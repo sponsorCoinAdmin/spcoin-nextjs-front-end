@@ -1,4 +1,4 @@
-// File: components/views/ListItems/AccountListItem.tsx
+// File: @/components/views/ListItems/AccountListItem.tsx
 'use client';
 
 import React, { memo } from 'react';

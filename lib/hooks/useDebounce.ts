@@ -1,4 +1,4 @@
-// File: lib/hooks/useDebounce.ts
+// File: @/lib/hooks/useDebounce.ts
 import { useEffect, useState } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/studyPolicy.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/studyPolicy.ts
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

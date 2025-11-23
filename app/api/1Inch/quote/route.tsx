@@ -1,4 +1,6 @@
-// /app/api/1Inch/price/route.ts
+// @/app/api/1Inch/price/route.ts
+'use server';
+
 import { BASE_URL } from '../networkConfig'
 import { apiResponse } from '@/app/api/1Inch/lib/apiResponse'
 

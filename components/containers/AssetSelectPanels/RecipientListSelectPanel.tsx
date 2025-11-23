@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectPanels/RecipientListSelectPanel.tsx
+// File: @/components/containers/AssetSelectPanels/RecipientListSelectPanel.tsx
 'use client';
 
 import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract } from '@/lib/structure';

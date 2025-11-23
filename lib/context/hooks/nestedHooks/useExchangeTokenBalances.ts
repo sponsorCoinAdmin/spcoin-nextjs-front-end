@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useExchangeTokenBalances.ts
+// File: @/lib/context/hooks/nestedHooks/useExchangeTokenBalances.ts
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';

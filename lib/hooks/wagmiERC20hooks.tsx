@@ -1,4 +1,4 @@
-// File: lib/hooks/wagmiERC20hooks.tsx
+// File: @/lib/hooks/wagmiERC20hooks.tsx
 'use client';
 
 import { useState, useEffect } from 'react';

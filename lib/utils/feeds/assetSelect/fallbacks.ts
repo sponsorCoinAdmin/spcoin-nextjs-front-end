@@ -1,4 +1,4 @@
-// File: lib/utils/feeds/assetSelect/fallbacks.ts
+// File: @/lib/utils/feeds/assetSelect/fallbacks.ts
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';

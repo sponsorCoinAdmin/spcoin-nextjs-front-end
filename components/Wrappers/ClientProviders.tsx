@@ -1,4 +1,4 @@
-// File: components/Wrappers/ClientProviders.tsx
+// File: @/components/Wrappers/ClientProviders.tsx
 'use client';
 
 import React from 'react';

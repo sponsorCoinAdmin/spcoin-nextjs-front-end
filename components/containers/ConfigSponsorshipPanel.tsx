@@ -1,4 +1,4 @@
-// File: components/containers/ConfigSponsorshipPanel.tsx
+// File: @/components/containers/ConfigSponsorshipPanel.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';

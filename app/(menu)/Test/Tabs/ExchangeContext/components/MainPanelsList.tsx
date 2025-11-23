@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/components/MainPanelsList.tsx
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/MainPanelsList.tsx
 'use client';
 
 import React from 'react';

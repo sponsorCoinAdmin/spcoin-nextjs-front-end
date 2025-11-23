@@ -1,4 +1,4 @@
-// File: lib/structure/assetSelection/enums/inputState.ts
+// File: @/lib/structure/assetSelection/enums/inputState.ts
 
 // ---------------------------------------------------------------------------
 // InputState (renumbered consecutively from 0; preview only after resolve)

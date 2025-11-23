@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidation/FSM_Core/fSMInputStates.ts
+// File: @/lib/hooks/inputValidation/FSM_Core/fSMInputStates.ts
 
 import { InputState } from "@/lib/structure/assetSelection";
 

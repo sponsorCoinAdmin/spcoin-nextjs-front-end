@@ -1,4 +1,4 @@
-// File: lib/network/initialize/defaultNetworkSettings.tsx
+// File: @/lib/network/initialize/defaultNetworkSettings.tsx
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';

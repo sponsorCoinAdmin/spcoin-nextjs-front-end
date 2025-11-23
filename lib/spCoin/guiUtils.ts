@@ -1,4 +1,4 @@
-// File: lib/spCoin/guiUtils.ts
+// File: @/lib/spCoin/guiUtils.ts
 'use client';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';

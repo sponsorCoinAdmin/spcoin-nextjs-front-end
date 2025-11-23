@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/hooks/useInstanceId.ts
+// File: @/lib/context/AssetSelectPanels/hooks/useInstanceId.ts
 'use client';
 
 import { useMemo } from 'react';

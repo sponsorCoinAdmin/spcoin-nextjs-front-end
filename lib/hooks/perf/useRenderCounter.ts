@@ -1,4 +1,4 @@
-// File: lib/hooks/perf/useRenderCounter.ts
+// File: @/lib/hooks/perf/useRenderCounter.ts
 // Count renders of a component. Safe no-op unless enabled.
 // Env flag: NEXT_PUBLIC_RENDER_COUNTER = 'true' | 'false' (default: false)
 'use client';

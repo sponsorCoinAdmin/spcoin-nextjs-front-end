@@ -1,4 +1,4 @@
-// File: components/Wrappers/SpCoinConfig.tsx
+// File: @/components/Wrappers/SpCoinConfig.tsx
 'use client';
 
 import * as React from 'react';

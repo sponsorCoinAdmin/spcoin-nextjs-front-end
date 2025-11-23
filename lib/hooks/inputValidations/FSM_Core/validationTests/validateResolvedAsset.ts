@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/tests/validateResolvedAsset.ts
+// File: @/lib/hooks/inputValidations/tests/validateResolvedAsset.ts
 
 import type { Address } from 'viem';
 import { FEED_TYPE } from '@/lib/structure';

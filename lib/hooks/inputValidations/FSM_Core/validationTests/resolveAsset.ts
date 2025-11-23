@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/validationTests/resolveAsset.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/resolveAsset.ts
 import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { SP_COIN_DISPLAY } from '@/lib/structure';

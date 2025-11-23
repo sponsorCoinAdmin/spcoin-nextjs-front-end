@@ -1,4 +1,4 @@
-// File: components/Buttons/Connect/ConnectNetworkButton.tsx
+// File: @/components/Buttons/Connect/ConnectNetworkButton.tsx
 'use client';
 
 import React from 'react';

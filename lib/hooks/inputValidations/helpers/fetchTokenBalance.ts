@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fetchTokenBalance.ts
+// File: @/lib/hooks/inputValidations/helpers/fetchTokenBalance.ts
 
 import type { PublicClient, Address } from 'viem';
 import { erc20Abi } from 'viem';

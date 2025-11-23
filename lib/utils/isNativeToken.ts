@@ -1,4 +1,4 @@
-// File: lib/utils/isNativeToken.ts
+// File: @/lib/utils/isNativeToken.ts
 
 import type { Address } from 'viem';
 

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/useDebouncedFSMTrigger.ts
+// File: @/lib/hooks/inputValidations/helpers/useDebouncedFSMTrigger.ts
 
 'use client';
 

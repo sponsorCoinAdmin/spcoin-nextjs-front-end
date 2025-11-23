@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/hooks/useSeedMainPanelsOnFirstRun.ts
+// File: @/lib/context/exchangeContext/hooks/useSeedMainPanelsOnFirstRun.ts
 'use client';
 
 import { useEffect } from 'react';

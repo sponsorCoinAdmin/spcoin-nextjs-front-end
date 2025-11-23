@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/AssetSelectProvider.tsx
+// File: @/lib/context/AssetSelectPanels/AssetSelectProvider.tsx
 'use client';
 
 import type { ReactNode } from 'react';

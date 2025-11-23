@@ -1,4 +1,4 @@
-// File: lib/structure/constants/addresses.ts
+// File: @/lib/structure/constants/addresses.ts
 import type { Address } from 'viem';
 
 /** Well-known addresses */

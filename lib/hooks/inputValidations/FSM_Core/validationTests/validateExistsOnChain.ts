@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/validationTests/validateExistsOnChain.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateExistsOnChain.ts
 'use client';
 
 import type { Address } from 'viem';

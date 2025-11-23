@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/validation/isEmptyInput.ts
+// File: @/lib/hooks/inputValidations/validation/isEmptyInput.ts
 
 import { getValidationDebugLogger } from '../helpers/debugLogInstance';
 

@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/components/SettingsSection.tsx
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/SettingsSection.tsx
 'use client';
 
 import React from 'react';

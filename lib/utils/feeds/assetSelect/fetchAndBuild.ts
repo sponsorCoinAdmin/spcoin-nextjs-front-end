@@ -1,4 +1,4 @@
-// File: lib/utils/feeds/assetSelect/fetchAndBuild.ts
+// File: @/lib/utils/feeds/assetSelect/fetchAndBuild.ts
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';

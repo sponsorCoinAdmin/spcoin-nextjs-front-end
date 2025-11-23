@@ -1,4 +1,4 @@
-// File: lib/hooks/trade/useTokenSelection.ts
+// File: @/lib/hooks/trade/useTokenSelection.ts
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';

@@ -1,13 +1,12 @@
-// File: app/api/0x/price/route.ts
+// File: @/app/api/0x/price/route.ts
+'use server';
 
 import { BASE_URL } from '../networkConfig';
 import { apiResponse } from '@/app/api/0x/lib/apiResponse';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true' ||
-  process.env.DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_API_0X_PRICE_REQUEST === 'true';
 
 const debugLog = createDebugLogger('0x-swap-permit2-price', DEBUG_ENABLED, LOG_TIME);
 
@@ -20,7 +19,7 @@ export async function GET(req: Request) {
   const search = urlObj.search;
   const origin = req.headers.get('origin');
 
-  if (process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true') {
+  if (process.env.NEXT_SERVER_DEBUG_LOG_API_0X_PRICE_REQUEST === 'true') {
     debugLog.log?.('📥 Incoming request to 0x permit2 price route', {
       method: 'GET',
       url: req.url,
@@ -35,7 +34,7 @@ export async function GET(req: Request) {
   try {
     const res = await apiResponse(upstreamBase, req.url);
 
-    if (process.env.DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true') {
+    if (process.env.NEXT_SERVER_DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true') {
       debugLog.log?.('📤 Upstream response from 0x proxy', {
         upstreamBase,
         status: res.status,

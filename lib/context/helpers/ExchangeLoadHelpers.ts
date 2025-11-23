@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/helpers/ExchangeLoadHelpers.ts
+// File: @/lib/context/exchangeContext/helpers/ExchangeLoadHelpers.ts
 import { CHAIN_ID, SP_COIN_DISPLAY } from '@/lib/structure';
 import type { ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';

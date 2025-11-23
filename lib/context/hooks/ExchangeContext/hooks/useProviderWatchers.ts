@@ -1,4 +1,4 @@
-// File: lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
+// File: @/lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
 import { useEffect, useRef } from 'react';
 import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';

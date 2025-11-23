@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/helpers/panelBootstrap.ts
+// File: @/lib/context/exchangeContext/helpers/panelBootstrap.ts
 'use client';
 
 import { useEffect, useRef } from 'react';

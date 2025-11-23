@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useNetwork.ts
+// File: @/lib/context/hooks/nestedHooks/useNetwork.ts
 'use client';
 
 import { useMemo } from 'react';

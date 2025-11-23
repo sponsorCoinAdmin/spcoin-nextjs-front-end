@@ -1,4 +1,4 @@
-// File: lib/utils/renderTrace.ts
+// File: @/lib/utils/renderTrace.ts
 import { useEffect, useRef } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

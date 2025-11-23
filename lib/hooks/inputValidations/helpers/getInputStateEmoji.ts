@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/getInputStateEmoji.ts
+// File: @/lib/hooks/inputValidations/helpers/getInputStateEmoji.ts
 
 import { InputState } from "@/lib/structure/assetSelection";
 

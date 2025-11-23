@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/debugLogInstance.ts
+// File: @/lib/hooks/inputValidations/helpers/debugLogInstance.ts
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

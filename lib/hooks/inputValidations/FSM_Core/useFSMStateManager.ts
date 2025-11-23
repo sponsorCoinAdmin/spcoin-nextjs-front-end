@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/useFSMStateManager.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/useFSMStateManager.ts
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';

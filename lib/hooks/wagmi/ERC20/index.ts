@@ -1,4 +1,4 @@
-// File: lib/hooks/wagmi/ERC20/index.ts
+// File: @/lib/hooks/wagmi/ERC20/index.ts
 
 export * from './useAllowance';
 export * from './useApprove';

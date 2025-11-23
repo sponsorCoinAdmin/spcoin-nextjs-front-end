@@ -1,4 +1,4 @@
-// File: lib/hooks/useContextBalance.ts
+// File: @/lib/hooks/useContextBalance.ts
 'use client';
 
 import { useEffect } from 'react';

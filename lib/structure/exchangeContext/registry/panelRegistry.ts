@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/registry/panelRegistry.ts
+// File: @/lib/structure/exchangeContext/registry/panelRegistry.ts
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 

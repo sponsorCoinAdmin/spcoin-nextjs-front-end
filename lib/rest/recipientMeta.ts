@@ -1,4 +1,4 @@
-// File: lib/rest/recipientMeta.ts
+// File: @/lib/rest/recipientMeta.ts
 import type { Address } from 'viem';
 import { getAddress } from 'viem';
 import { getJson } from './http';

@@ -1,4 +1,4 @@
-// File: components/views/ManageSponsorships/ManageWalletList.tsx
+// File: @/components/views/ManageSponsorships/ManageWalletList.tsx
 'use client';
 
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';

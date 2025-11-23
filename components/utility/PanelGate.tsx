@@ -1,4 +1,4 @@
-// File: components/utility/PanelGate.tsx
+// File: @/components/utility/PanelGate.tsx
 'use client';
 
 import React from 'react';

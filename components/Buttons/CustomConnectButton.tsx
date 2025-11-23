@@ -1,4 +1,4 @@
-// File: components/Buttons/CustomConnectButton.tsx
+// File: @/components/Buttons/CustomConnectButton.tsx
 'use client';
 
 import React from 'react';

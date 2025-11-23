@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
+// File: @/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
 'use client';
 
 import { useMemo, useCallback } from 'react';

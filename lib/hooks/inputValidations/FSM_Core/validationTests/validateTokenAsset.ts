@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
 import { isAddress, type Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';

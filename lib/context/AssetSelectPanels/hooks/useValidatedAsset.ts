@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/hooks/useValidatedAsset.ts
+// File: @/lib/context/AssetSelectPanels/hooks/useValidatedAsset.ts
 'use client';
 
 import { useCallback, useState } from 'react';

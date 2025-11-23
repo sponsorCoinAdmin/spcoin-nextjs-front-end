@@ -1,4 +1,4 @@
-// File: lib/wagmi/server/etERC20WagmiServerBalanceOfRec.ts
+// File: @/lib/wagmi/server/etERC20WagmiServerBalanceOfRec.ts
 'use server';
 
 import { readContract } from '@wagmi/core';

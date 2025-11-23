@@ -1,4 +1,4 @@
-// File: lib/hooks/usePriceErrorEffect.ts
+// File: @/lib/hooks/usePriceErrorEffect.ts
 
 'use client';
 

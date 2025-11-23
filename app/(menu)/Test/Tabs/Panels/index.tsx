@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/PanelsTab.tsx
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/PanelsTab.tsx
 
 'use client';
 

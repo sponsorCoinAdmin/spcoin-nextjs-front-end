@@ -1,4 +1,4 @@
-// File: lib/hooks/useSwapFunctions.ts
+// File: @/lib/hooks/useSwapFunctions.ts
 'use client';
 
 import { useCallback } from 'react';

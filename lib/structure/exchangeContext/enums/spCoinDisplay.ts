@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/enums/spCoinDisplay.ts
+// File: @/lib/structure/exchangeContext/enums/spCoinDisplay.ts
 export enum SP_COIN_DISPLAY {
   MAIN_TRADING_PANEL,
   TRADING_STATION_PANEL,

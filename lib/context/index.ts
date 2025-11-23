@@ -1,4 +1,4 @@
-// File: lib/context/index.ts
+// File: @/lib/context/index.ts
 
 /**
  * @file Top-level context barrel.

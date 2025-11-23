@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/validations/resolveTokenContract.ts
+// File: @/lib/hooks/inputValidations/validations/resolveTokenContract.ts
 
 import type { Address, PublicClient } from 'viem';
 import { isAddress } from 'viem';

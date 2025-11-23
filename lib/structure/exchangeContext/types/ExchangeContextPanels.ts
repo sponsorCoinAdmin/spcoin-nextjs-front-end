@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/types/ExchangeContextPanels.ts
+// File: @/lib/structure/exchangeContext/types/ExchangeContextPanels.ts
 
 import type { SpCoinPanelTree, PanelNode } from './PanelNode';
 

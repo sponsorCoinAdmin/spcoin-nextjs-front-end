@@ -1,4 +1,4 @@
-// File: lib/network/utils.tsx
+// File: @/lib/network/utils.tsx
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import type { Address } from 'viem';

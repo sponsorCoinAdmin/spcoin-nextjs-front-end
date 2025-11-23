@@ -1,3 +1,7 @@
+// File: @/lib/api/0x/sepolia/quote/route.tsx
+
+'use server';
+
 import { BASE_URL } from '../networkConfig'
 import { apiResponse } from '@/app/api/0x/lib/apiResponse'
 

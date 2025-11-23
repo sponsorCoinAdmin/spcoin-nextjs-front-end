@@ -1,4 +1,4 @@
-// File: lib/hooks/useSettledState.ts
+// File: @/lib/hooks/useSettledState.ts
 import { useEffect } from 'react';
 import type React from 'react';
 

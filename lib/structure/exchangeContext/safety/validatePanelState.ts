@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/safety/validatePanelState.ts
+// File: @/lib/structure/exchangeContext/safety/validatePanelState.ts
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';

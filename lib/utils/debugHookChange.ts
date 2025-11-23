@@ -1,4 +1,4 @@
-// File: lib/utils/debugHookChange.ts
+// File: @/lib/utils/debugHookChange.ts
 
 import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fetchTokenMetadata.ts
+// File: @/lib/hooks/inputValidations/helpers/fetchTokenMetadata.ts
 
 import type { Address, PublicClient } from 'viem';
 import { erc20Abi } from 'viem';

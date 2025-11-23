@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/utils/exCtxMapStorage.ts
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/utils/exCtxMapStorage.ts
 export type ExCtxMapStored = {
   version: number;
   paths: Record<string, boolean>;

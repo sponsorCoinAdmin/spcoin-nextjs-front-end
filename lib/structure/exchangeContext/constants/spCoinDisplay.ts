@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/constants/spCoinDisplay.ts
+// File: @/lib/structure/exchangeContext/constants/spCoinDisplay.ts
 import { SP_COIN_DISPLAY } from '../enums/spCoinDisplay';
 
 // ✅ MAIN_TRADING_PANEL is now part of the radio group (as requested)

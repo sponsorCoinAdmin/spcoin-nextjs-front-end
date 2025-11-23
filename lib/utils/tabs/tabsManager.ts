@@ -1,4 +1,4 @@
-// File: lib/utils/tabs/tabsManager.ts
+// File: @/lib/utils/tabs/tabsManager.ts
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';

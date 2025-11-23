@@ -1,4 +1,4 @@
-// File: components/views/ManageSponsorships/ManageAgent.tsx
+// File: @/components/views/ManageSponsorships/ManageAgent.tsx
 'use client';
 
 import React, { useCallback, useContext, useState, useMemo } from 'react';

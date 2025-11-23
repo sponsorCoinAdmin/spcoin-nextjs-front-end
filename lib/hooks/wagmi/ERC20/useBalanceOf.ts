@@ -1,4 +1,4 @@
-// File: lib/hooks/wagmi/ERC20/useBalanceOf.ts
+// File: @/lib/hooks/wagmi/ERC20/useBalanceOf.ts
 'use client';
 
 import { useEffect } from 'react';

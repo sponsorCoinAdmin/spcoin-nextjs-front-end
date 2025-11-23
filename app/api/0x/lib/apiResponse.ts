@@ -1,4 +1,4 @@
-// File: lib/api/apiResponse.ts
+// File: @/lib/api/apiResponse.ts
 import { getURLParams } from '@/lib/getURLParams'
 import { getJson } from '@/lib/rest/http'
 import { createDebugLogger } from '@/lib/utils/debugLogger'
@@ -10,7 +10,7 @@ const FEE_WALLET_DETAILS = `feeRecipient=${FEE_RECIPIENT}&AFFILIATE_FEE=${AFFILI
 
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME = false
-const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true'
+const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true'
 const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME)
 
 /**

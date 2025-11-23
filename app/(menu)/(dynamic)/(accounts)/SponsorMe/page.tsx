@@ -1,4 +1,4 @@
-// File: app/(menu)/CreateRecipientAccount/page.tsx
+// File: @/app/(menu)/CreateRecipientAccount/page.tsx
 'use client';
 
 import React, { useState, useContext, useEffect } from 'react';

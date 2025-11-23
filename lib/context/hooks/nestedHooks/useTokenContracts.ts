@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useTokenContracts.ts
+// File: @/lib/context/hooks/nestedHooks/useTokenContracts.ts
 
 import { useContext } from 'react';
 import type { TokenContract } from '@/lib/structure';

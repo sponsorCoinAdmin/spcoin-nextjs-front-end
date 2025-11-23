@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fsm/internals/debugFSM.ts
+// File: @/lib/hooks/inputValidations/helpers/fsm/internals/debugFSM.ts
 'use client';
 
 import { InputState } from '@/lib/structure/assetSelection';

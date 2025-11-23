@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/hooks/useHeaderController.ts
+// File: @/lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
 import type React from 'react';

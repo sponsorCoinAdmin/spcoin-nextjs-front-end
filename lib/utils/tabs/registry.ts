@@ -1,4 +1,4 @@
-// File: lib/utils/tabs/registry.ts
+// File: @/lib/utils/tabs/registry.ts
 /* Server-safe: no 'use client' here. Central registry + helpers for tab metadata. */
 
 export const TAB_REGISTRY = {

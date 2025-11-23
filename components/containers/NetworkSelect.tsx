@@ -1,4 +1,4 @@
-// File: components/containers/NetworkSelect.tsx
+// File: @/components/containers/NetworkSelect.tsx
 'use client';
 
 import React, { useEffect, useMemo, useCallback } from 'react';

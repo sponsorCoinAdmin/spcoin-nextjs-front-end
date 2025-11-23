@@ -6,7 +6,7 @@ export const useNetwork = () => {
   return exchangeContext?.network;
 };
 
-// File: lib/context/hooks/ExchangeContext/network.ts
+// File: @/lib/context/hooks/ExchangeContext/network.ts
 export const useAppChainId = () => {
   const { setExchangeContext } = useExchangeContext();
   return (chainId: number) =>

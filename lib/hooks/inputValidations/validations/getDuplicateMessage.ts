@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/validations/getDuplicateMessage.ts
+// File: @/lib/hooks/inputValidations/validations/getDuplicateMessage.ts
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 

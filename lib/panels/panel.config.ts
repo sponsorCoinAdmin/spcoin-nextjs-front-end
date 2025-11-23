@@ -1,4 +1,4 @@
-// File: lib/panels/panel.config.ts
+// File: @/lib/panels/panel.config.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 export type PanelKind = 'root' | 'panel' | 'list' | 'button' | 'control';

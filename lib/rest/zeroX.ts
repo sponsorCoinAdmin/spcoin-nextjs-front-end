@@ -1,4 +1,4 @@
-// File: lib/rest/zeroX.ts
+// File: @/lib/rest/zeroX.ts
 // import { getJson } from '@/lib/rest/http'
 // import { getURLParams } from '@/lib/getURLParams'
 

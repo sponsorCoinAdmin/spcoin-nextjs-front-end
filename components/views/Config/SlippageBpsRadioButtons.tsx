@@ -1,4 +1,4 @@
-// File: components/views/Config/SlippageBpsRadioButtons.tsx
+// File: @/components/views/Config/SlippageBpsRadioButtons.tsx
 'use client';
 
 import React, { memo, useCallback } from 'react';

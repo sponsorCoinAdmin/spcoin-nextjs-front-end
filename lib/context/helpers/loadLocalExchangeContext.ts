@@ -1,4 +1,4 @@
-// File: lib/context/helpers/loadLocalExchangeContext.ts
+// File: @/lib/context/helpers/loadLocalExchangeContext.ts
 'use client';
 
 import type { ExchangeContext } from '@/lib/structure';

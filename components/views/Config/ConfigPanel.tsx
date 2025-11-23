@@ -1,4 +1,4 @@
-// File: components/views/Config/ConfigPanel.tsx
+// File: @/components/views/Config/ConfigPanel.tsx
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';

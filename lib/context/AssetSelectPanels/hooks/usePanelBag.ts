@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/hooks/usePanelBag.ts
+// File: @/lib/context/AssetSelectPanels/hooks/usePanelBag.ts
 'use client';
 
 import type { Dispatch, SetStateAction} from 'react';

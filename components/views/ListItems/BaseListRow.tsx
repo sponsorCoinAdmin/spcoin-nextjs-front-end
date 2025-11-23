@@ -1,4 +1,4 @@
-// File: components/views/ListItems/BaseListRow.tsx
+// File: @/components/views/ListItems/BaseListRow.tsx
 'use client';
 
 import React, { memo } from 'react';

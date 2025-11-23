@@ -1,4 +1,4 @@
-// File: lib/utils/feeds/assetSelect/types.ts
+// File: @/lib/utils/feeds/assetSelect/types.ts
 'use client';
 
 import type { FEED_TYPE, WalletAccount } from '@/lib/structure';

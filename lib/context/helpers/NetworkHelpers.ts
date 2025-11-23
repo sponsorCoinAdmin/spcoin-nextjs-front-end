@@ -1,4 +1,4 @@
-// File: lib/context/helpers/NetworkHelpers.ts
+// File: @/lib/context/helpers/NetworkHelpers.ts
 import rawChainIdList from '@/resources/data/networks/chainIds.json';
 import type { NetworkElement } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

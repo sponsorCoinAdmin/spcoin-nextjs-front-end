@@ -1,4 +1,4 @@
-// File: components/views/ManageSponsorships/ManageRecipients.tsx
+// File: @/components/views/ManageSponsorships/ManageRecipients.tsx
 'use client';
 
 import React, { useEffect, useState, useContext } from 'react';

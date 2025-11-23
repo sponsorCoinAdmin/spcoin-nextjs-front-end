@@ -1,4 +1,4 @@
-// File: lib/rest/resolveWallet.ts
+// File: @/lib/rest/resolveWallet.ts
 /* Resolve the wallet's effective website URL via priority:
    1) query ?url
    2) recipientMeta.website

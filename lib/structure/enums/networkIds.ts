@@ -1,4 +1,4 @@
-// File: lib/structure/enums/networkIds.ts
+// File: @/lib/structure/enums/networkIds.ts
 
 /** Supported chain IDs (sorted ascending by network ID) */
 export enum CHAIN_ID {

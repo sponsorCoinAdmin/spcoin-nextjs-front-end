@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/panelStore.ts
+// File: @/lib/context/exchangeContext/panelStore.ts
 
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 

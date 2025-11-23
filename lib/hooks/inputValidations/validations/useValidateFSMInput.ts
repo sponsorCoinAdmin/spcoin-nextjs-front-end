@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/useValidateFSMInput.ts
+// File: @/lib/hooks/inputValidations/helpers/useValidateFSMInput.ts
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';

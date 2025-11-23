@@ -1,4 +1,4 @@
-// File: lib/network/defaults.ts
+// File: @/lib/network/defaults.ts
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
 import defaultPolygonSettings  from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
 import defaultHardHatSettings  from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';

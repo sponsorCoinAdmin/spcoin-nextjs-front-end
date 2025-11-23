@@ -1,4 +1,4 @@
-// File: lib/network/onchain/cacheKeys.ts
+// File: @/lib/network/onchain/cacheKeys.ts
 import type { Address } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 

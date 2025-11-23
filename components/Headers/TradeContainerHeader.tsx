@@ -1,4 +1,4 @@
-// File: components/Headers/TradeContainerHeader.tsx
+// File: @/components/Headers/TradeContainerHeader.tsx
 'use client';
 
 import Image from 'next/image';

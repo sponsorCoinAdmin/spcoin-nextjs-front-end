@@ -1,4 +1,4 @@
-// File: components/buttons/AddSponsorshipButton.tsx
+// File: @/components/buttons/AddSponsorshipButton.tsx
 'use client';
 
 import React, { useCallback, useEffect, useRef } from 'react';

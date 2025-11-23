@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/tests/validateAddress.ts
+// File: @/lib/hooks/inputValidations/tests/validateAddress.ts
 
 import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';

@@ -1,4 +1,4 @@
-// File: lib/context/ScrollSelectPanels/structure/types/panelBag.ts
+// File: @/lib/context/ScrollSelectPanels/structure/types/panelBag.ts
 
 import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';

@@ -1,4 +1,4 @@
-// File: components/shared/utils/sharedPreviews/BasePreviewCard.tsx
+// File: @/components/shared/utils/sharedPreviews/BasePreviewCard.tsx
 'use client';
 
 import React from 'react';

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/index.ts
+// File: @/lib/hooks/inputValidations/index.ts
 
 // Re-export individual validation functions
 export * from './validations/isEmptyInput';

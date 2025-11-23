@@ -1,4 +1,4 @@
-// File: components/views/BaseSelectPanel.tsx
+// File: @/components/views/BaseSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';

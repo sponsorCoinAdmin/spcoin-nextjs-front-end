@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/logStateChanges.ts
+// File: @/lib/hooks/inputValidations/helpers/logStateChanges.ts
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

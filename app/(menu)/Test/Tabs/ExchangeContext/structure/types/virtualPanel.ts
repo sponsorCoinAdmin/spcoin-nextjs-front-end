@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/structure/types/virtualPanel.ts
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/structure/types/virtualPanel.ts
 
 import type { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 

@@ -1,4 +1,4 @@
-// File: lib/context/ScrollSelectPanels/useAssetSelectContext.tsx
+// File: @/lib/context/ScrollSelectPanels/useAssetSelectContext.tsx
 'use client';
 
 import { createContext, useContext } from 'react';

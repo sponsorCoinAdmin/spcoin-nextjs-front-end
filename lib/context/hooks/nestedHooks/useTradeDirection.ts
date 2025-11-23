@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useTradeDirection.ts
+// File: @/lib/context/hooks/nestedHooks/useTradeDirection.ts
 
 import { useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';

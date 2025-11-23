@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/hooks/usePanelTree.ts
+// File: @/lib/context/exchangeContext/hooks/usePanelTree.ts
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';

@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/helpers/persistExchangeContext.ts
+// File: @/lib/context/exchangeContext/helpers/persistExchangeContext.ts
 'use client';
 
 import type { ExchangeContext as ExchangeContextTypeOnly } from '@/lib/structure';

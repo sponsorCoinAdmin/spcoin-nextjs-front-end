@@ -1,4 +1,4 @@
-// File: components/Buttons/BuySellSwapArrowButton.tsx
+// File: @/components/Buttons/BuySellSwapArrowButton.tsx
 'use client';
 
 import React, { useCallback } from 'react';

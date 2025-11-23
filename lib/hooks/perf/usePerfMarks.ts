@@ -1,4 +1,4 @@
-// File: lib/hooks/perf/usePerfMarks.ts
+// File: @/lib/hooks/perf/usePerfMarks.ts
 // Tiny wrapper around Performance API. Safe no-op unless enabled.
 // Env flag: NEXT_PUBLIC_PERF_MARKS = 'true' | 'false' (default: false)
 'use client';

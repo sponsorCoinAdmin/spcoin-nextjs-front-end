@@ -1,4 +1,4 @@
-// File: lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
+// File: @/lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
 import {
   SP_COIN_DISPLAY as SP,
   type ExchangeContext as ExchangeContextTypeOnly,

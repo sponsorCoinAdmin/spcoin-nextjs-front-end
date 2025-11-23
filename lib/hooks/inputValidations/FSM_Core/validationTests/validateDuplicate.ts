@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/tests/validateDuplicate.ts
+// File: @/lib/hooks/inputValidations/tests/validateDuplicate.ts
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';

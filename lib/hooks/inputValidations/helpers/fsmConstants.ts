@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fsmConstants.ts
+// File: @/lib/hooks/inputValidations/helpers/fsmConstants.ts
 
 // Keep this in sync with fsmRunner.ts
 export const LOCAL_TRACE_KEY = 'latestFSMTrace';

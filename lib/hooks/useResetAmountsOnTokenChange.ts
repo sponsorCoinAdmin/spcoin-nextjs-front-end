@@ -1,4 +1,4 @@
-// File: lib/hooks/useResetAmountsOnTokenChange.ts
+// File: @/lib/hooks/useResetAmountsOnTokenChange.ts
 
 'use client';
 

@@ -1,4 +1,4 @@
-// File: lib/wagmi/wagmiERC20hooks.tsx
+// File: @/lib/wagmi/wagmiERC20hooks.tsx
 'use client';
 
 import { useBalance, useReadContract } from 'wagmi';

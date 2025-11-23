@@ -1,4 +1,4 @@
-// File: components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
+// File: @/components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';

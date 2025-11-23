@@ -1,4 +1,4 @@
-// File: lib/utils/logEffectReasons.ts
+// File: @/lib/utils/logEffectReasons.ts
 import { useEffect, useRef } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

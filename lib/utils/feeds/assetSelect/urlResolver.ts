@@ -1,4 +1,4 @@
-// File: lib/utils/feeds/assetSelect/urlResolver.ts
+// File: @/lib/utils/feeds/assetSelect/urlResolver.ts
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';

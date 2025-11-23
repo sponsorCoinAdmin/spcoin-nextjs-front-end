@@ -1,4 +1,4 @@
-// File: lib/hooks/useFSMHeaderTrace.ts
+// File: @/lib/hooks/useFSMHeaderTrace.ts
 
 'use client';
 

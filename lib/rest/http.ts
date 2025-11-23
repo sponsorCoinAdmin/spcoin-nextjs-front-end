@@ -1,4 +1,4 @@
-// File: lib/rest/http.ts
+// File: @/lib/rest/http.ts
 /* Minimal GET-only REST helpers with timeout, retries, and type-safe JSON parsing. */
 
 export type GetOptions = {

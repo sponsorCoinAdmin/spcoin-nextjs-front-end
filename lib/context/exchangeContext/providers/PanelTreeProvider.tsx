@@ -1,4 +1,4 @@
-// File: lib/debug/panels/panelVisibilityProbe.ts
+// File: @/lib/debug/panels/panelVisibilityProbe.ts
 // (env-gated, zero-cost in prod unless flags are on)
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';

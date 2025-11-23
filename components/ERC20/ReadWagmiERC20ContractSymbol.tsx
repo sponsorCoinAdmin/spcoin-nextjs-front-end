@@ -1,4 +1,4 @@
-// File: components/ERC20/ReadWagmiERC20ContractSymbol.tsx
+// File: @/components/ERC20/ReadWagmiERC20ContractSymbol.tsx
 'use client';
 
 import React from 'react';

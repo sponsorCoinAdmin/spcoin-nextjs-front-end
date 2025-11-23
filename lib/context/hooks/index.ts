@@ -1,4 +1,4 @@
-// File: lib/context/hooks/index.ts
+// File: @/lib/context/hooks/index.ts
 
 /**
  * @file Hooks barrel (does not re-export other barrels).

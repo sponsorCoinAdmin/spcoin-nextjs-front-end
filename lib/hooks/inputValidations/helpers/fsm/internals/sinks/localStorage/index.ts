@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/sinks/localStorageTraceSink.ts
+// File: @/lib/hooks/inputValidations/helpers/sinks/localStorageTraceSink.ts
 'use client';
 
 import { InputState } from '@/lib/structure/assetSelection';

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/types/validationTypes.ts
+// File: @/lib/hooks/inputValidations/types/validationTypes.ts
 
 import type { TokenContract, WalletAccount } from '@/lib/structure';
 

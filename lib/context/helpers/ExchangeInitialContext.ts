@@ -1,4 +1,4 @@
-// File: lib/context/helpers/initExchangeContext.ts
+// File: @/lib/context/helpers/initExchangeContext.ts
 
 import type {
   WalletAccount,

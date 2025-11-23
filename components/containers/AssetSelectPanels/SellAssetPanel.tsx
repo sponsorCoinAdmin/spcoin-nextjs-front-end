@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectPanels/SellAssetPanel.tsx
+// File: @/components/containers/AssetSelectPanels/SellAssetPanel.tsx
 'use client';
 
 import React from 'react';

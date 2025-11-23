@@ -1,4 +1,4 @@
-// File: lib/network/AppChainController.tsx
+// File: @/lib/network/AppChainController.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';

@@ -1,4 +1,5 @@
-// File: app/api/0x/price/route.ts
+// File: @/app/api/0x/price/route.ts
+'use server';
 
 import { BASE_URL } from '../networkConfig';
 import { apiResponse } from '@/app/api/0x/lib/apiResponse';
@@ -8,7 +9,7 @@ const api = '/swap/permit2/price/';
 const ROUTE_TAG = '[api/0x/price]';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
+const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_0X_PRICE_API === 'true';
 const debugLog = createDebugLogger('0xPriceRoute', DEBUG_ENABLED, LOG_TIME);
 
 // This runs once when the route module is loaded by Next.js

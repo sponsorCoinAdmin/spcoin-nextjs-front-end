@@ -1,4 +1,4 @@
-// File: components\containers\RecipientSiteInfo.tsx
+// File: @/components\containers\RecipientSiteInfo.tsx
 // Author: Robin (robin@spcoin.com)
 // Date: 2023-09-19
 // Description: Recipient Site Info

@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
+// File: @/lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

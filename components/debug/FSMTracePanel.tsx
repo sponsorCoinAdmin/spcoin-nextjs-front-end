@@ -1,4 +1,4 @@
-// File: components/debug/FSMTracePanel.tsx
+// File: @/components/debug/FSMTracePanel.tsx
 'use client';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';

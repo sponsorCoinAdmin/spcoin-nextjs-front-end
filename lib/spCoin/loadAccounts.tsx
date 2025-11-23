@@ -1,4 +1,4 @@
-// File: lib/server/loadAccounts.ts
+// File: @/lib/server/loadAccounts.ts
 'use server';
 
 import * as fs from 'fs';

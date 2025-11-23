@@ -1,4 +1,4 @@
-// File: components/views/DataListSelect.tsx
+// File: @/components/views/DataListSelect.tsx
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';

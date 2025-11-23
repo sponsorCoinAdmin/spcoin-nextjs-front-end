@@ -1,4 +1,4 @@
-// File: lib/hooks/useDidHydrate.ts
+// File: @/lib/hooks/useDidHydrate.ts
 
 import { useEffect, useState } from 'react';
 

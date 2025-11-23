@@ -1,4 +1,4 @@
-// File: lib/hooks/useAppPublicClient.ts
+// File: @/lib/hooks/useAppPublicClient.ts
 'use client';
 
 import { usePublicClient } from 'wagmi';

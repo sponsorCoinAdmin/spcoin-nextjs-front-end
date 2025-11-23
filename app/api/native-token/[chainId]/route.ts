@@ -1,4 +1,6 @@
-// File: app/api/native-token/[chainId]/route.ts
+// File: @/app/api/native-token/[chainId]/route.ts
+'use server';
+
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
@@ -8,7 +10,7 @@ export const runtime = 'nodejs';
 
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.DEBUG_LOG_API_SPCOIN_TOKEN === 'true';
+const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_API_SPCOIN_TOKEN === 'true';
 const debugLog = createDebugLogger('api/native-token', DEBUG_ENABLED, LOG_TIME);
 
 function validateTokenInfo(data: any): data is {

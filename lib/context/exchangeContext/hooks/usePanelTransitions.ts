@@ -1,4 +1,4 @@
-// File: lib/context/exchangeContext/hooks/usePanelTransitions.ts
+// File: @/lib/context/exchangeContext/hooks/usePanelTransitions.ts
 'use client';
 
 import { useCallback, useRef } from 'react';

@@ -1,4 +1,4 @@
-// File: lib/wagmi/wagmiConfig.ts
+// File: @/lib/wagmi/wagmiConfig.ts
 
 'use client';
 

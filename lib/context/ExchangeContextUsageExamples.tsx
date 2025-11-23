@@ -1,4 +1,4 @@
-// File: lib/context/ExchangeContextUsageExamples.tsx
+// File: @/lib/context/ExchangeContextUsageExamples.tsx
 'use client';
 
 import React, { useMemo } from 'react';

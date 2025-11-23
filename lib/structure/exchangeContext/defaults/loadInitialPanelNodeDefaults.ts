@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults.ts
+// File: @/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults.ts
 'use client';
 
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';

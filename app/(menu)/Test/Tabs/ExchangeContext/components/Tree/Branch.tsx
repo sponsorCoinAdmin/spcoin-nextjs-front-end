@@ -1,4 +1,4 @@
-// File: components/PanelTree/Branch.tsx
+// File: @/components/PanelTree/Branch.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';

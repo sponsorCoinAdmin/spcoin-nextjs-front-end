@@ -1,4 +1,4 @@
-// File: lib/utils/telemetry.ts
+// File: @/lib/utils/telemetry.ts
 // Lightweight, optional telemetry emitter. Safe no-op unless enabled.
 // Env flags:
 //   NEXT_PUBLIC_TELEMETRY_ENABLED = 'true' | 'false' (default: false)

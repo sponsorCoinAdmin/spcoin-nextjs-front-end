@@ -1,4 +1,4 @@
-// File: lib/context/hooks/useAppChainId.ts
+// File: @/lib/context/hooks/useAppChainId.ts
 'use client';
 
 import { useEffect } from 'react';

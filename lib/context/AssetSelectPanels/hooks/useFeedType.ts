@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/hooks/useFeedType.ts
+// File: @/lib/context/AssetSelectPanels/hooks/useFeedType.ts
 'use client';
 
 import { useMemo } from 'react';

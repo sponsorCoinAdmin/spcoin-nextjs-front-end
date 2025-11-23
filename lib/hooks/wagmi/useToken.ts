@@ -1,4 +1,4 @@
-// File: lib/hooks/wagmi/useToken.ts
+// File: @/lib/hooks/wagmi/useToken.ts
 'use client';
 
 import { useEffect, useState } from 'react';

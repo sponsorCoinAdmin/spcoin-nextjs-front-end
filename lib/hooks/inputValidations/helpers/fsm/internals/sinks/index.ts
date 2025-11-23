@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fsm/internal/sinks/index.ts
+// File: @/lib/hooks/inputValidations/helpers/fsm/internal/sinks/index.ts
 
 // Note: This module is isomorphic (no "use client").
 // Only the localStorage sink uses browser APIs and is lazy-loaded.

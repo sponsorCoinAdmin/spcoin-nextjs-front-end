@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useAppChainId.ts
+// File: @/lib/context/hooks/nestedHooks/useAppChainId.ts
 'use client';
 
 import { useCallback } from 'react';

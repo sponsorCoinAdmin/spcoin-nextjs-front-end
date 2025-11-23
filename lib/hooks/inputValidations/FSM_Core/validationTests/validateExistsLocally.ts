@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/tests/validateExistsLocally.ts
+// File: @/lib/hooks/inputValidations/tests/validateExistsLocally.ts
 
 import { InputState } from '@/lib/structure/assetSelection';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';

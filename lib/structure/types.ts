@@ -1,4 +1,4 @@
-// File: lib/structure/types.ts
+// File: @/lib/structure/types.ts
 
 import type { Address } from 'viem';
 import type { UseReadContractReturnType } from 'wagmi';

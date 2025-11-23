@@ -1,4 +1,4 @@
-// File: lib/context/ExchangeProvider.tsx
+// File: @/lib/context/ExchangeProvider.tsx
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';

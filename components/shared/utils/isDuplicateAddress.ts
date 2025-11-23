@@ -1,4 +1,4 @@
-// File: lib/spCoin/isDuplicateAddress.ts
+// File: @/lib/spCoin/isDuplicateAddress.ts
 
 import type { TokenContract } from '@/lib/structure';
 

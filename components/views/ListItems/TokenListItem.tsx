@@ -1,4 +1,4 @@
-// File: components/views/ListItems/TokenListItem.tsx
+// File: @/components/views/ListItems/TokenListItem.tsx
 'use client';
 
 import React from 'react';

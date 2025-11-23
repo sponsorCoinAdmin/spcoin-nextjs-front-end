@@ -1,4 +1,4 @@
-// File: app/(menu)/_providers/AppBootstrap.tsx
+// File: @/app/(menu)/_providers/AppBootstrap.tsx
 'use client';
 
 import { useEffect } from 'react';

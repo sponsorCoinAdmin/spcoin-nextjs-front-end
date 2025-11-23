@@ -1,4 +1,4 @@
-// File: lib/context/initExchangeContext.ts
+// File: @/lib/context/initExchangeContext.ts
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
 import type { WalletAccount, ExchangeContext } from '@/lib/structure';

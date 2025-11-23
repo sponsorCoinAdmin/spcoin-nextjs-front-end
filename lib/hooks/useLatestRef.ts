@@ -1,4 +1,4 @@
-// File: lib/hooks/useLatestRef.ts
+// File: @/lib/hooks/useLatestRef.ts
 import { useEffect, useRef } from 'react';
 
 /**

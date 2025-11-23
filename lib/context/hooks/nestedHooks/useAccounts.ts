@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useAccounts.ts
+// File: @/lib/context/hooks/nestedHooks/useAccounts.ts
 
 'use client';
 

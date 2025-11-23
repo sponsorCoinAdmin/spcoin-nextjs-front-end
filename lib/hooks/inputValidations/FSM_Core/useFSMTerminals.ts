@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/useFSMTerminals.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/useFSMTerminals.ts
 import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure/assetSelection';
 import type { TokenContract, WalletAccount } from '@/lib/structure';

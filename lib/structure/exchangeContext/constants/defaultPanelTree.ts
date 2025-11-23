@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/constants/defaultPanelTree.ts
+// File: @/lib/structure/exchangeContext/constants/defaultPanelTree.ts
 
 import type { SpCoinPanelTree, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';

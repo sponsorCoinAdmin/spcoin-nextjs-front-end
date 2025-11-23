@@ -1,4 +1,4 @@
-// File: lib/hooks/useFetchLocalLogo.ts
+// File: @/lib/hooks/useFetchLocalLogo.ts
 'use client';
 
 import { useEffect, useState } from 'react';

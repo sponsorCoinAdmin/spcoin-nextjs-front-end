@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/startFSM.ts
+// File: @/lib/hooks/inputValidations/helpers/startFSM.ts
 'use client';
 
 import type { MutableRefObject } from 'react';

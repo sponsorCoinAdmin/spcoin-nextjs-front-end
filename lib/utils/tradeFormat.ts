@@ -1,4 +1,4 @@
-// File: lib/utils/tradeFormat.ts
+// File: @/lib/utils/tradeFormat.ts
 export const maxInputSz = 28;
 export const TYPING_GRACE_MS = 550;
 

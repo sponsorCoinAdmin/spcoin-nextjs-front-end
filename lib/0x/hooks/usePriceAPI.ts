@@ -1,4 +1,4 @@
-// File: lib/hooks/usePriceAPI.ts
+// File: @/lib/hooks/usePriceAPI.ts
 'use client';
 
 import { useEffect } from 'react';
@@ -25,7 +25,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
+const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_0X_PRICE_API === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 // SWR key is [endpoint, params]

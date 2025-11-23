@@ -1,4 +1,4 @@
-// File: lib/panels/panel.derived.ts
+// File: @/lib/panels/panel.derived.ts
 import type { GroupId } from './panel.config';
 import { PANELS } from './panel.config';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';

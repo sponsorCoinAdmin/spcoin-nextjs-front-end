@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/utils/debugContextDump.ts
+// File: @/lib/hooks/inputValidations/utils/debugContextDump.ts
 
 import type { TokenContract } from '@/lib/structure';
 import type { InputState } from '@/lib/structure/assetSelection';

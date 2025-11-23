@@ -1,4 +1,6 @@
-// File: app/api/health/route.js
+// File: @/app/api/health/route.js
+'use server';
+
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";

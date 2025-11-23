@@ -1,4 +1,4 @@
-// File: components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
+// File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
 import AddressSelect from '@/components/views/AddressSelect';

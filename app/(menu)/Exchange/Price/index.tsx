@@ -1,4 +1,4 @@
-// File: app/(menu)/Exchange/Price/index.tsx
+// File: @/app/(menu)/Exchange/Price/index.tsx
 'use client';
 
 import styles from '@/styles/Exchange.module.css';

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import { InputState } from '@/lib/structure/assetSelection';

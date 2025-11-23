@@ -1,4 +1,4 @@
-// File: components/Pages/WalletsPage.tsx
+// File: @/components/Pages/WalletsPage.tsx
 'use client';
 
 import { useState, useEffect } from 'react';

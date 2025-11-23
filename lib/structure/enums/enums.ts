@@ -1,4 +1,4 @@
-// File: lib/structure/enums.ts
+// File: @/lib/structure/enums.ts
 
 export enum BUTTON_TYPE {
   API_TRANSACTION_ERROR,

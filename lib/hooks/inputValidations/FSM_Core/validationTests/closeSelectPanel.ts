@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/FSM_Core/validationTests/closeSelectPanel.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/closeSelectPanel.ts
 
 import { InputState } from '@/lib/structure/assetSelection';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';

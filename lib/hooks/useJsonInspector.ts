@@ -1,4 +1,4 @@
-// File: lib/hooks/useJsonInspector.ts
+// File: @/lib/hooks/useJsonInspector.ts
 
 import { useCallback, useEffect, useState } from 'react';
 

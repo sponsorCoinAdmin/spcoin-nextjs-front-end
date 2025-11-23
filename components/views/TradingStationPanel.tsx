@@ -1,4 +1,4 @@
-// File: components/views/TradingStationPanel.tsx
+// File: @/components/views/TradingStationPanel.tsx
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';

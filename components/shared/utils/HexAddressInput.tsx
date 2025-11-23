@@ -1,4 +1,4 @@
-// File: components/shared/HexAddressInput.tsx
+// File: @/components/shared/HexAddressInput.tsx
 'use client';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';

@@ -1,4 +1,4 @@
-// File: lib/erc20/useERC20Symbol.ts
+// File: @/lib/erc20/useERC20Symbol.ts
 'use client';
 
 import { useReadContract } from 'wagmi';

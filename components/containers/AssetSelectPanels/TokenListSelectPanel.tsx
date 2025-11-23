@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectPanels/TokenListSelectPanel.tsx
+// File: @/components/containers/AssetSelectPanels/TokenListSelectPanel.tsx
 'use client';
 
 import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract } from '@/lib/structure';

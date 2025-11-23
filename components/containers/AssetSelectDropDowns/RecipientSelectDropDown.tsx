@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectDropDowns/RecipientSelectDropDown.tsx
+// File: @/components/containers/AssetSelectDropDowns/RecipientSelectDropDown.tsx
 'use client';
 
 import React, { useCallback, useRef, useMemo, useEffect } from 'react';

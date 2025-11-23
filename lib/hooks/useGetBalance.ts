@@ -1,4 +1,4 @@
-// File: lib/hooks/useGetBalance.ts
+// File: @/lib/hooks/useGetBalance.ts
 'use client';
 
 import { useMemo } from 'react';

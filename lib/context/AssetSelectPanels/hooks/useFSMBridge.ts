@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelectPanels/hooks/useFSMBridge.ts
+// File: @/lib/context/AssetSelectPanels/hooks/useFSMBridge.ts
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';

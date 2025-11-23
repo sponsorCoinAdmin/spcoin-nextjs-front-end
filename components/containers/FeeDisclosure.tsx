@@ -1,4 +1,4 @@
-// File: components/containers/FeeDisclosure.tsx
+// File: @/components/containers/FeeDisclosure.tsx
 'use client';
 
 import React from 'react';

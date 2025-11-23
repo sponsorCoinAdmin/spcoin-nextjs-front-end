@@ -1,4 +1,4 @@
-// File: components/views/MainTradingPanel.tsx
+// File: @/components/views/MainTradingPanel.tsx
 'use client';
 
 import React, { useMemo } from 'react';

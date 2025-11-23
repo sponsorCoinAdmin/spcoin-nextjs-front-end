@@ -1,4 +1,4 @@
-// File: lib/structure/index.ts
+// File: @/lib/structure/index.ts
 
 /**
  * @file Manually curated barrel for structure exports.

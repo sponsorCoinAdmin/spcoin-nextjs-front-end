@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/helpers/fsmStorage.ts
+// File: @/lib/hooks/inputValidations/helpers/fsmStorage.ts
 'use client';
 
 import type { InputState } from '@/lib/structure/assetSelection';

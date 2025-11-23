@@ -1,4 +1,4 @@
-// File: app/(menu)/Exchange/page.tsx
+// File: @/app/(menu)/Exchange/page.tsx
 'use client'
 
 import React from 'react'

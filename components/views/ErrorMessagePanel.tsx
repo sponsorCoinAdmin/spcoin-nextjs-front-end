@@ -1,4 +1,4 @@
-// File: components/containers/ErrorMessagePanel.tsx
+// File: @/components/containers/ErrorMessagePanel.tsx
 'use client';
 
 import { useCallback } from 'react';

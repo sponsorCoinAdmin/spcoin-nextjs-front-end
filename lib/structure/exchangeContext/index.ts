@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/index.ts
+// File: @/lib/structure/exchangeContext/index.ts
 // (Barrel) — Add these lines to your existing barrel; do not remove current exports.
 
 export * from './types/PanelNode';

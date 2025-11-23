@@ -1,4 +1,4 @@
-// File: components/shared/AddressSelect.tsx
+// File: @/components/shared/AddressSelect.tsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';

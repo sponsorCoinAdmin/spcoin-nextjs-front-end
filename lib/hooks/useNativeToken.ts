@@ -1,4 +1,4 @@
-// File: lib/hooks/useNativeToken.ts
+// File: @/lib/hooks/useNativeToken.ts
 
 'use client';
 

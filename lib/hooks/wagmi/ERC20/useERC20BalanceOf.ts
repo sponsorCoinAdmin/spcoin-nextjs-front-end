@@ -1,4 +1,4 @@
-// File: lib/erc20/useERC20BalanceOf.ts
+// File: @/lib/erc20/useERC20BalanceOf.ts
 'use client';
 
 import { useReadContract } from 'wagmi';

@@ -1,4 +1,4 @@
-// File: lib/network/utils/getNativeTokenInfo.ts
+// File: @/lib/network/utils/getNativeTokenInfo.ts
 
 import { CHAIN_ID } from "@/lib/structure";
 

@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/validations/isValidAddress.ts
+// File: @/lib/hooks/inputValidations/validations/isValidAddress.ts
 
 import { isAddress } from 'viem';
 import { getValidationDebugLogger } from '../helpers/debugLogInstance';

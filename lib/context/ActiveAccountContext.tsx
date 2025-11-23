@@ -1,4 +1,4 @@
-// File: lib/context/ActiveAccountContext.tsx
+// File: @/lib/context/ActiveAccountContext.tsx
 'use client';
 
 import React, {

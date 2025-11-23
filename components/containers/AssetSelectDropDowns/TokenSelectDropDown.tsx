@@ -1,4 +1,4 @@
-// File: components/containers/TokenSelectDropDown.tsx
+// File: @/components/containers/TokenSelectDropDown.tsx
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';

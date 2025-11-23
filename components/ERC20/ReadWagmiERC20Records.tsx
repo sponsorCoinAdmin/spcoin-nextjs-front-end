@@ -1,4 +1,4 @@
-// File: components/ERC20/ReadWagmiERC20Records.tsx
+// File: @/components/ERC20/ReadWagmiERC20Records.tsx
 
 import React from 'react'
 import type { Address } from 'viem'
