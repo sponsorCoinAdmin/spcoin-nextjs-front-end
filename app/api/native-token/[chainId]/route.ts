@@ -1,5 +1,4 @@
-// File: @/app/api/native-token/[chainId]/route.ts
-'use server';
+// File: app/api/native-token/[chainId]/route.ts
 
 import { NextResponse } from 'next/server';
 import path from 'path';
