@@ -21,8 +21,12 @@ import { zeroAddress } from 'viem';
 
 import { isTriggerFSMState } from '../../FSM_Core/fSMInputStates';
 import { makeSignature, shouldRunFSM } from './internals/guards';
+import { createTraceSink } from './internals/sinks';
 
 type PublicClientLike = unknown;
+
+const TRACE_ENABLED =
+  process.env.NEXT_PUBLIC_FSM_INPUT_STATE_TRACE === 'true';
 
 type StartFSMArgs = {
   debouncedHexInput: string;
@@ -106,6 +110,13 @@ export async function startFSM(
     resolvedAsset: undefined,
   };
 
+  // Pick a trace sink (no-op when TRACE_ENABLED is false; lazily loads heavy code when true)
+  const traceSink = await createTraceSink(TRACE_ENABLED, {
+    containerType,
+    debouncedHexInput,
+    feedType,
+  });
+
   // ─────────────────────────────────────────────
   // Inline FSM loop (previously runFSM)
   // ─────────────────────────────────────────────
@@ -167,10 +178,17 @@ export async function startFSM(
 
     if (next === state) break;
 
+    // Report transition to the trace sink (for localStorage FSM trace)
+    traceSink.onTransition(state, next);
+
     state = next;
   }
 
   const finalState = state;
+
+  // Finalize trace (pretty-print + persist when enabled)
+  traceSink.onFinish(finalState);
+
   const committedAsset =
     (assetAcc as WalletAccount | TokenContract | undefined);
   const hasAddr = Boolean((committedAsset as any)?.address);
