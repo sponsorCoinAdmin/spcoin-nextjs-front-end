@@ -7,11 +7,11 @@ import type {
   ValidateFSMInput,
 } from './FSM_Core/types/validateFSMTypes';
 import { closeSelectPanel } from './FSM_Core/validationTests/closeSelectPanel';
-import { resolveAsset } from './FSM_Core/validationTests/resolveAsset';
+import { validateERC20Asset } from './FSM_Core/validationTests/validateERC20Asset';
 import { updateValidated } from './FSM_Core/validationTests/updateValidated';
 import { validateAddress } from './FSM_Core/validationTests/validateAddress';
 import { validateDuplicate } from './FSM_Core/validationTests/validateDuplicate';
-import { validateExistsLocally } from './FSM_Core/validationTests/validateExistsLocally';
+import { validateLocalNativeToken } from './FSM_Core/validationTests/validateExistsLocally';
 import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
 const LOG_TIME = false;
@@ -24,7 +24,7 @@ const F = {
   DUPLICATE: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
   EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'true',
   EXISTS_ONCHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'true',
-  RESOLVE: process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
+  RESOLVE: process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ERC20_ASSET === 'true',
   UPDATE: process.env.NEXT_PUBLIC_FSM_TEST_UPDATE_ASSET === 'true',
   CLOSE: process.env.NEXT_PUBLIC_FSM_TEST_CLOSE_SELECT_PANEL === 'true',
 };
@@ -92,7 +92,7 @@ export async function validateFSMCore(
       await step(
         out,
         F.EXISTS_LOCALLY,
-        () => validateExistsLocally(input),
+        () => validateLocalNativeToken(input),
         InputState.VALIDATE_EXISTS_ON_CHAIN,
       );
       break;
@@ -102,16 +102,16 @@ export async function validateFSMCore(
         out,
         F.EXISTS_ONCHAIN,
         () => validateExistsOnChain(input),
-        InputState.RESOLVE_ASSET,
+        InputState.RESOLVE_ERC20_ASSET,
       );
       break;
 
-    case InputState.RESOLVE_ASSET: {
+    case InputState.RESOLVE_ERC20_ASSET: {
       // 🔧 crucial: panel-aware; returns assetPatch for account-like flows
       await step(
         out,
         F.RESOLVE,
-        () => resolveAsset(input),
+        () => validateERC20Asset(input),
         InputState.UPDATE_VALIDATED_ASSET,
       );
 

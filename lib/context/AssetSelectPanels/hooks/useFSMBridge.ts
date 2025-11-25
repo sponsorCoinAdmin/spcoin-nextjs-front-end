@@ -157,13 +157,13 @@ export function useFSMBridge(params: BridgeParams) {
         resetPreview();
         break;
 
-      case InputState.RESOLVE_ASSET:
+      case InputState.RESOLVE_ERC20_ASSET:
       case InputState.VALIDATE_PREVIEW:
         if (validatedAsset) showAssetPreview();
         break;
 
-      case InputState.TOKEN_NOT_RESOLVED_ERROR:
-      case InputState.RESOLVE_ASSET_ERROR:
+      case InputState.VALIDATE_ERC20_ASSET_ERROR:
+      case InputState.RESOLVE_ERC20_ASSET_ERROR:
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       case InputState.INVALID_ADDRESS_INPUT:
         showErrorPreview();

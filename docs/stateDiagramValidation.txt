@@ -63,7 +63,7 @@ User types raw hex ──► useHexInput ──► validHexInput ──► useDe
                    │                                │
                    │                                ▼
                    │                       ┌──────────────────┐
-                   │                       │ RESOLVE_ASSET │
+                   │                       │ RESOLVE_ERC20_ASSET │
                    │                       └────────┬─────────┘
                    │                                │
                    │                                ▼

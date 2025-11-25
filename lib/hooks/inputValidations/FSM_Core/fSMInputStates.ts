@@ -9,7 +9,7 @@ export const TRIGGER_FSM_STATES = new Set<InputState>([
   InputState.VALIDATE_PREVIEW,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.VALIDATE_EXISTS_ON_CHAIN,
-  InputState.RESOLVE_ASSET,
+  InputState.RESOLVE_ERC20_ASSET,
   InputState.UPDATE_VALIDATED_ASSET,
 ]);
 
@@ -20,8 +20,8 @@ export const ERROR_FSM_STATES = new Set<InputState>([
   InputState.INVALID_ADDRESS_INPUT,
   InputState.DUPLICATE_INPUT_ERROR,
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  InputState.RESOLVE_ASSET_ERROR,
-  InputState.TOKEN_NOT_RESOLVED_ERROR, // optional if used in your state enum
+  InputState.RESOLVE_ERC20_ASSET_ERROR,
+  InputState.VALIDATE_ERC20_ASSET_ERROR, // optional if used in your state enum
 ]);
 
 // ────────────── Finalize FSM States ──────────────

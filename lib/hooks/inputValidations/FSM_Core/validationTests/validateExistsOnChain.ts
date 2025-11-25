@@ -58,7 +58,7 @@ async function getBytecodeWithTiming(
  * On-chain existence gate.
  * - TOKEN_LIST flows require contract bytecode (except native token).
  * - Non-token flows accept EOAs (bytecode '0x') as valid accounts.
- * - Native token address short-circuits (case-insensitive) to RESOLVE_ASSET.
+ * - Native token address short-circuits (case-insensitive) to RESOLVE_ERC20_ASSET.
  *
  * ⚙️ Policy-aware: respects studyPolicy for VALIDATE_EXISTS_ON_CHAIN.
  */
@@ -102,17 +102,17 @@ export async function validateExistsOnChain(
   // 🔐 Policy gate — allow selective bypass per panel
   if (!isStudyEnabled(containerType, StudyId.VALIDATE_EXISTS_ON_CHAIN)) {
     log.log?.(
-      `[${traceId}] [POLICY] VALIDATE_EXISTS_ON_CHAIN disabled for ${SP_COIN_DISPLAY[containerType]} → RESOLVE_ASSET`
+      `[${traceId}] [POLICY] VALIDATE_EXISTS_ON_CHAIN disabled for ${SP_COIN_DISPLAY[containerType]} → RESOLVE_ERC20_ASSET`
     );
-    return { nextState: InputState.RESOLVE_ASSET };
+    return { nextState: InputState.RESOLVE_ERC20_ASSET };
   }
 
   // ✅ Native token has no bytecode; short-circuit (case-insensitive)
   if (isNativeCaseInsensitive) {
     log.log?.(
-      `[${traceId}] [SHORT-CIRCUIT] Native token (${NATIVE_TOKEN_ADDRESS}) matched case-insensitively → RESOLVE_ASSET`
+      `[${traceId}] [SHORT-CIRCUIT] Native token (${NATIVE_TOKEN_ADDRESS}) matched case-insensitively → RESOLVE_ERC20_ASSET`
     );
-    return { nextState: InputState.RESOLVE_ASSET };
+    return { nextState: InputState.RESOLVE_ERC20_ASSET };
   }
 
   // Guards
@@ -143,7 +143,7 @@ export async function validateExistsOnChain(
     const msg = `Chain mismatch: app=${appChainId}, client=${clientChainId} (${clientSummary.chainName}) @ ${clientSummary.transportType} ${rpcUrl}`;
     log.warn?.(`[${traceId}] [MISMATCH] ${msg}`);
     return {
-      nextState: InputState.RESOLVE_ASSET_ERROR,
+      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }
@@ -178,10 +178,10 @@ export async function validateExistsOnChain(
       }
 
       log.log?.(
-        `[${traceId}] [RESULT] Bytecode found (len=${bytecode!.length}) → RESOLVE_ASSET`,
+        `[${traceId}] [RESULT] Bytecode found (len=${bytecode!.length}) → RESOLVE_ERC20_ASSET`,
         { addr, clientChainId, rpcUrl } as any
       );
-      return { nextState: InputState.RESOLVE_ASSET };
+      return { nextState: InputState.RESOLVE_ERC20_ASSET };
     } else {
       // Account-like flows: EOA or contract → both acceptable
       if (bytecode === null) {
@@ -198,10 +198,10 @@ export async function validateExistsOnChain(
 
       const kind = bytecode === '0x' ? 'EOA' : `contract(len=${bytecode.length})`;
       log.log?.(
-        `[${traceId}] [RESULT] ${kind} acceptable for non-token flow → RESOLVE_ASSET`,
+        `[${traceId}] [RESULT] ${kind} acceptable for non-token flow → RESOLVE_ERC20_ASSET`,
         { addr, clientChainId, rpcUrl } as any
       );
-      return { nextState: InputState.RESOLVE_ASSET };
+      return { nextState: InputState.RESOLVE_ERC20_ASSET };
     }
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);

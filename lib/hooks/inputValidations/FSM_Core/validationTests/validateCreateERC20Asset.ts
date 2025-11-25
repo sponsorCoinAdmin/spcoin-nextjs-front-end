@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
+// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateCreateERC20Asset.ts
 import { isAddress, type Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
@@ -11,7 +11,7 @@ import type {
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger(
-  'validateTokenAsset(FSM_Core)',
+  'validateCreateERC20Asset(FSM_Core)',
   DEBUG_ENABLED,
   LOG_TIME,
 );
@@ -45,14 +45,14 @@ const ERC20_ABI = [
  * Resolve a token contract into an assetPatch suitable for UPDATE_VALIDATED_ASSET.
  * Assumes on-chain existence was already handled by VALIDATE_EXISTS_ON_CHAIN.
  */
-export async function validateTokenAsset(
+export async function validateCreateERC20Asset(
   params: ValidateFSMInput,
 ): Promise<ValidateFSMOutput> {
   const { debouncedHexInput, publicClient, chainId } = params;
   const addr = (debouncedHexInput ?? '').trim() as Address;
 
   const clientChainId = (publicClient as any)?.chain?.id;
-  debugLog.log?.('🔎 validateTokenAsset entry', {
+  debugLog.log?.('🔎 validateCreateERC20Asset entry', {
     addr,
     chainIdParam: chainId,
     clientChainId,
@@ -80,7 +80,7 @@ export async function validateTokenAsset(
     const msg = `Invalid token address "${addr}"`;
     debugLog.warn?.(msg);
     return {
-      nextState: InputState.RESOLVE_ASSET_ERROR,
+      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }
@@ -89,7 +89,7 @@ export async function validateTokenAsset(
     const msg = `Public client missing for token resolve (chainId=${chainId})`;
     debugLog.warn?.(msg);
     return {
-      nextState: InputState.RESOLVE_ASSET_ERROR,
+      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }

@@ -19,7 +19,7 @@ export enum StudyId {
   VALIDATE_PREVIEW = 'VALIDATE_PREVIEW',
   PREVIEW_CONTRACT_EXISTS_LOCALLY = 'PREVIEW_CONTRACT_EXISTS_LOCALLY',
   VALIDATE_EXISTS_ON_CHAIN = 'VALIDATE_EXISTS_ON_CHAIN',
-  RESOLVE_ASSET = 'RESOLVE_ASSET',
+  RESOLVE_ERC20_ASSET = 'RESOLVE_ERC20_ASSET',
   UPDATE_VALIDATED_ASSET = 'UPDATE_VALIDATED_ASSET',
 }
 
@@ -51,7 +51,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.VALIDATE_PREVIEW]: true,
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: true,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: true,
-    [StudyId.RESOLVE_ASSET]: true,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.UPDATE_VALIDATED_ASSET]: true,
   },
 
@@ -62,7 +62,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.VALIDATE_PREVIEW]: true,
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: true,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: true,
-    [StudyId.RESOLVE_ASSET]: true,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.UPDATE_VALIDATED_ASSET]: true,
   },
 
@@ -73,7 +73,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.VALIDATE_PREVIEW]: true,
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
-    [StudyId.RESOLVE_ASSET]: true,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.UPDATE_VALIDATED_ASSET]: true,
   },
 
@@ -84,7 +84,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.VALIDATE_PREVIEW]: true,
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
-    [StudyId.RESOLVE_ASSET]: true,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.UPDATE_VALIDATED_ASSET]: true,
   },
 
@@ -95,7 +95,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.VALIDATE_PREVIEW]: true,
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
-    [StudyId.RESOLVE_ASSET]: true,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.UPDATE_VALIDATED_ASSET]: true,
   },
 

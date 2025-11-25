@@ -19,10 +19,10 @@ PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
 
 VALIDATE_EXISTS_ON_CHAIN
   ├─ not on chain              → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN (show ErrorAssetPreview)
-  └─ on chain                  → RESOLVE_ASSET
+  └─ on chain                  → RESOLVE_ERC20_ASSET
 
-RESOLVE_ASSET
-  ├─ resolve error             → RESOLVE_ASSET_ERROR (show ErrorAssetPreview)
+RESOLVE_ERC20_ASSET
+  ├─ resolve error             → RESOLVE_ERC20_ASSET_ERROR (show ErrorAssetPreview)
   └─ resolve ok                → (branch on manualEntry)
         • manualEntry === true   → VALIDATE_PREVIEW (show RenderAssetPreview, await click)
         • manualEntry === false  → UPDATE_VALIDATED_ASSET → CLOSE_SELECT_PANEL

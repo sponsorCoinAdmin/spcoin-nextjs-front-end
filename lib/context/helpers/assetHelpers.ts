@@ -1,4 +1,4 @@
-// File: @/lib/context/helpers/assetHelpers.ts
+// File: lib/context/helpers/assetHelpers.ts
 
 import type { Address } from 'viem';
 import { FEED_TYPE, type WalletAccount } from '@/lib/structure';
@@ -6,6 +6,9 @@ import { headOk, get } from '@/lib/rest/http';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
+
+// Minimal client-side existence cache for info.json paths
+const infoExistenceCache = new Map<string, boolean>();
 
 export const defaultMissingImage =
   '/assets/miscellaneous/QuestionBlackOnRed.png';
@@ -81,6 +84,34 @@ export async function getLogoURL(
   const ok = await resourceExists(path);
   logoExistenceCache.set(path, ok);
   return ok ? path : defaultMissingImage;
+}
+
+/**
+ * Resolve an asset info.json path and verify existence (client-side).
+ * Uses chainId only for building the asset path; does not read network metadata.
+ *
+ * Returns:
+ *   - the info.json path if it exists
+ *   - '' (empty string) if it does not exist or cannot be probed
+ */
+export async function getInfoURL(
+  chainId: number | undefined,
+  address: Address,
+  dataFeedType: FEED_TYPE,
+): Promise<string> {
+  const addr = (address ?? '').trim();
+  if (!addr) return '';
+
+  const path = getAssetInfoURL(addr, chainId ?? 1, dataFeedType);
+  if (!path) return '';
+
+  if (infoExistenceCache.has(path)) {
+    return infoExistenceCache.get(path)! ? path : '';
+  }
+
+  const ok = await resourceExists(path);
+  infoExistenceCache.set(path, ok);
+  return ok ? path : '';
 }
 
 export type RequiredAssetMembers = { address: string; chainId: number };
@@ -172,6 +203,38 @@ export function getAssetLogoURL(
     default:
       // For unknown feeds, fall back to a token-style path to preserve prior behaviour.
       return getTokenLogoURL({ address, chainId });
+  }
+}
+
+/**
+ * Generic asset info helper that switches based on FEED_TYPE.
+ * Builds a path ending in /info.json instead of /logo.png.
+ */
+export function getAssetInfoURL(
+  address: string,
+  chainId: number,
+  dataFeedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
+): string {
+  if (!address || address.length < 10) {
+    return '';
+  }
+
+  switch (dataFeedType) {
+    case FEED_TYPE.TOKEN_LIST: {
+      const root = getContractRoot(chainId, address);
+      return root ? `${root}/info.json` : '';
+    }
+
+    case FEED_TYPE.RECIPIENT_ACCOUNTS:
+    case FEED_TYPE.AGENT_ACCOUNTS: {
+      const root = getWalletRoot(address);
+      return root ? `${root}/info.json` : '';
+    }
+
+    default: {
+      const root = getContractRoot(chainId, address);
+      return root ? `${root}/info.json` : '';
+    }
   }
 }
 
