@@ -25,7 +25,7 @@ export function getInputStateEmoji(state: InputState): string {
       return '🚫'; // prohibited
     case InputState.VALIDATE_PREVIEW:
       return '🔍'; // magnifying glass
-   case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
+   case InputState.VALIDATE_LOCAL_NATIVE_TOKEN:
       return '💾'; // save disk
     case InputState.RESOLVE_ERC20_ASSET:
       return '💰'; // money bag

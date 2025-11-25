@@ -12,9 +12,9 @@ INVALID_ADDRESS_INPUT           → show ErrorAssetPreview
 
 TEST_DUPLICATE_INPUT
   ├─ duplicate                 → DUPLICATE_INPUT_ERROR (show ErrorAssetPreview)
-  └─ ok                        → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
+  └─ ok                        → VALIDATE_LOCAL_NATIVE_TOKEN
 
-PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
+VALIDATE_LOCAL_NATIVE_TOKEN
   → VALIDATE_EXISTS_ON_CHAIN
 
 VALIDATE_EXISTS_ON_CHAIN

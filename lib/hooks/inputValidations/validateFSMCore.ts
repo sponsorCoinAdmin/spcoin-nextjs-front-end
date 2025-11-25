@@ -78,7 +78,7 @@ export async function validateFSMCore(
         out,
         F.DUPLICATE,
         () => validateDuplicate(input),
-        InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
+        InputState.VALIDATE_LOCAL_NATIVE_TOKEN,
       );
       if (out.nextState === undefined) {
         merge(out, {
@@ -88,7 +88,7 @@ export async function validateFSMCore(
       }
       break;
 
-    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
+    case InputState.VALIDATE_LOCAL_NATIVE_TOKEN:
       await step(
         out,
         F.EXISTS_LOCALLY,

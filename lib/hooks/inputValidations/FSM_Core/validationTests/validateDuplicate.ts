@@ -35,7 +35,7 @@ export function validateDuplicate(input: ValidateFSMInput): ValidateFSMOutput {
   }
 
   // ✅ Always proceed to the "exists locally" preview step when not duplicate.
-  const result: ValidateFSMOutput = { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
+  const result: ValidateFSMOutput = { nextState: InputState.VALIDATE_LOCAL_NATIVE_TOKEN };
   debugLog.log('✅ No duplicate found → returning:', result);
   return result;
 }

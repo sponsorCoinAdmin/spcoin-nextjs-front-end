@@ -58,7 +58,7 @@ User types raw hex ──► useHexInput ──► validHexInput ──► useDe
                    │                    └───────────┬────────────┘
                    │                                │ broken logo?
                    │                            ┌───┴───┐
-                   │                            │ Yes   │──►PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
+                   │                            │ Yes   │──►VALIDATE_LOCAL_NATIVE_TOKEN
                    │                            └───┬───┘
                    │                                │
                    │                                ▼

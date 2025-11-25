@@ -19,7 +19,7 @@ export enum InputState {
   DUPLICATE_INPUT_ERROR,
 
   // 3️⃣ Preview check phase (local summaries/cache lookups)
-  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
+  VALIDATE_LOCAL_NATIVE_TOKEN,
 
   // 4️⃣ Blockchain existence check
   VALIDATE_EXISTS_ON_CHAIN,
