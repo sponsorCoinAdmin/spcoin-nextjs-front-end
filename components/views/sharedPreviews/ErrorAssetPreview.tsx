@@ -58,12 +58,7 @@ export default function ErrorAssetPreview() {
         text: 'Address not found on blockchain.',
         colorHex: '#ef4444',
       },
-      [InputState.VALIDATE_ERC20_ASSET_ERROR]: {
-        imageSrc: badTokenAddressImage,
-        text: 'Token Not Resolved.',
-        colorHex: '#ef4444',
-      },
-      // Keep emoji for the rest
+       // Keep emoji for the rest
       [InputState.INCOMPLETE_ADDRESS]: {
         emoji: '✏️',
         text: 'Incomplete address.',
