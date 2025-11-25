@@ -29,7 +29,7 @@ export function getInputStateEmoji(state: InputState): string {
       return '💾'; // save disk
     case InputState.RESOLVE_ERC20_ASSET:
       return '💰'; // money bag
-    case InputState.RESOLVE_ERC20_ASSET_ERROR:
+    case InputState.VALIDATE_ERC20_ASSET_ERROR:
       return '❌'; // red cross
     case InputState.VALIDATE_ERC20_ASSET_ERROR:
       return '❌'; // red cross

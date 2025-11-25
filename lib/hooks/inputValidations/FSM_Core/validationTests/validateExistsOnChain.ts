@@ -143,7 +143,7 @@ export async function validateExistsOnChain(
     const msg = `Chain mismatch: app=${appChainId}, client=${clientChainId} (${clientSummary.chainName}) @ ${clientSummary.transportType} ${rpcUrl}`;
     log.warn?.(`[${traceId}] [MISMATCH] ${msg}`);
     return {
-      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
+      nextState: InputState.VALIDATE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }

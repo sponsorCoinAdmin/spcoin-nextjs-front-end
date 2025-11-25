@@ -30,7 +30,7 @@
 
 → RESOLVE_ERC20_ASSET → Check balance
         ├── if error → VALIDATE_ERC20_ASSET_ERROR 
-        ├── if error → RESOLVE_ERC20_ASSET_ERROR 
+        ├── if error → VALIDATE_ERC20_ASSET_ERROR 
         └── if ok → CLOSE_SELECT_PANEL
 		
 → CLOSE_SELECT_PANEL → Promote and close

@@ -20,7 +20,7 @@ export const ERROR_FSM_STATES = new Set<InputState>([
   InputState.INVALID_ADDRESS_INPUT,
   InputState.DUPLICATE_INPUT_ERROR,
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  InputState.RESOLVE_ERC20_ASSET_ERROR,
+  InputState.VALIDATE_ERC20_ASSET_ERROR,
   InputState.VALIDATE_ERC20_ASSET_ERROR, // optional if used in your state enum
 ]);
 

@@ -79,7 +79,7 @@ export default function ErrorAssetPreview() {
         text: 'Missing local asset preview.',
         colorHex: '#f97316',
       },
-      [InputState.RESOLVE_ERC20_ASSET_ERROR]: {
+      [InputState.VALIDATE_ERC20_ASSET_ERROR]: {
         emoji: '💥',
         text: 'Validate asset error.',
         colorHex: '#ef4444',

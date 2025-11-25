@@ -163,7 +163,7 @@ export function useFSMBridge(params: BridgeParams) {
         break;
 
       case InputState.VALIDATE_ERC20_ASSET_ERROR:
-      case InputState.RESOLVE_ERC20_ASSET_ERROR:
+      case InputState.VALIDATE_ERC20_ASSET_ERROR:
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       case InputState.INVALID_ADDRESS_INPUT:
         showErrorPreview();

@@ -22,7 +22,7 @@ export function getStateIcon(state: InputState): string {
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN: return '📵';
     case InputState.RESOLVE_ERC20_ASSET: return '📊';
     case InputState.VALIDATE_ERC20_ASSET_ERROR: return '❗';
-    case InputState.RESOLVE_ERC20_ASSET_ERROR: return '💥';
+    case InputState.VALIDATE_ERC20_ASSET_ERROR: return '💥';
     case InputState.MISSING_ACCOUNT_ADDRESS: return '🙈';
     case InputState.UPDATE_VALIDATED_ASSET: return '✅';
     case InputState.CLOSE_SELECT_PANEL: return '🔒';

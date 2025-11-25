@@ -30,7 +30,7 @@ export enum InputState {
 
   // 6️⃣ Error outcomes from resolve
   VALIDATE_ERC20_ASSET_ERROR,
-  RESOLVE_ERC20_ASSET_ERROR,
+  VALIDATE_ERC20_ASSET_ERROR,
   MISSING_ACCOUNT_ADDRESS,
 
   // 7️⃣ Preview Asset (only after RESOLVE_ERC20_ASSET when manualEntry === true)
