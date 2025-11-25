@@ -11,7 +11,7 @@ import { validateERC20Asset } from './FSM_Core/validationTests/validateERC20Asse
 import { updateValidated } from './FSM_Core/validationTests/updateValidated';
 import { validateAddress } from './FSM_Core/validationTests/validateAddress';
 import { validateDuplicate } from './FSM_Core/validationTests/validateDuplicate';
-import { validateLocalNativeToken } from './FSM_Core/validationTests/validateExistsLocally';
+import { validateLocalNativeToken } from './FSM_Core/validationTests/validateLocalNativeToken';
 import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
 const LOG_TIME = false;
@@ -118,7 +118,10 @@ export async function validateFSMCore(
       // At this point, `out.nextState` is typically UPDATE_VALIDATED_ASSET.
       // If the input came from *manual entry* (typed/pasted), we *preview* instead of committing.
       // This forces <RenderAssetPreview /> to show and waits for an explicit user click to commit.
-      if (out.nextState === InputState.UPDATE_VALIDATED_ASSET && input.manualEntry) {
+      if (
+        out.nextState === InputState.UPDATE_VALIDATED_ASSET &&
+        input.manualEntry
+      ) {
         debugLog.log?.(
           '[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was UPDATE_VALIDATED_ASSET)',
           {

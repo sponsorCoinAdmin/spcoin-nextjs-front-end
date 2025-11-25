@@ -1,4 +1,5 @@
 // File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateCreateERC20Asset.ts
+
 import { isAddress, type Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
@@ -59,7 +60,7 @@ export async function validateCreateERC20Asset(
     hasPublicClient: !!publicClient,
   });
 
-  // 1) Native token short-circuit
+  // 1) Native token short-circuit (normally handled earlier, but keep as safety)
   if (addr === NATIVE_TOKEN_ADDRESS) {
     debugLog.log?.('🌐 native token → UPDATE_VALIDATED_ASSET', {
       addr,
@@ -80,7 +81,7 @@ export async function validateCreateERC20Asset(
     const msg = `Invalid token address "${addr}"`;
     debugLog.warn?.(msg);
     return {
-      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
+      nextState: InputState.VALIDATE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }
@@ -89,7 +90,7 @@ export async function validateCreateERC20Asset(
     const msg = `Public client missing for token resolve (chainId=${chainId})`;
     debugLog.warn?.(msg);
     return {
-      nextState: InputState.RESOLVE_ERC20_ASSET_ERROR,
+      nextState: InputState.VALIDATE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }
@@ -112,12 +113,11 @@ export async function validateCreateERC20Asset(
       clientChainId,
       transportType: transport?.type,
       rpcUrl,
-      // These two are mainly for deep debugging if needed
+      // Deep debugging fields
       rawTransport: transport,
       chainRpcUrls: anyClient?.chain?.rpcUrls,
     };
 
-    // Goes through your debug logger (controlled by NEXT_PUBLIC_DEBUG_FSM)
     debugLog.log?.('🌐 publicClient transport snapshot', transportSnapshot);
   } catch (e: any) {
     const msg = e?.message || String(e ?? 'unknown error');
@@ -209,7 +209,6 @@ export async function validateCreateERC20Asset(
   }
 
   if (!symbol && !name && decimals === undefined) {
-    // Metadata completely missing — still proceed with bare token patch
     debugLog.warn?.(
       `❗ metadata not available for ${addr}; proceeding with bare patch`,
     );
