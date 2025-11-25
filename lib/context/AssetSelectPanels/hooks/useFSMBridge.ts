@@ -100,13 +100,13 @@ export function useFSMBridge(params: BridgeParams) {
       return;
     }
 
-    if (inputState === InputState.UPDATE_VALIDATED_ASSET) {
+    if (inputState === InputState.RETURN_VALIDATED_ASSET) {
       if (didHandleTerminalRef.current) return;
       didHandleTerminalRef.current = true;
 
       if (!validatedAsset) {
         debugLog.warn?.(
-          `[${instanceId}] UPDATE_VALIDATED_ASSET with no validatedAsset`,
+          `[${instanceId}] RETURN_VALIDATED_ASSET with no validatedAsset`,
         );
       } else {
         debugLog.log?.(

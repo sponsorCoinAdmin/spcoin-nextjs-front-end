@@ -6,7 +6,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const debug = createDebugLogger('updateValidated', process.env.NEXT_PUBLIC_DEBUG_FSM === 'true');
 
 /**
- * UPDATE_VALIDATED_ASSET
+ * RETURN_VALIDATED_ASSET
  * - Commit the validated asset to the app (via optional callback).
  * - Then advance to CLOSE_SELECT_PANEL.
  *

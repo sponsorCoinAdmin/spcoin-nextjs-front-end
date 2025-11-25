@@ -24,7 +24,7 @@ export function getStateIcon(state: InputState): string {
     case InputState.VALIDATE_ERC20_ASSET_ERROR: return '❗';
     case InputState.VALIDATE_ERC20_ASSET_ERROR: return '💥';
     case InputState.MISSING_ACCOUNT_ADDRESS: return '🙈';
-    case InputState.UPDATE_VALIDATED_ASSET: return '✅';
+    case InputState.RETURN_VALIDATED_ASSET: return '✅';
     case InputState.CLOSE_SELECT_PANEL: return '🔒';
     default: return '➖';
   }

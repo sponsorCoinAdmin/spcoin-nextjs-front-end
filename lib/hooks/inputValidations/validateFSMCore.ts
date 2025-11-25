@@ -112,18 +112,18 @@ export async function validateFSMCore(
         out,
         F.RESOLVE,
         () => validateERC20Asset(input),
-        InputState.UPDATE_VALIDATED_ASSET,
+        InputState.RETURN_VALIDATED_ASSET,
       );
 
-      // At this point, `out.nextState` is typically UPDATE_VALIDATED_ASSET.
+      // At this point, `out.nextState` is typically RETURN_VALIDATED_ASSET.
       // If the input came from *manual entry* (typed/pasted), we *preview* instead of committing.
       // This forces <RenderAssetPreview /> to show and waits for an explicit user click to commit.
       if (
-        out.nextState === InputState.UPDATE_VALIDATED_ASSET &&
+        out.nextState === InputState.RETURN_VALIDATED_ASSET &&
         input.manualEntry
       ) {
         debugLog.log?.(
-          '[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was UPDATE_VALIDATED_ASSET)',
+          '[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was RETURN_VALIDATED_ASSET)',
           {
             container: input.containerType,
             feedType: input.feedType,
@@ -134,7 +134,7 @@ export async function validateFSMCore(
       break;
     }
 
-    case InputState.UPDATE_VALIDATED_ASSET:
+    case InputState.RETURN_VALIDATED_ASSET:
       // Your updateValidated should read input.assetPatch (runner merges patches across steps)
       await step(
         out,

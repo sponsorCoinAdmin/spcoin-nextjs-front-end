@@ -22,7 +22,7 @@ const debugLog = createDebugLogger('useFSMTerminals', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Terminal-state safety net:
- *  - UPDATE_VALIDATED_ASSET → forward asset once (if caller missed it)
+ *  - RETURN_VALIDATED_ASSET → forward asset once (if caller missed it)
  *  - CLOSE_SELECT_PANEL     → close once, then run cleanup
  *
  * NOTE:
@@ -45,7 +45,7 @@ export function useFSMTerminals({
 
     // Fallback: ensure selected asset is forwarded on commit state
     if (
-      inputState === InputState.UPDATE_VALIDATED_ASSET &&
+      inputState === InputState.RETURN_VALIDATED_ASSET &&
       validatedAsset &&
       !sentRef.current
     ) {

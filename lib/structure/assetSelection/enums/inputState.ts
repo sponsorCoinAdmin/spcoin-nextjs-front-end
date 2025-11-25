@@ -36,7 +36,7 @@ export enum InputState {
   VALIDATE_PREVIEW,
 
   // 8️⃣ Final delivery
-  UPDATE_VALIDATED_ASSET,
+  RETURN_VALIDATED_ASSET,
 
   // 9️⃣ Final close
   CLOSE_SELECT_PANEL,

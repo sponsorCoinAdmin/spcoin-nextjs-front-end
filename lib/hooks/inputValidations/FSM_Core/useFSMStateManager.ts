@@ -194,7 +194,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
         try {
           setValidatedAsset(result.asset);
           if (
-            result.finalState === InputState.UPDATE_VALIDATED_ASSET ||
+            result.finalState === InputState.RETURN_VALIDATED_ASSET ||
             result.finalState === InputState.CLOSE_SELECT_PANEL
           ) {
             setTradingTokenCallback(result.asset);

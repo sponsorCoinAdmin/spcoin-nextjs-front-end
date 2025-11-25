@@ -43,7 +43,7 @@ const ERC20_ABI = [
 ] as const;
 
 /**
- * Resolve a token contract into an assetPatch suitable for UPDATE_VALIDATED_ASSET.
+ * Resolve a token contract into an assetPatch suitable for RETURN_VALIDATED_ASSET.
  * Assumes on-chain existence was already handled by VALIDATE_EXISTS_ON_CHAIN.
  */
 export async function validateCreateERC20Asset(
@@ -62,12 +62,12 @@ export async function validateCreateERC20Asset(
 
   // 1) Native token short-circuit (normally handled earlier, but keep as safety)
   if (addr === NATIVE_TOKEN_ADDRESS) {
-    debugLog.log?.('🌐 native token → UPDATE_VALIDATED_ASSET', {
+    debugLog.log?.('🌐 native token → RETURN_VALIDATED_ASSET', {
       addr,
       chainId,
     });
     return {
-      nextState: InputState.UPDATE_VALIDATED_ASSET,
+      nextState: InputState.RETURN_VALIDATED_ASSET,
       assetPatch: {
         address: NATIVE_TOKEN_ADDRESS as Address,
         chainId,
@@ -213,11 +213,11 @@ export async function validateCreateERC20Asset(
       `❗ metadata not available for ${addr}; proceeding with bare patch`,
     );
   } else {
-    debugLog.log?.('✅ token resolved → UPDATE_VALIDATED_ASSET', patch);
+    debugLog.log?.('✅ token resolved → RETURN_VALIDATED_ASSET', patch);
   }
 
   return {
-    nextState: InputState.UPDATE_VALIDATED_ASSET,
+    nextState: InputState.RETURN_VALIDATED_ASSET,
     assetPatch: patch,
   };
 }

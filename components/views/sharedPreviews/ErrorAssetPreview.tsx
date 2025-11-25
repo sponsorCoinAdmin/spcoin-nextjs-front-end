@@ -71,12 +71,12 @@ export default function ErrorAssetPreview() {
       },
       [InputState.VALIDATE_LOCAL_NATIVE_TOKEN]: {
         emoji: '📭',
-        text: 'Missing local asset preview.',
+        text: 'Missing local native token.',
         colorHex: '#f97316',
       },
       [InputState.VALIDATE_ERC20_ASSET_ERROR]: {
         emoji: '💥',
-        text: 'Validate asset error.',
+        text: 'Validate ERC20 Error.',
         colorHex: '#ef4444',
       },
       [InputState.MISSING_ACCOUNT_ADDRESS]: {

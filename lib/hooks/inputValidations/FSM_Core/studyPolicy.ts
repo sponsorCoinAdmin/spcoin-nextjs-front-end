@@ -20,7 +20,7 @@ export enum StudyId {
   PREVIEW_CONTRACT_EXISTS_LOCALLY = 'PREVIEW_CONTRACT_EXISTS_LOCALLY',
   VALIDATE_EXISTS_ON_CHAIN = 'VALIDATE_EXISTS_ON_CHAIN',
   RESOLVE_ERC20_ASSET = 'RESOLVE_ERC20_ASSET',
-  UPDATE_VALIDATED_ASSET = 'UPDATE_VALIDATED_ASSET',
+  RETURN_VALIDATED_ASSET = 'RETURN_VALIDATED_ASSET',
 }
 
 /** A single panel’s row in the policy matrix. */
@@ -41,7 +41,7 @@ type PanelPolicy = Readonly<Partial<Record<StudyId, boolean>>>;
 const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   // Trading station doesn’t run the selection FSM (keep all off)
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: {
-    [StudyId.UPDATE_VALIDATED_ASSET]: false,
+    [StudyId.RETURN_VALIDATED_ASSET]: false,
   },
 
   // BUY token list (full token pipeline)
@@ -52,7 +52,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: true,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: true,
     [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.UPDATE_VALIDATED_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
   // SELL token list (full token pipeline)
@@ -63,7 +63,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: true,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: true,
     [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.UPDATE_VALIDATED_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
   // RECIPIENT selection (WalletAccount-like → bypass token-only checks)
@@ -74,7 +74,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
     [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.UPDATE_VALIDATED_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
   // AGENT selection (WalletAccount-like → bypass token-only checks)
@@ -85,7 +85,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
     [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.UPDATE_VALIDATED_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
   // SPONSOR selection (WalletAccount-like → bypass token-only checks)
@@ -96,7 +96,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
     [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
     [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.UPDATE_VALIDATED_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
   // Error and undefined panels don’t run the FSM

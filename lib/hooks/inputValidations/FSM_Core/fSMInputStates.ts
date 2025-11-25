@@ -10,7 +10,7 @@ export const TRIGGER_FSM_STATES = new Set<InputState>([
   InputState.VALIDATE_LOCAL_NATIVE_TOKEN,
   InputState.VALIDATE_EXISTS_ON_CHAIN,
   InputState.RESOLVE_ERC20_ASSET,
-  InputState.UPDATE_VALIDATED_ASSET,
+  InputState.RETURN_VALIDATED_ASSET,
 ]);
 
 // ────────────── FSM Error States ──────────────

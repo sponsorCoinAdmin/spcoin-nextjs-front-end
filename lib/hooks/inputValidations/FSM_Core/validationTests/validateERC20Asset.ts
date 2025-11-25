@@ -39,9 +39,9 @@ export async function validateERC20Asset(
   // 🔐 Policy gate
   if (!isStudyEnabled(containerType, StudyId.RESOLVE_ERC20_ASSET)) {
     log.log?.(
-      `policy: RESOLVE_ERC20_ASSET disabled for ${SP_COIN_DISPLAY[containerType]} → UPDATE_VALIDATED_ASSET`,
+      `policy: RESOLVE_ERC20_ASSET disabled for ${SP_COIN_DISPLAY[containerType]} → RETURN_VALIDATED_ASSET`,
     );
-    return { nextState: InputState.UPDATE_VALIDATED_ASSET };
+    return { nextState: InputState.RETURN_VALIDATED_ASSET };
   }
 
   // Account-like flows: build WalletAccount via assetPatch & finish
@@ -64,7 +64,7 @@ export async function validateERC20Asset(
 
     // Return patch-only per your ValidateFSMOutput type
     return {
-      nextState: InputState.UPDATE_VALIDATED_ASSET,
+      nextState: InputState.RETURN_VALIDATED_ASSET,
       assetPatch: {
         // Minimal WalletAccount shape; your update step can enrich if needed
         address: addr as `0x${string}`,
@@ -90,8 +90,8 @@ export async function validateERC20Asset(
     );
 
     // Let validateFSMCore handle the manualEntry → VALIDATE_PREVIEW reroute
-    // when nextState === UPDATE_VALIDATED_ASSET.
-    return { nextState: InputState.UPDATE_VALIDATED_ASSET };
+    // when nextState === RETURN_VALIDATED_ASSET.
+    return { nextState: InputState.RETURN_VALIDATED_ASSET };
   }
 
   // Token-like ERC-20 flows: delegate to token resolver (which should also return assetPatch)

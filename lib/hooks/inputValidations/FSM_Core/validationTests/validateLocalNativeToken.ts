@@ -41,11 +41,7 @@ export async function validateLocalNativeToken(
   debugLog.log(`validateLocalNativeToken(${debouncedHexInput})`);
 
   const addr = (debouncedHexInput ?? '').trim();
-  if (!addr) {
-    // Nothing to do; continue the normal pipeline.
-    return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
-  }
-
+  
   // Treat feedType defensively; default to TOKEN_LIST if missing.
   const effectiveFeedType = feedType ?? FEED_TYPE.TOKEN_LIST;
 
@@ -72,7 +68,7 @@ export async function validateLocalNativeToken(
         'No infoURL for native asset; continuing to VALIDATE_EXISTS_ON_CHAIN',
         { addr, chainId, feedType: effectiveFeedType },
       );
-      return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+      return { nextState: InputState.VALIDATE_ERC20_ASSET_ERROR};
     }
 
     const res = await get(infoURL, {
@@ -88,7 +84,7 @@ export async function validateLocalNativeToken(
         feedType: effectiveFeedType,
         status: res.status,
       });
-      return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+      return { nextState: InputState.VALIDATE_ERC20_ASSET_ERROR };
     }
 
     const info = await res.json();
@@ -112,7 +108,7 @@ export async function validateLocalNativeToken(
         'Native info.json contained no usable metadata; continuing unchanged',
         { addr, chainId },
       );
-      return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+      return { nextState: InputState.VALIDATE_ERC20_ASSET_ERROR };
     }
 
     debugLog.log('✅ Native asset hydrated from info.json', {
@@ -125,7 +121,7 @@ export async function validateLocalNativeToken(
     });
 
     return {
-      nextState: InputState.VALIDATE_EXISTS_ON_CHAIN,
+      nextState: InputState.RETURN_VALIDATED_ASSET,
       assetPatch,
     };
   } catch (error) {
@@ -136,6 +132,6 @@ export async function validateLocalNativeToken(
     });
 
     // On any failure, keep the pipeline moving as before.
-    return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+    return { nextState: InputState.VALIDATE_ERC20_ASSET_ERROR };
   }
 }

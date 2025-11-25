@@ -194,7 +194,7 @@ export async function startFSM(
   const hasAddr = Boolean((committedAsset as any)?.address);
 
   const isCommit =
-    finalState === InputState.UPDATE_VALIDATED_ASSET ||
+    finalState === InputState.RETURN_VALIDATED_ASSET ||
     finalState === InputState.CLOSE_SELECT_PANEL;
   const isPreview = finalState === InputState.VALIDATE_PREVIEW;
 

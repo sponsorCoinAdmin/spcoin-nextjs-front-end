@@ -126,11 +126,11 @@ export default function RenderAssetPreview() {
         debugLog.warn?.('⚠️ setValidatedAsset not available in context');
       }
 
-      // 4) Now that manualEntry is definitely false, advance FSM → UPDATE_VALIDATED_ASSET
+      // 4) Now that manualEntry is definitely false, advance FSM → RETURN_VALIDATED_ASSET
       //    Bridge will commit to context, then CLOSE_SELECT_PANEL, then reset.
       setInputState(
-        InputState.UPDATE_VALIDATED_ASSET,
-        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)'
+        InputState.RETURN_VALIDATED_ASSET,
+        'RenderAssetPreview → RETURN_VALIDATED_ASSET (avatar click)'
       );
     } catch (err) {
       debugLog.error?.('❌ Failed to dispatch validated asset', err);
