@@ -6,9 +6,12 @@ import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import type { TokenContract } from '@/lib/structure';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
-import { getLogoURL } from '@/lib/network/utils';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import {
+  defaultMissingImage,
+  getLogoURL,
+  getTokenLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -57,7 +60,10 @@ export async function resolveTokenContract(
 
   // For visibility, show the exact file path we expect for TOKEN_LIST
   if (feedType === FEED_TYPE.TOKEN_LIST && !isNative) {
-    const expectedPath = `/assets/blockchains/${chainId}/contracts/${resolvedAddress}/logo.png`;
+    const expectedPath = getTokenLogoURL({
+      chainId,
+      address: resolvedAddress,
+    });
     debugLog.log?.('expected token logo path', { expectedPath });
   }
 

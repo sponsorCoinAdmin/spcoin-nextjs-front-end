@@ -12,15 +12,6 @@ import {
   BURN_ADDRESS,
 } from '../structure/constants/addresses';
 
-// Centralized asset/logo helpers are implemented in assetUtils/assetHelpers.
-// Re-export them here so existing imports from `lib/network/utils` keep working
-// without duplicating logo path logic.
-export {
-  getLogoURL,
-  getTokenLogoURL,
-  getAssetLogoURL,
-  getAccountLogo,
-} from '@/lib/context/helpers/assetHelpers';
 
 /* ───────── Active connected-account / token helpers (no network metadata) ───────── */
 

@@ -8,14 +8,22 @@ import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http'; // ← REST helper
+import { getWalletJsonURL } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
 const SEED_DEBUG =
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_SEED ?? 'false').toLowerCase() === 'true';
+  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_SEED ?? 'false').toLowerCase() ===
+  'true';
 
-const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
+const debugLog = createDebugLogger(
+  'initExchangeContext',
+  DEBUG_ENABLED,
+  LOG_TIME,
+  LOG_LEVEL,
+);
 
 /**
  * NOTE (contract with ExchangeProvider):
@@ -28,7 +36,8 @@ export async function initExchangeContext(
   isConnected: boolean,
   address?: `0x${string}`,
 ): Promise<ExchangeContext> {
-  const effectiveChainId = typeof chainId === 'number' && chainId > 0 ? chainId : 1;
+  const effectiveChainId =
+    typeof chainId === 'number' && chainId > 0 ? chainId : 1;
 
   // 1) Load & sanitize stored context
   debugLog.log?.('🔍 Loading stored ExchangeContext…');
@@ -97,7 +106,11 @@ function toBigIntSafe(value: unknown): bigint {
   return 0n;
 }
 
-function makeWalletFallback(addr: Address, status: STATUS, description: string): WalletAccount {
+function makeWalletFallback(
+  addr: Address,
+  status: STATUS,
+  description: string,
+): WalletAccount {
   return {
     address: addr,
     type: 'ERC20_WALLET',
@@ -111,11 +124,14 @@ function makeWalletFallback(addr: Address, status: STATUS, description: string):
   };
 }
 
-type WalletJson = Partial<WalletAccount> & { balance?: string | number | bigint };
+type WalletJson = Partial<WalletAccount> & {
+  balance?: string | number | bigint;
+};
 
 /** RESTful metadata loader (no plain). */
 async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
-  const url = `/assets/accounts/${addr}/wallet.json`;
+  // 🔁 Only change: use centralized helper for the wallet.json path
+  const url = getWalletJsonURL(addr);
 
   let json: WalletJson | undefined;
   try {
@@ -232,10 +248,18 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
 
   const neverPersist: number[] = [SP.SPONSOR_LIST_SELECT_PANEL];
 
-  const missing = mustIncludeOnBoot.filter(([id]) => !byId.has(id)).map(([id]) => id);
+  const missing = mustIncludeOnBoot
+    .filter(([id]) => !byId.has(id))
+    .map(([id]) => id);
   const wrongVisibility = mustIncludeOnBoot
-    .filter(([id, vis]) => byId.has(id) && !!byId.get(id)!.visible !== vis)
-    .map(([id, vis]) => ({ id, expected: vis, got: !!byId.get(id)!.visible }));
+    .filter(
+      ([id, vis]) => byId.has(id) && !!byId.get(id)!.visible !== vis,
+    )
+    .map(([id, vis]) => ({
+      id,
+      expected: vis,
+      got: !!byId.get(id)!.visible,
+    }));
 
   const accidentallyIncluded = neverPersist.filter((id) => byId.has(id));
 
@@ -254,6 +278,8 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
 
   debugLog.log?.('checks.accidentallyIncluded', {
     label,
-    accidentallyIncluded: accidentallyIncluded.map((id) => SP[id] ?? id),
+    accidentallyIncluded: accidentallyIncluded.map(
+      (id) => SP[id] ?? id,
+    ),
   });
 }

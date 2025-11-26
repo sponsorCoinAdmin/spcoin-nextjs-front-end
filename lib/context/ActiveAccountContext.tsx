@@ -14,6 +14,7 @@ import { STATUS } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { getJson } from '@/lib/rest/http';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getWalletJsonURL } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -56,7 +57,15 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
     const ac = new AbortController();
 
     (async () => {
-      const accountPath = `/assets/accounts/${address}/wallet.json`;
+      // Use centralized helper so address casing & path are consistent
+      const accountPath = getWalletJsonURL(address);
+
+      if (!accountPath) {
+        debugLog.warn?.(
+          '[ActiveAccount] getWalletJsonURL returned empty path',
+        );
+        return;
+      }
 
       try {
         const metadata = await getJson<WalletAccount>(accountPath, {
@@ -89,6 +98,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
           website: '',
           status: STATUS.MISSING,
           balance: 0n,
+          // This is a static error icon, not address-based, so it stays literal
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };
 

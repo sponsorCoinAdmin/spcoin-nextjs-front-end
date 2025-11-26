@@ -7,6 +7,7 @@ import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
 import { isAddress } from 'ethers';
 import type { Address } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -56,7 +57,12 @@ const fetchTokenDetails = async (
   chainId: number,
   tokenAddr: string,
 ): Promise<TokenContract | undefined> => {
-  const tokenIconPath = `assets/blockchains/${tokenAddr}.png`;
+  // ✅ Centralized token logo path builder (uses uppercase filesystem convention internally)
+  const tokenIconPath = getTokenLogoURL({
+    chainId,
+    address: tokenAddr as Address,
+  });
+
   let tokenContract: TokenContract | undefined;
 
   try {
@@ -79,6 +85,7 @@ const fetchTokenDetails = async (
         tokenAddr,
         symbol: retResponse.symbol,
         decimals: retResponse.decimals,
+        logoURL: tokenIconPath,
       });
     } else {
       debugLog.warn?.(

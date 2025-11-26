@@ -1,24 +1,37 @@
-// File: @/components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
+// File: @/components/views/sharedPreviews/RenderAssetPreview.tsx
+
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { Address } from 'viem';
+
 import BasePreviewWrapper from './BasePreviewWrapper';
-import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
+import BaseListRow from '@/components/views/ListItems/BaseListRow';
+
+import { useAssetSelectContext } from '@/lib/context';
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-import { getLogoURL } from '@/lib/network/utils';
+import { useAppChainId } from '@/lib/context/hooks';
+
+import {
+  defaultMissingImage,
+  getLogoURL,
+  getWalletLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import BaseListRow from '@/components/views/ListItems/BaseListRow';
-import { useAppChainId } from '@/lib/context/hooks';
-import { flushSync } from 'react-dom';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
-const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED, LOG_TIME);
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
+const debugLog = createDebugLogger(
+  'RenderAssetPreview',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 export default function RenderAssetPreview() {
   const [chainId] = useAppChainId();
@@ -55,29 +68,50 @@ export default function RenderAssetPreview() {
       setAvatarSrc((prev) => prev || defaultMissingImage);
 
       if (feedType === FEED_TYPE.TOKEN_LIST) {
+        // Token logos → chain/contracts/<ADDR>/logo.png via getLogoURL
         if (!address || !chainId) {
           if (!cancelled) setAvatarSrc(defaultMissingImage);
           return;
         }
         try {
-          const url = await getLogoURL(chainId, address as Address, FEED_TYPE.TOKEN_LIST);
+          const url = await getLogoURL(
+            chainId,
+            address as Address,
+            FEED_TYPE.TOKEN_LIST,
+          );
           if (!cancelled) {
             setAvatarSrc(url || defaultMissingImage);
-            debugLog.log?.('🖼️ Resolved token logo', { chainId, address, url });
+            debugLog.log?.('🖼️ Resolved token logo', {
+              chainId,
+              address,
+              url,
+            });
           }
         } catch (e) {
           if (!cancelled) {
             setAvatarSrc(defaultMissingImage);
-            debugLog.warn?.('⚠️ getLogoURL failed; using fallback', { chainId, address, error: e });
+            debugLog.warn?.('⚠️ getLogoURL failed; using fallback', {
+              chainId,
+              address,
+              error: e,
+            });
           }
         }
       } else {
-        // Accounts/agents: construct synchronously
+        // Recipient / agent / other wallet-like: use wallet helper
         const url =
           validatedAsset.logoURL ||
-          (address ? `/assets/accounts/${address}/logo.png` : '') ||
+          getWalletLogoURL(address) ||
           defaultMissingImage;
-        if (!cancelled) setAvatarSrc(url);
+
+        if (!cancelled) {
+          setAvatarSrc(url);
+          debugLog.log?.('🖼️ Resolved wallet/logo asset', {
+            address,
+            url,
+            feedType,
+          });
+        }
       }
     };
 
@@ -104,8 +138,10 @@ export default function RenderAssetPreview() {
     });
 
     try {
-      // 1) Flip manualEntry to false **synchronously** so downstream commit treats this as programmatic
-      debugLog.log?.('[onAvatarClick] forcing manualEntry=false before commit');
+      // 1) Flip manualEntry → false synchronously so FSM treats this as programmatic select
+      debugLog.log?.(
+        '[onAvatarClick] forcing manualEntry=false before commit',
+      );
       flushSync(() => setManualEntry?.(false));
 
       // 2) Ensure chainId/address present on the committed object
@@ -123,14 +159,15 @@ export default function RenderAssetPreview() {
           name: assetToCommit.name,
         });
       } else {
-        debugLog.warn?.('⚠️ setValidatedAsset not available in context');
+        debugLog.warn?.(
+          '⚠️ setValidatedAsset not available in context (RenderAssetPreview)',
+        );
       }
 
-      // 4) Now that manualEntry is definitely false, advance FSM → RETURN_VALIDATED_ASSET
-      //    Bridge will commit to context, then CLOSE_SELECT_PANEL, then reset.
+      // 4) Advance FSM → RETURN_VALIDATED_ASSET; bridge will commit + close panel
       setInputState(
         InputState.RETURN_VALIDATED_ASSET,
-        'RenderAssetPreview → RETURN_VALIDATED_ASSET (avatar click)'
+        'RenderAssetPreview → RETURN_VALIDATED_ASSET (avatar click)',
       );
     } catch (err) {
       debugLog.error?.('❌ Failed to dispatch validated asset', err);
@@ -149,15 +186,19 @@ export default function RenderAssetPreview() {
     if (feedType === FEED_TYPE.TOKEN_LIST) {
       alert(`${name} Logo URL: ${avatarSrc}`);
     } else {
-      alert(`${name} Record:\n${stringifyBigInt(validatedAsset.logoURL || '')}`);
+      alert(
+        `${name} Record:\n${stringifyBigInt(
+          validatedAsset.logoURL || '',
+        )}`,
+      );
     }
   };
 
   return (
-    <div id='RenderAssetPreview' className='w-full'>
+    <div id="RenderAssetPreview" className="w-full">
       <BasePreviewWrapper show>
         <BaseListRow
-          className='w-full'
+          className="w-full"
           avatarSrc={avatarSrc}
           title={name}
           subtitle={symbol}

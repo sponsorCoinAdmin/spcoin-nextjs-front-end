@@ -4,6 +4,7 @@ import { isAddress, type Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 import type {
   ValidateFSMInput,
   ValidateFSMOutput,
@@ -198,9 +199,10 @@ export async function validateCreateERC20Asset(
   if (symbol) patch.symbol = symbol;
   if (name) patch.name = name;
 
-  // 4b) Attach local logo path so dropdowns can render the token icon
+  // 4b) Attach local logo path so dropdowns can render the token icon.
+  //     Use centralized helper so address casing and directories are consistent.
   if (typeof chainId === 'number') {
-    patch.logoURL = `/assets/blockchains/${chainId}/contracts/${addr}/logo.png`;
+    patch.logoURL = getTokenLogoURL({ chainId, address: addr });
     debugLog.log?.('🖼️ token logoURL attached', {
       addr,
       chainIdParam: chainId,

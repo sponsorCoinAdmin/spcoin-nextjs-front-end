@@ -178,13 +178,18 @@ export function getNetworkLogoURL(chainId?: number): string {
 /**
  * Generic asset logo helper that switches based on FEED_TYPE.
  * This is the central place to keep wallet / token / account logo path logic.
+ *
+ * NOTE:
+ * - We normalize the address for filesystem paths up front, so all feeds
+ *   (token, recipient, agent) share the same casing rules.
  */
 export function getAssetLogoURL(
   address: string,
   chainId: number,
   dataFeedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
 ): string {
-  if (!address || address.length < 10) {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) {
     // For token feeds, keep using the "bad token" sentinel; for others, use the generic missing image.
     return dataFeedType === FEED_TYPE.TOKEN_LIST
       ? badTokenAddressImage
@@ -193,46 +198,52 @@ export function getAssetLogoURL(
 
   switch (dataFeedType) {
     case FEED_TYPE.TOKEN_LIST:
-      return getTokenLogoURL({ address, chainId });
+      // Token logos live under /assets/blockchains/<chainId>/contracts/<0X...>/logo.png
+      return getTokenLogoURL({ address: normalized, chainId });
 
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
     case FEED_TYPE.AGENT_ACCOUNTS:
-      // Recipient/agent feeds are account-style logos.
-      return getWalletLogoURL(address);
+      // Recipient/agent feeds are account-style logos under /assets/accounts/<0X...>/logo.png
+      return getWalletLogoURL(normalized);
 
     default:
       // For unknown feeds, fall back to a token-style path to preserve prior behaviour.
-      return getTokenLogoURL({ address, chainId });
+      return getTokenLogoURL({ address: normalized, chainId });
   }
 }
 
 /**
  * Generic asset info helper that switches based on FEED_TYPE.
  * Builds a path ending in /info.json instead of /logo.png.
+ *
+ * NOTE:
+ * - We normalize the address once up front so both token and account
+ *   info paths follow the same casing rules as the logo helpers.
  */
 export function getAssetInfoURL(
   address: string,
   chainId: number,
   dataFeedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
 ): string {
-  if (!address || address.length < 10) {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) {
     return '';
   }
 
   switch (dataFeedType) {
     case FEED_TYPE.TOKEN_LIST: {
-      const root = getContractRoot(chainId, address);
+      const root = getContractRoot(chainId, normalized);
       return root ? `${root}/info.json` : '';
     }
 
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
     case FEED_TYPE.AGENT_ACCOUNTS: {
-      const root = getWalletRoot(address);
+      const root = getWalletRoot(normalized);
       return root ? `${root}/info.json` : '';
     }
 
     default: {
-      const root = getContractRoot(chainId, address);
+      const root = getContractRoot(chainId, normalized);
       return root ? `${root}/info.json` : '';
     }
   }
@@ -240,12 +251,11 @@ export function getAssetInfoURL(
 
 /**
  * Legacy-style account logo helper (used where a full WalletAccount is available).
+ * Delegates to the wallet logo helper so account logos share the same behavior.
  */
 export function getAccountLogo(account?: WalletAccount): string {
   if (!account) return defaultMissingImage;
-  const normalized = normalizeAddressForAssets(account.address);
-  if (!normalized) return defaultMissingImage;
-  return `${getWalletRoot(account.address)}/logo.png`;
+  return getWalletLogoURL(account.address);
 }
 
 /**

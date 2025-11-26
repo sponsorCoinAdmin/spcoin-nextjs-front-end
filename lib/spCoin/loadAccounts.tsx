@@ -5,6 +5,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { WalletAccount, AccountAddress } from '../structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import {
+  normalizeAddressForAssets,
+  getWalletLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 // Server-only debug flag
@@ -37,9 +41,18 @@ export async function loadAccounts(
   if (jsonAccountFileList && jsonAccountFileList.length > 0) {
     debugLog.log?.('🔎 Loading accounts from provided list…');
     for (const file of jsonAccountFileList) {
+      // Use canonical filesystem folder name (0X... uppercase)
+      const folderName = normalizeAddressForAssets(file.address);
+      if (!folderName) {
+        console.error('❌ ERROR: Invalid account address in list', {
+          address: file.address,
+        });
+        continue;
+      }
+
       const accountFilePath = path.join(
         accountsDir,
-        file.address,
+        folderName,
         'wallet.json',
       );
 
@@ -49,9 +62,12 @@ export async function loadAccounts(
         try {
           const accountData = fs.readFileSync(accountFilePath, 'utf-8');
           const account: WalletAccount = JSON.parse(accountData);
+
+          // Centralized logo URL builder (address stays in its original case)
           if (!account.logoURL) {
-            account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+            account.logoURL = getWalletLogoURL(account.address);
           }
+
           accounts.push(account);
         } catch (error) {
           // Ungated hard error logging
@@ -81,7 +97,7 @@ export async function loadAccounts(
       const accountFolders = fs
         .readdirSync(accountsDir)
         .filter((folder) =>
-          /^0x[a-fA-F0-9]{40}$/.test(folder), // ✅ Match Ethereum addresses
+          /^0[xX][a-fA-F0-9]{40}$/.test(folder), // ✅ Match Ethereum addresses (0x or 0X)
         );
 
       for (const accountFolder of accountFolders) {
@@ -97,9 +113,15 @@ export async function loadAccounts(
           try {
             const accountData = fs.readFileSync(accountFilePath, 'utf-8');
             const account: WalletAccount = JSON.parse(accountData);
+
             if (!account.logoURL) {
-              account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+              // Prefer the address from JSON if present; fall back to folder name
+              const addrForLogo =
+                account.address ??
+                (`0x${accountFolder.slice(2)}` as WalletAccount['address']);
+              account.logoURL = getWalletLogoURL(addrForLogo);
             }
+
             accounts.push(account);
           } catch (error) {
             console.error(
