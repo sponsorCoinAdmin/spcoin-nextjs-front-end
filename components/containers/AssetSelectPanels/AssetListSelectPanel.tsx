@@ -19,10 +19,21 @@ export default function AssetListSelectPanel() {
   const { feedData, loading } = useFeedData(feedType);
   const safeFeedData = feedData ?? { wallets: [], tokens: [] };
 
+  // Narrow the union for logging
+  const walletsCount =
+    feedData && 'wallets' in feedData && Array.isArray(feedData.wallets)
+      ? feedData.wallets.length
+      : 0;
+
+  const tokensCount =
+    feedData && 'tokens' in feedData && Array.isArray(feedData.tokens)
+      ? feedData.tokens.length
+      : 0;
+
   debugLog.log?.('[AssetListSelectPanel] feedData snapshot', {
     loading,
-    walletsCount: safeFeedData.wallets?.length ?? 0,
-    tokensCount: safeFeedData.tokens?.length ?? 0,
+    walletsCount,
+    tokensCount,
   });
 
   return (
