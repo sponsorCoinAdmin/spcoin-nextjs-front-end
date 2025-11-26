@@ -9,6 +9,10 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
+// Read env once, with a safe fallback
+const AGENT_WALLET_TITLE =
+  process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
+
 const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
 export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
   useEffect(() => {
@@ -66,7 +70,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL: return 'Select Recipient to Sponsor';
     case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL: return 'Select a Token to Sell';
     case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return 'Sponsor Coin Exchange';
+    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return AGENT_WALLET_TITLE; // ← uses env var now
     case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Claim Sponsorship Rewards';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';

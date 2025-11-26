@@ -35,7 +35,7 @@ const SHOW_ACTIVE =
   process.env.NEXT_PUBLIC_TREE_SHOW_VISIBILITY === 'true';
 
 const AGENT_TITLE =
-  process.env.NEXT_PUBLIC_AGENT_TITLE ?? 'Sponsor Coin Trading Station';
+  process.env.NEXT_PUBLIC_AGENT_PAGE_TITLE ?? 'Sponsor Coin Trading Station';
 const AGENT_SUB_TITLE =
   process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
 
