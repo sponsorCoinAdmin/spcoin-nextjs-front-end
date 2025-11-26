@@ -1,9 +1,9 @@
 // File: @/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import type { WalletAccount, TokenContract , FEED_TYPE} from '@/lib/structure';
+import type { WalletAccount, TokenContract, FEED_TYPE } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -101,12 +101,39 @@ function PanelListSelectWrapperInner({
     [panel, peerAddress]
   );
 
-  const closeForProvider = useCallback((_fromUser?: boolean) => {
-    // Note: this wrapper does not call openPanel/closePanel directly; it delegates
-    // to usePanelTransitions.toTrading(). Parent tagging is therefore handled
-    // inside the transitions hook implementation.
-    toTrading();
-  }, [toTrading]);
+  // 🔍 One-time debug alert for Recipient accounts path (useEffect = on mount)
+  useEffect(() => {
+    if (panel !== SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) return;
+
+    const recipientAccounts =
+      exchangeContext?.accounts?.recipientAccounts ?? [];
+
+    const first = recipientAccounts[0];
+    const firstSummary = first
+      ? `${first.name ?? 'unnamed'} @ ${first.address ?? 'no-address'}`
+      : 'none';
+
+    // Note: avoid JSON.stringify on full accounts because of bigint balances.
+    alert(
+      [
+        '[Recipient debug]',
+        `chainId: ${chainId}`,
+        `instanceId: ${instanceId}`,
+        `recipientAccounts.length: ${recipientAccounts.length}`,
+        `first: ${firstSummary}`,
+      ].join('\n')
+    );
+  }, [panel, exchangeContext, chainId, instanceId]);
+
+  const closeForProvider = useCallback(
+    (_fromUser?: boolean) => {
+      // Note: this wrapper does not call openPanel/closePanel directly; it delegates
+      // to usePanelTransitions.toTrading(). Parent tagging is therefore handled
+      // inside the transitions hook implementation.
+      toTrading();
+    },
+    [toTrading]
+  );
 
   // ✅ Route selection directly to ExchangeContext.tradeData.{buy|sell}TokenContract
   const handleCommit = useCallback(
