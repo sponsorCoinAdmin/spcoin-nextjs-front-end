@@ -1,7 +1,7 @@
 // File: @/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
 'use client';
 
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { WalletAccount, TokenContract, FEED_TYPE } from '@/lib/structure';
 
@@ -92,7 +92,8 @@ function PanelListSelectWrapperInner({
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
-    () => `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}_${chainId}`,
+    () =>
+      `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}_${chainId}`,
     [instancePrefix, panel, chainId]
   );
 
@@ -100,44 +101,6 @@ function PanelListSelectWrapperInner({
     () => makeInitialPanelBag(panel, peerAddress),
     [panel, peerAddress]
   );
-
-  // 🔍 One-time debug alert for Recipient accounts path
-  useEffect(() => {
-    if (panel !== SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) return;
-
-    const recipientAccounts =
-      exchangeContext?.accounts?.recipientAccounts ?? [];
-
-    const first = recipientAccounts[0];
-
-    const firstName = first?.name ?? 'unnamed';
-    const firstAddress = first?.address ?? 'no-address';
-
-    const logoURL = typeof first?.logoURL === 'string' ? first.logoURL : 'none';
-    const website = first?.website ?? 'none';
-
-    // Build a full URL for the logo path (helps see exact case + prefix)
-    let fullLogoURL = logoURL;
-    if (logoURL && !logoURL.startsWith('http')) {
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : '';
-      fullLogoURL = origin + logoURL;
-    }
-
-    alert(
-      [
-        '[Recipient debug]',
-        `chainId: ${chainId}`,
-        `instanceId: ${instanceId}`,
-        `recipientAccounts.length: ${recipientAccounts.length}`,
-        `first.name: ${firstName}`,
-        `first.address: ${firstAddress}`,
-        `first.logoURL: ${logoURL}`,
-        `first.logoURL (full): ${fullLogoURL}`,
-        `first.website: ${website}`,
-      ].join('\n')
-    );
-  }, [panel, exchangeContext, chainId, instanceId]);
 
   const closeForProvider = useCallback(
     (_fromUser?: boolean) => {
