@@ -101,7 +101,7 @@ function PanelListSelectWrapperInner({
     [panel, peerAddress]
   );
 
-  // 🔍 One-time debug alert for Recipient accounts path (useEffect = on mount)
+  // 🔍 One-time debug alert for Recipient accounts path
   useEffect(() => {
     if (panel !== SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) return;
 
@@ -109,18 +109,32 @@ function PanelListSelectWrapperInner({
       exchangeContext?.accounts?.recipientAccounts ?? [];
 
     const first = recipientAccounts[0];
-    const firstSummary = first
-      ? `${first.name ?? 'unnamed'} @ ${first.address ?? 'no-address'}`
-      : 'none';
 
-    // Note: avoid JSON.stringify on full accounts because of bigint balances.
+    const firstName = first?.name ?? 'unnamed';
+    const firstAddress = first?.address ?? 'no-address';
+
+    const logoURL = typeof first?.logoURL === 'string' ? first.logoURL : 'none';
+    const website = first?.website ?? 'none';
+
+    // Build a full URL for the logo path (helps see exact case + prefix)
+    let fullLogoURL = logoURL;
+    if (logoURL && !logoURL.startsWith('http')) {
+      const origin =
+        typeof window !== 'undefined' ? window.location.origin : '';
+      fullLogoURL = origin + logoURL;
+    }
+
     alert(
       [
         '[Recipient debug]',
         `chainId: ${chainId}`,
         `instanceId: ${instanceId}`,
         `recipientAccounts.length: ${recipientAccounts.length}`,
-        `first: ${firstSummary}`,
+        `first.name: ${firstName}`,
+        `first.address: ${firstAddress}`,
+        `first.logoURL: ${logoURL}`,
+        `first.logoURL (full): ${fullLogoURL}`,
+        `first.website: ${website}`,
       ].join('\n')
     );
   }, [panel, exchangeContext, chainId, instanceId]);
