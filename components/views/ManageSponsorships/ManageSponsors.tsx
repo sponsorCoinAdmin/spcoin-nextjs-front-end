@@ -130,12 +130,15 @@ export default function ManageSponsors({ onClose }: Props) {
   };
 
   // Always render the shared list (detail panel renders elsewhere)
+  // 👇 This gives ManageWalletList a bounded height to work within
   return (
-    <ManageWalletList
-      walletList={walletList}
-      setWalletCallBack={setWalletCallBack}
-      containerType={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
-      onClose={onClose}
-    />
+    <div className="h-full min-h-0">
+      <ManageWalletList
+        walletList={walletList}
+        setWalletCallBack={setWalletCallBack}
+        containerType={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
+        onClose={onClose}
+      />
+    </div>
   );
 }

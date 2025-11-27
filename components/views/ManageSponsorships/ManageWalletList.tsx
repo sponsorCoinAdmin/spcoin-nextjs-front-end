@@ -1,4 +1,3 @@
-// File: @/components/views/ManageSponsorships/ManageWalletList.tsx
 'use client';
 
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
@@ -158,16 +157,26 @@ export default function ManageWalletList({
       {mode === 'all' && (
         <div
           id={wrapperId}
-          className="mb-6 -mt-[20px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+          className="mb-6 -mt-[20px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
         >
           <table id={tableId} className="min-w-full border-collapse">
             <thead>
               <tr className="border-b border-black">
-                <th scope="col" className={th}>Name</th>
-                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
-                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
-                <th scope="col" className={`${th} text-center`}>Rewards</th>
-                <th scope="col" className={`${th} text-center`}>Config</th>
+                <th scope="col" className={th}>
+                  Name
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Staked Coins
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Pending Coins
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Rewards
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Config
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -193,7 +202,9 @@ export default function ManageWalletList({
                 return (
                   <tr key={addressText}>
                     <td className="p-0">
-                      <div className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center`}>
+                      <div
+                        className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center`}
+                      >
                         <Image
                           src={w.logoURL || '/assets/miscellaneous/placeholder.png'}
                           alt={`${w.name ?? 'Wallet'} logo`}
@@ -208,15 +219,25 @@ export default function ManageWalletList({
                     </td>
 
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
                     </td>
 
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
                     </td>
 
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
                         <button
                           type="button"
                           className={claimClass}
@@ -229,7 +250,9 @@ export default function ManageWalletList({
                     </td>
 
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
                         <button
                           type="button"
                           className={iconBtn}
@@ -264,18 +287,32 @@ export default function ManageWalletList({
                 return (
                   <tr>
                     <td className="p-0">
-                      <div className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}>
-                        <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
+                      <div
+                        className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}
+                      >
+                        <span className="text-xl md:text-2xl font-bold tracking-wide">
+                          Total
+                        </span>
                       </div>
                     </td>
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
                     </td>
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
                     </td>
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
                         <button
                           type="button"
                           className={claimClass}
@@ -287,7 +324,9 @@ export default function ManageWalletList({
                       </div>
                     </td>
                     <td className="p-0">
-                      <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`} />
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      />
                     </td>
                   </tr>
                 );
@@ -297,11 +336,32 @@ export default function ManageWalletList({
 
           {/* Scoped styles via derived idPrefix */}
           <style jsx>{`
-            #${wrapperId} { border-color: #000 !important; -ms-overflow-style: none; scrollbar-width: none; }
-            #${wrapperId}::-webkit-scrollbar { display: none; }
-            #${tableId} thead tr, #${tableId} thead th { background-color: #2b2b2b !important; }
-            #${tableId} thead tr { border-bottom: 1px solid #000 !important; }
-            #${tableId} tbody td { padding: 0 !important; }
+            #${wrapperId} {
+              border-color: #000 !important;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+            #${wrapperId}::-webkit-scrollbar {
+              display: none;
+            }
+            #${tableId} thead tr,
+            #${tableId} thead th {
+              background-color: #2b2b2b !important;
+            }
+            #${tableId} thead tr {
+              border-bottom: 1px solid #000 !important;
+            }
+
+            /* 🔒 Sticky header cells */
+            #${tableId} thead th {
+              position: sticky;
+              top: 0;
+              z-index: 10;
+            }
+
+            #${tableId} tbody td {
+              padding: 0 !important;
+            }
             #${tableId} .ms-claim--orange {
               background-color: #ec8840ff !important;
               color: #0f172a !important;
@@ -342,8 +402,12 @@ export default function ManageWalletList({
               -webkit-mask-size: contain;
               mask-size: contain;
             }
-            #${tableId} .cog-rot { transition: transform 0.3s ease; }
-            #${tableId} .cog-rot:hover { transform: rotate(360deg); }
+            #${tableId} .cog-rot {
+              transition: transform 0.3s ease;
+            }
+            #${tableId} .cog-rot:hover {
+              transform: rotate(360deg);
+            }
           `}</style>
         </div>
       )}
