@@ -129,16 +129,30 @@ export default function ManageSponsors({ onClose }: Props) {
     }
   };
 
-  // Always render the shared list (detail panel renders elsewhere)
-  // 👇 This gives ManageWalletList a bounded height to work within
+  // 🧩 Layout: mirror AssetListSelectPanel
+  // AssetListSelectPanel:
+  //   <div className="flex flex-col h-full w-full ... min-h-0">
+  //     <AddressSelect />
+  //     <DataListSelect ... />
+  //   </div>
+  //
+  // Here:
+  //   <div className="flex flex-col h-full w-full ... min-h-0">
+  //     <ManageWalletList ... />   // (our "DataListSelect"-style child)
+  //   </div>
   return (
-    <div className="h-full min-h-0">
-      <ManageWalletList
-        walletList={walletList}
-        setWalletCallBack={setWalletCallBack}
-        containerType={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
-        onClose={onClose}
-      />
+    <div
+      id="ManageSponsorsPanel"
+      className="flex flex-col h-full w-full rounded-[15px] overflow-hidden min-h-0 gap-[4px]"
+    >
+      <div className="flex-1 min-h-0">
+        <ManageWalletList
+          walletList={walletList}
+          setWalletCallBack={setWalletCallBack}
+          containerType={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
+          onClose={onClose}
+        />
+      </div>
     </div>
   );
 }
