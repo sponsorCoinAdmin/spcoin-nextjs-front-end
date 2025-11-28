@@ -220,7 +220,7 @@ export default function ManageWalletList({
           {/* Scrollable list whose height is capped by viewport, like DataListSelect */}
           <div
             id={wrapperId}
-            className="mb-6 -mt-[20px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+            className="mb-0 -mt-[0px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
           >
             <table id={tableId} className="min-w-full border-collapse">
               <thead>

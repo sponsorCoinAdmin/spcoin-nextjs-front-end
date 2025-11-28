@@ -163,7 +163,7 @@ export default function ManageSponsorshipsPanel({ }: Props) {
         {mode === 'all' && (
           <div
             id="msWrapper"
-            className="shrink-0 mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black"
+            className="shrink-0 mb-6 -mt-[10px] overflow-x-auto rounded-xl border border-black"
           >
             <table id="msTable" className="min-w-full border-collapse">
               <thead>

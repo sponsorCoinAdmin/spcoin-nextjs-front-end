@@ -31,7 +31,7 @@ export default function ManageSponsors() {
     debugLog.log?.('[visibility] MANAGE_SPONSORS_PANEL', { visible });
     if (visible) {
       // eslint-disable-next-line no-alert
-      alert('OPENING ManageSponsors');
+      debugLog.log('OPENING ManageSponsors');
     }
   }, [visible]);
 
