@@ -13,12 +13,16 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
+import AddressSelect from '@/components/views/AddressSelect';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = {
   walletList: WalletAccount[];
   setWalletCallBack: (wallet?: WalletAccount) => void;
+  onClose?: () => void;
 
   /** REQUIRED: selector panel container type */
   containerType: SP_COIN_DISPLAY;
@@ -32,6 +36,7 @@ function shortAddr(addr: string, left = 6, right = 4) {
 export default function ManageWalletList({
   walletList,
   setWalletCallBack,
+  onClose,
   containerType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
@@ -50,9 +55,7 @@ export default function ManageWalletList({
 
   // 🔴 ToDo overlay
   const [showToDo, setShowToDo] = useState<boolean>(false);
-  const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(
-    null
-  );
+  const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
 
   // Role label + id prefix from the enum name (for CSS scoping)
   const { roleLabel, idPrefix } = useMemo(() => {
@@ -63,19 +66,19 @@ export default function ManageWalletList({
     return { roleLabel: 'Agent', idPrefix: 'ma' };
   }, [containerType]);
 
-  const claimRewards = useCallback((type: AccountType, accountId: number) => {
-    pendingClaimRef.current = { type, accountId };
-    setShowToDo(true);
-  }, []);
+  const claimRewards = useCallback(
+    (type: AccountType, accountId: number) => {
+      pendingClaimRef.current = { type, accountId };
+      setShowToDo(true);
+    },
+    []
+  );
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
 
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-    const pending = pendingClaimRef.current ?? {
-      type: accountType,
-      accountId: -1,
-    };
+    const pending = pendingClaimRef.current ?? { type: accountType, accountId: -1 };
 
     const isTotal = pending.accountId < 0 || pending.accountId >= walletList.length;
     const row = isTotal ? undefined : walletList[pending.accountId];
@@ -106,9 +109,7 @@ export default function ManageWalletList({
       'N/A';
 
     const label =
-      pending.type === AccountType.ALL
-        ? 'ALL'
-        : `${pending.type.toString()}${isTotal ? '' : '(s)'}`;
+      pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '' : '(s)'}`;
 
     // eslint-disable-next-line no-alert
     alert(
@@ -116,9 +117,7 @@ export default function ManageWalletList({
         'ToDo:(Not Yet Implemented)',
         `Claim ${label} Rewards`,
         isTotal ? 'From: Total' : `From: ${String(rowName)}`,
-        isTotal
-          ? 'From Account: (aggregate)'
-          : `From Account: ${String(rowAccount)}`,
+        isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
         `For account: ${connected ? connected.address : '(none connected)'}`,
       ].join('\n')
     );
@@ -140,8 +139,32 @@ export default function ManageWalletList({
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
+  // Connected address + instance id for AddressSelect
+  const connectedAddress = String(
+    ctx?.exchangeContext?.accounts?.activeAccount?.address ?? ''
+  );
+  const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
+  const instanceId = useMemo(
+    () =>
+      `${idPrefix.toUpperCase()}_${(SP_COIN_DISPLAY as any)[containerType]}_${chainId}`,
+    [idPrefix, containerType, chainId]
+  );
+
   return (
     <>
+      {/* Address selector (non-flex root; MainPanelsList manages height) */}
+      <div className="mb-6">
+        <AssetSelectDisplayProvider instanceId={instanceId}>
+          <AssetSelectProvider
+            containerType={containerType}
+            closePanelCallback={() => onClose?.()}
+            setSelectedAssetCallback={() => {}}
+          >
+            <AddressSelect defaultAddress={connectedAddress} bypassDefaultFsm />
+          </AssetSelectProvider>
+        </AssetSelectDisplayProvider>
+      </div>
+
       {mode === 'all' && (
         <>
           {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
@@ -245,8 +268,7 @@ export default function ManageWalletList({
               <tbody>
                 {walletList.map((w, i) => {
                   const zebra = i % 2 === 0 ? zebraA : zebraB;
-                  const claimClass =
-                    i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
+                  const claimClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
 
                   const addressText =
                     typeof (w as any).address === 'string'

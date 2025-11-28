@@ -24,7 +24,7 @@ import type {
 
 type Props = {
   panel: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE; // kept for API stability; not used internally
+  feedType: FEED_TYPE; // used to drive AssetSelectProvider / feeds
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: WalletAccount | TokenContract) => void;
@@ -62,7 +62,7 @@ function makeInitialPanelBag(
 
 export default function PanelListSelectWrapper({
   panel,
-  feedType: _feedType, // unused on purpose
+  feedType,
   instancePrefix,
   peerAddress,
   onCommit,
@@ -72,7 +72,7 @@ export default function PanelListSelectWrapper({
   return (
     <PanelListSelectWrapperInner
       panel={panel}
-      feedType={_feedType}
+      feedType={feedType}
       instancePrefix={instancePrefix}
       peerAddress={peerAddress}
       onCommit={onCommit}
@@ -82,7 +82,7 @@ export default function PanelListSelectWrapper({
 
 function PanelListSelectWrapperInner({
   panel,
-  feedType: _feedType, // unused on purpose
+  feedType,
   instancePrefix,
   peerAddress,
   onCommit,
@@ -143,6 +143,7 @@ function PanelListSelectWrapperInner({
         setSelectedAssetCallback={handleCommit}
         containerType={panel}
         initialPanelBag={initialPanelBag}
+        feedTypeOverride={feedType} // ⬅️ NEW: thread feedType into provider
       >
         <AssetListSelectPanel />
       </AssetSelectProvider>

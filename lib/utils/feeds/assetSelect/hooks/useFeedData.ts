@@ -15,10 +15,16 @@ export function useFeedData(feedType: FEED_TYPE) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(
+
+    // Spinner for account-like feeds (including manage views)
+    const isAccountFeed =
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
-      feedType === FEED_TYPE.AGENT_ACCOUNTS
-    ); // spinner only for account feeds
+      feedType === FEED_TYPE.AGENT_ACCOUNTS ||
+      feedType === FEED_TYPE.MANAGE_SPONSORS ||
+      feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
+      feedType === FEED_TYPE.MANAGE_AGENTS;
+
+    setLoading(isAccountFeed);
 
     (async () => {
       try {

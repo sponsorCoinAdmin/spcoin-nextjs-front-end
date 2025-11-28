@@ -25,7 +25,12 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 
-const debugLog = createDebugLogger('AssetSelectProvider', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
+const debugLog = createDebugLogger(
+  'AssetSelectProvider',
+  DEBUG_ENABLED,
+  LOG_TIME,
+  LOG_LEVEL
+);
 
 type Props = {
   children: ReactNode;
@@ -33,6 +38,8 @@ type Props = {
   setSelectedAssetCallback: (asset: TokenContract | WalletAccount) => void;
   containerType: SP_COIN_DISPLAY;
   initialPanelBag?: AssetSelectBag;
+  /** Optional: force a specific FEED_TYPE instead of inferring from containerType */
+  feedTypeOverride?: FEED_TYPE;
 };
 
 export const AssetSelectProvider = ({
@@ -41,9 +48,14 @@ export const AssetSelectProvider = ({
   setSelectedAssetCallback,
   containerType,
   initialPanelBag,
+  feedTypeOverride,
 }: Props) => {
   const instanceId = useInstanceId(containerType);
-  const feedType = useFeedType(containerType);
+
+  // Infer feedType from container, but allow explicit override
+  const inferredFeedType = useFeedType(containerType);
+  const feedType = feedTypeOverride ?? inferredFeedType;
+
   const { panelBag, setPanelBag } = usePanelBag(initialPanelBag, containerType);
 
   // Call once (Rules of Hooks)
@@ -65,11 +77,14 @@ export const AssetSelectProvider = ({
       container: SP_COIN_DISPLAY[containerType],
       feed: FEED_TYPE[feedType],
       hasInitialBag: !!initialPanelBag,
+      feedTypeOverride: feedTypeOverride
+        ? FEED_TYPE[feedTypeOverride]
+        : '(none)',
     });
     // Ensure the default is enforced at mount as a safeguard
     _setManualEntry(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // mount only
 
   useEffect(() => {
     debugLog.log?.('manualEntry changed', {
@@ -108,7 +123,8 @@ export const AssetSelectProvider = ({
     validatedAsset,
     setValidatedAsset,
     fireClosePanel: (fromUser?: boolean) => closePanelCallback(fromUser),
-    fireSetTradingToken: (asset: TokenContract | WalletAccount) => setSelectedAssetCallback(asset),
+    fireSetTradingToken: (asset: TokenContract | WalletAccount) =>
+      setSelectedAssetCallback(asset),
     resetPreview,
     showAssetPreview,
     showErrorPreview,
@@ -119,7 +135,11 @@ export const AssetSelectProvider = ({
 
   const setManualEntry = useCallback(
     (flag: boolean) => {
-      debugLog.log?.('setManualEntry', { instanceId, fromState: manualEntry, toState: flag });
+      debugLog.log?.('setManualEntry', {
+        instanceId,
+        fromState: manualEntry,
+        toState: flag,
+      });
       _setManualEntry(flag);
     },
     [instanceId, manualEntry]
@@ -183,7 +203,9 @@ export const AssetSelectProvider = ({
   }, [inputState, instanceId, manualEntry]);
 
   // Log when validatedAsset changes (guarded)
-  const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(undefined);
+  const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(
+    undefined
+  );
   useEffect(() => {
     if (validatedAsset && validatedAsset !== prevValidatedRef.current) {
       const a: any = validatedAsset;
@@ -303,6 +325,7 @@ export const AssetSelectProvider = ({
     }),
     [
       inputState,
+      setInputState,
       validatedAssetNarrow,
       setValidatedAssetLogged,
       manualEntry,
@@ -334,7 +357,11 @@ export const AssetSelectProvider = ({
     ]
   );
 
-  return <AssetSelectContext.Provider value={ctxValue}>{children}</AssetSelectContext.Provider>;
+  return (
+    <AssetSelectContext.Provider value={ctxValue}>
+      {children}
+    </AssetSelectContext.Provider>
+  );
 };
 
 export default AssetSelectProvider;

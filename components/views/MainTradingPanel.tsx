@@ -110,9 +110,9 @@ export default function MainTradingPanel() {
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}>
+          {/* <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}> */}
             <ManageSponsors />
-          </PanelGate>
+          {/* </PanelGate> */}
 
           {/* Detail views */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
