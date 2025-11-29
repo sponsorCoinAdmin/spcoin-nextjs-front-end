@@ -14,6 +14,7 @@ import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+
 type Props = { onClose?: () => void };
 
 export default function ManageSponsor({ onClose }: Props) {
@@ -22,13 +23,20 @@ export default function ManageSponsor({ onClose }: Props) {
 
   const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
   const logoURL = sponsorWallet?.logoURL;
+  const hasSponsor = !!sponsorWallet;
 
+  // Header title
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-    `Sponsor ${sponsorWallet?.name ?? 'N/A'}`
+    hasSponsor
+      ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}`
+      : 'Sponsor (none selected)'
   );
 
-  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
+  const resolvedLogo = useMemo(
+    () => logoURL || defaultMissingImage,
+    [logoURL]
+  );
 
   // Left header logo (square, no crop)
   useRegisterHeaderLeft(
@@ -50,6 +58,8 @@ export default function ManageSponsor({ onClose }: Props) {
     )
   );
 
+  const [showToDo, setShowToDo] = useState<boolean>(false);
+
   const doToDo = useCallback(() => {
     setShowToDo(false);
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
@@ -64,9 +74,8 @@ export default function ManageSponsor({ onClose }: Props) {
     alert(msg);
   }, [ctx?.exchangeContext?.accounts?.activeAccount, sponsorWallet?.name, sponsorWallet?.address]);
 
-  const [showToDo, setShowToDo] = useState<boolean>(false);
-
   const handleClose = useCallback(() => {
+    // Return user to the sponsors list when closing detail
     openPanel(
       SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
       'ManageSponsor:handleClose(open)'
@@ -82,7 +91,19 @@ export default function ManageSponsor({ onClose }: Props) {
 
   return (
     <>
-      <ManageWallet wallet={sponsorWallet} />
+      {hasSponsor ? (
+        <ManageWallet wallet={sponsorWallet} />
+      ) : (
+        <div className="p-4 text-sm text-slate-200">
+          <p className="mb-2 font-semibold">No sponsor selected.</p>
+          <p className="m-0">
+            Open the <strong>Sponsors</strong> list and choose a sponsor to
+            manage. Once selected, this panel will show the sponsor&apos;s
+            wallet details.
+          </p>
+        </div>
+      )}
+
       {showToDo && (
         <ToDo
           show

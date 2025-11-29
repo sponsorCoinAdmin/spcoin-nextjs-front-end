@@ -48,12 +48,12 @@ export default function MainTradingPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
-      <div id='MainPage_ID' style={{ position: 'relative' }}>
+      <div id="MainPage_ID" style={{ position: 'relative' }}>
         {/* 🟢 Debug HUD: current active main overlay */}
         {SHOW_ACTIVE && (
           <div
-            id='ActiveOverlayHUD'
-            className='pointer-events-none select-none'
+            id="ActiveOverlayHUD"
+            className="pointer-events-none select-none"
             style={{
               position: 'absolute',
               top: 6,
@@ -69,7 +69,7 @@ export default function MainTradingPanel() {
               border: '1px solid rgba(255,255,255,0.15)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
             }}
-            aria-live='polite'
+            aria-live="polite"
           >
             activeMainOverlay:&nbsp;<strong>{activeOverlayLabel}</strong>
           </div>
@@ -77,21 +77,21 @@ export default function MainTradingPanel() {
 
         {/* ⬆️ Lifted header block (moved up by an extra 25px → total -60px) */}
         <div
-          id='MainTradingPanelHeader'
-          className='w-full text-center pt-[10px] pb-2 select-none relative -top-[80px]'
+          id="MainTradingPanelHeader"
+          className="w-full text-center pt-[10px] pb-2 select-none relative -top-[80px]"
         >
           <h2 className="m-0 text-2xl md:text-3xl font-extrabold tracking-wide leading-tight text-[#5981F3]">
             {AGENT_TITLE}
           </h2>
-          <p className='m-0 mt-1 text-sm opacity-80'>
+          <p className="m-0 mt-1 text-sm opacity-80">
             {AGENT_SUB_TITLE}
           </p>
         </div>
 
         {/* Spacer matches the lift so the panel doesn’t overlap the header */}
-        <div aria-hidden className='h-[60px]' />
+        <div aria-hidden className="h-[60px]" />
 
-        <div id='mainTradingPanel' className={styles.mainTradingPanel}>
+        <div id="mainTradingPanel" className={styles.mainTradingPanel}>
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
             <TradeContainerHeader />
           </PanelGate>
@@ -110,8 +110,9 @@ export default function MainTradingPanel() {
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
+          {/* Sponsors list currently rendered always (no PanelGate) */}
           {/* <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}> */}
-            <ManageSponsors />
+          <ManageSponsors />
           {/* </PanelGate> */}
 
           {/* Detail views */}
