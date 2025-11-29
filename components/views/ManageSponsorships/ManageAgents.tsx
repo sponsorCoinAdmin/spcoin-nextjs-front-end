@@ -1,79 +1,121 @@
 // File: @/components/views/ManageSponsorships/ManageAgents.tsx
 'use client';
 
-import React, { useEffect, useState, useContext } from 'react';
-import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import React, { useEffect, useContext, useCallback } from 'react';
+import {
+  FEED_TYPE,
+  SP_COIN_DISPLAY,
+  type WalletAccount,
+  type TokenContract,
+} from '@/lib/structure';
+
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
-import rawAgents from './agents.json';
-import ManageWalletList from './ManageWalletList';
+import PanelListSelectWrapper from '@/components/containers/AssetSelectPanels/PanelListSelectWrapper';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-function shortAddr(addr: string, left = 6, right = 4) {
-  const a = String(addr);
-  return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
-}
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_AGENTS === 'true';
+const debugLog = createDebugLogger('ManageAgents', DEBUG_ENABLED, LOG_TIME);
 
+/**
+ * Agents list:
+ * - List visibility: MANAGE_AGENTS_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - Detail visibility: MANAGE_AGENT_PANEL (ManageAgent + PanelGate)
+ * - Selection source: FEED_TYPE.MANAGE_AGENTS via PanelListSelectWrapper
+ */
 export default function ManageAgents() {
-  const { openPanel, closePanel } = usePanelTree();
-  const ctx = useContext(ExchangeContextState);
-
-  const [walletList, setWalletList] = useState<WalletAccount[]>([]);
-
-  useRegisterDetailCloser(
-    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-    () => setWalletCallBack(undefined)
-  );
+  const visible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
 
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const enriched = await loadAccounts(rawAgents as any);
-        if (!alive) return;
-        setWalletList(
-          enriched.map(buildWalletObj).map((w) => ({
-            ...w,
-            name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
-            symbol: w.symbol ?? 'N/A',
-          })) as WalletAccount[]
-        );
-      } catch {
-        if (!alive) return;
-        const fallback = (Array.isArray(rawAgents) ? rawAgents : []).map((a: any) => {
-          const w = buildWalletObj(a);
-          return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
-        });
-        setWalletList(fallback);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const setWalletCallBack = (w?: WalletAccount) => {
-    ctx?.setExchangeContext((prev) => {
-      if (!prev) return prev;
-      return { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
-    }, 'ManageAgents:setWalletCallBack(w)');
-
-    if (w) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(w)');
-    } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(undefined)');
+    debugLog.log?.('[visibility] MANAGE_AGENTS_PANEL', { visible });
+    if (visible) {
+      debugLog.log?.('OPENING ManageAgents');
     }
-  };
+  }, [visible]);
+
+  debugLog.log?.('[render]', { visible });
+
+  return <ManageAgentsInner />;
+}
+
+function ManageAgentsInner() {
+  const ctx = useContext(ExchangeContextState);
+  const { openPanel } = usePanelTree();
+
+  const handleCommit = useCallback(
+    (asset: WalletAccount | TokenContract) => {
+      const isToken = typeof (asset as any)?.decimals === 'number';
+
+      debugLog.log?.('[handleCommit]', {
+        isToken,
+        assetPreview: {
+          address: (asset as any)?.address,
+          name: (asset as any)?.name,
+        },
+      });
+
+      // This panel is for agent *wallets*, not tokens
+      if (isToken) return;
+
+      const wallet = asset as WalletAccount;
+
+      // 1️⃣ Set agentAccount in ExchangeContext
+      ctx?.setExchangeContext(
+        (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              agentAccount: wallet,
+            },
+          };
+        },
+        'ManageAgents:handleCommit(agentAccount)',
+      );
+
+      // 2️⃣ Defer opening MANAGE_AGENT_PANEL so it runs *after*
+      //     any toTrading(MAIN_TRADING_PANEL) transition.
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => {
+          debugLog.log?.(
+            '[handleCommit] deferred open of MANAGE_AGENT_PANEL after transitions',
+          );
+          openPanel(
+            SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+            'ManageAgents:handleCommit(deferred open MANAGE_AGENT_PANEL)',
+          );
+        }, 0);
+      } else {
+        // Fallback (shouldn’t really hit because we’re in a client component)
+        debugLog.log?.(
+          '[handleCommit] non-window environment; opening MANAGE_AGENT_PANEL immediately',
+        );
+        openPanel(
+          SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+          'ManageAgents:handleCommit(open MANAGE_AGENT_PANEL)',
+        );
+      }
+    },
+    [ctx, openPanel],
+  );
+
+  debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
+    panel: 'MANAGE_AGENTS_PANEL',
+    feedType: 'MANAGE_AGENTS',
+    instancePrefix: 'agent',
+  });
 
   return (
-    <ManageWalletList
-      walletList={walletList}
-      setWalletCallBack={setWalletCallBack}
-      containerType={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
+    <PanelListSelectWrapper
+      panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
+      feedType={FEED_TYPE.MANAGE_AGENTS}
+      instancePrefix="agent"
+      onCommit={handleCommit}
     />
   );
 }

@@ -1,4 +1,4 @@
-// File: lib/context/helpers/assetHelpers.ts
+// File: @/lib/context/helpers/assetHelpers.ts
 
 import type { Address } from 'viem';
 import { FEED_TYPE, type WalletAccount } from '@/lib/structure';

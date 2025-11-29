@@ -1,139 +1,121 @@
 // File: @/components/views/ManageSponsorships/ManageRecipients.tsx
 'use client';
 
-import React, { useEffect, useState, useContext } from 'react';
-import type { WalletAccount } from '@/lib/structure';
+import React, { useEffect, useContext, useCallback } from 'react';
+import {
+  FEED_TYPE,
+  SP_COIN_DISPLAY,
+  type WalletAccount,
+  type TokenContract,
+} from '@/lib/structure';
 
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-
-import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
-import rawRecipients from './recipients.json';
-
-import ManageWalletList from './ManageWalletList';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-function shortAddr(addr: string, left = 6, right = 4) {
-  const a = String(addr);
-  return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
+import PanelListSelectWrapper from '@/components/containers/AssetSelectPanels/PanelListSelectWrapper';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_RECIPIENTS === 'true';
+const debugLog = createDebugLogger('ManageRecipients', DEBUG_ENABLED, LOG_TIME);
+
+/**
+ * Recipients list:
+ * - List visibility: MANAGE_RECIPIENTS_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - Detail visibility: MANAGE_RECIPIENT_PANEL (ManageRecipient + PanelGate)
+ * - Selection source: FEED_TYPE.MANAGE_RECIPIENTS via PanelListSelectWrapper
+ */
+export default function ManageRecipients() {
+  const visible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+
+  useEffect(() => {
+    debugLog.log?.('[visibility] MANAGE_RECIPIENTS_PANEL', { visible });
+    if (visible) {
+      debugLog.log?.('OPENING ManageRecipients');
+    }
+  }, [visible]);
+
+  debugLog.log?.('[render]', { visible });
+
+  return <ManageRecipientsInner />;
 }
 
-export default function ManageRecipients() {
-  const { openPanel, closePanel } = usePanelTree();
+function ManageRecipientsInner() {
   const ctx = useContext(ExchangeContextState);
+  const { openPanel } = usePanelTree();
 
-  // Local list state
-  const [walletList, setWalletList] = useState<WalletAccount[]>([]);
+  const handleCommit = useCallback(
+    (asset: WalletAccount | TokenContract) => {
+      const isToken = typeof (asset as any)?.decimals === 'number';
 
-  // Allow header close to say “exit detail → list”
-  useRegisterDetailCloser(
-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-    () => setWalletCallBack(undefined)
+      debugLog.log?.('[handleCommit]', {
+        isToken,
+        assetPreview: {
+          address: (asset as any)?.address,
+          name: (asset as any)?.name,
+        },
+      });
+
+      // This panel is for recipient *wallets*, not tokens
+      if (isToken) return;
+
+      const wallet = asset as WalletAccount;
+
+      // 1️⃣ Set recipientAccount in ExchangeContext
+      ctx?.setExchangeContext(
+        (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              recipientAccount: wallet,
+            },
+          };
+        },
+        'ManageRecipients:handleCommit(recipientAccount)',
+      );
+
+      // 2️⃣ Defer opening MANAGE_RECIPIENT_PANEL so it runs *after*
+      //     any toTrading(MAIN_TRADING_PANEL) transition.
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => {
+          debugLog.log?.(
+            '[handleCommit] deferred open of MANAGE_RECIPIENT_PANEL after transitions',
+          );
+          openPanel(
+            SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+            'ManageRecipients:handleCommit(deferred open MANAGE_RECIPIENT_PANEL)',
+          );
+        }, 0);
+      } else {
+        // Fallback (shouldn’t really hit because we’re in a client component)
+        debugLog.log?.(
+          '[handleCommit] non-window environment; opening MANAGE_RECIPIENT_PANEL immediately',
+        );
+        openPanel(
+          SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+          'ManageRecipients:handleCommit(open MANAGE_RECIPIENT_PANEL)',
+        );
+      }
+    },
+    [ctx, openPanel],
   );
 
-  // Resolve recipients once (same enrichment pattern as Agents) and store in ExchangeContext.accounts.recipientAccounts
-  useEffect(() => {
-    let alive = true;
+  debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
+    panel: 'MANAGE_RECIPIENTS_PANEL',
+    feedType: 'MANAGE_RECIPIENTS',
+    instancePrefix: 'recipient',
+  });
 
-    const isSameList = (a: WalletAccount[], b: WalletAccount[]) => {
-      if (a.length !== b.length) return false;
-      for (let i = 0; i < a.length; i++) {
-        const ax = (a[i]?.address ?? '').toLowerCase();
-        const bx = (b[i]?.address ?? '').toLowerCase();
-        if (ax !== bx) return false;
-      }
-      return true;
-    };
-
-    (async () => {
-      try {
-        const enriched = await loadAccounts(rawRecipients as any);
-        const built = enriched
-          .map(buildWalletObj)
-          .map((w) => ({
-            ...w,
-            name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
-            symbol: w.symbol ?? 'N/A',
-          })) as WalletAccount[];
-
-        if (!alive) return;
-
-        setWalletList(built);
-
-        // Store in ExchangeContext.accounts.recipientAccounts if changed
-        ctx?.setExchangeContext((prev) => {
-          const current = prev?.accounts?.recipientAccounts ?? [];
-          if (isSameList(current, built)) return prev;
-          return {
-            ...prev,
-            accounts: {
-              ...prev.accounts,
-              recipientAccounts: built,
-            },
-          };
-        }, 'ManageRecipients:loadRecipientAccounts()');
-      } catch {
-        const fallback = (Array.isArray(rawRecipients) ? rawRecipients : []).map((a: any) => {
-          const w = buildWalletObj(a);
-          return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
-        });
-
-        if (!alive) return;
-
-        setWalletList(fallback);
-
-        // Fallback write to context
-        ctx?.setExchangeContext((prev) => {
-          const current = prev?.accounts?.recipientAccounts ?? [];
-          if (isSameList(current, fallback)) return prev;
-          return {
-            ...prev,
-            accounts: {
-              ...prev.accounts,
-              recipientAccounts: fallback,
-            },
-          };
-        }, 'ManageRecipients:loadRecipientAccounts(fallback)');
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL
-  const setWalletCallBack = (w?: WalletAccount) => {
-    ctx?.setExchangeContext(
-      (prev) => {
-        const next = { ...prev, accounts: { ...prev.accounts, recipientAccount: w } };
-        return next;
-      },
-      'ManageRecipients:setWalletCallBack(w)'
-    );
-
-    if (w) {
-      openPanel(
-        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-        'ManageRecipients:setWalletCallBack(w)'
-      );
-    } else {
-      closePanel(
-        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-        'ManageRecipients:setWalletCallBack(undefined)'
-      );
-    }
-  };
-
-  // Always render the shared list; the detail panel renders elsewhere
   return (
-    <ManageWalletList
-      walletList={walletList}
-      setWalletCallBack={setWalletCallBack}
-      containerType={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
+    <PanelListSelectWrapper
+      panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}
+      feedType={FEED_TYPE.MANAGE_RECIPIENTS}
+      instancePrefix="recipient"
+      onCommit={handleCommit}
     />
   );
 }

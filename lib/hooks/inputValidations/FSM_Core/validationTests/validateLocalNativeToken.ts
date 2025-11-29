@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/tests/validateLocalNativeToken.ts
+// File: @/lib/hooks/inputValidations/tests/validateLocalNativeToken.ts
 
 import type { Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';

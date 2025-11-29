@@ -57,7 +57,6 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const stakedBalance = 0;
   const pendingBalance = 0;
 
-  // 🔴 ToDo overlay pattern (matches ManageSponsorships / ManageWalletList)
   const [showToDo, setShowToDo] = useState<boolean>(false);
   const pendingClaimRef = useRef<{ type: AccountType } | null>(null);
 
