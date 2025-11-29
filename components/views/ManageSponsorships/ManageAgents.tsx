@@ -13,14 +13,12 @@ import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
 import rawAgents from './agents.json';
 import ManageWalletList from './ManageWalletList';
 
-type Props = { onClose?: () => void };
-
 function shortAddr(addr: string, left = 6, right = 4) {
   const a = String(addr);
   return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
 }
 
-export default function ManageAgents({ onClose }: Props) {
+export default function ManageAgents() {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
@@ -75,7 +73,6 @@ export default function ManageAgents({ onClose }: Props) {
     <ManageWalletList
       walletList={walletList}
       setWalletCallBack={setWalletCallBack}
-      onClose={onClose}
       containerType={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
     />
   );

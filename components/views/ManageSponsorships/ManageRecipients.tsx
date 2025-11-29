@@ -15,14 +15,12 @@ import rawRecipients from './recipients.json';
 import ManageWalletList from './ManageWalletList';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-type Props = { onClose?: () => void };
-
 function shortAddr(addr: string, left = 6, right = 4) {
   const a = String(addr);
   return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
 }
 
-export default function ManageRecipients({ onClose }: Props) {
+export default function ManageRecipients() {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
@@ -135,7 +133,6 @@ export default function ManageRecipients({ onClose }: Props) {
     <ManageWalletList
       walletList={walletList}
       setWalletCallBack={setWalletCallBack}
-      onClose={onClose}
       containerType={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
     />
   );
