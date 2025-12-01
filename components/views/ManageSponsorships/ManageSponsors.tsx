@@ -111,6 +111,7 @@ function ManageSponsorsInner() {
   });
 
   return (
+    
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}
       feedType={FEED_TYPE.MANAGE_SPONSORS}

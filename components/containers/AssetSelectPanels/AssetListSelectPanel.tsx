@@ -142,8 +142,8 @@ export default function AssetListSelectPanel() {
       {showAddressBar && (
         <AddressSelect
           callingParent="AssetListSelectPanel"
-          // for trading/list-select flows we keep the original behavior
-          // (no auto-useActiveAddr)
+        // for trading/list-select flows we keep the original behavior
+        // (no auto-useActiveAddr)
         />
       )}
 
@@ -152,8 +152,7 @@ export default function AssetListSelectPanel() {
         <ManageWalletList
           walletList={wallets}
           setWalletCallBack={setWalletCallBack}
-          containerType={containerType as SP_COIN_DISPLAY}
-        />
+          containerType={containerType as SP_COIN_DISPLAY} />
       ) : (
         <DataListSelect
           feedData={safeFeedData}

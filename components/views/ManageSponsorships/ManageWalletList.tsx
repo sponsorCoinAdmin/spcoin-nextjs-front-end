@@ -15,6 +15,7 @@ import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import AddressSelect from '../AddressSelect';
 
 type Props = {
   walletList: WalletAccount[];
@@ -84,16 +85,16 @@ export default function ManageWalletList({
       row && typeof (row as any).address === 'string'
         ? (row as any).address
         : (() => {
-            const a = (row as any)?.address as Record<string, unknown> | undefined;
-            if (!a) return 'N/A';
-            const cand =
-              a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-            try {
-              return cand ? String(cand) : JSON.stringify(a);
-            } catch {
-              return 'N/A';
-            }
-          })();
+          const a = (row as any)?.address as Record<string, unknown> | undefined;
+          if (!a) return 'N/A';
+          const cand =
+            a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+          try {
+            return cand ? String(cand) : JSON.stringify(a);
+          } catch {
+            return 'N/A';
+          }
+        })();
 
     const rowName = row?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
     const rowAccount =
@@ -142,6 +143,7 @@ export default function ManageWalletList({
 
   return (
     <>
+      <AddressSelect defaultAddress={undefined} bypassDefaultFsm callingParent={"ManageWallet"} useActiveAddr={true} />
       {mode === 'all' && (
         <>
           {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
@@ -252,22 +254,22 @@ export default function ManageWalletList({
                     typeof (w as any).address === 'string'
                       ? (w as any).address
                       : (() => {
-                          const a = (w as any)?.address as
-                            | Record<string, unknown>
-                            | undefined;
-                          if (!a) return 'N/A';
-                          const cand =
-                            a['address'] ??
-                            a['hex'] ??
-                            a['bech32'] ??
-                            a['value'] ??
-                            a['id'];
-                          try {
-                            return cand ? String(cand) : JSON.stringify(a);
-                          } catch {
-                            return 'N/A';
-                          }
-                        })();
+                        const a = (w as any)?.address as
+                          | Record<string, unknown>
+                          | undefined;
+                        if (!a) return 'N/A';
+                        const cand =
+                          a['address'] ??
+                          a['hex'] ??
+                          a['bech32'] ??
+                          a['value'] ??
+                          a['id'];
+                        try {
+                          return cand ? String(cand) : JSON.stringify(a);
+                        } catch {
+                          return 'N/A';
+                        }
+                      })();
 
                   return (
                     <tr key={addressText}>

@@ -138,7 +138,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   return (
     <>
       {/* Address selector */}
-      <div className="mb-6">
+      <div className="mb-[1.375rem]">
         <AssetSelectDisplayProvider>
           {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
           <AssetSelectProvider
