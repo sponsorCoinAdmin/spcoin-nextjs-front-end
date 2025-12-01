@@ -21,12 +21,19 @@ function addressToText(addr: unknown): string {
   if (typeof addr === 'string') return addr;
   if (typeof addr === 'object') {
     const a = addr as Record<string, unknown>;
-    const candidates = [a['address'], a['hex'], a['bech32'], a['value'], a['id']].filter(Boolean) as string[];
+    const candidates = [a['address'], a['hex'], a['bech32'], a['value'], a['id']].filter(
+      Boolean,
+    ) as string[];
     if (candidates.length > 0) return String(candidates[0]);
-    try { return JSON.stringify(addr); } catch { return String(addr); }
+    try {
+      return JSON.stringify(addr);
+    } catch {
+      return String(addr);
+    }
   }
   return String(addr);
 }
+
 const fallback = (v: unknown) => {
   const s = (v ?? '').toString().trim();
   return s || 'N/A';
@@ -35,6 +42,12 @@ const fallback = (v: unknown) => {
 export default function ManageWallet({ wallet, onClose }: Props) {
   // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
+
+  // 🔑 Default address should come from the connected account (activeAccount),
+  // not from the managed wallet itself.
+  const defaultAddr = String(
+    ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '',
+  );
 
   // Derive a best-effort AccountType from wallet metadata; default to AGENT
   const accountType: AccountType = useMemo(() => {
@@ -61,13 +74,10 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const pendingClaimRef = useRef<{ type: AccountType } | null>(null);
 
   // Trigger ToDo (store intent, then show red overlay)
-  const claimRewards = useCallback(
-    (type: AccountType) => {
-      pendingClaimRef.current = { type };
-      setShowToDo(true);
-    },
-    []
-  );
+  const claimRewards = useCallback((type: AccountType) => {
+    pendingClaimRef.current = { type };
+    setShowToDo(true);
+  }, []);
 
   // When ToDo is dismissed, show the alert and hide overlay
   const doToDo = useCallback(() => {
@@ -84,11 +94,12 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         `From: ${name.toString()}`,
         `From Account: ${address.toString()}`,
         `For account: ${connected ? connected.address : '(none connected)'}`,
-      ].join('\n')
+      ].join('\n'),
     );
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, name, address]);
 
-  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const th =
+    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
@@ -96,8 +107,9 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   // ⬇️ Build a stable instance id for the AddressSelect display provider
   const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
-    () => `MANAGE_WALLET_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.MANAGE_AGENT_PANEL]}_${chainId}`,
-    [chainId]
+    () =>
+      `MANAGE_WALLET_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.MANAGE_AGENT_PANEL]}_${chainId}`,
+    [chainId],
   );
 
   // After hooks have run, you can short-circuit rendering if no wallet
@@ -106,7 +118,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   return (
     // ⬇️ wrap table + button in a container; we’ll scope styles to this id
     <div id="msWallet">
-      {/* Address selector (prefilled, FSM bypass) */}
+      {/* Address selector (prefilled from activeAccount, FSM bypass) */}
       <div className="mb-6">
         <AssetSelectDisplayProvider instanceId={instanceId}>
           <AssetSelectProvider
@@ -114,7 +126,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect defaultAddress={String(wallet?.address ?? '')} bypassDefaultFsm />
+            <AddressSelect defaultAddress={defaultAddr} bypassDefaultFsm callingParent={"ManageWallet"}/>
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
@@ -126,8 +138,12 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         <table id="msTableWalletKV" className="min-w-full border-collapse">
           <thead>
             <tr className="border-b border-black">
-              <th scope="col" className={th}>Name</th>
-              <th scope="col" className={th}>value</th>
+              <th scope="col" className={th}>
+                Name
+              </th>
+              <th scope="col" className={th}>
+                value
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -143,7 +159,11 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             <tr className="border-b border-black">
               <td className={`${zebraB} ${cell}`}>logoURL:</td>
               <td className={`${zebraB} ${cell}`}>
-                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
+                {logoURL ? (
+                  <span className="break-all text-xs text-slate-200">{logoURL}</span>
+                ) : (
+                  'N/A'
+                )}
               </td>
             </tr>
 

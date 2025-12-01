@@ -1,0 +1,30 @@
+// File: @/lib/context/hooks/ExchangeContext/nested/accounts/useRecipientAccount.ts
+'use client';
+
+import { useAccounts } from '../useAccounts';
+
+// Infer Accounts + WalletAccount type from useAccounts
+type Accounts = ReturnType<typeof useAccounts>[0];
+type WalletAccount = Accounts['activeAccount'];
+
+export function useRecipientAccount(): [
+  WalletAccount | undefined,
+  (next: WalletAccount | undefined) => void,
+] {
+  const [accounts, setAccounts] = useAccounts();
+
+  // If recipientAccount doesn't exist yet on the type, you may need to add it
+  // to your ExchangeAccounts shape. For now we assert it's the same kind of thing
+  // as activeAccount.
+  const recipient = accounts.recipientAccount as WalletAccount | undefined;
+
+  const setRecipient = (next: WalletAccount | undefined) => {
+    // Explicit type for prev avoids the "implicitly has any type" warning
+    setAccounts((prev: Accounts) => ({
+      ...prev,
+      recipientAccount: next,
+    }));
+  };
+
+  return [recipient, setRecipient];
+}

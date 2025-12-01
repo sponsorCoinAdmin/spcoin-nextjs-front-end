@@ -79,23 +79,18 @@ export default function AssetListSelectPanel() {
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS;
 
-  // Branch: only non-manage feeds get the AddressSelect header
-  const showAddressBar = !isManageView;
-
   // 🔔 Debug log to show feedType whenever this component renders
   useEffect(() => {
     const msg: string =
       `[AssetListSelectPanel] render\n` +
       `instanceId=${instanceId}\n` +
       `feedType=${feedType} (${FEED_TYPE[feedType]})\n` +
-      `isManageView=${isManageView}\n` +
-      `showAddressBar=${showAddressBar}`;
+      `isManageView=${isManageView}`;
     debugLog.log?.(msg);
-  }, [instanceId, feedType, isManageView, showAddressBar]);
+  }, [instanceId, feedType, isManageView]);
 
   debugLog.log?.('[view mode]', {
     isManageView,
-    showAddressBar,
     containerType,
     containerLabel,
   });
@@ -138,14 +133,8 @@ export default function AssetListSelectPanel() {
       data-instance={instanceId}
       data-feed-type={feedType}
     >
-      {/* Header: only for non-manage feeds */}
-      {showAddressBar && (
-        <AddressSelect
-          callingParent="AssetListSelectPanel"
-          // for trading/list-select flows we keep the original behavior
-          // (no auto-useActiveAddr)
-        />
-      )}
+      {/* Shared header: keep AddressSelect for *all* feeds */}
+      <AddressSelect callingParent={"AssetListSelectPanel"} />
 
       {/* Body: either generic DataListSelect or the richer ManageWalletList */}
       {isManageView ? (

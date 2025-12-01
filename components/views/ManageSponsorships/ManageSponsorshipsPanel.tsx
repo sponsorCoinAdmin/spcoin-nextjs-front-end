@@ -1,7 +1,7 @@
 // File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useState, useCallback, useContext, useRef } from 'react';
+import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -19,6 +19,16 @@ import ManageAgents from './ManageAgents';
 // ✅ ToDo overlay
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
+const debugLog = createDebugLogger(
+  'ManageSponsorshipsPanel',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 type Props = { onClose?: () => void };
 
@@ -37,9 +47,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
+  const activeAccount = ctx?.exchangeContext?.accounts?.activeAccount;
 
   // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
-  const defaultAddr = String(ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '');
+  const defaultAddr = String(activeAccount?.address ?? '');
+
+  // 🔍 Log what we actually see at runtime
+  useEffect(() => {
+    debugLog.log?.('[render]', {
+      isActive,
+      hasActive: !!activeAccount,
+      activeAddress: activeAccount?.address,
+      defaultAddr,
+    });
+  }, [isActive, activeAccount, defaultAddr]);
 
   // 🔒 Keep latest selected account type for the ToDo alert across renders
   const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
@@ -56,26 +77,30 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
         ids.forEach((pid) => {
           if (pid === id) {
-            openPanel(pid, `ManageSponsorshipsPanel:openOnly(target=${SP_COIN_DISPLAY[id]}#${id})`);
+            debugLog.log?.('openOnly → open', { target: SP_COIN_DISPLAY[pid] });
+            openPanel(
+              pid,
+              `ManageSponsorshipsPanel:openOnly(target=${SP_COIN_DISPLAY[id]}#${id})`,
+            );
           } else {
-            closePanel(pid, `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${pid})`);
+            closePanel(
+              pid,
+              `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${pid})`,
+            );
           }
         });
-      } catch {
-        /* no-op: panel tree may not be ready */
+      } catch (err) {
+        debugLog.warn?.('openOnly error (panel tree not ready?)', { err });
       }
     },
-    [openPanel, closePanel]
+    [openPanel, closePanel],
   );
 
   /** Alert-only placeholder per request */
-  const claimRewards = useCallback(
-    (actType: AccountType) => {
-      setShowToDo(true);
-      accountTypeRef.current = actType;
-    },
-    []
-  );
+  const claimRewards = useCallback((actType: AccountType) => {
+    setShowToDo(true);
+    accountTypeRef.current = actType;
+  }, []);
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
@@ -113,7 +138,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   return (
     <>
       {/* Address selector */}
-      <div className='mb-6'>
+      <div className="mb-6">
         <AssetSelectDisplayProvider>
           {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
           <AssetSelectProvider
@@ -121,51 +146,77 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect defaultAddress={defaultAddr} bypassDefaultFsm />
+            <AddressSelect
+              callingParent={"ManageSponsorshipsPanel"}
+              defaultAddress={defaultAddr}
+              bypassDefaultFsm
+              useActiveAddr={true}
+            />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
 
       {mode === 'all' && (
-        <div id='msWrapper' className='mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black'>
-          <table id='msTable' className='min-w-full border-collapse'>
+        <div
+          id="msWrapper"
+          className="mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black"
+        >
+          <table id="msTable" className="min-w-full border-collapse">
             <thead>
-              <tr className='border-b border-black'>
-                <th scope='col' className={th}>Account</th>
-                <th scope='col' className={`${th} text-center`}>Staked Coins</th>
-                <th scope='col' className={`${th} text-center`}>Pending Coins</th>
-                <th scope='col' className={`${th} text-center`}>Rewards</th>
-                <th scope='col' className={`${th} text-center`}>Config</th>
+              <tr className="border-b border-black">
+                <th scope="col" className={th}>
+                  Account
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Staked Coins
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Pending Coins
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Rewards
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  Config
+                </th>
               </tr>
             </thead>
             <tbody>
               {/* Row 1: Sponsors (A) */}
               <tr className={`${rowBorder}`}>
-                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInner}`}>Sponsors</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type='button'
-                      className='ms-claim--orange'
-                      aria-label='Claim Sponsors rewards'
+                      type="button"
+                      className="ms-claim--orange"
+                      aria-label="Claim Sponsors rewards"
                       onClick={() => claimRewards(AccountType.SPONSOR)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className='p-0'>
+                <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type='button'
+                      type="button"
                       className={iconBtn}
-                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)}
-                      aria-label='Open Sponsors reconfigure'
-                      title='Reconfigure Sponsors'
+                      onClick={() =>
+                        openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)
+                      }
+                      aria-label="Open Sponsors reconfigure"
+                      title="Reconfigure Sponsors"
                     >
-                      <span className='cog-white-mask cog-rot' aria-hidden />
+                      <span className="cog-white-mask cog-rot" aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -173,31 +224,39 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 2: Recipients (B) */}
               <tr className={`${rowBorder}`}>
-                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInner}`}>Recipients</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type='button'
-                      className='ms-claim--green'
-                      aria-label='Claim Recipients rewards'
+                      type="button"
+                      className="ms-claim--green"
+                      aria-label="Claim Recipients rewards"
                       onClick={() => claimRewards(AccountType.RECIPIENT)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className='p-0'>
+                <td className="p-0">
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type='button'
+                      type="button"
                       className={iconBtn}
-                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)}
-                      aria-label='Open Recipients reconfigure'
-                      title='Reconfigure Recipients'
+                      onClick={() =>
+                        openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
+                      }
+                      aria-label="Open Recipients reconfigure"
+                      title="Reconfigure Recipients"
                     >
-                      <span className='cog-white-mask cog-rot' aria-hidden />
+                      <span className="cog-white-mask cog-rot" aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -205,31 +264,39 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 3: Agents (A) */}
               <tr className={`${rowBorder}`}>
-                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Agents</div></td>
-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInner}`}>Agents</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type='button'
-                      className='ms-claim--orange'
-                      aria-label='Claim Agents rewards'
+                      type="button"
+                      className="ms-claim--orange"
+                      aria-label="Claim Agents rewards"
                       onClick={() => claimRewards(AccountType.AGENT)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className='p-0'>
+                <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type='button'
+                      type="button"
                       className={iconBtn}
-                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
-                      aria-label='Open Agents reconfigure'
-                      title='Reconfigure Agents'
+                      onClick={() =>
+                        openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
+                      }
+                      aria-label="Open Agents reconfigure"
+                      title="Reconfigure Agents"
                     >
-                      <span className='cog-white-mask cog-rot' aria-hidden />
+                      <span className="cog-white-mask cog-rot" aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -237,22 +304,30 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 4: Total (B, no cog) */}
               <tr className={`${rowBorder}`}>
-                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Total</div></td>
-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className='p-0'>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInner}`}>Total</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                </td>
+                <td className="p-0">
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type='button'
-                      className='ms-claim--green'
-                      aria-label='Claim Total rewards'
+                      type="button"
+                      className="ms-claim--green"
+                      aria-label="Claim Total rewards"
                       onClick={() => claimRewards(AccountType.ALL)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`} /></td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`} />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -343,9 +418,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       {showToDo && (
         <ToDo
           show
-          message='ToDo'
+          message="ToDo"
           opacity={0.5}
-          color='#ff1a1a'
+          color="#ff1a1a"
           zIndex={2000}
           onDismiss={() => doToDo()}
         />

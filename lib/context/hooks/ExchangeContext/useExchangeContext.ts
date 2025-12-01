@@ -1,3 +1,5 @@
+// File: @/lib/context/hooks/ExchangeContext/useExchangeContext.ts
+
 import { useContext } from 'react';
 import { ExchangeContextState } from '../../ExchangeProvider';
 

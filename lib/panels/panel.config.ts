@@ -25,32 +25,182 @@ export const PANELS: readonly PanelDef[] = [
   { id: SP.MAIN_TRADING_PANEL, kind: 'root', defaultVisible: true },
 
   // Non-radio chrome under main root
-  { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', parent: SP.MAIN_TRADING_PANEL, defaultVisible: true },
+  {
+    id: SP.TRADE_CONTAINER_HEADER,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    defaultVisible: true,
+  },
 
   // Main overlays (radio group: mainOverlay)
-  { id: SP.TRADING_STATION_PANEL,       kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.BUY_LIST_SELECT_PANEL,       kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.SELL_LIST_SELECT_PANEL,      kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
-  { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
-  { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL,   kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
+  {
+    id: SP.TRADING_STATION_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: true,
+  },
+  {
+    id: SP.BUY_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: true,
+  },
+  {
+    id: SP.SELL_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: true,
+  },
+  {
+    id: SP.RECIPIENT_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.AGENT_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.ERROR_MESSAGE_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+
+  // Manage overlays as first-class main overlays (same radio group)
+  {
+    id: SP.MANAGE_SPONSORSHIPS_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_RECIPIENTS_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_AGENTS_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_SPONSORS_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+
+  // Detail manage overlays (also full-screen overlays in the same radio set)
+  {
+    id: SP.MANAGE_AGENT_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_RECIPIENT_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_SPONSOR_PANEL,
+    kind: 'panel',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+
   // legacy (kept so old states don’t break)
-  { id: SP.SPONSOR_LIST_SELECT_PANEL,   kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
+  {
+    id: SP.SPONSOR_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.MAIN_TRADING_PANEL,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
 
   // Trading view subtree (non-radio)
-  { id: SP.SELL_SELECT_PANEL,           kind: 'panel',   parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
-  { id: SP.BUY_SELECT_PANEL,            kind: 'panel',   parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
-  { id: SP.ADD_SPONSORSHIP_PANEL,       kind: 'panel',   parent: SP.TRADING_STATION_PANEL, defaultVisible: false },
-  { id: SP.CONFIG_SPONSORSHIP_PANEL,    kind: 'panel',   parent: SP.ADD_SPONSORSHIP_PANEL, defaultVisible: false },
+  {
+    id: SP.SELL_SELECT_PANEL,
+    kind: 'panel',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
+  {
+    id: SP.BUY_SELECT_PANEL,
+    kind: 'panel',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
+  {
+    id: SP.ADD_SPONSORSHIP_PANEL,
+    kind: 'panel',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: false,
+  },
+  {
+    id: SP.CONFIG_SPONSORSHIP_PANEL,
+    kind: 'panel',
+    parent: SP.ADD_SPONSORSHIP_PANEL,
+    defaultVisible: false,
+  },
 
   // Inline controls under Trading
-  { id: SP.SWAP_ARROW_BUTTON,           kind: 'control', parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
-  { id: SP.PRICE_BUTTON,                kind: 'control', parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
-  { id: SP.FEE_DISCLOSURE,              kind: 'control', parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
-  { id: SP.AFFILIATE_FEE,               kind: 'control', parent: SP.TRADING_STATION_PANEL, defaultVisible: true },
+  {
+    id: SP.SWAP_ARROW_BUTTON,
+    kind: 'control',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
+  {
+    id: SP.PRICE_BUTTON,
+    kind: 'control',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
+  {
+    id: SP.FEE_DISCLOSURE,
+    kind: 'control',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
+  {
+    id: SP.AFFILIATE_FEE,
+    kind: 'control',
+    parent: SP.TRADING_STATION_PANEL,
+    defaultVisible: true,
+  },
 
   // Buttons
-  { id: SP.ADD_SPONSORSHIP_BUTTON,      kind: 'button',  parent: SP.BUY_SELECT_PANEL,  defaultVisible: false },
-  { id: SP.MANAGE_SPONSORSHIPS_BUTTON,  kind: 'button',  parent: SP.SELL_SELECT_PANEL, defaultVisible: false },
+  {
+    id: SP.ADD_SPONSORSHIP_BUTTON,
+    kind: 'button',
+    parent: SP.BUY_SELECT_PANEL,
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_SPONSORSHIPS_BUTTON,
+    kind: 'button',
+    parent: SP.SELL_SELECT_PANEL,
+    defaultVisible: false,
+  },
 ] as const;

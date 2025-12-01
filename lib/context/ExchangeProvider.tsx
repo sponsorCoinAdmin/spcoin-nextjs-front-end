@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
-import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/hooks/useProviderSetters';
+import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/providers/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 import { reconcilePanelState } from '@/lib/context/exchangeContext/helpers/panelReconcile';
 
