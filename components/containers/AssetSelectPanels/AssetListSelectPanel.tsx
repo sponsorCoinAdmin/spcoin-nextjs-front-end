@@ -142,8 +142,6 @@ export default function AssetListSelectPanel() {
       {showAddressBar && (
         <AddressSelect
           callingParent="AssetListSelectPanel"
-        // for trading/list-select flows we keep the original behavior
-        // (no auto-useActiveAddr)
         />
       )}
 

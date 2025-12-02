@@ -7,6 +7,12 @@ import { debugHookChange } from '@/lib/utils/debugHookChange';
 import { tokenContractsEqual } from '@/components/shared/utils/isDuplicateAddress';
 // Import the provider state directly to avoid barrel ↔ barrel cycles
 import { ExchangeContextState } from '../../ExchangeProvider';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_CONTRACTS === 'true';
+const tLog = createDebugLogger('useTokenContracts', DEBUG_ENABLED, LOG_TIME);
 
 // Local, cycle-free access to the exchange context
 function useExchangeContextDirect() {
@@ -27,7 +33,15 @@ export const useSellTokenContract = (): [
 
   const setToken = (contract: TokenContract | undefined) => {
     const prev = exchangeContext?.tradeData?.sellTokenContract;
-    if (tokenContractsEqual(prev, contract)) return;
+    const isEqual = tokenContractsEqual(prev, contract);
+
+    tLog.log?.('[sellTokenContract] setToken', {
+      prevAddress: (prev as any)?.address,
+      nextAddress: (contract as any)?.address,
+      equal: isEqual,
+    });
+
+    if (isEqual) return;
 
     debugHookChange('sellTokenContract', prev, contract);
 
@@ -58,7 +72,15 @@ export const useBuyTokenContract = (): [
 
   const setToken = (contract: TokenContract | undefined) => {
     const prev = exchangeContext?.tradeData?.buyTokenContract;
-    if (tokenContractsEqual(prev, contract)) return;
+    const isEqual = tokenContractsEqual(prev, contract);
+
+    tLog.log?.('[buyTokenContract] setToken', {
+      prevAddress: (prev as any)?.address,
+      nextAddress: (contract as any)?.address,
+      equal: isEqual,
+    });
+
+    if (isEqual) return;
 
     debugHookChange('buyTokenContract', prev, contract);
 

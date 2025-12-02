@@ -33,6 +33,12 @@ type Props = {
 
   /** Show the Error/Asset preview block under the input (default: true). */
   showPreview?: boolean;
+
+  /** When true, display address as bxxxb ... bxxxb in the label instead of HexAddressInput. */
+  shortAddr?: boolean;
+
+  /** Optional text prefix for the displayed address label. */
+  preText?: string;
 };
 
 export default function AddressSelect({
@@ -42,6 +48,8 @@ export default function AddressSelect({
   makeEditable = true,
   callingParent,
   showPreview = true,
+  shortAddr = false,
+  preText,
 }: Props) {
   const {
     instanceId,
@@ -81,8 +89,13 @@ export default function AddressSelect({
     return chosen;
   }, [defaultAddress, activeAddr, useActiveAddr, instanceId, callingParent]);
 
-  debugLog.log?.('🆔 context', { callingParent: callingParent ?? '(none)', instanceId });
-  debugLog.log?.('✅ AddressSelect function START', { callingParent: callingParent ?? '(none)' });
+  debugLog.log?.('🆔 context', {
+    callingParent: callingParent ?? '(none)',
+    instanceId,
+  });
+  debugLog.log?.('✅ AddressSelect function START', {
+    callingParent: callingParent ?? '(none)',
+  });
   debugLog.log?.('[props]', {
     callingParent: callingParent ?? '(none)',
     defaultAddress: defaultAddress ?? '(undefined)',
@@ -90,9 +103,11 @@ export default function AddressSelect({
     useActiveAddr,
     makeEditable,
     activeAddr: activeAddr || '(none)',
+    shortAddr,
+    preText: preText ?? '(undefined)',
   });
 
-  // ⬇️ Minimal change: enforce manualEntry=true when AddressSelect mounts
+  // Enforce manualEntry=true when AddressSelect mounts
   useEffect(() => {
     setManualEntry(true);
   }, [setManualEntry]);
@@ -193,44 +208,122 @@ export default function AddressSelect({
     callingParent,
   ]);
 
+  // ────────────────────────────────────────────────────────────
+  // Display label formatting: shortAddr + preText
+  // ────────────────────────────────────────────────────────────
+
+  const baseDisplayAddress = useMemo(() => {
+    // Prefer the current input if present, otherwise fall back to resolved default
+    const fromInput = (validHexInput ?? '').trim();
+    if (fromInput.length > 0) return fromInput;
+    return (resolvedDefault ?? '').trim();
+  }, [validHexInput, resolvedDefault]);
+
+  const formattedAddress = useMemo(() => {
+    if (!baseDisplayAddress) return '';
+
+    if (!shortAddr) return baseDisplayAddress;
+
+    // Short form: bxxxb ... bxxxb with ~15 chars either side.
+    if (baseDisplayAddress.length <= 36) {
+      // For shorter addresses, just wrap with spaces.
+      return ` ${baseDisplayAddress} `;
+    }
+
+    const start = baseDisplayAddress.slice(0, 15);
+    const end = baseDisplayAddress.slice(-15);
+    // Leading/trailing blanks plus spaced ellipsis → " bxxxb ... bxxxb "
+    return ` ${start} ... ${end} `;
+  }, [baseDisplayAddress, shortAddr]);
+
+  const hasLabel = useMemo(() => {
+    return !!formattedAddress || !!(preText && preText.trim().length > 0);
+  }, [formattedAddress, preText]);
+
+  const showShortLabel = shortAddr && hasLabel;
+  const showHexInput = !shortAddr;
+
   return (
     <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">
-      <HexAddressInput
-        inputValue={validHexInput}
-        onChange={(val) => {
-          if (!makeEditable) {
+      {/* Label row: preText on the left, shortened address in the container.
+          ONLY shown when shortAddr === true. */}
+      {showShortLabel && (
+        <div className="flex items-center gap-2 mb-1 text-sm text-slate-300/80">
+          {preText && preText.trim().length > 0 && (
+            <span className="whitespace-nowrap">
+              {preText.trim()}
+            </span>
+          )}
+
+          {formattedAddress && (
+            // Shortened address pill:
+            // same bg/fg/rounding as HexAddressInput outer div,
+            // fills remaining width, text centered.
+            <div
+              className="
+                flex-1
+                min-w-0
+                flex
+                items-center
+                justify-center
+                px-1
+                py-1
+                gap-2
+                bg-[#243056]
+                text-[#5981F3]
+                text-base
+                w-full
+                mb-0
+                rounded-[22px]
+              "
+            >
+              <span className="w-full text-center font-mono break-all">
+                {formattedAddress}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* HexAddressInput: ONLY shown when shortAddr === false */}
+      {showHexInput && (
+        <HexAddressInput
+          inputValue={validHexInput}
+          onChange={(val) => {
+            if (!makeEditable) {
+              debugLog.log?.(
+                '✏️ [HexAddressInput] input ignored because makeEditable=false',
+              );
+              return;
+            }
+
+            debugLog.log?.('✏️ [HexAddressInput] onChange:', val);
+            armEnforcementForThisTick();
+            setManualEntry(true);
+
+            if (!bypassDefaultFsm) {
+              setInputState(
+                InputState.EMPTY_INPUT,
+                'AddressSelect (Manual Entry)',
+              );
+            } else {
+              debugLog.log?.(
+                '⏭️ Bypass active: not kicking FSM on manual entry',
+              );
+            }
+
+            const accepted = handleHexInputChange(val, true);
             debugLog.log?.(
-              '✏️ [HexAddressInput] input ignored because makeEditable=false',
+              `✏️ [HexAddressInput] handleHexInputChange(\`${val.slice(
+                0,
+                6,
+              )}…\`, true) → accepted=${accepted}`,
             );
-            return;
-          }
-
-          debugLog.log?.('✏️ [HexAddressInput] onChange:', val);
-          armEnforcementForThisTick();
-          setManualEntry(true);
-
-          if (!bypassDefaultFsm) {
-            setInputState(
-              InputState.EMPTY_INPUT,
-              'AddressSelect (Manual Entry)',
-            );
-          } else {
-            debugLog.log?.(
-              '⏭️ Bypass active: not kicking FSM on manual entry',
-            );
-          }
-
-          const accepted = handleHexInputChange(val, true);
-          debugLog.log?.(
-            `✏️ [HexAddressInput] handleHexInputChange(\`${val.slice(
-              0,
-              6,
-            )}…\`, true) → accepted=${accepted}`,
-          );
-        }}
-        placeholder="Enter address"
-        statusEmoji=""
-      />
+          }}
+          placeholder="Enter address"
+          statusEmoji=""
+        />
+      )}
 
       {showPreview && (
         <>

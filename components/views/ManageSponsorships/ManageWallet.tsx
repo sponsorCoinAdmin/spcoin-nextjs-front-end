@@ -124,9 +124,14 @@ export default function ManageWallet({ wallet, onClose }: Props) {
           <AssetSelectProvider
             containerType={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}
             closePanelCallback={() => onClose?.()}
-            setSelectedAssetCallback={() => {}}
+            setSelectedAssetCallback={() => { }}
           >
-            <AddressSelect defaultAddress={defaultAddr} bypassDefaultFsm callingParent={"ManageWallet"}/>
+            <AddressSelect
+              defaultAddress={defaultAddr}
+              bypassDefaultFsm
+              callingParent={"ManageWallet"}
+              shortAddr={true}
+              preText={"Deposit Account:"} />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>

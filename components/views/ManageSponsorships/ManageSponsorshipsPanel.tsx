@@ -151,6 +151,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               defaultAddress={defaultAddr}
               bypassDefaultFsm
               useActiveAddr={true}
+              shortAddr={true}
+              preText={"Deposit Account:"}
             />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>

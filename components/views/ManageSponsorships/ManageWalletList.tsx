@@ -143,7 +143,13 @@ export default function ManageWalletList({
 
   return (
     <>
-      <AddressSelect defaultAddress={undefined} bypassDefaultFsm callingParent={"ManageWallet"} useActiveAddr={true} />
+      <AddressSelect
+        defaultAddress={undefined}
+        bypassDefaultFsm callingParent={"ManageWallet"}
+        useActiveAddr={true}
+        shortAddr={true}
+        preText={"Deposit Account:"}
+      />
       {mode === 'all' && (
         <>
           {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
