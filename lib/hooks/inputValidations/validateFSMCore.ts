@@ -15,7 +15,10 @@ import { validateLocalNativeToken } from './FSM_Core/validationTests/validateLoc
 import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_FSM_VALIDATE_CORE === 'true';
+
 const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
 
 // Feature flags (true = call validator; false = jump to fallback nextState)
@@ -107,6 +110,15 @@ export async function validateFSMCore(
       break;
 
     case InputState.RESOLVE_ERC20_ASSET: {
+      // Extra visibility for the RESOLVE step so we can compare localhost vs EC2
+      debugLog.log?.('[FSM_CORE] RESOLVE_ERC20_ASSET dispatch', {
+        instanceId: (input as any)?.instanceId ?? '—',
+        containerType: input.containerType,
+        feedType: input.feedType,
+        manualEntry: input.manualEntry,
+        featureFlag: F.RESOLVE,
+      });
+
       // 🔧 crucial: panel-aware; returns assetPatch for account-like flows
       await step(
         out,
@@ -162,8 +174,10 @@ export async function validateFSMCore(
   }
 
   debugLog.log?.('Core transition', {
+    instanceId: (input as any)?.instanceId ?? '—',
     from: InputState[input.inputState],
     to: InputState[out.nextState],
+    debouncedHexInput: input.debouncedHexInput ?? '',
   });
 
   return out;

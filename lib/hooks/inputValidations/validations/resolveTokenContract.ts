@@ -16,7 +16,8 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
+  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_FSM_RESOLVE_TOKEN_CONTRACT === 'true';
 
 const debugLog = createDebugLogger(
   'resolveTokenContract',
@@ -32,10 +33,12 @@ export async function resolveTokenContract(
   _accountAddress?: Address, // kept for compatibility; unused
 ): Promise<TokenContract | undefined> {
   const t0 = Date.now();
-  debugLog.log?.('entry', {
+
+  debugLog.log?.('🟢 [ENTRY] resolveTokenContract', {
     tokenAddress,
     chainId,
     feedType,
+    feedTypeLabel: FEED_TYPE[feedType],
     hasPublicClient: !!publicClient,
     accountAddress: _accountAddress,
   });
@@ -43,7 +46,7 @@ export async function resolveTokenContract(
   // Allow native sentinel; otherwise require a valid EVM address
   if (tokenAddress !== NATIVE_TOKEN_ADDRESS && !isAddress(tokenAddress)) {
     debugLog.warn?.(
-      '⛔ invalid address (not native sentinel and not isAddress)',
+      '⛔ Invalid address (not native sentinel and not isAddress)',
       { tokenAddress },
     );
     return undefined;
@@ -56,7 +59,11 @@ export async function resolveTokenContract(
       : (tokenAddress as `0x${string}`);
 
   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
-  debugLog.log?.('normalized (no case changes)', { resolvedAddress, isNative });
+
+  debugLog.log?.('ℹ️ Address normalization (no case changes)', {
+    resolvedAddress,
+    isNative,
+  });
 
   // For visibility, show the exact file path we expect for TOKEN_LIST
   if (feedType === FEED_TYPE.TOKEN_LIST && !isNative) {
@@ -64,25 +71,42 @@ export async function resolveTokenContract(
       chainId,
       address: resolvedAddress,
     });
-    debugLog.log?.('expected token logo path', { expectedPath });
+    debugLog.log?.('📁 Expected token logo path (TOKEN_LIST)', {
+      chainId,
+      address: resolvedAddress,
+      expectedPath,
+    });
   }
 
   // Prepare async tasks (run in parallel) — logo only
   const logoP = getLogoURL(chainId, resolvedAddress, feedType)
     .then((url) => {
-      debugLog.log?.('logo resolved', { url });
+      debugLog.log?.('🖼️ Logo resolved', {
+        chainId,
+        address: resolvedAddress,
+        url,
+      });
       return url;
     })
     .catch((e) => {
       debugLog.warn?.(
-        '⚠️ logo resolution failed, using defaultMissingImage',
-        e,
+        '⚠️ Logo resolution failed, using defaultMissingImage',
+        {
+          chainId,
+          address: resolvedAddress,
+          error: e instanceof Error ? e.message : String(e),
+        },
       );
       return defaultMissingImage;
     });
 
   // 🟢 Native: metadata from getNativeTokenInfo, no balance
   if (isNative) {
+    debugLog.log?.('🟡 Native token branch', {
+      chainId,
+      resolvedAddress,
+    });
+
     const [logoURL] = await Promise.all([logoP]);
     const nativeInfo = getNativeTokenInfo(chainId);
 
@@ -98,11 +122,19 @@ export async function resolveTokenContract(
       logoURL: logoURL || defaultMissingImage,
     };
 
-    debugLog.log?.('return native (no balance)', {
+    debugLog.log?.('✅ Returning native token (no balance)', {
       ms: Date.now() - t0,
-      ret: {
-        ...ret,
-        totalSupply: ret.totalSupply?.toString?.() ?? ret.totalSupply,
+      summary: {
+        chainId: ret.chainId,
+        address: ret.address,
+        symbol: ret.symbol,
+        name: ret.name,
+        decimals: ret.decimals,
+        logoURL: ret.logoURL,
+        totalSupply:
+          ret.totalSupply && typeof ret.totalSupply === 'bigint'
+            ? ret.totalSupply.toString()
+            : ret.totalSupply,
       },
     });
 
@@ -110,23 +142,42 @@ export async function resolveTokenContract(
   }
 
   // 🧱 ERC-20: metadata + logo in parallel (no balance)
+  debugLog.log?.('🟣 ERC-20 branch (metadata + logo)', {
+    chainId,
+    resolvedAddress,
+  });
+
   const [metadata, logoURL] = await Promise.all([
     fetchTokenMetadata(resolvedAddress, publicClient)
       .then((m) => {
-        debugLog.log?.('metadata resolved', m);
+        debugLog.log?.('📦 Metadata resolved', {
+          address: resolvedAddress,
+          chainId,
+          hasMetadata: !!m,
+          symbol: m?.symbol,
+          name: m?.name,
+          decimals: m?.decimals,
+        });
         return m;
       })
       .catch((e) => {
-        debugLog.warn?.('⚠️ metadata get failed', e);
+        debugLog.warn?.('⚠️ Metadata fetch failed', {
+          address: resolvedAddress,
+          chainId,
+          error: e instanceof Error ? e.message : String(e),
+        });
         return undefined;
       }),
     logoP,
   ]);
 
   if (!metadata) {
-    debugLog.warn?.('⛔ no metadata; returning undefined', {
+    debugLog.warn?.('⛔ No metadata; returning undefined', {
       ms: Date.now() - t0,
       resolvedAddress,
+      chainId,
+      feedType,
+      feedTypeLabel: FEED_TYPE[feedType],
     });
     return undefined;
   }
@@ -143,11 +194,19 @@ export async function resolveTokenContract(
     logoURL: logoURL || defaultMissingImage,
   };
 
-  debugLog.log?.('return erc20 (no balance)', {
+  debugLog.log?.('✅ Returning ERC-20 token (no balance)', {
     ms: Date.now() - t0,
-    ret: {
-      ...ret,
-      totalSupply: ret.totalSupply?.toString?.() ?? ret.totalSupply,
+    summary: {
+      chainId: ret.chainId,
+      address: ret.address,
+      symbol: ret.symbol,
+      name: ret.name,
+      decimals: ret.decimals,
+      logoURL: ret.logoURL,
+      totalSupply:
+        ret.totalSupply && typeof ret.totalSupply === 'bigint'
+          ? ret.totalSupply.toString()
+          : ret.totalSupply,
     },
   });
 

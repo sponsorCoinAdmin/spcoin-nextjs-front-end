@@ -12,11 +12,14 @@ import { isStudyEnabled, StudyId } from '../studyPolicy';
 import { validateCreateERC20Asset } from './validateCreateERC20Asset';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure/constants/addresses';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
-const log = createDebugLogger(
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true' ||
+process.env.NEXT_PUBLIC_DEBUG_FSM_VALIDATE_ERC20_ASSET === 'true';
+
+const debugLog = createDebugLogger(
   'validateERC20Asset(FSM_Core)',
   DEBUG_ENABLED,
-  false,
+  LOG_TIME,
 );
 
 // Lowercased sentinel for native token (e.g. 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
@@ -34,22 +37,62 @@ const ACCOUNT_LIKE_PANELS = new Set<SP_COIN_DISPLAY>([
 export async function validateERC20Asset(
   params: ValidateFSMInput,
 ): Promise<ValidateFSMOutput> {
-  const { containerType, debouncedHexInput, publicClient } = params;
+  const {
+    containerType,
+    debouncedHexInput,
+    publicClient,
+    feedType,
+    instanceId,
+  } = params as any;
+
+  const containerLabel = SP_COIN_DISPLAY[containerType] ?? String(containerType);
+  const addr = (debouncedHexInput ?? '').trim();
+
+  debugLog.log?.('🟢 [ENTRY] validateERC20Asset', {
+    containerType,
+    containerLabel,
+    instanceId: instanceId ?? '—',
+    debouncedHexInput: addr || '«empty»',
+    hasPublicClient: !!publicClient,
+    feedType,
+  });
 
   // 🔐 Policy gate
-  if (!isStudyEnabled(containerType, StudyId.RESOLVE_ERC20_ASSET)) {
-    log.log?.(
-      `policy: RESOLVE_ERC20_ASSET disabled for ${SP_COIN_DISPLAY[containerType]} → RETURN_VALIDATED_ASSET`,
+  const studyEnabled = isStudyEnabled(containerType, StudyId.RESOLVE_ERC20_ASSET);
+  debugLog.log?.('🔍 Policy check', {
+    studyId: 'RESOLVE_ERC20_ASSET',
+    containerType,
+    containerLabel,
+    enabled: studyEnabled,
+  });
+
+  if (!studyEnabled) {
+    debugLog.log?.(
+      '🚧 Policy disabled for RESOLVE_ERC20_ASSET → RETURN_VALIDATED_ASSET',
+      {
+        containerType,
+        containerLabel,
+        instanceId: instanceId ?? '—',
+      },
     );
     return { nextState: InputState.RETURN_VALIDATED_ASSET };
   }
 
   // Account-like flows: build WalletAccount via assetPatch & finish
   if (ACCOUNT_LIKE_PANELS.has(containerType)) {
-    const addr = (debouncedHexInput ?? '').trim();
+    debugLog.log?.('🟡 Account-like panel branch', {
+      containerType,
+      containerLabel,
+      addr,
+    });
+
     if (!addr || !isAddress(addr)) {
       const msg = `Invalid or empty address for account-like panel: "${addr}"`;
-      log.warn?.(msg);
+      debugLog.warn?.('⛔ Invalid account-like address', {
+        containerType,
+        containerLabel,
+        addr,
+      });
       return {
         nextState: InputState.MISSING_ACCOUNT_ADDRESS,
         errorMessage: msg,
@@ -62,30 +105,35 @@ export async function validateERC20Asset(
       params.chainId ??
       1;
 
-    // Return patch-only per your ValidateFSMOutput type
+    const assetPatch = {
+      address: addr as `0x${string}`,
+      chainId,
+    } as any;
+
+    debugLog.log?.('✅ Account-like assetPatch prepared', {
+      containerType,
+      containerLabel,
+      instanceId: instanceId ?? '—',
+      assetPatch,
+    });
+
     return {
       nextState: InputState.RETURN_VALIDATED_ASSET,
-      assetPatch: {
-        // Minimal WalletAccount shape; your update step can enrich if needed
-        address: addr as `0x${string}`,
-        chainId,
-      } as any,
+      assetPatch,
     };
   }
 
   // 🪙 Native token: skip ERC-20 resolution entirely.
-  // At this point, earlier steps (validateLocalNativeToken / validateExistsOnChain)
-  // should already have patched symbol/name/decimals/logo from info.json or
-  // other native metadata sources. We just advance the FSM.
-  const addr = (debouncedHexInput ?? '').trim();
   const isNative = !!addr && addr.toLowerCase() === NATIVE_SENTINEL;
 
   if (isNative) {
-    log.log?.(
-      '[validateERC20Asset] Native token detected → skipping ERC20 resolution step',
+    debugLog.log?.(
+      '🟡 Native token detected → skipping ERC-20 resolution step',
       {
         address: addr,
-        container: SP_COIN_DISPLAY[containerType],
+        containerType,
+        containerLabel,
+        instanceId: instanceId ?? '—',
       },
     );
 
@@ -96,25 +144,56 @@ export async function validateERC20Asset(
 
   // Token-like ERC-20 flows: delegate to token resolver (which should also return assetPatch)
   try {
+    debugLog.log?.('🟣 Delegating to validateCreateERC20Asset', {
+      containerType,
+      containerLabel,
+      instanceId: instanceId ?? '—',
+      address: addr || '«empty»',
+    });
+
     const result = await validateCreateERC20Asset(params);
 
     if (!result || result.nextState === undefined) {
       const msg =
         'validateCreateERC20Asset returned no nextState; mapping to VALIDATE_ERC20_ASSET_ERROR';
-      log.warn?.(msg, { container: SP_COIN_DISPLAY[containerType], address: addr });
+      debugLog.warn?.(
+        '⚠️ validateCreateERC20Asset returned invalid result',
+        {
+          containerType,
+          containerLabel,
+          instanceId: instanceId ?? '—',
+          address: addr,
+          rawResult: result,
+        },
+      );
       return {
         nextState: InputState.VALIDATE_ERC20_ASSET_ERROR,
         errorMessage: msg,
       };
     }
 
+    debugLog.log?.('✅ validateCreateERC20Asset result', {
+      containerType,
+      containerLabel,
+      instanceId: instanceId ?? '—',
+      nextState: InputState[result.nextState] ?? result.nextState,
+      hasValidatedAsset: !!(result as any).validatedAsset,
+      hasResolvedAsset: !!(result as any).resolvedAsset,
+      hasAssetPatch: !!(result as any).assetPatch,
+    });
+
     return result;
-  } catch (err) {
-    const msg = 'validateCreateERC20Asset threw; mapping to VALIDATE_ERC20_ASSET_ERROR';
-    log.error?.(msg, {
-      container: SP_COIN_DISPLAY[containerType],
+  } catch (err: any) {
+    const msg =
+      'validateCreateERC20Asset threw; mapping to VALIDATE_ERC20_ASSET_ERROR';
+
+    debugLog.error?.(msg, {
+      containerType,
+      containerLabel,
+      instanceId: instanceId ?? '—',
       address: addr,
-      error: err,
+      errorMessage: err?.message ?? String(err),
+      stack: err?.stack,
     });
 
     return {
