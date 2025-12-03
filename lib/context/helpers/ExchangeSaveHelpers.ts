@@ -5,7 +5,9 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
-const STORAGE_KEY = 'exchangeContext';
+// 🔑 LocalStorage key (keep in sync with loader)
+const LOCAL_STORAGE_KEY = 'spcoin-exchange-context-v1';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
@@ -49,7 +51,7 @@ function diffVisibility(prev: FlatPanel[], next: FlatPanel[]): string {
 /** Ensure exactly one MAIN_OVERLAY_GROUP panel is visible; if none, pick TRADING_STATION_PANEL. */
 function normalizeOverlayVisibility(
   flat: FlatPanel[],
-  fallback: SP_COIN_DISPLAY
+  fallback: SP_COIN_DISPLAY,
 ): SP_COIN_DISPLAY {
   const current = flat.find((p) => MAIN_OVERLAY_GROUP.includes(p.panel) && p.visible)?.panel;
   const chosen = current ?? fallback;
@@ -59,14 +61,34 @@ function normalizeOverlayVisibility(
   return chosen;
 }
 
+/** Small helper to inspect localStorage around saves. */
+function debugLocalStorageSnapshot(stage: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    const size = raw ? raw.length : 0;
+
+    debugLog.log?.(`📦 [${stage}] localStorage snapshot`, {
+      key: LOCAL_STORAGE_KEY,
+      hasValue: !!raw,
+      size,
+      head: raw?.slice(0, 180) ?? null,
+    });
+  } catch (err) {
+    debugLog.error?.(`⛔ [${stage}] localStorage snapshot failed`, err);
+  }
+}
+
 /* ───────────────────────────── main API ───────────────────────────── */
 
 export function saveLocalExchangeContext(ctx: ExchangeContext): void {
   try {
+    debugLocalStorageSnapshot('before-save');
+
     // Snapshot previous saved panels (for diff)
     let prevSavedPanels: FlatPanel[] = [];
     try {
-      const prevRaw = localStorage.getItem(STORAGE_KEY);
+      const prevRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (prevRaw) {
         const prevParsed = JSON.parse(prevRaw);
         prevSavedPanels = toFlat(prevParsed?.settings?.spCoinPanelTree);
@@ -88,7 +110,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
     // 1) Never persist legacy/derived fields
     if ('mainPanelNode' in out.settings) {
       delete out.settings.mainPanelNode;
-      debugLog.log('🧹 Removed settings.mainPanelNode before save');
+      debugLog.log?.('🧹 Removed settings.mainPanelNode before save');
     }
 
     // 2) Coerce and sanitize spCoinPanelTree
@@ -100,7 +122,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
       // Never persist these
       (n) =>
         n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
-        n.panel !== SP_COIN_DISPLAY.UNDEFINED
+        n.panel !== SP_COIN_DISPLAY.UNDEFINED,
     );
 
     // Pre-normalize visibility picture (for logging)
@@ -109,47 +131,50 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
     // 3) Normalize overlays to avoid multi-select bugs in storage
     const chosenOverlay = normalizeOverlayVisibility(
       flatTree,
-      SP_COIN_DISPLAY.TRADING_STATION_PANEL
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
 
     // 4) Write back sanitized tree and bump schema
     out.settings.spCoinPanelTree = flatTree;
     out.settings.spCoinPanelSchemaVersion = Math.max(
       3,
-      Number(out.settings.spCoinPanelSchemaVersion ?? 0)
+      Number(out.settings.spCoinPanelSchemaVersion ?? 0),
     );
 
     // Compose a concise, actionable debug record
     const visDiff = diffVisibility(prevSavedPanels, flatTree);
-    debugLog.log(
+    debugLog.log?.(
       [
         '💾 Saving ExchangeContext → localStorage',
         `• Overlay chosen: ${nameOf(chosenOverlay)}`,
         `• Visible (pre-normalize snapshot): ${preNormalizeVisible}`,
         `• Visibility diff vs. previous save: ${visDiff}`,
-      ].join('\n')
+      ].join('\n'),
     );
 
     const serialized = stringifyBigInt(out);
-    localStorage.setItem(STORAGE_KEY, serialized);
+    localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
+
+    debugLocalStorageSnapshot('after-save');
 
     // 5) Read-back verification
     try {
-      const roundTrip = localStorage.getItem(STORAGE_KEY);
+      const roundTrip = localStorage.getItem(LOCAL_STORAGE_KEY);
       const landedPanels = toFlat((roundTrip && JSON.parse(roundTrip))?.settings?.spCoinPanelTree);
-      debugLog.log(
-        ['✅ Read-back verification', `• Visible panels persisted: ${visibleList(landedPanels)}`].join(
-          '\n'
-        )
+      debugLog.log?.(
+        [
+          '✅ Read-back verification',
+          `• Visible panels persisted: ${visibleList(landedPanels)}`,
+        ].join('\n'),
       );
     } catch {
-      debugLog.warn('⚠️ Unable to parse read-back verification payload.');
+      debugLog.warn?.('⚠️ Unable to parse read-back verification payload.');
     }
   } catch (err) {
-    debugLog.error(
+    debugLog.error?.(
       `⛔ Failed to save exchangeContext: ${
         err instanceof Error ? err.message : String(err)
-      }`
+      }`,
     );
     // Best-effort only; do not throw
   }

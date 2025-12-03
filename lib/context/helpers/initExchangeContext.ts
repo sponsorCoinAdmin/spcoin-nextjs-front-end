@@ -36,21 +36,63 @@ export async function initExchangeContext(
   isConnected: boolean,
   address?: `0x${string}`,
 ): Promise<ExchangeContext> {
-  const effectiveChainId =
-    typeof chainId === 'number' && chainId > 0 ? chainId : 1;
-
-  // 1) Load & sanitize stored context
+  // 1) Load stored context (if any)
   debugLog.log?.('🔍 Loading stored ExchangeContext…');
+
   const stored = loadLocalExchangeContext();
+  debugLog.log?.('[initExchangeContext] stored snapshot', stored);
 
   // Seed/boot diagnostics (read-only; we do NOT mutate panel state here)
   if (SEED_DEBUG) {
     logStoredBootState(stored);
   }
 
-  debugLog.log?.(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
+  // ────────────────────────────────────────────────────────────────
+  // Network hydrate: prefer persisted appChainId / chainId over wallet
+  // ────────────────────────────────────────────────────────────────
 
+  // In case of historical refactors, try both top-level `network` and `settings.network`.
+  const storedNetwork: any =
+    (stored as any)?.network ?? (stored as any)?.settings?.network ?? null;
+
+  // Extra debug so we can see where it actually lives in real data
+  debugLog.log?.('[initExchangeContext] raw stored.network', (stored as any)?.network);
+  debugLog.log?.(
+    '[initExchangeContext] raw stored.settings?.network',
+    (stored as any)?.settings?.network,
+  );
+
+  const storedAppChainId =
+    typeof storedNetwork?.appChainId === 'number'
+      ? (storedNetwork.appChainId as number)
+      : undefined;
+  const storedChainId =
+    typeof storedNetwork?.chainId === 'number'
+      ? (storedNetwork.chainId as number)
+      : undefined;
+
+  const walletChainId =
+    typeof chainId === 'number' && chainId > 0 ? chainId : undefined;
+
+  // 🧠 APP-FIRST: prefer persisted appChainId, then stored chainId, then wallet, then hard default 1
+  const effectiveChainId =
+    storedAppChainId ?? storedChainId ?? walletChainId ?? 1;
+
+  debugLog.log?.('📦 stored.network BEFORE sanitize', {
+    storedAppChainId: storedAppChainId ?? null,
+    storedChainId: storedChainId ?? null,
+    walletChainId: walletChainId ?? null,
+    effectiveChainId,
+  });
+
+  // 2) Sanitize using the effectiveChainId we chose above
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
+
+  debugLog.log?.('🧼 sanitized.network AFTER sanitize', {
+    effectiveChainId,
+    sanitizedAppChainId: sanitized.network?.appChainId,
+    sanitizedChainId: sanitized.network?.chainId,
+  });
 
   debugLog.log?.(
     `🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`,
@@ -64,7 +106,7 @@ export async function initExchangeContext(
     logPanelSnapshot('post-sanitize', getPanelsArray(sanitized));
   }
 
-  // 2) Optionally enrich with wallet metadata (client-only; no panel changes)
+  // 3) Optionally enrich with wallet metadata (client-only; no panel changes)
   if (isConnected && address && isProbablyClient() && isAddress(address)) {
     try {
       const meta = await loadWalletMetadata(address);
