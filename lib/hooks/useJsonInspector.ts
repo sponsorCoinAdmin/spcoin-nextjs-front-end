@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-const LOCAL_STORAGE_KEY = 'CollapsedKeysMap';
+// 🔑 LocalStorage key (keep in sync with loader)
+import { COLLAPSE_KEYS_MAP } from '@/lib/context/exchangeContext/constants';
 
 export function useJsonInspector(namespace: string) {
   const [collapsedKeys, setCollapsedKeys] = useState<string[]>([]);
@@ -11,7 +12,7 @@ export function useJsonInspector(namespace: string) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const raw = localStorage.getItem(COLLAPSE_KEYS_MAP);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && Array.isArray(parsed[namespace])) {
@@ -27,10 +28,10 @@ export function useJsonInspector(namespace: string) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const raw = localStorage.getItem(COLLAPSE_KEYS_MAP);
       const parsed = raw ? JSON.parse(raw) : {};
       parsed[namespace] = collapsedKeys;
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(COLLAPSE_KEYS_MAP, JSON.stringify(parsed));
     } catch (err) {
       console.warn('Failed to persist collapsedKeys:', err);
     }
