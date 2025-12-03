@@ -6,7 +6,7 @@ import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/pan
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 // 🔑 LocalStorage key (keep in sync with loader)
-const LOCAL_STORAGE_KEY = 'spcoin-exchange-context-v1';
+const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';

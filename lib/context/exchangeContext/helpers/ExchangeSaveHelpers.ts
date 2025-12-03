@@ -16,7 +16,7 @@ const debugLog = createDebugLogger(
 );
 
 // 🔑 LocalStorage key (if you used a different one before, keep that name)
-const LOCAL_STORAGE_KEY = 'spcoin-exchange-context-v1';
+const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Helpers                                   */

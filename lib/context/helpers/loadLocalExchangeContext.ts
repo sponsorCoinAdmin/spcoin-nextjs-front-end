@@ -6,7 +6,7 @@ import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // 🔑 LocalStorage key (keep in sync with ExchangeSaveHelpers)
-const LOCAL_STORAGE_KEY = 'spcoin-exchange-context-v1';
+const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
