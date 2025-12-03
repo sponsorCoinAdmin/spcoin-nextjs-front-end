@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
+// File: @/lib/context/exchangeContext/helpers/saveLocalExchangeContext.ts
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -6,11 +6,11 @@ import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/pan
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 // 🔑 LocalStorage key (keep in sync with loader)
-const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/constants';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
-const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('saveLocalExchangeContext', DEBUG_ENABLED, LOG_TIME);
 
 type FlatPanel = { panel: SP_COIN_DISPLAY; visible: boolean; name?: string };
 
@@ -65,11 +65,11 @@ function normalizeOverlayVisibility(
 function debugLocalStorageSnapshot(stage: string) {
   if (typeof window === 'undefined') return;
   try {
-    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    const raw = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
     const size = raw ? raw.length : 0;
 
     debugLog.log?.(`📦 [${stage}] localStorage snapshot`, {
-      key: LOCAL_STORAGE_KEY,
+      key: EXCHANGE_CONTEXT_LS_KEY,
       hasValue: !!raw,
       size,
       head: raw?.slice(0, 180) ?? null,
@@ -88,7 +88,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
     // Snapshot previous saved panels (for diff)
     let prevSavedPanels: FlatPanel[] = [];
     try {
-      const prevRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const prevRaw = localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
       if (prevRaw) {
         const prevParsed = JSON.parse(prevRaw);
         prevSavedPanels = toFlat(prevParsed?.settings?.spCoinPanelTree);
@@ -153,13 +153,13 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
     );
 
     const serialized = stringifyBigInt(out);
-    localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
+    localStorage.setItem(EXCHANGE_CONTEXT_LS_KEY, serialized);
 
     debugLocalStorageSnapshot('after-save');
 
     // 5) Read-back verification
     try {
-      const roundTrip = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const roundTrip = localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
       const landedPanels = toFlat((roundTrip && JSON.parse(roundTrip))?.settings?.spCoinPanelTree);
       debugLog.log?.(
         [

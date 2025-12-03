@@ -5,8 +5,9 @@ import type { ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// 🔑 LocalStorage key (keep in sync with ExchangeSaveHelpers)
-const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
+
+// 🔑 LocalStorage key (keep in sync with loader)
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/constants';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -26,11 +27,11 @@ const debugLog = createDebugLogger(
 function debugLocalStorageSnapshot(stage: string) {
   if (typeof window === 'undefined') return;
   try {
-    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    const raw = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
     const size = raw ? raw.length : 0;
 
     debugLog.log?.(`📦 [${stage}] localStorage snapshot`, {
-      key: LOCAL_STORAGE_KEY,
+      key: EXCHANGE_CONTEXT_LS_KEY,
       hasValue: !!raw,
       size,
       head: raw?.slice(0, 180) ?? null,
@@ -49,11 +50,11 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
 
     debugLocalStorageSnapshot('before-load');
 
-    const serializedContext = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    const serializedContext = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
 
     if (!serializedContext) {
       debugLog.warn?.(
-        `⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${LOCAL_STORAGE_KEY}`,
+        `⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${EXCHANGE_CONTEXT_LS_KEY}`,
       );
       return null;
     }
@@ -61,7 +62,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     debugLog.log?.(
       '🔓 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE (metadata)',
       {
-        key: LOCAL_STORAGE_KEY,
+        key: EXCHANGE_CONTEXT_LS_KEY,
         size: serializedContext.length,
         head: serializedContext.slice(0, 180),
       },

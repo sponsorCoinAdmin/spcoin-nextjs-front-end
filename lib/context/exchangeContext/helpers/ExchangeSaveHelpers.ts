@@ -4,6 +4,8 @@
 import type { ExchangeContext as ExchangeContextTypeOnly } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+// 🔑 LocalStorage key (keep in sync with loader)
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/constants';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -14,9 +16,6 @@ const debugLog = createDebugLogger(
   DEBUG_ENABLED,
   LOG_TIME,
 );
-
-// 🔑 LocalStorage key (if you used a different one before, keep that name)
-const LOCAL_STORAGE_KEY = 'ExchangeContext-LSKey';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Helpers                                   */
@@ -79,14 +78,14 @@ export function saveLocalExchangeContext(next: ExchangeContextTypeOnly) {
 
     const json = JSON.stringify(toPersist);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(LOCAL_STORAGE_KEY, json);
+      window.localStorage.setItem(EXCHANGE_CONTEXT_LS_KEY, json);
     }
 
     // ✅ Optional read-back verification
     try {
       if (typeof window === 'undefined') return;
 
-      const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+      const stored = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
       if (!stored) {
         debugLog.warn?.('⚠️ Read-back: no value found after save');
         return;
