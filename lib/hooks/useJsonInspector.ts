@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // 🔑 LocalStorage key (keep in sync with loader)
-import { COLLAPSE_KEYS_MAP } from '@/lib/context/exchangeContext/constants';
+import { COLLAPSE_KEYS_MAP } from '@/lib/context/exchangeContext/localStorageKeys';
 
 export function useJsonInspector(namespace: string) {
   const [collapsedKeys, setCollapsedKeys] = useState<string[]>([]);

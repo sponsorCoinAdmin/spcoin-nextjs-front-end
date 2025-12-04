@@ -3,12 +3,12 @@
 
 import type { InputState } from '@/lib/structure/assetSelection';
 
-export const LOCAL_TRACE_KEY = 'latestFSMTrace';
+import { LATEST_FSM_TRACE_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 
 export function getPrevTrace(): InputState[] {
   try {
-    const raw = localStorage.getItem(LOCAL_TRACE_KEY);
+    const raw = localStorage.getItem(LATEST_FSM_TRACE_KEY);
     const parsed = JSON.parse(raw || '[]');
     return Array.isArray(parsed) ? (parsed as InputState[]) : [];
   } catch {
@@ -17,7 +17,7 @@ export function getPrevTrace(): InputState[] {
 }
 
 export function setTrace(states: InputState[]) {
-  localStorage.setItem(LOCAL_TRACE_KEY, JSON.stringify(states));
+  localStorage.setItem(LATEST_FSM_TRACE_KEY, JSON.stringify(states));
 }
 
 export function getPrevLines(): string {

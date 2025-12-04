@@ -1,16 +1,18 @@
 // File: @/app/(menu)/Test/Tabs/ExchangeContext/utils/exCtxMapStorage.ts
+
+import { EXCHANGE_CONTEXT_TREE_DISPLAY_MAP } from '@/lib/context/exchangeContext/localStorageKeys';
+
 export type ExCtxMapStored = {
   version: number;
   paths: Record<string, boolean>;
   shape?: string; // optional shape signature for pruning on schema change
 };
 
-const STORAGE_KEY = 'exCtxMap';
 const VERSION = 1;
 
 export function loadExCtxMap(): ExCtxMapStored | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(EXCHANGE_CONTEXT_TREE_DISPLAY_MAP);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ExCtxMapStored;
     if (!parsed || typeof parsed !== 'object') return null;
@@ -34,7 +36,7 @@ export function saveExCtxMap(paths: Record<string, boolean>, shape?: string) {
   }
   saveTimer = window.setTimeout(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(EXCHANGE_CONTEXT_TREE_DISPLAY_MAP, JSON.stringify(payload));
     } catch {
       // ignore quota / privacy mode errors
     }

@@ -5,6 +5,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
 import FSMTracePanel from '@/components/debug/FSMTracePanel';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { LATEST_FSM_HEADER_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
+import { LATEST_FSM_HEADER_LINES } from '@/lib/context/exchangeContext/localStorageKeys';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
@@ -40,8 +42,8 @@ export default function FSMTraceTab() {
   // Top buttons: mirror the bottom buttons’ functionality
   const clearFSMHeader = useCallback(() => {
     try {
-      localStorage.removeItem('latestFSMHeader');
-      localStorage.removeItem('latestFSMHeaderLines');
+      localStorage.removeItem(LATEST_FSM_HEADER_KEY);
+      localStorage.removeItem(LATEST_FSM_HEADER_LINES);
       debugLog.log?.('[FSMTraceTab] 🧹 Cleared FSM header from localStorage');
     } catch (e) {
       debugLog.warn?.('[FSMTraceTab] Failed to clear FSM header', e);
@@ -52,8 +54,8 @@ export default function FSMTraceTab() {
 
   const clearFSMTrace = useCallback(() => {
     try {
-      localStorage.removeItem('latestFSMTrace');
-      localStorage.removeItem('latestFSMTraceLines');
+      localStorage.removeItem(LATEST_FSM_HEADER_KEY);
+      localStorage.removeItem(LATEST_FSM_HEADER_LINES);
       debugLog.log?.('[FSMTraceTab] 🧹 Cleared FSM trace from localStorage');
     } catch (e) {
       debugLog.warn?.('[FSMTraceTab] Failed to clear FSM trace', e);

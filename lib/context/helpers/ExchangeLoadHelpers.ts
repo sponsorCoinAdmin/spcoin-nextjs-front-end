@@ -6,7 +6,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
-const STORAGE_KEY = 'exchangeContext';
+const EXCHANGE_CONTEXT_TREE_DISPLAY_MAP = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
@@ -27,10 +27,10 @@ function normalizeOverlayVisibility(
 
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
-    const serializedContext = localStorage.getItem(STORAGE_KEY);
+    const serializedContext = localStorage.getItem(EXCHANGE_CONTEXT_TREE_DISPLAY_MAP);
 
     if (!serializedContext) {
-      debugLog.warn(`\u26A0\uFE0F NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${STORAGE_KEY}`);
+      debugLog.warn(`\u26A0\uFE0F NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${EXCHANGE_CONTEXT_TREE_DISPLAY_MAP}`);
       return null;
     }
 

@@ -4,9 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { TabId, TabMeta } from './registry';
 import { getTabById, TAB_REGISTRY, DEFAULT_FALLBACK_TAB_ID, PATH_TO_ID } from './registry';
-
-/** Must match the header */
-export const STORAGE_KEY = 'header_open_tabs';
+import { HEADER_OPEN_TABS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
 /* Snapshot registry */
 const ALL_TAB_META = Object.values(TAB_REGISTRY) as TabMeta[];
@@ -18,16 +16,17 @@ const isKnownPath = (href: string): href is KnownPath =>
 
 /* ─────────────────────────────────────────────────────────────
    STORAGE USES HREFs (paths), not TabIds — matches the header
+   Uses localStorage so header tabs persist across sessions.
 ────────────────────────────────────────────────────────────── */
 function readHrefsFromStorage(): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(HEADER_OPEN_TABS_KEY);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
     if (!Array.isArray(parsed)) return [];
 
     // Make the set explicitly Set<string> so TS doesn't narrow to the literal union
-    const knownPathsArr: string[] = ALL_TAB_META.map(t => t.path as string);
+    const knownPathsArr: string[] = ALL_TAB_META.map((t) => t.path as string);
     const knownPaths: Set<string> = new Set(knownPathsArr);
 
     const cleaned = (parsed as unknown[]).filter(
@@ -43,17 +42,21 @@ function readHrefsFromStorage(): string[] {
 function writeHrefsToStorage(hrefs: string[]) {
   if (typeof window === 'undefined') return;
   const unique = Array.from(new Set(hrefs));
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
+  window.localStorage.setItem(HEADER_OPEN_TABS_KEY, JSON.stringify(unique));
 }
 
 /* Notify header to refresh immediately */
 function dispatchAdd(href: string) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent<{ href: string }>('header:add-tab', { detail: { href } }));
+  window.dispatchEvent(
+    new CustomEvent<{ href: string }>('header:add-tab', { detail: { href } })
+  );
 }
 function dispatchRemove(href: string) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent<{ href: string }>('header:remove-tab', { detail: { href } }));
+  window.dispatchEvent(
+    new CustomEvent<{ href: string }>('header:remove-tab', { detail: { href } })
+  );
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -89,7 +92,7 @@ export function closeTab(
   const hrefs = readHrefsFromStorage();
   if (!hrefs.includes(href)) return; // idempotent
 
-  const next = hrefs.filter(h => h !== href);
+  const next = hrefs.filter((h) => h !== href);
   writeHrefsToStorage(next);
   dispatchRemove(href);
 
@@ -123,7 +126,7 @@ export function closeTabByHref(href: string, opts?: Parameters<typeof closeTab>[
 export function listOpenTabs(): TabId[] {
   const hrefs = readHrefsFromStorage();
   const ids: TabId[] = hrefs
-    .map(h => (isKnownPath(h) ? PATH_TO_ID[h] : undefined))
+    .map((h) => (isKnownPath(h) ? PATH_TO_ID[h] : undefined))
     .filter(Boolean) as TabId[];
   return ids;
 }
@@ -145,12 +148,25 @@ export function useTabs() {
     const onAdd = (e: Event) => {
       const href = (e as CustomEvent<{ href?: string }>).detail?.href;
       if (!href) return;
-      setHrefs(prev => (prev.includes(href) ? prev : [...prev, href]));
+
+      setHrefs((prev) => {
+        if (prev.includes(href)) return prev;
+        const next = [...prev, href];
+        writeHrefsToStorage(next); // persist to localStorage
+        return next;
+      });
     };
+
     const onRemove = (e: Event) => {
       const href = (e as CustomEvent<{ href?: string }>).detail?.href;
       if (!href) return;
-      setHrefs(prev => prev.filter(x => x !== href));
+
+      setHrefs((prev) => {
+        if (!prev.includes(href)) return prev;
+        const next = prev.filter((x) => x !== href);
+        writeHrefsToStorage(next); // persist to localStorage
+        return next;
+      });
     };
 
     window.addEventListener('header:add-tab', onAdd as EventListener);
@@ -162,13 +178,13 @@ export function useTabs() {
   }, []);
 
   const tabs: TabMeta[] = useMemo(() => {
-    const byPath = new Map<string, TabMeta>(ALL_TAB_META.map(t => [t.path, t]));
-    return hrefs.map(h => byPath.get(h)).filter(Boolean) as TabMeta[];
+    const byPath = new Map<string, TabMeta>(ALL_TAB_META.map((t) => [t.path, t]));
+    return hrefs.map((h) => byPath.get(h)).filter(Boolean) as TabMeta[];
   }, [hrefs]);
 
   const add = useCallback((id: TabId) => {
     const href = getTabById(id).path;
-    setHrefs(prev => {
+    setHrefs((prev) => {
       if (prev.includes(href)) return prev;
       const next = [...prev, href];
       writeHrefsToStorage(next);
@@ -179,19 +195,22 @@ export function useTabs() {
 
   const remove = useCallback((id: TabId) => {
     const href = getTabById(id).path;
-    setHrefs(prev => {
+    setHrefs((prev) => {
       if (!prev.includes(href)) return prev;
-      const next = prev.filter(x => x !== href);
+      const next = prev.filter((x) => x !== href);
       writeHrefsToStorage(next);
       dispatchRemove(href);
       return next;
     });
   }, []);
 
-  const isOpen = useCallback((id: TabId) => {
-    const href = getTabById(id).path;
-    return hrefs.includes(href);
-  }, [hrefs]);
+  const isOpen = useCallback(
+    (id: TabId) => {
+      const href = getTabById(id).path;
+      return hrefs.includes(href);
+    },
+    [hrefs]
+  );
 
   return { hrefs, tabs, add, remove, isOpen };
 }

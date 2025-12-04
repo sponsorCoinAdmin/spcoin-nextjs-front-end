@@ -4,7 +4,7 @@
 import { InputState } from '@/lib/structure/assetSelection';
 import { FEED_TYPE } from '@/lib/structure';
 
-export const LOCAL_TRACE_KEY = 'latestFSMTrace';
+export const LATEST_FSM_TRACE_KEY = 'latestFSMTrace';
 export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 
 export function getStateIcon(state: InputState): string {

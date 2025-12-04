@@ -1,110 +1,85 @@
-// File: @/lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
 'use client';
 
-import type { ExchangeContext as ExchangeContextTypeOnly } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-// 🔑 LocalStorage key (keep in sync with loader)
-import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/constants';
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_SAVE_HELPERS === 'true';
 
-const debugLog = createDebugLogger(
-  'ExchangeSaveHelpers',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
 
-/* -------------------------------------------------------------------------- */
-/*                                  Helpers                                   */
-/* -------------------------------------------------------------------------- */
+// 🔑 MUST match EXCHANGE_CONTEXT_LS_KEY used in ExchangeHelpers.loadLocalExchangeContext
 
-type FlatPanelLite = { panel: number; name?: string; visible?: boolean };
+// BigInt-safe replacer for JSON.stringify
+function bigIntReplacer(_key: string, value: unknown) {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
 
-const panelName = (id: number) => SP_COIN_DISPLAY[id] ?? String(id);
+export function saveLocalExchangeContext(ctx: ExchangeContext): void {
+  // Don’t touch localStorage on the server
+  if (typeof window === 'undefined') return;
 
-const visiblePanelsValue = (panels?: FlatPanelLite[]) => {
-  if (!Array.isArray(panels)) return '(none)';
-  const names = panels
-    .filter((p) => !!p?.visible)
-    .map((p) => p?.name || panelName(p.panel));
-  return names.length ? names.join('.') : '(none)';
-};
-
-const chosenOverlayLabel = (panels?: FlatPanelLite[]) => {
-  if (!Array.isArray(panels)) return '(none)';
-  const visible = panels.filter((p) => p.visible);
-  if (!visible.length) return '(none)';
-  // Prefer TRADING_STATION_PANEL if it’s visible, else the first visible
-  const trading = visible.find(
-    (p) => p.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-  );
-  const chosen = trading ?? visible[0];
-  return chosen?.name || panelName(chosen.panel);
-};
-
-/* -------------------------------------------------------------------------- */
-/*                          Save / Read-back verification                     */
-/* -------------------------------------------------------------------------- */
-
-export function saveLocalExchangeContext(next: ExchangeContextTypeOnly) {
   try {
-    // Shallow clone so we can strip / tweak before saving
-    const toPersist: any =
-      typeof structuredClone === 'function'
-        ? structuredClone(next)
-        : JSON.parse(JSON.stringify(next));
+    const src: any = ctx;
 
-    // 🧹 Do not persist runtime-only mainPanelNode (radio state)
-    if (toPersist?.settings?.mainPanelNode) {
+    // Build a minimal, JSON-safe snapshot
+    const settings: any = { ...(src.settings ?? {}) };
+
+    // Drop legacy / derived field
+    if ('mainPanelNode' in settings) {
+      delete settings.mainPanelNode;
       debugLog.log?.('🧹 Removed settings.mainPanelNode before save');
-      delete toPersist.settings.mainPanelNode;
     }
 
-    const flatPanels =
-      (toPersist?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined) ??
-      [];
+    const toPersist = {
+      network: src.network ?? {},
+      tradeData: src.tradeData ?? {}, // ⬅️ full tradeData will be stored
+      accounts: src.accounts ?? {},
+      settings,
+    };
 
-    const overlay = chosenOverlayLabel(flatPanels);
-    const visibleNow = visiblePanelsValue(flatPanels);
-
-    debugLog.log?.('💾 Saving ExchangeContext → localStorage');
-    debugLog.log?.(`• Overlay chosen: ${overlay}`);
-    debugLog.log?.(
-      `• Visible (pre-normalize snapshot): ${visibleNow}.`,
-    );
-
-    const json = JSON.stringify(toPersist);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(EXCHANGE_CONTEXT_LS_KEY, json);
-    }
-
-    // ✅ Optional read-back verification
+    let serialized: string;
     try {
-      if (typeof window === 'undefined') return;
-
-      const stored = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
-      if (!stored) {
-        debugLog.warn?.('⚠️ Read-back: no value found after save');
-        return;
-      }
-
-      const parsed = JSON.parse(stored);
-      const persistedPanels =
-        (parsed?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined) ??
-        [];
-      const persistedVisible = visiblePanelsValue(persistedPanels);
-
-      debugLog.log?.('✅ Read-back verification');
-      debugLog.log?.(
-        `• Visible panels persisted: ${persistedVisible}.`,
+      serialized = JSON.stringify(toPersist, bigIntReplacer);
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? `${err.name}: ${err.message}\n${err.stack ?? ''}`
+          : String(err);
+      debugLog.error?.(
+        'JSON.stringify failed in saveLocalExchangeContext:',
+        msg,
       );
-    } catch (e) {
-      debugLog.warn?.('⚠️ Read-back verification failed', e);
+      return; // nothing to write
     }
+
+    try {
+      window.localStorage.setItem(EXCHANGE_CONTEXT_LS_KEY, serialized);
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? `${err.name}: ${err.message}\n${err.stack ?? ''}`
+          : String(err);
+      debugLog.error?.(
+        'localStorage.setItem failed in saveLocalExchangeContext:',
+        msg,
+      );
+      return;
+    }
+
+    debugLog.log?.('✅ Saved ExchangeContext to localStorage', {
+      EXCHANGE_CONTEXT_LS_KEY,
+      tradeData: toPersist.tradeData,
+    });
   } catch (err) {
-    debugLog.error?.('❌ saveLocalExchangeContext failed', err);
+    const msg =
+      err instanceof Error
+        ? `${err.name}: ${err.message}\n${err.stack ?? ''}`
+        : String(err);
+    debugLog.error?.('❌ saveLocalExchangeContext failed:', msg);
+    // best-effort: don’t rethrow
   }
 }

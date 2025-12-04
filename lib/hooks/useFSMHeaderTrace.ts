@@ -6,7 +6,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOCAL_HEADER_KEY = 'latestFSMHeader';
+import { LATEST_FSM_HEADER_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
 type FSMHeaderData = Record<string, string>;
 
@@ -23,7 +23,7 @@ export function useFSMHeaderTrace() {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(LOCAL_HEADER_KEY);
+      const stored = localStorage.getItem(LATEST_FSM_HEADER_KEY);
       if (stored) {
         debugLog.log?.('[useFSMHeaderTrace] ✅ Loaded from localStorage', { stored });
         const parsed = JSON.parse(stored);
@@ -33,7 +33,7 @@ export function useFSMHeaderTrace() {
         debugLog.log?.(
           '[useFSMHeaderTrace] 🆕 No existing localStorage. Initializing empty header...',
         );
-        localStorage.setItem(LOCAL_HEADER_KEY, stringifyBigInt({}));
+        localStorage.setItem(LATEST_FSM_HEADER_KEY, stringifyBigInt({}));
         setFSMHeaderData({});
         dataRef.current = {};
       }
@@ -47,7 +47,7 @@ export function useFSMHeaderTrace() {
 
   const syncLocalStorage = useCallback((data: FSMHeaderData) => {
     try {
-      localStorage.setItem(LOCAL_HEADER_KEY, stringifyBigInt(data));
+      localStorage.setItem(LATEST_FSM_HEADER_KEY, stringifyBigInt(data));
       debugLog.log?.('[useFSMHeaderTrace] 💾 Synced localStorage', { data });
     } catch (err) {
       debugLog.error?.('[useFSMHeaderTrace] ❌ Failed to sync localStorage', err);
@@ -91,7 +91,7 @@ export function useFSMHeaderTrace() {
     dataRef.current = {};
     try {
       debugLog.log?.('[useFSMHeaderTrace] 🧹 Clearing localStorage key', {
-        key: LOCAL_HEADER_KEY,
+        key: LATEST_FSM_HEADER_KEY,
       });
       // (Behavior unchanged: no removeItem previously, just logging intent)
     } catch (err) {

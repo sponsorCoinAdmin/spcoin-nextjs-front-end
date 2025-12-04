@@ -39,6 +39,7 @@ import {
 // Core header/panel components (registered here so they’re visible in the tree)
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
+import { TEST_EXCHANGE_CONTEXT_PAGES } from '@/lib/context/exchangeContext/localStorageKeys';
 
 type NamedVirtualNode = {
   id: number;
@@ -47,7 +48,6 @@ type NamedVirtualNode = {
   name?: string;
 };
 
-const PAGES_KEY = 'test_exchangeContext_pages';
 
 function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
   return nodes.map((n) => ({
@@ -65,7 +65,7 @@ type PagesState = { showGui?: boolean; expanded?: boolean; showExchange?: boolea
 function readPagesState(): PagesState {
   try {
     if (typeof window === 'undefined') return {};
-    const raw = window.localStorage.getItem(PAGES_KEY);
+    const raw = window.localStorage.getItem(TEST_EXCHANGE_CONTEXT_PAGES);
     return raw ? (JSON.parse(raw) as PagesState) : {};
   } catch {
     return {};
@@ -75,7 +75,7 @@ function writePagesState(patch: PagesState) {
   try {
     const current = readPagesState();
     const next = { ...current, ...patch };
-    window.localStorage.setItem(PAGES_KEY, JSON.stringify(next));
+    window.localStorage.setItem(TEST_EXCHANGE_CONTEXT_PAGES, JSON.stringify(next));
   } catch {
     /* ignore */
   }

@@ -1,61 +1,87 @@
+// File: @/lib/context/exchangeContext/helpers/ExchangeHelpers.ts
 'use client';
 
 import type { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
 import { getInitialContext } from './ExchangeInitialContext';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { saveLocalExchangeContext } from './saveLocalExchangeContext';
 
-const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
+
 const debugLog = createDebugLogger('ExchangeHelpers', DEBUG_ENABLED, LOG_TIME);
 
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
-    const serializedContext = localStorage.getItem(STORAGE_KEY);
+    const serializedContext = localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
 
     if (!serializedContext) {
-      debugLog.warn(`⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${STORAGE_KEY}`);
+      debugLog.warn(
+        `⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${EXCHANGE_CONTEXT_LS_KEY}`,
+      );
       return null;
     }
 
-    debugLog.log('🔓 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(serialized)\n:', serializedContext);
+    debugLog.log(
+      '🔓 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(serialized)\n:',
+      serializedContext,
+    );
 
     let parsed: any;
     try {
       parsed = deserializeWithBigInt(serializedContext);
     } catch (parseError) {
       debugLog.error(
-        `❌ Failed to deserializeWithBigInt: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+        `❌ Failed to deserializeWithBigInt: ${
+          parseError instanceof Error
+            ? parseError.message
+            : String(parseError)
+        }`,
       );
       console.error(parseError);
       return null;
     }
 
-    debugLog.log('✅ PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', parsed);
+    debugLog.log(
+      '✅ PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:',
+      parsed,
+    );
 
     try {
       const prettyPrinted = JSON.stringify(
         parsed,
-        (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-        2
+        (_key, value) =>
+          typeof value === 'bigint' ? value.toString() : value,
+        2,
       );
-      debugLog.log('✅ (PRETTY PRINT) LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', prettyPrinted);
+      debugLog.log(
+        '✅ (PRETTY PRINT) LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:',
+        prettyPrinted,
+      );
     } catch (stringifyError) {
-      debugLog.warn('⚠️ Failed to pretty-print parsed ExchangeContext:', stringifyError);
+      debugLog.warn(
+        '⚠️ Failed to pretty-print parsed ExchangeContext:',
+        stringifyError,
+      );
     }
 
     const chainId = parsed.network?.chainId;
     return sanitizeExchangeContext(parsed, chainId);
   } catch (error) {
-    debugLog.error(`⛔ Failed to load exchangeContext: ${error instanceof Error ? error.message : String(error)}`);
+    debugLog.error(
+      `⛔ Failed to load exchangeContext: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
     console.error(error);
     return null;
   }
 }
 
-export { getInitialContext, sanitizeExchangeContext, saveLocalExchangeContext }
+export { getInitialContext, sanitizeExchangeContext, saveLocalExchangeContext };

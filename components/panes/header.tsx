@@ -1,7 +1,7 @@
 // File: @/components/panes/header.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -9,8 +9,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectNetworkButtonProps from '@/components/Buttons/Connect/ConnectNetworkButton';
 
-import { labelForPath, getTabById, PATH_TO_ID } from '@/lib/utils/tabs/registry';
-import { closeTabByHref, listOpenTabs } from '@/lib/utils/tabs/tabsManager';
+import { labelForPath, PATH_TO_ID } from '@/lib/utils/tabs/registry';
+import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
 
 const NON_NAV_HOVER = '__non_nav_hover__';
 
@@ -19,41 +19,13 @@ export default function Header() {
   const router = useRouter();
 
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const [openTabs, setOpenTabs] = useState<string[]>([]); // hrefs only
+
+  // 🔹 Source of truth for open tabs (persists via localStorage inside useTabs)
+  const { hrefs: openTabs } = useTabs(); // hrefs = list of open tab paths
 
   const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_TAB === 'true';
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
-
-  /** Hydrate from tabsManager (single source of truth). */
-  useEffect(() => {
-    try {
-      const ids = listOpenTabs(); // TabId[]
-      const hrefs = ids.map((id) => getTabById(id).path);
-      setOpenTabs(hrefs);
-    } catch {}
-  }, []);
-
-  /** Listen to add/remove events dispatched by tabsManager. */
-  useEffect(() => {
-    const onAdd = (e: Event) => {
-      const href = (e as CustomEvent).detail?.href as string | undefined;
-      if (!href) return;
-      setOpenTabs((prev) => (prev.includes(href) ? prev : [...prev, href]));
-    };
-    const onRemove = (e: Event) => {
-      const href = (e as CustomEvent).detail?.href as string | undefined;
-      if (!href) return;
-      setOpenTabs((prev) => prev.filter((h) => h !== href));
-    };
-
-    window.addEventListener('header:add-tab', onAdd as EventListener);
-    window.addEventListener('header:remove-tab', onRemove as EventListener);
-    return () => {
-      window.removeEventListener('header:add-tab', onAdd as EventListener);
-      window.removeEventListener('header:remove-tab', onRemove as EventListener);
-    };
-  }, []);
 
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
   const closeTab = useCallback(
@@ -65,7 +37,7 @@ export default function Header() {
         currentId,
       });
     },
-    [router, pathname]
+    [router]
   );
 
   const linkClass = (href: string) => {
@@ -73,7 +45,11 @@ export default function Header() {
     const isActive = pathname === href && hoveredTab === null;
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
-      ${isHovered || isActive ? 'bg-[#222a3a] text-[#5981F3]' : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'}
+      ${
+        isHovered || isActive
+          ? 'bg-[#222a3a] text-[#5981F3]'
+          : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'
+      }
     `;
   };
 
