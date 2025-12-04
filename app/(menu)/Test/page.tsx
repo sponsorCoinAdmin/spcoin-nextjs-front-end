@@ -7,7 +7,6 @@ import { usePageState } from '@/lib/context/PageStateContext';
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestWallets';
-import PanelsTab from './Tabs/Panels';
 import ToDoTab from './Tabs/ToDo';
 
 const buttonClasses =
@@ -124,7 +123,6 @@ export default function TestPage() {
       {showContext && <ExchangeContextTab />}
       {showWallets && <TestWalletsTab />}
       {showFSMTracePanel && <FSMTraceTab />}
-      {showPanels && <PanelsTab />}
       {showToDo && <ToDoTab />}
     </div>
   );
