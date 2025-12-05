@@ -11,7 +11,7 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 type Props = { isLoadingPrice: boolean };
 
 const PriceButton = ({ isLoadingPrice }: Props) => {
-  const show = usePanelVisible(SP.PRICE_BUTTON);
+  const show = usePanelVisible(SP.CONNECT_PRICE_BUTTON);
   const { exchangeContext } = useExchangeContext();
   const walletAddress = exchangeContext?.accounts?.activeAccount?.address;
 

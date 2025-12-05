@@ -284,7 +284,7 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     [SP.SELL_SELECT_PANEL, true],
     [SP.BUY_SELECT_PANEL, true],
     [SP.SWAP_ARROW_BUTTON, true],
-    [SP.PRICE_BUTTON, true],
+    [SP.CONNECT_PRICE_BUTTON, true],
     [SP.FEE_DISCLOSURE, true],
   ];
 
