@@ -10,7 +10,7 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_SAVE_HELPERS === 'true';
 
-const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('saveLocalExchangeContext', DEBUG_ENABLED, LOG_TIME);
 
 // BigInt-safe replacer for JSON.stringify
 function bigIntReplacer(_key: string, value: unknown) {
