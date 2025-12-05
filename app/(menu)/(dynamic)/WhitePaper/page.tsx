@@ -33,11 +33,11 @@ export default function WhitePaper() {
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">Swap For Sick Kids Hospital SponsorCoins Here</h1>
         <img
-          src="/assets/docs/whitePaper/RecipientPage.png"
-          alt="Recipient Page"
+          src="/assets/docs/whitePaper/RecipientPage2.png"
+          alt="Recipient Page2"
           className="w-[600px] mx-auto my-[20px]"
         />
-        <h2 className={h2Class}>Image 1 (Recipient Page)</h2>
+        <h2 className={h2Class}>Image 1 (Sponsor Recipient Page)</h2>
       </div>
 
       <p>Upon Loading this page, the gear configurator above can be allowed to connect to a wallet such as Metamask.</p>
@@ -49,11 +49,11 @@ export default function WhitePaper() {
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">Sample Sponsor Coin Management App</h1>
         <img
-          src="/assets/docs/whitePaper/ManagementApp.png"
-          alt="Management App"
+          src="/assets/docs/whitePaper/ManagementApp2.png"
+          alt="Management App2"
           className="w-[600px] mx-auto my-[20px]"
         />
-        <h2 className={h2Class}>Image 2 (Management App)</h2>
+        <h2 className={h2Class}>Image 2 (Sponsor Management App)</h2>
       </div>
       <p>The Buy button executes a contract to buy directly from an exchange through a third-party app like Metamask.</p>
       <p>The Sell button executes a contract to sell back to the exchange through a third party app like Metamask. *</p>
