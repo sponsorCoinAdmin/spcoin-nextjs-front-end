@@ -76,12 +76,26 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       return null;
     }
 
+    // Derive stored + effective appChainId for diagnostics
+    const storedAppChainId =
+      typeof parsed?.network?.appChainId === 'number'
+        ? (parsed.network.appChainId as number)
+        : null;
+
+    const storedChainId =
+      typeof parsed?.network?.chainId === 'number'
+        ? (parsed.network.chainId as number)
+        : null;
+
+    const effectiveAppChainId = storedAppChainId ?? storedChainId ?? null;
+
     debugLog.log?.(
       '✅ PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE (summary)',
       {
         hasNetwork: !!parsed?.network,
-        chainId: parsed?.network?.chainId ?? null,
-        appChainId: parsed?.network?.appChainId ?? null,
+        storedChainId,
+        storedAppChainId,
+        effectiveAppChainId,
         hasSettings: !!parsed?.settings,
         hasPanelTree: Array.isArray(parsed?.settings?.spCoinPanelTree),
       },
@@ -110,6 +124,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     debugLocalStorageSnapshot('after-load');
 
     // 🔄 Do NOT sanitize here; initExchangeContext owns sanitizeExchangeContext
+    //     and will decide the final effective appChainId.
     return parsed as ExchangeContext;
   } catch (error) {
     debugLog.error?.(

@@ -4,7 +4,7 @@
 import type { ExchangeContext as ExchangeContextTypeOnly } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
+import { saveLocalExchangeContext } from '@/lib/context/helpers/saveLocalExchangeContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
