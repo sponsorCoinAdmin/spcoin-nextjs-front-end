@@ -36,6 +36,8 @@ function isSpCoinPanelTree(x: unknown): x is SpCoinPanelTree {
  * IMPORTANT:
  * - Do NOT seed/overwrite `settings.spCoinPanelTree` here. If present, preserve it as-is.
  *   Provider/init code is responsible for seeding/migrating defaults.
+ * - NEW: we enforce the invariant that when `network.chainId` is non‑zero,
+ *   `network.appChainId` MUST equal `network.chainId`.
  */
 export const sanitizeExchangeContext = (
   raw: ({ tradeData?: Partial<TradeData> } & Partial<ExchangeContext>) | null,
@@ -65,15 +67,43 @@ export const sanitizeExchangeContext = (
   }
 
   // ----- NETWORK
-  const sanitizedNetwork = {
+  // Start with defaults, then overlay whatever was stored.
+  let sanitizedNetwork = {
     ...defaultContext.network,
     ...raw.network,
     connected: raw.network?.connected ?? defaultContext.network.connected,
   };
 
+  // Enforce the invariant:
+  //  - If we have a non‑zero chain id, appChainId MUST match it.
+  //  - If we were passed an explicit `chainId` arg, that takes precedence when non‑zero.
+  let effectiveChainId = sanitizedNetwork.chainId ?? 0;
+  const argChainId = chainId ?? 0;
+
+  if (argChainId !== 0) {
+    effectiveChainId = argChainId;
+  }
+
+  if (effectiveChainId !== 0) {
+    sanitizedNetwork = {
+      ...sanitizedNetwork,
+      chainId: effectiveChainId,
+      appChainId: effectiveChainId,
+      connected: true,
+    };
+  } else {
+    // Disconnected / unknown network → both ids are 0
+    sanitizedNetwork = {
+      ...sanitizedNetwork,
+      chainId: 0,
+      appChainId: 0,
+      connected: false,
+    };
+  }
+
   // ----- ACCOUNTS
   const sanitizedAccounts = {
-     activeAccount: raw.accounts?.activeAccount
+    activeAccount: raw.accounts?.activeAccount
       ? {
           ...raw.accounts.activeAccount,
           balance: raw.accounts.activeAccount.balance ?? 0n,

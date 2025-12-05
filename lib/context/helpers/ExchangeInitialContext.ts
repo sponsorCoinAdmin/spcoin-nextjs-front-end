@@ -27,19 +27,32 @@ const buildDefaultSpCoinPanelTree = (): SpCoinPanelTree => {
 };
 
 export const getInitialContext = (chainId: number): ExchangeContext => {
-  const initialContextMap = getInitialContextMap(chainId);
+  // Interpret the argument as the *app* chain id
+  const effectiveAppChainId = typeof chainId === 'number' && chainId > 0 ? chainId : 0;
+
+  const initialContextMap = getInitialContextMap(effectiveAppChainId);
+  const header = (initialContextMap.get('networkHeader') as NetworkElement) ?? ({} as NetworkElement);
 
   return {
     network: {
-      ...(initialContextMap.get('networkHeader') as NetworkElement),
+      // ✅ IDs: single source of truth — argument only
+      appChainId: effectiveAppChainId,
+      chainId: effectiveAppChainId,
+
+      // ✅ Start disconnected; connection state is managed elsewhere
       connected: false,
+
+      // ✅ Branding only from JSON (ignore any ids in the JSON)
+      logoURL: header.logoURL,
+      name: header.name,
+      symbol: header.symbol,
+      url: header.url,
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
       spCoinPanelTree: buildDefaultSpCoinPanelTree(), // ✅ a SpCoinPanelTree, not an array
     },
     accounts: {
-
       // 🔹 Wallet-linked account (mirrors wagmi connection)
       activeAccount: undefined,
 

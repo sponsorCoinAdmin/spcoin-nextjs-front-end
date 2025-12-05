@@ -71,8 +71,23 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       );
     }
 
-    const chainId = parsed.network?.chainId;
-    return sanitizeExchangeContext(parsed, chainId);
+    // 🔹 Use appChainId as SSoT; fall back to chainId if needed
+    let effectiveAppChainId = 0;
+
+    if (parsed?.network && typeof parsed.network === 'object') {
+      const storedAppChainId =
+        typeof parsed.network.appChainId === 'number'
+          ? (parsed.network.appChainId as number)
+          : undefined;
+      const storedChainId =
+        typeof parsed.network.chainId === 'number'
+          ? (parsed.network.chainId as number)
+          : undefined;
+
+      effectiveAppChainId = storedAppChainId ?? storedChainId ?? 0;
+    }
+
+    return sanitizeExchangeContext(parsed, effectiveAppChainId);
   } catch (error) {
     debugLog.error(
       `⛔ Failed to load exchangeContext: ${

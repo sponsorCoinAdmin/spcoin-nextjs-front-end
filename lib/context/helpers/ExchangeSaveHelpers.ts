@@ -1,3 +1,4 @@
+// File: @/lib/context/helpers/ExchangeSaveHelpers..ts
 'use client';
 
 import type { ExchangeContext } from '@/lib/structure';
@@ -9,13 +10,52 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_SAVE_HELPERS === 'true';
 
-const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger(
+  'ExchangeSaveHelpers',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 // 🔑 MUST match EXCHANGE_CONTEXT_LS_KEY used in ExchangeHelpers.loadLocalExchangeContext
 
 // BigInt-safe replacer for JSON.stringify
 function bigIntReplacer(_key: string, value: unknown) {
   return typeof value === 'bigint' ? value.toString() : value;
+}
+
+/**
+ * Normalize network so that:
+ *  - appChainId is the single source of truth
+ *  - chainId always mirrors appChainId
+ *  - if neither is set, both are 0 and connected=false
+ */
+function normalizeNetworkForSave(
+  network: ExchangeContext['network'] | undefined,
+): ExchangeContext['network'] {
+  const n = (network ?? {}) as any;
+
+  const storedAppChainId =
+    typeof n.appChainId === 'number' ? (n.appChainId as number) : 0;
+  const storedChainId =
+    typeof n.chainId === 'number' ? (n.chainId as number) : 0;
+
+  const effective = storedAppChainId || storedChainId || 0;
+
+  if (effective !== 0) {
+    return {
+      ...n,
+      appChainId: effective,
+      chainId: effective,
+      connected: true,
+    };
+  }
+
+  return {
+    ...n,
+    appChainId: 0,
+    chainId: 0,
+    connected: false,
+  };
 }
 
 export function saveLocalExchangeContext(ctx: ExchangeContext): void {
@@ -34,8 +74,11 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
       debugLog.log?.('🧹 Removed settings.mainPanelNode before save');
     }
 
+    // 🔒 Enforce appChainId/chainId invariant before persisting
+    const normalizedNetwork = normalizeNetworkForSave(src.network);
+
     const toPersist = {
-      network: src.network ?? {},
+      network: normalizedNetwork,
       tradeData: src.tradeData ?? {}, // ⬅️ full tradeData will be stored
       accounts: src.accounts ?? {},
       settings,
@@ -73,6 +116,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
     debugLog.log?.('✅ Saved ExchangeContext to localStorage', {
       EXCHANGE_CONTEXT_LS_KEY,
       tradeData: toPersist.tradeData,
+      network: toPersist.network,
     });
   } catch (err) {
     const msg =
