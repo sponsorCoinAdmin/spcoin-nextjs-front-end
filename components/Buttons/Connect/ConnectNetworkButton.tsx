@@ -3,7 +3,13 @@
 
 import React from 'react';
 import { ConnectKitButton } from 'connectkit';
-import { useChainId, useConnect, useConnectors, useDisconnect, useSwitchChain } from 'wagmi';
+import {
+  useChainId as useWalletChainId,
+  useConnect,
+  useConnectors,
+  useDisconnect,
+  useSwitchChain,
+} from 'wagmi';
 import { useAppChainId } from '@/lib/context/hooks';
 
 import ConnectMainButton from './ConnectMainButton';
@@ -42,12 +48,16 @@ export default function ConnectNetworkButton({
   // network sets
   const { allOptions, mainnetOptions, testnetOptions, findById } = useNetworkOptions();
 
-  // wagmi
+  // wagmi + app network
   const { switchChainAsync } = useSwitchChain();
-  const { disconnect } = useDisconnect(); 
+  const { disconnect } = useDisconnect();
   const { connectAsync } = useConnect();
   const connectors = useConnectors();
-  const walletChainId = useChainId();
+
+  // 🔹 Wallet chain id (wallet-only; not app SSoT)
+  const walletChainId = useWalletChainId();
+
+  // 🔹 App chain id (single source of truth for UI/network selection)
   const [appChainId, setAppChainId] = useAppChainId();
 
   // wallet actions (with cancel/pending guards)
@@ -61,31 +71,63 @@ export default function ConnectNetworkButton({
   });
 
   // testnet toggle (persisted)
-  const [showTestNets, setShowTestNets] = usePersistentState<boolean>('ck_show_testnets', false);
+  const [showTestNets, setShowTestNets] = usePersistentState<boolean>(
+    'ck_show_testnets',
+    false,
+  );
 
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, address, truncatedAddress, chain, show }) => {
-        // id selection
+        const normalizedAppChainId =
+          typeof appChainId === 'number' && appChainId > 0 ? appChainId : undefined;
+
+        const normalizedWalletChainId =
+          typeof walletChainId === 'number' && walletChainId > 0
+            ? walletChainId
+            : undefined;
+
+        const normalizedChainId =
+          typeof chain?.id === 'number' && chain.id > 0 ? chain.id : undefined;
+
         const fallbackId = allOptions[0]?.id;
+
+        // 🔹 Base id for app/network selection:
+        //     appChainId (SSoT) → ConnectKit chain → wallet chain → first option
         const baseId =
-          (typeof appChainId === 'number' && appChainId > 0 ? appChainId : undefined) ??
-          (typeof walletChainId === 'number' && walletChainId > 0 ? walletChainId : undefined) ??
+          normalizedAppChainId ??
+          normalizedChainId ??
+          normalizedWalletChainId ??
           fallbackId;
 
-        const currentId = isConnected
-          ? (chain?.id ?? appChainId ?? walletChainId ?? baseId)
-          : baseId;
+        // 🔹 Current network id for display & dropdown
+        // When connected, we *still* let appChainId lead; ConnectKit chain is
+        // informational, but the app's idea of "active network" is appChainId.
+        const currentId =
+          (isConnected
+            ? normalizedAppChainId ?? normalizedChainId ?? normalizedWalletChainId
+            : normalizedAppChainId) ?? baseId;
+
+        const numericCurrentId =
+          typeof currentId === 'number' && currentId > 0 ? currentId : undefined;
 
         // label
-        const opt = findById(typeof currentId === 'number' ? currentId : undefined);
+        const opt = findById(numericCurrentId);
         const currentName =
-          opt?.name || chain?.name || (typeof currentId === 'number' ? `Chain ${currentId}` : '');
-        const currentSymbol = opt?.symbol || (chain as any)?.nativeCurrency?.symbol || '';
+          opt?.name ||
+          chain?.name ||
+          (typeof numericCurrentId === 'number'
+            ? `Chain ${numericCurrentId}`
+            : '');
+
+        const currentSymbol =
+          opt?.symbol || (chain as any)?.nativeCurrency?.symbol || '';
 
         let label = '';
         if (showName && currentName) label = currentName;
-        if (showSymbol && currentSymbol) label = label ? `${label} (${currentSymbol})` : currentSymbol;
+        if (showSymbol && currentSymbol) {
+          label = label ? `${label} (${currentSymbol})` : currentSymbol;
+        }
 
         // click handlers
         const onButtonClick = toggle;
@@ -130,7 +172,7 @@ export default function ConnectNetworkButton({
           <div ref={anchorRef} className="relative m-0 p-0 inline-flex items-center">
             <div className={trimClass}>
               <ConnectMainButton
-                currentId={typeof currentId === 'number' ? currentId : undefined}
+                currentId={numericCurrentId}
                 label={
                   !isConnected && showConnect
                     ? 'Connect'
@@ -153,12 +195,14 @@ export default function ConnectNetworkButton({
                 <ConnectDropDown
                   address={address}
                   truncatedAddress={truncatedAddress}
-                  currentId={typeof currentId === 'number' ? currentId : undefined}
+                  currentId={numericCurrentId}
                   showHoverBg={showHoverBg}
                   showConnectRow={showConnectRowInDropdown}
                   showDisconnectRow={showDisconnectRowInDropdown}
                   onSelectNetwork={(id) => {
+                    // 🔹 First update app-level network (SSoT)
                     setAppChainId(id);
+                    // 🔹 Then sync wallet if connected
                     switchTo(id, isConnected);
                   }}
                   onConnect={() => connectMetaMask(show)}
