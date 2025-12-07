@@ -1,9 +1,11 @@
+'use client';
+
 // File: @/lib/context/hooks/ExchangeContext/nested/network/useNetworkController.ts
 
 /**
  * useNetworkController
  *
- * Central policy for network resolution (Cases A–E):
+ * Central policy for network resolution (Cases A–D):
  *
  * NOTE:
  *  - This hook is meant to be called once at a high level (e.g. in AppChainController).
@@ -26,36 +28,33 @@
  * Case D: Wallet Connected / Local Storage Available
  *   appChainId = stored appChainId
  *   chainId    = stored chainId
- *   → switch wallet to appChainId
+ *   → wallet is switched to appChainId if needed
  *
- * Case E: Connecting to wallet.
- *   switch wallet to appChainId
- *
- * ┌──────┬────────────┬───────────────┬────────────────────────────────────────────────────────┐
- * │ Case │ Connected  │ Local Storage │ Result / Action                                        │
- * │      │            │   Available   │                                                        │
- * ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
- * │  A   │ NO         │ NO            │ appChainId = 1 (default Ethereum)                      │
- * │      │            │               │ chainId = undefined                                    │
- * ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
- * │  B   │ YES        │ NO            │ appChainId = wallet.chainId                            │
- * │      │            │               │ chainId = wallet.chainId                               │
- * ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
- * │  C   │ NO         │ YES           │ appChainId = stored appChainId                         │
- * │      │            │               │ chainId = stored chainId                               │
- * ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
- * │  D   │ YES        │ YES           │ appChainId = stored appChainId                         │
- * │      │            │               │ chainId = stored chainId                               │
- * │      │            │               │ ACTION: switch wallet to appChainId                    │
- * ├──────┴────────────┴───────────────┴────────────────────────────────────────────────────────┤
- * │                             Summary Network Resolution                                     │
- * ├────────────────────────────────────────────────────────────────────────────────────────────┤
- * │ LS empty + no wallet     → default network to 1, Ethereum.                                 │
- * │ LS empty + wallet        → app follows wallet.                                             │
- * │ LS available + no wallet → app restores last known network.                                │
- * │ LS available + wallet    → app restores last known network and forces wallet to match.     │
- * │ On connect               → wallet is always driven to appChainId.                          │
- * └────────────────────────────────────────────────────────────────────────────────────────────┘
+ * ┌──────┬────────────┬───────────────┬───────────────────────────────────────────────────────┐
+ * │ Case │ Connected  │ Local Storage │ Result / Action                                       │
+ * │      │            │   Available   │                                                       │
+ * ├──────┼────────────┼───────────────┼───────────────────────────────────────────────────────┤
+ * │  A   │ NO         │ NO            │ appChainId = 1 (default Ethereum)                     │
+ * │      │            │               │ chainId = undefined                                   │
+ * ├──────┼────────────┼───────────────┼───────────────────────────────────────────────────────┤
+ * │  B   │ YES        │ NO            │ appChainId = wallet.chainId                           │
+ * │      │            │               │ chainId = wallet.chainId                              │
+ * ├──────┼────────────┼───────────────┼───────────────────────────────────────────────────────┤
+ * │  C   │ NO         │ YES           │ appChainId = stored appChainId                        │
+ * │      │            │               │ chainId = stored chainId                              │
+ * ├──────┼────────────┼───────────────┼───────────────────────────────────────────────────────┤
+ * │  D   │ YES        │ YES           │ appChainId = stored appChainId                        │
+ * │      │            │               │ chainId = stored chainId                              │
+ * │      │            │               │ ACTION: switch wallet to appChainId if mismatched     │
+ * ├──────┴────────────┴───────────────┴───────────────────────────────────────────────────────┤
+ * │                          Summary Network Resolution                                       │
+ * ├───────────────────────────────────────────────────────────────────────────────────────────┤
+ * │ LS empty + no wallet     → default network to 1, Ethereum.                                │
+ * │ LS empty + wallet        → app follows wallet (Case B + first-connect adopt rule).        │
+ * │ LS available + no wallet → app restores last known network (Case C).                      │
+ * │ LS available + wallet    → app restores last known network and forces wallet to match     │
+ * │                            appChainId when connected (Case D).                            │
+ * └───────────────────────────────────────────────────────────────────────────────────────────┘
  *
  * Implementation note
  * --------------------
@@ -70,8 +69,6 @@
  * In other words: ExchangeProvider decides "which network" on boot, and
  * `useNetworkController` enforces that policy at runtime.
  */
-
-'use client';
 
 import { useEffect, useRef } from 'react';
 import {
@@ -135,19 +132,14 @@ export function useNetworkController() {
       });
     };
 
-    // ───────────────────────────────────────────────
-    // 0) Wait for wagmi handshake.
-    //    Until wagmiReady, we don't trust isConnected/chainId.
-    // ───────────────────────────────────────────────
+    // 0) Wait for wagmi handshake – until wagmiReady, we don't trust isConnected/chainId.
     if (!wagmiReady) {
       logState('skip:wagmi-not-ready');
       return;
     }
 
-    // ───────────────────────────────────────────────
     // 1) Wallet disconnected → just mark app as disconnected.
     //    Case A/C network choice has already been made by initExchangeContext.
-    // ───────────────────────────────────────────────
     if (!walletConnected) {
       logState('wallet-disconnected', {
         msg: 'Wallet disconnected → mark appConnected=false (keep appChainId)',
@@ -173,19 +165,8 @@ export function useNetworkController() {
       return;
     }
 
-    // ───────────────────────────────────────────────
     // 2) SPECIAL CASE: Fresh boot with *no* LocalStorage (LS empty)
-    //    and app network is still the default 1, but wallet is already
-    //    on a different chain.
-    //
-    //    This is the "Case B in practice after a Case A provisional":
-    //      • LS was empty at boot  → hydratedFromLocalStorage === false
-    //      • initExchangeContext defaulted appChainId to 1
-    //      • Wallet reconnects on a real chain (non-1)
-    //
-    //    → For this *first* connect only, we adopt the wallet chain
-    //      instead of forcing wallet back to 1.
-    // ───────────────────────────────────────────────
+    //    and app network is still the default 1, but wallet is already on a different chain.
     if (
       !hydratedFromLocalStorage &&
       !adoptedOnFirstConnectRef.current &&
@@ -202,12 +183,7 @@ export function useNetworkController() {
       return;
     }
 
-    // ───────────────────────────────────────────────
     // 3) No app network chosen yet → adopt wallet (Case B).
-    //    This covers:
-    //      • LS empty + wallet connected (pure Case B)
-    //      • Any defensive 0-appChainId edge cases.
-    // ───────────────────────────────────────────────
     if (!appChainId || appChainId === 0) {
       logState('adopt-wallet', {
         msg: 'appChainId is 0 → adopt walletChainId as appChainId (Case B)',
@@ -216,14 +192,10 @@ export function useNetworkController() {
       return;
     }
 
-    // ───────────────────────────────────────────────
-    // 4) App has a network and wallet disagrees → app is authoritative.
-    //    - Case D on boot
-    //    - Case E when user connects / changes wallet chain manually
-    // ───────────────────────────────────────────────
+    // 4) App has a network and wallet disagrees → app is authoritative (Case D).
     if (walletChainId !== appChainId) {
       logState('switch-wallet', {
-        msg: 'Wallet chain mismatch → switch wallet to appChainId (Case D/E)',
+        msg: 'Wallet chain mismatch → switch wallet to appChainId (Case D)',
       });
       switchChainAsync({ chainId: appChainId }).catch((err) => {
         debugLog.error?.(
@@ -234,9 +206,7 @@ export function useNetworkController() {
       return;
     }
 
-    // ───────────────────────────────────────────────
     // 5) Everything already aligned → noop.
-    // ───────────────────────────────────────────────
     logState('noop', {
       msg: 'Wallet and app chain already aligned → no action',
     });

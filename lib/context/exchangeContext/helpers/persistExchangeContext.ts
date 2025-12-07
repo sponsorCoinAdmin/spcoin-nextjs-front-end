@@ -1,6 +1,6 @@
-// File: @/lib/context/exchangeContext/helpers/persistExchangeContext.ts
-
 'use client';
+
+// File: @/lib/context/exchangeContext/helpers/persistExchangeContext.ts
 
 import type { ExchangeContext } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
