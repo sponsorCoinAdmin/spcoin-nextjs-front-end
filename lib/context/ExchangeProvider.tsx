@@ -4,7 +4,7 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
-import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
+import { initExchangeContext } from '@/lib/context/init/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/providers/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 import { reconcilePanelState } from '@/lib/context/exchangeContext/helpers/panelReconcile';
@@ -26,6 +26,9 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { validateAndRepairPanels } from '@/lib/structure/exchangeContext/safety/validatePanelState';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+// ⬇️ wagmi readiness gate
+import { useWagmiReady } from '@/lib/network/initialize/hooks/useWagmiReady';
+
 // panel helpers + PanelBootstrap
 import {
   PANEL_SCHEMA_VERSION,
@@ -41,6 +44,28 @@ import {
 import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persistExchangeContext';
 
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
+
+/**
+ * REQUIREMENT (boot sequencing):
+ *
+ *  - ExchangeProvider MUST only call `initExchangeContext(...)` *after* wagmi
+ *    has finished its initial handshake.
+ *
+ *  - Concretely, we use `useWagmiReady()` (in `@/lib/network/initialize/hooks/useWagmiReady`)
+ *    which returns `true` only when wagmi has settled into a stable state
+ *    (connected or disconnected) and is no longer in an initial "connecting" phase.
+ *
+ *  - The init effect is gated like:
+ *        const wagmiReady = useWagmiReady();
+ *        if (!wagmiReady || hasInitializedRef.current) return;
+ *        hasInitializedRef.current = true;
+ *        await initExchangeContext(wagmiChainId, isConnected, address);
+ *
+ *  - This ensures correct Case A–D behaviour together with useNetworkController:
+ *      • LS empty + wallet connected  → init with walletChainId (Case B).
+ *      • LS empty + no wallet         → init with default 1 (Case A).
+ *      • LS available                 → init from stored appChainId/chainId (Case C/D).
+ */
 
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
@@ -102,9 +127,12 @@ const clone = <T,>(o: T): T =>
 /* --------------------------------- Provider -------------------------------- */
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
-  // ⬇️ Back to wagmi directly here to avoid context recursion
+  // ⬇️ Direct wagmi access here to avoid context recursion
   const wagmiChainId = useWagmiChainId();
   const { address, isConnected } = useAccount();
+
+  // ⬇️ wagmi readiness gate
+  const wagmiReady = useWagmiReady();
 
   const [contextState, setContextState] = useState<
     ExchangeContextTypeOnly | undefined
@@ -143,7 +171,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Persist (diff path only when DEBUG is enabled)
-      persistWithOptDiff(prev, normalized, 'ExchangeContext.settings.spCoinPanelTree');
+      persistWithOptDiff(
+        prev,
+        normalized,
+        'ExchangeContext.settings.spCoinPanelTree',
+      );
 
       return nextBase;
     });
@@ -151,13 +183,29 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
   // initial hydrate + normalize + migrate panels + immediate network reconcile
   useEffect(() => {
+    // ⬇️ don’t boot until wagmiReady is true
+    if (!wagmiReady) {
+      debugLog.log?.(
+        '[ExchangeProvider] wagmi not ready yet — skipping initExchangeContext boot',
+      );
+      return;
+    }
+
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
     (async () => {
-      debugLog.log?.('🚀 initExchangeContext boot start');
+      debugLog.log?.('🚀 initExchangeContext boot start', {
+        wagmiChainId,
+        isConnected,
+        address,
+      });
 
-      const base = await initExchangeContext(wagmiChainId, isConnected, address);
+      const base = await initExchangeContext(
+        wagmiChainId,
+        isConnected,
+        address,
+      );
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.spCoinPanelTree as
         | PanelNode[]
@@ -174,8 +222,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       );
       const flatPanels = reconcileOverlayVisibility(ensured);
 
-      const radioTopLevel: any[] =
-        (settingsAny.mainPanelNode as any[]) ?? [];
+      const radioTopLevel: any[] = (settingsAny.mainPanelNode as any[]) ?? [];
 
       reconcilePanelState(
         flatPanels as any,
@@ -195,12 +242,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
+      // Normalize network from initExchangeContext; it already chose
+      // appChainId/chainId based on wagmi + localStorage.
       const net = ensureNetwork((base as any).network);
-      net.connected = !!isConnected;
-      net.chainId =
-        isConnected && typeof wagmiChainId === 'number'
-          ? (wagmiChainId as number)
-          : 0;
+      debugLog.log?.('[ExchangeProvider] network after initExchangeContext', {
+        net,
+      });
 
       (base as any).network = net;
       (base as any).settings = nextSettings;
@@ -219,8 +266,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       setContextState(base as ExchangeContextTypeOnly);
       debugLog.log?.('✅ initExchangeContext boot complete');
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [wagmiReady, wagmiChainId, isConnected, address]);
 
   const {
     setRecipientAccount,
@@ -235,34 +281,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
-  // Wallet/network sync for subsequent changes
-  useEffect(() => {
-    if (!contextState) return;
-
-    setExchangeContext(
-      (prev) => {
-        const next = clone(prev);
-        const net = ensureNetwork(next.network);
-        const connected = !!isConnected;
-        const desiredChainId =
-          connected && typeof wagmiChainId === 'number'
-            ? (wagmiChainId as number)
-            : 0;
-
-        if (net.connected === connected && net.chainId === desiredChainId) {
-          return prev;
-        }
-
-        net.connected = connected;
-        net.chainId = desiredChainId;
-        next.network = net;
-        return next;
-      },
-      'provider:syncNetworkAndWallet',
-    );
-  }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
-
-  /* 🔐 Authoritative sync of activeAccount from Wagmi */
+  // 🔐 Authoritative sync of activeAccount from Wagmi
   const lastAppliedAddrRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -306,7 +325,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   // 🩹 Repair after rehydrate (in case storage clobbers a live connection)
   useEffect(() => {
     if (!contextState) return;
-    if (isConnected && address && !contextState.accounts?.activeAccount?.address) {
+    if (
+      isConnected &&
+      address &&
+      !contextState.accounts?.activeAccount?.address
+    ) {
       setExchangeContext(
         (prev) => {
           const next = clone(prev);
@@ -323,7 +346,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [contextState, isConnected, address, setExchangeContext]);
 
-  /** SINGLE source of truth on appChainId change */
+  /** SINGLE source of truth on appChainId change → refresh derived display props. */
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -343,6 +366,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           next.network = {
             ...next.network,
             appChainId: appId,
+            chainId: appId, // keep internal chainId aligned with appChainId
             name: derived?.name ?? '',
             symbol: derived?.symbol ?? '',
             url: derived?.url ?? '',

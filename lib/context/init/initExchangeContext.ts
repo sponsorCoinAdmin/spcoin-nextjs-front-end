@@ -1,6 +1,6 @@
-// File: @/lib/context/initExchangeContext.ts
-import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
-import { loadLocalExchangeContext } from './loadLocalExchangeContext';
+// File: @/lib/context/init/initExchangeContext.ts
+import { sanitizeExchangeContext } from '../helpers/ExchangeSanitizeHelpers';
+import { loadLocalExchangeContext } from '../helpers/loadLocalExchangeContext';
 import type { WalletAccount, ExchangeContext } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
@@ -48,7 +48,7 @@ export async function initExchangeContext(
   }
 
   // ────────────────────────────────────────────────────────────────
-  // Network hydrate: prefer persisted appChainId / chainId over wallet
+  // Network hydrate: LS vs wallet vs default
   // ────────────────────────────────────────────────────────────────
 
   // In case of historical refactors, try both top-level `network` and `settings.network`.
@@ -56,7 +56,10 @@ export async function initExchangeContext(
     (stored as any)?.network ?? (stored as any)?.settings?.network ?? null;
 
   // Extra debug so we can see where it actually lives in real data
-  debugLog.log?.('[initExchangeContext] raw stored.network', (stored as any)?.network);
+  debugLog.log?.(
+    '[initExchangeContext] raw stored.network',
+    (stored as any)?.network,
+  );
   debugLog.log?.(
     '[initExchangeContext] raw stored.settings?.network',
     (stored as any)?.settings?.network,
@@ -71,14 +74,61 @@ export async function initExchangeContext(
       ? (storedNetwork.chainId as number)
       : undefined;
 
+  // isLocalStorage = this boot has a usable network from LS
+  const isLocalStorage =
+    !!stored && (storedAppChainId !== undefined || storedChainId !== undefined);
+
   const walletChainId =
     typeof chainId === 'number' && chainId > 0 ? chainId : undefined;
 
-  // 🧠 APP-FIRST: prefer persisted appChainId, then stored chainId, then wallet, then hard default 1
-  const effectiveChainId =
-    storedAppChainId ?? storedChainId ?? walletChainId ?? 1;
+  debugLog.log?.('[initExchangeContext] network boot inputs', {
+    isLocalStorage,
+    storedAppChainId: storedAppChainId ?? null,
+    storedChainId: storedChainId ?? null,
+    walletChainId: walletChainId ?? null,
+    wagmiIsConnected: isConnected,
+  });
+
+  // Decide effectiveChainId according to the LS vs wallet rules:
+  //
+  //  - isLocalStorage = true  → LS is authoritative on boot (Case C/D).
+  //  - isLocalStorage = false → fresh boot:
+  //        • if wallet already connected → adopt wallet (Case B)
+  //        • else → default to 1 (Case A provisional)
+  let effectiveChainId: number;
+
+  if (isLocalStorage) {
+    // LocalStorage had a network; prefer appChainId, then chainId, then wallet, then default 1.
+    effectiveChainId = storedAppChainId ?? storedChainId ?? walletChainId ?? 1;
+
+    debugLog.log?.('📦 [initExchangeContext] Case C/D (from localStorage)', {
+      effectiveChainId,
+      storedAppChainId: storedAppChainId ?? null,
+      storedChainId: storedChainId ?? null,
+      walletChainId: walletChainId ?? null,
+    });
+  } else {
+    // No network in LS for this boot.
+    if (isConnected && walletChainId) {
+      // Case B: LS empty + wallet connected → app follows wallet.
+      effectiveChainId = walletChainId;
+      debugLog.log?.('🌱 [initExchangeContext] Case B (fresh + wallet connected)', {
+        effectiveChainId,
+        walletChainId,
+      });
+    } else {
+      // Case A: LS empty + no wallet → default to 1
+      effectiveChainId = 1;
+      debugLog.log?.('🌱 [initExchangeContext] Case A (fresh + no wallet)', {
+        effectiveChainId,
+        walletChainId: walletChainId ?? null,
+        wagmiIsConnected: isConnected,
+      });
+    }
+  }
 
   debugLog.log?.('📦 stored.network BEFORE sanitize', {
+    isLocalStorage,
     storedAppChainId: storedAppChainId ?? null,
     storedChainId: storedChainId ?? null,
     walletChainId: walletChainId ?? null,
@@ -92,6 +142,7 @@ export async function initExchangeContext(
     effectiveChainId,
     sanitizedAppChainId: sanitized.network?.appChainId,
     sanitizedChainId: sanitized.network?.chainId,
+    isLocalStorage,
   });
 
   debugLog.log?.(
@@ -320,8 +371,6 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
 
   debugLog.log?.('checks.accidentallyIncluded', {
     label,
-    accidentallyIncluded: accidentallyIncluded.map(
-      (id) => SP[id] ?? id,
-    ),
+    accidentallyIncluded: accidentallyIncluded.map((id) => SP[id] ?? id),
   });
 }

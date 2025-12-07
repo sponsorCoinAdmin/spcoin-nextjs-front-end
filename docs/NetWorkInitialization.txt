@@ -1,0 +1,49 @@
+What happens on Allpication Load/Refresh/Connect.
+
+Case A: Wallet Disconnected / Local Storage Empty
+	appChainId = 1 (default Ethereum)
+	chainId = undefined
+
+Case B: Wallet Connected /Local Storage Empty
+	appChainId = wallet.chainId
+	chainId = wallet.chainId	
+
+Case C: Wallet Disconnected / Local Storage Available
+	appChainId = stored appChainId
+	chainId = stored chainId
+
+Case D: Wallet Connected / Local Storage Available
+	appChainId = stored appChainId
+	chainId = stored chainId
+	switch wallet to app chainId
+
+Case E: Connecting to wallet.
+	switch wallet to app chainId
+
+┌──────┬────────────┬───────────────┬────────────────────────────────────────────────────────┐
+│ Case │ Connected  │ Local Storage │ Result / Action                                        │
+│      │            │   Available   │                                                        │
+├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
+│  A   │ NO         │ NO            │ appChainId = 1 (default Ethereum)                      │
+│      │            │               │ chainId = undefined                                    │
+├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
+│  B   │ YES        │ NO            │ appChainId = wallet.chainId                            │
+│      │            │               │ chainId = wallet.chainId                               │
+├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
+│  C   │ NO         │ YES           │ appChainId = stored appChainId                         │
+│      │            │               │ chainId = stored chainId                               │
+├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
+│  D   │ YES        │ YES           │ appChainId = stored appChainId                         │
+│      │            │               │ chainId = stored chainId                               │
+│      │            │               │ ACTION: switch wallet to appChainId                    │
+├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
+│  E   │ Connecting │ YES           │ ACTION on connect: switch wallet to current appChainId │
+├──────┴────────────┴───────────────┴────────────────────────────────────────────────────────┤
+│                             Summary Network Resolution                                     │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LS empty + no wallet     → default network to 1, Ethereum.                                 │
+│ LS empty + wallet        → app follows wallet.                                             │
+│ LS available + no wallet → app restores last known network.                                │
+│ LS available + wallet    → app restores last known network and forces wallet to match.     │
+│ On connect               → wallet is always driven to appChainId.                          │
+└────────────────────────────────────────────────────────────────────────────────────────────┘

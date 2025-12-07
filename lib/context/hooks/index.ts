@@ -20,7 +20,7 @@ export * from './nestedHooks/useTokenContracts'; // provides useSellTokenContrac
 export * from '../exchangeContext/hooks/usePanelTree';
 
 // Named re-export (concrete file, not a barrel)
-export * from './nestedHooks/useAppChainId';
+export * from './ExchangeContext/nested/network/useAppChainId';
 
 import { useContext } from 'react';
 import { ExchangeContextState } from '../ExchangeProvider';

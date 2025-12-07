@@ -79,11 +79,14 @@ export type Settings = {
   /** Which backend to use for trading operations */
   apiTradingProvider: API_TRADING_PROVIDER;
 
-  /**
-   * New visibility model: full panel tree persisted in settings.
-   * Always present after hydration (provider seeds it from defaults).
-   */
+  /** Persisted panel tree */
   spCoinPanelTree: SpCoinPanelTree;
+
+  /**
+   * True if this ExchangeContext was hydrated from Local Storage on boot.
+   * False or undefined means "started from defaults" (no LS data).
+   */
+  hydratedFromLocalStorage?: boolean;
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */
