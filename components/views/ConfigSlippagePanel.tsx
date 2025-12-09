@@ -63,7 +63,7 @@ const ConfigSlippagePanel: React.FC = () => {
       {/* Slider on the left */}
       <input
         type='range'
-        title='Adjust slippage tolerance'
+        title='Adjust Slippage Tolerance'
         className='border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer'
         min={MIN_BPS}
         max={MAX_BPS}

@@ -19,7 +19,8 @@ export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const { title, leftElement, onClose, isTrading } = useHeaderController();
 
-  const { openPanel, isVisible } = usePanelTree();
+  // ⬇️ include closePanel so we can toggle
+  const { openPanel, closePanel, isVisible } = usePanelTree();
 
   const accounts = exchangeContext?.accounts ?? {};
   const recipientAccount = accounts.recipientAccount as
@@ -111,10 +112,22 @@ export default function TradeContainerHeader() {
             alt="Open slippage settings"
             title="Open slippage settings"
             onClick={() => {
-              openPanel(
-                SP_TREE.CONFIG_SLIPPAGE_PANEL,
-                'TradeContainerHeader:cog(CONFIG_SLIPPAGE_PANEL)',
-              );
+              const visible =
+                typeof isVisible === 'function'
+                  ? isVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL)
+                  : false;
+
+              if (visible) {
+                closePanel(
+                  SP_TREE.CONFIG_SLIPPAGE_PANEL,
+                  'TradeContainerHeader:cog(toggle-close CONFIG_SLIPPAGE_PANEL)',
+                );
+              } else {
+                openPanel(
+                  SP_TREE.CONFIG_SLIPPAGE_PANEL,
+                  'TradeContainerHeader:cog(toggle-open CONFIG_SLIPPAGE_PANEL)',
+                );
+              }
             }}
             className="h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
             priority
