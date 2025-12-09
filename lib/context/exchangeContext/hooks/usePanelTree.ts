@@ -12,7 +12,12 @@ import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
-type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
+
+type PanelEntry = {
+  panel: SP_COIN_DISPLAY;
+  visible: boolean;
+  name?: string; // ⬅️ carry name through this hook
+};
 
 /* ------------------------------ debug helpers ------------------------------ */
 
@@ -55,6 +60,8 @@ function logAction(
 const schedule = (fn: () => void) =>
   typeof queueMicrotask === 'function' ? queueMicrotask(fn) : setTimeout(fn, 0); // post-commit scheduling
 
+const panelName = (id: number) => SP_COIN_DISPLAY[id] ?? String(id);
+
 function flatten(nodes: any[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
   const out: PanelEntry[] = [];
@@ -62,7 +69,17 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
     for (const n of ns) {
       const id = typeof n?.panel === 'number' ? (n.panel as number) : NaN;
       if (!Number.isFinite(id) || !KNOWN.has(id)) continue;
-      out.push({ panel: id as SP_COIN_DISPLAY, visible: !!n.visible });
+
+      const name =
+        typeof n?.name === 'string' && n.name.length > 0
+          ? (n.name as string)
+          : panelName(id);
+
+      out.push({
+        panel: id as SP_COIN_DISPLAY,
+        visible: !!n.visible,
+        name,
+      });
       if (Array.isArray(n.children) && n.children.length) walk(n.children);
     }
   };
@@ -78,14 +95,30 @@ function toMap(list: PanelEntry[]): Record<number, boolean> {
 }
 
 function writeFlat(prevCtx: any, next: PanelEntry[]) {
+  // Always persist name as well so Test page & tools see it
+  const withNames = next.map((e) => ({
+    panel: e.panel,
+    visible: !!e.visible,
+    name: e.name ?? panelName(e.panel),
+  }));
+
   return {
     ...prevCtx,
-    settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: next },
+    settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: withNames },
   };
 }
 
 function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEntry[] {
-  return list.some((e) => e.panel === panel) ? list : [...list, { panel, visible: false }];
+  return list.some((e) => e.panel === panel)
+    ? list
+    : [
+        ...list,
+        {
+          panel,
+          visible: false,
+          name: panelName(panel),
+        },
+      ];
 }
 
 function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number, boolean>) {
@@ -133,7 +166,13 @@ export function usePanelTree() {
       setExchangeContext((prev) => {
         const flatPrev = flatten((prev as any)?.settings?.spCoinPanelTree);
         const next = flatPrev.map((e) =>
-          overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e,
+          overlays.includes(e.panel)
+            ? {
+                ...e,
+                visible: e.panel === keep,
+                name: e.name ?? panelName(e.panel),
+              }
+            : e,
         );
         diffAndPublish(toMap(flatPrev), toMap(next));
         return writeFlat(prev, next);
@@ -155,7 +194,6 @@ export function usePanelTree() {
 
   /* ------------------------------- actions ------------------------------- */
 
-  // New, simplified signature:
   //   openPanel(panel, invoker?)
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string) => {
@@ -175,8 +213,19 @@ export function usePanelTree() {
           if (overlays.includes(panel)) {
             flat = overlays.reduce((acc, id) => {
               const idx = acc.findIndex((e) => e.panel === id);
-              if (idx >= 0) acc[idx] = { ...acc[idx], visible: id === panel };
-              else acc.push({ panel: id, visible: id === panel });
+              if (idx >= 0) {
+                acc[idx] = {
+                  ...acc[idx],
+                  visible: id === panel,
+                  name: acc[idx].name ?? panelName(id),
+                };
+              } else {
+                acc.push({
+                  panel: id as SP_COIN_DISPLAY,
+                  visible: id === panel,
+                  name: panelName(id),
+                });
+              }
               return acc;
             }, [...flat]);
 
@@ -187,8 +236,15 @@ export function usePanelTree() {
           const nextFlat = [...flat];
           const i = nextFlat.findIndex((e) => e.panel === panel);
           if (i >= 0 && nextFlat[i].visible === true) return prev; // idempotent
-          if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: true };
-          else nextFlat.push({ panel, visible: true });
+          if (i >= 0) {
+            nextFlat[i] = {
+              ...nextFlat[i],
+              visible: true,
+              name: nextFlat[i].name ?? panelName(panel),
+            };
+          } else {
+            nextFlat.push({ panel, visible: true, name: panelName(panel) });
+          }
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
@@ -198,7 +254,6 @@ export function usePanelTree() {
     [setExchangeContext, overlays],
   );
 
-  // New, simplified signature:
   //   closePanel(panel, invoker?)
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string) => {
@@ -219,8 +274,19 @@ export function usePanelTree() {
             if (isActive) {
               const next = overlays.reduce((acc, id) => {
                 const idx = acc.findIndex((e) => e.panel === id);
-                if (idx >= 0) acc[idx] = { ...acc[idx], visible: false };
-                else acc.push({ panel: id, visible: false });
+                if (idx >= 0) {
+                  acc[idx] = {
+                    ...acc[idx],
+                    visible: false,
+                    name: acc[idx].name ?? panelName(id),
+                  };
+                } else {
+                  acc.push({
+                    panel: id as SP_COIN_DISPLAY,
+                    visible: false,
+                    name: panelName(id),
+                  });
+                }
                 return acc;
               }, [...flat0]);
 
@@ -229,7 +295,13 @@ export function usePanelTree() {
             }
 
             const nextFlat = flat0.map((e) =>
-              e.panel === panel ? { ...e, visible: false } : e,
+              e.panel === panel
+                ? {
+                    ...e,
+                    visible: false,
+                    name: e.name ?? panelName(panel),
+                  }
+                : e,
             );
             diffAndPublish(toMap(flat0), toMap(nextFlat));
             return writeFlat(prev, nextFlat);
@@ -238,7 +310,13 @@ export function usePanelTree() {
           const nextFlat = [...flat0];
           const i = nextFlat.findIndex((e) => e.panel === panel);
           if (i >= 0 && nextFlat[i].visible === false) return prev; // idempotent
-          if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: false };
+          if (i >= 0) {
+            nextFlat[i] = {
+              ...nextFlat[i],
+              visible: false,
+              name: nextFlat[i].name ?? panelName(panel),
+            };
+          }
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
