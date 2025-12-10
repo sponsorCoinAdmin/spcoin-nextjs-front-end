@@ -1,3 +1,4 @@
+// File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
 import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
@@ -38,12 +39,16 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
 
+  // ✅ Visibility for Pending Rewards is driven by MANAGE_PENDING_REWARDS panel
+  const pendingVisible = usePanelVisible(
+    SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+  );
+
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
   const [showToDo, setShowToDo] = useState<boolean>(false);
-  const [pendingVisible, setPendingVisible] = useState<boolean>(false); // default hidden
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
@@ -99,8 +104,18 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   /** Toggle Pending Rewards detail rows (Reward Type / Sponsors / Recipients / Agents) */
   const togglePendingRewards = useCallback(() => {
-    setPendingVisible((prev) => !prev);
-  }, []);
+    if (pendingVisible) {
+      closePanel(
+        SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+        'ManageSponsorshipsPanel:togglePendingRewards(close)',
+      );
+    } else {
+      openPanel(
+        SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+        'ManageSponsorshipsPanel:togglePendingRewards(open)',
+      );
+    }
+  }, [pendingVisible, openPanel, closePanel]);
 
   /** Alert-only placeholder per request */
   const claimRewards = useCallback((actType: AccountType) => {
@@ -153,12 +168,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             setSelectedAssetCallback={() => {}}
           >
             <AddressSelect
-              callingParent={'ManageSponsorshipsPanel'}
+              callingParent="ManageSponsorshipsPanel"
               defaultAddress={defaultAddr}
               bypassDefaultFsm
-              useActiveAddr={true}
-              shortAddr={true}
-              preText={'Deposit Account:'}
+              useActiveAddr
+              shortAddr
+              preText="Deposit Account:"
             />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
@@ -278,10 +293,17 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 {/* Detail rows only visible when toggle is "on" */}
                 {pendingVisible && (
                   <>
-                    {/* Row 0: Reward Type (A) */}
+                    {/* Row 0: Reward Type (A) — now also toggles MANAGE_PENDING_REWARDS */}
                     <tr className={`${rowBorder}`}>
                       <td className="p-0">
-                        <div className={`${rowA} ${tdInner}`}>Reward Type</div>
+                        <button
+                          type="button"
+                          className={`${rowA} ${tdInner} ms-link-cell`}
+                          onClick={togglePendingRewards}
+                          aria-label="Toggle Pending Rewards details from Reward Type"
+                        >
+                          Reward Type
+                        </button>
                       </td>
                       <td className="p-0">
                         <div className={`${rowA} ${tdInnerCenter}`}></div>
@@ -481,7 +503,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               width: 90px;
             }
 
-            /* Clickable label cells (Sponsors / Recipients / Agents / Pending Rewards) */
+            /* Clickable label cells (Sponsors / Recipients / Agents / Pending Rewards / Reward Type) */
             .msTable .ms-link-cell {
               border: none;
               width: 100%;

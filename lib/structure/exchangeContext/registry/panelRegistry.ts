@@ -41,7 +41,11 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_SPONSORS_PANEL,
   SP.MANAGE_AGENT_PANEL,       // detail
   SP.MANAGE_RECIPIENT_PANEL,   // detail
-  SP.MANAGE_SPONSOR_PANEL,     // ✅ detail (added)
+  SP.MANAGE_SPONSOR_PANEL,     // detail
+
+  // ✅ New: coin-management overlays (radio peers)
+  SP.MAMAGE_STAKED_COINS_PANEL,
+  SP.MAMAGE_TRADING_COINS_PANEL,
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -81,12 +85,26 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_AGENT_PANEL,        kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_RECIPIENT_PANEL,    kind: 'panel', overlay: true, defaultVisible: false },
-  { id: SP.MANAGE_SPONSOR_PANEL,      kind: 'panel', overlay: true, defaultVisible: false }, // ✅ added
+  { id: SP.MANAGE_SPONSOR_PANEL,      kind: 'panel', overlay: true, defaultVisible: false }, // detail
 
-  // ✅ New: MANAGE_PENDING_REWARDS is a real, known panel (non-overlay)
+  // ✅ MANAGE_PENDING_REWARDS remains a non-overlay child of MANAGE_SPONSORSHIPS_PANEL
   {
     id: SP.MANAGE_PENDING_REWARDS,
     kind: 'panel',
+    defaultVisible: false,
+  },
+
+  // ✅ New: coin-management overlays (radio group members)
+  {
+    id: SP.MAMAGE_STAKED_COINS_PANEL,
+    kind: 'panel',
+    overlay: true,
+    defaultVisible: false,
+  },
+  {
+    id: SP.MAMAGE_TRADING_COINS_PANEL,
+    kind: 'panel',
+    overlay: true,
     defaultVisible: false,
   },
 
