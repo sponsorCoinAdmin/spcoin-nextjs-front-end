@@ -44,8 +44,8 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_SPONSOR_PANEL,     // detail
 
   // ✅ New: coin-management overlays (radio peers)
-  SP.MAMAGE_STAKED_COINS_PANEL,
-  SP.MAMAGE_TRADING_COINS_PANEL,
+  SP.MANAGE_STAKING_SPCOINS_PANEL,
+  SP.MANAGE_TRADING_COINS_PANEL,
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -96,13 +96,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // ✅ New: coin-management overlays (radio group members)
   {
-    id: SP.MAMAGE_STAKED_COINS_PANEL,
+    id: SP.MANAGE_STAKING_SPCOINS_PANEL,
     kind: 'panel',
     overlay: true,
     defaultVisible: false,
   },
   {
-    id: SP.MAMAGE_TRADING_COINS_PANEL,
+    id: SP.MANAGE_TRADING_COINS_PANEL,
     kind: 'panel',
     overlay: true,
     defaultVisible: false,
