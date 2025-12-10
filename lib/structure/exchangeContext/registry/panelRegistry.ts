@@ -45,10 +45,21 @@ const MAIN_TRADING_CHILDREN: SP[] = [
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
-  { id: SP.MAIN_TRADING_PANEL, kind: 'root', defaultVisible: true, children: MAIN_TRADING_CHILDREN },
+  {
+    id: SP.MAIN_TRADING_PANEL,
+    kind: 'root',
+    defaultVisible: true,
+    children: MAIN_TRADING_CHILDREN,
+  },
   { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', defaultVisible: true },
 
-  { id: SP.TRADING_STATION_PANEL, kind: 'root', overlay: true, defaultVisible: true, children: TRADING_CHILDREN },
+  {
+    id: SP.TRADING_STATION_PANEL,
+    kind: 'root',
+    overlay: true,
+    defaultVisible: true,
+    children: TRADING_CHILDREN,
+  },
 
   { id: SP.BUY_LIST_SELECT_PANEL,       kind: 'list',  overlay: true, defaultVisible: false },
   { id: SP.SELL_LIST_SELECT_PANEL,      kind: 'list',  overlay: true, defaultVisible: false },
@@ -57,7 +68,14 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', overlay: true, defaultVisible: false },
 
   // ✅ All manage screens are overlays (radio group members)
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
+  {
+    id: SP.MANAGE_SPONSORSHIPS_PANEL,
+    kind: 'panel',
+    overlay: true,
+    defaultVisible: false,
+    // ✅ reflect defaultSpCoinPanelTree: MANAGE_PENDING_REWARDS nested under MANAGE_SPONSORSHIPS_PANEL
+    children: [SP.MANAGE_PENDING_REWARDS],
+  },
   { id: SP.MANAGE_RECIPIENTS_PANEL,   kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
@@ -65,18 +83,30 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_RECIPIENT_PANEL,    kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_SPONSOR_PANEL,      kind: 'panel', overlay: true, defaultVisible: false }, // ✅ added
 
+  // ✅ New: MANAGE_PENDING_REWARDS is a real, known panel (non-overlay)
+  {
+    id: SP.MANAGE_PENDING_REWARDS,
+    kind: 'panel',
+    defaultVisible: false,
+  },
+
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 
   { id: SP.SELL_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
   { id: SP.BUY_SELECT_PANEL,  kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },
-  { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
+  {
+    id: SP.ADD_SPONSORSHIP_PANEL,
+    kind: 'panel',
+    defaultVisible: false,
+    children: [SP.CONFIG_SPONSORSHIP_PANEL],
+  },
   { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel', defaultVisible: false },
   { id: SP.CONFIG_SLIPPAGE_PANEL,    kind: 'panel', defaultVisible: false }, // ✅ new panel def
 
-  { id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true },
-  { id: SP.CONNECT_PRICE_BUTTON,      kind: 'control', defaultVisible: true },
-  { id: SP.FEE_DISCLOSURE,    kind: 'panel',   defaultVisible: true },
-  { id: SP.AFFILIATE_FEE,     kind: 'panel',   defaultVisible: false },
+  { id: SP.SWAP_ARROW_BUTTON,       kind: 'control', defaultVisible: true },
+  { id: SP.CONNECT_PRICE_BUTTON,    kind: 'control', defaultVisible: true },
+  { id: SP.FEE_DISCLOSURE,          kind: 'panel',   defaultVisible: true },
+  { id: SP.AFFILIATE_FEE,           kind: 'panel',   defaultVisible: false },
 
   { id: SP.ADD_SPONSORSHIP_BUTTON,     kind: 'button', defaultVisible: false },
   { id: SP.MANAGE_SPONSORSHIPS_BUTTON, kind: 'button', defaultVisible: false },

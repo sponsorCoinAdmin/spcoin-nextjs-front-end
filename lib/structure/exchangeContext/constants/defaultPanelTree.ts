@@ -48,8 +48,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.AGENT_LIST_SELECT_PANEL, false),
     node(SP.ERROR_MESSAGE_PANEL, false),
 
-    // Manage overlays as top-level radio overlays
-    node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
+    // Manage overlays as top-level entries
+    // ⬇️ New: MANAGE_PENDING_REWARDS nested under MANAGE_SPONSORSHIPS_PANEL
+    node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
+      node(SP.MANAGE_PENDING_REWARDS, false),
+    ]),
     node(SP.MANAGE_RECIPIENTS_PANEL, false),
     node(SP.MANAGE_AGENTS_PANEL, false),
     node(SP.MANAGE_SPONSORS_PANEL, false),
@@ -89,10 +92,12 @@ export function flattenPanelTree(nodes: PanelNode[]): FlatPanel[] {
   return out;
 }
 
-export const DEFAULT_PANEL_ORDER: readonly SP[] = flattenPanelTree(defaultSpCoinPanelTree).map(
-  (p) => p.panel
-) as readonly SP[];
+export const DEFAULT_PANEL_ORDER: readonly SP[] = flattenPanelTree(
+  defaultSpCoinPanelTree,
+).map((p) => p.panel) as readonly SP[];
 
 export function seedPanelsFromDefault(): FlatPanel[] {
-  return flattenPanelTree(defaultSpCoinPanelTree).filter((p) => !NON_PERSISTED_PANELS.has(p.panel));
+  return flattenPanelTree(defaultSpCoinPanelTree).filter(
+    (p) => !NON_PERSISTED_PANELS.has(p.panel),
+  );
 }
