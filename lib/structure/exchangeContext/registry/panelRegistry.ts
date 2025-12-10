@@ -45,7 +45,7 @@ const MAIN_TRADING_CHILDREN: SP[] = [
 
   // ✅ New: coin-management overlays (radio peers)
   SP.MANAGE_STAKING_SPCOINS_PANEL,
-  SP.MANAGE_TRADING_COINS_PANEL,
+  SP.MANAGE_TRADING_SPCOINS_PANEL,
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -102,7 +102,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     defaultVisible: false,
   },
   {
-    id: SP.MANAGE_TRADING_COINS_PANEL,
+    id: SP.MANAGE_TRADING_SPCOINS_PANEL,
     kind: 'panel',
     overlay: true,
     defaultVisible: false,

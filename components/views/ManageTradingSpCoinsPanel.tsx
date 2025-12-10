@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel.tsx
+// File: @/components/views/ManageTradingSpCoins.tsx
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -14,21 +14,18 @@ import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
 import ConfigSponsorshipPanel from './ConfigSlippagePanel';
 
-export default function TradingStationPanel() {
+// ...
+
+export default function ManageTradingSpCoins() {
   const { isLoading, data } = usePriceAPI();
   const priceResponse = isLoading ? undefined : (data as any);
 
   return (
-    <PanelGate panel={SP_COIN_DISPLAY.MANAGE_TRADING_COINS_PANEL}>
-      <div id='TradingStationPanel'>
-        <ConfigSponsorshipPanel />
-        <SellAssetPanel />
-        <BuySellSwapArrowButton />
+    <PanelGate panel={SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL}>
+      <div id="ManageTradingSpCoins">
         <BuyAssetPanel />
         <AddSponsorShipPanel />
         <PriceButton isLoadingPrice={isLoading} />
-        <AffiliateFee priceResponse={priceResponse} />
-        <FeeDisclosure />
       </div>
     </PanelGate>
   );

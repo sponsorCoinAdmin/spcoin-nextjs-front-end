@@ -79,6 +79,8 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account'; // ← fix label
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
+    case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL: return 'Manage Sponsor Coin Staking';
+    case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL: return 'Manage Sponsor Coin Trading';
     default: return 'Main Panel Header';
   }
 }

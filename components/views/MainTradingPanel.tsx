@@ -17,6 +17,7 @@ import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors
 import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
 import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
 import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
+import ManageTradingSpCoins from '@/components/views/ManageTradingSpCoinsPanel';
 
 import {
   TokenListSelectPanel,
@@ -96,7 +97,11 @@ export default function MainTradingPanel() {
             <TradeContainerHeader />
           </PanelGate>
 
+          {/* Main trading station (TRADING_STATION_PANEL) */}
           <TradingStationPanel />
+
+          {/* Manage trading spCoins overlay (MANAGE_TRADING_SPCOINS_PANEL) */}
+          <ManageTradingSpCoins />
 
           {/* Top-level overlay panels (radio group) */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
