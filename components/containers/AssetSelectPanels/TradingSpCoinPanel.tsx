@@ -525,7 +525,7 @@ function TradeAssetPanel({ containerType }: { containerType: ContainerType }) {
 
 export default function TradingSpCoinPanel() {
   const { isVisible } = usePanelTree();
-  const stakingPanelVisible = isVisible(SP_COIN_DISPLAY.TRADING_SPCOIN_PANEL);
+  const stakingPanelVisible = isVisible(SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL);
   if (!stakingPanelVisible) return null;
 
   // SELL-select-only for this module

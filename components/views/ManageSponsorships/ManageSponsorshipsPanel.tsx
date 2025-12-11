@@ -233,7 +233,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         className="ms-claim--orange"
                         onClick={() =>
                           openMainOverlay(
-                            SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
+                            SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
                           )
                         }
                         aria-label="Open Trading Coins config"
@@ -261,7 +261,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         className="ms-claim--green"
                         onClick={() =>
                           openMainOverlay(
-                            SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
+                            SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
                           )
                         }
                         aria-label="Open Staked Coins config"

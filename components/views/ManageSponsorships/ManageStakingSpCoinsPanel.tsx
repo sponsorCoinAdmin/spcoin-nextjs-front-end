@@ -11,7 +11,7 @@ import PanelGate from '@/components/utility/PanelGate';
 export default function ManageStakingSpCoins() {
 
   return (
-    <PanelGate panel={SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL}>
+    <PanelGate panel={SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL}>
       <div id="ManageStakingSpCoins">
         <BuyAssetPanel />
         <AddSponsorShipPanel />

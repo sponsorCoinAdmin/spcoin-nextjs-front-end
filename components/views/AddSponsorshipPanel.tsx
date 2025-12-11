@@ -57,9 +57,9 @@ const AddSponsorShipPanel: React.FC = () => {
   const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
-  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR MANAGE_TRADING_SPCOINS_PANEL is true
+  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR MANAGE_STAKING_SPCOINS_PANEL is true
   const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-  const manageTradingVisible = usePanelVisible(SP_TREE.MANAGE_TRADING_SPCOINS_PANEL);
+  const manageTradingVisible = usePanelVisible(SP_TREE.MANAGE_STAKING_SPCOINS_PANEL);
   const isVisible = addVisible || manageTradingVisible;
 
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
@@ -93,7 +93,7 @@ const AddSponsorShipPanel: React.FC = () => {
   }, [recipientWallet?.address]);
 
   // Ensure TRADING_STATION_PANEL visible when this opens
-  // ⚠️ Only when driven by ADD_SPONSORSHIP_PANEL (not MANAGE_TRADING_SPCOINS_PANEL)
+  // ⚠️ Only when driven by ADD_SPONSORSHIP_PANEL (not MANAGE_STAKING_SPCOINS_PANEL)
   useEffect(() => {
     if (addVisible && !tradingVisible) {
       debugLog.log?.(

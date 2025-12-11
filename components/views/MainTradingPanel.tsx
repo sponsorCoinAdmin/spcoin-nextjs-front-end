@@ -101,10 +101,10 @@ export default function MainTradingPanel() {
           {/* Main trading station (TRADING_STATION_PANEL) */}
           <TradingStationPanel />
 
-          {/* Manage Trading spCoins overlay (MANAGE_TRADING_SPCOINS_PANEL) */}
+          {/* Manage Trading spCoins overlay (MANAGE_STAKING_SPCOINS_PANEL) */}
           <ManageTradingSpCoins />
 
-          {/* Manage Staking spCoins overlay (MANAGE_STAKING_SPCOINS_PANEL) */}
+          {/* Manage Staking spCoins overlay (MANAGE_TRADING_SPCOINS_PANEL) */}
           <ManageStakingSpCoins />
 
           {/* Top-level overlay panels (radio group) */}
