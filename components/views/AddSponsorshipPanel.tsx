@@ -39,11 +39,15 @@ function openRecipientSiteTab() {
   try {
     const raw = sessionStorage.getItem(TAB_STORAGE_KEY);
     const arr = raw ? JSON.parse(raw) : [];
-    const next = Array.isArray(arr) ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF])) : [RECIPIENT_TAB_HREF];
+    const next = Array.isArray(arr)
+      ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF]))
+      : [RECIPIENT_TAB_HREF];
     sessionStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(next));
   } catch {}
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }));
+    window.dispatchEvent(
+      new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }),
+    );
   }
 }
 
@@ -53,17 +57,24 @@ const AddSponsorShipPanel: React.FC = () => {
   const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
-  const isVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
+  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR MANAGE_TRADING_SPCOINS_PANEL is true
+  const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
+  const manageTradingVisible = usePanelVisible(SP_TREE.MANAGE_TRADING_SPCOINS_PANEL);
+  const isVisible = addVisible || manageTradingVisible;
+
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   const [buyTokenContract] = useBuyTokenContract();
 
-  const recipientWallet: WalletAccount | undefined = exchangeContext.accounts.recipientAccount;
+  const recipientWallet: WalletAccount | undefined =
+    exchangeContext.accounts.recipientAccount;
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [showToDo, setShowToDo] = useState<boolean>(true);
-  const [recipientMeta, setRecipientMeta] = useState<RecipientMeta | undefined>(undefined);
+  const [recipientMeta, setRecipientMeta] = useState<RecipientMeta | undefined>(
+    undefined,
+  );
 
   // ── Debug: mount / wallet changes ────────────────────────────────────────────
   useEffect(() => {
@@ -82,12 +93,18 @@ const AddSponsorShipPanel: React.FC = () => {
   }, [recipientWallet?.address]);
 
   // Ensure TRADING_STATION_PANEL visible when this opens
+  // ⚠️ Only when driven by ADD_SPONSORSHIP_PANEL (not MANAGE_TRADING_SPCOINS_PANEL)
   useEffect(() => {
-    if (isVisible && !tradingVisible) {
-      debugLog.log?.('Forcing TRADING_STATION_PANEL visible');
-      openPanel(SP_TREE.TRADING_STATION_PANEL, 'AddSponsorshipPanel:ensureTradingVisible()');
+    if (addVisible && !tradingVisible) {
+      debugLog.log?.(
+        'Forcing TRADING_STATION_PANEL visible (ADD_SPONSORSHIP_PANEL context)',
+      );
+      openPanel(
+        SP_TREE.TRADING_STATION_PANEL,
+        'AddSponsorshipPanel:ensureTradingVisible()',
+      );
     }
-  }, [isVisible, tradingVisible, openPanel]);
+  }, [addVisible, tradingVisible, openPanel]);
 
   // Fetch wallet.json for selected recipient (from /public)
   useEffect(() => {
@@ -118,7 +135,10 @@ const AddSponsorShipPanel: React.FC = () => {
 
   // ── Callbacks ────────────────────────────────────────────────────────────────
   const toggleSponsorRateConfig = useCallback(() => {
-    debugLog.log?.('toggleSponsorRateConfig clicked; currently visible?', configVisible);
+    debugLog.log?.(
+      'toggleSponsorRateConfig clicked; currently visible?',
+      configVisible,
+    );
     if (configVisible) closeConfigSponsorship();
     else openConfigSponsorship();
   }, [configVisible, openConfigSponsorship, closeConfigSponsorship]);
@@ -132,15 +152,21 @@ const AddSponsorShipPanel: React.FC = () => {
         next.accounts.recipientAccount = undefined;
         return next;
       },
-      'AddSponsorShipPanel:closeAddSponsorshipPanel'
+      'AddSponsorShipPanel:closeAddSponsorshipPanel',
     );
 
-    // Close the panel
-    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipPanel:closeAddSponsorshipPanel(closePanel)');
+    // Close the launcher panel
+    closePanel(
+      SP_TREE.ADD_SPONSORSHIP_PANEL,
+      'AddSponsorshipPanel:closeAddSponsorshipPanel(closePanel)',
+    );
 
     // Only re-show the launcher button if the current BUY token is an SpCoin
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipPanel:closeAddSponsorshipPanel(reopenLauncher)');
+      openPanel(
+        SP_TREE.ADD_SPONSORSHIP_BUTTON,
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(reopenLauncher)',
+      );
     }
   }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
 
@@ -202,8 +228,10 @@ const AddSponsorShipPanel: React.FC = () => {
 
   const linkTopClass = useMemo(
     () =>
-      (recipientWallet?.name ? 'absolute top-[47px] left-[10px]' : 'absolute top-[57px] left-[10px]'),
-    [recipientWallet?.name]
+      recipientWallet?.name
+        ? 'absolute top-[47px] left-[10px]'
+        : 'absolute top-[57px] left-[10px]',
+    [recipientWallet?.name],
   );
 
   // ── Only now is it safe to early-return (after all hooks have been called) ───
@@ -212,26 +240,29 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
-      id='AddSponsorshipPanel'
-      className='
+      id="AddSponsorshipPanel"
+      className="
         pt-[8px]
         relative
         mb-[5px]
         rounded-t-[12px]
         rounded-b-[12px]
         overflow-hidden
-        bg-[#1f2639] text-[#94a3b8]'
+        bg-[#1f2639] text-[#94a3b8]"
     >
-      <div className='h-[90px]'>
-        <div className='absolute top-3 left-[11px] text-[14px] text-[#94a3b8]'>
+      <div className="h-[90px]">
+        <div className="absolute top-3 left-[11px] text-[14px] text-[#94a3b8]">
           You are sponsoring:
         </div>
 
-        <div id='OpenRecipientSite'>
+        <div id="OpenRecipientSite">
           <Link
             href={recipientSiteHref}
             onClick={() => {
-              debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
+              debugLog.log?.(
+                'Link clicked → opening RecipientSite tab for:',
+                recipientSiteHref,
+              );
               openRecipientSiteTab();
             }}
             className={`${linkTopClass} min-w-[50px] h-[10px] text-[#94a3b8] text-[25px] pr-2 flex items-center justify-start gap-1 cursor-pointer hover:text-[orange] transition-colors duration-200`}
@@ -240,18 +271,18 @@ const AddSponsorShipPanel: React.FC = () => {
           </Link>
         </div>
 
-        <div className='absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]'>
+        <div className="absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]">
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 
         <div>
           <Image
             src={cog_png}
-            className='absolute right-[39px] object-contain text-[#51586f] inline-block transition-transform duration-300 hover:rotate-[360deg] hover:cursor-pointer'
+            className="absolute right-[39px] object-contain text-[#51586f] inline-block transition-transform duration-300 hover:rotate-[360deg] hover:cursor-pointer"
             width={20}
             height={20}
-            alt='Settings'
-            role='button'
+            alt="Settings"
+            role="button"
             tabIndex={0}
             onClick={toggleSponsorRateConfig}
             onKeyDown={(e) => {
@@ -264,8 +295,8 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
 
         <div
-          id='closeAddSponsorshipPanel'
-          className='pt-[12px] absolute -top-2 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer'
+          id="closeAddSponsorshipPanel"
+          className="pt-[12px] absolute -top-2 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer"
           onClick={closeAddSponsorshipPanel}
         >
           X
@@ -276,7 +307,14 @@ const AddSponsorShipPanel: React.FC = () => {
 
       {/* 🔴 ToDo overlay (red text, click to dismiss) */}
       {!showToDo && (
-        <ToDo show message='ToDo' opacity={0.5} color='#ff1a1a' zIndex={2000} onDismiss={() => setShowToDo(false)} />
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={() => setShowToDo(false)}
+        />
       )}
     </div>
   );

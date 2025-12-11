@@ -80,7 +80,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
     case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL: return 'Manage Sponsor Coin Staking';
-    case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL: return 'Manage Sponsor Coin Trading';
+    case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL: return 'Staking Your Sponsor Coins';
     default: return 'Main Panel Header';
   }
 }
@@ -108,6 +108,10 @@ export function useHeaderController() {
     manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
     manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
 
+    // New manage coin overlays
+    manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL),
+    manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL),
+
     agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
     error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
     trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
@@ -128,6 +132,10 @@ export function useHeaderController() {
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
     if (vis.manageSponsorsList) return SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL;
+
+    // New manage coin overlays
+    if (vis.manageTradingCoins) return SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL;
+    if (vis.manageStakingCoins) return SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL;
 
     if (vis.manageHub) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
     if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
@@ -199,6 +207,15 @@ export function useHeaderController() {
       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
         openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:onClose');
+        return;
+
+      // 🔹 NEW: coin-management overlays → go back to hub
+      case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL:
+      case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL:
+        openPanel(
+          SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+          'HeaderController:onClose(coin-manage)',
+        );
         return;
 
       default:

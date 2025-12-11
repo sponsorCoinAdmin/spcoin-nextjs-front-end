@@ -46,6 +46,9 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   // ✅ New: coin-management overlays (radio peers)
   SP.MANAGE_STAKING_SPCOINS_PANEL,
   SP.MANAGE_TRADING_SPCOINS_PANEL,
+
+  // ✅ New: inner content panel used by TradingSpCoinPanel
+  SP.TRADING_SPCOIN_PANEL,
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -106,6 +109,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     kind: 'panel',
     overlay: true,
     defaultVisible: false,
+  },
+
+  // ✅ New: non-overlay content panel used inside ManageTradingSpCoins
+  {
+    id: SP.TRADING_SPCOIN_PANEL,
+    kind: 'panel',
+    defaultVisible: true,
   },
 
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy

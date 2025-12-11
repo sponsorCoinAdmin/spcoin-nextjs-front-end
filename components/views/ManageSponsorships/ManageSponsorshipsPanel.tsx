@@ -71,7 +71,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   // 🔒 Keep latest selected account type for the ToDo alert across renders
   const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
 
-  // Open only the requested panel; close the alternatives
+  // Open only the requested *list* panel; close the alternative list panels
   const openOnly = useCallback(
     (id: SP_COIN_DISPLAY) => {
       try {
@@ -100,6 +100,22 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       }
     },
     [openPanel, closePanel],
+  );
+
+  // ✅ Open a MAIN_OVERLAY_GROUP panel (Trading / Staking spCoins etc.)
+  const openMainOverlay = useCallback(
+    (id: SP_COIN_DISPLAY) => {
+      try {
+        debugLog.log?.('openMainOverlay', { target: SP_COIN_DISPLAY[id] });
+        openPanel(
+          id,
+          `ManageSponsorshipsPanel:openMainOverlay(target=${SP_COIN_DISPLAY[id]}#${id})`,
+        );
+      } catch (err) {
+        debugLog.warn?.('openMainOverlay error', { err });
+      }
+    },
+    [openPanel],
   );
 
   /** Toggle Pending Rewards detail rows (Reward Type / Sponsors / Recipients / Agents) */
@@ -216,10 +232,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         type="button"
                         className={iconBtn}
                         onClick={() =>
-                          openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)
+                          openMainOverlay(
+                            SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
+                          )
                         }
-                        aria-label="Open Sponsors reconfigure"
-                        title="Reconfigure Sponsors"
+                        aria-label="Open Trading Coins config"
+                        title="Configure Trading Coins"
                       >
                         <span className="cog-white-mask cog-rot" aria-hidden />
                       </button>
@@ -242,10 +260,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         type="button"
                         className={iconBtn}
                         onClick={() =>
-                          openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
+                          openMainOverlay(
+                            SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
+                          )
                         }
-                        aria-label="Open Recipients reconfigure"
-                        title="Reconfigure Recipients"
+                        aria-label="Open Staked Coins config"
+                        title="Configure Staked Coins"
                       >
                         <span className="cog-white-mask cog-rot" aria-hidden />
                       </button>
