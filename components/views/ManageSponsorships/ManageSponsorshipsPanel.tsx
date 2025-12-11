@@ -225,12 +225,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   <td className="p-0">
                     <div className={`${rowA} ${tdInnerCenter}`}>0</div>
                   </td>
-                  {/* Config column: cog */}
+                  {/* Config column: Stake button */}
                   <td className="p-0">
                     <div className={`${rowA} ${tdInnerCenter}`}>
                       <button
                         type="button"
-                        className={iconBtn}
+                        className="ms-claim--orange"
                         onClick={() =>
                           openMainOverlay(
                             SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
@@ -239,7 +239,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         aria-label="Open Trading Coins config"
                         title="Configure Trading Coins"
                       >
-                        <span className="cog-white-mask cog-rot" aria-hidden />
+                        Stake
                       </button>
                     </div>
                   </td>
@@ -253,12 +253,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   <td className="p-0">
                     <div className={`${rowB} ${tdInnerCenter}`}>0</div>
                   </td>
-                  {/* Config column: cog */}
+                  {/* Config column: Unstake button */}
                   <td className="p-0">
                     <div className={`${rowB} ${tdInnerCenter}`}>
                       <button
                         type="button"
-                        className={iconBtn}
+                        className="ms-claim--green"
                         onClick={() =>
                           openMainOverlay(
                             SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
@@ -267,7 +267,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         aria-label="Open Staked Coins config"
                         title="Configure Staked Coins"
                       >
-                        <span className="cog-white-mask cog-rot" aria-hidden />
+                        Unstake
                       </button>
                     </div>
                   </td>
@@ -539,37 +539,45 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               color: #ec8840ff; /* orange hover text */
             }
 
-            /* ORANGE claim buttons */
-            .msTable .ms-claim--orange {
-              background-color: #ec8840ff !important;
-              color: #0f172a !important;
-              padding: 0.375rem 0.75rem;
+            /* Base size + layout for ALL claim/stake/unstake buttons */
+            .msTable .ms-claim--orange,
+            .msTable .ms-claim--green {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 76px;       /* ⬅️ was 96px – narrower overall */
+              height: 32px;
+              padding: 0 0.375rem;   /* ⬅️ half the horizontal padding */
               font-size: 0.875rem;
               font-weight: 500;
               border-radius: 0.375rem;
-              transition: background-color 0.2s ease;
+              transition: background-color 0.2s ease, color 0.2s ease;
+              box-sizing: border-box;
+              white-space: nowrap;
+            }
+
+
+            /* ORANGE claim / stake buttons */
+            .msTable .ms-claim--orange {
+              background-color: #ec8840ff !important;
+              color: #0f172a !important;
             }
             .msTable .ms-claim--orange:hover {
               background-color: #c7610fff !important;
               color: #ffffff !important;
             }
 
-            /* GREEN claim buttons */
+            /* GREEN claim / unstake buttons */
             .msTable .ms-claim--green {
               background-color: #147f3bff !important;
               color: #ffffff !important;
-              padding: 0.375rem 0.75rem;
-              font-size: 0.875rem;
-              font-weight: 500;
-              border-radius: 0.375rem;
-              transition: background-color 0.2s ease;
             }
             .msTable .ms-claim--green:hover {
               background-color: #22c55e !important;
               color: #0f172a !important;
             }
 
-            /* White cog via PNG mask */
+            /* White cog via PNG mask (still here if you reuse later) */
             .msTable .cog-white-mask {
               display: inline-block;
               width: 20px;
@@ -591,6 +599,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               transform: rotate(360deg);
             }
           `}</style>
+
         </>
       )}
 
