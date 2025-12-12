@@ -72,7 +72,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return AGENT_WALLET_TITLE; // ← uses env var now
     case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Claim Sponsorship Rewards';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Sponsorship Account Management';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
     case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Claim Sponsor Rewards';

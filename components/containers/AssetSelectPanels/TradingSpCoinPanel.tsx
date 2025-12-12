@@ -295,7 +295,6 @@ function TradeAssetPanelInner() {
   // amount input
   const [inputValue, setInputValue] = useState('0');
   const debouncedSell = useDebounce(sellAmount, 600);
-  const debouncedBuy = useDebounce(buyAmount, 600); // still passed downstream
 
   const typingUntilRef = useRef(0);
   const currentAmount = sellAmount;

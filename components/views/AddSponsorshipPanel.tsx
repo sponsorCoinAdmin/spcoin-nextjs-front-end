@@ -28,6 +28,10 @@ import ToDo from '@/lib/utils/components/ToDo';
 
 // ✅ Debug logger
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+// ✅ New: overlay caller registry
+import { setOverlayCaller } from '@/lib/context/exchangeContext/overlayReturnRegistry';
+
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ADD_SPONSORSHIP === 'true';
 const debugLog = createDebugLogger('AddSponsorshipPanel', DEBUG_ENABLED);
 
@@ -54,16 +58,18 @@ function openRecipientSiteTab() {
 const AddSponsorShipPanel: React.FC = () => {
   // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { openPanel, closePanel } = usePanelTree();
+  const { closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
   // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR MANAGE_STAKING_SPCOINS_PANEL is true
   const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-  const manageTradingVisible = usePanelVisible(SP_TREE.MANAGE_STAKING_SPCOINS_PANEL);
-  const isVisible = addVisible || manageTradingVisible;
+  const manageStakingVisible = usePanelVisible(SP_TREE.MANAGE_STAKING_SPCOINS_PANEL);
+  const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
+
+  // 🔹 The overlay we care about for “return to caller”
+  const recipientListVisible = usePanelVisible(SP_TREE.RECIPIENT_LIST_SELECT_PANEL);
 
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
-  const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   const [buyTokenContract] = useBuyTokenContract();
 
@@ -92,19 +98,32 @@ const AddSponsorShipPanel: React.FC = () => {
     });
   }, [recipientWallet?.address]);
 
-  // Ensure TRADING_STATION_PANEL visible when this opens
-  // ⚠️ Only when driven by ADD_SPONSORSHIP_PANEL (not MANAGE_STAKING_SPCOINS_PANEL)
+  // 🧭 Register caller for RECIPIENT_LIST_SELECT_PANEL
+  // If the recipient list overlay becomes visible while we’re under
+  // MANAGE_STAKING_SPCOINS_PANEL, we want the header close to return there.
+  // Otherwise, fall back to TRADING_STATION_PANEL.
   useEffect(() => {
-    if (addVisible && !tradingVisible) {
+    if (!recipientListVisible) return;
+
+    let parent: SP_TREE | undefined;
+
+    if (manageStakingVisible) {
+      parent = SP_TREE.MANAGE_STAKING_SPCOINS_PANEL;
+    } else if (tradingVisible) {
+      parent = SP_TREE.TRADING_STATION_PANEL;
+    }
+
+    if (parent != null) {
+      debugLog.log?.('Registering overlay caller for RECIPIENT_LIST_SELECT_PANEL', {
+        parent: SP_TREE[parent],
+      });
+      setOverlayCaller(SP_TREE.RECIPIENT_LIST_SELECT_PANEL, parent);
+    } else {
       debugLog.log?.(
-        'Forcing TRADING_STATION_PANEL visible (ADD_SPONSORSHIP_PANEL context)',
-      );
-      openPanel(
-        SP_TREE.TRADING_STATION_PANEL,
-        'AddSponsorshipPanel:ensureTradingVisible()',
+        'RECIPIENT_LIST_SELECT_PANEL visible but no obvious parent; header will fall back to TRADING_STATION_PANEL',
       );
     }
-  }, [addVisible, tradingVisible, openPanel]);
+  }, [recipientListVisible, manageStakingVisible, tradingVisible]);
 
   // Fetch wallet.json for selected recipient (from /public)
   useEffect(() => {
@@ -163,12 +182,14 @@ const AddSponsorShipPanel: React.FC = () => {
 
     // Only re-show the launcher button if the current BUY token is an SpCoin
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      openPanel(
-        SP_TREE.ADD_SPONSORSHIP_BUTTON,
-        'AddSponsorshipPanel:closeAddSponsorshipPanel(reopenLauncher)',
+      // NOTE: This just reopens the button; parenting for overlays
+      // is now handled by overlayReturnRegistry + header.
+      closePanel(
+        SP_TREE.MANAGE_STAKING_SPCOINS_PANEL,
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalCloseManageStaking)',
       );
     }
-  }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
+  }, [setExchangeContext, closePanel, buyTokenContract]);
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const pageQueryUrl = useMemo(() => {
@@ -187,7 +208,6 @@ const AddSponsorShipPanel: React.FC = () => {
   }, []);
 
   const effectiveWebsite = useMemo(() => {
-    // Build a safe fallback only if we *have* an address; otherwise leave undefined.
     const fallbackMeta: Pick<RecipientMeta, 'address' | 'website'> | undefined =
       recipientWallet?.address
         ? {
@@ -235,6 +255,7 @@ const AddSponsorShipPanel: React.FC = () => {
   );
 
   // ── Only now is it safe to early-return (after all hooks have been called) ───
+  const isVisible = addVisible || manageStakingVisible;
   if (!isVisible) return null;
 
   // ── Render ───────────────────────────────────────────────────────────────────

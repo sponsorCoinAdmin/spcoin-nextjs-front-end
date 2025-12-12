@@ -1,6 +1,7 @@
 // File: @/components/Headers/TradeContainerHeader.tsx
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
@@ -14,13 +15,28 @@ import {
 } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
+import { useOverlayCloseHandler } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TRADE_HEADER === 'true';
+
+const debugLog = createDebugLogger(
+  'TradeContainerHeader',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const { title, leftElement, onClose, isTrading } = useHeaderController();
 
-  // ⬇️ include closePanel so we can toggle
+  // For slippage cog toggle
   const { openPanel, closePanel, isVisible } = usePanelTree();
+
+  // Generic overlay close (back-to-previous behavior)
+  const { handleCloseOverlay } = useOverlayCloseHandler();
 
   const accounts = exchangeContext?.accounts ?? {};
   const recipientAccount = accounts.recipientAccount as
@@ -88,6 +104,22 @@ export default function TradeContainerHeader() {
     );
   };
 
+  const handleHeaderClose = () => {
+    debugLog.log?.('handleHeaderClose clicked', {
+      title,
+      isTrading,
+    });
+
+    // Allow header-specific onClose (if any) to run first
+    if (onClose) {
+      debugLog.log?.('handleHeaderClose → calling onClose from headerController');
+      onClose();
+    }
+
+    // Then perform generic overlay close (return-to-previous behavior)
+    handleCloseOverlay();
+  };
+
   return (
     <div
       id="TradeContainerHeader"
@@ -117,6 +149,10 @@ export default function TradeContainerHeader() {
                   ? isVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL)
                   : false;
 
+              debugLog.log?.('slippage cog clicked', {
+                currentlyVisible: visible,
+              });
+
               if (visible) {
                 closePanel(
                   SP_TREE.CONFIG_SLIPPAGE_PANEL,
@@ -134,7 +170,7 @@ export default function TradeContainerHeader() {
           />
         ) : (
           <CloseButton
-            closeCallback={onClose}
+            closeCallback={handleHeaderClose}
             className="
               absolute top-2 right-[27px] h-10 w-10 rounded-full
               bg-[#243056] text-[#5981F3] flex items-center justify-center

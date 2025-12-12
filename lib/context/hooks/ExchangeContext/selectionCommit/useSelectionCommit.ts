@@ -5,12 +5,21 @@ import { useCallback } from 'react';
 import type { TokenContract, WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useSellTokenContract, useBuyTokenContract, useExchangeContext } from '@/lib/context/hooks';
+import {
+  useSellTokenContract,
+  useBuyTokenContract,
+  useExchangeContext,
+} from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SELECTION_COMMIT === 'true';
-const log = createDebugLogger('useSelectionCommit', DEBUG_ENABLED, LOG_TIME);
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SELECTION_COMMIT === 'true';
+const log = createDebugLogger(
+  'useSelectionCommit',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 export type UseSelectionCommit = {
   commitBuyToken: (t: TokenContract) => void;
@@ -20,12 +29,13 @@ export type UseSelectionCommit = {
   commitRecipient: (w: WalletAccount) => void;
   commitAgent: (w: WalletAccount) => void;
 
-  finish: () => void; // navigate back to Trading
+  finish: () => void; // now only closes the active list panel
 };
 
 /** Plain hook that composes ExchangeContext + panel-tree navigation. */
 export function useSelectionCommit(): UseSelectionCommit {
-  const { openPanel } = usePanelTree();
+  // We only need visibility + close; navigation target is decided elsewhere
+  const { closePanel, isVisible } = usePanelTree();
 
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
@@ -34,14 +44,59 @@ export function useSelectionCommit(): UseSelectionCommit {
   // Recipient/Agent writes
   const { setExchangeContext } = useExchangeContext();
 
+  /**
+   * Helper to detect which list-select overlay is currently active.
+   * This is the panel we want to close when a selection is committed.
+   */
+  const getActiveListPanel = useCallback(() => {
+    if (typeof isVisible !== 'function') {
+      log.warn?.(
+        'getActiveListPanel: isVisible is not a function; cannot determine active list panel',
+      );
+      return null;
+    }
+
+    const candidates = [
+      SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
+      SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+      SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+      SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+    ];
+
+    for (const panel of candidates) {
+      if (isVisible(panel)) {
+        return panel;
+      }
+    }
+
+    return null;
+  }, [isVisible]);
+
+  /**
+   * finish:
+   * - NO LONGER opens TRADING_STATION_PANEL.
+   * - ONLY closes the currently active list-select overlay (if any),
+   *   letting the overlay parent logic / header controller decide where to go.
+   */
   const finish = useCallback(() => {
-    log.log?.('finish → openPanel(TRADING_STATION_PANEL)');
-    // Parent label follows the new convention: module:method(args)
-    openPanel(
-      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      'useSelectionCommit:finish(MAIN_TRADING_PANEL)',
+    const activeList = getActiveListPanel();
+
+    log.log?.('finish invoked', { activeList });
+
+    if (!activeList) {
+      log.log?.(
+        'finish: no active list-select panel detected; nothing to close',
+      );
+      return;
+    }
+
+    log.log?.('finish → closing active list-select panel', { activeList });
+
+    closePanel(
+      activeList,
+      `useSelectionCommit:finish(close ${activeList})`,
     );
-  }, [openPanel]);
+  }, [getActiveListPanel, closePanel]);
 
   const commitBuyToken = useCallback(
     (t: TokenContract) => {
@@ -49,7 +104,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       const sym = (t as any)?.symbol;
 
       if (!t || !addr) {
-        log.warn?.('commitBuyToken aborted: missing token or address', { token: t });
+        log.warn?.('commitBuyToken aborted: missing token or address', {
+          token: t,
+        });
         return;
       }
 
@@ -57,7 +114,7 @@ export function useSelectionCommit(): UseSelectionCommit {
       setBuyTokenContract(t);
       finish();
     },
-    [setBuyTokenContract, finish]
+    [setBuyTokenContract, finish],
   );
 
   const commitSellToken = useCallback(
@@ -66,7 +123,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       const sym = (t as any)?.symbol;
 
       if (!t || !addr) {
-        log.warn?.('commitSellToken aborted: missing token or address', { token: t });
+        log.warn?.('commitSellToken aborted: missing token or address', {
+          token: t,
+        });
         return;
       }
 
@@ -74,19 +133,24 @@ export function useSelectionCommit(): UseSelectionCommit {
       setSellTokenContract(t);
       finish();
     },
-    [setSellTokenContract, finish]
+    [setSellTokenContract, finish],
   );
 
   const commitToken = useCallback(
     (t: TokenContract, side: 'buy' | 'sell') => {
-      log.log?.('commitToken', { side, address: (t as any)?.address, symbol: (t as any)?.symbol });
+      log.log?.('commitToken', {
+        side,
+        address: (t as any)?.address,
+        symbol: (t as any)?.symbol,
+      });
+
       if (side === 'buy') {
         commitBuyToken(t);
       } else {
         commitSellToken(t);
       }
     },
-    [commitBuyToken, commitSellToken]
+    [commitBuyToken, commitSellToken],
   );
 
   const commitRecipient = useCallback(
@@ -95,7 +159,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       const name = (w as any)?.name;
 
       if (!w || !addr) {
-        log.warn?.('commitRecipient aborted: missing wallet or address', { wallet: w });
+        log.warn?.('commitRecipient aborted: missing wallet or address', {
+          wallet: w,
+        });
         return;
       }
 
@@ -108,12 +174,12 @@ export function useSelectionCommit(): UseSelectionCommit {
           next.accounts.recipientAccount = w;
           return next;
         },
-        'useSelectionCommit:recipient'
+        'useSelectionCommit:recipient',
       );
 
       finish();
     },
-    [setExchangeContext, finish]
+    [setExchangeContext, finish],
   );
 
   const commitAgent = useCallback(
@@ -122,7 +188,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       const name = (w as any)?.name;
 
       if (!w || !addr) {
-        log.warn?.('commitAgent aborted: missing wallet or address', { wallet: w });
+        log.warn?.('commitAgent aborted: missing wallet or address', {
+          wallet: w,
+        });
         return;
       }
 
@@ -135,12 +203,12 @@ export function useSelectionCommit(): UseSelectionCommit {
           next.accounts.agentAccount = w;
           return next;
         },
-        'useSelectionCommit:agent'
+        'useSelectionCommit:agent',
       );
 
       finish();
     },
-    [setExchangeContext, finish]
+    [setExchangeContext, finish],
   );
 
   return {
