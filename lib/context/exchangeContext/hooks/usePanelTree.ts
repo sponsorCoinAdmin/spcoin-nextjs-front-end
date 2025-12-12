@@ -16,7 +16,7 @@ const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = {
   panel: SP_COIN_DISPLAY;
   visible: boolean;
-  name?: string; // ⬅️ carry name through this hook
+  name?: string; // carry name through this hook
 };
 
 /* ------------------------------ debug helpers ------------------------------ */
@@ -28,24 +28,12 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('usePanelTree', DEBUG_ENABLED, LOG_TIME);
 
-const PT_DEBUG =
-  typeof window !== 'undefined' && DEBUG_ENABLED;
-
-const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
-
-function traceIfEnabled(label: string) {
-  if (!PT_DEBUG || !PT_TRACE) return;
-  debugLog.log?.(`[usePanelTree] trace: ${label}`, {
-    stack: new Error().stack,
-  });
-}
-
 function logAction(
   kind: 'openPanel' | 'closePanel',
   panel: SP_COIN_DISPLAY,
   invoker?: string,
 ) {
-  if (!PT_DEBUG) return;
+  if (!DEBUG_ENABLED) return;
   const panelName = SP_COIN_DISPLAY[panel];
   const invokerLabel = invoker ?? 'unknown';
   debugLog.log?.('[usePanelTree] action', {
@@ -197,7 +185,6 @@ export function usePanelTree() {
   //   openPanel(panel, invoker?)
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string) => {
-      traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
       logAction('openPanel', panel, invoker);
 
       if (!KNOWN.has(panel)) {
@@ -257,7 +244,6 @@ export function usePanelTree() {
   //   closePanel(panel, invoker?)
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string) => {
-      traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
       logAction('closePanel', panel, invoker);
 
       if (!KNOWN.has(panel)) {

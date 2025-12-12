@@ -1,3 +1,4 @@
+// File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
 import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
@@ -116,14 +117,17 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     [openPanel],
   );
 
-  /** Toggle Pending Rewards table visibility (entire second table) */
+  /** Toggle Pending Rewards view (entire second table vs first table) */
   const togglePendingRewards = useCallback(() => {
     if (pendingVisible) {
+      // Hide the pending view (Table 2), show summary (Table 1)
       closePanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
         'ManageSponsorshipsPanel:togglePendingRewards(close)',
       );
     } else {
+      // Show the pending view (Table 2), hide summary (Table 1)
+      // NOTE: MANAGE_SPONSORSHIPS_PANEL stays open; MANAGE_PENDING_REWARDS is not a radio panel.
       openPanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
         'ManageSponsorshipsPanel:togglePendingRewards(open)',
@@ -157,6 +161,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const recipientsHidden = !vRecipients;
   const agentsHidden = !vAgents;
   const sponsorsHidden = !vSponsors;
+
+  // Decide which table is displayed based on MANAGE_PENDING_REWARDS
+  const showSummaryTable = !pendingVisible; // Table 1
+  const showPendingTable = pendingVisible;  // Table 2
 
   // UI classes
   const rowH = 'h-[40px]';
@@ -193,131 +201,133 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       {/* MAIN SUMMARY TABLES (Coins / Rewards overview) */}
       <>
-        {/* TABLE 1 CONTAINER: Coins / amounts */}
-        <div className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
-          <table className="msTable min-w-full border-collapse">
-            {/* TABLE 1 HEADER */}
-            <thead>
-              <tr className="border-b border-black">
-                <th scope="col" className={th}>
-                  Sponsor Coins
-                </th>
-                <th scope="col" className={`${th} text-center`}>
-                  Amount
-                </th>
-                <th scope="col" className={`${th} text-center`}>
-                  OPTIONS
-                </th>
-              </tr>
-            </thead>
+        {/* TABLE 1: Coins / amounts (only when MANAGE_PENDING_REWARDS is FALSE) */}
+        {showSummaryTable && (
+          <div className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
+            <table className="msTable min-w-full border-collapse">
+              {/* TABLE 1 HEADER */}
+              <thead>
+                <tr className="border-b border-black">
+                  <th scope="col" className={th}>
+                    Sponsor Coins
+                  </th>
+                  <th scope="col" className={`${th} text-center`}>
+                    Amount
+                  </th>
+                  <th scope="col" className={`${th} text-center`}>
+                    OPTIONS
+                  </th>
+                </tr>
+              </thead>
 
-            {/* TABLE 1 BODY */}
-            <tbody>
-              {/* Row 1: Trading */}
-              <tr className={`${rowBorder}`}>
-                <td className="p-0">
-                  <div className={`${rowA} ${tdInner}`}>Trading Coins</div>
-                </td>
-                <td className="p-0">
-                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
-                </td>
-                {/* Config column: Stake button */}
-                <td className="p-0">
-                  <div className={`${rowA} ${tdInnerCenter}`}>
+              {/* TABLE 1 BODY */}
+              <tbody>
+                {/* Row 1: Trading */}
+                <tr className={`${rowBorder}`}>
+                  <td className="p-0">
+                    <div className={`${rowA} ${tdInner}`}>Trading Coins</div>
+                  </td>
+                  <td className="p-0">
+                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                  </td>
+                  {/* Config column: Stake button */}
+                  <td className="p-0">
+                    <div className={`${rowA} ${tdInnerCenter}`}>
+                      <button
+                        type="button"
+                        className="ms-claim--orange"
+                        onClick={() =>
+                          openMainOverlay(
+                            SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
+                          )
+                        }
+                        aria-label="Open Trading Coins config"
+                        title="Configure Trading Coins"
+                      >
+                        Stake
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Row 2: Staked Sponsored Coins */}
+                <tr className={`${rowBorder}`}>
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInner}`}>Staked Coins</div>
+                  </td>
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                  </td>
+                  {/* Config column: Unstake button */}
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInnerCenter}`}>
+                      <button
+                        type="button"
+                        className="ms-claim--green"
+                        onClick={() =>
+                          openMainOverlay(
+                            SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
+                          )
+                        }
+                        aria-label="Open Staked Coins config"
+                        title="Configure Staked Coins"
+                      >
+                        Unstake
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Row 3: Pending Rewards (toggles entire second table) */}
+                <tr className={`${rowBorder}`}>
+                  <td className="p-0">
                     <button
                       type="button"
-                      className="ms-claim--orange"
-                      onClick={() =>
-                        openMainOverlay(
-                          SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL,
-                        )
-                      }
-                      aria-label="Open Trading Coins config"
-                      title="Configure Trading Coins"
+                      className={`${rowA} ${tdInner} ms-link-cell`}
+                      onClick={togglePendingRewards}
+                      aria-label="Toggle Pending Rewards table"
                     >
-                      Stake
+                      Pending Rewards
                     </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td className="p-0">
+                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                  </td>
+                  {/* Rewards: Claim All */}
+                  <td className="p-0">
+                    <div className={`${rowA} ${tdInnerCenter}`}>
+                      <button
+                        type="button"
+                        className="ms-claim--green"
+                        aria-label="Claim Total rewards"
+                        onClick={() => claimRewards(AccountType.ALL)}
+                      >
+                        Claim All
+                      </button>
+                    </div>
+                  </td>
+                </tr>
 
-              {/* Row 2: Staked Sponsored Coins */}
-              <tr className={`${rowBorder}`}>
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInner}`}>Staked Coins</div>
-                </td>
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
-                </td>
-                {/* Config column: Unstake button */}
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInnerCenter}`}>
-                    <button
-                      type="button"
-                      className="ms-claim--green"
-                      onClick={() =>
-                        openMainOverlay(
-                          SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL,
-                        )
-                      }
-                      aria-label="Open Staked Coins config"
-                      title="Configure Staked Coins"
-                    >
-                      Unstake
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                {/* Row 4: Total Coins */}
+                <tr className={`${rowBorder}`}>
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInner}`}>Total Coins</div>
+                  </td>
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                  </td>
+                  {/* Config column: empty for now */}
+                  <td className="p-0">
+                    <div className={`${rowB} ${tdInnerCenter}`}> </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
-              {/* Row 3: Pending Rewards (toggles entire second table) */}
-              <tr className={`${rowBorder}`}>
-                <td className="p-0">
-                  <button
-                    type="button"
-                    className={`${rowA} ${tdInner} ms-link-cell`}
-                    onClick={togglePendingRewards}
-                    aria-label="Toggle Pending Rewards table"
-                  >
-                    Pending Rewards
-                  </button>
-                </td>
-                <td className="p-0">
-                  <div className={`${rowA} ${tdInnerCenter}`}>0</div>
-                </td>
-                {/* Rewards: Claim All */}
-                <td className="p-0">
-                  <div className={`${rowA} ${tdInnerCenter}`}>
-                    <button
-                      type="button"
-                      className="ms-claim--green"
-                      aria-label="Claim Total rewards"
-                      onClick={() => claimRewards(AccountType.ALL)}
-                    >
-                      Claim All
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Row 4: Total Coins */}
-              <tr className={`${rowBorder}`}>
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInner}`}>Total Coins</div>
-                </td>
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInnerCenter}`}>0</div>
-                </td>
-                {/* Config column: empty for now */}
-                <td className="p-0">
-                  <div className={`${rowB} ${tdInnerCenter}`}> </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* TABLE 2 CONTAINER: Staked Rewards (entire table visible only when pendingVisible) */}
-        {pendingVisible && (
+        {/* TABLE 2: Staked Rewards (only when MANAGE_PENDING_REWARDS is TRUE) */}
+        {showPendingTable && (
           <div className="msWrapper mb-6 overflow-x-auto rounded-xl border border-black">
             <table className="msTable min-w-full border-collapse">
               {/* TABLE 2 HEADER: Staked Rewards */}
@@ -588,7 +598,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         `}</style>
       </>
 
-      {/* Keep modules mounted; switch visibility with CSS to preserve Suspense tree */}
+      {/* Keep sub-modules mounted; switch visibility with CSS to preserve Suspense tree */}
       <div className={sponsorsHidden ? 'hidden' : ''}>
         <ManageSponsors />
       </div>

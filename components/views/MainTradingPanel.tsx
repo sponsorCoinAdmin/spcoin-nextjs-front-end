@@ -73,7 +73,6 @@ export default function MainTradingPanel() {
             }}
             aria-live="polite"
           >
-            activeMainOverlay:&nbsp;<strong>{activeOverlayLabel}</strong>
           </div>
         )}
 

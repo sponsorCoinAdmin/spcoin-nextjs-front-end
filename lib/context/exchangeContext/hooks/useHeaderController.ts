@@ -13,6 +13,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 const AGENT_WALLET_TITLE =
   process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
 
+// Detail closers registered by inner detail views
 const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
 export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
   useEffect(() => {
@@ -30,7 +31,7 @@ export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void)
   }, [panel, fn]);
 }
 
-/** Title overrides (per panel) registered by screens like ManageAgent */
+/** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
 export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
   useEffect(() => {
@@ -44,17 +45,14 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
   }, [panel, title]);
 }
 
-/** Left-element (component) overrides (per panel) */
+/** Left-side component override mapper */
 type LeftFactory = () => React.ReactNode;
 const headerLeftOverrides = new Map<SP_COIN_DISPLAY, LeftFactory>();
-
-/** Register a custom left-side component for a specific panel header */
 export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
   useEffect(() => {
     if (!factory) return;
     headerLeftOverrides.set(panel, factory);
     return () => {
-      // Cleanup only if the same factory is still set (avoid clobbering others)
       if (headerLeftOverrides.get(panel) === factory) {
         headerLeftOverrides.delete(panel);
       }
@@ -70,13 +68,13 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL: return 'Select Recipient to Sponsor';
     case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL: return 'Select a Token to Sell';
     case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return AGENT_WALLET_TITLE; // ← uses env var now
+    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return AGENT_WALLET_TITLE;
     case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Sponsorship Account Management';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
     case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Claim Sponsor Rewards';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account'; // ← fix label
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account';
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
     case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL: return 'Manage Sponsor Coin Staking';
@@ -90,6 +88,7 @@ export function useHeaderController() {
   const { toTrading } = usePanelTransitions();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
+  // Panel visibility map
   const vis = {
     sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
     sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
@@ -108,7 +107,10 @@ export function useHeaderController() {
     manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
     manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
 
-    // New manage coin overlays
+    // NOT A RADIO PANEL — just a toggle inside the hub
+    pendingRewards: usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS),
+
+    // Coin-management overlays
     manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL),
     manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL),
 
@@ -117,69 +119,64 @@ export function useHeaderController() {
     trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
   };
 
+  const pendingRewards = vis.pendingRewards;
+
+  // Header must NOT consider MANAGE_PENDING_REWARDS as the current display
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
     if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
     if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
     if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
 
-    // Prefer detail first
+    // Details
     if (vis.manageAgentDetail) return SP_COIN_DISPLAY.MANAGE_AGENT_PANEL;
     if (vis.manageRecipientDetail) return SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL;
     if (vis.manageSponsorDetail) return SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
 
-    // Then lists
+    // Lists
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
     if (vis.manageSponsorsList) return SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL;
 
-    // New manage coin overlays
+    // Do NOT return MANAGE_PENDING_REWARDS — not a radio panel
+
+    // Coin management overlays
     if (vis.manageTradingCoins) return SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL;
     if (vis.manageStakingCoins) return SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL;
 
+    // Hub
     if (vis.manageHub) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+
     if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
     if (vis.error) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
     if (vis.trading) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+
     return SP_COIN_DISPLAY.UNDEFINED;
   }, [vis]);
 
-  // Prefer a registered override title; fallback to default
+  // Header title resolution
   const overrideTitle = headerTitleOverrides.get(currentDisplay);
   const title = overrideTitle ?? titleFor(currentDisplay);
 
-  // Resolve optional left-side element (component) for the current display
+  // Left-side element
   const leftElementFactory = headerLeftOverrides.get(currentDisplay);
   const leftElement = leftElementFactory ? leftElementFactory() : null;
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
-  // Helper: force exactly one manage sub-list visible (and hide hub + details)
-  const openOnlyManageList = useCallback((list: SP_COIN_DISPLAY) => {
-    // close hub + all details
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:openOnlyManageList');
-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'HeaderController:openOnlyManageList');
-    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, 'HeaderController:openOnlyManageList');
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, 'HeaderController:openOnlyManageList');
-
-    // close the other lists
-    if (list !== SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL) {
-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'HeaderController:openOnlyManageList');
-    }
-    if (list !== SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL) {
-      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'HeaderController:openOnlyManageList');
-    }
-    if (list !== SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL) {
-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'HeaderController:openOnlyManageList');
-    }
-
-    // finally open the requested list
-    openPanel(list, 'HeaderController:openOnlyManageList');
-  }, [openPanel, closePanel]);
-
+  // Close handler
   const onClose = useCallback(() => {
-    // Run any registered detail closer first
+    // RULE: If pendingRewards is active → ONLY close pendingRewards. Nothing else.
+    if (pendingRewards) {
+      closePanel(
+        SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+        'HeaderController:onClose(pendingRewards)'
+      );
+      return;
+    }
+
+    // Delegate to detail closers
     if (
       currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENT_PANEL ||
       currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL ||
@@ -187,46 +184,46 @@ export function useHeaderController() {
     ) {
       const closers = detailClosers.get(currentDisplay);
       if (closers && closers.size) {
-        closers.forEach((fn) => { try { fn(); } catch {} });
+        closers.forEach(fn => {
+          try { fn(); } catch {}
+        });
         return;
       }
     }
 
     switch (currentDisplay) {
       case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
-        openOnlyManageList(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+        openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
         return;
+
       case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
-        openOnlyManageList(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+        openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
         return;
+
       case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
-        openOnlyManageList(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
         return;
 
       case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:onClose');
+        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
         return;
 
-      // 🔹 NEW: coin-management overlays → go back to hub
       case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL:
-        openPanel(
-          SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-          'HeaderController:onClose(coin-manage)',
-        );
+        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
         return;
 
       default:
         toTrading();
         return;
     }
-  }, [currentDisplay, openOnlyManageList, openPanel, toTrading]);
+  }, [pendingRewards, currentDisplay, closePanel, openPanel, toTrading]);
 
   return {
     title,
-    leftElement,      // ⬅️ expose the optional left-side component
+    leftElement,
     isConfigOpen,
     onOpenConfig,
     onCloseConfig,
