@@ -1,7 +1,6 @@
 // File: @/components/views/MainTradingPanel.tsx
 'use client';
 
-import React, { useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -29,7 +28,6 @@ import {
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { ErrorMessagePanel } from '@/components/views';
 
 const SHOW_ACTIVE =
@@ -42,12 +40,8 @@ const AGENT_SUB_TITLE =
   process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
 
 export default function MainTradingPanel() {
-  const { activeMainOverlay } = usePanelTree();
 
-  const activeOverlayLabel = useMemo(() => {
-    return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
-  }, [activeMainOverlay]);
-
+ 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
       <div id="MainPage_ID" style={{ position: 'relative' }}>
