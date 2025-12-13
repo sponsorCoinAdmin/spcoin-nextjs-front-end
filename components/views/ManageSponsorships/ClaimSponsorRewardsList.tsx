@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageSponsors.tsx
+// File: @/components/views/ManageSponsorships/ClaimSponsorRewardsList.tsx
 'use client';
 
 import React, { useEffect, useContext, useCallback } from 'react';
@@ -19,21 +19,21 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';
-const debugLog = createDebugLogger('ManageSponsors', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('ClaimSponsorRewardsList', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Sponsors list:
- * - List visibility: MANAGE_SPONSORS_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - List visibility: CLAIM_SPONSOR_REWARDS_LIST_PANEL (opened by ManageSponsorshipsPanel.openOnly)
  * - Detail visibility: MANAGE_SPONSOR_PANEL (ManageSponsor + PanelGate)
- * - Selection source: FEED_TYPE.MANAGE_SPONSORS via PanelListSelectWrapper
+ * - Selection source: FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST via PanelListSelectWrapper
  */
-export default function ManageSponsors() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+export default function ClaimSponsorRewardsList() {
+  const visible = usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
 
   useEffect(() => {
-    debugLog.log?.('[visibility] MANAGE_SPONSORS_PANEL', { visible });
+    debugLog.log?.('[visibility] CLAIM_SPONSOR_REWARDS_LIST_PANEL', { visible });
     if (visible) {
-      debugLog.log?.('OPENING ManageSponsors');
+      debugLog.log?.('OPENING ClaimSponsorRewardsList');
     }
   }, [visible]);
 
@@ -75,7 +75,7 @@ function ManageSponsorsInner() {
             },
           };
         },
-        'ManageSponsors:handleCommit(sponsorAccount)'
+        'ClaimSponsorRewardsList:handleCommit(sponsorAccount)'
       );
 
       // 2️⃣ Defer opening MANAGE_SPONSOR_PANEL so it runs *after*
@@ -87,7 +87,7 @@ function ManageSponsorsInner() {
           );
           openPanel(
             SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-            'ManageSponsors:handleCommit(deferred open MANAGE_SPONSOR_PANEL)'
+            'ClaimSponsorRewardsList:handleCommit(deferred open MANAGE_SPONSOR_PANEL)'
           );
         }, 0);
       } else {
@@ -97,7 +97,7 @@ function ManageSponsorsInner() {
         );
         openPanel(
           SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-          'ManageSponsors:handleCommit(open MANAGE_SPONSOR_PANEL)'
+          'ClaimSponsorRewardsList:handleCommit(open MANAGE_SPONSOR_PANEL)'
         );
       }
     },
@@ -105,16 +105,16 @@ function ManageSponsorsInner() {
   );
 
   debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
-    panel: 'MANAGE_SPONSORS_PANEL',
-    feedType: 'MANAGE_SPONSORS',
+    panel: 'CLAIM_SPONSOR_REWARDS_LIST_PANEL',
+    feedType: 'CLAIM_SPONSOR_REWARDS_LIST',
     instancePrefix: 'sponsor',
   });
 
   return (
     
     <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}
-      feedType={FEED_TYPE.MANAGE_SPONSORS}
+      panel={SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL}
+      feedType={FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST}
       instancePrefix="sponsor"
       onCommit={handleCommit}
     />

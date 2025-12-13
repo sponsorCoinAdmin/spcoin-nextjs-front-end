@@ -21,7 +21,7 @@ import PanelGate from '@/components/utility/PanelGate';
 // List views
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
+import ClaimSponsorRewardsList from '@/components/views/ManageSponsorships/ClaimSponsorRewardsList';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
 // Detail views
@@ -243,8 +243,8 @@ useEffect(() => {
           <PanelGate panel={SP.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
-          <PanelGate panel={SP.MANAGE_SPONSORS_PANEL}>
-            <ManageSponsors />
+          <PanelGate panel={SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL}>
+            <ClaimSponsorRewardsList />
           </PanelGate>
 
           {/* Manage DETAIL views */}

@@ -45,12 +45,12 @@ export async function fetchAndBuildDataList(
 ): Promise<FeedData> {
   // 🔹 Management feeds: use dedicated JSON specs for now
   if (
-    feedType === FEED_TYPE.MANAGE_SPONSORS ||
+    feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS
   ) {
     const raw =
-      feedType === FEED_TYPE.MANAGE_SPONSORS
+      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST
         ? sponsorsJson
         : feedType === FEED_TYPE.MANAGE_RECIPIENTS
         ? recipientsJson
@@ -83,12 +83,12 @@ export async function fetchSingleFromSource(
 ) {
   // Treat MANAGE_* like account feeds for "first wallet" convenience
   if (
-    feedType === FEED_TYPE.MANAGE_SPONSORS ||
+    feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS
   ) {
     const raw =
-      feedType === FEED_TYPE.MANAGE_SPONSORS
+      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST
         ? sponsorsJson
         : feedType === FEED_TYPE.MANAGE_RECIPIENTS
         ? recipientsJson

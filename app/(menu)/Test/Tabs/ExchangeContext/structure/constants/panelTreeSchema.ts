@@ -29,7 +29,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // ✅ Manage LIST views
     SPCD.MANAGE_RECIPIENTS_PANEL,
     SPCD.MANAGE_AGENTS_PANEL,
-    SPCD.MANAGE_SPONSORS_PANEL,
+    SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
 
     // ✅ Manage DETAIL views (these were missing from the schema)
     SPCD.MANAGE_AGENT_PANEL,
@@ -76,7 +76,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ Manage LIST views
   [SPCD.MANAGE_RECIPIENTS_PANEL]: 'panel',
   [SPCD.MANAGE_AGENTS_PANEL]: 'panel',
-  [SPCD.MANAGE_SPONSORS_PANEL]: 'panel',
+  [SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL]: 'panel',
 
   // ✅ Manage DETAIL views
   [SPCD.MANAGE_AGENT_PANEL]: 'panel',
@@ -109,7 +109,7 @@ export const GROUPS = {
     // ✅ include manage list & detail panels so they’re easy to toggle/view in the test UI
     SPCD.MANAGE_RECIPIENTS_PANEL,
     SPCD.MANAGE_AGENTS_PANEL,
-    SPCD.MANAGE_SPONSORS_PANEL,
+    SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
     SPCD.MANAGE_RECIPIENT_PANEL,
     SPCD.MANAGE_AGENT_PANEL,
     SPCD.MANAGE_SPONSOR_PANEL,

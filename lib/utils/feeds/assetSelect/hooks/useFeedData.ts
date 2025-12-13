@@ -20,7 +20,7 @@ export function useFeedData(feedType: FEED_TYPE) {
     const isAccountFeed =
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
       feedType === FEED_TYPE.AGENT_ACCOUNTS ||
-      feedType === FEED_TYPE.MANAGE_SPONSORS ||
+      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
       feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
       feedType === FEED_TYPE.MANAGE_AGENTS;
 

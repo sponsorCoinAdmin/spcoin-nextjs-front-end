@@ -77,7 +77,7 @@ export default function ManageSponsor({ onClose }: Props) {
   const handleClose = useCallback(() => {
     // Return user to the sponsors list when closing detail
     openPanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
       'ManageSponsor:handleClose(open)'
     );
     closePanel(

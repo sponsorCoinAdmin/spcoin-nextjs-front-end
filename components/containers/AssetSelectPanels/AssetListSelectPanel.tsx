@@ -75,7 +75,7 @@ export default function AssetListSelectPanel() {
 
   // ⚙️ Manage view is driven purely by feedType
   const isManageView =
-    feedType === FEED_TYPE.MANAGE_SPONSORS ||
+    feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS;
 

@@ -108,7 +108,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     ]),
     node(SP.MANAGE_RECIPIENTS_PANEL, false),
     node(SP.MANAGE_AGENTS_PANEL, false),
-    node(SP.MANAGE_SPONSORS_PANEL, false),
+    node(SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL, false),
 
     // ─────────────── Detail views (drill-down pages) ───────────────
     node(SP.MANAGE_AGENT_PANEL, false),

@@ -99,7 +99,7 @@ export const PANELS: readonly PanelDef[] = [
     defaultVisible: false,
   },
   {
-    id: SP.MANAGE_SPONSORS_PANEL,
+    id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
     kind: 'panel',
     parent: SP.MAIN_TRADING_PANEL,
     group: 'mainOverlay',

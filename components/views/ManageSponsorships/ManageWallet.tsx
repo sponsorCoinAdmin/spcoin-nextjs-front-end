@@ -248,7 +248,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         />
       )}
 
-      {/* Styles (container-scoped, with !important), mirroring ManageSponsors strategy */}
+      {/* Styles (container-scoped, with !important), mirroring ClaimSponsorRewardsList strategy */}
       <style jsx>{`
         #msWrapperWalletKV {
           border-color: #000 !important;

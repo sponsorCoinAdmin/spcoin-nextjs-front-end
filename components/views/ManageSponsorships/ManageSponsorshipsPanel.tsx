@@ -13,7 +13,7 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
 import ManageRecipients from './ManageRecipients';
-import ManageSponsors from './ManageSponsors';
+import ClaimSponsorRewardsList from './ClaimSponsorRewardsList';
 import ManageAgents from './ManageAgents';
 
 // ✅ ToDo overlay
@@ -37,7 +37,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-  const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+  const vSponsors = usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
 
   // ✅ Visibility for Pending Rewards is driven by MANAGE_PENDING_REWARDS panel
   const pendingVisible = usePanelVisible(
@@ -77,7 +77,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         const ids = [
           SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
           SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-          SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+          SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
         ] as const;
 
         ids.forEach((pid) => {
@@ -367,7 +367,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       type="button"
                       className={`${rowB} ${tdInner} ms-link-cell`}
                       onClick={() =>
-                        openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)
+                        openOnly(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL)
                       }
                       aria-label="Open Claim Sponsors Rewards panel"
                     >
@@ -600,7 +600,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       {/* Keep sub-modules mounted; switch visibility with CSS to preserve Suspense tree */}
       <div className={sponsorsHidden ? 'hidden' : ''}>
-        <ManageSponsors />
+        <ClaimSponsorRewardsList />
       </div>
       <div className={agentsHidden ? 'hidden' : ''}>
         <ManageAgents />

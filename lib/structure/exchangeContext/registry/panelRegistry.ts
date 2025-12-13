@@ -63,7 +63,7 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.MANAGE_RECIPIENTS_PANEL,
   SP.MANAGE_AGENTS_PANEL,
-  SP.MANAGE_SPONSORS_PANEL,
+  SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
 
   // Detail views (still overlays)
   SP.MANAGE_AGENT_PANEL,
@@ -123,7 +123,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   },
   { id: SP.MANAGE_RECIPIENTS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_AGENTS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
-  { id: SP.MANAGE_SPONSORS_PANEL,   kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,   kind: 'panel', overlay: true, defaultVisible: false },
 
   /* ───────────── Detail overlays ───────────── */
   { id: SP.MANAGE_AGENT_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },

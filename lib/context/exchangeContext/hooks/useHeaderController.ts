@@ -73,7 +73,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Sponsorship Account Management';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Claim Sponsor Rewards';
+    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL: return 'Claim Sponsor Rewards';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account';
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
@@ -100,7 +100,7 @@ export function useHeaderController() {
     // Lists
     manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
     manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsorsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL),
+    manageSponsorsList: usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL),
 
     // Details
     manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
@@ -136,7 +136,7 @@ export function useHeaderController() {
     // Lists
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageSponsorsList) return SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL;
+    if (vis.manageSponsorsList) return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
 
     // Do NOT return MANAGE_PENDING_REWARDS — not a radio panel
 
@@ -201,12 +201,12 @@ export function useHeaderController() {
         return;
 
       case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+        openPanel(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
         return;
 
       case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
-      case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
+      case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
         openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
         return;
 

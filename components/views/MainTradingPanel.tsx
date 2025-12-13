@@ -10,14 +10,14 @@ import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/Manag
 // List panels
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
+import ClaimSponsorRewardsList from '@/components/views/ManageSponsorships/ClaimSponsorRewardsList';
 
 // Detail panels (must be mounted for openPanel to work)
 import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
 import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
 import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
-import StakingSpCoins from '@/components/views/ManageSponsorships/ManageTradingSpCoinsPanel';
-import UnstakingSpCoins from '@/components/views/ManageSponsorships/ManageStakingSpCoinsPanel';
+import StakingSpCoins from '@/components/views/ManageSponsorships/StakingSpCoinsPanel';
+import UnstakingSpCoins from '@/components/views/ManageSponsorships/UnstakingSpCoinsPanel';
 
 import {
   TokenListSelectPanel,
@@ -113,8 +113,8 @@ export default function MainTradingPanel() {
             <ManageAgents />
           </PanelGate>
           {/* Sponsors list currently rendered always (no PanelGate) */}
-          {/* <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}> */}
-          <ManageSponsors />
+          {/* <PanelGate panel={SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL}> */}
+          <ClaimSponsorRewardsList />
           {/* </PanelGate> */}
 
           {/* Detail views */}
