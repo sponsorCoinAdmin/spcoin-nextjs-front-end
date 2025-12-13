@@ -61,9 +61,9 @@ const AddSponsorShipPanel: React.FC = () => {
   const { closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
-  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR MANAGE_STAKING_SPCOINS_PANEL is true
+  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR STAKING_SPCOINS_PANEL is true
   const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-  const manageStakingVisible = usePanelVisible(SP_TREE.MANAGE_STAKING_SPCOINS_PANEL);
+  const manageStakingVisible = usePanelVisible(SP_TREE.STAKING_SPCOINS_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   // 🔹 The overlay we care about for “return to caller”
@@ -100,7 +100,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
   // 🧭 Register caller for RECIPIENT_LIST_SELECT_PANEL
   // If the recipient list overlay becomes visible while we’re under
-  // MANAGE_STAKING_SPCOINS_PANEL, we want the header close to return there.
+  // STAKING_SPCOINS_PANEL, we want the header close to return there.
   // Otherwise, fall back to TRADING_STATION_PANEL.
   useEffect(() => {
     if (!recipientListVisible) return;
@@ -108,7 +108,7 @@ const AddSponsorShipPanel: React.FC = () => {
     let parent: SP_TREE | undefined;
 
     if (manageStakingVisible) {
-      parent = SP_TREE.MANAGE_STAKING_SPCOINS_PANEL;
+      parent = SP_TREE.STAKING_SPCOINS_PANEL;
     } else if (tradingVisible) {
       parent = SP_TREE.TRADING_STATION_PANEL;
     }
@@ -185,7 +185,7 @@ const AddSponsorShipPanel: React.FC = () => {
       // NOTE: This just reopens the button; parenting for overlays
       // is now handled by overlayReturnRegistry + header.
       closePanel(
-        SP_TREE.MANAGE_STAKING_SPCOINS_PANEL,
+        SP_TREE.STAKING_SPCOINS_PANEL,
         'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalCloseManageStaking)',
       );
     }

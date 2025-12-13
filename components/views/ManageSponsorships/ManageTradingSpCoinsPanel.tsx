@@ -1,4 +1,4 @@
-// File: @/components/views/ManageTradingSpCoins.tsx
+// File: @/components/views/StakingSpCoins.tsx
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -8,11 +8,11 @@ import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
 
 import PanelGate from '@/components/utility/PanelGate';
 
-export default function ManageTradingSpCoins() {
+export default function StakingSpCoins() {
 
   return (
-    <PanelGate panel={SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL}>
-      <div id="ManageTradingSpCoins">
+    <PanelGate panel={SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL}>
+      <div id="StakingSpCoins">
         <TradingSpCoinPanel />
         <AddSponsorShipPanel />
         <PriceButton isLoadingPrice={false} />

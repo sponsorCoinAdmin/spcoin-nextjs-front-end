@@ -71,8 +71,8 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_SPONSOR_PANEL,
 
   // New SP Coin management overlays
-  SP.MANAGE_TRADING_SPCOINS_PANEL,
-  SP.MANAGE_STAKING_SPCOINS_PANEL,
+  SP.UNSTAKING_SPCOINS_PANEL,
+  SP.STAKING_SPCOINS_PANEL,
 ];
 
 /* ─────────────────────────────── PANEL DEFINITIONS ───────────────────────────────
@@ -142,13 +142,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   /* ───────────── SP Coin management ───────────── */
   {
-    id: SP.MANAGE_TRADING_SPCOINS_PANEL,
+    id: SP.UNSTAKING_SPCOINS_PANEL,
     kind: 'panel',
     overlay: true,
     defaultVisible: false,
   },
   {
-    id: SP.MANAGE_STAKING_SPCOINS_PANEL,
+    id: SP.STAKING_SPCOINS_PANEL,
     kind: 'panel',
     overlay: true,
     defaultVisible: false,

@@ -77,8 +77,8 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account';
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
-    case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL: return 'Manage Sponsor Coin Staking';
-    case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL: return 'Staking Your Sponsor Coins';
+    case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL: return 'Un-Staking Your Sponsor Coins';
+    case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL: return 'Staking Your Sponsor Coins';
     default: return 'Main Panel Header';
   }
 }
@@ -111,8 +111,8 @@ export function useHeaderController() {
     pendingRewards: usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS),
 
     // Coin-management overlays
-    manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL),
-    manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL),
+    manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL),
+    manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL),
 
     agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
     error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
@@ -141,8 +141,8 @@ export function useHeaderController() {
     // Do NOT return MANAGE_PENDING_REWARDS — not a radio panel
 
     // Coin management overlays
-    if (vis.manageTradingCoins) return SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL;
-    if (vis.manageStakingCoins) return SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL;
+    if (vis.manageTradingCoins) return SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL;
+    if (vis.manageStakingCoins) return SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;
 
     // Hub
     if (vis.manageHub) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
@@ -210,8 +210,8 @@ export function useHeaderController() {
         openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
         return;
 
-      case SP_COIN_DISPLAY.MANAGE_TRADING_SPCOINS_PANEL:
-      case SP_COIN_DISPLAY.MANAGE_STAKING_SPCOINS_PANEL:
+      case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
+      case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
         openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
         return;
 

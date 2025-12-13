@@ -6,7 +6,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 /**
  * For each overlay panel, remember which panel opened it.
  * Example:
- *   RECIPIENT_LIST_SELECT_PANEL → MANAGE_STAKING_SPCOINS_PANEL
+ *   RECIPIENT_LIST_SELECT_PANEL → STAKING_SPCOINS_PANEL
  */
 const overlayCaller = new Map<SP_COIN_DISPLAY, SP_COIN_DISPLAY>();
 
