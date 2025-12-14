@@ -1,7 +1,7 @@
 // File: @/components/containers/AssetSelectPanels/AgentListSelectPanel.tsx
 'use client';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from './PanelListSelectWrapper';
@@ -27,8 +27,8 @@ function AgentListSelectPanelInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
       feedType={FEED_TYPE.AGENT_ACCOUNTS}
+      listType={LIST_TYPE.UNDEFINED} 
       instancePrefix="agent"
-      onCommit={handleCommit}
-    />
+      onCommit={handleCommit}    />
   );
 }

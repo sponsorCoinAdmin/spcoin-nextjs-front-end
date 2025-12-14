@@ -1,7 +1,7 @@
 // File: @/components/containers/AssetSelectPanels/TokenListSelectPanel.tsx
 'use client';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from './PanelListSelectWrapper';
@@ -40,6 +40,7 @@ function TokenListSelectPanelInner({
     <PanelListSelectWrapper
       panel={activePanel}
       feedType={FEED_TYPE.TOKEN_LIST}
+      listType={LIST_TYPE.UNDEFINED} 
       instancePrefix={side}
       onCommit={handleCommit}
     />

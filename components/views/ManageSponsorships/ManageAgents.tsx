@@ -7,6 +7,7 @@ import {
   SP_COIN_DISPLAY,
   type WalletAccount,
   type TokenContract,
+  LIST_TYPE,
 } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -114,6 +115,7 @@ function ManageAgentsInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
       feedType={FEED_TYPE.MANAGE_AGENTS}
+      listType={LIST_TYPE.UNDEFINED} 
       instancePrefix="agent"
       onCommit={handleCommit}
     />

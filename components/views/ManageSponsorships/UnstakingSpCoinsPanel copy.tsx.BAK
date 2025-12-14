@@ -130,6 +130,7 @@ function ManageSponsorsInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL}
       feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
+      listType={LIST_TYPE.UNDEFINED} 
       instancePrefix="sponsor"
       onCommit={handleCommit}
     />
