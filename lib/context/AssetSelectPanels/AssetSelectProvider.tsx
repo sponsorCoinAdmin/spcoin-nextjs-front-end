@@ -50,6 +50,7 @@ export const AssetSelectProvider = ({
   initialPanelBag,
   feedTypeOverride,
 }: Props) => {
+
   const instanceId = useInstanceId(containerType);
 
   // Infer feedType from container, but allow explicit override

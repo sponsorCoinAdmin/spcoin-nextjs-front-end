@@ -53,7 +53,7 @@
   },
 
   // Include only source + Next type helpers
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/views/ManageSponsorships/UnstakingSpCoinsPanel copy.tsx.BAK"],
 
   // Keep heavy generated folders out
   "exclude": ["node_modules"]

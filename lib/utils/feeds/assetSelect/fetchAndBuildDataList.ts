@@ -1,4 +1,4 @@
-// File: @/lib/utils/feeds/assetSelect/fetchAndBuild.ts
+// File: @/lib/utils/feeds/assetSelect/fetchAndBuildDataList.ts
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';
@@ -45,12 +45,12 @@ export async function fetchAndBuildDataList(
 ): Promise<FeedData> {
   // 🔹 Management feeds: use dedicated JSON specs for now
   if (
-    feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS
   ) {
     const raw =
-      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST
+      feedType === FEED_TYPE.SPONSOR_ACCOUNTS
         ? sponsorsJson
         : feedType === FEED_TYPE.MANAGE_RECIPIENTS
         ? recipientsJson
@@ -61,7 +61,7 @@ export async function fetchAndBuildDataList(
     const ACCOUNT_STYLE_FEED = FEED_TYPE.RECIPIENT_ACCOUNTS;
 
     const built = await feedDataFromJson(ACCOUNT_STYLE_FEED, chainId, raw);
-    logFeed('manage', feedType, built);
+    logFeed('fetchAndBuildDataList', feedType, built);
     return built;
   }
 
@@ -83,12 +83,12 @@ export async function fetchSingleFromSource(
 ) {
   // Treat MANAGE_* like account feeds for "first wallet" convenience
   if (
-    feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS
   ) {
     const raw =
-      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST
+      feedType === FEED_TYPE.SPONSOR_ACCOUNTS
         ? sponsorsJson
         : feedType === FEED_TYPE.MANAGE_RECIPIENTS
         ? recipientsJson

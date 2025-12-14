@@ -1,18 +1,11 @@
 // File: @/components/views/ManageSponsorships/ManageWalletList.tsx
 'use client';
 
-import React, {
-  useMemo,
-  useState,
-  useCallback,
-  useContext,
-  useRef,
-} from 'react';
+import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
 import Image from 'next/image';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
+import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import AddressSelect from '../AddressSelect';
@@ -23,6 +16,9 @@ type Props = {
 
   /** REQUIRED: selector panel container type */
   containerType: SP_COIN_DISPLAY;
+
+  /** Mandatory (temporary): determines which actions/columns this list should show */
+  listType: LIST_TYPE;
 };
 
 function shortAddr(addr: string, left = 6, right = 4) {
@@ -34,6 +30,7 @@ export default function ManageWalletList({
   walletList,
   setWalletCallBack,
   containerType,
+  listType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
 
@@ -51,9 +48,7 @@ export default function ManageWalletList({
 
   // 🔴 ToDo overlay
   const [showToDo, setShowToDo] = useState<boolean>(false);
-  const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(
-    null
-  );
+  const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
 
   // Role label + id prefix from the enum name (for CSS scoping)
   const { roleLabel, idPrefix } = useMemo(() => {
@@ -64,6 +59,7 @@ export default function ManageWalletList({
     return { roleLabel: 'Agent', idPrefix: 'ma' };
   }, [containerType]);
 
+  // For now, claim is the only implemented action. Unsponsor can be wired later.
   const claimRewards = useCallback((type: AccountType, accountId: number) => {
     pendingClaimRef.current = { type, accountId };
     setShowToDo(true);
@@ -85,16 +81,15 @@ export default function ManageWalletList({
       row && typeof (row as any).address === 'string'
         ? (row as any).address
         : (() => {
-          const a = (row as any)?.address as Record<string, unknown> | undefined;
-          if (!a) return 'N/A';
-          const cand =
-            a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-          try {
-            return cand ? String(cand) : JSON.stringify(a);
-          } catch {
-            return 'N/A';
-          }
-        })();
+            const a = (row as any)?.address as Record<string, unknown> | undefined;
+            if (!a) return 'N/A';
+            const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+            try {
+              return cand ? String(cand) : JSON.stringify(a);
+            } catch {
+              return 'N/A';
+            }
+          })();
 
     const rowName = row?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
     const rowAccount =
@@ -115,15 +110,15 @@ export default function ManageWalletList({
     alert(
       [
         'ToDo:(Not Yet Implemented)',
-        `Claim ${label} Rewards`,
+        listType === LIST_TYPE.SPONSOR_UNSPONSOR
+          ? `Unsponsor ${label}`
+          : `Claim ${label} Rewards`,
         isTotal ? 'From: Total' : `From: ${String(rowName)}`,
-        isTotal
-          ? 'From Account: (aggregate)'
-          : `From Account: ${String(rowAccount)}`,
+        isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
         `For account: ${connected ? connected.address : '(none connected)'}`,
       ].join('\n')
     );
-  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList]);
+  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
 
   // Scoped ids
   const wrapperId = `${idPrefix}Wrapper`;
@@ -135,21 +130,35 @@ export default function ManageWalletList({
   const cell = 'px-3 text-sm align-middle';
   const cellCenter = `${cell} text-center`;
   const rowH = 'h-[77px]';
-  const iconBtn =
-    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
 
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+
+  const actionHeaderLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Unsponsor'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+      ? 'Rewards'
+      : 'Action';
+
+  const actionButtonLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Unsponsor'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+      ? 'Claim'
+      : 'Action';
 
   return (
     <>
       <AddressSelect
         defaultAddress={undefined}
-        bypassDefaultFsm callingParent={"ManageWallet"}
+        bypassDefaultFsm
+        callingParent={'ManageWallet'}
         useActiveAddr={true}
         shortAddr={true}
-        preText={"Deposit Account:"}
+        preText={'Deposit Account:'}
       />
+
       {mode === 'all' && (
         <>
           {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
@@ -203,32 +212,13 @@ export default function ManageWalletList({
               background-color: #22c55e !important;
               color: #0f172a !important;
             }
-            #${tableId} .cog-white-mask {
-              display: inline-block;
-              width: 20px;
-              height: 20px;
-              background-color: #ffffff;
-              -webkit-mask-image: url(${cog_png.src});
-              mask-image: url(${cog_png.src});
-              -webkit-mask-repeat: no-repeat;
-              mask-repeat: no-repeat;
-              -webkit-mask-position: center;
-              mask-position: center;
-              -webkit-mask-size: contain;
-              mask-size: contain;
-            }
-            #${tableId} .cog-rot {
-              transition: transform 0.3s ease;
-            }
-            #${tableId} .cog-rot:hover {
-              transform: rotate(360deg);
-            }
           `}</style>
 
           {/* Scrollable list whose height is capped by viewport, like DataListSelect */}
           <div
             id={wrapperId}
             className="mb-0 -mt-[0px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+            data-list-type={LIST_TYPE[listType]}
           >
             <table id={tableId} className="min-w-full border-collapse">
               <thead>
@@ -243,51 +233,55 @@ export default function ManageWalletList({
                     Pending Coins
                   </th>
                   <th scope="col" className={`${th} text-center`}>
-                    Rewards
-                  </th>
-                  <th scope="col" className={`${th} text-center`}>
-                    Config
+                    {actionHeaderLabel}
                   </th>
                 </tr>
               </thead>
+
               <tbody>
                 {walletList.map((w, i) => {
                   const zebra = i % 2 === 0 ? zebraA : zebraB;
-                  const claimClass =
-                    i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
+                  const actionClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
 
                   const addressText =
                     typeof (w as any).address === 'string'
                       ? (w as any).address
                       : (() => {
-                        const a = (w as any)?.address as
-                          | Record<string, unknown>
-                          | undefined;
-                        if (!a) return 'N/A';
-                        const cand =
-                          a['address'] ??
-                          a['hex'] ??
-                          a['bech32'] ??
-                          a['value'] ??
-                          a['id'];
-                        try {
-                          return cand ? String(cand) : JSON.stringify(a);
-                        } catch {
-                          return 'N/A';
-                        }
-                      })();
+                          const a = (w as any)?.address as Record<string, unknown> | undefined;
+                          if (!a) return 'N/A';
+                          const cand =
+                            a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+                          try {
+                            return cand ? String(cand) : JSON.stringify(a);
+                          } catch {
+                            return 'N/A';
+                          }
+                        })();
 
                   return (
                     <tr key={addressText}>
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center`}
+                        <button
+                          type="button"
+                          className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center w-full hover:opacity-90 focus:outline-none`}
+                          onClick={() => {
+                            // eslint-disable-next-line no-console
+                            console.debug('[ManageWalletList] row click', {
+                              roleLabel,
+                              containerType,
+                              listType: LIST_TYPE[listType],
+                              address: addressText,
+                              name: w?.name ?? 'N/A',
+                            });
+                            setWalletCallBack(w);
+                          }}
+                          aria-label={`Open ${roleLabel}s reconfigure`}
+                          title={`Reconfigure ${roleLabel}`}
+                          data-role={roleLabel}
+                          data-address={addressText}
                         >
                           <Image
-                            src={
-                              (w as any).logoURL ||
-                              '/assets/miscellaneous/placeholder.png'
-                            }
+                            src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
                             alt={`${w.name ?? 'Wallet'} logo`}
                             width={53}
                             height={53}
@@ -296,63 +290,26 @@ export default function ManageWalletList({
                           <div className="mt-1 text-xs text-slate-200 max-w-[130px] truncate text-center">
                             {w.name || shortAddr(addressText)}
                           </div>
-                        </div>
+                        </button>
                       </td>
 
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
-                          0
-                        </div>
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
 
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
-                          0
-                        </div>
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
 
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
                           <button
                             type="button"
-                            className={claimClass}
-                            aria-label={`Claim rewards for ${addressText}`}
+                            className={actionClass}
+                            aria-label={`${actionButtonLabel} for ${addressText}`}
                             onClick={() => claimRewards(accountType, i)}
                           >
-                            Claim
-                          </button>
-                        </div>
-                      </td>
-
-                      <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
-                          <button
-                            type="button"
-                            className={iconBtn}
-                            onClick={() => {
-                              // eslint-disable-next-line no-console
-                              console.debug('[ManageWalletList] cog click', {
-                                roleLabel,
-                                containerType,
-                                address: addressText,
-                                name: w?.name ?? 'N/A',
-                              });
-                              setWalletCallBack(w);
-                            }}
-                            aria-label={`Open ${roleLabel}s reconfigure`}
-                            title={`Reconfigure ${roleLabel}`}
-                            data-role={roleLabel}
-                            data-address={addressText}
-                          >
-                            <span className="cog-white-mask cog-rot" aria-hidden />
+                            {actionButtonLabel}
                           </button>
                         </div>
                       </td>
@@ -364,50 +321,32 @@ export default function ManageWalletList({
                 {(() => {
                   const isA = walletList.length % 2 === 0;
                   const zebra = isA ? zebraA : zebraB;
-                  const claimClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
+                  const actionClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
+
                   return (
                     <tr>
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}
-                        >
-                          <span className="text-xl md:text-2xl font-bold tracking-wide">
-                            Total
-                          </span>
+                        <div className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}>
+                          <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
                         </div>
                       </td>
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
-                          0
-                        </div>
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
-                          0
-                        </div>
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
                       <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        >
+                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
                           <button
                             type="button"
-                            className={claimClass}
-                            aria-label="Claim Total rewards"
+                            className={actionClass}
+                            aria-label={`${actionButtonLabel} total`}
                             onClick={() => claimRewards(accountType, -1)}
                           >
-                            Claim
+                            {actionButtonLabel}
                           </button>
                         </div>
-                      </td>
-                      <td className="p-0">
-                        <div
-                          className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                        />
                       </td>
                     </tr>
                   );

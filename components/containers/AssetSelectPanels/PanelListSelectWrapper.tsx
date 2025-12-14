@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, LIST_TYPE } from '@/lib/structure';
 import type { WalletAccount, TokenContract, FEED_TYPE } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -24,7 +24,9 @@ import type {
 
 type Props = {
   panel: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE; // used to drive AssetSelectProvider / feeds
+  feedType: FEED_TYPE;
+  /** TEMP: mandatory so we can find all call sites that must choose a list behavior */
+  listType: LIST_TYPE;
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: WalletAccount | TokenContract) => void;
@@ -63,16 +65,19 @@ function makeInitialPanelBag(
 export default function PanelListSelectWrapper({
   panel,
   feedType,
+  listType,
   instancePrefix,
   peerAddress,
   onCommit,
 }: Props) {
   const visible = usePanelVisible(panel);
   if (!visible) return null;
+
   return (
     <PanelListSelectWrapperInner
       panel={panel}
       feedType={feedType}
+      listType={listType}
       instancePrefix={instancePrefix}
       peerAddress={peerAddress}
       onCommit={onCommit}
@@ -83,17 +88,18 @@ export default function PanelListSelectWrapper({
 function PanelListSelectWrapperInner({
   panel,
   feedType,
+  listType,
   instancePrefix,
   peerAddress,
   onCommit,
 }: Props) {
+
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
-    () =>
-      `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}_${chainId}`,
+    () => `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}_${chainId}`,
     [instancePrefix, panel, chainId]
   );
 
@@ -143,9 +149,10 @@ function PanelListSelectWrapperInner({
         setSelectedAssetCallback={handleCommit}
         containerType={panel}
         initialPanelBag={initialPanelBag}
-        feedTypeOverride={feedType} // ⬅️ NEW: thread feedType into provider
+        feedTypeOverride={feedType} // ⬅️ thread feedType into provider
       >
-        <AssetListSelectPanel />
+        {/* listType drives display/actions; keep it explicit so we can evolve UI per feed */}
+        <AssetListSelectPanel listType={listType} />
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );

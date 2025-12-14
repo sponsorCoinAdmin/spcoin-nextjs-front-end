@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ClaimSponsorRewardsList.tsx
+// File: @/components/views/UnstakingSpCoins.tsx
 'use client';
 
 import React, { useEffect, useContext, useCallback } from 'react';
@@ -7,7 +7,6 @@ import {
   SP_COIN_DISPLAY,
   type WalletAccount,
   type TokenContract,
-  LIST_TYPE,
 } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -21,6 +20,21 @@ const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';
 const debugLog = createDebugLogger('ClaimSponsorRewardsList', DEBUG_ENABLED, LOG_TIME);
+
+export default function UnstakingSpCoins() {
+  return (
+    <PanelGate panel={SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL}>
+      <div id="UnstakingSpCoins">
+        <BuyAssetPanel />
+        <AddSponsorShipPanel />
+        <PriceButton isLoadingPrice={false} />
+      </div>
+    </PanelGate>
+  );
+}
+
+
+
 
 /**
  * Sponsors list:
@@ -116,10 +130,8 @@ function ManageSponsorsInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL}
       feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
-      listType={LIST_TYPE.UNDEFINED}
-      // listType={LIST_TYPE.SPONSOR_CLAIM_REWARDS}
       instancePrefix="sponsor"
       onCommit={handleCommit}
-      />
+    />
   );
 }

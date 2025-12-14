@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { FEED_TYPE } from '@/lib/structure';
 import { useAppChainId } from '@/lib/context/hooks';
-import { fetchAndBuildDataList } from '../fetchAndBuild';
+import { fetchAndBuildDataList } from '../fetchAndBuildDataList'
 import type { FeedData } from '../types';
 
 export function useFeedData(feedType: FEED_TYPE) {
@@ -20,7 +20,7 @@ export function useFeedData(feedType: FEED_TYPE) {
     const isAccountFeed =
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
       feedType === FEED_TYPE.AGENT_ACCOUNTS ||
-      feedType === FEED_TYPE.CLAIM_SPONSOR_REWARDS_LIST ||
+      feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
       feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
       feedType === FEED_TYPE.MANAGE_AGENTS;
 

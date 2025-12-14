@@ -156,7 +156,9 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   );
 
   const isAccountFeed =
-    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS;
+    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || 
+    feedType === FEED_TYPE.AGENT_ACCOUNTS || 
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS;
 
   return (
     <>
