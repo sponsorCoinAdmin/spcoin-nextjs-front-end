@@ -138,7 +138,6 @@ export default function ManageWalletList({
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 text-sm align-middle';
   const cellCenter = `${cell} text-center`;
-  const rowH = 'h-[77px]';
 
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
@@ -214,18 +213,28 @@ export default function ManageWalletList({
               z-index: 10;
             }
 
+            /* ✅ Fix FIRST row (header) height to 49px */
+            #${tableId} thead tr,
+            #${tableId} thead th {
+              height: 49px !important;
+            }
+
+            /* ✅ Center text in header + total row cells */
+            #${tableId} thead th {
+              text-align: center !important;
+            }
+            #${tableId} tr.mw-total-row td {
+              text-align: center !important;
+            }
+
             #${tableId} tbody td {
               padding: 0 !important;
             }
 
-            /* ✅ Vertical white separators */
-            #${tableId} th,
-            #${tableId} td {
-              border-right: 1px solid rgba(255, 255, 255, 0.85);
-            }
-            #${tableId} th:last-child,
-            #${tableId} td:last-child {
-              border-right: none;
+            /* ✅ Fix LAST row (Total) height to 49px */
+            #${tableId} tr.mw-total-row td,
+            #${tableId} tr.mw-total-row td > * {
+              height: 49px !important;
             }
 
             /* ✅ Make first + last column fit content (not stretch) */
@@ -347,7 +356,7 @@ export default function ManageWalletList({
                       <td className={`${zebra} p-0`}>
                         <button
                           type="button"
-                          className={`mw-firstpad ${cell} ${rowH} w-full h-full inline-flex flex-col items-center justify-center hover:opacity-90 focus:outline-none`}
+                          className={`mw-firstpad ${cell} w-full inline-flex flex-col items-center justify-center hover:opacity-90 focus:outline-none`}
                           onMouseEnter={() => onRowEnter(w?.name ?? '')}
                           onMouseMove={onRowMove}
                           onMouseLeave={onRowLeave}
@@ -371,20 +380,17 @@ export default function ManageWalletList({
                             alt={`${w.name ?? 'Wallet'} logo`}
                             width={53}
                             height={53}
-                            className="h-[53px] w-[53px] object-contain rounded"
+                            className="h-[60px] w-[53px] px-[5px] object-contain rounded"
                           />
                         </button>
                       </td>
 
-                      {/* ✅ FIX: zebra background moved to <td> */}
                       <td className={`${zebra} p-0`}>
-                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                        <div className={`${cellCenter} flex items-center justify-center`}>0</div>
                       </td>
 
-                      {/* ✅ FIX: zebra background moved to <td> */}
                       <td className={`${zebra} p-0`}>
-                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>
-                          {' '}
+                        <div className={`${cellCenter} flex items-center justify-center`}>
                           <button
                             type="button"
                             className={actionClass}
@@ -406,20 +412,21 @@ export default function ManageWalletList({
                   const actionClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
 
                   return (
-                    <tr>
-                      {/* ✅ FIX: zebra background moved to <td> */}
+                    <tr className="mw-total-row">
                       <td className={`${zebra} p-0`}>
                         <div
-                          className={`mw-firstpad ${cell} ${rowH} w-full h-full inline-flex items-center justify-center`}
+                          className={`mw-firstpad ${cell} w-full inline-flex items-center justify-center`}
                         >
-                          <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
+                          <span className="text-xl md:text-2xl font-bold tracking-wide ml-[2px]">
+                            Total
+                          </span>
                         </div>
                       </td>
                       <td className={`${zebra} p-0`}>
-                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                        <div className={`${cellCenter} flex items-center justify-center`}>0</div>
                       </td>
                       <td className={`${zebra} p-0`}>
-                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>
+                        <div className={`${cellCenter} flex items-center justify-center`}>
                           <button
                             type="button"
                             className={actionClass}
