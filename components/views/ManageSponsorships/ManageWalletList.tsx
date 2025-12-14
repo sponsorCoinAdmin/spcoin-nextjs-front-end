@@ -50,6 +50,16 @@ export default function ManageWalletList({
   const [showToDo, setShowToDo] = useState<boolean>(false);
   const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
 
+  // ✅ Single tooltip (white bg + black text) positioned above cursor
+  const [tip, setTip] = useState<{ show: boolean; text: string; x: number; y: number }>(
+    {
+      show: false,
+      text: '',
+      x: 0,
+      y: 0,
+    },
+  );
+
   // Role label + id prefix from the enum name (for CSS scoping)
   const { roleLabel, idPrefix } = useMemo(() => {
     const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined;
@@ -116,7 +126,7 @@ export default function ManageWalletList({
         isTotal ? 'From: Total' : `From: ${String(rowName)}`,
         isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
         `For account: ${connected ? connected.address : '(none connected)'}`,
-      ].join('\n')
+      ].join('\n'),
     );
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
 
@@ -125,8 +135,7 @@ export default function ManageWalletList({
   const tableId = `${idPrefix}Table`;
 
   // Styling helpers
-  const th =
-    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 text-sm align-middle';
   const cellCenter = `${cell} text-center`;
   const rowH = 'h-[77px]';
@@ -134,19 +143,39 @@ export default function ManageWalletList({
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
+  // ✅ 3-column layout: (Logo) | (Staked/Pending) | Action
+  const middleHeaderLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Staked Coins'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+        ? 'Pending Coins'
+        : 'Coins';
+
   const actionHeaderLabel =
     listType === LIST_TYPE.SPONSOR_UNSPONSOR
       ? 'Unsponsor'
       : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-      ? 'Rewards'
-      : 'Action';
+        ? 'Rewards'
+        : 'Action';
 
   const actionButtonLabel =
     listType === LIST_TYPE.SPONSOR_UNSPONSOR
       ? 'Unsponsor'
       : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-      ? 'Claim'
-      : 'Action';
+        ? 'Claim'
+        : 'Action';
+
+  const onRowEnter = (name?: string | null) => {
+    setTip((t) => ({ ...t, show: true, text: name ?? '' }));
+  };
+
+  const onRowMove: React.MouseEventHandler = (e) => {
+    setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
+  };
+
+  const onRowLeave = () => {
+    setTip((t) => ({ ...t, show: false }));
+  };
 
   return (
     <>
@@ -171,6 +200,7 @@ export default function ManageWalletList({
             #${wrapperId}::-webkit-scrollbar {
               display: none;
             }
+
             #${tableId} thead tr,
             #${tableId} thead th {
               background-color: #2b2b2b !important;
@@ -183,9 +213,39 @@ export default function ManageWalletList({
               top: 0;
               z-index: 10;
             }
+
             #${tableId} tbody td {
               padding: 0 !important;
             }
+
+            /* ✅ Vertical white separators */
+            #${tableId} th,
+            #${tableId} td {
+              border-right: 1px solid rgba(255, 255, 255, 0.85);
+            }
+            #${tableId} th:last-child,
+            #${tableId} td:last-child {
+              border-right: none;
+            }
+
+            /* ✅ Make first + last column fit content (not stretch) */
+            #${tableId} th:first-child,
+            #${tableId} td:first-child {
+              width: 1%;
+              white-space: nowrap;
+            }
+            #${tableId} th:last-child,
+            #${tableId} td:last-child {
+              width: 1%;
+              white-space: nowrap;
+            }
+
+            /* ✅ First-column inner padding buffers (1px) */
+            #${tableId} .mw-firstpad {
+              padding-left: 1px !important;
+              padding-right: 1px !important;
+            }
+
             #${tableId} .ms-claim--orange {
               background-color: #ec8840ff !important;
               color: #0f172a !important;
@@ -212,7 +272,33 @@ export default function ManageWalletList({
               background-color: #22c55e !important;
               color: #0f172a !important;
             }
+
+            /* ✅ Single tooltip (white bg, black text) */
+            .mw-tooltip {
+              position: fixed;
+              z-index: 9999;
+              pointer-events: none;
+              background: #ffffff;
+              color: #000000;
+              padding: 6px 10px;
+              border-radius: 8px;
+              font-size: 12px;
+              line-height: 1.2;
+              box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+              transform: translate(-50%, -120%);
+              max-width: 260px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
           `}</style>
+
+          {/* Tooltip */}
+          {tip.show && tip.text ? (
+            <div className="mw-tooltip" style={{ left: tip.x, top: tip.y }}>
+              {tip.text}
+            </div>
+          ) : null}
 
           {/* Scrollable list whose height is capped by viewport, like DataListSelect */}
           <div
@@ -224,13 +310,10 @@ export default function ManageWalletList({
               <thead>
                 <tr className="border-b border-black">
                   <th scope="col" className={th}>
-                    Name
+                    Logo
                   </th>
                   <th scope="col" className={`${th} text-center`}>
-                    Staked Coins
-                  </th>
-                  <th scope="col" className={`${th} text-center`}>
-                    Pending Coins
+                    {middleHeaderLabel}
                   </th>
                   <th scope="col" className={`${th} text-center`}>
                     {actionHeaderLabel}
@@ -260,10 +343,14 @@ export default function ManageWalletList({
 
                   return (
                     <tr key={addressText}>
-                      <td className="p-0">
+                      {/* ✅ FIX: zebra background is applied to the <td>, not the inner button */}
+                      <td className={`${zebra} p-0`}>
                         <button
                           type="button"
-                          className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center w-full hover:opacity-90 focus:outline-none`}
+                          className={`mw-firstpad ${cell} ${rowH} w-full h-full inline-flex flex-col items-center justify-center hover:opacity-90 focus:outline-none`}
+                          onMouseEnter={() => onRowEnter(w?.name ?? '')}
+                          onMouseMove={onRowMove}
+                          onMouseLeave={onRowLeave}
                           onClick={() => {
                             // eslint-disable-next-line no-console
                             console.debug('[ManageWalletList] row click', {
@@ -276,7 +363,6 @@ export default function ManageWalletList({
                             setWalletCallBack(w);
                           }}
                           aria-label={`Open ${roleLabel}s reconfigure`}
-                          title={`Reconfigure ${roleLabel}`}
                           data-role={roleLabel}
                           data-address={addressText}
                         >
@@ -287,22 +373,18 @@ export default function ManageWalletList({
                             height={53}
                             className="h-[53px] w-[53px] object-contain rounded"
                           />
-                          <div className="mt-1 text-xs text-slate-200 max-w-[130px] truncate text-center">
-                            {w.name || shortAddr(addressText)}
-                          </div>
                         </button>
                       </td>
 
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      {/* ✅ FIX: zebra background moved to <td> */}
+                      <td className={`${zebra} p-0`}>
+                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
 
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
-                      </td>
-
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
+                      {/* ✅ FIX: zebra background moved to <td> */}
+                      <td className={`${zebra} p-0`}>
+                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>
+                          {' '}
                           <button
                             type="button"
                             className={actionClass}
@@ -325,19 +407,19 @@ export default function ManageWalletList({
 
                   return (
                     <tr>
-                      <td className="p-0">
-                        <div className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}>
+                      {/* ✅ FIX: zebra background moved to <td> */}
+                      <td className={`${zebra} p-0`}>
+                        <div
+                          className={`mw-firstpad ${cell} ${rowH} w-full h-full inline-flex items-center justify-center`}
+                        >
                           <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
                         </div>
                       </td>
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
+                      <td className={`${zebra} p-0`}>
+                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
                       </td>
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>0</div>
-                      </td>
-                      <td className="p-0">
-                        <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
+                      <td className={`${zebra} p-0`}>
+                        <div className={`${cellCenter} ${rowH} flex items-center justify-center`}>
                           <button
                             type="button"
                             className={actionClass}
