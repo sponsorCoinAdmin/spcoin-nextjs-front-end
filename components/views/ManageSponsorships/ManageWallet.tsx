@@ -1,13 +1,10 @@
 // File: @/components/views/ManageSponsorships/ManageWallet.tsx
 'use client';
 
-import React, { useCallback, useContext, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
-import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
-import AddressSelect from '../AddressSelect';
+import { AccountType } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 
@@ -42,12 +39,6 @@ const fallback = (v: unknown) => {
 export default function ManageWallet({ wallet, onClose }: Props) {
   // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
-
-  // 🔑 Default address should come from the connected account (activeAccount),
-  // not from the managed wallet itself.
-  const defaultAddr = String(
-    ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '',
-  );
 
   // Derive a best-effort AccountType from wallet metadata; default to AGENT
   const accountType: AccountType = useMemo(() => {
@@ -104,37 +95,16 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
-  // ⬇️ Build a stable instance id for the AddressSelect display provider
-  const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
-  const instanceId = useMemo(
-    () =>
-      `MANAGE_WALLET_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.MANAGE_AGENT_PANEL]}_${chainId}`,
-    [chainId],
-  );
-
   // After hooks have run, you can short-circuit rendering if no wallet
   if (!wallet) return null;
 
   return (
-    // ⬇️ wrap table + button in a container; we’ll scope styles to this id
     <div id="msWallet">
-      {/* Address selector (prefilled from activeAccount, FSM bypass) */}
-      <div className="mb-6">
-        <AssetSelectDisplayProvider instanceId={instanceId}>
-          <AssetSelectProvider
-            containerType={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}
-            closePanelCallback={() => onClose?.()}
-            setSelectedAssetCallback={() => { }}
-          >
-            <AddressSelect
-              defaultAddress={defaultAddr}
-              bypassDefaultFsm
-              callingParent={"ManageWallet"}
-              shortAddr={true}
-              preText={"Deposit Account:"} />
-          </AssetSelectProvider>
-        </AssetSelectDisplayProvider>
-      </div>
+      {/*
+        NOTE:
+        We intentionally removed the AddressSelect “Deposit Account” header block from this panel,
+        because it was being rendered in a parent panel too, resulting in duplicate lines.
+      */}
 
       <div
         id="msWrapperWalletKV"
@@ -224,7 +194,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         </table>
       </div>
 
-      {/* Claim Rewards button under the table — now uses ToDo flow */}
+      {/* Claim Rewards button under the table — uses ToDo flow */}
       <div className="mb-6 flex items-center justify-start">
         <button
           type="button"

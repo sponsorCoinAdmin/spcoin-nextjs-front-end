@@ -52,6 +52,7 @@ const panelName = (id: number) => SP_COIN_DISPLAY[id] ?? String(id);
 function flatten(nodes: any[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
   const out: PanelEntry[] = [];
+
   const walk = (ns: any[]) => {
     for (const n of ns) {
       const id = typeof n?.panel === 'number' ? (n.panel as number) : NaN;
@@ -66,7 +67,10 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
       if (Array.isArray(n.children) && n.children.length) walk(n.children);
     }
   };
+
   walk(nodes);
+
+  // De-dupe by panel id (keep first occurrence)
   const seen = new Set<number>();
   return out.filter((e) =>
     seen.has(e.panel) ? false : (seen.add(e.panel), true),
@@ -85,6 +89,7 @@ function writeFlat(prevCtx: any, next: PanelEntry[]) {
     visible: !!e.visible,
     name: e.name ?? panelName(e.panel),
   }));
+
   return {
     ...prevCtx,
     settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: withNames },
@@ -97,11 +102,15 @@ function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEn
     : [...list, { panel, visible: false, name: panelName(panel) }];
 }
 
-function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number, boolean>) {
+function diffAndPublish(
+  prevMap: Record<number, boolean>,
+  nextMap: Record<number, boolean>,
+) {
   const ids = new Set<number>([
     ...Object.keys(prevMap),
     ...Object.keys(nextMap),
   ].map(Number));
+
   ids.forEach((idNum) => {
     const id = idNum as SP_COIN_DISPLAY;
     const prev = !!prevMap[idNum];
@@ -125,7 +134,7 @@ export function usePanelTree() {
   // Global overlays (top-level radio)
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
 
-  // ✅ Scoped overlays for MANAGE_SPONSORSHIPS container
+  // Scoped overlays for MANAGE_SPONSORSHIPS container
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
   const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
     const kids = (CHILDREN as any)?.[manageContainer] as
@@ -134,7 +143,158 @@ export function usePanelTree() {
     return Array.isArray(kids) ? kids.slice() : [];
   }, [manageContainer]);
 
-  // Keep panelStore in sync with computed map
+  const manageScopedSet = useMemo(
+    () => new Set<number>(manageScoped as unknown as number[]),
+    [manageScoped],
+  );
+
+  // ✅ All descendants of MANAGE_SPONSORSHIPS (handles nested sponsor detail)
+  const manageDescendantsSet = useMemo(() => {
+    const out = new Set<number>();
+    const stack: number[] = [Number(manageContainer)];
+
+    while (stack.length) {
+      const cur = stack.pop() as number;
+      const kids =
+        ((CHILDREN as any)?.[cur] as SP_COIN_DISPLAY[] | undefined) ?? [];
+      for (const k of kids) {
+        const kn = Number(k);
+        if (!KNOWN.has(kn)) continue;
+        if (!out.has(kn)) {
+          out.add(kn);
+          stack.push(kn);
+        }
+      }
+    }
+
+    out.delete(Number(manageContainer));
+    return out;
+  }, [manageContainer]);
+
+  const isGlobalOverlay = useCallback(
+    (p: SP_COIN_DISPLAY) => overlays.includes(p),
+    [overlays],
+  );
+
+  // Normalize `name` consistently whenever we touch an entry.
+  const withName = useCallback(
+    (e: PanelEntry) => ({ ...e, name: e.name ?? panelName(e.panel) }),
+    [],
+  );
+
+  // ───────────────────────── parent return tracking ─────────────────────────
+
+  const DEFAULT_MANAGE_CHILD = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+  const MANAGE_SPONSOR_PANEL = SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
+
+  const SPONSOR_ALLOWED_PARENTS = useMemo(
+    () =>
+      new Set<number>([
+        SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
+        SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+      ]),
+    [],
+  );
+
+  // Radio-children are ALL manage direct children except the sponsor detail panel.
+  const isManageRadioChild = useCallback(
+    (p: SP_COIN_DISPLAY) =>
+      manageScopedSet.has(Number(p)) && Number(p) !== Number(MANAGE_SPONSOR_PANEL),
+    [manageScopedSet, MANAGE_SPONSOR_PANEL],
+  );
+
+  // Any manage child (including descendants like sponsor detail)
+  const isManageAnyChild = useCallback(
+    (p: SP_COIN_DISPLAY) => manageDescendantsSet.has(Number(p)),
+    [manageDescendantsSet],
+  );
+
+  // Store the last parent so sponsor close can return correctly.
+  const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
+
+  const pickSponsorParent = useCallback(
+    (flat0: PanelEntry[], explicit?: SP_COIN_DISPLAY): SP_COIN_DISPLAY => {
+      const explicitOk =
+        typeof explicit === 'number' &&
+        SPONSOR_ALLOWED_PARENTS.has(Number(explicit));
+      if (explicitOk) return explicit as SP_COIN_DISPLAY;
+
+      // ✅ If we already have a remembered allowed parent, keep it.
+      const remembered = sponsorParentRef.current;
+      if (
+        typeof remembered === 'number' &&
+        SPONSOR_ALLOWED_PARENTS.has(Number(remembered))
+      ) {
+        return remembered;
+      }
+
+      // Fallback: infer from currently-visible allowed parent.
+      const m0 = toMap(flat0);
+      for (const idNum of SPONSOR_ALLOWED_PARENTS) {
+        if (m0[idNum]) return idNum as SP_COIN_DISPLAY;
+      }
+
+      return DEFAULT_MANAGE_CHILD;
+    },
+    [SPONSOR_ALLOWED_PARENTS],
+  );
+
+  const closeManageBranch = useCallback(
+    (arr: PanelEntry[]) =>
+      arr.map((e) => {
+        if (e.panel === manageContainer) return { ...withName(e), visible: false };
+        if (isManageAnyChild(e.panel)) return { ...withName(e), visible: false };
+        return e;
+      }),
+    [manageContainer, isManageAnyChild, withName],
+  );
+
+  const applyGlobalRadio = useCallback(
+    (accIn: PanelEntry[], target: SP_COIN_DISPLAY) => {
+      return overlays.reduce((acc, id) => {
+        const idx = acc.findIndex((e) => e.panel === id);
+        if (idx >= 0) {
+          acc[idx] = { ...withName(acc[idx]), visible: id === target };
+        } else {
+          acc.push({
+            panel: id as SP_COIN_DISPLAY,
+            visible: id === target,
+            name: panelName(id),
+          });
+        }
+        return acc;
+      }, [...accIn]);
+    },
+    [overlays, withName],
+  );
+
+  // Sets the scoped radio target among manage radio children.
+  // NOTE: does NOT toggle MANAGE_SPONSOR_PANEL.
+  const setScopedRadio = useCallback(
+    (
+      flatIn: PanelEntry[],
+      makeVisible: SP_COIN_DISPLAY,
+      alsoEnsureContainer = true,
+    ) => {
+      let next = flatIn;
+      if (alsoEnsureContainer) next = ensurePanelPresent(next, manageContainer);
+      next = ensurePanelPresent(next, makeVisible);
+
+      return next.map((e) => {
+        if (e.panel === manageContainer) {
+          return { ...withName(e), visible: alsoEnsureContainer ? true : e.visible };
+        }
+        if (isManageRadioChild(e.panel)) {
+          return { ...withName(e), visible: e.panel === makeVisible };
+        }
+        return e;
+      });
+    },
+    [manageContainer, isManageRadioChild, withName],
+  );
+
+  /* ------------------ keep panelStore in sync with computed map ------------------ */
+
   const prevMapRef = useRef<Record<number, boolean> | null>(null);
   useEffect(() => {
     const prev = prevMapRef.current ?? {};
@@ -142,9 +302,8 @@ export function usePanelTree() {
     prevMapRef.current = map;
   }, [map]);
 
-  // If multiple GLOBAL overlays visible, collapse to the first.
-  // ✅ IMPORTANT: if the kept overlay is NOT the manage container,
-  // force-close manage container + children so UI never shows stale manage panels.
+  /* ------------------ enforce single global overlay visible ------------------ */
+
   useEffect(() => {
     const visible = overlays.filter((id) => !!map[id]);
     if (visible.length <= 1) return;
@@ -156,32 +315,18 @@ export function usePanelTree() {
         const flatPrev = flatten((prev as any)?.settings?.spCoinPanelTree);
         let next = flatPrev.map((e) =>
           overlays.includes(e.panel)
-            ? {
-              ...e,
-              visible: e.panel === keep,
-              name: e.name ?? panelName(e.panel),
-            }
+            ? { ...withName(e), visible: e.panel === keep }
             : e,
         );
 
-        // If manage container is not kept, ensure it and its children are off.
-        if (keep !== manageContainer) {
-          next = next.map((e) => {
-            if (e.panel === manageContainer) {
-              return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-            }
-            if (manageScoped.includes(e.panel)) {
-              return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-            }
-            return e;
-          });
-        }
+        // If manage container isn't kept, shut down the whole manage branch.
+        if (keep !== manageContainer) next = closeManageBranch(next);
 
         diffAndPublish(toMap(flatPrev), toMap(next));
         return writeFlat(prev, next);
       });
     });
-  }, [map, overlays, setExchangeContext, manageContainer, manageScoped]);
+  }, [map, overlays, setExchangeContext, manageContainer, closeManageBranch, withName]);
 
   /* ------------------------------- queries ------------------------------- */
 
@@ -198,187 +343,44 @@ export function usePanelTree() {
   /* ------------------------------- actions ------------------------------- */
 
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, invoker?: string) => {
+    (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       logAction('openPanel', panel, invoker);
-      if (!KNOWN.has(panel)) return;
+      if (!KNOWN.has(Number(panel))) return;
 
       schedule(() => {
         setExchangeContext((prev) => {
           const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
+
+          const openingManageContainer = Number(panel) === Number(manageContainer);
+          const openingGlobal = isGlobalOverlay(panel);
+          const openingSponsorDetail = Number(panel) === Number(MANAGE_SPONSOR_PANEL);
+          const openingManageRadioChild = isManageRadioChild(panel);
+
+          // ✅ Remember last allowed parent whenever user opens those radio children.
+          if (openingManageRadioChild && SPONSOR_ALLOWED_PARENTS.has(Number(panel))) {
+            sponsorParentRef.current = panel;
+          }
+
+          // Track parent for sponsor detail so close can return correctly.
+          if (openingSponsorDetail) {
+            sponsorParentRef.current = pickSponsorParent(flat0, parent);
+          }
+
           let flat = ensurePanelPresent(flat0, panel);
 
-          const isGlobalOverlay = overlays.includes(panel);
-          const isManageChild = manageScoped.includes(panel);
-          const isManageContainer = panel === manageContainer;
+          // ✅ Opening sponsor detail: keep parent visible
+          if (openingSponsorDetail) {
+            const parentPanel = sponsorParentRef.current ?? DEFAULT_MANAGE_CHILD;
 
-          // Helper: apply GLOBAL radio so only `target` is on.
-          const applyGlobalRadio = (accIn: PanelEntry[], target: SP_COIN_DISPLAY) => {
-            return overlays.reduce((acc, id) => {
-              const idx = acc.findIndex((e) => e.panel === id);
-              if (idx >= 0) {
-                acc[idx] = {
-                  ...acc[idx],
-                  visible: id === target,
-                  name: acc[idx].name ?? panelName(id),
-                };
-              } else {
-                acc.push({
-                  panel: id as SP_COIN_DISPLAY,
-                  visible: id === target,
-                  name: panelName(id),
-                });
-              }
-              return acc;
-            }, [...accIn]);
-          };
-
-          // ✅ Opening a scoped manage child:
-          // 1) Make MANAGE_SPONSORSHIPS the active GLOBAL overlay (close other root overlays)
-          // 2) Keep container visible
-          // 3) Enforce scoped radio among manage children
-          if (isManageChild) {
             flat = ensurePanelPresent(flat, manageContainer);
             flat = applyGlobalRadio(flat, manageContainer);
 
-            const next = [...flat].map((e) => {
-              if (e.panel === manageContainer) {
-                return {
-                  ...e,
-                  visible: true,
-                  name: e.name ?? panelName(e.panel),
-                };
-              }
-              if (manageScoped.includes(e.panel)) {
-                return {
-                  ...e,
-                  visible: e.panel === panel,
-                  name: e.name ?? panelName(e.panel),
-                };
-              }
-              return e;
-            });
+            let next = setScopedRadio(flat, parentPanel, true);
 
-            diffAndPublish(toMap(flat0), toMap(next));
-            return writeFlat(prev, next);
-          }
-
-          // ✅ Opening the manage container itself:
-          // 1) Make it the active GLOBAL overlay (close other root overlays)
-          // 2) If no child active, open MANAGE_SPONSORSHIPS_PANEL ONCE on entry
-          if (isManageContainer) {
-            flat = ensurePanelPresent(flat, manageContainer);
-            flat = applyGlobalRadio(flat, manageContainer);
-
-            const map0 = toMap(flat);
-            const anyChildVisible = manageScoped.some((id) => !!map0[id]);
-            const defaultChild = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-
-            let next = [...flat].map((e) => {
-              if (e.panel === manageContainer) {
-                return {
-                  ...e,
-                  visible: true,
-                  name: e.name ?? panelName(e.panel),
-                };
-              }
-              if (!anyChildVisible && e.panel === defaultChild) {
-                return {
-                  ...e,
-                  visible: true,
-                  name: e.name ?? panelName(e.panel),
-                };
-              }
-              return e;
-            });
-
-            if (!anyChildVisible && !next.some((e) => e.panel === defaultChild)) {
-              next.push({
-                panel: defaultChild,
-                visible: true,
-                name: panelName(defaultChild),
-              });
-            }
-
-            diffAndPublish(toMap(flat0), toMap(next));
-            return writeFlat(prev, next);
-          }
-
-          // ✅ Opening any OTHER global overlay:
-          // Apply global radio, AND force-close manage container + its children.
-          if (isGlobalOverlay) {
-            let next = applyGlobalRadio(flat, panel);
-
-            if (Number(panel) !== Number(manageContainer)) {
-              next = next.map((e) => {
-                if (e.panel === manageContainer) {
-                  return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-                }
-                if (manageScoped.includes(e.panel)) {
-                  return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-                }
-                return e;
-              });
-            }
-
-            diffAndPublish(toMap(flat0), toMap(next));
-            return writeFlat(prev, next);
-          }
-
-          // Non-overlay: simple open
-          const nextFlat = [...flat];
-          const i = nextFlat.findIndex((e) => e.panel === panel);
-          if (i >= 0 && nextFlat[i].visible === true) return prev;
-          if (i >= 0) {
-            nextFlat[i] = {
-              ...nextFlat[i],
-              visible: true,
-              name: nextFlat[i].name ?? panelName(panel),
-            };
-          } else {
-            nextFlat.push({ panel, visible: true, name: panelName(panel) });
-          }
-
-          diffAndPublish(toMap(flat0), toMap(nextFlat));
-          return writeFlat(prev, nextFlat);
-        });
-      });
-    },
-    [setExchangeContext, overlays, manageScoped, manageContainer],
-  );
-
-  const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, invoker?: string) => {
-      logAction('closePanel', panel, invoker);
-      if (!KNOWN.has(panel)) return;
-
-      schedule(() => {
-        setExchangeContext((prev) => {
-          const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
-
-          const isManageChild = manageScoped.includes(panel);
-          const isManageContainer = panel === manageContainer;
-
-          // Closing container: hide container + all its scoped children
-          if (isManageContainer) {
-            const next = flat0.map((e) => {
-              if (e.panel === manageContainer) {
-                return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-              }
-              if (manageScoped.includes(e.panel)) {
-                return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-              }
-              return e;
-            });
-
-            diffAndPublish(toMap(flat0), toMap(next));
-            return writeFlat(prev, next);
-          }
-
-          // Closing scoped child: only hide that child (do NOT auto-default)
-          if (isManageChild) {
-            const next = flat0.map((e) =>
-              e.panel === panel
-                ? { ...e, visible: false, name: e.name ?? panelName(e.panel) }
+            next = ensurePanelPresent(next, MANAGE_SPONSOR_PANEL);
+            next = next.map((e) =>
+              e.panel === MANAGE_SPONSOR_PANEL
+                ? { ...withName(e), visible: true }
                 : e,
             );
 
@@ -386,19 +388,152 @@ export function usePanelTree() {
             return writeFlat(prev, next);
           }
 
-          // Global overlay close behavior
-          if (overlays.includes(panel)) {
-            // If closing a non-manage overlay, also ensure manage container+children off
-            const closingIsManageContainer = Number(panel) === Number(manageContainer);
+          // Opening a manage radio child: enforce radio; sponsor detail OFF
+          if (openingManageRadioChild) {
+            flat = ensurePanelPresent(flat, manageContainer);
+            flat = applyGlobalRadio(flat, manageContainer);
+
+            let next = setScopedRadio(flat, panel, true);
+
+            next = next.map((e) =>
+              e.panel === MANAGE_SPONSOR_PANEL ? { ...withName(e), visible: false } : e,
+            );
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          // Opening manage container: ensure default radio child; sponsor detail OFF
+          if (openingManageContainer) {
+            flat = ensurePanelPresent(flat, manageContainer);
+            flat = applyGlobalRadio(flat, manageContainer);
+
+            const map0 = toMap(flat);
+            const anyChildVisible = manageScoped.some((id) => !!map0[Number(id)]);
+
+            let next = flat;
+            if (!anyChildVisible) {
+              next = setScopedRadio(flat, DEFAULT_MANAGE_CHILD, true);
+            } else {
+              next = flat.map((e) =>
+                e.panel === manageContainer ? { ...withName(e), visible: true } : e,
+              );
+            }
+
+            next = next.map((e) =>
+              e.panel === MANAGE_SPONSOR_PANEL ? { ...withName(e), visible: false } : e,
+            );
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          // Opening any other GLOBAL overlay: apply global radio; close manage branch
+          if (openingGlobal) {
+            let next = applyGlobalRadio(flat, panel);
+            if (Number(panel) !== Number(manageContainer)) next = closeManageBranch(next);
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          // Non-overlay: simple open
+          const nextFlat = flat.map((e) =>
+            e.panel === panel ? { ...withName(e), visible: true } : e,
+          );
+
+          diffAndPublish(toMap(flat0), toMap(nextFlat));
+          return writeFlat(prev, nextFlat);
+        });
+      });
+    },
+    [
+      setExchangeContext,
+      overlays,
+      manageContainer,
+      manageScoped,
+      applyGlobalRadio,
+      closeManageBranch,
+      isGlobalOverlay,
+      isManageRadioChild,
+      withName,
+      pickSponsorParent,
+      setScopedRadio,
+      DEFAULT_MANAGE_CHILD,
+      MANAGE_SPONSOR_PANEL,
+      SPONSOR_ALLOWED_PARENTS,
+    ],
+  );
+
+  const closePanel = useCallback(
+    (panel: SP_COIN_DISPLAY, invoker?: string) => {
+      logAction('closePanel', panel, invoker);
+      if (!KNOWN.has(Number(panel))) return;
+
+      schedule(() => {
+        setExchangeContext((prev) => {
+          const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
+
+          const closingManageContainer = Number(panel) === Number(manageContainer);
+          const closingGlobal = isGlobalOverlay(panel);
+          const closingSponsorDetail = Number(panel) === Number(MANAGE_SPONSOR_PANEL);
+          const closingManageRadioChild = isManageRadioChild(panel);
+
+          if (closingManageContainer) {
+            const next = closeManageBranch(
+              flat0.map((e) =>
+                e.panel === manageContainer ? { ...withName(e), visible: false } : e,
+              ),
+            );
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          if (closingSponsorDetail) {
+            const targetAfterClose = sponsorParentRef.current ?? DEFAULT_MANAGE_CHILD;
+            const containerIsVisible = !!toMap(flat0)[Number(manageContainer)];
+
+            let next = flat0.map((e) =>
+              e.panel === MANAGE_SPONSOR_PANEL ? { ...withName(e), visible: false } : e,
+            );
+
+            if (containerIsVisible) {
+              next = applyGlobalRadio(next, manageContainer);
+              next = setScopedRadio(next, targetAfterClose, true);
+            }
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          if (closingManageRadioChild) {
+            const containerIsVisible = !!toMap(flat0)[Number(manageContainer)];
+
+            let next = flat0.map((e) =>
+              e.panel === panel ? { ...withName(e), visible: false } : e,
+            );
+
+            next = next.map((e) =>
+              e.panel === MANAGE_SPONSOR_PANEL ? { ...withName(e), visible: false } : e,
+            );
+
+            if (containerIsVisible) {
+              next = applyGlobalRadio(next, manageContainer);
+              next = setScopedRadio(next, DEFAULT_MANAGE_CHILD, true);
+            }
+
+            diffAndPublish(toMap(flat0), toMap(next));
+            return writeFlat(prev, next);
+          }
+
+          if (closingGlobal) {
+            const closingIsManage = Number(panel) === Number(manageContainer);
 
             let next = overlays.reduce((acc, id) => {
               const idx = acc.findIndex((e) => e.panel === id);
               if (idx >= 0) {
-                acc[idx] = {
-                  ...acc[idx],
-                  visible: false,
-                  name: acc[idx].name ?? panelName(id),
-                };
+                acc[idx] = { ...withName(acc[idx]), visible: false };
               } else {
                 acc.push({
                   panel: id as SP_COIN_DISPLAY,
@@ -409,27 +544,14 @@ export function usePanelTree() {
               return acc;
             }, [...flat0]);
 
-            if (!closingIsManageContainer) {
-              next = next.map((e) => {
-                if (e.panel === manageContainer) {
-                  return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-                }
-                if (manageScoped.includes(e.panel)) {
-                  return { ...e, visible: false, name: e.name ?? panelName(e.panel) };
-                }
-                return e;
-              });
-            }
+            if (!closingIsManage) next = closeManageBranch(next);
 
             diffAndPublish(toMap(flat0), toMap(next));
             return writeFlat(prev, next);
           }
 
-          // Non-overlay close
           const nextFlat = flat0.map((e) =>
-            e.panel === panel
-              ? { ...e, visible: false, name: e.name ?? panelName(panel) }
-              : e,
+            e.panel === panel ? { ...withName(e), visible: false } : e,
           );
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
@@ -437,7 +559,19 @@ export function usePanelTree() {
         });
       });
     },
-    [setExchangeContext, overlays, manageScoped, manageContainer],
+    [
+      setExchangeContext,
+      overlays,
+      manageContainer,
+      closeManageBranch,
+      isGlobalOverlay,
+      isManageRadioChild,
+      withName,
+      applyGlobalRadio,
+      setScopedRadio,
+      DEFAULT_MANAGE_CHILD,
+      MANAGE_SPONSOR_PANEL,
+    ],
   );
 
   /* ------------------------------- derived -------------------------------- */

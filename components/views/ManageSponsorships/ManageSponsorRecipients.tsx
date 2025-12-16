@@ -113,23 +113,27 @@ function ManageSponsorRecipientsInner({
         `ManageSponsorRecipients:handleCommit(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
       );
 
-      // 2) PanelListSelectWrapper will call toTrading() after selection.
-      //    Defer opening the detail panel so it runs *after* those transitions.
+      // 2) Open detail panel like tree behavior:
+      //    - keep UNSTAKING/CLAIM visible
+      //    - pass parent so usePanelTree can preserve/restore correctly
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           debugLog.log?.(
-            '[handleCommit] deferred open of MANAGE_SPONSOR_PANEL after transitions',
+            '[handleCommit] deferred open of MANAGE_SPONSOR_PANEL (keep parent visible)',
             { from: SP_COIN_DISPLAY[activePanel] },
           );
+
           openPanel(
             SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
             `ManageSponsorRecipients:handleCommit(deferred open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+            activePanel, // ✅ parent
           );
         }, 0);
       } else {
         openPanel(
           SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
           `ManageSponsorRecipients:handleCommit(open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+          activePanel, // ✅ parent
         );
       }
     },
@@ -143,6 +147,7 @@ function ManageSponsorRecipientsInner({
       listType={listType}
       instancePrefix={instancePrefix}
       onCommit={handleCommit}
+      suppressToTrading
     />
   );
 }

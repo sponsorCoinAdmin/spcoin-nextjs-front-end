@@ -1,7 +1,7 @@
 // File: @/lib/context/exchangeContext/hooks/useOverlayCloseHandler.ts
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -38,38 +38,41 @@ const LIST_OVERLAYS = new Set<SP_COIN_DISPLAY>([
  * always falling back to TRADING_STATION_PANEL.
  */
 const MANAGE_SP_ORIGINS = new Set<SP_COIN_DISPLAY>([
+  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
   SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
   SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
 ]);
 
+const MANAGE_CONTAINER = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
+const MANAGE_DEFAULT_CHILD = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+
 /**
  * useOverlayCloseHandler
  *
- * Centralized handler for "overlay close" behavior:
- *
- * 1. Tracks transitions of `activeMainOverlay` to:
- *    - Capture the "origin" overlay when entering a list overlay
- *    - Restore that origin overlay when leaving a list overlay
- *      (if we would otherwise land on TRADING_STATION_PANEL)
- *
- * 2. Provides `handleCloseOverlay` for headers / back buttons:
- *    - If pending rewards is visible under MANAGE_SPONSORSHIPS_PANEL,
- *      only close MANAGE_PENDING_REWARDS (keep the hub open).
- *    - Otherwise, close the current active overlay.
- *
- * This hook is intentionally small and focused: all the actual
- * visibility updates are delegated to `usePanelTree`.
+ * Centralized handler for "overlay close" behavior.
  */
 export function useOverlayCloseHandler() {
   // NOTE: usePanelTree exposes `activeMainOverlay` as the single
   // "radio" overlay in the MAIN_OVERLAY_GROUP.
-  const { activeMainOverlay, isVisible, openPanel, closePanel } = usePanelTree();
+  const {
+    activeMainOverlay,
+    isVisible,
+    getPanelChildren,
+    openPanel,
+    closePanel,
+  } = usePanelTree();
 
   // Last overlay we saw (for transition detection)
   const prevOverlayRef = useRef<SP_COIN_DISPLAY | null>(null);
 
   // Where a list overlay was opened from (if applicable)
   const originOverlayRef = useRef<SP_COIN_DISPLAY | null>(null);
+
+  const manageChildren = useMemo(() => {
+    // Children of the MANAGE_SPONSORSHIPS container form a scoped radio group.
+    // We rely on the registry via getPanelChildren.
+    return getPanelChildren(MANAGE_CONTAINER);
+  }, [getPanelChildren]);
 
   useEffect(() => {
     const prev = prevOverlayRef.current;
@@ -114,10 +117,7 @@ export function useOverlayCloseHandler() {
             });
           }
 
-          openPanel(
-            origin,
-            'useOverlayCloseHandler:restoreOriginOverlay',
-          );
+          openPanel(origin, 'useOverlayCloseHandler:restoreOriginOverlay');
         }
       }
     }
@@ -126,40 +126,79 @@ export function useOverlayCloseHandler() {
   }, [activeMainOverlay, openPanel]);
 
   /**
-   * Generic close handler used by headers / back buttons.
-   *
-   * Behavior:
-   * - If MANAGE_SPONSORSHIPS_PANEL is active AND MANAGE_PENDING_REWARDS
-   *   is visible, only close MANAGE_PENDING_REWARDS (keep the hub open).
-   * - Otherwise, close the current overlay. List overlays rely on the
-   *   effect above to restore their origin when appropriate.
+   * Generic close handler used by TRADE_CONTAINER_HEADER close button / back button.
    */
   const handleCloseOverlay = useCallback(() => {
     const current = activeMainOverlay;
     if (!current) return;
 
-    const pendingVisible = isVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+    // ───────────────── Special-case: manage container close behavior ─────────────────
+    // Requirement:
+    //   When MANAGE_SPONSORSHIPS is the active GLOBAL overlay and the user is on any
+    //   scoped child (e.g. MANAGE_SPONSOR_PANEL / UNSTAKING / etc.), the header close
+    //   should return to the default hub panel (MANAGE_SPONSORSHIPS_PANEL), NOT close
+    //   the whole container.
+    if (current === MANAGE_CONTAINER) {
+      const pendingVisible = isVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
 
-    // 🔹 Special-case: Pending Rewards is a "sub-state" of the manage hub.
-    // When it's visible, overlay-close should ONLY hide it, not the hub.
-    if (
-      current === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL &&
-      pendingVisible
-    ) {
-      if (DEBUG_ENABLED) {
-        debugLog.log?.(
-          'handleCloseOverlay: pending visible, closing it only',
-          { current },
+      // Preserve existing behavior: pending is a sub-state of the hub.
+      if (pendingVisible) {
+        if (DEBUG_ENABLED) {
+          debugLog.log?.(
+            'handleCloseOverlay: pending visible, closing it only (keep hub)',
+            { current },
+          );
+        }
+
+        closePanel(
+          SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+          'useOverlayCloseHandler:handleCloseOverlay(pending-only)',
         );
+        return;
+      }
+
+      // Find the currently-visible manage child (scoped radio).
+      const activeManageChild = manageChildren.find((p) => isVisible(p)) ?? null;
+
+      // If we are on a non-default child, close it and return to the hub.
+      if (activeManageChild && activeManageChild !== MANAGE_DEFAULT_CHILD) {
+        if (DEBUG_ENABLED) {
+          debugLog.log?.('handleCloseOverlay: return to manage hub', {
+            current,
+            activeManageChild,
+            defaultChild: MANAGE_DEFAULT_CHILD,
+          });
+        }
+
+        closePanel(
+          activeManageChild,
+          'useOverlayCloseHandler:handleCloseOverlay(manage-child->hub)',
+        );
+
+        // Ensure hub is visible (and container stays open).
+        openPanel(
+          MANAGE_DEFAULT_CHILD,
+          'useOverlayCloseHandler:handleCloseOverlay(open-manage-hub)',
+        );
+        return;
+      }
+
+      // If we're already on the hub (or nothing visible), close the container normally.
+      if (DEBUG_ENABLED) {
+        debugLog.log?.('handleCloseOverlay: closing manage container', {
+          current,
+          activeManageChild,
+        });
       }
 
       closePanel(
-        SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'useOverlayCloseHandler:handleCloseOverlay(pending-only)',
+        MANAGE_CONTAINER,
+        'useOverlayCloseHandler:handleCloseOverlay(close-manage-container)',
       );
       return;
     }
 
+    // ───────────────── Default behavior for non-manage overlays ─────────────────
     const isList = LIST_OVERLAYS.has(current);
 
     if (DEBUG_ENABLED) {
@@ -172,8 +211,13 @@ export function useOverlayCloseHandler() {
         ? 'useOverlayCloseHandler:handleCloseOverlay(list)'
         : 'useOverlayCloseHandler:handleCloseOverlay',
     );
-  }, [activeMainOverlay, isVisible, closePanel]);
+  }, [
+    activeMainOverlay,
+    isVisible,
+    manageChildren,
+    openPanel,
+    closePanel,
+  ]);
 
-  // Always return a stable object so destructuring never fails
   return { handleCloseOverlay };
 }

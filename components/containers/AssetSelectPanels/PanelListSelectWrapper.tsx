@@ -30,11 +30,18 @@ type Props = {
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: WalletAccount | TokenContract) => void;
+
+  /**
+   * If true, this wrapper will NOT auto-run toTrading() after commit/close.
+   * Use this for flows where the parent panel must remain visible
+   * (e.g. UNSTAKING/CLAIM sponsor lists opening MANAGE_SPONSOR_PANEL).
+   */
+  suppressToTrading?: boolean;
 };
 
 function makeInitialPanelBag(
   panel: SP_COIN_DISPLAY,
-  peerAddress?: `0x${string}`
+  peerAddress?: `0x${string}`,
 ): UnionBag | undefined {
   switch (panel) {
     case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
@@ -69,6 +76,7 @@ export default function PanelListSelectWrapper({
   instancePrefix,
   peerAddress,
   onCommit,
+  suppressToTrading,
 }: Props) {
   const visible = usePanelVisible(panel);
   if (!visible) return null;
@@ -81,6 +89,7 @@ export default function PanelListSelectWrapper({
       instancePrefix={instancePrefix}
       peerAddress={peerAddress}
       onCommit={onCommit}
+      suppressToTrading={suppressToTrading}
     />
   );
 }
@@ -92,30 +101,29 @@ function PanelListSelectWrapperInner({
   instancePrefix,
   peerAddress,
   onCommit,
+  suppressToTrading,
 }: Props) {
-
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
     () => `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}_${chainId}`,
-    [instancePrefix, panel, chainId]
+    [instancePrefix, panel, chainId],
   );
 
   const initialPanelBag = useMemo(
     () => makeInitialPanelBag(panel, peerAddress),
-    [panel, peerAddress]
+    [panel, peerAddress],
   );
 
   const closeForProvider = useCallback(
     (_fromUser?: boolean) => {
-      // Note: this wrapper does not call openPanel/closePanel directly; it delegates
-      // to usePanelTransitions.toTrading(). Parent tagging is therefore handled
-      // inside the transitions hook implementation.
-      toTrading();
+      // Default behavior: close list overlay back to trading.
+      // For sponsor detail flows we keep the parent open.
+      if (!suppressToTrading) toTrading();
     },
-    [toTrading]
+    [toTrading, suppressToTrading],
   );
 
   // ✅ Route selection directly to ExchangeContext.tradeData.{buy|sell}TokenContract
@@ -136,9 +144,12 @@ function PanelListSelectWrapperInner({
       }
 
       onCommit?.(asset);
-      toTrading();
+
+      // Default behavior: return to trading.
+      // Sponsor flows: DO NOT auto-close the parent manage panel.
+      if (!suppressToTrading) toTrading();
     },
-    [panel, setExchangeContext, onCommit, toTrading]
+    [panel, setExchangeContext, onCommit, toTrading, suppressToTrading],
   );
 
   return (
