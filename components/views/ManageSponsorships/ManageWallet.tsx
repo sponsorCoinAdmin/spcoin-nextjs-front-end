@@ -10,7 +10,6 @@ import ToDo from '@/lib/utils/components/ToDo';
 
 type Props = {
   wallet?: WalletAccount;
-  onClose?: () => void;
 };
 
 function addressToText(addr: unknown): string {
@@ -36,7 +35,7 @@ const fallback = (v: unknown) => {
   return s || 'N/A';
 };
 
-export default function ManageWallet({ wallet, onClose }: Props) {
+export default function ManageWallet({ wallet }: Props) {
   // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
 
