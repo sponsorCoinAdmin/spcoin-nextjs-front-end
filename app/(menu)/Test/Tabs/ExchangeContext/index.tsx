@@ -1,4 +1,3 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -21,7 +20,7 @@ import PanelGate from '@/components/utility/PanelGate';
 // List views
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ClaimSponsorRewardsList from '@/components/views/ManageSponsorships/ClaimSponsorRewardsList';
+import ManageSponsorRecipients from '@/components/views/ManageSponsorships/ManageSponsorRecipients';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
 // Detail views
@@ -47,7 +46,6 @@ type NamedVirtualNode = {
   children: NamedVirtualNode[];
   name?: string;
 };
-
 
 function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
   return nodes.map((n) => ({
@@ -103,16 +101,16 @@ export default function ExchangeContextTab() {
   });
 
   // Restore initial expand state
-useEffect(() => {
-  const { expanded } = readPagesState();
-  if (typeof expanded === 'boolean') {
-    // Keep the header's toggle in sync with last state,
-    // but DO NOT stomp the per-branch expansion map on boot.
-    setExpandContext(expanded);
-    // ❌ Do NOT call toggleAll(expanded) here.
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  useEffect(() => {
+    const { expanded } = readPagesState();
+    if (typeof expanded === 'boolean') {
+      // Keep the header's toggle in sync with last state,
+      // but DO NOT stomp the per-branch expansion map on boot.
+      setExpandContext(expanded);
+      // ❌ Do NOT call toggleAll(expanded) here.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist UI prefs
   useEffect(() => {
@@ -243,8 +241,13 @@ useEffect(() => {
           <PanelGate panel={SP.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
+
+          {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
           <PanelGate panel={SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL}>
-            <ClaimSponsorRewardsList />
+            <ManageSponsorRecipients />
+          </PanelGate>
+          <PanelGate panel={SP.UNSTAKING_SPCOINS_PANEL}>
+            <ManageSponsorRecipients />
           </PanelGate>
 
           {/* Manage DETAIL views */}

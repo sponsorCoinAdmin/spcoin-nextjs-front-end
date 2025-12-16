@@ -13,8 +13,8 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
 import ManageRecipients from './ManageRecipients';
-import ClaimSponsorRewardsList from './ClaimSponsorRewardsList';
 import ManageAgents from './ManageAgents';
+import ManageSponsorRecipients from './ManageSponsorRecipients';
 
 // ✅ ToDo overlay
 import ToDo from '@/lib/utils/components/ToDo';
@@ -37,12 +37,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-  const vSponsors = usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
+  const vSponsors = usePanelVisible(
+    SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+  );
 
   // ✅ Visibility for Pending Rewards is driven by MANAGE_PENDING_REWARDS panel
-  const pendingVisible = usePanelVisible(
-    SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-  );
+  const pendingVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
 
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
@@ -85,12 +85,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             debugLog.log?.('openOnly → open', { target: SP_COIN_DISPLAY[pid] });
             openPanel(
               pid,
-              `ManageSponsorshipsPanel:openOnly(target=${SP_COIN_DISPLAY[id]}#${id})`,
+              'ManageSponsorshipsPanel:openOnly(target=' +
+                SP_COIN_DISPLAY[id] +
+                '#' +
+                String(id) +
+                ')',
             );
           } else {
             closePanel(
               pid,
-              `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${pid})`,
+              'ManageSponsorshipsPanel:openOnly(close=' +
+                SP_COIN_DISPLAY[pid] +
+                '#' +
+                String(pid) +
+                ')',
             );
           }
         });
@@ -108,7 +116,11 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         debugLog.log?.('openMainOverlay', { target: SP_COIN_DISPLAY[id] });
         openPanel(
           id,
-          `ManageSponsorshipsPanel:openMainOverlay(target=${SP_COIN_DISPLAY[id]}#${id})`,
+          'ManageSponsorshipsPanel:openMainOverlay(target=' +
+            SP_COIN_DISPLAY[id] +
+            '#' +
+            String(id) +
+            ')',
         );
       } catch (err) {
         debugLog.warn?.('openMainOverlay error', { err });
@@ -117,16 +129,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     [openPanel],
   );
 
-  /** Toggle Pending Rewards view (entire second table vs first table) */
+  /** Toggle Pending Rewards rows (the 3 bulleted rows under Pending Rewards) */
   const togglePendingRewards = useCallback(() => {
     if (pendingVisible) {
-      // Hide the pending view (Table 2), show summary (Table 1)
       closePanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
         'ManageSponsorshipsPanel:togglePendingRewards(close)',
       );
     } else {
-      // Show the pending view (Table 2), hide summary (Table 1)
       // NOTE: MANAGE_SPONSORSHIPS_PANEL stays open; MANAGE_PENDING_REWARDS is not a radio panel.
       openPanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
@@ -135,7 +145,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     }
   }, [pendingVisible, openPanel, closePanel]);
 
-  /** Alert-only placeholder per request */
+  /** ✅ Claim All must open the same overlay list that contains ManageSponsorRecipients */
+  const claimAllOpenOverlay = useCallback(() => {
+    openMainOverlay(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
+  }, [openMainOverlay]);
+
+  /** Alert-only placeholder per request (used for per-type Claim buttons) */
   const claimRewards = useCallback((actType: AccountType) => {
     setShowToDo(true);
     accountTypeRef.current = actType;
@@ -162,15 +177,16 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const agentsHidden = !vAgents;
   const sponsorsHidden = !vSponsors;
 
-  // Decide which table is displayed based on MANAGE_PENDING_REWARDS
-  const showSummaryTable = !pendingVisible; // Table 1
-  const showPendingTable = pendingVisible;  // Table 2
+  // ✅ IMPORTANT:
+  // Table 1 is ALWAYS visible.
+  // Pending Rewards toggles the 3 bulleted rows.
+  const showSummaryTable = true;
 
   // UI classes
   const rowH = 'h-[40px]';
-  const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
-  const tdInnerCenter = `${tdInner} justify-center`;
-  const rowA = 'bg-[rgba(56,78,126,0.35)]'; // Sponsors / Agents / Pending / Reward Type
+  const tdInner = rowH + ' w-full px-3 text-sm align-middle flex items-center';
+  const tdInnerCenter = tdInner + ' justify-center';
+  const rowA = 'bg-[rgba(56,78,126,0.35)]'; // Sponsors / Agents / Pending
   const rowB = 'bg-[rgba(156,163,175,0.25)]'; // Recipients / Total
   const th =
     'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
@@ -181,7 +197,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       {/* Address selector */}
       <div className="mb-[1.375rem]">
         <AssetSelectDisplayProvider>
-          {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
           <AssetSelectProvider
             containerType={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}
             closePanelCallback={() => onClose?.()}
@@ -201,7 +216,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       {/* MAIN SUMMARY TABLES (Coins / Rewards overview) */}
       <>
-        {/* TABLE 1: Coins / amounts (only when MANAGE_PENDING_REWARDS is FALSE) */}
+        {/* TABLE 1: Coins / amounts (ALWAYS visible) */}
         {showSummaryTable && (
           <div className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
             <table className="msTable min-w-full border-collapse">
@@ -209,12 +224,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               <thead>
                 <tr className="border-b border-black">
                   <th scope="col" className={th}>
-                    Sponsor Coins
+                    SpCoins
                   </th>
-                  <th scope="col" className={`${th} text-center`}>
+                  <th scope="col" className={th + ' text-center'}>
                     Amount
                   </th>
-                  <th scope="col" className={`${th} text-center`}>
+                  <th scope="col" className={th + ' text-center'}>
                     OPTIONS
                   </th>
                 </tr>
@@ -223,23 +238,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               {/* TABLE 1 BODY */}
               <tbody>
                 {/* Row 1: Trading */}
-                <tr className={`${rowBorder}`}>
+                <tr className={rowBorder}>
                   <td className="p-0">
-                    <div className={`${rowA} ${tdInner}`}>Trading Coins</div>
+                    <div className={rowA + ' ' + tdInner}>Trading</div>
                   </td>
                   <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                    <div className={rowA + ' ' + tdInnerCenter}>0</div>
                   </td>
-                  {/* Config column: Stake button */}
                   <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>
+                    <div className={rowA + ' ' + tdInnerCenter}>
                       <button
                         type="button"
                         className="ms-claim--orange"
                         onClick={() =>
-                          openMainOverlay(
-                            SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
-                          )
+                          openMainOverlay(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL)
                         }
                         aria-label="Open Trading Coins config"
                         title="Configure Trading Coins"
@@ -251,16 +263,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </tr>
 
                 {/* Row 2: Staked Sponsored Coins */}
-                <tr className={`${rowBorder}`}>
+                <tr className={rowBorder}>
                   <td className="p-0">
-                    <div className={`${rowB} ${tdInner}`}>Staked Coins</div>
+                    <div className={rowB + ' ' + tdInner}>Staked</div>
                   </td>
                   <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
+                    <div className={rowB + ' ' + tdInnerCenter}>0</div>
                   </td>
-                  {/* Config column: Unstake button */}
                   <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>
+                    <div className={rowB + ' ' + tdInnerCenter}>
                       <button
                         type="button"
                         className="ms-claim--green"
@@ -278,212 +289,163 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </td>
                 </tr>
 
-                {/* Row 3: Pending Rewards (toggles entire second table) */}
-                <tr className={`${rowBorder}`}>
+                {/* Row 3: Pending Rewards */}
+                <tr className={rowBorder}>
                   <td className="p-0">
                     <button
                       type="button"
-                      className={`${rowA} ${tdInner} ms-link-cell`}
+                      className={rowA + ' ' + tdInner + ' ms-link-cell'}
                       onClick={togglePendingRewards}
-                      aria-label="Toggle Pending Rewards table"
+                      aria-label="Toggle Pending Rewards rows"
                     >
-                      Pending Rewards
+                      Pending
                     </button>
                   </td>
+
+                  {/* Amount: hidden when bulleted rows are open */}
                   <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
+                    <div className={rowA + ' ' + tdInnerCenter}>
+                      {pendingVisible ? '' : 0}
+                    </div>
                   </td>
-                  {/* Rewards: Claim All */}
+
+                  {/* Options: Claim All hidden when bulleted rows are open */}
                   <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>
-                      <button
-                        type="button"
-                        className="ms-claim--green"
-                        aria-label="Claim Total rewards"
-                        onClick={() => claimRewards(AccountType.ALL)}
-                      >
-                        Claim All
-                      </button>
+                    <div className={rowA + ' ' + tdInnerCenter}>
+                      {!pendingVisible && (
+                        <button
+                          type="button"
+                          className="ms-claim--green"
+                          aria-label="Open Claim All rewards overlay"
+                          onClick={claimAllOpenOverlay}
+                        >
+                          Claim All
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
 
-                {/* Row 4: Total Coins */}
-                <tr className={`${rowBorder}`}>
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInner}`}>Total Coins</div>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
-                  </td>
-                  {/* Config column: empty for now */}
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}> </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+                {/* Row 4–6: Sponsors / Recipients / Agents (ONLY when Pending rows are shown) */}
+                {pendingVisible && (
+                  <>
+                    {/* Row 4: Sponsors */}
+                    <tr className={rowBorder}>
+                      <td className="p-0">
+                        <button
+                          type="button"
+                          className={rowB + ' ' + tdInner + ' ms-link-cell'}
+                          onClick={() =>
+                            openOnly(
+                              SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+                            )
+                          }
+                          aria-label="Open Claim Sponsors Rewards panel"
+                        >
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          Sponsors
+                        </button>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowB + ' ' + tdInnerCenter}>0</div>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowB + ' ' + tdInnerCenter}>
+                          <button
+                            type="button"
+                            className="ms-claim--orange"
+                            aria-label="Claim Sponsors rewards"
+                            onClick={() => claimRewards(AccountType.SPONSOR)}
+                          >
+                            Claim
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
 
-        {/* TABLE 2: Staked Rewards (only when MANAGE_PENDING_REWARDS is TRUE) */}
-        {showPendingTable && (
-          <div className="msWrapper mb-6 overflow-x-auto rounded-xl border border-black">
-            <table className="msTable min-w-full border-collapse">
-              {/* TABLE 2 HEADER: Staked Rewards */}
-              <thead>
-                <tr className="border-b border-black">
-                  <th scope="col" className={th}>
-                    Staked Rewards
-                  </th>
-                  <th scope="col" className={`${th} text-center`}>
-                    Pending Coins
-                  </th>
-                  <th scope="col" className={`${th} text-center`}>
-                    Rewards
-                  </th>
-                </tr>
-              </thead>
+                    {/* Row 5: Recipients */}
+                    <tr className={rowBorder}>
+                      <td className="p-0">
+                        <button
+                          type="button"
+                          className={rowA + ' ' + tdInner + ' ms-link-cell'}
+                          onClick={() =>
+                            openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
+                          }
+                          aria-label="Open Claim Recipients Rewards panel"
+                        >
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          Recipients
+                        </button>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowA + ' ' + tdInnerCenter}>0</div>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowA + ' ' + tdInnerCenter}>
+                          <button
+                            type="button"
+                            className="ms-claim--green"
+                            aria-label="Claim Recipients rewards"
+                            onClick={() => claimRewards(AccountType.RECIPIENT)}
+                          >
+                            Claim
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
 
-              {/* TABLE 2 BODY: all rows shown when table is visible */}
-              <tbody>
-                {/* Row 0: Reward Type (A) — simple label row */}
-                <tr className={`${rowBorder}`}>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInner}`}>Reward Type</div>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}></div>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}></div>
-                  </td>
-                </tr>
+                    {/* Row 6: Agents */}
+                    <tr className={rowBorder}>
+                      <td className="p-0">
+                        <button
+                          type="button"
+                          className={rowB + ' ' + tdInner + ' ms-link-cell'}
+                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+                          aria-label="Open Claim Agents Rewards panel"
+                        >
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          Agents
+                        </button>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowB + ' ' + tdInnerCenter}>0</div>
+                      </td>
+                      <td className="p-0">
+                        <div className={rowB + ' ' + tdInnerCenter}>
+                          <button
+                            type="button"
+                            className="ms-claim--orange"
+                            aria-label="Claim Agents rewards"
+                            onClick={() => claimRewards(AccountType.AGENT)}
+                          >
+                            Claim
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </>
+                )}
 
-                {/* Row 1: Sponsors (B) — with bullet indent */}
-                <tr className={`${rowBorder}`}>
+                {/* Row 7: Total Coins (invert when pending rows are open) */}
+                <tr className={rowBorder}>
                   <td className="p-0">
-                    <button
-                      type="button"
-                      className={`${rowB} ${tdInner} ms-link-cell`}
-                      onClick={() =>
-                        openOnly(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL)
-                      }
-                      aria-label="Open Claim Sponsors Rewards panel"
-                    >
-                      <span className="mr-1">
-                        &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                      </span>
-                      Sponsors
-                    </button>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
-                  </td>
-                  {/* Rewards: Claim button */}
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>
-                      <button
-                        type="button"
-                        className="ms-claim--orange"
-                        aria-label="Claim Sponsors rewards"
-                        onClick={() => claimRewards(AccountType.SPONSOR)}
-                      >
-                        Claim
-                      </button>
+                    <div className={(pendingVisible ? rowA : rowB) + ' ' + tdInner}>
+                      Total Coins
                     </div>
                   </td>
-                </tr>
-
-                {/* Row 2: Recipients (A) */}
-                <tr className={`${rowBorder}`}>
                   <td className="p-0">
-                    <button
-                      type="button"
-                      className={`${rowA} ${tdInner} ms-link-cell`}
-                      onClick={() =>
-                        openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
-                      }
-                      aria-label="Open Claim Recipients Rewards panel"
+                    <div
+                      className={(pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter}
                     >
-                      <span className="mr-1">
-                        &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                      </span>
-                      Recipients
-                    </button>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
-                  </td>
-                  {/* Rewards: Claim button */}
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>
-                      <button
-                        type="button"
-                        className="ms-claim--green"
-                        aria-label="Claim Recipients rewards"
-                        onClick={() => claimRewards(AccountType.RECIPIENT)}
-                      >
-                        Claim
-                      </button>
+                      0
                     </div>
                   </td>
-                </tr>
-
-                {/* Row 3: Agents (B) */}
-                <tr className={`${rowBorder}`}>
                   <td className="p-0">
-                    <button
-                      type="button"
-                      className={`${rowB} ${tdInner} ms-link-cell`}
-                      onClick={() =>
-                        openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
-                      }
-                      aria-label="Open Claim Agents Rewards panel"
+                    <div
+                      className={(pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter}
                     >
-                      <span className="mr-1">
-                        &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                      </span>
-                      Agents
-                    </button>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>0</div>
-                  </td>
-                  {/* Rewards: Claim button */}
-                  <td className="p-0">
-                    <div className={`${rowB} ${tdInnerCenter}`}>
-                      <button
-                        type="button"
-                        className="ms-claim--orange"
-                        aria-label="Claim Agents rewards"
-                        onClick={() => claimRewards(AccountType.AGENT)}
-                      >
-                        Claim
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Row 4: Pending Rewards summary within table 2 */}
-                <tr className={`${rowBorder}`}>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInner}`}>Pending Rewards</div>
-                  </td>
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>0</div>
-                  </td>
-                  {/* Rewards: Claim All */}
-                  <td className="p-0">
-                    <div className={`${rowA} ${tdInnerCenter}`}>
-                      <button
-                        type="button"
-                        className="ms-claim--green"
-                        aria-label="Claim Total rewards"
-                        onClick={() => claimRewards(AccountType.ALL)}
-                      >
-                        Claim All
-                      </button>
+                      {' '}
                     </div>
                   </td>
                 </tr>
@@ -521,7 +483,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             width: 90px;
           }
 
-          /* Clickable label cells (Sponsors / Recipients / Agents / Pending Rewards / Reward Type) */
+          /* Clickable label cells */
           .msTable .ms-link-cell {
             border: none;
             width: 100%;
@@ -543,9 +505,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 76px;       /* ⬅️ was 96px – narrower overall */
+            min-width: 76px;
             height: 32px;
-            padding: 0 0.375rem;   /* ⬅️ half the horizontal padding */
+            padding: 0 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
             border-radius: 0.375rem;
@@ -600,7 +562,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       {/* Keep sub-modules mounted; switch visibility with CSS to preserve Suspense tree */}
       <div className={sponsorsHidden ? 'hidden' : ''}>
-        <ClaimSponsorRewardsList />
+        <ManageSponsorRecipients />
       </div>
       <div className={agentsHidden ? 'hidden' : ''}>
         <ManageAgents />

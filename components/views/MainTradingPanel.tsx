@@ -10,14 +10,13 @@ import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/Manag
 // List panels
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ClaimSponsorRewardsList from '@/components/views/ManageSponsorships/ClaimSponsorRewardsList';
+import ManageSponsorRecipients from '@/components/views/ManageSponsorships/ManageSponsorRecipients';
 
 // Detail panels (must be mounted for openPanel to work)
 import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
 import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
 import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
 import StakingSpCoins from '@/components/views/ManageSponsorships/StakingSpCoinsPanel';
-import UnstakingSpCoins from '@/components/views/ManageSponsorships/UnstakingSpCoinsPanel';
 
 import {
   TokenListSelectPanel,
@@ -40,8 +39,6 @@ const AGENT_SUB_TITLE =
   process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
 
 export default function MainTradingPanel() {
-
- 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
       <div id="MainPage_ID" style={{ position: 'relative' }}>
@@ -66,8 +63,7 @@ export default function MainTradingPanel() {
               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
             }}
             aria-live="polite"
-          >
-          </div>
+          ></div>
         )}
 
         {/* ⬆️ Lifted header block (moved up by an extra 25px → total -60px) */}
@@ -78,9 +74,7 @@ export default function MainTradingPanel() {
           <h2 className="m-0 text-2xl md:text-3xl font-extrabold tracking-wide leading-tight text-[#5981F3]">
             {AGENT_TITLE}
           </h2>
-          <p className="m-0 mt-1 text-sm opacity-80">
-            {AGENT_SUB_TITLE}
-          </p>
+          <p className="m-0 mt-1 text-sm opacity-80">{AGENT_SUB_TITLE}</p>
         </div>
 
         {/* Spacer matches the lift so the panel doesn’t overlap the header */}
@@ -97,8 +91,12 @@ export default function MainTradingPanel() {
           {/* Manage Trading spCoins overlay (STAKING_SPCOINS_PANEL) */}
           <StakingSpCoins />
 
-          {/* Manage Staking spCoins overlay (UNSTAKING_SPCOINS_PANEL) */}
-          <UnstakingSpCoins />
+          {/* ✅ Merged list overlay:
+              - CLAIM_SPONSOR_REWARDS_LIST_PANEL (claim)
+              - UNSTAKING_SPCOINS_PANEL (unstake)
+              Component gates itself by visibility of either panel.
+           */}
+          <ManageSponsorRecipients />
 
           {/* Top-level overlay panels (radio group) */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
@@ -112,10 +110,6 @@ export default function MainTradingPanel() {
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
-          {/* Sponsors list currently rendered always (no PanelGate) */}
-          {/* <PanelGate panel={SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL}> */}
-          <ClaimSponsorRewardsList />
-          {/* </PanelGate> */}
 
           {/* Detail views */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
