@@ -37,10 +37,16 @@ const debugLog = createDebugLogger(
  * Differences are driven by `listType`:
  * - SPONSOR_CLAIM_REWARDS → header/button labels for Claim flow
  * - SPONSOR_UNSPONSOR    → header/button labels for Unstake flow
+ *
+ * IMPORTANT UX RULE:
+ * When MANAGE_SPONSOR_PANEL (detail) is visible, we keep the parent radio panel
+ * (UNSTAKING / CLAIM) logically open, but we suppress the list UI to avoid
+ * duplicate headers and stacked screens.
  */
 export default function ManageSponsorRecipients() {
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
+  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
 
   // Choose a single active panel to pass to PanelListSelectWrapper (it gates by that panel)
   const activePanel: SP_COIN_DISPLAY | null = vUnstaking
@@ -53,11 +59,17 @@ export default function ManageSponsorRecipients() {
     debugLog.log?.('[visibility]', {
       vUnstaking,
       vClaim,
+      vSponsorDetail,
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
-  }, [vUnstaking, vClaim, activePanel]);
+  }, [vUnstaking, vClaim, vSponsorDetail, activePanel]);
 
   if (!activePanel) return null;
+
+  // ✅ If detail is open, do NOT render the list UI.
+  // The parent radio panel stays visible in the tree, but visually yields to MANAGE_SPONSOR_PANEL.
+  if (vSponsorDetail) return null;
+
   return <ManageSponsorRecipientsInner activePanel={activePanel} />;
 }
 
@@ -114,7 +126,7 @@ function ManageSponsorRecipientsInner({
       );
 
       // 2) Open detail panel like tree behavior:
-      //    - keep UNSTAKING/CLAIM visible
+      //    - keep UNSTAKING/CLAIM visible (radio invariant)
       //    - pass parent so usePanelTree can preserve/restore correctly
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {

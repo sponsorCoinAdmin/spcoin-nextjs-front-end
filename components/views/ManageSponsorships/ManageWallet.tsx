@@ -35,6 +35,19 @@ const fallback = (v: unknown) => {
   return s || 'N/A';
 };
 
+function formatShortAddress(addr: string) {
+  const a = (addr ?? '').toString().trim();
+  if (!a) return '';
+
+  // Match AddressSelect short label style:
+  // - if short, wrap with spaces
+  // - otherwise " start ... end "
+  if (a.length <= 36) return ` ${a} `;
+  const start = a.slice(0, 15);
+  const end = a.slice(-15);
+  return ` ${start} ... ${end} `;
+}
+
 export default function ManageWallet({ wallet }: Props) {
   // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
@@ -97,17 +110,27 @@ export default function ManageWallet({ wallet }: Props) {
   // After hooks have run, you can short-circuit rendering if no wallet
   if (!wallet) return null;
 
+  // ✅ Deposit account display WITHOUT AssetSelectProvider
+  const depositAddrRaw = ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '';
+  const depositAddr = formatShortAddress(String(depositAddrRaw ?? '').trim());
+
   return (
     <div id="msWallet">
-      {/*
-        NOTE:
-        We intentionally removed the AddressSelect “Deposit Account” header block from this panel,
-        because it was being rendered in a parent panel too, resulting in duplicate lines.
-      */}
+      {/* Deposit Account header (short label pill) */}
+      {depositAddr ? (
+        <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">
+          <span className="whitespace-nowrap">Deposit Account:</span>
+          <div className="flex-1 min-w-0 flex items-center justify-center px-1 py-1 gap-2 bg-[#243056] text-[#5981F3] text-base w-full mb-0 rounded-[22px]">
+            <span className="w-full text-center font-mono break-all">{depositAddr}</span>
+          </div>
+        </div>
+      ) : null}
 
       <div
         id="msWrapperWalletKV"
-        className="mb-4 -mt-[20px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+        // ✅ IMPORTANT: no negative top margin; match list panel spacing so the table
+        // does not overlap/"step on" the Deposit Account row.
+        className="mb-4 mt-0 overflow-x-auto overflow-y-auto rounded-xl border border-black"
       >
         <table id="msTableWalletKV" className="min-w-full border-collapse">
           <thead>
