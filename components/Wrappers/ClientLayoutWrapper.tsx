@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '@/components/panes/header';
+import Header from '@/components/panes/Header';
 import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
 
 export default function ClientLayoutWrapper({

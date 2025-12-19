@@ -28,7 +28,6 @@ import {
 import {
   applyGlobalRadio,
   clearGlobalRadio,
-  switchToDefaultGlobal,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeRadio';
 
 import {
@@ -81,14 +80,6 @@ export function usePanelTree() {
 
   // Global overlays (top-level radio)
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
-
-  // Default global overlay: radio index 0 (fallback to TRADING_STATION_PANEL)
-  const DEFAULT_GLOBAL_OVERLAY = useMemo<SP_COIN_DISPLAY>(() => {
-    const first = overlays[0];
-    return typeof first === 'number'
-      ? (first as SP_COIN_DISPLAY)
-      : SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-  }, [overlays]);
 
   // ───────────────────────── Manage scope config ─────────────────────────
 
@@ -145,6 +136,51 @@ export function usePanelTree() {
   // sponsor parent tracking
   const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
 
+  // manage scoped "radio stack" tracking (so close reveals previous selection)
+  // NOTE: this is GUI/UX state, not persisted; it mirrors how MAIN_OVERLAY_GROUP
+  // behaves: selecting a new radio member replaces the current one, but closing
+  // should reveal the previous selection.
+  const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
+
+  const getActiveManageScoped = useCallback(
+    (flat: PanelEntry[]) => {
+      const m = toVisibilityMap(flat);
+      for (const id of manageScoped) {
+        if (m[Number(id)]) return id;
+      }
+      return null;
+    },
+    [manageScoped],
+  );
+
+  const pushManageScopedHistory = useCallback(
+    (prevScoped: SP_COIN_DISPLAY | null, nextScoped: SP_COIN_DISPLAY) => {
+      if (!prevScoped) return;
+      if (Number(prevScoped) === Number(nextScoped)) return;
+      // Avoid dupes on consecutive opens.
+      const stack = manageScopedHistoryRef.current;
+      if (stack.length && Number(stack[stack.length - 1]) === Number(prevScoped)) {
+        return;
+      }
+      stack.push(prevScoped);
+    },
+    [],
+  );
+
+  const popManageScopedHistory = useCallback(
+    (disallow?: SP_COIN_DISPLAY | null) => {
+      const stack = manageScopedHistoryRef.current;
+      while (stack.length) {
+        const cand = stack.pop() as SP_COIN_DISPLAY;
+        if (disallow && Number(cand) === Number(disallow)) continue;
+        // Only restore something that is still a valid scoped member.
+        if (manageScopedSet.has(Number(cand))) return cand;
+      }
+      return null;
+    },
+    [manageScopedSet],
+  );
+
   /* ------------------ keep panelStore in sync with computed map ------------------ */
 
   const prevMapRef = useRef<Record<number, boolean> | null>(null);
@@ -176,6 +212,8 @@ export function usePanelTree() {
         );
 
         if (keep !== manageCfg.manageContainer) {
+          // Leaving manage overlay: close branch + clear scoped history.
+          manageScopedHistoryRef.current = [];
           next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
         }
 
@@ -261,6 +299,10 @@ export function usePanelTree() {
                 true,
               );
 
+            // Push previous scoped selection before switching.
+            const prevScoped = getActiveManageScoped(flat0);
+            pushManageScopedHistory(prevScoped, parentPanel);
+
             let next = setScoped(flat, parentPanel);
 
             next = ensurePanelPresent(next, manageCfg.manageSponsorPanel);
@@ -276,6 +318,10 @@ export function usePanelTree() {
 
           // Opening a manage radio child: enforce scoped radio; sponsor detail OFF
           if (openingManageRadioChild) {
+            // Push previous scoped selection before switching.
+            const prevScoped = getActiveManageScoped(flat0);
+            pushManageScopedHistory(prevScoped, panel);
+
             flat = ensurePanelPresent(flat, manageCfg.manageContainer);
             flat = applyGlobalRadio(
               flat,
@@ -338,6 +384,7 @@ export function usePanelTree() {
           if (openingGlobal) {
             let next = applyGlobalRadio(flat, overlays, panel, withName);
             if (Number(panel) !== Number(manageCfg.manageContainer)) {
+              manageScopedHistoryRef.current = [];
               next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
             }
 
@@ -363,6 +410,8 @@ export function usePanelTree() {
       isManageRadioChild,
       isManageAnyChild,
       withName,
+      getActiveManageScoped,
+      pushManageScopedHistory,
     ],
   );
 
@@ -386,36 +435,9 @@ export function usePanelTree() {
             Number(panel) === Number(manageCfg.manageSponsorPanel);
           const closingManageRadioChild = isManageRadioChild(panel);
 
-          const doSwitchToDefaultGlobal = (flatIn: PanelEntry[]) => {
-            let next = switchToDefaultGlobal(
-              flatIn,
-              overlays,
-              DEFAULT_GLOBAL_OVERLAY,
-              withName,
-            );
-            if (Number(DEFAULT_GLOBAL_OVERLAY) !== Number(manageCfg.manageContainer)) {
-              next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
-            }
-            return next;
-          };
-
           if (closingManageContainer) {
-            if (!allowEmptyRadio) {
-              let next = closeManageBranch(
-                flat0.map((e) =>
-                  e.panel === manageCfg.manageContainer
-                    ? { ...withName(e), visible: false }
-                    : e,
-                ),
-                manageCfg,
-                isManageAnyChild,
-                withName,
-              );
-              next = doSwitchToDefaultGlobal(next);
-              diffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-              return writeFlatTree(prev, next);
-            }
-
+            // Always close the container + its branch. No auto-open of any other overlay.
+            manageScopedHistoryRef.current = [];
             const next = closeManageBranch(
               flat0.map((e) =>
                 e.panel === manageCfg.manageContainer
@@ -426,6 +448,7 @@ export function usePanelTree() {
               isManageAnyChild,
               withName,
             );
+
             diffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
             return writeFlatTree(prev, next);
           }
@@ -442,6 +465,7 @@ export function usePanelTree() {
                 : e,
             );
 
+            // If manage container is visible, restore scoped radio to its parent.
             if (containerIsVisible) {
               next = applyGlobalRadio(
                 next,
@@ -471,13 +495,20 @@ export function usePanelTree() {
               e.panel === panel ? { ...withName(e), visible: false } : e,
             );
 
+            // Always hide sponsor detail when leaving any manage child.
             next = next.map((e) =>
               e.panel === manageCfg.manageSponsorPanel
                 ? { ...withName(e), visible: false }
                 : e,
             );
 
-            if (containerIsVisible) {
+            // If container is visible and we are closing a scoped radio child,
+            // restore the previous scoped selection (stack-like). If none exists,
+            // fall back to the default hub.
+            if (containerIsVisible && !allowEmptyRadio) {
+              const restore =
+                popManageScopedHistory(panel) ?? manageCfg.defaultManageChild;
+
               next = applyGlobalRadio(
                 next,
                 overlays,
@@ -486,7 +517,7 @@ export function usePanelTree() {
               );
               next = setScopedRadio(
                 next,
-                manageCfg.defaultManageChild,
+                restore,
                 manageCfg,
                 isManageRadioChild,
                 withName,
@@ -499,18 +530,19 @@ export function usePanelTree() {
           }
 
           if (closingGlobal) {
-            // Normal close of any global radio member → select default.
-            if (!allowEmptyRadio) {
-              const next = doSwitchToDefaultGlobal(flat0);
-              diffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-              return writeFlatTree(prev, next);
+            const closingIsManage =
+              Number(panel) === Number(manageCfg.manageContainer);
+
+            let next = flat0.map((e) =>
+              e.panel === panel ? { ...withName(e), visible: false } : e,
+            );
+
+            if (allowEmptyRadio) {
+              next = clearGlobalRadio(next, overlays, withName);
             }
 
-            // Tree clear path: allow empty
-            const closingIsManage = Number(panel) === Number(manageCfg.manageContainer);
-
-            let next = clearGlobalRadio(flat0, overlays, withName);
-            if (!closingIsManage) {
+            if (closingIsManage) {
+              manageScopedHistoryRef.current = [];
               next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
             }
 
@@ -531,12 +563,12 @@ export function usePanelTree() {
     [
       setExchangeContext,
       overlays,
-      DEFAULT_GLOBAL_OVERLAY,
       manageCfg,
       isGlobalOverlay,
       isManageRadioChild,
       isManageAnyChild,
       withName,
+      popManageScopedHistory,
     ],
   );
 

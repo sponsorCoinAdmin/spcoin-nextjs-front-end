@@ -1,7 +1,7 @@
 // File: @/lib/context/exchangeContext/hooks/useOverlayCloseHandler.ts
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -20,8 +20,7 @@ const debugLog = createDebugLogger(
  * List-style overlays
  *
  * These are the "scroll/list-select" overlays (token/recipient/agent)
- * that temporarily replace another overlay (e.g. a manage hub) and
- * should bounce back to that origin when closed.
+ * that temporarily replace another overlay (e.g. a manage hub).
  */
 const LIST_OVERLAYS = new Set<SP_COIN_DISPLAY>([
   SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
@@ -31,16 +30,20 @@ const LIST_OVERLAYS = new Set<SP_COIN_DISPLAY>([
 ]);
 
 /**
- * Origin overlays for manage flows
+ * CLOSE_ONLY overlays
  *
- * When a list overlay is launched from one of these panels, closing
- * the list overlay should restore the origin overlay instead of
- * always falling back to TRADING_STATION_PANEL.
+ * Panels in this group must behave like true stack/detail overlays:
+ * - Header "X" closes ONLY the visible panel.
+ * - No hub/radio fallback is performed here.
+ *
+ * Rationale: the opener/parent was never closed; PanelTree visibility rules will
+ * reveal what is underneath.
  */
-const MANAGE_SP_ORIGINS = new Set<SP_COIN_DISPLAY>([
-  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
-  SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
-  SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
+const CLOSE_ONLY_PANELS = new Set<SP_COIN_DISPLAY>([
+  // Manage detail overlays (stack-like): close only, reveal underlying panel.
+  SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+  SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+  SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
 ]);
 
 const MANAGE_CONTAINER = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
@@ -49,7 +52,13 @@ const MANAGE_DEFAULT_CHILD = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 /**
  * useOverlayCloseHandler
  *
- * Centralized handler for "overlay close" behavior.
+ * Centralized handler for GUI-driven "overlay close" behavior (header X / back).
+ *
+ * IMPORTANT POLICY:
+ * - NO fallback behavior belongs here (e.g. "if nothing visible, open Trading").
+ * - Panel-tree selection is responsible only for visibility + radio-group enforcement
+ *   on OPEN. Closing a radio panel simply closes it.
+ * - The GUI close/back behavior may implement back-stack / parent-return rules.
  */
 export function useOverlayCloseHandler() {
   // NOTE: usePanelTree exposes `activeMainOverlay` as the single
@@ -62,73 +71,45 @@ export function useOverlayCloseHandler() {
     closePanel,
   } = usePanelTree();
 
-  // Last overlay we saw (for transition detection)
-  const prevOverlayRef = useRef<SP_COIN_DISPLAY | null>(null);
-
-  // Where a list overlay was opened from (if applicable)
-  const originOverlayRef = useRef<SP_COIN_DISPLAY | null>(null);
-
   const manageChildren = useMemo(() => {
     // Children of the MANAGE_SPONSORSHIPS container form a scoped radio group.
     // We rely on the registry via getPanelChildren.
     return getPanelChildren(MANAGE_CONTAINER);
   }, [getPanelChildren]);
 
-  useEffect(() => {
-    const prev = prevOverlayRef.current;
-    const current = activeMainOverlay ?? null;
-
-    if (prev === current) return;
-
-    if (DEBUG_ENABLED) {
-      debugLog.log?.('overlay change detected', { prev, next: current });
+  /**
+   * Returns the highest-priority CLOSE_ONLY panel that is currently visible.
+   */
+  const pickVisibleCloseOnly = useCallback((): SP_COIN_DISPLAY | null => {
+    for (const p of CLOSE_ONLY_PANELS) {
+      if (isVisible(p)) return p;
     }
-
-    const prevIsList = !!prev && LIST_OVERLAYS.has(prev);
-    const currIsList = !!current && LIST_OVERLAYS.has(current);
-
-    // ───────────────── Entering a list overlay ─────────────────
-    // From a non-list overlay → capture that overlay as the "origin".
-    if (current && currIsList && !prevIsList && prev) {
-      originOverlayRef.current = prev;
-
-      if (DEBUG_ENABLED) {
-        debugLog.log?.('captured origin overlay for list-select', {
-          origin: prev,
-          listOverlay: current,
-        });
-      }
-    }
-
-    // ───────────────── Leaving a list overlay ─────────────────
-    // If we leave a list overlay and land on TRADING_STATION_PANEL,
-    // but we know we came from a MANAGE_* origin, restore that origin.
-    if (prev && prevIsList && !currIsList) {
-      const origin = originOverlayRef.current;
-      originOverlayRef.current = null;
-
-      if (origin && MANAGE_SP_ORIGINS.has(origin)) {
-        // Only override when we would otherwise land on the trading station.
-        if (current === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
-          if (DEBUG_ENABLED) {
-            debugLog.log?.('restoring origin overlay after list-select close', {
-              origin,
-              fallback: current,
-            });
-          }
-
-          openPanel(origin, 'useOverlayCloseHandler:restoreOriginOverlay');
-        }
-      }
-    }
-
-    prevOverlayRef.current = current;
-  }, [activeMainOverlay, openPanel]);
+    return null;
+  }, [isVisible]);
 
   /**
    * Generic close handler used by TRADE_CONTAINER_HEADER close button / back button.
    */
   const handleCloseOverlay = useCallback(() => {
+    // ───────────────── Priority 0: CLOSE_ONLY stack/detail panels ─────────────────
+    // If any designated stack/detail panel is visible, close ONLY that panel.
+    // Do not consult activeMainOverlay and do not apply hub/radio fallback here.
+    const closeOnly = pickVisibleCloseOnly();
+    if (closeOnly) {
+      if (DEBUG_ENABLED) {
+        debugLog.log?.('handleCloseOverlay: CLOSE_ONLY -> close only', {
+          closeOnly,
+          activeMainOverlay,
+        });
+      }
+
+      closePanel(
+        closeOnly,
+        'useOverlayCloseHandler:handleCloseOverlay(close-only)',
+      );
+      return;
+    }
+
     const current = activeMainOverlay;
     if (!current) return;
 
@@ -143,40 +124,24 @@ export function useOverlayCloseHandler() {
       // Find the currently-visible manage child (scoped radio).
       const activeManageChild = manageChildren.find((p) => isVisible(p)) ?? null;
 
-      // ✅ Priority 1: If we are on a non-default manage child, return to hub.
-      // Do NOT touch pending here — it should remain open if it was open.
+            // ✅ Priority 1: If we are on a non-default manage child, close it.
+      // IMPORTANT: do NOT explicitly open the hub here.
+      // The PanelTree close rules for scoped radio children are responsible for
+      // restoring the default/hub (and preserving any independent sub-panels like pending).
       if (activeManageChild && activeManageChild !== MANAGE_DEFAULT_CHILD) {
         if (DEBUG_ENABLED) {
-          debugLog.log?.(
-            'handleCloseOverlay: manage child -> hub (preserve pending)',
-            {
-              current,
-              activeManageChild,
-              defaultChild: MANAGE_DEFAULT_CHILD,
-              pendingVisible,
-            },
-          );
+          debugLog.log?.('handleCloseOverlay: manage child -> close child only', {
+            current,
+            activeManageChild,
+            defaultChild: MANAGE_DEFAULT_CHILD,
+            pendingVisible,
+          });
         }
 
         closePanel(
           activeManageChild,
-          'useOverlayCloseHandler:handleCloseOverlay(manage-child->hub)',
+          'useOverlayCloseHandler:handleCloseOverlay(close-manage-child)',
         );
-
-        // Ensure hub is visible (and container stays open).
-        openPanel(
-          MANAGE_DEFAULT_CHILD,
-          'useOverlayCloseHandler:handleCloseOverlay(open-manage-hub)',
-        );
-
-        // If pending was open, keep it open (no-op if already visible).
-        if (pendingVisible) {
-          openPanel(
-            SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-            'useOverlayCloseHandler:handleCloseOverlay(preserve-pending)',
-          );
-        }
-
         return;
       }
 
@@ -218,13 +183,21 @@ export function useOverlayCloseHandler() {
       debugLog.log?.('handleCloseOverlay', { current, isList });
     }
 
+    // ✅ No fallback: just close the current overlay.
     closePanel(
       current,
       isList
         ? 'useOverlayCloseHandler:handleCloseOverlay(list)'
         : 'useOverlayCloseHandler:handleCloseOverlay',
     );
-  }, [activeMainOverlay, isVisible, manageChildren, openPanel, closePanel]);
+  }, [
+    activeMainOverlay,
+    closePanel,
+    isVisible,
+    manageChildren,
+    openPanel,
+    pickVisibleCloseOnly,
+  ]);
 
   return { handleCloseOverlay };
 }
