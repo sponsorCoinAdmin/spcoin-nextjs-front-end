@@ -1,8 +1,7 @@
 // File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
+import React, { useCallback, useContext, useEffect } from 'react';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
@@ -21,6 +20,9 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+import styles from './ManageSponsorshipsPanel.module.css';
+import { useManageSponsorshipsToDo } from './useManageSponsorshipsToDo';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
@@ -31,11 +33,6 @@ const debugLog = createDebugLogger(
 );
 
 type Props = { onClose?: () => void };
-
-type ToDoMode =
-  | 'claimRewards'
-  | 'claimAllSponsorshipRewards'
-  | 'unstakeAllSponsorships';
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   // ⬇️ All hooks must be called unconditionally (before any early returns)
@@ -51,8 +48,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
-
-  const [showToDo, setShowToDo] = useState<boolean>(false);
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
@@ -72,11 +67,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     });
   }, [isActive, activeAccount, defaultAddr, pendingVisible]);
 
-  // 🔒 Keep latest selected account type for the ToDo alert across renders
-  const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
-
-  // 🔒 Track which ToDo scenario we are showing
-  const todoModeRef = useRef<ToDoMode>('claimRewards');
+  // ✅ All ToDo/alert behaviors live in a dedicated hook now
+  const {
+    showToDo,
+    claimRewards,
+    claimAllToDo,
+    unstakeAllSponsorships,
+    doToDo,
+  } = useManageSponsorshipsToDo(ctx);
 
   // Open only the requested *list* panel; close the alternative list panels
   const openOnly = useCallback(
@@ -153,66 +151,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     }
   }, [pendingVisible, openPanel, closePanel]);
 
-  /**
-   * Claim All button → ToDo (must behave like Sponsors row Claim)
-   * BUT with a custom message.
-   */
-  const claimAllToDo = useCallback(() => {
-    todoModeRef.current = 'claimAllSponsorshipRewards';
-    setShowToDo(true);
-    accountTypeRef.current = 'ALL';
-  }, []);
-
-  /** Alert-only placeholder per request (used for per-type Claim buttons) */
-  const claimRewards = useCallback((actType: AccountType) => {
-    todoModeRef.current = 'claimRewards';
-    setShowToDo(true);
-    accountTypeRef.current = actType;
-  }, []);
-
-  /** Unstake All Sponsorships ToDo (used by the Unstake button on Staked row) */
-  const unstakeAllSponsorships = useCallback(() => {
-    todoModeRef.current = 'unstakeAllSponsorships';
-    setShowToDo(true);
-
-    // This flow isn't per-account-type, but keeping this aligned avoids stale refs.
-    accountTypeRef.current = AccountType.SPONSOR;
-  }, []);
-
-  const doToDo = useCallback(() => {
-    setShowToDo(false);
-
-    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-
-    // eslint-disable-next-line no-alert
-    if (todoModeRef.current === 'unstakeAllSponsorships') {
-      let msg: string = 'ToDo: (Not Yet Implemented)\n';
-      msg += 'Unstake All Sponsorships :\n';
-      msg += `For account: ${connected ? connected.address : '(none connected)'}`;
-      alert(msg);
-      return;
-    }
-
-    // eslint-disable-next-line no-alert
-    if (todoModeRef.current === 'claimAllSponsorshipRewards') {
-      let msg: string = 'ToDo: (Not Yet Implemented)\n';
-      msg += 'Claim all Sponsorship Rewards\n';
-      msg += `For Account: ${connected ? connected.address : '(none connected)'}`;
-      alert(msg);
-      return;
-    }
-
-    // Default: Claim Rewards (existing behavior)
-    const sel = String(accountTypeRef.current);
-    let msg: string = 'ToDo: (Not Yet Implemented)\n';
-    msg += 'Claim: ';
-    msg += sel === 'ALL' ? sel : `${sel}(s)`;
-    msg += ' Rewards\n';
-    msg += `For account: ${connected ? connected.address : '(none connected)'}`;
-    // eslint-disable-next-line no-alert
-    alert(msg);
-  }, [ctx?.exchangeContext?.accounts?.activeAccount]);
-
   // ✅ Early return happens only after all hooks have been called
   if (!isActive) return null;
 
@@ -264,9 +202,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         {showSummaryTable && (
           <div
             id="MANAGE_SPONSORSHIPS_TABLE"
-            className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black"
+            className={`${styles.msWrapper} mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black`}
           >
-            <table className="msTable min-w-full border-collapse">
+            <table className={`${styles.msTable} min-w-full border-collapse`}>
               {/* TABLE 1 HEADER */}
               <thead>
                 <tr className="border-b border-black">
@@ -296,7 +234,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <div className={rowA + ' ' + tdInnerCenter}>
                       <button
                         type="button"
-                        className="ms-claim--orange"
+                        className={styles.msClaimOrange}
                         onClick={() =>
                           openMainOverlay(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL)
                         }
@@ -315,7 +253,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     {/* ✅ Make the *text* behave like the Unstake button, while keeping row background */}
                     <button
                       type="button"
-                      className={rowB + ' ' + tdInner + ' ms-link-cell'}
+                      className={`${rowB} ${tdInner} ${styles.msLinkCell}`}
                       onClick={() =>
                         openMainOverlay(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL)
                       }
@@ -332,7 +270,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <div className={rowB + ' ' + tdInnerCenter}>
                       <button
                         type="button"
-                        className="ms-claim--green"
+                        className={styles.msClaimGreen}
                         onClick={unstakeAllSponsorships}
                         aria-label="Unstake All Sponsorships (ToDo)"
                         title="Unstake All Sponsorships (ToDo)"
@@ -348,7 +286,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   <td className="p-0">
                     <button
                       type="button"
-                      className={rowA + ' ' + tdInner + ' ms-link-cell'}
+                      className={`${rowA} ${tdInner} ${styles.msLinkCell}`}
                       onClick={togglePendingRewards}
                       aria-label="Toggle Pending Rewards rows"
                     >
@@ -369,7 +307,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       {!pendingVisible && (
                         <button
                           type="button"
-                          className="ms-claim--green"
+                          className={styles.msClaimGreen}
                           aria-label="Claim all Sponsorship rewards (ToDo)"
                           onClick={claimAllToDo}
                         >
@@ -388,7 +326,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <td className="p-0">
                         <button
                           type="button"
-                          className={rowB + ' ' + tdInner + ' ms-link-cell'}
+                          className={`${rowB} ${tdInner} ${styles.msLinkCell}`}
                           onClick={() =>
                             openOnly(
                               SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
@@ -396,7 +334,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                           }
                           aria-label="Open Claim Sponsors Rewards panel"
                         >
-                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          <span className="mr-1">
+                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
+                          </span>
                           Sponsors
                         </button>
                       </td>
@@ -407,7 +347,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <div className={rowB + ' ' + tdInnerCenter}>
                           <button
                             type="button"
-                            className="ms-claim--orange"
+                            className={styles.msClaimOrange}
                             aria-label="Claim Sponsors rewards"
                             onClick={() => claimRewards(AccountType.SPONSOR)}
                           >
@@ -422,13 +362,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <td className="p-0">
                         <button
                           type="button"
-                          className={rowA + ' ' + tdInner + ' ms-link-cell'}
+                          className={`${rowA} ${tdInner} ${styles.msLinkCell}`}
                           onClick={() =>
                             openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
                           }
                           aria-label="Open Claim Recipients Rewards panel"
                         >
-                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          <span className="mr-1">
+                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
+                          </span>
                           Recipients
                         </button>
                       </td>
@@ -439,7 +381,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <div className={rowA + ' ' + tdInnerCenter}>
                           <button
                             type="button"
-                            className="ms-claim--green"
+                            className={styles.msClaimGreen}
                             aria-label="Claim Recipients rewards"
                             onClick={() => claimRewards(AccountType.RECIPIENT)}
                           >
@@ -454,13 +396,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <td className="p-0">
                         <button
                           type="button"
-                          className={rowB + ' ' + tdInner + ' ms-link-cell'}
-                          onClick={() =>
-                            openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
-                          }
+                          className={`${rowB} ${tdInner} ${styles.msLinkCell}`}
+                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
                           aria-label="Open Claim Agents Rewards panel"
                         >
-                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          <span className="mr-1">
+                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
+                          </span>
                           Agents
                         </button>
                       </td>
@@ -471,7 +413,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <div className={rowB + ' ' + tdInnerCenter}>
                           <button
                             type="button"
-                            className="ms-claim--orange"
+                            className={styles.msClaimOrange}
                             aria-label="Claim Agents rewards"
                             onClick={() => claimRewards(AccountType.AGENT)}
                           >
@@ -486,7 +428,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 {/* Row 7: Total Coins (invert when pending rows are open) */}
                 <tr className={rowBorder}>
                   <td className="p-0">
-                    <div className={(pendingVisible ? rowA : rowB) + ' ' + tdInner}>
+                    <div
+                      className={(pendingVisible ? rowA : rowB) + ' ' + tdInner}
+                    >
                       Total Coins
                     </div>
                   </td>
@@ -509,111 +453,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             </table>
           </div>
         )}
-
-        <style jsx>{`
-          .msWrapper {
-            border-color: #000 !important;
-            margin-top: -18px !important;
-          }
-          .msTable {
-            border-collapse: collapse;
-          }
-          .msTable thead tr,
-          .msTable thead th {
-            background-color: #2b2b2b !important;
-          }
-          .msTable thead tr {
-            border-bottom: 1px solid #000 !important;
-          }
-          .msTable tbody td {
-            padding: 0 !important;
-          }
-
-          /* First & last column widths fixed across all tables */
-          .msTable th:first-child,
-          .msTable td:first-child {
-            width: 160px;
-          }
-          .msTable th:last-child,
-          .msTable td:last-child {
-            width: 90px;
-          }
-
-          /* Clickable label cells */
-          .msTable .ms-link-cell {
-            border: none;
-            width: 100%;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            padding: 0 0.75rem;
-            font: inherit;
-            color: inherit;
-            cursor: pointer;
-          }
-          .msTable .ms-link-cell:hover {
-            color: #ec8840ff; /* orange hover text */
-          }
-
-          /* Base size + layout for ALL claim/stake/unstake buttons */
-          .msTable .ms-claim--orange,
-          .msTable .ms-claim--green {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 76px;
-            height: 32px;
-            padding: 0 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            box-sizing: border-box;
-            white-space: nowrap;
-          }
-
-          /* ORANGE claim / stake buttons */
-          .msTable .ms-claim--orange {
-            background-color: #ec8840ff !important;
-            color: #0f172a !important;
-          }
-          .msTable .ms-claim--orange:hover {
-            background-color: #c7610fff !important;
-            color: #ffffff !important;
-          }
-
-          /* GREEN claim / unstake buttons */
-          .msTable .ms-claim--green {
-            background-color: #147f3bff !important;
-            color: #ffffff !important;
-          }
-          .msTable .ms-claim--green:hover {
-            background-color: #22c55e !important;
-            color: #0f172a !important;
-          }
-
-          /* White cog via PNG mask (still here if you reuse later) */
-          .msTable .cog-white-mask {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            background-color: #ffffff;
-            -webkit-mask-image: url(${cog_png.src});
-            mask-image: url(${cog_png.src});
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            -webkit-mask-size: contain;
-            mask-size: contain;
-          }
-          .msTable .cog-rot {
-            transition: transform 0.3s ease;
-          }
-          .msTable .cog-rot:hover {
-            transform: rotate(360deg);
-          }
-        `}</style>
       </>
 
       {/* Keep sub-modules mounted; switch visibility with CSS to preserve Suspense tree */}

@@ -34,7 +34,7 @@ type Props = {
   /**
    * If true, this wrapper will NOT auto-run toTrading() after commit/close.
    * Use this for flows where the parent panel must remain visible
-   * (e.g. UNSTAKING/CLAIM sponsor lists opening MANAGE_SPONSOR_PANEL).
+   * (e.g. UNSTAKING/CLAIM sponsor lists opening ManageSponsor panel).
    */
   suppressToTrading?: boolean;
 };

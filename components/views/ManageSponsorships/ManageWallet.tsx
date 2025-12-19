@@ -12,6 +12,13 @@ type Props = {
   wallet?: WalletAccount;
 };
 
+type ToDoMode = 'claimRewards' | 'unstakeSponsorships';
+
+type PendingAction = {
+  mode: ToDoMode;
+  type: AccountType;
+};
+
 function addressToText(addr: unknown): string {
   if (addr == null) return 'N/A';
   if (typeof addr === 'string') return addr;
@@ -74,11 +81,17 @@ export default function ManageWallet({ wallet }: Props) {
   const pendingBalance = 0;
 
   const [showToDo, setShowToDo] = useState<boolean>(false);
-  const pendingClaimRef = useRef<{ type: AccountType } | null>(null);
+  const pendingActionRef = useRef<PendingAction | null>(null);
 
   // Trigger ToDo (store intent, then show red overlay)
   const claimRewards = useCallback((type: AccountType) => {
-    pendingClaimRef.current = { type };
+    pendingActionRef.current = { mode: 'claimRewards', type };
+    setShowToDo(true);
+  }, []);
+
+  // Separate ToDo for Unstake button
+  const unstakeSponsorships = useCallback((type: AccountType) => {
+    pendingActionRef.current = { mode: 'unstakeSponsorships', type };
     setShowToDo(true);
   }, []);
 
@@ -87,16 +100,31 @@ export default function ManageWallet({ wallet }: Props) {
     setShowToDo(false);
 
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-    const pending = pendingClaimRef.current ?? { type: accountType };
+    const pending = pendingActionRef.current ?? { mode: 'claimRewards', type: accountType };
 
+    if (pending.mode === 'unstakeSponsorships') {
+      // eslint-disable-next-line no-alert
+      alert(
+        [
+          'ToDo:(Not Yet Implemented)',
+          'Unstake Sponsorship',
+          `From: ${name.toString()}`,
+          `Recipient Wallet: ${address.toString()}`,
+          `Active Account: ${connected ? connected.address : '(none connected)'}`,
+        ].join('\n'),
+      );
+      return;
+    }
+
+    // Default: Claim Rewards
     // eslint-disable-next-line no-alert
     alert(
       [
         'ToDo:(Not Yet Implemented)',
         `Claim ${pending.type.toString()} Rewards`,
         `From: ${name.toString()}`,
-        `From Account: ${address.toString()}`,
-        `For account: ${connected ? connected.address : '(none connected)'}`,
+        `Recipient Wallet: ${address.toString()}`,
+        `Active Account: ${connected ? connected.address : '(none connected)'}`,
       ].join('\n'),
     );
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, name, address]);
@@ -127,12 +155,12 @@ export default function ManageWallet({ wallet }: Props) {
       ) : null}
 
       <div
-        id="msWrapperWalletKV"
+        id="MANAGE WALLET"
         // ✅ IMPORTANT: no negative top margin; match list panel spacing so the table
         // does not overlap/"step on" the Deposit Account row.
         className="mb-4 mt-0 overflow-x-auto overflow-y-auto rounded-xl border border-black"
       >
-        <table id="msTableWalletKV" className="min-w-full border-collapse">
+        <table id="MANAGE WALLET TABLE" className="min-w-full border-collapse">
           <thead>
             <tr className="border-b border-black">
               <th scope="col" className={th}>
@@ -216,15 +244,23 @@ export default function ManageWallet({ wallet }: Props) {
         </table>
       </div>
 
-      {/* Claim Rewards button under the table — uses ToDo flow */}
-      <div className="mb-6 flex items-center justify-start">
+      {/* Buttons under the table — equal size, 10px gap, same width as the table container */}
+      <div className="mb-6 w-full flex gap-[10px]">
         <button
           type="button"
-          className="ms-claim--green"
+          className="ms-claim--green msWalletBtn"
           aria-label="Claim Rewards"
           onClick={() => claimRewards(accountType)}
         >
           Claim Rewards
+        </button>
+        <button
+          type="button"
+          className="ms-claim--green msWalletBtn"
+          aria-label="Unstake Sponsorships"
+          onClick={() => unstakeSponsorships(accountType)}
+        >
+          Unstake Sponsorship
         </button>
       </div>
 
@@ -274,6 +310,17 @@ export default function ManageWallet({ wallet }: Props) {
         #msWallet .ms-claim--green:hover {
           background-color: #22c55e !important;
           color: #0f172a !important;
+        }
+
+        /* Equal-size buttons that fill the same width as the table container */
+        #msWallet .msWalletBtn {
+          flex: 1 1 0;
+          min-width: 0;
+          height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
         }
       `}</style>
     </div>
