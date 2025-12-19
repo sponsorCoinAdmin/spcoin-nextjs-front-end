@@ -62,7 +62,7 @@ export default function ManageAgent({ onClose }: Props) {
   useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, handleClose);
 
   return (
-    <>
+    <div id="MANAGE_AGENT_PANEL">
       <ManageWallet wallet={agentWallet} />
       {!showToDo && (
         <ToDo
@@ -74,6 +74,6 @@ export default function ManageAgent({ onClose }: Props) {
           onDismiss={() => setShowToDo(false)}
         />
       )}
-    </>
+    </div>
   );
 }

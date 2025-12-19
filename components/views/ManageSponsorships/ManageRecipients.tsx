@@ -112,12 +112,14 @@ function ManageRecipientsInner() {
   });
 
   return (
-    <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}
-      feedType={FEED_TYPE.MANAGE_RECIPIENTS}
-      listType={LIST_TYPE.UNDEFINED} 
-      instancePrefix="recipient"
-      onCommit={handleCommit}
-    />
+    <div id="MANAGE_RECIPIENTS_PANEL">
+      <PanelListSelectWrapper
+        panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}
+        feedType={FEED_TYPE.MANAGE_RECIPIENTS}
+        listType={LIST_TYPE.UNDEFINED}
+        instancePrefix="recipient"
+        onCommit={handleCommit}
+      />
+    </div>
   );
 }

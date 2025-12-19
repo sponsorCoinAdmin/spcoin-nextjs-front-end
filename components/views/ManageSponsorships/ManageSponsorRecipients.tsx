@@ -153,13 +153,15 @@ function ManageSponsorRecipientsInner({
   );
 
   return (
-    <PanelListSelectWrapper
-      panel={activePanel}
-      feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
-      listType={listType}
-      instancePrefix={instancePrefix}
-      onCommit={handleCommit}
-      suppressToTrading
-    />
+    <div id="">
+      <PanelListSelectWrapper
+        panel={activePanel}
+        feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
+        listType={listType}
+        instancePrefix={instancePrefix}
+        onCommit={handleCommit}
+        suppressToTrading
+      />
+    </div>
   );
 }

@@ -32,6 +32,11 @@ const debugLog = createDebugLogger(
 
 type Props = { onClose?: () => void };
 
+type ToDoMode =
+  | 'claimRewards'
+  | 'claimAllSponsorshipRewards'
+  | 'unstakeAllSponsorships';
+
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   // ⬇️ All hooks must be called unconditionally (before any early returns)
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -69,6 +74,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   // 🔒 Keep latest selected account type for the ToDo alert across renders
   const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
+
+  // 🔒 Track which ToDo scenario we are showing
+  const todoModeRef = useRef<ToDoMode>('claimRewards');
 
   // Open only the requested *list* panel; close the alternative list panels
   const openOnly = useCallback(
@@ -145,20 +153,56 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     }
   }, [pendingVisible, openPanel, closePanel]);
 
-  /** ✅ Claim All must open the same overlay list that contains ManageSponsorRecipients */
-  const claimAllOpenOverlay = useCallback(() => {
-    openMainOverlay(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
-  }, [openMainOverlay]);
+  /**
+   * Claim All button → ToDo (must behave like Sponsors row Claim)
+   * BUT with a custom message.
+   */
+  const claimAllToDo = useCallback(() => {
+    todoModeRef.current = 'claimAllSponsorshipRewards';
+    setShowToDo(true);
+    accountTypeRef.current = 'ALL';
+  }, []);
 
   /** Alert-only placeholder per request (used for per-type Claim buttons) */
   const claimRewards = useCallback((actType: AccountType) => {
+    todoModeRef.current = 'claimRewards';
     setShowToDo(true);
     accountTypeRef.current = actType;
   }, []);
 
+  /** Unstake All Sponsorships ToDo (used by the Unstake button on Staked row) */
+  const unstakeAllSponsorships = useCallback(() => {
+    todoModeRef.current = 'unstakeAllSponsorships';
+    setShowToDo(true);
+
+    // This flow isn't per-account-type, but keeping this aligned avoids stale refs.
+    accountTypeRef.current = AccountType.SPONSOR;
+  }, []);
+
   const doToDo = useCallback(() => {
     setShowToDo(false);
+
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
+
+    // eslint-disable-next-line no-alert
+    if (todoModeRef.current === 'unstakeAllSponsorships') {
+      let msg: string = 'ToDo: (Not Yet Implemented)\n';
+      msg += 'Unstake All Sponsorships :\n';
+      msg += `For account: ${connected ? connected.address : '(none connected)'}`;
+      alert(msg);
+      return;
+    }
+
+    // eslint-disable-next-line no-alert
+    if (todoModeRef.current === 'claimAllSponsorshipRewards') {
+      let msg: string = 'ToDo: (Not Yet Implemented)\n';
+      msg += 'Claim all Sponsorship Rewards\n';
+      msg += `For Account: ${connected ? connected.address : '(none connected)'}`;
+      alert(msg);
+      return;
+    }
+
+    // Default: Claim Rewards (existing behavior)
     const sel = String(accountTypeRef.current);
     let msg: string = 'ToDo: (Not Yet Implemented)\n';
     msg += 'Claim: ';
@@ -193,7 +237,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const rowBorder = 'border-b border-slate-800';
 
   return (
-    <>
+    <div id="MANAGE_SPONSORSHIPS_PANEL">
       {/* Address selector */}
       <div className="mb-[1.375rem]">
         <AssetSelectDisplayProvider>
@@ -218,7 +262,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       <>
         {/* TABLE 1: Coins / amounts (ALWAYS visible) */}
         {showSummaryTable && (
-          <div className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
+          <div
+            id="MANAGE_SPONSORSHIPS_TABLE"
+            className="msWrapper mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black"
+          >
             <table className="msTable min-w-full border-collapse">
               {/* TABLE 1 HEADER */}
               <thead>
@@ -265,7 +312,18 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 {/* Row 2: Staked Sponsored Coins */}
                 <tr className={rowBorder}>
                   <td className="p-0">
-                    <div className={rowB + ' ' + tdInner}>Staked</div>
+                    {/* ✅ Make the *text* behave like the Unstake button, while keeping row background */}
+                    <button
+                      type="button"
+                      className={rowB + ' ' + tdInner + ' ms-link-cell'}
+                      onClick={() =>
+                        openMainOverlay(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL)
+                      }
+                      aria-label="Open Un-Staking SpCoins panel"
+                      title="Open Un-Staking"
+                    >
+                      Staked
+                    </button>
                   </td>
                   <td className="p-0">
                     <div className={rowB + ' ' + tdInnerCenter}>0</div>
@@ -275,13 +333,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className="ms-claim--green"
-                        onClick={() =>
-                          openMainOverlay(
-                            SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
-                          )
-                        }
-                        aria-label="Open Staked Coins config"
-                        title="Configure Staked Coins"
+                        onClick={unstakeAllSponsorships}
+                        aria-label="Unstake All Sponsorships (ToDo)"
+                        title="Unstake All Sponsorships (ToDo)"
                       >
                         Unstake
                       </button>
@@ -316,8 +370,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className="ms-claim--green"
-                          aria-label="Open Claim All rewards overlay"
-                          onClick={claimAllOpenOverlay}
+                          aria-label="Claim all Sponsorship rewards (ToDo)"
+                          onClick={claimAllToDo}
                         >
                           Claim All
                         </button>
@@ -401,7 +455,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={rowB + ' ' + tdInner + ' ms-link-cell'}
-                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+                          onClick={() =>
+                            openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
+                          }
                           aria-label="Open Claim Agents Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -582,6 +638,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           onDismiss={() => doToDo()}
         />
       )}
-    </>
+    </div>
   );
 }

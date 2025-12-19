@@ -90,7 +90,7 @@ export default function ManageSponsor({ onClose }: Props) {
   useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, handleClose);
 
   return (
-    <>
+    <div id="MANAGE_SPONSOR_PANEL">
       {hasSponsor ? (
         <ManageWallet wallet={sponsorWallet} />
       ) : (
@@ -114,6 +114,6 @@ export default function ManageSponsor({ onClose }: Props) {
           onDismiss={() => doToDo()}
         />
       )}
-    </>
+    </div>
   );
 }

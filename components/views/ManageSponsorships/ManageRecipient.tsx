@@ -97,7 +97,7 @@ export default function ManageRecipient({ onClose }: Props) {
   });
 
   return (
-    <>
+    <div id="MANAGE_RECIPIENT_PANEL">
       <ManageWallet wallet={recipientWallet} />
       {!showToDo && (
         <ToDo
@@ -109,6 +109,6 @@ export default function ManageRecipient({ onClose }: Props) {
           onDismiss={() => setShowToDo(false)}
         />
       )}
-    </>
+    </div>
   );
 }

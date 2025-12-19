@@ -112,12 +112,14 @@ function ManageAgentsInner() {
   });
 
   return (
-    <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
-      feedType={FEED_TYPE.MANAGE_AGENTS}
-      listType={LIST_TYPE.UNDEFINED} 
-      instancePrefix="agent"
-      onCommit={handleCommit}
-    />
+    <div id="MANAGE_AGENTS_PANEL">
+      <PanelListSelectWrapper
+        panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
+        feedType={FEED_TYPE.MANAGE_AGENTS}
+        listType={LIST_TYPE.UNDEFINED}
+        instancePrefix="agent"
+        onCommit={handleCommit}
+      />
+    </div>
   );
 }

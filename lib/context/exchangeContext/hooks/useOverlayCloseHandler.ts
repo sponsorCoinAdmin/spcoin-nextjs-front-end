@@ -45,9 +45,6 @@ const MANAGE_SP_ORIGINS = new Set<SP_COIN_DISPLAY>([
 
 const MANAGE_CONTAINER = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
 const MANAGE_DEFAULT_CHILD = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-const MANAGE_SPONSOR_PANEL = SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
-const UNSTAKING = SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;
-const CLAIM = SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
 
 /**
  * useOverlayCloseHandler
@@ -135,73 +132,30 @@ export function useOverlayCloseHandler() {
     const current = activeMainOverlay;
     if (!current) return;
 
-    // ───────────────── Highest priority: sponsor detail close ─────────────────
-    // MANAGE_SPONSOR_PANEL is a nested detail panel (child of UNSTAKING/CLAIM).
-    // It is NOT a direct scoped-radio child of MANAGE_SPONSORSHIPS.
-    //
-    // ✅ If sponsor detail is visible, close it and explicitly restore its parent
-    //    (UNSTAKING_SPCOINS_PANEL or CLAIM_SPONSOR_REWARDS_LIST_PANEL), whichever
-    //    is currently visible. This avoids falling back to MANAGE_SPONSORSHIPS_PANEL.
-    if (isVisible(MANAGE_SPONSOR_PANEL)) {
-      const parent = isVisible(UNSTAKING) ? UNSTAKING : isVisible(CLAIM) ? CLAIM : null;
-
-      if (DEBUG_ENABLED) {
-        debugLog.log?.('handleCloseOverlay: closing sponsor detail (restore parent)', {
-          current,
-          detail: MANAGE_SPONSOR_PANEL,
-          parent: parent != null ? SP_COIN_DISPLAY[parent] : null,
-        });
-      }
-
-      closePanel(
-        MANAGE_SPONSOR_PANEL,
-        'useOverlayCloseHandler:handleCloseOverlay(close-sponsor-detail)',
-      );
-
-      // If we know which parent list launched the detail, re-open it explicitly
-      // (keeps MANAGE_SPONSORSHIPS as the active global overlay).
-      if (parent != null) {
-        openPanel(parent, 'useOverlayCloseHandler:handleCloseOverlay(restore-parent)');
-      }
-
-      return;
-    }
-
     // ───────────────── Special-case: manage container close behavior ─────────────────
-    // Requirement:
-    //   When MANAGE_SPONSORSHIPS is the active GLOBAL overlay and the user is on any
-    //   scoped child (e.g. UNSTAKING/CLAIM/etc.), the header close should return to
-    //   the default hub panel (MANAGE_SPONSORSHIPS_PANEL), NOT close the whole container.
+    // IMPORTANT:
+    //   MANAGE_PENDING_REWARDS is a *sub-state* of the hub (row expander), not a radio
+    //   child. So we must NOT close it when closing a scoped child (Sponsors list, etc.).
+    //   Only close pending when we are already on the hub.
     if (current === MANAGE_CONTAINER) {
       const pendingVisible = isVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
-
-      // Preserve existing behavior: pending is a sub-state of the hub.
-      if (pendingVisible) {
-        if (DEBUG_ENABLED) {
-          debugLog.log?.(
-            'handleCloseOverlay: pending visible, closing it only (keep hub)',
-            { current },
-          );
-        }
-
-        closePanel(
-          SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-          'useOverlayCloseHandler:handleCloseOverlay(pending-only)',
-        );
-        return;
-      }
 
       // Find the currently-visible manage child (scoped radio).
       const activeManageChild = manageChildren.find((p) => isVisible(p)) ?? null;
 
-      // If we are on a non-default child, close it and return to the hub.
+      // ✅ Priority 1: If we are on a non-default manage child, return to hub.
+      // Do NOT touch pending here — it should remain open if it was open.
       if (activeManageChild && activeManageChild !== MANAGE_DEFAULT_CHILD) {
         if (DEBUG_ENABLED) {
-          debugLog.log?.('handleCloseOverlay: return to manage hub', {
-            current,
-            activeManageChild,
-            defaultChild: MANAGE_DEFAULT_CHILD,
-          });
+          debugLog.log?.(
+            'handleCloseOverlay: manage child -> hub (preserve pending)',
+            {
+              current,
+              activeManageChild,
+              defaultChild: MANAGE_DEFAULT_CHILD,
+              pendingVisible,
+            },
+          );
         }
 
         closePanel(
@@ -214,10 +168,35 @@ export function useOverlayCloseHandler() {
           MANAGE_DEFAULT_CHILD,
           'useOverlayCloseHandler:handleCloseOverlay(open-manage-hub)',
         );
+
+        // If pending was open, keep it open (no-op if already visible).
+        if (pendingVisible) {
+          openPanel(
+            SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+            'useOverlayCloseHandler:handleCloseOverlay(preserve-pending)',
+          );
+        }
+
         return;
       }
 
-      // If we're already on the hub (or nothing visible), close the container normally.
+      // ✅ Priority 2: We are on the hub. Now the close button should collapse
+      // pending first (if open), otherwise close the container.
+      if (pendingVisible) {
+        if (DEBUG_ENABLED) {
+          debugLog.log?.('handleCloseOverlay: hub -> close pending only', {
+            current,
+          });
+        }
+
+        closePanel(
+          SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+          'useOverlayCloseHandler:handleCloseOverlay(pending-only)',
+        );
+        return;
+      }
+
+      // ✅ Priority 3: Hub with no pending → close the container normally.
       if (DEBUG_ENABLED) {
         debugLog.log?.('handleCloseOverlay: closing manage container', {
           current,
@@ -245,13 +224,7 @@ export function useOverlayCloseHandler() {
         ? 'useOverlayCloseHandler:handleCloseOverlay(list)'
         : 'useOverlayCloseHandler:handleCloseOverlay',
     );
-  }, [
-    activeMainOverlay,
-    isVisible,
-    manageChildren,
-    openPanel,
-    closePanel,
-  ]);
+  }, [activeMainOverlay, isVisible, manageChildren, openPanel, closePanel]);
 
   return { handleCloseOverlay };
 }
