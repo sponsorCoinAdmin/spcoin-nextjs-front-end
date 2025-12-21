@@ -12,18 +12,43 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'tru
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
 
 /** Ensure exactly one MAIN_OVERLAY_GROUP panel is visible; if none, use fallback. */
+/** Normalize MAIN_OVERLAY_GROUP visibility:
+ *  - If 0 overlays visible: do nothing (allow empty)
+ *  - If 1 overlay visible: do nothing
+ *  - If >1 overlays visible: collapse to the first visible (stable)
+ */
 function normalizeOverlayVisibility(
   flat: Array<{ panel: SP_COIN_DISPLAY; visible: boolean }>,
-  fallback: SP_COIN_DISPLAY
 ): void {
-  const alreadyVisible = flat.filter((p) => MAIN_OVERLAY_GROUP.includes(p.panel) && p.visible);
-  const chosen = alreadyVisible.length > 0 ? alreadyVisible[0].panel : fallback;
+  const overlays = flat.filter((p) => MAIN_OVERLAY_GROUP.includes(p.panel));
+  const visible = overlays.filter((p) => p.visible);
+
+  if (DEBUG_ENABLED) {
+    debugLog.log?.('[normalizeOverlayVisibility] before', {
+      overlayCount: overlays.length,
+      visibleCount: visible.length,
+      visible: visible.map((v) => SP_COIN_DISPLAY[v.panel] ?? v.panel),
+    });
+  }
+
+  // ✅ Allow empty overlay selection
+  if (visible.length <= 1) return;
+
+  const chosen = visible[0]!.panel;
+
   for (const p of flat) {
     if (MAIN_OVERLAY_GROUP.includes(p.panel)) {
       p.visible = p.panel === chosen;
     }
   }
+
+  if (DEBUG_ENABLED) {
+    debugLog.log?.('[normalizeOverlayVisibility] after', {
+      chosen: SP_COIN_DISPLAY[chosen] ?? chosen,
+    });
+  }
 }
+
 
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
@@ -95,7 +120,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       );
 
     // Normalize radio overlays, preserving the saved choice if present
-    normalizeOverlayVisibility(flatTree, SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    normalizeOverlayVisibility(flatTree);
 
     // Reassign cleaned settings, optionally bump schema
     settings.spCoinPanelTree = flatTree;

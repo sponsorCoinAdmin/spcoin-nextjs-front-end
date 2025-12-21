@@ -62,24 +62,42 @@ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFact
 
 function titleFor(display: SP_COIN_DISPLAY): string {
   switch (display) {
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL: return 'Select Sponsors Agent';
-    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL: return 'Select a Token to Buy';
-    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL: return 'Select Recipient to Sponsor';
-    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL: return 'Select a Token to Sell';
-    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return AGENT_WALLET_TITLE;
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Sponsorship Account Management';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
-    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
-    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL: return 'Claim Sponsor Rewards';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account';
-    case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
-    case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
-    case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL: return 'Un-Staking Your Sponsor Coins';
-    case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL: return 'Staking Your Sponsor Coins';
-    default: return 'Main Panel Header';
+    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+      return 'Select Sponsors Agent';
+    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
+      return 'Select a Token to Buy';
+    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
+      return 'Error Message Panel';
+    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+      return 'Select Recipient to Sponsor';
+    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+      return 'Select a Token to Sell';
+    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL:
+      return 'Sponsor Rate Configuration';
+    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
+      return AGENT_WALLET_TITLE;
+    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
+      return 'Select a Sponsor';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:
+      return 'Sponsorship Account Management';
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
+      return 'Claim Recipient Rewards';
+    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
+      return 'Claim Agent Rewards';
+    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
+      return 'Claim Sponsor Rewards';
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
+      return 'Manage Recipient Account';
+    case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
+      return 'Manage Agent Account';
+    case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
+      return 'Manage Sponsor Account';
+    case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
+      return 'Un-Staking Your Sponsor Coins';
+    case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
+      return 'Staking Your Sponsor Coins';
+    default:
+      return 'Main Panel Header';
   }
 }
 
@@ -100,7 +118,9 @@ export function useHeaderController() {
     // Lists
     manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
     manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsorsList: usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL),
+    manageSponsorsList: usePanelVisible(
+      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    ),
 
     // Details
     manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
@@ -136,7 +156,8 @@ export function useHeaderController() {
     // Lists
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageSponsorsList) return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
+    if (vis.manageSponsorsList)
+      return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
 
     // Do NOT return MANAGE_PENDING_REWARDS — not a radio panel
 
@@ -166,60 +187,73 @@ export function useHeaderController() {
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
   // Close handler
-  const onClose = useCallback(() => {
-    // RULE: If pendingRewards is active → ONLY close pendingRewards. Nothing else.
-    if (pendingRewards) {
-      closePanel(
-        SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'HeaderController:onClose(pendingRewards)'
-      );
-      return;
-    }
+  // IMPORTANT: accept an optional click event so the X button can stop propagation.
+  const onClose = useCallback(
+    (e?: React.MouseEvent) => {
+      // Prevent the header X click from also triggering any outer “overlay close” handlers.
+      // (This is the precise cause of “pops 2” in your stack dump.)
+      try {
+        e?.preventDefault();
+        e?.stopPropagation();
+      } catch {}
 
-    // Delegate to detail closers
-    if (
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENT_PANEL ||
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL ||
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL
-    ) {
-      const closers = detailClosers.get(currentDisplay);
-      if (closers && closers.size) {
-        closers.forEach(fn => {
-          try { fn(); } catch {}
-        });
+      // RULE: If pendingRewards is active → ONLY close pendingRewards. Nothing else.
+      if (pendingRewards) {
+        closePanel(
+          SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+          'HeaderController:onClose(pendingRewards)',
+        );
         return;
       }
-    }
 
-    switch (currentDisplay) {
-      case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-        return;
+      // Delegate to detail closers
+      if (
+        currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENT_PANEL ||
+        currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL ||
+        currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL
+      ) {
+        const closers = detailClosers.get(currentDisplay);
+        if (closers && closers.size) {
+          closers.forEach((fn) => {
+            try {
+              fn();
+            } catch {}
+          });
+          return;
+        }
+      }
 
-      case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-        return;
+      switch (currentDisplay) {
+        case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
+          openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+          return;
 
-      case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
-        openPanel(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
-        return;
+        case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
+          openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+          return;
 
-      case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
-      case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
-      case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-        return;
+        case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
+          openPanel(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
+          return;
 
-      case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
-      case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-        return;
+        case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
+        case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
+        case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
+          openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+          return;
 
-      default:
-        toTrading();
-        return;
-    }
-  }, [pendingRewards, currentDisplay, closePanel, openPanel, toTrading]);
+        case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
+        case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
+          openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+          return;
+
+        default:
+          toTrading();
+          return;
+      }
+    },
+    [pendingRewards, currentDisplay, closePanel, openPanel, toTrading],
+  );
 
   return {
     title,

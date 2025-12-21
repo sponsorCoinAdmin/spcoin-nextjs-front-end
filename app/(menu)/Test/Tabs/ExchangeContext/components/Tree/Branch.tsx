@@ -38,13 +38,10 @@ const nameForVirtual = (v: any): string => {
 };
 
 // Arrays that should show "[idx] PANEL_NAME" for their virtual children
-const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'spCoinPanelTree']);
+const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children']);
 
 /** Format child labels with “non-indexed” and overlay-relative indexing rules. */
-function formatChildLabel(
-  childVal: any,
-  defaultIndex: string
-): string {
+function formatChildLabel(childVal: any, defaultIndex: string): string {
   if (!looksLikeVirtualPanelNode(childVal)) return `[${defaultIndex}]`;
   const id = (childVal as any).id as number;
   const displayName = nameForVirtual(childVal);
@@ -76,9 +73,9 @@ const Branch: React.FC<BranchProps> = ({
   const isObject = value !== null && typeof value === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
-  // dot-path classifiers for *virtual* panel nodes (now includes spCoinPanelTree)
+  // dot-path classifiers for *virtual* panel nodes
   const isPanelArrayItem =
-    (/(\.(spCoinPanelTree|children|spCoinPanelTree)\.\d+$)/.test(path)) &&
+    /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) &&
     looksLikeVirtualPanelNode(value);
 
   // Treat any array labeled exactly 'children' as a pure container (no row rendered)
@@ -107,7 +104,9 @@ const Branch: React.FC<BranchProps> = ({
   // BRANCH NODES (objects & arrays)
   // ──────────────────────────────────────────────────────────────
   if (isBranch) {
-    const numEntries = isArray ? (value as any[]).length : Object.keys(value as object).length;
+    const numEntries = isArray
+      ? (value as any[]).length
+      : Object.keys(value as object).length;
     const hasEntries = numEntries > 0;
 
     // Expanded state:
@@ -127,13 +126,13 @@ const Branch: React.FC<BranchProps> = ({
         const panelId = (value as any).id as number;
         const currentlyVisible = !!(value as any).visible;
         const parentTag = 'Branch:onRowClick()';
+
         if (!currentlyVisible) {
-          // ✅ Always include a parent/source tag for open
           openPanel(panelId, parentTag);
           ensureOpen(path);
           ensureOpen(`${path}.children`);
         } else {
-          // ✅ Always include a parent/source tag for close (mirrors open)
+          // ✅ closePanel always behaves as if "empty radio" is allowed.
           closePanel(panelId, parentTag);
         }
       } else if (hasEntries) {
@@ -142,7 +141,7 @@ const Branch: React.FC<BranchProps> = ({
     };
 
     // Hide 'name' inside virtual panel node bodies (avoid duplication)
-    // NEW: also hide 'id' and/or 'visible' based on env flags
+    // also hide 'id' and/or 'visible' based on env flags
     const isVirtualNode = looksLikeVirtualPanelNode(value);
     const keys = isArray
       ? (value as any[]).map((_, i) => String(i))
@@ -163,7 +162,6 @@ const Branch: React.FC<BranchProps> = ({
               const childPath = `${path}.${k}`;
               const childVal = (value as any[])[Number(k)];
 
-              // Label: use smart formatter for virtual panel nodes
               const childLabel = looksLikeVirtualPanelNode(childVal)
                 ? formatChildLabel(childVal, k)
                 : `[${k}]`;
@@ -192,21 +190,26 @@ const Branch: React.FC<BranchProps> = ({
           text={label}
           path={path}
           depth={depth}
-          open={hasEntries ? (isPanelArrayItem ? ((value as any)?.visible === true) : expanded) : undefined}
+          open={
+            hasEntries
+              ? isPanelArrayItem
+                ? (value as any)?.visible === true
+                : expanded
+              : undefined
+          }
           clickable={isPanelArrayItem || hasEntries}
           onClick={onRowClick}
           dense={dense}
         />
-        {(isPanelArrayItem ? ((value as any)?.visible === true) : expanded) &&
+        {(isPanelArrayItem ? (value as any)?.visible === true : expanded) &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
-            const childVal = isArray ? (value as any[])[Number(k)] : (value as any)[k];
+            const childVal = isArray
+              ? (value as any[])[Number(k)]
+              : (value as any)[k];
 
-            // Minimal label to keep layout intact
             let childLabel = isArray ? `[${k}]` : k;
 
-            // ✅ Append enum/name with smart indexing for arrays of virtual panel nodes,
-            //    including top-level 'spCoinPanelTree' and any 'children' arrays.
             if (
               isArray &&
               PANEL_ARRAY_LABELS.has(label) &&
@@ -236,19 +239,21 @@ const Branch: React.FC<BranchProps> = ({
   // ──────────────────────────────────────────────────────────────
   // LEAF NODES (primitives)
   // ──────────────────────────────────────────────────────────────
-  const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
+  const lineClass = dense
+    ? 'flex items-center leading-tight'
+    : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
 
   const content =
     enumForKey && typeof value === 'number' ? (
       <>
-        {/* If ids are hidden and this key is 'id', skip rendering entirely.
-            (Normally filtered above, but this is an extra guard.) */}
         {label === 'id' && !SHOW_IDS ? null : (
           <>
             {`${label}(${value}): `}
-            <span className='text-[#5981F3]'>
-              {typeof enumForKey[value] === 'string' ? enumForKey[value] : `[${value}]`}
+            <span className="text-[#5981F3]">
+              {typeof enumForKey[value] === 'string'
+                ? enumForKey[value]
+                : `[${value}]`}
             </span>
           </>
         )}
@@ -256,7 +261,7 @@ const Branch: React.FC<BranchProps> = ({
     ) : label === 'visible' && !SHOW_VIS ? null : (
       <>
         {`${label}: `}
-        <span className='text-[#5981F3]'>{quoteIfString(value)}</span>
+        <span className="text-[#5981F3]">{quoteIfString(value)}</span>
       </>
     );
 
@@ -264,7 +269,7 @@ const Branch: React.FC<BranchProps> = ({
 
   return (
     <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
-      <span className='whitespace-pre select-none'>{'  '.repeat(depth)}</span>
+      <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
       <span>{content}</span>
     </div>
   );

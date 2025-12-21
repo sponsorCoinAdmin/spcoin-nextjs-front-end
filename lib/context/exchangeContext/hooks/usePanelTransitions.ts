@@ -8,7 +8,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-type OpenOpts  = { methodName?: string };
+type OpenOpts = { methodName?: string };
 type ClickOpts = OpenOpts & {
   preventDefault?: boolean;
   stopPropagation?: boolean;
@@ -22,7 +22,7 @@ export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
-  const buyCountRef  = useRef(0);
+  const buyCountRef = useRef(0);
   const sellCountRef = useRef(0);
 
   const toClickHandler = <T extends HTMLElement>(
@@ -64,53 +64,59 @@ export function usePanelTransitions() {
     perf.end('toTrading');
   }, [openPanel, perf]);
 
-  const openBuyList = useCallback((opts?: OpenOpts) => {
-    const count = ++buyCountRef.current;
-    const methodName = opts?.methodName ?? 'openBuyList';
+  const openBuyList = useCallback(
+    (opts?: OpenOpts) => {
+      const count = ++buyCountRef.current;
+      const methodName = opts?.methodName ?? 'openBuyList';
 
-    debug.log?.('[openBuyList]', `#${count}`, {
-      before: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-      beforeOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-      methodName,
-    });
+      debug.log?.('[openBuyList]', `#${count}`, {
+        before: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+        beforeOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+        methodName,
+      });
 
-    perf.start();
-    openPanel(
-      SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
-      `usePanelTransitions:openBuyList#${count}(${methodName}→TRADING_STATION_PANEL)`,
-    );
-    perf.end('openBuyList');
+      perf.start();
+      openPanel(
+        SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
+        `usePanelTransitions:openBuyList#${count}(${methodName}→TRADING_STATION_PANEL)`,
+      );
+      perf.end('openBuyList');
 
-    debug.log?.('[openBuyList]', `#${count} (after)`, {
-      after: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-      afterOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-      methodName,
-    });
-  }, [isVisible, openPanel, perf]);
+      debug.log?.('[openBuyList]', `#${count} (after)`, {
+        after: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+        afterOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+        methodName,
+      });
+    },
+    [isVisible, openPanel, perf],
+  );
 
-  const openSellList = useCallback((opts?: OpenOpts) => {
-    const count = ++sellCountRef.current;
-    const methodName = opts?.methodName ?? 'openSellList';
+  const openSellList = useCallback(
+    (opts?: OpenOpts) => {
+      const count = ++sellCountRef.current;
+      const methodName = opts?.methodName ?? 'openSellList';
 
-    debug.log?.('[openSellList]', `#${count}`, {
-      before: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-      beforeOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-      methodName,
-    });
+      debug.log?.('[openSellList]', `#${count}`, {
+        before: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+        beforeOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+        methodName,
+      });
 
-    perf.start();
-    openPanel(
-      SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
-      `usePanelTransitions:openSellList#${count}(${methodName}→TRADING_STATION_PANEL)`,
-    );
-    perf.end('openSellList');
+      perf.start();
+      openPanel(
+        SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+        `usePanelTransitions:openSellList#${count}(${methodName}→TRADING_STATION_PANEL)`,
+      );
+      perf.end('openSellList');
 
-    debug.log?.('[openSellList]', `#${count} (after)`, {
-      after: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-      afterOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-      methodName,
-    });
-  }, [isVisible, openPanel, perf]);
+      debug.log?.('[openSellList]', `#${count} (after)`, {
+        after: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+        afterOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+        methodName,
+      });
+    },
+    [isVisible, openPanel, perf],
+  );
 
   const openBuyListClick = useCallback(
     (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openBuyList, opts),
@@ -150,10 +156,13 @@ export function usePanelTransitions() {
     perf.end('showErrorOverlay');
   }, [openPanel, perf]);
 
+  // IMPORTANT:
+  // MANAGE_SPONSORSHIPS is the GLOBAL overlay container.
+  // MANAGE_SPONSORSHIPS_PANEL is the default scoped child inside that overlay.
   const openManageSponsorships = useCallback(() => {
     perf.start();
     openPanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
       'usePanelTransitions:openManageSponsorships(TRADING_STATION_PANEL)',
     );
     perf.end('openManageSponsorships');
@@ -162,7 +171,7 @@ export function usePanelTransitions() {
   const closeManageSponsorships = useCallback(() => {
     perf.start();
     closePanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
       'usePanelTransitions:closeManageSponsorships(TRADING_STATION_PANEL)',
     );
     perf.end('closeManageSponsorships');
@@ -226,15 +235,18 @@ export function usePanelTransitions() {
     perf.end('closeAddSponsorship');
   }, [closePanel, perf]);
 
-  const openOverlay = useCallback((overlay: SP_COIN_DISPLAY) => {
-    const name = SP_COIN_DISPLAY[overlay];
-    perf.start();
-    openPanel(
-      overlay,
-      `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`,
-    );
-    perf.end(`openOverlay:${overlay}`);
-  }, [openPanel, perf]);
+  const openOverlay = useCallback(
+    (overlay: SP_COIN_DISPLAY) => {
+      const name = SP_COIN_DISPLAY[overlay];
+      perf.start();
+      openPanel(
+        overlay,
+        `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`,
+      );
+      perf.end(`openOverlay:${overlay}`);
+    },
+    [openPanel, perf],
+  );
 
   return {
     // programmatic

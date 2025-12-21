@@ -13,24 +13,46 @@ const RADIO_ALIAS: Partial<Record<SP_COIN_DISPLAY, SP_COIN_DISPLAY>> = {
   [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
 };
 
+/**
+ * Policy:
+ * - Normalize MAIN_OVERLAY_GROUP to 0 or 1 visible.
+ * - NEVER force-open TRADING_STATION_PANEL (or any overlay) implicitly.
+ * - If there is no visible overlay, keep overlay group empty.
+ * - Caller may optionally provide a fallback overlay when none is visible.
+ */
 export function reconcilePanelState(
   flat: FlatEntry[],
   radio: RadioNode[],
-  fallback: SP_COIN_DISPLAY = SP_COIN_DISPLAY.TRADING_STATION_PANEL
+  fallback?: SP_COIN_DISPLAY | null,
 ) {
-  // 1) Find currently selected overlay in the flat list (or fallback)
-  const selectedFlat =
-    flat.find((e) => MAIN_OVERLAY_GROUP.includes(e.panel) && e.visible)?.panel ?? fallback;
+  // 1) Find selected overlay from current flat state
+  const selectedFromFlat = flat.find(
+    (e) => MAIN_OVERLAY_GROUP.includes(e.panel) && e.visible,
+  )?.panel;
 
-  // 2) Map it to radio list’s top-level ID
+  // 2) Use fallback ONLY if explicitly provided by the caller
+  const selectedFlat = selectedFromFlat ?? (fallback ?? null);
+
+  // 3) Nothing selected => leave overlay group EMPTY (0 visible)
+  if (selectedFlat == null) {
+    for (const e of flat) {
+      if (MAIN_OVERLAY_GROUP.includes(e.panel)) e.visible = false;
+    }
+    for (const n of radio) {
+      if (MAIN_OVERLAY_GROUP.includes(n.panel)) n.visible = false;
+    }
+    return;
+  }
+
+  // 4) Map to radio top-level ID
   const selectedRadio = RADIO_ALIAS[selectedFlat] ?? selectedFlat;
 
-  // 3) Normalize flat: exactly one visible in MAIN_OVERLAY_GROUP
+  // 5) Normalize flat overlays: exactly one visible
   for (const e of flat) {
     if (MAIN_OVERLAY_GROUP.includes(e.panel)) e.visible = e.panel === selectedFlat;
   }
 
-  // 4) Normalize radio: only selectedRadio visible among top-level radio nodes
+  // 6) Normalize radio overlays: exactly one visible
   for (const n of radio) {
     if (MAIN_OVERLAY_GROUP.includes(n.panel)) n.visible = n.panel === selectedRadio;
   }
