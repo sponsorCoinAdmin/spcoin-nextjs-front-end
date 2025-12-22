@@ -1,7 +1,7 @@
 // File: @/components/panes/header.tsx
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -27,17 +27,30 @@ export default function Header() {
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
+  // ✅ Debounce/lock per-tab close clicks (prevents double-fire)
+  const closingTabsRef = useRef<Set<string>>(new Set());
+
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
   const closeTab = useCallback(
     (href: string) => {
-      const currentId = PATH_TO_ID[href];
-      closeTabByHref(href, {
-        navigate: true,
-        router,
-        currentId,
-      });
+      if (closingTabsRef.current.has(href)) return;
+      closingTabsRef.current.add(href);
+
+      try {
+        const currentId = PATH_TO_ID[href];
+        closeTabByHref(href, {
+          navigate: true,
+          router,
+          currentId,
+        });
+      } finally {
+        // Small delay so rapid double-clicks / duplicate bubbling can't re-run close.
+        window.setTimeout(() => {
+          closingTabsRef.current.delete(href);
+        }, 150);
+      }
     },
-    [router]
+    [router],
   );
 
   const linkClass = (href: string) => {
@@ -60,7 +73,12 @@ export default function Header() {
     <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
       <div className="flex flex-row justify-between items-center w-full">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <Image src={spCoin_png} alt="Sponsor Coin Logo" priority className="h-8 w-auto" />
+          <Image
+            src={spCoin_png}
+            alt="Sponsor Coin Logo"
+            priority
+            className="h-8 w-auto"
+          />
 
           {SPCOIN_LINK && (
             <Link

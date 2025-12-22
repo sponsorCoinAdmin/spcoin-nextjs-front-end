@@ -121,7 +121,7 @@ export default function ManageWalletList({
       [
         'ToDo:(Not Yet Implemented)',
         listType === LIST_TYPE.SPONSOR_UNSPONSOR
-          ? `Unsponsor ${label}`
+          ? `ZZZUnsponsor ${label}`
           : `Claim ${label} Rewards`,
         isTotal ? 'From: Total' : `From: ${String(rowName)}`,
         isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,

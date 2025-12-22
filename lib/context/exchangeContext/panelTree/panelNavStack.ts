@@ -7,12 +7,36 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 const NAV_STACK: SP_COIN_DISPLAY[] = [];
 let NAV_STACK_SEEDED = false;
 
+const DEBUG_STACK =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE === 'true';
+
 const nameOf = (id: SP_COIN_DISPLAY) => SP_COIN_DISPLAY[id] ?? String(id);
+
+const snapshotNamed = () =>
+  NAV_STACK.map((p) => ({ id: Number(p), name: nameOf(p) }));
+
+function logStack(event: string, extra?: Record<string, unknown>) {
+  if (!DEBUG_STACK) return;
+  // eslint-disable-next-line no-console
+  console.log(`[panelNavStack] ${event}`, {
+    size: NAV_STACK.length,
+    top: NAV_STACK.length
+      ? { id: Number(NAV_STACK[NAV_STACK.length - 1]), name: nameOf(NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY) }
+      : null,
+    stack: snapshotNamed(),
+    ...extra,
+  });
+}
 
 export function pushNav(panel: SP_COIN_DISPLAY) {
   const top = NAV_STACK.length ? NAV_STACK[NAV_STACK.length - 1] : null;
-  if (top !== null && Number(top) === Number(panel)) return;
+  if (top !== null && Number(top) === Number(panel)) {
+    logStack('pushNav(skip-same-top)', { panel: nameOf(panel) });
+    return;
+  }
   NAV_STACK.push(panel);
+  logStack('pushNav', { panel: nameOf(panel) });
 }
 
 // Returns a copy so callers can't mutate the real stack.
@@ -20,17 +44,34 @@ export function navStackSnapshot(): SP_COIN_DISPLAY[] {
   return NAV_STACK.slice();
 }
 
+// Convenience for debug UIs.
+export function navStackSnapshotNamed() {
+  return snapshotNamed();
+}
+
 export function removeNav(panel: SP_COIN_DISPLAY) {
+  const beforeLen = NAV_STACK.length;
   // remove ALL occurrences to avoid stale duplicates
   for (let i = NAV_STACK.length - 1; i >= 0; i--) {
     if (Number(NAV_STACK[i]) === Number(panel)) NAV_STACK.splice(i, 1);
   }
+  const removed = beforeLen - NAV_STACK.length;
+  if (removed) logStack('removeNav', { panel: nameOf(panel), removed });
+  else logStack('removeNav(no-op)', { panel: nameOf(panel) });
 }
 
 export function popTopIfMatches(panel: SP_COIN_DISPLAY) {
-  if (!NAV_STACK.length) return;
+  if (!NAV_STACK.length) {
+    logStack('popTopIfMatches(empty)', { panel: nameOf(panel) });
+    return;
+  }
   const top = NAV_STACK[NAV_STACK.length - 1];
-  if (Number(top) === Number(panel)) NAV_STACK.pop();
+  if (Number(top) === Number(panel)) {
+    NAV_STACK.pop();
+    logStack('popTopIfMatches(pop)', { panel: nameOf(panel) });
+  } else {
+    logStack('popTopIfMatches(no-match)', { panel: nameOf(panel), top: nameOf(top as SP_COIN_DISPLAY) });
+  }
 }
 
 export function peekNav(): SP_COIN_DISPLAY | null {
@@ -68,7 +109,10 @@ export function seedNavStackFromVisibility(opts: {
   NAV_STACK_SEEDED = true;
 
   // Don’t overwrite if something already pushed into the stack.
-  if (NAV_STACK.length) return;
+  if (NAV_STACK.length) {
+    logStack('seedNavStackFromVisibility(skip-existing)');
+    return;
+  }
 
   const isVisibleFromMap = (id: SP_COIN_DISPLAY) => !!map[Number(id)];
 
@@ -86,6 +130,10 @@ export function seedNavStackFromVisibility(opts: {
       NAV_STACK.push(manageSponsorPanel);
     }
   }
+
+  logStack('seedNavStackFromVisibility', {
+    activeOverlay: activeOverlay ? nameOf(activeOverlay) : null,
+  });
 }
 
 export function dumpNavStack(opts: {
@@ -128,4 +176,5 @@ export function dumpNavStack(opts: {
 export function __unsafeResetNavStackForTests() {
   NAV_STACK.length = 0;
   NAV_STACK_SEEDED = false;
+  logStack('__unsafeResetNavStackForTests');
 }
