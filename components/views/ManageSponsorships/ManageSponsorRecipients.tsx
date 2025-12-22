@@ -22,11 +22,7 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_UNSTAKING_SPCOINS === 'true';
 
-const debugLog = createDebugLogger(
-  'ManageSponsorRecipients',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Merged list panel for:
@@ -64,20 +60,23 @@ export default function ManageSponsorRecipients() {
     });
   }, [vUnstaking, vClaim, vSponsorDetail, activePanel]);
 
-  if (!activePanel) return null;
+  if (!activePanel) {
+    debugLog.log?.('[render] no activePanel → null', { vUnstaking, vClaim, vSponsorDetail });
+    return null;
+  }
 
   // ✅ If detail is open, do NOT render the list UI.
-  // The parent radio panel stays visible in the tree, but visually yields to MANAGE_SPONSOR_PANEL.
-  if (vSponsorDetail) return null;
+  if (vSponsorDetail) {
+    debugLog.log?.('[render] sponsor detail visible → suppress list', {
+      activePanel: SP_COIN_DISPLAY[activePanel],
+    });
+    return null;
+  }
 
   return <ManageSponsorRecipientsInner activePanel={activePanel} />;
 }
 
-function ManageSponsorRecipientsInner({
-  activePanel,
-}: {
-  activePanel: SP_COIN_DISPLAY;
-}) {
+function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DISPLAY }) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
@@ -87,9 +86,18 @@ function ManageSponsorRecipientsInner({
       : LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 
   const instancePrefix =
-    activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-      ? 'unstaking'
-      : 'sponsor';
+    activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL ? 'unstaking' : 'sponsor';
+
+  useEffect(() => {
+    debugLog.log?.('[inner render]', {
+      activePanel: SP_COIN_DISPLAY[activePanel],
+      listType,
+      listTypeLabel: LIST_TYPE[listType],
+      instancePrefix,
+      feedType: FEED_TYPE.SPONSOR_ACCOUNTS,
+      feedTypeLabel: FEED_TYPE[FEED_TYPE.SPONSOR_ACCOUNTS],
+    });
+  }, [activePanel, listType, instancePrefix]);
 
   const handleCommit = useCallback(
     (asset: WalletAccount | TokenContract) => {
@@ -106,7 +114,12 @@ function ManageSponsorRecipientsInner({
       });
 
       // These panels are for sponsor *wallets*, not tokens
-      if (isToken) return;
+      if (isToken) {
+        debugLog.log?.('[handleCommit] ignored token asset', {
+          activePanel: SP_COIN_DISPLAY[activePanel],
+        });
+        return;
+      }
 
       const wallet = asset as WalletAccount;
 
@@ -125,27 +138,30 @@ function ManageSponsorRecipientsInner({
         `ManageSponsorRecipients:handleCommit(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
       );
 
-      // 2) Open detail panel like tree behavior:
-      //    - keep UNSTAKING/CLAIM visible (radio invariant)
-      //    - pass parent so usePanelTree can preserve/restore correctly
+      // 2) Open detail panel like tree behavior
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
-          debugLog.log?.(
-            '[handleCommit] deferred open of MANAGE_SPONSOR_PANEL (keep parent visible)',
-            { from: SP_COIN_DISPLAY[activePanel] },
-          );
+          debugLog.log?.('[handleCommit] deferred open of MANAGE_SPONSOR_PANEL', {
+            from: SP_COIN_DISPLAY[activePanel],
+            parent: SP_COIN_DISPLAY[activePanel],
+          });
 
           openPanel(
             SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
             `ManageSponsorRecipients:handleCommit(deferred open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
-            activePanel, // ✅ parent
+            activePanel,
           );
         }, 0);
       } else {
+        debugLog.log?.('[handleCommit] open MANAGE_SPONSOR_PANEL (no window)', {
+          from: SP_COIN_DISPLAY[activePanel],
+          parent: SP_COIN_DISPLAY[activePanel],
+        });
+
         openPanel(
           SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
           `ManageSponsorRecipients:handleCommit(open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
-          activePanel, // ✅ parent
+          activePanel,
         );
       }
     },
@@ -153,7 +169,7 @@ function ManageSponsorRecipientsInner({
   );
 
   return (
-    <div id="">
+    <div id="ManageSponsorRecipients">
       <PanelListSelectWrapper
         panel={activePanel}
         feedType={FEED_TYPE.SPONSOR_ACCOUNTS}

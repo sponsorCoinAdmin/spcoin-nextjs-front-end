@@ -1,3 +1,5 @@
+
+
 // File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
@@ -87,24 +89,18 @@ export default function AssetListSelectPanel({ listType }: Props) {
   const showAddressBar = !isManageView;
 
   useEffect(() => {
-    const msg: string =
-      `[AssetListSelectPanel] render\n` +
-      `instanceId=${instanceId}\n` +
-      `feedType=${feedType} (${FEED_TYPE[feedType]})\n` +
-      `listType=${listType} (${LIST_TYPE[listType]})\n` +
-      `isManageView=${isManageView}\n` +
-      `showAddressBar=${showAddressBar}`;
-    debugLog.log?.(msg);
-  }, [instanceId, feedType, listType, isManageView, showAddressBar]);
-
-  debugLog.log?.('[view mode]', {
-    isManageView,
-    showAddressBar,
-    listType,
-    listTypeLabel: LIST_TYPE[listType],
-    containerType,
-    containerLabel,
-  });
+    debugLog.log?.('[render]', {
+      instanceId,
+      feedType,
+      feedTypeLabel: FEED_TYPE[feedType],
+      listType,
+      listTypeLabel: LIST_TYPE[listType],
+      isManageView,
+      showAddressBar,
+      containerType,
+      containerLabel,
+    });
+  }, [instanceId, feedType, listType, isManageView, showAddressBar, containerType, containerLabel]);
 
   // Wallets are the input for ManageWalletList
   const wallets: WalletAccount[] = (safeFeedData as any).wallets ?? [];
