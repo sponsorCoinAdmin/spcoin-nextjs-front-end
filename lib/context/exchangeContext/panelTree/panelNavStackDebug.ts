@@ -2,7 +2,6 @@
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { navStackSnapshot } from './panelNavStack';
 
 let SEEDED = false;
 
@@ -16,54 +15,57 @@ export function seedNavStackOnceFromVisibility(opts: {
   manageSponsorPanel: SP_COIN_DISPLAY;
   push: (p: SP_COIN_DISPLAY) => void;
 }) {
-  const {
-    map,
-    overlays,
-    manageContainer,
-    manageScoped,
-    manageSponsorPanel,
-    push,
-  } = opts;
+  const { map, overlays, manageContainer, manageScoped, manageSponsorPanel, push } =
+    opts;
 
   if (SEEDED) return;
   if (!Object.values(map).some(Boolean)) return;
 
   SEEDED = true;
 
-  // Don’t overwrite if something already pushed into the stack.
-  if (navStackSnapshot().length) return;
-
   const isVis = (id: SP_COIN_DISPLAY) => !!map[Number(id)];
 
+  // Build the intended seed deterministically from visibility.
+  const fresh: SP_COIN_DISPLAY[] = [];
+
   const activeOverlay = overlays.find((id) => isVis(id)) ?? null;
-  if (activeOverlay) push(activeOverlay);
+  if (activeOverlay) fresh.push(activeOverlay);
 
   if (activeOverlay && Number(activeOverlay) === Number(manageContainer)) {
     const activeScoped = manageScoped.find((id) => isVis(id)) ?? null;
-    if (activeScoped) push(activeScoped);
-    if (isVis(manageSponsorPanel)) push(manageSponsorPanel);
+    if (activeScoped) fresh.push(activeScoped);
+    if (isVis(manageSponsorPanel)) fresh.push(manageSponsorPanel);
   }
+
+  // Push in order (pushNav already avoids "same-top" spam).
+  for (const p of fresh) push(p);
 
   // eslint-disable-next-line no-console
   console.log('[panelTree] seeded NAV_STACK from map', {
-    stack: navStackSnapshot().map((p: SP_COIN_DISPLAY) => ({
-      id: Number(p),
-      name: nameOf(p),
-    })),
+    seeded: fresh.map((p) => ({ id: Number(p), name: nameOf(p) })),
   });
 }
 
+/**
+ * Debug dump helper.
+ * If you want stack printed, pass it in explicitly.
+ */
 export function dumpNavStack(
   tag = 'panelNavStack.dump',
   opts?: {
+    stack?: SP_COIN_DISPLAY[];
     map?: Record<number, boolean>;
     overlays?: SP_COIN_DISPLAY[];
     known?: Set<number>;
   },
 ) {
-  const st = navStackSnapshot();
+  const st = opts?.stack ?? [];
 
-  const stack = st.map((p: SP_COIN_DISPLAY) => ({ id: Number(p), name: nameOf(p) }));
+  const stack = st.map((p: SP_COIN_DISPLAY) => ({
+    id: Number(p),
+    name: nameOf(p),
+  }));
+
   const stackTop = st.length
     ? {
         id: Number(st[st.length - 1]),
@@ -100,4 +102,9 @@ export function dumpNavStack(
     visibleCountFromMap: visibleFromMap.length,
     visibleFromMap,
   });
+}
+
+// Optional: lets you reset between hot reloads/tests
+export function __unsafeResetNavSeedForTests() {
+  SEEDED = false;
 }

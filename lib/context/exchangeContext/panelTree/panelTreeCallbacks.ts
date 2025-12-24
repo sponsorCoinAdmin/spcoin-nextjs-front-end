@@ -22,7 +22,7 @@ import {
   type ManageScopeConfig,
 } from './panelTreeManageScope';
 
-import { pushNav, removeNav, popTopIfMatches, peekNav } from './panelNavStack';
+import { pushNav, popTopIfMatches } from './panelNavStack';
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
@@ -62,10 +62,8 @@ export type PanelTreeCallbacksDeps = {
   setExchangeContext: SetExchangeContextFn;
 };
 
-/**
- * Header close can trigger multiple closePanel calls (e.g. HeaderController + overlay close handler).
- * We want EXACTLY one stack pop per click.
- */
+/* ---------------- header close guard ---------------- */
+
 const HEADER_CLOSE_LOCK_MS = 140;
 let headerCloseLockUntil = 0;
 
@@ -73,7 +71,6 @@ function isHeaderCloseInvoker(invoker?: string) {
   if (!invoker) return false;
   return (
     invoker.includes('HeaderX') ||
-    invoker.includes('HeaderController:onClose') ||
     invoker.includes('HeaderController') ||
     invoker.includes('TopBar') ||
     invoker.includes('TradeContainerHeader')
@@ -82,7 +79,6 @@ function isHeaderCloseInvoker(invoker?: string) {
 
 function isChainedCloseInvoker(invoker?: string) {
   if (!invoker) return false;
-  // This is the one from your logs that causes the second pop.
   return invoker.includes('useOverlayCloseHandler');
 }
 
@@ -94,14 +90,6 @@ function hasAnyOverlayVisible(
   return false;
 }
 
-/**
- * ✅ Safety: never allow the app to end up with "0 overlays visible".
- * (This is exactly the state you saw: activeOverlaysFromMap: Array(0))
- *
- * NOTE:
- * This does NOT default a manage radio child.
- * It only guarantees a valid *global overlay* is visible (fallback trading).
- */
 function ensureOneGlobalOverlayVisible(
   flat: PanelEntry[],
   overlays: SP_COIN_DISPLAY[],
@@ -116,11 +104,39 @@ function ensureOneGlobalOverlayVisible(
   return next;
 }
 
+function deriveTopFromVisibility(opts: {
+  flat: PanelEntry[];
+  overlays: SP_COIN_DISPLAY[];
+  manageScoped: SP_COIN_DISPLAY[];
+  manageCfg: ManageScopeConfig;
+}) {
+  const { flat, overlays, manageScoped, manageCfg } = opts;
+  const m = toVisibilityMap(flat);
+
+  // 1) Sponsor detail wins
+  if (m[Number(manageCfg.manageSponsorPanel)]) return manageCfg.manageSponsorPanel;
+
+  // 2) Active manage scoped child (radio)
+  for (const id of manageScoped) {
+    if (m[Number(id)]) return id;
+  }
+
+  // 3) Active global overlay
+  for (const id of overlays) {
+    if (m[Number(id)]) return id;
+  }
+
+  return null;
+}
+
+/* ---------------- factory ---------------- */
+
 export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   const {
     known,
     overlays,
     manageCfg,
+    manageScoped,
     isGlobalOverlay,
     isManageRadioChild,
     isManageAnyChild,
@@ -132,7 +148,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     setExchangeContext,
   } = deps;
 
-  // ✅ Guard: prevent runtime crash if caller forgot diffAndPublish
   let warned = false;
   const safeDiffAndPublish = (
     prev: Record<number, boolean>,
@@ -144,11 +159,11 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     if (DEBUG && !warned) {
       warned = true;
       // eslint-disable-next-line no-console
-      console.warn(
-        '[panelTreeCallbacks] diffAndPublish missing; using no-op (panelStore may still be synced elsewhere).',
-      );
+      console.warn('[panelTreeCallbacks] diffAndPublish missing (noop).');
     }
   };
+
+  /* ---------------- open ---------------- */
 
   const openPanel = (
     panel: SP_COIN_DISPLAY,
@@ -165,15 +180,17 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           known,
         );
 
+        // Stage 3: stack is UI-only bookkeeping
+        pushNav(panel);
+
+        const openingGlobal = isGlobalOverlay(panel);
         const openingManageContainer =
           Number(panel) === Number(manageCfg.manageContainer);
-        const openingGlobal = isGlobalOverlay(panel);
         const openingSponsorDetail =
           Number(panel) === Number(manageCfg.manageSponsorPanel);
         const openingManageRadioChild = isManageRadioChild(panel);
 
-        // stack bookkeeping (used for header-close redirection + debug tooling)
-        pushNav(panel);
+        let flat = ensurePanelPresent(flat0, panel);
 
         if (openingSponsorDetail) {
           sponsorParentRef.current = pickSponsorParent(
@@ -182,13 +199,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             sponsorParentRef,
             parent,
           );
-        }
-
-        let flat = ensurePanelPresent(flat0, panel);
-
-        if (openingSponsorDetail) {
-          const parentPanel =
-            sponsorParentRef.current ?? manageCfg.defaultManageChild;
 
           flat = ensurePanelPresent(flat, manageCfg.manageContainer);
           flat = applyGlobalRadio(
@@ -199,11 +209,14 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           );
 
           const prevScoped = getActiveManageScoped(flat0);
-          pushManageScopedHistory(prevScoped, parentPanel);
+          pushManageScopedHistory(
+            prevScoped,
+            sponsorParentRef.current ?? manageCfg.defaultManageChild,
+          );
 
           let next = setScopedRadio(
             flat,
-            parentPanel,
+            sponsorParentRef.current ?? manageCfg.defaultManageChild,
             manageCfg,
             isManageRadioChild,
             withName,
@@ -233,7 +246,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             withName,
           );
 
-          let next = setScopedRadio(
+          const next = setScopedRadio(
             flat,
             panel,
             manageCfg,
@@ -242,21 +255,13 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             true,
           );
 
-          // Sponsor detail OFF
-          next = next.map((e) =>
-            e.panel === manageCfg.manageSponsorPanel
-              ? { ...withName(e), visible: false }
-              : e,
-          );
-
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
         }
 
         if (openingManageContainer) {
-          flat = ensurePanelPresent(flat, manageCfg.manageContainer);
           flat = applyGlobalRadio(
-            flat,
+            ensurePanelPresent(flat, manageCfg.manageContainer),
             overlays,
             manageCfg.manageContainer,
             withName,
@@ -298,13 +303,12 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     });
   };
 
-  /**
-   * closeTopPanel(): compatibility helper.
-   */
+  /* ---------------- close ---------------- */
+
+  // Stage 3: derive "top" from VISIBILITY, not from nav stack.
   const closeTopPanel = (invoker?: string) => {
-    const top = peekNav();
-    if (!top) return;
-    closePanel(top, invoker ?? 'HeaderX');
+    // Placeholder panel; closePanel will redirect when invoker is header-ish.
+    closePanel(manageCfg.manageContainer, invoker ?? 'HeaderX');
   };
 
   const closePanel = (
@@ -316,43 +320,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     if (!known.has(Number(panel))) return;
 
     const now = Date.now();
-
-    // ✅ If a header close just happened, ignore the chained close handler that fires right after.
-    if (now < headerCloseLockUntil && isChainedCloseInvoker(invoker)) {
-      if (DEBUG) {
-        // eslint-disable-next-line no-console
-        console.log('[panelTreeCallbacks] closePanel(ignored-by-header-lock)', {
-          panel,
-          invoker: invoker ?? null,
-          lockUntil: headerCloseLockUntil,
-        });
-      }
-      return;
-    }
-
-    // ✅ Header X rule: ALWAYS close stackTop (ignore passed-in panel if it isn't top).
-    let panelToClose: SP_COIN_DISPLAY = panel;
-    if (isHeaderCloseInvoker(invoker)) {
-      headerCloseLockUntil = now + HEADER_CLOSE_LOCK_MS;
-
-      const top = peekNav();
-      if (top && known.has(Number(top))) {
-        panelToClose = top;
-
-        if (DEBUG && Number(panelToClose) !== Number(panel)) {
-          // eslint-disable-next-line no-console
-          console.log('[panelTreeCallbacks] header-close redirected to stackTop', {
-            requested: panel,
-            stackTop: panelToClose,
-            invoker: invoker ?? null,
-          });
-        }
-      }
-    }
-
-    // stack bookkeeping (kept for now)
-    popTopIfMatches(panelToClose);
-    removeNav(panelToClose);
+    if (now < headerCloseLockUntil && isChainedCloseInvoker(invoker)) return;
 
     schedule(() => {
       setExchangeContext((prev) => {
@@ -361,73 +329,34 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           known,
         );
 
-        const closingManageContainer =
-          Number(panelToClose) === Number(manageCfg.manageContainer);
-        const closingGlobal = isGlobalOverlay(panelToClose);
-        const closingSponsorDetail =
-          Number(panelToClose) === Number(manageCfg.manageSponsorPanel);
-        const closingManageRadioChild = isManageRadioChild(panelToClose);
+        let panelToClose: SP_COIN_DISPLAY = panel;
 
-        let next: PanelEntry[] = flat0;
+        if (isHeaderCloseInvoker(invoker)) {
+          headerCloseLockUntil = now + HEADER_CLOSE_LOCK_MS;
 
-        if (closingManageContainer) {
-          manageScopedHistoryRef.current = [];
-          next = closeManageBranch(
-            flat0.map((e) =>
-              e.panel === manageCfg.manageContainer
-                ? { ...withName(e), visible: false }
-                : e,
-            ),
+          const derived = deriveTopFromVisibility({
+            flat: flat0,
+            overlays,
+            manageScoped,
             manageCfg,
-            isManageAnyChild,
-            withName,
-          );
-        } else if (closingSponsorDetail) {
-          // close sponsor detail only; underlying scoped parent remains
-          next = flat0.map((e) =>
-            e.panel === manageCfg.manageSponsorPanel
-              ? { ...withName(e), visible: false }
-              : e,
-          );
-        } else if (closingManageRadioChild) {
-          // IMPORTANT: do NOT "default" another manage radio child on close.
-          next = flat0
-            .map((e) =>
-              e.panel === panelToClose ? { ...withName(e), visible: false } : e,
-            )
-            .map((e) =>
-              e.panel === manageCfg.manageSponsorPanel
-                ? { ...withName(e), visible: false }
-                : e,
-            );
-        } else if (closingGlobal) {
-          const closingIsManage =
-            Number(panelToClose) === Number(manageCfg.manageContainer);
+          });
 
-          // hide just this overlay
-          next = flat0.map((e) =>
-            e.panel === panelToClose ? { ...withName(e), visible: false } : e,
-          );
+          if (derived) panelToClose = derived;
+        }
 
-          // if manage overlay closed, also close its branch
-          if (closingIsManage) {
+        // stack bookkeeping (best-effort; no longer authoritative)
+        popTopIfMatches(panelToClose);
+
+        let next = flat0.map((e) =>
+          e.panel === panelToClose ? { ...withName(e), visible: false } : e,
+        );
+
+        if (isGlobalOverlay(panelToClose)) {
+          if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
             manageScopedHistoryRef.current = [];
             next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
           }
 
-          // ✅ Guarantee we don't end with "no overlay"
-          next = ensureOneGlobalOverlayVisible(
-            next,
-            overlays,
-            SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-            withName,
-          );
-        } else {
-          next = flat0.map((e) =>
-            e.panel === panelToClose ? { ...withName(e), visible: false } : e,
-          );
-
-          // Also guarantee overlay invariant (safe even when closing non-overlays)
           next = ensureOneGlobalOverlayVisible(
             next,
             overlays,

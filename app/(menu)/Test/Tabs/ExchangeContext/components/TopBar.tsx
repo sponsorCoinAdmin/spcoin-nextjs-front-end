@@ -52,7 +52,7 @@ const TopBar: React.FC<Props> = ({
       );
       // eslint-disable-next-line no-console
       console.log('[TopBar] NAV STACK (fallback)', {
-        tag: 'TopBar:Panel Stack Dump',
+        tag: 'TopBar:Panel Branch Dump',
         raw,
         named,
       });

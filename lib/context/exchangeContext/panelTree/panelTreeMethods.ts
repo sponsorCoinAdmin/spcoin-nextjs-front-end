@@ -19,7 +19,6 @@ import {
 export type PanelTreeMethodsDeps = {
   overlays: SP_COIN_DISPLAY[];
   manageCfg: ManageScopeConfig;
-  manageScopedSet: Set<number>;
 
   // Predicates
   isGlobalOverlay: (p: SP_COIN_DISPLAY) => boolean;
@@ -35,20 +34,17 @@ export type PanelTreeMethodsDeps = {
   // Name helper
   withName: (e: PanelEntry) => PanelEntry;
 
-  // sponsor detail restore fallback (still useful for multi-parent sponsor detail)
+  // sponsor detail restore fallback
   sponsorParentRef: React.MutableRefObject<SP_COIN_DISPLAY | null>;
 };
 
 /**
  * Factory: creates the `activatePanel(flat, target)` method.
  *
- * Stage 2 NOTE:
- * - No stack-driven “restore last overlay / last scoped child”.
- * - Activation is deterministic and tree-based:
- *   - If target is a global overlay: make it the active overlay (radio).
- *   - If target is a manage scoped child: make manage overlay active + set scoped radio to target.
- *   - If target is sponsor detail: make manage overlay active + set scoped parent (explicit ref or default).
- *   - Otherwise: walk parents and ensure required parents are visible.
+ * Stage 3:
+ * - Deterministic, tree-only activation
+ * - No stack interaction
+ * - No "restore last" behavior
  */
 export function createActivatePanel(deps: PanelTreeMethodsDeps) {
   const {
@@ -75,12 +71,12 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
     const targetIsSponsorDetail =
       Number(target) === Number(manageCfg.manageSponsorPanel);
 
-    // 1) Global overlay target (top-level radio)
+    /* 1) Global overlay */
     if (targetIsGlobal) {
       return applyGlobalRadio(flat, overlays, target, withName);
     }
 
-    // 2) Manage container target
+    /* 2) Manage container */
     if (targetIsManageContainer) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
@@ -88,10 +84,13 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       const setScoped = (fi: PanelEntry[], p: SP_COIN_DISPLAY) =>
         setScopedRadio(fi, p, manageCfg, isManageRadioChild, withName, true);
 
-      // Ensures container visible + default child if none visible.
-      flat = ensureManageContainerAndDefaultChild(flat, manageCfg, withName, setScoped);
+      flat = ensureManageContainerAndDefaultChild(
+        flat,
+        manageCfg,
+        withName,
+        setScoped,
+      );
 
-      // Sponsor detail OFF by default
       return flat.map((e) =>
         e.panel === manageCfg.manageSponsorPanel
           ? { ...withName(e), visible: false }
@@ -99,7 +98,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       );
     }
 
-    // 3) Manage-scoped child target
+    /* 3) Manage scoped child */
     if (targetIsManageScoped) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
@@ -113,7 +112,6 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
         true,
       );
 
-      // Sponsor detail OFF
       return flat.map((e) =>
         e.panel === manageCfg.manageSponsorPanel
           ? { ...withName(e), visible: false }
@@ -121,7 +119,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       );
     }
 
-    // 4) Sponsor detail target (manage detail)
+    /* 4) Sponsor detail */
     if (targetIsSponsorDetail) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
@@ -147,7 +145,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       );
     }
 
-    // 5) Regular panels: ensure required parents (multi-parent aware)
+    /* 5) Regular panels (multi-parent walk) */
     const vis0 = toVisibilityMap(flat);
     const chain: SP_COIN_DISPLAY[] = [];
     let cur: SP_COIN_DISPLAY = target;
@@ -155,32 +153,27 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
 
     while (parentsOf.has(Number(cur))) {
       const p = pickParentForChild(cur, vis0);
-      if (!p) break;
-      if (seen.has(Number(p))) break;
+      if (!p || seen.has(Number(p))) break;
       chain.push(p);
       seen.add(Number(p));
       cur = p;
     }
 
-    // Activate parents from root-most → down to direct parent.
     for (let i = chain.length - 1; i >= 0; i--) {
-      const p = chain[i] as SP_COIN_DISPLAY;
+      const p = chain[i];
 
-      // If a parent is a global overlay, activate that overlay (radio).
       if (isGlobalOverlay(p)) {
         flat = ensurePanelPresent(flat, p);
         flat = applyGlobalRadio(flat, overlays, p, withName);
         continue;
       }
 
-      // If parent is manage container, activate manage overlay (radio).
       if (Number(p) === Number(manageCfg.manageContainer)) {
         flat = ensurePanelPresent(flat, manageCfg.manageContainer);
         flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
         continue;
       }
 
-      // If parent is a manage scoped (radio) child, activate it deterministically.
       if (isManageRadioChild(p)) {
         flat = ensurePanelPresent(flat, manageCfg.manageContainer);
         flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
@@ -195,14 +188,12 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
         continue;
       }
 
-      // Otherwise: just ensure parent panel is visible.
       flat = ensurePanelPresent(flat, p);
       flat = flat.map((e) =>
         e.panel === p ? { ...withName(e), visible: true } : e,
       );
     }
 
-    // Finally, ensure target visible.
     flat = ensurePanelPresent(flat, target);
     flat = flat.map((e) =>
       e.panel === target ? { ...withName(e), visible: true } : e,
@@ -212,11 +203,11 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
   };
 }
 
-// Small utility (optional but handy in split code)
+/* ---------- helpers ---------- */
+
 export const nameOf = (id: SP_COIN_DISPLAY) =>
   (SP_COIN_DISPLAY as any)?.[id] ?? String(id);
 
-// For quick logging in callers (keeps logs consistent)
 export function summarizeVis(
   map: Record<number, boolean>,
   ids: SP_COIN_DISPLAY[],

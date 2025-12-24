@@ -1,7 +1,7 @@
 // File: @/lib/context/exchangeContext/hooks/usePanelTree.ts
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import {
@@ -18,16 +18,11 @@ import {
   panelName,
 } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
-import { schedule } from '@/lib/context/exchangeContext/panelTree/panelTreeDebug';
-
 import {
   computeManageDescendantsSet,
   makeManagePredicates,
-  closeManageBranch,
   type ManageScopeConfig,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeManageScope';
-
-import { dumpNavStack } from '@/lib/context/exchangeContext/panelTree/panelNavStack';
 
 import {
   createPanelTreeCallbacks,
@@ -36,46 +31,30 @@ import {
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
-const DEBUG_TREE =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_STACK === 'true';
-
-const nameOf = (id: SP_COIN_DISPLAY) => SP_COIN_DISPLAY[id] ?? String(id);
-
-function diffAndPublish(
-  prevMap: Record<number, boolean>,
-  nextMap: Record<number, boolean>,
-) {
-  const ids = new Set<number>(
-    [...Object.keys(prevMap), ...Object.keys(nextMap)].map(Number),
-  );
-
-  ids.forEach((idNum) => {
-    const id = idNum as SP_COIN_DISPLAY;
-    const prev = !!prevMap[idNum];
-    const next = !!nextMap[idNum];
-    if (prev !== next) panelStore.setVisible(id, next);
-  });
-}
-
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const list = useMemo<PanelEntry[]>(
-    () =>
-      flattenPanelTree(
-        (exchangeContext as any)?.settings?.spCoinPanelTree,
-        KNOWN,
-      ),
-    [exchangeContext],
-  );
+  /* ------------------------------- source -------------------------------- */
 
-  const map = useMemo(() => toVisibilityMap(list), [list]);
+  const list = useMemo<PanelEntry[]>(() => {
+    return flattenPanelTree(
+      (exchangeContext as any)?.settings?.spCoinPanelTree,
+      KNOWN,
+    );
+  }, [exchangeContext]);
 
-  // Global overlays (top-level radio)
+  const visibilityMap = useMemo(() => toVisibilityMap(list), [list]);
+
+  /* -------------------------- global overlays ----------------------------- */
+
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
 
-  // ───────────────────────── Manage scope config ─────────────────────────
+  const isGlobalOverlay = useCallback(
+    (p: SP_COIN_DISPLAY) => overlays.includes(p),
+    [overlays],
+  );
+
+  /* -------------------------- manage scope -------------------------------- */
 
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
 
@@ -117,27 +96,21 @@ export function usePanelTree() {
     [manageCfg, manageScopedSet, manageDescendantsSet],
   );
 
-  const isGlobalOverlay = useCallback(
-    (p: SP_COIN_DISPLAY) => overlays.includes(p),
-    [overlays],
-  );
+  /* ------------------------------ helpers --------------------------------- */
 
   const withName = useCallback(
     (e: PanelEntry) => ({ ...e, name: e.name ?? panelName(e.panel) }),
     [],
   );
 
-  // sponsor parent tracking
   const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
-
-  // manage scoped history (kept for now; used by callbacks + future UX rules)
   const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
 
   const getActiveManageScoped = useCallback(
     (flat: PanelEntry[]) => {
-      const m = toVisibilityMap(flat);
+      const map = toVisibilityMap(flat);
       for (const id of manageScoped) {
-        if (m[Number(id)]) return id;
+        if (map[Number(id)]) return id;
       }
       return null;
     },
@@ -148,6 +121,7 @@ export function usePanelTree() {
     (prevScoped: SP_COIN_DISPLAY | null, nextScoped: SP_COIN_DISPLAY) => {
       if (!prevScoped) return;
       if (Number(prevScoped) === Number(nextScoped)) return;
+
       const st = manageScopedHistoryRef.current;
       if (st.length && Number(st[st.length - 1]) === Number(prevScoped)) return;
       st.push(prevScoped);
@@ -155,161 +129,35 @@ export function usePanelTree() {
     [],
   );
 
-  /* ------------------ keep panelStore in sync with computed map ------------------ */
+  /* -------------------------- panelStore sync ----------------------------- */
 
-  const prevMapRef = useRef<Record<number, boolean> | null>(null);
-  useEffect(() => {
-    const prev = prevMapRef.current ?? {};
-    diffAndPublish(prev, map);
-    prevMapRef.current = map;
-  }, [map]);
-
-  /* ------------------ enforce single global overlay visible ------------------ */
-
-  useEffect(() => {
-    const visible = overlays.filter((id) => !!map[id]);
-    if (visible.length <= 1) return;
-
-    // deterministic choice: keep the *last* overlay in the group order that is visible
-    const keep = visible[visible.length - 1] as SP_COIN_DISPLAY;
-
-    if (DEBUG_TREE) {
-      // eslint-disable-next-line no-console
-      console.warn('[usePanelTree] multiple global overlays visible; repairing', {
-        keep: nameOf(keep),
-        visible: visible.map((id) => nameOf(id as SP_COIN_DISPLAY)),
-      });
-    }
-
-    schedule(() => {
-      setExchangeContext((prev) => {
-        const flatPrev = flattenPanelTree(
-          (prev as any)?.settings?.spCoinPanelTree,
-          KNOWN,
-        );
-
-        let next = flatPrev.map((e) =>
-          overlays.includes(e.panel)
-            ? { ...withName(e), visible: e.panel === keep }
-            : e,
-        );
-
-        if (keep !== manageCfg.manageContainer) {
-          manageScopedHistoryRef.current = [];
-          next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
-        }
-
-        diffAndPublish(toVisibilityMap(flatPrev), toVisibilityMap(next));
-        return {
-          ...prev,
-          settings: {
-            ...(prev as any)?.settings,
-            spCoinPanelTree: next,
-          },
-        } as any;
-      });
-    });
-  }, [
-    map,
-    overlays,
-    setExchangeContext,
-    manageCfg,
-    isManageAnyChild,
-    withName,
-  ]);
-
-  /* ------------------ ✅ enforce a valid Manage state (must have active child) ------------------ */
-
-  const forcedManageDefaultRef = useRef(false);
-
-  useEffect(() => {
-    const manageOpen = !!map[Number(manageCfg.manageContainer)];
-    const activeManageChild = getActiveManageScoped(list);
-
-    // reset the guard whenever Manage closes
-    if (!manageOpen) {
-      forcedManageDefaultRef.current = false;
-      return;
-    }
-
-    // if Manage is open and there's no active radio-child, force the default child ONCE
-    if (manageOpen && !activeManageChild && !forcedManageDefaultRef.current) {
-      forcedManageDefaultRef.current = true;
-
-      if (DEBUG_TREE) {
-        // eslint-disable-next-line no-console
-        console.warn('[usePanelTree] manage open but no active scoped child; forcing default', {
-          defaultChild: nameOf(manageCfg.defaultManageChild),
-        });
+  const publishVisibility = useCallback(
+    (nextMap: Record<number, boolean>) => {
+      for (const [idStr, v] of Object.entries(nextMap)) {
+        panelStore.setVisible(Number(idStr) as SP_COIN_DISPLAY, !!v);
       }
-
-      schedule(() => {
-        setExchangeContext((prev) => {
-          const flatPrev = flattenPanelTree(
-            (prev as any)?.settings?.spCoinPanelTree,
-            KNOWN,
-          );
-
-          const prevMap = toVisibilityMap(flatPrev);
-
-          const next = flatPrev.map((e) => {
-            // keep manage container open
-            if (e.panel === manageCfg.manageContainer) {
-              return { ...withName(e), visible: true };
-            }
-
-            // enforce exactly one manage radio child
-            if (isManageRadioChild(e.panel)) {
-              return {
-                ...withName(e),
-                visible: e.panel === manageCfg.defaultManageChild,
-              };
-            }
-
-            return e;
-          });
-
-          diffAndPublish(prevMap, toVisibilityMap(next));
-
-          return {
-            ...prev,
-            settings: {
-              ...(prev as any)?.settings,
-              spCoinPanelTree: next,
-            },
-          } as any;
-        });
-      });
-    }
-
-    // If we later *do* get an active child, don't keep forcing.
-    if (manageOpen && activeManageChild) {
-      forcedManageDefaultRef.current = true;
-    }
-  }, [
-    map,
-    list,
-    manageCfg.manageContainer,
-    manageCfg.defaultManageChild,
-    getActiveManageScoped,
-    isManageRadioChild,
-    setExchangeContext,
-    withName,
-  ]);
-
-  /* ------------------------------- queries ------------------------------- */
-
-  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => {
-    return panelStore.isVisible(panel);
-  }, []);
-
-  const getPanelChildren = useCallback(
-    (invoker: SP_COIN_DISPLAY) =>
-      ((CHILDREN as any)?.[invoker] as SP_COIN_DISPLAY[] | undefined) ?? [],
+    },
     [],
   );
 
-  /* ------------------------------- actions ------------------------------- */
+  useMemo(() => {
+    publishVisibility(visibilityMap);
+  }, [visibilityMap, publishVisibility]);
+
+  /* ------------------------------ queries -------------------------------- */
+
+  const isVisible = useCallback(
+    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
+    [],
+  );
+
+  const getPanelChildren = useCallback(
+    (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
+      (((CHILDREN as any)?.[panel] as unknown) as SP_COIN_DISPLAY[]) ?? [],
+    [],
+  );
+
+  /* ------------------------------ actions -------------------------------- */
 
   const callbacksDeps: PanelTreeCallbacksDeps = useMemo(
     () => ({
@@ -332,7 +180,9 @@ export function usePanelTree() {
       getActiveManageScoped,
       pushManageScopedHistory,
 
-      diffAndPublish,
+      diffAndPublish: (_prev, next) => {
+        publishVisibility(next);
+      },
       setExchangeContext,
     }),
     [
@@ -346,6 +196,7 @@ export function usePanelTree() {
       withName,
       getActiveManageScoped,
       pushManageScopedHistory,
+      publishVisibility,
       setExchangeContext,
     ],
   );
@@ -355,24 +206,93 @@ export function usePanelTree() {
     [callbacksDeps],
   );
 
-  /* ------------------------------- derived -------------------------------- */
+  /* ------------------------------ derived -------------------------------- */
 
   const activeMainOverlay = useMemo<SP_COIN_DISPLAY | null>(() => {
-    for (const id of overlays) if (map[id]) return id;
+    for (const id of overlays) if (visibilityMap[id]) return id;
     return null;
-  }, [map, overlays]);
+  }, [visibilityMap, overlays]);
 
   const isTokenScrollVisible = useMemo(
     () =>
-      map[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
-      map[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
-    [map],
+      visibilityMap[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
+      visibilityMap[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
+    [visibilityMap],
   );
 
-  const dumpStack = useCallback(
-    (tag?: string) => dumpNavStack({ tag, map, overlays, known: KNOWN }),
-    [map, overlays],
-  );
+  /* ------------------------------ debug ---------------------------------- */
+
+  const dumpNavStack = useCallback((): void => {
+    // Start at the active overlay if one exists; otherwise pick the first visible panel we can find.
+    const start = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
+
+    if (!start) {
+      console.warn('[PanelTree] dumpNavStack(): no visible start panel found.');
+      return;
+    }
+
+    const seen = new Set<number>();
+    const stack: SP_COIN_DISPLAY[] = [];
+
+    let current: SP_COIN_DISPLAY | null = start;
+
+    console.groupCollapsed(
+      `[PanelTree] Display stack from "${panelName(Number(start) as any)}" (${Number(start)})`,
+    );
+
+    while (current != null) {
+      const curId = Number(current);
+
+      if (seen.has(curId)) {
+        console.error(
+          `[PanelTree] cycle detected at "${panelName(curId as any)}" (${curId}). Stopping traversal.`,
+        );
+        break;
+      }
+      seen.add(curId);
+      stack.push(current);
+
+      const children: SP_COIN_DISPLAY[] = getPanelChildren(current);
+      const visibleChildren: SP_COIN_DISPLAY[] = children.filter(
+        (c: SP_COIN_DISPLAY) => visibilityMap[Number(c)],
+      );
+
+      // Our "current stack for display" rule:
+      // follow the FIRST visible child in children[] order (if any).
+      const selectedChild: SP_COIN_DISPLAY | null =
+        visibleChildren.length > 0 ? visibleChildren[0] : null;
+
+      console.log({
+        node: panelName(curId as any),
+        id: curId,
+        isVisible: !!visibilityMap[curId],
+        children: children.map((c: SP_COIN_DISPLAY) => ({
+          name: panelName(Number(c) as any),
+          id: Number(c),
+          visible: !!visibilityMap[Number(c)],
+        })),
+        selectedChild: selectedChild
+          ? {
+              name: panelName(Number(selectedChild) as any),
+              id: Number(selectedChild),
+            }
+          : null,
+      });
+
+      if (!selectedChild) break;
+      current = selectedChild;
+    }
+
+    console.log(
+      '[PanelTree] displayStack =',
+      stack.map((p: SP_COIN_DISPLAY) => ({
+        name: panelName(Number(p) as any),
+        id: Number(p),
+      })),
+    );
+
+    console.groupEnd();
+  }, [activeMainOverlay, getPanelChildren, list, visibilityMap]);
 
   return {
     activeMainOverlay,
@@ -382,8 +302,6 @@ export function usePanelTree() {
     openPanel,
     closePanel,
     closeTopPanel,
-
-    // Debug
-    dumpNavStack: dumpStack,
+    dumpNavStack,
   };
 }
