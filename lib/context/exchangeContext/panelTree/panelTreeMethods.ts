@@ -16,8 +16,6 @@ import {
   type ManageScopeConfig,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeManageScope';
 
-import { findLastInStack } from '@/lib/context/exchangeContext/panelTree/panelNavStack';
-
 export type PanelTreeMethodsDeps = {
   overlays: SP_COIN_DISPLAY[];
   manageCfg: ManageScopeConfig;
@@ -29,24 +27,33 @@ export type PanelTreeMethodsDeps = {
 
   // Parent selection (multi-parent support)
   parentsOf: Map<number, number[]>;
-  pickParentForChild: (child: SP_COIN_DISPLAY, visMap: Record<number, boolean>) => SP_COIN_DISPLAY | null;
+  pickParentForChild: (
+    child: SP_COIN_DISPLAY,
+    visMap: Record<number, boolean>,
+  ) => SP_COIN_DISPLAY | null;
 
   // Name helper
   withName: (e: PanelEntry) => PanelEntry;
 
-  // sponsor detail restore fallback
+  // sponsor detail restore fallback (still useful for multi-parent sponsor detail)
   sponsorParentRef: React.MutableRefObject<SP_COIN_DISPLAY | null>;
 };
 
 /**
  * Factory: creates the `activatePanel(flat, target)` method.
- * Keeps the big restore logic out of usePanelTree.ts.
+ *
+ * Stage 2 NOTE:
+ * - No stack-driven “restore last overlay / last scoped child”.
+ * - Activation is deterministic and tree-based:
+ *   - If target is a global overlay: make it the active overlay (radio).
+ *   - If target is a manage scoped child: make manage overlay active + set scoped radio to target.
+ *   - If target is sponsor detail: make manage overlay active + set scoped parent (explicit ref or default).
+ *   - Otherwise: walk parents and ensure required parents are visible.
  */
 export function createActivatePanel(deps: PanelTreeMethodsDeps) {
   const {
     overlays,
     manageCfg,
-    manageScopedSet,
     isGlobalOverlay,
     isManageRadioChild,
     parentsOf,
@@ -68,7 +75,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
     const targetIsSponsorDetail =
       Number(target) === Number(manageCfg.manageSponsorPanel);
 
-    // 1) Global overlay target
+    // 1) Global overlay target (top-level radio)
     if (targetIsGlobal) {
       return applyGlobalRadio(flat, overlays, target, withName);
     }
@@ -78,19 +85,11 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
 
-      const lastScoped =
-        findLastInStack(manageScopedSet) ?? manageCfg.defaultManageChild;
-
       const setScoped = (fi: PanelEntry[], p: SP_COIN_DISPLAY) =>
         setScopedRadio(fi, p, manageCfg, isManageRadioChild, withName, true);
 
-      flat = ensureManageContainerAndDefaultChild(
-        flat,
-        manageCfg,
-        withName,
-        setScoped,
-      );
-      flat = setScoped(flat, lastScoped);
+      // Ensures container visible + default child if none visible.
+      flat = ensureManageContainerAndDefaultChild(flat, manageCfg, withName, setScoped);
 
       // Sponsor detail OFF by default
       return flat.map((e) =>
@@ -122,19 +121,17 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       );
     }
 
-    // 4) Sponsor detail target
+    // 4) Sponsor detail target (manage detail)
     if (targetIsSponsorDetail) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
 
-      const lastScoped =
-        findLastInStack(manageScopedSet, manageCfg.manageSponsorPanel) ??
-        sponsorParentRef.current ??
-        manageCfg.defaultManageChild;
+      const parentScoped =
+        sponsorParentRef.current ?? manageCfg.defaultManageChild;
 
       flat = setScopedRadio(
         flat,
-        lastScoped,
+        parentScoped,
         manageCfg,
         isManageRadioChild,
         withName,
@@ -165,30 +162,31 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       cur = p;
     }
 
+    // Activate parents from root-most → down to direct parent.
     for (let i = chain.length - 1; i >= 0; i--) {
       const p = chain[i] as SP_COIN_DISPLAY;
 
+      // If a parent is a global overlay, activate that overlay (radio).
       if (isGlobalOverlay(p)) {
-        const lastOverlay =
-          findLastInStack(new Set<number>(overlays as unknown as number[])) ?? p;
-        flat = ensurePanelPresent(flat, lastOverlay);
-        flat = applyGlobalRadio(flat, overlays, lastOverlay, withName);
+        flat = ensurePanelPresent(flat, p);
+        flat = applyGlobalRadio(flat, overlays, p, withName);
         continue;
       }
 
+      // If parent is manage container, activate manage overlay (radio).
       if (Number(p) === Number(manageCfg.manageContainer)) {
         flat = ensurePanelPresent(flat, manageCfg.manageContainer);
         flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
         continue;
       }
 
+      // If parent is a manage scoped (radio) child, activate it deterministically.
       if (isManageRadioChild(p)) {
-        const lastScoped = findLastInStack(manageScopedSet) ?? p;
         flat = ensurePanelPresent(flat, manageCfg.manageContainer);
         flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
         flat = setScopedRadio(
           flat,
-          lastScoped,
+          p,
           manageCfg,
           isManageRadioChild,
           withName,
@@ -197,12 +195,14 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
         continue;
       }
 
+      // Otherwise: just ensure parent panel is visible.
       flat = ensurePanelPresent(flat, p);
       flat = flat.map((e) =>
         e.panel === p ? { ...withName(e), visible: true } : e,
       );
     }
 
+    // Finally, ensure target visible.
     flat = ensurePanelPresent(flat, target);
     flat = flat.map((e) =>
       e.panel === target ? { ...withName(e), visible: true } : e,
@@ -217,6 +217,13 @@ export const nameOf = (id: SP_COIN_DISPLAY) =>
   (SP_COIN_DISPLAY as any)?.[id] ?? String(id);
 
 // For quick logging in callers (keeps logs consistent)
-export function summarizeVis(map: Record<number, boolean>, ids: SP_COIN_DISPLAY[]) {
-  return ids.map((id) => ({ id: Number(id), name: nameOf(id), v: !!map[Number(id)] }));
+export function summarizeVis(
+  map: Record<number, boolean>,
+  ids: SP_COIN_DISPLAY[],
+) {
+  return ids.map((id) => ({
+    id: Number(id),
+    name: nameOf(id),
+    v: !!map[Number(id)],
+  }));
 }

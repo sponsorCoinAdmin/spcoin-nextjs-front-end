@@ -5,7 +5,17 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // One shared stack for the entire app runtime (per browser tab / JS bundle).
 const NAV_STACK: SP_COIN_DISPLAY[] = [];
-let NAV_STACK_SEEDED = false;
+
+/**
+ * NOTE (Stage 2 direction):
+ * The stack is now *bookkeeping only* (HeaderX redirection + debug),
+ * NOT a driver of visibility restoration.
+ *
+ * That means the stack must never become "stale" after reload/persistence.
+ * We therefore allow re-seeding when:
+ *  - stack is empty, OR
+ *  - stackTop is not visible anymore (map disagrees)
+ */
 
 const DEBUG_STACK =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
@@ -22,7 +32,10 @@ function logStack(event: string, extra?: Record<string, unknown>) {
   console.log(`[panelNavStack] ${event}`, {
     size: NAV_STACK.length,
     top: NAV_STACK.length
-      ? { id: Number(NAV_STACK[NAV_STACK.length - 1]), name: nameOf(NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY) }
+      ? {
+          id: Number(NAV_STACK[NAV_STACK.length - 1]),
+          name: nameOf(NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY),
+        }
       : null,
     stack: snapshotNamed(),
     ...extra,
@@ -70,7 +83,10 @@ export function popTopIfMatches(panel: SP_COIN_DISPLAY) {
     NAV_STACK.pop();
     logStack('popTopIfMatches(pop)', { panel: nameOf(panel) });
   } else {
-    logStack('popTopIfMatches(no-match)', { panel: nameOf(panel), top: nameOf(top as SP_COIN_DISPLAY) });
+    logStack('popTopIfMatches(no-match)', {
+      panel: nameOf(panel),
+      top: nameOf(top as SP_COIN_DISPLAY),
+    });
   }
 }
 
@@ -92,7 +108,7 @@ export function findLastInStack(
   return null;
 }
 
-export function seedNavStackFromVisibility(opts: {
+function rebuildFromVisibility(opts: {
   map: Record<number, boolean>;
   overlays: SP_COIN_DISPLAY[];
   manageContainer: SP_COIN_DISPLAY;
@@ -102,36 +118,66 @@ export function seedNavStackFromVisibility(opts: {
   const { map, overlays, manageContainer, manageScoped, manageSponsorPanel } =
     opts;
 
-  if (NAV_STACK_SEEDED) return;
-  const anyVisible = Object.values(map).some(Boolean);
-  if (!anyVisible) return;
-
-  NAV_STACK_SEEDED = true;
-
-  // Don’t overwrite if something already pushed into the stack.
-  if (NAV_STACK.length) {
-    logStack('seedNavStackFromVisibility(skip-existing)');
-    return;
-  }
-
   const isVisibleFromMap = (id: SP_COIN_DISPLAY) => !!map[Number(id)];
+
+  // Build a fresh seed based on current visibility
+  const fresh: SP_COIN_DISPLAY[] = [];
 
   // 1) Active global overlay (top-level radio)
   const activeOverlay = overlays.find((id) => isVisibleFromMap(id)) ?? null;
-  if (activeOverlay) NAV_STACK.push(activeOverlay);
+  if (activeOverlay) fresh.push(activeOverlay);
 
-  // 2) If Manage overlay is active, seed scoped child + sponsor detail (if visible)
+  // 2) If Manage overlay active, seed scoped child + sponsor detail (if visible)
   if (activeOverlay && Number(activeOverlay) === Number(manageContainer)) {
     const activeScoped =
       manageScoped.find((id) => isVisibleFromMap(id)) ?? null;
-    if (activeScoped) NAV_STACK.push(activeScoped);
+    if (activeScoped) fresh.push(activeScoped);
 
     if (isVisibleFromMap(manageSponsorPanel)) {
-      NAV_STACK.push(manageSponsorPanel);
+      fresh.push(manageSponsorPanel);
     }
   }
 
-  logStack('seedNavStackFromVisibility', {
+  return { fresh, activeOverlay };
+}
+
+/**
+ * Reconciles the stack with the current visibility.
+ *
+ * This is intentionally conservative:
+ * - If the stack is empty, seed it.
+ * - If the stackTop is no longer visible, reseed it.
+ * - Otherwise do nothing (open/close already keep it updated).
+ */
+export function seedNavStackFromVisibility(opts: {
+  map: Record<number, boolean>;
+  overlays: SP_COIN_DISPLAY[];
+  manageContainer: SP_COIN_DISPLAY;
+  manageScoped: SP_COIN_DISPLAY[];
+  manageSponsorPanel: SP_COIN_DISPLAY;
+}) {
+  const { map } = opts;
+
+  const anyVisible = Object.values(map).some(Boolean);
+  if (!anyVisible) return;
+
+  const top = peekNav();
+  const topVisible = top ? !!map[Number(top)] : false;
+
+  // Seed if empty, or if top became stale (common after refresh/persistence)
+  if (NAV_STACK.length && topVisible) {
+    logStack('seedNavStackFromVisibility(skip-in-sync)', {
+      top: top ? nameOf(top) : null,
+    });
+    return;
+  }
+
+  const { fresh, activeOverlay } = rebuildFromVisibility(opts);
+
+  NAV_STACK.length = 0;
+  NAV_STACK.push(...fresh);
+
+  logStack('seedNavStackFromVisibility(reseed)', {
     activeOverlay: activeOverlay ? nameOf(activeOverlay) : null,
   });
 }
@@ -175,6 +221,5 @@ export function dumpNavStack(opts: {
 // Optional: lets you reset between hot reloads/tests
 export function __unsafeResetNavStackForTests() {
   NAV_STACK.length = 0;
-  NAV_STACK_SEEDED = false;
   logStack('__unsafeResetNavStackForTests');
 }

@@ -27,15 +27,7 @@ import {
   type ManageScopeConfig,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeManageScope';
 
-import {
-  seedNavStackFromVisibility,
-  dumpNavStack,
-} from '@/lib/context/exchangeContext/panelTree/panelNavStack';
-
-import {
-  createActivatePanel,
-  type PanelTreeMethodsDeps,
-} from '@/lib/context/exchangeContext/panelTree/panelTreeMethods';
+import { dumpNavStack } from '@/lib/context/exchangeContext/panelTree/panelNavStack';
 
 import {
   createPanelTreeCallbacks,
@@ -54,10 +46,9 @@ function diffAndPublish(
   prevMap: Record<number, boolean>,
   nextMap: Record<number, boolean>,
 ) {
-  const ids = new Set<number>([
-    ...Object.keys(prevMap),
-    ...Object.keys(nextMap),
-  ].map(Number));
+  const ids = new Set<number>(
+    [...Object.keys(prevMap), ...Object.keys(nextMap)].map(Number),
+  );
 
   ids.forEach((idNum) => {
     const id = idNum as SP_COIN_DISPLAY;
@@ -65,21 +56,6 @@ function diffAndPublish(
     const next = !!nextMap[idNum];
     if (prev !== next) panelStore.setVisible(id, next);
   });
-}
-
-function buildParentsOf(children: Record<string, unknown>) {
-  const m = new Map<number, number[]>();
-  for (const [parentKey, kids] of Object.entries(children)) {
-    const parentId = Number(parentKey);
-    if (!Array.isArray(kids)) continue;
-    for (const k of kids) {
-      const childId = Number(k);
-      const arr = m.get(childId) ?? [];
-      if (!arr.includes(parentId)) arr.push(parentId);
-      m.set(childId, arr);
-    }
-  }
-  return m;
 }
 
 export function usePanelTree() {
@@ -151,57 +127,10 @@ export function usePanelTree() {
     [],
   );
 
-  // ───────────────────────── Seed nav stack ─────────────────────────
-
-  useEffect(() => {
-    seedNavStackFromVisibility({
-      map,
-      overlays,
-      manageContainer: manageCfg.manageContainer,
-      manageScoped,
-      manageSponsorPanel: manageCfg.manageSponsorPanel,
-    });
-
-    if (DEBUG_TREE) {
-      // eslint-disable-next-line no-console
-      console.log('[usePanelTree] seedNavStackFromVisibility', {
-        activeOverlay: overlays.find((id) => !!map[Number(id)])
-          ? nameOf(overlays.find((id) => !!map[Number(id)]) as SP_COIN_DISPLAY)
-          : null,
-      });
-    }
-  }, [
-    map,
-    overlays,
-    manageCfg.manageContainer,
-    manageCfg.manageSponsorPanel,
-    manageScoped,
-  ]);
-
-  // ───────────────────────── Parents lookup (multi-parent support) ─────────────────────────
-
-  const parentsOf = useMemo(() => buildParentsOf(CHILDREN as any), []);
-
-  const pickParentForChild = useCallback(
-    (
-      child: SP_COIN_DISPLAY,
-      visMap: Record<number, boolean>,
-    ): SP_COIN_DISPLAY | null => {
-      const parents = parentsOf.get(Number(child)) ?? [];
-      if (!parents.length) return null;
-
-      for (const p of parents) {
-        if (visMap[p]) return p as SP_COIN_DISPLAY;
-      }
-      return parents[0] as SP_COIN_DISPLAY;
-    },
-    [parentsOf],
-  );
-
   // sponsor parent tracking
   const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
 
-  // manage scoped history
+  // manage scoped history (kept for now; used by callbacks + future UX rules)
   const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
 
   const getActiveManageScoped = useCallback(
@@ -241,7 +170,8 @@ export function usePanelTree() {
     const visible = overlays.filter((id) => !!map[id]);
     if (visible.length <= 1) return;
 
-    const keep = visible[0] as SP_COIN_DISPLAY;
+    // deterministic choice: keep the *last* overlay in the group order that is visible
+    const keep = visible[visible.length - 1] as SP_COIN_DISPLAY;
 
     if (DEBUG_TREE) {
       // eslint-disable-next-line no-console
@@ -288,6 +218,85 @@ export function usePanelTree() {
     withName,
   ]);
 
+  /* ------------------ ✅ enforce a valid Manage state (must have active child) ------------------ */
+
+  const forcedManageDefaultRef = useRef(false);
+
+  useEffect(() => {
+    const manageOpen = !!map[Number(manageCfg.manageContainer)];
+    const activeManageChild = getActiveManageScoped(list);
+
+    // reset the guard whenever Manage closes
+    if (!manageOpen) {
+      forcedManageDefaultRef.current = false;
+      return;
+    }
+
+    // if Manage is open and there's no active radio-child, force the default child ONCE
+    if (manageOpen && !activeManageChild && !forcedManageDefaultRef.current) {
+      forcedManageDefaultRef.current = true;
+
+      if (DEBUG_TREE) {
+        // eslint-disable-next-line no-console
+        console.warn('[usePanelTree] manage open but no active scoped child; forcing default', {
+          defaultChild: nameOf(manageCfg.defaultManageChild),
+        });
+      }
+
+      schedule(() => {
+        setExchangeContext((prev) => {
+          const flatPrev = flattenPanelTree(
+            (prev as any)?.settings?.spCoinPanelTree,
+            KNOWN,
+          );
+
+          const prevMap = toVisibilityMap(flatPrev);
+
+          const next = flatPrev.map((e) => {
+            // keep manage container open
+            if (e.panel === manageCfg.manageContainer) {
+              return { ...withName(e), visible: true };
+            }
+
+            // enforce exactly one manage radio child
+            if (isManageRadioChild(e.panel)) {
+              return {
+                ...withName(e),
+                visible: e.panel === manageCfg.defaultManageChild,
+              };
+            }
+
+            return e;
+          });
+
+          diffAndPublish(prevMap, toVisibilityMap(next));
+
+          return {
+            ...prev,
+            settings: {
+              ...(prev as any)?.settings,
+              spCoinPanelTree: next,
+            },
+          } as any;
+        });
+      });
+    }
+
+    // If we later *do* get an active child, don't keep forcing.
+    if (manageOpen && activeManageChild) {
+      forcedManageDefaultRef.current = true;
+    }
+  }, [
+    map,
+    list,
+    manageCfg.manageContainer,
+    manageCfg.defaultManageChild,
+    getActiveManageScoped,
+    isManageRadioChild,
+    setExchangeContext,
+    withName,
+  ]);
+
   /* ------------------------------- queries ------------------------------- */
 
   const isVisible = useCallback((panel: SP_COIN_DISPLAY) => {
@@ -298,37 +307,6 @@ export function usePanelTree() {
     (invoker: SP_COIN_DISPLAY) =>
       ((CHILDREN as any)?.[invoker] as SP_COIN_DISPLAY[] | undefined) ?? [],
     [],
-  );
-
-  /* -------------------- activation (stack restore) -------------------- */
-
-  const methodsDeps: PanelTreeMethodsDeps = useMemo(
-    () => ({
-      overlays,
-      manageCfg,
-      manageScopedSet,
-      isGlobalOverlay,
-      isManageRadioChild,
-      parentsOf,
-      pickParentForChild,
-      withName,
-      sponsorParentRef,
-    }),
-    [
-      overlays,
-      manageCfg,
-      manageScopedSet,
-      isGlobalOverlay,
-      isManageRadioChild,
-      parentsOf,
-      pickParentForChild,
-      withName,
-    ],
-  );
-
-  const activatePanel = useMemo(
-    () => createActivatePanel(methodsDeps),
-    [methodsDeps],
   );
 
   /* ------------------------------- actions ------------------------------- */
@@ -354,9 +332,7 @@ export function usePanelTree() {
       getActiveManageScoped,
       pushManageScopedHistory,
 
-      activatePanel,
       diffAndPublish,
-
       setExchangeContext,
     }),
     [
@@ -370,12 +346,10 @@ export function usePanelTree() {
       withName,
       getActiveManageScoped,
       pushManageScopedHistory,
-      activatePanel,
       setExchangeContext,
     ],
   );
 
-  // NOTE: createPanelTreeCallbacks now also returns closeTopPanel (Header X helper)
   const { openPanel, closePanel, closeTopPanel } = useMemo(
     () => createPanelTreeCallbacks(callbacksDeps),
     [callbacksDeps],
