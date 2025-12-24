@@ -1,133 +1,170 @@
-// File: @/lib/context/exchangeContext/panelTree/panelNavStack.ts
-'use client';
-
+// File: @/lib/context/exchangeContext/panelTree/panelTreeRadio.ts
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { PanelEntry } from './panelTreePersistence';
+import { ensurePanelPresent, panelName } from './panelTreePersistence';
 
-// One shared stack for the entire app runtime (per browser tab / JS bundle).
-// Stage 3: stack is EPHEMERAL and UI-only (Header X / Back behavior).
-const NAV_STACK: SP_COIN_DISPLAY[] = [];
-
-const DEBUG_STACK =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-  process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE === 'true';
+const DEBUG_RADIO = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
 const nameOf = (id: SP_COIN_DISPLAY) => SP_COIN_DISPLAY[id] ?? String(id);
 
-const snapshotNamed = () =>
-  NAV_STACK.map((p) => ({ id: Number(p), name: nameOf(p) }));
-
-function logStack(event: string, extra?: Record<string, unknown>) {
-  if (!DEBUG_STACK) return;
-  // eslint-disable-next-line no-console
-  console.log(`[panelNavStack] ${event}`, {
-    size: NAV_STACK.length,
-    top: NAV_STACK.length
-      ? {
-          id: Number(NAV_STACK[NAV_STACK.length - 1]),
-          name: nameOf(NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY),
-        }
-      : null,
-    stack: snapshotNamed(),
-    ...extra,
-  });
+function summarizeOverlayState(list: PanelEntry[], overlays: SP_COIN_DISPLAY[]) {
+  return list
+    .filter((e) => overlays.includes(e.panel))
+    .map((e) => ({ p: nameOf(e.panel), v: !!e.visible }));
 }
 
-/* ------------------------------- core -------------------------------- */
-
-export function pushNav(panel: SP_COIN_DISPLAY) {
-  const top = NAV_STACK.length ? NAV_STACK[NAV_STACK.length - 1] : null;
-
-  if (top !== null && Number(top) === Number(panel)) {
-    logStack('pushNav(skip-same-top)', { panel: nameOf(panel) });
-    return;
+function hasAnyVisible(list: PanelEntry[], overlays: SP_COIN_DISPLAY[]) {
+  for (const e of list) {
+    if (overlays.includes(e.panel) && !!e.visible) return true;
   }
-
-  NAV_STACK.push(panel);
-  logStack('pushNav', { panel: nameOf(panel) });
+  return false;
 }
 
-export function popTopIfMatches(panel: SP_COIN_DISPLAY) {
-  if (!NAV_STACK.length) {
-    logStack('popTopIfMatches(empty)', { panel: nameOf(panel) });
-    return;
+function diffCount(
+  before: Array<{ p: string; v: boolean }>,
+  after: Array<{ p: string; v: boolean }>,
+) {
+  const m = new Map(before.map((x) => [x.p, x.v]));
+  let changed = 0;
+  for (const a of after) {
+    if (m.get(a.p) !== a.v) changed++;
   }
-
-  const top = NAV_STACK[NAV_STACK.length - 1];
-  if (Number(top) === Number(panel)) {
-    NAV_STACK.pop();
-    logStack('popTopIfMatches(pop)', { panel: nameOf(panel) });
-  } else {
-    logStack('popTopIfMatches(no-match)', {
-      panel: nameOf(panel),
-      top: nameOf(top as SP_COIN_DISPLAY),
-    });
-  }
+  return changed;
 }
 
-export function removeNav(panel: SP_COIN_DISPLAY) {
-  let removed = 0;
+/**
+ * Enforces a "global overlay radio" selection:
+ * - exactly one overlay in `overlays` is visible (the `target`)
+ * - other overlays are set to visible=false
+ *
+ * Stage4 note:
+ * - When using branch replay, this is called repeatedly during replay.
+ * - It is intentionally deterministic: it always enforces the full group.
+ */
+export function applyGlobalRadio(
+  accIn: PanelEntry[],
+  overlays: SP_COIN_DISPLAY[],
+  target: SP_COIN_DISPLAY,
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  const before = DEBUG_RADIO ? summarizeOverlayState(accIn, overlays) : null;
 
-  for (let i = NAV_STACK.length - 1; i >= 0; i--) {
-    if (Number(NAV_STACK[i]) === Number(panel)) {
-      NAV_STACK.splice(i, 1);
-      removed++;
+  const out = overlays.reduce((acc, id) => {
+    const idx = acc.findIndex((e) => e.panel === id);
+    if (idx >= 0) {
+      acc[idx] = { ...withName(acc[idx]), visible: id === target };
+    } else {
+      acc.push({
+        panel: id as SP_COIN_DISPLAY,
+        visible: id === target,
+        name: panelName(id),
+      });
+    }
+    return acc;
+  }, [...accIn]);
+
+  if (DEBUG_RADIO) {
+    const after = summarizeOverlayState(out, overlays);
+    const changed = diffCount(before ?? [], after);
+
+    // Only log when something actually changes (keeps logs readable).
+    if (changed > 0) {
+      // eslint-disable-next-line no-console
+      console.log('[panelTreeRadio] applyGlobalRadio', {
+        target: nameOf(target),
+        changed,
+        before,
+        after,
+      });
     }
   }
 
-  if (removed) {
-    logStack('removeNav', { panel: nameOf(panel), removed });
-  } else {
-    logStack('removeNav(no-op)', { panel: nameOf(panel) });
+  return out;
+}
+
+export function clearGlobalRadio(
+  flat0: PanelEntry[],
+  overlays: SP_COIN_DISPLAY[],
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  const shouldLog = DEBUG_RADIO && hasAnyVisible(flat0, overlays);
+  const before = shouldLog ? summarizeOverlayState(flat0, overlays) : null;
+
+  const out = overlays.reduce((acc, id) => {
+    const idx = acc.findIndex((e) => e.panel === id);
+    if (idx >= 0) {
+      acc[idx] = { ...withName(acc[idx]), visible: false };
+    } else {
+      acc.push({
+        panel: id as SP_COIN_DISPLAY,
+        visible: false,
+        name: panelName(id),
+      });
+    }
+    return acc;
+  }, [...flat0]);
+
+  if (shouldLog) {
+    const after = summarizeOverlayState(out, overlays);
+    const changed = diffCount(before ?? [], after);
+    if (changed > 0) {
+      // eslint-disable-next-line no-console
+      console.log('[panelTreeRadio] clearGlobalRadio', {
+        changed,
+        before,
+        after,
+      });
+    }
   }
+
+  return out;
 }
-
-export function getNavTop(): SP_COIN_DISPLAY | null {
-  return NAV_STACK.length
-    ? (NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY)
-    : null;
-}
-
-/* ------------------------------- helpers ------------------------------- */
-
-export function findLastInStack(
-  set: Set<number>,
-  disallow?: SP_COIN_DISPLAY | null,
-): SP_COIN_DISPLAY | null {
-  for (let i = NAV_STACK.length - 1; i >= 0; i--) {
-    const cand = NAV_STACK[i] as SP_COIN_DISPLAY;
-    if (disallow && Number(cand) === Number(disallow)) continue;
-    if (set.has(Number(cand))) return cand;
-  }
-  return null;
-}
-
-/* ------------------------------- debug -------------------------------- */
 
 /**
- * Stage 3: dump function remains, but callers that need richer dumps
- * should use panelNavStackDebug.dumpNavStack and pass stack explicitly.
+ * NEW (Stage4): ensure exactly one overlay is visible.
+ * - If any overlay is already visible, do nothing.
+ * - Otherwise ensure defaultOverlay is present and selected.
+ *
+ * This is handy for branch replay and close paths.
  */
-export function dumpNavStack(opts: { tag?: string }) {
-  const { tag = 'panelNavStack.dump' } = opts;
+export function ensureOneGlobalOverlayVisible(
+  flatIn: PanelEntry[],
+  overlays: SP_COIN_DISPLAY[],
+  defaultOverlay: SP_COIN_DISPLAY,
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  const m = new Map<number, boolean>();
+  for (const e of flatIn) m.set(Number(e.panel), !!e.visible);
 
-  // eslint-disable-next-line no-console
-  console.log(`[panelTree] ${tag}`, {
-    stack: snapshotNamed(),
-    stackTop: getNavTop()
-      ? { id: Number(getNavTop()), name: nameOf(getNavTop() as SP_COIN_DISPLAY) }
-      : null,
-  });
+  let any = false;
+  for (const id of overlays) {
+    if (m.get(Number(id))) {
+      any = true;
+      break;
+    }
+  }
+  if (any) return flatIn;
+
+  let next = ensurePanelPresent(flatIn, defaultOverlay);
+  next = applyGlobalRadio(next, overlays, defaultOverlay, withName);
+  return next;
 }
 
-// Optional: lets you reset between hot reloads/tests
-export function __unsafeResetNavStackForTests() {
-  NAV_STACK.length = 0;
-  logStack('__unsafeResetNavStackForTests');
-}
+export function switchToDefaultGlobal(
+  flatIn: PanelEntry[],
+  overlays: SP_COIN_DISPLAY[],
+  defaultOverlay: SP_COIN_DISPLAY,
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  // Keep this log minimal: this is usually only hit during fallback paths.
+  if (DEBUG_RADIO) {
+    // eslint-disable-next-line no-console
+    console.log('[panelTreeRadio] switchToDefaultGlobal', {
+      defaultOverlay: nameOf(defaultOverlay),
+    });
+  }
 
-/* --------------------------- backwards compat -------------------------- */
-/**
- * Temporary aliases so you can migrate call sites gradually.
- * Remove these once all imports are updated.
- */
-export const peekNav = getNavTop;
+  let next = ensurePanelPresent(flatIn, defaultOverlay);
+  next = applyGlobalRadio(next, overlays, defaultOverlay, withName);
+  return next;
+}

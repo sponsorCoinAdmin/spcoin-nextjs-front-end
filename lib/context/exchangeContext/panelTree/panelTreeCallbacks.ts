@@ -22,8 +22,6 @@ import {
   type ManageScopeConfig,
 } from './panelTreeManageScope';
 
-import { pushNav, popTopIfMatches } from './panelNavStack';
-
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
 export type SetExchangeContextFn<TState = any> = (
@@ -104,6 +102,10 @@ function ensureOneGlobalOverlayVisible(
   return next;
 }
 
+/**
+ * Old (priority) close-top chooser.
+ * Kept as a fallback if branch traversal can’t determine a top.
+ */
 function deriveTopFromVisibility(opts: {
   flat: PanelEntry[];
   overlays: SP_COIN_DISPLAY[];
@@ -127,6 +129,61 @@ function deriveTopFromVisibility(opts: {
   }
 
   return null;
+}
+
+/**
+ * Branch design:
+ * - start at MAIN_TRADING_PANEL
+ * - follow first visible child in CHILDREN[] order
+ * - return the last node in that path (the “top” of the branch)
+ */
+function deriveTopFromBranch(opts: {
+  flat: PanelEntry[];
+  manageCfg: ManageScopeConfig;
+  known: Set<number>;
+}): SP_COIN_DISPLAY | null {
+  const { flat, manageCfg, known } = opts;
+  const m = toVisibilityMap(flat);
+
+  const ROOT: SP_COIN_DISPLAY = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
+
+  // If root isn’t visible (it should be), we can’t traverse safely.
+  if (!m[Number(ROOT)]) return null;
+
+  const seen = new Set<number>();
+  let current: SP_COIN_DISPLAY | null = ROOT;
+  let last: SP_COIN_DISPLAY = ROOT;
+
+  while (current != null) {
+    const curId: number = Number(current);
+    if (seen.has(curId)) {
+      // cycle: bail out and use what we have
+      return last;
+    }
+    seen.add(curId);
+
+    last = current;
+
+    const kids: SP_COIN_DISPLAY[] =
+      (manageCfg.children?.[curId] as SP_COIN_DISPLAY[] | undefined) ?? [];
+
+    // first visible child in order
+    let next: SP_COIN_DISPLAY | null = null;
+    for (const k of kids) {
+      const kn: number = Number(k);
+      if (!known.has(kn)) continue;
+      if (m[kn]) {
+        next = k;
+        break;
+      }
+    }
+
+    if (!next) break;
+    current = next;
+  }
+
+  // If the branch is only root, treat as “nothing to close”
+  return Number(last) === Number(ROOT) ? null : last;
 }
 
 /* ---------------- factory ---------------- */
@@ -179,9 +236,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           (prev as any)?.settings?.spCoinPanelTree,
           known,
         );
-
-        // Stage 3: stack is UI-only bookkeeping
-        pushNav(panel);
 
         const openingGlobal = isGlobalOverlay(panel);
         const openingManageContainer =
@@ -305,9 +359,8 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
   /* ---------------- close ---------------- */
 
-  // Stage 3: derive "top" from VISIBILITY, not from nav stack.
+  // Close "top" derived from BRANCH when invoker is a header close.
   const closeTopPanel = (invoker?: string) => {
-    // Placeholder panel; closePanel will redirect when invoker is header-ish.
     closePanel(manageCfg.manageContainer, invoker ?? 'HeaderX');
   };
 
@@ -334,23 +387,32 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         if (isHeaderCloseInvoker(invoker)) {
           headerCloseLockUntil = now + HEADER_CLOSE_LOCK_MS;
 
-          const derived = deriveTopFromVisibility({
+          // Branch-first: close the last node on the computed branch.
+          const branchTop = deriveTopFromBranch({
             flat: flat0,
-            overlays,
-            manageScoped,
             manageCfg,
+            known,
           });
 
-          if (derived) panelToClose = derived;
+          if (branchTop) {
+            panelToClose = branchTop;
+          } else {
+            // Fallback to old priority-based selection.
+            const derived = deriveTopFromVisibility({
+              flat: flat0,
+              overlays,
+              manageScoped,
+              manageCfg,
+            });
+            if (derived) panelToClose = derived;
+          }
         }
-
-        // stack bookkeeping (best-effort; no longer authoritative)
-        popTopIfMatches(panelToClose);
 
         let next = flat0.map((e) =>
           e.panel === panelToClose ? { ...withName(e), visible: false } : e,
         );
 
+        // If closing a global overlay, enforce fallback and possibly close manage branch.
         if (isGlobalOverlay(panelToClose)) {
           if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
             manageScopedHistoryRef.current = [];

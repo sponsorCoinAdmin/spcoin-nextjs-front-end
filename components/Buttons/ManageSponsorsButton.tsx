@@ -12,8 +12,13 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
- * SELL-only launcher. Phase 7: scoped re-render using usePanelVisible, stable actions from usePanelTree.
+ * SELL-only launcher.
  * Visibility rule: show iff the SELL token is an SpCoin. Ref guard prevents redundant flips.
+ *
+ * Stage4 (branch-backed close/revert):
+ * - Do NOT close the launcher on click.
+ * - Ensure the launcher is part of the branch path, then open the manage overlay + panel.
+ *   This makes "close manage -> revert to launcher" work via branch replay.
  */
 export default function ManageSponsorsButton() {
   const [sellToken] = useSellTokenContract();
@@ -25,7 +30,7 @@ export default function ManageSponsorsButton() {
       const parentTag = parent ?? `ManageSponsorsButton:safeOpen(${panel})`;
       openPanel(panel, parentTag);
     },
-    [openPanel]
+    [openPanel],
   );
 
   const safeClose = useCallback(
@@ -33,11 +38,13 @@ export default function ManageSponsorsButton() {
       const parentTag = parent ?? `ManageSponsorsButton:safeClose(${panel})`;
       closePanel(panel, parentTag);
     },
-    [closePanel]
+    [closePanel],
   );
 
   // Re-render only when THIS launcher flag changes
-  const launcherVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+  const launcherVisible = usePanelVisible(
+    SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON,
+  );
 
   // Stable identity for current SELL token
   const addr = sellToken?.address?.toLowerCase() ?? '';
@@ -60,15 +67,27 @@ export default function ManageSponsorsButton() {
   }, [addr, sellToken, safeOpen, safeClose]);
 
   const onOpenManage = useCallback(() => {
-    safeClose(
+    // IMPORTANT (branch model):
+    // Keep the launcher in the branch path so closing Manage can revert to it.
+    safeOpen(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON,
-      'ManageSponsorsButton:onOpenManage(closeLauncher)'
+      'ManageSponsorsButton:onOpenManage(ensureLauncherInBranch)',
     );
+
+    // If your panel tree still uses MANAGE_SPONSORSHIPS as the overlay root/container,
+    // open it so the branch becomes:
+    // ... -> MANAGE_SPONSORSHIPS_BUTTON -> MANAGE_SPONSORSHIPS -> MANAGE_SPONSORSHIPS_PANEL
+    safeOpen(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
+      'ManageSponsorsButton:onOpenManage(openManageContainer)',
+    );
+
+    // Open the manage landing panel.
     safeOpen(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-      'ManageSponsorsButton:onOpenManage(openPanel)'
+      'ManageSponsorsButton:onOpenManage(openManagePanel)',
     );
-  }, [safeOpen, safeClose]);
+  }, [safeOpen]);
 
   if (!launcherVisible) return null;
 

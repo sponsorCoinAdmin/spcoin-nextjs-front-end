@@ -15,7 +15,7 @@ type Props = {
   onLog: () => void;
   onClose: () => void;
 
-  /** NEW: controls the left panel (Exchange) visibility */
+  /** controls the left panel (Exchange) visibility */
   onToggleExchange?: () => void;
   showExchange?: boolean;
 };
@@ -34,37 +34,20 @@ const TopBar: React.FC<Props> = ({
   const handleToggleExchange = onToggleExchange ?? (() => {});
   const isExchangeVisible = showExchange ?? true;
 
-  // Panel stack dump (debug)
-  const panelTree = usePanelTree() as any;
+  // Panel branch dump (debug)
+  const { dumpNavStack } = usePanelTree();
+
   const dumpStack = useCallback(() => {
-    // Preferred: hook-provided dumper (if you added it)
-    if (typeof panelTree?.dumpNavStack === 'function') {
-      panelTree.dumpNavStack('TopBar:Panel Stack Dump');
+    if (typeof dumpNavStack === 'function') {
+      dumpNavStack();
       return;
     }
 
-    // Fallback: if a getter exists, print it
-    if (typeof panelTree?.getNavStack === 'function') {
-      const raw = panelTree.getNavStack();
-      const named = (raw ?? []).map((id: number) =>
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (panelTree?.SP_COIN_DISPLAY?.[id] as string) ?? String(id),
-      );
-      // eslint-disable-next-line no-console
-      console.log('[TopBar] NAV STACK (fallback)', {
-        tag: 'TopBar:Panel Branch Dump',
-        raw,
-        named,
-      });
-      return;
-    }
-
-    // Last resort
     // eslint-disable-next-line no-console
     console.warn(
       '[TopBar] Panel stack dump not available. Add dumpNavStack() to usePanelTree().',
     );
-  }, [panelTree]);
+  }, [dumpNavStack]);
 
   return (
     <div className="relative w-full -mt-[15px]">
@@ -73,7 +56,6 @@ const TopBar: React.FC<Props> = ({
           {expanded ? 'Collapse Context' : 'Expand Context'}
         </button>
 
-        {/* NEW: Hide/Show Exchange Context (left panel) */}
         <button onClick={handleToggleExchange} className={buttonClasses}>
           {isExchangeVisible ? 'Hide Context' : 'Show Context'}
         </button>
@@ -86,13 +68,11 @@ const TopBar: React.FC<Props> = ({
           Log Context
         </button>
 
-        {/* DEBUG: Panel stack */}
         <button onClick={dumpStack} className={buttonClasses}>
           Panel Stack Dump
         </button>
       </div>
 
-      {/* Close */}
       <button
         onClick={onClose}
         aria-label="Close Context"
