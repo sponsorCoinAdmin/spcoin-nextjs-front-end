@@ -1,4 +1,3 @@
-// File: @/lib/context/exchangeContext/panelTree/panelTreeCallbacks.ts
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -88,6 +87,36 @@ function isChainedCloseInvoker(invoker?: string) {
   return invoker.includes('useOverlayCloseHandler');
 }
 
+function hasAnyOverlayVisible(
+  map: Record<number, boolean>,
+  overlays: SP_COIN_DISPLAY[],
+) {
+  for (const id of overlays) if (map[Number(id)]) return true;
+  return false;
+}
+
+/**
+ * ✅ Safety: never allow the app to end up with "0 overlays visible".
+ * This is exactly the state you saw: activeOverlaysFromMap: Array(0).
+ *
+ * NOTE:
+ * This does NOT "default a manage radio group" on close.
+ * It only guarantees a valid *global overlay* is visible (fallback trading).
+ */
+function ensureOneGlobalOverlayVisible(
+  flat: PanelEntry[],
+  overlays: SP_COIN_DISPLAY[],
+  fallback: SP_COIN_DISPLAY,
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  const m = toVisibilityMap(flat);
+  if (hasAnyOverlayVisible(m, overlays)) return flat;
+
+  let next = ensurePanelPresent(flat, fallback);
+  next = applyGlobalRadio(next, overlays, fallback, withName);
+  return next;
+}
+
 export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   const {
     known,
@@ -145,6 +174,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           Number(panel) === Number(manageCfg.manageSponsorPanel);
         const openingManageRadioChild = isManageRadioChild(panel);
 
+        // stack bookkeeping (used mainly for header-close + debug tooling)
         pushNav(panel);
 
         if (openingSponsorDetail) {
@@ -214,6 +244,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             true,
           );
 
+          // Sponsor detail OFF
           next = next.map((e) =>
             e.panel === manageCfg.manageSponsorPanel
               ? { ...withName(e), visible: false }
@@ -270,9 +301,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   };
 
   /**
-   * ✅ New: closeTopPanel()
-   * - Pops/Closes ONLY the current stackTop.
-   * - Intended for Header X behavior.
+   * closeTopPanel(): compatibility helper.
    */
   const closeTopPanel = (invoker?: string) => {
     const top = peekNav();
@@ -304,8 +333,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     }
 
     // ✅ Header X rule: ALWAYS close stackTop (ignore passed-in panel if it isn't top).
-    // This fixes cases like HeaderController:onClose(pendingRewards) passing MANAGE_PENDING_REWARDS
-    // while CLAIM_SPONSOR_REWARDS_LIST_PANEL is actually on top.
     let panelToClose: SP_COIN_DISPLAY = panel;
     if (isHeaderCloseInvoker(invoker)) {
       headerCloseLockUntil = now + HEADER_CLOSE_LOCK_MS;
@@ -325,6 +352,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
       }
     }
 
+    // stack bookkeeping (kept for now)
     popTopIfMatches(panelToClose);
     removeNav(panelToClose);
 
@@ -357,12 +385,14 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             withName,
           );
         } else if (closingSponsorDetail) {
+          // close sponsor detail only; underlying scoped parent remains
           next = flat0.map((e) =>
             e.panel === manageCfg.manageSponsorPanel
               ? { ...withName(e), visible: false }
               : e,
           );
         } else if (closingManageRadioChild) {
+          // IMPORTANT: do NOT "default" another manage radio child on close.
           next = flat0
             .map((e) =>
               e.panel === panelToClose ? { ...withName(e), visible: false } : e,
@@ -376,12 +406,15 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           const closingIsManage =
             Number(panelToClose) === Number(manageCfg.manageContainer);
 
+          // hide just this overlay
           next = flat0.map((e) =>
             e.panel === panelToClose ? { ...withName(e), visible: false } : e,
           );
 
+          // clear global radio flags (keeps invariants clean)
           next = clearGlobalRadio(next, overlays, withName);
 
+          // if manage overlay closed, also close its branch
           if (closingIsManage) {
             manageScopedHistoryRef.current = [];
             next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
@@ -392,8 +425,18 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           );
         }
 
+        // ✅ Restore underneath when appropriate (but never allow 0 overlays)
         const restore = peekNav();
         if (restore) next = activatePanel(next, restore);
+
+        // ✅ The actual fix for your log:
+        // never end with activeOverlaysFromMap: Array(0)
+        next = ensureOneGlobalOverlayVisible(
+          next,
+          overlays,
+          SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+          withName,
+        );
 
         safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
         return writeFlatTree(prev as any, next) as any;

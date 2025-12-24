@@ -326,11 +326,13 @@ export function usePanelTree() {
     ],
   );
 
-  const activatePanel = useMemo(() => createActivatePanel(methodsDeps), [methodsDeps]);
+  const activatePanel = useMemo(
+    () => createActivatePanel(methodsDeps),
+    [methodsDeps],
+  );
 
   /* ------------------------------- actions ------------------------------- */
 
-  // ✅ FIX: Match PanelTreeCallbacksDeps exactly
   const callbacksDeps: PanelTreeCallbacksDeps = useMemo(
     () => ({
       known: KNOWN,
@@ -373,7 +375,8 @@ export function usePanelTree() {
     ],
   );
 
-  const { openPanel, closePanel } = useMemo(
+  // NOTE: createPanelTreeCallbacks now also returns closeTopPanel (Header X helper)
+  const { openPanel, closePanel, closeTopPanel } = useMemo(
     () => createPanelTreeCallbacks(callbacksDeps),
     [callbacksDeps],
   );
@@ -404,6 +407,7 @@ export function usePanelTree() {
     getPanelChildren,
     openPanel,
     closePanel,
+    closeTopPanel,
 
     // Debug
     dumpNavStack: dumpStack,

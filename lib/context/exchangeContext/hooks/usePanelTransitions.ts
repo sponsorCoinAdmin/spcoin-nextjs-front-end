@@ -3,12 +3,14 @@
 
 import { useCallback, useRef } from 'react';
 import type { MouseEvent, MouseEventHandler } from 'react';
+
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type OpenOpts = { methodName?: string };
+
 type ClickOpts = OpenOpts & {
   preventDefault?: boolean;
   stopPropagation?: boolean;
@@ -55,6 +57,7 @@ export function usePanelTransitions() {
   };
 
   // ─── Core overlays ────────────────────────────────────────────────────────
+
   const toTrading = useCallback(() => {
     perf.start();
     openPanel(
@@ -129,6 +132,7 @@ export function usePanelTransitions() {
   );
 
   // ─── Other panels ─────────────────────────────────────────────────────────
+
   const openRecipientList = useCallback(() => {
     perf.start();
     openPanel(
@@ -239,10 +243,7 @@ export function usePanelTransitions() {
     (overlay: SP_COIN_DISPLAY) => {
       const name = SP_COIN_DISPLAY[overlay];
       perf.start();
-      openPanel(
-        overlay,
-        `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`,
-      );
+      openPanel(overlay, `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`);
       perf.end(`openOverlay:${overlay}`);
     },
     [openPanel, perf],
