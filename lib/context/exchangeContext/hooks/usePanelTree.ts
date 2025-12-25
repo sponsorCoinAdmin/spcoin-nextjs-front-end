@@ -80,7 +80,7 @@ const branchOnClose = (panel: SP_COIN_DISPLAY): void => {
 const logBranch = (tag?: string) => {
   if (!DEBUG_BRANCH) return;
   // eslint-disable-next-line no-console
-  console.log(`[PanelTree] branchPath${tag ? ` (${tag})` : ''} =`, [
+  console.log(`[PanelTree] branchStack${tag ? ` (${tag})` : ''} =`, [
     ...BRANCH_PATH.map((p) => ({
       name: panelName(Number(p) as any),
       id: Number(p),
@@ -259,10 +259,10 @@ export function usePanelTree() {
 
   /**
    * ✅ Wrapped actions:
-   * - Update NAV-only branchPath
+   * - Update NAV-only branchStack
    * - Then call existing behavior unchanged
    *
-   * This guarantees branchPath changes do NOT affect radios/visibility.
+   * This guarantees branchStackchanges do NOT affect radios/visibility.
    */
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
@@ -313,26 +313,63 @@ export function usePanelTree() {
     [base, getPanelChildren, visibilityMap],
   );
 
+  /**
+   * ✅ Wrapped closePanel:
+   * BranchPath traversal rule:
+   * - If caller attempts to close manageContainer while a deeper leaf exists,
+   *   treat it as "close leaf" (branch traversal).
+   * - Otherwise close exactly what caller asked.
+   */
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
+      const nav = snapshotBranch();
+      const leaf =
+        nav.length > 0 ? (nav[nav.length - 1] as SP_COIN_DISPLAY) : null;
+
+      const target =
+        leaf &&
+        Number(panel) === Number(manageContainer) &&
+        Number(leaf) !== Number(panel)
+          ? leaf
+          : panel;
+
       // NAV-only: update branch to support "close -> revert".
-      branchOnClose(panel);
+      branchOnClose(target);
 
-      // Real behavior unchanged.
-      base.closePanel(panel, invoker, arg);
+      // Real behavior unchanged (aside from redirecting manageContainer close -> leaf).
+      base.closePanel(target, invoker, arg);
 
-      if (DEBUG_BRANCH) logBranch(`close:${panelName(Number(panel) as any)}`);
+      if (DEBUG_BRANCH) logBranch(`close:${panelName(Number(target) as any)}`);
     },
-    [base],
+    [base, manageContainer],
   );
 
+  /**
+   * ✅ FIXED closeTopPanel:
+   * Previously, base.closeTopPanel() closes MANAGE_SPONSORSHIPS (container),
+   * which truncates branchStackby 2 levels (drops container + leaf).
+   *
+   * New behavior:
+   * - Determine leaf from NAV branchStack
+   * - Close THAT leaf (one level)
+   * - Let base callbacks handle visibility/radio logic
+   */
   const closeTopPanel = useCallback(
     (invoker?: string) => {
-      // No nav mutation here because your real closeTopPanel derives top internally.
-      // branchPath will update via the resulting closePanel calls.
-      base.closeTopPanel(invoker);
+      const nav = snapshotBranch();
+      const leaf =
+        nav.length > 0 ? (nav[nav.length - 1] as SP_COIN_DISPLAY) : null;
 
-      if (DEBUG_BRANCH) logBranch('closeTop');
+      if (!leaf) return;
+
+      // NAV-only: pop exactly ONE level (the leaf)
+      branchOnClose(leaf);
+
+      // Real behavior: close the leaf, not MANAGE_SPONSORSHIPS container
+      base.closePanel(leaf, invoker ?? 'HeaderX');
+
+      if (DEBUG_BRANCH)
+        logBranch(`closeTop->leaf:${panelName(Number(leaf) as any)}`);
     },
     [base],
   );
@@ -356,7 +393,7 @@ export function usePanelTree() {
   /**
    * Dumps:
    * 1) DISPLAY traversal (visibility-based) for inspecting what the UI currently shows
-   * 2) NAV branchPath (open/close based) for your navigation/revert logic
+   * 2) NAV branchStack(open/close based) for your navigation/revert logic
    */
   const dumpNavStack = useCallback(
     (tag?: string): void => {
@@ -425,7 +462,7 @@ export function usePanelTree() {
 
       const nav = snapshotBranch();
       console.log(
-        '[PanelTree] branchPath =',
+        '[PanelTree] branchStack=',
         nav.map((p: SP_COIN_DISPLAY) => ({
           name: panelName(Number(p) as any),
           id: Number(p),
@@ -443,7 +480,7 @@ export function usePanelTree() {
     isTokenScrollVisible,
     getPanelChildren,
 
-    // ✅ wrapped, behavior unchanged, only branchPath tracking added
+    // ✅ wrapped, behavior unchanged, only branchStacktracking added
     openPanel,
     closePanel,
     closeTopPanel,
