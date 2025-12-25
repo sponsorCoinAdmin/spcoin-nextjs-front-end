@@ -31,57 +31,71 @@ import {
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
-/* ───────────────────────────── BranchPath (NAV ONLY) ─────────────────────────────
+/* ───────────────────────────── BranchStack (NAV ONLY) ─────────────────────────────
  * This is intentionally NOT derived from visibility/tree traversal.
- * It is a runtime navigation trace (open/close), and MUST NOT affect radio logic.
+ * It is a runtime navigation stack (open/close), and MUST NOT affect radio logic.
  */
-const BRANCH_PATH: SP_COIN_DISPLAY[] = [];
+const BRANCH_STACK: SP_COIN_DISPLAY[] = [];
 
 const DEBUG_BRANCH =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE === 'true';
 
-const snapshotBranch = (): SP_COIN_DISPLAY[] => BRANCH_PATH.slice();
-
-const branchPush = (panel: SP_COIN_DISPLAY): void => {
-  const top: SP_COIN_DISPLAY | null = BRANCH_PATH.length
-    ? (BRANCH_PATH[BRANCH_PATH.length - 1] as SP_COIN_DISPLAY)
-    : null;
-
-  if (top !== null && Number(top) === Number(panel)) return;
-  BRANCH_PATH.push(panel);
-};
+const snapshotBranch = (): SP_COIN_DISPLAY[] => BRANCH_STACK.slice();
 
 const branchEnsureSeeded = (seed: SP_COIN_DISPLAY[]): void => {
-  if (BRANCH_PATH.length > 0) return;
+  if (BRANCH_STACK.length > 0) return;
   if (!seed.length) return;
-  BRANCH_PATH.length = 0;
-  for (const p of seed) BRANCH_PATH.push(p);
+  BRANCH_STACK.length = 0;
+  for (const p of seed) BRANCH_STACK.push(p);
 };
 
-const branchOnClose = (panel: SP_COIN_DISPLAY): void => {
-  if (!BRANCH_PATH.length) return;
+/**
+ * Stack push:
+ * - If panel is already anywhere in stack -> truncate stack to it (bring it to top).
+ * - Else push.
+ * This prevents the repeated triples you were seeing.
+ */
+const branchPush = (panel: SP_COIN_DISPLAY): void => {
+  const idx = BRANCH_STACK.lastIndexOf(panel);
+  if (idx >= 0) {
+    // already in stack -> make it the top (drop anything after it)
+    BRANCH_STACK.length = idx + 1;
+    return;
+  }
+  BRANCH_STACK.push(panel);
+};
 
-  const top: SP_COIN_DISPLAY = BRANCH_PATH[BRANCH_PATH.length - 1] as SP_COIN_DISPLAY;
+/**
+ * Stack pop/hide:
+ * - If panel is top -> pop it.
+ * - If panel exists in middle -> truncate to just BEFORE it (remove it and anything after).
+ * - If panel not found -> noop.
+ */
+const branchPop = (panel: SP_COIN_DISPLAY): void => {
+  if (!BRANCH_STACK.length) return;
+
+  const top = BRANCH_STACK[BRANCH_STACK.length - 1] as SP_COIN_DISPLAY;
   if (Number(top) === Number(panel)) {
-    BRANCH_PATH.pop();
+    BRANCH_STACK.pop();
     return;
   }
 
-  // If closing something in the middle, truncate from its last occurrence.
-  for (let i = BRANCH_PATH.length - 1; i >= 0; i--) {
-    if (Number(BRANCH_PATH[i]) === Number(panel)) {
-      BRANCH_PATH.length = i; // drop the closed panel and anything after it
-      return;
-    }
+  const idx = BRANCH_STACK.lastIndexOf(panel);
+  if (idx >= 0) {
+    BRANCH_STACK.length = idx; // drop closed panel and anything after it
   }
 };
+
+// ✅ naming you asked for
+const branchNodeShow = (panel: SP_COIN_DISPLAY): void => branchPush(panel);
+const branchNodeHide = (panel: SP_COIN_DISPLAY): void => branchPop(panel);
 
 const logBranch = (tag?: string) => {
   if (!DEBUG_BRANCH) return;
   // eslint-disable-next-line no-console
   console.log(`[PanelTree] branchStack${tag ? ` (${tag})` : ''} =`, [
-    ...BRANCH_PATH.map((p) => ({
+    ...BRANCH_STACK.map((p) => ({
       name: panelName(Number(p) as any),
       id: Number(p),
     })),
@@ -255,20 +269,20 @@ export function usePanelTree() {
     ],
   );
 
-  const base = useMemo(() => createPanelTreeCallbacks(callbacksDeps), [callbacksDeps]);
+  const base = useMemo(
+    () => createPanelTreeCallbacks(callbacksDeps),
+    [callbacksDeps],
+  );
 
   /**
-   * ✅ Wrapped actions:
-   * - Update NAV-only branchStack
-   * - Then call existing behavior unchanged
-   *
-   * This guarantees branchStackchanges do NOT affect radios/visibility.
+   * ✅ Wrapped openPanel:
+   * - Seed branchStack once from DISPLAY traversal
+   * - branchNodeShow(panel)
+   * - delegate to base.openPanel
    */
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
-      // Seed branch once from the current DISPLAY traversal (only for initial state).
-      // After that, branch is driven by open/close calls only.
-      if (BRANCH_PATH.length === 0) {
+      if (BRANCH_STACK.length === 0) {
         const seed = ((): SP_COIN_DISPLAY[] => {
           const start: SP_COIN_DISPLAY = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
           const seen = new Set<number>();
@@ -302,23 +316,19 @@ export function usePanelTree() {
         branchEnsureSeeded(seed);
       }
 
-      // NAV-only: push the thing being opened.
-      branchPush(panel);
-
-      // Real behavior unchanged.
+      branchNodeShow(panel);
       base.openPanel(panel, invoker, parent);
 
-      if (DEBUG_BRANCH) logBranch(`open:${panelName(Number(panel) as any)}`);
+      if (DEBUG_BRANCH) logBranch(`show:${panelName(Number(panel) as any)}`);
     },
     [base, getPanelChildren, visibilityMap],
   );
 
   /**
    * ✅ Wrapped closePanel:
-   * BranchPath traversal rule:
-   * - If caller attempts to close manageContainer while a deeper leaf exists,
-   *   treat it as "close leaf" (branch traversal).
-   * - Otherwise close exactly what caller asked.
+   * - Decide target (if caller passes manageContainer but leaf exists, close leaf)
+   * - branchNodeHide(target)
+   * - delegate to base.closePanel(target)
    */
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
@@ -333,26 +343,17 @@ export function usePanelTree() {
           ? leaf
           : panel;
 
-      // NAV-only: update branch to support "close -> revert".
-      branchOnClose(target);
-
-      // Real behavior unchanged (aside from redirecting manageContainer close -> leaf).
+      branchNodeHide(target);
       base.closePanel(target, invoker, arg);
 
-      if (DEBUG_BRANCH) logBranch(`close:${panelName(Number(target) as any)}`);
+      if (DEBUG_BRANCH) logBranch(`hide:${panelName(Number(target) as any)}`);
     },
     [base, manageContainer],
   );
 
   /**
-   * ✅ FIXED closeTopPanel:
-   * Previously, base.closeTopPanel() closes MANAGE_SPONSORSHIPS (container),
-   * which truncates branchStackby 2 levels (drops container + leaf).
-   *
-   * New behavior:
-   * - Determine leaf from NAV branchStack
-   * - Close THAT leaf (one level)
-   * - Let base callbacks handle visibility/radio logic
+   * ✅ closeTopPanel:
+   * - Close ONLY the current nav leaf (one level)
    */
   const closeTopPanel = useCallback(
     (invoker?: string) => {
@@ -362,14 +363,11 @@ export function usePanelTree() {
 
       if (!leaf) return;
 
-      // NAV-only: pop exactly ONE level (the leaf)
-      branchOnClose(leaf);
-
-      // Real behavior: close the leaf, not MANAGE_SPONSORSHIPS container
+      branchNodeHide(leaf);
       base.closePanel(leaf, invoker ?? 'HeaderX');
 
       if (DEBUG_BRANCH)
-        logBranch(`closeTop->leaf:${panelName(Number(leaf) as any)}`);
+        logBranch(`hideTop:${panelName(Number(leaf) as any)}`);
     },
     [base],
   );
@@ -390,11 +388,6 @@ export function usePanelTree() {
 
   /* ------------------------------ debug ---------------------------------- */
 
-  /**
-   * Dumps:
-   * 1) DISPLAY traversal (visibility-based) for inspecting what the UI currently shows
-   * 2) NAV branchStack(open/close based) for your navigation/revert logic
-   */
   const dumpNavStack = useCallback(
     (tag?: string): void => {
       const start: SP_COIN_DISPLAY = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
@@ -441,10 +434,7 @@ export function usePanelTree() {
             visible: !!visibilityMap[Number(c)],
           })),
           selectedChild: selectedChild
-            ? {
-                name: panelName(Number(selectedChild) as any),
-                id: Number(selectedChild),
-              }
+            ? { name: panelName(Number(selectedChild) as any), id: Number(selectedChild) }
             : null,
         });
 
@@ -462,7 +452,7 @@ export function usePanelTree() {
 
       const nav = snapshotBranch();
       console.log(
-        '[PanelTree] branchStack=',
+        '[PanelTree] branchStack =',
         nav.map((p: SP_COIN_DISPLAY) => ({
           name: panelName(Number(p) as any),
           id: Number(p),
@@ -480,7 +470,6 @@ export function usePanelTree() {
     isTokenScrollVisible,
     getPanelChildren,
 
-    // ✅ wrapped, behavior unchanged, only branchStacktracking added
     openPanel,
     closePanel,
     closeTopPanel,

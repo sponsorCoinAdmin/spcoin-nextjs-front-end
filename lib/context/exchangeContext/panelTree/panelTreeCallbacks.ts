@@ -103,8 +103,14 @@ function ensureOneGlobalOverlayVisible(
 }
 
 /**
- * Old (priority) close-top chooser.
- * Kept as a fallback if branch traversal can’t determine a top.
+ * Priority close-top chooser (VISIBILITY-BASED).
+ *
+ * IMPORTANT:
+ * This MUST ONLY be used for legacy "header close" calls that pass the *container*
+ * (manageCfg.manageContainer) into closePanel/closeTopPanel.
+ *
+ * If callers pass the true leaf (your NAV branchStack logic), we close exactly what
+ * was requested and DO NOT re-derive a different "top" here.
  */
 function deriveTopFromVisibility(opts: {
   flat: PanelEntry[];
@@ -129,55 +135,6 @@ function deriveTopFromVisibility(opts: {
   }
 
   return null;
-}
-
-/**
- * Branch path (display-branch) design:
- * - start at MAIN_TRADING_PANEL
- * - follow first visible child in CHILDREN[] order
- * - return the path of nodes visited (root..leaf)
- */
-function deriveBranchPathFromVisibility(opts: {
-  flat: PanelEntry[];
-  manageCfg: ManageScopeConfig;
-  known: Set<number>;
-}): SP_COIN_DISPLAY[] {
-  const { flat, manageCfg, known } = opts;
-  const m = toVisibilityMap(flat);
-
-  const ROOT: SP_COIN_DISPLAY = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
-  if (!m[Number(ROOT)]) return [];
-
-  const path: SP_COIN_DISPLAY[] = [];
-  const seen = new Set<number>();
-
-  let current: SP_COIN_DISPLAY | null = ROOT;
-
-  while (current != null) {
-    const curId: number = Number(current);
-    if (seen.has(curId)) break;
-    seen.add(curId);
-
-    path.push(current);
-
-    const kids: SP_COIN_DISPLAY[] =
-      (manageCfg.children?.[curId] as SP_COIN_DISPLAY[] | undefined) ?? [];
-
-    let next: SP_COIN_DISPLAY | null = null;
-    for (const k of kids) {
-      const kn: number = Number(k);
-      if (!known.has(kn)) continue;
-      if (m[kn]) {
-        next = k;
-        break;
-      }
-    }
-
-    if (!next) break;
-    current = next;
-  }
-
-  return path;
 }
 
 /* ---------------- factory ---------------- */
@@ -354,6 +311,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   /* ---------------- close ---------------- */
 
   const closeTopPanel = (invoker?: string) => {
+    // Legacy path: callers still using base.closeTopPanel will close the container.
     closePanel(manageCfg.manageContainer, invoker ?? 'HeaderX');
   };
 
@@ -375,106 +333,27 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           known,
         );
 
-        const branchStack= deriveBranchPathFromVisibility({
-          flat: flat0,
-          manageCfg,
-          known,
-        });
-
-        const ROOT = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
-        const branchLeaf =
-          branchStack.length > 0
-            ? (branchStack[branchStack.length - 1] as SP_COIN_DISPLAY)
-            : null;
-
-        // Decide what to close.
+        // ✅ KEY FIX:
+        // Close EXACTLY what the caller requested.
+        // Only legacy header-close-of-container is allowed to "derive top".
         let panelToClose: SP_COIN_DISPLAY = panel;
 
-        // Header close picks "top" (branch leaf first, fallback to old visibility priority).
-        if (isHeaderCloseInvoker(invoker)) {
+        if (
+          isHeaderCloseInvoker(invoker) &&
+          Number(panel) === Number(manageCfg.manageContainer)
+        ) {
           headerCloseLockUntil = now + HEADER_CLOSE_LOCK_MS;
 
-          if (branchLeaf && Number(branchLeaf) !== Number(ROOT)) {
-            panelToClose = branchLeaf;
-          } else {
-            const derived = deriveTopFromVisibility({
-              flat: flat0,
-              overlays,
-              manageScoped,
-              manageCfg,
-            });
-            if (derived) panelToClose = derived;
-          }
+          const derived = deriveTopFromVisibility({
+            flat: flat0,
+            overlays,
+            manageScoped,
+            manageCfg,
+          });
+
+          if (derived) panelToClose = derived;
         }
 
-        // NEW DESIGN:
-        // If we are closing the CURRENT branch leaf (top panel), regardless of invoker:
-        // - make the leaf invisible
-        // - remove it from the branch
-        // - if leaf is a radio panel, traverse backwards to find another panel in same radio group
-        //   -> make it visible (select it) and EXIT.
-        const isClosingCurrentBranchLeaf =
-          !!branchLeaf && Number(panelToClose) === Number(branchLeaf);
-
-        if (isClosingCurrentBranchLeaf) {
-          // 1) make leaf invisible
-          let next = flat0.map((e) =>
-            e.panel === panelToClose ? { ...withName(e), visible: false } : e,
-          );
-
-          // 2) remove leaf from branch
-          const remaining = branchStack.slice(0, -1) as SP_COIN_DISPLAY[];
-
-          // 3) if leaf is a radio panel: find previous in same group, select it, exit
-          if (isManageRadioChild(panelToClose)) {
-            let prevInGroup: SP_COIN_DISPLAY | null = null;
-            for (let i = remaining.length - 1; i >= 0; i--) {
-              const p = remaining[i] as SP_COIN_DISPLAY;
-              if (isManageRadioChild(p)) {
-                prevInGroup = p;
-                break;
-              }
-            }
-
-            if (prevInGroup) {
-              next = setScopedRadio(
-                next,
-                prevInGroup,
-                manageCfg,
-                isManageRadioChild,
-                withName,
-                true,
-              );
-
-              safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-              return writeFlatTree(prev as any, next) as any;
-            }
-          }
-
-          if (isGlobalOverlay(panelToClose)) {
-            let prevOverlay: SP_COIN_DISPLAY | null = null;
-            for (let i = remaining.length - 1; i >= 0; i--) {
-              const p = remaining[i] as SP_COIN_DISPLAY;
-              if (isGlobalOverlay(p)) {
-                prevOverlay = p;
-                break;
-              }
-            }
-
-            if (prevOverlay) {
-              next = applyGlobalRadio(next, overlays, prevOverlay, withName);
-
-              safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-              return writeFlatTree(prev as any, next) as any;
-            }
-          }
-
-          // No radio fallback found -> we're done. (Do not add extra behavior.)
-          safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-          return writeFlatTree(prev as any, next) as any;
-        }
-
-        // Otherwise keep existing behavior.
         let next = flat0.map((e) =>
           e.panel === panelToClose ? { ...withName(e), visible: false } : e,
         );
