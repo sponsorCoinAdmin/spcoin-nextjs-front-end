@@ -16,6 +16,9 @@ const debugLog = createDebugLogger(
   LOG_TIME,
 );
 
+const nameOf = (p: SP_COIN_DISPLAY | null) =>
+  p == null ? null : (SP_COIN_DISPLAY as any)[p] ?? String(p);
+
 /**
  * List-style overlays
  *
@@ -75,13 +78,27 @@ export function useOverlayCloseHandler() {
     return null;
   }, [isVisible]);
 
+  const closeWithDebug = useCallback(
+    (target: SP_COIN_DISPLAY, invoker: string) => {
+      if (DEBUG_ENABLED) {
+        debugLog.log?.('handleCloseOverlay: closePanel()', {
+          target: nameOf(target),
+          invoker,
+          activeMainOverlay: nameOf(activeMainOverlay),
+        });
+      }
+      closePanel(target, invoker);
+    },
+    [activeMainOverlay, closePanel],
+  );
+
   /**
    * Generic close handler used by TRADE_CONTAINER_HEADER close button / back button.
    *
-   * Stage 1 policy:
-   * - The header "X" should NOT cause radio fallback/selection.
-   * - For MANAGE_SPONSORSHIPS, clicking "X" should EXIT the overlay (close the container)
-   *   rather than closing a scoped child and letting stack-restore pick a default.
+   * Policy (updated):
+   * - Header "X" closes ONE layer at a time.
+   * - For MANAGE_SPONSORSHIPS: DO NOT close the container if a deeper leaf exists.
+   *   Close the most-specific visible child first (e.g. MANAGE_PENDING_REWARDS, then scoped child).
    */
   const handleCloseOverlay = useCallback(() => {
     // ───────────────── Priority 0: CLOSE_ONLY stack/detail panels ─────────────────
@@ -90,12 +107,12 @@ export function useOverlayCloseHandler() {
     if (closeOnly) {
       if (DEBUG_ENABLED) {
         debugLog.log?.('handleCloseOverlay: CLOSE_ONLY -> close only', {
-          closeOnly,
-          activeMainOverlay,
+          closeOnly: nameOf(closeOnly),
+          activeMainOverlay: nameOf(activeMainOverlay),
         });
       }
 
-      closePanel(
+      closeWithDebug(
         closeOnly,
         'useOverlayCloseHandler:handleCloseOverlay(close-only)',
       );
@@ -105,25 +122,44 @@ export function useOverlayCloseHandler() {
     const current = activeMainOverlay;
     if (!current) return;
 
-    // ───────────────── Manage overlay: always exit on X ─────────────────
-    // If MANAGE_SPONSORSHIPS is active, close the container.
-    // We do NOT close a scoped child first, because that can trigger restore logic
-    // that incorrectly defaults to an unrelated sub-panel (e.g. MANAGE_PENDING_REWARDS).
+    // ───────────────── Manage overlay: close ONE level (leaf-first) ─────────────────
     if (current === MANAGE_CONTAINER) {
-      const pendingVisible = isVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+      const pending = SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS;
+      const pendingVisible = isVisible(pending);
+
+      // scoped radio child under manage container
       const activeManageChild = manageChildren.find((p) => isVisible(p)) ?? null;
 
       if (DEBUG_ENABLED) {
-        debugLog.log?.('handleCloseOverlay: manage -> close container (exit overlay)', {
-          current,
-          activeManageChild,
+        debugLog.log?.('handleCloseOverlay: manage -> leaf-first', {
+          current: nameOf(current),
           pendingVisible,
+          activeManageChild: nameOf(activeManageChild),
         });
       }
 
-      closePanel(
+      // 1) Close deepest leaf first (pending rewards detail)
+      if (pendingVisible) {
+        closeWithDebug(
+          pending,
+          'useOverlayCloseHandler:handleCloseOverlay(close-manage-leaf:pending-rewards)',
+        );
+        return;
+      }
+
+      // 2) Otherwise close the currently-visible scoped child (radio member)
+      if (activeManageChild) {
+        closeWithDebug(
+          activeManageChild,
+          'useOverlayCloseHandler:handleCloseOverlay(close-manage-leaf:scoped-child)',
+        );
+        return;
+      }
+
+      // 3) Only if nothing inside manage is visible, close the container
+      closeWithDebug(
         MANAGE_CONTAINER,
-        'useOverlayCloseHandler:handleCloseOverlay(close-manage-container)',
+        'useOverlayCloseHandler:handleCloseOverlay(close-manage-container:fallback)',
       );
       return;
     }
@@ -132,17 +168,26 @@ export function useOverlayCloseHandler() {
     const isList = LIST_OVERLAYS.has(current);
 
     if (DEBUG_ENABLED) {
-      debugLog.log?.('handleCloseOverlay', { current, isList });
+      debugLog.log?.('handleCloseOverlay', {
+        current: nameOf(current),
+        isList,
+      });
     }
 
     // ✅ No fallback: just close the current overlay.
-    closePanel(
+    closeWithDebug(
       current,
       isList
         ? 'useOverlayCloseHandler:handleCloseOverlay(list)'
         : 'useOverlayCloseHandler:handleCloseOverlay',
     );
-  }, [activeMainOverlay, closePanel, isVisible, manageChildren, pickVisibleCloseOnly]);
+  }, [
+    activeMainOverlay,
+    closeWithDebug,
+    isVisible,
+    manageChildren,
+    pickVisibleCloseOnly,
+  ]);
 
   return { handleCloseOverlay };
 }

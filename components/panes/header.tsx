@@ -1,7 +1,7 @@
 // File: @/components/panes/header.tsx
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -13,6 +13,9 @@ import { labelForPath, PATH_TO_ID } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
 
 const NON_NAV_HOVER = '__non_nav_hover__';
+
+// ✅ Header X spam guard (per-tab). Keep small + explicit.
+const HEADER_X_CLOSE_SPAM_DELAY_MS = 30;
 
 export default function Header() {
   const pathname = usePathname();
@@ -27,13 +30,25 @@ export default function Header() {
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
-  // ✅ Debounce/lock per-tab close clicks (prevents double-fire)
+  // ✅ Lock per-tab close clicks (prevents double-fire / bubbled duplicates)
   const closingTabsRef = useRef<Set<string>>(new Set());
+  const closeTimersRef = useRef<Map<string, number>>(new Map());
+
+  // Cleanup pending timers on unmount (avoids stateful refs leaking timeouts in dev/hmr)
+  useEffect(() => {
+    return () => {
+      for (const t of closeTimersRef.current.values()) window.clearTimeout(t);
+      closeTimersRef.current.clear();
+      closingTabsRef.current.clear();
+    };
+  }, []);
 
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
   const closeTab = useCallback(
     (href: string) => {
       if (closingTabsRef.current.has(href)) return;
+
+      // Lock immediately
       closingTabsRef.current.add(href);
 
       try {
@@ -44,10 +59,16 @@ export default function Header() {
           currentId,
         });
       } finally {
-        // Small delay so rapid double-clicks / duplicate bubbling can't re-run close.
-        window.setTimeout(() => {
+        // Unlock after a short delay so rapid double-clicks / duplicate bubbling can't re-run close.
+        const existing = closeTimersRef.current.get(href);
+        if (existing) window.clearTimeout(existing);
+
+        const t = window.setTimeout(() => {
           closingTabsRef.current.delete(href);
-        }, 150);
+          closeTimersRef.current.delete(href);
+        }, HEADER_X_CLOSE_SPAM_DELAY_MS);
+
+        closeTimersRef.current.set(href, t);
       }
     },
     [router],

@@ -5,7 +5,8 @@ import type { UseReadContractReturnType } from 'wagmi';
 import type {
   STATUS,
   TRADE_DIRECTION,
-  API_TRADING_PROVIDER, // provider enum
+  API_TRADING_PROVIDER,
+  PanelTypeId, // provider enum
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
@@ -81,6 +82,9 @@ export type Settings = {
 
   /** Persisted panel tree */
   spCoinPanelTree: SpCoinPanelTree;
+
+  /** Persisted visible branch stack (by panel type id) */
+  panelTypeIdStack: PanelTypeId[];
 
   /**
    * True if this ExchangeContext was hydrated from Local Storage on boot.
