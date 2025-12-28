@@ -6,7 +6,7 @@ import type {
   STATUS,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
-  PanelTypeId, // provider enum
+  SP_COIN_DISPLAY, // provider enum
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
@@ -84,7 +84,7 @@ export type Settings = {
   spCoinPanelTree: SpCoinPanelTree;
 
   /** Persisted visible branch stack (by panel type id) */
-  panelTypeIdStack: PanelTypeId[];
+  panelTypeIdStack: SP_COIN_DISPLAY[];
 
   /**
    * True if this ExchangeContext was hydrated from Local Storage on boot.

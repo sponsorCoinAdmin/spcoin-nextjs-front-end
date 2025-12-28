@@ -158,9 +158,13 @@ const diffVisibility = (
 const normalizeStack = (arr: Array<number | SP_COIN_DISPLAY>) =>
   arr
     .map((x) => Number(x))
-    .filter((x) => Number.isFinite(x)) as number[];
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY) as SP_COIN_DISPLAY[];
 
-const sameStack = (a: Array<number>, b: Array<number>) => {
+const sameStack = (
+  a: Array<number | SP_COIN_DISPLAY>,
+  b: Array<number | SP_COIN_DISPLAY>,
+) => {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (Number(a[i]) !== Number(b[i])) return false;
   return true;
@@ -331,49 +335,67 @@ export function usePanelTree() {
     );
   }, [getPanelChildren, visibilityMap]);
 
+  /* ------------------------------ safe context update --------------------- */
+
+  const setExchangeContextSafe = useCallback(
+    (nextOrUpdater: any) => {
+      // Try functional update first; if provider doesn't support it, fall back.
+      try {
+        if (typeof nextOrUpdater === 'function') {
+          (setExchangeContext as any)(nextOrUpdater);
+          return;
+        }
+        (setExchangeContext as any)(nextOrUpdater);
+      } catch {
+        // Fallback: compute next from current and set as object.
+        if (typeof nextOrUpdater === 'function') {
+          const next = nextOrUpdater(exchangeContext);
+          (setExchangeContext as any)(next);
+        } else {
+          (setExchangeContext as any)(nextOrUpdater);
+        }
+      }
+    },
+    [setExchangeContext, exchangeContext],
+  );
+
   /* ------------------------------ persistence ----------------------------- */
 
   const persistPanelTypeIdStack = useCallback(
     (next: SP_COIN_DISPLAY[] | number[]) => {
-      const nextIds = normalizeStack(next as any);
-
+      const nextIds = normalizeStack(next as any); // SP_COIN_DISPLAY[]
       const currentIds = normalizeStack(
         ((exchangeContext as any)?.settings?.panelTypeIdStack ?? []) as any,
       );
 
       if (sameStack(currentIds, nextIds)) return;
 
-      // Object-style update (safe even if setter is not useState-setter)
-      setExchangeContext({
-        ...(exchangeContext as any),
-        settings: {
-          ...((exchangeContext as any)?.settings ?? {}),
-          panelTypeIdStack: nextIds,
-        },
+      setExchangeContextSafe((prev: any) => {
+        const prevSettings = prev?.settings ?? {};
+        return {
+          ...prev,
+          settings: {
+            ...prevSettings,
+            panelTypeIdStack: nextIds,
+          },
+        };
       });
     },
-    [exchangeContext, setExchangeContext],
+    [exchangeContext, setExchangeContextSafe],
   );
 
   // Hydration + invariant enforcement:
   // - Seed runtime BRANCH_STACK from persisted stack or derived displayBranch.
   // - If persisted stack missing, derive from displayBranch and persist immediately.
   // - Keep persisted stack aligned to displayBranch; keep BRANCH_STACK aligned too.
-  const didHydrateNavRef = useRef(false);
-
   useEffect(() => {
     const settingsStackRaw = (exchangeContext as any)?.settings?.panelTypeIdStack;
 
-    const hasPersistedStack =
-      Array.isArray(settingsStackRaw) && settingsStackRaw.length > 0;
+    const hasPersistedStack = Array.isArray(settingsStackRaw);
+    const persistedStack = hasPersistedStack ? normalizeStack(settingsStackRaw) : [];
+    const derivedStack = normalizeStack(displayBranch);
 
-    const persistedStack = hasPersistedStack
-      ? normalizeStack(settingsStackRaw as any)
-      : [];
-
-    const derivedStack = normalizeStack(displayBranch as any);
-
-    // 1) Seed runtime stack if empty
+    // 1) Seed runtime stack if empty (refresh case)
     if (BRANCH_STACK.length === 0) {
       if (persistedStack.length > 0) {
         branchEnsureSeeded(persistedStack);
@@ -382,32 +404,25 @@ export function usePanelTree() {
       }
     }
 
-    // 2) Missing persisted stack: derive + persist immediately (mandatory field)
-    if (!hasPersistedStack && derivedStack.length > 0) {
+    // 2) Missing/empty persisted stack: derive + persist immediately (mandatory field)
+    if ((!hasPersistedStack || persistedStack.length === 0) && derivedStack.length > 0) {
       persistPanelTypeIdStack(displayBranch);
-      didHydrateNavRef.current = true;
       return;
     }
 
     // 3) Persisted stack diverges from visible branch: overwrite with derived
-    if (
-      hasPersistedStack &&
-      derivedStack.length > 0 &&
-      !sameStack(persistedStack, derivedStack)
-    ) {
+    if (derivedStack.length > 0 && !sameStack(persistedStack, derivedStack)) {
       persistPanelTypeIdStack(displayBranch);
     }
 
     // 4) Runtime invariant: BRANCH_STACK matches visible branch
     if (derivedStack.length > 0) {
-      const navNow = normalizeStack(snapshotBranch() as any);
+      const navNow = normalizeStack(snapshotBranch());
       if (!sameStack(navNow, derivedStack)) {
         BRANCH_STACK.length = 0;
-        for (const id of derivedStack) BRANCH_STACK.push(id as any);
+        for (const id of derivedStack) BRANCH_STACK.push(id);
       }
     }
-
-    didHydrateNavRef.current = true;
   }, [exchangeContext, displayBranch, persistPanelTypeIdStack]);
 
   /* ------------------------------ debug state ----------------------------- */
@@ -491,8 +506,11 @@ export function usePanelTree() {
 
       displayBranchNow: toNamedStack(displayBranch),
       branchStackNow: toNamedStack(snapshotBranch()),
+      persistedStackNow: toNamedStack(
+        normalizeStack((exchangeContext as any)?.settings?.panelTypeIdStack ?? []),
+      ),
     });
-  }, [visibilityMap, manageScoped, displayBranch]);
+  }, [visibilityMap, manageScoped, displayBranch, exchangeContext]);
 
   /* ------------------------------ actions -------------------------------- */
 

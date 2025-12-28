@@ -45,38 +45,15 @@ import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persis
 
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 
-/**
- * REQUIREMENT (boot sequencing):
- *
- *  - ExchangeProvider MUST only call `initExchangeContext(...)` *after* wagmi
- *    has finished its initial handshake.
- *
- *  - Concretely, we use `useWagmiReady()` (in `@/lib/network/initialize/hooks/useWagmiReady`)
- *    which returns `true` only when wagmi has settled into a stable state
- *    (connected or disconnected) and is no longer in an initial "connecting" phase.
- *
- *  - The init effect is gated like:
- *        const wagmiReady = useWagmiReady();
- *        if (!wagmiReady || hasInitializedRef.current) return;
- *        hasInitializedRef.current = true;
- *        await initExchangeContext(wagmiChainId, isConnected, address);
- *
- *  - This ensures correct Case A–D behaviour together with useNetworkController:
- *      • LS empty + wallet connected  → init with walletChainId (Case B).
- *      • LS empty + no wallet         → init with default 1 (Case A).
- *      • LS available                 → init from stored appChainId/chainId (Case C/D).
- */
+// ✅ Need CHILDREN to derive display branch stack during hydration
+import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
 
-const debugLog = createDebugLogger(
-  'ExchangeProvider',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const debugLog = createDebugLogger('ExchangeProvider', DEBUG_ENABLED, LOG_TIME);
 
 /* ---------------------------- Types & Context API --------------------------- */
 
@@ -124,23 +101,115 @@ const clone = <T,>(o: T): T =>
     ? structuredClone(o)
     : (JSON.parse(JSON.stringify(o)) as T);
 
+/* ----------------------- Panel stack hydration helpers --------------------- */
+
+const normalizePanelTypeIdStack = (arr: unknown): SP_COIN_DISPLAY[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((x) => Number(x))
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY);
+};
+
+const samePanelStack = (a: SP_COIN_DISPLAY[], b: SP_COIN_DISPLAY[]) => {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (Number(a[i]) !== Number(b[i])) return false;
+  return true;
+};
+
+const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
+  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[Number(panel)];
+  return Array.isArray(maybe) ? maybe : [];
+};
+
+// Wrapper nodes you want to SKIP in the user-facing nav stack
+const NON_INDEXED = new Set<number>([
+  Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL),
+  Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+  Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
+]);
+
+const computeVisibleDisplayBranchFromPanels = (
+  flatPanels: Array<{ panel: number; visible: boolean }>,
+  start: SP_COIN_DISPLAY,
+): SP_COIN_DISPLAY[] => {
+  const visibleMap: Record<number, boolean> = {};
+  for (const n of flatPanels) visibleMap[Number(n.panel)] = !!n.visible;
+
+  const seen = new Set<number>();
+  const path: SP_COIN_DISPLAY[] = [];
+  let current: SP_COIN_DISPLAY | null = start;
+
+  while (current != null) {
+    const id = Number(current);
+    if (seen.has(id)) break;
+    seen.add(id);
+
+    path.push(current);
+
+    const kids: SP_COIN_DISPLAY[] = getChildren(current);
+
+    let selected: SP_COIN_DISPLAY | null = null;
+    for (const k of kids) {
+      if (visibleMap[Number(k)]) {
+        selected = k;
+        break;
+      }
+    }
+
+    if (!selected) break;
+    current = selected;
+  }
+
+  return path;
+};
+
+// ✅ Build the persisted nav stack by skipping wrapper nodes (e.g. 28)
+const toPersistedNavStack = (displayBranch: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] =>
+  displayBranch.filter((p) => !NON_INDEXED.has(Number(p)));
+
+// ✅ Repair structural visibility: if a descendant is visible, force container visible
+const ensureStructuralContainersVisible = (
+  flatPanels: Array<{ panel: number; visible: boolean; name?: string }>,
+) => {
+  const byId = new Map<number, { panel: number; visible: boolean; name?: string }>();
+  for (const n of flatPanels) byId.set(Number(n.panel), n);
+
+  const setVisible = (id: SP_COIN_DISPLAY) => {
+    const key = Number(id);
+    const node = byId.get(key);
+    if (!node) return;
+    if (!node.visible) node.visible = true;
+  };
+
+  // If MANAGE_SPONSORSHIPS is visible, TRADE_CONTAINER_HEADER must be visible
+  const manage = byId.get(Number(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS));
+  if (manage?.visible) {
+    setVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
+    setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
+  }
+
+  // If TRADE_CONTAINER_HEADER is visible, MAIN_TRADING_PANEL must be visible
+  const header = byId.get(Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER));
+  if (header?.visible) {
+    setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
+  }
+
+  return flatPanels;
+};
+
 /* --------------------------------- Provider -------------------------------- */
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
-  // ⬇️ Direct wagmi access here to avoid context recursion
   const wagmiChainId = useWagmiChainId();
   const { address, isConnected } = useAccount();
-
-  // ⬇️ wagmi readiness gate
   const wagmiReady = useWagmiReady();
 
-  const [contextState, setContextState] = useState<
-    ExchangeContextTypeOnly | undefined
-  >(undefined);
+  const [contextState, setContextState] = useState<ExchangeContextTypeOnly | undefined>(
+    undefined,
+  );
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
-  const [apiErrorMessage, setApiErrorMessage] = useState<
-    ErrorMessage | undefined
-  >();
+  const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
   const setExchangeContext = (
@@ -150,118 +219,127 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setContextState((prev) => {
       if (!prev) return prev;
 
-      // Snapshot BEFORE applying updater to detect in-place mutations
       const prevStr = stringifyBigInt(prev);
 
-      const nextBase = updater(prev);
-      if (!nextBase) return prev;
+      const nextRaw = updater(prev);
+      if (!nextRaw) return prev;
+
+      // ✅ Keep LIVE state normalized (so devtools shows settings.panelTypeIdStack)
+      const nextBase = clone(nextRaw);
+      (nextBase as any).settings = (nextBase as any).settings ?? {};
+      (nextBase as any).settings.panelTypeIdStack = normalizePanelTypeIdStack(
+        (nextBase as any).settings.panelTypeIdStack,
+      );
 
       const nextStr = stringifyBigInt(nextBase);
-      if (prevStr === nextStr) return prev; // true no-op, skip persistence
+      if (prevStr === nextStr) return prev;
 
-      // Normalize for persistence: shallow clone + normalized panel tree
       const normalized = clone(nextBase);
-      if (Array.isArray((normalized as any)?.settings?.spCoinPanelTree)) {
-        (normalized as any).settings.spCoinPanelTree =
-          (normalized as any).settings.spCoinPanelTree;
-      }
+
+      const st = normalizePanelTypeIdStack((normalized as any)?.settings?.panelTypeIdStack);
+
       (normalized as any).settings = {
         ...(normalized as any).settings,
+        panelTypeIdStack: st,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
-      // Persist (diff path only when DEBUG is enabled)
-      persistWithOptDiff(
-        prev,
-        normalized,
-        'ExchangeContext.settings.spCoinPanelTree',
-      );
+      if (DEBUG_ENABLED) {
+        // eslint-disable-next-line no-console
+        console.log('[ExchangeProvider][persistWithOptDiff]', {
+          hook: _hookName,
+          panelTypeIdStack: (normalized as any).settings.panelTypeIdStack,
+          keys: Object.keys((normalized as any).settings ?? {}),
+        });
+      }
+
+      persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
 
       return nextBase;
     });
   };
 
-  // initial hydrate + normalize + migrate panels + immediate network reconcile
   useEffect(() => {
-    // ⬇️ don’t boot until wagmiReady is true
     if (!wagmiReady) {
-      debugLog.log?.(
-        '[ExchangeProvider] wagmi not ready yet — skipping initExchangeContext boot',
-      );
+      debugLog.log?.('[ExchangeProvider] wagmi not ready yet — skipping initExchangeContext boot');
       return;
     }
-
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
     (async () => {
-      debugLog.log?.('🚀 initExchangeContext boot start', {
-        wagmiChainId,
-        isConnected,
-        address,
-      });
+      debugLog.log?.('🚀 initExchangeContext boot start', { wagmiChainId, isConnected, address });
 
-      const base = await initExchangeContext(
-        wagmiChainId,
-        isConnected,
-        address,
-      );
+      const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
-      const storedPanels = settingsAny.spCoinPanelTree as
-        | PanelNode[]
-        | undefined;
+      const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
 
-      // Panel repair + validation pipeline
-      const repaired = repairPanels(
-        isMainPanels(storedPanels) ? storedPanels : undefined,
-      );
+      const repaired = repairPanels(isMainPanels(storedPanels) ? storedPanels : undefined);
       const { panels: validated } = validateAndRepairPanels(repaired);
-      const ensured = ensureRequiredPanels(
-        dropNonPersisted(validated),
-        MUST_INCLUDE_ON_BOOT,
-      );
-      const flatPanels = reconcileOverlayVisibility(ensured);
+      const ensured = ensureRequiredPanels(dropNonPersisted(validated), MUST_INCLUDE_ON_BOOT);
+
+      // overlays reconciliation first
+      let flatPanels = reconcileOverlayVisibility(ensured);
+
+      // ✅ FIX A: repair structural container visibility (e.g. 28)
+      flatPanels = ensureStructuralContainersVisible(flatPanels as any);
 
       const radioTopLevel: any[] = (settingsAny.mainPanelNode as any[]) ?? [];
 
-      reconcilePanelState(
+      reconcilePanelState(flatPanels as any, radioTopLevel as any, SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+
+      // Rebuild display branch from visibility
+      const displayBranch = computeVisibleDisplayBranchFromPanels(
         flatPanels as any,
-        radioTopLevel as any,
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+        SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
       );
 
-      // Persist both, now coherent
+      // ✅ FIX B: persisted nav stack skips wrapper nodes (so you get 12 -> 20 -> 6)
+      const derivedStack = toPersistedNavStack(displayBranch);
+
+      const storedStack = normalizePanelTypeIdStack(settingsAny.panelTypeIdStack);
+
+      // If stored stack missing, or differs from derived, prefer derived on boot
+      const panelTypeIdStack =
+        storedStack.length === 0 || !samePanelStack(storedStack, derivedStack)
+          ? derivedStack
+          : storedStack;
+
+      if (DEBUG_ENABLED) {
+        // eslint-disable-next-line no-console
+        console.log('[ExchangeProvider][boot] stack rebuild', {
+          displayBranch: displayBranch.map(Number),
+          derivedStack: derivedStack.map(Number),
+          storedStack: storedStack.map(Number),
+          chosenStack: panelTypeIdStack.map(Number),
+          tradeHeaderVisible: !!(flatPanels as any).find((p: any) => Number(p.panel) === 28)?.visible,
+          manageVisible: !!(flatPanels as any).find((p: any) => Number(p.panel) === 20)?.visible,
+        });
+      }
+
       const nextSettings: any = {
         ...settingsAny,
-        spCoinPanelTree: flatPanels.map((n) => ({
+        spCoinPanelTree: flatPanels.map((n: any) => ({
           panel: n.panel,
           name: n.name,
           visible: n.visible,
         })),
+        panelTypeIdStack,
         mainPanelNode: radioTopLevel,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
-      // Normalize network from initExchangeContext; it already chose
-      // appChainId/chainId based on wagmi + localStorage.
       const net = ensureNetwork((base as any).network);
-      debugLog.log?.('[ExchangeProvider] network after initExchangeContext', {
-        net,
-      });
+      debugLog.log?.('[ExchangeProvider] network after initExchangeContext', { net });
 
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      // Persist on boot (diff path only when DEBUG is enabled)
-      persistWithOptDiff(
-        undefined,
-        base as ExchangeContextTypeOnly,
-        'ExchangeContext.settings.spCoinPanelTree',
-      );
+      // Persist on boot
+      persistWithOptDiff(undefined, base as ExchangeContextTypeOnly, 'ExchangeContext.settings');
 
       // In-memory panel tree keeps full names
-      (base as any).settings.spCoinPanelTree =
-        ensurePanelNamesInMemory(flatPanels);
+      (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
 
       setContextState(base as ExchangeContextTypeOnly);
       debugLog.log?.('✅ initExchangeContext boot complete');
@@ -281,7 +359,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
-  // 🔐 Authoritative sync of activeAccount from Wagmi
   const lastAppliedAddrRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -289,9 +366,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     const nextAddr = isConnected ? (address ?? undefined) : undefined;
 
-    // 🛑 On disconnect / missing address:
-    //     ➜ Do NOT clear accounts.activeAccount
-    //     ➜ Just log and preserve previous value
     if (!isConnected || !nextAddr) {
       debugLog.log?.(
         '[ExchangeProvider] disconnect or missing address — preserving previous accounts.activeAccount',
@@ -322,14 +396,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     lastAppliedAddrRef.current = nextAddr;
   }, [contextState, isConnected, address, setExchangeContext]);
 
-  // 🩹 Repair after rehydrate (in case storage clobbers a live connection)
   useEffect(() => {
     if (!contextState) return;
-    if (
-      isConnected &&
-      address &&
-      !contextState.accounts?.activeAccount?.address
-    ) {
+    if (isConnected && address && !contextState.accounts?.activeAccount?.address) {
       setExchangeContext(
         (prev) => {
           const next = clone(prev);
@@ -346,7 +415,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [contextState, isConnected, address, setExchangeContext]);
 
-  /** SINGLE source of truth on appChainId change → refresh derived display props. */
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -366,7 +434,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           next.network = {
             ...next.network,
             appChainId: appId,
-            chainId: appId, // keep internal chainId aligned with appChainId
+            chainId: appId,
             name: derived?.name ?? '',
             symbol: derived?.symbol ?? '',
             url: derived?.url ?? '',
@@ -389,7 +457,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setBuyTokenContract,
   ]);
 
-  /** Safety net: if logoURL ever drifts from the template for the current appId, fix it. */
   useEffect(() => {
     const appId = contextState?.network?.appChainId ?? 0;
     if (!appId) return;
@@ -438,7 +505,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {/* Post-mount helpers that depend on ExchangeContext */}
       <PanelBootstrap />
       <AppBootstrap />
       {children}

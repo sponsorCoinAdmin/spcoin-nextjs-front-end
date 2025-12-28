@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/enums/spCoinDisplay.ts
 
-export enum PanelTypeId {
+export enum SP_COIN_DISPLAY {
   ADD_SPONSORSHIP_BUTTON,
   ADD_SPONSORSHIP_PANEL,
   AFFILIATE_FEE,
