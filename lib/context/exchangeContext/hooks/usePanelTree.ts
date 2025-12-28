@@ -31,63 +31,55 @@ import {
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
-/* ───────────────────────────── BranchStack (NAV ONLY) ───────────────────────────── */
-const BRANCH_STACK: SP_COIN_DISPLAY[] = [];
+/* ───────────────────────────── Runtime NAV stack (NOT persisted) ───────────────────────────── */
+const NAV_STACK: SP_COIN_DISPLAY[] = [];
 
-const DEBUG_BRANCH =
+const DEBUG_NAV =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE === 'true';
 
 const DEBUG_CLOSE_INVARIANTS =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_CLOSE_INVARIANTS === 'true';
 
-const DEBUG_CLOSE_INVARIANTS_VERBOSE =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_CLOSE_INVARIANTS_VERBOSE === 'true';
-
 const DEBUG_CLOSE_INVARIANTS_RENDER =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_CLOSE_INVARIANTS_RENDER === 'true';
 
-/**
- * ✅ NEW: log when we infer a missing parent for manage scoped opens
- */
 const DEBUG_OPEN_INFER_PARENT =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_OPEN_INFER_PARENT === 'true';
 
-const snapshotBranch = (): SP_COIN_DISPLAY[] => BRANCH_STACK.slice();
+const snapshotNav = (): SP_COIN_DISPLAY[] => NAV_STACK.slice();
 
-const branchEnsureSeeded = (seed: SP_COIN_DISPLAY[] | number[]): void => {
-  if (BRANCH_STACK.length > 0) return;
+const navEnsureSeeded = (seed: SP_COIN_DISPLAY[] | number[]): void => {
+  if (NAV_STACK.length > 0) return;
   if (!seed.length) return;
-  BRANCH_STACK.length = 0;
-  for (const p of seed as any) BRANCH_STACK.push(p as any);
+  NAV_STACK.length = 0;
+  for (const p of seed as any) NAV_STACK.push(p as any);
 };
 
-const branchPush = (panel: SP_COIN_DISPLAY): void => {
-  const idx = BRANCH_STACK.lastIndexOf(panel);
+const navPush = (panel: SP_COIN_DISPLAY): void => {
+  const idx = NAV_STACK.lastIndexOf(panel);
   if (idx >= 0) {
-    BRANCH_STACK.length = idx + 1;
+    NAV_STACK.length = idx + 1;
     return;
   }
-  BRANCH_STACK.push(panel);
+  NAV_STACK.push(panel);
 };
 
-const branchPop = (panel: SP_COIN_DISPLAY): void => {
-  if (!BRANCH_STACK.length) return;
+const navPop = (panel: SP_COIN_DISPLAY): void => {
+  if (!NAV_STACK.length) return;
 
-  const top = BRANCH_STACK[BRANCH_STACK.length - 1] as SP_COIN_DISPLAY;
+  const top = NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY;
   if (Number(top) === Number(panel)) {
-    BRANCH_STACK.pop();
+    NAV_STACK.pop();
     return;
   }
 
-  const idx = BRANCH_STACK.lastIndexOf(panel);
-  if (idx >= 0) {
-    BRANCH_STACK.length = idx;
-  }
+  const idx = NAV_STACK.lastIndexOf(panel);
+  if (idx >= 0) NAV_STACK.length = idx;
 };
 
-const branchNodeShow = (panel: SP_COIN_DISPLAY): void => branchPush(panel);
-const branchNodeHide = (panel: SP_COIN_DISPLAY): void => branchPop(panel);
+const navNodeShow = (panel: SP_COIN_DISPLAY): void => navPush(panel);
+const navNodeHide = (panel: SP_COIN_DISPLAY): void => navPop(panel);
 
 const nameOf = (p: SP_COIN_DISPLAY | number | null | undefined) =>
   p == null ? null : panelName(Number(p) as any);
@@ -95,11 +87,11 @@ const nameOf = (p: SP_COIN_DISPLAY | number | null | undefined) =>
 const toNamedStack = (arr: SP_COIN_DISPLAY[]) =>
   arr.map((p) => ({ id: Number(p), name: nameOf(p) }));
 
-const logBranch = (tag?: string) => {
-  if (!DEBUG_BRANCH) return;
+const logNav = (tag?: string) => {
+  if (!DEBUG_NAV) return;
   // eslint-disable-next-line no-console
-  console.log(`[PanelTree] branchStack${tag ? ` (${tag})` : ''} =`, [
-    ...BRANCH_STACK.map((p) => ({
+  console.log(`[PanelTree] navStack${tag ? ` (${tag})` : ''} =`, [
+    ...NAV_STACK.map((p) => ({
       name: panelName(Number(p) as any),
       id: Number(p),
     })),
@@ -146,16 +138,16 @@ const diffVisibility = (
   for (const id of allIds) {
     const a = !!(prev ?? {})[id];
     const b = !!next[id];
-    if (a !== b) {
-      changes.push({ id, name: panelName(id as any), from: a, to: b });
-    }
+    if (a !== b) changes.push({ id, name: panelName(id as any), from: a, to: b });
   }
   return changes;
 };
 
-/* ───────────────────────────── Stack ↔ DisplayBranch helpers ───────────────────────────── */
+/* ───────────────────────────── Display stack helpers (Option A) ───────────────────────────── */
 
-const normalizeStack = (arr: Array<number | SP_COIN_DISPLAY>) =>
+type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
+
+const normalizeIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
   arr
     .map((x) => Number(x))
     .filter((x) => Number.isFinite(x))
@@ -201,16 +193,51 @@ const computeDisplayBranch = (
   return path;
 };
 
+// Wrapper nodes to SKIP in persisted nav stack
+const NON_INDEXED = new Set<number>([
+  Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL),
+  Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+  Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
+]);
+
+const toPersistedNavIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
+  normalizeIds(arr).filter((p) => !NON_INDEXED.has(Number(p)));
+
+const toDisplayStackNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
+  ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
+
+/**
+ * Accepts:
+ * - new: [{id,name}]
+ * - legacy: number[]
+ * - older experimental: [{displayTypeId,...}]
+ * - mixed (defensive)
+ */
+const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
+  if (!Array.isArray(raw)) return [];
+  const ids: number[] = [];
+
+  for (const item of raw as any[]) {
+    if (item && typeof item === 'object') {
+      if ('id' in item) ids.push(Number((item as any).id));
+      else if ('displayTypeId' in item) ids.push(Number((item as any).displayTypeId));
+      continue;
+    }
+    ids.push(Number(item));
+  }
+
+  return ids
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY);
+};
+
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   /* ------------------------------- source -------------------------------- */
 
   const list = useMemo<PanelEntry[]>(() => {
-    return flattenPanelTree(
-      (exchangeContext as any)?.settings?.spCoinPanelTree,
-      KNOWN,
-    );
+    return flattenPanelTree((exchangeContext as any)?.settings?.spCoinPanelTree, KNOWN);
   }, [exchangeContext]);
 
   const visibilityMap = useMemo(() => toVisibilityMap(list), [list]);
@@ -218,27 +245,22 @@ export function usePanelTree() {
   /* -------------------------- global overlays ----------------------------- */
 
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
-
-  const isGlobalOverlay = useCallback(
-    (p: SP_COIN_DISPLAY) => overlays.includes(p),
-    [overlays],
-  );
+  const isGlobalOverlay = useCallback((p: SP_COIN_DISPLAY) => overlays.includes(p), [
+    overlays,
+  ]);
 
   /* -------------------------- manage scope -------------------------------- */
 
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
 
   const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
-    const kids = (CHILDREN as any)?.[manageContainer] as
-      | SP_COIN_DISPLAY[]
-      | undefined;
+    const kids = (CHILDREN as any)?.[manageContainer] as SP_COIN_DISPLAY[] | undefined;
     return Array.isArray(kids) ? kids.slice() : [];
   }, [manageContainer]);
 
-  const manageScopedSet = useMemo(
-    () => new Set<number>(manageScoped as unknown as number[]),
-    [manageScoped],
-  );
+  const manageScopedSet = useMemo(() => new Set<number>(manageScoped as any), [
+    manageScoped,
+  ]);
 
   const manageCfg: ManageScopeConfig = useMemo(
     () => ({
@@ -256,10 +278,9 @@ export function usePanelTree() {
     [manageContainer, manageScoped],
   );
 
-  const manageDescendantsSet = useMemo(
-    () => computeManageDescendantsSet(manageCfg),
-    [manageCfg],
-  );
+  const manageDescendantsSet = useMemo(() => computeManageDescendantsSet(manageCfg), [
+    manageCfg,
+  ]);
 
   const { isManageRadioChild, isManageAnyChild } = useMemo(
     () => makeManagePredicates(manageCfg, manageScopedSet, manageDescendantsSet),
@@ -279,9 +300,7 @@ export function usePanelTree() {
   const getActiveManageScoped = useCallback(
     (flat: PanelEntry[]) => {
       const map = toVisibilityMap(flat);
-      for (const id of manageScoped) {
-        if (map[Number(id)]) return id;
-      }
+      for (const id of manageScoped) if (map[Number(id)]) return id;
       return null;
     },
     [manageScoped],
@@ -307,17 +326,11 @@ export function usePanelTree() {
     }
   }, []);
 
-  useMemo(() => {
-    publishVisibility(visibilityMap);
-  }, [visibilityMap, publishVisibility]);
+  useMemo(() => publishVisibility(visibilityMap), [visibilityMap, publishVisibility]);
 
   /* ------------------------------ queries -------------------------------- */
 
-  const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
-    [],
-  );
-
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
       (((CHILDREN as any)?.[panel] as unknown) as SP_COIN_DISPLAY[]) ?? [],
@@ -328,29 +341,18 @@ export function usePanelTree() {
 
   const displayBranch = useMemo(() => {
     const start = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
-    return computeDisplayBranch(
-      start,
-      getPanelChildren,
-      (p) => !!visibilityMap[Number(p)],
-    );
+    return computeDisplayBranch(start, getPanelChildren, (p) => !!visibilityMap[Number(p)]);
   }, [getPanelChildren, visibilityMap]);
 
   /* ------------------------------ safe context update --------------------- */
 
   const setExchangeContextSafe = useCallback(
     (nextOrUpdater: any) => {
-      // Try functional update first; if provider doesn't support it, fall back.
       try {
-        if (typeof nextOrUpdater === 'function') {
-          (setExchangeContext as any)(nextOrUpdater);
-          return;
-        }
         (setExchangeContext as any)(nextOrUpdater);
       } catch {
-        // Fallback: compute next from current and set as object.
         if (typeof nextOrUpdater === 'function') {
-          const next = nextOrUpdater(exchangeContext);
-          (setExchangeContext as any)(next);
+          (setExchangeContext as any)(nextOrUpdater(exchangeContext));
         } else {
           (setExchangeContext as any)(nextOrUpdater);
         }
@@ -361,14 +363,16 @@ export function usePanelTree() {
 
   /* ------------------------------ persistence ----------------------------- */
 
-  const persistPanelTypeIdStack = useCallback(
-    (next: SP_COIN_DISPLAY[] | number[]) => {
-      const nextIds = normalizeStack(next as any); // SP_COIN_DISPLAY[]
-      const currentIds = normalizeStack(
-        ((exchangeContext as any)?.settings?.panelTypeIdStack ?? []) as any,
-      );
+  const persistDisplayStack = useCallback(
+    (nextIds: SP_COIN_DISPLAY[] | number[]) => {
+      const nextPersistedIds = toPersistedNavIds(nextIds as any);
 
-      if (sameStack(currentIds, nextIds)) return;
+      const currentRaw = (exchangeContext as any)?.settings?.displayStack;
+      const currentIds = toPersistedNavIds(normalizeDisplayStackNodesToIds(currentRaw));
+
+      if (sameStack(currentIds, nextPersistedIds)) return;
+
+      const displayStack = toDisplayStackNodes(nextPersistedIds);
 
       setExchangeContextSafe((prev: any) => {
         const prevSettings = prev?.settings ?? {};
@@ -376,7 +380,7 @@ export function usePanelTree() {
           ...prev,
           settings: {
             ...prevSettings,
-            panelTypeIdStack: nextIds,
+            displayStack,
           },
         };
       });
@@ -384,69 +388,52 @@ export function usePanelTree() {
     [exchangeContext, setExchangeContextSafe],
   );
 
-  // Hydration + invariant enforcement:
-  // - Seed runtime BRANCH_STACK from persisted stack or derived displayBranch.
-  // - If persisted stack missing, derive from displayBranch and persist immediately.
-  // - Keep persisted stack aligned to displayBranch; keep BRANCH_STACK aligned too.
+  // Hydration + invariants:
+  // - seed NAV_STACK from persisted displayStack OR derived displayBranch
+  // - if persisted missing, derive + persist
+  // - keep persisted aligned to derived visible branch
+  // - keep NAV_STACK aligned too
   useEffect(() => {
-    const settingsStackRaw = (exchangeContext as any)?.settings?.panelTypeIdStack;
+    const settingsStackRaw = (exchangeContext as any)?.settings?.displayStack;
 
     const hasPersistedStack = Array.isArray(settingsStackRaw);
-    const persistedStack = hasPersistedStack ? normalizeStack(settingsStackRaw) : [];
-    const derivedStack = normalizeStack(displayBranch);
+    const persistedIds = hasPersistedStack
+      ? toPersistedNavIds(normalizeDisplayStackNodesToIds(settingsStackRaw))
+      : [];
 
-    // 1) Seed runtime stack if empty (refresh case)
-    if (BRANCH_STACK.length === 0) {
-      if (persistedStack.length > 0) {
-        branchEnsureSeeded(persistedStack);
-      } else if (derivedStack.length > 0) {
-        branchEnsureSeeded(derivedStack);
-      }
+    const derivedIds = toPersistedNavIds(displayBranch);
+
+    // 1) Seed runtime stack if empty
+    if (NAV_STACK.length === 0) {
+      if (persistedIds.length > 0) navEnsureSeeded(persistedIds);
+      else if (derivedIds.length > 0) navEnsureSeeded(derivedIds);
     }
 
-    // 2) Missing/empty persisted stack: derive + persist immediately (mandatory field)
-    if ((!hasPersistedStack || persistedStack.length === 0) && derivedStack.length > 0) {
-      persistPanelTypeIdStack(displayBranch);
+    // 2) Missing/empty persisted stack: derive + persist immediately
+    if ((!hasPersistedStack || persistedIds.length === 0) && derivedIds.length > 0) {
+      persistDisplayStack(derivedIds);
       return;
     }
 
-    // 3) Persisted stack diverges from visible branch: overwrite with derived
-    if (derivedStack.length > 0 && !sameStack(persistedStack, derivedStack)) {
-      persistPanelTypeIdStack(displayBranch);
+    // 3) Persisted diverges from derived visible branch: overwrite with derived
+    if (derivedIds.length > 0 && !sameStack(persistedIds, derivedIds)) {
+      persistDisplayStack(derivedIds);
     }
 
-    // 4) Runtime invariant: BRANCH_STACK matches visible branch
-    if (derivedStack.length > 0) {
-      const navNow = normalizeStack(snapshotBranch());
-      if (!sameStack(navNow, derivedStack)) {
-        BRANCH_STACK.length = 0;
-        for (const id of derivedStack) BRANCH_STACK.push(id);
+    // 4) Runtime invariant: NAV_STACK matches derived stack
+    if (derivedIds.length > 0) {
+      const navNow = toPersistedNavIds(snapshotNav());
+      if (!sameStack(navNow, derivedIds)) {
+        NAV_STACK.length = 0;
+        for (const id of derivedIds) NAV_STACK.push(id);
       }
     }
-  }, [exchangeContext, displayBranch, persistPanelTypeIdStack]);
+  }, [exchangeContext, displayBranch, persistDisplayStack]);
 
-  /* ------------------------------ debug state ----------------------------- */
+  /* ------------------------------ debug tracer ---------------------------- */
 
   const lastActionRef = useRef<LastAction>(null);
   const lastVisRef = useRef<Record<number, boolean> | null>(null);
-
-  const debugGroup = (title: string) => {
-    if (!DEBUG_CLOSE_INVARIANTS) return;
-    if (DEBUG_CLOSE_INVARIANTS_VERBOSE) {
-      // eslint-disable-next-line no-console
-      console.log(title);
-      return;
-    }
-    // eslint-disable-next-line no-console
-    console.groupCollapsed(title);
-  };
-
-  const debugGroupEnd = () => {
-    if (!DEBUG_CLOSE_INVARIANTS) return;
-    if (DEBUG_CLOSE_INVARIANTS_VERBOSE) return;
-    // eslint-disable-next-line no-console
-    console.groupEnd();
-  };
 
   const visibleManageKidsFromStore = () =>
     manageScoped
@@ -458,13 +445,14 @@ export function usePanelTree() {
       .filter((p) => !!visibilityMap[Number(p)])
       .map((p) => ({ id: Number(p), name: nameOf(p) }));
 
-  /* ------------------------------ render sync tracer ---------------------- */
-
   useEffect(() => {
     if (!DEBUG_CLOSE_INVARIANTS_RENDER) return;
 
     const action = lastActionRef.current;
     const claim = SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
+
+    const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
+    const persistedIds = toPersistedNavIds(normalizeDisplayStackNodesToIds(persistedRaw));
 
     // eslint-disable-next-line no-console
     console.log('[PanelTree][render-sync]', {
@@ -484,10 +472,7 @@ export function usePanelTree() {
                 }
               : action.kind === 'closePanel'
                 ? {
-                    requested: {
-                      id: Number(action.requested),
-                      name: nameOf(action.requested),
-                    },
+                    requested: { id: Number(action.requested), name: nameOf(action.requested) },
                     target: { id: Number(action.target), name: nameOf(action.target) },
                     invoker: action.invoker,
                   }
@@ -505,10 +490,11 @@ export function usePanelTree() {
       manageVisible_store: visibleManageKidsFromStore(),
 
       displayBranchNow: toNamedStack(displayBranch),
-      branchStackNow: toNamedStack(snapshotBranch()),
-      persistedStackNow: toNamedStack(
-        normalizeStack((exchangeContext as any)?.settings?.panelTypeIdStack ?? []),
-      ),
+      derivedPersistedBranchNow: toNamedStack(toPersistedNavIds(displayBranch)),
+      navStackNow: toNamedStack(snapshotNav()),
+      persistedDisplayStackNow: toNamedStack(persistedIds),
+
+      displayStack_persisted: persistedRaw,
     });
   }, [visibilityMap, manageScoped, displayBranch, exchangeContext]);
 
@@ -547,15 +533,15 @@ export function usePanelTree() {
         const action = lastActionRef.current;
         const ageMs = action ? Date.now() - action.ts : null;
 
-        debugGroup('[PanelTree][close-invariants] publishVisibility');
         // eslint-disable-next-line no-console
-        console.log('lastAction', action ? { ...action, ageMs } : null);
-        // eslint-disable-next-line no-console
-        console.log('visibilityChanges', changes.length ? changes : '(none)');
-        debugGroupEnd();
+        console.log('[PanelTree][close-invariants] publishVisibility', {
+          lastAction: action ? { ...action, ageMs } : null,
+          visibilityChanges: changes.length ? changes : '(none)',
+        });
 
         lastVisRef.current = next;
       },
+
       setExchangeContext,
     }),
     [
@@ -574,22 +560,12 @@ export function usePanelTree() {
     ],
   );
 
-  const base = useMemo(
-    () => createPanelTreeCallbacks(callbacksDeps),
-    [callbacksDeps],
-  );
+  const base = useMemo(() => createPanelTreeCallbacks(callbacksDeps), [callbacksDeps]);
 
-  /**
-   * ✅ openPanel:
-   * - branch stack is first-class (persisted)
-   * - manage-scoped opens infer parent when missing
-   */
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const inferredParent =
-        parent == null && manageScopedSet.has(Number(panel))
-          ? manageContainer
-          : parent;
+        parent == null && manageScopedSet.has(Number(panel)) ? manageContainer : parent;
 
       if (DEBUG_OPEN_INFER_PARENT && parent == null && inferredParent != null) {
         // eslint-disable-next-line no-console
@@ -600,7 +576,7 @@ export function usePanelTree() {
         });
       }
 
-      const navBefore = snapshotBranch();
+      const navBefore = snapshotNav();
       lastActionRef.current = {
         kind: 'openPanel',
         panel,
@@ -610,48 +586,23 @@ export function usePanelTree() {
         ts: Date.now(),
       };
 
-      if (DEBUG_CLOSE_INVARIANTS) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree][close-invariants] openPanel()', {
-          panel: { id: Number(panel), name: nameOf(panel) },
-          parent:
-            inferredParent != null
-              ? { id: Number(inferredParent), name: nameOf(inferredParent) }
-              : null,
-          invoker,
-          navBefore: toNamedStack(navBefore),
-          visibleBefore_map: !!visibilityMap[Number(panel)],
-          visibleBefore_store: panelStore.isVisible(panel),
-        });
-      }
-
-      branchNodeShow(panel);
-      persistPanelTypeIdStack(snapshotBranch());
+      navNodeShow(panel);
+      persistDisplayStack(toPersistedNavIds(snapshotNav()));
       base.openPanel(panel, invoker, inferredParent);
 
-      if (DEBUG_BRANCH) logBranch(`show:${panelName(Number(panel) as any)}`);
+      if (DEBUG_NAV) logNav(`show:${panelName(Number(panel) as any)}`);
     },
-    [
-      base,
-      visibilityMap,
-      manageContainer,
-      manageScopedSet,
-      persistPanelTypeIdStack,
-    ],
+    [base, manageContainer, manageScopedSet, persistDisplayStack],
   );
 
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
-      const navBefore = snapshotBranch();
-      const leaf =
-        navBefore.length > 0
-          ? (navBefore[navBefore.length - 1] as SP_COIN_DISPLAY)
-          : null;
+      const navBefore = snapshotNav();
+      const leaf = navBefore.length ? (navBefore[navBefore.length - 1] as SP_COIN_DISPLAY) : null;
 
+      // closing manage container closes leaf (child) if leaf is not container
       const target =
-        leaf &&
-        Number(panel) === Number(manageContainer) &&
-        Number(leaf) !== Number(panel)
+        leaf && Number(panel) === Number(manageContainer) && Number(leaf) !== Number(panel)
           ? leaf
           : panel;
 
@@ -664,70 +615,19 @@ export function usePanelTree() {
         ts: Date.now(),
       };
 
-      if (DEBUG_CLOSE_INVARIANTS) {
-        debugGroup('[PanelTree][close-invariants] closePanel() request');
-        // eslint-disable-next-line no-console
-        console.log('requested', { id: Number(panel), name: nameOf(panel) });
-        // eslint-disable-next-line no-console
-        console.log('target', { id: Number(target), name: nameOf(target) });
-        // eslint-disable-next-line no-console
-        console.log(
-          'leaf',
-          leaf != null ? { id: Number(leaf), name: nameOf(leaf) } : null,
-        );
-        // eslint-disable-next-line no-console
-        console.log('invoker', invoker);
-        // eslint-disable-next-line no-console
-        console.log('navBefore', toNamedStack(navBefore));
-        // eslint-disable-next-line no-console
-        console.log('visibleBefore_map', !!visibilityMap[Number(target)]);
-        // eslint-disable-next-line no-console
-        console.log('visibleBefore_store', panelStore.isVisible(target));
-        debugGroupEnd();
-      }
-
-      branchNodeHide(target);
-      persistPanelTypeIdStack(snapshotBranch());
+      navNodeHide(target);
+      persistDisplayStack(toPersistedNavIds(snapshotNav()));
       base.closePanel(target, invoker, arg);
 
-      if (DEBUG_BRANCH) logBranch(`hide:${panelName(Number(target) as any)}`);
-
-      if (DEBUG_CLOSE_INVARIANTS) {
-        const check = (phase: 'microtask' | 'timeout') => {
-          const navNow = snapshotBranch();
-          const vStore = panelStore.isVisible(target);
-          // eslint-disable-next-line no-console
-          console.log(`[PanelTree][close-invariants] post-close (${phase})`, {
-            target: { id: Number(target), name: nameOf(target) },
-            requested: { id: Number(panel), name: nameOf(panel) },
-            invoker,
-            targetVisible_store: vStore,
-            branchStackNow: toNamedStack(navNow),
-            manageScopedVisibleNow_store: visibleManageKidsFromStore(),
-          });
-        };
-
-        queueMicrotask(() => check('microtask'));
-        setTimeout(() => check('timeout'), 0);
-      }
+      if (DEBUG_NAV) logNav(`hide:${panelName(Number(target) as any)}`);
     },
-    [
-      base,
-      manageContainer,
-      visibilityMap,
-      manageScoped,
-      persistPanelTypeIdStack,
-    ],
+    [base, manageContainer, persistDisplayStack],
   );
 
   const closeTopPanel = useCallback(
     (invoker?: string) => {
-      const navBefore = snapshotBranch();
-      const leaf =
-        navBefore.length > 0
-          ? (navBefore[navBefore.length - 1] as SP_COIN_DISPLAY)
-          : null;
-
+      const navBefore = snapshotNav();
+      const leaf = navBefore.length ? (navBefore[navBefore.length - 1] as SP_COIN_DISPLAY) : null;
       if (!leaf) return;
 
       lastActionRef.current = {
@@ -738,24 +638,13 @@ export function usePanelTree() {
         ts: Date.now(),
       };
 
-      if (DEBUG_CLOSE_INVARIANTS) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree][close-invariants] closeTopPanel()', {
-          leaf: { id: Number(leaf), name: nameOf(leaf) },
-          invoker,
-          navBefore: toNamedStack(navBefore),
-          visibleBefore_map: !!visibilityMap[Number(leaf)],
-          visibleBefore_store: panelStore.isVisible(leaf),
-        });
-      }
-
-      branchNodeHide(leaf);
-      persistPanelTypeIdStack(snapshotBranch());
+      navNodeHide(leaf);
+      persistDisplayStack(toPersistedNavIds(snapshotNav()));
       base.closePanel(leaf, invoker ?? 'HeaderX');
 
-      if (DEBUG_BRANCH) logBranch(`hideTop:${panelName(Number(leaf) as any)}`);
+      if (DEBUG_NAV) logNav(`hideTop:${panelName(Number(leaf) as any)}`);
     },
-    [base, visibilityMap, persistPanelTypeIdStack],
+    [base, persistDisplayStack],
   );
 
   /* ------------------------------ derived -------------------------------- */
@@ -777,86 +666,40 @@ export function usePanelTree() {
   const dumpNavStack = useCallback(
     (tag?: string): void => {
       const start: SP_COIN_DISPLAY = SP_COIN_DISPLAY.MAIN_TRADING_PANEL;
+      const title = `[PanelTree] Display branch${tag ? ` (${tag})` : ''} from "${panelName(
+        Number(start) as any,
+      )}" (${Number(start)})`;
 
-      const seen = new Set<number>();
-      const displayStack: SP_COIN_DISPLAY[] = [];
-      let current: SP_COIN_DISPLAY | null = start;
-
-      const title = `[PanelTree] Display branch${
-        tag ? ` (${tag})` : ''
-      } from "${panelName(Number(start) as any)}" (${Number(start)})`;
-
+      // eslint-disable-next-line no-console
       console.groupCollapsed(title);
 
-      while (current != null) {
-        const curId: number = Number(current);
-
-        if (seen.has(curId)) {
-          console.error(
-            `[PanelTree] cycle detected at "${panelName(curId as any)}" (${curId}). Stopping traversal.`,
-          );
-          break;
-        }
-
-        seen.add(curId);
-        displayStack.push(current);
-
-        const children: SP_COIN_DISPLAY[] = getPanelChildren(current);
-
-        const visibleChildren: SP_COIN_DISPLAY[] = children.filter(
-          (c: SP_COIN_DISPLAY) => !!visibilityMap[Number(c)],
-        );
-
-        const selectedChild: SP_COIN_DISPLAY | null =
-          visibleChildren.length > 0 ? visibleChildren[0] : null;
-
-        console.log({
-          node: panelName(curId as any),
-          id: curId,
-          isVisible: !!visibilityMap[curId],
-          children: children.map((c: SP_COIN_DISPLAY) => ({
-            name: panelName(Number(c) as any),
-            id: Number(c),
-            visible: !!visibilityMap[Number(c)],
-          })),
-          selectedChild: selectedChild
-            ? { name: panelName(Number(selectedChild) as any), id: Number(selectedChild) }
-            : null,
-        });
-
-        if (!selectedChild) break;
-        current = selectedChild;
-      }
-
-      console.log(
-        '[PanelTree] displayBranch =',
-        displayStack.map((p: SP_COIN_DISPLAY) => ({
-          name: panelName(Number(p) as any),
-          id: Number(p),
-        })),
+      const displayStack = computeDisplayBranch(
+        start,
+        getPanelChildren,
+        (p) => !!visibilityMap[Number(p)],
       );
 
-      const nav = snapshotBranch();
+      // eslint-disable-next-line no-console
+      console.log('[PanelTree] displayBranch =', toNamedStack(displayStack));
+      // eslint-disable-next-line no-console
+      console.log('[PanelTree] derivedPersistedIds =', toNamedStack(toPersistedNavIds(displayStack)));
+      // eslint-disable-next-line no-console
       console.log(
-        '[PanelTree] branchStack =',
-        nav.map((p: SP_COIN_DISPLAY) => ({
-          name: panelName(Number(p) as any),
-          id: Number(p),
-        })),
+        '[PanelTree] derivedPersistedNodes =',
+        toDisplayStackNodes(toPersistedNavIds(displayStack)),
+      );
+      // eslint-disable-next-line no-console
+      console.log('[PanelTree] navStack =', toNamedStack(snapshotNav()));
+      // eslint-disable-next-line no-console
+      console.log(
+        '[PanelTree] displayStack (persisted) =',
+        (exchangeContext as any)?.settings?.displayStack ?? [],
       );
 
-      const persisted = (exchangeContext as any)?.settings?.panelTypeIdStack ?? [];
-      console.log(
-        '[PanelTree] panelTypeIdStack (persisted) =',
-        (persisted as any[]).map((p) => ({
-          name: panelName(Number(p) as any),
-          id: Number(p),
-        })),
-      );
-
+      // eslint-disable-next-line no-console
       console.groupEnd();
     },
-    [getPanelChildren, visibilityMap, exchangeContext],
+    [exchangeContext, getPanelChildren, visibilityMap],
   );
 
   return {

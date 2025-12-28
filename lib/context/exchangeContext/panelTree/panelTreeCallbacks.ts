@@ -109,7 +109,7 @@ function ensureOneGlobalOverlayVisible(
  * This MUST ONLY be used for legacy "header close" calls that pass the *container*
  * (manageCfg.manageContainer) into closePanel/closeTopPanel.
  *
- * If callers pass the true leaf (your NAV branchStack logic), we close exactly what
+ * If callers pass the true leaf (your NAV displayStack logic), we close exactly what
  * was requested and DO NOT re-derive a different "top" here.
  */
 function deriveTopFromVisibility(opts: {

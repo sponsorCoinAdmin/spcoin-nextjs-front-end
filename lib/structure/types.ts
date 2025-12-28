@@ -33,7 +33,6 @@ export enum AccountType {
   ALL = 'ALL',
 }
 
-
 /**
  * Useful for inputs where the raw string may still be in flight before validation.
  */
@@ -75,16 +74,22 @@ export type Accounts = {
  * ✅ Settings for view/panel management and API provider choice.
  * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
  * - `spCoinPanelTree` persists the full panel tree (new visibility model).
+ *
+ * ✅ Persisted NAV stack is now readable in Local Storage:
+ *   - id is authoritative
+ *   - name is derived (non-authoritative)
  */
+export type DISPLAY_STACK_NODE = {
+  id: SP_COIN_DISPLAY; // authoritative
+  name: string; // derived / non-authoritative
+};
+
 export type Settings = {
   /** Which backend to use for trading operations */
   apiTradingProvider: API_TRADING_PROVIDER;
 
   /** Persisted panel tree */
   spCoinPanelTree: SpCoinPanelTree;
-
-  /** Persisted visible branch stack (by panel type id) */
-  panelTypeIdStack: SP_COIN_DISPLAY[];
 
   /**
    * True if this ExchangeContext was hydrated from Local Storage on boot.

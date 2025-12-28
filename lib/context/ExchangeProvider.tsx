@@ -48,10 +48,16 @@ import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 // ✅ Need CHILDREN to derive display branch stack during hydration
 import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
+// ✅ Human-readable names for persisted stack nodes
+import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
+
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
+
+const TRACE_DISPLAYSTACK =
+  process.env.NEXT_PUBLIC_TRACE_BRANCHSTACK === 'true'; // (kept env var name for compatibility)
 
 const debugLog = createDebugLogger('ExchangeProvider', DEBUG_ENABLED, LOG_TIME);
 
@@ -101,9 +107,70 @@ const clone = <T,>(o: T): T =>
     ? structuredClone(o)
     : (JSON.parse(JSON.stringify(o)) as T);
 
-/* ----------------------- Panel stack hydration helpers --------------------- */
+/* ------------------------------ Trace helpers ------------------------------ */
 
-const normalizePanelTypeIdStack = (arr: unknown): SP_COIN_DISPLAY[] => {
+const safeJsonParse = (s: string | null) => {
+  if (!s) return undefined;
+  try {
+    return JSON.parse(s);
+  } catch {
+    return { __parseError: true, raw: s.slice(0, 500) };
+  }
+};
+
+const lsPeek = (key: string) => {
+  try {
+    if (typeof window === 'undefined') return undefined;
+    const raw = window.localStorage.getItem(key);
+    return safeJsonParse(raw);
+  } catch (e) {
+    return { __lsError: true, key, error: String(e) };
+  }
+};
+
+const lsFindLikelyKeys = () => {
+  try {
+    if (typeof window === 'undefined') return [];
+    return Object.keys(window.localStorage);
+  } catch {
+    return [];
+  }
+};
+
+const lsDumpCandidates = () => {
+  const candidates = [
+    'ExchangeContext.settings',
+    'ExchangeContext',
+    'exchangeContext',
+    'spCoinExchangeContext',
+    'SPCOIN_EXCHANGE_CONTEXT',
+    'ExchangeProvider',
+  ];
+  const existing = lsFindLikelyKeys();
+  const also = existing.filter((k) => /exchange|spcoin|panel|context/i.test(k));
+  const keys = Array.from(new Set([...candidates, ...also])).slice(0, 20);
+
+  const out: Record<string, any> = {};
+  for (const k of keys) out[k] = lsPeek(k);
+  return { keys, out };
+};
+
+const summarizeStacks = (settings: any) => {
+  const ds = settings?.displayStack;
+  return {
+    displayStackType: Array.isArray(ds) ? 'array' : typeof ds,
+    displayStackLen: Array.isArray(ds) ? ds.length : 0,
+  };
+};
+
+/* ----------------------- Display stack hydration helpers ------------------- */
+
+export type DISPLAY_STACK_NODE = {
+  id: SP_COIN_DISPLAY; // authoritative
+  name: string; // derived (non-authoritative)
+};
+
+const normalizeIdArray = (arr: unknown): SP_COIN_DISPLAY[] => {
   if (!Array.isArray(arr)) return [];
   return arr
     .map((x) => Number(x))
@@ -111,14 +178,54 @@ const normalizePanelTypeIdStack = (arr: unknown): SP_COIN_DISPLAY[] => {
     .map((x) => x as SP_COIN_DISPLAY);
 };
 
+const normalizeDisplayStackNodes = (arr: unknown): DISPLAY_STACK_NODE[] => {
+  if (!Array.isArray(arr)) return [];
+  const out: DISPLAY_STACK_NODE[] = [];
+
+  for (const it of arr as any[]) {
+    // allow legacy numbers
+    if (typeof it === 'number' || typeof it === 'string') {
+      const id = Number(it);
+      if (!Number.isFinite(id)) continue;
+      out.push({ id: id as SP_COIN_DISPLAY, name: panelName(id as any) });
+      continue;
+    }
+
+    if (!it || typeof it !== 'object') continue;
+    const id = Number((it as any).id);
+    if (!Number.isFinite(id)) continue;
+
+    const name =
+      typeof (it as any).name === 'string' && (it as any).name.trim().length
+        ? String((it as any).name)
+        : panelName(id as any);
+
+    out.push({ id: id as SP_COIN_DISPLAY, name });
+  }
+
+  return out;
+};
+
+const idsFromNodes = (nodes: DISPLAY_STACK_NODE[]): SP_COIN_DISPLAY[] =>
+  nodes
+    .map((n) => Number(n.id))
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY);
+
+const toNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
+  ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
+
 const samePanelStack = (a: SP_COIN_DISPLAY[], b: SP_COIN_DISPLAY[]) => {
   if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (Number(a[i]) !== Number(b[i])) return false;
+  for (let i = 0; i < a.length; i++)
+    if (Number(a[i]) !== Number(b[i])) return false;
   return true;
 };
 
 const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
-  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[Number(panel)];
+  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[
+    Number(panel)
+  ];
   return Array.isArray(maybe) ? maybe : [];
 };
 
@@ -165,14 +272,17 @@ const computeVisibleDisplayBranchFromPanels = (
 };
 
 // ✅ Build the persisted nav stack by skipping wrapper nodes (e.g. 28)
-const toPersistedNavStack = (displayBranch: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] =>
+const toPersistedNavIds = (displayBranch: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] =>
   displayBranch.filter((p) => !NON_INDEXED.has(Number(p)));
 
 // ✅ Repair structural visibility: if a descendant is visible, force container visible
 const ensureStructuralContainersVisible = (
   flatPanels: Array<{ panel: number; visible: boolean; name?: string }>,
 ) => {
-  const byId = new Map<number, { panel: number; visible: boolean; name?: string }>();
+  const byId = new Map<
+    number,
+    { panel: number; visible: boolean; name?: string }
+  >();
   for (const n of flatPanels) byId.set(Number(n.panel), n);
 
   const setVisible = (id: SP_COIN_DISPLAY) => {
@@ -182,14 +292,12 @@ const ensureStructuralContainersVisible = (
     if (!node.visible) node.visible = true;
   };
 
-  // If MANAGE_SPONSORSHIPS is visible, TRADE_CONTAINER_HEADER must be visible
   const manage = byId.get(Number(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS));
   if (manage?.visible) {
     setVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
     setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
   }
 
-  // If TRADE_CONTAINER_HEADER is visible, MAIN_TRADING_PANEL must be visible
   const header = byId.get(Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER));
   if (header?.visible) {
     setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
@@ -205,11 +313,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const { address, isConnected } = useAccount();
   const wagmiReady = useWagmiReady();
 
-  const [contextState, setContextState] = useState<ExchangeContextTypeOnly | undefined>(
-    undefined,
-  );
+  const [contextState, setContextState] = useState<
+    ExchangeContextTypeOnly | undefined
+  >(undefined);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
-  const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
+  const [apiErrorMessage, setApiErrorMessage] = useState<
+    ErrorMessage | undefined
+  >();
   const hasInitializedRef = useRef(false);
 
   const setExchangeContext = (
@@ -219,41 +329,119 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setContextState((prev) => {
       if (!prev) return prev;
 
+      if (TRACE_DISPLAYSTACK) {
+        // eslint-disable-next-line no-console
+        console.groupCollapsed(`[TRACE][setExchangeContext] hook=${_hookName}`);
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] prev.settings stack summary',
+          summarizeStacks((prev as any).settings),
+        );
+      }
+
       const prevStr = stringifyBigInt(prev);
 
       const nextRaw = updater(prev);
       if (!nextRaw) return prev;
 
-      // ✅ Keep LIVE state normalized (so devtools shows settings.panelTypeIdStack)
       const nextBase = clone(nextRaw);
       (nextBase as any).settings = (nextBase as any).settings ?? {};
-      (nextBase as any).settings.panelTypeIdStack = normalizePanelTypeIdStack(
-        (nextBase as any).settings.panelTypeIdStack,
-      );
+
+      if (TRACE_DISPLAYSTACK) {
+        const s = (nextBase as any).settings;
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] nextRaw.settings stack summary',
+          summarizeStacks(s),
+        );
+        // eslint-disable-next-line no-console
+        console.log('[TRACE] raw displayStack', s.displayStack);
+      }
+
+      // ✅ Normalize displayStack to DISPLAY_STACK_NODE[]
+      const rawDisplayStack = (nextBase as any).settings.displayStack;
+      const nodesFromDisplay = normalizeDisplayStackNodes(rawDisplayStack);
+
+      // tolerate legacy ids-only
+      const nodes =
+        nodesFromDisplay.length > 0
+          ? nodesFromDisplay
+          : toNodes(normalizeIdArray(rawDisplayStack));
+
+      (nextBase as any).settings.displayStack = nodes;
+
+      if (TRACE_DISPLAYSTACK) {
+        // eslint-disable-next-line no-console
+        console.log('[TRACE] normalized nodes', nodes);
+        // eslint-disable-next-line no-console
+        console.log('[TRACE] normalized ids', idsFromNodes(nodes).map(Number));
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] post-normalize stack summary',
+          summarizeStacks((nextBase as any).settings),
+        );
+      }
 
       const nextStr = stringifyBigInt(nextBase);
-      if (prevStr === nextStr) return prev;
+      if (prevStr === nextStr) {
+        if (TRACE_DISPLAYSTACK) {
+          // eslint-disable-next-line no-console
+          console.log('[TRACE] no-op update (prevStr === nextStr)');
+          // eslint-disable-next-line no-console
+          console.groupEnd();
+        }
+        return prev;
+      }
 
+      // ✅ Persist normalized settings (with readable nodes)
       const normalized = clone(nextBase);
-
-      const st = normalizePanelTypeIdStack((normalized as any)?.settings?.panelTypeIdStack);
-
       (normalized as any).settings = {
         ...(normalized as any).settings,
-        panelTypeIdStack: st,
+        displayStack: normalizeDisplayStackNodes(
+          (normalized as any).settings.displayStack,
+        ),
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
+      if (TRACE_DISPLAYSTACK) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] normalized-to-persist.settings stack summary',
+          summarizeStacks((normalized as any).settings),
+        );
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] normalized-to-persist.settings.displayStack',
+          (normalized as any).settings.displayStack,
+        );
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] about to persistWithOptDiff key=ExchangeContext.settings',
+        );
+      }
+
       if (DEBUG_ENABLED) {
         // eslint-disable-next-line no-console
-        console.log('[ExchangeProvider][persistWithOptDiff]', {
+        console.log('[ExchangeProvider][persist]', {
           hook: _hookName,
-          panelTypeIdStack: (normalized as any).settings.panelTypeIdStack,
-          keys: Object.keys((normalized as any).settings ?? {}),
+          persistedDisplayStack: (normalized as any).settings.displayStack,
+          persistedIds: idsFromNodes((normalized as any).settings.displayStack).map(
+            Number,
+          ),
         });
       }
 
       persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
+
+      if (TRACE_DISPLAYSTACK) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE] localStorage candidates after persist',
+          lsDumpCandidates(),
+        );
+        // eslint-disable-next-line no-console
+        console.groupEnd();
+      }
 
       return nextBase;
     });
@@ -261,60 +449,92 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!wagmiReady) {
-      debugLog.log?.('[ExchangeProvider] wagmi not ready yet — skipping initExchangeContext boot');
+      debugLog.log?.(
+        '[ExchangeProvider] wagmi not ready yet — skipping initExchangeContext boot',
+      );
       return;
     }
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
     (async () => {
-      debugLog.log?.('🚀 initExchangeContext boot start', { wagmiChainId, isConnected, address });
+      debugLog.log?.('🚀 initExchangeContext boot start', {
+        wagmiChainId,
+        isConnected,
+        address,
+      });
 
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
 
-      const repaired = repairPanels(isMainPanels(storedPanels) ? storedPanels : undefined);
+      const repaired = repairPanels(
+        isMainPanels(storedPanels) ? storedPanels : undefined,
+      );
       const { panels: validated } = validateAndRepairPanels(repaired);
-      const ensured = ensureRequiredPanels(dropNonPersisted(validated), MUST_INCLUDE_ON_BOOT);
+      const ensured = ensureRequiredPanels(
+        dropNonPersisted(validated),
+        MUST_INCLUDE_ON_BOOT,
+      );
 
-      // overlays reconciliation first
       let flatPanels = reconcileOverlayVisibility(ensured);
-
-      // ✅ FIX A: repair structural container visibility (e.g. 28)
       flatPanels = ensureStructuralContainersVisible(flatPanels as any);
 
       const radioTopLevel: any[] = (settingsAny.mainPanelNode as any[]) ?? [];
 
-      reconcilePanelState(flatPanels as any, radioTopLevel as any, SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+      reconcilePanelState(
+        flatPanels as any,
+        radioTopLevel as any,
+        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      );
 
-      // Rebuild display branch from visibility
       const displayBranch = computeVisibleDisplayBranchFromPanels(
         flatPanels as any,
         SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
       );
 
-      // ✅ FIX B: persisted nav stack skips wrapper nodes (so you get 12 -> 20 -> 6)
-      const derivedStack = toPersistedNavStack(displayBranch);
+      const derivedIds = toPersistedNavIds(displayBranch);
 
-      const storedStack = normalizePanelTypeIdStack(settingsAny.panelTypeIdStack);
+      /**
+       * ✅ Hydrate from LS:
+       * prefer settings.displayStack (nodes),
+       * fallback to ids-only arrays (legacy)
+       */
+      const storedNodes = normalizeDisplayStackNodes(settingsAny.displayStack);
+      const storedIds =
+        storedNodes.length > 0
+          ? idsFromNodes(storedNodes)
+          : normalizeIdArray(settingsAny.displayStack);
 
-      // If stored stack missing, or differs from derived, prefer derived on boot
-      const panelTypeIdStack =
-        storedStack.length === 0 || !samePanelStack(storedStack, derivedStack)
-          ? derivedStack
-          : storedStack;
+      const chosenIds =
+        storedIds.length === 0 || !samePanelStack(storedIds, derivedIds)
+          ? derivedIds
+          : storedIds;
+
+      const chosenNodes = toNodes(chosenIds);
 
       if (DEBUG_ENABLED) {
         // eslint-disable-next-line no-console
-        console.log('[ExchangeProvider][boot] stack rebuild', {
-          displayBranch: displayBranch.map(Number),
-          derivedStack: derivedStack.map(Number),
-          storedStack: storedStack.map(Number),
-          chosenStack: panelTypeIdStack.map(Number),
-          tradeHeaderVisible: !!(flatPanels as any).find((p: any) => Number(p.panel) === 28)?.visible,
-          manageVisible: !!(flatPanels as any).find((p: any) => Number(p.panel) === 20)?.visible,
+        console.log('[ExchangeProvider][boot]', {
+          derivedIds: derivedIds.map(Number),
+          storedIds: storedIds.map(Number),
+          chosenIds: chosenIds.map(Number),
+          chosenNodes,
         });
+      }
+
+      if (TRACE_DISPLAYSTACK) {
+        // eslint-disable-next-line no-console
+        console.groupCollapsed('[TRACE][boot]');
+        // eslint-disable-next-line no-console
+        console.log(
+          '[TRACE][boot] settingsAny stack summary',
+          summarizeStacks(settingsAny),
+        );
+        // eslint-disable-next-line no-console
+        console.log('[TRACE][boot] storedNodes', storedNodes);
+        // eslint-disable-next-line no-console
+        console.groupEnd();
       }
 
       const nextSettings: any = {
@@ -324,21 +544,21 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           name: n.name,
           visible: n.visible,
         })),
-        panelTypeIdStack,
+
+        // ✅ Option A persisted value (readable LS)
+        displayStack: chosenNodes,
+
         mainPanelNode: radioTopLevel,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
       const net = ensureNetwork((base as any).network);
-      debugLog.log?.('[ExchangeProvider] network after initExchangeContext', { net });
-
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      // Persist on boot
+      // Persist on boot (persistExchangeContext will serialize what’s in settings)
       persistWithOptDiff(undefined, base as ExchangeContextTypeOnly, 'ExchangeContext.settings');
 
-      // In-memory panel tree keeps full names
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
 
       setContextState(base as ExchangeContextTypeOnly);

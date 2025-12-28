@@ -7,9 +7,17 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
+// ✅ for readable names
+import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
+
 const LOG_TIME_PERSIST = false;
 const DEBUG_ENABLED_PERSIST =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PERSIST_EXCHANGE_CONTEXT === 'true';
+
+// 🔎 Trace toggle (renamed in-code; keeps env var for compatibility)
+const TRACE_DISPLAYSTACK_PERSIST =
+  process.env.NEXT_PUBLIC_TRACE_BRANCHSTACK === 'true';
 
 const debugPersist = createDebugLogger(
   'PersistExchangeContext',
@@ -75,6 +83,103 @@ function describePanelVisibility(
   };
 }
 
+/* -------------------- Option A: displayStack as readable nodes -------------------- */
+
+type DISPLAY_STACK_NODE = {
+  id: SP_COIN_DISPLAY; // authoritative
+  name: string; // derived (non-authoritative)
+};
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === 'object';
+}
+
+function toNode(idNum: number, nameMaybe?: unknown): DISPLAY_STACK_NODE {
+  const id = idNum as SP_COIN_DISPLAY;
+  const name =
+    typeof nameMaybe === 'string' && nameMaybe.trim().length
+      ? nameMaybe
+      : panelName(idNum as any);
+  return { id, name };
+}
+
+function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
+  if (!Array.isArray(arr)) return [];
+  const out: DISPLAY_STACK_NODE[] = [];
+
+  for (const it of arr as any[]) {
+    // tolerate ids-only arrays
+    if (typeof it === 'number' || typeof it === 'string') {
+      const id = Number(it);
+      if (!Number.isFinite(id)) continue;
+      out.push(toNode(id));
+      continue;
+    }
+
+    if (!isRecord(it)) continue;
+
+    // { id, name }
+    if ('id' in it) {
+      const id = Number((it as any).id);
+      if (!Number.isFinite(id)) continue;
+      out.push(toNode(id, (it as any).name));
+      continue;
+    }
+
+    // tolerate legacy mirror shape if it still shows up somewhere
+    if ('displayTypeId' in it) {
+      const id = Number((it as any).displayTypeId);
+      if (!Number.isFinite(id)) continue;
+      out.push(toNode(id, (it as any).displayTypeName));
+      continue;
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Ensures LS persistence uses ONLY:
+ *   settings.displayStack: DISPLAY_STACK_NODE[]
+ *
+ */
+function ensureReadableDisplayStack(next: ExchangeContext): ExchangeContext {
+  const settings: any = (next as any)?.settings;
+  if (!settings) return next;
+
+  const finalNodes = normalizeDisplayStackNodes(settings.displayStack);
+
+  settings.displayStack = finalNodes;
+
+  if (DEBUG_ENABLED_PERSIST) {
+    // eslint-disable-next-line no-console
+    console.log('[PersistExchangeContext] normalized displayStack', {
+      displayStack: finalNodes,
+      ids: finalNodes.map((n) => Number(n.id)),
+    });
+  }
+
+  return next;
+}
+
+function safeJsonParse(s: string | null) {
+  if (!s) return undefined;
+  try {
+    return JSON.parse(s);
+  } catch {
+    return { __parseError: true, raw: s.slice(0, 500) };
+  }
+}
+
+function lsPeek(key: string) {
+  try {
+    if (typeof window === 'undefined') return undefined;
+    return safeJsonParse(window.localStorage.getItem(key));
+  } catch (e) {
+    return { __lsError: true, key, error: String(e) };
+  }
+}
+
 export function persistWithOptDiff(
   prev: ExchangeContext | undefined,
   next: ExchangeContext,
@@ -94,21 +199,15 @@ export function persistWithOptDiff(
     ? (getByPath(next as any, panelPathKey) as any[])
     : [];
 
-  const {
-    hasPanelVisibilityChange,
-    diffSummary,
-    visibleNow,
-  } = describePanelVisibility(prevPanels, nextPanels);
+  const { hasPanelVisibilityChange, diffSummary, visibleNow } =
+    describePanelVisibility(prevPanels, nextPanels);
 
   const prevTradeData = (prev as any)?.tradeData;
   const nextTradeData = (next as any)?.tradeData;
 
-  // Use stringifyBigInt to safely compare structures that may contain bigint
   const sameTradeData =
     stringifyBigInt(prevTradeData) === stringifyBigInt(nextTradeData);
 
-  // For diagnostics only — we ALWAYS persist when state has changed at the
-  // ExchangeProvider level (prevStr !== nextStr).
   debugPersist.log?.('🧾 Persist (with diff)', {
     isFirstPersist,
     hasPanelVisibilityChange,
@@ -126,8 +225,24 @@ export function persistWithOptDiff(
   }
 
   try {
-    const serialized = stringifyBigInt(next);
+    const coerced = ensureReadableDisplayStack(next);
+
+    if (DEBUG_ENABLED_PERSIST) {
+      debugPersist.log?.('[PersistExchangeContext] settings snapshot', {
+        displayStack: (coerced as any)?.settings?.displayStack,
+      });
+    }
+
+    const serialized = stringifyBigInt(coerced);
     window.localStorage.setItem(EXCHANGE_CONTEXT_LS_KEY, serialized);
+
+    if (TRACE_DISPLAYSTACK_PERSIST) {
+      // eslint-disable-next-line no-console
+      console.log('[TRACE][PersistExchangeContext] LS readback', {
+        key: EXCHANGE_CONTEXT_LS_KEY,
+        stored: lsPeek(EXCHANGE_CONTEXT_LS_KEY),
+      });
+    }
   } catch (err) {
     debugPersist.error?.('persistWithOptDiff: localStorage setItem failed', err);
   }
