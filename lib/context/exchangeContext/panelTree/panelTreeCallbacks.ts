@@ -378,6 +378,5 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
       });
     });
   };
-
   return { openPanel, closePanel, closeTopPanel };
 }
