@@ -7,7 +7,6 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
-  useRegisterDetailCloser,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageWallet from './ManageWallet';
@@ -28,15 +27,10 @@ export default function ManageSponsor({ onClose }: Props) {
   // Header title
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-    hasSponsor
-      ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}`
-      : 'Sponsor (none selected)'
+    hasSponsor ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}` : 'Sponsor (none selected)',
   );
 
-  const resolvedLogo = useMemo(
-    () => logoURL || defaultMissingImage,
-    [logoURL]
-  );
+  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
   // Left header logo (square, no crop)
   useRegisterHeaderLeft(
@@ -54,8 +48,8 @@ export default function ManageSponsor({ onClose }: Props) {
             />
           </div>
         ),
-      [resolvedLogo]
-    )
+      [resolvedLogo],
+    ),
   );
 
   const [showToDo, setShowToDo] = useState<boolean>(false);
@@ -78,16 +72,14 @@ export default function ManageSponsor({ onClose }: Props) {
     // Return user to the sponsors list when closing detail
     openPanel(
       SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-      'ManageSponsor:handleClose(open)'
+      'ManageSponsor:handleClose(open)',
     );
     closePanel(
       SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-      'ManageSponsor:handleClose(close)'
+      'ManageSponsor:handleClose(close)',
     );
     onClose?.();
   }, [openPanel, closePanel, onClose]);
-
-  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, handleClose);
 
   return (
     <div id="MANAGE_SPONSOR_PANEL">
@@ -97,9 +89,8 @@ export default function ManageSponsor({ onClose }: Props) {
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No sponsor selected.</p>
           <p className="m-0">
-            Open the <strong>Sponsors</strong> list and choose a sponsor to
-            manage. Once selected, this panel will show the sponsor&apos;s
-            wallet details.
+            Open the <strong>Sponsors</strong> list and choose a sponsor to manage.
+            Once selected, this panel will show the sponsor&apos;s wallet details.
           </p>
         </div>
       )}

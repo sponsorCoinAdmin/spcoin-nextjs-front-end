@@ -7,13 +7,13 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
-  useRegisterDetailCloser,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+
 type Props = { onClose?: () => void };
 
 export default function ManageAgent({ onClose }: Props) {
@@ -25,12 +25,11 @@ export default function ManageAgent({ onClose }: Props) {
 
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-    `Agent ${agentWallet?.name ?? 'N/A'}`
+    `Agent ${agentWallet?.name ?? 'N/A'}`,
   );
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
-  // Register square logo on the left side of the header
   useRegisterHeaderLeft(
     SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
     useMemo(
@@ -46,20 +45,18 @@ export default function ManageAgent({ onClose }: Props) {
             />
           </div>
         ),
-      [resolvedLogo]
-    )
+      [resolvedLogo],
+    ),
   );
 
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
   const handleClose = useCallback(() => {
-    // Provide parent/source for logs
+    // This is still fine if you call it from an in-panel button.
     openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'ManageAgent:handleClose()');
     closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgent:handleClose()');
     onClose?.();
   }, [openPanel, closePanel, onClose]);
-
-  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, handleClose);
 
   return (
     <div id="MANAGE_AGENT_PANEL">

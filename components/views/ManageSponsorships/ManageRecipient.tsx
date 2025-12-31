@@ -5,7 +5,6 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
-  useRegisterDetailCloser,
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
@@ -23,11 +22,7 @@ const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_RECIPIENT === 'true';
 
-const debugLog = createDebugLogger(
-  'ManageRecipient',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const debugLog = createDebugLogger('ManageRecipient', DEBUG_ENABLED, LOG_TIME);
 
 export default function ManageRecipient({ onClose }: Props) {
   const { closePanel, openPanel } = usePanelTree();
@@ -35,10 +30,7 @@ export default function ManageRecipient({ onClose }: Props) {
 
   const recipientWallet = ctx?.exchangeContext?.accounts?.recipientAccount;
   const logoURL = recipientWallet?.logoURL;
-  const resolvedLogo = useMemo(
-    () => logoURL || defaultMissingImage,
-    [logoURL],
-  );
+  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
   // Title + left header avatar for the RECIPIENT detail panel
   useRegisterHeaderTitle(
@@ -72,7 +64,7 @@ export default function ManageRecipient({ onClose }: Props) {
       fromDetail: true,
     });
 
-    // Go back to the list panel when the header X is clicked
+    // This can still be used by an in-panel button, but NOT by header X anymore.
     openPanel(
       SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
       'ManageRecipient:handleClose(open list)',
@@ -84,12 +76,6 @@ export default function ManageRecipient({ onClose }: Props) {
 
     onClose?.();
   }, [openPanel, closePanel, onClose]);
-
-  // Header will call this when MANAGE_RECIPIENT_PANEL is the active detail view
-  useRegisterDetailCloser(
-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-    handleClose,
-  );
 
   debugLog.log?.('render', {
     recipientAddress: recipientWallet?.address,
