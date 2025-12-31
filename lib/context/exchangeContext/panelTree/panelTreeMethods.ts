@@ -8,7 +8,7 @@ import {
   toVisibilityMap,
 } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
-import { applyGlobalRadio } from '@/lib/context/exchangeContext/panelTree/panelTreeRadio';
+import { applyGlobalRadio } from '@/lib/context/exchangeContext/panelTree/panelTreeRadioController';
 
 import {
   setScopedRadio,

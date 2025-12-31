@@ -78,11 +78,13 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
 
     // Minimal JSON-safe snapshot — NO panel diffing, NO extra bloat.
     const rawSettings: any = src.settings ?? {};
-    const { mainPanelNode, ...safeSettings } = rawSettings;
+    const safeSettings = { ...rawSettings };
 
     // ✅ Strip non-persisted panels out of the saved panel tree (if present)
     if (safeSettings?.spCoinPanelTree) {
-      safeSettings.spCoinPanelTree = filterNonPersistedPanels(safeSettings.spCoinPanelTree);
+      safeSettings.spCoinPanelTree = filterNonPersistedPanels(
+        safeSettings.spCoinPanelTree,
+      );
     }
 
     const toPersist = {
@@ -111,7 +113,10 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
         err instanceof Error
           ? `${err.name}: ${err.message}\n${err.stack ?? ''}`
           : String(err);
-      debugLog.error?.('localStorage.setItem failed in saveLocalExchangeContext:', msg);
+      debugLog.error?.(
+        'localStorage.setItem failed in saveLocalExchangeContext:',
+        msg,
+      );
       return;
     }
 

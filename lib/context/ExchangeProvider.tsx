@@ -7,7 +7,6 @@ import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 import { initExchangeContext } from '@/lib/context/init/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/providers/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
-import { reconcilePanelState } from '@/lib/context/exchangeContext/helpers/panelReconcile';
 
 import type {
   ExchangeContext as ExchangeContextTypeOnly,
@@ -45,11 +44,10 @@ import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persis
 
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 
-// ✅ Need CHILDREN to derive display branch stack during hydration
-import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
-
-// ✅ Human-readable names for persisted stack nodes
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
+
+// ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
+import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
@@ -57,7 +55,7 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
 
 const TRACE_DISPLAYSTACK =
-  process.env.NEXT_PUBLIC_TRACE_BRANCHSTACK === 'true'; // (kept env var name for compatibility)
+  process.env.NEXT_PUBLIC_TRACE_BRANCHSTACK === 'true'; // kept env var name for compatibility
 
 const debugLog = createDebugLogger('ExchangeProvider', DEBUG_ENABLED, LOG_TIME);
 
@@ -163,7 +161,7 @@ const summarizeStacks = (settings: any) => {
   };
 };
 
-/* ----------------------- Display stack hydration helpers ------------------- */
+/* ----------------------- DisplayStack hydration helpers ------------------- */
 
 export type DISPLAY_STACK_NODE = {
   id: SP_COIN_DISPLAY; // authoritative
@@ -215,28 +213,16 @@ const idsFromNodes = (nodes: DISPLAY_STACK_NODE[]): SP_COIN_DISPLAY[] =>
 const toNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
 
-const samePanelStack = (a: SP_COIN_DISPLAY[], b: SP_COIN_DISPLAY[]) => {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++)
-    if (Number(a[i]) !== Number(b[i])) return false;
-  return true;
-};
-
+/**
+ * Cold-boot fallback:
+ * Build displayStack from visible panels + CHILDREN hierarchy.
+ */
 const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
-  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[
-    Number(panel)
-  ];
+  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[Number(panel)];
   return Array.isArray(maybe) ? maybe : [];
 };
 
-// Wrapper nodes you want to SKIP in the user-facing nav stack
-const NON_INDEXED = new Set<number>([
-  Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL),
-  Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
-  Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
-]);
-
-const computeVisibleDisplayBranchFromPanels = (
+const computeVisibleDisplayStackFromPanels = (
   flatPanels: Array<{ panel: number; visible: boolean }>,
   start: SP_COIN_DISPLAY,
 ): SP_COIN_DISPLAY[] => {
@@ -254,9 +240,9 @@ const computeVisibleDisplayBranchFromPanels = (
 
     path.push(current);
 
-    const kids: SP_COIN_DISPLAY[] = getChildren(current);
-
+    const kids = getChildren(current);
     let selected: SP_COIN_DISPLAY | null = null;
+
     for (const k of kids) {
       if (visibleMap[Number(k)]) {
         selected = k;
@@ -269,41 +255,6 @@ const computeVisibleDisplayBranchFromPanels = (
   }
 
   return path;
-};
-
-// ✅ Build the persisted nav stack by skipping wrapper nodes (e.g. 28)
-const toPersistedNavIds = (displayBranch: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] =>
-  displayBranch.filter((p) => !NON_INDEXED.has(Number(p)));
-
-// ✅ Repair structural visibility: if a descendant is visible, force container visible
-const ensureStructuralContainersVisible = (
-  flatPanels: Array<{ panel: number; visible: boolean; name?: string }>,
-) => {
-  const byId = new Map<
-    number,
-    { panel: number; visible: boolean; name?: string }
-  >();
-  for (const n of flatPanels) byId.set(Number(n.panel), n);
-
-  const setVisible = (id: SP_COIN_DISPLAY) => {
-    const key = Number(id);
-    const node = byId.get(key);
-    if (!node) return;
-    if (!node.visible) node.visible = true;
-  };
-
-  const manage = byId.get(Number(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS));
-  if (manage?.visible) {
-    setVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
-    setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
-  }
-
-  const header = byId.get(Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER));
-  if (header?.visible) {
-    setVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
-  }
-
-  return flatPanels;
 };
 
 /* --------------------------------- Provider -------------------------------- */
@@ -477,23 +428,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         MUST_INCLUDE_ON_BOOT,
       );
 
-      let flatPanels = reconcileOverlayVisibility(ensured);
-      flatPanels = ensureStructuralContainersVisible(flatPanels as any);
+      const flatPanels = reconcileOverlayVisibility(ensured);
 
-      const radioTopLevel: any[] = (settingsAny.mainPanelNode as any[]) ?? [];
-
-      reconcilePanelState(
-        flatPanels as any,
-        radioTopLevel as any,
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      );
-
-      const displayBranch = computeVisibleDisplayBranchFromPanels(
-        flatPanels as any,
-        SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
-      );
-
-      const derivedIds = toPersistedNavIds(displayBranch);
+      // displayStack is hydrated only from persisted settings.displayStack.
+      // BUT: if LS is empty, derive a default from visible panels + CHILDREN.
 
       /**
        * ✅ Hydrate from LS:
@@ -506,18 +444,19 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           ? idsFromNodes(storedNodes)
           : normalizeIdArray(settingsAny.displayStack);
 
-      const chosenIds =
-        storedIds.length === 0 || !samePanelStack(storedIds, derivedIds)
-          ? derivedIds
-          : storedIds;
+      const derivedIds = computeVisibleDisplayStackFromPanels(
+        flatPanels as any,
+        SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
+      );
 
+      const chosenIds = storedIds.length > 0 ? storedIds : derivedIds;
       const chosenNodes = toNodes(chosenIds);
 
       if (DEBUG_ENABLED) {
         // eslint-disable-next-line no-console
         console.log('[ExchangeProvider][boot]', {
-          derivedIds: derivedIds.map(Number),
           storedIds: storedIds.map(Number),
+          derivedIds: derivedIds.map(Number),
           chosenIds: chosenIds.map(Number),
           chosenNodes,
         });
@@ -534,6 +473,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         // eslint-disable-next-line no-console
         console.log('[TRACE][boot] storedNodes', storedNodes);
         // eslint-disable-next-line no-console
+        console.log('[TRACE][boot] derivedIds', derivedIds.map(Number));
+        // eslint-disable-next-line no-console
         console.groupEnd();
       }
 
@@ -548,7 +489,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         // ✅ Option A persisted value (readable LS)
         displayStack: chosenNodes,
 
-        mainPanelNode: radioTopLevel,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
@@ -556,7 +496,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      // Persist on boot (persistExchangeContext will serialize what’s in settings)
+      // Persist on boot
       persistWithOptDiff(undefined, base as ExchangeContextTypeOnly, 'ExchangeContext.settings');
 
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);

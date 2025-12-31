@@ -9,24 +9,15 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import ConnectNetworkButton from '@/components/Buttons/Connect/ConnectNetworkButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import CloseButton from '@/components/Buttons/CloseButton';
-import {
-  SP_COIN_DISPLAY as SP_TREE,
-  type WalletAccount,
-} from '@/lib/structure';
+import { SP_COIN_DISPLAY as SP_TREE, type WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
-import { useOverlayCloseHandler } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_TRADE_HEADER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TRADE_HEADER === 'true';
 
-const debugLog = createDebugLogger(
-  'TradeContainerHeader',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const debugLog = createDebugLogger('TradeContainerHeader', DEBUG_ENABLED, LOG_TIME);
 
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
@@ -35,29 +26,20 @@ export default function TradeContainerHeader() {
   // For slippage cog toggle
   const { openPanel, closePanel, isVisible } = usePanelTree();
 
-  // Generic overlay close (back-to-previous behavior)
-  const { handleCloseOverlay } = useOverlayCloseHandler();
-
   const accounts = exchangeContext?.accounts ?? {};
-  const recipientAccount = accounts.recipientAccount as
-    | WalletAccount
-    | undefined;
+  const recipientAccount = accounts.recipientAccount as WalletAccount | undefined;
   const agentAccount = accounts.agentAccount as WalletAccount | undefined;
   const sponsorAccount = accounts.sponsorAccount as WalletAccount | undefined;
 
   // Use panel visibility to detect which manage detail view is active
   const agentDetailOpen =
-    typeof isVisible === 'function'
-      ? isVisible(SP_TREE.MANAGE_AGENT_PANEL)
-      : false;
+    typeof isVisible === 'function' ? isVisible(SP_TREE.MANAGE_AGENT_PANEL) : false;
   const recipientDetailOpen =
     typeof isVisible === 'function'
       ? isVisible(SP_TREE.MANAGE_RECIPIENT_PANEL)
       : false;
   const sponsorDetailOpen =
-    typeof isVisible === 'function'
-      ? isVisible(SP_TREE.MANAGE_SPONSOR_PANEL)
-      : false;
+    typeof isVisible === 'function' ? isVisible(SP_TREE.MANAGE_SPONSOR_PANEL) : false;
 
   let headerWallet: WalletAccount | undefined;
   if (agentDetailOpen && agentAccount) {
@@ -74,7 +56,7 @@ export default function TradeContainerHeader() {
     // If headerController explicitly provided a leftElement, respect it.
     if (leftElement) return leftElement;
 
-    // If a manage detail panel is open and we have an account, show its (slightly larger) logo
+    // If a manage detail panel is open and we have an account, show its logo
     if (headerWallet && logoSrc) {
       return (
         <div className="flex items-center gap-2">
@@ -82,7 +64,6 @@ export default function TradeContainerHeader() {
             src={logoSrc}
             alt={headerWallet.name || 'Selected account'}
             title={headerWallet.name || headerWallet.address}
-            // 44% larger than 32px -> ~46px
             width={46}
             height={46}
             className="h-[46px] w-[46px] rounded-full object-cover"
@@ -104,20 +85,20 @@ export default function TradeContainerHeader() {
     );
   };
 
-  const handleHeaderClose = () => {
-    debugLog.log?.('handleHeaderClose clicked', {
-      title,
-      isTrading,
-    });
+  /**
+   * ✅ NEW ARCH: Header X must do ONE thing only:
+   * - delegate to useHeaderController.onClose(e) (which closes top of persisted displayStack once)
+   * - DO NOT call useOverlayCloseHandler here (that was the 2nd event).
+   */
+  const handleHeaderClose = (e?: React.MouseEvent) => {
+    debugLog.log?.('handleHeaderClose clicked', { title, isTrading });
 
-    // Allow header-specific onClose (if any) to run first
-    if (onClose) {
-      debugLog.log?.('handleHeaderClose → calling onClose from headerController');
-      onClose();
-    }
+    try {
+      e?.preventDefault();
+      e?.stopPropagation();
+    } catch {}
 
-    // Then perform generic overlay close (return-to-previous behavior)
-    handleCloseOverlay();
+    onClose?.(e);
   };
 
   return (
@@ -149,9 +130,7 @@ export default function TradeContainerHeader() {
                   ? isVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL)
                   : false;
 
-              debugLog.log?.('slippage cog clicked', {
-                currentlyVisible: visible,
-              });
+              debugLog.log?.('slippage cog clicked', { currentlyVisible: visible });
 
               if (visible) {
                 closePanel(
@@ -170,7 +149,7 @@ export default function TradeContainerHeader() {
           />
         ) : (
           <CloseButton
-            closeCallback={handleHeaderClose}
+            closeCallback={(e?: any) => handleHeaderClose(e as any)}
             className="
               absolute top-2 right-[27px] h-10 w-10 rounded-full
               bg-[#243056] text-[#5981F3] flex items-center justify-center

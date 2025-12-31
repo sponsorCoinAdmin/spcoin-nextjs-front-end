@@ -6,14 +6,14 @@ import { useCallback, useMemo, useState, useEffect } from 'react';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 // Read env once, with a safe fallback
 const AGENT_WALLET_TITLE =
   process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
 
-// Detail closers registered by inner detail views
+// ✅ Keep registries (title/left) — they are not navigation.
+// You can remove detailClosers later if you want; they are no longer used by X.
 const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
 export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
   useEffect(() => {
@@ -96,17 +96,19 @@ function titleFor(display: SP_COIN_DISPLAY): string {
       return 'Un-Staking Your Sponsor Coins';
     case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
       return 'Staking Your Sponsor Coins';
+    case SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS:
+      return 'Pending Rewards';
     default:
       return 'Main Panel Header';
   }
 }
 
 export function useHeaderController() {
-  const { openPanel, closePanel } = usePanelTree();
-  const { toTrading } = usePanelTransitions();
+  const { closeTopOfDisplayStack } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Panel visibility map
+  // Visibility is still used for title + left overrides selection.
+  // ✅ Note: MANAGE_PENDING_REWARDS is now treated like a normal stack display.
   const vis = {
     sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
     sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
@@ -115,22 +117,16 @@ export function useHeaderController() {
 
     manageHub: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL),
 
-    // Lists
     manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
     manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsorsList: usePanelVisible(
-      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-    ),
+    manageSponsorsList: usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL),
 
-    // Details
     manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
     manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
     manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
 
-    // NOT A RADIO PANEL — just a toggle inside the hub
     pendingRewards: usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS),
 
-    // Coin-management overlays
     manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL),
     manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL),
 
@@ -139,33 +135,25 @@ export function useHeaderController() {
     trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
   };
 
-  const pendingRewards = vis.pendingRewards;
-
-  // Header must NOT consider MANAGE_PENDING_REWARDS as the current display
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
     if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
     if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
     if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
 
-    // Details
     if (vis.manageAgentDetail) return SP_COIN_DISPLAY.MANAGE_AGENT_PANEL;
     if (vis.manageRecipientDetail) return SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL;
     if (vis.manageSponsorDetail) return SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
 
-    // Lists
+    if (vis.pendingRewards) return SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS;
+
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageSponsorsList)
-      return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
+    if (vis.manageSponsorsList) return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
 
-    // Do NOT return MANAGE_PENDING_REWARDS — not a radio panel
-
-    // Coin management overlays
     if (vis.manageTradingCoins) return SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL;
     if (vis.manageStakingCoins) return SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;
 
-    // Hub
     if (vis.manageHub) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
     if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
@@ -175,84 +163,25 @@ export function useHeaderController() {
     return SP_COIN_DISPLAY.UNDEFINED;
   }, [vis]);
 
-  // Header title resolution
   const overrideTitle = headerTitleOverrides.get(currentDisplay);
   const title = overrideTitle ?? titleFor(currentDisplay);
 
-  // Left-side element
   const leftElementFactory = headerLeftOverrides.get(currentDisplay);
   const leftElement = leftElementFactory ? leftElementFactory() : null;
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
-  // Close handler
-  // IMPORTANT: accept an optional click event so the X button can stop propagation.
+  /**
+   * ✅ NEW ARCH RULE:
+   * Header X closes ONE thing only: top of persisted displayStack.
+   * No openPanel/toTrading/detailClosers logic here.
+   */
   const onClose = useCallback(
     (e?: React.MouseEvent) => {
-      // Prevent the header X click from also triggering any outer “overlay close” handlers.
-      // (This is the precise cause of “pops 2” in your stack dump.)
-      try {
-        e?.preventDefault();
-        e?.stopPropagation();
-      } catch {}
-
-      // RULE: If pendingRewards is active → ONLY close pendingRewards. Nothing else.
-      if (pendingRewards) {
-        closePanel(
-          SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-          'HeaderController:onClose(pendingRewards)',
-        );
-        return;
-      }
-
-      // Delegate to detail closers
-      if (
-        currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENT_PANEL ||
-        currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL ||
-        currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL
-      ) {
-        const closers = detailClosers.get(currentDisplay);
-        if (closers && closers.size) {
-          closers.forEach((fn) => {
-            try {
-              fn();
-            } catch {}
-          });
-          return;
-        }
-      }
-
-      switch (currentDisplay) {
-        case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
-          openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-          return;
-
-        case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
-          openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-          return;
-
-        case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
-          openPanel(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
-          return;
-
-        case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
-        case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
-        case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
-          openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-          return;
-
-        case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
-        case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
-          openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-          return;
-
-        default:
-          toTrading();
-          return;
-      }
+      closeTopOfDisplayStack('HeaderController:onClose', e);
     },
-    [pendingRewards, currentDisplay, closePanel, openPanel, toTrading],
+    [closeTopOfDisplayStack],
   );
 
   return {

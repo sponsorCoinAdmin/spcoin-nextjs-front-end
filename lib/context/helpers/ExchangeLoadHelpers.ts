@@ -5,13 +5,13 @@ import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
 const EXCHANGE_CONTEXT_TREE_DISPLAY_MAP = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
 
-/** Ensure exactly one MAIN_OVERLAY_GROUP panel is visible; if none, use fallback. */
 /** Normalize MAIN_OVERLAY_GROUP visibility:
  *  - If 0 overlays visible: do nothing (allow empty)
  *  - If 1 overlay visible: do nothing
@@ -49,19 +49,67 @@ function normalizeOverlayVisibility(
   }
 }
 
+/* -------------------- displayStack normalization -------------------- */
+
+type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
+
+function normalizeDisplayStackNodes(raw: unknown): DISPLAY_STACK_NODE[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DISPLAY_STACK_NODE[] = [];
+
+  for (const it of raw as any[]) {
+    // tolerate ids-only
+    if (typeof it === 'number' || typeof it === 'string') {
+      const id = Number(it);
+      if (!Number.isFinite(id)) continue;
+      out.push({ id: id as SP_COIN_DISPLAY, name: panelName(id as any) });
+      continue;
+    }
+
+    if (!it || typeof it !== 'object') continue;
+
+    if ('id' in it) {
+      const id = Number((it as any).id);
+      if (!Number.isFinite(id)) continue;
+      const name =
+        typeof (it as any).name === 'string' && String((it as any).name).trim().length
+          ? String((it as any).name)
+          : panelName(id as any);
+      out.push({ id: id as SP_COIN_DISPLAY, name });
+      continue;
+    }
+
+    // tolerate legacy mirror, if it appears
+    if ('displayTypeId' in it) {
+      const id = Number((it as any).displayTypeId);
+      if (!Number.isFinite(id)) continue;
+      const name =
+        typeof (it as any).displayTypeName === 'string' &&
+        String((it as any).displayTypeName).trim().length
+          ? String((it as any).displayTypeName)
+          : panelName(id as any);
+      out.push({ id: id as SP_COIN_DISPLAY, name });
+      continue;
+    }
+  }
+
+  return out;
+}
 
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
     const serializedContext = localStorage.getItem(EXCHANGE_CONTEXT_TREE_DISPLAY_MAP);
 
     if (!serializedContext) {
-      debugLog.warn(`\u26A0\uFE0F NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${EXCHANGE_CONTEXT_TREE_DISPLAY_MAP}`);
+      debugLog.warn(
+        `\u26A0\uFE0F NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${EXCHANGE_CONTEXT_TREE_DISPLAY_MAP}`,
+      );
       return null;
     }
 
     debugLog.log(
       '\ud83d\udd13 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(serialized)\n:',
-      serializedContext
+      serializedContext,
     );
 
     let parsed: any;
@@ -71,62 +119,71 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       debugLog.error(
         `\u274C Failed to deserializeWithBigInt: ${
           parseError instanceof Error ? parseError.message : String(parseError)
-        }`
+        }`,
       );
       return null;
     }
 
     debugLog.log(
       '\u2705 PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:',
-      parsed
+      parsed,
     );
 
     try {
       const prettyPrinted = JSON.stringify(
         parsed,
         (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-        2
+        2,
       );
       debugLog.log(
         '\u2705 (PRETTY PRINT) LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:',
-        prettyPrinted
+        prettyPrinted,
       );
     } catch (stringifyError) {
-      debugLog.warn('\u26A0\uFE0F Failed to pretty-print parsed ExchangeContext:', stringifyError);
+      debugLog.warn(
+        '\u26A0\uFE0F Failed to pretty-print parsed ExchangeContext:',
+        stringifyError,
+      );
     }
 
-    // --------- Clean up settings, drop legacy fields, and normalize overlays ----------
+    // --------- Clean up settings and normalize overlays / stacks ----------
     const settings: any = parsed?.settings ?? {};
 
-    // Never keep legacy mainPanelNode
-    if ('mainPanelNode' in settings) {
-      delete settings.mainPanelNode;
-      debugLog.log('🧹 Dropped legacy settings.mainPanelNode from loaded context');
-    }
+    // Remove deprecated/legacy keys if they still exist
+    if ('mainPanelNode' in settings) delete settings.mainPanelNode;
+    if ('branchStack' in settings) delete settings.branchStack;
+    if ('branchDisplayStack' in settings) delete settings.branchDisplayStack;
 
     // Coerce tree & strip non-persisted/invalid entries
-    const rawTree: any[] = Array.isArray(settings.spCoinPanelTree) ? settings.spCoinPanelTree : [];
-    const flatTree: Array<{ panel: SP_COIN_DISPLAY; visible: boolean; name?: string }> = rawTree
-      .filter((n) => n && typeof n.panel === 'number')
-      .map((n) => ({
-        panel: n.panel as SP_COIN_DISPLAY,
-        visible: !!n.visible,
-        name: typeof n.name === 'string' ? n.name : undefined,
-      }))
-      .filter(
-        (n) =>
-          n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
-          n.panel !== SP_COIN_DISPLAY.UNDEFINED
-      );
+    const rawTree: any[] = Array.isArray(settings.spCoinPanelTree)
+      ? settings.spCoinPanelTree
+      : [];
 
-    // Normalize radio overlays, preserving the saved choice if present
+    const flatTree: Array<{ panel: SP_COIN_DISPLAY; visible: boolean; name?: string }> =
+      rawTree
+        .filter((n) => n && typeof n.panel === 'number')
+        .map((n) => ({
+          panel: n.panel as SP_COIN_DISPLAY,
+          visible: !!n.visible,
+          name: typeof n.name === 'string' ? n.name : undefined,
+        }))
+        .filter(
+          (n) =>
+            n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
+            n.panel !== SP_COIN_DISPLAY.UNDEFINED,
+        );
+
+    // Normalize radio overlays
     normalizeOverlayVisibility(flatTree);
+
+    // Normalize displayStack to nodes (do NOT derive here; Provider/persist handles seeding)
+    settings.displayStack = normalizeDisplayStackNodes(settings.displayStack);
 
     // Reassign cleaned settings, optionally bump schema
     settings.spCoinPanelTree = flatTree;
     settings.spCoinPanelSchemaVersion = Math.max(
       3,
-      Number(settings.spCoinPanelSchemaVersion ?? 0)
+      Number(settings.spCoinPanelSchemaVersion ?? 0),
     );
 
     parsed.settings = settings;
@@ -138,7 +195,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     debugLog.error(
       `\u26D4\uFE0F Failed to load exchangeContext: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
     return null;
   }

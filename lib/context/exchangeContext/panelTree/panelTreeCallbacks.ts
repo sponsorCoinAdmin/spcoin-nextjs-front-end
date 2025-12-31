@@ -12,7 +12,12 @@ import {
 } from './panelTreePersistence';
 
 import { schedule, logAction } from './panelTreeDebug';
-import { applyGlobalRadio } from './panelTreeRadio';
+import {
+  applyGlobalRadio,
+  ensureOneGlobalOverlayVisible,
+  restorePrevRadioMember,
+  type RadioGroup,
+} from './panelTreeRadioController';
 
 import {
   closeManageBranch,
@@ -80,34 +85,8 @@ function isChainedCloseInvoker(invoker?: string) {
   return invoker.includes('useOverlayCloseHandler');
 }
 
-function hasAnyOverlayVisible(
-  map: Record<number, boolean>,
-  overlays: SP_COIN_DISPLAY[],
-) {
-  for (const id of overlays) if (map[Number(id)]) return true;
-  return false;
-}
-
-function ensureOneGlobalOverlayVisible(
-  flat: PanelEntry[],
-  overlays: SP_COIN_DISPLAY[],
-  fallback: SP_COIN_DISPLAY,
-  withName: (e: PanelEntry) => PanelEntry,
-) {
-  const m = toVisibilityMap(flat);
-  if (hasAnyOverlayVisible(m, overlays)) return flat;
-
-  let next = ensurePanelPresent(flat, fallback);
-  next = applyGlobalRadio(next, overlays, fallback, withName);
-  return next;
-}
-
 /**
  * Priority close-top chooser (VISIBILITY-BASED).
- *
- * IMPORTANT:
- * This MUST ONLY be used for legacy "header close" calls that pass the *container*
- * (manageCfg.manageContainer) into closePanel/closeTopPanel.
  *
  * If callers pass the true leaf (your NAV displayStack logic), we close exactly what
  * was requested and DO NOT re-derive a different "top" here.
@@ -135,6 +114,26 @@ function deriveTopFromVisibility(opts: {
   }
 
   return null;
+}
+
+/* ---------------- displayStack normalize ---------------- */
+
+function normalizeDisplayStackNodesToIds(raw: unknown): SP_COIN_DISPLAY[] {
+  if (!Array.isArray(raw)) return [];
+  const ids: number[] = [];
+
+  for (const item of raw as any[]) {
+    if (item && typeof item === 'object') {
+      if ('id' in item) ids.push(Number((item as any).id));
+      else if ('displayTypeId' in item) ids.push(Number((item as any).displayTypeId));
+      continue;
+    }
+    ids.push(Number(item));
+  }
+
+  return ids
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY);
 }
 
 /* ---------------- factory ---------------- */
@@ -170,6 +169,12 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
       console.warn('[panelTreeCallbacks] diffAndPublish missing (noop).');
     }
   };
+
+  const radioGroupsPriority: RadioGroup[] = [
+    // Most-nested / highest priority first
+    { name: 'MANAGE_SCOPED', members: manageScoped },
+    { name: 'MAIN_OVERLAY_GROUP', members: overlays },
+  ];
 
   /* ---------------- open ---------------- */
 
@@ -310,11 +315,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
   /* ---------------- close ---------------- */
 
-  const closeTopPanel = (invoker?: string) => {
-    // Legacy path: callers still using base.closeTopPanel will close the container.
-    closePanel(manageCfg.manageContainer, invoker ?? 'HeaderX');
-  };
-
   const closePanel = (
     panel: SP_COIN_DISPLAY,
     invoker?: string,
@@ -333,7 +333,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           known,
         );
 
-        // ✅ KEY FIX:
         // Close EXACTLY what the caller requested.
         // Only legacy header-close-of-container is allowed to "derive top".
         let panelToClose: SP_COIN_DISPLAY = panel;
@@ -354,11 +353,24 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           if (derived) panelToClose = derived;
         }
 
-        let next = flat0.map((e) =>
-          e.panel === panelToClose ? { ...withName(e), visible: false } : e,
+        // displayStack drives "restore previous radio member" behavior
+        const displayStackIds = normalizeDisplayStackNodesToIds(
+          (prev as any)?.settings?.displayStack,
         );
 
+        // Hide + (if needed) restore previous radio member (nested-first priority)
+        const restoredResult = restorePrevRadioMember({
+          flatIn: flat0,
+          displayStack: displayStackIds,
+          closing: panelToClose,
+          radioGroupsPriority,
+          withName,
+        });
+
+        let next = restoredResult.nextFlat;
+
         // If closing a global overlay, enforce fallback and possibly close manage branch.
+        // NOTE: restorePrevRadioMember may already have restored another overlay in the same group.
         if (isGlobalOverlay(panelToClose)) {
           if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
             manageScopedHistoryRef.current = [];
@@ -378,5 +390,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
       });
     });
   };
-  return { openPanel, closePanel, closeTopPanel };
+
+  return { openPanel, closePanel };
 }

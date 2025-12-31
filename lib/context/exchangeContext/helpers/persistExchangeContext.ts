@@ -11,6 +11,9 @@ import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStor
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
+// ✅ to derive displayStack from spCoinPanelTree when LS is empty / stack missing
+import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+
 const LOG_TIME_PERSIST = false;
 const DEBUG_ENABLED_PERSIST =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PERSIST_EXCHANGE_CONTEXT === 'true';
@@ -138,16 +141,77 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
   return out;
 }
 
+function deriveDisplayStackFromPanelTree(settings: any): DISPLAY_STACK_NODE[] {
+  const rawTree: any[] = Array.isArray(settings?.spCoinPanelTree)
+    ? settings.spCoinPanelTree
+    : [];
+
+  const visibleMap: Record<number, boolean> = {};
+  for (const n of rawTree) {
+    if (!n || typeof n.panel !== 'number') continue;
+    visibleMap[Number(n.panel)] = !!n.visible;
+  }
+
+  const getKids = (p: number): number[] => {
+    const maybe = (CHILDREN as unknown as Record<number, number[]>)[Number(p)];
+    return Array.isArray(maybe) ? maybe : [];
+  };
+
+  const start = Number((settings as any)?.displayStackRoot ?? 12); // default MAIN_TRADING_PANEL id
+  // If the enum value is available at runtime, prefer it. (Safe even if undefined.)
+  const MAIN_TRADING_PANEL = (settings as any)?.MAIN_TRADING_PANEL;
+  const root = Number.isFinite(Number(MAIN_TRADING_PANEL))
+    ? Number(MAIN_TRADING_PANEL)
+    : start;
+
+  const seen = new Set<number>();
+  const path: number[] = [];
+  let current: number | null = root;
+
+  while (current != null) {
+    const id = Number(current);
+    if (!Number.isFinite(id)) break;
+    if (seen.has(id)) break;
+    seen.add(id);
+
+    path.push(id);
+
+    const kids = getKids(id);
+    let selected: number | null = null;
+
+    for (const k of kids) {
+      if (visibleMap[Number(k)]) {
+        selected = Number(k);
+        break;
+      }
+    }
+
+    if (!selected) break;
+    current = selected;
+  }
+
+  return path.map((id) => toNode(id));
+}
+
 /**
  * Ensures LS persistence uses ONLY:
  *   settings.displayStack: DISPLAY_STACK_NODE[]
  *
+ * Fix:
+ * - If displayStack is missing/empty, derive it from settings.spCoinPanelTree visibility,
+ *   then persist it so a "fresh LS" boot writes a non-empty displayStack immediately.
  */
 function ensureReadableDisplayStack(next: ExchangeContext): ExchangeContext {
   const settings: any = (next as any)?.settings;
   if (!settings) return next;
 
-  const finalNodes = normalizeDisplayStackNodes(settings.displayStack);
+  let finalNodes = normalizeDisplayStackNodes(settings.displayStack);
+
+  // ✅ If missing/empty, derive from panel tree (fresh LS case)
+  if (finalNodes.length === 0) {
+    const derived = deriveDisplayStackFromPanelTree(settings);
+    if (derived.length > 0) finalNodes = derived;
+  }
 
   settings.displayStack = finalNodes;
 
