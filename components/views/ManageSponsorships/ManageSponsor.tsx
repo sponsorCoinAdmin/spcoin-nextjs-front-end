@@ -3,7 +3,6 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
@@ -16,8 +15,7 @@ import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 type Props = { onClose?: () => void };
 
-export default function ManageSponsor({ onClose }: Props) {
-  const { closePanel, openPanel } = usePanelTree();
+export default function ManageSponsor(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
@@ -66,20 +64,11 @@ export default function ManageSponsor({ onClose }: Props) {
       `Connected account: ${connected ? connected.address : '(none connected)'}`;
     // eslint-disable-next-line no-alert
     alert(msg);
-  }, [ctx?.exchangeContext?.accounts?.activeAccount, sponsorWallet?.name, sponsorWallet?.address]);
-
-  const handleClose = useCallback(() => {
-    // Return user to the sponsors list when closing detail
-    openPanel(
-      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-      'ManageSponsor:handleClose(open)',
-    );
-    closePanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-      'ManageSponsor:handleClose(close)',
-    );
-    onClose?.();
-  }, [openPanel, closePanel, onClose]);
+  }, [
+    ctx?.exchangeContext?.accounts?.activeAccount,
+    sponsorWallet?.name,
+    sponsorWallet?.address,
+  ]);
 
   return (
     <div id="MANAGE_SPONSOR_PANEL">

@@ -1,9 +1,8 @@
 // File: @/components/views/ManageSponsorships/ManageRecipient.tsx
 'use client';
 
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
@@ -24,8 +23,7 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('ManageRecipient', DEBUG_ENABLED, LOG_TIME);
 
-export default function ManageRecipient({ onClose }: Props) {
-  const { closePanel, openPanel } = usePanelTree();
+export default function ManageRecipient(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const recipientWallet = ctx?.exchangeContext?.accounts?.recipientAccount;
@@ -58,24 +56,6 @@ export default function ManageRecipient({ onClose }: Props) {
   );
 
   const [showToDo, setShowToDo] = useState<boolean>(true);
-
-  const handleClose = useCallback(() => {
-    debugLog.log?.('handleClose → back to MANAGE_RECIPIENTS_PANEL', {
-      fromDetail: true,
-    });
-
-    // This can still be used by an in-panel button, but NOT by header X anymore.
-    openPanel(
-      SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-      'ManageRecipient:handleClose(open list)',
-    );
-    closePanel(
-      SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-      'ManageRecipient:handleClose(close detail)',
-    );
-
-    onClose?.();
-  }, [openPanel, closePanel, onClose]);
 
   debugLog.log?.('render', {
     recipientAddress: recipientWallet?.address,

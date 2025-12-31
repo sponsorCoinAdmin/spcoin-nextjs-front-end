@@ -1,9 +1,8 @@
 // File: @/components/views/ManageSponsorships/ManageAgent.tsx
 'use client';
 
-import React, { useCallback, useContext, useState, useMemo } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
@@ -16,8 +15,7 @@ import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 type Props = { onClose?: () => void };
 
-export default function ManageAgent({ onClose }: Props) {
-  const { closePanel, openPanel } = usePanelTree();
+export default function ManageAgent(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const agentWallet = ctx?.exchangeContext?.accounts?.agentAccount;
@@ -50,13 +48,6 @@ export default function ManageAgent({ onClose }: Props) {
   );
 
   const [showToDo, setShowToDo] = useState<boolean>(true);
-
-  const handleClose = useCallback(() => {
-    // This is still fine if you call it from an in-panel button.
-    openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'ManageAgent:handleClose()');
-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgent:handleClose()');
-    onClose?.();
-  }, [openPanel, closePanel, onClose]);
 
   return (
     <div id="MANAGE_AGENT_PANEL">
