@@ -31,13 +31,6 @@ import {
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
-/* ───────────────────────────── Runtime NAV stack (NOT persisted) ───────────────────────────── */
-/**
- * Internal runtime navigation stack used for open/close ordering.
- * Persisted stack is ONLY: settings.displayStack
- */
-const NAV_STACK: SP_COIN_DISPLAY[] = [];
-
 const DEBUG_NAV =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE === 'true';
@@ -51,56 +44,11 @@ const DEBUG_CLOSE_INVARIANTS_RENDER =
 const DEBUG_OPEN_INFER_PARENT =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_OPEN_INFER_PARENT === 'true';
 
-const snapshotNav = (): SP_COIN_DISPLAY[] => NAV_STACK.slice();
-
-const navEnsureSeeded = (seed: SP_COIN_DISPLAY[] | number[]): void => {
-  if (NAV_STACK.length > 0) return;
-  if (!seed.length) return;
-  NAV_STACK.length = 0;
-  for (const p of seed as any) NAV_STACK.push(p as any);
-};
-
-const navPush = (panel: SP_COIN_DISPLAY): void => {
-  const idx = NAV_STACK.lastIndexOf(panel);
-  if (idx >= 0) {
-    NAV_STACK.length = idx + 1;
-    return;
-  }
-  NAV_STACK.push(panel);
-};
-
-const navPop = (panel: SP_COIN_DISPLAY): void => {
-  if (!NAV_STACK.length) return;
-
-  const top = NAV_STACK[NAV_STACK.length - 1] as SP_COIN_DISPLAY;
-  if (Number(top) === Number(panel)) {
-    NAV_STACK.pop();
-    return;
-  }
-
-  const idx = NAV_STACK.lastIndexOf(panel);
-  if (idx >= 0) NAV_STACK.length = idx; // removes the panel and anything above it
-};
-
-const navNodeShow = (panel: SP_COIN_DISPLAY): void => navPush(panel);
-const navNodeHide = (panel: SP_COIN_DISPLAY): void => navPop(panel);
-
 const nameOf = (p: SP_COIN_DISPLAY | number | null | undefined) =>
   p == null ? null : panelName(Number(p) as any);
 
 const toNamedStack = (arr: SP_COIN_DISPLAY[]) =>
   arr.map((p) => ({ id: Number(p), name: nameOf(p) }));
-
-const logNav = (tag?: string) => {
-  if (!DEBUG_NAV) return;
-  // eslint-disable-next-line no-console
-  console.log(`[PanelTree] navStack${tag ? ` (${tag})` : ''} =`, [
-    ...NAV_STACK.map((p) => ({
-      name: panelName(Number(p) as any),
-      id: Number(p),
-    })),
-  ]);
-};
 
 type LastAction =
   | {
@@ -108,7 +56,7 @@ type LastAction =
       panel: SP_COIN_DISPLAY;
       invoker?: string;
       parent?: SP_COIN_DISPLAY;
-      navBefore: SP_COIN_DISPLAY[];
+      stackBefore: SP_COIN_DISPLAY[];
       ts: number;
     }
   | {
@@ -116,7 +64,7 @@ type LastAction =
       requested: SP_COIN_DISPLAY;
       target: SP_COIN_DISPLAY;
       invoker?: string;
-      navBefore: SP_COIN_DISPLAY[];
+      stackBefore: SP_COIN_DISPLAY[];
       ts: number;
     }
   | null;
@@ -140,7 +88,7 @@ const diffVisibility = (
   return changes;
 };
 
-/* ───────────────────────────── DisplayStack helpers (Option A) ───────────────────────────── */
+/* ───────────────────────────── DisplayStack helpers (single source of truth) ───────────────────────────── */
 
 type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
 
@@ -159,26 +107,19 @@ const sameStack = (
   return true;
 };
 
-// Wrapper nodes to SKIP in persisted nav stack
+// Wrapper nodes to SKIP in persisted stack
 const NON_INDEXED = new Set<number>([
   Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL),
   Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
   Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
 ]);
 
-const toPersistedNavIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
+const toPersistedStackIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
   normalizeIds(arr).filter((p) => !NON_INDEXED.has(Number(p)));
 
 const toDisplayStackNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
 
-/**
- * Accepts:
- * - new: [{id,name}]
- * - legacy: number[]
- * - older experimental: [{displayTypeId,...}]
- * - mixed (defensive)
- */
 const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
   if (!Array.isArray(raw)) return [];
   const ids: number[] = [];
@@ -186,8 +127,7 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
   for (const item of raw as any[]) {
     if (item && typeof item === 'object') {
       if ('id' in item) ids.push(Number((item as any).id));
-      else if ('displayTypeId' in item)
-        ids.push(Number((item as any).displayTypeId));
+      else if ('displayTypeId' in item) ids.push(Number((item as any).displayTypeId));
       continue;
     }
     ids.push(Number(item));
@@ -198,39 +138,8 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
     .map((x) => x as SP_COIN_DISPLAY);
 };
 
-/* ───────────────────────────── Header close detection ───────────────────────────── */
-
-function isHeaderCloseInvoker(invoker?: string) {
-  if (!invoker) return false;
-  return (
-    invoker.includes('HeaderX') ||
-    invoker.includes('HeaderController') ||
-    invoker.includes('TopBar') ||
-    invoker.includes('TradeContainerHeader') ||
-    invoker.includes('useOverlayCloseHandler')
-  );
-}
-
-/**
- * Remove ONLY the last occurrence of target.
- * Used to keep persisted displayStack accurate when runtime NAV_STACK diverges.
- */
-function removeLastOccurrence(
-  stack: readonly SP_COIN_DISPLAY[],
-  target: SP_COIN_DISPLAY,
-): SP_COIN_DISPLAY[] {
-  for (let i = stack.length - 1; i >= 0; i--) {
-    if (Number(stack[i]) === Number(target)) {
-      return [...stack.slice(0, i), ...stack.slice(i + 1)];
-    }
-  }
-  return [...stack];
-}
-
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-
-  /* ------------------------------- source -------------------------------- */
 
   const list = useMemo<PanelEntry[]>(() => {
     return flattenPanelTree(
@@ -241,14 +150,10 @@ export function usePanelTree() {
 
   const visibilityMap = useMemo(() => toVisibilityMap(list), [list]);
 
-  /* -------------------------- global overlays ----------------------------- */
-
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
   const isGlobalOverlay = useCallback((p: SP_COIN_DISPLAY) => overlays.includes(p), [
     overlays,
   ]);
-
-  /* -------------------------- manage scope -------------------------------- */
 
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
 
@@ -287,8 +192,6 @@ export function usePanelTree() {
     [manageCfg, manageScopedSet, manageDescendantsSet],
   );
 
-  /* ------------------------------ helpers --------------------------------- */
-
   const withName = useCallback(
     (e: PanelEntry) => ({ ...e, name: e.name ?? panelName(e.panel) }),
     [],
@@ -318,8 +221,6 @@ export function usePanelTree() {
     [],
   );
 
-  /* -------------------------- panelStore sync ----------------------------- */
-
   const publishVisibility = useCallback((nextMap: Record<number, boolean>) => {
     for (const [idStr, v] of Object.entries(nextMap)) {
       panelStore.setVisible(Number(idStr) as SP_COIN_DISPLAY, !!v);
@@ -328,20 +229,13 @@ export function usePanelTree() {
 
   useMemo(() => publishVisibility(visibilityMap), [visibilityMap, publishVisibility]);
 
-  /* ------------------------------ queries -------------------------------- */
-
-  const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
-    [],
-  );
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
 
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
       (((CHILDREN as any)?.[panel] as unknown) as SP_COIN_DISPLAY[]) ?? [],
     [],
   );
-
-  /* ------------------------------ safe context update --------------------- */
 
   const setExchangeContextSafe = useCallback(
     (nextOrUpdater: any) => {
@@ -358,25 +252,14 @@ export function usePanelTree() {
     [setExchangeContext, exchangeContext],
   );
 
-  /* ------------------------------ persistence ----------------------------- */
-
   const getPersistedDisplayStackIds = useCallback((): SP_COIN_DISPLAY[] => {
     const currentRaw = (exchangeContext as any)?.settings?.displayStack;
-    return toPersistedNavIds(normalizeDisplayStackNodesToIds(currentRaw));
+    return toPersistedStackIds(normalizeDisplayStackNodesToIds(currentRaw));
   }, [exchangeContext]);
 
-  /**
-   * Persist ONLY settings.displayStack.
-   *
-   * IMPORTANT:
-   * - We only REMOVE (pop) from persisted displayStack on HEADER closes (X / back)
-   * - Non-header closes are "hide only" and do not mutate persisted displayStack,
-   *   because panelTreeCallbacks uses displayStack history to restore prev radio member.
-   */
   const persistDisplayStack = useCallback(
     (nextIds: SP_COIN_DISPLAY[] | number[]) => {
-      const nextPersistedIds = toPersistedNavIds(nextIds as any);
-
+      const nextPersistedIds = toPersistedStackIds(nextIds as any);
       const currentIds = getPersistedDisplayStackIds();
       if (sameStack(currentIds, nextPersistedIds)) return;
 
@@ -395,37 +278,6 @@ export function usePanelTree() {
     },
     [getPersistedDisplayStackIds, setExchangeContextSafe],
   );
-
-  /**
-   * Hydration + invariants:
-   * - seed NAV_STACK from persisted displayStack (once)
-   * - if persisted displayStack CHANGES externally, sync NAV_STACK to it
-   * - otherwise allow NAV_STACK to diverge (runtime-only) for "hide-only" closes
-   */
-  const lastPersistedIdsRef = useRef<SP_COIN_DISPLAY[] | null>(null);
-
-  useEffect(() => {
-    const persistedIds = getPersistedDisplayStackIds();
-
-    // 1) Seed runtime stack if empty
-    if (NAV_STACK.length === 0 && persistedIds.length > 0) {
-      navEnsureSeeded(persistedIds);
-      lastPersistedIdsRef.current = persistedIds;
-      return;
-    }
-
-    // 2) Only resync NAV_STACK when persisted displayStack actually changed
-    const last = lastPersistedIdsRef.current ?? [];
-    const persistedChanged = !sameStack(last, persistedIds);
-
-    if (persistedChanged) {
-      NAV_STACK.length = 0;
-      for (const id of persistedIds) NAV_STACK.push(id);
-      lastPersistedIdsRef.current = persistedIds;
-    }
-  }, [getPersistedDisplayStackIds]);
-
-  /* ------------------------------ debug tracer ---------------------------- */
 
   const lastActionRef = useRef<LastAction>(null);
   const lastVisRef = useRef<Record<number, boolean> | null>(null);
@@ -447,73 +299,35 @@ export function usePanelTree() {
 
     const persistedIds = getPersistedDisplayStackIds();
     const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
-
     const action = lastActionRef.current;
-
-    const lastActionFmt =
-      action?.kind === 'openPanel'
-        ? {
-            kind: action.kind,
-            ts: action.ts,
-            ageMs: Date.now() - action.ts,
-            panel: { id: Number(action.panel), name: nameOf(action.panel) },
-            invoker: action.invoker,
-            parent:
-              action.parent != null
-                ? { id: Number(action.parent), name: nameOf(action.parent) }
-                : null,
-          }
-        : action?.kind === 'closePanel'
-          ? {
-              kind: action.kind,
-              ts: action.ts,
-              ageMs: Date.now() - action.ts,
-              requested: { id: Number(action.requested), name: nameOf(action.requested) },
-              target: { id: Number(action.target), name: nameOf(action.target) },
-              invoker: action.invoker,
-            }
-          : null;
 
     // eslint-disable-next-line no-console
     console.log('[PanelTree][render-sync]', {
-      lastAction: lastActionFmt,
-
+      lastAction: action,
       claimVisible_map: !!visibilityMap[Number(claim)],
       claimVisible_store: panelStore.isVisible(claim),
-
       manageVisible_map: visibleManageKidsFromMap(),
       manageVisible_store: visibleManageKidsFromStore(),
-
-      navStackNow: toNamedStack(snapshotNav()),
       persistedDisplayStackNow: toNamedStack(persistedIds),
-
       displayStack_persisted: persistedRaw,
     });
   }, [visibilityMap, manageScoped, exchangeContext, getPersistedDisplayStackIds]);
-
-  /* ------------------------------ actions -------------------------------- */
 
   const callbacksDeps: PanelTreeCallbacksDeps = useMemo(
     () => ({
       known: KNOWN,
       overlays,
-
       manageCfg,
       manageScoped,
       manageScopedSet,
-
       isGlobalOverlay,
       isManageRadioChild,
       isManageAnyChild,
-
       withName,
-
       sponsorParentRef,
       manageScopedHistoryRef,
-
       getActiveManageScoped,
       pushManageScopedHistory,
-
       diffAndPublish: (prev, next) => {
         publishVisibility(next);
 
@@ -523,18 +337,13 @@ export function usePanelTree() {
         }
 
         const changes = diffVisibility(prev ?? lastVisRef.current, next);
-        const action = lastActionRef.current;
-        const ageMs = action ? Date.now() - action.ts : null;
-
         // eslint-disable-next-line no-console
         console.log('[PanelTree][close-invariants] publishVisibility', {
-          lastAction: action ? { ...action, ageMs } : null,
           visibilityChanges: changes.length ? changes : '(none)',
         });
 
         lastVisRef.current = next;
       },
-
       setExchangeContext,
     }),
     [
@@ -555,6 +364,8 @@ export function usePanelTree() {
 
   const base = useMemo(() => createPanelTreeCallbacks(callbacksDeps), [callbacksDeps]);
 
+  /* ------------------------------ actions -------------------------------- */
+
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const inferredParent =
@@ -569,125 +380,92 @@ export function usePanelTree() {
         });
       }
 
-      const navBefore = snapshotNav();
+      const stackBefore = getPersistedDisplayStackIds();
       lastActionRef.current = {
         kind: 'openPanel',
         panel,
         invoker,
         parent: inferredParent,
-        navBefore,
+        stackBefore,
         ts: Date.now(),
       };
 
-      navNodeShow(panel);
-
-      // Opening always appends/normalizes the persisted displayStack.
-      persistDisplayStack(toPersistedNavIds(snapshotNav()));
+      const nextStack = toPersistedStackIds([...stackBefore, panel]);
+      persistDisplayStack(nextStack);
 
       base.openPanel(panel, invoker, inferredParent);
 
-      if (DEBUG_NAV) logNav(`show:${panelName(Number(panel) as any)}`);
+      if (DEBUG_NAV) {
+        // eslint-disable-next-line no-console
+        console.log('[PanelTree] displayStack (push) =', toNamedStack(nextStack));
+      }
     },
-    [base, manageContainer, manageScopedSet, persistDisplayStack],
+    [base, manageContainer, manageScopedSet, getPersistedDisplayStackIds, persistDisplayStack],
   );
 
-  /**
-   * ✅ NEW: Header-close API (displayStack authoritative)
-   *
-   * Closes EXACTLY the top entry from persisted displayStack and persists the pop.
-   * This bypasses manage-container leaf inference and any visibility-driven heuristics.
-   */
   const closeTopOfDisplayStack = useCallback(
     (invoker?: string, arg?: unknown) => {
       const persistedIds = getPersistedDisplayStackIds();
       if (!persistedIds.length) return;
 
-      // Seed NAV_STACK if needed (defensive)
-      navEnsureSeeded(persistedIds);
-
       const closing = persistedIds[persistedIds.length - 1] as SP_COIN_DISPLAY;
       const nextPersisted = persistedIds.slice(0, -1);
 
-      const navBefore = snapshotNav();
       lastActionRef.current = {
         kind: 'closePanel',
         requested: closing,
         target: closing,
         invoker: invoker ?? 'usePanelTree:closeTopOfDisplayStack',
-        navBefore,
+        stackBefore: persistedIds,
         ts: Date.now(),
       };
 
-      // Keep runtime stack consistent with persisted pop
-      navNodeHide(closing);
-
-      // Persist pop (authoritative)
       persistDisplayStack(nextPersisted);
 
-      // Close the exact panel
-      base.closePanel(closing, invoker, arg);
+      base.closePanel(closing, invoker ?? 'closeTopOfDisplayStack:persist-pop', arg);
 
       if (DEBUG_NAV) {
-        logNav(`hide:${panelName(Number(closing) as any)}:persist-pop(displayStack)`);
+        // eslint-disable-next-line no-console
+        console.log('[PanelTree] displayStack (pop) =', toNamedStack(nextPersisted));
       }
     },
     [base, getPersistedDisplayStackIds, persistDisplayStack],
   );
 
-  /**
-   * CLOSE semantics:
-   * - Always update runtime NAV_STACK (for ordering / "what's current" decisions)
-   * - Only mutate persisted displayStack on HEADER closes (X / back)
-   *
-   * IMPORTANT FIX:
-   * - For header closes, persisted displayStack is authoritative (NOT NAV_STACK),
-   *   because NAV_STACK can diverge due to hide-only closes.
-   */
+  // ✅ visibility-based leaf inference (because stack top may be hidden)
+  const deriveVisibleManageLeaf = useCallback((): SP_COIN_DISPLAY | null => {
+    const pending = SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS;
+    if (isVisible(pending)) return pending;
+
+    for (const id of manageScoped) {
+      if (isVisible(id)) return id;
+    }
+    return null;
+  }, [isVisible, manageScoped]);
+
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
-      const navBefore = snapshotNav();
-      const leaf = navBefore.length
-        ? (navBefore[navBefore.length - 1] as SP_COIN_DISPLAY)
-        : null;
+      const stackBefore = getPersistedDisplayStackIds();
 
-      // Closing manage container closes leaf (child) if leaf is not container
-      const target =
-        leaf &&
-        Number(panel) === Number(manageContainer) &&
-        Number(leaf) !== Number(panel)
-          ? leaf
-          : panel;
+      let target = panel;
+
+      // hide-only close of manageContainer closes the currently visible manage leaf
+      if (Number(panel) === Number(manageContainer)) {
+        target = deriveVisibleManageLeaf() ?? manageContainer;
+      }
 
       lastActionRef.current = {
         kind: 'closePanel',
         requested: panel,
         target,
         invoker,
-        navBefore,
+        stackBefore,
         ts: Date.now(),
       };
 
-      // Always update runtime stack
-      navNodeHide(target);
-
-      if (isHeaderCloseInvoker(invoker)) {
-        // Persisted displayStack is authoritative: remove the *last* occurrence of target.
-        const persistedIds = getPersistedDisplayStackIds();
-        const nextPersisted = removeLastOccurrence(persistedIds, target);
-        persistDisplayStack(nextPersisted);
-      }
-
       base.closePanel(target, invoker, arg);
-
-      if (DEBUG_NAV) {
-        logNav(
-          `hide:${panelName(Number(target) as any)}${
-            isHeaderCloseInvoker(invoker) ? ':persist-pop' : ':hide-only'
-          }`,
-        );
-      }
     },
-    [base, manageContainer, persistDisplayStack, getPersistedDisplayStackIds],
+    [base, manageContainer, getPersistedDisplayStackIds, deriveVisibleManageLeaf],
   );
 
   /* ------------------------------ derived -------------------------------- */
@@ -704,8 +482,6 @@ export function usePanelTree() {
     [visibilityMap],
   );
 
-  /* ------------------------------ debug ---------------------------------- */
-
   const dumpNavStack = useCallback(
     (tag?: string): void => {
       const title = `[PanelTree] displayStack${tag ? ` (${tag})` : ''}`;
@@ -717,11 +493,9 @@ export function usePanelTree() {
       const persistedIds = getPersistedDisplayStackIds();
 
       // eslint-disable-next-line no-console
-      console.log('[PanelTree] navStack =', toNamedStack(snapshotNav()));
-      // eslint-disable-next-line no-console
       console.log('[PanelTree] displayStack (persisted) =', persistedRaw);
       // eslint-disable-next-line no-console
-      console.log('[PanelTree] displayStack (persisted ids) =', toNamedStack(persistedIds));
+      console.log('[PanelTree] displayStack (ids) =', toNamedStack(persistedIds));
 
       // eslint-disable-next-line no-console
       console.groupEnd();
@@ -736,10 +510,7 @@ export function usePanelTree() {
     getPanelChildren,
     openPanel,
     closePanel,
-
-    // ✅ New architecture: header X should call this (displayStack-only close once)
     closeTopOfDisplayStack,
-
     dumpNavStack,
   };
 }

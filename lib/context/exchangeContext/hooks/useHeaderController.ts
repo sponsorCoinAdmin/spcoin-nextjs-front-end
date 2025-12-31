@@ -12,25 +12,6 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 const AGENT_WALLET_TITLE =
   process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
 
-// ✅ Keep registries (title/left) — they are not navigation.
-// You can remove detailClosers later if you want; they are no longer used by X.
-const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
-export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
-  useEffect(() => {
-    if (!fn) return;
-    let set = detailClosers.get(panel);
-    if (!set) {
-      set = new Set();
-      detailClosers.set(panel, set);
-    }
-    set.add(fn);
-    return () => {
-      set?.delete(fn);
-      if (set && set.size === 0) detailClosers.delete(panel);
-    };
-  }, [panel, fn]);
-}
-
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
 export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
@@ -107,8 +88,7 @@ export function useHeaderController() {
   const { closeTopOfDisplayStack } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Visibility is still used for title + left overrides selection.
-  // ✅ Note: MANAGE_PENDING_REWARDS is now treated like a normal stack display.
+  // Visibility is used ONLY for computing header title/left (not for nav).
   const vis = {
     sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
     sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
@@ -119,12 +99,15 @@ export function useHeaderController() {
 
     manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
     manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsorsList: usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL),
+    manageSponsorsList: usePanelVisible(
+      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    ),
 
     manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
     manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
     manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
 
+    // ✅ Normal stack display now
     pendingRewards: usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS),
 
     manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL),
@@ -149,7 +132,8 @@ export function useHeaderController() {
 
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageSponsorsList) return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
+    if (vis.manageSponsorsList)
+      return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
 
     if (vis.manageTradingCoins) return SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL;
     if (vis.manageStakingCoins) return SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;
@@ -174,11 +158,14 @@ export function useHeaderController() {
 
   /**
    * ✅ NEW ARCH RULE:
-   * Header X closes ONE thing only: top of persisted displayStack.
-   * No openPanel/toTrading/detailClosers logic here.
+   * Header X = POP stack (close top of persisted displayStack) exactly once.
    */
   const onClose = useCallback(
     (e?: React.MouseEvent) => {
+      try {
+        e?.preventDefault();
+        e?.stopPropagation();
+      } catch {}
       closeTopOfDisplayStack('HeaderController:onClose', e);
     },
     [closeTopOfDisplayStack],

@@ -23,7 +23,7 @@ export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const { title, leftElement, onClose, isTrading } = useHeaderController();
 
-  // For slippage cog toggle
+  // For slippage cog toggle (hide-only close)
   const { openPanel, closePanel, isVisible } = usePanelTree();
 
   const accounts = exchangeContext?.accounts ?? {};
@@ -31,32 +31,20 @@ export default function TradeContainerHeader() {
   const agentAccount = accounts.agentAccount as WalletAccount | undefined;
   const sponsorAccount = accounts.sponsorAccount as WalletAccount | undefined;
 
-  // Use panel visibility to detect which manage detail view is active
-  const agentDetailOpen =
-    typeof isVisible === 'function' ? isVisible(SP_TREE.MANAGE_AGENT_PANEL) : false;
-  const recipientDetailOpen =
-    typeof isVisible === 'function'
-      ? isVisible(SP_TREE.MANAGE_RECIPIENT_PANEL)
-      : false;
-  const sponsorDetailOpen =
-    typeof isVisible === 'function' ? isVisible(SP_TREE.MANAGE_SPONSOR_PANEL) : false;
+  const agentDetailOpen = isVisible(SP_TREE.MANAGE_AGENT_PANEL);
+  const recipientDetailOpen = isVisible(SP_TREE.MANAGE_RECIPIENT_PANEL);
+  const sponsorDetailOpen = isVisible(SP_TREE.MANAGE_SPONSOR_PANEL);
 
   let headerWallet: WalletAccount | undefined;
-  if (agentDetailOpen && agentAccount) {
-    headerWallet = agentAccount;
-  } else if (recipientDetailOpen && recipientAccount) {
-    headerWallet = recipientAccount;
-  } else if (sponsorDetailOpen && sponsorAccount) {
-    headerWallet = sponsorAccount;
-  }
+  if (agentDetailOpen && agentAccount) headerWallet = agentAccount;
+  else if (recipientDetailOpen && recipientAccount) headerWallet = recipientAccount;
+  else if (sponsorDetailOpen && sponsorAccount) headerWallet = sponsorAccount;
 
   const logoSrc = headerWallet ? getAccountLogo(headerWallet) : null;
 
   const renderLeft = () => {
-    // If headerController explicitly provided a leftElement, respect it.
     if (leftElement) return leftElement;
 
-    // If a manage detail panel is open and we have an account, show its logo
     if (headerWallet && logoSrc) {
       return (
         <div className="flex items-center gap-2">
@@ -72,7 +60,6 @@ export default function TradeContainerHeader() {
       );
     }
 
-    // Fallback: original network connect button
     return (
       <ConnectNetworkButton
         showName={false}
@@ -86,9 +73,8 @@ export default function TradeContainerHeader() {
   };
 
   /**
-   * ✅ NEW ARCH: Header X must do ONE thing only:
-   * - delegate to useHeaderController.onClose(e) (which closes top of persisted displayStack once)
-   * - DO NOT call useOverlayCloseHandler here (that was the 2nd event).
+   * ✅ NEW ARCH: Header X does ONE thing only:
+   * - delegate to useHeaderController.onClose(e) (pop top of persisted displayStack once)
    */
   const handleHeaderClose = (e?: React.MouseEvent) => {
     debugLog.log?.('handleHeaderClose clicked', { title, isTrading });
@@ -125,10 +111,7 @@ export default function TradeContainerHeader() {
             alt="Open slippage settings"
             title="Open slippage settings"
             onClick={() => {
-              const visible =
-                typeof isVisible === 'function'
-                  ? isVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL)
-                  : false;
+              const visible = isVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL);
 
               debugLog.log?.('slippage cog clicked', { currentlyVisible: visible });
 
@@ -149,7 +132,7 @@ export default function TradeContainerHeader() {
           />
         ) : (
           <CloseButton
-            closeCallback={(e?: any) => handleHeaderClose(e as any)}
+            closeCallback={handleHeaderClose}
             className="
               absolute top-2 right-[27px] h-10 w-10 rounded-full
               bg-[#243056] text-[#5981F3] flex items-center justify-center
