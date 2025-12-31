@@ -1,6 +1,7 @@
 // File: @/lib/context/exchangeContext/panelTree/panelTreeCallbacks.ts
 'use client';
 
+import type React from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import type { PanelEntry } from './panelTreePersistence';
@@ -49,19 +50,37 @@ function isPopInvoker(invoker?: string) {
   );
 }
 
-/* ---------------- displayStack normalize ---------------- */
+/* ---------------- displayStack normalize ----------------
+ *
+ * ✅ STRICT MODE: displayStack is always:
+ *   DISPLAY_STACK_NODE[] = [{ id: number, name: string }, ...]
+ *
+ * No more number[], no more {displayTypeId}.
+ */
+type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
 
-function normalizeDisplayStackNodesToIds(raw: unknown): SP_COIN_DISPLAY[] {
+function displayStackNodesToIdsStrict(raw: unknown): SP_COIN_DISPLAY[] {
   if (!Array.isArray(raw)) return [];
-  const ids: number[] = [];
 
+  const ids: number[] = [];
   for (const item of raw as any[]) {
-    if (item && typeof item === 'object') {
-      if ('id' in item) ids.push(Number((item as any).id));
-      else if ('displayTypeId' in item) ids.push(Number((item as any).displayTypeId));
+    if (!item || typeof item !== 'object') {
+      if (DEBUG) {
+        // eslint-disable-next-line no-console
+        console.warn('[panelTreeCallbacks] displayStack contains non-object item (ignored):', item);
+      }
       continue;
     }
-    ids.push(Number(item));
+
+    if (!('id' in item)) {
+      if (DEBUG) {
+        // eslint-disable-next-line no-console
+        console.warn('[panelTreeCallbacks] displayStack node missing id (ignored):', item);
+      }
+      continue;
+    }
+
+    ids.push(Number((item as DISPLAY_STACK_NODE).id));
   }
 
   return ids
@@ -148,29 +167,51 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
   /* ---------------- open ---------------- */
 
-  const openPanel = (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
+  const openPanel = (
+    panel: SP_COIN_DISPLAY,
+    invoker?: string,
+    parent?: SP_COIN_DISPLAY,
+  ) => {
     logAction('openPanel', panel, invoker);
     if (!known.has(Number(panel))) return;
 
     schedule(() => {
       setExchangeContext((prev) => {
-        const flat0 = flattenPanelTree((prev as any)?.settings?.spCoinPanelTree, known);
+        const flat0 = flattenPanelTree(
+          (prev as any)?.settings?.spCoinPanelTree,
+          known,
+        );
 
         const openingGlobal = isGlobalOverlay(panel);
-        const openingManageContainer = Number(panel) === Number(manageCfg.manageContainer);
-        const openingSponsorDetail = Number(panel) === Number(manageCfg.manageSponsorPanel);
+        const openingManageContainer =
+          Number(panel) === Number(manageCfg.manageContainer);
+        const openingSponsorDetail =
+          Number(panel) === Number(manageCfg.manageSponsorPanel);
         const openingManageRadioChild = isManageRadioChild(panel);
 
         let flat = ensurePanelPresent(flat0, panel);
 
         if (openingSponsorDetail) {
-          sponsorParentRef.current = pickSponsorParent(flat0, manageCfg, sponsorParentRef, parent);
+          sponsorParentRef.current = pickSponsorParent(
+            flat0,
+            manageCfg,
+            sponsorParentRef,
+            parent,
+          );
 
           flat = ensurePanelPresent(flat, manageCfg.manageContainer);
-          flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
+          flat = applyGlobalRadio(
+            flat,
+            overlays,
+            manageCfg.manageContainer,
+            withName,
+          );
 
           const prevScoped = getActiveManageScoped(flat0);
-          pushManageScopedHistory(prevScoped, sponsorParentRef.current ?? manageCfg.defaultManageChild);
+          pushManageScopedHistory(
+            prevScoped,
+            sponsorParentRef.current ?? manageCfg.defaultManageChild,
+          );
 
           let next = setScopedRadio(
             flat,
@@ -183,7 +224,9 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
           next = ensurePanelPresent(next, manageCfg.manageSponsorPanel);
           next = next.map((e) =>
-            e.panel === manageCfg.manageSponsorPanel ? { ...withName(e), visible: true } : e,
+            e.panel === manageCfg.manageSponsorPanel
+              ? { ...withName(e), visible: true }
+              : e,
           );
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
@@ -195,9 +238,21 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           pushManageScopedHistory(prevScoped, panel);
 
           flat = ensurePanelPresent(flat, manageCfg.manageContainer);
-          flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
+          flat = applyGlobalRadio(
+            flat,
+            overlays,
+            manageCfg.manageContainer,
+            withName,
+          );
 
-          const next = setScopedRadio(flat, panel, manageCfg, isManageRadioChild, withName, true);
+          const next = setScopedRadio(
+            flat,
+            panel,
+            manageCfg,
+            isManageRadioChild,
+            withName,
+            true,
+          );
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
@@ -214,7 +269,12 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           const setScoped = (fi: PanelEntry[], p: SP_COIN_DISPLAY) =>
             setScopedRadio(fi, p, manageCfg, isManageRadioChild, withName, true);
 
-          const next = ensureManageContainerAndDefaultChild(flat, manageCfg, withName, setScoped);
+          const next = ensureManageContainerAndDefaultChild(
+            flat,
+            manageCfg,
+            withName,
+            setScoped,
+          );
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
@@ -244,16 +304,27 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
   /* ---------------- close ---------------- */
 
-  const closePanel = (panel: SP_COIN_DISPLAY, invoker?: string, _unused?: unknown) => {
+  const closePanel = (
+    panel: SP_COIN_DISPLAY,
+    invoker?: string,
+    _unused?: unknown,
+  ) => {
     logAction('closePanel', panel, invoker);
     if (!known.has(Number(panel))) return;
 
     schedule(() => {
       setExchangeContext((prev) => {
-        const flat0 = flattenPanelTree((prev as any)?.settings?.spCoinPanelTree, known);
+        const flat0 = flattenPanelTree(
+          (prev as any)?.settings?.spCoinPanelTree,
+          known,
+        );
+
         const panelToClose: SP_COIN_DISPLAY = panel;
 
-        const displayStackIds = normalizeDisplayStackNodesToIds((prev as any)?.settings?.displayStack);
+        // ✅ Strict: persisted settings.displayStack is DISPLAY_STACK_NODE[]
+        const displayStackIds = displayStackNodesToIdsStrict(
+          (prev as any)?.settings?.displayStack,
+        );
 
         let next: PanelEntry[] = flat0;
 

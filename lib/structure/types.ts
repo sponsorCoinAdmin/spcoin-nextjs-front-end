@@ -91,6 +91,7 @@ export type Settings = {
   /** Persisted panel tree */
   spCoinPanelTree: SpCoinPanelTree;
 
+  displayStack: DISPLAY_STACK_NODE[];
   /**
    * True if this ExchangeContext was hydrated from Local Storage on boot.
    * False or undefined means "started from defaults" (no LS data).

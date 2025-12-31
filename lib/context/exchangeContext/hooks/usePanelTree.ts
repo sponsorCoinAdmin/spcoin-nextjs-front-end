@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
 import {
   MAIN_OVERLAY_GROUP,
   PANEL_DEFS,
@@ -90,8 +91,6 @@ const diffVisibility = (
 
 /* ───────────────────────────── DisplayStack helpers (single source of truth) ───────────────────────────── */
 
-type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
-
 const normalizeIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
   arr
     .map((x) => Number(x))
@@ -120,6 +119,13 @@ const toPersistedStackIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
 const toDisplayStackNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
 
+/**
+ * Accepts:
+ * - new: [{id,name}]
+ * - legacy: number[]
+ * - older experimental: [{displayTypeId,...}]
+ * - mixed (defensive)
+ */
 const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
   if (!Array.isArray(raw)) return [];
   const ids: number[] = [];
@@ -227,9 +233,15 @@ export function usePanelTree() {
     }
   }, []);
 
-  useMemo(() => publishVisibility(visibilityMap), [visibilityMap, publishVisibility]);
+  // ✅ Correct side-effect hook (no useMemo side-effects)
+  useEffect(() => {
+    publishVisibility(visibilityMap);
+  }, [visibilityMap, publishVisibility]);
 
-  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
+  const isVisible = useCallback(
+    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
+    [],
+  );
 
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
@@ -308,8 +320,12 @@ export function usePanelTree() {
       claimVisible_store: panelStore.isVisible(claim),
       manageVisible_map: visibleManageKidsFromMap(),
       manageVisible_store: visibleManageKidsFromStore(),
-      persistedDisplayStackNow: toNamedStack(persistedIds),
+
+      // ✅ one source of truth (raw)
       displayStack_persisted: persistedRaw,
+
+      // optional helper: ids in named form for readability
+      persistedDisplayStackNow: toNamedStack(persistedIds),
     });
   }, [visibilityMap, manageScoped, exchangeContext, getPersistedDisplayStackIds]);
 
@@ -492,10 +508,13 @@ export function usePanelTree() {
       const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
       const persistedIds = getPersistedDisplayStackIds();
 
+      // ✅ one source of truth
       // eslint-disable-next-line no-console
       console.log('[PanelTree] displayStack (persisted) =', persistedRaw);
+
+      // Optional: ids only (NOT rebuilt nodes)
       // eslint-disable-next-line no-console
-      console.log('[PanelTree] displayStack (ids) =', toNamedStack(persistedIds));
+      console.log('[PanelTree] displayStackIds =', persistedIds.map(Number));
 
       // eslint-disable-next-line no-console
       console.groupEnd();
