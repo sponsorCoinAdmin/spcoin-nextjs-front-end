@@ -56,7 +56,7 @@ type LastAction =
       kind: 'openPanel';
       panel: SP_COIN_DISPLAY;
       invoker?: string;
-      parent?: SP_COIN_DISPLAY;
+      parent?: SP_COIN_DISPLAY | null;
       stackBefore: SP_COIN_DISPLAY[];
       ts: number;
     }
@@ -382,7 +382,57 @@ export function usePanelTree() {
 
   /* ------------------------------ actions -------------------------------- */
 
-  const openPanel = useCallback(
+  /**
+   * pushPanel: stack-only (persist displayStack push). No visibility side effects.
+   */
+  const pushPanel = useCallback(
+    (panel: SP_COIN_DISPLAY) => {
+      const stackBefore = getPersistedDisplayStackIds();
+      const nextStack = toPersistedStackIds([...stackBefore, panel]);
+      persistDisplayStack(nextStack);
+
+      if (DEBUG_NAV) {
+        // eslint-disable-next-line no-console
+        console.log('[PanelTree] displayStack (push) =', toNamedStack(nextStack));
+      }
+
+      return { stackBefore, nextStack };
+    },
+    [getPersistedDisplayStackIds, persistDisplayStack],
+  );
+
+  /**
+   * popPanel: stack-only (persist displayStack pop). No visibility side effects.
+   * Returns the popped id or null.
+   */
+  const popPanel = useCallback(() => {
+    const stackBefore = getPersistedDisplayStackIds();
+    if (!stackBefore.length) {
+      return {
+        popped: null as SP_COIN_DISPLAY | null,
+        stackBefore,
+        nextStack: stackBefore,
+      };
+    }
+
+    const popped = stackBefore[stackBefore.length - 1] as SP_COIN_DISPLAY;
+    const nextStack = stackBefore.slice(0, -1);
+
+    persistDisplayStack(nextStack);
+
+    if (DEBUG_NAV) {
+      // eslint-disable-next-line no-console
+      console.log('[PanelTree] displayStack (pop) =', toNamedStack(nextStack));
+    }
+
+    return { popped, stackBefore, nextStack };
+  }, [getPersistedDisplayStackIds, persistDisplayStack]);
+
+  /**
+   * showPanel: visibility-only (open panel). No stack side effects.
+   * Keeps the "infer parent" behavior for manage-scoped panels.
+   */
+  const showPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const inferredParent =
         parent == null && manageScopedSet.has(Number(panel)) ? manageContainer : parent;
@@ -396,7 +446,35 @@ export function usePanelTree() {
         });
       }
 
+      base.openPanel(panel, invoker, inferredParent);
+      return inferredParent ?? null;
+    },
+    [base, manageContainer, manageScopedSet],
+  );
+
+  /**
+   * hidePanel: visibility-only (close panel). No stack side effects.
+   */
+  const hidePanel = useCallback(
+    (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
+      base.closePanel(panel, invoker, arg);
+    },
+    [base],
+  );
+
+  /**
+   * openPanel: composed behavior (push + show)
+   */
+  const openPanel = useCallback(
+    (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const stackBefore = getPersistedDisplayStackIds();
+
+      // push (persist)
+      pushPanel(panel);
+
+      // show (visibility)
+      const inferredParent = showPanel(panel, invoker, parent);
+
       lastActionRef.current = {
         kind: 'openPanel',
         panel,
@@ -405,47 +483,30 @@ export function usePanelTree() {
         stackBefore,
         ts: Date.now(),
       };
-
-      const nextStack = toPersistedStackIds([...stackBefore, panel]);
-      persistDisplayStack(nextStack);
-
-      base.openPanel(panel, invoker, inferredParent);
-
-      if (DEBUG_NAV) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree] displayStack (push) =', toNamedStack(nextStack));
-      }
     },
-    [base, manageContainer, manageScopedSet, getPersistedDisplayStackIds, persistDisplayStack],
+    [getPersistedDisplayStackIds, pushPanel, showPanel],
   );
 
+  /**
+   * closeTopOfDisplayStack: composed behavior (pop + hide)
+   */
   const closeTopOfDisplayStack = useCallback(
     (invoker?: string, arg?: unknown) => {
-      const persistedIds = getPersistedDisplayStackIds();
-      if (!persistedIds.length) return;
-
-      const closing = persistedIds[persistedIds.length - 1] as SP_COIN_DISPLAY;
-      const nextPersisted = persistedIds.slice(0, -1);
+      const { popped: closing, stackBefore } = popPanel();
+      if (!closing) return;
 
       lastActionRef.current = {
         kind: 'closePanel',
         requested: closing,
         target: closing,
         invoker: invoker ?? 'usePanelTree:closeTopOfDisplayStack',
-        stackBefore: persistedIds,
+        stackBefore,
         ts: Date.now(),
       };
 
-      persistDisplayStack(nextPersisted);
-
-      base.closePanel(closing, invoker ?? 'closeTopOfDisplayStack:persist-pop', arg);
-
-      if (DEBUG_NAV) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree] displayStack (pop) =', toNamedStack(nextPersisted));
-      }
+      hidePanel(closing, invoker ?? 'closeTopOfDisplayStack:persist-pop', arg);
     },
-    [base, getPersistedDisplayStackIds, persistDisplayStack],
+    [popPanel, hidePanel],
   );
 
   // ✅ visibility-based leaf inference (because stack top may be hidden)
@@ -459,6 +520,9 @@ export function usePanelTree() {
     return null;
   }, [isVisible, manageScoped]);
 
+  /**
+   * closePanel: visibility-only close (no stack change), but preserves manageContainer behavior.
+   */
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
       const stackBefore = getPersistedDisplayStackIds();
@@ -479,9 +543,9 @@ export function usePanelTree() {
         ts: Date.now(),
       };
 
-      base.closePanel(target, invoker, arg);
+      hidePanel(target, invoker, arg);
     },
-    [base, manageContainer, getPersistedDisplayStackIds, deriveVisibleManageLeaf],
+    [manageContainer, getPersistedDisplayStackIds, deriveVisibleManageLeaf, hidePanel],
   );
 
   /* ------------------------------ derived -------------------------------- */
@@ -531,5 +595,11 @@ export function usePanelTree() {
     closePanel,
     closeTopOfDisplayStack,
     dumpNavStack,
+
+    // new primitives
+    pushPanel,
+    popPanel,
+    showPanel,
+    hidePanel,
   };
 }

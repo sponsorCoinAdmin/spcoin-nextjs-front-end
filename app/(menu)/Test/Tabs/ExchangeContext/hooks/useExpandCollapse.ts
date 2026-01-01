@@ -16,6 +16,7 @@ function isBranchNode(val: any): boolean {
  *  - every panel item:                      rest.settings.spCoinPanelTree.N
  *  - every children container:              rest.settings.spCoinPanelTree.N.children
  *  - nested children recursively:           …children.M, …children.M.children, …
+ *  - ✅ other settings branches (e.g. displayStack) via generic walk
  *  - everything else under rest.*
  */
 function discoverNonPanelPaths(exchangeContext: any): Set<string> {
@@ -26,7 +27,23 @@ function discoverNonPanelPaths(exchangeContext: any): Set<string> {
     found.add(path);
   };
 
-  // settings + spCoinPanelTree
+  // Generic walker for objects/arrays
+  const walk = (val: any, basePath: string) => {
+    if (!isBranchNode(val)) return;
+    add(basePath, val);
+
+    if (Array.isArray(val)) {
+      for (let i = 0; i < val.length; i++) {
+        walk(val[i], `${basePath}.${i}`);
+      }
+    } else {
+      for (const k of Object.keys(val)) {
+        walk(val[k], `${basePath}.${k}`);
+      }
+    }
+  };
+
+  // settings + spCoinPanelTree (+ children recursion)
   const settings = (exchangeContext ?? {}).settings;
   if (isBranchNode(settings)) {
     add('rest.settings', settings);
@@ -52,6 +69,15 @@ function discoverNonPanelPaths(exchangeContext: any): Set<string> {
 
       walkPanels(main, 'rest.settings.spCoinPanelTree');
     }
+
+    // ✅ ALSO discover any other expandable settings branches (e.g. displayStack)
+    // We skip spCoinPanelTree here because it’s already handled above (with special children rules).
+    if (!Array.isArray(settings)) {
+      for (const k of Object.keys(settings)) {
+        if (k === 'spCoinPanelTree') continue;
+        walk((settings as any)[k], `rest.settings.${k}`);
+      }
+    }
   }
 
   // everything except settings under rest.*
@@ -59,21 +85,6 @@ function discoverNonPanelPaths(exchangeContext: any): Set<string> {
     const { settings: _omit, ...restObj } = (exchangeContext ?? {}) as any;
     return restObj;
   })();
-
-  const walk = (val: any, basePath: string) => {
-    if (!isBranchNode(val)) return;
-    add(basePath, val);
-
-    if (Array.isArray(val)) {
-      for (let i = 0; i < val.length; i++) {
-        walk(val[i], `${basePath}.${i}`);
-      }
-    } else {
-      for (const k of Object.keys(val)) {
-        walk(val[k], `${basePath}.${k}`);
-      }
-    }
-  };
 
   for (const k of Object.keys(rest)) {
     walk(rest[k], `rest.${k}`);
@@ -98,10 +109,7 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
   }, [exchangeContext]);
 
   // discover current branch paths
-  const allowedPaths = useMemo(
-    () => discoverNonPanelPaths(exchangeContext),
-    [exchangeContext]
-  );
+  const allowedPaths = useMemo(() => discoverNonPanelPaths(exchangeContext), [exchangeContext]);
 
   // hydrate UI.exp on exchangeContext changes: defaults → saved (filtered to allowed)
   const hydratedRef = useRef(false);
@@ -109,6 +117,7 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
     const defaults: Record<string, boolean> = {
       'rest.settings': true,
       'rest.settings.spCoinPanelTree': true,
+      // NOTE: we do NOT auto-expand displayStack by default, but it is now expandable.
     };
 
     const stored = loadExCtxMap();
@@ -145,7 +154,7 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
         setUi({ ctx: false, settings: false, main: false, exp: {} });
       }
     },
-    [allowedPaths]
+    [allowedPaths],
   );
 
   // toggle an individual path (UI-only)
@@ -154,7 +163,7 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
       if (!allowedPaths.has(path)) return;
       setUi((prev) => ({ ...prev, exp: { ...prev.exp, [path]: !prev.exp[path] } }));
     },
-    [allowedPaths]
+    [allowedPaths],
   );
 
   // header toggles (UI only)

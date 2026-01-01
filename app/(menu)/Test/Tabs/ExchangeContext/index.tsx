@@ -1,3 +1,4 @@
+// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -137,13 +138,14 @@ export default function ExchangeContextTab() {
     return showExchange ? 'flex-1 border-l border-slate-700' : 'w-full';
   }, [showGui, showExchange]);
 
-  const settingsObj = useMemo(
-    () => ({
-      apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
+  // ✅ Keep ALL real settings fields (including displayStack), override only spCoinPanelTree for display
+  const settingsObj = useMemo(() => {
+    const realSettings = (exchangeContext as any)?.settings ?? {};
+    return {
+      ...realSettings,
       spCoinPanelTree: treeWithNames,
-    }),
-    [exchangeContext, treeWithNames]
-  );
+    };
+  }, [exchangeContext, treeWithNames]);
 
   return (
     <div className="space-y-4">
@@ -168,7 +170,7 @@ export default function ExchangeContextTab() {
         <div className={leftPaneClass}>
           <Row text="Exchange Context" depth={0} open />
 
-          {/* Settings (virtual tree as ARRAY; nodes include `name` string) */}
+          {/* Settings */}
           <TreeView
             label="settings"
             value={settingsObj}

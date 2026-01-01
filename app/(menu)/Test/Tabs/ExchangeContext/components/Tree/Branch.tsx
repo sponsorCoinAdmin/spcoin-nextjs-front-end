@@ -57,6 +57,17 @@ function formatChildLabel(childVal: any, defaultIndex: string): string {
   return `[${defaultIndex}] ${displayName}`;
 }
 
+/** ✅ displayStack items render as a single non-toggleable line: [i] {id: X, name: "Y"} */
+function formatDisplayStackItem(idxLabel: string, v: any): string {
+  const idNum = Number(v?.id);
+  const safeId = Number.isFinite(idNum) ? idNum : 'N/A';
+
+  const name =
+    typeof v?.name === 'string' && v.name.trim().length ? String(v.name) : 'N/A';
+
+  return `${idxLabel} { id: ${safeId}, name: "${name}" }`;
+}
+
 const Branch: React.FC<BranchProps> = ({
   label,
   value,
@@ -77,6 +88,9 @@ const Branch: React.FC<BranchProps> = ({
   const isPanelArrayItem =
     /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) &&
     looksLikeVirtualPanelNode(value);
+
+  // ✅ displayStack items: always-open, no +/- and no nested fields
+  const isDisplayStackItem = /(\.settings\.displayStack\.\d+$)/.test(path);
 
   // Treat any array labeled exactly 'children' as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
@@ -99,6 +113,19 @@ const Branch: React.FC<BranchProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPanelArrayItem, value?.visible, path, label]);
+
+  // ✅ Render displayStack item rows as a single line (non-toggleable)
+  if (isDisplayStackItem) {
+    const lineClass = dense ? 'leading-tight' : 'leading-6';
+    const text = formatDisplayStackItem(label, value);
+
+    return (
+      <div className={`font-mono flex items-center ${lineClass} text-slate-200 m-0 p-0`}>
+        <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+        <span className="text-[#5981F3]">{text}</span>
+      </div>
+    );
+  }
 
   // ──────────────────────────────────────────────────────────────
   // BRANCH NODES (objects & arrays)
