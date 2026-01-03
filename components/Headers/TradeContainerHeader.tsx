@@ -14,6 +14,9 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+// ✅ NEW: prevent “double close” when header X also triggers overlay close handlers
+import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TRADE_HEADER === 'true';
 
@@ -23,7 +26,7 @@ export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const { title, leftElement, onClose, isTrading } = useHeaderController();
 
-  // For slippage cog toggle (hide-only close)
+  // ✅ New contract: usePanelTree exposes ONLY openPanel/closePanel as the public API.
   const { openPanel, closePanel, isVisible } = usePanelTree();
 
   const accounts = exchangeContext?.accounts ?? {};
@@ -73,11 +76,20 @@ export default function TradeContainerHeader() {
   };
 
   /**
-   * ✅ NEW ARCH: Header X does ONE thing only:
-   * - delegate to useHeaderController.onClose(e) (pop top of persisted displayStack once)
+   * ✅ Header X does ONE thing:
+   * - delegate to useHeaderController.onClose(e)
+   *
+   * Also:
+   * - suppress the next overlay close attempt (one-shot) to prevent double close.
    */
   const handleHeaderClose = (e?: React.MouseEvent) => {
     debugLog.log?.('handleHeaderClose clicked', { title, isTrading });
+
+    // one-shot suppress in case an overlay/backdrop handler runs too
+    suppressNextOverlayClose(
+      `TradeContainerHeader:X:${String(title ?? '')}`,
+      'TradeContainerHeader',
+    );
 
     try {
       e?.preventDefault();
@@ -116,6 +128,7 @@ export default function TradeContainerHeader() {
               debugLog.log?.('slippage cog clicked', { currentlyVisible: visible });
 
               if (visible) {
+                // ✅ closePanel(panel) hides that panel (and removes from stack if it’s a stack member)
                 closePanel(
                   SP_TREE.CONFIG_SLIPPAGE_PANEL,
                   'TradeContainerHeader:cog(toggle-close CONFIG_SLIPPAGE_PANEL)',

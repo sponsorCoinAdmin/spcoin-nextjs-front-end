@@ -15,11 +15,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SELECTION_COMMIT === 'true';
-const log = createDebugLogger(
-  'useSelectionCommit',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const log = createDebugLogger('useSelectionCommit', DEBUG_ENABLED, LOG_TIME);
 
 export type UseSelectionCommit = {
   commitBuyToken: (t: TokenContract) => void;
@@ -34,8 +30,9 @@ export type UseSelectionCommit = {
 
 /** Plain hook that composes ExchangeContext + panel-tree navigation. */
 export function useSelectionCommit(): UseSelectionCommit {
-  // We only need visibility + close; navigation target is decided elsewhere
-  const { closePanel, isVisible } = usePanelTree();
+  // ✅ closePanel = pop + hide (top-of-stack)
+  // ✅ hidePanel = hide a specific panel (visibility-only)
+  const { hidePanel, isVisible } = usePanelTree();
 
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
@@ -64,9 +61,7 @@ export function useSelectionCommit(): UseSelectionCommit {
     ];
 
     for (const panel of candidates) {
-      if (isVisible(panel)) {
-        return panel;
-      }
+      if (isVisible(panel)) return panel;
     }
 
     return null;
@@ -74,9 +69,8 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   /**
    * finish:
-   * - NO LONGER opens TRADING_STATION_PANEL.
-   * - ONLY closes the currently active list-select overlay (if any),
-   *   letting the overlay parent logic / header controller decide where to go.
+   * - ONLY closes the currently active list-select overlay (if any)
+   * - does NOT pop the stack
    */
   const finish = useCallback(() => {
     const activeList = getActiveListPanel();
@@ -84,19 +78,15 @@ export function useSelectionCommit(): UseSelectionCommit {
     log.log?.('finish invoked', { activeList });
 
     if (!activeList) {
-      log.log?.(
-        'finish: no active list-select panel detected; nothing to close',
-      );
+      log.log?.('finish: no active list-select panel detected; nothing to close');
       return;
     }
 
-    log.log?.('finish → closing active list-select panel', { activeList });
+    log.log?.('finish → hiding active list-select panel', { activeList });
 
-    closePanel(
-      activeList,
-      `useSelectionCommit:finish(close ${activeList})`,
-    );
-  }, [getActiveListPanel, closePanel]);
+    // ✅ hide specific panel; do NOT use closePanel(panelId)
+    hidePanel(activeList, `useSelectionCommit:finish(hide ${SP_COIN_DISPLAY[activeList]})`);
+  }, [getActiveListPanel, hidePanel]);
 
   const commitBuyToken = useCallback(
     (t: TokenContract) => {
@@ -104,9 +94,7 @@ export function useSelectionCommit(): UseSelectionCommit {
       const sym = (t as any)?.symbol;
 
       if (!t || !addr) {
-        log.warn?.('commitBuyToken aborted: missing token or address', {
-          token: t,
-        });
+        log.warn?.('commitBuyToken aborted: missing token or address', { token: t });
         return;
       }
 
@@ -123,9 +111,7 @@ export function useSelectionCommit(): UseSelectionCommit {
       const sym = (t as any)?.symbol;
 
       if (!t || !addr) {
-        log.warn?.('commitSellToken aborted: missing token or address', {
-          token: t,
-        });
+        log.warn?.('commitSellToken aborted: missing token or address', { token: t });
         return;
       }
 
@@ -144,11 +130,8 @@ export function useSelectionCommit(): UseSelectionCommit {
         symbol: (t as any)?.symbol,
       });
 
-      if (side === 'buy') {
-        commitBuyToken(t);
-      } else {
-        commitSellToken(t);
-      }
+      if (side === 'buy') commitBuyToken(t);
+      else commitSellToken(t);
     },
     [commitBuyToken, commitSellToken],
   );
@@ -159,9 +142,7 @@ export function useSelectionCommit(): UseSelectionCommit {
       const name = (w as any)?.name;
 
       if (!w || !addr) {
-        log.warn?.('commitRecipient aborted: missing wallet or address', {
-          wallet: w,
-        });
+        log.warn?.('commitRecipient aborted: missing wallet or address', { wallet: w });
         return;
       }
 
@@ -188,9 +169,7 @@ export function useSelectionCommit(): UseSelectionCommit {
       const name = (w as any)?.name;
 
       if (!w || !addr) {
-        log.warn?.('commitAgent aborted: missing wallet or address', {
-          wallet: w,
-        });
+        log.warn?.('commitAgent aborted: missing wallet or address', { wallet: w });
         return;
       }
 

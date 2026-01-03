@@ -5,17 +5,25 @@
 // Canonical registry for ALL SponsorCoin panels.
 // Provides structural metadata only (NO UI logic):
 //   • Panel definitions (PANEL_DEFS)
-//   • Overlay participation
 //   • Parent → child relationships
-//   • Derived helpers (MAIN_OVERLAY_GROUP, CHILDREN, KINDS)
+//   • Derived helpers (CHILDREN, KINDS)
 //
-// This registry drives:
-//   - usePanelTree()
-//   - useOverlayCloseHandler()
-//   - PanelTree persistence & reconciliation
+// NOTE:
+// Radio membership lists are now defined as "action-model groups" in spCoinDisplay.ts,
+// and are imported here to keep a single readable source of truth.
 //
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
+
+// ✅ Action-model groups (explicit membership lists)
+import {
+  MAIN_OVERLAY_GROUP as MAIN_OVERLAY_GROUP_MODEL,
+  MANAGE_SCOPED as MANAGE_SCOPED_MODEL,
+  STACK_COMPONENTS as STACK_COMPONENTS_MODEL,
+  IS_MAIN_OVERLAY,
+  IS_MANAGE_SCOPED,
+  IS_STACK_COMPONENT,
+} from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
 
@@ -25,7 +33,10 @@ export type PanelDef = {
 
   /**
    * If true: participates in the GLOBAL overlay radio group.
-   * Scoped (nested) radio behavior is handled in usePanelTree via CHILDREN.
+   * Scoped (nested) radio behavior is handled elsewhere.
+   *
+   * NOTE: This field is still kept for structure/history/clarity,
+   * but MAIN_OVERLAY_GROUP is now sourced from the action-model list.
    */
   overlay?: boolean;
 
@@ -211,8 +222,25 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
 /* ─────────────────────────────── Derived Helpers ─────────────────────────────── */
 
+/**
+ * ✅ Single source of truth for global overlay membership now lives in the action-model list.
+ * Keeping this export name preserves existing imports.
+ */
 export const MAIN_OVERLAY_GROUP: readonly SP[] =
-  PANEL_DEFS.filter((d) => !!d.overlay).map((d) => d.id) as readonly SP[];
+  MAIN_OVERLAY_GROUP_MODEL as readonly SP[];
+
+/**
+ * Optional convenience exports (action-model groups).
+ * Not required, but useful for callers already importing from panelRegistry.
+ */
+export const MANAGE_SCOPED: readonly SP[] = MANAGE_SCOPED_MODEL as readonly SP[];
+export const STACK_COMPONENTS: readonly SP[] =
+  STACK_COMPONENTS_MODEL as readonly SP[];
+
+/**
+ * Fast membership helpers (re-exported).
+ */
+export { IS_MAIN_OVERLAY, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MAIN_TRADING_PANEL,

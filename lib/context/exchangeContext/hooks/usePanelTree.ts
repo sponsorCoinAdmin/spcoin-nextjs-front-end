@@ -12,6 +12,9 @@ import {
 } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
+// ✅ STACK_COMPONENT gate (only these may be pushed/popped)
+import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
 import {
   type PanelEntry,
   flattenPanelTree,
@@ -30,6 +33,9 @@ import {
   type PanelTreeCallbacksDeps,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeCallbacks';
 
+// ✅ Use project logger (instead of raw console.log)
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
 const DEBUG_NAV =
@@ -45,30 +51,20 @@ const DEBUG_CLOSE_INVARIANTS_RENDER =
 const DEBUG_OPEN_INFER_PARENT =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_OPEN_INFER_PARENT === 'true';
 
+// ✅ New: action-level trace logging (push/pop/open/close)
+const DEBUG_ACTIONS = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_ACTIONS === 'true';
+
+// ✅ New: stack-focused debugging (diagnose “why stack stays empty”)
+const DEBUG_STACK = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_STACK === 'true';
+
+// ✅ Target to diagnose “opens then closes”
+const TRACE_TARGET = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+
 const nameOf = (p: SP_COIN_DISPLAY | number | null | undefined) =>
   p == null ? null : panelName(Number(p) as any);
 
 const toNamedStack = (arr: SP_COIN_DISPLAY[]) =>
   arr.map((p) => ({ id: Number(p), name: nameOf(p) }));
-
-type LastAction =
-  | {
-      kind: 'openPanel';
-      panel: SP_COIN_DISPLAY;
-      invoker?: string;
-      parent?: SP_COIN_DISPLAY | null;
-      stackBefore: SP_COIN_DISPLAY[];
-      ts: number;
-    }
-  | {
-      kind: 'closePanel';
-      requested: SP_COIN_DISPLAY;
-      target: SP_COIN_DISPLAY;
-      invoker?: string;
-      stackBefore: SP_COIN_DISPLAY[];
-      ts: number;
-    }
-  | null;
 
 const diffVisibility = (
   prev: Record<number, boolean> | null | undefined,
@@ -90,6 +86,19 @@ const diffVisibility = (
 };
 
 /* ───────────────────────────── DisplayStack helpers (single source of truth) ───────────────────────────── */
+
+/**
+ * SINGLE SOURCE OF TRUTH (hard rule):
+ *   ✅ exchangeContext.settings.displayStack
+ *   ❌ exchangeContext.displayStack (root) is NOT used here.
+ *
+ * IMPORTANT FIX:
+ * React state updates are async. If you push+persist then immediately call closePanel,
+ * reading from exchangeContext can still be stale (empty).
+ *
+ * So we keep a synchronous ref of the latest persisted stack ids,
+ * sourced ONLY from exchangeContext.settings.displayStack, and updated immediately on writes.
+ */
 
 const normalizeIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
   arr
@@ -113,8 +122,15 @@ const NON_INDEXED = new Set<number>([
   Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
 ]);
 
+/**
+ * ✅ Persisted stack ids are ALWAYS:
+ *   - not NON_INDEXED
+ *   - AND members of STACK_COMPONENTS
+ */
 const toPersistedStackIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
-  normalizeIds(arr).filter((p) => !NON_INDEXED.has(Number(p)));
+  normalizeIds(arr).filter(
+    (p) => !NON_INDEXED.has(Number(p)) && IS_STACK_COMPONENT.has(Number(p)),
+  );
 
 const toDisplayStackNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
@@ -146,6 +162,26 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
 
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  // ✅ action logger (gated by NEXT_PUBLIC_DEBUG_LOG_PANEL_ACTIONS)
+  const debugLog = useMemo(
+    () => createDebugLogger('usePanelTree', DEBUG_ACTIONS || DEBUG_STACK),
+    [],
+  );
+
+  // ✅ trace counter for action logging
+  const traceRef = useRef(0);
+  const nextTraceId = useCallback(() => {
+    traceRef.current += 1;
+    return traceRef.current;
+  }, []);
+
+  const logAction = useCallback(
+    (traceId: number, event: string, payload?: any) => {
+      debugLog.log?.(`[trace:${traceId}] ${event}`, payload ?? '');
+    },
+    [debugLog],
+  );
 
   const list = useMemo<PanelEntry[]>(() => {
     return flattenPanelTree(
@@ -233,15 +269,11 @@ export function usePanelTree() {
     }
   }, []);
 
-  // ✅ Correct side-effect hook (no useMemo side-effects)
   useEffect(() => {
     publishVisibility(visibilityMap);
   }, [visibilityMap, publishVisibility]);
 
-  const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
-    [],
-  );
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
 
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
@@ -250,48 +282,114 @@ export function usePanelTree() {
   );
 
   const setExchangeContextSafe = useCallback(
-    (nextOrUpdater: any) => {
+    (nextOrUpdater: any, hookName?: string) => {
       try {
-        (setExchangeContext as any)(nextOrUpdater);
+        (setExchangeContext as any)(nextOrUpdater, hookName);
       } catch {
         if (typeof nextOrUpdater === 'function') {
-          (setExchangeContext as any)(nextOrUpdater(exchangeContext));
+          (setExchangeContext as any)(nextOrUpdater(exchangeContext), hookName);
         } else {
-          (setExchangeContext as any)(nextOrUpdater);
+          (setExchangeContext as any)(nextOrUpdater, hookName);
         }
       }
     },
     [setExchangeContext, exchangeContext],
   );
 
-  const getPersistedDisplayStackIds = useCallback((): SP_COIN_DISPLAY[] => {
+  // ✅ Synchronous ref of latest persisted ids (derived ONLY from settings.displayStack)
+  const persistedIdsRef = useRef<SP_COIN_DISPLAY[]>([]);
+
+  const readPersistedIdsFromContext = useCallback((): SP_COIN_DISPLAY[] => {
     const currentRaw = (exchangeContext as any)?.settings?.displayStack;
+
+    if (DEBUG_STACK) {
+      const rawIds = normalizeDisplayStackNodesToIds(currentRaw);
+      const persisted = toPersistedStackIds(rawIds);
+      debugLog.log?.('[stack] hydrate readPersistedIdsFromContext', {
+        raw_displayStack: currentRaw ?? null,
+        rawIds: rawIds.map(Number),
+        rawIds_named: toNamedStack(rawIds as any),
+        persistedIds: persisted.map(Number),
+        persistedIds_named: toNamedStack(persisted),
+        note:
+          'If persistedIds is empty while raw_displayStack is non-empty, filtering/gating is removing items (NON_INDEXED or IS_STACK_COMPONENT).',
+      });
+    }
+
     return toPersistedStackIds(normalizeDisplayStackNodesToIds(currentRaw));
-  }, [exchangeContext]);
+  }, [exchangeContext, debugLog]);
+
+  // Keep ref in sync on renders (and on any external writes)
+  useEffect(() => {
+    const next = readPersistedIdsFromContext();
+    const prev = persistedIdsRef.current ?? [];
+    persistedIdsRef.current = next;
+
+    if (DEBUG_STACK && !sameStack(prev, next)) {
+      debugLog.log?.('[stack] persistedIdsRef sync (render)', {
+        prev: toNamedStack(prev),
+        next: toNamedStack(next),
+      });
+    }
+  }, [readPersistedIdsFromContext, debugLog]);
+
+  const getPersistedDisplayStackIds = useCallback((): SP_COIN_DISPLAY[] => {
+    return persistedIdsRef.current ?? [];
+  }, []);
 
   const persistDisplayStack = useCallback(
-    (nextIds: SP_COIN_DISPLAY[] | number[]) => {
+    (nextIds: SP_COIN_DISPLAY[] | number[], traceId?: number, reason?: string) => {
       const nextPersistedIds = toPersistedStackIds(nextIds as any);
-      const currentIds = getPersistedDisplayStackIds();
-      if (sameStack(currentIds, nextPersistedIds)) return;
+      const currentIds = persistedIdsRef.current ?? [];
+
+      if (sameStack(currentIds, nextPersistedIds)) {
+        if (traceId != null) {
+          logAction(traceId, 'persistDisplayStack skipped (sameStack)', {
+            reason: reason ?? '(none)',
+            current: toNamedStack(currentIds),
+          });
+        }
+        return;
+      }
+
+      // ✅ Update ref immediately (so closePanel sees it synchronously)
+      persistedIdsRef.current = nextPersistedIds;
 
       const displayStack = toDisplayStackNodes(nextPersistedIds);
 
-      setExchangeContextSafe((prev: any) => {
-        const prevSettings = prev?.settings ?? {};
-        return {
-          ...prev,
-          settings: {
-            ...prevSettings,
-            displayStack,
-          },
-        };
-      });
+      if (traceId != null) {
+        logAction(traceId, 'persistDisplayStack write', {
+          reason: reason ?? '(none)',
+          next: toNamedStack(nextPersistedIds),
+          next_rawIds: nextPersistedIds.map(Number),
+          next_nodes: displayStack,
+        });
+      }
+
+      if (DEBUG_STACK) {
+        debugLog.log?.('[stack] persistDisplayStack commit', {
+          reason: reason ?? '(none)',
+          nextPersistedIds_named: toNamedStack(nextPersistedIds),
+        });
+      }
+
+      setExchangeContextSafe(
+        (prev: any) => {
+          const prevSettings = prev?.settings ?? {};
+          return {
+            ...prev,
+            settings: {
+              ...prevSettings,
+              displayStack,
+            },
+          };
+        },
+        'usePanelTree:persistDisplayStack',
+      );
     },
-    [getPersistedDisplayStackIds, setExchangeContextSafe],
+    [setExchangeContextSafe, logAction, debugLog],
   );
 
-  const lastActionRef = useRef<LastAction>(null);
   const lastVisRef = useRef<Record<number, boolean> | null>(null);
 
   const visibleManageKidsFromStore = () =>
@@ -311,23 +409,18 @@ export function usePanelTree() {
 
     const persistedIds = getPersistedDisplayStackIds();
     const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
-    const action = lastActionRef.current;
 
     // eslint-disable-next-line no-console
     console.log('[PanelTree][render-sync]', {
-      lastAction: action,
       claimVisible_map: !!visibilityMap[Number(claim)],
       claimVisible_store: panelStore.isVisible(claim),
       manageVisible_map: visibleManageKidsFromMap(),
       manageVisible_store: visibleManageKidsFromStore(),
 
-      // ✅ one source of truth (raw)
       displayStack_persisted: persistedRaw,
-
-      // optional helper: ids in named form for readability
       persistedDisplayStackNow: toNamedStack(persistedIds),
     });
-  }, [visibilityMap, manageScoped, exchangeContext, getPersistedDisplayStackIds]);
+  }, [visibilityMap, exchangeContext, getPersistedDisplayStackIds]);
 
   const callbacksDeps: PanelTreeCallbacksDeps = useMemo(
     () => ({
@@ -345,6 +438,20 @@ export function usePanelTree() {
       getActiveManageScoped,
       pushManageScopedHistory,
       diffAndPublish: (prev, next) => {
+        // ✅ Focused flip log for TRADING_STATION_PANEL
+        if (DEBUG_ACTIONS) {
+          const before = !!(prev ?? lastVisRef.current ?? {})[Number(TRACE_TARGET)];
+          const after = !!next[Number(TRACE_TARGET)];
+          if (before !== after) {
+            debugLog.log?.('[trace] TRADING_STATION_PANEL visibility flip', {
+              from: before,
+              to: after,
+              id: Number(TRACE_TARGET),
+              name: nameOf(TRACE_TARGET),
+            });
+          }
+        }
+
         publishVisibility(next);
 
         if (!DEBUG_CLOSE_INVARIANTS) {
@@ -375,67 +482,66 @@ export function usePanelTree() {
       pushManageScopedHistory,
       publishVisibility,
       setExchangeContext,
+      debugLog,
     ],
   );
 
   const base = useMemo(() => createPanelTreeCallbacks(callbacksDeps), [callbacksDeps]);
 
-  /* ------------------------------ actions -------------------------------- */
+  /**
+   * ✅ Visibility primitives coming from createPanelTreeCallbacks.
+   * (They are named open/close historically, but functionally used as show/hide here.)
+   */
+  const baseShow = base.openPanel;
+  const baseHide = base.closePanel;
 
   /**
-   * pushPanel: stack-only (persist displayStack push). No visibility side effects.
+   * ✅ Invoker tagging
+   *
+   * panelTreeCallbacks now treats invokers starting with "NAV_CLOSE:" as POP intent
+   * (restore radio fallback). Anything else is hide-only.
+   *
+   * We keep NAV_OPEN prefix for log clarity.
    */
-  const pushPanel = useCallback(
-    (panel: SP_COIN_DISPLAY) => {
-      const stackBefore = getPersistedDisplayStackIds();
-      const nextStack = toPersistedStackIds([...stackBefore, panel]);
-      persistDisplayStack(nextStack);
-
-      if (DEBUG_NAV) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree] displayStack (push) =', toNamedStack(nextStack));
-      }
-
-      return { stackBefore, nextStack };
+  const tagInvoker = useCallback(
+    (kind: 'NAV_OPEN' | 'NAV_CLOSE', invoker?: string) => {
+      const s = (invoker ?? '').trim();
+      const base = s.length ? s : '(none)';
+      return kind === 'NAV_OPEN' ? `NAV_OPEN:${base}` : `NAV_CLOSE:${base}`;
     },
-    [getPersistedDisplayStackIds, persistDisplayStack],
+    [],
   );
 
   /**
-   * popPanel: stack-only (persist displayStack pop). No visibility side effects.
-   * Returns the popped id or null.
+   * ✅ Hide-only invoker tag:
+   * Must NOT start with "NAV_CLOSE:" (otherwise panelTreeCallbacks will treat it as POP).
    */
-  const popPanel = useCallback(() => {
-    const stackBefore = getPersistedDisplayStackIds();
-    if (!stackBefore.length) {
-      return {
-        popped: null as SP_COIN_DISPLAY | null,
-        stackBefore,
-        nextStack: stackBefore,
-      };
-    }
+  const tagHideInvoker = useCallback((invoker?: string) => {
+    const s = (invoker ?? '').trim();
+    const base = s.length ? s : '(none)';
+    return `HIDE:${base}`;
+  }, []);
 
-    const popped = stackBefore[stackBefore.length - 1] as SP_COIN_DISPLAY;
-    const nextStack = stackBefore.slice(0, -1);
+  /* ------------------------------ PRIVATE (internal) -------------------------------- */
 
-    persistDisplayStack(nextStack);
-
-    if (DEBUG_NAV) {
-      // eslint-disable-next-line no-console
-      console.log('[PanelTree] displayStack (pop) =', toNamedStack(nextStack));
-    }
-
-    return { popped, stackBefore, nextStack };
-  }, [getPersistedDisplayStackIds, persistDisplayStack]);
-
-  /**
-   * showPanel: visibility-only (open panel). No stack side effects.
-   * Keeps the "infer parent" behavior for manage-scoped panels.
-   */
-  const showPanel = useCallback(
+  // Visibility-only show (keeps manage parent inference)
+  const showInternal = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
+      const traceId = nextTraceId();
+
       const inferredParent =
         parent == null && manageScopedSet.has(Number(panel)) ? manageContainer : parent;
+
+      logAction(traceId, 'showInternal called', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker,
+        parent: parent == null ? null : { id: Number(parent), name: nameOf(parent) },
+        inferredParent:
+          inferredParent == null
+            ? null
+            : { id: Number(inferredParent), name: nameOf(inferredParent) },
+        visibleBefore_store: panelStore.isVisible(panel),
+      });
 
       if (DEBUG_OPEN_INFER_PARENT && parent == null && inferredParent != null) {
         // eslint-disable-next-line no-console
@@ -446,107 +552,279 @@ export function usePanelTree() {
         });
       }
 
-      base.openPanel(panel, invoker, inferredParent);
+      baseShow(panel, invoker, inferredParent);
       return inferredParent ?? null;
     },
-    [base, manageContainer, manageScopedSet],
+    [baseShow, manageContainer, manageScopedSet, nextTraceId, logAction],
+  );
+
+  // Visibility-only hide
+  const hideInternal = useCallback(
+    (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
+      const traceId = nextTraceId();
+
+      logAction(traceId, 'hideInternal called', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker,
+        visibleBefore_store: panelStore.isVisible(panel),
+        arg,
+      });
+
+      baseHide(panel, invoker, arg);
+    },
+    [baseHide, nextTraceId, logAction],
   );
 
   /**
-   * hidePanel: visibility-only (close panel). No stack side effects.
+   * ✅ Visibility-only PUBLIC helpers (non-stack)
+   * - do NOT push/pop displayStack
+   * - do NOT trigger restorePrevRadioMember
    */
+  const showPanel = useCallback(
+    (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
+      showInternal(panel, tagHideInvoker(invoker), parent);
+    },
+    [showInternal, tagHideInvoker],
+  );
+
   const hidePanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
-      base.closePanel(panel, invoker, arg);
+      hideInternal(panel, tagHideInvoker(invoker), arg);
     },
-    [base],
+    [hideInternal, tagHideInvoker],
+  );
+
+  /* ------------------------------ STACK helpers (internal) -------------------------------- */
+
+  const pushIfStackMember = useCallback(
+    (panel: SP_COIN_DISPLAY, traceId: number, reason: string) => {
+      const stackBefore = getPersistedDisplayStackIds();
+
+      logAction(traceId, 'stack push check', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
+        isNonIndexed: NON_INDEXED.has(Number(panel)),
+        stackBefore: toNamedStack(stackBefore),
+      });
+
+      if (!IS_STACK_COMPONENT.has(Number(panel))) return stackBefore;
+      if (NON_INDEXED.has(Number(panel))) return stackBefore;
+
+      const nextStack = toPersistedStackIds([...stackBefore, panel]);
+      persistDisplayStack(nextStack, traceId, reason);
+
+      if (DEBUG_NAV) {
+        // eslint-disable-next-line no-console
+        console.log('[PanelTree] displayStack (push) =', toNamedStack(nextStack));
+      }
+
+      return nextStack;
+    },
+    [getPersistedDisplayStackIds, persistDisplayStack, logAction],
+  );
+
+  const removeIfStackMember = useCallback(
+    (panel: SP_COIN_DISPLAY, traceId: number, reason: string) => {
+      const stackBefore = getPersistedDisplayStackIds();
+
+      logAction(traceId, 'stack remove check', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
+        stackBefore: toNamedStack(stackBefore),
+      });
+
+      if (!IS_STACK_COMPONENT.has(Number(panel))) {
+        return {
+          removed: null as SP_COIN_DISPLAY | null,
+          stackBefore,
+          nextStack: stackBefore,
+        };
+      }
+
+      // remove LAST occurrence of panel (defensive for duplicates)
+      let idx = -1;
+      for (let i = stackBefore.length - 1; i >= 0; i--) {
+        if (Number(stackBefore[i]) === Number(panel)) {
+          idx = i;
+          break;
+        }
+      }
+
+      if (idx < 0) {
+        return {
+          removed: null as SP_COIN_DISPLAY | null,
+          stackBefore,
+          nextStack: stackBefore,
+        };
+      }
+
+      const nextStack = stackBefore.slice(0, idx).concat(stackBefore.slice(idx + 1));
+      persistDisplayStack(nextStack, traceId, reason);
+
+      if (DEBUG_NAV) {
+        // eslint-disable-next-line no-console
+        console.log('[PanelTree] displayStack (remove) =', toNamedStack(nextStack));
+      }
+
+      return { removed: panel, stackBefore, nextStack };
+    },
+    [getPersistedDisplayStackIds, persistDisplayStack, logAction],
   );
 
   /**
-   * openPanel: composed behavior (push + show)
+   * Legacy helper: pop TOP stack item.
+   * (kept for backward-compat callers that used closePanel(invoker,arg) without panel)
+   */
+  const popTop = useCallback(
+    (traceId: number, reason: string) => {
+      const stackBefore = getPersistedDisplayStackIds();
+      if (!stackBefore.length) {
+        return {
+          popped: null as SP_COIN_DISPLAY | null,
+          stackBefore,
+          nextStack: stackBefore,
+        };
+      }
+
+      // find last stackable item (defensive)
+      let idx = stackBefore.length - 1;
+      while (idx >= 0 && !IS_STACK_COMPONENT.has(Number(stackBefore[idx]))) idx--;
+
+      if (idx < 0) {
+        persistDisplayStack([], traceId, `${reason}:clear (no stackable items found)`);
+        return {
+          popped: null as SP_COIN_DISPLAY | null,
+          stackBefore,
+          nextStack: [] as SP_COIN_DISPLAY[],
+        };
+      }
+
+      const popped = stackBefore[idx] as SP_COIN_DISPLAY;
+      const nextStack = stackBefore.slice(0, idx);
+      persistDisplayStack(nextStack, traceId, reason);
+      return { popped, stackBefore, nextStack };
+    },
+    [getPersistedDisplayStackIds, persistDisplayStack],
+  );
+
+  /* ------------------------------ PUBLIC API (single source of truth) -------------------------------- */
+
+  /**
+   * ✅ openPanel(panel): ALWAYS shows panel.
+   * If panel is a stack member, ALSO pushes it into settings.displayStack.
+   *
+   * This is the only "open/show" API the app should call for NAV.
    */
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
+      const traceId = nextTraceId();
+      const navInvoker = tagInvoker('NAV_OPEN', invoker);
+
+      logAction(traceId, 'openPanel (public) called', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker: navInvoker,
+        parent: parent == null ? null : { id: Number(parent), name: nameOf(parent) },
+        isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
+        isNonIndexed: NON_INDEXED.has(Number(panel)),
+      });
+
       const stackBefore = getPersistedDisplayStackIds();
+      const nextStack = pushIfStackMember(panel, traceId, `openPanel:${navInvoker}`);
+      showInternal(panel, navInvoker, parent);
 
-      // push (persist)
-      pushPanel(panel);
-
-      // show (visibility)
-      const inferredParent = showPanel(panel, invoker, parent);
-
-      lastActionRef.current = {
-        kind: 'openPanel',
-        panel,
-        invoker,
-        parent: inferredParent,
-        stackBefore,
-        ts: Date.now(),
-      };
-    },
-    [getPersistedDisplayStackIds, pushPanel, showPanel],
-  );
-
-  /**
-   * closeTopOfDisplayStack: composed behavior (pop + hide)
-   */
-  const closeTopOfDisplayStack = useCallback(
-    (invoker?: string, arg?: unknown) => {
-      const { popped: closing, stackBefore } = popPanel();
-      if (!closing) return;
-
-      lastActionRef.current = {
-        kind: 'closePanel',
-        requested: closing,
-        target: closing,
-        invoker: invoker ?? 'usePanelTree:closeTopOfDisplayStack',
-        stackBefore,
-        ts: Date.now(),
-      };
-
-      hidePanel(closing, invoker ?? 'closeTopOfDisplayStack:persist-pop', arg);
-    },
-    [popPanel, hidePanel],
-  );
-
-  // ✅ visibility-based leaf inference (because stack top may be hidden)
-  const deriveVisibleManageLeaf = useCallback((): SP_COIN_DISPLAY | null => {
-    const pending = SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS;
-    if (isVisible(pending)) return pending;
-
-    for (const id of manageScoped) {
-      if (isVisible(id)) return id;
-    }
-    return null;
-  }, [isVisible, manageScoped]);
-
-  /**
-   * closePanel: visibility-only close (no stack change), but preserves manageContainer behavior.
-   */
-  const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
-      const stackBefore = getPersistedDisplayStackIds();
-
-      let target = panel;
-
-      // hide-only close of manageContainer closes the currently visible manage leaf
-      if (Number(panel) === Number(manageContainer)) {
-        target = deriveVisibleManageLeaf() ?? manageContainer;
+      if (DEBUG_STACK) {
+        const stackAfter = getPersistedDisplayStackIds();
+        debugLog.log?.('[stack] openPanel post', {
+          panel: { id: Number(panel), name: nameOf(panel) },
+          invoker: navInvoker,
+          stackBefore: toNamedStack(stackBefore),
+          nextStack_fromPush: toNamedStack(nextStack),
+          stackAfter_ref: toNamedStack(stackAfter),
+        });
       }
-
-      lastActionRef.current = {
-        kind: 'closePanel',
-        requested: panel,
-        target,
-        invoker,
-        stackBefore,
-        ts: Date.now(),
-      };
-
-      hidePanel(target, invoker, arg);
     },
-    [manageContainer, getPersistedDisplayStackIds, deriveVisibleManageLeaf, hidePanel],
+    [
+      nextTraceId,
+      tagInvoker,
+      logAction,
+      getPersistedDisplayStackIds,
+      pushIfStackMember,
+      showInternal,
+      debugLog,
+    ],
   );
+
+  /**
+   * ✅ closePanel(panel): ALWAYS hides that panel.
+   * If panel is a stack member, ALSO removes it from settings.displayStack (last occurrence).
+   *
+   * Backward-compat:
+   * - If called as closePanel(invoker, arg) (no panel), it will POP TOP and hide that popped panel.
+   *
+   * This is the only "close/hide" API the app should call for NAV.
+   */
+  function closePanel(panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown): void;
+  function closePanel(invoker?: string, arg?: unknown): void;
+  function closePanel(
+    a?: SP_COIN_DISPLAY | string,
+    b?: string | unknown,
+    c?: unknown,
+  ) {
+    const traceId = nextTraceId();
+
+    // overload resolution
+    const hasPanel =
+      typeof a === 'number' && Number.isFinite(Number(a)) && KNOWN.has(Number(a));
+
+    if (hasPanel) {
+      const panel = a as SP_COIN_DISPLAY;
+      const invoker = b as string | undefined;
+      const arg = c;
+
+      const navInvoker = tagInvoker('NAV_CLOSE', invoker);
+
+      logAction(traceId, 'closePanel (public) called', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker: navInvoker,
+        arg,
+        isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
+      });
+
+      // remove (if stack member) + hide (always)
+      removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
+      hideInternal(panel, navInvoker, arg);
+      return;
+    }
+
+    // legacy: closePanel(invoker?, arg?) => pop top and hide popped
+    const invoker = (typeof a === 'string' ? a : undefined) as string | undefined;
+    const arg = b as unknown;
+
+    const navInvoker = tagInvoker('NAV_CLOSE', invoker ?? 'closePanel:pop-top');
+
+    logAction(traceId, 'closePanel (legacy pop-top) called', {
+      invoker: navInvoker,
+      arg,
+    });
+
+    const { popped, stackBefore, nextStack } = popTop(
+      traceId,
+      `closePanel:${navInvoker}`,
+    );
+    if (!popped) {
+      logAction(traceId, 'closePanel pop-top noop (stack empty)', {
+        stackBefore: toNamedStack(stackBefore),
+      });
+      return;
+    }
+
+    logAction(traceId, 'closePanel pop-top will hide popped', {
+      popped: { id: Number(popped), name: nameOf(popped) },
+      nextStack: toNamedStack(nextStack),
+    });
+
+    hideInternal(popped, navInvoker, arg);
+  }
 
   /* ------------------------------ derived -------------------------------- */
 
@@ -570,20 +848,50 @@ export function usePanelTree() {
       console.groupCollapsed(title);
 
       const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
-      const persistedIds = getPersistedDisplayStackIds();
+      const persistedIdsFromRef = getPersistedDisplayStackIds();
+      const hydratedIdsFromContext = readPersistedIdsFromContext();
 
-      // ✅ one source of truth
       // eslint-disable-next-line no-console
-      console.log('[PanelTree] displayStack (persisted) =', persistedRaw);
+      console.log('[PanelTree] displayStack (persisted raw) =', persistedRaw);
+      // eslint-disable-next-line no-console
+      console.log(
+        '[PanelTree] displayStackIds (ref) =',
+        persistedIdsFromRef.map(Number),
+        toNamedStack(persistedIdsFromRef),
+      );
+      // eslint-disable-next-line no-console
+      console.log(
+        '[PanelTree] displayStackIds (rehydrate from context) =',
+        hydratedIdsFromContext.map(Number),
+        toNamedStack(hydratedIdsFromContext),
+      );
 
-      // Optional: ids only (NOT rebuilt nodes)
-      // eslint-disable-next-line no-console
-      console.log('[PanelTree] displayStackIds =', persistedIds.map(Number));
+      if (DEBUG_STACK) {
+        const rawIds = normalizeDisplayStackNodesToIds(persistedRaw);
+        const dropped = rawIds.filter(
+          (id) =>
+            Number.isFinite(Number(id)) &&
+            (NON_INDEXED.has(Number(id)) || !IS_STACK_COMPONENT.has(Number(id))),
+        );
+
+        // eslint-disable-next-line no-console
+        console.log(
+          '[PanelTree][stack-debug] rawIds =',
+          rawIds.map(Number),
+          toNamedStack(rawIds as any),
+        );
+        // eslint-disable-next-line no-console
+        console.log(
+          '[PanelTree][stack-debug] droppedByGate =',
+          dropped.map(Number),
+          toNamedStack(dropped as any),
+        );
+      }
 
       // eslint-disable-next-line no-console
       console.groupEnd();
     },
-    [exchangeContext, getPersistedDisplayStackIds],
+    [exchangeContext, getPersistedDisplayStackIds, readPersistedIdsFromContext],
   );
 
   return {
@@ -591,15 +899,15 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
+
+    // ✅ stack-aware navigation API
     openPanel,
     closePanel,
-    closeTopOfDisplayStack,
-    dumpNavStack,
 
-    // new primitives
-    pushPanel,
-    popPanel,
+    // ✅ visibility-only helpers (non-stack callers)
     showPanel,
     hidePanel,
+
+    dumpNavStack,
   };
 }

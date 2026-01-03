@@ -47,7 +47,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const pendingVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
 
   usePanelTransitions();
-  const { openPanel, closePanel } = usePanelTree();
+
+  /**
+   * ✅ Navigation vs local radio:
+   * - openPanel  = push + show  (true navigation)
+   * - showPanel  = visibility-only (NO stack)
+   * - hidePanel  = visibility-only (NO stack)
+   * - closePanel = pop + hide top-of-stack (NOT used here)
+   */
+  const { openPanel, showPanel, hidePanel } = usePanelTree();
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
@@ -76,7 +84,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     doToDo,
   } = useManageSponsorshipsToDo(ctx);
 
-  // Open only the requested *list* panel; close the alternative list panels
+  /**
+   * ✅ openOnly is LOCAL RADIO ONLY (no stack writes)
+   * Open only the requested *list* panel; hide the alternative list panels.
+   */
   const openOnly = useCallback(
     (id: SP_COIN_DISPLAY) => {
       try {
@@ -88,19 +99,21 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
         ids.forEach((pid) => {
           if (pid === id) {
-            debugLog.log?.('openOnly → open', { target: SP_COIN_DISPLAY[pid] });
-            openPanel(
+            debugLog.log?.('openOnly → show', { target: SP_COIN_DISPLAY[pid] });
+            showPanel(
               pid,
-              'ManageSponsorshipsPanel:openOnly(target=' +
-                SP_COIN_DISPLAY[id] +
+              'ManageSponsorshipsPanel:openOnly(show=' +
+                SP_COIN_DISPLAY[pid] +
                 '#' +
-                String(id) +
+                String(pid) +
                 ')',
+              // optional parent inference handled inside showPanel in usePanelTree
             );
           } else {
-            closePanel(
+            debugLog.log?.('openOnly → hide', { target: SP_COIN_DISPLAY[pid] });
+            hidePanel(
               pid,
-              'ManageSponsorshipsPanel:openOnly(close=' +
+              'ManageSponsorshipsPanel:openOnly(hide=' +
                 SP_COIN_DISPLAY[pid] +
                 '#' +
                 String(pid) +
@@ -112,10 +125,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         debugLog.warn?.('openOnly error (panel tree not ready?)', { err });
       }
     },
-    [openPanel, closePanel],
+    [showPanel, hidePanel],
   );
 
-  // ✅ Open a MAIN_OVERLAY_GROUP panel (Trading / Staking spCoins etc.)
+  // ✅ Open a MAIN_OVERLAY_GROUP panel (Trading / Staking spCoins etc.) — real navigation
   const openMainOverlay = useCallback(
     (id: SP_COIN_DISPLAY) => {
       try {
@@ -138,18 +151,19 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   /** Toggle Pending Rewards rows (the 3 bulleted rows under Pending Rewards) */
   const togglePendingRewards = useCallback(() => {
     if (pendingVisible) {
-      closePanel(
+      // ✅ local toggle (no stack)
+      hidePanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'ManageSponsorshipsPanel:togglePendingRewards(close)',
+        'ManageSponsorshipsPanel:togglePendingRewards(hide)',
       );
     } else {
-      // NOTE: MANAGE_SPONSORSHIPS_PANEL stays open; MANAGE_PENDING_REWARDS is not a radio panel.
-      openPanel(
+      // ✅ local toggle (no stack)
+      showPanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'ManageSponsorshipsPanel:togglePendingRewards(open)',
+        'ManageSponsorshipsPanel:togglePendingRewards(show)',
       );
     }
-  }, [pendingVisible, openPanel, closePanel]);
+  }, [pendingVisible, showPanel, hidePanel]);
 
   // ✅ Early return happens only after all hooks have been called
   if (!isActive) return null;
@@ -397,7 +411,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${rowB} ${tdInner} ${styles.msLinkCell}`}
-                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+                          onClick={() =>
+                            openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
+                          }
                           aria-label="Open Claim Agents Rewards panel"
                         >
                           <span className="mr-1">
@@ -436,14 +452,18 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </td>
                   <td className="p-0">
                     <div
-                      className={(pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter}
+                      className={
+                        (pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter
+                      }
                     >
                       0
                     </div>
                   </td>
                   <td className="p-0">
                     <div
-                      className={(pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter}
+                      className={
+                        (pendingVisible ? rowA : rowB) + ' ' + tdInnerCenter
+                      }
                     >
                       {' '}
                     </div>

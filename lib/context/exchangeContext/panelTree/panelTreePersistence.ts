@@ -9,6 +9,22 @@ export type PanelEntry = {
 };
 
 /**
+ * Persisted node shapes we may encounter (read-compat):
+ * - canonical (stage 3): { id, visible, name }
+ * - legacy:             { panel, visible, name }
+ * - older experimental: { displayTypeId, visible, name }
+ * - optional nesting:   { children: [...] }
+ */
+export type PersistedPanelNode = {
+  id?: number;
+  panel?: number;
+  displayTypeId?: number;
+  visible?: boolean;
+  name?: string;
+  children?: PersistedPanelNode[];
+};
+
+/**
  * Stable name resolver.
  */
 export function panelName(id: number) {
@@ -16,41 +32,60 @@ export function panelName(id: number) {
 }
 
 /**
+ * ✅ Single source-of-truth ID resolver (read-compat):
+ * Accepts canonical + legacy shapes.
+ *
+ * Supports:
+ * - { id }
+ * - { panel }
+ * - { displayTypeId } (older experimental)
+ */
+export function panelIdOf(v: unknown): number | null {
+  const anyV = v as any;
+  const raw = anyV?.id ?? anyV?.panel ?? anyV?.displayTypeId;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : null;
+}
+
+/**
  * Flattens the persisted tree into a de-duplicated flat list.
  * Stage 3:
  * - Tree shape is no longer authoritative; visibility is.
  * - First occurrence of a panel id wins (deterministic).
+ *
+ * ✅ Supports:
+ * - persisted nodes using { id }
+ * - legacy nodes using { panel }
+ * - older experimental nodes using { displayTypeId }
+ * - nested children (optional)
  */
 export function flattenPanelTree(
-  nodes: any[] | undefined,
+  nodes: PersistedPanelNode[] | undefined,
   known: Set<number>,
 ): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
 
   const out: PanelEntry[] = [];
 
-  const walk = (ns: any[]) => {
+  const walk = (ns: PersistedPanelNode[]) => {
     for (const n of ns) {
-      const id =
-        typeof n?.panel === 'number' && known.has(n.panel)
-          ? (n.panel as number)
-          : null;
-
+      const id = panelIdOf(n);
       if (id == null) continue;
+      if (!known.has(id)) continue;
 
       const name =
-        typeof n?.name === 'string' && n.name.length > 0
-          ? n.name
+        typeof (n as any)?.name === 'string' && (n as any).name.length > 0
+          ? (n as any).name
           : panelName(id);
 
       out.push({
         panel: id as SP_COIN_DISPLAY,
-        visible: !!n?.visible,
+        visible: !!(n as any)?.visible,
         name,
       });
 
-      if (Array.isArray(n?.children) && n.children.length) {
-        walk(n.children);
+      if (Array.isArray((n as any)?.children) && (n as any).children.length) {
+        walk((n as any).children as PersistedPanelNode[]);
       }
     }
   };
@@ -60,8 +95,9 @@ export function flattenPanelTree(
   // De-dupe by panel id (keep first occurrence)
   const seen = new Set<number>();
   return out.filter((e) => {
-    if (seen.has(e.panel)) return false;
-    seen.add(e.panel);
+    const k = Number(e.panel);
+    if (seen.has(k)) return false;
+    seen.add(k);
     return true;
   });
 }
@@ -73,7 +109,7 @@ export function flattenPanelTree(
 export function toVisibilityMap(list: PanelEntry[]): Record<number, boolean> {
   const m: Record<number, boolean> = {};
   for (const e of list) {
-    m[e.panel] = !!e.visible;
+    m[Number(e.panel)] = !!e.visible;
   }
   return m;
 }
@@ -86,7 +122,7 @@ export function ensurePanelPresent(
   list: PanelEntry[],
   panel: SP_COIN_DISPLAY,
 ): PanelEntry[] {
-  if (list.some((e) => e.panel === panel)) return list;
+  if (list.some((e) => Number(e.panel) === Number(panel))) return list;
   return [
     ...list,
     {
@@ -103,18 +139,32 @@ export function ensurePanelPresent(
  * Stage 3:
  * - Persistence is a normalized flat list
  * - No stack or tree reconstruction
+ *
+ * ✅ Canonical write: { id, visible, name }
+ * ✅ Back-compat: also write { panel } until all readers are migrated.
+ *
+ * ✅ Required fix:
+ * - NEVER write/keep a legacy root `displayStack` here. (Single source of truth is settings.displayStack)
+ *   If a stale root field exists on prevCtx, remove it in the returned object to prevent re-persisting it.
  */
 export function writeFlatTree(prevCtx: any, next: PanelEntry[]) {
-  const normalized = next.map((e) => ({
-    panel: e.panel,
-    visible: !!e.visible,
-    name: e.name ?? panelName(e.panel),
-  }));
+  const normalized = next.map((e) => {
+    const id = Number(e.panel);
+    return {
+      id: id as SP_COIN_DISPLAY, // canonical
+      panel: id as SP_COIN_DISPLAY, // back-compat (remove later)
+      visible: !!e.visible,
+      name: e.name ?? panelName(id),
+    };
+  });
+
+  // strip any stale legacy root displayStack so it can't be re-persisted
+  const { displayStack: _legacyRootDisplayStack, ...rest } = prevCtx ?? {};
 
   return {
-    ...prevCtx,
+    ...rest,
     settings: {
-      ...(prevCtx?.settings ?? {}),
+      ...(rest?.settings ?? {}),
       spCoinPanelTree: normalized,
     },
   };

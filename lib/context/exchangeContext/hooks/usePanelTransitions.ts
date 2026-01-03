@@ -21,7 +21,9 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_PANEL_TRANSITIONS === 'true'
 const debug = createDebugLogger('usePanelTransitions', DEBUG_ENABLED);
 
 export function usePanelTransitions() {
-  const { openPanel, closePanel, isVisible } = usePanelTree();
+  // ✅ Use hidePanel for closing a specific panel (visibility-only)
+  // ✅ Use closePanel() only for pop+hide (top-of-stack)
+  const { openPanel, hidePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
   const buyCountRef = useRef(0);
@@ -174,12 +176,13 @@ export function usePanelTransitions() {
 
   const closeManageSponsorships = useCallback(() => {
     perf.start();
-    closePanel(
+    // ✅ close specific overlay (visibility-only)
+    hidePanel(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
       'usePanelTransitions:closeManageSponsorships(TRADING_STATION_PANEL)',
     );
     perf.end('closeManageSponsorships');
-  }, [closePanel, perf]);
+  }, [hidePanel, perf]);
 
   const startAddSponsorship = useCallback(() => {
     perf.time('startAddSponsorship', () => {
@@ -201,19 +204,20 @@ export function usePanelTransitions() {
 
   const closeConfigSponsorship = useCallback(() => {
     perf.start();
-    closePanel(
+    // ✅ close specific panel (visibility-only)
+    hidePanel(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeConfigSponsorship(MANAGE_SPONSORSHIPS_PANEL)',
     );
     perf.end('closeConfigSponsorship');
-  }, [closePanel, perf]);
+  }, [hidePanel, perf]);
 
   const toggleSponsorConfig = useCallback(() => {
     const open = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
 
     perf.start();
     if (open) {
-      closePanel(
+      hidePanel(
         SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
         'usePanelTransitions:toggleSponsorConfig(close→MANAGE_SPONSORSHIPS_PANEL)',
       );
@@ -224,20 +228,21 @@ export function usePanelTransitions() {
       );
     }
     perf.end('toggleSponsorConfig');
-  }, [isVisible, closePanel, openPanel, perf]);
+  }, [isVisible, hidePanel, openPanel, perf]);
 
   const closeAddSponsorship = useCallback(() => {
     perf.start();
-    closePanel(
+    // ✅ close specific panels (visibility-only)
+    hidePanel(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeAddSponsorship(Config→MANAGE_SPONSORSHIPS_PANEL)',
     );
-    closePanel(
+    hidePanel(
       SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeAddSponsorship(Add→MANAGE_SPONSORSHIPS_PANEL)',
     );
     perf.end('closeAddSponsorship');
-  }, [closePanel, perf]);
+  }, [hidePanel, perf]);
 
   const openOverlay = useCallback(
     (overlay: SP_COIN_DISPLAY) => {

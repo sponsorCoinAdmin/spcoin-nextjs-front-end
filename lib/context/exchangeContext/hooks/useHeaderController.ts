@@ -8,6 +8,9 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
+// ✅ Prevent “double close” when a header close also triggers an overlay/backdrop close.
+import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+
 // Read env once, with a safe fallback
 const AGENT_WALLET_TITLE =
   process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
@@ -85,7 +88,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
 }
 
 export function useHeaderController() {
-  const { closeTopOfDisplayStack } = usePanelTree();
+  const { closePanel } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   // Visibility is used ONLY for computing header title/left (not for nav).
@@ -159,16 +162,23 @@ export function useHeaderController() {
   /**
    * ✅ NEW ARCH RULE:
    * Header X = POP stack (close top of persisted displayStack) exactly once.
+   *
+   * Also:
+   * - suppress next overlay close attempt to prevent double-close (header + backdrop).
    */
   const onClose = useCallback(
     (e?: React.MouseEvent) => {
+      suppressNextOverlayClose('HeaderController:onClose(pop)', 'HeaderController');
+
       try {
         e?.preventDefault();
         e?.stopPropagation();
       } catch {}
-      closeTopOfDisplayStack('HeaderController:onClose', e);
+
+      // ✅ Legacy form: closePanel(invoker, arg) => pop-top inside usePanelTree
+      closePanel('HeaderController:onClose(pop)', e);
     },
-    [closeTopOfDisplayStack],
+    [closePanel],
   );
 
   return {

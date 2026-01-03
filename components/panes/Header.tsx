@@ -12,6 +12,9 @@ import ConnectNetworkButtonProps from '@/components/Buttons/Connect/ConnectNetwo
 import { labelForPath, PATH_TO_ID } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
 
+// ✅ NEW: prevent “double close” when header X also triggers overlay close handlers
+import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+
 const NON_NAV_HOVER = '__non_nav_hover__';
 
 // ✅ Header X spam guard (per-tab). Keep small + explicit.
@@ -160,8 +163,18 @@ export default function Header() {
                       ].join(' ')}
                       style={{ color: '#fb923c' }}
                       onClick={(e) => {
+                        // ✅ Critical ordering:
+                        // 1) suppress overlay close (one-shot)
+                        // 2) stop event propagation
+                        // 3) close tab
+                        suppressNextOverlayClose(
+                          `header-tab-x:${href}`,
+                          'Header:TabX',
+                        );
+
                         e.preventDefault();
                         e.stopPropagation();
+
                         closeTab(href);
                       }}
                     >

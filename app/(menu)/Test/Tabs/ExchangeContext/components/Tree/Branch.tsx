@@ -1,4 +1,4 @@
-// File: @/components/PanelTree/Branch.tsx
+// File: @/app/(menu)/Test/Tabs/ExchangeContext/omponents/Tree/Branch.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -26,15 +26,34 @@ type BranchProps = {
   dense?: boolean;
 };
 
-// This page renders VIRTUAL nodes: { id, name, visible, children }
+/**
+ * Virtual panel nodes can be shaped as either:
+ * - { id, name, visible, children }
+ * - { panel, name, visible, children }   (common persisted shape)
+ */
+const getVirtualId = (v: any): number | null => {
+  const id = Number(v?.id);
+  if (Number.isFinite(id)) return id;
+
+  const panel = Number(v?.panel);
+  if (Number.isFinite(panel)) return panel;
+
+  return null;
+};
+
+// This page renders VIRTUAL nodes: { id|panel, name, visible, children }
 const looksLikeVirtualPanelNode = (v: any) =>
-  v && typeof v.id === 'number' && 'visible' in v;
+  v && getVirtualId(v) != null && 'visible' in v;
 
 const nameForVirtual = (v: any): string => {
   if (!looksLikeVirtualPanelNode(v)) return '';
   if (typeof v.name === 'string' && v.name.length > 0) return v.name;
-  const mapped = (SP_COIN_DISPLAY as any)?.[v.id];
-  return typeof mapped === 'string' ? mapped : String(v.id);
+
+  const id = getVirtualId(v);
+  if (id == null) return '';
+
+  const mapped = (SP_COIN_DISPLAY as any)?.[id];
+  return typeof mapped === 'string' ? mapped : String(id);
 };
 
 // Arrays that should show "[idx] PANEL_NAME" for their virtual children
@@ -43,8 +62,10 @@ const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children']);
 /** Format child labels with “non-indexed” and overlay-relative indexing rules. */
 function formatChildLabel(childVal: any, defaultIndex: string): string {
   if (!looksLikeVirtualPanelNode(childVal)) return `[${defaultIndex}]`;
-  const id = (childVal as any).id as number;
+
+  const id = getVirtualId(childVal);
   const displayName = nameForVirtual(childVal);
+  if (id == null) return `[${defaultIndex}]`;
 
   // 1) Never index these
   if (NON_INDEXED_PANELS.has(id as any)) return displayName;
@@ -78,6 +99,11 @@ const Branch: React.FC<BranchProps> = ({
   enumRegistry,
   dense,
 }) => {
+  /**
+   * ✅ Contract:
+   * Tree only calls openPanel / closePanel.
+   * Stack membership + visibility semantics are handled inside usePanelTree.
+   */
   const { openPanel, closePanel } = usePanelTree();
 
   const isArray = Array.isArray(value);
@@ -89,8 +115,21 @@ const Branch: React.FC<BranchProps> = ({
     /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) &&
     looksLikeVirtualPanelNode(value);
 
-  // ✅ displayStack items: always-open, no +/- and no nested fields
-  const isDisplayStackItem = /(\.settings\.displayStack\.\d+$)/.test(path);
+  /**
+   * ✅ displayStack items: always-open, no +/- and no nested fields
+   * Support BOTH:
+   *  - .settings.displayStack.0
+   *  - .displayStack.0   (root)
+   */
+  const isDisplayStackItem = /(\.(?:settings\.)?displayStack\.\d+$)/.test(path);
+
+  /**
+   * ✅ Auto-expand the displayStack container when it exists
+   * Support BOTH:
+   *  - .settings.displayStack
+   *  - .displayStack
+   */
+  const isDisplayStackContainer = /(\.(?:settings\.)?displayStack$)/.test(path);
 
   // Treat any array labeled exactly 'children' as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
@@ -120,7 +159,9 @@ const Branch: React.FC<BranchProps> = ({
     const text = formatDisplayStackItem(label, value);
 
     return (
-      <div className={`font-mono flex items-center ${lineClass} text-slate-200 m-0 p-0`}>
+      <div
+        className={`font-mono flex items-center ${lineClass} text-slate-200 m-0 p-0`}
+      >
         <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
         <span className="text-[#5981F3]">{text}</span>
       </div>
@@ -143,6 +184,9 @@ const Branch: React.FC<BranchProps> = ({
         expanded = (value as any)?.visible === true;
       } else if (isChildrenContainer) {
         expanded = true;
+      } else if (isDisplayStackContainer) {
+        // ✅ keep displayStack open so you always see items
+        expanded = true;
       } else {
         expanded = !!exp[path];
       }
@@ -150,19 +194,22 @@ const Branch: React.FC<BranchProps> = ({
 
     const onRowClick = () => {
       if (isPanelArrayItem) {
-        const panelId = (value as any).id as number;
+        const panelId = getVirtualId(value);
+        if (panelId == null) return;
+
         const currentlyVisible = !!(value as any).visible;
-        const parentTag = 'Branch:onRowClick()';
+        const invoker = 'Branch:onRowClick(tree)';
 
         if (!currentlyVisible) {
-          openPanel(panelId, parentTag);
+          // ✅ openPanel always shows; stack push happens only if stack-member (inside usePanelTree)
+          openPanel(panelId as any, invoker);
           ensureOpen(path);
           ensureOpen(`${path}.children`);
         } else {
-          // ✅ closePanel always behaves as if "empty radio" is allowed.
-          closePanel(panelId, parentTag);
+          // ✅ closePanel(panel) always hides THAT panel; stack remove happens only if stack-member
+          closePanel(panelId as any, invoker);
         }
-      } else if (hasEntries) {
+      } else if (hasEntries && !isDisplayStackContainer) {
         togglePath(path);
       }
     };
@@ -175,7 +222,8 @@ const Branch: React.FC<BranchProps> = ({
       : Object.keys(value as object).filter((k) => {
           if (!isVirtualNode) return true;
           if (k === 'name') return false;
-          if (!SHOW_IDS && k === 'id') return false;
+          // hide either identifier key if SHOW_IDS disabled
+          if (!SHOW_IDS && (k === 'id' || k === 'panel')) return false;
           if (!SHOW_VIS && k === 'visible') return false;
           return true;
         });
@@ -224,7 +272,7 @@ const Branch: React.FC<BranchProps> = ({
                 : expanded
               : undefined
           }
-          clickable={isPanelArrayItem || hasEntries}
+          clickable={isPanelArrayItem || (hasEntries && !isDisplayStackContainer)}
           onClick={onRowClick}
           dense={dense}
         />

@@ -10,15 +10,20 @@ const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAY_CLOSE_HANDLER === 'true';
 
-const debugLog = createDebugLogger('useOverlayCloseHandler', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger(
+  'useOverlayCloseHandler',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 /**
  * ✅ One-shot suppression flag to prevent “double close”
  * (e.g. header X triggers both header handler + global overlay handler).
  */
-const SUPPRESS_NEXT_OVERLAY_CLOSE_REF: { n: number; why?: string; tag?: string } = {
-  n: 0,
-};
+const SUPPRESS_NEXT_OVERLAY_CLOSE_REF: { n: number; why?: string; tag?: string } =
+  {
+    n: 0,
+  };
 
 /**
  * Call this from header-X (or any close source) to suppress the *next*
@@ -64,29 +69,40 @@ function consumeSuppression(): { suppressed: boolean; why?: string; tag?: string
  *
  * New architecture:
  * - Overlay close (backdrop/back/back) is a STACK POP.
- * - No visibility-based heuristics here.
- * - MANAGE_PENDING_REWARDS is just another display on the stack.
+ * - This MUST trigger radio-restore behavior in panelTreeCallbacks.
+ *
+ * ✅ Required fix:
+ * - panelTreeCallbacks treats invokers starting with "NAV_CLOSE:" as POP.
+ * - Therefore the invoker we pass to closePanel(...) MUST start with "NAV_CLOSE:"
+ *   so restorePrevRadioMember() runs when appropriate.
+ *
+ * NOTE:
+ * - We still call the legacy overload closePanel(invoker, arg) (no panel),
+ *   which pops the top of settings.displayStack and hides it.
  */
 export function useOverlayCloseHandler() {
-  const { closeTopOfDisplayStack } = usePanelTree();
+  const { closePanel } = usePanelTree();
 
   const handleCloseOverlay = useCallback(
     (e?: React.MouseEvent) => {
       const sup = consumeSuppression();
       if (sup.suppressed) {
-        if (DEBUG_ENABLED) debugLog.log?.('handleCloseOverlay: SUPPRESSED (one-shot)', sup);
+        if (DEBUG_ENABLED) {
+          debugLog.log?.('handleCloseOverlay: SUPPRESSED (one-shot)', sup);
+        }
         return;
       }
 
+      const invoker = 'NAV_CLOSE:useOverlayCloseHandler:handleCloseOverlay(pop)';
+
       if (DEBUG_ENABLED) {
-        debugLog.log?.('handleCloseOverlay: pop top of displayStack', {
-          invoker: 'useOverlayCloseHandler:handleCloseOverlay(pop)',
-        });
+        debugLog.log?.('handleCloseOverlay: pop top of displayStack', { invoker });
       }
 
-      closeTopOfDisplayStack('useOverlayCloseHandler:handleCloseOverlay(pop)', e);
+      // ✅ pop-top close (stack-driven)
+      closePanel(invoker, e);
     },
-    [closeTopOfDisplayStack],
+    [closePanel],
   );
 
   return { handleCloseOverlay };

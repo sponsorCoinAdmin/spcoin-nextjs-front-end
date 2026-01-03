@@ -107,52 +107,6 @@ const clone = <T,>(o: T): T =>
 
 /* ------------------------------ Trace helpers ------------------------------ */
 
-const safeJsonParse = (s: string | null) => {
-  if (!s) return undefined;
-  try {
-    return JSON.parse(s);
-  } catch {
-    return { __parseError: true, raw: s.slice(0, 500) };
-  }
-};
-
-const lsPeek = (key: string) => {
-  try {
-    if (typeof window === 'undefined') return undefined;
-    const raw = window.localStorage.getItem(key);
-    return safeJsonParse(raw);
-  } catch (e) {
-    return { __lsError: true, key, error: String(e) };
-  }
-};
-
-const lsFindLikelyKeys = () => {
-  try {
-    if (typeof window === 'undefined') return [];
-    return Object.keys(window.localStorage);
-  } catch {
-    return [];
-  }
-};
-
-const lsDumpCandidates = () => {
-  const candidates = [
-    'ExchangeContext.settings',
-    'ExchangeContext',
-    'exchangeContext',
-    'spCoinExchangeContext',
-    'SPCOIN_EXCHANGE_CONTEXT',
-    'ExchangeProvider',
-  ];
-  const existing = lsFindLikelyKeys();
-  const also = existing.filter((k) => /exchange|spcoin|panel|context/i.test(k));
-  const keys = Array.from(new Set([...candidates, ...also])).slice(0, 20);
-
-  const out: Record<string, any> = {};
-  for (const k of keys) out[k] = lsPeek(k);
-  return { keys, out };
-};
-
 const summarizeStacks = (settings: any) => {
   const ds = settings?.displayStack;
   return {
@@ -214,11 +168,55 @@ const toNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
 
 /**
+ * ✅ SINGLE SOURCE OF TRUTH:
+ * - ONLY: ctx.settings.displayStack
+ * - NEVER: ctx.displayStack (root)
+ *
+ * If legacy root exists and settings is empty, migrate once.
+ * Then ALWAYS delete ctx.displayStack.
+ */
+const enforceSettingsDisplayStackOnly = (ctx: any) => {
+  if (!ctx || typeof ctx !== 'object') return;
+
+  ctx.settings = ctx.settings ?? {};
+
+  const root = (ctx as any).displayStack;
+  const settings = (ctx as any).settings?.displayStack;
+
+  const settingsEmpty = !Array.isArray(settings) || settings.length === 0;
+  const rootHas = Array.isArray(root) && root.length > 0;
+
+  if (rootHas && settingsEmpty) {
+    const migratedNodes = normalizeDisplayStackNodes(root);
+    (ctx as any).settings.displayStack =
+      migratedNodes.length > 0 ? migratedNodes : toNodes(normalizeIdArray(root));
+  }
+
+  if ('displayStack' in (ctx as any)) {
+    delete (ctx as any).displayStack;
+  }
+};
+
+const normalizeSettingsDisplayStack = (ctx: any) => {
+  if (!ctx || typeof ctx !== 'object') return;
+  ctx.settings = ctx.settings ?? {};
+
+  const raw = ctx.settings.displayStack;
+  const nodesFromDisplay = normalizeDisplayStackNodes(raw);
+  const nodes =
+    nodesFromDisplay.length > 0 ? nodesFromDisplay : toNodes(normalizeIdArray(raw));
+
+  ctx.settings.displayStack = nodes;
+};
+
+/**
  * Cold-boot fallback:
  * Build displayStack from visible panels + CHILDREN hierarchy.
  */
 const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
-  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[Number(panel)];
+  const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[
+    Number(panel)
+  ];
   return Array.isArray(maybe) ? maybe : [];
 };
 
@@ -296,41 +294,18 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       if (!nextRaw) return prev;
 
       const nextBase = clone(nextRaw);
-      (nextBase as any).settings = (nextBase as any).settings ?? {};
+      nextBase.settings = (nextBase as any).settings ?? {};
+
+      // ✅ enforce single source of truth: settings.displayStack only
+      enforceSettingsDisplayStackOnly(nextBase as any);
+      normalizeSettingsDisplayStack(nextBase as any);
 
       if (TRACE_DISPLAYSTACK) {
         const s = (nextBase as any).settings;
         // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] nextRaw.settings stack summary',
-          summarizeStacks(s),
-        );
+        console.log('[TRACE] next.settings stack summary', summarizeStacks(s));
         // eslint-disable-next-line no-console
-        console.log('[TRACE] raw displayStack', s.displayStack);
-      }
-
-      // ✅ Normalize displayStack to DISPLAY_STACK_NODE[]
-      const rawDisplayStack = (nextBase as any).settings.displayStack;
-      const nodesFromDisplay = normalizeDisplayStackNodes(rawDisplayStack);
-
-      // tolerate legacy ids-only
-      const nodes =
-        nodesFromDisplay.length > 0
-          ? nodesFromDisplay
-          : toNodes(normalizeIdArray(rawDisplayStack));
-
-      (nextBase as any).settings.displayStack = nodes;
-
-      if (TRACE_DISPLAYSTACK) {
-        // eslint-disable-next-line no-console
-        console.log('[TRACE] normalized nodes', nodes);
-        // eslint-disable-next-line no-console
-        console.log('[TRACE] normalized ids', idsFromNodes(nodes).map(Number));
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] post-normalize stack summary',
-          summarizeStacks((nextBase as any).settings),
-        );
+        console.log('[TRACE] next.settings.displayStack', s.displayStack);
       }
 
       const nextStr = stringifyBigInt(nextBase);
@@ -344,32 +319,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         return prev;
       }
 
-      // ✅ Persist normalized settings (with readable nodes)
+      // ✅ persist (also guaranteed: no root displayStack)
       const normalized = clone(nextBase);
+      enforceSettingsDisplayStackOnly(normalized as any);
+      normalizeSettingsDisplayStack(normalized as any);
+
       (normalized as any).settings = {
         ...(normalized as any).settings,
-        displayStack: normalizeDisplayStackNodes(
-          (normalized as any).settings.displayStack,
-        ),
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
-
-      if (TRACE_DISPLAYSTACK) {
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] normalized-to-persist.settings stack summary',
-          summarizeStacks((normalized as any).settings),
-        );
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] normalized-to-persist.settings.displayStack',
-          (normalized as any).settings.displayStack,
-        );
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] about to persistWithOptDiff key=ExchangeContext.settings',
-        );
-      }
 
       if (DEBUG_ENABLED) {
         // eslint-disable-next-line no-console
@@ -385,11 +343,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
 
       if (TRACE_DISPLAYSTACK) {
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE] localStorage candidates after persist',
-          lsDumpCandidates(),
-        );
         // eslint-disable-next-line no-console
         console.groupEnd();
       }
@@ -416,6 +369,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       });
 
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
+
+      // ✅ enforce single source of truth immediately on boot result
+      enforceSettingsDisplayStackOnly(base as any);
+
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
 
@@ -430,14 +387,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const flatPanels = reconcileOverlayVisibility(ensured);
 
-      // displayStack is hydrated only from persisted settings.displayStack.
-      // BUT: if LS is empty, derive a default from visible panels + CHILDREN.
-
-      /**
-       * ✅ Hydrate from LS:
-       * prefer settings.displayStack (nodes),
-       * fallback to ids-only arrays (legacy)
-       */
       const storedNodes = normalizeDisplayStackNodes(settingsAny.displayStack);
       const storedIds =
         storedNodes.length > 0
@@ -452,32 +401,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const chosenIds = storedIds.length > 0 ? storedIds : derivedIds;
       const chosenNodes = toNodes(chosenIds);
 
-      if (DEBUG_ENABLED) {
-        // eslint-disable-next-line no-console
-        console.log('[ExchangeProvider][boot]', {
-          storedIds: storedIds.map(Number),
-          derivedIds: derivedIds.map(Number),
-          chosenIds: chosenIds.map(Number),
-          chosenNodes,
-        });
-      }
-
-      if (TRACE_DISPLAYSTACK) {
-        // eslint-disable-next-line no-console
-        console.groupCollapsed('[TRACE][boot]');
-        // eslint-disable-next-line no-console
-        console.log(
-          '[TRACE][boot] settingsAny stack summary',
-          summarizeStacks(settingsAny),
-        );
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][boot] storedNodes', storedNodes);
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][boot] derivedIds', derivedIds.map(Number));
-        // eslint-disable-next-line no-console
-        console.groupEnd();
-      }
-
       const nextSettings: any = {
         ...settingsAny,
         spCoinPanelTree: flatPanels.map((n: any) => ({
@@ -485,10 +408,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           name: n.name,
           visible: n.visible,
         })),
-
-        // ✅ Option A persisted value (readable LS)
-        displayStack: chosenNodes,
-
+        displayStack: chosenNodes, // ✅ canonical
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
@@ -496,10 +416,20 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      // Persist on boot
-      persistWithOptDiff(undefined, base as ExchangeContextTypeOnly, 'ExchangeContext.settings');
+      // ✅ guarantee no root displayStack before persisting / storing
+      enforceSettingsDisplayStackOnly(base as any);
+      normalizeSettingsDisplayStack(base as any);
+
+      persistWithOptDiff(
+        undefined,
+        base as ExchangeContextTypeOnly,
+        'ExchangeContext.settings',
+      );
 
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
+
+      // ✅ store in state without root displayStack
+      enforceSettingsDisplayStackOnly(base as any);
 
       setContextState(base as ExchangeContextTypeOnly);
       debugLog.log?.('✅ initExchangeContext boot complete');
@@ -640,11 +570,20 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
   if (!contextState) return null;
 
+  // ✅ FINAL GUARD: never expose root displayStack to consumers (Tree, etc.)
+  // This is the hard guarantee that you will ONLY see `.settings.displayStack`.
+  const { displayStack: _rootDisplayStack, ...exchangeContextNoRoot } =
+    (contextState as any) ?? {};
+  (exchangeContextNoRoot as any).settings =
+    (exchangeContextNoRoot as any).settings ?? {};
+  enforceSettingsDisplayStackOnly(exchangeContextNoRoot as any);
+  normalizeSettingsDisplayStack(exchangeContextNoRoot as any);
+
   return (
     <ExchangeContextState.Provider
       value={{
         exchangeContext: {
-          ...(contextState as ExchangeContextTypeOnly),
+          ...(exchangeContextNoRoot as ExchangeContextTypeOnly),
           errorMessage,
           apiErrorMessage,
         } as ExchangeContextTypeOnly,

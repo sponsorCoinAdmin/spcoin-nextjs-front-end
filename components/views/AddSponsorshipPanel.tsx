@@ -58,7 +58,12 @@ function openRecipientSiteTab() {
 const AddSponsorShipPanel: React.FC = () => {
   // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { closePanel } = usePanelTree();
+
+  // ✅ openPanel = push+show
+  // ✅ hidePanel = hide specific panel (visibility-only)
+  // ✅ closePanel = pop+hide (top-of-stack) — not used here
+  const { hidePanel } = usePanelTree();
+
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
   // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR STAKING_SPCOINS_PANEL is true
@@ -87,6 +92,7 @@ const AddSponsorShipPanel: React.FC = () => {
     debugLog.log?.('mounted; resolveWallet typeof =', typeof resolveWallet);
     return () => debugLog.log?.('unmounted');
   }, []);
+
   useEffect(() => {
     if (!recipientWallet) return;
     debugLog.log?.('recipientWallet changed:', {
@@ -99,9 +105,6 @@ const AddSponsorShipPanel: React.FC = () => {
   }, [recipientWallet?.address]);
 
   // 🧭 Register caller for RECIPIENT_LIST_SELECT_PANEL
-  // If the recipient list overlay becomes visible while we’re under
-  // STAKING_SPCOINS_PANEL, we want the header close to return there.
-  // Otherwise, fall back to TRADING_STATION_PANEL.
   useEffect(() => {
     if (!recipientListVisible) return;
 
@@ -164,6 +167,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
   const closeAddSponsorshipPanel = useCallback(() => {
     debugLog.log?.('closeAddSponsorshipPanel clicked');
+
     setExchangeContext(
       (prev) => {
         const next: any = structuredClone(prev);
@@ -174,22 +178,20 @@ const AddSponsorShipPanel: React.FC = () => {
       'AddSponsorShipPanel:closeAddSponsorshipPanel',
     );
 
-    // Close the launcher panel
-    closePanel(
+    // ✅ Close specific panels by visibility (NOT stack-pop)
+    hidePanel(
       SP_TREE.ADD_SPONSORSHIP_PANEL,
-      'AddSponsorshipPanel:closeAddSponsorshipPanel(closePanel)',
+      'AddSponsorshipPanel:closeAddSponsorshipPanel(hide ADD_SPONSORSHIP_PANEL)',
     );
 
     // Only re-show the launcher button if the current BUY token is an SpCoin
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      // NOTE: This just reopens the button; parenting for overlays
-      // is now handled by overlayReturnRegistry + header.
-      closePanel(
+      hidePanel(
         SP_TREE.STAKING_SPCOINS_PANEL,
-        'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalCloseManageStaking)',
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalHide STAKING_SPCOINS_PANEL)',
       );
     }
-  }, [setExchangeContext, closePanel, buyTokenContract]);
+  }, [setExchangeContext, hidePanel, buyTokenContract]);
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const pageQueryUrl = useMemo(() => {
@@ -327,7 +329,7 @@ const AddSponsorShipPanel: React.FC = () => {
       <ConfigSponsorshipPanel />
 
       {/* 🔴 ToDo overlay (red text, click to dismiss) */}
-      {!showToDo && (
+      {showToDo && (
         <ToDo
           show
           message="ToDo"

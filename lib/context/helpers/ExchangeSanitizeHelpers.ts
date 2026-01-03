@@ -32,12 +32,44 @@ function isSpCoinPanelTree(x: unknown): x is SpCoinPanelTree {
 }
 
 /**
+ * DisplayStack invariants for sanitize:
+ * - SINGLE SOURCE OF TRUTH is ALWAYS: `settings.displayStack`
+ * - Legacy/shadow root `displayStack` is ignored (but can be migrated if settings is empty)
+ *
+ * We intentionally do NOT normalize the shape here (numbers vs nodes);
+ * Provider code is responsible for normalization.
+ */
+function sanitizeDisplayStack(raw: any, sanitizedSettings: any) {
+  // Prefer settings.displayStack if present
+  const settingsStack = raw?.settings?.displayStack;
+  const rootStack = raw?.displayStack;
+
+  const settingsHas =
+    Array.isArray(settingsStack) && settingsStack.length > 0;
+  const rootHas = Array.isArray(rootStack) && rootStack.length > 0;
+
+  if (settingsHas) {
+    sanitizedSettings.displayStack = settingsStack;
+    return;
+  }
+
+  if (rootHas) {
+    // migrate legacy root → settings (best effort)
+    sanitizedSettings.displayStack = rootStack;
+    return;
+  }
+
+  // else: keep whatever defaultContext.settings had (if anything)
+}
+
+/**
  * Safely merges a raw (possibly partial or malformed) ExchangeContext object with defaults.
  * IMPORTANT:
  * - Do NOT seed/overwrite `settings.spCoinPanelTree` here. If present, preserve it as-is.
  *   Provider/init code is responsible for seeding/migrating defaults.
- * - NEW: we enforce the invariant that when `network.chainId` is non‑zero,
+ * - We enforce the invariant that when `network.chainId` is non-zero,
  *   `network.appChainId` MUST equal `network.chainId`.
+ * - SINGLE SOURCE OF TRUTH: displayStack lives ONLY at `settings.displayStack`.
  */
 export const sanitizeExchangeContext = (
   raw: ({ tradeData?: Partial<TradeData> } & Partial<ExchangeContext>) | null,
@@ -57,6 +89,9 @@ export const sanitizeExchangeContext = (
     ...prevSettings,
   };
 
+  // ✅ enforce single source of truth for displayStack (settings only)
+  sanitizeDisplayStack(raw as any, sanitizedSettings);
+
   // Preserve persisted panel state if it looks like either the new tree or the old array
   const mpn = prevSettings.spCoinPanelTree;
   if (isSpCoinPanelTree(mpn) || isPanelNodeArray(mpn)) {
@@ -70,13 +105,14 @@ export const sanitizeExchangeContext = (
   // Start with defaults, then overlay whatever was stored.
   let sanitizedNetwork = {
     ...defaultContext.network,
-    ...raw.network,
-    connected: raw.network?.connected ?? defaultContext.network.connected,
+    ...(raw as any).network,
+    connected:
+      (raw as any).network?.connected ?? defaultContext.network.connected,
   };
 
   // Enforce the invariant:
-  //  - If we have a non‑zero chain id, appChainId MUST match it.
-  //  - If we were passed an explicit `chainId` arg, that takes precedence when non‑zero.
+  //  - If we have a non-zero chain id, appChainId MUST match it.
+  //  - If we were passed an explicit `chainId` arg, that takes precedence when non-zero.
   let effectiveChainId = sanitizedNetwork.chainId ?? 0;
   const argChainId = chainId ?? 0;
 
@@ -103,81 +139,86 @@ export const sanitizeExchangeContext = (
 
   // ----- ACCOUNTS
   const sanitizedAccounts = {
-    activeAccount: raw.accounts?.activeAccount
+    activeAccount: (raw as any).accounts?.activeAccount
       ? {
-          ...raw.accounts.activeAccount,
-          balance: raw.accounts.activeAccount.balance ?? 0n,
+          ...(raw as any).accounts.activeAccount,
+          balance: (raw as any).accounts.activeAccount.balance ?? 0n,
         }
       : defaultContext.accounts.activeAccount,
 
-    sponsorAccount: raw.accounts?.sponsorAccount
+    sponsorAccount: (raw as any).accounts?.sponsorAccount
       ? {
-          ...raw.accounts.sponsorAccount,
-          balance: raw.accounts.sponsorAccount.balance ?? 0n,
+          ...(raw as any).accounts.sponsorAccount,
+          balance: (raw as any).accounts.sponsorAccount.balance ?? 0n,
         }
       : defaultContext.accounts.sponsorAccount,
 
-    recipientAccount: raw.accounts?.recipientAccount
+    recipientAccount: (raw as any).accounts?.recipientAccount
       ? {
-          ...raw.accounts.recipientAccount,
-          balance: raw.accounts.recipientAccount.balance ?? 0n,
+          ...(raw as any).accounts.recipientAccount,
+          balance: (raw as any).accounts.recipientAccount.balance ?? 0n,
         }
       : defaultContext.accounts.recipientAccount,
 
-    agentAccount: raw.accounts?.agentAccount
+    agentAccount: (raw as any).accounts?.agentAccount
       ? {
-          ...raw.accounts.agentAccount,
-          balance: raw.accounts.agentAccount.balance ?? 0n,
+          ...(raw as any).accounts.agentAccount,
+          balance: (raw as any).accounts.agentAccount.balance ?? 0n,
         }
       : defaultContext.accounts.agentAccount,
 
     sponsorAccounts:
-      raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
+      (raw as any).accounts?.sponsorAccounts ??
+      defaultContext.accounts.sponsorAccounts,
     recipientAccounts:
-      raw.accounts?.recipientAccounts ??
+      (raw as any).accounts?.recipientAccounts ??
       defaultContext.accounts.recipientAccounts,
     agentAccounts:
-      raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
+      (raw as any).accounts?.agentAccounts ??
+      defaultContext.accounts.agentAccounts,
   };
 
   // ----- TRADEDATA
   const sanitizedTradeData: TradeData = {
     tradeDirection:
-      raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
-    sellTokenContract: raw.tradeData?.sellTokenContract
+      (raw as any).tradeData?.tradeDirection ??
+      defaultContext.tradeData.tradeDirection,
+    sellTokenContract: (raw as any).tradeData?.sellTokenContract
       ? {
           ...defaultContext.tradeData.sellTokenContract,
-          ...raw.tradeData.sellTokenContract,
-          balance: raw.tradeData.sellTokenContract.balance ?? 0n,
+          ...(raw as any).tradeData.sellTokenContract,
+          balance: (raw as any).tradeData.sellTokenContract.balance ?? 0n,
         }
       : defaultContext.tradeData.sellTokenContract,
-    buyTokenContract: raw.tradeData?.buyTokenContract
+    buyTokenContract: (raw as any).tradeData?.buyTokenContract
       ? {
           ...defaultContext.tradeData.buyTokenContract,
-          ...raw.tradeData.buyTokenContract,
-          balance: raw.tradeData.buyTokenContract.balance ?? 0n,
+          ...(raw as any).tradeData.buyTokenContract,
+          balance: (raw as any).tradeData.buyTokenContract.balance ?? 0n,
         }
       : defaultContext.tradeData.buyTokenContract,
-    rateRatio: raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
+    rateRatio:
+      (raw as any).tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
     slippage: {
       bps:
-        raw.tradeData?.slippage?.bps ??
+        (raw as any).tradeData?.slippage?.bps ??
         defaultContext.tradeData.slippage.bps,
       percentage:
-        raw.tradeData?.slippage?.percentage ??
+        (raw as any).tradeData?.slippage?.percentage ??
         defaultContext.tradeData.slippage.percentage,
       percentageString:
-        raw.tradeData?.slippage?.percentageString ??
+        (raw as any).tradeData?.slippage?.percentageString ??
         defaultContext.tradeData.slippage.percentageString,
     },
   };
 
+  // ✅ DO NOT return any root displayStack field.
   return {
     settings: sanitizedSettings,
     network: sanitizedNetwork,
     accounts: sanitizedAccounts,
     tradeData: sanitizedTradeData,
-    errorMessage: raw.errorMessage ?? defaultContext.errorMessage,
-    apiErrorMessage: raw.apiErrorMessage ?? defaultContext.apiErrorMessage,
+    errorMessage: (raw as any).errorMessage ?? defaultContext.errorMessage,
+    apiErrorMessage: (raw as any).apiErrorMessage ?? defaultContext.apiErrorMessage,
   };
 };

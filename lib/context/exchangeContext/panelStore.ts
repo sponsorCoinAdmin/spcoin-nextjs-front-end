@@ -1,5 +1,5 @@
-
 // File: @/lib/context/exchangeContext/panelStore.ts
+'use client';
 
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -58,6 +58,7 @@ class PanelStore {
       this.listeners.set(id, set);
     }
     set.add(listener);
+
     return () => {
       set!.delete(listener);
       if (set!.size === 0) this.listeners.delete(id);
@@ -70,6 +71,7 @@ class PanelStore {
     this.pending.add(id);
     if (this.scheduled) return;
     this.scheduled = true;
+
     // Notify after React commit
     setTimeout(() => this.flushNow(), 0);
   }
@@ -84,7 +86,9 @@ class PanelStore {
   private emitNow(id: PanelId) {
     const set = this.listeners.get(id);
     if (!set) return;
-    for (const fn of set) fn();
+
+    // ✅ Copy listeners to avoid mutation issues during emit
+    for (const fn of Array.from(set)) fn();
   }
 }
 

@@ -8,6 +8,56 @@ const DEBUG_RADIO = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
 const nameOf = (id: SP_COIN_DISPLAY) => (SP_COIN_DISPLAY as any)[id] ?? String(id);
 
+/* ───────────────────────────── displayStack normalization (defensive) ─────────────────────────────
+ *
+ * Required fix:
+ * - Upstream now persists settings.displayStack as DISPLAY_STACK_NODE[] = [{id,name}]
+ * - Some callers may still pass legacy number[] or mixed arrays
+ * - This controller MUST be tolerant and normalize to SP_COIN_DISPLAY[].
+ */
+
+type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name?: string };
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === 'object';
+}
+
+/**
+ * Accepts:
+ * - strict nodes: [{id,name}]
+ * - legacy ids: number[]
+ * - older experimental: [{displayTypeId,...}]
+ * - mixed arrays (defensive)
+ */
+function normalizeDisplayStackToIds(raw: unknown): SP_COIN_DISPLAY[] {
+  if (!Array.isArray(raw)) return [];
+
+  const ids: number[] = [];
+  for (const item of raw as any[]) {
+    // tolerate ids-only arrays
+    if (typeof item === 'number' || typeof item === 'string') {
+      ids.push(Number(item));
+      continue;
+    }
+
+    if (!isRecord(item)) continue;
+
+    if ('id' in item) {
+      ids.push(Number((item as DISPLAY_STACK_NODE).id));
+      continue;
+    }
+
+    if ('displayTypeId' in item) {
+      ids.push(Number((item as any).displayTypeId));
+      continue;
+    }
+  }
+
+  return ids
+    .filter((x) => Number.isFinite(x))
+    .map((x) => x as SP_COIN_DISPLAY);
+}
+
 function summarizeOverlayState(list: PanelEntry[], overlays: SP_COIN_DISPLAY[]) {
   return list
     .filter((e) => overlays.includes(e.panel))
@@ -174,18 +224,28 @@ type RestoreTrace = {
  *
  * Debugging:
  * - If opts.traceId is supplied, it will be printed so you can correlate multi-step closes.
+ *
+ * ✅ Required fix:
+ * - `displayStack` may arrive as DISPLAY_STACK_NODE[] (new strict persisted shape) or legacy ids.
+ * - We normalize here so restore logic is stable.
  */
 export function restorePrevRadioMember(opts: {
   flatIn: PanelEntry[];
-  displayStack: readonly SP_COIN_DISPLAY[];
+  displayStack: unknown;
   closing: SP_COIN_DISPLAY;
   radioGroupsPriority: readonly RadioGroup[];
   withName: (e: PanelEntry) => PanelEntry;
   trace?: RestoreTrace;
 }): RestorePrevRadioMemberResult {
-  const { flatIn, displayStack, closing, radioGroupsPriority, withName, trace } = opts;
+  const { flatIn, closing, radioGroupsPriority, withName, trace } = opts;
 
-  const topOfStack = displayStack.length > 0 ? (displayStack[displayStack.length - 1] as SP_COIN_DISPLAY) : null;
+  const displayStack = normalizeDisplayStackToIds(opts.displayStack);
+
+  const topOfStack =
+    displayStack.length > 0
+      ? (displayStack[displayStack.length - 1] as SP_COIN_DISPLAY)
+      : null;
+
   const closingWasTop = topOfStack != null && Number(topOfStack) === Number(closing);
 
   const closingVisibleBefore =

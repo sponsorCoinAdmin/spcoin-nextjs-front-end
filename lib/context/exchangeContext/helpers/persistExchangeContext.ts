@@ -11,14 +11,11 @@ import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStor
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
-// ✅ to derive displayStack from spCoinPanelTree when LS is empty / stack missing
-import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
-
 const LOG_TIME_PERSIST = false;
 const DEBUG_ENABLED_PERSIST =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PERSIST_EXCHANGE_CONTEXT === 'true';
 
-// 🔎 Trace toggle (renamed in-code; keeps env var for compatibility)
+// 🔎 Trace toggle (keeps env var for compatibility)
 const TRACE_DISPLAYSTACK_PERSIST =
   process.env.NEXT_PUBLIC_TRACE_BRANCHSTACK === 'true';
 
@@ -86,7 +83,7 @@ function describePanelVisibility(
   };
 }
 
-/* -------------------- Option A: displayStack as readable nodes -------------------- */
+/* -------------------- displayStack: normalize-only (single source of truth) -------------------- */
 
 type DISPLAY_STACK_NODE = {
   id: SP_COIN_DISPLAY; // authoritative
@@ -106,6 +103,12 @@ function toNode(idNum: number, nameMaybe?: unknown): DISPLAY_STACK_NODE {
   return { id, name };
 }
 
+/**
+ * Accepts:
+ * - new: [{id,name}]
+ * - legacy: number[]
+ * - older experimental: [{displayTypeId,displayTypeName}]
+ */
 function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
   if (!Array.isArray(arr)) return [];
   const out: DISPLAY_STACK_NODE[] = [];
@@ -121,7 +124,6 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
 
     if (!isRecord(it)) continue;
 
-    // { id, name }
     if ('id' in it) {
       const id = Number((it as any).id);
       if (!Number.isFinite(id)) continue;
@@ -129,7 +131,6 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
       continue;
     }
 
-    // tolerate legacy mirror shape if it still shows up somewhere
     if ('displayTypeId' in it) {
       const id = Number((it as any).displayTypeId);
       if (!Number.isFinite(id)) continue;
@@ -141,89 +142,56 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
   return out;
 }
 
-function deriveDisplayStackFromPanelTree(settings: any): DISPLAY_STACK_NODE[] {
-  const rawTree: any[] = Array.isArray(settings?.spCoinPanelTree)
-    ? settings.spCoinPanelTree
-    : [];
-
-  const visibleMap: Record<number, boolean> = {};
-  for (const n of rawTree) {
-    if (!n || typeof n.panel !== 'number') continue;
-    visibleMap[Number(n.panel)] = !!n.visible;
-  }
-
-  const getKids = (p: number): number[] => {
-    const maybe = (CHILDREN as unknown as Record<number, number[]>)[Number(p)];
-    return Array.isArray(maybe) ? maybe : [];
-  };
-
-  const start = Number((settings as any)?.displayStackRoot ?? 12); // default MAIN_TRADING_PANEL id
-  // If the enum value is available at runtime, prefer it. (Safe even if undefined.)
-  const MAIN_TRADING_PANEL = (settings as any)?.MAIN_TRADING_PANEL;
-  const root = Number.isFinite(Number(MAIN_TRADING_PANEL))
-    ? Number(MAIN_TRADING_PANEL)
-    : start;
-
-  const seen = new Set<number>();
-  const path: number[] = [];
-  let current: number | null = root;
-
-  while (current != null) {
-    const id = Number(current);
-    if (!Number.isFinite(id)) break;
-    if (seen.has(id)) break;
-    seen.add(id);
-
-    path.push(id);
-
-    const kids = getKids(id);
-    let selected: number | null = null;
-
-    for (const k of kids) {
-      if (visibleMap[Number(k)]) {
-        selected = Number(k);
-        break;
-      }
-    }
-
-    if (!selected) break;
-    current = selected;
-  }
-
-  return path.map((id) => toNode(id));
-}
-
 /**
- * Ensures LS persistence uses ONLY:
- *   settings.displayStack: DISPLAY_STACK_NODE[]
+ * ✅ SINGLE SOURCE OF TRUTH GUARANTEE:
+ * - Canonical: next.settings.displayStack
+ * - Remove legacy/shadow: next.displayStack (root) ALWAYS
+ * - Persistence NEVER derives displayStack from visibility/panel tree
  *
- * Fix:
- * - If displayStack is missing/empty, derive it from settings.spCoinPanelTree visibility,
- *   then persist it so a "fresh LS" boot writes a non-empty displayStack immediately.
+ * ✅ IMPORTANT FIX:
+ * Do NOT mutate the incoming `next` object (it may be React state).
+ * Return a shallow-cloned coerced object instead.
  */
-function ensureReadableDisplayStack(next: ExchangeContext): ExchangeContext {
-  const settings: any = (next as any)?.settings;
-  if (!settings) return next;
+function enforceSettingsDisplayStackOnly(next: ExchangeContext): ExchangeContext {
+  const anyNext: any = next as any;
 
-  let finalNodes = normalizeDisplayStackNodes(settings.displayStack);
+  const nextSettings = (anyNext?.settings ?? {}) as any;
 
-  // ✅ If missing/empty, derive from panel tree (fresh LS case)
-  if (finalNodes.length === 0) {
-    const derived = deriveDisplayStackFromPanelTree(settings);
-    if (derived.length > 0) finalNodes = derived;
-  }
+  // Inputs (may be legacy)
+  const rootRaw = (anyNext as any)?.displayStack;
+  const settingsRaw = nextSettings?.displayStack;
 
-  settings.displayStack = finalNodes;
+  const settingsEmpty = !Array.isArray(settingsRaw) || settingsRaw.length === 0;
+  const rootHas = Array.isArray(rootRaw) && rootRaw.length > 0;
+
+  // migrate root -> settings ONLY if settings is empty
+  const chosenRaw = rootHas && settingsEmpty ? rootRaw : settingsRaw;
+
+  const normalized = normalizeDisplayStackNodes(chosenRaw);
+
+  // Build new object, ensuring root displayStack is removed without mutating `next`
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { displayStack: _dropRoot, ...rest } = anyNext ?? {};
+
+  const coerced: any = {
+    ...rest,
+    settings: {
+      ...nextSettings,
+      displayStack: normalized,
+    },
+  };
 
   if (DEBUG_ENABLED_PERSIST) {
     // eslint-disable-next-line no-console
     console.log('[PersistExchangeContext] normalized displayStack', {
-      displayStack: finalNodes,
-      ids: finalNodes.map((n) => Number(n.id)),
+      displayStack: coerced.settings.displayStack,
+      ids: (coerced.settings.displayStack as DISPLAY_STACK_NODE[]).map((n) =>
+        Number(n.id),
+      ),
     });
   }
 
-  return next;
+  return coerced as ExchangeContext;
 }
 
 function safeJsonParse(s: string | null) {
@@ -249,10 +217,7 @@ export function persistWithOptDiff(
   next: ExchangeContext,
   panelPathKey: string,
 ): void {
-  if (typeof window === 'undefined') {
-    // SSR / RSC safety: never touch localStorage on the server.
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   const isFirstPersist = !prev;
 
@@ -289,7 +254,8 @@ export function persistWithOptDiff(
   }
 
   try {
-    const coerced = ensureReadableDisplayStack(next);
+    // ✅ normalize + remove root displayStack (WITHOUT mutating state)
+    const coerced = enforceSettingsDisplayStackOnly(next);
 
     if (DEBUG_ENABLED_PERSIST) {
       debugPersist.log?.('[PersistExchangeContext] settings snapshot', {

@@ -138,7 +138,6 @@ export default function ExchangeContextTab() {
     return showExchange ? 'flex-1 border-l border-slate-700' : 'w-full';
   }, [showGui, showExchange]);
 
-  // ✅ Keep ALL real settings fields (including displayStack), override only spCoinPanelTree for display
   const settingsObj = useMemo(() => {
     const realSettings = (exchangeContext as any)?.settings ?? {};
     return {

@@ -32,21 +32,41 @@ const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
 /* ---------------- POP detection ----------------
  *
- * New rules:
- * - closePanel(...) = HIDE ONLY (does NOT restore radio siblings)
- * - popTop(...)     = HIDE + RESTORE (radio fallback) driven by displayStack
+ * RULES (important):
+ * - closePanel(...) may be used as:
+ *    (A) HIDE ONLY  -> do NOT restore radio siblings
+ *    (B) POP/CLOSE  -> HIDE + RESTORE (radio fallback), driven by displayStack
  *
- * Detect pop using invoker strings. Keep explicit.
+ * We detect POP intent ONLY via invoker strings.
+ * The new upstream convention tags invokers like:
+ *   - "NAV_CLOSE:..."   (means: this close is stack-driven / pop-like)
+ *   - "HIDE:..."        (means: hide-only)
+ *
+ * Keep backward compatibility for older callers that used substring checks.
  */
-function isPopInvoker(invoker?: string) {
-  if (!invoker) return false;
+function isPopInvoker(invoker?: unknown) {
+  if (typeof invoker !== 'string' || !invoker) return false;
+
+  const s = invoker.trim();
+
+  // ✅ New explicit tags (single-source-of-truth callers should use these)
+  if (s.startsWith('NAV_CLOSE:')) return true;
+
+  // (Optional future tag if you add it elsewhere)
+  if (s.startsWith('NAV_POP:')) return true;
+
+  // ✅ If explicitly tagged as HIDE, do not pop/restore.
+  // (This prevents accidental restores if some invoker contains "closePanel" as text.)
+  if (s.startsWith('HIDE:')) return false;
+
+  // ✅ Back-compat: previous heuristics
   return (
-    invoker.includes('closeTopOfDisplayStack') ||
-    invoker.includes('persist-pop') ||
-    invoker.includes('useOverlayCloseHandler') ||
-    invoker.includes('HeaderController') ||
-    invoker.includes('HeaderX') ||
-    invoker.includes('TradeContainerHeader')
+    s.includes('closePanel') ||
+    s.includes('persist-pop') ||
+    s.includes('useOverlayCloseHandler') ||
+    s.includes('HeaderController') ||
+    s.includes('HeaderX') ||
+    s.includes('TradeContainerHeader')
   );
 }
 
@@ -67,7 +87,10 @@ function displayStackNodesToIdsStrict(raw: unknown): SP_COIN_DISPLAY[] {
     if (!item || typeof item !== 'object') {
       if (DEBUG) {
         // eslint-disable-next-line no-console
-        console.warn('[panelTreeCallbacks] displayStack contains non-object item (ignored):', item);
+        console.warn(
+          '[panelTreeCallbacks] displayStack contains non-object item (ignored):',
+          item,
+        );
       }
       continue;
     }
@@ -75,7 +98,10 @@ function displayStackNodesToIdsStrict(raw: unknown): SP_COIN_DISPLAY[] {
     if (!('id' in item)) {
       if (DEBUG) {
         // eslint-disable-next-line no-console
-        console.warn('[panelTreeCallbacks] displayStack node missing id (ignored):', item);
+        console.warn(
+          '[panelTreeCallbacks] displayStack node missing id (ignored):',
+          item,
+        );
       }
       continue;
     }

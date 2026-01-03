@@ -11,26 +11,37 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
- * BUY-only launcher. Phase 7: scoped re-render via usePanelVisible + stable actions via usePanelTree.
- * Visibility rule: show iff the BUY token is an SpCoin. Ref guard prevents redundant flips.
+ * BUY-only launcher.
+ * Visibility rule: show iff the BUY token is an SpCoin.
+ *
+ * IMPORTANT:
+ * - This launcher is NOT a stack navigation item.
+ * - So it must use showPanel/hidePanel (visibility-only),
+ *   NOT openPanel/closePanel (stack-aware).
  */
 export default function AddSponsorshipButton() {
   const [buyToken] = useBuyTokenContract();
-  const { openPanel, closePanel } = usePanelTree();
 
-  // 🔧 Always provide a non-empty parent/source tag to open/close.
-  //    If a caller forgets to provide one, use this module's name.
+  // ✅ Use visibility-only primitives for non-stack panels (like this launcher button)
+  const { openPanel, showPanel, hidePanel } = usePanelTree();
+
+  // 🔧 Always provide a non-empty parent/source tag to show/hide/open.
   const DEFAULT_PARENT = 'components/buttons/AddSponsorshipButton';
   const asParent = (p?: string) => (p && p.trim().length > 0 ? p : DEFAULT_PARENT);
 
-  const safeOpen = useCallback(
-    (panel: SP_COIN_DISPLAY, parent?: string) => openPanel(panel, asParent(parent)),
-    [openPanel]
+  const safeShow = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => showPanel(panel, asParent(parent)),
+    [showPanel],
   );
 
-  const safeClose = useCallback(
-    (panel: SP_COIN_DISPLAY, parent?: string) => closePanel(panel, asParent(parent)),
-    [closePanel]
+  const safeHide = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => hidePanel(panel, asParent(parent)),
+    [hidePanel],
+  );
+
+  const safeOpen = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => openPanel(panel, asParent(parent)),
+    [openPanel],
   );
 
   // Re-render only when THIS launcher flag changes
@@ -48,24 +59,26 @@ export default function AddSponsorshipButton() {
     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
 
     if (shouldShow) {
-      safeOpen(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoShow`);
+      safeShow(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoShow`);
     } else {
-      safeClose(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoHide`);
+      safeHide(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoHide`);
     }
 
     appliedRef.current = next;
-  }, [addr, buyToken, safeOpen, safeClose]);
+  }, [addr, buyToken, safeShow, safeHide]);
 
   const onOpenInline = useCallback(() => {
-    safeClose(
+    // Hide launcher (visibility-only), then open the panel (navigation/stack-aware as needed)
+    safeHide(
       SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON,
-      `${DEFAULT_PARENT}:onOpenInline:closeLauncher`
+      `${DEFAULT_PARENT}:onOpenInline:hideLauncher`,
     );
+
     safeOpen(
       SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
-      `${DEFAULT_PARENT}:onOpenInline:openPanel`
+      `${DEFAULT_PARENT}:onOpenInline:openPanel`,
     );
-  }, [safeOpen, safeClose]);
+  }, [safeOpen, safeHide]);
 
   if (!launcherVisible) return null;
 

@@ -38,6 +38,38 @@ function debugLocalStorageSnapshot(stage: string) {
   }
 }
 
+/**
+ * ✅ SINGLE SOURCE OF TRUTH ENFORCER (LOAD-TIME):
+ * - Canonical: parsed.settings.displayStack
+ * - Legacy/shadow: parsed.displayStack (root) → migrate (only if settings empty) → delete root always
+ *
+ * NOTE: We do NOT normalize node shapes here (provider already does that).
+ * We only ensure the path is `.settings.displayStack` and root is removed.
+ */
+function enforceSettingsDisplayStackOnly(parsed: any) {
+  if (!parsed || typeof parsed !== 'object') return;
+
+  parsed.settings = parsed.settings ?? {};
+
+  const root = parsed.displayStack;
+  const settings = parsed.settings.displayStack;
+
+  const settingsEmpty = !Array.isArray(settings) || settings.length === 0;
+  const rootHas = Array.isArray(root) && root.length > 0;
+
+  if (rootHas && settingsEmpty) {
+    parsed.settings.displayStack = root;
+    debugLog.log?.('[loadLocalExchangeContext] migrated root displayStack → settings.displayStack', {
+      migratedLen: root.length,
+    });
+  }
+
+  if ('displayStack' in parsed) {
+    delete parsed.displayStack;
+    debugLog.log?.('[loadLocalExchangeContext] removed legacy root displayStack', {});
+  }
+}
+
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
     // Never touch localStorage on the server
@@ -76,6 +108,9 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       return null;
     }
 
+    // ✅ Enforce canonical `.settings.displayStack` and delete any root `displayStack`
+    enforceSettingsDisplayStackOnly(parsed);
+
     // Derive stored + effective appChainId for diagnostics
     const storedAppChainId =
       typeof parsed?.network?.appChainId === 'number'
@@ -98,6 +133,12 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
         effectiveAppChainId,
         hasSettings: !!parsed?.settings,
         hasPanelTree: Array.isArray(parsed?.settings?.spCoinPanelTree),
+        hasSettingsDisplayStack: Array.isArray(parsed?.settings?.displayStack),
+        settingsDisplayStackLen: Array.isArray(parsed?.settings?.displayStack)
+          ? parsed.settings.displayStack.length
+          : 0,
+        // Should now ALWAYS be false:
+        hasRootDisplayStack: Array.isArray((parsed as any)?.displayStack),
       },
     );
 
