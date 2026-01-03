@@ -1,3 +1,5 @@
+// File: resources/data/networks/base/initialize/defaultNetworkSettings.tsx
+
 import type { TokenContract } from '@/lib/structure';
 import { CHAIN_ID } from '@/lib/structure'
  

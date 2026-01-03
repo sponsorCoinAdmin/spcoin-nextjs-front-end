@@ -2,24 +2,29 @@
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings  from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings  from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
-import defaultSepoliaSettings  from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
+import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
+import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
+import defaultSepoliaSettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
 
 import type {
   TradeData,
   ExchangeContext,
   NetworkElement,
-  WalletAccount} from '@/lib/structure';
+  WalletAccount,
+} from '@/lib/structure';
 import {
   TRADE_DIRECTION,
   SP_COIN_DISPLAY,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
+
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+// ✅ displayStack node type (strict shape: [{id,name}])
+import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_NETWORK_SETTINGS === 'true';
@@ -39,7 +44,9 @@ const defaultInitialTradeData: TradeData = {
 
 // ---- panel tree helpers ----
 function clone<T>(o: T): T {
-  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+  return typeof structuredClone === 'function'
+    ? structuredClone(o)
+    : JSON.parse(JSON.stringify(o));
 }
 
 /** Build a default SpCoinPanelTree and exclude CONFIG_SPONSORSHIP_PANEL anywhere in the tree */
@@ -48,7 +55,12 @@ function buildDefaultSpCoinPanelTree(): SpCoinPanelTree {
 
   const prune = (nodes: any[]): any[] =>
     nodes
-      .filter((n) => n && typeof n.panel === 'number' && n.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)
+      .filter(
+        (n) =>
+          n &&
+          typeof n.panel === 'number' &&
+          n.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+      )
       .map((n) => {
         if (Array.isArray(n.children) && n.children.length) {
           const kids = prune(n.children);
@@ -67,7 +79,9 @@ const initialContext = () => {
   return { exchangeContext };
 };
 
-const getInitialContext = (chain: number | string | { id: number } | undefined): ExchangeContext => {
+const getInitialContext = (
+  chain: number | string | { id: number } | undefined,
+): ExchangeContext => {
   const chainId = normalizeChainId(chain);
   const initialContextMap = getInitialContextMap(chainId);
   logger.log(`🛠️ [getInitialContext] Generating context for chainId: ${chainId}`);
@@ -75,7 +89,9 @@ const getInitialContext = (chain: number | string | { id: number } | undefined):
   const exchangeContext: ExchangeContext = {
     network: initialContextMap.get('networkHeader') as NetworkElement,
     accounts: {
-      recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
+      recipientAccount: initialContextMap.get('defaultRecipient') as
+        | WalletAccount
+        | undefined,
       agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
       sponsorAccount: undefined,
       sponsorAccounts: [],
@@ -87,8 +103,13 @@ const getInitialContext = (chain: number | string | { id: number } | undefined):
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+
       // ✅ satisfy required Settings.spCoinPanelTree with a full tree root
       spCoinPanelTree: buildDefaultSpCoinPanelTree(),
+
+      // ✅ REQUIRED by Settings: initialize empty persisted nav stack
+      // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
+      displayStack: [] as DISPLAY_STACK_NODE[],
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,
@@ -153,14 +174,11 @@ const getDefaultNetworkSettings = (chain: number) => {
       logger.log('🔗 [getDefaultNetworkSettings] Using Sepolia settings');
       return defaultSepoliaSettings;
     default:
-      logger.warn('⚠️ [getDefaultNetworkSettings] Unknown chain, defaulting to Ethereum');
+      logger.warn(
+        '⚠️ [getDefaultNetworkSettings] Unknown chain, defaulting to Ethereum',
+      );
       return defaultEthereumSettings;
   }
 };
 
-export {
-  getDefaultNetworkSettings,
-  getInitialContext,
-  getInitialContextMap,
-  initialContext,
-};
+export { getDefaultNetworkSettings, getInitialContext, getInitialContextMap, initialContext };
