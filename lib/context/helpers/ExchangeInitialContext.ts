@@ -5,14 +5,14 @@ import type {
   NetworkElement,
   ExchangeContext,
 } from '@/lib/structure';
-import {
-  API_TRADING_PROVIDER,
-  TRADE_DIRECTION,
-} from '@/lib/structure';
+import { API_TRADING_PROVIDER, TRADE_DIRECTION } from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+
+// ✅ displayStack node type (strict shape: [{id,name}])
+import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
 
 function clone<T>(o: T): T {
   return typeof structuredClone === 'function'
@@ -28,10 +28,13 @@ const buildDefaultSpCoinPanelTree = (): SpCoinPanelTree => {
 
 export const getInitialContext = (chainId: number): ExchangeContext => {
   // Interpret the argument as the *app* chain id
-  const effectiveAppChainId = typeof chainId === 'number' && chainId > 0 ? chainId : 0;
+  const effectiveAppChainId =
+    typeof chainId === 'number' && chainId > 0 ? chainId : 0;
 
   const initialContextMap = getInitialContextMap(effectiveAppChainId);
-  const header = (initialContextMap.get('networkHeader') as NetworkElement) ?? ({} as NetworkElement);
+  const header =
+    (initialContextMap.get('networkHeader') as NetworkElement) ??
+    ({} as NetworkElement);
 
   return {
     network: {
@@ -50,7 +53,13 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      spCoinPanelTree: buildDefaultSpCoinPanelTree(), // ✅ a SpCoinPanelTree, not an array
+
+      // ✅ a SpCoinPanelTree, not an array
+      spCoinPanelTree: buildDefaultSpCoinPanelTree(),
+
+      // ✅ REQUIRED by Settings: initialize empty persisted nav stack
+      // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
+      displayStack: [] as DISPLAY_STACK_NODE[],
     },
     accounts: {
       // 🔹 Wallet-linked account (mirrors wagmi connection)
