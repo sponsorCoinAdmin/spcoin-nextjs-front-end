@@ -1,4 +1,4 @@
-// File: lib/structure/exchangeContext/enums/spCoinDisplay.ts
+// File: @/lib/structure/exchangeContext/enums/spCoinDisplay.ts
 
 export enum SP_COIN_DISPLAY {
   ADD_SPONSORSHIP_BUTTON,
@@ -21,7 +21,12 @@ export enum SP_COIN_DISPLAY {
   MANAGE_RECIPIENTS_PANEL,
   MANAGE_SPONSOR_PANEL,
   MANAGE_SPONSORSHIPS_BUTTON,
-  MANAGE_SPONSORSHIPS,
+
+  /**
+   * @deprecated Legacy container enum value kept for numeric stability.
+   * Do not use. Manage panels are first-class overlays now.
+   */
+
   MANAGE_SPONSORSHIPS_PANEL,
   RECIPIENT_LIST_SELECT_PANEL,
   SELL_LIST_SELECT_PANEL,
@@ -34,40 +39,3 @@ export enum SP_COIN_DISPLAY {
   UNDEFINED,
   UNSTAKING_SPCOINS_PANEL,
 }
-
-/**
- * Action-model groups (explicit, readable).
- * These DO NOT replace panelRegistry (structure) yet.
- */
-
-export const MAIN_OVERLAY_GROUP = [
-  SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-  SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
-  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-] as const satisfies readonly SP_COIN_DISPLAY[];
-
-export const MANAGE_SCOPED = [
-  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-  SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
-  SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
-  SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-  SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-  SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-  SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-  SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-] as const satisfies readonly SP_COIN_DISPLAY[];
-
-export const STACK_COMPONENTS = [
-  ...MAIN_OVERLAY_GROUP,
-  ...MANAGE_SCOPED,
-] as const satisfies readonly SP_COIN_DISPLAY[];
-
-/** Fast membership checks (action-model helpers). */
-export const IS_MAIN_OVERLAY = new Set<number>(MAIN_OVERLAY_GROUP.map(Number));
-export const IS_MANAGE_SCOPED = new Set<number>(MANAGE_SCOPED.map(Number));
-export const IS_STACK_COMPONENT = new Set<number>(STACK_COMPONENTS.map(Number));

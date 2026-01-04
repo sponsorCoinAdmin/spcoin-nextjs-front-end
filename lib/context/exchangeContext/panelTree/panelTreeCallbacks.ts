@@ -56,7 +56,6 @@ function isPopInvoker(invoker?: unknown) {
   if (s.startsWith('NAV_POP:')) return true;
 
   // ✅ If explicitly tagged as HIDE, do not pop/restore.
-  // (This prevents accidental restores if some invoker contains "closePanel" as text.)
   if (s.startsWith('HIDE:')) return false;
 
   // ✅ Back-compat: previous heuristics
@@ -171,6 +170,9 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     setExchangeContext,
   } = deps;
 
+  // Keep imported symbol used even in the new model (avoid TS "declared but never used")
+  void ensureManageContainerAndDefaultChild;
+
   let warned = false;
   const safeDiffAndPublish = (
     prev: Record<number, boolean>,
@@ -186,8 +188,11 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     }
   };
 
+  /**
+   * ✅ New model: NO scoped manage radio group.
+   * Keep the array shape stable, but only include MAIN_OVERLAY_GROUP.
+   */
   const radioGroupsPriority: RadioGroup[] = [
-    { name: 'MANAGE_SCOPED', members: manageScoped },
     { name: 'MAIN_OVERLAY_GROUP', members: overlays },
   ];
 
@@ -209,14 +214,26 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         );
 
         const openingGlobal = isGlobalOverlay(panel);
+
+        // NEW model:
+        // - manageCfg.manageContainer is set to MANAGE_SPONSORSHIPS_PANEL (landing overlay)
+        // - manageScoped is empty (so "manage scoped radio child" never applies)
         const openingManageContainer =
           Number(panel) === Number(manageCfg.manageContainer);
+
         const openingSponsorDetail =
           Number(panel) === Number(manageCfg.manageSponsorPanel);
+
         const openingManageRadioChild = isManageRadioChild(panel);
 
         let flat = ensurePanelPresent(flat0, panel);
 
+        /**
+         * Sponsor detail open:
+         * - still supported (opened from allowed parents)
+         * - make sponsor detail the active GLOBAL overlay
+         * - remember which parent it came from (for "back" semantics elsewhere)
+         */
         if (openingSponsorDetail) {
           sponsorParentRef.current = pickSponsorParent(
             flat0,
@@ -225,31 +242,14 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             parent,
           );
 
-          flat = ensurePanelPresent(flat, manageCfg.manageContainer);
-          flat = applyGlobalRadio(
+          flat = ensurePanelPresent(flat, manageCfg.manageSponsorPanel);
+
+          const next = applyGlobalRadio(
             flat,
             overlays,
-            manageCfg.manageContainer,
+            manageCfg.manageSponsorPanel,
             withName,
-          );
-
-          const prevScoped = getActiveManageScoped(flat0);
-          pushManageScopedHistory(
-            prevScoped,
-            sponsorParentRef.current ?? manageCfg.defaultManageChild,
-          );
-
-          let next = setScopedRadio(
-            flat,
-            sponsorParentRef.current ?? manageCfg.defaultManageChild,
-            manageCfg,
-            isManageRadioChild,
-            withName,
-            true,
-          );
-
-          next = ensurePanelPresent(next, manageCfg.manageSponsorPanel);
-          next = next.map((e) =>
+          ).map((e) =>
             e.panel === manageCfg.manageSponsorPanel
               ? { ...withName(e), visible: true }
               : e,
@@ -259,17 +259,16 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
+        /**
+         * OLD manage scoped radio child open:
+         * manageScoped is empty now, so this block will never run.
+         * Kept for compatibility (no-op in new model).
+         */
         if (openingManageRadioChild) {
           const prevScoped = getActiveManageScoped(flat0);
           pushManageScopedHistory(prevScoped, panel);
 
-          flat = ensurePanelPresent(flat, manageCfg.manageContainer);
-          flat = applyGlobalRadio(
-            flat,
-            overlays,
-            manageCfg.manageContainer,
-            withName,
-          );
+          flat = applyGlobalRadio(flat, overlays, panel, withName);
 
           const next = setScopedRadio(
             flat,
@@ -277,35 +276,35 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
             manageCfg,
             isManageRadioChild,
             withName,
-            true,
+            false,
           );
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
         }
 
+        /**
+         * Manage landing panel open:
+         * It's just a global overlay now.
+         */
         if (openingManageContainer) {
-          flat = applyGlobalRadio(
-            ensurePanelPresent(flat, manageCfg.manageContainer),
+          const next = applyGlobalRadio(
+            flat,
             overlays,
             manageCfg.manageContainer,
             withName,
           );
 
-          const setScoped = (fi: PanelEntry[], p: SP_COIN_DISPLAY) =>
-            setScopedRadio(fi, p, manageCfg, isManageRadioChild, withName, true);
-
-          const next = ensureManageContainerAndDefaultChild(
-            flat,
-            manageCfg,
-            withName,
-            setScoped,
-          );
-
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
         }
 
+        /**
+         * Any other global overlay:
+         * - apply global radio
+         * - clear legacy manage history + close any "manage branch" descendants if any exist
+         *   (harmless in new model because there is no container subtree)
+         */
         if (openingGlobal) {
           let next = applyGlobalRadio(flat, overlays, panel, withName);
 
@@ -318,6 +317,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
+        // Non-overlay, simple show
         const nextFlat = flat.map((e) =>
           e.panel === panel ? { ...withName(e), visible: true } : e,
         );
@@ -366,6 +366,8 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           next = restoredResult.nextFlat;
 
           if (isGlobalOverlay(panelToClose)) {
+            // NEW model: no special container close logic.
+            // Still clear history + close any descendants if registry ever nests them.
             if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
               manageScopedHistoryRef.current = [];
               next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);

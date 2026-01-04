@@ -5,7 +5,7 @@ import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode'
 
 /** Pre-order flatten */
 export function flattenPanels<M extends Record<string, unknown> = Record<string, unknown>>(
-  root: PanelNode<M>
+  root: PanelNode<M>,
 ): PanelNode<M>[] {
   const out: PanelNode<M>[] = [];
   const walk = (n: PanelNode<M>) => {
@@ -19,7 +19,7 @@ export function flattenPanels<M extends Record<string, unknown> = Record<string,
 /** BFS find by panel enum */
 export function findNode<M extends Record<string, unknown> = Record<string, unknown>>(
   root: PanelNode<M>,
-  panel: SP_COIN_DISPLAY
+  panel: SP_COIN_DISPLAY,
 ): PanelNode<M> | undefined {
   const q: PanelNode<M>[] = [root];
   while (q.length) {
@@ -34,7 +34,7 @@ export function findNode<M extends Record<string, unknown> = Record<string, unkn
 export function toggleVisibility<M extends Record<string, unknown> = Record<string, unknown>>(
   root: PanelNode<M>,
   panel: SP_COIN_DISPLAY,
-  force?: boolean
+  force?: boolean,
 ): PanelNode<M> {
   const recur = (n: PanelNode<M>): PanelNode<M> => {
     const hit = n.panel === panel;
@@ -49,16 +49,28 @@ export function toggleVisibility<M extends Record<string, unknown> = Record<stri
   return recur(root);
 }
 
-/** Close all in `group` then open `panel` */
+/** Close all in `group` then open `panel` (skips ids not present in tree) */
 export function openOnly<M extends Record<string, unknown> = Record<string, unknown>>(
   root: PanelNode<M>,
   panel: SP_COIN_DISPLAY,
-  group?: readonly SP_COIN_DISPLAY[]
+  group?: readonly SP_COIN_DISPLAY[],
 ): PanelNode<M> {
+  // Build a fast membership set so we don't waste work toggling panels that
+  // aren't even in the current tree (helps when registry/tree changes).
+  const present = new Set<SP_COIN_DISPLAY>(flattenPanels(root).map((n) => n.panel));
+
   let next = root;
+
   if (group?.length) {
-    for (const g of group) next = toggleVisibility(next, g, false);
+    for (const g of group) {
+      if (!present.has(g)) continue;
+      next = toggleVisibility(next, g, false);
+    }
   }
-  next = toggleVisibility(next, panel, true);
+
+  if (present.has(panel)) {
+    next = toggleVisibility(next, panel, true);
+  }
+
   return next;
 }

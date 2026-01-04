@@ -162,13 +162,11 @@ export function usePanelTransitions() {
     perf.end('showErrorOverlay');
   }, [openPanel, perf]);
 
-  // IMPORTANT:
-  // MANAGE_SPONSORSHIPS is the GLOBAL overlay container.
-  // MANAGE_SPONSORSHIPS_PANEL is the default scoped child inside that overlay.
+
   const openManageSponsorships = useCallback(() => {
     perf.start();
     openPanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       'usePanelTransitions:openManageSponsorships(TRADING_STATION_PANEL)',
     );
     perf.end('openManageSponsorships');
@@ -178,7 +176,7 @@ export function usePanelTransitions() {
     perf.start();
     // ✅ close specific overlay (visibility-only)
     hidePanel(
-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS,
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       'usePanelTransitions:closeManageSponsorships(TRADING_STATION_PANEL)',
     );
     perf.end('closeManageSponsorships');
@@ -248,7 +246,10 @@ export function usePanelTransitions() {
     (overlay: SP_COIN_DISPLAY) => {
       const name = SP_COIN_DISPLAY[overlay];
       perf.start();
-      openPanel(overlay, `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`);
+      openPanel(
+        overlay,
+        `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`,
+      );
       perf.end(`openOverlay:${overlay}`);
     },
     [openPanel, perf],

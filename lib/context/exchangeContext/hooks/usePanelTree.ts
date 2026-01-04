@@ -13,7 +13,7 @@ import {
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
 // ✅ STACK_COMPONENT gate (only these may be pushed/popped)
-import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 import {
   type PanelEntry,
@@ -197,12 +197,24 @@ export function usePanelTree() {
     overlays,
   ]);
 
-  const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS;
+  /**
+   * ✅ Manage container removed:
+   * Manage panels are first-class overlays, not nested under a container anymore.
+   *
+   * We still keep ManageScopeConfig wired for sponsor-detail parent selection logic,
+   * but scoped-radio behavior is disabled (manageScoped = []).
+   *
+   * IMPORTANT:
+   * manageContainer is now the manage landing panel (MANAGE_SPONSORSHIPS_PANEL),
+   * purely as an anchor for "descendants" if your registry ever nests children under it
+   * (it currently does not, which is fine).
+   */
+  const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
   const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
-    const kids = (CHILDREN as any)?.[manageContainer] as SP_COIN_DISPLAY[] | undefined;
-    return Array.isArray(kids) ? kids.slice() : [];
-  }, [manageContainer]);
+    // No nested manage radio children in the new model.
+    return [];
+  }, []);
 
   const manageScopedSet = useMemo(() => new Set<number>(manageScoped as any), [
     manageScoped,
@@ -212,9 +224,12 @@ export function usePanelTree() {
     () => ({
       known: KNOWN,
       children: CHILDREN as any,
+
+      // "Container" is now just the landing manage panel
       manageContainer,
       manageScoped,
       defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+
       manageSponsorPanel: SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
       sponsorAllowedParents: new Set<number>([
         SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
@@ -243,22 +258,16 @@ export function usePanelTree() {
   const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
 
   const getActiveManageScoped = useCallback(
-    (flat: PanelEntry[]) => {
-      const map = toVisibilityMap(flat);
-      for (const id of manageScoped) if (map[Number(id)]) return id;
+    (_flat: PanelEntry[]) => {
+      // No nested manage scoped members in the new model.
       return null;
     },
-    [manageScoped],
+    [],
   );
 
   const pushManageScopedHistory = useCallback(
-    (prevScoped: SP_COIN_DISPLAY | null, nextScoped: SP_COIN_DISPLAY) => {
-      if (!prevScoped) return;
-      if (Number(prevScoped) === Number(nextScoped)) return;
-
-      const st = manageScopedHistoryRef.current;
-      if (st.length && Number(st[st.length - 1]) === Number(prevScoped)) return;
-      st.push(prevScoped);
+    (_prevScoped: SP_COIN_DISPLAY | null, _nextScoped: SP_COIN_DISPLAY) => {
+      // No-op in new model (no nested manage scoped members).
     },
     [],
   );
@@ -392,16 +401,6 @@ export function usePanelTree() {
 
   const lastVisRef = useRef<Record<number, boolean> | null>(null);
 
-  const visibleManageKidsFromStore = () =>
-    manageScoped
-      .filter((p) => panelStore.isVisible(p))
-      .map((p) => ({ id: Number(p), name: nameOf(p) }));
-
-  const visibleManageKidsFromMap = () =>
-    manageScoped
-      .filter((p) => !!visibilityMap[Number(p)])
-      .map((p) => ({ id: Number(p), name: nameOf(p) }));
-
   useEffect(() => {
     if (!DEBUG_CLOSE_INVARIANTS_RENDER) return;
 
@@ -414,8 +413,6 @@ export function usePanelTree() {
     console.log('[PanelTree][render-sync]', {
       claimVisible_map: !!visibilityMap[Number(claim)],
       claimVisible_store: panelStore.isVisible(claim),
-      manageVisible_map: visibleManageKidsFromMap(),
-      manageVisible_store: visibleManageKidsFromStore(),
 
       displayStack_persisted: persistedRaw,
       persistedDisplayStackNow: toNamedStack(persistedIds),
@@ -524,7 +521,7 @@ export function usePanelTree() {
 
   /* ------------------------------ PRIVATE (internal) -------------------------------- */
 
-  // Visibility-only show (keeps manage parent inference)
+  // Visibility-only show (manage scoped parent inference now effectively unused)
   const showInternal = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const traceId = nextTraceId();

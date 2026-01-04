@@ -1,6 +1,6 @@
 // File: @/lib/panels/panel.derived.ts
-import type { GroupId } from './panel.config';
-import { PANELS } from './panel.config';
+import type { GroupId } from './panelConfig';
+import { PANELS } from './panelConfig';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 /** Enum label fallback helper */

@@ -54,8 +54,9 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.CONNECT_PRICE_BUTTON, true],
   [SP.FEE_DISCLOSURE, true],
   [SP.AFFILIATE_FEE, false],
-  // Ensure the new nested container exists on boot
-  [SP.MANAGE_SPONSORSHIPS, false],
+
+  // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
+  [SP.MANAGE_SPONSORSHIPS_PANEL, false],
 ] as const;
 
 /**
@@ -74,9 +75,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.TRADE_CONTAINER_HEADER, true, [
       // Trading station (always-on core)
       node(SP.TRADING_STATION_PANEL, true, [
-        node(SP.SELL_SELECT_PANEL, true, [
-          node(SP.MANAGE_SPONSORSHIPS_BUTTON, false),
-        ]),
+        node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
         node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
 
@@ -87,25 +86,27 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.AGENT_LIST_SELECT_PANEL, false),
       node(SP.ERROR_MESSAGE_PANEL, false),
 
-      // ─────────────── ✅ Nested Manage Sponsorships container ───────────────
-      node(SP.MANAGE_SPONSORSHIPS, false, [
-        // Default child overlay (hub)
-        node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
-          node(SP.MANAGE_PENDING_REWARDS, false),
-        ]),
+      // ─────────────── ✅ Manage overlays as first-class main overlays ───────────────
+      node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
+      node(SP.MANAGE_PENDING_REWARDS, false),
+      node(SP.UNSTAKING_SPCOINS_PANEL, false),
+      node(SP.STAKING_SPCOINS_PANEL, false),
+      node(SP.MANAGE_RECIPIENTS_PANEL, false),
+      node(SP.MANAGE_AGENTS_PANEL, false),
 
-        // Other overlays within the Manage Sponsorships scope
-        node(SP.UNSTAKING_SPCOINS_PANEL, false),
-        node(SP.STAKING_SPCOINS_PANEL, false),
-        node(SP.MANAGE_RECIPIENTS_PANEL, false),
-        node(SP.MANAGE_AGENTS_PANEL, false),
-        node(SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL, false),
-
-        // Detail views (scoped to this container)
-        node(SP.MANAGE_AGENT_PANEL, false),
-        node(SP.MANAGE_RECIPIENT_PANEL, false),
+      // These can drill into sponsor detail
+      node(SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL, false, [
         node(SP.MANAGE_SPONSOR_PANEL, false),
       ]),
+      node(SP.UNSTAKING_SPCOINS_PANEL, false, [node(SP.MANAGE_SPONSOR_PANEL, false)]),
+
+      // Detail views (also overlays in the same group)
+      node(SP.MANAGE_AGENT_PANEL, false),
+      node(SP.MANAGE_RECIPIENT_PANEL, false),
+
+      // NOTE: MANAGE_SPONSOR_PANEL is included above as a child of the two allowed parents.
+      // If your runtime expects it as a standalone top-level overlay as well, uncomment:
+      // node(SP.MANAGE_SPONSOR_PANEL, false),
 
       // ─────────────── Inline / auxiliary panels ───────────────
       node(SP.ADD_SPONSORSHIP_PANEL, false),

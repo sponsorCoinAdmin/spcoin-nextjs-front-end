@@ -7,9 +7,24 @@ import { ensurePanelPresent, toVisibilityMap } from './panelTreePersistence';
 export type ManageScopeConfig = {
   known: Set<number>;
   children: Record<number, SP_COIN_DISPLAY[] | undefined>;
+
+  /**
+   * NEW model: there is no "manage container" overlay.
+   * We keep this field for backward compat and set it to the landing overlay panel:
+   *   SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL
+   */
   manageContainer: SP_COIN_DISPLAY;
+
+  /**
+   * NEW model: manageScoped is empty (no nested scoped radio group).
+   */
   manageScoped: SP_COIN_DISPLAY[];
+
+  /**
+   * Default manage panel (landing panel). In the new model this equals manageContainer.
+   */
   defaultManageChild: SP_COIN_DISPLAY;
+
   manageSponsorPanel: SP_COIN_DISPLAY;
   sponsorAllowedParents: Set<number>;
 };
@@ -33,6 +48,7 @@ export function computeManageDescendantsSet(
     }
   }
 
+  // Do not include the "container" itself in descendants.
   out.delete(Number(cfg.manageContainer));
   return out;
 }
@@ -42,14 +58,24 @@ export function makeManagePredicates(
   manageScopedSet: Set<number>,
   manageDescendantsSet: Set<number>,
 ) {
+  // NEW model: manageScopedSet is empty => always false.
   const isManageRadioChild = (p: SP_COIN_DISPLAY) =>
     manageScopedSet.has(Number(p)) && Number(p) !== Number(cfg.manageSponsorPanel);
 
+  // NEW model: usually false unless you still nest children under manageContainer in registry.
   const isManageAnyChild = (p: SP_COIN_DISPLAY) => manageDescendantsSet.has(Number(p));
 
   return { isManageRadioChild, isManageAnyChild };
 }
 
+/**
+ * NEW model:
+ * There is no container branch to close; manage panels are overlays.
+ *
+ * Compatibility behavior:
+ * - Always hides manageContainer (landing panel).
+ * - Also hides any descendants IF your registry still nests children under manageContainer.
+ */
 export function closeManageBranch(
   arr: PanelEntry[],
   cfg: ManageScopeConfig,
@@ -63,6 +89,16 @@ export function closeManageBranch(
   });
 }
 
+/**
+ * OLD model: container + nested scoped radio.
+ * NEW model: manageScoped is empty, so this becomes:
+ * - ensure manageContainer present (optional)
+ * - ensure makeVisible present
+ * - (no scoped-radio toggling because there are no manageScoped members)
+ *
+ * NOTE: We do NOT auto-open makeVisible here unless it's the container itself.
+ * Callers that use this in the NEW model should open overlays directly via openPanel().
+ */
 export function setScopedRadio(
   flatIn: PanelEntry[],
   makeVisible: SP_COIN_DISPLAY,
@@ -99,7 +135,6 @@ export function pickSponsorParent(
     typeof explicit === 'number' && cfg.sponsorAllowedParents.has(Number(explicit));
   if (explicitOk) return explicit as SP_COIN_DISPLAY;
 
-  // If we already have a remembered allowed parent, keep it.
   const remembered = sponsorParentRef.current;
   if (
     typeof remembered === 'number' &&
@@ -108,15 +143,23 @@ export function pickSponsorParent(
     return remembered;
   }
 
-  // Fallback: infer from currently-visible allowed parent.
+  // Infer from currently-visible allowed parent.
   const m0 = toVisibilityMap(flat0);
   for (const idNum of cfg.sponsorAllowedParents) {
     if (m0[idNum]) return idNum as SP_COIN_DISPLAY;
   }
 
+  // Default to landing/manage panel in the new model.
   return cfg.defaultManageChild;
 }
 
+/**
+ * OLD model: ensure container and default child if none visible.
+ * NEW model: manageScoped is empty, so:
+ * - anyChildVisible is always false
+ * - we ensure defaultManageChild (landing panel) is opened (via setScopedRadioFn)
+ * - sponsor detail OFF
+ */
 export function ensureManageContainerAndDefaultChild(
   flat: PanelEntry[],
   cfg: ManageScopeConfig,

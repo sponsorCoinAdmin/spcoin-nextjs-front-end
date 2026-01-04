@@ -1,4 +1,4 @@
-// File: @/lib/panels/panel.config.ts
+// File: @/lib/panels/panelConfig.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 export type PanelKind = 'root' | 'panel' | 'list' | 'button' | 'control';
@@ -19,6 +19,8 @@ export type PanelDef = {
 /**
  * Single source of truth for panels.
  * Add a new panel by inserting one object here.
+ *
+ * ✅ Manage panels are first-class overlays (no container/group).
  */
 export const PANELS: readonly PanelDef[] = [
   // Root app container for trading
@@ -32,46 +34,59 @@ export const PANELS: readonly PanelDef[] = [
     defaultVisible: true,
   },
 
-  // Main overlays (radio group: mainOverlay)
+  /**
+   * Main overlays (radio group: mainOverlay)
+   *
+   * Children of TRADE_CONTAINER_HEADER (matches updated structural registry).
+   */
   {
     id: SP.TRADING_STATION_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: true,
   },
   {
     id: SP.BUY_LIST_SELECT_PANEL,
     kind: 'list',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: true,
   },
   {
     id: SP.SELL_LIST_SELECT_PANEL,
     kind: 'list',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: true,
   },
   {
     id: SP.RECIPIENT_LIST_SELECT_PANEL,
     kind: 'list',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.AGENT_LIST_SELECT_PANEL,
     kind: 'list',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.ERROR_MESSAGE_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+
+  // Sponsor list (GLOBAL overlay, not persisted)
+  {
+    id: SP.SPONSOR_LIST_SELECT_PANEL,
+    kind: 'list',
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
@@ -80,60 +95,72 @@ export const PANELS: readonly PanelDef[] = [
   {
     id: SP.MANAGE_SPONSORSHIPS_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.MANAGE_PENDING_REWARDS,
+    kind: 'panel',
+    parent: SP.TRADE_CONTAINER_HEADER,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.UNSTAKING_SPCOINS_PANEL,
+    kind: 'panel',
+    parent: SP.TRADE_CONTAINER_HEADER,
+    group: 'mainOverlay',
+    defaultVisible: false,
+  },
+  {
+    id: SP.STAKING_SPCOINS_PANEL,
+    kind: 'panel',
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.MANAGE_RECIPIENTS_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.MANAGE_AGENTS_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
 
-  // Detail manage overlays (also full-screen overlays in the same radio set)
+  // Detail/manage overlays (also full-screen overlays in the same radio set)
   {
     id: SP.MANAGE_AGENT_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.MANAGE_RECIPIENT_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
   {
     id: SP.MANAGE_SPONSOR_PANEL,
     kind: 'panel',
-    parent: SP.MAIN_TRADING_PANEL,
-    group: 'mainOverlay',
-    defaultVisible: false,
-  },
-
-  // legacy (kept so old states don’t break)
-  {
-    id: SP.SPONSOR_LIST_SELECT_PANEL,
-    kind: 'list',
-    parent: SP.MAIN_TRADING_PANEL,
+    parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
     defaultVisible: false,
   },
@@ -161,6 +188,14 @@ export const PANELS: readonly PanelDef[] = [
     id: SP.CONFIG_SPONSORSHIP_PANEL,
     kind: 'panel',
     parent: SP.ADD_SPONSORSHIP_PANEL,
+    defaultVisible: false,
+  },
+
+  // Optional trading config panel (if used)
+  {
+    id: SP.CONFIG_SLIPPAGE_PANEL,
+    kind: 'panel',
+    parent: SP.TRADING_STATION_PANEL,
     defaultVisible: false,
   },
 

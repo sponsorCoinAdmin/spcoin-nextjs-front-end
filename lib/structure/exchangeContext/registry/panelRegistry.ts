@@ -9,8 +9,8 @@
 //   • Derived helpers (CHILDREN, KINDS)
 //
 // NOTE:
-// Radio membership lists are now defined as "action-model groups" in spCoinDisplay.ts,
-// and are imported here to keep a single readable source of truth.
+// Global overlay membership lists are defined as "action-model groups" in spCoinDisplay.ts
+// and imported here to keep a single readable source of truth.
 //
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
@@ -23,7 +23,7 @@ import {
   IS_MAIN_OVERLAY,
   IS_MANAGE_SCOPED,
   IS_STACK_COMPONENT,
-} from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+} from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
 
@@ -33,10 +33,8 @@ export type PanelDef = {
 
   /**
    * If true: participates in the GLOBAL overlay radio group.
-   * Scoped (nested) radio behavior is handled elsewhere.
    *
-   * NOTE: This field is still kept for structure/history/clarity,
-   * but MAIN_OVERLAY_GROUP is now sourced from the action-model list.
+   * NOTE: MAIN_OVERLAY_GROUP is now sourced from the action-model list.
    */
   overlay?: boolean;
 
@@ -61,28 +59,9 @@ const TRADING_CHILDREN: SP[] = [
 ];
 
 /**
- * Nested Manage Sponsorships container (GLOBAL overlay)
- *
- * NOTE:
- * MANAGE_SPONSOR_PANEL is intentionally NOT a direct child here.
- * It is nested under multiple parents:
- *   - CLAIM_SPONSOR_REWARDS_LIST_PANEL
- *   - UNSTAKING_SPCOINS_PANEL
- */
-const MANAGE_SPONSORSHIPS_CHILDREN: SP[] = [
-  SP.MANAGE_SPONSORSHIPS_PANEL,
-  SP.UNSTAKING_SPCOINS_PANEL,
-  SP.STAKING_SPCOINS_PANEL,
-  SP.MANAGE_RECIPIENTS_PANEL,
-  SP.MANAGE_AGENTS_PANEL,
-  SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-  SP.MANAGE_AGENT_PANEL,
-  SP.MANAGE_RECIPIENT_PANEL,
-  // SP.MANAGE_SPONSOR_PANEL, // ⛔ moved under two specific parents
-];
-
-/**
  * Primary overlay container under MAIN_TRADING_PANEL
+ *
+ * ✅ Manage panels are first-class overlays mounted here.
  */
 const TRADE_HEADER_CHILDREN: SP[] = [
   SP.TRADING_STATION_PANEL,
@@ -91,7 +70,19 @@ const TRADE_HEADER_CHILDREN: SP[] = [
   SP.RECIPIENT_LIST_SELECT_PANEL,
   SP.AGENT_LIST_SELECT_PANEL,
   SP.ERROR_MESSAGE_PANEL,
-  SP.MANAGE_SPONSORSHIPS,
+
+  // ✅ First-class "manage" overlays
+  SP.MANAGE_SPONSORSHIPS_PANEL,
+  SP.MANAGE_PENDING_REWARDS,
+  SP.UNSTAKING_SPCOINS_PANEL,
+  SP.STAKING_SPCOINS_PANEL,
+  SP.MANAGE_RECIPIENTS_PANEL,
+  SP.MANAGE_AGENTS_PANEL,
+  SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+  SP.MANAGE_AGENT_PANEL,
+  SP.MANAGE_RECIPIENT_PANEL,
+
+  // Overlay list (not persisted)
   SP.SPONSOR_LIST_SELECT_PANEL,
 ];
 
@@ -131,26 +122,15 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.AGENT_LIST_SELECT_PANEL, kind: 'list', overlay: true },
   { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true },
 
-  /* Manage Sponsorships (GLOBAL overlay container) */
-  {
-    id: SP.MANAGE_SPONSORSHIPS,
-    kind: 'root',
-    overlay: true,
-    children: MANAGE_SPONSORSHIPS_CHILDREN,
-  },
-
-  /* Scoped children under MANAGE_SPONSORSHIPS */
-  {
-    id: SP.MANAGE_SPONSORSHIPS_PANEL,
-    kind: 'panel',
-    children: [SP.MANAGE_PENDING_REWARDS],
-  },
+  /* First-class overlay panels */
+  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel' },
+  { id: SP.MANAGE_PENDING_REWARDS, kind: 'panel' },
 
   { id: SP.MANAGE_RECIPIENTS_PANEL, kind: 'panel' },
   { id: SP.MANAGE_AGENTS_PANEL, kind: 'panel' },
 
   /**
-   * Parent #1: Claim Rewards list can drill into Sponsor detail
+   * Claim Rewards list can drill into Sponsor detail
    */
   {
     id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
@@ -162,7 +142,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_RECIPIENT_PANEL, kind: 'panel' },
 
   /**
-   * Parent #2: Unstaking can drill into Sponsor detail
+   * Unstaking can drill into Sponsor detail
    */
   {
     id: SP.UNSTAKING_SPCOINS_PANEL,
@@ -173,15 +153,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' },
 
   /**
-   * Shared detail panel (scoped)
-   *
-   * NOTE:
-   * This panel is referenced as a child under multiple parents above.
+   * Shared detail panel
    */
   { id: SP.MANAGE_SPONSOR_PANEL, kind: 'panel' },
-
-  /* Non-overlay substate */
-  { id: SP.MANAGE_PENDING_REWARDS, kind: 'panel' },
 
   /* Sponsor list (GLOBAL overlay, not persisted) */
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true },
@@ -222,24 +196,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
 /* ─────────────────────────────── Derived Helpers ─────────────────────────────── */
 
-/**
- * ✅ Single source of truth for global overlay membership now lives in the action-model list.
- * Keeping this export name preserves existing imports.
- */
 export const MAIN_OVERLAY_GROUP: readonly SP[] =
   MAIN_OVERLAY_GROUP_MODEL as readonly SP[];
 
-/**
- * Optional convenience exports (action-model groups).
- * Not required, but useful for callers already importing from panelRegistry.
- */
 export const MANAGE_SCOPED: readonly SP[] = MANAGE_SCOPED_MODEL as readonly SP[];
 export const STACK_COMPONENTS: readonly SP[] =
   STACK_COMPONENTS_MODEL as readonly SP[];
 
-/**
- * Fast membership helpers (re-exported).
- */
 export { IS_MAIN_OVERLAY, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
