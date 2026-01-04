@@ -1,6 +1,7 @@
 // File: @/lib/context/exchangeContext/helpers/panelTree.ts
 
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure'; // ✅ add this
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /** Pre-order flatten */
@@ -73,4 +74,58 @@ export function openOnly<M extends Record<string, unknown> = Record<string, unkn
   }
 
   return next;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+ * GUI-only view transform
+ *
+ * Persisted structure stays:
+ *   MAIN_TRADING_PANEL -> TRADE_CONTAINER_HEADER -> overlays...
+ *
+ * But the debug/tree GUI can *display* it as:
+ *   MAIN_TRADING_PANEL
+ *     TRADE_CONTAINER_HEADER
+ *     TRADING_STATION_PANEL
+ *     BUY_LIST_SELECT_PANEL
+ *     ...
+ *
+ * This does NOT affect storage/persistence; it only reshapes for rendering.
+ * ────────────────────────────────────────────────────────────────────────────── */
+
+export function hoistTradeHeaderChildrenForGui<
+  M extends Record<string, unknown> = Record<string, unknown>,
+>(root: PanelNode<M>): PanelNode<M> {
+  // Only meaningful if root is MAIN_TRADING_PANEL (otherwise no-op)
+  if (Number(root.panel) !== Number(SP.MAIN_TRADING_PANEL)) return root;
+
+  const rootKids = root.children ?? [];
+  const headerIdx = rootKids.findIndex((c) => Number(c.panel) === Number(SP.TRADE_CONTAINER_HEADER));
+  if (headerIdx < 0) return root;
+
+  const header = rootKids[headerIdx];
+  const headerKids = header.children ?? [];
+  if (!headerKids.length) return root;
+
+  // We want: root.children = [ ...everything except header..., header(without children), ...headerKids ]
+  // but keep header located where it already is (at headerIdx).
+  // Also avoid duplicates if something already exists at root level.
+  const existingRootIds = new Set<number>(rootKids.map((k) => Number(k.panel)));
+
+  const hoisted = headerKids.filter((k) => !existingRootIds.has(Number(k.panel)));
+
+  const headerLeaf: PanelNode<M> = {
+    ...header,
+    children: [], // ✅ GUI leaf (so overlays appear as siblings)
+  };
+
+  const nextKids = rootKids.slice();
+  nextKids[headerIdx] = headerLeaf;
+
+  // Insert hoisted children *immediately after* header for the exact layout you showed
+  nextKids.splice(headerIdx + 1, 0, ...hoisted);
+
+  return {
+    ...root,
+    children: nextKids,
+  };
 }

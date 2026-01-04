@@ -30,35 +30,24 @@ import {
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 
-/* ---------------- POP detection ----------------
- *
- * RULES (important):
- * - closePanel(...) may be used as:
- *    (A) HIDE ONLY  -> do NOT restore radio siblings
- *    (B) POP/CLOSE  -> HIDE + RESTORE (radio fallback), driven by displayStack
- *
- * We detect POP intent ONLY via invoker strings.
- * The new upstream convention tags invokers like:
- *   - "NAV_CLOSE:..."   (means: this close is stack-driven / pop-like)
- *   - "HIDE:..."        (means: hide-only)
- *
- * Keep backward compatibility for older callers that used substring checks.
+/**
+ * ✅ If true, allows ALL global overlays to be closed (no forced fallback).
+ * If false, legacy behavior remains: at least one overlay stays visible.
  */
+const ALLOW_EMPTY_GLOBAL_OVERLAY =
+  process.env.NEXT_PUBLIC_ALLOW_EMPTY_GLOBAL_OVERLAY === 'true';
+
+/* ---------------- POP detection ---------------- */
 function isPopInvoker(invoker?: unknown) {
   if (typeof invoker !== 'string' || !invoker) return false;
 
   const s = invoker.trim();
 
-  // ✅ New explicit tags (single-source-of-truth callers should use these)
   if (s.startsWith('NAV_CLOSE:')) return true;
-
-  // (Optional future tag if you add it elsewhere)
   if (s.startsWith('NAV_POP:')) return true;
 
-  // ✅ If explicitly tagged as HIDE, do not pop/restore.
   if (s.startsWith('HIDE:')) return false;
 
-  // ✅ Back-compat: previous heuristics
   return (
     s.includes('closePanel') ||
     s.includes('persist-pop') ||
@@ -69,13 +58,8 @@ function isPopInvoker(invoker?: unknown) {
   );
 }
 
-/* ---------------- displayStack normalize ----------------
- *
- * ✅ STRICT MODE: displayStack is always:
- *   DISPLAY_STACK_NODE[] = [{ id: number, name: string }, ...]
- *
- * No more number[], no more {displayTypeId}.
- */
+/* ---------------- displayStack normalize ---------------- */
+
 type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
 
 function displayStackNodesToIdsStrict(raw: unknown): SP_COIN_DISPLAY[] {
@@ -158,7 +142,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     known,
     overlays,
     manageCfg,
-    manageScoped,
+    // ✅ removed: manageScoped (unused in new model)
     isGlobalOverlay,
     isManageRadioChild,
     isManageAnyChild,
@@ -188,10 +172,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     }
   };
 
-  /**
-   * ✅ New model: NO scoped manage radio group.
-   * Keep the array shape stable, but only include MAIN_OVERLAY_GROUP.
-   */
   const radioGroupsPriority: RadioGroup[] = [
     { name: 'MAIN_OVERLAY_GROUP', members: overlays },
   ];
@@ -215,9 +195,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
         const openingGlobal = isGlobalOverlay(panel);
 
-        // NEW model:
-        // - manageCfg.manageContainer is set to MANAGE_SPONSORSHIPS_PANEL (landing overlay)
-        // - manageScoped is empty (so "manage scoped radio child" never applies)
         const openingManageContainer =
           Number(panel) === Number(manageCfg.manageContainer);
 
@@ -228,12 +205,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
         let flat = ensurePanelPresent(flat0, panel);
 
-        /**
-         * Sponsor detail open:
-         * - still supported (opened from allowed parents)
-         * - make sponsor detail the active GLOBAL overlay
-         * - remember which parent it came from (for "back" semantics elsewhere)
-         */
         if (openingSponsorDetail) {
           sponsorParentRef.current = pickSponsorParent(
             flat0,
@@ -259,11 +230,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
-        /**
-         * OLD manage scoped radio child open:
-         * manageScoped is empty now, so this block will never run.
-         * Kept for compatibility (no-op in new model).
-         */
         if (openingManageRadioChild) {
           const prevScoped = getActiveManageScoped(flat0);
           pushManageScopedHistory(prevScoped, panel);
@@ -283,10 +249,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
-        /**
-         * Manage landing panel open:
-         * It's just a global overlay now.
-         */
         if (openingManageContainer) {
           const next = applyGlobalRadio(
             flat,
@@ -299,12 +261,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
-        /**
-         * Any other global overlay:
-         * - apply global radio
-         * - clear legacy manage history + close any "manage branch" descendants if any exist
-         *   (harmless in new model because there is no container subtree)
-         */
         if (openingGlobal) {
           let next = applyGlobalRadio(flat, overlays, panel, withName);
 
@@ -317,7 +273,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           return writeFlatTree(prev as any, next) as any;
         }
 
-        // Non-overlay, simple show
         const nextFlat = flat.map((e) =>
           e.panel === panel ? { ...withName(e), visible: true } : e,
         );
@@ -347,7 +302,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
         const panelToClose: SP_COIN_DISPLAY = panel;
 
-        // ✅ Strict: persisted settings.displayStack is DISPLAY_STACK_NODE[]
         const displayStackIds = displayStackNodesToIdsStrict(
           (prev as any)?.settings?.displayStack,
         );
@@ -366,22 +320,22 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           next = restoredResult.nextFlat;
 
           if (isGlobalOverlay(panelToClose)) {
-            // NEW model: no special container close logic.
-            // Still clear history + close any descendants if registry ever nests them.
             if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
               manageScopedHistoryRef.current = [];
               next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
             }
 
-            next = ensureOneGlobalOverlayVisible(
-              next,
-              overlays,
-              SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-              withName,
-            );
+            // ✅ Allow "close all overlays" when enabled
+            if (!ALLOW_EMPTY_GLOBAL_OVERLAY) {
+              next = ensureOneGlobalOverlayVisible(
+                next,
+                overlays,
+                SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+                withName,
+              );
+            }
           }
         } else {
-          // HIDE ONLY
           next = flat0.map((e) =>
             e.panel === panelToClose ? { ...withName(e), visible: false } : e,
           );

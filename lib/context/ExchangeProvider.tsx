@@ -49,6 +49,9 @@ import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePers
 // ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
 import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
+// ✅ STACK gate: only these may appear in displayStack
+import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -168,6 +171,27 @@ const toNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
   ids.map((id) => ({ id, name: panelName(Number(id) as any) }));
 
 /**
+ * ✅ STACK FILTER (boot-time):
+ * displayStack must ONLY contain stack-eligible overlays (IS_STACK_COMPONENT).
+ * This prevents non-stack panels like SELL_SELECT_PANEL from being persisted.
+ */
+const filterToStackComponents = (ids: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] => {
+  const out: SP_COIN_DISPLAY[] = [];
+  const seen = new Set<number>();
+
+  for (const id of ids) {
+    const n = Number(id);
+    if (!Number.isFinite(n)) continue;
+    if (!IS_STACK_COMPONENT.has(n)) continue;
+    if (seen.has(n)) continue;
+    seen.add(n);
+    out.push(id);
+  }
+
+  return out;
+};
+
+/**
  * ✅ SINGLE SOURCE OF TRUTH:
  * - ONLY: ctx.settings.displayStack
  * - NEVER: ctx.displayStack (root)
@@ -212,6 +236,9 @@ const normalizeSettingsDisplayStack = (ctx: any) => {
 /**
  * Cold-boot fallback:
  * Build displayStack from visible panels + CHILDREN hierarchy.
+ *
+ * NOTE: This returns a "visible path" which includes non-stack nodes.
+ * We MUST filter it through IS_STACK_COMPONENT before persisting.
  */
 const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
   const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[
@@ -387,16 +414,24 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const flatPanels = reconcileOverlayVisibility(ensured);
 
+      // --- read stored stack (if any) ---
       const storedNodes = normalizeDisplayStackNodes(settingsAny.displayStack);
-      const storedIds =
+      const storedIdsRaw =
         storedNodes.length > 0
           ? idsFromNodes(storedNodes)
           : normalizeIdArray(settingsAny.displayStack);
 
-      const derivedIds = computeVisibleDisplayStackFromPanels(
+      // ✅ filter out non-stack ids like SELL_SELECT_PANEL
+      const storedIds = filterToStackComponents(storedIdsRaw);
+
+      // --- cold boot derive stack ---
+      const derivedIdsRaw = computeVisibleDisplayStackFromPanels(
         flatPanels as any,
         SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
       );
+
+      // ✅ filter derived path down to overlays only
+      const derivedIds = filterToStackComponents(derivedIdsRaw);
 
       const chosenIds = storedIds.length > 0 ? storedIds : derivedIds;
       const chosenNodes = toNodes(chosenIds);
@@ -408,7 +443,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           name: n.name,
           visible: n.visible,
         })),
-        displayStack: chosenNodes, // ✅ canonical
+        displayStack: chosenNodes, // ✅ canonical + filtered
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
@@ -432,7 +467,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       enforceSettingsDisplayStackOnly(base as any);
 
       setContextState(base as ExchangeContextTypeOnly);
-      debugLog.log?.('✅ initExchangeContext boot complete');
+      debugLog.log?.('✅ initExchangeContext boot complete', {
+        bootStoredStackRaw: storedIdsRaw.map(Number),
+        bootDerivedPathRaw: derivedIdsRaw.map(Number),
+        bootChosenStackFiltered: chosenIds.map(Number),
+      });
     })();
   }, [wagmiReady, wagmiChainId, isConnected, address]);
 
@@ -484,7 +523,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     );
 
     lastAppliedAddrRef.current = nextAddr;
-  }, [contextState, isConnected, address, setExchangeContext]);
+  }, [contextState, isConnected, address]);
 
   useEffect(() => {
     if (!contextState) return;
@@ -570,8 +609,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
   if (!contextState) return null;
 
-  // ✅ FINAL GUARD: never expose root displayStack to consumers (Tree, etc.)
-  // This is the hard guarantee that you will ONLY see `.settings.displayStack`.
+  // ✅ FINAL GUARD: never expose root displayStack to consumers
   const { displayStack: _rootDisplayStack, ...exchangeContextNoRoot } =
     (contextState as any) ?? {};
   (exchangeContextNoRoot as any).settings =

@@ -57,6 +57,10 @@ const DEBUG_ACTIONS = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_ACTIONS === 'true'
 // ✅ New: stack-focused debugging (diagnose “why stack stays empty”)
 const DEBUG_STACK = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_STACK === 'true';
 
+// ✅ Allow closing ALL radio overlays (no forced fallback)
+const ALLOW_EMPTY_GLOBAL_OVERLAY =
+  process.env.NEXT_PUBLIC_ALLOW_EMPTY_GLOBAL_OVERLAY === 'true';
+
 // ✅ Target to diagnose “opens then closes”
 const TRACE_TARGET = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
@@ -86,19 +90,6 @@ const diffVisibility = (
 };
 
 /* ───────────────────────────── DisplayStack helpers (single source of truth) ───────────────────────────── */
-
-/**
- * SINGLE SOURCE OF TRUTH (hard rule):
- *   ✅ exchangeContext.settings.displayStack
- *   ❌ exchangeContext.displayStack (root) is NOT used here.
- *
- * IMPORTANT FIX:
- * React state updates are async. If you push+persist then immediately call closePanel,
- * reading from exchangeContext can still be stale (empty).
- *
- * So we keep a synchronous ref of the latest persisted stack ids,
- * sourced ONLY from exchangeContext.settings.displayStack, and updated immediately on writes.
- */
 
 const normalizeIds = (arr: Array<number | SP_COIN_DISPLAY>) =>
   arr
@@ -197,22 +188,9 @@ export function usePanelTree() {
     overlays,
   ]);
 
-  /**
-   * ✅ Manage container removed:
-   * Manage panels are first-class overlays, not nested under a container anymore.
-   *
-   * We still keep ManageScopeConfig wired for sponsor-detail parent selection logic,
-   * but scoped-radio behavior is disabled (manageScoped = []).
-   *
-   * IMPORTANT:
-   * manageContainer is now the manage landing panel (MANAGE_SPONSORSHIPS_PANEL),
-   * purely as an anchor for "descendants" if your registry ever nests children under it
-   * (it currently does not, which is fine).
-   */
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
   const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
-    // No nested manage radio children in the new model.
     return [];
   }, []);
 
@@ -224,12 +202,9 @@ export function usePanelTree() {
     () => ({
       known: KNOWN,
       children: CHILDREN as any,
-
-      // "Container" is now just the landing manage panel
       manageContainer,
       manageScoped,
       defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-
       manageSponsorPanel: SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
       sponsorAllowedParents: new Set<number>([
         SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
@@ -257,18 +232,9 @@ export function usePanelTree() {
   const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
   const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
 
-  const getActiveManageScoped = useCallback(
-    (_flat: PanelEntry[]) => {
-      // No nested manage scoped members in the new model.
-      return null;
-    },
-    [],
-  );
-
+  const getActiveManageScoped = useCallback((_flat: PanelEntry[]) => null, []);
   const pushManageScopedHistory = useCallback(
-    (_prevScoped: SP_COIN_DISPLAY | null, _nextScoped: SP_COIN_DISPLAY) => {
-      // No-op in new model (no nested manage scoped members).
-    },
+    (_prevScoped: SP_COIN_DISPLAY | null, _nextScoped: SP_COIN_DISPLAY) => {},
     [],
   );
 
@@ -435,7 +401,6 @@ export function usePanelTree() {
       getActiveManageScoped,
       pushManageScopedHistory,
       diffAndPublish: (prev, next) => {
-        // ✅ Focused flip log for TRADING_STATION_PANEL
         if (DEBUG_ACTIONS) {
           const before = !!(prev ?? lastVisRef.current ?? {})[Number(TRACE_TARGET)];
           const after = !!next[Number(TRACE_TARGET)];
@@ -485,21 +450,9 @@ export function usePanelTree() {
 
   const base = useMemo(() => createPanelTreeCallbacks(callbacksDeps), [callbacksDeps]);
 
-  /**
-   * ✅ Visibility primitives coming from createPanelTreeCallbacks.
-   * (They are named open/close historically, but functionally used as show/hide here.)
-   */
   const baseShow = base.openPanel;
   const baseHide = base.closePanel;
 
-  /**
-   * ✅ Invoker tagging
-   *
-   * panelTreeCallbacks now treats invokers starting with "NAV_CLOSE:" as POP intent
-   * (restore radio fallback). Anything else is hide-only.
-   *
-   * We keep NAV_OPEN prefix for log clarity.
-   */
   const tagInvoker = useCallback(
     (kind: 'NAV_OPEN' | 'NAV_CLOSE', invoker?: string) => {
       const s = (invoker ?? '').trim();
@@ -509,10 +462,6 @@ export function usePanelTree() {
     [],
   );
 
-  /**
-   * ✅ Hide-only invoker tag:
-   * Must NOT start with "NAV_CLOSE:" (otherwise panelTreeCallbacks will treat it as POP).
-   */
   const tagHideInvoker = useCallback((invoker?: string) => {
     const s = (invoker ?? '').trim();
     const base = s.length ? s : '(none)';
@@ -521,7 +470,6 @@ export function usePanelTree() {
 
   /* ------------------------------ PRIVATE (internal) -------------------------------- */
 
-  // Visibility-only show (manage scoped parent inference now effectively unused)
   const showInternal = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const traceId = nextTraceId();
@@ -555,7 +503,6 @@ export function usePanelTree() {
     [baseShow, manageContainer, manageScopedSet, nextTraceId, logAction],
   );
 
-  // Visibility-only hide
   const hideInternal = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
       const traceId = nextTraceId();
@@ -572,11 +519,6 @@ export function usePanelTree() {
     [baseHide, nextTraceId, logAction],
   );
 
-  /**
-   * ✅ Visibility-only PUBLIC helpers (non-stack)
-   * - do NOT push/pop displayStack
-   * - do NOT trigger restorePrevRadioMember
-   */
   const showPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       showInternal(panel, tagHideInvoker(invoker), parent);
@@ -638,7 +580,6 @@ export function usePanelTree() {
         };
       }
 
-      // remove LAST occurrence of panel (defensive for duplicates)
       let idx = -1;
       for (let i = stackBefore.length - 1; i >= 0; i--) {
         if (Number(stackBefore[i]) === Number(panel)) {
@@ -668,10 +609,6 @@ export function usePanelTree() {
     [getPersistedDisplayStackIds, persistDisplayStack, logAction],
   );
 
-  /**
-   * Legacy helper: pop TOP stack item.
-   * (kept for backward-compat callers that used closePanel(invoker,arg) without panel)
-   */
   const popTop = useCallback(
     (traceId: number, reason: string) => {
       const stackBefore = getPersistedDisplayStackIds();
@@ -683,7 +620,6 @@ export function usePanelTree() {
         };
       }
 
-      // find last stackable item (defensive)
       let idx = stackBefore.length - 1;
       while (idx >= 0 && !IS_STACK_COMPONENT.has(Number(stackBefore[idx]))) idx--;
 
@@ -706,12 +642,6 @@ export function usePanelTree() {
 
   /* ------------------------------ PUBLIC API (single source of truth) -------------------------------- */
 
-  /**
-   * ✅ openPanel(panel): ALWAYS shows panel.
-   * If panel is a stack member, ALSO pushes it into settings.displayStack.
-   *
-   * This is the only "open/show" API the app should call for NAV.
-   */
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const traceId = nextTraceId();
@@ -751,15 +681,6 @@ export function usePanelTree() {
     ],
   );
 
-  /**
-   * ✅ closePanel(panel): ALWAYS hides that panel.
-   * If panel is a stack member, ALSO removes it from settings.displayStack (last occurrence).
-   *
-   * Backward-compat:
-   * - If called as closePanel(invoker, arg) (no panel), it will POP TOP and hide that popped panel.
-   *
-   * This is the only "close/hide" API the app should call for NAV.
-   */
   function closePanel(panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown): void;
   function closePanel(invoker?: string, arg?: unknown): void;
   function closePanel(
@@ -769,7 +690,6 @@ export function usePanelTree() {
   ) {
     const traceId = nextTraceId();
 
-    // overload resolution
     const hasPanel =
       typeof a === 'number' && Number.isFinite(Number(a)) && KNOWN.has(Number(a));
 
@@ -788,12 +708,19 @@ export function usePanelTree() {
       });
 
       // remove (if stack member) + hide (always)
-      removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
-      hideInternal(panel, navInvoker, arg);
+      const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
+
+      // ✅ Key fix: if we're closing a global overlay AND stack becomes empty,
+      // use HIDE invoker so radio restore does NOT run.
+      const hideInvoker =
+        ALLOW_EMPTY_GLOBAL_OVERLAY && isGlobalOverlay(panel) && nextStack.length === 0
+          ? tagHideInvoker(invoker)
+          : navInvoker;
+
+      hideInternal(panel, hideInvoker, arg);
       return;
     }
 
-    // legacy: closePanel(invoker?, arg?) => pop top and hide popped
     const invoker = (typeof a === 'string' ? a : undefined) as string | undefined;
     const arg = b as unknown;
 
@@ -820,7 +747,13 @@ export function usePanelTree() {
       nextStack: toNamedStack(nextStack),
     });
 
-    hideInternal(popped, navInvoker, arg);
+    // For legacy pop-top, apply same empty-overlay rule if applicable
+    const hideInvoker =
+      ALLOW_EMPTY_GLOBAL_OVERLAY && isGlobalOverlay(popped) && nextStack.length === 0
+        ? tagHideInvoker(invoker)
+        : navInvoker;
+
+    hideInternal(popped, hideInvoker, arg);
   }
 
   /* ------------------------------ derived -------------------------------- */

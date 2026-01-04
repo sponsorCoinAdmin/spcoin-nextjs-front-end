@@ -89,6 +89,57 @@ function formatDisplayStackItem(idxLabel: string, v: any): string {
   return `${idxLabel} { id: ${safeId}, name: "${name}" }`;
 }
 
+/**
+ * ✅ GUI-only transformation:
+ * Persisted structure is:
+ *   MAIN_TRADING_PANEL
+ *     TRADE_CONTAINER_HEADER
+ *       (overlays...)
+ *
+ * But the GUI should show overlays as siblings of TRADE_CONTAINER_HEADER under MAIN_TRADING_PANEL:
+ *   MAIN_TRADING_PANEL
+ *     TRADE_CONTAINER_HEADER
+ *     (overlays...)
+ *
+ * This does NOT change persisted state — only how the tree is rendered.
+ */
+function hoistTradeHeaderChildrenForGui(mainNode: any): any {
+  if (!looksLikeVirtualPanelNode(mainNode)) return mainNode;
+
+  const mainId = getVirtualId(mainNode);
+  if (Number(mainId) !== Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL)) return mainNode;
+
+  const mainChildren: any[] = Array.isArray(mainNode?.children) ? mainNode.children : [];
+  if (!mainChildren.length) return mainNode;
+
+  // Find TRADE_CONTAINER_HEADER inside MAIN_TRADING_PANEL.children
+  const idx = mainChildren.findIndex(
+    (c) =>
+      looksLikeVirtualPanelNode(c) &&
+      Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+  );
+  if (idx < 0) return mainNode;
+
+  const tradeHeader = mainChildren[idx];
+  const tradeKids: any[] = Array.isArray(tradeHeader?.children) ? tradeHeader.children : [];
+
+  // If it has no kids, nothing to hoist
+  if (!tradeKids.length) return mainNode;
+
+  // Clone TRADE_CONTAINER_HEADER but strip its children
+  const tradeHeaderLeaf = { ...tradeHeader, children: [] };
+
+  // MAIN children become: [ ...before, tradeHeaderLeaf, ...tradeKids, ...after ]
+  const nextChildren = [
+    ...mainChildren.slice(0, idx),
+    tradeHeaderLeaf,
+    ...tradeKids,
+    ...mainChildren.slice(idx + 1),
+  ];
+
+  return { ...mainNode, children: nextChildren };
+}
+
 const Branch: React.FC<BranchProps> = ({
   label,
   value,
@@ -107,13 +158,23 @@ const Branch: React.FC<BranchProps> = ({
   const { openPanel, closePanel } = usePanelTree();
 
   const isArray = Array.isArray(value);
-  const isObject = value !== null && typeof value === 'object' && !isArray;
+
+  /**
+   * ✅ GUI-only shaping of spCoinPanelTree (roots array).
+   * If this Branch node is the "spCoinPanelTree" array, transform only the MAIN_TRADING_PANEL root.
+   */
+  const guiValue =
+    isArray && label === 'spCoinPanelTree'
+      ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n))
+      : value;
+
+  const isObject = guiValue !== null && typeof guiValue === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
   // dot-path classifiers for *virtual* panel nodes
   const isPanelArrayItem =
     /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) &&
-    looksLikeVirtualPanelNode(value);
+    looksLikeVirtualPanelNode(guiValue);
 
   /**
    * ✅ displayStack items: always-open, no +/- and no nested fields
@@ -141,7 +202,7 @@ const Branch: React.FC<BranchProps> = ({
   const lastVisibleRef = useRef<boolean | undefined>(undefined);
   useEffect(() => {
     if (isPanelArrayItem) {
-      const vis = !!(value as any)?.visible;
+      const vis = !!(guiValue as any)?.visible;
       if (lastVisibleRef.current !== vis) {
         lastVisibleRef.current = vis;
         if (vis) {
@@ -151,12 +212,12 @@ const Branch: React.FC<BranchProps> = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPanelArrayItem, value?.visible, path, label]);
+  }, [isPanelArrayItem, (guiValue as any)?.visible, path, label]);
 
   // ✅ Render displayStack item rows as a single line (non-toggleable)
   if (isDisplayStackItem) {
     const lineClass = dense ? 'leading-tight' : 'leading-6';
-    const text = formatDisplayStackItem(label, value);
+    const text = formatDisplayStackItem(label, guiValue);
 
     return (
       <div
@@ -173,15 +234,15 @@ const Branch: React.FC<BranchProps> = ({
   // ──────────────────────────────────────────────────────────────
   if (isBranch) {
     const numEntries = isArray
-      ? (value as any[]).length
-      : Object.keys(value as object).length;
+      ? (guiValue as any[]).length
+      : Object.keys(guiValue as object).length;
     const hasEntries = numEntries > 0;
 
     // Expanded state:
     let expanded = false;
     if (hasEntries) {
       if (isPanelArrayItem) {
-        expanded = (value as any)?.visible === true;
+        expanded = (guiValue as any)?.visible === true;
       } else if (isChildrenContainer) {
         expanded = true;
       } else if (isDisplayStackContainer) {
@@ -194,10 +255,10 @@ const Branch: React.FC<BranchProps> = ({
 
     const onRowClick = () => {
       if (isPanelArrayItem) {
-        const panelId = getVirtualId(value);
+        const panelId = getVirtualId(guiValue);
         if (panelId == null) return;
 
-        const currentlyVisible = !!(value as any).visible;
+        const currentlyVisible = !!(guiValue as any).visible;
         const invoker = 'Branch:onRowClick(tree)';
 
         if (!currentlyVisible) {
@@ -216,10 +277,10 @@ const Branch: React.FC<BranchProps> = ({
 
     // Hide 'name' inside virtual panel node bodies (avoid duplication)
     // also hide 'id' and/or 'visible' based on env flags
-    const isVirtualNode = looksLikeVirtualPanelNode(value);
+    const isVirtualNode = looksLikeVirtualPanelNode(guiValue);
     const keys = isArray
-      ? (value as any[]).map((_, i) => String(i))
-      : Object.keys(value as object).filter((k) => {
+      ? (guiValue as any[]).map((_, i) => String(i))
+      : Object.keys(guiValue as object).filter((k) => {
           if (!isVirtualNode) return true;
           if (k === 'name') return false;
           // hide either identifier key if SHOW_IDS disabled
@@ -235,7 +296,7 @@ const Branch: React.FC<BranchProps> = ({
           {expanded &&
             keys.map((k) => {
               const childPath = `${path}.${k}`;
-              const childVal = (value as any[])[Number(k)];
+              const childVal = (guiValue as any[])[Number(k)];
 
               const childLabel = looksLikeVirtualPanelNode(childVal)
                 ? formatChildLabel(childVal, k)
@@ -268,7 +329,7 @@ const Branch: React.FC<BranchProps> = ({
           open={
             hasEntries
               ? isPanelArrayItem
-                ? (value as any)?.visible === true
+                ? (guiValue as any)?.visible === true
                 : expanded
               : undefined
           }
@@ -276,12 +337,12 @@ const Branch: React.FC<BranchProps> = ({
           onClick={onRowClick}
           dense={dense}
         />
-        {(isPanelArrayItem ? (value as any)?.visible === true : expanded) &&
+        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
             const childVal = isArray
-              ? (value as any[])[Number(k)]
-              : (value as any)[k];
+              ? (guiValue as any[])[Number(k)]
+              : (guiValue as any)[k];
 
             let childLabel = isArray ? `[${k}]` : k;
 
@@ -320,15 +381,15 @@ const Branch: React.FC<BranchProps> = ({
   const enumForKey = enumRegistry[label];
 
   const content =
-    enumForKey && typeof value === 'number' ? (
+    enumForKey && typeof guiValue === 'number' ? (
       <>
         {label === 'id' && !SHOW_IDS ? null : (
           <>
-            {`${label}(${value}): `}
+            {`${label}(${guiValue}): `}
             <span className="text-[#5981F3]">
-              {typeof enumForKey[value] === 'string'
-                ? enumForKey[value]
-                : `[${value}]`}
+              {typeof enumForKey[guiValue] === 'string'
+                ? enumForKey[guiValue]
+                : `[${guiValue}]`}
             </span>
           </>
         )}
@@ -336,7 +397,7 @@ const Branch: React.FC<BranchProps> = ({
     ) : label === 'visible' && !SHOW_VIS ? null : (
       <>
         {`${label}: `}
-        <span className="text-[#5981F3]">{quoteIfString(value)}</span>
+        <span className="text-[#5981F3]">{quoteIfString(guiValue)}</span>
       </>
     );
 

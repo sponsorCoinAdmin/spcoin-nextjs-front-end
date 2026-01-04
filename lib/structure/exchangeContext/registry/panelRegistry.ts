@@ -82,6 +82,9 @@ const TRADE_HEADER_CHILDREN: SP[] = [
   SP.MANAGE_AGENT_PANEL,
   SP.MANAGE_RECIPIENT_PANEL,
 
+  // ✅ Shared detail panel should live at the same level as other overlays (not nested)
+  SP.MANAGE_SPONSOR_PANEL,
+
   // Overlay list (not persisted)
   SP.SPONSOR_LIST_SELECT_PANEL,
 ];
@@ -130,30 +133,30 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_AGENTS_PANEL, kind: 'panel' },
 
   /**
-   * Claim Rewards list can drill into Sponsor detail
+   * Claim Rewards list (no longer nests sponsor detail structurally)
+   * Navigation to sponsor detail is handled by action model, not registry nesting.
    */
   {
     id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
     kind: 'panel',
-    children: [SP.MANAGE_SPONSOR_PANEL],
   },
 
   { id: SP.MANAGE_AGENT_PANEL, kind: 'panel' },
   { id: SP.MANAGE_RECIPIENT_PANEL, kind: 'panel' },
 
   /**
-   * Unstaking can drill into Sponsor detail
+   * Unstaking (no longer nests sponsor detail structurally)
+   * Navigation to sponsor detail is handled by action model, not registry nesting.
    */
   {
     id: SP.UNSTAKING_SPCOINS_PANEL,
     kind: 'panel',
-    children: [SP.MANAGE_SPONSOR_PANEL],
   },
 
   { id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' },
 
   /**
-   * Shared detail panel
+   * Shared detail panel (mounted once at overlay level)
    */
   { id: SP.MANAGE_SPONSOR_PANEL, kind: 'panel' },
 
