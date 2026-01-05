@@ -32,7 +32,10 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
 /** Left-side component override mapper */
 type LeftFactory = () => React.ReactNode;
 const headerLeftOverrides = new Map<SP_COIN_DISPLAY, LeftFactory>();
-export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
+export function useRegisterHeaderLeft(
+  panel: SP_COIN_DISPLAY,
+  factory?: LeftFactory,
+) {
   useEffect(() => {
     if (!factory) return;
     headerLeftOverrides.set(panel, factory);
@@ -80,8 +83,6 @@ function titleFor(display: SP_COIN_DISPLAY): string {
       return 'Un-Staking Your Sponsor Coins';
     case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
       return 'Staking Your Sponsor Coins';
-    case SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS:
-      return 'Pending Rewards';
     default:
       return 'Main Panel Header';
   }
@@ -91,7 +92,12 @@ export function useHeaderController() {
   const { closePanel } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Visibility is used ONLY for computing header title/left (not for nav).
+  /**
+   * Visibility is used ONLY for computing header title/left (not for nav).
+   *
+   * ✅ Pending Rewards is a LOCAL/INLINE toggle and must NOT drive header selection.
+   * We intentionally do NOT read it here to avoid treating it like a nav/display member.
+   */
   const vis = {
     sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
     sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
@@ -110,9 +116,6 @@ export function useHeaderController() {
     manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
     manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
 
-    // ✅ Normal stack display now
-    pendingRewards: usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS),
-
     manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL),
     manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL),
 
@@ -130,8 +133,6 @@ export function useHeaderController() {
     if (vis.manageAgentDetail) return SP_COIN_DISPLAY.MANAGE_AGENT_PANEL;
     if (vis.manageRecipientDetail) return SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL;
     if (vis.manageSponsorDetail) return SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
-
-    if (vis.pendingRewards) return SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS;
 
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
@@ -160,23 +161,34 @@ export function useHeaderController() {
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
   /**
-   * ✅ NEW ARCH RULE:
-   * Header X = POP stack (close top of persisted displayStack) exactly once.
+   * ✅ Header X = POP stack (close top of persisted displayStack) exactly once.
    *
-   * Also:
-   * - suppress next overlay close attempt to prevent double-close (header + backdrop).
+   * IMPORTANT:
+   * This handler is designed to be callable from:
+   * - onPointerDownCapture
+   * - onMouseDownCapture
+   * - onClick
+   *
+   * so suppression + stopPropagation can run BEFORE backdrop/document handlers.
    */
+  type AnyCloseEvent = {
+    preventDefault?: () => void;
+    stopPropagation?: () => void;
+  };
+
   const onClose = useCallback(
-    (e?: React.MouseEvent) => {
+    (e?: AnyCloseEvent) => {
+      // one-shot suppress next overlay close attempt (header + backdrop)
       suppressNextOverlayClose('HeaderController:onClose(pop)', 'HeaderController');
 
       try {
-        e?.preventDefault();
-        e?.stopPropagation();
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
       } catch {}
 
-      // ✅ Legacy form: closePanel(invoker, arg) => pop-top inside usePanelTree
-      closePanel('HeaderController:onClose(pop)', e);
+      // Pop top-of-stack (legacy API: closePanel(invoker, event?))
+      // If your closePanel does NOT need the event, you can remove the 2nd arg safely.
+      closePanel('HeaderController:onClose(pop)', e as any);
     },
     [closePanel],
   );

@@ -21,6 +21,7 @@ export type PanelDef = {
  * Add a new panel by inserting one object here.
  *
  * ✅ Manage panels are first-class overlays (no container/group).
+ * ✅ Pending Rewards is NOT an overlay: it is a local inline child of Manage Sponsorships.
  */
 export const PANELS: readonly PanelDef[] = [
   // Root app container for trading
@@ -99,13 +100,20 @@ export const PANELS: readonly PanelDef[] = [
     group: 'mainOverlay',
     defaultVisible: false,
   },
+
+  /**
+   * ✅ Pending Rewards is LOCAL/INLINE state under Manage Sponsorships.
+   * - NOT in mainOverlay radio group
+   * - NOT a stack overlay
+   * - Must not be auto-hidden by overlay switching
+   */
   {
     id: SP.MANAGE_PENDING_REWARDS,
     kind: 'panel',
-    parent: SP.TRADE_CONTAINER_HEADER,
-    group: 'mainOverlay',
+    parent: SP.MANAGE_SPONSORSHIPS_PANEL,
     defaultVisible: false,
   },
+
   {
     id: SP.UNSTAKING_SPCOINS_PANEL,
     kind: 'panel',

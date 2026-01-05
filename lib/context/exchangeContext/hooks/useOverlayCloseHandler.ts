@@ -67,18 +67,13 @@ function consumeSuppression(): { suppressed: boolean; why?: string; tag?: string
 /**
  * useOverlayCloseHandler
  *
- * New architecture:
- * - Overlay close (backdrop/back/back) is a STACK POP.
- * - This MUST trigger radio-restore behavior in panelTreeCallbacks.
+ * ✅ Simplified rule:
+ * - Backdrop/overlay close ALWAYS pops the top of displayStack.
  *
- * ✅ Required fix:
- * - panelTreeCallbacks treats invokers starting with "NAV_CLOSE:" as POP.
- * - Therefore the invoker we pass to closePanel(...) MUST start with "NAV_CLOSE:"
- *   so restorePrevRadioMember() runs when appropriate.
+ * Pending Rewards is a LOCAL/INLINE toggle and must NOT participate
+ * in overlay close semantics (no two-step close).
  *
- * NOTE:
- * - We still call the legacy overload closePanel(invoker, arg) (no panel),
- *   which pops the top of settings.displayStack and hides it.
+ * Pending state is persisted separately via the panel-tree visibility store.
  */
 export function useOverlayCloseHandler() {
   const { closePanel } = usePanelTree();

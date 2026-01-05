@@ -62,6 +62,7 @@ const TRADING_CHILDREN: SP[] = [
  * Primary overlay container under MAIN_TRADING_PANEL
  *
  * ✅ Manage panels are first-class overlays mounted here.
+ * ✅ EXCEPTION: MANAGE_PENDING_REWARDS is NOT a sibling overlay; it is nested under MANAGE_SPONSORSHIPS_PANEL.
  */
 const TRADE_HEADER_CHILDREN: SP[] = [
   SP.TRADING_STATION_PANEL,
@@ -73,7 +74,7 @@ const TRADE_HEADER_CHILDREN: SP[] = [
 
   // ✅ First-class "manage" overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
-  SP.MANAGE_PENDING_REWARDS,
+  // ❌ SP.MANAGE_PENDING_REWARDS,  // moved under MANAGE_SPONSORSHIPS_PANEL
   SP.UNSTAKING_SPCOINS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
   SP.MANAGE_RECIPIENTS_PANEL,
@@ -126,7 +127,12 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true },
 
   /* First-class overlay panels */
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel' },
+  {
+    id: SP.MANAGE_SPONSORSHIPS_PANEL,
+    kind: 'panel',
+    // ✅ Pending Rewards is a nested sub-container within Manage Sponsorships
+    children: [SP.MANAGE_PENDING_REWARDS],
+  },
   { id: SP.MANAGE_PENDING_REWARDS, kind: 'panel' },
 
   { id: SP.MANAGE_RECIPIENTS_PANEL, kind: 'panel' },

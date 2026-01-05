@@ -97,6 +97,20 @@ function displayStackNodesToIdsStrict(raw: unknown): SP_COIN_DISPLAY[] {
     .map((x) => x as SP_COIN_DISPLAY);
 }
 
+/* ---------------- tiny helpers ---------------- */
+
+function setVisible(
+  flat: PanelEntry[],
+  panel: SP_COIN_DISPLAY,
+  visible: boolean,
+  withName: (e: PanelEntry) => PanelEntry,
+) {
+  const n = Number(panel);
+  return flat.map((e) =>
+    Number(e.panel) === n ? { ...withName(e), visible } : e,
+  );
+}
+
 /* ---------------- types ---------------- */
 
 export type SetExchangeContextFn<TState = any> = (
@@ -157,6 +171,24 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   // Keep imported symbol used even in the new model (avoid TS "declared but never used")
   void ensureManageContainerAndDefaultChild;
 
+  /**
+   * ✅ Local-only panel that must NEVER be treated as:
+   * - a stack component
+   * - a global overlay radio member
+   * - a manage branch member that gets auto-closed
+   *
+   * BUT: it still must be able to flip visibility via showPanel/hidePanel,
+   * which may call openPanel/closePanel internally.
+   */
+  const isPendingRewards = (p: SP_COIN_DISPLAY) =>
+    Number(p) === Number(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+
+  /**
+   * ✅ Wrap manage-branch membership so closeManageBranch can never touch Pending Rewards.
+   */
+  const isManageAnyChildNoPending = (p: SP_COIN_DISPLAY) =>
+    !isPendingRewards(p) && isManageAnyChild(p);
+
   let warned = false;
   const safeDiffAndPublish = (
     prev: Record<number, boolean>,
@@ -185,6 +217,30 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   ) => {
     logAction('openPanel', panel, invoker);
     if (!known.has(Number(panel))) return;
+
+    // ✅ Pending Rewards: treat "open" as a pure visibility toggle (NO radio, NO stack).
+    if (isPendingRewards(panel)) {
+      schedule(() => {
+        setExchangeContext((prev) => {
+          const flat0 = flattenPanelTree(
+            (prev as any)?.settings?.spCoinPanelTree,
+            known,
+          );
+
+          let next = ensurePanelPresent(flat0, SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+          next = setVisible(
+            next,
+            SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+            true,
+            withName,
+          );
+
+          safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
+          return writeFlatTree(prev as any, next) as any;
+        });
+      });
+      return;
+    }
 
     schedule(() => {
       setExchangeContext((prev) => {
@@ -264,9 +320,15 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         if (openingGlobal) {
           let next = applyGlobalRadio(flat, overlays, panel, withName);
 
+          // ✅ When switching away from Manage, closeManageBranch must NOT touch Pending Rewards.
           if (Number(panel) !== Number(manageCfg.manageContainer)) {
             manageScopedHistoryRef.current = [];
-            next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
+            next = closeManageBranch(
+              next,
+              manageCfg,
+              isManageAnyChildNoPending,
+              withName,
+            );
           }
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
@@ -292,6 +354,30 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   ) => {
     logAction('closePanel', panel, invoker);
     if (!known.has(Number(panel))) return;
+
+    // ✅ Pending Rewards: treat "close" as pure visibility toggle OFF (NO pop/restore).
+    if (isPendingRewards(panel)) {
+      schedule(() => {
+        setExchangeContext((prev) => {
+          const flat0 = flattenPanelTree(
+            (prev as any)?.settings?.spCoinPanelTree,
+            known,
+          );
+
+          let next = ensurePanelPresent(flat0, SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+          next = setVisible(
+            next,
+            SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
+            false,
+            withName,
+          );
+
+          safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
+          return writeFlatTree(prev as any, next) as any;
+        });
+      });
+      return;
+    }
 
     schedule(() => {
       setExchangeContext((prev) => {
@@ -322,7 +408,12 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
           if (isGlobalOverlay(panelToClose)) {
             if (Number(panelToClose) === Number(manageCfg.manageContainer)) {
               manageScopedHistoryRef.current = [];
-              next = closeManageBranch(next, manageCfg, isManageAnyChild, withName);
+              next = closeManageBranch(
+                next,
+                manageCfg,
+                isManageAnyChildNoPending,
+                withName,
+              );
             }
 
             // ✅ Allow "close all overlays" when enabled

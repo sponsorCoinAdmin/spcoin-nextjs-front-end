@@ -29,6 +29,9 @@ export type ManageScopeConfig = {
   sponsorAllowedParents: Set<number>;
 };
 
+const isPendingRewards = (p: SP_COIN_DISPLAY) =>
+  Number(p) === Number(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
+
 export function computeManageDescendantsSet(
   cfg: Pick<ManageScopeConfig, 'known' | 'children' | 'manageContainer'>,
 ) {
@@ -50,6 +53,11 @@ export function computeManageDescendantsSet(
 
   // Do not include the "container" itself in descendants.
   out.delete(Number(cfg.manageContainer));
+
+  // ✅ Pending Rewards is local-only; it must not be considered a "manage descendant"
+  // for branch-close purposes (otherwise it gets auto-hidden on leaving Manage).
+  out.delete(Number(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS));
+
   return out;
 }
 
@@ -62,7 +70,12 @@ export function makeManagePredicates(
   const isManageRadioChild = (p: SP_COIN_DISPLAY) =>
     manageScopedSet.has(Number(p)) && Number(p) !== Number(cfg.manageSponsorPanel);
 
-  // NEW model: usually false unless you still nest children under manageContainer in registry.
+  /**
+   * NEW model: usually false unless you still nest children under manageContainer in registry.
+   *
+   * Note:
+   * - Pending Rewards is already excluded from manageDescendantsSet in computeManageDescendantsSet().
+   */
   const isManageAnyChild = (p: SP_COIN_DISPLAY) => manageDescendantsSet.has(Number(p));
 
   return { isManageRadioChild, isManageAnyChild };
@@ -75,6 +88,9 @@ export function makeManagePredicates(
  * Compatibility behavior:
  * - Always hides manageContainer (landing panel).
  * - Also hides any descendants IF your registry still nests children under manageContainer.
+ *
+ * ✅ Pending Rewards exception:
+ * - Pending is a local/inline toggle and must NOT be force-hidden by branch close.
  */
 export function closeManageBranch(
   arr: PanelEntry[],
@@ -84,6 +100,10 @@ export function closeManageBranch(
 ) {
   return arr.map((e) => {
     if (e.panel === cfg.manageContainer) return { ...withName(e), visible: false };
+
+    // ✅ Hard safety: never auto-hide Pending Rewards due to branch close
+    if (isPendingRewards(e.panel)) return e;
+
     if (isManageAnyChild(e.panel)) return { ...withName(e), visible: false };
     return e;
   });

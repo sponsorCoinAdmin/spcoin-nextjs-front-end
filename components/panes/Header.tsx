@@ -82,10 +82,9 @@ export default function Header() {
     const isActive = pathname === href && hoveredTab === null;
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
-      ${
-        isHovered || isActive
-          ? 'bg-[#222a3a] text-[#5981F3]'
-          : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'
+      ${isHovered || isActive
+        ? 'bg-[#222a3a] text-[#5981F3]'
+        : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'
       }
     `;
   };
@@ -162,19 +161,24 @@ export default function Header() {
                         '!text-orange-400 hover:!text-orange-300 focus:!text-orange-300 font-extrabold',
                       ].join(' ')}
                       style={{ color: '#fb923c' }}
-                      onClick={(e) => {
-                        // ✅ Critical ordering:
-                        // 1) suppress overlay close (one-shot)
-                        // 2) stop event propagation
-                        // 3) close tab
-                        suppressNextOverlayClose(
-                          `header-tab-x:${href}`,
-                          'Header:TabX',
-                        );
 
+                      // ✅ IMPORTANT: run suppression EARLY (pointer down), in CAPTURE phase
+                      onPointerDownCapture={(e) => {
+                        suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
                         e.preventDefault();
                         e.stopPropagation();
+                      }}
+                      // (optional) extra belt-and-suspenders for older mouse-only listeners
+                      onMouseDownCapture={(e) => {
+                        suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
 
+                      onClick={(e) => {
+                        // keep this too (harmless), but now it's not the first line of defense
+                        e.preventDefault();
+                        e.stopPropagation();
                         closeTab(href);
                       }}
                     >
