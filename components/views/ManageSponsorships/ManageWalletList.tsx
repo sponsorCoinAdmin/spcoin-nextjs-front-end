@@ -214,6 +214,7 @@ export default function ManageWalletList({
   const cell = 'px-3 text-sm align-middle';
   const cellCenter = `${cell} text-center`;
 
+  // ✅ Desired zebra colors (keep these as the “source of truth”)
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
@@ -236,7 +237,7 @@ export default function ManageWalletList({
     listType === LIST_TYPE.SPONSOR_UNSPONSOR
       ? 'Unsponsor'
       : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-        ? 'ClaimZZZZ'
+        ? "Claim Rewards"
         : 'Action';
 
   const onRowEnter = (name?: string | null) => {
@@ -343,6 +344,7 @@ export default function ManageWalletList({
             padding-right: 1px !important;
           }
 
+          /* ✅ ACTION BUTTONS */
           #${tableId} .ms-claim--orange {
             background-color: #ec8840ff !important;
             color: #0f172a !important;
@@ -368,6 +370,14 @@ export default function ManageWalletList({
           #${tableId} .ms-claim--green:hover {
             background-color: #22c55e !important;
             color: #0f172a !important;
+          }
+
+          /* ✅ FIX: FORCE zebra backgrounds at high specificity (beats global/table defaults) */
+          #${tableId} tbody tr:nth-child(odd) > td {
+            background-color: rgba(56, 78, 126, 0.35) !important;
+          }
+          #${tableId} tbody tr:nth-child(even) > td {
+            background-color: rgba(156, 163, 175, 0.25) !important;
           }
 
           /* ✅ Single tooltip (white bg, black text) */
@@ -420,6 +430,8 @@ export default function ManageWalletList({
 
             <tbody>
               {walletList.map((w, i) => {
+                // keep your Tailwind class markers (useful in DOM),
+                // but actual background is now enforced by the scoped CSS above.
                 const zebra = i % 2 === 0 ? zebraA : zebraB;
                 const actionClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
 
@@ -429,7 +441,8 @@ export default function ManageWalletList({
                     : (() => {
                       const a = (w as any)?.address as Record<string, unknown> | undefined;
                       if (!a) return 'N/A';
-                      const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+                      const cand =
+                        a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
                       try {
                         return cand ? String(cand) : JSON.stringify(a);
                       } catch {
@@ -502,8 +515,12 @@ export default function ManageWalletList({
                 return (
                   <tr className="mw-total-row">
                     <td className={`${zebra} p-0`}>
-                      <div className={`mw-firstpad ${cell} w-full inline-flex items-center justify-center`}>
-                        <span className="text-xl md:text-2xl font-bold tracking-wide ml-[2px]">Total</span>
+                      <div
+                        className={`mw-firstpad ${cell} w-full inline-flex items-center justify-center`}
+                      >
+                        <span className="text-xl md:text-2xl font-bold tracking-wide ml-[2px]">
+                          Total
+                        </span>
                       </div>
                     </td>
                     <td className={`${zebra} p-0`}>
@@ -543,4 +560,3 @@ export default function ManageWalletList({
     </>
   );
 }
-
