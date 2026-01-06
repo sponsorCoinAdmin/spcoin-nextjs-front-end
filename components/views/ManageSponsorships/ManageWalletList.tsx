@@ -203,82 +203,82 @@ export default function ManageWalletList({
     debugLog.log?.(msg);
     // eslint-disable-next-line no-alert
     alert(msg);
-}, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
+  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
 
-// Scoped ids
-const wrapperId = `${idPrefix}Wrapper`;
-const tableId = `${idPrefix}Table`;
+  // Scoped ids
+  const wrapperId = `${idPrefix}Wrapper`;
+  const tableId = `${idPrefix}Table`;
 
-// Styling helpers
-const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-const cell = 'px-3 text-sm align-middle';
-const cellCenter = `${cell} text-center`;
+  // Styling helpers
+  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const cell = 'px-3 text-sm align-middle';
+  const cellCenter = `${cell} text-center`;
 
-const zebraA = 'bg-[rgba(56,78,126,0.35)]';
-const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
+  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
-// ✅ 3-column layout: (Logo) | (Staked/Pending) | Action
-const middleHeaderLabel =
-  listType === LIST_TYPE.SPONSOR_UNSPONSOR
-    ? 'Staked Coins'
-    : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-      ? 'Pending Coins'
-      : 'Coins';
+  // ✅ 3-column layout: (Logo) | (Staked/Pending) | Action
+  const middleHeaderLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Staked Coins'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+        ? 'Pending Coins'
+        : 'Coins';
 
-const actionHeaderLabel =
-  listType === LIST_TYPE.SPONSOR_UNSPONSOR
-    ? 'Unsponsor'
-    : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-      ? 'Rewards'
-      : 'Action';
+  const actionHeaderLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Unsponsor'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+        ? 'Rewards'
+        : 'Action';
 
-const actionButtonLabel =
-  listType === LIST_TYPE.SPONSOR_UNSPONSOR
-    ? 'Unsponsor'
-    : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-      ? 'Claim'
-      : 'Action';
+  const actionButtonLabel =
+    listType === LIST_TYPE.SPONSOR_UNSPONSOR
+      ? 'Unsponsor'
+      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
+        ? 'ClaimZZZZ'
+        : 'Action';
 
-const onRowEnter = (name?: string | null) => {
-  setTip((t) => ({ ...t, show: true, text: name ?? '' }));
-};
+  const onRowEnter = (name?: string | null) => {
+    setTip((t) => ({ ...t, show: true, text: name ?? '' }));
+  };
 
-const onRowMove: React.MouseEventHandler = (e) => {
-  setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
-};
+  const onRowMove: React.MouseEventHandler = (e) => {
+    setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
+  };
 
-const onRowLeave = () => {
-  setTip((t) => ({ ...t, show: false }));
-};
+  const onRowLeave = () => {
+    setTip((t) => ({ ...t, show: false }));
+  };
 
-// Snapshot per render (cheap + useful)
-debugLog.log?.('[render snapshot]', {
-  showToDo,
-  roleLabel,
-  idPrefix,
-  containerType,
-  containerLabel: SP_COIN_DISPLAY[containerType],
-  listType,
-  listTypeLabel: LIST_TYPE[listType],
-  walletListLen: walletList.length,
-  pendingRef: pendingClaimRef.current,
-});
+  // Snapshot per render (cheap + useful)
+  debugLog.log?.('[render snapshot]', {
+    showToDo,
+    roleLabel,
+    idPrefix,
+    containerType,
+    containerLabel: SP_COIN_DISPLAY[containerType],
+    listType,
+    listTypeLabel: LIST_TYPE[listType],
+    walletListLen: walletList.length,
+    pendingRef: pendingClaimRef.current,
+  });
 
-return (
-  <>
-    <AddressSelect
-      defaultAddress={undefined}
-      bypassDefaultFsm
-      callingParent={'ManageWallet'}
-      useActiveAddr={true}
-      shortAddr={true}
-      preText={'Deposit Account:'}
-    />
-
-    {/* ✅ No mode gating yet: always render the list */}
+  return (
     <>
-      {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
-      <style jsx>{`
+      <AddressSelect
+        defaultAddress={undefined}
+        bypassDefaultFsm
+        callingParent={'ManageWallet'}
+        useActiveAddr={true}
+        shortAddr={true}
+        preText={'Deposit Account:'}
+      />
+
+      {/* ✅ No mode gating yet: always render the list */}
+      <>
+        {/* Scoped styles for this instance (hide scrollbars, sticky header) */}
+        <style jsx>{`
           #${wrapperId} {
             border-color: #000 !important;
             -ms-overflow-style: none;
@@ -390,157 +390,157 @@ return (
           }
         `}</style>
 
-      {/* Tooltip */}
-      {tip.show && tip.text ? (
-        <div className="mw-tooltip" style={{ left: tip.x, top: tip.y }}>
-          {tip.text}
+        {/* Tooltip */}
+        {tip.show && tip.text ? (
+          <div className="mw-tooltip" style={{ left: tip.x, top: tip.y }}>
+            {tip.text}
+          </div>
+        ) : null}
+
+        {/* Scrollable list whose height is capped by viewport, like DataListSelect */}
+        <div
+          id={wrapperId}
+          className="mb-0 -mt-[0px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+          data-list-type={LIST_TYPE[listType]}
+        >
+          <table id={tableId} className="min-w-full border-collapse">
+            <thead>
+              <tr className="border-b border-black">
+                <th scope="col" className={th}>
+                  Logo
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  {middleHeaderLabel}
+                </th>
+                <th scope="col" className={`${th} text-center`}>
+                  {actionHeaderLabel}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {walletList.map((w, i) => {
+                const zebra = i % 2 === 0 ? zebraA : zebraB;
+                const actionClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
+
+                const addressText =
+                  typeof (w as any).address === 'string'
+                    ? (w as any).address
+                    : (() => {
+                      const a = (w as any)?.address as Record<string, unknown> | undefined;
+                      if (!a) return 'N/A';
+                      const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+                      try {
+                        return cand ? String(cand) : JSON.stringify(a);
+                      } catch {
+                        return 'N/A';
+                      }
+                    })();
+
+                return (
+                  <tr key={addressText}>
+                    <td className={`${zebra} p-0`}>
+                      <button
+                        type="button"
+                        className={`mw-firstpad ${cell} w-full inline-flex flex-col items-center justify-center hover:opacity-90 focus:outline-none`}
+                        onMouseEnter={() => onRowEnter(w?.name ?? '')}
+                        onMouseMove={onRowMove}
+                        onMouseLeave={onRowLeave}
+                        onClick={() => {
+                          debugLog.log?.('[row click]', {
+                            roleLabel,
+                            containerType,
+                            containerLabel: SP_COIN_DISPLAY[containerType],
+                            listType,
+                            listTypeLabel: LIST_TYPE[listType],
+                            rowIndex: i,
+                            address: addressText,
+                            name: w?.name ?? 'N/A',
+                          });
+                          setWalletCallBack(w);
+                        }}
+                        aria-label={`Open ${roleLabel}s reconfigure`}
+                        data-role={roleLabel}
+                        data-address={addressText}
+                      >
+                        <Image
+                          src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
+                          alt={`${w.name ?? 'Wallet'} logo`}
+                          width={53}
+                          height={53}
+                          className="h-[60px] w-[53px] px-[5px] object-contain rounded"
+                        />
+                      </button>
+                    </td>
+
+                    <td className={`${zebra} p-0`}>
+                      <div className={`${cellCenter} flex items-center justify-center`}>0</div>
+                    </td>
+
+                    <td className={`${zebra} p-0`}>
+                      <div className={`${cellCenter} flex items-center justify-center`}>
+                        <button
+                          type="button"
+                          className={actionClass}
+                          aria-label={`${actionButtonLabel} for ${addressText}`}
+                          onClick={() => claimRewards(accountType, i)}
+                        >
+                          {actionButtonLabel}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* Total row */}
+              {(() => {
+                const isA = walletList.length % 2 === 0;
+                const zebra = isA ? zebraA : zebraB;
+                const actionClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
+
+                return (
+                  <tr className="mw-total-row">
+                    <td className={`${zebra} p-0`}>
+                      <div className={`mw-firstpad ${cell} w-full inline-flex items-center justify-center`}>
+                        <span className="text-xl md:text-2xl font-bold tracking-wide ml-[2px]">Total</span>
+                      </div>
+                    </td>
+                    <td className={`${zebra} p-0`}>
+                      <div className={`${cellCenter} flex items-center justify-center`}>0</div>
+                    </td>
+                    <td className={`${zebra} p-0`}>
+                      <div className={`${cellCenter} flex items-center justify-center`}>
+                        <button
+                          type="button"
+                          className={actionClass}
+                          aria-label={`${actionButtonLabel} total`}
+                          onClick={() => claimRewards(accountType, -1)}
+                        >
+                          {actionButtonLabel}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })()}
+            </tbody>
+          </table>
         </div>
-      ) : null}
+      </>
 
-      {/* Scrollable list whose height is capped by viewport, like DataListSelect */}
-      <div
-        id={wrapperId}
-        className="mb-0 -mt-[0px] max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto rounded-xl border border-black"
-        data-list-type={LIST_TYPE[listType]}
-      >
-        <table id={tableId} className="min-w-full border-collapse">
-          <thead>
-            <tr className="border-b border-black">
-              <th scope="col" className={th}>
-                Logo
-              </th>
-              <th scope="col" className={`${th} text-center`}>
-                {middleHeaderLabel}
-              </th>
-              <th scope="col" className={`${th} text-center`}>
-                {actionHeaderLabel}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {walletList.map((w, i) => {
-              const zebra = i % 2 === 0 ? zebraA : zebraB;
-              const actionClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
-
-              const addressText =
-                typeof (w as any).address === 'string'
-                  ? (w as any).address
-                  : (() => {
-                    const a = (w as any)?.address as Record<string, unknown> | undefined;
-                    if (!a) return 'N/A';
-                    const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-                    try {
-                      return cand ? String(cand) : JSON.stringify(a);
-                    } catch {
-                      return 'N/A';
-                    }
-                  })();
-
-              return (
-                <tr key={addressText}>
-                  <td className={`${zebra} p-0`}>
-                    <button
-                      type="button"
-                      className={`mw-firstpad ${cell} w-full inline-flex flex-col items-center justify-center hover:opacity-90 focus:outline-none`}
-                      onMouseEnter={() => onRowEnter(w?.name ?? '')}
-                      onMouseMove={onRowMove}
-                      onMouseLeave={onRowLeave}
-                      onClick={() => {
-                        debugLog.log?.('[row click]', {
-                          roleLabel,
-                          containerType,
-                          containerLabel: SP_COIN_DISPLAY[containerType],
-                          listType,
-                          listTypeLabel: LIST_TYPE[listType],
-                          rowIndex: i,
-                          address: addressText,
-                          name: w?.name ?? 'N/A',
-                        });
-                        setWalletCallBack(w);
-                      }}
-                      aria-label={`Open ${roleLabel}s reconfigure`}
-                      data-role={roleLabel}
-                      data-address={addressText}
-                    >
-                      <Image
-                        src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                        alt={`${w.name ?? 'Wallet'} logo`}
-                        width={53}
-                        height={53}
-                        className="h-[60px] w-[53px] px-[5px] object-contain rounded"
-                      />
-                    </button>
-                  </td>
-
-                  <td className={`${zebra} p-0`}>
-                    <div className={`${cellCenter} flex items-center justify-center`}>0</div>
-                  </td>
-
-                  <td className={`${zebra} p-0`}>
-                    <div className={`${cellCenter} flex items-center justify-center`}>
-                      <button
-                        type="button"
-                        className={actionClass}
-                        aria-label={`${actionButtonLabel} for ${addressText}`}
-                        onClick={() => claimRewards(accountType, i)}
-                      >
-                        {actionButtonLabel}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-
-            {/* Total row */}
-            {(() => {
-              const isA = walletList.length % 2 === 0;
-              const zebra = isA ? zebraA : zebraB;
-              const actionClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
-
-              return (
-                <tr className="mw-total-row">
-                  <td className={`${zebra} p-0`}>
-                    <div className={`mw-firstpad ${cell} w-full inline-flex items-center justify-center`}>
-                      <span className="text-xl md:text-2xl font-bold tracking-wide ml-[2px]">Total</span>
-                    </div>
-                  </td>
-                  <td className={`${zebra} p-0`}>
-                    <div className={`${cellCenter} flex items-center justify-center`}>0</div>
-                  </td>
-                  <td className={`${zebra} p-0`}>
-                    <div className={`${cellCenter} flex items-center justify-center`}>
-                      <button
-                        type="button"
-                        className={actionClass}
-                        aria-label={`${actionButtonLabel} total`}
-                        onClick={() => claimRewards(accountType, -1)}
-                      >
-                        {actionButtonLabel}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })()}
-          </tbody>
-        </table>
-      </div>
+      {/* 🔴 ToDo overlay (click the red text to dismiss) */}
+      {showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={doToDo}
+        />
+      )}
     </>
-
-    {/* 🔴 ToDo overlay (click the red text to dismiss) */}
-    {showToDo && (
-      <ToDo
-        show
-        message="ToDo"
-        opacity={0.5}
-        color="#ff1a1a"
-        zIndex={2000}
-        onDismiss={doToDo}
-      />
-    )}
-  </>
-);
+  );
 }
 

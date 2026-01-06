@@ -365,7 +365,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                             aria-label="Claim Sponsors rewards"
                             onClick={() => claimRewards(AccountType.SPONSOR)}
                           >
-                            Claim
+                            Claim All
                           </button>
                         </div>
                       </td>
@@ -399,7 +399,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                             aria-label="Claim Recipients rewards"
                             onClick={() => claimRewards(AccountType.RECIPIENT)}
                           >
-                            Claim
+                            Claim All
                           </button>
                         </div>
                       </td>
@@ -433,7 +433,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                             aria-label="Claim Agents rewards"
                             onClick={() => claimRewards(AccountType.AGENT)}
                           >
-                            Claim
+                            Claim All
                           </button>
                         </div>
                       </td>
