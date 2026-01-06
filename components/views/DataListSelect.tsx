@@ -41,6 +41,11 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const wallets = useMemo<WalletAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
   const tokens = useMemo<TokenFeedItem[]>(() => feedData.tokens ?? [], [feedData.tokens]);
 
+  // ✅ Zebra row backgrounds (Tailwind arbitrary values)
+  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
+  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+  const zebraForIndex = (i: number) => (i % 2 === 0 ? zebraA : zebraB);
+
   // FSM / selection bridge (unchanged except explicit manualEntry=false when programmatic)
   const {
     handleHexInputChange,
@@ -53,11 +58,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
 
-  const programmaticReady = useEnsureBoolWhen(
-    [manualEntry, setManualEntry],
-    false,
-    enforceProgrammatic
-  );
+  const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
   useEffect(() => {
     debugLog.log?.('[mount]', {
@@ -147,17 +148,17 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   );
 
   const wrapperClass =
-    'flex flex-col flex-1 min-h-0 overflow-y-auto bg-[#243056] text-[#5981F3] rounded-[20px] p-2.5 box-border';
+    'flex flex-col flex-1 min-h-0 overflow-y-auto overflow-hidden bg-[#243056] text-[#5981F3] rounded-[20px] p-0 box-border';
 
   const renderEmptyState = (message: string) => (
-    <div className='flex flex-1 items-center justify-center'>
+    <div className="flex flex-1 items-center justify-center">
       <p>{message}</p>
     </div>
   );
 
   const isAccountFeed =
-    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || 
-    feedType === FEED_TYPE.AGENT_ACCOUNTS || 
+    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+    feedType === FEED_TYPE.AGENT_ACCOUNTS ||
     feedType === FEED_TYPE.SPONSOR_ACCOUNTS;
 
   return (
@@ -172,26 +173,44 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
         }
       `}</style>
 
-      <div id='DataListWrapper' className={wrapperClass}>
+      <div id="DataListWrapper" className={wrapperClass}>
+        {/* ✅ Sticky header */}
+        {/* Fixed header (matches row layout: left content + right meta button area) */}
+        <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
+          <div className="w-full flex justify-between px-5 py-2">
+            <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
+              Token
+            </div>
+
+            {/* Meta label centered over the right-side meta button column */}
+            <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
+              Meta
+            </div>
+          </div>
+        </div>
+
         {isAccountFeed ? (
-          loading
-            ? renderEmptyState('Loading accounts…')
-            : wallets.length === 0
-            ? renderEmptyState('No accounts available.')
-            : wallets.map((wallet) => (
+          loading ? (
+            renderEmptyState('Loading accounts…')
+          ) : wallets.length === 0 ? (
+            renderEmptyState('No accounts available.')
+          ) : (
+            wallets.map((wallet, i) => (
+              <div key={wallet.address} className={zebraForIndex(i)}>
                 <AccountListItem
-                  key={wallet.address}
                   account={wallet}
                   onPick={handlePickAddress}
                   role={feedType === FEED_TYPE.AGENT_ACCOUNTS ? 'agent' : 'recipient'}
                 />
-              ))
+              </div>
+            ))
+          )
         ) : loading ? (
           renderEmptyState('Loading tokens…')
         ) : tokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (
-          tokens.map((token) => {
+          tokens.map((token, i) => {
             // Ensure TokenListItem receives required string props
             const safeName: string =
               token.name ??
@@ -200,14 +219,15 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
             const safeSymbol: string = token.symbol ?? '';
 
             return (
-              <TokenListItem
-                key={token.address}
-                name={safeName}
-                symbol={safeSymbol}
-                address={token.address as `0x${string}` | string}
-                logoURL={token.logoURL ?? undefined}
-                confirmAssetCallback={handlePickAddress}
-              />
+              <div key={token.address} className={zebraForIndex(i)}>
+                <TokenListItem
+                  name={safeName}
+                  symbol={safeSymbol}
+                  address={token.address as `0x${string}` | string}
+                  logoURL={token.logoURL ?? undefined}
+                  confirmAssetCallback={handlePickAddress}
+                />
+              </div>
             );
           })
         )}
