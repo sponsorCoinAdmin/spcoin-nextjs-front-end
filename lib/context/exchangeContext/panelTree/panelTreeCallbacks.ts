@@ -416,8 +416,13 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
               );
             }
 
-            // ✅ Allow "close all overlays" when enabled
-            if (!ALLOW_EMPTY_GLOBAL_OVERLAY) {
+            // ✅ CRITICAL FIX:
+            // If closing a radio overlay and NOTHING can be restored, do NOT force-open a default.
+            // This prevents TRADING_STATION_PANEL from re-opening when the stack becomes empty.
+            if (!restoredResult.restored) {
+              // leave overlays as-is (all closed is allowed)
+            } else if (!ALLOW_EMPTY_GLOBAL_OVERLAY) {
+              // legacy fallback behavior ONLY when something was restored
               next = ensureOneGlobalOverlayVisible(
                 next,
                 overlays,
