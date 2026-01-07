@@ -1,4 +1,3 @@
-// File: @/components/containers/TokenSelectDropDown.tsx
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';
@@ -28,7 +27,8 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
-  const { openSellList, openBuyList } = usePanelTransitions();
+  // ✅ new transitions API
+  const { openOverlay } = usePanelTransitions();
   const { isVisible } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
@@ -40,13 +40,10 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
     const raw = tokenContract.logoURL?.trim();
 
-    // If this is an absolute remote URL, respect it as-is.
     if (raw && (raw.startsWith('http://') || raw.startsWith('https://'))) {
       return raw;
     }
 
-    // For local assets, derive the path from address + chainId so that
-    // case-normalization (UPPERCASE dirs) stays consistent with assetHelpers.
     if (tokenContract.address && typeof tokenContract.chainId === 'number') {
       return getTokenLogoURL({
         address: tokenContract.address,
@@ -54,7 +51,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       });
     }
 
-    // Fallback: normalize any other non-empty relative path.
     if (raw && raw.length > 0) {
       return raw.startsWith('/') ? raw : `/${raw.replace(/^\/+/, '')}`;
     }
@@ -68,17 +64,14 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       img.onerror = null;
       img.src = defaultMissingImage;
       if (tokenContract?.symbol && tokenContract?.address) {
-        debugLog.log?.(
-          `⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`
-        );
+        debugLog.log?.(`⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`);
       } else {
         debugLog.log?.('⚠️ Missing logo (no tokenContract info available)');
       }
     },
-    [tokenContract]
+    [tokenContract],
   );
 
-  // stop bubbling for mousedown and click; some “outside close” handlers listen on either
   const stopMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
@@ -86,7 +79,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     e.stopPropagation();
   }, []);
 
-  // Post-open visibility probes to catch "flash close"
   const schedulePostChecks = useCallback(
     (panel: SP_COIN_DISPLAY) => {
       const t0 = performance.now();
@@ -97,20 +89,18 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
         debugLog.log?.(
           `[post-check:${label}] +${Math.round(
-            now - (lastOpenAtRef.current ?? t0)
-          )}ms { panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`
+            now - (lastOpenAtRef.current ?? t0),
+          )}ms { panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`,
         );
-        // If we see it already closed within 250ms, warn loudly
         if (!v && now - (lastOpenAtRef.current ?? t0) < 300) {
           debugLog.warn?.(
             `⚠️ Detected early close ("flash"): ${
               SP_COIN_DISPLAY[panel]
-            } closed within ${Math.round(now - (lastOpenAtRef.current ?? t0))}ms`
+            } closed within ${Math.round(now - (lastOpenAtRef.current ?? t0))}ms`,
           );
         }
       };
 
-      // Do a couple of quick samples
       setTimeout(() => check('0ms'), 0);
       setTimeout(() => check('150ms'), 150);
       setTimeout(() => {
@@ -118,7 +108,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         check('400ms');
       }, 400);
     },
-    [isVisible]
+    [isVisible],
   );
 
   const openTokenSelectPanel = useCallback(
@@ -127,11 +117,8 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         e.preventDefault();
         e.stopPropagation();
       }
-      // If we’re already in the middle of opening due to rapid double-clicks, ignore
       if (openingRef.current) {
-        debugLog.log?.(
-          '⏳ Ignoring re-entrant open while a previous open is in-flight'
-        );
+        debugLog.log?.('⏳ Ignoring re-entrant open while a previous open is in-flight');
         return;
       }
 
@@ -141,23 +128,22 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       openingRef.current = true;
       lastOpenAtRef.current = performance.now();
 
-      // Open synchronously to avoid microtask races with global outside-click closers
+      // ✅ open via generic openOverlay
       if (isSellRoot) {
-        openSellList({ methodName });
+        openOverlay(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
       } else {
-        openBuyList({ methodName });
+        openOverlay(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
       }
 
-      // Immediate snapshot after open
       const sellNow = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
       const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
       debugLog.log?.(
-        `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`
+        `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`,
       );
     },
-    [isSellRoot, openSellList, openBuyList, isVisible, schedulePostChecks]
+    [isSellRoot, openOverlay, isVisible, schedulePostChecks],
   );
 
   function displaySymbol(token: TokenContract) {
@@ -170,7 +156,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
   return (
     <div
-      id='TokenSelectDropDown'
+      id="TokenSelectDropDown"
       className={styles.assetSelect}
       onClick={stopClick}
       onMouseDown={stopMouseDown}
@@ -179,16 +165,16 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       {tokenContract ? (
         <>
           <img
-            id='TokenSelectDropDownImage.png'
-            className='h-9 w-9 mr-2 rounded-md cursor-pointer'
+            id="TokenSelectDropDownImage.png"
+            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
             src={logoURL}
-            loading='lazy'
-            decoding='async'
+            loading="lazy"
+            decoding="async"
             onMouseDown={stopMouseDown}
             onClick={openTokenSelectPanel}
             onError={handleMissingLogoURL}
-            data-testid='token-dropdown-avatar'
+            data-testid="token-dropdown-avatar"
           />
           {displaySymbol(tokenContract)}
         </>
@@ -197,12 +183,12 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       )}
 
       <ChevronDown
-        id='ChevronDown'
+        id="ChevronDown"
         size={18}
-        className='ml-2 cursor-pointer'
+        className="ml-2 cursor-pointer"
         onMouseDown={stopMouseDown}
         onClick={openTokenSelectPanel}
-        data-testid='token-dropdown-chevron'
+        data-testid="token-dropdown-chevron"
       />
     </div>
   );

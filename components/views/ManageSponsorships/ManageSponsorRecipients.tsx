@@ -176,7 +176,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
         listType={listType}
         instancePrefix={instancePrefix}
         onCommit={handleCommit}
-        suppressToTrading
+        suppressAutoClose
       />
     </div>
   );

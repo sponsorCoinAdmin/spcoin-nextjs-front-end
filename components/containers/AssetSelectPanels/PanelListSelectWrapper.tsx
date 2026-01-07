@@ -1,4 +1,3 @@
-// File: @/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
 'use client';
 
 import { useMemo, useCallback } from 'react';
@@ -17,7 +16,6 @@ import type {
   AssetSelectBag as UnionBag,
   TokenSelectBag,
   RecipientSelectBag,
-  // AgentSelectBag, // ❌ removed (AGENT_LIST_SELECT_PANEL deprecated)
   ErrorMessageBag,
   SimplePanelBag,
 } from '@/lib/context/structure/types/panelBag';
@@ -32,11 +30,10 @@ type Props = {
   onCommit: (asset: WalletAccount | TokenContract) => void;
 
   /**
-   * If true, this wrapper will NOT auto-run toTrading() after commit/close.
-   * Use this for flows where the parent panel must remain visible
-   * (e.g. UNSTAKING/CLAIM sponsor lists opening ManageSponsor panel).
+   * If true, this wrapper will NOT auto-close (stack POP) after commit/close.
+   * Use this for flows where the parent panel must remain visible.
    */
-  suppressToTrading?: boolean;
+  suppressAutoClose?: boolean;
 };
 
 function makeInitialPanelBag(
@@ -53,7 +50,6 @@ function makeInitialPanelBag(
       const bag: RecipientSelectBag = { type: panel };
       return bag;
     }
-    // ❌ Removed: AGENT_LIST_SELECT_PANEL (per app changes to drop this panel)
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: {
       const bag: ErrorMessageBag = { type: panel, message: '' };
       return bag;
@@ -76,7 +72,7 @@ export default function PanelListSelectWrapper({
   instancePrefix,
   peerAddress,
   onCommit,
-  suppressToTrading,
+  suppressAutoClose,
 }: Props) {
   const visible = usePanelVisible(panel);
   if (!visible) return null;
@@ -89,7 +85,7 @@ export default function PanelListSelectWrapper({
       instancePrefix={instancePrefix}
       peerAddress={peerAddress}
       onCommit={onCommit}
-      suppressToTrading={suppressToTrading}
+      suppressAutoClose={suppressAutoClose}
     />
   );
 }
@@ -101,10 +97,12 @@ function PanelListSelectWrapperInner({
   instancePrefix,
   peerAddress,
   onCommit,
-  suppressToTrading,
+  suppressAutoClose,
 }: Props) {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { toTrading } = usePanelTransitions();
+
+  // ✅ POP the stack (like header X)
+  const { closeTop } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
@@ -119,14 +117,13 @@ function PanelListSelectWrapperInner({
 
   const closeForProvider = useCallback(
     (_fromUser?: boolean) => {
-      // Default behavior: close list overlay back to trading.
+      // Default behavior: close list overlay by POPping it.
       // For sponsor detail flows we keep the parent open.
-      if (!suppressToTrading) toTrading();
+      if (!suppressAutoClose) closeTop('PanelListSelectWrapper:closeForProvider(pop)');
     },
-    [toTrading, suppressToTrading],
+    [closeTop, suppressAutoClose],
   );
 
-  // ✅ Route selection directly to ExchangeContext.tradeData.{buy|sell}TokenContract
   const handleCommit = useCallback(
     (asset: WalletAccount | TokenContract) => {
       if (
@@ -145,11 +142,10 @@ function PanelListSelectWrapperInner({
 
       onCommit?.(asset);
 
-      // Default behavior: return to trading.
-      // Sponsor flows: DO NOT auto-close the parent manage panel.
-      if (!suppressToTrading) toTrading();
+      // ✅ Selection behaves like header close: POP the list panel
+      if (!suppressAutoClose) closeTop('PanelListSelectWrapper:handleCommit(pop)');
     },
-    [panel, setExchangeContext, onCommit, toTrading, suppressToTrading],
+    [panel, setExchangeContext, onCommit, closeTop, suppressAutoClose],
   );
 
   return (
@@ -160,9 +156,8 @@ function PanelListSelectWrapperInner({
         setSelectedAssetCallback={handleCommit}
         containerType={panel}
         initialPanelBag={initialPanelBag}
-        feedTypeOverride={feedType} // ⬅️ thread feedType into provider
+        feedTypeOverride={feedType}
       >
-        {/* listType drives display/actions; keep it explicit so we can evolve UI per feed */}
         <AssetListSelectPanel listType={listType} />
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
