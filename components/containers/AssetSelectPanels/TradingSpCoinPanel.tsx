@@ -1,13 +1,7 @@
 // File: @/components/containers/AssetSelectPanels/TradingSpCoinPanel.tsx
 'use client';
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Address } from 'viem';
 import { formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
@@ -39,10 +33,7 @@ import {
   TYPING_GRACE_MS,
 } from '@/lib/utils/tradeFormat';
 
-import {
-  TokenPanelProvider,
-  useTokenPanelContext,
-} from '@/lib/context/providers/Panels';
+import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useGetBalance } from '@/lib/hooks/useGetBalance';
@@ -54,8 +45,7 @@ import {
   getTokenLogoURL,
 } from '@/lib/context/helpers/assetHelpers';
 
-const DEBUG =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 
 // SELL-only container type for this module
@@ -85,7 +75,8 @@ function SpCoinComponent() {
 
   const [tokenContract] = sellHook;
 
-  const { openSellList } = usePanelTransitions();
+  // ✅ New transitions API
+  const { openOverlay } = usePanelTransitions();
   const { isVisible } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
@@ -202,8 +193,8 @@ function SpCoinComponent() {
       openingRef.current = true;
       lastOpenAtRef.current = performance.now();
 
-      // SELL list only for this module
-      openSellList({ methodName });
+      // ✅ SELL list only for this module (new API)
+      openOverlay(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, { methodName });
       schedulePostChecks(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
 
       // Immediate snapshot after open
@@ -213,7 +204,7 @@ function SpCoinComponent() {
         `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} }`,
       );
     },
-    [openSellList, isVisible, schedulePostChecks],
+    [openOverlay, isVisible, schedulePostChecks],
   );
 
   function displaySymbol(token: TokenContract) {
@@ -226,27 +217,25 @@ function SpCoinComponent() {
 
   return (
     <div
-      id='SpCoinComponent'
+      id="SpCoinComponent"
       className={styles.assetSelect}
       onClick={stopClick}
       onMouseDown={stopMouseDown}
-      data-panel-root='sell'
+      data-panel-root="sell"
     >
       {tokenContract ? (
         <>
           <img
-            id='SpCoinComponentImage.png'
-            className='h-9 w-9 mr-2 rounded-md cursor-pointer'
-            alt={`${
-              tokenContract.name ?? tokenContract.symbol ?? 'token'
-            } logo`}
+            id="SpCoinComponentImage.png"
+            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+            alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
             src={logoURL}
-            loading='lazy'
-            decoding='async'
+            loading="lazy"
+            decoding="async"
             onMouseDown={stopMouseDown}
             onClick={openTokenSelectPanel}
             onError={handleMissingLogoURL}
-            data-testid='token-dropdown-avatar'
+            data-testid="token-dropdown-avatar"
           />
           {displaySymbol(tokenContract)}
         </>
@@ -389,10 +378,8 @@ function TradeAssetPanelInner() {
   // 🧮 Human-readable balance text for the UI
   let formattedBalance: string;
   if (!tokenAddr) {
-    // No asset selected → no balance to show
     formattedBalance = '—';
   } else if (!hasBalanceOwner) {
-    // Token chosen but no owner yet (initial load / context not ready)
     formattedBalance = '—';
   } else if (balanceError) {
     formattedBalance = '—';
@@ -407,16 +394,9 @@ function TradeAssetPanelInner() {
   useEffect(() => {
     if (!tokenAddr || !activeAccountAddr) return;
     if (balanceLoading || balanceError) return;
-    if (rawBalance == null || (balanceDecimals ?? tokenDecimals) == null)
-      return;
+    if (rawBalance == null || (balanceDecimals ?? tokenDecimals) == null) return;
 
-    let parsed: bigint | undefined;
-    try {
-      // rawBalance is already bigint, so we just pass it through
-      parsed = rawBalance;
-    } catch {
-      return;
-    }
+    const parsed = rawBalance;
 
     if (prevPushedBalanceRef.current === parsed) return; // avoid spam
     prevPushedBalanceRef.current = parsed;
@@ -453,21 +433,21 @@ function TradeAssetPanelInner() {
 
   return (
     <div
-      id='TradeAssetPanelInner'
+      id="TradeAssetPanelInner"
       className={clsx(
         'relative mt-[5px] mb-[5px]',
         'rounded-[12px] overflow-hidden',
       )}
     >
       <input
-        id='TokenPanelInputAmount'
+        id="TokenPanelInputAmount"
         className={clsx(
           'w-full h-[106px] indent-[10px] pt-[10px]',
           'bg-[#1f2639] text-[#94a3b8] text-[25px]',
           'border-0 outline-none focus:outline-none',
           'rounded-b-[12px]',
         )}
-        placeholder='0'
+        placeholder="0"
         disabled={isInputDisabled}
         value={inputValue}
         onChange={(e) => onChangeAmount(e.target.value)}
@@ -476,34 +456,34 @@ function TradeAssetPanelInner() {
           setInputValue(clampDisplay(isNaN(n) ? '0' : String(n), 10));
         }}
         name={noAutofillName}
-        autoComplete='off'
-        autoCorrect='off'
-        autoCapitalize='none'
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
         spellCheck={false}
-        inputMode='decimal'
-        aria-autocomplete='none'
-        data-lpignore='true'
-        data-1p-ignore='true'
-        data-form-type='other'
+        inputMode="decimal"
+        aria-autocomplete="none"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-form-type="other"
       />
 
       {/* Invisible decoy for autofill managers */}
       <input
-        type='text'
-        autoComplete='new-password'
+        type="text"
+        autoComplete="new-password"
         tabIndex={-1}
-        aria-hidden='true'
-        className='absolute opacity-0 h-0 w-0 pointer-events-none'
+        aria-hidden="true"
+        className="absolute opacity-0 h-0 w-0 pointer-events-none"
       />
 
       <SpCoinComponent />
 
       {/* Text row: static staking label */}
-      <div className='absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
+      <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
         {buySellText}
       </div>
 
-      <div className='absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
+      <div className="absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
         Balance: {formattedBalance}
       </div>
     </div>
@@ -528,7 +508,5 @@ export default function TradingSpCoinPanel() {
   if (!stakingPanelVisible) return null;
 
   // SELL-select-only for this module
-  return (
-    <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />
-  );
+  return <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />;
 }
