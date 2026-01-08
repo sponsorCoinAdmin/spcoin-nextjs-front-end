@@ -154,13 +154,11 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // ✅ action logger (gated by NEXT_PUBLIC_DEBUG_LOG_PANEL_ACTIONS)
   const debugLog = useMemo(
     () => createDebugLogger('usePanelTree', DEBUG_ACTIONS || DEBUG_STACK),
     [],
   );
 
-  // ✅ trace counter for action logging
   const traceRef = useRef(0);
   const nextTraceId = useCallback(() => {
     traceRef.current += 1;
@@ -248,7 +246,10 @@ export function usePanelTree() {
     publishVisibility(visibilityMap);
   }, [visibilityMap, publishVisibility]);
 
-  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
+  const isVisible = useCallback(
+    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
+    [],
+  );
 
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
@@ -271,7 +272,6 @@ export function usePanelTree() {
     [setExchangeContext, exchangeContext],
   );
 
-  // ✅ Synchronous ref of latest persisted ids (derived ONLY from settings.displayStack)
   const persistedIdsRef = useRef<SP_COIN_DISPLAY[]>([]);
 
   const readPersistedIdsFromContext = useCallback((): SP_COIN_DISPLAY[] => {
@@ -294,7 +294,6 @@ export function usePanelTree() {
     return toPersistedStackIds(normalizeDisplayStackNodesToIds(currentRaw));
   }, [exchangeContext, debugLog]);
 
-  // Keep ref in sync on renders (and on any external writes)
   useEffect(() => {
     const next = readPersistedIdsFromContext();
     const prev = persistedIdsRef.current ?? [];
@@ -327,7 +326,6 @@ export function usePanelTree() {
         return;
       }
 
-      // ✅ Update ref immediately (so closePanel sees it synchronously)
       persistedIdsRef.current = nextPersistedIds;
 
       const displayStack = toDisplayStackNodes(nextPersistedIds);
@@ -470,14 +468,15 @@ export function usePanelTree() {
 
   /* ------------------------------ PRIVATE (internal) -------------------------------- */
 
-  const showInternal = useCallback(
+  // ✅ renamed from showInternal
+  const showDisplay = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const traceId = nextTraceId();
 
       const inferredParent =
         parent == null && manageScopedSet.has(Number(panel)) ? manageContainer : parent;
 
-      logAction(traceId, 'showInternal called', {
+      logAction(traceId, 'showDisplay called', {
         panel: { id: Number(panel), name: nameOf(panel) },
         invoker,
         parent: parent == null ? null : { id: Number(parent), name: nameOf(parent) },
@@ -503,11 +502,12 @@ export function usePanelTree() {
     [baseShow, manageContainer, manageScopedSet, nextTraceId, logAction],
   );
 
-  const hideInternal = useCallback(
+  // ✅ renamed from hideInternal
+  const hideDisplay = useCallback(
     (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
       const traceId = nextTraceId();
 
-      logAction(traceId, 'hideInternal called', {
+      logAction(traceId, 'hideDisplay called', {
         panel: { id: Number(panel), name: nameOf(panel) },
         invoker,
         visibleBefore_store: panelStore.isVisible(panel),
@@ -517,20 +517,6 @@ export function usePanelTree() {
       baseHide(panel, invoker, arg);
     },
     [baseHide, nextTraceId, logAction],
-  );
-
-  const showPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
-      showInternal(panel, tagHideInvoker(invoker), parent);
-    },
-    [showInternal, tagHideInvoker],
-  );
-
-  const hidePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown) => {
-      hideInternal(panel, tagHideInvoker(invoker), arg);
-    },
-    [hideInternal, tagHideInvoker],
   );
 
   /* ------------------------------ STACK helpers (internal) -------------------------------- */
@@ -657,7 +643,9 @@ export function usePanelTree() {
 
       const stackBefore = getPersistedDisplayStackIds();
       const nextStack = pushIfStackMember(panel, traceId, `openPanel:${navInvoker}`);
-      showInternal(panel, navInvoker, parent);
+
+      // ✅ showDisplay (was showInternal)
+      showDisplay(panel, navInvoker, parent);
 
       if (DEBUG_STACK) {
         const stackAfter = getPersistedDisplayStackIds();
@@ -676,7 +664,7 @@ export function usePanelTree() {
       logAction,
       getPersistedDisplayStackIds,
       pushIfStackMember,
-      showInternal,
+      showDisplay,
       debugLog,
     ],
   );
@@ -707,17 +695,15 @@ export function usePanelTree() {
         isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
       });
 
-      // remove (if stack member) + hide (always)
       const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
 
-      // ✅ Key fix: if we're closing a global overlay AND stack becomes empty,
-      // use HIDE invoker so radio restore does NOT run.
       const hideInvoker =
         ALLOW_EMPTY_GLOBAL_OVERLAY && isGlobalOverlay(panel) && nextStack.length === 0
           ? tagHideInvoker(invoker)
           : navInvoker;
 
-      hideInternal(panel, hideInvoker, arg);
+      // ✅ hideDisplay (was hideInternal)
+      hideDisplay(panel, hideInvoker, arg);
       return;
     }
 
@@ -731,10 +717,7 @@ export function usePanelTree() {
       arg,
     });
 
-    const { popped, stackBefore, nextStack } = popTop(
-      traceId,
-      `closePanel:${navInvoker}`,
-    );
+    const { popped, stackBefore, nextStack } = popTop(traceId, `closePanel:${navInvoker}`);
     if (!popped) {
       logAction(traceId, 'closePanel pop-top noop (stack empty)', {
         stackBefore: toNamedStack(stackBefore),
@@ -747,13 +730,13 @@ export function usePanelTree() {
       nextStack: toNamedStack(nextStack),
     });
 
-    // For legacy pop-top, apply same empty-overlay rule if applicable
     const hideInvoker =
       ALLOW_EMPTY_GLOBAL_OVERLAY && isGlobalOverlay(popped) && nextStack.length === 0
         ? tagHideInvoker(invoker)
         : navInvoker;
 
-    hideInternal(popped, hideInvoker, arg);
+    // ✅ hideDisplay (was hideInternal)
+    hideDisplay(popped, hideInvoker, arg);
   }
 
   /* ------------------------------ derived -------------------------------- */
@@ -833,10 +816,6 @@ export function usePanelTree() {
     // ✅ stack-aware navigation API
     openPanel,
     closePanel,
-
-    // ✅ visibility-only helpers (non-stack callers)
-    showPanel,
-    hidePanel,
 
     dumpNavStack,
   };
