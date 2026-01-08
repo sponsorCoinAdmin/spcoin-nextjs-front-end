@@ -15,8 +15,8 @@ const MAX_BPS = 500; // 5.00%
 const STEP_BPS = 5; // 0.05% increments
 
 const ConfigSlippagePanel: React.FC = () => {
-  // ✅ closePanel = pop+hide; slippage is NOT a stack action → use hidePanel
-  const { hidePanel } = usePanelTree();
+  // ✅ closePanel(panelId, ...) = close a specific panel (not pop-top)
+  const { closePanel } = usePanelTree();
 
   const isVisible = usePanelVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL);
   const { data: slippage, setBps } = useSlippage();
@@ -35,11 +35,11 @@ const ConfigSlippagePanel: React.FC = () => {
   const handleClose = useCallback(() => {
     if (!isVisible) return;
 
-    hidePanel(
+    closePanel(
       SP_TREE.CONFIG_SLIPPAGE_PANEL,
-      'ConfigSlippagePanel:hide(CONFIG_SLIPPAGE_PANEL)',
+      'ConfigSlippagePanel:close(CONFIG_SLIPPAGE_PANEL)',
     );
-  }, [hidePanel, isVisible]);
+  }, [closePanel, isVisible]);
 
   if (!isVisible) return null;
 

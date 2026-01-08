@@ -3,8 +3,7 @@
 
 import { useCallback } from 'react';
 import type { TokenContract, WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import {
   useSellTokenContract,
   useBuyTokenContract,
@@ -13,8 +12,7 @@ import {
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SELECTION_COMMIT === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SELECTION_COMMIT === 'true';
 const log = createDebugLogger('useSelectionCommit', DEBUG_ENABLED, LOG_TIME);
 
 export type UseSelectionCommit = {
@@ -25,14 +23,13 @@ export type UseSelectionCommit = {
   commitRecipient: (w: WalletAccount) => void;
   commitAgent: (w: WalletAccount) => void;
 
-  finish: () => void; // now only closes the active list panel
+  finish: () => void; // closes via stack POP (header-close behavior)
 };
 
 /** Plain hook that composes ExchangeContext + panel-tree navigation. */
 export function useSelectionCommit(): UseSelectionCommit {
-  // ✅ closePanel = pop + hide (top-of-stack)
-  // ✅ hidePanel = hide a specific panel (visibility-only)
-  const { hidePanel, isVisible } = usePanelTree();
+  // ✅ closeTop = POP top-of-stack (same as header X)
+  const { closeTop } = usePanelTransitions();
 
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
@@ -42,51 +39,13 @@ export function useSelectionCommit(): UseSelectionCommit {
   const { setExchangeContext } = useExchangeContext();
 
   /**
-   * Helper to detect which list-select overlay is currently active.
-   * This is the panel we want to close when a selection is committed.
-   */
-  const getActiveListPanel = useCallback(() => {
-    if (typeof isVisible !== 'function') {
-      log.warn?.(
-        'getActiveListPanel: isVisible is not a function; cannot determine active list panel',
-      );
-      return null;
-    }
-
-    const candidates = [
-      SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
-      SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
-      SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-      SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
-    ];
-
-    for (const panel of candidates) {
-      if (isVisible(panel)) return panel;
-    }
-
-    return null;
-  }, [isVisible]);
-
-  /**
    * finish:
-   * - ONLY closes the currently active list-select overlay (if any)
-   * - does NOT pop the stack
+   * - behaves like header close: POP the stack (closes active list overlay)
    */
   const finish = useCallback(() => {
-    const activeList = getActiveListPanel();
-
-    log.log?.('finish invoked', { activeList });
-
-    if (!activeList) {
-      log.log?.('finish: no active list-select panel detected; nothing to close');
-      return;
-    }
-
-    log.log?.('finish → hiding active list-select panel', { activeList });
-
-    // ✅ hide specific panel; do NOT use closePanel(panelId)
-    hidePanel(activeList, `useSelectionCommit:finish(hide ${SP_COIN_DISPLAY[activeList]})`);
-  }, [getActiveListPanel, hidePanel]);
+    log.log?.('finish invoked → closeTop(pop)');
+    closeTop('useSelectionCommit:finish(pop)');
+  }, [closeTop]);
 
   const commitBuyToken = useCallback(
     (t: TokenContract) => {

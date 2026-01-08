@@ -10,18 +10,18 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
 
-  // ✅ ERROR_MESSAGE_PANEL is a visibility overlay, not a stack pop
-  const { hidePanel } = usePanelTree();
+  // ✅ Close a specific overlay (not pop-top)
+  const { closePanel } = usePanelTree();
 
   const onDismiss = useCallback(() => {
     setErrorMessage(undefined);
 
-    // ✅ hide only this overlay (do not pop stack, do not force-open trading)
-    hidePanel(
+    // ✅ close only this overlay (panel-specific close, not pop-top)
+    closePanel(
       SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-      'ErrorMessagePanel:onDismiss(hide ERROR_MESSAGE_PANEL)',
+      'ErrorMessagePanel:onDismiss(close ERROR_MESSAGE_PANEL)',
     );
-  }, [setErrorMessage, hidePanel]);
+  }, [setErrorMessage, closePanel]);
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);
 

@@ -4,7 +4,6 @@
 import React, { useCallback, useContext, useEffect } from 'react';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import AddressSelect from '@/components/views/AddressSelect';
@@ -46,16 +45,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   // ✅ Visibility for Pending Rewards is driven by MANAGE_PENDING_REWARDS panel
   const pendingVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
 
-  usePanelTransitions();
-
   /**
-   * ✅ Navigation vs local radio:
-   * - openPanel  = push + show  (true navigation)
-   * - showPanel  = visibility-only (NO stack)
-   * - hidePanel  = visibility-only (NO stack)
-   * - closePanel = pop + hide top-of-stack (NOT used here)
+   * ✅ Navigation-only model:
+   * - openPanel(panel)           = show (push if stack component; gated inside usePanelTree)
+   * - closePanel(panelId, ...)   = hide specific panel (and remove from stack if present)
+   * - closePanel(invoker)        = pop top-of-stack
    */
-  const { openPanel, showPanel, hidePanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
@@ -85,65 +81,51 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   } = useManageSponsorshipsToDo(ctx);
 
   /**
-   * ✅ openOnly is LOCAL RADIO ONLY (no stack writes)
-   * Open only the requested *list* panel; hide the alternative list panels.
+   * ✅ openOnly "radio group" using navigation-only primitives:
+   * - open the requested list panel
+   * - close the other list panels
    */
   const openOnly = useCallback(
     (id: SP_COIN_DISPLAY) => {
-      try {
-        const ids = [
-          SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-          SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-          SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
-        ] as const;
+      const ids = [
+        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
+        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+        SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+      ] as const;
 
-        ids.forEach((pid) => {
-          if (pid === id) {
-            debugLog.log?.('openOnly → show', { target: SP_COIN_DISPLAY[pid] });
-            showPanel(
+      ids.forEach((pid) => {
+        if (pid === id) {
+          debugLog.log?.('openOnly → open', { target: SP_COIN_DISPLAY[pid] });
+          openPanel(
+            pid,
+            `ManageSponsorshipsPanel:openOnly(open=${SP_COIN_DISPLAY[pid]}#${String(
               pid,
-              'ManageSponsorshipsPanel:openOnly(show=' +
-                SP_COIN_DISPLAY[pid] +
-                '#' +
-                String(pid) +
-                ')',
-              // optional parent inference handled inside showPanel in usePanelTree
-            );
-          } else {
-            debugLog.log?.('openOnly → hide', { target: SP_COIN_DISPLAY[pid] });
-            hidePanel(
+            )})`,
+          );
+        } else {
+          debugLog.log?.('openOnly → close', { target: SP_COIN_DISPLAY[pid] });
+          closePanel(
+            pid,
+            `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${String(
               pid,
-              'ManageSponsorshipsPanel:openOnly(hide=' +
-                SP_COIN_DISPLAY[pid] +
-                '#' +
-                String(pid) +
-                ')',
-            );
-          }
-        });
-      } catch (err) {
-        debugLog.warn?.('openOnly error (panel tree not ready?)', { err });
-      }
+            )})`,
+          );
+        }
+      });
     },
-    [showPanel, hidePanel],
+    [openPanel, closePanel],
   );
 
   // ✅ Open a MAIN_OVERLAY_GROUP panel (Trading / Staking spCoins etc.) — real navigation
   const openMainOverlay = useCallback(
     (id: SP_COIN_DISPLAY) => {
-      try {
-        debugLog.log?.('openMainOverlay', { target: SP_COIN_DISPLAY[id] });
-        openPanel(
+      debugLog.log?.('openMainOverlay', { target: SP_COIN_DISPLAY[id] });
+      openPanel(
+        id,
+        `ManageSponsorshipsPanel:openMainOverlay(target=${SP_COIN_DISPLAY[id]}#${String(
           id,
-          'ManageSponsorshipsPanel:openMainOverlay(target=' +
-            SP_COIN_DISPLAY[id] +
-            '#' +
-            String(id) +
-            ')',
-        );
-      } catch (err) {
-        debugLog.warn?.('openMainOverlay error', { err });
-      }
+        )})`,
+      );
     },
     [openPanel],
   );
@@ -151,19 +133,17 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   /** Toggle Pending Rewards rows (the 3 bulleted rows under Pending Rewards) */
   const togglePendingRewards = useCallback(() => {
     if (pendingVisible) {
-      // ✅ local toggle (no stack)
-      hidePanel(
+      closePanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'ManageSponsorshipsPanel:togglePendingRewards(hide)',
+        'ManageSponsorshipsPanel:togglePendingRewards(close)',
       );
     } else {
-      // ✅ local toggle (no stack)
-      showPanel(
+      openPanel(
         SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-        'ManageSponsorshipsPanel:togglePendingRewards(show)',
+        'ManageSponsorshipsPanel:togglePendingRewards(open)',
       );
     }
-  }, [pendingVisible, showPanel, hidePanel]);
+  }, [pendingVisible, openPanel, closePanel]);
 
   // ✅ Early return happens only after all hooks have been called
   if (!isActive) return null;
@@ -182,8 +162,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const rowH = 'h-[40px]';
   const tdInner = rowH + ' w-full px-3 text-sm align-middle flex items-center';
   const tdInnerCenter = tdInner + ' justify-center';
-  const rowA = 'bg-[rgba(56,78,126,0.35)]'; // Sponsors / Agents / Pending
-  const rowB = 'bg-[rgba(156,163,175,0.25)]'; // Recipients / Total
+  const rowA = 'bg-[rgba(56,78,126,0.35)]';
+  const rowB = 'bg-[rgba(156,163,175,0.25)]';
   const th =
     'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const rowBorder = 'border-b border-slate-800';
@@ -212,14 +192,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       {/* MAIN SUMMARY TABLES (Coins / Rewards overview) */}
       <>
-        {/* TABLE 1: Coins / amounts (ALWAYS visible) */}
         {showSummaryTable && (
           <div
             id="MANAGE_SPONSORSHIPS_TABLE"
             className={`${styles.msWrapper} mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black`}
           >
             <table className={`${styles.msTable} min-w-full border-collapse`}>
-              {/* TABLE 1 HEADER */}
               <thead>
                 <tr className="border-b border-black">
                   <th scope="col" className={th}>
@@ -234,7 +212,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </tr>
               </thead>
 
-              {/* TABLE 1 BODY */}
               <tbody>
                 {/* Row 1: Trading */}
                 <tr className={rowBorder}>
@@ -264,7 +241,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 {/* Row 2: Staked Sponsored Coins */}
                 <tr className={rowBorder}>
                   <td className="p-0">
-                    {/* ✅ Make the *text* behave like the Unstake button, while keeping row background */}
                     <button
                       type="button"
                       className={`${rowB} ${tdInner} ${styles.msLinkCell}`}
@@ -308,14 +284,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     </button>
                   </td>
 
-                  {/* Amount: hidden when bulleted rows are open */}
                   <td className="p-0">
                     <div className={rowA + ' ' + tdInnerCenter}>
                       {pendingVisible ? '' : 0}
                     </div>
                   </td>
 
-                  {/* Options: Claim All hidden when bulleted rows are open */}
                   <td className="p-0">
                     <div className={rowA + ' ' + tdInnerCenter}>
                       {!pendingVisible && (
@@ -335,7 +309,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 {/* Row 4–6: Sponsors / Recipients / Agents (ONLY when Pending rows are shown) */}
                 {pendingVisible && (
                   <>
-                    {/* Row 4: Sponsors */}
                     <tr className={rowBorder}>
                       <td className="p-0">
                         <button
@@ -371,7 +344,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       </td>
                     </tr>
 
-                    {/* Row 5: Recipients */}
                     <tr className={rowBorder}>
                       <td className="p-0">
                         <button
@@ -405,7 +377,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       </td>
                     </tr>
 
-                    {/* Row 6: Agents */}
                     <tr className={rowBorder}>
                       <td className="p-0">
                         <button
@@ -441,7 +412,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </>
                 )}
 
-                {/* Row 7: Total Coins (invert when pending rows are open) */}
                 <tr className={rowBorder}>
                   <td className="p-0">
                     <div
@@ -475,7 +445,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         )}
       </>
 
-      {/* Keep sub-modules mounted; switch visibility with CSS to preserve Suspense tree */}
       <div className={sponsorsHidden ? 'hidden' : ''}>
         <ManageSponsorRecipients />
       </div>
@@ -486,7 +455,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         <ManageRecipients />
       </div>
 
-      {/* 🔴 ToDo overlay (click the red text to dismiss) */}
       {showToDo && (
         <ToDo
           show

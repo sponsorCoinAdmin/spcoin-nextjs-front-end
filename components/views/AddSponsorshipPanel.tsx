@@ -59,12 +59,11 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // ✅ openPanel = push+show
-  // ✅ hidePanel = hide specific panel (visibility-only)
-  // ✅ closePanel = pop+hide (top-of-stack) — not used here
-  const { hidePanel } = usePanelTree();
+  // ✅ only openPanel / closePanel remain
+  const { closePanel } = usePanelTree();
 
-  const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
+  // ✅ usePanelTransitions now exposes openOverlay / closeTop only
+  const { openOverlay } = usePanelTransitions();
 
   // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR STAKING_SPCOINS_PANEL is true
   const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
@@ -157,13 +156,19 @@ const AddSponsorShipPanel: React.FC = () => {
 
   // ── Callbacks ────────────────────────────────────────────────────────────────
   const toggleSponsorRateConfig = useCallback(() => {
-    debugLog.log?.(
-      'toggleSponsorRateConfig clicked; currently visible?',
-      configVisible,
-    );
-    if (configVisible) closeConfigSponsorship();
-    else openConfigSponsorship();
-  }, [configVisible, openConfigSponsorship, closeConfigSponsorship]);
+    debugLog.log?.('toggleSponsorRateConfig clicked; currently visible?', configVisible);
+
+    if (configVisible) {
+      closePanel(
+        SP_TREE.CONFIG_SPONSORSHIP_PANEL,
+        'AddSponsorshipPanel:toggleSponsorRateConfig(close CONFIG_SPONSORSHIP_PANEL)',
+      );
+    } else {
+      openOverlay(SP_TREE.CONFIG_SPONSORSHIP_PANEL, {
+        methodName: 'AddSponsorshipPanel:toggleSponsorRateConfig(open)',
+      });
+    }
+  }, [configVisible, openOverlay, closePanel]);
 
   const closeAddSponsorshipPanel = useCallback(() => {
     debugLog.log?.('closeAddSponsorshipPanel clicked');
@@ -178,20 +183,20 @@ const AddSponsorShipPanel: React.FC = () => {
       'AddSponsorShipPanel:closeAddSponsorshipPanel',
     );
 
-    // ✅ Close specific panels by visibility (NOT stack-pop)
-    hidePanel(
+    // ✅ Close specific panels (NOT pop-top)
+    closePanel(
       SP_TREE.ADD_SPONSORSHIP_PANEL,
-      'AddSponsorshipPanel:closeAddSponsorshipPanel(hide ADD_SPONSORSHIP_PANEL)',
+      'AddSponsorshipPanel:closeAddSponsorshipPanel(close ADD_SPONSORSHIP_PANEL)',
     );
 
-    // Only re-show the launcher button if the current BUY token is an SpCoin
+    // Keep your existing intent (close STAKING panel conditionally)
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      hidePanel(
+      closePanel(
         SP_TREE.STAKING_SPCOINS_PANEL,
-        'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalHide STAKING_SPCOINS_PANEL)',
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalClose STAKING_SPCOINS_PANEL)',
       );
     }
-  }, [setExchangeContext, hidePanel, buyTokenContract]);
+  }, [setExchangeContext, closePanel, buyTokenContract]);
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const pageQueryUrl = useMemo(() => {
@@ -282,10 +287,7 @@ const AddSponsorShipPanel: React.FC = () => {
           <Link
             href={recipientSiteHref}
             onClick={() => {
-              debugLog.log?.(
-                'Link clicked → opening RecipientSite tab for:',
-                recipientSiteHref,
-              );
+              debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
               openRecipientSiteTab();
             }}
             className={`${linkTopClass} min-w-[50px] h-[10px] text-[#94a3b8] text-[25px] pr-2 flex items-center justify-start gap-1 cursor-pointer hover:text-[orange] transition-colors duration-200`}
@@ -328,7 +330,6 @@ const AddSponsorShipPanel: React.FC = () => {
 
       <ConfigSponsorshipPanel />
 
-      {/* 🔴 ToDo overlay (red text, click to dismiss) */}
       {showToDo && (
         <ToDo
           show

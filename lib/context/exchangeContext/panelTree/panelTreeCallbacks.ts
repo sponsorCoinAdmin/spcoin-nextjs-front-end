@@ -177,8 +177,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
    * - a global overlay radio member
    * - a manage branch member that gets auto-closed
    *
-   * BUT: it still must be able to flip visibility via showPanel/hidePanel,
-   * which may call openPanel/closePanel internally.
    */
   const isPendingRewards = (p: SP_COIN_DISPLAY) =>
     Number(p) === Number(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
