@@ -3,6 +3,7 @@
 
 import React, { useCallback, useRef, useMemo, useEffect } from 'react';
 import type { WalletAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
@@ -12,7 +13,11 @@ import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePane
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
-const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger(
+  'RecipientSelectDropDown',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
 
 interface Props {
   recipientAccount?: WalletAccount;
@@ -20,16 +25,23 @@ interface Props {
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const hasErroredRef = useRef(false);
-  const { openRecipientList } = usePanelTransitions();
+
+  // ✅ New transitions API
+  const { openOverlay } = usePanelTransitions();
 
   const logoFromAddr = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
   const logoSrc = useMemo(
     () => recipientAccount?.logoURL?.trim() || logoFromAddr,
-    [recipientAccount?.logoURL, logoFromAddr]
+    [recipientAccount?.logoURL, logoFromAddr],
   );
 
+  // Reset the "already errored" guard when recipient changes
   useEffect(() => {
-    debugLog.log('📥 dropdown props changed', {
+    hasErroredRef.current = false;
+  }, [recipientAccount?.address]);
+
+  useEffect(() => {
+    debugLog.log?.('📥 dropdown props changed', {
       name: recipientAccount?.name,
       symbol: recipientAccount?.symbol,
       address: recipientAccount?.address,
@@ -42,25 +54,42 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (!recipientAccount || hasErroredRef.current) return;
       if (event.currentTarget.src.includes(defaultMissingImage)) return;
-      debugLog.log(`⚠️ Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL ?? 'no explicit logoURL'})`);
+
+      debugLog.log?.(
+        `⚠️ Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL ?? 'no explicit logoURL'})`,
+      );
+
       if (recipientAccount.address) markLogoAsBroken(recipientAccount.address);
       hasErroredRef.current = true;
       event.currentTarget.src = defaultMissingImage;
     },
-    [recipientAccount]
+    [recipientAccount],
   );
 
-  const showRecipientListSelectPanel = useCallback(() => {
-    debugLog.log('📂 Opening Recipient dialog');
-    openRecipientList();
-  }, [openRecipientList]);
+  const showRecipientListSelectPanel = useCallback(
+    (e: React.SyntheticEvent) => {
+      // ✅ prevent bubbling into any global “outside click” closers
+      e.preventDefault();
+      e.stopPropagation();
+
+      debugLog.log?.('📂 Opening Recipient dialog');
+      openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, {
+        methodName: 'RecipientSelectDropDown:showRecipientListSelectPanel',
+      });
+    },
+    [openOverlay],
+  );
 
   return (
-    <div className="flex items-center cursor-pointer" onClick={showRecipientListSelectPanel}>
+    <div
+      className="flex items-center cursor-pointer"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={showRecipientListSelectPanel}
+    >
       {recipientAccount ? (
         <>
           <img
-            alt={recipientAccount.name}
+            alt={recipientAccount.name ?? 'Recipient'}
             className="h-9 w-9 mr-2 rounded-md"
             src={logoSrc}
             onError={handleLogoError}
