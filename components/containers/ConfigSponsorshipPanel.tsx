@@ -1,12 +1,12 @@
 // File: @/components/containers/ConfigSponsorshipPanel.tsx
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
+
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const MIN_SPONSOR_STEP = 2; // 20% recipient / 80% sponsor
 const MAX_SPONSOR_STEP = 10; // 100% recipient / 0% sponsor
@@ -15,8 +15,7 @@ const MIN_AGENT_STEP = 2; // 2% of remaining balance
 const MAX_AGENT_STEP = 10; // 10% of remaining balance
 
 const ConfigSponsorshipPanel: React.FC = () => {
-  const { isVisible } = usePanelTree();
-  const { closeConfigSponsorship } = usePanelTransitions();
+  const { isVisible, closePanel } = usePanelTree();
 
   // Sponsor slider: step from 2..10 where
   //   sponsorPct = 100 - step * 10
@@ -49,57 +48,73 @@ const ConfigSponsorshipPanel: React.FC = () => {
   const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
   if (!selfVisible) return null;
 
+  const onClose = useCallback(() => {
+    closePanel(
+      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+      'ConfigSponsorshipPanel:close(CONFIG_SPONSORSHIP_PANEL)',
+    );
+  }, [closePanel]);
+
   return (
     <div
-      id='SponsorRateConfig_ID'
-      className='bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] rounded-b-[12px]'
+      id="SponsorRateConfig_ID"
+      className="bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] rounded-b-[12px]"
     >
-      <div className='relative'>
-        <div id='recipient-config' />
+      <div className="relative">
+        <div id="recipient-config" />
 
         {/* top divider line */}
-        <div className='absolute -top-[7px] left-[11px] right-[11px] h-px bg-[#94a3b8] opacity-20' />
+        <div className="absolute -top-[7px] left-[11px] right-[11px] h-px bg-[#94a3b8] opacity-20" />
 
         {/* label: Staking Reward Ratio */}
-        <div className='absolute top-[5px] left-[10px] text-[14px] text-[#94a3b8]'>
+        <div className="absolute top-[5px] left-[10px] text-[14px] text-[#94a3b8]">
           Staking Reward Distributions:
         </div>
 
         {/* info icon */}
         <Image
           src={info_png}
-          className='absolute top-[5px] left-[218px] cursor-pointer'
+          className="absolute top-[5px] left-[218px] cursor-pointer"
           width={18}
           height={18}
-          alt='Info'
+          alt="Info"
           onClick={() => alert('ToDo: Rate Distribution Info')}
         />
 
         {/* Overall Recipient pill (final RP after Agent deduction) */}
-        <div className='absolute top-0 right-[50px] min-w-[50px] h-[28px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
+        <div className="absolute top-0 right-[50px] min-w-[50px] h-[28px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
           Recipient:
-          <div id='recipientRatio'>{recipientPct}%</div>
+          <div id="recipientRatio">{recipientPct}%</div>
         </div>
 
         {/* close button */}
         <div
-          id='closeSponsorConfig'
-          className='absolute top-0 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer'
-          onClick={closeConfigSponsorship}
+          id="closeSponsorConfig"
+          className="absolute top-0 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer"
+          onClick={onClose}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClose();
+            }
+          }}
+          aria-label="Close sponsorship config"
         >
           X
         </div>
 
         {/* Row 1: Sponsor + slider */}
-        <div className='absolute top-[35px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
+        <div className="absolute top-[35px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
           Sponsor:
-          <div id='sponsorRatio'>{sponsorPct}%</div>
+          <div id="sponsorRatio">{sponsorPct}%</div>
         </div>
 
         <input
-          type='range'
-          title='Adjust Sponsor/Recipient Ratio'
-          className='absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer'
+          type="range"
+          title="Adjust Sponsor/Recipient Ratio"
+          className="absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
           min={MIN_SPONSOR_STEP}
           max={MAX_SPONSOR_STEP}
           value={sponsorStep}
@@ -107,15 +122,15 @@ const ConfigSponsorshipPanel: React.FC = () => {
         />
 
         {/* Row 2: Agent + slider (takes a slice of remainingBal) */}
-        <div className='absolute top-[60px] right-[50px] min-w-[50px] h-[24px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
+        <div className="absolute top-[60px] right-[50px] min-w-[50px] h-[24px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
           Agent:
-          <div id='agentRatio'>{agentPct}%</div>
+          <div id="agentRatio">{agentPct}%</div>
         </div>
 
         <input
-          type='range'
-          title='Adjust Recipient/Agent Ratio'
-          className='absolute top-[95px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer'
+          type="range"
+          title="Adjust Recipient/Agent Ratio"
+          className="absolute top-[95px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
           min={MIN_AGENT_STEP}
           max={MAX_AGENT_STEP}
           value={agentStep}
