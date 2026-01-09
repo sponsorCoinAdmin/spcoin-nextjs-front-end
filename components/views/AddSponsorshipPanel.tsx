@@ -81,7 +81,7 @@ const AddSponsorShipPanel: React.FC = () => {
     exchangeContext.accounts.recipientAccount;
 
   // ── State ────────────────────────────────────────────────────────────────────
-  const [showToDo, setShowToDo] = useState<boolean>(true);
+  const [showToDo, setShowToDo] = useState<boolean>(false);
   const [recipientMeta, setRecipientMeta] = useState<RecipientMeta | undefined>(
     undefined,
   );
