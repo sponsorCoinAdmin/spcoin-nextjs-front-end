@@ -23,7 +23,7 @@ import {
   RecipientListSelectPanel,
   AgentSelectPanel,
   // SponsorListSelectPanel,
-} from '@/components/views/TradingStationPanel/AssetSelectPanels';
+} from '@/components/views/AssetSelectPanels';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';

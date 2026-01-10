@@ -11,7 +11,7 @@ import type { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
-import ConfigSlippagePanel from '@/components/views/TradingStationPanel/AssetSelectPanels/AddSponsorshipPanel/ConfigSponsorshipPanel';
+import ConfigSlippagePanel from '@/components/views/AssetSelectPanels/AddSponsorshipPanel/ConfigSponsorshipPanel';
 import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';

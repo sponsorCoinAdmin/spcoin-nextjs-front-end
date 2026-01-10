@@ -34,7 +34,7 @@ import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
   AgentSelectPanel,
-} from '@/components/views/TradingStationPanel/AssetSelectPanels';
+} from '@/components/views/AssetSelectPanels';
 
 // Core header/panel components (registered here so they’re visible in the tree)
 import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';

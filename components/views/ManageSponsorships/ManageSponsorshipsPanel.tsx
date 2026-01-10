@@ -7,7 +7,7 @@ import React, { useCallback, useContext, useEffect } from 'react';
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import AddressSelect from '@/components/views/TradingStationPanel/AssetSelectPanels/AddressSelect';
+import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 

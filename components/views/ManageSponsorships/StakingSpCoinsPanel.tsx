@@ -2,9 +2,9 @@
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import TradingSpCoinPanel from '@/components/views/TradingStationPanel/AssetSelectPanels/TradingSpCoinPanel';
+import TradingSpCoinPanel from '@/components/views/AssetSelectPanels/TradingSpCoinPanel';
 import PriceButton from '@/components/views/Buttons/PriceButton';
-import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSelectPanels/AddSponsorshipPanel';
+import AddSponsorShipPanel from '@/components/views/AssetSelectPanels/AddSponsorshipPanel';
 
 import PanelGate from '@/components/utility/PanelGate';
 

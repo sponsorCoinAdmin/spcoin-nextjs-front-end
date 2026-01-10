@@ -53,7 +53,7 @@
   },
 
   // Include only source + Next type helpers
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/views/ManageSponsorships/UnstakingSpCoinsPanel copy.tsx.BAK", "components/views/TradingStationPanel/AssetSelectPanels/AddSponsorshipPanel/ConfigSponsorshipPanel/index.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/views/ManageSponsorships/UnstakingSpCoinsPanel copy.tsx.BAK", "components/views/AssetSelectPanels/AddSponsorshipPanel/ConfigSponsorshipPanel/index.tsx"],
 
   // Keep heavy generated folders out
   "exclude": ["node_modules"]

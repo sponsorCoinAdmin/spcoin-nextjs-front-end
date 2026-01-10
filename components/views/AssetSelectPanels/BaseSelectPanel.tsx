@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/AssetSelectPanels/BaseSelectPanel.tsx
+// File: @/components/views/AssetSelectPanels/BaseSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';

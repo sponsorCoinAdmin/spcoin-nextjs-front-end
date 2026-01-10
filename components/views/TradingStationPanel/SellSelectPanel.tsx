@@ -1,8 +1,8 @@
-// File: @/components/views/TradingStationPanel/AssetSelectPanels/SellSelectPanel.tsx
+// File: @/components/views/AssetSelectPanels/SellSelectPanel.tsx
 'use client';
 
 import React from 'react';
-import BaseSelectPanel from './AssetSelectPanels/BaseSelectPanel';
+import { BaseSelectPanel } from '@/components/views/AssetSelectPanels';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_ROOT , SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
