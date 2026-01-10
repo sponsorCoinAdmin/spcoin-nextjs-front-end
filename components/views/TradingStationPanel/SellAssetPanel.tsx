@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import TradeAssetPanel from './TradeAssetPanel';
+import TradeAssetPanel from './AssetSelectPanels/TradeAssetPanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_ROOT , SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 

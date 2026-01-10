@@ -11,8 +11,8 @@ import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSel
 
 import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
-import SellAssetPanel from './AssetSelectPanels/SellAssetPanel';
-import BuyAssetPanel from './AssetSelectPanels/BuyAssetPanel';
+import SellAssetPanel from './SellAssetPanel';
+import BuyAssetPanel from './BuyAssetPanel';
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
 
 export default function TradingStationPanel() {
