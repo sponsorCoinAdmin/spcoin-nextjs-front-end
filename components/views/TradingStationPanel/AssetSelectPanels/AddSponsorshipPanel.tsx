@@ -11,7 +11,7 @@ import type { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
-import ConfigTradingStationPanel from '@/components/views/TradingStationPanel/ConfigTradingStationPanel';
+import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
 import { RecipientSelectDropDown } from '@/components/views/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -328,7 +328,7 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
       </div>
 
-      <ConfigTradingStationPanel />
+      <ConfigSlippagePanel />
 
       {showToDo && (
         <ToDo

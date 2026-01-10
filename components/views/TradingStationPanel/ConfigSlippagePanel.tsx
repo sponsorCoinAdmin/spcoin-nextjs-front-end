@@ -1,4 +1,4 @@
-// File: @/components/containers/ConfigTradingStationPanel.tsx
+// File: @/components/containers/ConfigSlippagePanel.tsx
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -14,7 +14,7 @@ const MAX_SPONSOR_STEP = 10; // 100% recipient / 0% sponsor
 const MIN_AGENT_STEP = 2; // 2% of remaining balance
 const MAX_AGENT_STEP = 10; // 10% of remaining balance
 
-const ConfigTradingStationPanel: React.FC = () => {
+const ConfigSlippagePanel: React.FC = () => {
   const { isVisible, closePanel } = usePanelTree();
 
   // ✅ Always evaluate visibility, but DO NOT early-return until after hooks
@@ -51,7 +51,7 @@ const ConfigTradingStationPanel: React.FC = () => {
   const onClose = useCallback(() => {
     closePanel(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
-      'ConfigTradingStationPanel:close(CONFIG_SPONSORSHIP_PANEL)',
+      'ConfigSlippagePanel:close(CONFIG_SPONSORSHIP_PANEL)',
     );
   }, [closePanel]);
 
@@ -144,4 +144,4 @@ const ConfigTradingStationPanel: React.FC = () => {
   );
 };
 
-export default ConfigTradingStationPanel;
+export default ConfigSlippagePanel;
