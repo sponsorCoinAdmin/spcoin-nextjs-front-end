@@ -5,7 +5,7 @@
 
 import React, { useEffect } from 'react';
 
-import AddressSelect from '@/components/views/AddressSelect';
+import AddressSelect from '@/components/views/TradingStationPanel/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
 import ManageWalletList from '@/components/views/ManageSponsorships/ManageWalletList';
 

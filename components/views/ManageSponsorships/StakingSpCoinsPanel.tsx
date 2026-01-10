@@ -4,7 +4,7 @@
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import TradingSpCoinPanel from '@/components/views/TradingStationPanel/AssetSelectPanels/TradingSpCoinPanel';
 import PriceButton from '@/components/views/Buttons/PriceButton';
-import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
+import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSelectPanels/AddSponsorshipPanel';
 
 import PanelGate from '@/components/utility/PanelGate';
 

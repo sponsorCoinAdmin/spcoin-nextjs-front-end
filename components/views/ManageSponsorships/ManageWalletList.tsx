@@ -8,7 +8,7 @@ import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import AddressSelect from '../AddressSelect';
+import AddressSelect from '../TradingStationPanel/AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import { msTableTw } from './msTableTw';
