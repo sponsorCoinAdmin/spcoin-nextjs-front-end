@@ -1,103 +1,145 @@
-// File: @/components/views/TradingStationPanel/ConfigSlippagePanel/index.tsx
+// File: @/components/containers/ConfigSlippagePanel.tsx
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
+import info_png from '@/public/assets/miscellaneous/info1.png';
 
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { useSlippage } from '@/lib/context/hooks';
 
-// Slippage bounds in basis points (bps)
-const MIN_BPS = 50; // 0.50%
-const MAX_BPS = 500; // 5.00%
-// 0.05% increments → 5 bps
-const STEP_BPS = 5; // 0.05% increments
+const MIN_SPONSOR_STEP = 2; // 20% recipient / 80% sponsor
+const MAX_SPONSOR_STEP = 10; // 100% recipient / 0% sponsor
+
+const MIN_AGENT_STEP = 2; // 2% of remaining balance
+const MAX_AGENT_STEP = 10; // 10% of remaining balance
 
 const ConfigSlippagePanel: React.FC = () => {
-  // ✅ closePanel(panelId, ...) = close a specific panel (not pop-top)
-  const { closePanel } = usePanelTree();
+  const { isVisible, closePanel } = usePanelTree();
 
-  const isVisible = usePanelVisible(SP_TREE.CONFIG_SLIPPAGE_PANEL);
-  const { data: slippage, setBps } = useSlippage();
+  // ✅ Always evaluate visibility, but DO NOT early-return until after hooks
+  const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
 
-  const selected = slippage?.bps ?? 100; // default 1.00%
+  // Sponsor slider: step from 2..10 where
+  //   sponsorPct = 100 - step * 10
+  //   remainingBal (RB) = step * 10
+  const [sponsorStep, setSponsorStep] = useState<number>(5); // RB=50, SP=50 by default
 
-  const handleSliderChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const next = Number(e.target.value);
-      if (!Number.isFinite(next)) return;
-      if (next !== selected) setBps(next);
-    },
-    [selected, setBps],
-  );
+  // Agent slider: step from 2..10 representing 2%..10% of remainingBal
+  //   sliderRatioRange (SRR) = agentStep / 100
+  //   agentPct (AP) = RB * SRR
+  //   recipientPct (RP) = RB - AP
+  const [agentStep, setAgentStep] = useState<number>(2); // 2% of RB by default
 
-  const handleClose = useCallback(() => {
-    if (!isVisible) return;
+  // --- core percentage math -------------------------------------------------
 
+  const sponsorPct = useMemo(() => 100 - sponsorStep * 10, [sponsorStep]); // SP
+  const remainingBal = useMemo(() => sponsorStep * 10, [sponsorStep]); // RB
+
+  const sliderRatioRange = useMemo(() => agentStep / 100, [agentStep]); // SRR
+
+  const agentPct = useMemo(() => {
+    const raw = remainingBal * sliderRatioRange; // AP = RB * SRR
+    return Number(raw.toFixed(2));
+  }, [remainingBal, sliderRatioRange]);
+
+  const recipientPct = useMemo(() => {
+    const raw = remainingBal - agentPct; // RP = RB - AP
+    return Number(raw.toFixed(2));
+  }, [remainingBal, agentPct]);
+
+  const onClose = useCallback(() => {
     closePanel(
-      SP_TREE.CONFIG_SLIPPAGE_PANEL,
-      'ConfigSlippagePanel:close(CONFIG_SLIPPAGE_PANEL)',
+      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+      'ConfigSlippagePanel:close(CONFIG_SPONSORSHIP_PANEL)',
     );
-  }, [closePanel, isVisible]);
+  }, [closePanel]);
 
-  if (!isVisible) return null;
-
-  // selected is in bps → convert to percent and format as #,##%
-  const percentValue = selected / 100; // 100 bps -> 1.00
-  const spRateLabel = `${percentValue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}%`;
+  // ✅ Option A: conditional JSX return AFTER hooks
+  if (!selfVisible) return null;
 
   return (
     <div
-      id="ConfigSlippagePanel"
-      className="
-        bg-[#1f2639] text-[#94a3b8]
-        border-0 h-[45px]
-        rounded-[12px]
-        px-[11px]
-        flex items-center
-      "
+      id="SponsorRateConfig_ID"
+      className="bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] rounded-b-[12px]"
     >
-      {/* Slider on the left */}
-      <input
-        type="range"
-        title="Adjust Slippage Tolerance"
-        className="border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
-        min={MIN_BPS}
-        max={MAX_BPS}
-        step={STEP_BPS}
-        value={selected}
-        onChange={handleSliderChange}
-      />
+      <div className="relative">
+        <div id="recipient-config" />
 
-      {/* Slippage pill (formatted #,##%) */}
-      <div className="ml-[32px] min-w-[50px] h-[24px] bg-[#243056] rounded-full flex items-center gap-[5px] font-bold text-[17px] pr-2">
-        Slippage:
-        <div id="slippage">{spRateLabel}</div>
+        {/* top divider line */}
+        <div className="absolute -top-[7px] left-[11px] right-[11px] h-px bg-[#94a3b8] opacity-20" />
+
+        {/* label: Staking Reward Ratio */}
+        <div className="absolute top-[5px] left-[10px] text-[14px] text-[#94a3b8]">
+          Staking Reward Distributions:
+        </div>
+
+        {/* info icon */}
+        <Image
+          src={info_png}
+          className="absolute top-[5px] left-[218px] cursor-pointer"
+          width={18}
+          height={18}
+          alt="Info"
+          onClick={() => alert('ToDo: Rate Distribution Info')}
+        />
+
+        {/* Overall Recipient pill (final RP after Agent deduction) */}
+        <div className="absolute top-0 right-[50px] min-w-[50px] h-[28px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
+          Recipient:
+          <div id="recipientRatio">{recipientPct}%</div>
+        </div>
+
+        {/* close button */}
+        <div
+          id="closeSponsorConfig"
+          className="absolute top-0 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer"
+          onClick={onClose}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClose();
+            }
+          }}
+          aria-label="Close sponsorship config"
+        >
+          X
+        </div>
+
+        {/* Row 1: Sponsor + slider */}
+        <div className="absolute top-[35px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
+          Sponsor:
+          <div id="sponsorRatio">{sponsorPct}%</div>
+        </div>
+
+        <input
+          type="range"
+          title="Adjust Sponsor/Recipient Ratio"
+          className="absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
+          min={MIN_SPONSOR_STEP}
+          max={MAX_SPONSOR_STEP}
+          value={sponsorStep}
+          onChange={(e) => setSponsorStep(Number(e.target.value))}
+        />
+
+        {/* Row 2: Agent + slider (takes a slice of remainingBal) */}
+        <div className="absolute top-[60px] right-[50px] min-w-[50px] h-[24px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
+          Agent:
+          <div id="agentRatio">{agentPct}%</div>
+        </div>
+
+        <input
+          type="range"
+          title="Adjust Recipient/Agent Ratio"
+          className="absolute top-[95px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
+          min={MIN_AGENT_STEP}
+          max={MAX_AGENT_STEP}
+          value={agentStep}
+          onChange={(e) => setAgentStep(Number(e.target.value))}
+        />
       </div>
-
-      {/* Spacer to push X to the far right */}
-      <div className="flex-1" />
-
-      {/* Close button */}
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={handleClose}
-        className="
-          cursor-pointer w-5 text-xl leading-none
-          bg-transparent
-          border-0 outline-none ring-0 appearance-none
-          focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0
-          hover:bg-transparent active:bg-transparent
-          text-[#94a3b8]
-        "
-      >
-        X
-      </button>
     </div>
   );
 };
