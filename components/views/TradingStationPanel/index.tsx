@@ -11,8 +11,8 @@ import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSel
 
 import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
-import SellAssetPanel from './SellAssetPanel';
-import BuyAssetPanel from './BuyAssetPanel';
+import SellSelectPanel from './SellSelectPanel';
+import BuySelectPanel from './BuySelectPanel';
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
 
 export default function TradingStationPanel() {
@@ -23,9 +23,9 @@ export default function TradingStationPanel() {
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
       <div id='TradingStationPanel'>
         <ConfigSlippagePanel />
-        <SellAssetPanel />
+        <SellSelectPanel />
         <BuySellSwapArrowButton />
-        <BuyAssetPanel />
+        <BuySelectPanel />
         <AddSponsorShipPanel />
         <PriceButton isLoadingPrice={isLoading} />
         <AffiliateFee priceResponse={priceResponse} />

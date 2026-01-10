@@ -46,7 +46,7 @@ import {
 } from '@/lib/context/helpers/assetHelpers';
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
-const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
+const debugLog = createDebugLogger('BaseSelectPanel', DEBUG, false);
 
 // SELL-only container type for this module
 type ContainerType = SP_COIN_DISPLAY.SELL_SELECT_PANEL;
@@ -247,10 +247,10 @@ function SpCoinComponent() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// TradeAssetPanel (SELL-only inner + wrapper)
+// BaseSelectPanel (SELL-only inner + wrapper)
 // ──────────────────────────────────────────────────────────────────────────────
 
-function TradeAssetPanelInner() {
+function BaseSelectPanelInner() {
   const { exchangeContext, setSellBalance } = useExchangeContext();
 
   const activeAccountAddr = exchangeContext.accounts?.activeAccount
@@ -433,7 +433,7 @@ function TradeAssetPanelInner() {
 
   return (
     <div
-      id="TradeAssetPanelInner"
+      id="BaseSelectPanelInner"
       className={clsx(
         'relative mt-[5px] mb-[5px]',
         'rounded-[12px] overflow-hidden',
@@ -490,10 +490,10 @@ function TradeAssetPanelInner() {
   );
 }
 
-function TradeAssetPanel({ containerType }: { containerType: ContainerType }) {
+function BaseSelectPanel({ containerType }: { containerType: ContainerType }) {
   return (
     <TokenPanelProvider containerType={containerType}>
-      <TradeAssetPanelInner />
+      <BaseSelectPanelInner />
     </TokenPanelProvider>
   );
 }
@@ -508,5 +508,5 @@ export default function TradingSpCoinPanel() {
   if (!stakingPanelVisible) return null;
 
   // SELL-select-only for this module
-  return <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />;
+  return <BaseSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />;
 }

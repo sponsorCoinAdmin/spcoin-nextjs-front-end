@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/AssetSelectPanels/TradeAssetPanel.tsx
+// File: @/components/views/TradingStationPanel/AssetSelectPanels/BaseSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -49,9 +49,9 @@ import { useGetBalance } from '@/lib/hooks/useGetBalance';
 
 const DEBUG =
   process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
-const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
+const debugLog = createDebugLogger('BaseSelectPanel', DEBUG, false);
 
-function TradeAssetPanelInner() {
+function BaseSelectPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext, setSellBalance, setBuyBalance } =
     useExchangeContext();
@@ -106,11 +106,11 @@ function TradeAssetPanelInner() {
     if (!addr) {
       closePanel(
         SP_ROOT.ADD_SPONSORSHIP_BUTTON,
-        'TradeAssetPanelInner:buyAddrEffect(addrUnset)',
+        'BaseSelectPanelInner:buyAddrEffect(addrUnset)',
       );
       closePanel(
         SP_ROOT.ADD_SPONSORSHIP_PANEL,
-        'TradeAssetPanelInner:buyAddrEffect(addrUnset)',
+        'BaseSelectPanelInner:buyAddrEffect(addrUnset)',
       );
       return;
     }
@@ -118,16 +118,16 @@ function TradeAssetPanelInner() {
     if (isSpCoin(buyTokenContract)) {
       openPanel(
         SP_ROOT.ADD_SPONSORSHIP_BUTTON,
-        'TradeAssetPanelInner:buyAddrEffect(isSpCoin)',
+        'BaseSelectPanelInner:buyAddrEffect(isSpCoin)',
       );
     } else {
       closePanel(
         SP_ROOT.ADD_SPONSORSHIP_BUTTON,
-        'TradeAssetPanelInner:buyAddrEffect(notSpCoin)',
+        'BaseSelectPanelInner:buyAddrEffect(notSpCoin)',
       );
       closePanel(
         SP_ROOT.ADD_SPONSORSHIP_PANEL,
-        'TradeAssetPanelInner:buyAddrEffect(notSpCoin)',
+        'BaseSelectPanelInner:buyAddrEffect(notSpCoin)',
       );
     }
   }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
@@ -315,7 +315,7 @@ function TradeAssetPanelInner() {
 
   return (
     <div
-      id='TradeAssetPanelInner'
+      id='BaseSelectPanelInner'
       className={clsx(
         'relative mt-[5px] mb-[5px]',
         'rounded-[12px] overflow-hidden',
@@ -383,14 +383,14 @@ function TradeAssetPanelInner() {
   );
 }
 
-export default function TradeAssetPanel({
+export default function BaseSelectPanel({
   containerType,
 }: {
   containerType: SP_ROOT.SELL_SELECT_PANEL | SP_ROOT.BUY_SELECT_PANEL;
 }) {
   return (
     <TokenPanelProvider containerType={containerType}>
-      <TradeAssetPanelInner />
+      <BaseSelectPanelInner />
     </TokenPanelProvider>
   );
 }

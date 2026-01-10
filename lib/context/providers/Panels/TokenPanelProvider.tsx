@@ -21,7 +21,7 @@ const debugLog = createDebugLogger(
 );
 
 export const TokenPanelProvider = ({ containerType, children }: Props) => {
-  // local mirrors used by TradeAssetPanel
+  // local mirrors used by BaseSelectPanel
   const [localTokenContract, setLocalTokenContract] = useState<TokenContract | undefined>(undefined);
   const [localAmount, setLocalAmount] = useState<bigint>(0n);
 
