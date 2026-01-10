@@ -1,4 +1,4 @@
-// File: @/components/containers/AssetSelectPanels/TradingSpCoinPanel.tsx
+// File: @/components/views/TradingStationPanel/AssetSelectPanels/TradingSpCoinPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

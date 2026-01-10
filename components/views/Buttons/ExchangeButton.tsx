@@ -1,4 +1,4 @@
-// File: @/components/Buttons/ExchangeButton.tsx
+// File: @/components/views/Buttons/ExchangeButton.tsx
 'use client';
 
 import React, { useMemo, useCallback } from 'react';

@@ -34,10 +34,10 @@ import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
   AgentSelectPanel,
-} from '@/components/containers/AssetSelectPanels';
+} from '@/components/views/TradingStationPanel/AssetSelectPanels';
 
 // Core header/panel components (registered here so they’re visible in the tree)
-import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 import { TEST_EXCHANGE_CONTEXT_PAGES } from '@/lib/context/exchangeContext/localStorageKeys';
 

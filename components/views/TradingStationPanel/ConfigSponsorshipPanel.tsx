@@ -17,6 +17,9 @@ const MAX_AGENT_STEP = 10; // 10% of remaining balance
 const ConfigSponsorshipPanel: React.FC = () => {
   const { isVisible, closePanel } = usePanelTree();
 
+  // ✅ Always evaluate visibility, but DO NOT early-return until after hooks
+  const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+
   // Sponsor slider: step from 2..10 where
   //   sponsorPct = 100 - step * 10
   //   remainingBal (RB) = step * 10
@@ -45,15 +48,15 @@ const ConfigSponsorshipPanel: React.FC = () => {
     return Number(raw.toFixed(2));
   }, [remainingBal, agentPct]);
 
-  const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
-  if (!selfVisible) return null;
-
   const onClose = useCallback(() => {
     closePanel(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'ConfigSponsorshipPanel:close(CONFIG_SPONSORSHIP_PANEL)',
     );
   }, [closePanel]);
+
+  // ✅ Option A: conditional JSX return AFTER hooks
+  if (!selfVisible) return null;
 
   return (
     <div

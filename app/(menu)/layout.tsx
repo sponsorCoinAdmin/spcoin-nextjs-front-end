@@ -2,7 +2,7 @@
 
 import type { Metadata } from 'next'
 import '@/app/globals.css'
-import Header from '@/components/panes/Header'
+import Header from '@/components/views/BrowserPanes/Header'
 import SpCoinProviders from '@/components/Wrappers/SpCoinProviders'
 
 export const metadata: Metadata = {

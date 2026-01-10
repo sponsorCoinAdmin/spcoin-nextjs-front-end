@@ -1,4 +1,4 @@
-// File: @/components/containers/AssetSelectPanels/BuyAssetPanel.tsx
+// File: @/components/views/TradingStationPanel/AssetSelectPanels/BuyAssetPanel.tsx
 'use client';
 
 import React from 'react';

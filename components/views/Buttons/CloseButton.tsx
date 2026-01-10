@@ -1,4 +1,4 @@
-// File: @/components/Buttons/CloseButton.tsx
+// File: @/components/views/Buttons/CloseButton.tsx
 'use client';
 
 import React from 'react';

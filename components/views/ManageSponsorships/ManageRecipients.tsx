@@ -14,7 +14,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-import PanelListSelectWrapper from '@/components/containers/AssetSelectPanels/PanelListSelectWrapper';
+import PanelListSelectWrapper from '@/components/views/TradingStationPanel/AssetSelectPanels/PanelListSelectWrapper';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

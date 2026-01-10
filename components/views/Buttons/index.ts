@@ -1,4 +1,4 @@
-// File: @/components/Buttons/index.ts
+// File: @/components/views/Buttons/index.ts
 
 export * from './AddSponsorshipButton';
 export * from './BuySellSwapArrowButton';

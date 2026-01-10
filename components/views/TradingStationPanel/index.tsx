@@ -2,17 +2,18 @@
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import SellAssetPanel from '@/components/containers/AssetSelectPanels/SellAssetPanel';
-import BuyAssetPanel from '@/components/containers/AssetSelectPanels/BuyAssetPanel';
-import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
-import PriceButton from '@/components/Buttons/PriceButton';
-import AffiliateFee from '@/components/containers/AffiliateFee';
-import FeeDisclosure from '@/components/containers/FeeDisclosure';
+
+import BuySellSwapArrowButton from '@/components/views/Buttons/BuySellSwapArrowButton';
+import PriceButton from '@/components/views/Buttons/PriceButton';
+import AffiliateFee from '@/components/views/AffiliateFee';
+import FeeDisclosure from '@/components/views/FeeDisclosure';
 import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
 
 import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
 import ConfigSponsorshipPanel from './ConfigSlippagePanel';
+import SellAssetPanel from './AssetSelectPanels/SellAssetPanel';
+import BuyAssetPanel from './AssetSelectPanels/BuyAssetPanel';
 
 export default function TradingStationPanel() {
   const { isLoading, data } = usePriceAPI();

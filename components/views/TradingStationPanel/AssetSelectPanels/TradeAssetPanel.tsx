@@ -1,4 +1,4 @@
-// File: @/components/containers/AssetSelectPanels/TradeAssetPanel.tsx
+// File: @/components/views/TradingStationPanel/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -34,9 +34,11 @@ import {
   TYPING_GRACE_MS,
 } from '@/lib/utils/tradeFormat';
 
-import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
-import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
-import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
+import ManageSponsorsButton from '@/components/views/Buttons/ManageSponsorsButton';
+import AddSponsorshipButton from '@/components/views/Buttons/AddSponsorshipButton';
+
+import TokenSelectDropDown from '@/components/views/AssetSelectDropDowns/TokenSelectDropDown';
+
 import {
   TokenPanelProvider,
   useTokenPanelContext,

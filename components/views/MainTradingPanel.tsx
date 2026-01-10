@@ -3,7 +3,7 @@
 
 import styles from '@/styles/Exchange.module.css';
 
-import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
@@ -23,7 +23,7 @@ import {
   RecipientListSelectPanel,
   AgentSelectPanel,
   // SponsorListSelectPanel,
-} from '@/components/containers/AssetSelectPanels';
+} from '@/components/views/TradingStationPanel/AssetSelectPanels';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
