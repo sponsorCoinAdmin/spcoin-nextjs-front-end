@@ -3,12 +3,12 @@
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-import BuySellSwapArrowButton from '@/components/views/Buttons/BuySellSwapArrowButton';
+import BuySellSwapArrowButton from '@/components/views/TradingStationPanel/SwapArrowButton';
 import PriceButton from '@/components/views/Buttons/PriceButton';
 import AffiliateFee from '@/components/views/TradingStationPanel/AffiliateFee';
 import FeeDisclosure from '@/components/views/TradingStationPanel/FeeDisclosure';
 // import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSelectPCFanels/AddSponsorshipPanel';
-import AddSponsorShipPanel from '@/components/views/AssetSelectPanels/AddSponsorshipPanel';
+import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel';
 
 import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';

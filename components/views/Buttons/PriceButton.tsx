@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import CustomConnectButton from './CustomConnectButton';
+import CustomConnectButton from '../TradingStationPanel/ConnectPriceButton';
 import ExchangeButton from './ExchangeButton';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';

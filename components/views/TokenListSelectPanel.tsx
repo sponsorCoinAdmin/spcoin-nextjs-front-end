@@ -4,7 +4,7 @@
 import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
-import PanelListSelectWrapper from './PanelListSelectWrapper';
+import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
 
 /** Visibility gate: SELL or BUY list (radio behavior handled upstream). */
 export default function TokenListSelectPanel() {

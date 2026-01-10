@@ -34,8 +34,8 @@ import {
   TYPING_GRACE_MS,
 } from '@/lib/utils/tradeFormat';
 
-import ManageSponsorsButton from '@/components/views/Buttons/ManageSponsorsButton';
-import AddSponsorshipButton from '@/components/views/Buttons/AddSponsorshipButton';
+import ManageSponsorsButton from '@/components/views/TradingStationPanel/SellSelectPanel/ManageSponsorsButton';
+import AddSponsorshipButton from '@/components/views/TradingStationPanel/BuySelectPanel/AddSponsorshipButton';
 
 import TokenSelectDropDown from '@/components/views/TradingStationPanel/AssetSelectDropDowns/TokenSelectDropDown';
 
