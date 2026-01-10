@@ -37,7 +37,7 @@ import {
 import ManageSponsorsButton from '@/components/views/Buttons/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/views/Buttons/AddSponsorshipButton';
 
-import TokenSelectDropDown from '@/components/views/AssetSelectDropDowns/TokenSelectDropDown';
+import TokenSelectDropDown from '@/components/views/TradingStationPanel/AssetSelectDropDowns/TokenSelectDropDown';
 
 import {
   TokenPanelProvider,
