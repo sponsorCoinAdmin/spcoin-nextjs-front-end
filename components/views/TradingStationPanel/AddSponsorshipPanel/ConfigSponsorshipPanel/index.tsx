@@ -1,4 +1,4 @@
-// File: @/components/containers/ConfigSlippagePanel.tsx
+// File: @/components/views\TradingStationPanel/AddSponsorshipPanel/ConfigSponsorshipPanel/index.tsx
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';

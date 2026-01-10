@@ -1,4 +1,4 @@
-// File: @/components/views/ConfigSlippagePanel/index.tsx
+// File: @/components/views/TradingStationPanel/ConfigSlippagePanel/index.tsx
 'use client';
 
 import React, { useCallback } from 'react';

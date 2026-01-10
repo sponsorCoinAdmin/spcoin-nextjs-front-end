@@ -1,4 +1,4 @@
-// File: @/components/containers/FeeDisclosure.tsx
+// File: @/components/views/TradingStationPanel/FeeDisclosure/index.tsx
 'use client';
 
 import React from 'react';

@@ -1,4 +1,4 @@
-// File: @/components/views/AddSponsorshipPanel.tsx
+// File: @/components/views/TradingStationPanel/AddSponsorshipPanel/index.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -12,7 +12,7 @@ import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel/ConfigSponsorshipPanel';
-import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/AssetSelectDropDowns';
+import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/lib/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';

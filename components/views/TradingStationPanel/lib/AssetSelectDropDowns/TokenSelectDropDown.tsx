@@ -1,3 +1,5 @@
+// File: @lib/components/views/TradingStationPanel/lib/AssetSelectDropDowns/TokenSelectDropDown.tsx
+
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';

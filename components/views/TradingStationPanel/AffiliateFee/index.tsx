@@ -1,4 +1,4 @@
-// File: @/components/containers/AffiliateFee.tsx
+// File: @/components/views/TradingStationPanel/AffiliateFee/index.tsx
 'use client';
 
 import React, { useMemo } from 'react';
