@@ -136,7 +136,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   const showSummaryTable = true;
 
-  // ✅ Best fix: ensure first column content never wraps (prevents "Total Coins" splitting)
   const col1NoWrap = 'whitespace-nowrap';
 
   return (
@@ -164,7 +163,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         {showSummaryTable && (
           <div
             id="MANAGE_SPONSORSHIPS_TABLE"
-            className={`${msTableTw.wrapper} mb-6 -mt-[25px]`}
+            // ✅ reduced spacing by 2px: mt-4 → mt-3
+            className={`${msTableTw.wrapper} mb-1`}
           >
             <table className={`${msTableTw.table} min-w-full`}>
               <thead>
@@ -191,21 +191,17 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               </thead>
 
               <tbody>
-                {/* Row A */}
                 <tr className={msTableTw.rowBorder}>
-                  {/* Col 1 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
                     <div className={`${msTableTw.tdInner5} ${col1NoWrap}`}>
                       Trading
                     </div>
                   </td>
 
-                  {/* Col 2 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td}`}>
                     <div className={msTableTw.tdInnerCenter}>0</div>
                   </td>
 
-                  {/* Col 3 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
                     <div className={msTableTw.tdInnerCenter5}>
                       <button
@@ -223,9 +219,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </td>
                 </tr>
 
-                {/* Row B */}
                 <tr className={msTableTw.rowBorder}>
-                  {/* Col 1 */}
                   <td className={`${msTableTw.rowB} ${msTableTw.td5}`}>
                     <button
                       type="button"
@@ -240,12 +234,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     </button>
                   </td>
 
-                  {/* Col 2 */}
                   <td className={`${msTableTw.rowB} ${msTableTw.td}`}>
                     <div className={msTableTw.tdInnerCenter}>0</div>
                   </td>
 
-                  {/* Col 3 */}
                   <td className={`${msTableTw.rowB} ${msTableTw.td5}`}>
                     <div className={msTableTw.tdInnerCenter5}>
                       <button
@@ -261,9 +253,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </td>
                 </tr>
 
-                {/* Row A */}
                 <tr className={msTableTw.rowBorder}>
-                  {/* Col 1 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
                     <button
                       type="button"
@@ -275,14 +265,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     </button>
                   </td>
 
-                  {/* Col 2 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td}`}>
                     <div className={msTableTw.tdInnerCenter}>
                       {pendingVisible ? '' : 0}
                     </div>
                   </td>
 
-                  {/* Col 3 */}
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
                     <div className={msTableTw.tdInnerCenter5}>
                       {!pendingVisible && (
@@ -301,7 +289,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
                 {pendingVisible && (
                   <>
-                    {/* Sponsors (Row B) */}
                     <tr className={msTableTw.rowBorder}>
                       <td className={`${msTableTw.rowB} ${msTableTw.td5}`}>
                         <button
@@ -339,7 +326,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       </td>
                     </tr>
 
-                    {/* Recipients (Row A) */}
                     <tr className={msTableTw.rowBorder}>
                       <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
                         <button
@@ -375,7 +361,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       </td>
                     </tr>
 
-                    {/* Agents (Row B) */}
                     <tr className={msTableTw.rowBorder}>
                       <td className={`${msTableTw.rowB} ${msTableTw.td5}`}>
                         <button
@@ -413,7 +398,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </>
                 )}
 
-                {/* Total row (Row depends on pendingVisible) */}
                 {(() => {
                   const zebra = pendingVisible ? msTableTw.rowA : msTableTw.rowB;
 
