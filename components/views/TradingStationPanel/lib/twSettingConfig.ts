@@ -5,7 +5,7 @@ export const TSP_TW = {
   container: 'flex flex-col',
 
   // Global vertical spacing between children
-  gap: 'gap-2', // change to gap-1 / gap-3 / gap-4 etc.
+  gap: 'gap-0', // change to gap-1 / gap-3 / gap-4 etc.
 
   // Default slot wrapper (lets you normalize odd children without touching them)
   slot: 'w-full',
