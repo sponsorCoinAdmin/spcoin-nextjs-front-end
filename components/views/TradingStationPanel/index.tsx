@@ -28,7 +28,7 @@ export default function TradingStationPanel() {
 
         <div
           id="TRADING_PAIR"
-          className={`relative ${TSP_TW.container} ${TSP_TW.gap} min-h-[216px] bg-orange-500 p-0 m-0`}
+          className={`relative ${TSP_TW.container} ${TSP_TW.gap} min-h-[216px] `}
         >
           <div className={TSP_TW.slot}>
             <SellSelectPanel />
