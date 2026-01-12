@@ -57,6 +57,6 @@
         │                 │                                                           ├── callbackAccount(wallet)
         │                 │                                                           ├── hasErroredRef = false
         │                 │                                                           └── setSpCoinDisplay(SHOW_RECIPIENT_CONTAINER)
-        ├── <PriceButton>
+        ├── <ConnectTradeButton>
         ├── <AffiliateFee>
         └── <FeeDisclosure>

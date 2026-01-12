@@ -115,8 +115,6 @@ const BuySellSwapArrowButton = () => {
     relative
     z-10
     mx-auto
-    -mt-4
-    -mb-3
     flex items-center justify-center
     w-6 h-6
     text-[#5F6783] bg-[#3a4157]

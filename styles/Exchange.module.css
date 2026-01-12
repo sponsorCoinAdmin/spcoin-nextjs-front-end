@@ -231,21 +231,6 @@
   color: #51596f;
 }
 
-.exchangeButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #5981F3;
-  background-color: #243056; 
-  width: calc(100%);
-  height: 55px;
-  font-size: 20px;
-  border-radius: 12px;
-  font-weight: bold;
-  transition: 0.3s;
-  margin-bottom: 5px;
-}
-
 .errorColor {
   color: #5981F3;
   background-color: #501505; 
@@ -259,11 +244,6 @@
 .executeColor {
   color: #5981F3;
   background-color: #1f3e1d; 
-}
-
-.exchangeButton:hover {
-  cursor: pointer;
-  color: green
 }
 
 .infoImg {

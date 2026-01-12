@@ -46,7 +46,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // controls
     SPCD.SWAP_ARROW_BUTTON,
-    SPCD.CONNECT_PRICE_BUTTON,
+    SPCD.CONNECT_TRADE_BUTTON,
     SPCD.FEE_DISCLOSURE,
     SPCD.AFFILIATE_FEE,
   ],
@@ -88,7 +88,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   // controls
   [SPCD.SWAP_ARROW_BUTTON]: 'control',
-  [SPCD.CONNECT_PRICE_BUTTON]: 'control',
+  [SPCD.CONNECT_TRADE_BUTTON]: 'control',
   [SPCD.FEE_DISCLOSURE]: 'control',
   [SPCD.AFFILIATE_FEE]: 'control',
 

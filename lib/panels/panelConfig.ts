@@ -215,7 +215,7 @@ export const PANELS: readonly PanelDef[] = [
     defaultVisible: true,
   },
   {
-    id: SP.CONNECT_PRICE_BUTTON,
+    id: SP.CONNECT_TRADE_BUTTON,
     kind: 'control',
     parent: SP.TRADING_STATION_PANEL,
     defaultVisible: true,

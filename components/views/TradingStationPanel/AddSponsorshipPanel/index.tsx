@@ -12,7 +12,7 @@ import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel/ConfigSponsorshipPanel';
-import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/lib/AssetSelectDropDowns';
+import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
@@ -31,6 +31,9 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // ✅ New: overlay caller registry
 import { setOverlayCaller } from '@/lib/context/exchangeContext/overlayReturnRegistry';
+
+// ✅ New: Tailwind layout config
+import { TSP_TW } from '@/components/views/TradingStationPanel/lib/twSettingConfig';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ADD_SPONSORSHIP === 'true';
 const debugLog = createDebugLogger('AddSponsorshipPanel', DEBUG_ENABLED);
@@ -269,14 +272,15 @@ const AddSponsorShipPanel: React.FC = () => {
   return (
     <div
       id="AddSponsorshipPanel"
-      className="
-        pt-[8px]
+      className={`
         relative
-        mb-[5px]
+        ${TSP_TW.container} ${TSP_TW.gap}
+        pt-[8px]
         rounded-t-[12px]
         rounded-b-[12px]
         overflow-hidden
-        bg-[#1f2639] text-[#94a3b8]"
+        bg-[#1f2639] text-[#94a3b8]
+      `}
     >
       <div className="h-[90px]">
         <div className="absolute top-3 left-[11px] text-[14px] text-[#94a3b8]">

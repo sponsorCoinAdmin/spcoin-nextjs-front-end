@@ -4,7 +4,7 @@
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import BuySellSwapArrowButton from '@/components/views/TradingStationPanel/SwapArrowButton';
-import PriceButton from '@/components/views/Buttons/PriceButton';
+import ConnectTradeButton from '@/components/views/Buttons/ConnectTradeButton';
 import AffiliateFee from '@/components/views/TradingStationPanel/AffiliateFee';
 import FeeDisclosure from '@/components/views/TradingStationPanel/FeeDisclosure';
 // import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AssetSelectPCFanels/AddSponsorshipPanel';
@@ -15,6 +15,7 @@ import PanelGate from '@/components/utility/PanelGate';
 import SellSelectPanel from './SellSelectPanel';
 import BuySelectPanel from './BuySelectPanel';
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
+import { TSP_TW } from '@/components/views/TradingStationPanel/lib/twSettingConfig';
 
 export default function TradingStationPanel() {
   const { isLoading, data } = usePriceAPI();
@@ -22,15 +23,28 @@ export default function TradingStationPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
-      <div id='TradingStationPanel'>
+      <div id="TradingStationPanel" className={`flex flex-col ${TSP_TW.gap}`}>
         <ConfigSlippagePanel />
-        <div>
-          <SellSelectPanel />
+
+        <div
+          id="TRADING_PAIR"
+          className={`relative ${TSP_TW.container} ${TSP_TW.gap} min-h-[216px] bg-orange-500 p-0 m-0`}
+        >
+          <div className={TSP_TW.slot}>
+            <SellSelectPanel />
+          </div>
+
+          <div className={TSP_TW.arrowSlot}>
             <BuySellSwapArrowButton />
-          <BuySelectPanel />
+          </div>
+
+          <div className={TSP_TW.slot}>
+            <BuySelectPanel />
+          </div>
         </div>
+
         <AddSponsorShipPanel />
-        <PriceButton isLoadingPrice={isLoading} />
+        <ConnectTradeButton isLoadingPrice={isLoading} />
         <AffiliateFee priceResponse={priceResponse} />
         <FeeDisclosure />
       </div>

@@ -52,7 +52,7 @@ const TRADING_CHILDREN: SP[] = [
   SP.BUY_SELECT_PANEL,
   SP.ADD_SPONSORSHIP_PANEL,
   SP.SWAP_ARROW_BUTTON,
-  SP.CONNECT_PRICE_BUTTON,
+  SP.CONNECT_TRADE_BUTTON,
   SP.FEE_DISCLOSURE,
   SP.AFFILIATE_FEE,
   SP.CONFIG_SLIPPAGE_PANEL,
@@ -194,7 +194,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   /* Controls */
   { id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true },
-  { id: SP.CONNECT_PRICE_BUTTON, kind: 'control', defaultVisible: true },
+  { id: SP.CONNECT_TRADE_BUTTON, kind: 'control', defaultVisible: true },
   { id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true },
   { id: SP.AFFILIATE_FEE, kind: 'panel' },
 

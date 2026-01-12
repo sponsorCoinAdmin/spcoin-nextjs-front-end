@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
-import styles from '@/styles/Exchange.module.css';
 import {
   useBuyAmount,
   useErrorMessage,
@@ -32,7 +31,7 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
       tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
         ? 'EXACT OUT '
         : 'EXACT IN ',
-    [tradeData.tradeDirection]
+    [tradeData.tradeDirection],
   );
 
   const insufficientSellBalance = useMemo(() => {
@@ -53,19 +52,19 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
 
   const tokensRequired = useMemo(
     () => !tradeData.sellTokenContract && !tradeData.buyTokenContract,
-    [tradeData.sellTokenContract, tradeData.buyTokenContract]
+    [tradeData.sellTokenContract, tradeData.buyTokenContract],
   );
   const sellTokenRequired = useMemo(
     () => !tradeData.sellTokenContract,
-    [tradeData.sellTokenContract]
+    [tradeData.sellTokenContract],
   );
   const buyTokenRequired = useMemo(
     () => !tradeData.buyTokenContract,
-    [tradeData.buyTokenContract]
+    [tradeData.buyTokenContract],
   );
   const amountRequired = useMemo(
     () => sellAmount === 0n && buyAmount === 0n,
-    [sellAmount, buyAmount]
+    [sellAmount, buyAmount],
   );
 
   const buttonType = useMemo<BUTTON_TYPE>(() => {
@@ -73,20 +72,20 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
       errorMessage?.status === STATUS.WARNING_HARDHAT
         ? BUTTON_TYPE.NO_HARDHAT_API
         : errorMessage?.status === STATUS.ERROR_API_PRICE
-        ? BUTTON_TYPE.API_TRANSACTION_ERROR
-        : isLoadingPrice
-        ? BUTTON_TYPE.IS_LOADING_PRICE
-        : tokensRequired
-        ? BUTTON_TYPE.TOKENS_REQUIRED
-        : sellTokenRequired
-        ? BUTTON_TYPE.SELL_TOKEN_REQUIRED
-        : buyTokenRequired
-        ? BUTTON_TYPE.BUY_TOKEN_REQUIRED
-        : amountRequired
-        ? BUTTON_TYPE.ZERO_AMOUNT
-        : insufficientSellBalance
-        ? BUTTON_TYPE.INSUFFICIENT_BALANCE
-        : BUTTON_TYPE.SWAP;
+          ? BUTTON_TYPE.API_TRANSACTION_ERROR
+          : isLoadingPrice
+            ? BUTTON_TYPE.IS_LOADING_PRICE
+            : tokensRequired
+              ? BUTTON_TYPE.TOKENS_REQUIRED
+              : sellTokenRequired
+                ? BUTTON_TYPE.SELL_TOKEN_REQUIRED
+                : buyTokenRequired
+                  ? BUTTON_TYPE.BUY_TOKEN_REQUIRED
+                  : amountRequired
+                    ? BUTTON_TYPE.ZERO_AMOUNT
+                    : insufficientSellBalance
+                      ? BUTTON_TYPE.INSUFFICIENT_BALANCE
+                      : BUTTON_TYPE.SWAP;
 
     debugLog.log(`ExchangeButton Resolved Button Type, ${BUTTON_TYPE[result]}`);
     return result;
@@ -127,18 +126,22 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
     }
   }, [buttonType, tradeDirectionText, tradeData.sellTokenContract?.symbol]);
 
-  const colorKey = useMemo<'executeColor' | 'errorColor' | 'standardColor'>(() => {
+  // Matches the CSS:
+  // standardColor -> bg-[#243056]
+  // errorColor    -> bg-[#501505]
+  // executeColor  -> bg-[#1f3e1d]
+  const bgClass = useMemo(() => {
     switch (buttonType) {
       case BUTTON_TYPE.SWAP:
-        return 'executeColor';
+        return 'bg-[#1f3e1d]';
       case BUTTON_TYPE.API_TRANSACTION_ERROR:
       case BUTTON_TYPE.BUY_ERROR_REQUIRED:
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
       case BUTTON_TYPE.NO_HARDHAT_API:
       case BUTTON_TYPE.SELL_ERROR_REQUIRED:
-        return 'errorColor';
+        return 'bg-[#501505]';
       default:
-        return 'standardColor';
+        return 'bg-[#243056]';
     }
   }, [buttonType]);
 
@@ -185,12 +188,23 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
   }, [buttonType, errorMessage?.msg]);
 
   return (
-    <div id="ExchangeButtonContext">
+    <div id="ExchangeButtonContext" className="p-0 m-0">
       <button
         id="ExchangeButton"
         onClick={buttonClick}
         type="button"
-        className={`${styles.exchangeButton} ${styles[colorKey]}`}
+        className={[
+          // exchangeButton base (same visuals, no spacing utilities)
+          'flex items-center justify-center',
+          'text-[#5981F3]',
+          bgClass,
+          'w-full h-[55px]',
+          'text-[20px] font-bold',
+          'rounded-[12px]',
+          'transition-[color,background-color] duration-300',
+          // no mb, no mt, no gap, no padding/margin on container
+          'hover:cursor-pointer hover:text-green-500',
+        ].join(' ')}
       >
         {buttonText}
       </button>

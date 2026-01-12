@@ -51,7 +51,7 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.SELL_SELECT_PANEL, true],
   [SP.BUY_SELECT_PANEL, true],
   [SP.SWAP_ARROW_BUTTON, true],
-  [SP.CONNECT_PRICE_BUTTON, true],
+  [SP.CONNECT_TRADE_BUTTON, true],
   [SP.FEE_DISCLOSURE, true],
   [SP.AFFILIATE_FEE, false],
 
@@ -114,7 +114,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ─────────────── Default-on widgets ───────────────
       node(SP.SWAP_ARROW_BUTTON, true),
-      node(SP.CONNECT_PRICE_BUTTON, true),
+      node(SP.CONNECT_TRADE_BUTTON, true),
       node(SP.FEE_DISCLOSURE, true),
 
       // ─────────────── Default-off widget ───────────────

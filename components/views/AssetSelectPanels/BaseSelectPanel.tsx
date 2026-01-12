@@ -37,7 +37,7 @@ import {
 import ManageSponsorsButton from '@/components/views/TradingStationPanel/SellSelectPanel/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/views/TradingStationPanel/BuySelectPanel/AddSponsorshipButton';
 
-import TokenSelectDropDown from '@/components/views/TradingStationPanel/lib/AssetSelectDropDowns/TokenSelectDropDown';
+import TokenSelectDropDown from '@/components/views/TradingStationPanel/AssetSelectDropDowns/TokenSelectDropDown';
 
 import {
   TokenPanelProvider,
@@ -316,10 +316,7 @@ function BaseSelectPanelInner() {
   return (
     <div
       id='BaseSelectPanelInner'
-      className={clsx(
-        'relative mt-[5px] mb-[5px]',
-        'rounded-[12px] overflow-hidden',
-      )}
+      className={clsx('relative', 'rounded-[12px] overflow-hidden')}
     >
       <input
         id='TokenPanelInputAmount'
