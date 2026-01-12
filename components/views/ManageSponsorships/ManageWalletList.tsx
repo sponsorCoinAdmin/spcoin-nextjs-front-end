@@ -231,18 +231,30 @@ export default function ManageWalletList({
       <div id={wrapperId} className={wrapperTw} data-list-type={LIST_TYPE[listType]}>
         <table className={`min-w-full ${msTableTw.table}`}>
           <thead>
-            <tr className={msTableTw.theadRow}>
-              <th scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit}`}>
+            <tr className={`${msTableTw.theadRow} sticky top-0 z-20`}>
+              <th
+                scope="col"
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639]`}
+              >
                 {roleLabel}
               </th>
-              <th scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-center`}>
+
+              <th
+                scope="col"
+                className={`${msTableTw.th} ${msTableTw.thPad3} text-center sticky top-0 z-20 bg-[#1f2639]`}
+              >
                 {middleHeaderLabel}
               </th>
-              <th scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} text-center ${msTableTw.colFit}`}>
+
+              <th
+                scope="col"
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} text-center ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639]`}
+              >
                 {actionHeaderLabel}
               </th>
             </tr>
           </thead>
+
 
           <tbody>
             {walletList.map((w, i) => {
