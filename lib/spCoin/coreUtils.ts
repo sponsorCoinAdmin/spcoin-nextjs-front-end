@@ -1,4 +1,4 @@
-// Fixed file
+// File: @/lib/spCoin/coreUtils.ts
 
 import { parseUnits, formatUnits, getAddress } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
@@ -10,7 +10,7 @@ import type { TokenContract } from '@/lib/structure';
  */
 export const parseValidFormattedAmount = (
   value: string | bigint,
-  decimals: number | undefined
+  decimals: number | undefined,
 ): string => {
   decimals = decimals || 0;
 
@@ -74,7 +74,7 @@ const toggleElement = (id: string): boolean => {
  */
 const getValidBigIntToFormattedValue = (
   value: bigint | undefined,
-  decimals: number | undefined
+  decimals: number | undefined,
 ): string => {
   decimals = decimals || 0;
   const stringValue = formatUnits(value || 0n, decimals);
@@ -87,7 +87,7 @@ const getValidBigIntToFormattedValue = (
 const setValidPriceInput = (
   txt: string,
   decimals: number,
-  setSellAmount: (amount: bigint) => void
+  setSellAmount: (amount: bigint) => void,
 ): string => {
   txt = parseValidFormattedAmount(txt, decimals);
   if (!isNaN(Number(txt))) {
@@ -139,6 +139,21 @@ const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
 };
 
 /**
+ * Convenience helpers for TradeData-like objects.
+ * These are intentionally light-weight and only depend on TokenContract shape.
+ */
+type TradeDataLike = {
+  sellTokenContract?: TokenContract;
+  buyTokenContract?: TokenContract;
+};
+
+const isSellSpCoin = (tradeData: TradeDataLike | undefined): boolean =>
+  isSpCoin(tradeData?.sellTokenContract);
+
+const isBuySpCoin = (tradeData: TradeDataLike | undefined): boolean =>
+  isSpCoin(tradeData?.buyTokenContract);
+
+/**
  * Convert between different token decimals using a bigint shift.
  */
 const bigIntDecimalShift = (value: bigint, decimalShift: number): bigint => {
@@ -153,7 +168,7 @@ const bigIntDecimalShift = (value: bigint, decimalShift: number): bigint => {
 const decimalAdjustTokenAmount = (
   amount: bigint,
   newTokenContract: TokenContract | undefined,
-  prevTokenContract: TokenContract | undefined
+  prevTokenContract: TokenContract | undefined,
 ): bigint => {
   const decimalShift: number =
     (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
@@ -165,20 +180,20 @@ const decimalAdjustTokenAmount = (
  */
 const invalidTokenContract = (
   textInputField: string | undefined,
-  chainId: number
+  chainId: number,
 ): TokenContract | undefined => {
   return textInputField
     ? {
-      chainId,
-      address: BURN_ADDRESS,
-      name: 'Invalid Network/Token Address',
-      symbol: 'Please Enter Valid Token Address',
-      decimals: undefined,
-      balance: 0n,
-      totalSupply: undefined,
-      logoURL: undefined,
-      amount: 0n,
-    }
+        chainId,
+        address: BURN_ADDRESS,
+        name: 'Invalid Network/Token Address',
+        symbol: 'Please Enter Valid Token Address',
+        decimals: undefined,
+        balance: 0n,
+        totalSupply: undefined,
+        logoURL: undefined,
+        amount: 0n,
+      }
     : undefined;
 };
 
@@ -190,6 +205,8 @@ export {
   setValidPriceInput,
   getQueryVariable,
   isSpCoin,
+  isSellSpCoin,
+  isBuySpCoin,
   bigIntDecimalShift,
   decimalAdjustTokenAmount,
   invalidTokenContract,

@@ -16,8 +16,12 @@ import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import { useExchangeContext, useBuyTokenContract } from '@/lib/context/hooks';
-import { isSpCoin } from '@/lib/spCoin/coreUtils';
+import {
+  useExchangeContext,
+  useBuyTokenContract,
+  useTradeData,
+} from '@/lib/context/hooks';
+import { isSpCoin, isBuySpCoin } from '@/lib/spCoin/coreUtils';
 
 // ✅ REST helpers
 import { fetchRecipientMeta, type RecipientMeta } from '@/lib/rest/recipientMeta';
@@ -62,8 +66,10 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // ✅ only openPanel / closePanel remain
-  const { closePanel } = usePanelTree();
+  const tradeData = useTradeData();
+
+  // ✅ openPanel / closePanel
+  const { openPanel, closePanel } = usePanelTree();
 
   // ✅ usePanelTransitions now exposes openOverlay / closeTop only
   const { openOverlay } = usePanelTransitions();
@@ -173,6 +179,13 @@ const AddSponsorShipPanel: React.FC = () => {
     }
   }, [configVisible, openOverlay, closePanel]);
 
+  /**
+   * X close behavior:
+   * - Clears recipientAccount
+   * - Closes ADD_SPONSORSHIP_PANEL
+   * - If buy token is SpCoin, closes STAKING_SPCOINS_PANEL
+   * - If current buy token IS SpCoin, opens ADD_SPONSORSHIP_BUTTON (otherwise closes it)
+   */
   const closeAddSponsorshipPanel = useCallback(() => {
     debugLog.log?.('closeAddSponsorshipPanel clicked');
 
@@ -192,6 +205,21 @@ const AddSponsorShipPanel: React.FC = () => {
       'AddSponsorshipPanel:closeAddSponsorshipPanel(close ADD_SPONSORSHIP_PANEL)',
     );
 
+    // ✅ Toggle the inline button based on *current buy token*
+    // Requirement: open ADD_SPONSORSHIP_BUTTON if isSpCoin(tradeData.buyTokenContract)
+    if (isBuySpCoin(tradeData)) {
+      openPanel(
+        SP_TREE.ADD_SPONSORSHIP_BUTTON,
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(open ADD_SPONSORSHIP_BUTTON - buy is SpCoin)',
+        SP_TREE.TRADING_STATION_PANEL,
+      );
+    } else {
+      closePanel(
+        SP_TREE.ADD_SPONSORSHIP_BUTTON,
+        'AddSponsorshipPanel:closeAddSponsorshipPanel(close ADD_SPONSORSHIP_BUTTON - buy not SpCoin)',
+      );
+    }
+
     // Keep your existing intent (close STAKING panel conditionally)
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
       closePanel(
@@ -199,7 +227,13 @@ const AddSponsorShipPanel: React.FC = () => {
         'AddSponsorshipPanel:closeAddSponsorshipPanel(optionalClose STAKING_SPCOINS_PANEL)',
       );
     }
-  }, [setExchangeContext, closePanel, buyTokenContract]);
+  }, [
+    setExchangeContext,
+    closePanel,
+    openPanel,
+    buyTokenContract,
+    tradeData,
+  ]);
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const pageQueryUrl = useMemo(() => {
@@ -291,7 +325,10 @@ const AddSponsorShipPanel: React.FC = () => {
           <Link
             href={recipientSiteHref}
             onClick={() => {
-              debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
+              debugLog.log?.(
+                'Link clicked → opening RecipientSite tab for:',
+                recipientSiteHref,
+              );
               openRecipientSiteTab();
             }}
             className={`${linkTopClass} min-w-[50px] h-[10px] text-[#94a3b8] text-[25px] pr-2 flex items-center justify-start gap-1 cursor-pointer hover:text-[orange] transition-colors duration-200`}
