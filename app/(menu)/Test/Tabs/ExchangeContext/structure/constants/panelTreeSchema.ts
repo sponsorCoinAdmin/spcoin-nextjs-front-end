@@ -1,8 +1,9 @@
+
 // File: @/app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
 import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
-export const schemaVersion = 'v2'; // ⬅️ bump so the virtual tree rebuilds
+export const schemaVersion = 'v3'; // ⬅️ bump so the virtual tree rebuilds
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -31,7 +32,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.MANAGE_AGENTS_PANEL,
     SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
 
-    // ✅ Manage DETAIL views (these were missing from the schema)
+    // ✅ Manage DETAIL views
     SPCD.MANAGE_AGENT_PANEL,
     SPCD.MANAGE_RECIPIENT_PANEL,
     SPCD.MANAGE_SPONSOR_PANEL,
@@ -39,16 +40,30 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // (Optional legacy) SPCD.SPONSOR_LIST_SELECT_PANEL,
   ],
 
+  // ✅ Desired output: CONFIG_SLIPPAGE_PANEL is nested under TRADING_STATION_PANEL
   [SPCD.TRADING_STATION_PANEL]: [
-    SPCD.SELL_SELECT_PANEL,
-    SPCD.BUY_SELECT_PANEL,
+    SPCD.CONFIG_SLIPPAGE_PANEL,
+
+    // trading pair container
+    SPCD.EXCHANGE_TRADING_PAIR,
+
+    // other inline panels under trading
     SPCD.ADD_SPONSORSHIP_PANEL,
 
     // controls
-    SPCD.SWAP_ARROW_BUTTON,
     SPCD.CONNECT_TRADE_BUTTON,
     SPCD.FEE_DISCLOSURE,
     SPCD.AFFILIATE_FEE,
+  ],
+
+  // ✅ Desired order inside EXCHANGE_TRADING_PAIR:
+  // SELL_SELECT_PANEL (with MANAGE_SPONSORSHIPS_BUTTON nested under it),
+  // SWAP_ARROW_BUTTON,
+  // BUY_SELECT_PANEL
+  [SPCD.EXCHANGE_TRADING_PAIR]: [
+    SPCD.SELL_SELECT_PANEL,
+    SPCD.SWAP_ARROW_BUTTON,
+    SPCD.BUY_SELECT_PANEL,
   ],
 
   [SPCD.SELL_SELECT_PANEL]: [SPCD.MANAGE_SPONSORSHIPS_BUTTON],
@@ -58,8 +73,10 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.MAIN_TRADING_PANEL]: 'panel',
-
   [SPCD.TRADING_STATION_PANEL]: 'panel',
+
+  [SPCD.CONFIG_SLIPPAGE_PANEL]: 'panel',
+  [SPCD.EXCHANGE_TRADING_PAIR]: 'panel',
 
   [SPCD.SELL_SELECT_PANEL]: 'panel',
   [SPCD.BUY_SELECT_PANEL]: 'panel',
@@ -93,7 +110,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  // [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel', // legacy if you still want to show it
+  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel', // legacy/test UI support
 };
 
 // Optional grouping (updated to include manage panels)

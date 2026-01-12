@@ -47,15 +47,38 @@ export type PanelDef = {
 
 /* ─────────────────────────────── Grouping Helpers ─────────────────────────────── */
 
-const TRADING_CHILDREN: SP[] = [
+/**
+ * ✅ EXCHANGE_TRADING_PAIR is a structural container that controls the visibility
+ * of the associated div in TradingStationPanel.
+ *
+ * Tree order requirement:
+ *   SELL_SELECT_PANEL
+ *     MANAGE_SPONSORSHIPS_BUTTON (child of SELL_SELECT_PANEL)
+ *   SWAP_ARROW_BUTTON
+ *   BUY_SELECT_PANEL
+ */
+const EXCHANGE_TRADING_PAIR_CHILDREN: SP[] = [
   SP.SELL_SELECT_PANEL,
-  SP.BUY_SELECT_PANEL,
-  SP.ADD_SPONSORSHIP_PANEL,
   SP.SWAP_ARROW_BUTTON,
+  SP.BUY_SELECT_PANEL,
+];
+
+/**
+ * Trading station children order requirement:
+ *   CONFIG_SLIPPAGE_PANEL
+ *   EXCHANGE_TRADING_PAIR
+ *   ADD_SPONSORSHIP_PANEL
+ *   CONNECT_TRADE_BUTTON
+ *   FEE_DISCLOSURE
+ *   AFFILIATE_FEE
+ */
+const TRADING_CHILDREN: SP[] = [
+  SP.CONFIG_SLIPPAGE_PANEL,
+  SP.EXCHANGE_TRADING_PAIR,
+  SP.ADD_SPONSORSHIP_PANEL,
   SP.CONNECT_TRADE_BUTTON,
   SP.FEE_DISCLOSURE,
   SP.AFFILIATE_FEE,
-  SP.CONFIG_SLIPPAGE_PANEL,
 ];
 
 /**
@@ -170,6 +193,17 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true },
 
   /* Inline / auxiliary */
+
+  /**
+   * ✅ Container controlling the TRADING_PAIR/EXCHANGE_TRADING_PAIR visibility.
+   */
+  {
+    id: SP.EXCHANGE_TRADING_PAIR,
+    kind: 'panel',
+    defaultVisible: true,
+    children: EXCHANGE_TRADING_PAIR_CHILDREN,
+  },
+
   {
     id: SP.SELL_SELECT_PANEL,
     kind: 'panel',
@@ -190,6 +224,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   },
 
   { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel' },
+
+  /**
+   * ✅ Config Slippage is an inline panel under TRADING_STATION_PANEL
+   * (NOT under TRADE_CONTAINER_HEADER).
+   */
   { id: SP.CONFIG_SLIPPAGE_PANEL, kind: 'panel' },
 
   /* Controls */
