@@ -34,6 +34,32 @@ function shortAddr(addr: string, left = 6, right = 4) {
   return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
 }
 
+/** ✅ New: map containerType → AddressSelect preText (switch-based) */
+function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
+  switch (containerType) {
+    // Sponsor flows
+    case SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON:
+    case SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL:
+    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
+    case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
+      return 'Sponsor Account:';
+
+    // Agent flows
+    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
+    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
+      return 'Agent Account:';
+
+    // Recipient flows
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
+      return 'Recipient Account:';
+
+    default:
+      return 'Active Account:';
+  }
+}
+
 export default function ManageWalletList({
   walletList,
   setWalletCallBack,
@@ -62,6 +88,22 @@ export default function ManageWalletList({
     return derived;
   }, [containerType]);
 
+  // ✅ New: AddressSelect preText derived from containerType (same “style” as accountType)
+  const inputAccountText = useMemo(() => {
+    const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined;
+    const upper = (key ?? '').toUpperCase();
+    const derived = getInputAccountText(containerType);
+
+    debugLog.log?.('[derive inputAccountText]', {
+      containerType,
+      containerLabel: key ?? 'UNKNOWN',
+      upper,
+      derived,
+    });
+
+    return derived;
+  }, [containerType]);
+
   // 🔴 ToDo overlay
   const [showToDo, setShowToDo] = useState<boolean>(false);
   const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
@@ -79,10 +121,10 @@ export default function ManageWalletList({
     const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined;
     const upper = (key ?? '').toUpperCase();
     const derived = upper.includes('RECIPIENT')
-      ? { roleLabel: 'Recipient', idPrefix: 'mr' }
+      ? { roleLabel: 'My Recipients', idPrefix: 'mr' }
       : upper.includes('SPONSOR')
-        ? { roleLabel: 'Recipient', idPrefix: 'ms' }
-        : { roleLabel: 'Agent', idPrefix: 'ma' };
+        ? { roleLabel: 'My Recipients', idPrefix: 'ms' }
+        : { roleLabel: 'My Agents', idPrefix: 'ma' };
 
     debugLog.log?.('[derive roleLabel/idPrefix]', {
       containerType,
@@ -174,12 +216,14 @@ export default function ManageWalletList({
     `${msTableTw.wrapper} !mt-0 mt-0 ` +
     'mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto';
 
-  const middleHeaderLabel =
+  const coinAction =
     listType === LIST_TYPE.SPONSOR_UNSPONSOR
       ? 'Staked Coins'
       : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
         ? 'Pending Coins'
         : 'Coins';
+
+  const middleHeaderLabel = 'Meta Data';
 
   const actionHeaderLabel =
     listType === LIST_TYPE.SPONSOR_UNSPONSOR
@@ -215,7 +259,7 @@ export default function ManageWalletList({
         callingParent={'ManageWallet'}
         useActiveAddr={true}
         shortAddr={true}
-        preText={'Deposit Account:'}
+        preText={inputAccountText}
       />
 
       {/* Tooltip */}
@@ -255,7 +299,6 @@ export default function ManageWalletList({
             </tr>
           </thead>
 
-
           <tbody>
             {walletList.map((w, i) => {
               const zebra = i % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
@@ -267,8 +310,7 @@ export default function ManageWalletList({
                   : (() => {
                     const a = (w as any)?.address as Record<string, unknown> | undefined;
                     if (!a) return 'N/A';
-                    const cand =
-                      a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+                    const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
                     try {
                       return cand ? String(cand) : JSON.stringify(a);
                     } catch {
@@ -277,51 +319,69 @@ export default function ManageWalletList({
                   })();
 
               return (
-                <tr key={addressText} className={msTableTw.rowBorder}>
-                  {/* Column 1 (already correct) */}
-                  <td className="p-0">
-                    <button
-                      type="button"
-                      className={`${zebra} ${msTableTw.tdInnerCenter5} w-full flex-col hover:opacity-90 focus:outline-none`}
-                      onMouseEnter={() => onRowEnter(w?.name ?? '')}
-                      onMouseMove={onRowMove}
-                      onMouseLeave={onRowLeave}
-                      onClick={() => setWalletCallBack(w)}
-                      aria-label={`Open ${roleLabel}s reconfigure`}
-                      data-role={roleLabel}
-                      data-address={addressText}
-                    >
-                      <Image
-                        src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                        alt={`${w.name ?? 'Wallet'} logo`}
-                        width={53}
-                        height={53}
-                        className="h-[60px] w-[53px] px-[5px] object-contain rounded"
-                      />
-                    </button>
-                  </td>
-
-                  {/* Column 2 */}
-                  <td className={`${zebra} px-3 text-sm align-middle`}>
-                    <div className="w-full flex items-center justify-center bg-transparent">0</div>
-                  </td>
-
-                  {/* Column 3 (✅ +3px right padding) */}
-                  <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle`}>
-                    <div className="w-full flex items-center justify-center bg-transparent">
+                <React.Fragment key={addressText}>
+                  {/* Row 1: 3 columns, col #2 intentionally empty */}
+                  <tr>
+                    {/* Column 1 */}
+                    <td className="p-0">
                       <button
                         type="button"
-                        className={actionTw}
-                        aria-label={`${actionButtonLabel} for ${addressText}`}
-                        onClick={() => claimRewards(accountType, i)}
+                        className={`${zebra} ${msTableTw.tdInnerCenter5} w-full flex-col hover:opacity-90 focus:outline-none`}
+                        onMouseEnter={() => onRowEnter(w?.name ?? '')}
+                        onMouseMove={onRowMove}
+                        onMouseLeave={onRowLeave}
+                        onClick={() => setWalletCallBack(w)}
+                        aria-label={`Open ${roleLabel}s reconfigure`}
+                        data-role={roleLabel}
+                        data-address={addressText}
                       >
-                        {actionButtonLabel}
+                        <Image
+                          src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
+                          alt={`${w.name ?? 'Wallet'} logo`}
+                          width={53}
+                          height={53}
+                          className="h-[60px] w-[53px] px-[5px] object-contain rounded"
+                        />
                       </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+
+                    {/* Column 2 (Meta Data) — intentionally blank */}
+                    <td className={`${zebra} px-3 text-sm align-middle`}>
+                      <div className="w-full flex items-center justify-center bg-transparent" />
+                    </td>
+
+                    {/* Column 3 */}
+                    <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle`}>
+                      <div className="w-full flex items-center justify-center bg-transparent">
+                        <button
+                          type="button"
+                          className={actionTw}
+                          aria-label={`${actionButtonLabel} for ${addressText}`}
+                          onClick={() => claimRewards(accountType, i)}
+                        >
+                          {actionButtonLabel}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 2: same zebra; "Pending Coins" spans cols 1-2; "0" centered in col 3 */}
+                  <tr>
+                    <td className={`${zebra} px-3 py-2 text-sm align-middle`} colSpan={2}>
+                      <div className="w-full flex items-center justify-start bg-transparent whitespace-nowrap">
+                        {coinAction}
+                      </div>
+                    </td>
+
+                    <td className={`${zebra} px-3 py-2 text-sm align-middle`}>
+                      <div className="w-full flex items-center justify-center bg-transparent">0</div>
+                    </td>
+                  </tr>
+
+                </React.Fragment>
               );
             })}
+
 
             {/* Total row */}
             {(() => {
@@ -342,7 +402,7 @@ export default function ManageWalletList({
                     <div className="w-full flex items-center justify-center bg-transparent">0</div>
                   </td>
 
-                  {/* Column 3 (Total) (✅ +3px right padding) */}
+                  {/* Column 3 (Total) */}
                   <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle`}>
                     <div className="w-full flex items-center justify-center bg-transparent">
                       <button
