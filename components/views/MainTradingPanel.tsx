@@ -21,7 +21,8 @@ import StakingSpCoins from '@/components/views/ManageSponsorships/StakingSpCoins
 import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
-  AgentSelectPanel,
+  SponsorListSelectPanel,
+  AgentListSelectPanel,
   // SponsorListSelectPanel,
 } from '@/components/views/AssetSelectPanels';
 
@@ -125,7 +126,8 @@ export default function MainTradingPanel() {
           {/* Select / aux overlays */}
           <TokenListSelectPanel />
           <RecipientListSelectPanel />
-          <AgentSelectPanel />
+          <SponsorListSelectPanel />
+          <AgentListSelectPanel />
           {/* <SponsorListSelectPanel /> */}
 
           <ErrorMessagePanel />

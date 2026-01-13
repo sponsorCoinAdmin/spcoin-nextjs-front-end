@@ -32,9 +32,26 @@ type Props = {
   feedType: FEED_TYPE;
 };
 
-const LOG_TIME = false;
+const LOG_TIME = false as const;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATALIST === 'true';
 const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
+
+function isAccountFeedType(feedType: FEED_TYPE) {
+  return (
+    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+    feedType === FEED_TYPE.AGENT_ACCOUNTS ||
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
+    feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
+    feedType === FEED_TYPE.MANAGE_AGENTS
+  );
+}
+
+function roleFromFeedType(feedType: FEED_TYPE): string {
+  if (feedType === FEED_TYPE.AGENT_ACCOUNTS || feedType === FEED_TYPE.MANAGE_AGENTS)
+    return 'agent';
+  if (feedType === FEED_TYPE.SPONSOR_ACCOUNTS) return 'sponsor';
+  return 'recipient';
+}
 
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   // 💡 SSOT: use props directly; do not copy to local state
@@ -58,16 +75,24 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
 
-  const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
+  const programmaticReady = useEnsureBoolWhen(
+    [manualEntry, setManualEntry],
+    false,
+    enforceProgrammatic
+  );
 
+  // Log mount + whenever feed changes / data changes
   useEffect(() => {
-    debugLog.log?.('[mount]', {
+    debugLog.log?.('[render]', {
       feedType,
+      feedTypeLabel: FEED_TYPE[feedType],
+      isAccountFeed: isAccountFeedType(feedType),
       walletsCount: wallets.length,
       tokensCount: tokens.length,
       loading,
+      sampleWalletAddresses: wallets.slice(0, 3).map((w) => w.address),
     });
-  }, [feedType, wallets.length, tokens.length, loading]);
+  }, [feedType, wallets, tokens.length, loading]);
 
   // Commit deferred pick once allowed (unchanged + manualEntry=false)
   useEffect(() => {
@@ -86,11 +111,20 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
     handleHexInputChange(addr, false);
 
-    if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
+    // ✅ FIX: include SPONSOR_ACCOUNTS (+ manage feeds) as account selections
+    if (isAccountFeedType(feedType)) {
       const picked = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
       if (picked) {
-        debugLog.log?.('[deferred-commit] setTradingTokenCallback', { address: picked.address });
+        debugLog.log?.('[deferred-commit] setTradingTokenCallback', {
+          address: picked.address,
+          role: roleFromFeedType(feedType),
+        });
         setTradingTokenCallback(picked);
+      } else {
+        debugLog.warn?.('[deferred-commit] picked not found in wallets', {
+          addr,
+          walletsCount: wallets.length,
+        });
       }
     }
 
@@ -108,9 +142,11 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const handlePickAddress = useCallback(
     (address: string) => {
       debugLog.log?.('[pick]', {
-        addressPreview: address?.slice(0, 10),
+        addressPreview: address?.slice(0, 12),
         manualEntry,
         programmaticReady,
+        feedType,
+        feedTypeLabel: FEED_TYPE[feedType],
       });
 
       if (!programmaticReady) {
@@ -127,11 +163,20 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
       handleHexInputChange(address, false);
 
-      if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
+      // ✅ FIX: include SPONSOR_ACCOUNTS (+ manage feeds)
+      if (isAccountFeedType(feedType)) {
         const picked = wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
         if (picked) {
-          debugLog.log?.('[pick] setTradingTokenCallback immediate', { address: picked.address });
+          debugLog.log?.('[pick] setTradingTokenCallback immediate', {
+            address: picked.address,
+            role: roleFromFeedType(feedType),
+          });
           setTradingTokenCallback(picked);
+        } else {
+          debugLog.warn?.('[pick] picked not found in wallets', {
+            address,
+            walletsCount: wallets.length,
+          });
         }
       }
     },
@@ -156,10 +201,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     </div>
   );
 
-  const isAccountFeed =
-    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
-    feedType === FEED_TYPE.AGENT_ACCOUNTS ||
-    feedType === FEED_TYPE.SPONSOR_ACCOUNTS;
+  const isAccountFeed = isAccountFeedType(feedType);
+  const role = roleFromFeedType(feedType);
 
   return (
     <>
@@ -175,7 +218,6 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
       <div id="DataListWrapper" className={wrapperClass}>
         {/* ✅ Sticky header */}
-        {/* Fixed header (matches row layout: left content + right meta button area) */}
         <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
           <div className="w-full flex justify-between px-5 py-2">
             <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
@@ -200,7 +242,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
                 <AccountListItem
                   account={wallet}
                   onPick={handlePickAddress}
-                  role={feedType === FEED_TYPE.AGENT_ACCOUNTS ? 'agent' : 'recipient'}
+                  role={role}
                 />
               </div>
             ))

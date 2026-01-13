@@ -1,22 +1,33 @@
 // File: @/lib/utils/feeds/assetSelect/useFeedData.ts
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FEED_TYPE } from '@/lib/structure';
 import { useAppChainId } from '@/lib/context/hooks';
-import { fetchAndBuildDataList } from '../fetchAndBuildDataList'
+import { fetchAndBuildDataList } from '../fetchAndBuildDataList';
 import type { FeedData } from '../types';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false as const;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_DATALIST === 'true';
+
+const debugLog = createDebugLogger('useFeedData', DEBUG_ENABLED, LOG_TIME);
 
 export function useFeedData(feedType: FEED_TYPE) {
   const [chainId] = useAppChainId();
   const [feedData, setFeedData] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>();
+  const seqRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    const seq = ++seqRef.current;
+    const chain = Number(chainId);
 
-    // Spinner for account-like feeds (including manage views)
     const isAccountFeed =
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
       feedType === FEED_TYPE.AGENT_ACCOUNTS ||
@@ -26,18 +37,46 @@ export function useFeedData(feedType: FEED_TYPE) {
 
     setLoading(isAccountFeed);
 
+    debugLog.log?.('[start]', {
+      seq,
+      feedType,
+      feedTypeLabel: FEED_TYPE[feedType],
+      chainId: chain,
+    });
+
     (async () => {
       try {
-        const data = await fetchAndBuildDataList(feedType, Number(chainId));
-        if (!cancelled) {
-          setFeedData(data);
-          setError(undefined);
+        const data = await fetchAndBuildDataList(feedType, chain);
+        const anyData: any = data;
+
+        if (cancelled) {
+          debugLog.warn?.('[cancelled-after-fetch]', { seq });
+          return;
         }
+
+        setFeedData(data);
+        setError(undefined);
+
+        debugLog.log?.('[success]', {
+          seq,
+          feedTypeLabel: FEED_TYPE[feedType],
+          chainId: chain,
+          // ✅ This is the exact JSON identifier *if* fetchAndBuildDataList provides it
+          sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
+          sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
+          walletsLen: Array.isArray(anyData?.wallets) ? anyData.wallets.length : 0,
+          tokensLen: Array.isArray(anyData?.tokens) ? anyData.tokens.length : 0,
+        });
       } catch (e: any) {
-        if (!cancelled) {
-          setFeedData(null);
-          setError(e?.message ?? 'Failed to get feed');
-        }
+        if (cancelled) return;
+        setFeedData(null);
+        setError(e?.message ?? 'Failed to get feed');
+        debugLog.error?.('[error]', {
+          seq,
+          feedTypeLabel: FEED_TYPE[feedType],
+          chainId: chain,
+          message: e?.message ?? String(e),
+        });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -45,6 +84,7 @@ export function useFeedData(feedType: FEED_TYPE) {
 
     return () => {
       cancelled = true;
+      debugLog.log?.('[cleanup]', { seq });
     };
   }, [feedType, chainId]);
 

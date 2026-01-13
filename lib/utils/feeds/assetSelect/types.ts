@@ -1,25 +1,35 @@
-// File: @/lib/utils/feeds/assetSelect/types.ts
 'use client';
 
-import type { FEED_TYPE, WalletAccount } from '@/lib/structure';
+import { FEED_TYPE } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 
-/** Normalized token shape consumed by the list UI */
+// Used by TokenListItem and DataListSelect
 export type BuiltToken = {
-  name: string;
-  symbol: string;
   address: string;
-  logoURL: string;
-  // keep room for extra fields without breaking
-  [k: string]: any;
+  name?: string;
+  symbol?: string;
+  decimals?: number;
+  chainId?: number;
+  logoURL?: string;
 };
 
-/** Discriminated union returned by /build services */
+// ✅ Expand union to include SPONSOR + manage feeds
+export type AccountFeedType =
+  | FEED_TYPE.RECIPIENT_ACCOUNTS
+  | FEED_TYPE.AGENT_ACCOUNTS
+  | FEED_TYPE.SPONSOR_ACCOUNTS
+  | FEED_TYPE.MANAGE_RECIPIENTS
+  | FEED_TYPE.MANAGE_AGENTS;
+
+export type TokenFeedType = FEED_TYPE.TOKEN_LIST;
+
+// ✅ Optional debug metadata we can attach without breaking UI
+export type FeedDebugMeta = {
+  sourceId?: string;        // e.g. "@/resources/data/sponsors/accounts.json"
+  sourceKind?: string;      // e.g. "bundled-resource" | "manage-json" | "remote-url"
+  resolvedUrl?: string;     // if remote later
+};
+
 export type FeedData =
-  | {
-      feedType: FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS;
-      wallets: WalletAccount[];
-    }
-  | {
-      feedType: FEED_TYPE.TOKEN_LIST;
-      tokens: BuiltToken[];
-    };
+  | ({ feedType: TokenFeedType; tokens: BuiltToken[] } & { __debug?: FeedDebugMeta })
+  | ({ feedType: AccountFeedType; wallets: WalletAccount[] } & { __debug?: FeedDebugMeta });

@@ -33,7 +33,7 @@ import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
 import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
-  AgentSelectPanel,
+  AgentListSelectPanel,
 } from '@/components/views/AssetSelectPanels';
 
 // Core header/panel components (registered here so they’re visible in the tree)
@@ -229,7 +229,7 @@ export default function ExchangeContextTab() {
             <RecipientListSelectPanel />
           </PanelGate>
           <PanelGate panel={SP.AGENT_LIST_SELECT_PANEL}>
-            <AgentSelectPanel />
+            <AgentListSelectPanel />
           </PanelGate>
 
           {/* Manage LIST views */}

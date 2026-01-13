@@ -42,6 +42,18 @@ type Props = {
   feedTypeOverride?: FEED_TYPE;
 };
 
+function feedLabel(ft?: FEED_TYPE) {
+  return typeof ft === 'number' ? FEED_TYPE[ft] : '(none)';
+}
+
+function safeKeys(o: any) {
+  try {
+    return o && typeof o === 'object' ? Object.keys(o) : [];
+  } catch {
+    return [];
+  }
+}
+
 export const AssetSelectProvider = ({
   children,
   closePanelCallback,
@@ -50,7 +62,6 @@ export const AssetSelectProvider = ({
   initialPanelBag,
   feedTypeOverride,
 }: Props) => {
-
   const instanceId = useInstanceId(containerType);
 
   // Infer feedType from container, but allow explicit override
@@ -68,29 +79,62 @@ export const AssetSelectProvider = ({
     showErrorPreview,
   } = useAssetSelectDisplay();
 
-  // ⬇️ Minimal change: default manualEntry = true (so every mount starts "manual")
+  // ⬇️ default manualEntry = true (so every mount starts "manual")
   const [manualEntry, _setManualEntry] = useState(true);
   const [bypassFSM, setBypassFSM] = useState(false);
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 🔎 TOP-LEVEL TRACE: prove EXACT inputs that determine where data loads from
+  // ─────────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    debugLog.log?.('mount', {
+    debugLog.log?.('[mount]', {
       instanceId,
-      container: SP_COIN_DISPLAY[containerType],
-      feed: FEED_TYPE[feedType],
+      containerType,
+      containerLabel: SP_COIN_DISPLAY[containerType],
+      inferredFeedType,
+      inferredFeedLabel: feedLabel(inferredFeedType),
+      feedTypeOverride,
+      overrideFeedLabel: feedLabel(feedTypeOverride),
+      finalFeedType: feedType,
+      finalFeedLabel: feedLabel(feedType),
       hasInitialBag: !!initialPanelBag,
-      feedTypeOverride: feedTypeOverride
-        ? FEED_TYPE[feedTypeOverride]
-        : '(none)',
+      initialBagType: (initialPanelBag as any)?.type ?? '(none)',
+      initialBagKeys: safeKeys(initialPanelBag),
+      initialBag: initialPanelBag ?? null,
     });
-    // Ensure the default is enforced at mount as a safeguard
+
+    // Ensure default enforced at mount as a safeguard
     _setManualEntry(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount only
 
+  // Log any runtime changes (hot reload / transitions / provider reuse)
   useEffect(() => {
-    debugLog.log?.('manualEntry changed', {
+    debugLog.log?.('[feedType:resolved]', {
       instanceId,
-      container: SP_COIN_DISPLAY[containerType],
+      containerLabel: SP_COIN_DISPLAY[containerType],
+      inferredFeedLabel: feedLabel(inferredFeedType),
+      overrideFeedLabel: feedLabel(feedTypeOverride),
+      finalFeedLabel: feedLabel(feedType),
+    });
+  }, [instanceId, containerType, inferredFeedType, feedTypeOverride, feedType]);
+
+  // Panel bag evolution (often drives peerAddress / selection behavior)
+  useEffect(() => {
+    debugLog.log?.('[panelBag]', {
+      instanceId,
+      containerLabel: SP_COIN_DISPLAY[containerType],
+      bagType: (panelBag as any)?.type ?? '(none)',
+      bagKeys: safeKeys(panelBag),
+      bag: panelBag ?? null,
+    });
+  }, [panelBag, instanceId, containerType]);
+
+  useEffect(() => {
+    debugLog.log?.('[manualEntry]', {
+      instanceId,
+      containerLabel: SP_COIN_DISPLAY[containerType],
       manualEntry,
     });
   }, [manualEntry, instanceId, containerType]);
@@ -102,7 +146,7 @@ export const AssetSelectProvider = ({
     setValidatedAssetNarrow,
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
-  // Bridge to FSM (peerAddress is now derived inside useFSMBridge)
+  // Bridge to FSM (peerAddress is derived inside useFSMBridge)
   const {
     inputState,
     setInputState: _setInputState,
@@ -132,76 +176,29 @@ export const AssetSelectProvider = ({
     bypassFSM,
   });
 
-  // ---- Debug wrappers (no behavior change) ----
-
-  const setManualEntry = useCallback(
-    (flag: boolean) => {
-      debugLog.log?.('setManualEntry', {
-        instanceId,
-        fromState: manualEntry,
-        toState: flag,
-      });
-      _setManualEntry(flag);
-    },
-    [instanceId, manualEntry]
-  );
-
-  const setInputState = useCallback(
-    (state: any, source?: string) => {
-      debugLog.log?.('setInputState', {
-        requested: state,
-        source: source ?? '(none)',
-        instanceId,
-        manualEntry,
-        debouncedHexInput,
-      });
-      _setInputState(state, source);
-    },
-    [_setInputState, instanceId, manualEntry, debouncedHexInput]
-  );
-
-  const handleHexInputChange = useCallback(
-    (raw: string, isManual?: boolean) => {
-      debugLog.log?.('handleHexInputChange', {
-        rawPreview: raw?.slice(0, 12),
-        isManual,
-        instanceId,
-        manualEntry,
-      });
-      const res = _handleHexInputChange(raw);
-      debugLog.log?.('handleHexInputChange result', { accepted: res });
-      return res;
-    },
-    [_handleHexInputChange, instanceId, manualEntry]
-  );
-
-  const setValidatedAssetLogged = useCallback(
-    (asset?: TokenContract | WalletAccount) => {
-      debugLog.log?.('setValidatedAsset', {
-        instanceId,
-        manualEntry,
-        addr: (asset as any)?.address ?? '(none)',
-        sym: (asset as any)?.symbol ?? '(none)',
-        name: (asset as any)?.name ?? '(none)',
-      });
-      setValidatedAsset(asset as any);
-    },
-    [instanceId, manualEntry, setValidatedAsset]
-  );
-
-  // InputState transitions
+  // Trace inputState transitions (lets you align with when feed loads)
   const prevStateRef = useRef(inputState);
   useEffect(() => {
     if (prevStateRef.current !== inputState) {
-      debugLog.log?.('inputState transition', {
+      debugLog.log?.('[inputState:transition]', {
         instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
         from: prevStateRef.current,
         to: inputState,
         manualEntry,
+        feed: feedLabel(feedType),
+        debouncedHexInputPreview: (debouncedHexInput ?? '').slice(0, 14),
       });
       prevStateRef.current = inputState;
     }
-  }, [inputState, instanceId, manualEntry]);
+  }, [
+    inputState,
+    instanceId,
+    containerType,
+    manualEntry,
+    feedType,
+    debouncedHexInput,
+  ]);
 
   // Log when validatedAsset changes (guarded)
   const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(
@@ -210,60 +207,172 @@ export const AssetSelectProvider = ({
   useEffect(() => {
     if (validatedAsset && validatedAsset !== prevValidatedRef.current) {
       const a: any = validatedAsset;
-      debugLog.log?.('validatedAsset changed', {
+      debugLog.log?.('[validatedAsset:changed]', {
         instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        manualEntry,
+        feed: feedLabel(feedType),
         address: a?.address ?? '(none)',
         symbol: a?.symbol ?? '(none)',
         name: a?.name ?? '(none)',
-        manualEntry,
       });
       prevValidatedRef.current = validatedAsset;
     }
-  }, [validatedAsset, instanceId, manualEntry]);
+  }, [validatedAsset, instanceId, containerType, manualEntry, feedType]);
 
-  // Context-facing wrappers (minimal logging)
+  // ---- Debug wrappers (no behavior change) ----
+
+  const setManualEntry = useCallback(
+    (flag: boolean) => {
+      debugLog.log?.('[setManualEntry]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        fromState: manualEntry,
+        toState: flag,
+        feed: feedLabel(feedType),
+      });
+      _setManualEntry(flag);
+    },
+    [instanceId, containerType, manualEntry, feedType]
+  );
+
+  const setInputState = useCallback(
+    (state: any, source?: string) => {
+      debugLog.log?.('[setInputState]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        requested: state,
+        source: source ?? '(none)',
+        manualEntry,
+        feed: feedLabel(feedType),
+        debouncedHexInputPreview: (debouncedHexInput ?? '').slice(0, 14),
+      });
+      _setInputState(state, source);
+    },
+    [
+      _setInputState,
+      instanceId,
+      containerType,
+      manualEntry,
+      feedType,
+      debouncedHexInput,
+    ]
+  );
+
+  const handleHexInputChange = useCallback(
+    (raw: string, isManual?: boolean) => {
+      debugLog.log?.('[handleHexInputChange]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        feed: feedLabel(feedType),
+        rawPreview: raw?.slice(0, 14),
+        isManual,
+        manualEntry,
+      });
+      const res = _handleHexInputChange(raw);
+      debugLog.log?.('[handleHexInputChange:result]', {
+        instanceId,
+        accepted: res,
+      });
+      return res;
+    },
+    [_handleHexInputChange, instanceId, containerType, feedType, manualEntry]
+  );
+
+  const setValidatedAssetLogged = useCallback(
+    (asset?: TokenContract | WalletAccount) => {
+      const a: any = asset;
+      debugLog.log?.('[setValidatedAsset]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        manualEntry,
+        feed: feedLabel(feedType),
+        addr: a?.address ?? '(none)',
+        sym: a?.symbol ?? '(none)',
+        name: a?.name ?? '(none)',
+      });
+      setValidatedAsset(asset as any);
+    },
+    [instanceId, containerType, manualEntry, feedType, setValidatedAsset]
+  );
+
+  // Parent bridges (log who is committing/closing)
   const setTradingTokenCallbackCtx = useCallback(
     (asset: TokenContract | WalletAccount) => {
-      debugLog.log?.('setTradingTokenCallback', {
+      const a: any = asset;
+      debugLog.log?.('[setTradingTokenCallback]', {
         instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
         manualEntry,
-        address: (asset as any)?.address ?? '(none)',
-        symbol: (asset as any)?.symbol ?? '(none)',
+        feed: feedLabel(feedType),
+        address: a?.address ?? '(none)',
+        symbol: a?.symbol ?? '(none)',
+        name: a?.name ?? '(none)',
       });
       setSelectedAssetCallback(asset);
     },
-    [instanceId, setSelectedAssetCallback, manualEntry]
+    [instanceId, containerType, setSelectedAssetCallback, manualEntry, feedType]
   );
 
   const closePanelCallbackCtx = useCallback(() => {
-    debugLog.log?.('closePanelCallback', { instanceId, manualEntry });
+    debugLog.log?.('[closePanelCallback]', {
+      instanceId,
+      containerLabel: SP_COIN_DISPLAY[containerType],
+      manualEntry,
+      feed: feedLabel(feedType),
+    });
     closePanelCallback(true);
-  }, [instanceId, closePanelCallback, manualEntry]);
+  }, [instanceId, containerType, closePanelCallback, manualEntry, feedType]);
 
-  // 🔸 Always-present no-ops to satisfy strict context type
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 🔥 CRITICAL: dump wrappers emit debugLog BEFORE dumping internals
+  // Use these when you suspect the wrong JSON spec/cached source is being used.
+  // ─────────────────────────────────────────────────────────────────────────────
+
   const dumpFSMContext = useCallback(
     (h?: string) => {
-      if (DEBUG_ENABLED) dumpFSM(h ?? '');
+      if (!DEBUG_ENABLED) return;
+      debugLog.log?.('[dumpFSMContext]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        feed: feedLabel(feedType),
+        hint: h ?? '(none)',
+      });
+      dumpFSM(h ?? '');
     },
-    [dumpFSM]
+    [dumpFSM, instanceId, containerType, feedType]
   );
 
   const dumpInputFeedContext = useCallback(
     (h?: string) => {
-      if (DEBUG_ENABLED) dumpInputFeed(h ?? '');
+      if (!DEBUG_ENABLED) return;
+      debugLog.log?.('[dumpInputFeedContext]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        feed: feedLabel(feedType),
+        hint: h ?? '(none)',
+      });
+      dumpInputFeed(h ?? '');
     },
-    [dumpInputFeed]
+    [dumpInputFeed, instanceId, containerType, feedType]
   );
 
   // Deprecated alias kept for compatibility — calls FSM dump
   const dumpAssetSelectContext = useCallback(
     (h?: string) => {
-      if (DEBUG_ENABLED) dumpFSM(h ?? '');
+      if (!DEBUG_ENABLED) return;
+      debugLog.log?.('[dumpAssetSelectContext]', {
+        instanceId,
+        containerLabel: SP_COIN_DISPLAY[containerType],
+        feed: feedLabel(feedType),
+        hint: h ?? '(none)',
+      });
+      dumpFSM(h ?? '');
     },
-    [dumpFSM]
+    [dumpFSM, instanceId, containerType, feedType]
   );
 
-  // Also required by the type; keep as no-op unless you intend to support it
+  // Required by the type; keep as no-op unless you intend to support it
   const setValidatedWallet = useCallback((_?: WalletAccount) => {
     /* no-op: deprecated */
   }, []);
@@ -291,8 +400,8 @@ export const AssetSelectProvider = ({
       // Required by AssetSelectContextType
       setValidatedWallet, // no-op (deprecated)
       dumpAssetSelectContext, // compat alias → dumpFSM
-      dumpFSMContext, // always present; no-op when disabled
-      dumpInputFeedContext, // always present; no-op when disabled
+      dumpFSMContext, // wrapped
+      dumpInputFeedContext, // wrapped
 
       // Input feed
       validHexInput,
@@ -330,6 +439,7 @@ export const AssetSelectProvider = ({
       validatedAssetNarrow,
       setValidatedAssetLogged,
       manualEntry,
+      setManualEntry,
       bypassFSM,
       validHexInput,
       debouncedHexInput,
@@ -351,6 +461,7 @@ export const AssetSelectProvider = ({
       showErrorPreview,
       showAssetPreview,
       resetPreview,
+      setValidatedAssetNarrow,
       setValidatedWallet,
       dumpAssetSelectContext,
       dumpFSMContext,

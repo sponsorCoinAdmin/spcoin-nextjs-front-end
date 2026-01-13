@@ -3,18 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
+import agentJsonList from '@/resources/data/agents/accounts.json';
+import recipientJsonList from '@/resources/data/recipients/accounts.json';
+import sponsorJsonList from '@/resources/data/sponsors/accounts.json';
 import type { WalletAccount } from '@/lib/structure';
 import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 
-const walletOptions = ['All', 'Recipients', 'Agents'] as const;
+const walletOptions = ['All', 'Agents', 'Recipients', 'Sponsors'] as const;
 
 export default function WalletsPage() {
     const [walletCache, setWalletCache] = useState<Record<string, WalletAccount[]>>({
         All: [],
         Recipients: [],
         Agents: [],
+        Sponsors: [],
     });
 
     const [typeOfWallets, setTypeOfWallets] =
@@ -33,12 +35,22 @@ export default function WalletsPage() {
 
         setLoading(true);
 
-        const walletList =
-            typeOfWallets === 'Recipients'
-                ? recipientJsonList
-                : typeOfWallets === 'Agents'
-                    ? agentJsonList
-                    : [...recipientJsonList, ...agentJsonList];
+        let walletList;
+
+        switch (typeOfWallets) {
+            case 'Recipients':
+                walletList = recipientJsonList;
+                break;
+            case 'Agents':
+                walletList = agentJsonList;
+                break;
+            case 'Sponsors':
+                walletList = sponsorJsonList;
+                break;
+            default:
+                walletList = [...recipientJsonList, ...agentJsonList];
+                break;
+        }
 
         let cancelled = false;
         try {

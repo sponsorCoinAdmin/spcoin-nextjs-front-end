@@ -1,4 +1,3 @@
-// File: @/lib/utils/feeds/assetSelect/builders.ts
 'use client';
 
 import type { Address } from 'viem';
@@ -10,9 +9,17 @@ import {
   getWalletLogoURL,
   getTokenLogoURL,
 } from '@/lib/context/helpers/assetHelpers';
+
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import type { BuiltToken, FeedData } from './types';
+
+/* ───────────────────────────── debug ───────────────────────────── */
+
+const LOG_TIME = false as const;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
+const debugLog = createDebugLogger('assetSelect.builders', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────────────────────────── utils ───────────────────────────── */
 
@@ -27,7 +34,7 @@ function parseJson(input: unknown): any {
   return input ?? null;
 }
 
-/* ─────────────────────── core normalizers (existing) ─────────────────────── */
+/* ─────────────────────── core normalizers ─────────────────────── */
 
 /** Normalize a sparse account JSON entry into a WalletAccount */
 export function buildWalletObj(a: any): WalletAccount {
@@ -51,6 +58,7 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
     // Fallback: derive via central helper instead of hardcoding the path
     logoURL = getTokenLogoURL({ address, chainId });
   }
+
   return {
     ...t,
     address,
@@ -62,76 +70,84 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
 
 /* ─────────────────────────── new conveniences ─────────────────────────── */
 
-/**
- * Build a single token from a raw JSON object/string.
- * Example:
- *   await buildTokenFromJson({ symbol: 'USDC', address: '0x...', decimals: 6 }, 1)
- */
-export async function buildTokenFromJson(
-  rawToken: unknown,
-  chainId: number
-): Promise<BuiltToken> {
+export async function buildTokenFromJson(rawToken: unknown, chainId: number): Promise<BuiltToken> {
   return buildTokenObj(parseJson(rawToken), chainId);
 }
 
-/**
- * Build one or more wallets from a raw JSON spec.
- * Note: most account specs expand via loadAccounts and may yield multiple entries.
- * Example:
- *   await buildWalletsFromJson({ inline: [{ address: '0xabc...', name: 'My Agent' }] })
- */
-export async function buildWalletsFromJson(
-  rawAccountSpec: unknown
-): Promise<WalletAccount[]> {
-  const accounts = await loadAccounts(parseJson(rawAccountSpec));
+export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<WalletAccount[]> {
+  const spec = parseJson(rawAccountSpec);
+
+  // ✅ This is the “before we go to public/assets/accounts” log.
+  // We log the exact spec being passed into loadAccounts().
+  debugLog.log?.('[buildWalletsFromJson] calling loadAccounts(spec)', {
+    specType: typeof spec,
+    isArray: Array.isArray(spec),
+    keys: spec && typeof spec === 'object' && !Array.isArray(spec) ? Object.keys(spec).slice(0, 20) : undefined,
+    preview: Array.isArray(spec) ? spec.slice(0, 3) : spec,
+  });
+
+  const accounts = await loadAccounts(spec);
+  debugLog.log?.('[buildWalletsFromJson] loadAccounts returned', {
+    count: accounts.length,
+    sample: accounts.slice(0, 3).map((a) => a.address),
+  });
+
   return accounts.map(buildWalletObj);
 }
 
-/**
- * Convenience: build exactly one wallet (first) from a spec.
- * Returns null if none resolved.
- */
-export async function buildWalletFromJsonFirst(
-  rawAccountSpec: unknown
-): Promise<WalletAccount | null> {
+export async function buildWalletFromJsonFirst(rawAccountSpec: unknown): Promise<WalletAccount | null> {
   const ws = await buildWalletsFromJson(rawAccountSpec);
   return ws[0] ?? null;
 }
 
 /**
  * Feed-style converter: give a JSON (object/string) + FEED_TYPE and get a FeedData bundle.
- * Mirrors the shapes returned by fetchAndBuildDataList, but without going through getDataListObj.
- *
- * TOKEN_LIST:
- *   Accepts a single token object or an array of raw tokens.
- *
- * *_ACCOUNTS:
- *   Accepts the same accounts spec you'd feed into loadAccounts (inline or URL-based), and returns wallets[].
  */
-export async function feedDataFromJson(
-  feedType: FEED_TYPE,
-  chainId: number,
-  rawJson: unknown
-): Promise<FeedData> {
+export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, rawJson: unknown): Promise<FeedData> {
   const json = parseJson(rawJson);
+
+  debugLog.log?.('[feedDataFromJson] start', {
+    feedType,
+    feedTypeLabel: FEED_TYPE[feedType],
+    jsonKind: Array.isArray(json) ? 'array' : typeof json,
+    jsonPreview: Array.isArray(json) ? json.slice(0, 3) : json,
+  });
 
   switch (feedType) {
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
-    case FEED_TYPE.AGENT_ACCOUNTS: {
+    case FEED_TYPE.AGENT_ACCOUNTS:
+    case FEED_TYPE.SPONSOR_ACCOUNTS:
+    case FEED_TYPE.MANAGE_RECIPIENTS:
+    case FEED_TYPE.MANAGE_AGENTS: {
       const accounts = await loadAccounts(json);
       const wallets = accounts.map(buildWalletObj);
-      return { feedType, wallets };
+
+      debugLog.log?.('[feedDataFromJson] built wallets', {
+        feedTypeLabel: FEED_TYPE[feedType],
+        walletsLen: wallets.length,
+        sample: wallets.slice(0, 3).map((w) => w.address),
+      });
+
+      return { feedType: feedType as any, wallets };
     }
 
     case FEED_TYPE.TOKEN_LIST: {
       const list = Array.isArray(json) ? json : (json ? [json] : []);
       const tokens = await Promise.all(list.map((t) => buildTokenObj(t, chainId)));
-      return { feedType, tokens };
+
+      debugLog.log?.('[feedDataFromJson] built tokens', {
+        tokensLen: tokens.length,
+        sample: tokens.slice(0, 3).map((t) => t.address),
+      });
+
+      return { feedType: FEED_TYPE.TOKEN_LIST, tokens };
     }
 
     default: {
-      // Keep the union exhaustive by returning an empty token list.
-      // If you prefer strictness: throw new Error(`Unsupported feedType: ${feedType}`)
+      debugLog.warn?.('[feedDataFromJson] unsupported feedType -> returning empty', {
+        feedType,
+        feedTypeLabel: FEED_TYPE[feedType],
+      });
       return { feedType: FEED_TYPE.TOKEN_LIST, tokens: [] };
     }
   }
