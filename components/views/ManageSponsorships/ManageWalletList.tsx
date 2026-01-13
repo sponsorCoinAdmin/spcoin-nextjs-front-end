@@ -285,7 +285,7 @@ export default function ManageWalletList({
 
               <th
                 scope="col"
-                className={`${msTableTw.th} ${msTableTw.thPad3} text-center sticky top-0 z-20 bg-[#1f2639]`}
+                className={`${msTableTw.th} ${msTableTw.thPad3} text-left sticky top-0 z-20 bg-[#1f2639]`}
               >
                 {middleHeaderLabel}
               </th>
@@ -321,7 +321,7 @@ export default function ManageWalletList({
               return (
                 <React.Fragment key={addressText}>
                   {/* Row 1: 3 columns, col #2 intentionally empty */}
-                  <tr>
+                  <tr className={`${zebra} ${'border-b border-slate-400/30'}`}>
                     {/* Column 1 */}
                     <td className="p-0">
                       <button
@@ -345,9 +345,16 @@ export default function ManageWalletList({
                       </button>
                     </td>
 
-                    {/* Column 2 (Meta Data) — intentionally blank */}
+                    {/* Row 1 - Column 2 (Name + Symbol) */}
                     <td className={`${zebra} px-3 text-sm align-middle`}>
-                      <div className="w-full flex items-center justify-center bg-transparent" />
+                      <div className="min-w-0 flex flex-col items-start justify-center">
+                        <div className="font-semibold truncate !text-[#5981F3]">
+                          {w?.name ?? 'Unknown'}
+                        </div>
+                        <div className="text-sm truncate !text-[#5981F3]">
+                          {w?.symbol ?? ''}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Column 3 */}
@@ -366,15 +373,19 @@ export default function ManageWalletList({
                   </tr>
 
                   {/* Row 2: same zebra; "Pending Coins" spans cols 1-2; "0" centered in col 3 */}
-                  <tr>
-                    <td className={`${zebra} px-3 py-2 text-sm align-middle`} colSpan={2}>
-                      <div className="w-full flex items-center justify-start bg-transparent whitespace-nowrap">
+                  <tr className={zebra}>
+                    {/* Column 1: fit to content */}
+                    <td className={`${zebra} px-3 py-2 text-sm align-middle w-1 whitespace-nowrap`}>
+                      <div className="inline-flex items-center justify-start bg-transparent">
                         {coinAction}
                       </div>
                     </td>
 
-                    <td className={`${zebra} px-3 py-2 text-sm align-middle`}>
-                      <div className="w-full flex items-center justify-center bg-transparent">0</div>
+                    {/* Column 2: fill the rest of the row (spans remaining 2 columns) */}
+                    <td className={`${zebra} px-3 py-2 text-sm align-middle`} colSpan={2}>
+                      <div className="w-full flex items-center justify-start bg-transparent">
+                        0.0
+                      </div>
                     </td>
                   </tr>
 

@@ -1,9 +1,9 @@
 {
-  "name": "WilmaFlintstone",
-  "symbol": "WilmaFlintstone",
+  "name": "Wilma Flintstone",
+  "symbol": "WILMA",
   "type": "ERC20_WALLET",
   "website": "",
-  "description": "This is the description for site WilmaFlintstone",
+  "description": "This is the description for site Wilma Flintstone",
   "status": "test",
   "address": "0x000000000000000000000000000000000000008f"
 }

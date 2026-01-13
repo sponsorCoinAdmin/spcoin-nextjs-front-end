@@ -1,6 +1,6 @@
 {
-  "name": "Dog1",
-  "symbol": "Dog1",
+  "name": "Barkie",
+  "symbol": "BARK",
   "type": "ERC20_WALLET",
   "website": "",
   "description": "This is the description for site Dog1",

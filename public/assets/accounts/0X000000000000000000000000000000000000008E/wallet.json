@@ -1,6 +1,6 @@
 {
-  "name": "TweetyBird",
-  "symbol": "TweetyBird",
+  "name": "Tweety Bird",
+  "symbol": "TWEET",
   "type": "ERC20_WALLET",
   "website": "",
   "description": "This is the description for site TweetyBird",
