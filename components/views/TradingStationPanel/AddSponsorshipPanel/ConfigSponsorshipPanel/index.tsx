@@ -86,8 +86,8 @@ const ConfigSlippagePanel: React.FC = () => {
 
         {/* Overall Recipient pill (final RP after Agent deduction) */}
         <div className="absolute top-0 right-[50px] min-w-[50px] h-[28px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
-          Recipient:
-          <div id="recipientRatio">{recipientPct}%</div>
+          Sponsor:
+          <div id="sponsorRatio">{sponsorPct}%</div>
         </div>
 
         {/* close button */}
@@ -109,15 +109,15 @@ const ConfigSlippagePanel: React.FC = () => {
         </div>
 
         {/* Row 1: Sponsor + slider */}
-        <div className="absolute top-[35px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
-          Sponsor:
-          <div id="sponsorRatio">{sponsorPct}%</div>
+        <div className="absolute top-[36px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2">
+         Recipient:
+          <div id="recipientRatio">{recipientPct}%</div>
         </div>
 
         <input
           type="range"
           title="Adjust Sponsor/Recipient Ratio"
-          className="absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
+          className="absolute top-[63px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
           min={MIN_SPONSOR_STEP}
           max={MAX_SPONSOR_STEP}
           value={sponsorStep}
@@ -133,7 +133,7 @@ const ConfigSlippagePanel: React.FC = () => {
         <input
           type="range"
           title="Adjust Recipient/Agent Ratio"
-          className="absolute top-[95px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
+          className="absolute top-[93px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
           min={MIN_AGENT_STEP}
           max={MAX_AGENT_STEP}
           value={agentStep}

@@ -169,7 +169,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
         }))
         .filter(
           (n) =>
-            n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
+            n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD &&
             n.panel !== SP_COIN_DISPLAY.UNDEFINED,
         );
 

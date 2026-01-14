@@ -8,7 +8,7 @@ import {
   useRegisterHeaderTitle,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageWallet from './ManageWallet';
+import ManageAccount from './ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
@@ -73,7 +73,7 @@ export default function ManageSponsor(_props: Props) {
   return (
     <div id="MANAGE_SPONSOR_PANEL">
       {hasSponsor ? (
-        <ManageWallet wallet={sponsorWallet} />
+        <ManageAccount wallet={sponsorWallet} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No sponsor selected.</p>

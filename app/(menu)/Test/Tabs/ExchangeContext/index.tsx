@@ -21,7 +21,7 @@ import PanelGate from '@/components/utility/PanelGate';
 // List views
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ManageSponsorRecipients from '@/components/views/ManageSponsorships/ManageSponsorRecipients';
+import ManageSponsorRecipients from '@/components/views/ManageSponsorships/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
 // Detail views
@@ -244,7 +244,7 @@ export default function ExchangeContextTab() {
           </PanelGate>
 
           {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
-          <PanelGate panel={SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL}>
+          <PanelGate panel={SP.SPONSOR_LIST_SELECT_PANEL}>
             <ManageSponsorRecipients />
           </PanelGate>
           <PanelGate panel={SP.UNSTAKING_SPCOINS_PANEL}>

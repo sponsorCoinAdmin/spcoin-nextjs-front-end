@@ -10,7 +10,7 @@ import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/Manag
 // List panels
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ManageSponsorRecipients from '@/components/views/ManageSponsorships/ManageSponsorRecipients';
+import ManageSponsorRecipients from '@/components/views/ManageSponsorships/SponsorListSelectPanel';
 
 // Detail panels (must be mounted for openPanel to work)
 import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
@@ -21,9 +21,9 @@ import StakingSpCoins from '@/components/views/ManageSponsorships/StakingSpCoins
 import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
-  SponsorListSelectPanel,
+  SponsorListSelectPanel_OLD,
   AgentListSelectPanel,
-  // SponsorListSelectPanel,
+  // SponsorListSelectPanel_OLD,
 } from '@/components/views/AssetSelectPanels';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -93,7 +93,7 @@ export default function MainTradingPanel() {
           <StakingSpCoins />
 
           {/* ✅ Merged list overlay:
-              - CLAIM_SPONSOR_REWARDS_LIST_PANEL (claim)
+              - SPONSOR_LIST_SELECT_PANEL (claim)
               - UNSTAKING_SPCOINS_PANEL (unstake)
               Component gates itself by visibility of either panel.
            */}
@@ -126,9 +126,9 @@ export default function MainTradingPanel() {
           {/* Select / aux overlays */}
           <TokenListSelectPanel />
           <RecipientListSelectPanel />
-          <SponsorListSelectPanel />
+          <SponsorListSelectPanel_OLD />
           <AgentListSelectPanel />
-          {/* <SponsorListSelectPanel /> */}
+          {/* <SponsorListSelectPanel_OLD /> */}
 
           <ErrorMessagePanel />
         </div>

@@ -63,7 +63,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
       return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
       return AGENT_WALLET_TITLE;
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD:
       return 'Select a Sponsor';
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:
       return 'Sponsorship Account Management';
@@ -71,7 +71,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
       return 'Claim Recipient Rewards';
     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
       return 'Claim Agent Rewards';
-    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
+    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
       return 'Claim Sponsor Rewards';
     case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
       return 'Manage Recipient Account';
@@ -99,7 +99,7 @@ export function useHeaderController() {
    * We intentionally do NOT read it here to avoid treating it like a nav/display member.
    */
   const vis = {
-    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
+    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD),
     sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
     buy: usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
     recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL),
@@ -109,7 +109,7 @@ export function useHeaderController() {
     manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
     manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
     manageSponsorsList: usePanelVisible(
-      SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+      SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
     ),
 
     manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
@@ -125,7 +125,7 @@ export function useHeaderController() {
   };
 
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
+    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD;
     if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
     if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
     if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
@@ -137,7 +137,7 @@ export function useHeaderController() {
     if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
     if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
     if (vis.manageSponsorsList)
-      return SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL;
+      return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
 
     if (vis.manageTradingCoins) return SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL;
     if (vis.manageStakingCoins) return SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;

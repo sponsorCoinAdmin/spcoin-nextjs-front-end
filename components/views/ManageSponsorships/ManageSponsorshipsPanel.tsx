@@ -13,7 +13,7 @@ import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelect
 
 import ManageRecipients from './ManageRecipients';
 import ManageAgents from './ManageAgents';
-import ManageSponsorRecipients from './ManageSponsorRecipients';
+import ManageSponsorRecipients from './SponsorListSelectPanel';
 
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
@@ -38,7 +38,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(
-    SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
   );
 
   const pendingVisible = usePanelVisible(
@@ -75,7 +75,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       const ids = [
         SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
         SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-        SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+        SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
       ] as const;
 
       ids.forEach((pid) => {
@@ -296,7 +296,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
                           onClick={() =>
                             openOnly(
-                              SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+                              SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
                             )
                           }
                           aria-label="Open Claim Sponsors Rewards panel"

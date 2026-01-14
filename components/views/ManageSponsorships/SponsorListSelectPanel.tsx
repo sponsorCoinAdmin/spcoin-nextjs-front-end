@@ -26,7 +26,7 @@ const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG
 
 /**
  * Merged list panel for:
- * - ClaimSponsorRewardsList (CLAIM_SPONSOR_REWARDS_LIST_PANEL)
+ * - ClaimSponsorRewardsList (SPONSOR_LIST_SELECT_PANEL)
  * - UnstakingSpCoins (UNSTAKING_SPCOINS_PANEL)
  *
  * These two lists share the same underlying table (ManageWalletList via AssetListSelectPanel).
@@ -41,14 +41,14 @@ const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG
  */
 export default function ManageSponsorRecipients() {
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
-  const vClaim = usePanelVisible(SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL);
+  const vClaim = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
 
   // Choose a single active panel to pass to PanelListSelectWrapper (it gates by that panel)
   const activePanel: SP_COIN_DISPLAY | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     : vClaim
-      ? SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL
+      ? SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
       : null;
 
   useEffect(() => {

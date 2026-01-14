@@ -85,7 +85,7 @@ export const PANELS: readonly PanelDef[] = [
 
   // Sponsor list (GLOBAL overlay, not persisted)
   {
-    id: SP.SPONSOR_LIST_SELECT_PANEL,
+    id: SP.SPONSOR_LIST_SELECT_PANEL_OLD,
     kind: 'list',
     parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',
@@ -143,7 +143,7 @@ export const PANELS: readonly PanelDef[] = [
     defaultVisible: false,
   },
   {
-    id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    id: SP.SPONSOR_LIST_SELECT_PANEL,
     kind: 'panel',
     parent: SP.TRADE_CONTAINER_HEADER,
     group: 'mainOverlay',

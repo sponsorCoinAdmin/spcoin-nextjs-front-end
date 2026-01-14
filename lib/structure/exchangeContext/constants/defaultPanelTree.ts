@@ -34,7 +34,7 @@ const node = (
  * These panels are expected to be transient (e.g. list overlays that
  * are always reconstructed as needed).
  */
-export const NON_PERSISTED_PANELS = new Set<SP>([SP.SPONSOR_LIST_SELECT_PANEL]);
+export const NON_PERSISTED_PANELS = new Set<SP>([SP.SPONSOR_LIST_SELECT_PANEL_OLD]);
 
 /**
  * Panels that must always exist in the tree on boot, along with
@@ -65,9 +65,14 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
  * Canonical authored tree for the SponsorCoin UI.
  *
  * Notes:
- * - SP.SPONSOR_LIST_SELECT_PANEL is intentionally excluded from the
+ * - SP.SPONSOR_LIST_SELECT_PANEL_OLD is intentionally excluded from the
  *   tree and handled as NON_PERSISTED.
  * - Visibility flags here represent the "cold start" default.
+ *
+ * IMPORTANT:
+ * - MANAGE_PENDING_REWARDS is nested under MANAGE_SPONSORSHIPS_PANEL (not a sibling overlay).
+ * - SPONSOR_LIST_SELECT_PANEL has sub-panels (future control).
+ * - MANAGE_SPONSOR_PANEL is mounted once at the overlay level (not nested structurally).
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
@@ -87,26 +92,31 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.ERROR_MESSAGE_PANEL, false),
 
       // ─────────────── ✅ Manage overlays as first-class main overlays ───────────────
-      node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
-      node(SP.MANAGE_PENDING_REWARDS, false),
+      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
+        // ✅ Nested within Manage Sponsorships (sub-container)
+        node(SP.MANAGE_PENDING_REWARDS, false),
+      ]),
+
       node(SP.UNSTAKING_SPCOINS_PANEL, false),
       node(SP.STAKING_SPCOINS_PANEL, false),
       node(SP.MANAGE_RECIPIENTS_PANEL, false),
       node(SP.MANAGE_AGENTS_PANEL, false),
 
-      // These can drill into sponsor detail
-      node(SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL, false, [
-        node(SP.MANAGE_SPONSOR_PANEL, false),
+      // Sponsor list select (parent) + sub-panels (future control)
+      node(SP.SPONSOR_LIST_SELECT_PANEL, false, [
+        node(SP.UNSPONSOR_SP_COINS, false),
+        node(SP.CLAIM_PENDING_SPONSOR_COINS, false),
+        node(SP.CLAIM_PENDING_RECIPIENT_COINS, false),
+        node(SP.CLAIM_PENDING_AGENT_COINS, false),
       ]),
-      node(SP.UNSTAKING_SPCOINS_PANEL, false, [node(SP.MANAGE_SPONSOR_PANEL, false)]),
+
 
       // Detail views (also overlays in the same group)
       node(SP.MANAGE_AGENT_PANEL, false),
       node(SP.MANAGE_RECIPIENT_PANEL, false),
 
-      // NOTE: MANAGE_SPONSOR_PANEL is included above as a child of the two allowed parents.
-      // If your runtime expects it as a standalone top-level overlay as well, uncomment:
-      // node(SP.MANAGE_SPONSOR_PANEL, false),
+      // ✅ Shared detail panel (mounted once at overlay level)
+      node(SP.MANAGE_SPONSOR_PANEL, false),
 
       // ─────────────── Inline / auxiliary panels ───────────────
       node(SP.ADD_SPONSORSHIP_PANEL, false),

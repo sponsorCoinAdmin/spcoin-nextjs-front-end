@@ -82,6 +82,17 @@ const TRADING_CHILDREN: SP[] = [
 ];
 
 /**
+ * ✅ Sponsor list select panel has sub-modes (future panel control).
+ * These are first-class children in the panel tree for visibility/persistence.
+ */
+const SPONSOR_LIST_SELECT_CHILDREN: SP[] = [
+  SP.UNSPONSOR_SP_COINS,
+  SP.CLAIM_PENDING_SPONSOR_COINS,
+  SP.CLAIM_PENDING_RECIPIENT_COINS,
+  SP.CLAIM_PENDING_AGENT_COINS,
+];
+
+/**
  * Primary overlay container under MAIN_TRADING_PANEL
  *
  * ✅ Manage panels are first-class overlays mounted here.
@@ -102,7 +113,7 @@ const TRADE_HEADER_CHILDREN: SP[] = [
   SP.STAKING_SPCOINS_PANEL,
   SP.MANAGE_RECIPIENTS_PANEL,
   SP.MANAGE_AGENTS_PANEL,
-  SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+  SP.SPONSOR_LIST_SELECT_PANEL,
   SP.MANAGE_AGENT_PANEL,
   SP.MANAGE_RECIPIENT_PANEL,
 
@@ -110,7 +121,7 @@ const TRADE_HEADER_CHILDREN: SP[] = [
   SP.MANAGE_SPONSOR_PANEL,
 
   // Overlay list (not persisted)
-  SP.SPONSOR_LIST_SELECT_PANEL,
+  SP.SPONSOR_LIST_SELECT_PANEL_OLD,
 ];
 
 const MAIN_TRADING_CHILDREN: SP[] = [SP.TRADE_CONTAINER_HEADER];
@@ -162,13 +173,20 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_AGENTS_PANEL, kind: 'panel' },
 
   /**
-   * Claim Rewards list (no longer nests sponsor detail structurally)
-   * Navigation to sponsor detail is handled by action model, not registry nesting.
+   * Sponsor list select (structural parent).
+   * Child "modes" are first-class tree nodes for future control + persistence.
    */
   {
-    id: SP.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    id: SP.SPONSOR_LIST_SELECT_PANEL,
     kind: 'panel',
+    children: SPONSOR_LIST_SELECT_CHILDREN,
   },
+
+  // ✅ Sponsor list select sub-panels (future control; visible in tree)
+  { id: SP.UNSPONSOR_SP_COINS, kind: 'panel' },
+  { id: SP.CLAIM_PENDING_SPONSOR_COINS, kind: 'panel' },
+  { id: SP.CLAIM_PENDING_RECIPIENT_COINS, kind: 'panel' },
+  { id: SP.CLAIM_PENDING_AGENT_COINS, kind: 'panel' },
 
   { id: SP.MANAGE_AGENT_PANEL, kind: 'panel' },
   { id: SP.MANAGE_RECIPIENT_PANEL, kind: 'panel' },
@@ -190,7 +208,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_SPONSOR_PANEL, kind: 'panel' },
 
   /* Sponsor list (GLOBAL overlay, not persisted) */
-  { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true },
+  { id: SP.SPONSOR_LIST_SELECT_PANEL_OLD, kind: 'list', overlay: true },
 
   /* Inline / auxiliary */
 

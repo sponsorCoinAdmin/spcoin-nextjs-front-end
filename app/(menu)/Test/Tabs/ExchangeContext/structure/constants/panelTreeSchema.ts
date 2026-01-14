@@ -1,9 +1,8 @@
-
 // File: @/app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
 import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
-export const schemaVersion = 'v3'; // ⬅️ bump so the virtual tree rebuilds
+export const schemaVersion = 'v4'; // ⬅️ bump so the virtual tree rebuilds
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -30,14 +29,14 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // ✅ Manage LIST views
     SPCD.MANAGE_RECIPIENTS_PANEL,
     SPCD.MANAGE_AGENTS_PANEL,
-    SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    SPCD.SPONSOR_LIST_SELECT_PANEL,
 
     // ✅ Manage DETAIL views
     SPCD.MANAGE_AGENT_PANEL,
     SPCD.MANAGE_RECIPIENT_PANEL,
     SPCD.MANAGE_SPONSOR_PANEL,
 
-    // (Optional legacy) SPCD.SPONSOR_LIST_SELECT_PANEL,
+    // (Optional legacy) SPCD.SPONSOR_LIST_SELECT_PANEL_OLD,
   ],
 
   // ✅ Desired output: CONFIG_SLIPPAGE_PANEL is nested under TRADING_STATION_PANEL
@@ -69,6 +68,14 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.SELL_SELECT_PANEL]: [SPCD.MANAGE_SPONSORSHIPS_BUTTON],
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
   [SPCD.ADD_SPONSORSHIP_PANEL]: [SPCD.CONFIG_SPONSORSHIP_PANEL],
+
+  // ✅ NEW: Sponsor list select sub-panels (future panel control)
+  [SPCD.SPONSOR_LIST_SELECT_PANEL]: [
+    SPCD.UNSPONSOR_SP_COINS,
+    SPCD.CLAIM_PENDING_SPONSOR_COINS,
+    SPCD.CLAIM_PENDING_RECIPIENT_COINS,
+    SPCD.CLAIM_PENDING_AGENT_COINS,
+  ],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -93,7 +100,13 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ Manage LIST views
   [SPCD.MANAGE_RECIPIENTS_PANEL]: 'panel',
   [SPCD.MANAGE_AGENTS_PANEL]: 'panel',
-  [SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL]: 'panel',
+  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
+
+  // ✅ NEW: Sponsor list select sub-panels (non-radio, NOT part of displayStack)
+  [SPCD.UNSPONSOR_SP_COINS]: 'panel',
+  [SPCD.CLAIM_PENDING_SPONSOR_COINS]: 'panel',
+  [SPCD.CLAIM_PENDING_RECIPIENT_COINS]: 'panel',
+  [SPCD.CLAIM_PENDING_AGENT_COINS]: 'panel',
 
   // ✅ Manage DETAIL views
   [SPCD.MANAGE_AGENT_PANEL]: 'panel',
@@ -110,7 +123,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel', // legacy/test UI support
+  [SPCD.SPONSOR_LIST_SELECT_PANEL_OLD]: 'panel', // legacy/test UI support
 };
 
 // Optional grouping (updated to include manage panels)
@@ -126,7 +139,14 @@ export const GROUPS = {
     // ✅ include manage list & detail panels so they’re easy to toggle/view in the test UI
     SPCD.MANAGE_RECIPIENTS_PANEL,
     SPCD.MANAGE_AGENTS_PANEL,
-    SPCD.CLAIM_SPONSOR_REWARDS_LIST_PANEL,
+    SPCD.SPONSOR_LIST_SELECT_PANEL,
+
+    // ✅ NEW: sub-panels under SponsorListSelect (for Test UI visibility toggling)
+    SPCD.UNSPONSOR_SP_COINS,
+    SPCD.CLAIM_PENDING_SPONSOR_COINS,
+    SPCD.CLAIM_PENDING_RECIPIENT_COINS,
+    SPCD.CLAIM_PENDING_AGENT_COINS,
+
     SPCD.MANAGE_RECIPIENT_PANEL,
     SPCD.MANAGE_AGENT_PANEL,
     SPCD.MANAGE_SPONSOR_PANEL,

@@ -8,7 +8,7 @@ import {
   useRegisterHeaderTitle,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageWallet from './ManageWallet';
+import ManageAccount from './ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
@@ -64,7 +64,7 @@ export default function ManageRecipient(_props: Props) {
 
   return (
     <div id="MANAGE_RECIPIENT_PANEL">
-      <ManageWallet wallet={recipientWallet} />
+      <ManageAccount wallet={recipientWallet} />
       {!showToDo && (
         <ToDo
           show

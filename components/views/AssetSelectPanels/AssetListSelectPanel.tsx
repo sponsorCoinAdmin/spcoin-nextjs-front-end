@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
-import ManageWalletList from '@/components/views/ManageSponsorships/ManageWalletList';
+import ManageWalletList from '@/components/views/ManageSponsorships/ManageAccountList';
 
 import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';

@@ -6,6 +6,7 @@ import Image from 'next/image';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import AddressSelect from '../AssetSelectPanels/AddressSelect';
@@ -40,7 +41,7 @@ function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
     // Sponsor flows
     case SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON:
     case SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL:
-    case SP_COIN_DISPLAY.CLAIM_SPONSOR_REWARDS_LIST_PANEL:
+    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
       return 'Sponsor Account:';
 
@@ -67,6 +68,16 @@ export default function ManageWalletList({
   listType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
+
+  // ✅ Visibility gates (future panel control)
+  const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
+  const showAgentCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
+  const showRecipientCoinsRow = usePanelVisible(
+    SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS,
+  );
+  const showSponsorCoinsRow = usePanelVisible(
+    SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS,
+  );
 
   // 🔎 Account type derived from containerType (enum label text)
   const accountType: AccountType = useMemo(() => {
@@ -109,12 +120,14 @@ export default function ManageWalletList({
   const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
 
   // ✅ Single tooltip (white bg + black text) positioned above cursor
-  const [tip, setTip] = useState<{ show: boolean; text: string; x: number; y: number }>({
-    show: false,
-    text: '',
-    x: 0,
-    y: 0,
-  });
+  const [tip, setTip] = useState<{ show: boolean; text: string; x: number; y: number }>(
+    {
+      show: false,
+      text: '',
+      x: 0,
+      y: 0,
+    },
+  );
 
   // Role label + id prefix from the enum name (for scoping ids only)
   const { roleLabel, idPrefix } = useMemo(() => {
@@ -168,15 +181,15 @@ export default function ManageWalletList({
       row && typeof (row as any).address === 'string'
         ? (row as any).address
         : (() => {
-          const a = (row as any)?.address as Record<string, unknown> | undefined;
-          if (!a) return 'N/A';
-          const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-          try {
-            return cand ? String(cand) : JSON.stringify(a);
-          } catch {
-            return 'N/A';
-          }
-        })();
+            const a = (row as any)?.address as Record<string, unknown> | undefined;
+            if (!a) return 'N/A';
+            const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+            try {
+              return cand ? String(cand) : JSON.stringify(a);
+            } catch {
+              return 'N/A';
+            }
+          })();
 
     const rowName = row?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
     const rowAccount =
@@ -189,7 +202,9 @@ export default function ManageWalletList({
       'N/A';
 
     const label =
-      pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '(s)' : ''}`;
+      pending.type === AccountType.ALL
+        ? 'ALL'
+        : `${pending.type.toString()}${isTotal ? '(s)' : ''}`;
 
     // eslint-disable-next-line no-alert
     const msg = [
@@ -215,13 +230,6 @@ export default function ManageWalletList({
   const wrapperTw =
     `${msTableTw.wrapper} !mt-0 mt-0 ` +
     'mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto';
-
-  const coinAction =
-    listType === LIST_TYPE.SPONSOR_UNSPONSOR
-      ? 'Staked Coins'
-      : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS
-        ? 'Pending Coins'
-        : 'Coins';
 
   const middleHeaderLabel = 'Meta Data';
 
@@ -256,7 +264,7 @@ export default function ManageWalletList({
       <AddressSelect
         defaultAddress={undefined}
         bypassDefaultFsm
-        callingParent={'ManageWallet'}
+        callingParent={'ManageAccount'}
         useActiveAddr={true}
         shortAddr={true}
         preText={inputAccountText}
@@ -308,19 +316,33 @@ export default function ManageWalletList({
                 typeof (w as any).address === 'string'
                   ? (w as any).address
                   : (() => {
-                    const a = (w as any)?.address as Record<string, unknown> | undefined;
-                    if (!a) return 'N/A';
-                    const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-                    try {
-                      return cand ? String(cand) : JSON.stringify(a);
-                    } catch {
-                      return 'N/A';
-                    }
-                  })();
+                      const a = (w as any)?.address as Record<string, unknown> | undefined;
+                      if (!a) return 'N/A';
+                      const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+                      try {
+                        return cand ? String(cand) : JSON.stringify(a);
+                      } catch {
+                        return 'N/A';
+                      }
+                    })();
+
+              const renderCoinRow = (label: string) => (
+                <tr className={zebra}>
+                  <td className={`${zebra} px-3 py-2 text-sm align-middle w-1 whitespace-nowrap`}>
+                    <div className="inline-flex items-center justify-start bg-transparent">
+                      {label}
+                    </div>
+                  </td>
+
+                  <td className={`${zebra} px-3 py-2 text-sm align-middle`} colSpan={2}>
+                    <div className="w-full flex items-center justify-start bg-transparent">0.0</div>
+                  </td>
+                </tr>
+              );
 
               return (
                 <React.Fragment key={addressText}>
-                  {/* Row 1: 3 columns, col #2 intentionally empty */}
+                  {/* Row 1: 3 columns */}
                   <tr className={`${zebra} ${'border-b border-slate-400/30'}`}>
                     {/* Column 1 */}
                     <td className="p-0">
@@ -351,9 +373,7 @@ export default function ManageWalletList({
                         <div className="font-semibold truncate !text-[#5981F3]">
                           {w?.name ?? 'Unknown'}
                         </div>
-                        <div className="text-sm truncate !text-[#5981F3]">
-                          {w?.symbol ?? ''}
-                        </div>
+                        <div className="text-sm truncate !text-[#5981F3]">{w?.symbol ?? ''}</div>
                       </div>
                     </td>
 
@@ -372,27 +392,14 @@ export default function ManageWalletList({
                     </td>
                   </tr>
 
-                  {/* Row 2: same zebra; "Pending Coins" spans cols 1-2; "0" centered in col 3 */}
-                  <tr className={zebra}>
-                    {/* Column 1: fit to content */}
-                    <td className={`${zebra} px-3 py-2 text-sm align-middle w-1 whitespace-nowrap`}>
-                      <div className="inline-flex items-center justify-start bg-transparent">
-                        {coinAction}
-                      </div>
-                    </td>
-
-                    {/* Column 2: fill the rest of the row (spans remaining 2 columns) */}
-                    <td className={`${zebra} px-3 py-2 text-sm align-middle`} colSpan={2}>
-                      <div className="w-full flex items-center justify-start bg-transparent">
-                        0.0
-                      </div>
-                    </td>
-                  </tr>
-
+                  {/* Row 2..5 (2-column layout via colSpan=2), gated by new enums */}
+                  {showUnSponsorRow ? renderCoinRow('Staked Coins') : null}
+                  {showSponsorCoinsRow ? renderCoinRow('Sponsor Coins') : null}
+                  {showRecipientCoinsRow ? renderCoinRow('Recipient Coins') : null}
+                  {showAgentCoinsRow ? renderCoinRow('Agent Coins') : null}
                 </React.Fragment>
               );
             })}
-
 
             {/* Total row */}
             {(() => {

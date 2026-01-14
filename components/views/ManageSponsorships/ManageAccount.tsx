@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageWallet.tsx
+// File: @/components/views/ManageSponsorships/ManageAccount.tsx
 'use client';
 
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
@@ -55,7 +55,7 @@ function formatShortAddress(addr: string) {
   return ` ${start} ... ${end} `;
 }
 
-export default function ManageWallet({ wallet }: Props) {
+export default function ManageAccount({ wallet }: Props) {
   // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
 

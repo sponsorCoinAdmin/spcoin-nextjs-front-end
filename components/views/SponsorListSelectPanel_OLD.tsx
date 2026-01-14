@@ -1,4 +1,4 @@
-// File: @/components/views/AssetSelectPanels/SponsorListSelectPanel.tsx
+// File: @/components/views/AssetSelectPanels/SponsorListSelectPanel_OLD.tsx
 'use client';
 
 import {
@@ -15,24 +15,24 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TRANSITIONS === 'true';
-const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('SponsorListSelectPanel_OLD', DEBUG_ENABLED, LOG_TIME);
 
 /** Visibility gate only. */
-export default function SponsorListSelectPanel() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
+export default function SponsorListSelectPanel_OLD() {
+  const visible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD);
 
   debugLog.log?.('[render]', {
     visible,
-    panel: SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-    panelLabel: SP_COIN_DISPLAY[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
+    panel: SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD,
+    panelLabel: SP_COIN_DISPLAY[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD],
   });
 
   if (!visible) return null;
-  return <SponsorListSelectPanelInner />;
+  return <SponsorListSelectPanel_OLDInner />;
 }
 
 /** Shim: define feed + commit behavior. */
-function SponsorListSelectPanelInner() {
+function SponsorListSelectPanel_OLDInner() {
   const commits = useSelectionCommit();
 
   // ⚠️ We don't know your exact commit API.
@@ -53,7 +53,7 @@ function SponsorListSelectPanelInner() {
 
   return (
     <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
+      panel={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD}
       feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
       listType={LIST_TYPE.UNDEFINED}
       instancePrefix="sponsor"
