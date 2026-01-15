@@ -105,21 +105,21 @@ export default function MainTradingPanel() {
           </PanelGate>
 
           {/* List views */}
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}>
+          <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}>
             <ManageRecipients />
           </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
+          <PanelGate panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}>
             <ManageAgents />
           </PanelGate>
 
           {/* Detail views */}
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
+          <PanelGate panel={SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL}>
             <ManageAgent />
           </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL}>
+          <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL}>
             <ManageRecipient />
           </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL}>
+          <PanelGate panel={SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL}>
             <ManageSponsor />
           </PanelGate>
 

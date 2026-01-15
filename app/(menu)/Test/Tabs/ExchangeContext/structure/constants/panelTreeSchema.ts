@@ -19,6 +19,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.SELL_LIST_SELECT_PANEL,
 
     // Address selectors
+    // ✅ Manage LIST views
+    SPCD.SPONSOR_LIST_SELECT_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
     SPCD.AGENT_LIST_SELECT_PANEL,
 
@@ -26,17 +28,13 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.ERROR_MESSAGE_PANEL,
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
-    // ✅ Manage LIST views
-    SPCD.MANAGE_RECIPIENTS_PANEL,
-    SPCD.MANAGE_AGENTS_PANEL,
-    SPCD.SPONSOR_LIST_SELECT_PANEL,
 
     // ✅ Manage DETAIL views
-    SPCD.MANAGE_AGENT_PANEL,
-    SPCD.MANAGE_RECIPIENT_PANEL,
-    SPCD.MANAGE_SPONSOR_PANEL,
+    SPCD.AGENT_ACCOUNT_PANEL,
+    SPCD.RECIPIENT_ACCOUNT_PANEL,
+    SPCD.SPONSOR_ACCOUNT_PANEL,
 
-    // (Optional legacy) SPCD.SPONSOR_LIST_SELECT_PANEL_OLD,
+    // (Optional legacy) SPCD.TOKEN_CONTRACT_PANEL,
   ],
 
   // ✅ Desired output: CONFIG_SLIPPAGE_PANEL is nested under TRADING_STATION_PANEL
@@ -94,13 +92,9 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
   [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'list',
   [SPCD.AGENT_LIST_SELECT_PANEL]: 'list',
+  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
-
-  // ✅ Manage LIST views
-  [SPCD.MANAGE_RECIPIENTS_PANEL]: 'panel',
-  [SPCD.MANAGE_AGENTS_PANEL]: 'panel',
-  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
 
   // ✅ NEW: Sponsor list select sub-panels (non-radio, NOT part of displayStack)
   [SPCD.UNSPONSOR_SP_COINS]: 'panel',
@@ -109,9 +103,9 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.CLAIM_PENDING_AGENT_COINS]: 'panel',
 
   // ✅ Manage DETAIL views
-  [SPCD.MANAGE_AGENT_PANEL]: 'panel',
-  [SPCD.MANAGE_RECIPIENT_PANEL]: 'panel',
-  [SPCD.MANAGE_SPONSOR_PANEL]: 'panel',
+  [SPCD.AGENT_ACCOUNT_PANEL]: 'panel',
+  [SPCD.RECIPIENT_ACCOUNT_PANEL]: 'panel',
+  [SPCD.SPONSOR_ACCOUNT_PANEL]: 'panel',
 
   [SPCD.ADD_SPONSORSHIP_BUTTON]: 'button',
   [SPCD.MANAGE_SPONSORSHIPS_BUTTON]: 'button',
@@ -123,7 +117,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  [SPCD.SPONSOR_LIST_SELECT_PANEL_OLD]: 'panel', // legacy/test UI support
+  [SPCD.TOKEN_CONTRACT_PANEL]: 'panel', // legacy/test UI support
 };
 
 // Optional grouping (updated to include manage panels)
@@ -133,12 +127,11 @@ export const GROUPS = {
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
     // ✅ include manage list & detail panels so they’re easy to toggle/view in the test UI
-    SPCD.MANAGE_RECIPIENTS_PANEL,
-    SPCD.MANAGE_AGENTS_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL,
+    SPCD.AGENT_LIST_SELECT_PANEL,
     SPCD.SPONSOR_LIST_SELECT_PANEL,
 
     // ✅ NEW: sub-panels under SponsorListSelect (for Test UI visibility toggling)
@@ -147,9 +140,9 @@ export const GROUPS = {
     SPCD.CLAIM_PENDING_RECIPIENT_COINS,
     SPCD.CLAIM_PENDING_AGENT_COINS,
 
-    SPCD.MANAGE_RECIPIENT_PANEL,
-    SPCD.MANAGE_AGENT_PANEL,
-    SPCD.MANAGE_SPONSOR_PANEL,
+    SPCD.RECIPIENT_ACCOUNT_PANEL,
+    SPCD.AGENT_ACCOUNT_PANEL,
+    SPCD.SPONSOR_ACCOUNT_PANEL,
 
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],

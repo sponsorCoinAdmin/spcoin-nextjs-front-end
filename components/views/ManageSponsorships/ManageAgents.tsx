@@ -24,15 +24,15 @@ const debugLog = createDebugLogger('ManageAgents', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Agents list:
- * - List visibility: MANAGE_AGENTS_PANEL (opened by ManageSponsorshipsPanel.openOnly)
- * - Detail visibility: MANAGE_AGENT_PANEL (ManageAgent + PanelGate)
+ * - List visibility: AGENT_LIST_SELECT_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - Detail visibility: AGENT_ACCOUNT_PANEL (ManageAgent + PanelGate)
  * - Selection source: FEED_TYPE.MANAGE_AGENTS via PanelListSelectWrapper
  */
 export default function ManageAgents() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
 
   useEffect(() => {
-    debugLog.log?.('[visibility] MANAGE_AGENTS_PANEL', { visible });
+    debugLog.log?.('[visibility] AGENT_LIST_SELECT_PANEL', { visible });
     if (visible) {
       debugLog.log?.('OPENING ManageAgents');
     }
@@ -79,26 +79,26 @@ function ManageAgentsInner() {
         'ManageAgents:handleCommit(agentAccount)',
       );
 
-      // 2️⃣ Defer opening MANAGE_AGENT_PANEL so it runs *after*
+      // 2️⃣ Defer opening AGENT_ACCOUNT_PANEL so it runs *after*
       //     any toTrading(MAIN_TRADING_PANEL) transition.
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           debugLog.log?.(
-            '[handleCommit] deferred open of MANAGE_AGENT_PANEL after transitions',
+            '[handleCommit] deferred open of AGENT_ACCOUNT_PANEL after transitions',
           );
           openPanel(
-            SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-            'ManageAgents:handleCommit(deferred open MANAGE_AGENT_PANEL)',
+            SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
+            'ManageAgents:handleCommit(deferred open AGENT_ACCOUNT_PANEL)',
           );
         }, 0);
       } else {
         // Fallback (shouldn’t really hit because we’re in a client component)
         debugLog.log?.(
-          '[handleCommit] non-window environment; opening MANAGE_AGENT_PANEL immediately',
+          '[handleCommit] non-window environment; opening AGENT_ACCOUNT_PANEL immediately',
         );
         openPanel(
-          SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-          'ManageAgents:handleCommit(open MANAGE_AGENT_PANEL)',
+          SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
+          'ManageAgents:handleCommit(open AGENT_ACCOUNT_PANEL)',
         );
       }
     },
@@ -106,15 +106,15 @@ function ManageAgentsInner() {
   );
 
   debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
-    panel: 'MANAGE_AGENTS_PANEL',
+    panel: 'AGENT_LIST_SELECT_PANEL',
     feedType: 'MANAGE_AGENTS',
     instancePrefix: 'agent',
   });
 
   return (
-    <div id="MANAGE_AGENTS_PANEL">
+    <div id="AGENT_LIST_SELECT_PANEL">
       <PanelListSelectWrapper
-        panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}
+        panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
         feedType={FEED_TYPE.MANAGE_AGENTS}
         listType={LIST_TYPE.UNDEFINED}
         instancePrefix="agent"

@@ -35,8 +35,8 @@ type Props = { onClose?: () => void };
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const vRecipients = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-  const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+  const vRecipients = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+  const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const vSponsors = usePanelVisible(
     SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
   );
@@ -73,8 +73,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const openOnly = useCallback(
     (id: SP_COIN_DISPLAY) => {
       const ids = [
-        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+        SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+        SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
         SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
       ] as const;
 
@@ -332,7 +332,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
                           onClick={() =>
-                            openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)
+                            openOnly(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)
                           }
                           aria-label="Open Claim Recipients Rewards panel"
                         >
@@ -367,7 +367,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
                           onClick={() =>
-                            openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)
+                            openOnly(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL)
                           }
                           aria-label="Open Claim Agents Rewards panel"
                         >

@@ -24,7 +24,7 @@ export default function ManageSponsor(_props: Props) {
 
   // Header title
   useRegisterHeaderTitle(
-    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+    SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
     hasSponsor ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}` : 'Sponsor (none selected)',
   );
 
@@ -32,7 +32,7 @@ export default function ManageSponsor(_props: Props) {
 
   // Left header logo (square, no crop)
   useRegisterHeaderLeft(
-    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+    SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
     useMemo(
       () =>
         () => (
@@ -71,7 +71,7 @@ export default function ManageSponsor(_props: Props) {
   ]);
 
   return (
-    <div id="MANAGE_SPONSOR_PANEL">
+    <div id="SPONSOR_ACCOUNT_PANEL">
       {hasSponsor ? (
         <ManageAccount wallet={sponsorWallet} />
       ) : (

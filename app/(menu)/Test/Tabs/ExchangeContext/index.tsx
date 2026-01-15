@@ -20,7 +20,6 @@ import PanelGate from '@/components/utility/PanelGate';
 
 // List views
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
-import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
 import ManageSponsorRecipients from '@/components/views/ManageSponsorships/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
@@ -236,13 +235,13 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
             <ManageSponsorshipsPanel />
           </PanelGate>
-          <PanelGate panel={SP.MANAGE_RECIPIENTS_PANEL}>
+          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
             <ManageRecipients />
           </PanelGate>
-          <PanelGate panel={SP.MANAGE_AGENTS_PANEL}>
+          {/* <PanelGate panel={SP.AGENT_LIST_SELECT_PANEL}>
             <ManageAgents />
           </PanelGate>
-
+ */}
           {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
           <PanelGate panel={SP.SPONSOR_LIST_SELECT_PANEL}>
             <ManageSponsorRecipients />
@@ -252,13 +251,13 @@ export default function ExchangeContextTab() {
           </PanelGate>
 
           {/* Manage DETAIL views */}
-          <PanelGate panel={SP.MANAGE_AGENT_PANEL}>
+          <PanelGate panel={SP.AGENT_ACCOUNT_PANEL}>
             <ManageAgent />
           </PanelGate>
-          <PanelGate panel={SP.MANAGE_RECIPIENT_PANEL}>
+          <PanelGate panel={SP.RECIPIENT_ACCOUNT_PANEL}>
             <ManageRecipient />
           </PanelGate>
-          <PanelGate panel={SP.MANAGE_SPONSOR_PANEL}>
+          <PanelGate panel={SP.SPONSOR_ACCOUNT_PANEL}>
             <ManageSponsor />
           </PanelGate>
         </div>

@@ -34,9 +34,9 @@ export default function TradeContainerHeader() {
   const agentAccount = accounts.agentAccount as WalletAccount | undefined;
   const sponsorAccount = accounts.sponsorAccount as WalletAccount | undefined;
 
-  const agentDetailOpen = isVisible(SP_TREE.MANAGE_AGENT_PANEL);
-  const recipientDetailOpen = isVisible(SP_TREE.MANAGE_RECIPIENT_PANEL);
-  const sponsorDetailOpen = isVisible(SP_TREE.MANAGE_SPONSOR_PANEL);
+  const agentDetailOpen = isVisible(SP_TREE.AGENT_ACCOUNT_PANEL);
+  const recipientDetailOpen = isVisible(SP_TREE.RECIPIENT_ACCOUNT_PANEL);
+  const sponsorDetailOpen = isVisible(SP_TREE.SPONSOR_ACCOUNT_PANEL);
 
   let headerWallet: WalletAccount | undefined;
   if (agentDetailOpen && agentAccount) headerWallet = agentAccount;

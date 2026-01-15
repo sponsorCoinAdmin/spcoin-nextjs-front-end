@@ -339,7 +339,7 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     [SP.FEE_DISCLOSURE, true],
   ];
 
-  const neverPersist: number[] = [SP.SPONSOR_LIST_SELECT_PANEL_OLD];
+  const neverPersist: number[] = [SP.TOKEN_CONTRACT_PANEL];
 
   const missing = mustIncludeOnBoot
     .filter(([id]) => !byId.has(id))

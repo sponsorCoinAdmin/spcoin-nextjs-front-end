@@ -39,7 +39,7 @@ function uniqLastByPanel(list: PanelEntry[]): PanelEntry[] {
 function allEnumPanels(): SP[] {
   // numeric valued members only
   const nums = Object.values(SP).filter((v) => typeof v === 'number') as number[];
-  return nums.filter((n) => n !== SP.SPONSOR_LIST_SELECT_PANEL_OLD).map((n) => n as SP);
+  return nums.filter((n) => n !== SP.TOKEN_CONTRACT_PANEL).map((n) => n as SP);
 }
 
 function stableSortByEnumOrder(entries: PanelEntry[]): PanelEntry[] {
@@ -51,7 +51,7 @@ function stableSortByEnumOrder(entries: PanelEntry[]): PanelEntry[] {
 
 /**
  * Validate and normalize any persisted panel tree into a flat, consistent list.
- * - Drops unknown/invalid IDs and SPONSOR_LIST_SELECT_PANEL_OLD (never persist)
+ * - Drops unknown/invalid IDs and TOKEN_CONTRACT_PANEL (never persist)
  * - Coerces visible to boolean
  * - Dedupes by keeping the last occurrence per panel
  * - Adds any missing known panels with visible=false

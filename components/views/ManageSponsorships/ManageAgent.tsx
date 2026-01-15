@@ -22,14 +22,14 @@ export default function ManageAgent(_props: Props) {
   const logoURL = agentWallet?.logoURL;
 
   useRegisterHeaderTitle(
-    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+    SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
     `Agent ${agentWallet?.name ?? 'N/A'}`,
   );
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
   useRegisterHeaderLeft(
-    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+    SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
     useMemo(
       () =>
         () => (
@@ -50,7 +50,7 @@ export default function ManageAgent(_props: Props) {
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
   return (
-    <div id="MANAGE_AGENT_PANEL">
+    <div id="AGENT_ACCOUNT_PANEL">
       <ManageAccount wallet={agentWallet} />
       {!showToDo && (
         <ToDo

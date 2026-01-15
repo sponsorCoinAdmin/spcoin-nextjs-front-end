@@ -24,15 +24,15 @@ const debugLog = createDebugLogger('ManageRecipients', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Recipients list:
- * - List visibility: MANAGE_RECIPIENTS_PANEL (opened by ManageSponsorshipsPanel.openOnly)
- * - Detail visibility: MANAGE_RECIPIENT_PANEL (ManageRecipient + PanelGate)
+ * - List visibility: RECIPIENT_LIST_SELECT_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - Detail visibility: RECIPIENT_ACCOUNT_PANEL (ManageRecipient + PanelGate)
  * - Selection source: FEED_TYPE.MANAGE_RECIPIENTS via PanelListSelectWrapper
  */
 export default function ManageRecipients() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
   useEffect(() => {
-    debugLog.log?.('[visibility] MANAGE_RECIPIENTS_PANEL', { visible });
+    debugLog.log?.('[visibility] RECIPIENT_LIST_SELECT_PANEL', { visible });
     if (visible) {
       debugLog.log?.('OPENING ManageRecipients');
     }
@@ -79,26 +79,26 @@ function ManageRecipientsInner() {
         'ManageRecipients:handleCommit(recipientAccount)',
       );
 
-      // 2️⃣ Defer opening MANAGE_RECIPIENT_PANEL so it runs *after*
+      // 2️⃣ Defer opening RECIPIENT_ACCOUNT_PANEL so it runs *after*
       //     any toTrading(MAIN_TRADING_PANEL) transition.
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           debugLog.log?.(
-            '[handleCommit] deferred open of MANAGE_RECIPIENT_PANEL after transitions',
+            '[handleCommit] deferred open of RECIPIENT_ACCOUNT_PANEL after transitions',
           );
           openPanel(
-            SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-            'ManageRecipients:handleCommit(deferred open MANAGE_RECIPIENT_PANEL)',
+            SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
+            'ManageRecipients:handleCommit(deferred open RECIPIENT_ACCOUNT_PANEL)',
           );
         }, 0);
       } else {
         // Fallback (shouldn’t really hit because we’re in a client component)
         debugLog.log?.(
-          '[handleCommit] non-window environment; opening MANAGE_RECIPIENT_PANEL immediately',
+          '[handleCommit] non-window environment; opening RECIPIENT_ACCOUNT_PANEL immediately',
         );
         openPanel(
-          SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-          'ManageRecipients:handleCommit(open MANAGE_RECIPIENT_PANEL)',
+          SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
+          'ManageRecipients:handleCommit(open RECIPIENT_ACCOUNT_PANEL)',
         );
       }
     },
@@ -106,15 +106,15 @@ function ManageRecipientsInner() {
   );
 
   debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
-    panel: 'MANAGE_RECIPIENTS_PANEL',
+    panel: 'RECIPIENT_LIST_SELECT_PANEL',
     feedType: 'MANAGE_RECIPIENTS',
     instancePrefix: 'recipient',
   });
 
   return (
-    <div id="MANAGE_RECIPIENTS_PANEL">
+    <div id="RECIPIENT_LIST_SELECT_PANEL">
       <PanelListSelectWrapper
-        panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}
+        panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
         feedType={FEED_TYPE.MANAGE_RECIPIENTS}
         listType={LIST_TYPE.UNDEFINED}
         instancePrefix="recipient"

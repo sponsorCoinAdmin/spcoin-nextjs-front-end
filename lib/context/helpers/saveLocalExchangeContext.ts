@@ -22,7 +22,7 @@ function bigIntReplacer(_key: string, value: unknown) {
  * (Typically “ephemeral” overlays / temporary list selects.)
  */
 const NON_PERSISTED_PANELS = new Set<number>([
-  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD,
+  SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
   // Add others if desired:
   // SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
   // SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,

@@ -19,12 +19,12 @@ const debugLog = createDebugLogger('SponsorListSelectPanel_OLD', DEBUG_ENABLED, 
 
 /** Visibility gate only. */
 export default function SponsorListSelectPanel_OLD() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
 
   debugLog.log?.('[render]', {
     visible,
-    panel: SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD,
-    panelLabel: SP_COIN_DISPLAY[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD],
+    panel: SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+    panelLabel: SP_COIN_DISPLAY[SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL],
   });
 
   if (!visible) return null;
@@ -53,7 +53,7 @@ function SponsorListSelectPanel_OLDInner() {
 
   return (
     <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD}
+      panel={SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL}
       feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
       listType={LIST_TYPE.UNDEFINED}
       instancePrefix="sponsor"

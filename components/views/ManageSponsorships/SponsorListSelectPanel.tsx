@@ -35,14 +35,14 @@ const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG
  * - SPONSOR_UNSPONSOR    → header/button labels for Unstake flow
  *
  * IMPORTANT UX RULE:
- * When MANAGE_SPONSOR_PANEL (detail) is visible, we keep the parent radio panel
+ * When SPONSOR_ACCOUNT_PANEL (detail) is visible, we keep the parent radio panel
  * (UNSTAKING / CLAIM) logically open, but we suppress the list UI to avoid
  * duplicate headers and stacked screens.
  */
 export default function ManageSponsorRecipients() {
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
-  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
   // Choose a single active panel to pass to PanelListSelectWrapper (it gates by that panel)
   const activePanel: SP_COIN_DISPLAY | null = vUnstaking
@@ -141,26 +141,26 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
       // 2) Open detail panel like tree behavior
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
-          debugLog.log?.('[handleCommit] deferred open of MANAGE_SPONSOR_PANEL', {
+          debugLog.log?.('[handleCommit] deferred open of SPONSOR_ACCOUNT_PANEL', {
             from: SP_COIN_DISPLAY[activePanel],
             parent: SP_COIN_DISPLAY[activePanel],
           });
 
           openPanel(
-            SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-            `ManageSponsorRecipients:handleCommit(deferred open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+            SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
+            `ManageSponsorRecipients:handleCommit(deferred open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
             activePanel,
           );
         }, 0);
       } else {
-        debugLog.log?.('[handleCommit] open MANAGE_SPONSOR_PANEL (no window)', {
+        debugLog.log?.('[handleCommit] open SPONSOR_ACCOUNT_PANEL (no window)', {
           from: SP_COIN_DISPLAY[activePanel],
           parent: SP_COIN_DISPLAY[activePanel],
         });
 
         openPanel(
-          SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-          `ManageSponsorRecipients:handleCommit(open MANAGE_SPONSOR_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+          SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
+          `ManageSponsorRecipients:handleCommit(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
           activePanel,
         );
       }

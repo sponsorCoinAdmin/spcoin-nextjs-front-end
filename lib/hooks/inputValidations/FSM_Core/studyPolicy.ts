@@ -89,7 +89,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // SPONSOR selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD]: {
+  [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

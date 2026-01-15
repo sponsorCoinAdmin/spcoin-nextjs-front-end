@@ -2,13 +2,11 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-
-// ✅ Prevent “double close” when a header close also triggers an overlay/backdrop close.
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 
 // Read env once, with a safe fallback
@@ -22,9 +20,7 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
     if (title === undefined) return;
     headerTitleOverrides.set(panel, title);
     return () => {
-      if (headerTitleOverrides.get(panel) === title) {
-        headerTitleOverrides.delete(panel);
-      }
+      if (headerTitleOverrides.get(panel) === title) headerTitleOverrides.delete(panel);
     };
   }, [panel, title]);
 }
@@ -32,153 +28,161 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
 /** Left-side component override mapper */
 type LeftFactory = () => React.ReactNode;
 const headerLeftOverrides = new Map<SP_COIN_DISPLAY, LeftFactory>();
-export function useRegisterHeaderLeft(
-  panel: SP_COIN_DISPLAY,
-  factory?: LeftFactory,
-) {
+export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
   useEffect(() => {
     if (!factory) return;
     headerLeftOverrides.set(panel, factory);
     return () => {
-      if (headerLeftOverrides.get(panel) === factory) {
-        headerLeftOverrides.delete(panel);
-      }
+      if (headerLeftOverrides.get(panel) === factory) headerLeftOverrides.delete(panel);
     };
   }, [panel, factory]);
 }
 
+/** Default titles */
+const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
+  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: 'Select Sponsors Agent',
+  [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: 'Select a Token to Buy',
+  [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
+  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: 'Select Recipient to Sponsor',
+  [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: 'Select a Token to Sell',
+  [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
+  [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
+  [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Select a Sponsor',
+  [SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL]: 'Sponsorship Account Management',
+  [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: 'Manage Recipient Account',
+  [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
+  [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: 'Manage Sponsor Account',
+  [SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL]: 'Un-Staking Your Sponsor Coins',
+  [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
+};
+
 function titleFor(display: SP_COIN_DISPLAY): string {
-  switch (display) {
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
-      return 'Select Sponsors Agent';
-    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
-      return 'Select a Token to Buy';
-    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
-      return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
-      return 'Select Recipient to Sponsor';
-    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
-      return 'Select a Token to Sell';
-    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL:
-      return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
-      return AGENT_WALLET_TITLE;
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD:
-      return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:
-      return 'Sponsorship Account Management';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
-      return 'Claim Recipient Rewards';
-    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
-      return 'Claim Agent Rewards';
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
-      return 'Claim Sponsor Rewards';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL:
-      return 'Manage Recipient Account';
-    case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
-      return 'Manage Agent Account';
-    case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL:
-      return 'Manage Sponsor Account';
-    case SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL:
-      return 'Un-Staking Your Sponsor Coins';
-    case SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL:
-      return 'Staking Your Sponsor Coins';
-    default:
-      return 'Main Panel Header';
-  }
+  return DEFAULT_TITLES[display] ?? 'Main Panel Header';
 }
+
+type AnyCloseEvent = {
+  preventDefault?: () => void;
+  stopPropagation?: () => void;
+};
+
+/**
+ * Static, stable priority order (no allocations per render).
+ * Reorder/add items here.
+ */
+const DISPLAY_PRIORITY = [
+  SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+  SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+
+  SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
+  SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
+
+  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
+
+  SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
+  SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
+
+  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+
+  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+  SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+] as const;
+
+type PriorityDisplay = (typeof DISPLAY_PRIORITY)[number];
 
 export function useHeaderController() {
   const { closePanel } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
+  // Read each visibility exactly once
+  const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
+  const sellList = usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+  const buyList = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+  const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+
+  const agentDetail = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL);
+  const recipientDetail = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL);
+  const sponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
+
+  const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+  const sponsorList = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
+
+  const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
+  const unstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
+
+  const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+
+  const error = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+  const trading = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+
   /**
-   * Visibility is used ONLY for computing header title/left (not for nav).
+   * Option A: make TS understand the *exact* key set.
+   * We build a Record<PriorityDisplay, boolean> and iterate DISPLAY_PRIORITY.
    *
-   * ✅ Pending Rewards is a LOCAL/INLINE toggle and must NOT drive header selection.
-   * We intentionally do NOT read it here to avoid treating it like a nav/display member.
+   * This removes the "can't index with SP_COIN_DISPLAY" error because
+   * `display` is inferred as PriorityDisplay (the subset), not the whole enum.
    */
-  const vis = {
-    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD),
-    sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-    buy: usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-    recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL),
+  const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
+    const visibleByDisplay: Record<PriorityDisplay, boolean> = {
+      [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
+      [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: sellList,
+      [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: buyList,
+      [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
 
-    manageHub: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL),
+      [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: agentDetail,
+      [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: recipientDetail,
+      [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: sponsorDetail,
 
-    manageRecipientsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
-    manageAgentsList: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsorsList: usePanelVisible(
-      SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-    ),
+      [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
+      [SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL]: sponsorList,
 
-    manageRecipientDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL),
-    manageAgentDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL),
-    manageSponsorDetail: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL),
+      [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: staking,
+      [SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL]: unstaking,
 
-    manageTradingCoins: usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL),
-    manageStakingCoins: usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL),
+      [SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL]: manageHub,
 
-    agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
-    error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
-    trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
-  };
+      [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: error,
+      [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: trading,
+    };
 
-  const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD;
-    if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
-    if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
-    if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
-
-    if (vis.manageAgentDetail) return SP_COIN_DISPLAY.MANAGE_AGENT_PANEL;
-    if (vis.manageRecipientDetail) return SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL;
-    if (vis.manageSponsorDetail) return SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL;
-
-    if (vis.manageAgentsList) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
-    if (vis.manageRecipientsList) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageSponsorsList)
-      return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
-
-    if (vis.manageTradingCoins) return SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL;
-    if (vis.manageStakingCoins) return SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL;
-
-    if (vis.manageHub) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-
-    if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
-    if (vis.error) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-    if (vis.trading) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-
+    for (const display of DISPLAY_PRIORITY) {
+      if (visibleByDisplay[display]) return display;
+    }
     return SP_COIN_DISPLAY.UNDEFINED;
-  }, [vis]);
+  }, [
+    tokenList,
+    sellList,
+    buyList,
+    recipientList,
+    agentDetail,
+    recipientDetail,
+    sponsorDetail,
+    agentList,
+    sponsorList,
+    staking,
+    unstaking,
+    manageHub,
+    error,
+    trading,
+  ]);
 
-  const overrideTitle = headerTitleOverrides.get(currentDisplay);
-  const title = overrideTitle ?? titleFor(currentDisplay);
+  const title = useMemo(() => {
+    return headerTitleOverrides.get(currentDisplay) ?? titleFor(currentDisplay);
+  }, [currentDisplay]);
 
-  const leftElementFactory = headerLeftOverrides.get(currentDisplay);
-  const leftElement = leftElementFactory ? leftElementFactory() : null;
+  const leftElement = useMemo(() => {
+    const factory = headerLeftOverrides.get(currentDisplay);
+    return factory ? factory() : null;
+  }, [currentDisplay]);
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
-  /**
-   * ✅ Header X = POP stack (close top of persisted displayStack) exactly once.
-   *
-   * IMPORTANT:
-   * This handler is designed to be callable from:
-   * - onPointerDownCapture
-   * - onMouseDownCapture
-   * - onClick
-   *
-   * so suppression + stopPropagation can run BEFORE backdrop/document handlers.
-   */
-  type AnyCloseEvent = {
-    preventDefault?: () => void;
-    stopPropagation?: () => void;
-  };
-
   const onClose = useCallback(
     (e?: AnyCloseEvent) => {
-      // one-shot suppress next overlay close attempt (header + backdrop)
       suppressNextOverlayClose('HeaderController:onClose(pop)', 'HeaderController');
 
       try {
@@ -186,8 +190,6 @@ export function useHeaderController() {
         e?.stopPropagation?.();
       } catch {}
 
-      // Pop top-of-stack (legacy API: closePanel(invoker, event?))
-      // If your closePanel does NOT need the event, you can remove the 2nd arg safely.
       closePanel('HeaderController:onClose(pop)', e as any);
     },
     [closePanel],
@@ -200,7 +202,7 @@ export function useHeaderController() {
     onOpenConfig,
     onCloseConfig,
     onClose,
-    isTrading: vis.trading,
+    isTrading: trading,
     currentDisplay,
   };
 }

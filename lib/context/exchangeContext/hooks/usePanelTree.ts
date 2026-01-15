@@ -203,7 +203,7 @@ export function usePanelTree() {
       manageContainer,
       manageScoped,
       defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-      manageSponsorPanel: SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+      manageSponsorPanel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
 
       /**
        * ✅ Sponsor detail panel may be opened with a "parent" reference
@@ -764,7 +764,7 @@ export function usePanelTree() {
     () =>
       visibilityMap[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL] ||
-      visibilityMap[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL_OLD],
+      visibilityMap[SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL],
     [visibilityMap],
   );
 

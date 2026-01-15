@@ -32,12 +32,12 @@ export default function ManageRecipient(_props: Props) {
 
   // Title + left header avatar for the RECIPIENT detail panel
   useRegisterHeaderTitle(
-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+    SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
     `Recipient ${recipientWallet?.name ?? 'N/A'}`,
   );
 
   useRegisterHeaderLeft(
-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+    SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
     useMemo(
       () =>
         () => (
@@ -63,7 +63,7 @@ export default function ManageRecipient(_props: Props) {
   });
 
   return (
-    <div id="MANAGE_RECIPIENT_PANEL">
+    <div id="RECIPIENT_ACCOUNT_PANEL">
       <ManageAccount wallet={recipientWallet} />
       {!showToDo && (
         <ToDo
