@@ -59,7 +59,7 @@ export default function RadioOverlayPanelHost() {
       </PanelGate>
 
       {/* ───────────────────────── Detail overlays (must be mounted) ───────────────────────── */}
-      <PanelGate panel={SP_COIN_DISPLAY.AGENT_PANEL}>
+      <PanelGate panel={SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL}>
         <ManageAgent />
       </PanelGate>
 
