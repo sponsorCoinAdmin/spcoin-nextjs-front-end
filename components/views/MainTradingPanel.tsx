@@ -4,31 +4,10 @@
 import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
-import TradingStationPanel from '@/components/views/TradingStationPanel';
-import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
-
-// List panels
-import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
-import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
-import ManageSponsorRecipients from '@/components/views/ManageSponsorships/SponsorListSelectPanel';
-
-// Detail panels (must be mounted for openPanel to work)
-import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
-import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
-import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
-import StakingSpCoins from '@/components/views/ManageSponsorships/StakingSpCoinsPanel';
-
-import {
-  TokenListSelectPanel,
-  RecipientListSelectPanel,
-  SponsorListSelectPanel_OLD,
-  AgentListSelectPanel,
-  // SponsorListSelectPanel_OLD,
-} from '@/components/views/AssetSelectPanels';
+import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
-import { ErrorMessagePanel } from '@/components/views';
 
 const SHOW_ACTIVE =
   process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
@@ -86,51 +65,8 @@ export default function MainTradingPanel() {
             <TradeContainerHeader />
           </PanelGate>
 
-          {/* Main trading station (TRADING_STATION_PANEL) */}
-          <TradingStationPanel />
-
-          {/* Manage Trading spCoins overlay (STAKING_SPCOINS_PANEL) */}
-          <StakingSpCoins />
-
-          {/* ✅ Merged list overlay:
-              - SPONSOR_LIST_SELECT_PANEL (claim)
-              - UNSTAKING_SPCOINS_PANEL (unstake)
-              Component gates itself by visibility of either panel.
-           */}
-          <ManageSponsorRecipients />
-
-          {/* Top-level overlay panels (radio group) */}
-          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
-            <ManageSponsorshipsPanel />
-          </PanelGate>
-
-          {/* List views */}
-          <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}>
-            <ManageRecipients />
-          </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}>
-            <ManageAgents />
-          </PanelGate>
-
-          {/* Detail views */}
-          <PanelGate panel={SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL}>
-            <ManageAgent />
-          </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL}>
-            <ManageRecipient />
-          </PanelGate>
-          <PanelGate panel={SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL}>
-            <ManageSponsor />
-          </PanelGate>
-
-          {/* Select / aux overlays */}
-          <TokenListSelectPanel />
-          <RecipientListSelectPanel />
-          <SponsorListSelectPanel_OLD />
-          <AgentListSelectPanel />
-          {/* <SponsorListSelectPanel_OLD /> */}
-
-          <ErrorMessagePanel />
+          {/* All radio/overlay panels are mounted here */}
+          <RadioOverlayPanelHost />
         </div>
       </div>
     </PanelGate>

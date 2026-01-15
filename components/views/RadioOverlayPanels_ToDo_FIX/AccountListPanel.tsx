@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageWalletList.tsx
+// File: @/components/views/ManageSponsorships/AccountListPanel.tsx
 'use client';
 
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
@@ -60,7 +60,7 @@ function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
   }
 }
 
-export default function ManageWalletList({
+export default function AccountListPanel({
   walletList,
   setWalletCallBack,
   containerType,

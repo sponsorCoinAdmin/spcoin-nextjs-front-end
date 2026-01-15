@@ -11,39 +11,23 @@ import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
-import ManageRecipients from './ManageRecipients';
-import ManageAgents from './ManageAgents';
-import ManageSponsorRecipients from './SponsorListSelectPanel';
-
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { useManageSponsorshipsToDo } from './useManageSponsorshipsToDo';
-import { msTableTw } from './msTableTw';
+import { useManageSponsorshipsToDo } from '../RadioOverlayPanels_ToDo_FIX/useManageSponsorshipsToDo';
+import { msTableTw } from '../RadioOverlayPanels_ToDo_FIX/msTableTw';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
-const debugLog = createDebugLogger(
-  'ManageSponsorshipsPanel',
-  DEBUG_ENABLED,
-  LOG_TIME,
-);
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
+const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = { onClose?: () => void };
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const vRecipients = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
-  const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
-  const vSponsors = usePanelVisible(
-    SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-  );
 
-  const pendingVisible = usePanelVisible(
-    SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS,
-  );
+  const pendingVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
 
   const { openPanel, closePanel } = usePanelTree();
 
@@ -70,45 +54,16 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     doToDo,
   } = useManageSponsorshipsToDo(ctx);
 
-  const openOnly = useCallback(
+  /**
+   * Use the source-of-truth `openPanel()` only.
+   * Let the panel system enforce exclusivity (radio behavior).
+   */
+  const openOverlay = useCallback(
     (id: SP_COIN_DISPLAY) => {
-      const ids = [
-        SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-        SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
-        SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-      ] as const;
-
-      ids.forEach((pid) => {
-        if (pid === id) {
-          debugLog.log?.('openOnly → open', { target: SP_COIN_DISPLAY[pid] });
-          openPanel(
-            pid,
-            `ManageSponsorshipsPanel:openOnly(open=${SP_COIN_DISPLAY[pid]}#${String(
-              pid,
-            )})`,
-          );
-        } else {
-          debugLog.log?.('openOnly → close', { target: SP_COIN_DISPLAY[pid] });
-          closePanel(
-            pid,
-            `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${String(
-              pid,
-            )})`,
-          );
-        }
-      });
-    },
-    [openPanel, closePanel],
-  );
-
-  const openMainOverlay = useCallback(
-    (id: SP_COIN_DISPLAY) => {
-      debugLog.log?.('openMainOverlay', { target: SP_COIN_DISPLAY[id] });
+      debugLog.log?.('openOverlay', { target: SP_COIN_DISPLAY[id] });
       openPanel(
         id,
-        `ManageSponsorshipsPanel:openMainOverlay(target=${SP_COIN_DISPLAY[id]}#${String(
-          id,
-        )})`,
+        `ManageSponsorshipsPanel:openOverlay(target=${SP_COIN_DISPLAY[id]}#${String(id)})`,
       );
     },
     [openPanel],
@@ -130,12 +85,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   if (!isActive) return null;
 
-  const recipientsHidden = !vRecipients;
-  const agentsHidden = !vAgents;
-  const sponsorsHidden = !vSponsors;
-
   const showSummaryTable = true;
-
   const col1NoWrap = 'whitespace-nowrap';
 
   return (
@@ -161,11 +111,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       <>
         {showSummaryTable && (
-          <div
-            id="MANAGE_SPONSORSHIPS_TABLE"
-            // ✅ reduced spacing by 2px: mt-4 → mt-3
-            className={`${msTableTw.wrapper} mb-1`}
-          >
+          <div id="MANAGE_SPONSORSHIPS_TABLE" className={`${msTableTw.wrapper} mb-1`}>
             <table className={`${msTableTw.table} min-w-full`}>
               <thead>
                 <tr className={msTableTw.theadRow}>
@@ -193,9 +139,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               <tbody>
                 <tr className={msTableTw.rowBorder}>
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
-                    <div className={`${msTableTw.tdInner5} ${col1NoWrap}`}>
-                      Trading
-                    </div>
+                    <div className={`${msTableTw.tdInner5} ${col1NoWrap}`}>Trading</div>
                   </td>
 
                   <td className={`${msTableTw.rowA} ${msTableTw.td}`}>
@@ -207,9 +151,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={msTableTw.btnOrange}
-                        onClick={() =>
-                          openMainOverlay(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL)
-                        }
+                        onClick={() => openOverlay(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL)}
                         aria-label="Open Trading Coins config"
                         title="Configure Trading Coins"
                       >
@@ -224,9 +166,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <button
                       type="button"
                       className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                      onClick={() =>
-                        openMainOverlay(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL)
-                      }
+                      onClick={() => openOverlay(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL)}
                       aria-label="Open Un-Staking SpCoins panel"
                       title="Open Un-Staking"
                     >
@@ -266,9 +206,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   </td>
 
                   <td className={`${msTableTw.rowA} ${msTableTw.td}`}>
-                    <div className={msTableTw.tdInnerCenter}>
-                      {pendingVisible ? '' : 0}
-                    </div>
+                    <div className={msTableTw.tdInnerCenter}>{pendingVisible ? '' : 0}</div>
                   </td>
 
                   <td className={`${msTableTw.rowA} ${msTableTw.td5}`}>
@@ -294,16 +232,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() =>
-                            openOnly(
-                              SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
-                            )
-                          }
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL)}
                           aria-label="Open Claim Sponsors Rewards panel"
                         >
-                          <span className="mr-1">
-                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                          </span>
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
                           Sponsors
                         </button>
                       </td>
@@ -331,14 +263,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() =>
-                            openOnly(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)
-                          }
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)}
                           aria-label="Open Claim Recipients Rewards panel"
                         >
-                          <span className="mr-1">
-                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                          </span>
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
                           Recipients
                         </button>
                       </td>
@@ -366,14 +294,10 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() =>
-                            openOnly(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL)
-                          }
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL)}
                           aria-label="Open Claim Agents Rewards panel"
                         >
-                          <span className="mr-1">
-                            &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;
-                          </span>
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
                           Agents
                         </button>
                       </td>
@@ -404,9 +328,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   return (
                     <tr className={msTableTw.rowBorder}>
                       <td className={`${zebra} ${msTableTw.td5}`}>
-                        <div className={`${msTableTw.tdInner5} ${col1NoWrap}`}>
-                          Total Coins
-                        </div>
+                        <div className={`${msTableTw.tdInner5} ${col1NoWrap}`}>Total Coins</div>
                       </td>
 
                       <td className={`${zebra} ${msTableTw.td}`}>
@@ -433,16 +355,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           </div>
         )}
       </>
-
-      <div className={sponsorsHidden ? 'hidden' : ''}>
-        <ManageSponsorRecipients />
-      </div>
-      <div className={agentsHidden ? 'hidden' : ''}>
-        <ManageAgents />
-      </div>
-      <div className={recipientsHidden ? 'hidden' : ''}>
-        <ManageRecipients />
-      </div>
 
       {showToDo && (
         <ToDo

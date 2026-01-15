@@ -19,14 +19,14 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 
 // List views
-import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
-import ManageSponsorRecipients from '@/components/views/ManageSponsorships/SponsorListSelectPanel';
-import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
+import ManageRecipients from '@/components/views/RadioOverlayPanels/ManageRecipients';
+import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
+import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 
 // Detail views
-import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
-import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
-import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
+import ManageAgent from '@/components/views/RadioOverlayPanels/ManageAgent';
+import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
+import ManageSponsor from '@/components/views/RadioOverlayPanels/ManageSponsor';
 
 // Select / aux overlays
 import {
@@ -238,11 +238,8 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
             <ManageRecipients />
           </PanelGate>
-          {/* <PanelGate panel={SP.AGENT_LIST_SELECT_PANEL}>
-            <ManageAgents />
-          </PanelGate>
- */}
-          {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
+ 
+           {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
           <PanelGate panel={SP.SPONSOR_LIST_SELECT_PANEL}>
             <ManageSponsorRecipients />
           </PanelGate>
