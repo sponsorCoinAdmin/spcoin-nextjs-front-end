@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/AccountListPanel.tsx
+// File: @/components/views/AccountListPanel.tsx
 'use client';
 
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
@@ -9,10 +9,10 @@ import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import AddressSelect from '../AssetSelectPanels/AddressSelect';
+import AddressSelect from './AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { msTableTw } from './msTableTw';
+import { msTableTw } from './RadioOverlayPanels_ToDo_FIX/msTableTw';
 
 // ✅ Use the requested debug logger config
 const LOG_TIME = false;

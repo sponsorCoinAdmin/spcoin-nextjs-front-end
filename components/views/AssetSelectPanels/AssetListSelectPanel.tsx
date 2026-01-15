@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
-import AccountListPanel from '@/components/views/RadioOverlayPanels_ToDo_FIX/AccountListPanel'
+import AccountListPanel from '@/components/views/AccountListPanel'
 
 import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
