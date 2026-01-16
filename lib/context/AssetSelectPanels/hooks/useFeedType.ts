@@ -15,7 +15,7 @@ export function useFeedType(containerType: SP_COIN_DISPLAY): FEED_TYPE {
         return FEED_TYPE.RECIPIENT_ACCOUNTS;
 
     //   If you later add an Agent panel:
-      case SP_COIN_DISPLAY.AGIENT_LIST_SELECT_PANEL_OLD:
+      case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD:
         return FEED_TYPE.AGENT_ACCOUNTS;
 
       case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
