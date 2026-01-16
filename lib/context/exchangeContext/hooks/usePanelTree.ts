@@ -20,6 +20,9 @@ import {
   flattenPanelTree,
   toVisibilityMap,
   panelName,
+  // ✅ NEW: hydration repair helpers
+  ensurePanelPresent,
+  writeFlatTree,
 } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
 import {
@@ -74,8 +77,7 @@ const diffVisibility = (
   prev: Record<number, boolean> | null | undefined,
   next: Record<number, boolean>,
 ) => {
-  const changes: Array<{ id: number; name: string; from: boolean; to: boolean }> =
-    [];
+  const changes: Array<{ id: number; name: string; from: boolean; to: boolean }> = [];
   const allIds = new Set<number>([
     ...Object.keys(prev ?? {}).map(Number),
     ...Object.keys(next ?? {}).map(Number),
@@ -173,11 +175,52 @@ export function usePanelTree() {
   );
 
   const list = useMemo<PanelEntry[]>(() => {
-    return flattenPanelTree(
-      (exchangeContext as any)?.settings?.spCoinPanelTree,
-      KNOWN,
-    );
+    return flattenPanelTree((exchangeContext as any)?.settings?.spCoinPanelTree, KNOWN);
   }, [exchangeContext]);
+
+  // ✅ Hydration repair: ensure newly-added panels exist in persisted flat tree
+  // Without this, older persisted spCoinPanelTree snapshots will never include TOKEN_CONTRACT_PANEL,
+  // so it won't participate in visibilityMap/radio/stack behavior.
+  useEffect(() => {
+    const tree = (exchangeContext as any)?.settings?.spCoinPanelTree;
+
+    // If there's no persisted tree yet, don't repair here (defaults/boot seeding handles it)
+    if (!Array.isArray(tree)) return;
+
+    // If already present, noop
+    if (
+      list.some(
+        (e) =>
+          Number(e.panel) === Number(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL),
+      )
+    ) {
+      return;
+    }
+
+    // Repair persisted tree by injecting the missing panel (default visible=false)
+    try {
+      (setExchangeContext as any)(
+        (prev: any) => {
+          const flat0 = flattenPanelTree(prev?.settings?.spCoinPanelTree, KNOWN);
+          let next = flat0;
+
+          next = ensurePanelPresent(next, SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
+
+          // noop if nothing changed
+          if (next.length === flat0.length) return prev;
+
+          return writeFlatTree(prev, next);
+        },
+        'usePanelTree:repairPersistedTree',
+      );
+    } catch {
+      // Fallback: use local safe wrapper below if the context setter rejects direct calls
+      // (This should be rare, but keeps repair robust.)
+      // eslint-disable-next-line no-console
+      console.warn('[usePanelTree] repairPersistedTree failed via direct set; will retry via safe wrapper.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exchangeContext, list]);
 
   const visibilityMap = useMemo(() => toVisibilityMap(list), [list]);
 
@@ -260,10 +303,7 @@ export function usePanelTree() {
     publishVisibility(visibilityMap);
   }, [visibilityMap, publishVisibility]);
 
-  const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
-    [],
-  );
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
 
   const getPanelChildren = useCallback(
     (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
@@ -685,11 +725,7 @@ export function usePanelTree() {
 
   function closePanel(panel: SP_COIN_DISPLAY, invoker?: string, arg?: unknown): void;
   function closePanel(invoker?: string, arg?: unknown): void;
-  function closePanel(
-    a?: SP_COIN_DISPLAY | string,
-    b?: string | unknown,
-    c?: unknown,
-  ) {
+  function closePanel(a?: SP_COIN_DISPLAY | string, b?: string | unknown, c?: unknown) {
     const traceId = nextTraceId();
 
     const hasPanel =

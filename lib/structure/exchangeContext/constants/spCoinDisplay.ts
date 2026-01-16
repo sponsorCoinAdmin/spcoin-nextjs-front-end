@@ -39,6 +39,7 @@ export const MAIN_OVERLAY_GROUP = [
   SP.SPONSOR_ACCOUNT_PANEL,
   SP.AGENT_ACCOUNT_PANEL,
   SP.RECIPIENT_ACCOUNT_PANEL,
+  SP.TOKEN_CONTRACT_PANEL,
 ] as const satisfies readonly SP[];
 
 /**
@@ -53,28 +54,37 @@ export const MANAGE_SCOPED = [] as const satisfies readonly SP[];
  *
  * NOTE: keep this as its own literal list (don’t alias) so it can diverge safely later.
  */
-export const STACK_COMPONENTS = [
-  ...MAIN_OVERLAY_GROUP,
-] as const satisfies readonly SP[];
+export const STACK_COMPONENTS = [...MAIN_OVERLAY_GROUP] as const satisfies readonly SP[];
 
-/** Fast membership checks (action-model helpers). */
-export const IS_MAIN_OVERLAY: ReadonlySet<SP> = new Set(MAIN_OVERLAY_GROUP);
-export const IS_MANAGE_SCOPED: ReadonlySet<SP> = new Set(MANAGE_SCOPED);
-export const IS_STACK_COMPONENT: ReadonlySet<SP> = new Set(STACK_COMPONENTS);
+/**
+ * ✅ Fast membership checks (action-model helpers).
+ *
+ * CRITICAL:
+ * `usePanelTree` performs membership checks using Number(panel),
+ * so these sets MUST be numeric to avoid enum-instance / import-path mismatches.
+ */
+export const IS_MAIN_OVERLAY: ReadonlySet<number> = new Set(
+  MAIN_OVERLAY_GROUP.map(Number),
+);
+export const IS_MANAGE_SCOPED: ReadonlySet<number> = new Set(MANAGE_SCOPED.map(Number));
+export const IS_STACK_COMPONENT: ReadonlySet<number> = new Set(
+  STACK_COMPONENTS.map(Number),
+);
 
 /** Dev-only guard against accidental duplicates */
 if (process.env.NODE_ENV !== 'production') {
   const checkUnique = (label: string, arr: readonly SP[]) => {
-    const s = new Set<SP>();
+    const s = new Set<number>();
     for (const v of arr) {
-      if (s.has(v)) {
+      const id = Number(v);
+      if (s.has(id)) {
         // eslint-disable-next-line no-console
         console.error(`[spCoinDisplay] Duplicate in ${label}:`, v, SP[v]);
         throw new Error(
           `[spCoinDisplay] Duplicate in ${label}: ${String(v)} (${SP[v]})`,
         );
       }
-      s.add(v);
+      s.add(id);
     }
   };
 

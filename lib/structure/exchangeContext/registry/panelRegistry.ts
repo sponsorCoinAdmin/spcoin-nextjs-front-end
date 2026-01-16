@@ -105,7 +105,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // ✅ Shared detail panel should live at same level as other overlays
   SP.SPONSOR_ACCOUNT_PANEL,
 
-  // Overlay list (not persisted)
+  // Token contract overlay
   SP.TOKEN_CONTRACT_PANEL,
 ] as const;
 
@@ -116,10 +116,12 @@ const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as cons
 /**
  * Helper to auto-set overlay flag from action-model set.
  * Avoids repeating `overlay: true` all over the file.
+ *
+ * NOTE: IS_MAIN_OVERLAY is numeric (Set<number>), so compare with Number(d.id).
  */
 const def = (d: Omit<PanelDef, 'overlay'>): PanelDef => ({
   ...d,
-  ...(IS_MAIN_OVERLAY.has(d.id) ? { overlay: true } : null),
+  ...(IS_MAIN_OVERLAY.has(Number(d.id)) ? { overlay: true } : null),
 });
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -189,7 +191,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.UNSTAKING_SPCOINS_PANEL, kind: 'panel' }),
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
 
-  // Global overlay list (not persisted)
+  // Token contract overlay
   def({ id: SP.TOKEN_CONTRACT_PANEL, kind: 'list' }),
 
   // Inline / auxiliary

@@ -1,6 +1,9 @@
 // File: @/lib/structure/exchangeContext/constants/defaultPanelTree.ts
 
-import type { SpCoinPanelTree, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type {
+  SpCoinPanelTree,
+  PanelNode,
+} from '@/lib/structure/exchangeContext/types/PanelNode';
 import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -20,7 +23,14 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
 
 /* ──────────────── Single Source of Truth (SSoT) ───────────────── */
 
-export const NON_PERSISTED_PANELS = new Set<SP>([SP.TOKEN_CONTRACT_PANEL]);
+/**
+ * Panels that should NOT be persisted/seeded from the canonical tree.
+ *
+ * NOTE:
+ * - TOKEN_CONTRACT_PANEL is now a first-class overlay (radio member),
+ *   so it must be part of the canonical tree + seed.
+ */
+export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
 export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.MAIN_TRADING_PANEL, true],
@@ -33,6 +43,9 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.FEE_DISCLOSURE, true],
   [SP.AFFILIATE_FEE, false],
 
+  // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
+  [SP.TOKEN_CONTRACT_PANEL, false],
+
   // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
   [SP.MANAGE_SPONSORSHIPS_PANEL, false],
 ] as const;
@@ -41,17 +54,18 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
  * Canonical authored tree for the SponsorCoin UI.
  *
  * Notes:
- * - SP.TOKEN_CONTRACT_PANEL is intentionally excluded from the tree
- *   and handled as NON_PERSISTED.
  * - MANAGE_PENDING_REWARDS is nested under MANAGE_SPONSORSHIPS_PANEL.
  * - SPONSOR_ACCOUNT_PANEL is mounted once at the overlay level.
+ * - TOKEN_CONTRACT_PANEL is modeled as a first-class overlay panel.
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
     node(SP.TRADE_CONTAINER_HEADER, true, [
       // Core trading station subtree
       node(SP.TRADING_STATION_PANEL, true, [
-        node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
+        node(SP.SELL_SELECT_PANEL, true, [
+          node(SP.MANAGE_SPONSORSHIPS_BUTTON, false),
+        ]),
         node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
 
@@ -69,8 +83,13 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       node(SP.ERROR_MESSAGE_PANEL, false),
 
+      // ✅ Token contract overlay MUST be part of overlay tree now
+      node(SP.TOKEN_CONTRACT_PANEL, false),
+
       // ─────────────── Manage overlays (still overlays, but with an inline child) ───────────────
-      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
+      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
+        node(SP.MANAGE_PENDING_REWARDS, false),
+      ]),
 
       node(SP.UNSTAKING_SPCOINS_PANEL, false),
       node(SP.STAKING_SPCOINS_PANEL, false),
@@ -136,7 +155,9 @@ export function flattenPanelTree(nodes: PanelNode[]): FlatPanel[] {
 /** Flatten once, reuse everywhere */
 const DEFAULT_FLAT = flattenPanelTree(defaultSpCoinPanelTree);
 
-export const DEFAULT_PANEL_ORDER: readonly SP[] = DEFAULT_FLAT.map((p) => p.panel) as readonly SP[];
+export const DEFAULT_PANEL_ORDER: readonly SP[] = DEFAULT_FLAT.map(
+  (p) => p.panel,
+) as readonly SP[];
 
 export function seedPanelsFromDefault(): FlatPanel[] {
   return DEFAULT_FLAT.filter((p) => !NON_PERSISTED_PANELS.has(p.panel));
