@@ -24,15 +24,15 @@ const debugLog = createDebugLogger('ManageAgents', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Agents list:
- * - List visibility: AGENT_LIST_SELECT_PANEL (opened by ManageSponsorshipsPanel.openOnly)
+ * - List visibility: AGENT_LIST_SELECT_PANEL_OLD (opened by ManageSponsorshipsPanel.openOnly)
  * - Detail visibility: AGENT_ACCOUNT_PANEL (ManageAgent + PanelGate)
  * - Selection source: FEED_TYPE.MANAGE_AGENTS via PanelListSelectWrapper
  */
 export default function ManageAgents() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD);
 
   useEffect(() => {
-    debugLog.log?.('[visibility] AGENT_LIST_SELECT_PANEL', { visible });
+    debugLog.log?.('[visibility] AGENT_LIST_SELECT_PANEL_OLD', { visible });
     if (visible) {
       debugLog.log?.('OPENING ManageAgents');
     }
@@ -106,15 +106,15 @@ function ManageAgentsInner() {
   );
 
   debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
-    panel: 'AGENT_LIST_SELECT_PANEL',
+    panel: 'AGENT_LIST_SELECT_PANEL_OLD',
     feedType: 'MANAGE_AGENTS',
     instancePrefix: 'agent',
   });
 
   return (
-    <div id="AGENT_LIST_SELECT_PANEL">
+    <div id="AGENT_LIST_SELECT_PANEL_OLD">
       <PanelListSelectWrapper
-        panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
+        panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD}
         feedType={FEED_TYPE.MANAGE_AGENTS}
         listType={LIST_TYPE.UNDEFINED}
         instancePrefix="agent"

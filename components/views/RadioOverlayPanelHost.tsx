@@ -50,11 +50,11 @@ export default function RadioOverlayPanelHost() {
       </PanelGate>
 
       {/* ───────────────────────── List overlays ───────────────────────── */}
-      <PanelGate panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}>
+      <PanelGate panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD}>
         <ManageAgents />
       </PanelGate>
 
-      <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}>
+      <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD}>
         <ManageRecipients />
       </PanelGate>
 

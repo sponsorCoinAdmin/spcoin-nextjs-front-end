@@ -21,8 +21,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // Address selectors
     // ✅ Manage LIST views
     SPCD.SPONSOR_LIST_SELECT_PANEL,
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
+    SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
     // Errors / hub
     SPCD.ERROR_MESSAGE_PANEL,
@@ -90,8 +90,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
-  [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'list',
-  [SPCD.AGENT_LIST_SELECT_PANEL]: 'list',
+  [SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD]: 'list',
+  [SPCD.AGENT_LIST_SELECT_PANEL_OLD]: 'list',
   [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
@@ -126,12 +126,12 @@ export const GROUPS = {
   MODALS_AND_LISTS: [
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
     // ✅ include manage list & detail panels so they’re easy to toggle/view in the test UI
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
+    SPCD.AGENT_LIST_SELECT_PANEL_OLD,
     SPCD.SPONSOR_LIST_SELECT_PANEL,
 
     // ✅ NEW: sub-panels under SponsorListSelect (for Test UI visibility toggling)

@@ -75,8 +75,8 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.TRADING_STATION_PANEL,
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
+  SP.AGENT_LIST_SELECT_PANEL_OLD,
   SP.ERROR_MESSAGE_PANEL,
 
   // ✅ First-class "manage" overlays
@@ -137,8 +137,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Overlays (kinds)
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
-  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list' }),
-  def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'list' }),
+  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
+  def({ id: SP.AGENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
   def({ id: SP.ERROR_MESSAGE_PANEL, kind: 'panel' }),
 
   // Manage overlays

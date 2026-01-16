@@ -67,7 +67,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // RECIPIENT selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: {
+  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -78,7 +78,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // AGENT selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: {
+  [SP_COIN_DISPLAY.AGIENT_LIST_SELECT_PANEL_OLD]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

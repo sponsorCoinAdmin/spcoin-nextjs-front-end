@@ -80,7 +80,7 @@ const AddSponsorShipPanel: React.FC = () => {
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   // 🔹 The overlay we care about for “return to caller”
-  const recipientListVisible = usePanelVisible(SP_TREE.RECIPIENT_LIST_SELECT_PANEL);
+  const recipientListVisible = usePanelVisible(SP_TREE.RECIPIENT_LIST_SELECT_PANEL_OLD);
 
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
 
@@ -112,7 +112,7 @@ const AddSponsorShipPanel: React.FC = () => {
     });
   }, [recipientWallet?.address]);
 
-  // 🧭 Register caller for RECIPIENT_LIST_SELECT_PANEL
+  // 🧭 Register caller for RECIPIENT_LIST_SELECT_PANEL_OLD
   useEffect(() => {
     if (!recipientListVisible) return;
 
@@ -125,13 +125,13 @@ const AddSponsorShipPanel: React.FC = () => {
     }
 
     if (parent != null) {
-      debugLog.log?.('Registering overlay caller for RECIPIENT_LIST_SELECT_PANEL', {
+      debugLog.log?.('Registering overlay caller for RECIPIENT_LIST_SELECT_PANEL_OLD', {
         parent: SP_TREE[parent],
       });
-      setOverlayCaller(SP_TREE.RECIPIENT_LIST_SELECT_PANEL, parent);
+      setOverlayCaller(SP_TREE.RECIPIENT_LIST_SELECT_PANEL_OLD, parent);
     } else {
       debugLog.log?.(
-        'RECIPIENT_LIST_SELECT_PANEL visible but no obvious parent; header will fall back to TRADING_STATION_PANEL',
+        'RECIPIENT_LIST_SELECT_PANEL_OLD visible but no obvious parent; header will fall back to TRADING_STATION_PANEL',
       );
     }
   }, [recipientListVisible, manageStakingVisible, tradingVisible]);
