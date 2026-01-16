@@ -232,7 +232,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL)}
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL)}
                           aria-label="Open Claim Sponsors Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>

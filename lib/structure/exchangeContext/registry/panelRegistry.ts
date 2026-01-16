@@ -96,7 +96,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.STAKING_SPCOINS_PANEL,
 
   // Sponsor list select (parent) + sub-panels
-  SP.SPONSOR_LIST_SELECT_PANEL,
+  SP.ACCOUNT_LIST_REWARDS_PANEL,
 
   // Detail overlays
   SP.AGENT_ACCOUNT_PANEL,
@@ -173,7 +173,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // Sponsor list select (structural parent) + modes
   def({
-    id: SP.SPONSOR_LIST_SELECT_PANEL,
+    id: SP.ACCOUNT_LIST_REWARDS_PANEL,
     kind: 'panel',
     children: SPONSOR_LIST_SELECT_CHILDREN,
   }),

@@ -41,7 +41,7 @@ function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
     // Sponsor flows
     case SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON:
     case SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL:
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL:
     case SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL:
       return 'Sponsor Account:';
 
@@ -59,6 +59,17 @@ function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
       return 'Active Account:';
   }
 }
+
+/**
+ * ✅ ONLY CHANGE REQUESTED:
+ * Row + image sizing to match DataListSelect’s AccountListItem sizing.
+ *
+ * NOTE: DataListSelect delegates sizing to AccountListItem/TokenListItem.
+ * Paste AccountListItem.tsx and we will set these constants to EXACT values.
+ */
+const DATALIST_ROW_PY_TW = 'py-2'; // adjust to match AccountListItem exactly
+const DATALIST_IMG_PX = 44; // adjust to match AccountListItem exactly
+const DATALIST_IMG_TW = `h-[${DATALIST_IMG_PX}px] w-[${DATALIST_IMG_PX}px]`;
 
 export default function AccountListPanel({
   walletList,
@@ -347,7 +358,7 @@ export default function AccountListPanel({
                     <td className="p-0">
                       <button
                         type="button"
-                        className={`${zebra} ${msTableTw.tdInnerCenter5} w-full flex-col hover:opacity-90 focus:outline-none`}
+                        className={`${zebra} ${msTableTw.tdInnerCenter5} w-full flex-col hover:opacity-90 focus:outline-none ${DATALIST_ROW_PY_TW}`}
                         onMouseEnter={() => onRowEnter(w?.name ?? '')}
                         onMouseMove={onRowMove}
                         onMouseLeave={onRowLeave}
@@ -359,9 +370,9 @@ export default function AccountListPanel({
                         <Image
                           src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
                           alt={`${w.name ?? 'Wallet'} logo`}
-                          width={53}
-                          height={53}
-                          className="h-[60px] w-[53px] px-[5px] object-contain rounded"
+                          width={DATALIST_IMG_PX}
+                          height={DATALIST_IMG_PX}
+                          className={`${DATALIST_IMG_TW} object-contain rounded`}
                         />
                       </button>
                     </td>

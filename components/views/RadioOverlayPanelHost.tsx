@@ -27,7 +27,7 @@ import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoins
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import AccountListSelectPanel from '@/components/views/RadioOverlayPanels/AccountListListSelectPanel';
+import AccountListRewardsPanel from '@/components/views/RadioOverlayPanels/AccountListRewardsPanel';
 
 export default function RadioOverlayPanelHost() {
   return (
@@ -40,14 +40,14 @@ export default function RadioOverlayPanelHost() {
       <StakingSpCoins />
 
       {/* ✅ Merged list overlay:
-          - SPONSOR_LIST_SELECT_PANEL (claim)
+          - ACCOUNT_LIST_REWARDS_PANEL (claim)
           - UNSTAKING_SPCOINS_PANEL (unstake)
           Component gates itself by visibility of either panel.
       */}
       <ManageSponsorRecipients />
 
       {/* ✅ NEW: mount once globally so AGENT_LIST_SELECT_PANEL / RECIPIENT_LIST_SELECT_PANEL can show it too */}
-      <AccountListSelectPanel />
+      <AccountListRewardsPanel />
 
       {/* Top-level overlay panels (radio group) */}
       <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>

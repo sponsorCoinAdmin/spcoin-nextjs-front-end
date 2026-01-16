@@ -240,7 +240,7 @@ export default function ExchangeContextTab() {
           </PanelGate>
  
            {/* ✅ Sponsors list + Unstaking list are now the SAME merged component */}
-          <PanelGate panel={SP.SPONSOR_LIST_SELECT_PANEL}>
+          <PanelGate panel={SP.ACCOUNT_LIST_REWARDS_PANEL}>
             <ManageSponsorRecipients />
           </PanelGate>
           <PanelGate panel={SP.UNSTAKING_SPCOINS_PANEL}>

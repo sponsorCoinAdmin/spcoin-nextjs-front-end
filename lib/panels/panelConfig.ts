@@ -78,7 +78,7 @@ export const PANELS: readonly PanelDef[] = [
 
   overlay(SP.RECIPIENT_LIST_SELECT_PANEL_OLD, 'list', false),
   overlay(SP.AGENT_LIST_SELECT_PANEL_OLD, 'list', false),
-  overlay(SP.SPONSOR_LIST_SELECT_PANEL, 'list', false),
+  overlay(SP.ACCOUNT_LIST_REWARDS_PANEL, 'list', false),
 
   overlay(SP.TOKEN_CONTRACT_PANEL, 'list', false),
   overlay(SP.ERROR_MESSAGE_PANEL, 'panel', false),

@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/AccountListSelectPanel.tsx
+// File: @/components/views/RadioOverlayPanels/AccountListRewardsPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
@@ -28,11 +28,11 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_UNSTAKING_SPCOINS === 'true';
 
-const debugLog = createDebugLogger('AccountListSelectPanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('AccountListRewardsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type ActiveListPanel =
   | SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-  | SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
+  | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
   | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
   | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
 
@@ -69,10 +69,10 @@ function computeDetailPanel(activePanel: ActiveListPanel): SP_COIN_DISPLAY {
   }
 }
 
-export default function AccountListSelectPanel() {
+export default function AccountListRewardsPanel() {
   // These MUST be checked here, because this component self-gates
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
-  const vSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
+  const vSponsor = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   // ✅ new panels
   const vAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
@@ -88,7 +88,7 @@ export default function AccountListSelectPanel() {
   const activePanel: ActiveListPanel | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     : vSponsor
-      ? SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
+      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
       : vAgent
         ? SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
         : vRecipient
@@ -141,7 +141,7 @@ export default function AccountListSelectPanel() {
       }}
     >
       {[
-        `AccountListSelectPanel: mounted ✅`,
+        `AccountListRewardsPanel: mounted ✅`,
         `activePanel: ${activePanel != null ? SP_COIN_DISPLAY[activePanel] : 'null'}`,
         `visible: { sponsor:${String(vSponsor)} agent:${String(vAgent)} recipient:${String(vRecipient)} unstake:${String(vUnstaking)} }`,
         `detailVisible: ${String(anyDetailVisible)}`,
@@ -207,21 +207,21 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListP
 
           return { ...prev, accounts: nextAccounts };
         },
-        `AccountListSelectPanel:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]} -> ${SP_COIN_DISPLAY[detailPanel]})`,
+        `AccountListRewardsPanel:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]} -> ${SP_COIN_DISPLAY[detailPanel]})`,
       );
 
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           openPanel(
             detailPanel,
-            `AccountListSelectPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
+            `AccountListRewardsPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
             activePanel,
           );
         }, 0);
       } else {
         openPanel(
           detailPanel,
-          `AccountListSelectPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
+          `AccountListRewardsPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
           activePanel,
         );
       }
@@ -231,7 +231,7 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListP
 
   if (loading) {
     return (
-      <div id="AccountListSelectPanel" className="p-3 text-sm opacity-70">
+      <div id="AccountListRewardsPanel" className="p-3 text-sm opacity-70">
         Loading accounts…
       </div>
     );
@@ -239,14 +239,14 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListP
 
   if (error) {
     return (
-      <div id="AccountListSelectPanel" className="p-3 text-sm opacity-70">
+      <div id="AccountListRewardsPanel" className="p-3 text-sm opacity-70">
         Failed to load accounts: {error}
       </div>
     );
   }
 
   return (
-    <div id="AccountListSelectPanel">
+    <div id="AccountListRewardsPanel">
       <AssetSelectDisplayProvider instanceId={instanceId}>
         <AssetSelectProvider
           containerType={activePanel}

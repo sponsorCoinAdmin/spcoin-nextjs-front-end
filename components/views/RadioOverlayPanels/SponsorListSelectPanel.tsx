@@ -27,7 +27,7 @@ const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG
 
 /**
  * Merged list panel for:
- * - Claim Sponsor Rewards (SPONSOR_LIST_SELECT_PANEL)
+ * - Claim Sponsor Rewards (ACCOUNT_LIST_REWARDS_PANEL)
  * - Unstaking SpCoins      (UNSTAKING_SPCOINS_PANEL)
  *
  * ✅ Simplified:
@@ -41,13 +41,13 @@ const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG
  */
 export default function ManageSponsorRecipients() {
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
-  const vClaim = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
+  const vClaim = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
   const activePanel: SP_COIN_DISPLAY | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     : vClaim
-      ? SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
+      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
       : null;
 
   useEffect(() => {

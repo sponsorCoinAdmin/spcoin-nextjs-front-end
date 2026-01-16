@@ -20,7 +20,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // Address selectors
     // ✅ Manage LIST views (NEW + OLD)
-    SPCD.SPONSOR_LIST_SELECT_PANEL,
+    SPCD.ACCOUNT_LIST_REWARDS_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
     SPCD.AGENT_LIST_SELECT_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
@@ -70,7 +70,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ Sponsor list select sub-panels (future panel control)
   // (Note: if you eventually want agent/recipient list sub-modes too, add similar children here.)
-  [SPCD.SPONSOR_LIST_SELECT_PANEL]: [
+  [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
     SPCD.UNSPONSOR_SP_COINS,
     SPCD.CLAIM_PENDING_SPONSOR_COINS,
     SPCD.CLAIM_PENDING_RECIPIENT_COINS,
@@ -94,7 +94,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
 
   // ✅ NEW (radio-style list overlays, modeled like Sponsor list)
-  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
+  [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: 'panel',
   [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'panel',
   [SPCD.AGENT_LIST_SELECT_PANEL]: 'panel',
 
@@ -138,7 +138,7 @@ export const GROUPS = {
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
     // ✅ NEW list overlays
-    SPCD.SPONSOR_LIST_SELECT_PANEL,
+    SPCD.ACCOUNT_LIST_REWARDS_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
     SPCD.AGENT_LIST_SELECT_PANEL,
 

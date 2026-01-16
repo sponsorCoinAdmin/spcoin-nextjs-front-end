@@ -252,12 +252,12 @@ export function usePanelTree() {
        * ✅ Sponsor detail panel may be opened with a "parent" reference
        * from any Sponsor list-select context:
        *   - UNSTAKING_SPCOINS_PANEL
-       *   - SPONSOR_LIST_SELECT_PANEL
-       *   - NEW sub-panels under SPONSOR_LIST_SELECT_PANEL (future panel control)
+       *   - ACCOUNT_LIST_REWARDS_PANEL
+       *   - NEW sub-panels under ACCOUNT_LIST_REWARDS_PANEL (future panel control)
        */
       sponsorAllowedParents: new Set<number>([
         SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
-        SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
+        SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
         // ✅ NEW children (sub-panels / modes)
         SP_COIN_DISPLAY.UNSPONSOR_SP_COINS,
@@ -422,7 +422,7 @@ export function usePanelTree() {
   useEffect(() => {
     if (!DEBUG_CLOSE_INVARIANTS_RENDER) return;
 
-    const claim = SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
+    const claim = SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
 
     const persistedIds = getPersistedDisplayStackIds();
     const persistedRaw = (exchangeContext as any)?.settings?.displayStack ?? [];
@@ -799,7 +799,7 @@ export function usePanelTree() {
   const isTokenScrollVisible = useMemo(
     () =>
       visibilityMap[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
-      visibilityMap[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL] ||
+      visibilityMap[SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL],
     [visibilityMap],
   );
