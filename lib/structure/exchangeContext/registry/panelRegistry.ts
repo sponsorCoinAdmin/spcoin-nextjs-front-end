@@ -69,20 +69,33 @@ const SPONSOR_LIST_SELECT_CHILDREN: readonly SP[] = [
  * ✅ Manage panels are first-class overlays mounted here.
  * ✅ EXCEPTION: MANAGE_PENDING_REWARDS is NOT a sibling overlay; it is nested under MANAGE_SPONSORSHIPS_PANEL.
  *
- * NOTE: Do NOT duplicate ids here (it used to repeat recipient/agent).
+ * NOTE: Do NOT duplicate ids here.
  */
 const TRADE_HEADER_CHILDREN: readonly SP[] = [
+  // Core overlay
   SP.TRADING_STATION_PANEL,
+
+  // Token selectors
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
+
+  // ✅ NEW: first-class list overlays (Sponsor-style panel overlays)
+  SP.RECIPIENT_LIST_SELECT_PANEL,
+  SP.AGENT_LIST_SELECT_PANEL,
+
+  // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
   SP.AGENT_LIST_SELECT_PANEL_OLD,
+
+  // Errors / hub
   SP.ERROR_MESSAGE_PANEL,
 
   // ✅ First-class "manage" overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.UNSTAKING_SPCOINS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
+
+  // Sponsor list select (parent) + sub-panels
   SP.SPONSOR_LIST_SELECT_PANEL,
 
   // Detail overlays
@@ -134,11 +147,18 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: TRADING_CHILDREN,
   }),
 
-  // Overlays (kinds)
+  // Token selector overlays
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
+
+  // ✅ NEW: first-class list overlays (modeled like Sponsor list panel)
+  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'panel' }),
+  def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'panel' }),
+
+  // ✅ OLD: legacy list overlays (kept during migration)
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
   def({ id: SP.AGENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
+
   def({ id: SP.ERROR_MESSAGE_PANEL, kind: 'panel' }),
 
   // Manage overlays
@@ -169,7 +189,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.UNSTAKING_SPCOINS_PANEL, kind: 'panel' }),
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
 
-  // Sponsor list (GLOBAL overlay, not persisted)
+  // Global overlay list (not persisted)
   def({ id: SP.TOKEN_CONTRACT_PANEL, kind: 'list' }),
 
   // Inline / auxiliary

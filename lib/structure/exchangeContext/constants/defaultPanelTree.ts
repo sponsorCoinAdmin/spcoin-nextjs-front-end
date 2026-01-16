@@ -58,14 +58,19 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // ─────────────── Radio overlays (siblings) ───────────────
       node(SP.BUY_LIST_SELECT_PANEL, false),
       node(SP.SELL_LIST_SELECT_PANEL, false),
+
+      // ✅ NEW: first-class list overlays (modeled like Sponsor list)
+      node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
+      node(SP.AGENT_LIST_SELECT_PANEL, false),
+
+      // ✅ OLD: legacy list overlays (kept during migration)
       node(SP.RECIPIENT_LIST_SELECT_PANEL_OLD, false),
       node(SP.AGENT_LIST_SELECT_PANEL_OLD, false),
+
       node(SP.ERROR_MESSAGE_PANEL, false),
 
       // ─────────────── Manage overlays (still overlays, but with an inline child) ───────────────
-      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
-        node(SP.MANAGE_PENDING_REWARDS, false),
-      ]),
+      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
 
       node(SP.UNSTAKING_SPCOINS_PANEL, false),
       node(SP.STAKING_SPCOINS_PANEL, false),

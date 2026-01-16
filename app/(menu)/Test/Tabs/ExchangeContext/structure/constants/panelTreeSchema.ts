@@ -19,15 +19,16 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.SELL_LIST_SELECT_PANEL,
 
     // Address selectors
-    // ✅ Manage LIST views
+    // ✅ Manage LIST views (NEW + OLD)
     SPCD.SPONSOR_LIST_SELECT_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL,
+    SPCD.AGENT_LIST_SELECT_PANEL,
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
     // Errors / hub
     SPCD.ERROR_MESSAGE_PANEL,
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
-
 
     // ✅ Manage DETAIL views
     SPCD.AGENT_ACCOUNT_PANEL,
@@ -67,7 +68,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
   [SPCD.ADD_SPONSORSHIP_PANEL]: [SPCD.CONFIG_SPONSORSHIP_PANEL],
 
-  // ✅ NEW: Sponsor list select sub-panels (future panel control)
+  // ✅ Sponsor list select sub-panels (future panel control)
+  // (Note: if you eventually want agent/recipient list sub-modes too, add similar children here.)
   [SPCD.SPONSOR_LIST_SELECT_PANEL]: [
     SPCD.UNSPONSOR_SP_COINS,
     SPCD.CLAIM_PENDING_SPONSOR_COINS,
@@ -90,13 +92,19 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
+
+  // ✅ NEW (radio-style list overlays, modeled like Sponsor list)
+  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
+  [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'panel',
+  [SPCD.AGENT_LIST_SELECT_PANEL]: 'panel',
+
+  // ✅ OLD list overlays (legacy behavior)
   [SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD]: 'list',
   [SPCD.AGENT_LIST_SELECT_PANEL_OLD]: 'list',
-  [SPCD.SPONSOR_LIST_SELECT_PANEL]: 'panel',
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
-  // ✅ NEW: Sponsor list select sub-panels (non-radio, NOT part of displayStack)
+  // ✅ Sponsor list select sub-panels (non-radio, NOT part of displayStack)
   [SPCD.UNSPONSOR_SP_COINS]: 'panel',
   [SPCD.CLAIM_PENDING_SPONSOR_COINS]: 'panel',
   [SPCD.CLAIM_PENDING_RECIPIENT_COINS]: 'panel',
@@ -126,20 +134,25 @@ export const GROUPS = {
   MODALS_AND_LISTS: [
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
-    SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
+
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
-    // ✅ include manage list & detail panels so they’re easy to toggle/view in the test UI
+    // ✅ NEW list overlays
+    SPCD.SPONSOR_LIST_SELECT_PANEL,
+    SPCD.RECIPIENT_LIST_SELECT_PANEL,
+    SPCD.AGENT_LIST_SELECT_PANEL,
+
+    // ✅ OLD list overlays
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
-    SPCD.SPONSOR_LIST_SELECT_PANEL,
 
-    // ✅ NEW: sub-panels under SponsorListSelect (for Test UI visibility toggling)
+    // ✅ Sponsor list sub-panels (for Test UI visibility toggling)
     SPCD.UNSPONSOR_SP_COINS,
     SPCD.CLAIM_PENDING_SPONSOR_COINS,
     SPCD.CLAIM_PENDING_RECIPIENT_COINS,
     SPCD.CLAIM_PENDING_AGENT_COINS,
 
+    // Detail panels
     SPCD.RECIPIENT_ACCOUNT_PANEL,
     SPCD.AGENT_ACCOUNT_PANEL,
     SPCD.SPONSOR_ACCOUNT_PANEL,

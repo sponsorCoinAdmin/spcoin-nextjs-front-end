@@ -14,6 +14,7 @@ import {
 
 import { ErrorMessagePanel } from '@/components/views';
 
+
 import ManageAgent from '@/components/views/RadioOverlayPanels/ManageAgent';
 import ManageAgents from '@/components/views/RadioOverlayPanels/ManageAgents';
 import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
@@ -26,6 +27,7 @@ import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoins
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import AccountListSelectPanel from '@/components/views/RadioOverlayPanels/AccountListListSelectPanel';
 
 export default function RadioOverlayPanelHost() {
   return (
@@ -44,12 +46,15 @@ export default function RadioOverlayPanelHost() {
       */}
       <ManageSponsorRecipients />
 
+      {/* ✅ NEW: mount once globally so AGENT_LIST_SELECT_PANEL / RECIPIENT_LIST_SELECT_PANEL can show it too */}
+      <AccountListSelectPanel />
+
       {/* Top-level overlay panels (radio group) */}
       <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
         <ManageSponsorshipsPanel />
       </PanelGate>
 
-      {/* ───────────────────────── List overlays ───────────────────────── */}
+      {/* ───────────────────────── List overlays (legacy) ───────────────────────── */}
       <PanelGate panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD}>
         <ManageAgents />
       </PanelGate>

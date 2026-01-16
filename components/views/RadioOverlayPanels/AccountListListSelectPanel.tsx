@@ -18,10 +18,9 @@ import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-
-// ✅ Provide the context AddressSelect expects (without going through the old wrapper)
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+
 import AccountListPanel from '@/components/views/AccountListPanel';
 
 const LOG_TIME = false;
@@ -31,64 +30,147 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('AccountListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-function computeListType(activePanel: SP_COIN_DISPLAY): LIST_TYPE {
+type ActiveListPanel =
+  | SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
+  | SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
+  | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
+  | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
+
+function computeInstanceId(activePanel: SP_COIN_DISPLAY): string {
+  return `ACCOUNT_LIST_${SP_COIN_DISPLAY[activePanel]}`;
+}
+
+function computeListType(activePanel: ActiveListPanel): LIST_TYPE {
+  // keep your existing semantics
   return activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     ? LIST_TYPE.SPONSOR_UNSPONSOR
     : LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 }
 
-function computeInstanceId(activePanel: SP_COIN_DISPLAY): string {
-  // Keep it stable and descriptive; if you later want chainId in here, add it.
-  return `ACCOUNT_LIST_${SP_COIN_DISPLAY[activePanel]}`;
+function computeFeedType(activePanel: ActiveListPanel): FEED_TYPE {
+  switch (activePanel) {
+    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+      return FEED_TYPE.AGENT_ACCOUNTS;
+    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+      return FEED_TYPE.RECIPIENT_ACCOUNTS;
+    default:
+      return FEED_TYPE.SPONSOR_ACCOUNTS;
+  }
 }
 
-/**
- * Merged list overlay for:
- * - Claim Sponsor Rewards (SPONSOR_LIST_SELECT_PANEL)
- * - Unstaking SpCoins      (UNSTAKING_SPCOINS_PANEL)
- *
- * ✅ Simplified:
- * - Direct feed → AccountListPanel
- * - Still wraps minimal AssetSelect providers because AccountListPanel renders AddressSelect,
- *   and AddressSelect requires AssetSelectContext.
- */
-export default function AccountListSelectPanel() {
-  const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
-  const vClaim = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
-  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
+function computeDetailPanel(activePanel: ActiveListPanel): SP_COIN_DISPLAY {
+  switch (activePanel) {
+    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+      return SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL;
+    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+      return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL;
+    default:
+      return SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL;
+  }
+}
 
-  const activePanel: SP_COIN_DISPLAY | null = vUnstaking
+export default function AccountListSelectPanel() {
+  // These MUST be checked here, because this component self-gates
+  const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
+  const vSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL);
+
+  // ✅ new panels
+  const vAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+  const vRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+
+  // detail suppression
+  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
+  const vAgentDetail = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL);
+  const vRecipientDetail = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL);
+
+  const anyDetailVisible = vSponsorDetail || vAgentDetail || vRecipientDetail;
+
+  const activePanel: ActiveListPanel | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-    : vClaim
+    : vSponsor
       ? SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL
-      : null;
+      : vAgent
+        ? SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
+        : vRecipient
+          ? SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
+          : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
       vUnstaking,
-      vClaim,
+      vSponsor,
+      vAgent,
+      vRecipient,
       vSponsorDetail,
+      vAgentDetail,
+      vRecipientDetail,
+      anyDetailVisible,
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
-  }, [vUnstaking, vClaim, vSponsorDetail, activePanel]);
+  }, [
+    vUnstaking,
+    vSponsor,
+    vAgent,
+    vRecipient,
+    vSponsorDetail,
+    vAgentDetail,
+    vRecipientDetail,
+    anyDetailVisible,
+    activePanel,
+  ]);
 
-  if (!activePanel) return null;
+  // ✅ DEBUG HUD: proves the component is mounted and shows what it sees
+  const hud = DEBUG_ENABLED ? (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 10,
+        left: 10,
+        zIndex: 99999,
+        fontFamily:
+          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+        fontSize: 11,
+        background: 'rgba(0,0,0,0.75)',
+        color: '#9BE28F',
+        padding: '8px 10px',
+        borderRadius: 8,
+        border: '1px solid rgba(255,255,255,0.15)',
+        maxWidth: 420,
+        pointerEvents: 'none',
+        whiteSpace: 'pre-wrap',
+      }}
+    >
+      {[
+        `AccountListSelectPanel: mounted ✅`,
+        `activePanel: ${activePanel != null ? SP_COIN_DISPLAY[activePanel] : 'null'}`,
+        `visible: { sponsor:${String(vSponsor)} agent:${String(vAgent)} recipient:${String(vRecipient)} unstake:${String(vUnstaking)} }`,
+        `detailVisible: ${String(anyDetailVisible)}`,
+      ].join('\n')}
+    </div>
+  ) : null;
 
-  // ✅ If detail is open, do NOT render the list UI (prevents stacked screens)
-  if (vSponsorDetail) return null;
+  if (!activePanel) return hud;
 
-  return <AccountListSelectPanelInner activePanel={activePanel} />;
+  if (anyDetailVisible) return hud;
+
+  return (
+    <>
+      {hud}
+      <AccountListSelectPanelInner activePanel={activePanel} />
+    </>
+  );
 }
 
-function AccountListSelectPanelInner({ activePanel }: { activePanel: SP_COIN_DISPLAY }) {
+function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListPanel }) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
   const listType = useMemo(() => computeListType(activePanel), [activePanel]);
   const instanceId = useMemo(() => computeInstanceId(activePanel), [activePanel]);
+  const detailPanel = useMemo(() => computeDetailPanel(activePanel), [activePanel]);
+  const feedType = useMemo(() => computeFeedType(activePanel), [activePanel]);
 
-  // ✅ Directly load sponsor accounts (same source as before)
-  const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
+  const { feedData, loading, error } = useFeedData(feedType);
 
   const wallets: WalletAccount[] = useMemo(() => {
     const anyData: any = feedData;
@@ -98,70 +180,59 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: SP_COIN_DIS
   useEffect(() => {
     debugLog.log?.('[data]', {
       activePanel: SP_COIN_DISPLAY[activePanel],
+      feedType: FEED_TYPE[feedType],
       listType: LIST_TYPE[listType],
       loading,
       error: error ?? null,
       walletsLen: wallets.length,
-      sourceId: (feedData as any)?.__sourceId ?? '(missing __sourceId)',
-      sourceKind: (feedData as any)?.__sourceKind ?? '(missing __sourceKind)',
     });
-  }, [activePanel, listType, loading, error, wallets.length, feedData]);
+  }, [activePanel, feedType, listType, loading, error, wallets.length]);
 
   const setWalletCallBack = useCallback(
     (wallet?: WalletAccount) => {
-      if (!wallet?.address) {
-        debugLog.log?.('[setWalletCallBack] ignored (no wallet/address)', { wallet });
-        return;
-      }
+      if (!wallet?.address) return;
 
-      debugLog.log?.('[setWalletCallBack]', {
-        activePanel: SP_COIN_DISPLAY[activePanel],
-        listType: LIST_TYPE[listType],
-        addressPreview: String(wallet.address).slice(0, 12),
-        name: (wallet as any)?.name,
-      });
-
-      // 1) Store selected wallet in ExchangeContext
       ctx?.setExchangeContext(
         (prev) => {
           if (!prev) return prev;
-          return {
-            ...prev,
-            accounts: {
-              ...prev.accounts,
-              sponsorAccount: wallet,
-            },
-          };
+          const nextAccounts = { ...prev.accounts };
+
+          if (activePanel === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL) {
+            (nextAccounts as any).agentAccount = wallet;
+          } else if (activePanel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) {
+            (nextAccounts as any).recipientAccount = wallet;
+          } else {
+            (nextAccounts as any).sponsorAccount = wallet;
+          }
+
+          return { ...prev, accounts: nextAccounts };
         },
-        `AccountListSelectPanel:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
+        `AccountListSelectPanel:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]} -> ${SP_COIN_DISPLAY[detailPanel]})`,
       );
 
-      // 2) Open sponsor detail panel
-      // Use a microtask/0-timeout defer so the detail panel sees the updated ExchangeContext reliably.
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           openPanel(
-            SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-            `AccountListSelectPanel:setWalletCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+            detailPanel,
+            `AccountListSelectPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
             activePanel,
           );
         }, 0);
       } else {
         openPanel(
-          SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-          `AccountListSelectPanel:setWalletCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+          detailPanel,
+          `AccountListSelectPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
           activePanel,
         );
       }
     },
-    [activePanel, ctx, listType, openPanel],
+    [activePanel, ctx, detailPanel, openPanel],
   );
 
-  // Minimal render states
   if (loading) {
     return (
       <div id="AccountListSelectPanel" className="p-3 text-sm opacity-70">
-        Loading sponsor accounts…
+        Loading accounts…
       </div>
     );
   }
@@ -169,32 +240,19 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: SP_COIN_DIS
   if (error) {
     return (
       <div id="AccountListSelectPanel" className="p-3 text-sm opacity-70">
-        Failed to load sponsor accounts: {error}
+        Failed to load accounts: {error}
       </div>
     );
   }
 
-  /**
-   * ✅ Key point:
-   * Wrap AccountListPanel so AddressSelect has AssetSelectContext.
-   *
-   * We keep callbacks as no-ops because we are not using the FSM commit path here —
-   * AccountListPanel selection is handled by setWalletCallBack (which opens SPONSOR_ACCOUNT_PANEL).
-   *
-   * Also: pass a stable instanceId to AssetSelectDisplayProvider to prevent cross-panel bleed.
-   */
   return (
     <div id="AccountListSelectPanel">
       <AssetSelectDisplayProvider instanceId={instanceId}>
         <AssetSelectProvider
           containerType={activePanel}
-          feedTypeOverride={FEED_TYPE.SPONSOR_ACCOUNTS}
-          closePanelCallback={() => {
-            /* no-op: visibility is controlled by overlay system */
-          }}
-          setSelectedAssetCallback={(_asset: TokenContract | WalletAccount) => {
-            /* no-op: selection is handled by setWalletCallBack */
-          }}
+          feedTypeOverride={feedType}
+          closePanelCallback={() => {}}
+          setSelectedAssetCallback={(_asset: TokenContract | WalletAccount) => {}}
         >
           <AccountListPanel
             walletList={wallets}

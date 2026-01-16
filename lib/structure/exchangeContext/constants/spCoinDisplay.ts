@@ -5,22 +5,36 @@ import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
 /**
  * Main overlay radio members.
  * This list is used for "global overlay radio" and stack gating.
+ *
+ * IMPORTANT:
+ * - These are mutually exclusive overlays (radio behavior).
+ * - Avoid putting non-radio / non-tree / utility panels here (ex: TOKEN_CONTRACT_PANEL).
  */
 export const MAIN_OVERLAY_GROUP = [
+  // Core trading overlay
   SP.TRADING_STATION_PANEL,
+
+  // Token selectors
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
+
+  // ✅ NEW: first-class list overlays (new system)
+  SP.RECIPIENT_LIST_SELECT_PANEL,
+  SP.AGENT_LIST_SELECT_PANEL,
+
+  // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
-  SP.AGIENT_LIST_SELECT_PANEL_OLD,
+  SP.AGENT_LIST_SELECT_PANEL_OLD,
+
+  // System / misc overlays
   SP.ERROR_MESSAGE_PANEL,
-  SP.TOKEN_CONTRACT_PANEL,
 
   // ✅ Manage overlays are first-class main overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.UNSTAKING_SPCOINS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
 
-  // Sponsor + detail overlays
+  // Sponsor list + detail overlays
   SP.SPONSOR_LIST_SELECT_PANEL,
   SP.SPONSOR_ACCOUNT_PANEL,
   SP.AGENT_ACCOUNT_PANEL,
@@ -37,9 +51,11 @@ export const MANAGE_SCOPED = [] as const satisfies readonly SP[];
  * Stack components.
  * Right now it’s the same as main overlays (since manage-scoped is empty).
  *
- * NOTE: Don't use `as const` on variables—only on literals.
+ * NOTE: keep this as its own literal list (don’t alias) so it can diverge safely later.
  */
-export const STACK_COMPONENTS: readonly SP[] = MAIN_OVERLAY_GROUP;
+export const STACK_COMPONENTS = [
+  ...MAIN_OVERLAY_GROUP,
+] as const satisfies readonly SP[];
 
 /** Fast membership checks (action-model helpers). */
 export const IS_MAIN_OVERLAY: ReadonlySet<SP> = new Set(MAIN_OVERLAY_GROUP);
@@ -54,7 +70,9 @@ if (process.env.NODE_ENV !== 'production') {
       if (s.has(v)) {
         // eslint-disable-next-line no-console
         console.error(`[spCoinDisplay] Duplicate in ${label}:`, v, SP[v]);
-        throw new Error(`[spCoinDisplay] Duplicate in ${label}: ${String(v)} (${SP[v]})`);
+        throw new Error(
+          `[spCoinDisplay] Duplicate in ${label}: ${String(v)} (${SP[v]})`,
+        );
       }
       s.add(v);
     }

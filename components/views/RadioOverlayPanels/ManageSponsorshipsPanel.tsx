@@ -263,7 +263,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD)}
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)}
                           aria-label="Open Claim Recipients Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -294,7 +294,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD)}
+                          onClick={() => openOverlay(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL)}
                           aria-label="Open Claim Agents Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>

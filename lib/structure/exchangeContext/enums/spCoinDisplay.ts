@@ -1,5 +1,10 @@
 // File: @/lib/structure/exchangeContext/enums/spCoinDisplay.ts
 
+/**
+ * IMPORTANT:
+ * - This enum is persisted/serialized in multiple places (panel tree, visibility maps, etc).
+ * - Do NOT reorder existing members. Add new members at the end (append-only).
+ */
 export enum SP_COIN_DISPLAY {
   ADD_SPONSORSHIP_BUTTON,
   ADD_SPONSORSHIP_PANEL,
@@ -13,18 +18,26 @@ export enum SP_COIN_DISPLAY {
   EXCHANGE_TRADING_PAIR,
   FEE_DISCLOSURE,
   MAIN_TRADING_PANEL,
+
+  // Detail overlays
   AGENT_ACCOUNT_PANEL,
-  MANAGE_PENDING_REWARDS,
   RECIPIENT_ACCOUNT_PANEL,
   SPONSOR_ACCOUNT_PANEL,
+
+  // Manage / hub
+  MANAGE_PENDING_REWARDS,
   MANAGE_SPONSORSHIPS_BUTTON,
 
+  // Sponsor list select sub-panels (modes)
   UNSPONSOR_SP_COINS,
-	CLAIM_PENDING_SPONSOR_COINS,
-	CLAIM_PENDING_RECIPIENT_COINS,
-	CLAIM_PENDING_AGENT_COINS,
+  CLAIM_PENDING_SPONSOR_COINS,
+  CLAIM_PENDING_RECIPIENT_COINS,
+  CLAIM_PENDING_AGENT_COINS,
 
+  // Manage overlay
   MANAGE_SPONSORSHIPS_PANEL,
+
+  // Trading list overlays
   SELL_LIST_SELECT_PANEL,
   SELL_SELECT_PANEL,
   TOKEN_CONTRACT_PANEL, // never persist
@@ -35,11 +48,12 @@ export enum SP_COIN_DISPLAY {
   UNDEFINED,
   UNSTAKING_SPCOINS_PANEL,
 
-
+  // First-class list overlays (new)
   SPONSOR_LIST_SELECT_PANEL,
   AGENT_LIST_SELECT_PANEL,
   RECIPIENT_LIST_SELECT_PANEL,
 
+  // Legacy list overlays (migration)
   AGENT_LIST_SELECT_PANEL_OLD,
   RECIPIENT_LIST_SELECT_PANEL_OLD,
 }
