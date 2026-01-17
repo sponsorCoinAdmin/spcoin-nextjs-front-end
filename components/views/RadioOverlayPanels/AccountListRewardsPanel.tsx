@@ -33,9 +33,9 @@ const debugLog = createDebugLogger('AccountListRewardsPanel', DEBUG_ENABLED, LOG
 type ActiveListPanel =
   | SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
   | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-  | SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL
-  | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
-  | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
+  | SP_COIN_DISPLAY.SPONSORS
+  | SP_COIN_DISPLAY.AGENTS
+  | SP_COIN_DISPLAY.RECIPIENTS;
 
 function computeInstanceId(activePanel: SP_COIN_DISPLAY): string {
   return `ACCOUNT_LIST_${SP_COIN_DISPLAY[activePanel]}`;
@@ -50,12 +50,12 @@ function computeListType(activePanel: ActiveListPanel): LIST_TYPE {
 
 function computeFeedType(activePanel: ActiveListPanel): FEED_TYPE {
   switch (activePanel) {
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENTS:
       return FEED_TYPE.AGENT_ACCOUNTS;
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENTS:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
     // Sponsors mode (explicit) + legacy sponsor mode
-    case SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL:
+    case SP_COIN_DISPLAY.SPONSORS:
     case SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL:
     default:
       return FEED_TYPE.SPONSOR_ACCOUNTS;
@@ -64,9 +64,9 @@ function computeFeedType(activePanel: ActiveListPanel): FEED_TYPE {
 
 function computeDetailPanel(activePanel: ActiveListPanel): SP_COIN_DISPLAY {
   switch (activePanel) {
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENTS:
       return SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL;
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENTS:
       return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL;
     default:
       return SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL;
@@ -79,9 +79,9 @@ export default function AccountListRewardsPanel() {
   const vAccountRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   // ✅ child-mode panels (now children of ACCOUNT_LIST_REWARDS_PANEL)
-  const vSponsorsMode = usePanelVisible(SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL);
-  const vAgentMode = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
-  const vRecipientMode = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+  const vSponsorsMode = usePanelVisible(SP_COIN_DISPLAY.SPONSORS);
+  const vAgentMode = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
+  const vRecipientMode = usePanelVisible(SP_COIN_DISPLAY.RECIPIENTS);
 
   // detail suppression
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
@@ -94,11 +94,11 @@ export default function AccountListRewardsPanel() {
   const activePanel: ActiveListPanel | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     : vAgentMode
-      ? SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
+      ? SP_COIN_DISPLAY.AGENTS
       : vRecipientMode
-        ? SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
+        ? SP_COIN_DISPLAY.RECIPIENTS
         : vSponsorsMode
-          ? SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL
+          ? SP_COIN_DISPLAY.SPONSORS
           : vAccountRewards
             ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
             : null;
@@ -206,9 +206,9 @@ function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListP
           if (!prev) return prev;
           const nextAccounts = { ...prev.accounts };
 
-          if (activePanel === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL) {
+          if (activePanel === SP_COIN_DISPLAY.AGENTS) {
             (nextAccounts as any).agentAccount = wallet;
-          } else if (activePanel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) {
+          } else if (activePanel === SP_COIN_DISPLAY.RECIPIENTS) {
             (nextAccounts as any).recipientAccount = wallet;
           } else {
             (nextAccounts as any).sponsorAccount = wallet;

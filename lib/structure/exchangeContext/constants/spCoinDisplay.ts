@@ -8,7 +8,7 @@ import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
  *
  * IMPORTANT:
  * - These are mutually exclusive overlays (radio behavior).
- * - Do NOT put child-mode panels here (ex: AGENT_LIST_SELECT_PANEL, RECIPIENT_LIST_SELECT_PANEL, SPONSORS_LIST_REWARDS_PANEL).
+ * - Do NOT put child-mode panels here (ex: AGENTS, RECIPIENTS, SPONSORS).
  */
 export const MAIN_OVERLAY_GROUP = [
   // Core trading overlay

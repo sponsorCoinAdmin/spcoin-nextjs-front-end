@@ -21,8 +21,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // Address selectors
     // ✅ Manage LIST views (NEW + OLD)
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
+    SPCD.RECIPIENTS,
+    SPCD.AGENTS,
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
@@ -95,8 +95,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   // ✅ NEW (radio-style list overlays, modeled like Sponsor list)
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: 'panel',
-  [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'panel',
-  [SPCD.AGENT_LIST_SELECT_PANEL]: 'panel',
+  [SPCD.RECIPIENTS]: 'panel',
+  [SPCD.AGENTS]: 'panel',
 
   // ✅ OLD list overlays (legacy behavior)
   [SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD]: 'list',
@@ -139,8 +139,8 @@ export const GROUPS = {
 
     // ✅ NEW list overlays
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
+    SPCD.RECIPIENTS,
+    SPCD.AGENTS,
 
     // ✅ OLD list overlays
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,

@@ -74,8 +74,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.SELL_LIST_SELECT_PANEL, false),
 
       // ✅ NEW: first-class list overlays (modeled like Sponsor list)
-      node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
-      node(SP.AGENT_LIST_SELECT_PANEL, false),
+      node(SP.RECIPIENTS, false),
+      node(SP.AGENTS, false),
 
       // ✅ OLD: legacy list overlays (kept during migration)
       node(SP.RECIPIENT_LIST_SELECT_PANEL_OLD, false),

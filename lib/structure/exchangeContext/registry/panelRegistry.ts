@@ -62,18 +62,18 @@ const TRADING_CHILDREN: readonly SP[] = [
  * ✅ New child-mode panels live here (NOT in overlay radio, NOT in stack)
  *
  * Desired shape:
- * [0] AGENT_LIST_SELECT_PANEL
- * [1] RECIPIENT_LIST_SELECT_PANEL
- * [2] SPONSORS_LIST_REWARDS_PANEL
+ * [0] AGENTS
+ * [1] RECIPIENTS
+ * [2] SPONSORS
  * [3] UNSPONSOR_SP_COINS
  * [4] CLAIM_PENDING_SPONSOR_COINS
  * [5] CLAIM_PENDING_RECIPIENT_COINS
  * [6] CLAIM_PENDING_AGENT_COINS
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
-  SP.AGENT_LIST_SELECT_PANEL,
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.SPONSORS_LIST_REWARDS_PANEL,
+  SP.AGENTS,
+  SP.RECIPIENTS,
+  SP.SPONSORS,
   SP.UNSPONSOR_SP_COINS,
   SP.CLAIM_PENDING_SPONSOR_COINS,
   SP.CLAIM_PENDING_RECIPIENT_COINS,
@@ -167,9 +167,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
 
   // ✅ Child-mode panels (NOT overlays; children of ACCOUNT_LIST_REWARDS_PANEL)
-  def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'panel' }),
-  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'panel' }),
-  def({ id: SP.SPONSORS_LIST_REWARDS_PANEL, kind: 'panel' }),
+  def({ id: SP.AGENTS, kind: 'panel' }),
+  def({ id: SP.RECIPIENTS, kind: 'panel' }),
+  def({ id: SP.SPONSORS, kind: 'panel' }),
 
   // ✅ OLD: legacy list overlays (kept during migration)
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),

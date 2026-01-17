@@ -46,13 +46,13 @@ function getInputAccountText(containerType: SP_COIN_DISPLAY): string {
       return 'Sponsor Account:';
 
     // Agent flows
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENTS:
     case SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL:
       return 'Agent Account:';
 
     // Recipient flows
     case SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL:
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENTS:
       return 'Recipient Account:';
 
     default:

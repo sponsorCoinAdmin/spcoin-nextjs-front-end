@@ -46,7 +46,7 @@ export default function RadioOverlayPanelHost() {
       */}
       <ManageSponsorRecipients />
 
-      {/* ✅ NEW: mount once globally so AGENT_LIST_SELECT_PANEL / RECIPIENT_LIST_SELECT_PANEL can show it too */}
+      {/* ✅ NEW: mount once globally so AGENTS / RECIPIENTS can show it too */}
       <AccountListRewardsPanel />
 
       {/* Top-level overlay panels (radio group) */}
