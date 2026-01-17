@@ -56,7 +56,18 @@ const TRADING_CHILDREN: readonly SP[] = [
   SP.AFFILIATE_FEE,
 ] as const;
 
-const SPONSOR_LIST_SELECT_CHILDREN: readonly SP[] = [
+/**
+ * ✅ ACCOUNT_LIST_REWARDS_PANEL children in the exact order you specified:
+ * [0] AGENT_LIST_SELECT_PANEL
+ * [1] RECIPIENT_LIST_SELECT_PANEL
+ * [2] UNSPONSOR_SP_COINS
+ * [3] CLAIM_PENDING_SPONSOR_COINS
+ * [4] CLAIM_PENDING_RECIPIENT_COINS
+ * [5] CLAIM_PENDING_AGENT_COINS
+ */
+const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
+  SP.AGENT_LIST_SELECT_PANEL,
+  SP.RECIPIENT_LIST_SELECT_PANEL,
   SP.UNSPONSOR_SP_COINS,
   SP.CLAIM_PENDING_SPONSOR_COINS,
   SP.CLAIM_PENDING_RECIPIENT_COINS,
@@ -79,9 +90,9 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
 
-  // ✅ NEW: first-class list overlays (Sponsor-style panel overlays)
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  // ✅ REMOVE from top-level overlay siblings (now children under ACCOUNT_LIST_REWARDS_PANEL)
+  // SP.RECIPIENT_LIST_SELECT_PANEL,
+  // SP.AGENT_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
@@ -153,7 +164,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
 
-  // ✅ NEW: first-class list overlays (modeled like Sponsor list panel)
+  // ✅ These panels still exist; they’re just NOT in global radio/stack anymore.
+  // They are now children of ACCOUNT_LIST_REWARDS_PANEL.
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'panel' }),
   def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'panel' }),
 
@@ -171,11 +183,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
   def({ id: SP.MANAGE_PENDING_REWARDS, kind: 'panel' }),
 
-  // Sponsor list select (structural parent) + modes
+  // ✅ ACCOUNT_LIST_REWARDS_PANEL with requested children order
   def({
     id: SP.ACCOUNT_LIST_REWARDS_PANEL,
     kind: 'panel',
-    children: SPONSOR_LIST_SELECT_CHILDREN,
+    children: ACCOUNT_LIST_REWARDS_CHILDREN,
   }),
   def({ id: SP.UNSPONSOR_SP_COINS, kind: 'panel' }),
   def({ id: SP.CLAIM_PENDING_SPONSOR_COINS, kind: 'panel' }),

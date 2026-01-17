@@ -18,9 +18,9 @@ export const MAIN_OVERLAY_GROUP = [
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
 
-  // ✅ NEW: first-class list overlays (new system)
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  // ✅ REMOVE from radio/stack:
+  // SP.RECIPIENT_LIST_SELECT_PANEL,
+  // SP.AGENT_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
@@ -39,6 +39,8 @@ export const MAIN_OVERLAY_GROUP = [
   SP.SPONSOR_ACCOUNT_PANEL,
   SP.AGENT_ACCOUNT_PANEL,
   SP.RECIPIENT_ACCOUNT_PANEL,
+
+  // NOTE: you currently include this in radio/stack; leaving as-is per your file.
   SP.TOKEN_CONTRACT_PANEL,
 ] as const satisfies readonly SP[];
 
