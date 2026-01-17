@@ -30,41 +30,40 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('AccountListRewardsPanel', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * ✅ New model:
- * - ACCOUNT_LIST_REWARDS_PANEL is the parent container panel
- * - AGENT_LIST_SELECT_PANEL / RECIPIENT_LIST_SELECT_PANEL are children (modes)
- * - UNSPONSOR_SP_COINS / CLAIM_PENDING_* are also children (modes)
- */
-type ModePanel =
+type ActiveListPanel =
+  | SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
+  | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+  | SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL
   | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
-  | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
-  | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
+  | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
 
-function computeInstanceId(containerPanel: SP_COIN_DISPLAY, modePanel: ModePanel): string {
-  return `ACCOUNT_LIST_${SP_COIN_DISPLAY[containerPanel]}_${SP_COIN_DISPLAY[modePanel]}`;
+function computeInstanceId(activePanel: SP_COIN_DISPLAY): string {
+  return `ACCOUNT_LIST_${SP_COIN_DISPLAY[activePanel]}`;
 }
 
-function computeListType(containerPanel: SP_COIN_DISPLAY): LIST_TYPE {
+function computeListType(activePanel: ActiveListPanel): LIST_TYPE {
   // keep your existing semantics
-  return containerPanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
+  return activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
     ? LIST_TYPE.SPONSOR_UNSPONSOR
     : LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 }
 
-function computeFeedType(modePanel: ModePanel): FEED_TYPE {
-  switch (modePanel) {
+function computeFeedType(activePanel: ActiveListPanel): FEED_TYPE {
+  switch (activePanel) {
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
       return FEED_TYPE.AGENT_ACCOUNTS;
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
+    // Sponsors mode (explicit) + legacy sponsor mode
+    case SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL:
+    case SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL:
     default:
       return FEED_TYPE.SPONSOR_ACCOUNTS;
   }
 }
 
-function computeDetailPanel(modePanel: ModePanel): SP_COIN_DISPLAY {
-  switch (modePanel) {
+function computeDetailPanel(activePanel: ActiveListPanel): SP_COIN_DISPLAY {
+  switch (activePanel) {
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
       return SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL;
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
@@ -75,11 +74,12 @@ function computeDetailPanel(modePanel: ModePanel): SP_COIN_DISPLAY {
 }
 
 export default function AccountListRewardsPanel() {
-  // ✅ Parent container visibility gates
+  // These MUST be checked here, because this component self-gates
   const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
-  const vRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
+  const vAccountRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
-  // ✅ Child mode visibility (these are no longer overlays / no longer stack members)
+  // ✅ child-mode panels (now children of ACCOUNT_LIST_REWARDS_PANEL)
+  const vSponsorsMode = usePanelVisible(SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL);
   const vAgentMode = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const vRecipientMode = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
@@ -90,50 +90,43 @@ export default function AccountListRewardsPanel() {
 
   const anyDetailVisible = vSponsorDetail || vAgentDetail || vRecipientDetail;
 
-  // ✅ Container panel: unstaking takes precedence, otherwise rewards
-  const containerPanel: SP_COIN_DISPLAY | null = vUnstaking
+  // ✅ priority: unstake > agent > recipient > sponsorsMode > legacy sponsor container
+  const activePanel: ActiveListPanel | null = vUnstaking
     ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-    : vRewards
-      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-      : null;
-
-  // ✅ Mode panel: child modes override within rewards container
-  // - If container is UNSTAKING, we treat mode as sponsor (same as before)
-  const modePanel: ModePanel | null =
-    containerPanel == null
-      ? null
-      : containerPanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-        ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-        : vAgentMode
-          ? SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
-          : vRecipientMode
-            ? SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
-            : SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
+    : vAgentMode
+      ? SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
+      : vRecipientMode
+        ? SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
+        : vSponsorsMode
+          ? SP_COIN_DISPLAY.SPONSORS_LIST_REWARDS_PANEL
+          : vAccountRewards
+            ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+            : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
       vUnstaking,
-      vRewards,
+      vAccountRewards,
+      vSponsorsMode,
       vAgentMode,
       vRecipientMode,
       vSponsorDetail,
       vAgentDetail,
       vRecipientDetail,
       anyDetailVisible,
-      containerPanel: containerPanel != null ? SP_COIN_DISPLAY[containerPanel] : null,
-      modePanel: modePanel != null ? SP_COIN_DISPLAY[modePanel] : null,
+      activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
   }, [
     vUnstaking,
-    vRewards,
+    vAccountRewards,
+    vSponsorsMode,
     vAgentMode,
     vRecipientMode,
     vSponsorDetail,
     vAgentDetail,
     vRecipientDetail,
     anyDetailVisible,
-    containerPanel,
-    modePanel,
+    activePanel,
   ]);
 
   // ✅ DEBUG HUD: proves the component is mounted and shows what it sees
@@ -152,56 +145,39 @@ export default function AccountListRewardsPanel() {
         padding: '8px 10px',
         borderRadius: 8,
         border: '1px solid rgba(255,255,255,0.15)',
-        maxWidth: 520,
+        maxWidth: 420,
         pointerEvents: 'none',
         whiteSpace: 'pre-wrap',
       }}
     >
       {[
         `AccountListRewardsPanel: mounted ✅`,
-        `containerPanel: ${
-          containerPanel != null ? SP_COIN_DISPLAY[containerPanel] : 'null'
-        }`,
-        `modePanel: ${modePanel != null ? SP_COIN_DISPLAY[modePanel] : 'null'}`,
-        `visible: { rewards:${String(vRewards)} unstake:${String(
-          vUnstaking,
-        )} agentMode:${String(vAgentMode)} recipientMode:${String(vRecipientMode)} }`,
+        `activePanel: ${activePanel != null ? SP_COIN_DISPLAY[activePanel] : 'null'}`,
+        `visible: { accountRewards:${String(vAccountRewards)} sponsorsMode:${String(vSponsorsMode)} agentMode:${String(vAgentMode)} recipientMode:${String(vRecipientMode)} unstake:${String(vUnstaking)} }`,
         `detailVisible: ${String(anyDetailVisible)}`,
       ].join('\n')}
     </div>
   ) : null;
 
-  // Only show when the container is visible
-  if (!containerPanel || !modePanel) return hud;
-
-  // Never show list while detail is up
+  if (!activePanel) return hud;
   if (anyDetailVisible) return hud;
 
   return (
     <>
       {hud}
-      <AccountListSelectPanelInner containerPanel={containerPanel} modePanel={modePanel} />
+      <AccountListSelectPanelInner activePanel={activePanel} />
     </>
   );
 }
 
-function AccountListSelectPanelInner({
-  containerPanel,
-  modePanel,
-}: {
-  containerPanel: SP_COIN_DISPLAY;
-  modePanel: ModePanel;
-}) {
+function AccountListSelectPanelInner({ activePanel }: { activePanel: ActiveListPanel }) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
-  const listType = useMemo(() => computeListType(containerPanel), [containerPanel]);
-  const instanceId = useMemo(
-    () => computeInstanceId(containerPanel, modePanel),
-    [containerPanel, modePanel],
-  );
-  const detailPanel = useMemo(() => computeDetailPanel(modePanel), [modePanel]);
-  const feedType = useMemo(() => computeFeedType(modePanel), [modePanel]);
+  const listType = useMemo(() => computeListType(activePanel), [activePanel]);
+  const instanceId = useMemo(() => computeInstanceId(activePanel), [activePanel]);
+  const detailPanel = useMemo(() => computeDetailPanel(activePanel), [activePanel]);
+  const feedType = useMemo(() => computeFeedType(activePanel), [activePanel]);
 
   const { feedData, loading, error } = useFeedData(feedType);
 
@@ -212,15 +188,14 @@ function AccountListSelectPanelInner({
 
   useEffect(() => {
     debugLog.log?.('[data]', {
-      containerPanel: SP_COIN_DISPLAY[containerPanel],
-      modePanel: SP_COIN_DISPLAY[modePanel],
+      activePanel: SP_COIN_DISPLAY[activePanel],
       feedType: FEED_TYPE[feedType],
       listType: LIST_TYPE[listType],
       loading,
       error: error ?? null,
       walletsLen: wallets.length,
     });
-  }, [containerPanel, modePanel, feedType, listType, loading, error, wallets.length]);
+  }, [activePanel, feedType, listType, loading, error, wallets.length]);
 
   const setWalletCallBack = useCallback(
     (wallet?: WalletAccount) => {
@@ -231,9 +206,9 @@ function AccountListSelectPanelInner({
           if (!prev) return prev;
           const nextAccounts = { ...prev.accounts };
 
-          if (modePanel === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL) {
+          if (activePanel === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL) {
             (nextAccounts as any).agentAccount = wallet;
-          } else if (modePanel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) {
+          } else if (activePanel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL) {
             (nextAccounts as any).recipientAccount = wallet;
           } else {
             (nextAccounts as any).sponsorAccount = wallet;
@@ -241,29 +216,26 @@ function AccountListSelectPanelInner({
 
           return { ...prev, accounts: nextAccounts };
         },
-        `AccountListRewardsPanel:setWalletCallBack(${SP_COIN_DISPLAY[modePanel]} -> ${SP_COIN_DISPLAY[detailPanel]})`,
+        `AccountListRewardsPanel:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]} -> ${SP_COIN_DISPLAY[detailPanel]})`,
       );
-
-      // ✅ Parent passed to openPanel:
-      // - If we are in a child mode, parent should be the child mode panel.
-      // - Otherwise parent is the container (ACCOUNT_LIST_REWARDS_PANEL or UNSTAKING_SPCOINS_PANEL).
-      const parentForDetail =
-        modePanel === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL ||
-        modePanel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
-          ? modePanel
-          : containerPanel;
-
-      const invoker = `AccountListRewardsPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[parentForDetail]})`;
 
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
-          openPanel(detailPanel, invoker, parentForDetail);
+          openPanel(
+            detailPanel,
+            `AccountListRewardsPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
+            activePanel,
+          );
         }, 0);
       } else {
-        openPanel(detailPanel, invoker, parentForDetail);
+        openPanel(
+          detailPanel,
+          `AccountListRewardsPanel:setWalletCallBack(open ${SP_COIN_DISPLAY[detailPanel]} from ${SP_COIN_DISPLAY[activePanel]})`,
+          activePanel,
+        );
       }
     },
-    [containerPanel, modePanel, ctx, detailPanel, openPanel],
+    [activePanel, ctx, detailPanel, openPanel],
   );
 
   if (loading) {
@@ -286,7 +258,7 @@ function AccountListSelectPanelInner({
     <div id="AccountListRewardsPanel">
       <AssetSelectDisplayProvider instanceId={instanceId}>
         <AssetSelectProvider
-          containerType={containerPanel}
+          containerType={activePanel}
           feedTypeOverride={feedType}
           closePanelCallback={() => {}}
           setSelectedAssetCallback={(_asset: TokenContract | WalletAccount) => {}}
@@ -294,9 +266,7 @@ function AccountListSelectPanelInner({
           <AccountListPanel
             walletList={wallets}
             setWalletCallBack={setWalletCallBack}
-            // ✅ Keep containerType consistent with what you want the list to “be”
-            // - This drives labels like "Agent Account:" / "Recipient Account:" in AccountListPanel.
-            containerType={modePanel}
+            containerType={activePanel}
             listType={listType}
           />
         </AssetSelectProvider>
