@@ -39,11 +39,7 @@ export default function RadioOverlayPanelHost() {
       {/* Manage Trading spCoins overlay (STAKING_SPCOINS_PANEL) */}
       <StakingSpCoins />
 
-      {/* ✅ Merged list overlay:
-          - ACCOUNT_LIST_REWARDS_PANEL (claim)
-          - UNSTAKING_SPCOINS_PANEL (unstake)
-          Component gates itself by visibility of either panel.
-      */}
+
       <ManageSponsorRecipients />
 
       {/* ✅ NEW: mount once globally so AGENTS / RECIPIENTS can show it too */}

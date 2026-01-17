@@ -52,7 +52,6 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: 'Manage Recipient Account',
   [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
   [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: 'Manage Sponsor Account',
-  [SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL]: 'Un-Staking Your Sponsor Coins',
   [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
 };
 
@@ -83,7 +82,6 @@ const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
   SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
-  SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
 
   SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
 
@@ -111,7 +109,6 @@ export function useHeaderController() {
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
-  const unstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
 
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
 
@@ -140,7 +137,6 @@ export function useHeaderController() {
       [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: sponsorList,
 
       [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: staking,
-      [SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL]: unstaking,
 
       [SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL]: manageHub,
 
@@ -163,7 +159,6 @@ export function useHeaderController() {
     agentList,
     sponsorList,
     staking,
-    unstaking,
     manageHub,
     error,
     trading,

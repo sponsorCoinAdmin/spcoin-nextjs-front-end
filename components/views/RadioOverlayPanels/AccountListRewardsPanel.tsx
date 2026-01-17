@@ -31,7 +31,6 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('AccountListRewardsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type ActiveListPanel =
-  | SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
   | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
   | SP_COIN_DISPLAY.SPONSORS
   | SP_COIN_DISPLAY.AGENTS
@@ -41,11 +40,9 @@ function computeInstanceId(activePanel: SP_COIN_DISPLAY): string {
   return `ACCOUNT_LIST_${SP_COIN_DISPLAY[activePanel]}`;
 }
 
-function computeListType(activePanel: ActiveListPanel): LIST_TYPE {
-  // keep your existing semantics
-  return activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-    ? LIST_TYPE.SPONSOR_UNSPONSOR
-    : LIST_TYPE.SPONSOR_CLAIM_REWARDS;
+function computeListType(_activePanel: ActiveListPanel): LIST_TYPE {
+  // ✅ Unstaking removed; this panel is now rewards-only semantics
+  return LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 }
 
 function computeFeedType(activePanel: ActiveListPanel): FEED_TYPE {
@@ -74,8 +71,6 @@ function computeDetailPanel(activePanel: ActiveListPanel): SP_COIN_DISPLAY {
 }
 
 export default function AccountListRewardsPanel() {
-  // These MUST be checked here, because this component self-gates
-  const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
   const vAccountRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   // ✅ child-mode panels (now children of ACCOUNT_LIST_REWARDS_PANEL)
@@ -90,22 +85,19 @@ export default function AccountListRewardsPanel() {
 
   const anyDetailVisible = vSponsorDetail || vAgentDetail || vRecipientDetail;
 
-  // ✅ priority: unstake > agent > recipient > sponsorsMode > legacy sponsor container
-  const activePanel: ActiveListPanel | null = vUnstaking
-    ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-    : vAgentMode
-      ? SP_COIN_DISPLAY.AGENTS
-      : vRecipientMode
-        ? SP_COIN_DISPLAY.RECIPIENTS
-        : vSponsorsMode
-          ? SP_COIN_DISPLAY.SPONSORS
-          : vAccountRewards
-            ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-            : null;
+  // ✅ priority: agent > recipient > sponsorsMode > legacy sponsor container
+  const activePanel: ActiveListPanel | null = vAgentMode
+    ? SP_COIN_DISPLAY.AGENTS
+    : vRecipientMode
+      ? SP_COIN_DISPLAY.RECIPIENTS
+      : vSponsorsMode
+        ? SP_COIN_DISPLAY.SPONSORS
+        : vAccountRewards
+          ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+          : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
-      vUnstaking,
       vAccountRewards,
       vSponsorsMode,
       vAgentMode,
@@ -117,7 +109,6 @@ export default function AccountListRewardsPanel() {
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
   }, [
-    vUnstaking,
     vAccountRewards,
     vSponsorsMode,
     vAgentMode,
@@ -153,7 +144,7 @@ export default function AccountListRewardsPanel() {
       {[
         `AccountListRewardsPanel: mounted ✅`,
         `activePanel: ${activePanel != null ? SP_COIN_DISPLAY[activePanel] : 'null'}`,
-        `visible: { accountRewards:${String(vAccountRewards)} sponsorsMode:${String(vSponsorsMode)} agentMode:${String(vAgentMode)} recipientMode:${String(vRecipientMode)} unstake:${String(vUnstaking)} }`,
+        `visible: { accountRewards:${String(vAccountRewards)} sponsorsMode:${String(vSponsorsMode)} agentMode:${String(vAgentMode)} recipientMode:${String(vRecipientMode)} }`,
         `detailVisible: ${String(anyDetailVisible)}`,
       ].join('\n')}
     </div>

@@ -105,7 +105,6 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // ✅ First-class "manage" overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
-  SP.UNSTAKING_SPCOINS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
 
   // Sponsor list select (parent) + sub-panels
@@ -202,7 +201,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.SPONSOR_ACCOUNT_PANEL, kind: 'panel' }),
 
   // Staking/unstaking overlays
-  def({ id: SP.UNSTAKING_SPCOINS_PANEL, kind: 'panel' }),
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
 
   // Token contract overlay

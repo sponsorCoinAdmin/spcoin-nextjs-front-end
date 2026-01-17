@@ -19,45 +19,25 @@ import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelect
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true' ||
-  process.env.NEXT_PUBLIC_DEBUG_LOG_UNSTAKING_SPCOINS === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';
 
 const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * Merged list panel for:
- * - Claim Sponsor Rewards (ACCOUNT_LIST_REWARDS_PANEL)
- * - Unstaking SpCoins      (UNSTAKING_SPCOINS_PANEL)
- *
- * ✅ Simplified:
- * - No PanelListSelectWrapper
- * - No AssetListSelectPanel indirection
- * - Direct feed → AccountListPanel
- *
- * ⚠️ BUT:
- * AccountListPanel renders AddressSelect, which requires AssetSelectProvider context.
- * So we wrap just enough provider around AccountListPanel to satisfy that dependency.
- */
 export default function ManageSponsorRecipients() {
-  const vUnstaking = usePanelVisible(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL);
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
-  const activePanel: SP_COIN_DISPLAY | null = vUnstaking
-    ? SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-    : vClaim
-      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-      : null;
+  const activePanel: SP_COIN_DISPLAY | null = vClaim
+    ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+    : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
-      vUnstaking,
       vClaim,
       vSponsorDetail,
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
-  }, [vUnstaking, vClaim, vSponsorDetail, activePanel]);
+  }, [vClaim, vSponsorDetail, activePanel]);
 
   if (!activePanel) return null;
 
@@ -67,14 +47,16 @@ export default function ManageSponsorRecipients() {
   return <ManageSponsorRecipientsInner activePanel={activePanel} />;
 }
 
-function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DISPLAY }) {
+function ManageSponsorRecipientsInner({
+  activePanel,
+}: {
+  activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
+}) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
-  const listType =
-    activePanel === SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL
-      ? LIST_TYPE.SPONSOR_UNSPONSOR
-      : LIST_TYPE.SPONSOR_CLAIM_REWARDS;
+  // ✅ UNSTAKING removed: listType is always claim rewards for this component
+  const listType = LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 
   // ✅ Directly load sponsor accounts (same source as before)
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);

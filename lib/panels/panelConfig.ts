@@ -85,7 +85,6 @@ export const PANELS: readonly PanelDef[] = [
 
   // Manage overlays as first-class main overlays
   overlay(SP.MANAGE_SPONSORSHIPS_PANEL, 'panel', false),
-  overlay(SP.UNSTAKING_SPCOINS_PANEL, 'panel', false),
   overlay(SP.STAKING_SPCOINS_PANEL, 'panel', false),
 
   // Detail/manage overlays (full-screen overlays in the same radio set)

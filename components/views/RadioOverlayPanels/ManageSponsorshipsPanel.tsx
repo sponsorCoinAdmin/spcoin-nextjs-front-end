@@ -166,7 +166,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <button
                       type="button"
                       className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                      onClick={() => openOverlay(SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL)}
+                      onClick={() => openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL)}
                       aria-label="Open Un-Staking SpCoins panel"
                       title="Open Un-Staking"
                     >

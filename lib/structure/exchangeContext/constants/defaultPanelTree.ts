@@ -91,7 +91,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.MANAGE_PENDING_REWARDS, false),
       ]),
 
-      node(SP.UNSTAKING_SPCOINS_PANEL, false),
       node(SP.STAKING_SPCOINS_PANEL, false),
 
       // Sponsor list select (parent) + sub-panels

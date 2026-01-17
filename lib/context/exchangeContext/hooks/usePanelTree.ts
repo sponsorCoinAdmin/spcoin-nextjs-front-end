@@ -251,12 +251,10 @@ export function usePanelTree() {
       /**
        * ✅ Sponsor detail panel may be opened with a "parent" reference
        * from any Sponsor list-select context:
-       *   - UNSTAKING_SPCOINS_PANEL
        *   - ACCOUNT_LIST_REWARDS_PANEL
        *   - NEW sub-panels under ACCOUNT_LIST_REWARDS_PANEL (future panel control)
        */
       sponsorAllowedParents: new Set<number>([
-        SP_COIN_DISPLAY.UNSTAKING_SPCOINS_PANEL,
         SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
         // ✅ NEW children (sub-panels / modes)

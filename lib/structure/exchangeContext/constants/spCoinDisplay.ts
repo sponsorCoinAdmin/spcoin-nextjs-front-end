@@ -27,7 +27,6 @@ export const MAIN_OVERLAY_GROUP = [
 
   // ✅ Manage overlays are first-class main overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
-  SP.UNSTAKING_SPCOINS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
 
   // Sponsor list + detail overlays
