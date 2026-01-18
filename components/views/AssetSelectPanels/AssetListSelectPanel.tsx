@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
-import AccountListPanel from '@/components/views/AccountListPanel'
+import AccountListRewardsPanel from '@/components/views/RadioOverlayPanels/AccountListRewardsPanel'
 
 import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
@@ -102,10 +102,10 @@ export default function AssetListSelectPanel({ listType }: Props) {
     });
   }, [instanceId, feedType, listType, isManageView, showAddressBar, containerType, containerLabel]);
 
-  // Wallets are the input for AccountListPanel
+  // Wallets are the input for AccountListRewardsPanel
   const wallets: WalletAccount[] = (safeFeedData as any).wallets ?? [];
 
-  // When a wallet is picked in AccountListPanel, push it through
+  // When a wallet is picked in AccountListRewardsPanel, push it through
   // the same FSM bridge that DataListSelect uses for account feeds.
   const setWalletCallBack = (wallet?: WalletAccount) => {
     if (!wallet?.address) {
@@ -126,7 +126,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
 
     // Programmatic commit: mirror DataListSelect account behavior
     setManualEntry(false);
-    setInputState(InputState.EMPTY_INPUT, 'AssetListSelectPanel (AccountListPanel)');
+    setInputState(InputState.EMPTY_INPUT, 'AssetListSelectPanel (AccountListRewardsPanel)');
     handleHexInputChange(wallet.address, false);
 
     setTradingTokenCallback(wallet);
@@ -143,9 +143,9 @@ export default function AssetListSelectPanel({ listType }: Props) {
       {/* Header: only for non-manage feeds */}
       {showAddressBar && <AddressSelect callingParent="AssetListSelectPanel" />}
 
-      {/* Body: either generic DataListSelect or the richer AccountListPanel */}
+      {/* Body: either generic DataListSelect or the richer AccountListRewardsPanel */}
       {isManageView ? (
-        <AccountListPanel
+        <AccountListRewardsPanel
           walletList={wallets}
           setWalletCallBack={setWalletCallBack}
           containerType={containerType as SP_COIN_DISPLAY}

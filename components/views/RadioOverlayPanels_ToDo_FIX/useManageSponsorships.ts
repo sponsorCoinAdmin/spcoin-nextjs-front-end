@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/useManageSponsorshipsToDo.ts
+// File: @/components/views/ManageSponsorships/useManageSponsorships.ts
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
@@ -13,7 +13,7 @@ type ToDoMode =
 /**
  * Centralizes the ToDo overlay + alert message generation so the panel stays smaller.
  */
-export function useManageSponsorshipsToDo(ctx: ExchangeContextTypeMaybe) {
+export function useManageSponsorships(ctx: ExchangeContextTypeMaybe) {
   const [showToDo, setShowToDo] = useState<boolean>(false);
 
   // Keep latest selected account type for the ToDo alert across renders

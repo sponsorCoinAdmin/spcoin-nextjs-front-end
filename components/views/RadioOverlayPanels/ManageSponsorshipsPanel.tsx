@@ -15,14 +15,19 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { useManageSponsorshipsToDo } from '../RadioOverlayPanels_ToDo_FIX/useManageSponsorshipsToDo';
-import { msTableTw } from '../RadioOverlayPanels_ToDo_FIX/msTableTw';
+import { useManageSponsorships } from '../RadioOverlayPanels_ToDo_FIX/useManageSponsorships';
+import { msTableTw } from './msTableTw';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
 const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = { onClose?: () => void };
+
+type RewardsMode =
+  | SP_COIN_DISPLAY.SPONSORS
+  | SP_COIN_DISPLAY.RECIPIENTS
+  | SP_COIN_DISPLAY.AGENTS;
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -52,7 +57,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     claimAllToDo,
     unstakeAllSponsorships,
     doToDo,
-  } = useManageSponsorshipsToDo(ctx);
+  } = useManageSponsorships(ctx);
 
   /**
    * Use the source-of-truth `openPanel()` only.
@@ -67,6 +72,51 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       );
     },
     [openPanel],
+  );
+
+  /**
+   * ✅ New behavior:
+   * Pending → (Sponsors/Recipients/Agents) acts like a radio-mode selector:
+   * - open selected mode enum
+   * - close the other mode enums
+   * - open the shared container panel (ACCOUNT_LIST_REWARDS_PANEL)
+   */
+  const openRewardsMode = useCallback(
+    (mode: RewardsMode) => {
+      const modes: RewardsMode[] = [
+        SP_COIN_DISPLAY.SPONSORS,
+        SP_COIN_DISPLAY.RECIPIENTS,
+        SP_COIN_DISPLAY.AGENTS,
+      ];
+
+      debugLog.log?.('openRewardsMode', {
+        mode: SP_COIN_DISPLAY[mode],
+        modes: modes.map((m) => SP_COIN_DISPLAY[m]),
+      });
+
+      // 1) Close all other modes (radio)
+      for (const m of modes) {
+        if (Number(m) !== Number(mode)) {
+          closePanel(
+            m,
+            `ManageSponsorshipsPanel:openRewardsMode(close ${SP_COIN_DISPLAY[m]})`,
+          );
+        }
+      }
+
+      // 2) Open selected mode
+      openPanel(
+        mode,
+        `ManageSponsorshipsPanel:openRewardsMode(open ${SP_COIN_DISPLAY[mode]})`,
+      );
+
+      // 3) Open the shared container panel
+      openPanel(
+        SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
+        `ManageSponsorshipsPanel:openRewardsMode(open ACCOUNT_LIST_REWARDS_PANEL via ${SP_COIN_DISPLAY[mode]})`,
+      );
+    },
+    [openPanel, closePanel],
   );
 
   const togglePendingRewards = useCallback(() => {
@@ -121,10 +171,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   >
                     SpCoins
                   </th>
-                  <th
-                    scope="col"
-                    className={`${msTableTw.th} ${msTableTw.thPad3} text-center`}
-                  >
+                  <th scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-center`}>
                     Amount
                   </th>
                   <th
@@ -166,9 +213,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <button
                       type="button"
                       className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                      onClick={() => openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL)}
-                      aria-label="Open Un-Staking SpCoins panel"
-                      title="Open Un-Staking"
+                      onClick={() => openRewardsMode(SP_COIN_DISPLAY.SPONSORS)}
+                      aria-label="Open Staked list"
+                      title="Open Staked"
                     >
                       Staked
                     </button>
@@ -232,7 +279,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL)}
+                          onClick={() => openRewardsMode(SP_COIN_DISPLAY.SPONSORS)}
                           aria-label="Open Claim Sponsors Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -263,7 +310,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENTS)}
+                          onClick={() => openRewardsMode(SP_COIN_DISPLAY.RECIPIENTS)}
                           aria-label="Open Claim Recipients Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -294,7 +341,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         <button
                           type="button"
                           className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                          onClick={() => openOverlay(SP_COIN_DISPLAY.AGENTS)}
+                          onClick={() => openRewardsMode(SP_COIN_DISPLAY.AGENTS)}
                           aria-label="Open Claim Agents Rewards panel"
                         >
                           <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>

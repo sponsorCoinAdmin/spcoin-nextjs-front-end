@@ -12,11 +12,11 @@ import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import AccountListPanel from '@/components/views/AccountListPanel';
 
 // ✅ Provide the context AddressSelect expects (without going through the old wrapper)
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import AccountListRewardsPanel from './AccountListRewardsPanel';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';
@@ -136,10 +136,10 @@ function ManageSponsorRecipientsInner({
 
   /**
    * ✅ Key point:
-   * Wrap AccountListPanel so AddressSelect has AssetSelectContext.
+   * Wrap AccountListRewardsPanel so AddressSelect has AssetSelectContext.
    *
    * We keep callbacks as no-ops / pass-through because we aren’t using the FSM
-   * commit path here anymore — AccountListPanel clicks are handled by setWalletCallBack.
+   * commit path here anymore — AccountListRewardsPanel clicks are handled by setWalletCallBack.
    */
   return (
     <div id="ManageSponsorRecipients">
@@ -154,7 +154,7 @@ function ManageSponsorRecipientsInner({
             /* no-op: we handle selection via setWalletCallBack */
           }}
         >
-          <AccountListPanel
+          <AccountListRewardsPanel
             walletList={wallets}
             setWalletCallBack={setWalletCallBack}
             containerType={activePanel}
