@@ -59,26 +59,27 @@ const TRADING_CHILDREN: readonly SP[] = [
 /**
  * ACCOUNT_LIST_REWARDS_PANEL children (order matters)
  *
- * ✅ New child-mode panels live here (NOT in overlay radio, NOT in stack)
- *
- * Desired shape:
- * [0] AGENTS
- * [1] RECIPIENTS
- * [2] SPONSORS
- * [3] UNSPONSOR_SP_COINS
- * [4] CLAIM_PENDING_SPONSOR_COINS
- * [5] CLAIM_PENDING_RECIPIENT_COINS
- * [6] CLAIM_PENDING_AGENT_COINS
+ * ✅ Desired shape:
+ * [-] ACCOUNT_LIST_REWARDS_PANEL
+ *   [-] CLAIM_PENDING_SPONSOR_COINS
+ *   [+] CLAIM_PENDING_RECIPIENT_COINS
+ *   [+] CLAIM_PENDING_AGENT_COINS
+ *   [+] UNSPONSOR_SP_COINS
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
-  SP.AGENTS,
-  SP.RECIPIENTS,
-  SP.SPONSORS,
-  SP.UNSPONSOR_SP_COINS,
   SP.CLAIM_PENDING_SPONSOR_COINS,
   SP.CLAIM_PENDING_RECIPIENT_COINS,
   SP.CLAIM_PENDING_AGENT_COINS,
+  SP.UNSPONSOR_SP_COINS,
 ] as const;
+
+/**
+ * Each CLAIM_PENDING_* node shares the same mode selector children.
+ *
+ * NOTE: SP.SPONSORS / SP.RECIPIENTS / SP.AGENTS are defined ONCE in PANEL_DEFS,
+ * but can appear as children under multiple parents (GUI tree / structural mapping).
+ */
+const REWARDS_MODE_CHILDREN: readonly SP[] = [SP.SPONSORS, SP.RECIPIENTS, SP.AGENTS] as const;
 
 /**
  * Primary overlay container under MAIN_TRADING_PANEL
@@ -107,7 +108,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
 
-  // Sponsor list select (parent) + sub-panels
+  // Rewards list overlay (parent)
   SP.ACCOUNT_LIST_REWARDS_PANEL,
 
   // Detail overlays
@@ -165,10 +166,10 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
 
-  // ✅ Child-mode panels (NOT overlays; children of ACCOUNT_LIST_REWARDS_PANEL)
-  def({ id: SP.AGENTS, kind: 'panel' }),
-  def({ id: SP.RECIPIENTS, kind: 'panel' }),
+  // ✅ Mode selector panels (can appear under multiple parents)
   def({ id: SP.SPONSORS, kind: 'panel' }),
+  def({ id: SP.RECIPIENTS, kind: 'panel' }),
+  def({ id: SP.AGENTS, kind: 'panel' }),
 
   // ✅ OLD: legacy list overlays (kept during migration)
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
@@ -184,16 +185,32 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
   def({ id: SP.MANAGE_PENDING_REWARDS, kind: 'panel' }),
 
-  // Account list rewards (structural parent) + modes/rows
+  // ✅ Account list rewards (structural parent)
   def({
     id: SP.ACCOUNT_LIST_REWARDS_PANEL,
     kind: 'panel',
     children: ACCOUNT_LIST_REWARDS_CHILDREN,
   }),
+
+  // ✅ Claim panels now own the mode selector children
+  def({
+    id: SP.CLAIM_PENDING_SPONSOR_COINS,
+    kind: 'panel',
+    children: REWARDS_MODE_CHILDREN,
+  }),
+  def({
+    id: SP.CLAIM_PENDING_RECIPIENT_COINS,
+    kind: 'panel',
+    children: REWARDS_MODE_CHILDREN,
+  }),
+  def({
+    id: SP.CLAIM_PENDING_AGENT_COINS,
+    kind: 'panel',
+    children: REWARDS_MODE_CHILDREN,
+  }),
+
+  // Unstake panel (leaf)
   def({ id: SP.UNSPONSOR_SP_COINS, kind: 'panel' }),
-  def({ id: SP.CLAIM_PENDING_SPONSOR_COINS, kind: 'panel' }),
-  def({ id: SP.CLAIM_PENDING_RECIPIENT_COINS, kind: 'panel' }),
-  def({ id: SP.CLAIM_PENDING_AGENT_COINS, kind: 'panel' }),
 
   // Detail overlays
   def({ id: SP.AGENT_ACCOUNT_PANEL, kind: 'panel' }),

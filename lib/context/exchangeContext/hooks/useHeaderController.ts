@@ -38,7 +38,7 @@ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFact
   }, [panel, factory]);
 }
 
-/** Default titles */
+/** Default titles (STATIC only) */
 const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD]: 'Select Sponsors Agent',
   [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: 'Select a Token to Buy',
@@ -53,9 +53,36 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
   [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: 'Manage Sponsor Account',
   [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
+
+  // Fallback label for the rewards panel (dynamic title computed in titleFor())
+  [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: 'Pending Rewards Page',
 };
 
-function titleFor(display: SP_COIN_DISPLAY): string {
+function getRewardsHeaderTitle(opts: {
+  claimSponsor: boolean;
+  claimRecipient: boolean;
+  claimAgent: boolean;
+  unSponsor: boolean;
+}): string {
+  if (opts.claimSponsor) return 'Claim Pending Sponsor Rewards';
+  if (opts.claimRecipient) return 'Claim Pending Recipient Rewards';
+  if (opts.claimAgent) return 'Claim Pending Agent Rewards';
+  if (opts.unSponsor) return 'Unstaking Pending Sponsorships';
+  return 'Pending Rewards Page';
+}
+
+function titleFor(
+  display: SP_COIN_DISPLAY,
+  rewardsState?: {
+    claimSponsor: boolean;
+    claimRecipient: boolean;
+    claimAgent: boolean;
+    unSponsor: boolean;
+  },
+): string {
+  if (display === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL && rewardsState) {
+    return getRewardsHeaderTitle(rewardsState);
+  }
   return DEFAULT_TITLES[display] ?? 'Main Panel Header';
 }
 
@@ -115,13 +142,17 @@ export function useHeaderController() {
   const error = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
   const trading = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
-  /**
-   * Option A: make TS understand the *exact* key set.
-   * We build a Record<PriorityDisplay, boolean> and iterate DISPLAY_PRIORITY.
-   *
-   * This removes the "can't index with SP_COIN_DISPLAY" error because
-   * `display` is inferred as PriorityDisplay (the subset), not the whole enum.
-   */
+  // ✅ rewards-subpanel visibility used to compute dynamic header title
+  const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS);
+  const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS);
+  const claimAgent = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
+  const unSponsor = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
+
+  const rewardsState = useMemo(
+    () => ({ claimSponsor, claimRecipient, claimAgent, unSponsor }),
+    [claimSponsor, claimRecipient, claimAgent, unSponsor],
+  );
+
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
       [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
@@ -165,8 +196,14 @@ export function useHeaderController() {
   ]);
 
   const title = useMemo(() => {
-    return headerTitleOverrides.get(currentDisplay) ?? titleFor(currentDisplay);
-  }, [currentDisplay]);
+    const override = headerTitleOverrides.get(currentDisplay);
+    if (override) return override;
+
+    return titleFor(
+      currentDisplay,
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
+    );
+  }, [currentDisplay, rewardsState]);
 
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);

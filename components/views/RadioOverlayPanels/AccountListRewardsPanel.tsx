@@ -42,12 +42,14 @@ function shortAddr(addr: string, left = 6, right = 4) {
 }
 
 /**
- * ✅ CHANGED:
- * No parameter.
- * Uses panel visibility to decide which “mode” is active.
+ * Uses panel visibility to decide which “mode” is active (for AddressSelect label only).
  * Priority: AGENTS > RECIPIENTS > SPONSORS > fallback
  */
-function getInputAccountText(opts: { vAgents: boolean; vRecipients: boolean; vSponsors: boolean }): string {
+function getInputAccountText(opts: {
+  vAgents: boolean;
+  vRecipients: boolean;
+  vSponsors: boolean;
+}): string {
   if (opts.vAgents) return 'Agent Account:';
   if (opts.vRecipients) return 'Recipient Account:';
   if (opts.vSponsors) return 'Sponsor Account:';
@@ -58,14 +60,24 @@ function getInputAccountText(opts: { vAgents: boolean; vRecipients: boolean; vSp
  * Row + image sizing to match DataListSelect’s AccountListItem sizing.
  */
 const DATALIST_ROW_PY_TW = 'py-2';
-const DATALIST_IMG_PX = 44;
+const DATALIST_IMG_PX = 38;
 const DATALIST_IMG_TW = `h-[${DATALIST_IMG_PX}px] w-[${DATALIST_IMG_PX}px]`;
 
-// ✅ From AccountListRewardsPanel: compact rows 2..4
-const COIN_ROW_PY_TW = 'py-[1px]';
-const COIN_ROW_TEXT_TW = 'text-[10px] leading-[1.0]';
-const COIN_ROW_VALUE_TW = 'text-[10px] leading-[1.0] opacity-80';
-const COIN_ROW_BTN_TW = 'scale-[0.85] origin-center';
+/**
+ * rows 2..4 bigger by ~35%
+ */
+const COIN_ROW_PY_TW = 'py-[2px]';
+const COIN_ROW_TEXT_TW = 'text-[13px] leading-[1.15]';
+const COIN_ROW_VALUE_TW = 'text-[13px] leading-[1.15] opacity-80';
+const COIN_ROW_BTN_TW = 'scale-[1.0] origin-center';
+
+/**
+ * ✅ Prevent row height jumping when Claim becomes visible:
+ * - Always render the button
+ * - Toggle visibility (visible/invisible)
+ * - Reserve enough height for the button
+ */
+const COIN_ROW_MIN_H_TW = 'min-h-[34px]';
 
 export default function AccountListRewardsPanel({
   walletList,
@@ -75,18 +87,21 @@ export default function AccountListRewardsPanel({
 }: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  // ✅ Panel-mode visibility (new source of truth for labels)
+  /**
+   * ✅ These are the ONLY sources of truth for “mode is active” in THIS module.
+   * No fallback logic here: if all three are false, NO claim buttons show.
+   */
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.RECIPIENTS);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.SPONSORS);
 
-  // ✅ Visibility gates (future panel control)
+  // Rows that appear
   const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
   const showAgentCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
   const showRecipientCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS);
   const showSponsorCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS);
 
-  // 🔎 Account type derived from ACTIVE MODE (not containerType)
+  // Account type used for Row 1 action + Total action (kept as before)
   const accountType: AccountType = useMemo(() => {
     const derived = vAgents
       ? AccountType.AGENT
@@ -109,27 +124,14 @@ export default function AccountListRewardsPanel({
     return derived;
   }, [vAgents, vRecipients, vSponsors, containerType]);
 
-  // ✅ AddressSelect preText derived from ACTIVE MODE (no containerType switch)
   const inputAccountText = useMemo(() => {
     const derived = getInputAccountText({ vAgents, vRecipients, vSponsors });
-
-    debugLog.log?.('[derive inputAccountText (mode-based)]', {
-      vAgents,
-      vRecipients,
-      vSponsors,
-      derived,
-      containerType,
-      containerLabel: SP_COIN_DISPLAY[containerType],
-    });
-
     return derived;
-  }, [vAgents, vRecipients, vSponsors, containerType]);
+  }, [vAgents, vRecipients, vSponsors]);
 
-  // 🔴 ToDo overlay
   const [showToDo, setShowToDo] = useState<boolean>(false);
   const pendingClaimRef = useRef<PendingClaim | null>(null);
 
-  // ✅ Single tooltip (white bg + black text) positioned above cursor
   const [tip, setTip] = useState<{ show: boolean; text: string; x: number; y: number }>({
     show: false,
     text: '',
@@ -137,7 +139,6 @@ export default function AccountListRewardsPanel({
     y: 0,
   });
 
-  // Role label + id prefix derived from ACTIVE MODE (not enum name parsing)
   const { roleLabel, idPrefix } = useMemo(() => {
     const derived = vRecipients
       ? { roleLabel: 'My Recipients', idPrefix: 'mr' }
@@ -147,44 +148,25 @@ export default function AccountListRewardsPanel({
           ? { roleLabel: 'My Agents', idPrefix: 'ma' }
           : { roleLabel: 'Accounts', idPrefix: 'acct' };
 
-    debugLog.log?.('[derive roleLabel/idPrefix (mode-based)]', {
-      vAgents,
-      vRecipients,
-      vSponsors,
-      derived,
-      containerType,
-      containerLabel: SP_COIN_DISPLAY[containerType],
-    });
-
     return derived;
-  }, [vAgents, vRecipients, vSponsors, containerType]);
+  }, [vAgents, vRecipients, vSponsors]);
 
-  const claimRewards = useCallback(
-    (type: AccountType, accountId: number, label?: string) => {
-      debugLog.log?.('[claimRewards] set pending', {
-        type,
-        typeLabel: AccountType[type] ?? String(type),
-        accountId,
-        walletListLen: walletList.length,
-        listType,
-        listTypeLabel: LIST_TYPE[listType],
-        containerType,
-        containerLabel: SP_COIN_DISPLAY[containerType],
-        mode: { vAgents, vRecipients, vSponsors },
-        label,
-      });
-
-      pendingClaimRef.current = { type, accountId, label };
-      setShowToDo(true);
-    },
-    [walletList.length, listType, containerType, vAgents, vRecipients, vSponsors],
-  );
+  const claimRewards = useCallback((type: AccountType, accountId: number, label?: string) => {
+    pendingClaimRef.current = { type, accountId, label };
+    setShowToDo(true);
+  }, []);
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
 
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-    const pending = pendingClaimRef.current ?? { type: accountType, accountId: -1, label: undefined };
+    const pending =
+      pendingClaimRef.current ??
+      ({
+        type: accountType,
+        accountId: -1,
+        label: undefined,
+      } as PendingClaim);
 
     const isTotal = pending.accountId < 0 || pending.accountId >= walletList.length;
     const row = isTotal ? undefined : walletList[pending.accountId];
@@ -217,27 +199,23 @@ export default function AccountListRewardsPanel({
       pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '(s)' : ''}`;
 
     // eslint-disable-next-line no-alert
-    const msg = [
-      'ToDo: (Not Yet Implemented)\n',
-      `────────────────────────────────────────────────────────\n`,
-      `Unstake and Return Tokens back to Sponsors Trading Pool.\n`,
-      `────────────────────────────────────────────────────────\n`,
-      pending.label ? `Row: ${pending.label}\n` : '',
-      listType === LIST_TYPE.SPONSOR_UNSPONSOR ? `Unsponsor ${label}\n` : `Claim ${label} Rewards\n`,
-      isTotal ? `${label} Total\n` : `Target: ${String(rowName)}\n`,
-      isTotal ? 'Total Accounts: (aggregate)\n' : `Account: ${String(rowAccount)}\n`,
-      `From SPONSOR Account: ${connected ? connected.address : '(not connected)'}\n`,
-    ].join('');
-
-    debugLog.log?.(msg);
-    // eslint-disable-next-line no-alert
-    alert(msg);
+    alert(
+      [
+        'ToDo: (Not Yet Implemented)\n',
+        `────────────────────────────────────────────────────────\n`,
+        `Unstake and Return Tokens back to Sponsors Trading Pool.\n`,
+        `────────────────────────────────────────────────────────\n`,
+        pending.label ? `Row: ${pending.label}\n` : '',
+        listType === LIST_TYPE.SPONSOR_UNSPONSOR ? `Unsponsor ${label}\n` : `Claim ${label} Rewards\n`,
+        isTotal ? `${label} Total\n` : `Target: ${String(rowName)}\n`,
+        isTotal ? 'Total Accounts: (aggregate)\n' : `Account: ${String(rowAccount)}\n`,
+        `From SPONSOR Account: ${connected ? connected.address : '(not connected)'}\n`,
+      ].join(''),
+    );
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
 
-  // Scoped ids (kept, but no CSS usage)
   const wrapperId = `${idPrefix}Wrapper`;
 
-  // Prevent wrapper from pulling upward into AddressSelect
   const wrapperTw =
     `${msTableTw.wrapper} !mt-0 mt-0 ` +
     'mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto';
@@ -258,16 +236,33 @@ export default function AccountListRewardsPanel({
         ? 'Claim'
         : 'Action';
 
-  const onRowEnter = (name?: string | null) => setTip((t) => ({ ...t, show: true, text: name ?? '' }));
-  const onRowMove: React.MouseEventHandler = (e) => setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
+  const onRowEnter = (name?: string | null) =>
+    setTip((t) => ({ ...t, show: true, text: name ?? '' }));
+  const onRowMove: React.MouseEventHandler = (e) =>
+    setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
   const onRowLeave = () => setTip((t) => ({ ...t, show: false }));
 
-  // ✅ Bring over borders/dividers from RewardsPanel
   const tableOuterBorderTw = 'border border-white';
   const colDividerTw = 'border-l border-white';
   const rowDividerTw = 'border-b border-white/40';
 
-  // ✅ NEW: 3-column coin row with Claim button (ported from AccountListRewardsPanel)
+  /**
+   * ✅ Claim button visibility:
+   * - AGENT row -> vAgents
+   * - RECIPIENT row -> vRecipients
+   * - SPONSOR row -> vSponsors
+   * - NO fallback (if all false, none show)
+   */
+  const shouldShowClaimForType = useCallback(
+    (type: AccountType) => {
+      if (type === AccountType.AGENT) return vAgents;
+      if (type === AccountType.RECIPIENT) return vRecipients;
+      if (type === AccountType.SPONSOR) return vSponsors;
+      return false;
+    },
+    [vAgents, vRecipients, vSponsors],
+  );
+
   const renderClaimCoinRow = (
     zebraTw: string,
     label: string,
@@ -276,26 +271,42 @@ export default function AccountListRewardsPanel({
     subRowOffset: number,
     walletIndex: number,
   ) => {
-    const btnTw = (walletIndex + subRowOffset) % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
+    const btnTw =
+      (walletIndex + subRowOffset) % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
+
+    const showClaimButton = shouldShowClaimForType(type);
 
     return (
-      <tr className={`${zebraTw} ${rowDividerTw}`}>
-        <td className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle w-1 whitespace-nowrap`}>
-          <div className="inline-flex items-center justify-start bg-transparent">{label}</div>
+      <tr className={`${zebraTw} ${rowDividerTw} ${COIN_ROW_MIN_H_TW}`}>
+        <td
+          className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle w-1 whitespace-nowrap`}
+        >
+          <div className={`inline-flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>
+            {label}
+          </div>
         </td>
 
-        <td className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_VALUE_TW} align-middle ${colDividerTw}`}>
-          <div className="w-full flex items-center justify-start bg-transparent">{valueText}</div>
+        <td
+          className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_VALUE_TW} align-middle ${colDividerTw}`}
+        >
+          <div className={`w-full flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>
+            {valueText}
+          </div>
         </td>
 
-        <td className={`${zebraTw} pl-[5px] pr-[8px] ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle ${colDividerTw}`}>
-          <div className="w-full flex items-center justify-center bg-transparent">
+        <td
+          className={`${zebraTw} pl-[5px] pr-[8px] ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle ${colDividerTw}`}
+        >
+          <div className={`w-full flex items-center justify-center bg-transparent ${COIN_ROW_MIN_H_TW}`}>
             <button
               type="button"
-              className={`${btnTw} ${COIN_ROW_BTN_TW} opacity-100`}
+              className={`${btnTw} ${COIN_ROW_BTN_TW} ${showClaimButton ? 'visible' : 'invisible'}`}
               aria-label={`Claim ${label}`}
               title={`Claim ${label}`}
-              onClick={() => claimRewards(type, walletIndex, label)}
+              onClick={() => {
+                if (!showClaimButton) return;
+                claimRewards(type, walletIndex, label);
+              }}
             >
               Claim
             </button>
@@ -316,7 +327,6 @@ export default function AccountListRewardsPanel({
         preText={inputAccountText}
       />
 
-      {/* Tooltip */}
       {tip.show && tip.text ? (
         <div
           className="fixed z-[9999] pointer-events-none bg-white text-black px-[10px] py-[6px] rounded-lg text-[12px] leading-[1.2] shadow-lg max-w-[260px] whitespace-nowrap overflow-hidden text-ellipsis"
@@ -356,7 +366,6 @@ export default function AccountListRewardsPanel({
           <tbody>
             {walletList.map((w, i) => {
               const zebra = i % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
-              const actionTw = i % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
 
               const addressText =
                 typeof (w as any).address === 'string'
@@ -374,9 +383,8 @@ export default function AccountListRewardsPanel({
 
               return (
                 <React.Fragment key={`${i}-${addressText}`}>
-                  {/* Row 1: 3 columns */}
+                  {/* Row 1 */}
                   <tr className={`${zebra} ${rowDividerTw}`}>
-                    {/* Column 1 */}
                     <td className="p-0">
                       <button
                         type="button"
@@ -399,7 +407,6 @@ export default function AccountListRewardsPanel({
                       </button>
                     </td>
 
-                    {/* Column 2 */}
                     <td className={`${zebra} px-3 text-sm align-middle ${colDividerTw}`}>
                       <div className="min-w-0 flex flex-col items-start justify-center">
                         <div className="font-semibold truncate !text-[#5981F3]">{w?.name ?? 'Unknown'}</div>
@@ -407,26 +414,32 @@ export default function AccountListRewardsPanel({
                       </div>
                     </td>
 
-                    {/* Column 3 */}
+                    {/* ✅ CHANGE: third column has NO button now */}
                     <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle ${colDividerTw}`}>
-                      <div className="w-full flex items-center justify-center bg-transparent">
-                        <button
-                          type="button"
-                          className={actionTw}
-                          aria-label={`${actionButtonLabel} for ${addressText}`}
-                          onClick={() => claimRewards(accountType, i, `${actionButtonLabel} (Row 1)`)}
-                        >
-                          {actionButtonLabel}
-                        </button>
-                      </div>
+                      <div className="w-full flex items-center justify-center bg-transparent" />
                     </td>
                   </tr>
 
-                  {/* Row 2..5: now 3-column + Claim button, gated by your enums */}
-                  {showUnSponsorRow ? renderClaimCoinRow(zebra, 'Staked Coins', '0.0', AccountType.SPONSOR, 99, i) : null}
-                  {showSponsorCoinsRow ? renderClaimCoinRow(zebra, 'Sponsor Coins', '0.0', AccountType.SPONSOR, 0, i) : null}
-                  {showRecipientCoinsRow ? renderClaimCoinRow(zebra, 'Recipient Coins', '0.0', AccountType.RECIPIENT, 1, i) : null}
-                  {showAgentCoinsRow ? renderClaimCoinRow(zebra, 'Agent Coins', '0.0', AccountType.AGENT, 2, i) : null}
+                  {/* Rows 2..5 */}
+                  {showUnSponsorRow
+                    ? renderClaimCoinRow(zebra, 'Staked Coins', '0.0', AccountType.SPONSOR, 99, i)
+                    : null}
+                  {showSponsorCoinsRow
+                    ? renderClaimCoinRow(zebra, 'Sponsor Coins', '0.0', AccountType.SPONSOR, 0, i)
+                    : null}
+                  {showRecipientCoinsRow
+                    ? renderClaimCoinRow(
+                        zebra,
+                        'Recipient Coins',
+                        '0.0',
+                        AccountType.RECIPIENT,
+                        1,
+                        i,
+                      )
+                    : null}
+                  {showAgentCoinsRow
+                    ? renderClaimCoinRow(zebra, 'Agent Coins', '0.0', AccountType.AGENT, 2, i)
+                    : null}
                 </React.Fragment>
               );
             })}

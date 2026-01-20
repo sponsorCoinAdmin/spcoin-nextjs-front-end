@@ -2,7 +2,9 @@
 import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
-export const schemaVersion = 'v4'; // ⬅️ bump so the virtual tree rebuilds
+
+// ✅ bump so the virtual tree rebuilds (structure changes)
+export const schemaVersion = 'v6';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -18,11 +20,10 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
-    // Address selectors
     // ✅ Manage LIST views (NEW + OLD)
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
-    SPCD.RECIPIENTS,
-    SPCD.AGENTS,
+
+    // ✅ OLD list overlays (legacy behavior)
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
@@ -68,14 +69,34 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
   [SPCD.ADD_SPONSORSHIP_PANEL]: [SPCD.CONFIG_SPONSORSHIP_PANEL],
 
-  // ✅ Sponsor list select sub-panels (future panel control)
-  // (Note: if you eventually want agent/recipient list sub-modes too, add similar children here.)
+  // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
+  //
+  // [-][8] ACCOUNT_LIST_REWARDS_PANEL
+  //     [-] [0] CLAIM_PENDING_SPONSOR_COINS
+  //         [-] [0] SPONSORS
+  //         [+] [1] RECIPIENTS
+  //         [+] [2] AGENTS
+  //     [+] [1] CLAIM_PENDING_RECIPIENT_COINS
+  //         [-] [0] SPONSORS
+  //         [+] [1] RECIPIENTS
+  //         [+] [2] AGENTS
+  //     [+] [2] CLAIM_PENDING_AGENT_COINS
+  //         [-] [0] SPONSORS
+  //         [+] [1] RECIPIENTS
+  //         [+] [2] AGENTS
+  //     [+] [3] UNSPONSOR_SP_COINS
+  //
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
-    SPCD.UNSPONSOR_SP_COINS,
     SPCD.CLAIM_PENDING_SPONSOR_COINS,
     SPCD.CLAIM_PENDING_RECIPIENT_COINS,
     SPCD.CLAIM_PENDING_AGENT_COINS,
+    SPCD.UNSPONSOR_SP_COINS,
   ],
+
+  // ✅ Each claim panel shows the same mode selectors underneath
+  [SPCD.CLAIM_PENDING_SPONSOR_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
+  [SPCD.CLAIM_PENDING_RECIPIENT_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
+  [SPCD.CLAIM_PENDING_AGENT_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -93,8 +114,11 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
 
-  // ✅ NEW (radio-style list overlays, modeled like Sponsor list)
+  // ✅ NEW list overlay root
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: 'panel',
+
+  // ✅ Mode selectors (appear under each CLAIM_PENDING_* node)
+  [SPCD.SPONSORS]: 'panel',
   [SPCD.RECIPIENTS]: 'panel',
   [SPCD.AGENTS]: 'panel',
 
@@ -104,11 +128,11 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
-  // ✅ Sponsor list select sub-panels (non-radio, NOT part of displayStack)
-  [SPCD.UNSPONSOR_SP_COINS]: 'panel',
+  // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL
   [SPCD.CLAIM_PENDING_SPONSOR_COINS]: 'panel',
   [SPCD.CLAIM_PENDING_RECIPIENT_COINS]: 'panel',
   [SPCD.CLAIM_PENDING_AGENT_COINS]: 'panel',
+  [SPCD.UNSPONSOR_SP_COINS]: 'panel',
 
   // ✅ Manage DETAIL views
   [SPCD.AGENT_ACCOUNT_PANEL]: 'panel',
@@ -131,14 +155,18 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 // Optional grouping (updated to include manage panels)
 export const GROUPS = {
   TOKEN_SELECT_LISTS: [SPCD.BUY_LIST_SELECT_PANEL, SPCD.SELL_LIST_SELECT_PANEL] as SPCD[],
+
   MODALS_AND_LISTS: [
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
-    // ✅ NEW list overlays
+    // ✅ NEW list overlay root
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
+
+    // ✅ Mode selectors (now nested under CLAIM_PENDING_* in the GUI tree)
+    SPCD.SPONSORS,
     SPCD.RECIPIENTS,
     SPCD.AGENTS,
 
@@ -146,11 +174,11 @@ export const GROUPS = {
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
-    // ✅ Sponsor list sub-panels (for Test UI visibility toggling)
-    SPCD.UNSPONSOR_SP_COINS,
+    // ✅ Rewards sub-panels
     SPCD.CLAIM_PENDING_SPONSOR_COINS,
     SPCD.CLAIM_PENDING_RECIPIENT_COINS,
     SPCD.CLAIM_PENDING_AGENT_COINS,
+    SPCD.UNSPONSOR_SP_COINS,
 
     // Detail panels
     SPCD.RECIPIENT_ACCOUNT_PANEL,
