@@ -1,9 +1,6 @@
 // File: @/lib/structure/exchangeContext/constants/defaultPanelTree.ts
 
-import type {
-  SpCoinPanelTree,
-  PanelNode,
-} from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { SpCoinPanelTree, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -48,6 +45,9 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
 
   // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
   [SP.MANAGE_SPONSORSHIPS_PANEL, false],
+
+  // ✅ Ensure chevron pending flags exist even for older persisted trees
+  [SP.CHEVRON_DOWN_OPEN_PENDING, false],
 ] as const;
 
 /**
@@ -63,9 +63,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.TRADE_CONTAINER_HEADER, true, [
       // Core trading station subtree
       node(SP.TRADING_STATION_PANEL, true, [
-        node(SP.SELL_SELECT_PANEL, true, [
-          node(SP.MANAGE_SPONSORSHIPS_BUTTON, false),
-        ]),
+        node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
         node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
 
@@ -86,10 +84,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // ✅ Token contract overlay MUST be part of overlay tree now
       node(SP.TOKEN_CONTRACT_PANEL, false),
 
+      // ✅ Chevron pending flags (persisted UI state; not a visible overlay)
+      node(SP.CHEVRON_DOWN_OPEN_PENDING, false),
+
       // ─────────────── Manage overlays (still overlays, but with an inline child) ───────────────
-      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
-        node(SP.MANAGE_PENDING_REWARDS, false),
-      ]),
+      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
 
       node(SP.STAKING_SPCOINS_PANEL, false),
 
@@ -154,9 +153,7 @@ export function flattenPanelTree(nodes: PanelNode[]): FlatPanel[] {
 /** Flatten once, reuse everywhere */
 const DEFAULT_FLAT = flattenPanelTree(defaultSpCoinPanelTree);
 
-export const DEFAULT_PANEL_ORDER: readonly SP[] = DEFAULT_FLAT.map(
-  (p) => p.panel,
-) as readonly SP[];
+export const DEFAULT_PANEL_ORDER: readonly SP[] = DEFAULT_FLAT.map((p) => p.panel) as readonly SP[];
 
 export function seedPanelsFromDefault(): FlatPanel[] {
   return DEFAULT_FLAT.filter((p) => !NON_PERSISTED_PANELS.has(p.panel));

@@ -47,6 +47,8 @@ export enum SP_COIN_DISPLAY {
   TRADING_STATION_PANEL,
   UNDEFINED,
 
+  CHEVRON_DOWN_OPEN_PENDING,
+
   // First-class list overlays (new)
   ACCOUNT_LIST_REWARDS_PANEL,
   AGENTS,

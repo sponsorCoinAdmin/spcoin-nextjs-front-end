@@ -171,6 +171,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.RECIPIENTS, kind: 'panel' }),
   def({ id: SP.AGENTS, kind: 'panel' }),
 
+  // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)
+  def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
+
   // ✅ OLD: legacy list overlays (kept during migration)
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
   def({ id: SP.AGENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),

@@ -1,16 +1,18 @@
 // File: @/components/views/RadioOverlayPanels/AccountListRewardsPanel.tsx
 'use client';
 
-import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
+import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import AddressSelect from '../AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { msTableTw } from './msTableTw';
 
@@ -45,11 +47,7 @@ function shortAddr(addr: string, left = 6, right = 4) {
  * Uses panel visibility to decide which “mode” is active (for AddressSelect label only).
  * Priority: AGENTS > RECIPIENTS > SPONSORS > fallback
  */
-function getInputAccountText(opts: {
-  vAgents: boolean;
-  vRecipients: boolean;
-  vSponsors: boolean;
-}): string {
+function getInputAccountText(opts: { vAgents: boolean; vRecipients: boolean; vSponsors: boolean }): string {
   if (opts.vAgents) return 'Agent Account:';
   if (opts.vRecipients) return 'Recipient Account:';
   if (opts.vSponsors) return 'Sponsor Account:';
@@ -61,7 +59,7 @@ function getInputAccountText(opts: {
  */
 const DATALIST_ROW_PY_TW = 'py-2';
 const DATALIST_IMG_PX = 38;
-const DATALIST_IMG_TW = `h-[${DATALIST_IMG_PX}px] w-[${DATALIST_IMG_PX}px]`;
+const DATALIST_IMG_TW = 'h-[38px] w-[38px]';
 
 /**
  * rows 2..4 bigger by ~35%
@@ -71,37 +69,173 @@ const COIN_ROW_TEXT_TW = 'text-[13px] leading-[1.15]';
 const COIN_ROW_VALUE_TW = 'text-[13px] leading-[1.15] opacity-80';
 const COIN_ROW_BTN_TW = 'scale-[1.0] origin-center';
 
-/**
- * ✅ Prevent row height jumping when Claim becomes visible:
- * - Always render the button
- * - Toggle visibility (visible/invisible)
- * - Reserve enough height for the button
- */
 const COIN_ROW_MIN_H_TW = 'min-h-[34px]';
 
-export default function AccountListRewardsPanel({
-  walletList,
-  setWalletCallBack,
-  containerType,
-  listType,
-}: Props) {
+/**
+ * ✅ Claim/Unstake buttons: 5px left/right internal padding.
+ */
+const BTN_XPAD_HALF_TW = '!px-[5px]';
+
+/**
+ * ✅ Chevron styling (50% larger)
+ */
+const CHEVRON_ICON_TW = 'w-[21px] h-[21px]';
+const CHEVRON_FG_TW = 'text-white';
+
+/**
+ * ✅ Global chevron colors
+ */
+const GLOBAL_CHEVRON_DOWN_BG = 'bg-blue-600';
+const GLOBAL_CHEVRON_UP_BG = 'bg-red-600';
+
+/**
+ * ✅ Per-row chevron colors
+ */
+const ROW_CHEVRON_BG_OPEN = 'bg-orange-500';
+const ROW_CHEVRON_BG_CLOSED = 'bg-green-500';
+
+/**
+ * ✅ LocalStorage key for chevron state (direct persist for immediate "flash")
+ */
+const LS_CHEVRON_OPEN_KEY = 'spcoin:chevron_down_open_pending';
+
+/**
+ * ✅ Per-wallet row open state
+ */
+type SubRowKey = 'staked' | 'sponsor' | 'recipient' | 'agent';
+type SubRowOpenState = Partial<Record<SubRowKey, boolean>> & { all?: boolean };
+type OpenByWalletKey = Record<string, SubRowOpenState>;
+
+const EMPTY_SUBROWS: SubRowOpenState = Object.freeze({});
+
+/**
+ * Best-effort:
+ * - Update panelStore (so usePanelVisible changes)
+ * - Update ExchangeContext (so persistWithOptDiff runs / LS snapshot changes)
+ */
+function setPanelVisibleEverywhere(ctx: any, panel: SP_COIN_DISPLAY, visible: boolean) {
+  // 1) panelStore (authoritative for usePanelVisible)
+  try {
+    const ps: any = panelStore as any;
+    if (typeof ps?.setPanelVisible === 'function') ps.setPanelVisible(panel, visible);
+    else if (typeof ps?.setVisible === 'function') ps.setVisible(panel, visible);
+    else if (typeof ps?.set === 'function') ps.set(panel, visible);
+    else if (typeof ps?.dispatch === 'function') {
+      ps.dispatch({ type: 'SET_PANEL_VISIBLE', payload: { panel, visible } });
+    }
+  } catch {
+    // no-op
+  }
+
+  // 2) ExchangeContext (to trigger persistWithOptDiff)
+  try {
+    if (typeof ctx?.setExchangeContext === 'function') {
+      ctx.setExchangeContext(
+        (prev: any) => {
+          const prevSettings = prev?.settings ?? {};
+          const prevTree = Array.isArray(prevSettings.spCoinPanelTree) ? prevSettings.spCoinPanelTree : [];
+
+          const nextTree = prevTree.map((node: any) => ({ ...node }));
+
+          let found = false;
+          for (const node of nextTree) {
+            const id = Number(node?.id ?? node?.panel ?? node?.displayTypeId);
+            if (!Number.isFinite(id)) continue;
+            if (id === Number(panel)) {
+              node.visible = !!visible;
+              if (node.id !== undefined) node.id = id;
+              if (node.panel !== undefined) node.panel = id;
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            nextTree.push({
+              id: Number(panel),
+              panel: Number(panel),
+              visible: !!visible,
+              name: SP_COIN_DISPLAY[panel] ?? String(panel),
+            });
+          }
+
+          return {
+            ...prev,
+            settings: {
+              ...prevSettings,
+              spCoinPanelTree: nextTree,
+            },
+          };
+        },
+        'AccountListRewardsPanel:chevronToggle',
+      );
+    }
+  } catch {
+    // no-op
+  }
+}
+
+export default function AccountListRewardsPanel({ walletList, setWalletCallBack, containerType, listType }: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  /**
-   * ✅ These are the ONLY sources of truth for “mode is active” in THIS module.
-   * No fallback logic here: if all three are false, NO claim buttons show.
-   */
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.RECIPIENTS);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.SPONSORS);
 
-  // Rows that appear
-  const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
-  const showAgentCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
-  const showRecipientCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS);
-  const showSponsorCoinsRow = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS);
+  const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
+  const cfgClaimRecipient = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS);
+  const cfgClaimSponsor = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS);
 
-  // Account type used for Row 1 action + Total action (kept as before)
+  const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
+
+  // ✅ Global open-all flag
+  const cfgChevronOpen: boolean = usePanelVisible(SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING);
+
+  const [chevronOpenPending, setChevronOpenPending] = useState<boolean>(false);
+  const [openByWalletKey, setOpenByWalletKey] = useState<OpenByWalletKey>({});
+
+  const didHydrateChevronRef = useRef(false);
+
+  useEffect(() => {
+    setChevronOpenPending(cfgChevronOpen);
+
+    if (didHydrateChevronRef.current) return;
+    didHydrateChevronRef.current = true;
+
+    if (typeof window === 'undefined') return;
+
+    const lsOpen = window.localStorage.getItem(LS_CHEVRON_OPEN_KEY);
+    const hasLs = lsOpen === 'true' || lsOpen === 'false';
+    if (!hasLs) return;
+
+    const resolvedOpen = lsOpen === 'true';
+
+    setChevronOpenPending(resolvedOpen);
+    setPanelVisibleEverywhere(ctx, SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING, resolvedOpen);
+  }, [cfgChevronOpen, ctx]);
+
+  const effectiveChevronOpenPending = cfgChevronOpen || chevronOpenPending;
+
+  // ✅ Header chevrons: Down => true, Up => false
+  const setGlobalChevronOpen = useCallback(
+    (open: boolean) => {
+      debugLog.log?.('[global chevron]', { open });
+
+      setChevronOpenPending(open);
+
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(LS_CHEVRON_OPEN_KEY, String(open));
+        }
+      } catch {
+        // no-op
+      }
+
+      setPanelVisibleEverywhere(ctx, SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING, open);
+    },
+    [ctx],
+  );
+
   const accountType: AccountType = useMemo(() => {
     const derived = vAgents
       ? AccountType.AGENT
@@ -124,10 +258,10 @@ export default function AccountListRewardsPanel({
     return derived;
   }, [vAgents, vRecipients, vSponsors, containerType]);
 
-  const inputAccountText = useMemo(() => {
-    const derived = getInputAccountText({ vAgents, vRecipients, vSponsors });
-    return derived;
-  }, [vAgents, vRecipients, vSponsors]);
+  const inputAccountText = useMemo(
+    () => getInputAccountText({ vAgents, vRecipients, vSponsors }),
+    [vAgents, vRecipients, vSponsors],
+  );
 
   const [showToDo, setShowToDo] = useState<boolean>(false);
   const pendingClaimRef = useRef<PendingClaim | null>(null);
@@ -141,11 +275,11 @@ export default function AccountListRewardsPanel({
 
   const { roleLabel, idPrefix } = useMemo(() => {
     const derived = vRecipients
-      ? { roleLabel: 'My Recipients', idPrefix: 'mr' }
+      ? { roleLabel: 'Recipients', idPrefix: 'mr' }
       : vSponsors
-        ? { roleLabel: 'My Sponsors', idPrefix: 'ms' }
+        ? { roleLabel: 'Sponsors', idPrefix: 'ms' }
         : vAgents
-          ? { roleLabel: 'My Agents', idPrefix: 'ma' }
+          ? { roleLabel: 'Agents', idPrefix: 'ma' }
           : { roleLabel: 'Accounts', idPrefix: 'acct' };
 
     return derived;
@@ -195,23 +329,17 @@ export default function AccountListRewardsPanel({
       (row as any)?.id ??
       'N/A';
 
-    const label =
-      pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '(s)' : ''}`;
+    const label = pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '(s)' : ''}`;
 
-    // eslint-disable-next-line no-alert
-    alert(
-      [
-        'ToDo: (Not Yet Implemented)\n',
-        `────────────────────────────────────────────────────────\n`,
-        `Unstake and Return Tokens back to Sponsors Trading Pool.\n`,
-        `────────────────────────────────────────────────────────\n`,
-        pending.label ? `Row: ${pending.label}\n` : '',
-        listType === LIST_TYPE.SPONSOR_UNSPONSOR ? `Unsponsor ${label}\n` : `Claim ${label} Rewards\n`,
-        isTotal ? `${label} Total\n` : `Target: ${String(rowName)}\n`,
-        isTotal ? 'Total Accounts: (aggregate)\n' : `Account: ${String(rowAccount)}\n`,
-        `From SPONSOR Account: ${connected ? connected.address : '(not connected)'}\n`,
-      ].join(''),
-    );
+    debugLog.log?.('[ToDo]', {
+      listType,
+      pending,
+      label,
+      isTotal,
+      rowName,
+      rowAccount,
+      sponsorConnected: connected ? connected.address : '(not connected)',
+    });
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
 
   const wrapperId = `${idPrefix}Wrapper`;
@@ -236,33 +364,39 @@ export default function AccountListRewardsPanel({
         ? 'Claim'
         : 'Action';
 
-  const onRowEnter = (name?: string | null) =>
-    setTip((t) => ({ ...t, show: true, text: name ?? '' }));
-  const onRowMove: React.MouseEventHandler = (e) =>
-    setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
+  const onRowEnter = (name?: string | null) => setTip((t) => ({ ...t, show: true, text: name ?? '' }));
+  const onRowMove: React.MouseEventHandler = (e) => setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
   const onRowLeave = () => setTip((t) => ({ ...t, show: false }));
 
-  const tableOuterBorderTw = 'border border-white';
-  const colDividerTw = 'border-l border-white';
-  const rowDividerTw = 'border-b border-white/40';
+  // ✅ remove table borders/dividers
+  const tableOuterBorderTw = '';
+  const rowDividerTw = '';
 
-  /**
-   * ✅ Claim button visibility:
-   * - AGENT row -> vAgents
-   * - RECIPIENT row -> vRecipients
-   * - SPONSOR row -> vSponsors
-   * - NO fallback (if all false, none show)
-   */
   const shouldShowClaimForType = useCallback(
     (type: AccountType) => {
-      if (type === AccountType.AGENT) return vAgents;
-      if (type === AccountType.RECIPIENT) return vRecipients;
-      if (type === AccountType.SPONSOR) return vSponsors;
+      if (type === AccountType.AGENT) return cfgClaimAgent;
+      if (type === AccountType.RECIPIENT) return cfgClaimRecipient;
+      if (type === AccountType.SPONSOR) return cfgClaimSponsor;
       return false;
     },
-    [vAgents, vRecipients, vSponsors],
+    [cfgClaimAgent, cfgClaimRecipient, cfgClaimSponsor],
   );
 
+  const setWalletRows2to5Open = useCallback((walletKey: string, open: boolean) => {
+    setOpenByWalletKey((prev) => {
+      const cur = prev[walletKey] ?? EMPTY_SUBROWS;
+      const nextForKey: SubRowOpenState = {
+        ...cur,
+        staked: open,
+        sponsor: open,
+        recipient: open,
+        agent: open,
+      };
+      return { ...prev, [walletKey]: nextForKey };
+    });
+  }, []);
+
+  // ✅ MERGE Col[0] + Col[1] for Sponsor/Recipient/Agent/Staked rows
   const renderClaimCoinRow = (
     zebraTw: string,
     label: string,
@@ -271,44 +405,41 @@ export default function AccountListRewardsPanel({
     subRowOffset: number,
     walletIndex: number,
   ) => {
-    const btnTw =
-      (walletIndex + subRowOffset) % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
+    const btnTw = (walletIndex + subRowOffset) % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
 
-    const showClaimButton = shouldShowClaimForType(type);
+    const isUnstakeRow = label === 'Staked';
+    const buttonText = isUnstakeRow ? 'Unstake' : 'Claim';
+
+    const showButton = isUnstakeRow ? showUnSponsorRow : shouldShowClaimForType(type);
 
     return (
       <tr className={`${zebraTw} ${rowDividerTw} ${COIN_ROW_MIN_H_TW}`}>
-        <td
-          className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle w-1 whitespace-nowrap`}
-        >
-          <div className={`inline-flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>
-            {label}
-          </div>
+        {/* ✅ Col[0]+Col[1] merged */}
+        <td colSpan={2} className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle whitespace-nowrap`}>
+          <div className={`inline-flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>{label}</div>
         </td>
 
-        <td
-          className={`${zebraTw} px-3 ${COIN_ROW_PY_TW} ${COIN_ROW_VALUE_TW} align-middle ${colDividerTw}`}
-        >
-          <div className={`w-full flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>
-            {valueText}
-          </div>
+        {/* ✅ Col[2]: value ("0.0") */}
+        <td className={`${zebraTw} px-0 ${COIN_ROW_PY_TW} ${COIN_ROW_VALUE_TW} align-middle`}>
+          <div className={`w-full flex items-center justify-start bg-transparent ${COIN_ROW_MIN_H_TW}`}>{valueText}</div>
         </td>
 
-        <td
-          className={`${zebraTw} pl-[5px] pr-[8px] ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle ${colDividerTw}`}
-        >
-          <div className={`w-full flex items-center justify-center bg-transparent ${COIN_ROW_MIN_H_TW}`}>
+        {/* ✅ Col[3]: RIGHT-justified button */}
+        <td className={`${zebraTw} px-[5px] ${COIN_ROW_PY_TW} ${COIN_ROW_TEXT_TW} align-middle`}>
+          <div className={`w-full flex items-center justify-end bg-transparent ${COIN_ROW_MIN_H_TW}`}>
             <button
               type="button"
-              className={`${btnTw} ${COIN_ROW_BTN_TW} ${showClaimButton ? 'visible' : 'invisible'}`}
-              aria-label={`Claim ${label}`}
-              title={`Claim ${label}`}
+              className={`${btnTw} ${COIN_ROW_BTN_TW} ${
+                showButton ? 'visible' : 'invisible'
+              } !min-w-0 !w-auto ${BTN_XPAD_HALF_TW} inline-flex`}
+              aria-label={`${buttonText} ${label}`}
+              title={`${buttonText} ${label}`}
               onClick={() => {
-                if (!showClaimButton) return;
+                if (!showButton) return;
                 claimRewards(type, walletIndex, label);
               }}
             >
-              Claim
+              {buttonText}
             </button>
           </div>
         </td>
@@ -340,23 +471,54 @@ export default function AccountListRewardsPanel({
         <table className={`min-w-full ${msTableTw.table} ${tableOuterBorderTw}`}>
           <thead>
             <tr className={`${msTableTw.theadRow} sticky top-0 z-20 ${rowDividerTw}`}>
+              {/* ✅ Col[0] Header: global chevron edge-to-edge */}
               <th
                 scope="col"
-                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639]`}
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639] !p-0 w-[17px] min-w-[17px]
+
+
+
+`}
               >
+                <div className="relative w-full h-full">
+                  {effectiveChevronOpenPending ? (
+                    <button
+                      type="button"
+                      className={`absolute inset-0 m-0 p-0 rounded-md ${GLOBAL_CHEVRON_UP_BG} flex items-center justify-center`}
+                      aria-label="Chevron Up (Close all wallet rows)"
+                      title="Close all wallet rows"
+                      onClick={() => setGlobalChevronOpen(false)}
+                    >
+                      <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`absolute inset-0 m-0 p-0 rounded-md ${GLOBAL_CHEVRON_DOWN_BG} flex items-center justify-center`}
+                      aria-label="Chevron Down (Open all wallet rows)"
+                      title="Open all wallet rows"
+                      onClick={() => setGlobalChevronOpen(true)}
+                    >
+                      <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                    </button>
+                  )}
+                </div>
+              </th>
+
+              {/* ✅ Col[1] Header */}
+              <th scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639]`}>
                 {roleLabel}
               </th>
 
-              <th
-                scope="col"
-                className={`${msTableTw.th} ${msTableTw.thPad3} text-left sticky top-0 z-20 bg-[#1f2639] ${colDividerTw}`}
-              >
+              {/* ✅ Col[2] Header */}
+              <th scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-left sticky top-0 z-20 bg-[#1f2639]`}>
                 {middleHeaderLabel}
               </th>
 
+              {/* ✅ Col[3] Header */}
               <th
                 scope="col"
-                className={`${msTableTw.th5} ${msTableTw.th5Pad3} text-center ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639] ${colDividerTw}`}
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} text-center ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639]`}
               >
                 {actionHeaderLabel}
               </th>
@@ -381,65 +543,95 @@ export default function AccountListRewardsPanel({
                       }
                     })();
 
+              const walletKey = String((w as any)?.id ?? addressText ?? i);
+              const stableKey = (w as any)?.id ?? `${i}-${addressText}`;
+
+              const st = openByWalletKey[walletKey] ?? EMPTY_SUBROWS;
+              const openAll = !!st.all;
+              const openStaked = !!st.staked;
+              const openSponsor = !!st.sponsor;
+              const openRecipient = !!st.recipient;
+              const openAgent = !!st.agent;
+
+              const showRow2 = showUnSponsorRow || cfgChevronOpen || openAll || openStaked;
+              const showRow3 = vSponsors || cfgChevronOpen || openAll || openSponsor;
+              const showRow4 = vRecipients || cfgChevronOpen || openAll || openRecipient;
+              const showRow5 = vAgents || cfgChevronOpen || openAll || openAgent;
+
+              const walletOpen2to5 = openAll || (openStaked && openSponsor && openRecipient && openAgent);
+              const effectiveWalletOpen2to5 = cfgChevronOpen || walletOpen2to5;
+
+              const rowChevronBg = effectiveWalletOpen2to5 ? ROW_CHEVRON_BG_OPEN : ROW_CHEVRON_BG_CLOSED;
+
               return (
-                <React.Fragment key={`${i}-${addressText}`}>
+                <React.Fragment key={stableKey}>
                   {/* Row 1 */}
                   <tr className={`${zebra} ${rowDividerTw}`}>
-                    <td className="p-0">
+                    {/* ✅ Col[0]: per-row chevron edge-to-edge, NO rounded edges */}
+                    <td className={`${zebra} relative p-0 align-middle w-[17px] min-w-[17px]
+
+
+
+`}>
                       <button
                         type="button"
-                        className={`${zebra} ${msTableTw.tdInnerCenter5} w-full flex-col hover:opacity-90 focus:outline-none ${DATALIST_ROW_PY_TW}`}
-                        onMouseEnter={() => onRowEnter(w?.name ?? '')}
-                        onMouseMove={onRowMove}
-                        onMouseLeave={onRowLeave}
-                        onClick={() => setWalletCallBack(w)}
-                        aria-label={`Open ${roleLabel}s reconfigure`}
-                        data-role={roleLabel}
-                        data-address={addressText}
+                        className={`absolute inset-0 m-0 p-0 ${rowChevronBg} flex items-center justify-center`}
+                        aria-label={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                        title={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                        onClick={() => setWalletRows2to5Open(walletKey, !effectiveWalletOpen2to5)}
                       >
-                        <Image
-                          src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                          alt={`${w.name ?? 'Wallet'} logo`}
-                          width={DATALIST_IMG_PX}
-                          height={DATALIST_IMG_PX}
-                          className={`${DATALIST_IMG_TW} object-contain rounded`}
-                        />
+                        {effectiveWalletOpen2to5 ? (
+                          <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                        ) : (
+                          <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                        )}
                       </button>
                     </td>
 
-                    <td className={`${zebra} px-3 text-sm align-middle ${colDividerTw}`}>
+                    {/* ✅ Col[1]: image */}
+                    <td className={`${zebra} px-0 ${DATALIST_ROW_PY_TW} align-middle`}>
+                      <div className="w-full flex items-center justify-center">
+                        <button
+                          type="button"
+                          className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
+                          onMouseEnter={() => onRowEnter(w?.name ?? '')}
+                          onMouseMove={onRowMove}
+                          onMouseLeave={onRowLeave}
+                          onClick={() => setWalletCallBack(w)}
+                          aria-label={`Open ${roleLabel}s reconfigure`}
+                          data-role={roleLabel}
+                          data-address={addressText}
+                        >
+                          <Image
+                            src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
+                            alt={`${w.name ?? 'Wallet'} logo`}
+                            width={DATALIST_IMG_PX}
+                            height={DATALIST_IMG_PX}
+                            className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
+                          />
+                        </button>
+                      </div>
+                    </td>
+
+                    {/* ✅ Col[2]: meta */}
+                    <td className={`${zebra} px-3 text-sm align-middle`}>
                       <div className="min-w-0 flex flex-col items-start justify-center">
                         <div className="font-semibold truncate !text-[#5981F3]">{w?.name ?? 'Unknown'}</div>
                         <div className="text-sm truncate !text-[#5981F3]">{w?.symbol ?? ''}</div>
                       </div>
                     </td>
 
-                    {/* ✅ CHANGE: third column has NO button now */}
-                    <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle ${colDividerTw}`}>
-                      <div className="w-full flex items-center justify-center bg-transparent" />
+                    {/* ✅ Col[3]: action blank */}
+                    <td className={`${zebra} px-0 text-sm align-middle`}>
+                      <div className="w-full flex items-center justify-start bg-transparent" />
                     </td>
                   </tr>
 
-                  {/* Rows 2..5 */}
-                  {showUnSponsorRow
-                    ? renderClaimCoinRow(zebra, 'Staked Coins', '0.0', AccountType.SPONSOR, 99, i)
-                    : null}
-                  {showSponsorCoinsRow
-                    ? renderClaimCoinRow(zebra, 'Sponsor Coins', '0.0', AccountType.SPONSOR, 0, i)
-                    : null}
-                  {showRecipientCoinsRow
-                    ? renderClaimCoinRow(
-                        zebra,
-                        'Recipient Coins',
-                        '0.0',
-                        AccountType.RECIPIENT,
-                        1,
-                        i,
-                      )
-                    : null}
-                  {showAgentCoinsRow
-                    ? renderClaimCoinRow(zebra, 'Agent Coins', '0.0', AccountType.AGENT, 2, i)
-                    : null}
+                  {/* Rows 2..5 (merged Col[0]+Col[1]) */}
+                  {showRow2 ? renderClaimCoinRow(zebra, 'Staked', '0.0', AccountType.SPONSOR, 99, i) : null}
+                  {showRow3 ? renderClaimCoinRow(zebra, 'Sponsor', '0.0', AccountType.SPONSOR, 0, i) : null}
+                  {showRow4 ? renderClaimCoinRow(zebra, 'Recipient', '0.0', AccountType.RECIPIENT, 1, i) : null}
+                  {showRow5 ? renderClaimCoinRow(zebra, 'Agent', '0.0', AccountType.AGENT, 2, i) : null}
                 </React.Fragment>
               );
             })}
@@ -452,21 +644,33 @@ export default function AccountListRewardsPanel({
 
               return (
                 <tr className={msTableTw.rowBorder}>
+                  {/* ✅ Col[0]: empty */}
+                  <td className={`${zebra} p-0 align-middle w-[17px] min-w-[17px]
+
+
+
+`}>
+                    <div className="w-full h-full" />
+                  </td>
+
+                  {/* ✅ Col[1]: Total */}
                   <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle`}>
                     <div className="w-full flex items-center justify-center bg-transparent">
                       <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
                     </div>
                   </td>
 
-                  <td className={`${zebra} px-3 text-sm align-middle ${colDividerTw}`}>
+                  {/* ✅ Col[2]: total value */}
+                  <td className={`${zebra} px-3 text-sm align-middle`}>
                     <div className="w-full flex items-center justify-center bg-transparent">0</div>
                   </td>
 
-                  <td className={`${zebra} pl-[5px] pr-[8px] text-sm align-middle ${colDividerTw}`}>
-                    <div className="w-full flex items-center justify-center bg-transparent">
+                  {/* ✅ Col[3]: total action */}
+                  <td className={`${zebra} px-[5px] text-sm align-middle`}>
+                    <div className="w-full flex items-center justify-end bg-transparent">
                       <button
                         type="button"
-                        className={actionTw}
+                        className={`${actionTw} ${BTN_XPAD_HALF_TW} !min-w-0 !w-auto inline-flex`}
                         aria-label={`${actionButtonLabel} total`}
                         onClick={() => claimRewards(accountType, -1, `${actionButtonLabel} (TOTAL)`)}
                       >
@@ -481,9 +685,7 @@ export default function AccountListRewardsPanel({
         </table>
       </div>
 
-      {showToDo && (
-        <ToDo show message="ToDo" opacity={0.5} color="#ff1a1a" zIndex={2000} onDismiss={doToDo} />
-      )}
+      {showToDo && <ToDo show message="ToDo" opacity={0.5} color="#ff1a1a" zIndex={2000} onDismiss={doToDo} />}
     </>
   );
 }

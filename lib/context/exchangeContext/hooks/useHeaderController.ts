@@ -67,7 +67,10 @@ function getRewardsHeaderTitle(opts: {
   if (opts.claimSponsor) return 'Claim Pending Sponsor Rewards';
   if (opts.claimRecipient) return 'Claim Pending Recipient Rewards';
   if (opts.claimAgent) return 'Claim Pending Agent Rewards';
-  if (opts.unSponsor) return 'Unstaking Pending Sponsorships';
+
+  // ✅ NEW: UNSPONSOR_SP_COINS child-mode title
+  if (opts.unSponsor) return 'Allocated Sponsorships';
+
   return 'Pending Rewards Page';
 }
 

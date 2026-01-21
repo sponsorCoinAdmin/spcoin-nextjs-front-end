@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v6';
+export const schemaVersion = 'v7';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -59,11 +59,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // SELL_SELECT_PANEL (with MANAGE_SPONSORSHIPS_BUTTON nested under it),
   // SWAP_ARROW_BUTTON,
   // BUY_SELECT_PANEL
-  [SPCD.EXCHANGE_TRADING_PAIR]: [
-    SPCD.SELL_SELECT_PANEL,
-    SPCD.SWAP_ARROW_BUTTON,
-    SPCD.BUY_SELECT_PANEL,
-  ],
+  [SPCD.EXCHANGE_TRADING_PAIR]: [SPCD.SELL_SELECT_PANEL, SPCD.SWAP_ARROW_BUTTON, SPCD.BUY_SELECT_PANEL],
 
   [SPCD.SELL_SELECT_PANEL]: [SPCD.MANAGE_SPONSORSHIPS_BUTTON],
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
@@ -122,6 +118,9 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.RECIPIENTS]: 'panel',
   [SPCD.AGENTS]: 'panel',
 
+  // ✅ NEW chevron pending flags (persisted UI state; not a visual panel)
+  [SPCD.CHEVRON_DOWN_OPEN_PENDING]: 'control',
+
   // ✅ OLD list overlays (legacy behavior)
   [SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD]: 'list',
   [SPCD.AGENT_LIST_SELECT_PANEL_OLD]: 'list',
@@ -169,6 +168,9 @@ export const GROUPS = {
     SPCD.SPONSORS,
     SPCD.RECIPIENTS,
     SPCD.AGENTS,
+
+    // ✅ NEW chevron pending flags (persisted UI state)
+    SPCD.CHEVRON_DOWN_OPEN_PENDING,
 
     // ✅ OLD list overlays
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
