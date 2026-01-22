@@ -1,6 +1,6 @@
 {
   "name": "spcoin-hardhat-contract-access-test",
-  "version": "1.0.1",
+  "version": "2026-01.15.WIP",
   "private": true,
   "scripts": {
     "clean": "rimraf .next node_modules/.cache || true",
