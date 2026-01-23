@@ -345,8 +345,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
   const wrapperId = `${idPrefix}Wrapper`;
 
   const wrapperTw =
-    `${msTableTw.wrapper} !mt-0 mt-0 ` +
-    'mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto';
+    `${msTableTw.wrapper} !mt-0 mt-0 ` + 'mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto';
 
   const middleHeaderLabel = 'Meta Data';
 
@@ -474,11 +473,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
               {/* ✅ Col[0] Header: global chevron edge-to-edge */}
               <th
                 scope="col"
-                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639] !p-0 w-[17px] min-w-[17px]
-
-
-
-`}
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 bg-[#1f2639] !p-0 w-[17px] min-w-[17px]`}
               >
                 <div className="relative w-full h-full">
                   {effectiveChevronOpenPending ? (
@@ -567,25 +562,39 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
                 <React.Fragment key={stableKey}>
                   {/* Row 1 */}
                   <tr className={`${zebra} ${rowDividerTw}`}>
-                    {/* ✅ Col[0]: per-row chevron edge-to-edge, NO rounded edges */}
-                    <td className={`${zebra} relative p-0 align-middle w-[17px] min-w-[17px]
+                    {/* ✅ Col[0]: per-row chevrons (split into 2) */}
+                    <td className={`${zebra} relative p-0 align-middle w-[17px] min-w-[17px]`}>
+                      <div className="absolute inset-0 grid grid-rows-2">
+                        {/* Top chevron (same behavior for now) */}
+                        <button
+                          type="button"
+                          className={`${rowChevronBg} flex items-center justify-center w-full h-full`}
+                          aria-label={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                          title={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                          onClick={() => setWalletRows2to5Open(walletKey, !effectiveWalletOpen2to5)}
+                        >
+                          {effectiveWalletOpen2to5 ? (
+                            <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                          ) : (
+                            <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                          )}
+                        </button>
 
-
-
-`}>
-                      <button
-                        type="button"
-                        className={`absolute inset-0 m-0 p-0 ${rowChevronBg} flex items-center justify-center`}
-                        aria-label={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
-                        title={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
-                        onClick={() => setWalletRows2to5Open(walletKey, !effectiveWalletOpen2to5)}
-                      >
-                        {effectiveWalletOpen2to5 ? (
-                          <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-                        ) : (
-                          <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-                        )}
-                      </button>
+                        {/* Bottom chevron (same behavior for now) */}
+                        <button
+                          type="button"
+                          className={`${rowChevronBg} flex items-center justify-center w-full h-full`}
+                          aria-label={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                          title={effectiveWalletOpen2to5 ? 'Close this wallet rows' : 'Open this wallet rows'}
+                          onClick={() => setWalletRows2to5Open(walletKey, !effectiveWalletOpen2to5)}
+                        >
+                          {effectiveWalletOpen2to5 ? (
+                            <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                          ) : (
+                            <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                          )}
+                        </button>
+                      </div>
                     </td>
 
                     {/* ✅ Col[1]: image */}
@@ -645,11 +654,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
               return (
                 <tr className={msTableTw.rowBorder}>
                   {/* ✅ Col[0]: empty */}
-                  <td className={`${zebra} p-0 align-middle w-[17px] min-w-[17px]
-
-
-
-`}>
+                  <td className={`${zebra} p-0 align-middle w-[17px] min-w-[17px]`}>
                     <div className="w-full h-full" />
                   </td>
 
