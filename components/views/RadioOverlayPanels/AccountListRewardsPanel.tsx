@@ -55,26 +55,6 @@ function getInputAccountText(opts: { vAgents: boolean; vRecipients: boolean; vSp
 }
 
 /**
- * ✅ Fixed column widths
- *
- * Header now has 3 columns:
- *  - col[0] global chevron (fixed)
- *  - col[1] roleLabel (wide: includes image + name/symbol)
- *  - col[2] XXXXXX (fills the rest)
- */
-const COL_0_WIDTH = '25px';
-const COL_1_WIDTH = '175px'; // base width
-const ROW_0_COL_1_WIDTH = '45px'; // image area width INSIDE col[1]
-
-// ✅ col[1] total width = prior "roleLabel" width + the removed spacer/image width
-const COL_1_TOTAL_WIDTH = `calc(${COL_1_WIDTH} + ${ROW_0_COL_1_WIDTH})`;
-
-/**
- * ✅ XXXXXX column fills remaining width (starts after col[0]+col[1])
- */
-const COL_WIDTH_X = 'auto';
-
-/**
  * Row + image sizing to match DataListSelect’s AccountListItem sizing.
  */
 const DATALIST_ROW_PY_TW = 'py-2';
@@ -130,8 +110,6 @@ const EMPTY_SUBROWS: SubRowOpenState = Object.freeze({});
 
 /**
  * ✅ Row/cell borders
- * - Light blue outline around each row
- * - White vertical separators between cells
  */
 const ROW_OUTLINE_TW = 'border-y border-sky-200';
 const CELL_VDIV_TW = 'border-r border-white';
@@ -405,10 +383,6 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
   const onRowMove: React.MouseEventHandler = (e) => setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
   const onRowLeave = () => setTip((t) => ({ ...t, show: false }));
 
-  // ✅ remove table borders/dividers (outer)
-  const tableOuterBorderTw = '';
-  const rowDividerTw = '';
-
   // ✅ Sponsor-mode helper (UNSPONSOR or PENDING_SPONSOR)
   const isSponsorMode = showUnSponsorRow || cfgClaimSponsor;
 
@@ -439,11 +413,9 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
   }, []);
 
   /**
-   * Animated row renderer for “sub rows” (Staked / Sponsor / Recipient / Agent).
-   * Table has 3 columns; expanded content aligns to:
-   *  - col[0] spacer (COL_0_WIDTH)
-   *  - col[1] label (COL_1_TOTAL_WIDTH)
-   *  - col[2] value + button (fills)
+   * Animated sub-row aligned to 2 equal columns:
+   *  - col[0] label
+   *  - col[1] value + action
    */
   const renderAnimatedClaimCoinRow = (open: boolean, zebraTw: string, label: string, valueText: string, type: AccountType, walletIndex: number) => {
     const btnTw = msTableTw.btnGreen;
@@ -457,21 +429,16 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
 
     return (
       <tr className={`${msTableTw.rowBorder} ${ROW_OUTLINE_TW}`} aria-hidden={!open}>
-        <td colSpan={3} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
+        <td colSpan={2} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
           <ExpandWrap open={open}>
             <div className="flex items-stretch">
-              {/* col[0] spacer */}
-              <div style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }} className={CELL_VDIV_TW} />
-
-              {/* col[1] label */}
-              <div style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }} className={`${msTableTw.td5} ${CELL_VDIV_TW}`} title={labelTitle}>
+              <div style={{ width: '50%' }} className={`${msTableTw.td5} ${CELL_VDIV_TW}`} title={labelTitle}>
                 <div className={`${msTableTw.tdInner5} ${COIN_ROW_TEXT_TW} ${COIN_ROW_PY_TW} ${COIN_ROW_MIN_H_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>
                   {label}
                 </div>
               </div>
 
-              {/* col[2] value + action */}
-              <div className={`${msTableTw.td} flex-1 min-w-0`}>
+              <div style={{ width: '50%' }} className={`${msTableTw.td} min-w-0`}>
                 <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
                   <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
 
@@ -497,7 +464,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
   };
 
   /**
-   * Rewards row (aligned to 3 columns)
+   * Rewards row aligned to 2 equal columns — chevron left-justified inside col[0]
    */
   const renderRewardsSummaryRow = (open: boolean, zebraTw: string, walletKey: string, walletIndex: number) => {
     const claimBtnTw = msTableTw.btnGreen;
@@ -507,12 +474,11 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
 
     return (
       <tr className={`${msTableTw.rowBorder} ${ROW_OUTLINE_TW}`} aria-hidden={!open}>
-        <td colSpan={3} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
+        <td colSpan={2} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
           <ExpandWrap open={open}>
             <div className="flex items-stretch">
-              {/* col[0] down chevron */}
-              <div style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }} className={`${msTableTw.td5} !p-0 ${CELL_VDIV_TW}`}>
-                <div className="w-full h-full flex items-center justify-center">
+              <div style={{ width: '50%' }} className={`${msTableTw.td5} ${CELL_VDIV_TW}`} title={labelTitle}>
+                <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center gap-2`}>
                   <button
                     type="button"
                     className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_DOWN} flex items-center justify-center`}
@@ -522,18 +488,12 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
                   >
                     <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
                   </button>
+
+                  <div className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>Rewards</div>
                 </div>
               </div>
 
-              {/* col[1] label */}
-              <div style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }} className={`${msTableTw.td5} ${CELL_VDIV_TW}`} title={labelTitle}>
-                <div className={`${msTableTw.tdInner5} ${COIN_ROW_TEXT_TW} ${COIN_ROW_PY_TW} ${COIN_ROW_MIN_H_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                  Rewards
-                </div>
-              </div>
-
-              {/* col[2] value + claim */}
-              <div className={`${msTableTw.td} flex-1 min-w-0`}>
+              <div style={{ width: '50%' }} className={`${msTableTw.td} min-w-0`}>
                 <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
                   <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
 
@@ -556,17 +516,16 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
   };
 
   /**
-   * Sponsor Coin Sponsorship Details row (aligned to 3 columns)
+   * Sponsor Coin Sponsorship Details row aligned to 2 equal columns — chevron left-justified in col[0]
    */
   const renderTokenContractRow = (open: boolean, zebraTw: string, walletKey: string) => {
     return (
       <tr className={`${msTableTw.rowBorder} ${ROW_OUTLINE_TW}`} aria-hidden={!open}>
-        <td colSpan={3} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
+        <td colSpan={2} className={`${zebraTw} ${msTableTw.td} !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_RIGHT_OUTLINE_TW}`}>
           <ExpandWrap open={open}>
             <div className="flex items-stretch">
-              {/* col[0] UP chevron */}
-              <div style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }} className={`${msTableTw.td5} !p-0 ${CELL_VDIV_TW}`}>
-                <div className="w-full h-full flex items-center justify-center">
+              <div style={{ width: '50%' }} className={`${msTableTw.td5} ${CELL_VDIV_TW}`}>
+                <div className={`${COIN_ROW_MIN_H_TW} flex items-center justify-start`}>
                   <button
                     type="button"
                     className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_UP} flex items-center justify-center`}
@@ -579,13 +538,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
                 </div>
               </div>
 
-              {/* col[1] (empty spacer to match columns) */}
-              <div style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }} className={`${msTableTw.td} ${CELL_VDIV_TW}`}>
-                <div className={`${msTableTw.tdInner} ${COIN_ROW_MIN_H_TW}`} />
-              </div>
-
-              {/* col[2] text */}
-              <div className={`${msTableTw.td} flex-1 min-w-0`}>
+              <div style={{ width: '50%' }} className={`${msTableTw.td} min-w-0`}>
                 <div className={`${msTableTw.tdInnerCenter} ${COIN_ROW_MIN_H_TW} text-[14.3px] leading-[1.15]`}>Sponsor Coin Sponsorship Details</div>
               </div>
             </div>
@@ -613,51 +566,30 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
         className={`${msTableTw.wrapper} !mt-0 mt-0 mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto`}
         data-list-type={LIST_TYPE[listType]}
       >
-        <table className={`min-w-full table-fixed ${msTableTw.table} ${tableOuterBorderTw}`}>
+        <table className={`min-w-full ${msTableTw.table}`}>
           <thead>
-            <tr className={`${msTableTw.theadRow} sticky top-0 z-20 ${rowDividerTw}`}>
-              {/* col[0] fixed */}
-              <th
-                scope="col"
-                style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }}
-                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit} sticky top-0 z-20 !p-0 ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW} ${ROW_OUTLINE_TW}`}
-              >
-                <div className="relative w-full h-full">
-                  {effectiveChevronOpenPending ? (
-                    <button
-                      type="button"
-                      className={`absolute inset-0 m-0 p-0 rounded-md ${GLOBAL_CHEVRON_UP_BG} flex items-center justify-center`}
-                      aria-label="Chevron Up (Close all wallet rows)"
-                      title="Close all wallet rows"
-                      onClick={() => setGlobalChevronOpen(false)}
-                    >
+            <tr className={`${msTableTw.theadRow} sticky top-0 z-20`}>
+              <th style={{ width: '50%' }} scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW} ${ROW_OUTLINE_TW}`}>
+                <div className="w-full flex items-center gap-2">
+                  <button
+                    type="button"
+                    className={`m-0 p-0 rounded-md ${effectiveChevronOpenPending ? GLOBAL_CHEVRON_UP_BG : GLOBAL_CHEVRON_DOWN_BG} flex items-center justify-center`}
+                    aria-label={effectiveChevronOpenPending ? 'Chevron Up (Close all wallet rows)' : 'Chevron Down (Open all Sponsorship Account Rows)'}
+                    title={effectiveChevronOpenPending ? 'Close all wallet rows' : 'Open all account rows'}
+                    onClick={() => setGlobalChevronOpen(!effectiveChevronOpenPending)}
+                  >
+                    {effectiveChevronOpenPending ? (
                       <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={`absolute inset-0 m-0 p-0 rounded-md ${GLOBAL_CHEVRON_DOWN_BG} flex items-center justify-center`}
-                      aria-label="Chevron Down (Open all Sponsorship Account Rows)"
-                      title="Open all account rows"
-                      onClick={() => setGlobalChevronOpen(true)}
-                    >
+                    ) : (
                       <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-                    </button>
-                  )}
+                    )}
+                  </button>
+
+                  <span className="truncate">{roleLabel}</span>
                 </div>
               </th>
 
-              {/* col[1] fixed-ish (wide) */}
-              <th
-                scope="col"
-                style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }}
-                className={`${msTableTw.th5} ${msTableTw.th5Pad3} sticky top-0 z-20 ${CELL_VDIV_TW} ${ROW_OUTLINE_TW}`}
-              >
-                {roleLabel}
-              </th>
-
-              {/* col[2] fills to end (starts after wide col[1]) */}
-              <th scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-left sticky top-0 z-20 ${CELL_RIGHT_OUTLINE_TW} ${ROW_OUTLINE_TW}`}>
+              <th style={{ width: '50%' }} scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-left ${CELL_RIGHT_OUTLINE_TW} ${ROW_OUTLINE_TW}`}>
                 XXXXXX
               </th>
             </tr>
@@ -714,44 +646,28 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
                 <React.Fragment key={stableKey}>
                   {/* Row 0 (wallet row) */}
                   <tr className={`${msTableTw.rowBorder} ${ROW_OUTLINE_TW}`}>
-                    {/* col[0] (empty, aligns with global chevron column) */}
-                    <td
-                      style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }}
-                      className={`${zebra} ${msTableTw.td5} !p-0 align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
-                    >
-                      <div className="w-full h-full" />
-                    </td>
-
-                    {/* col[1] image + (name/symbol) */}
-                    <td
-                      style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }}
-                      className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_VDIV_TW}`}
-                    >
+                    <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}>
                       <div className="w-full flex items-center gap-2 min-w-0">
-                        {/* image (fixed width) */}
-                        <div style={{ width: ROW_0_COL_1_WIDTH, minWidth: ROW_0_COL_1_WIDTH, maxWidth: ROW_0_COL_1_WIDTH }} className="flex items-center justify-center">
-                          <button
-                            type="button"
-                            className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
-                            onMouseEnter={() => onRowEnter(w?.name ?? '')}
-                            onMouseMove={onRowMove}
-                            onMouseLeave={onRowLeave}
-                            onClick={() => setWalletCallBack(w)}
-                            aria-label={`Open ${roleLabel}s reconfigure`}
-                            data-role={roleLabel}
-                            data-address={addressText}
-                          >
-                            <Image
-                              src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                              alt={`${w.name ?? 'Wallet'} logo`}
-                              width={DATALIST_IMG_PX}
-                              height={DATALIST_IMG_PX}
-                              className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
-                            />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
+                          onMouseEnter={() => onRowEnter(w?.name ?? '')}
+                          onMouseMove={onRowMove}
+                          onMouseLeave={onRowLeave}
+                          onClick={() => setWalletCallBack(w)}
+                          aria-label={`Open ${roleLabel}s reconfigure`}
+                          data-role={roleLabel}
+                          data-address={addressText}
+                        >
+                          <Image
+                            src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
+                            alt={`${w.name ?? 'Wallet'} logo`}
+                            width={DATALIST_IMG_PX}
+                            height={DATALIST_IMG_PX}
+                            className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
+                          />
+                        </button>
 
-                        {/* name + symbol (to the RIGHT of image, inside roleLabel column) */}
                         <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
                           <div className="w-full font-semibold truncate !text-[#5981F3] text-left">{w?.name ?? 'Unknown'}</div>
                           <div className="w-full text-sm truncate !text-[#5981F3] text-left">{w?.symbol ?? ''}</div>
@@ -759,8 +675,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
                       </div>
                     </td>
 
-                    {/* col[2] XXXXXX column content */}
-                    <td className={`${zebra} ${msTableTw.td} px-0 align-middle ${CELL_RIGHT_OUTLINE_TW}`}>
+                    <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td} px-0 align-middle ${CELL_RIGHT_OUTLINE_TW}`}>
                       <div className={`${msTableTw.tdInner} w-full text-left`}>YYYYYYY</div>
                     </td>
                   </tr>
@@ -788,23 +703,13 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
 
               return (
                 <tr className={`${msTableTw.rowBorder} ${ROW_OUTLINE_TW}`}>
-                  {/* col[0] */}
-                  <td
-                    style={{ width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH }}
-                    className={`${zebra} ${msTableTw.td5} !p-0 align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
-                  >
-                    <div className="w-full h-full" />
-                  </td>
-
-                  {/* col[1] */}
-                  <td style={{ width: COL_1_TOTAL_WIDTH, minWidth: COL_1_TOTAL_WIDTH, maxWidth: COL_1_TOTAL_WIDTH }} className={`${zebra} ${msTableTw.td5} ${CELL_VDIV_TW}`}>
+                  <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}>
                     <div className={msTableTw.tdInnerCenter5}>
                       <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
                     </div>
                   </td>
 
-                  {/* col[2] total action (kept, aligned right inside XXXXXX column) */}
-                  <td className={`${zebra} ${msTableTw.td} ${CELL_RIGHT_OUTLINE_TW}`}>
+                  <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td} ${CELL_RIGHT_OUTLINE_TW}`}>
                     <div className="w-full flex items-center justify-between gap-2">
                       <div className={msTableTw.tdInnerCenter}>0</div>
 
