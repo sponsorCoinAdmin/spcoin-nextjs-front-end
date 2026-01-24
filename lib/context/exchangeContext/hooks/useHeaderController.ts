@@ -64,9 +64,9 @@ function getRewardsHeaderTitle(opts: {
   claimAgent: boolean;
   unSponsor: boolean;
 }): string {
-  if (opts.claimSponsor) return 'Claim Pending Sponsor Rewards';
-  if (opts.claimRecipient) return 'Claim Pending Recipient Rewards';
-  if (opts.claimAgent) return 'Claim Pending Agent Rewards';
+  if (opts.claimSponsor) return 'Pending Sponsor Rewards';
+  if (opts.claimRecipient) return 'Pending Recipient Rewards';
+  if (opts.claimAgent) return 'Pending Agent Rewards';
 
   // ✅ NEW: UNSPONSOR_SP_COINS child-mode title
   if (opts.unSponsor) return 'Allocated Sponsorships';
@@ -146,9 +146,9 @@ export function useHeaderController() {
   const trading = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
   // ✅ rewards-subpanel visibility used to compute dynamic header title
-  const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS);
-  const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS);
-  const claimAgent = usePanelVisible(SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS);
+  const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_COINS);
+  const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS);
+  const claimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_COINS);
   const unSponsor = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
 
   const rewardsState = useMemo(

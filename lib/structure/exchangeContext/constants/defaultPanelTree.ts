@@ -95,9 +95,9 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // Sponsor list select (parent) + sub-panels
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
         node(SP.UNSPONSOR_SP_COINS, false),
-        node(SP.CLAIM_PENDING_SPONSOR_COINS, false),
-        node(SP.CLAIM_PENDING_RECIPIENT_COINS, false),
-        node(SP.CLAIM_PENDING_AGENT_COINS, false),
+        node(SP.PENDING_SPONSOR_COINS, false),
+        node(SP.PENDING_RECIPIENT_COINS, false),
+        node(SP.PENDING_AGENT_COINS, false),
       ]),
 
       // Detail overlays

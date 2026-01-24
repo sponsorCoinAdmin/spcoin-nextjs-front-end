@@ -61,15 +61,15 @@ const TRADING_CHILDREN: readonly SP[] = [
  *
  * ✅ Desired shape:
  * [-] ACCOUNT_LIST_REWARDS_PANEL
- *   [-] CLAIM_PENDING_SPONSOR_COINS
- *   [+] CLAIM_PENDING_RECIPIENT_COINS
- *   [+] CLAIM_PENDING_AGENT_COINS
+ *   [-] PENDING_SPONSOR_COINS
+ *   [+] PENDING_RECIPIENT_COINS
+ *   [+] PENDING_AGENT_COINS
  *   [+] UNSPONSOR_SP_COINS
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
-  SP.CLAIM_PENDING_SPONSOR_COINS,
-  SP.CLAIM_PENDING_RECIPIENT_COINS,
-  SP.CLAIM_PENDING_AGENT_COINS,
+  SP.PENDING_SPONSOR_COINS,
+  SP.PENDING_RECIPIENT_COINS,
+  SP.PENDING_AGENT_COINS,
   SP.UNSPONSOR_SP_COINS,
 ] as const;
 
@@ -197,17 +197,17 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // ✅ Claim panels now own the mode selector children
   def({
-    id: SP.CLAIM_PENDING_SPONSOR_COINS,
+    id: SP.PENDING_SPONSOR_COINS,
     kind: 'panel',
     children: REWARDS_MODE_CHILDREN,
   }),
   def({
-    id: SP.CLAIM_PENDING_RECIPIENT_COINS,
+    id: SP.PENDING_RECIPIENT_COINS,
     kind: 'panel',
     children: REWARDS_MODE_CHILDREN,
   }),
   def({
-    id: SP.CLAIM_PENDING_AGENT_COINS,
+    id: SP.PENDING_AGENT_COINS,
     kind: 'panel',
     children: REWARDS_MODE_CHILDREN,
   }),

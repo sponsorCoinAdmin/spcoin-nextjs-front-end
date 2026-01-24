@@ -259,9 +259,9 @@ export function usePanelTree() {
 
         // ✅ NEW children (sub-panels / modes)
         SP_COIN_DISPLAY.UNSPONSOR_SP_COINS,
-        SP_COIN_DISPLAY.CLAIM_PENDING_SPONSOR_COINS,
-        SP_COIN_DISPLAY.CLAIM_PENDING_RECIPIENT_COINS,
-        SP_COIN_DISPLAY.CLAIM_PENDING_AGENT_COINS,
+        SP_COIN_DISPLAY.PENDING_SPONSOR_COINS,
+        SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS,
+        SP_COIN_DISPLAY.PENDING_AGENT_COINS,
       ]),
     }),
     [manageContainer, manageScoped],
