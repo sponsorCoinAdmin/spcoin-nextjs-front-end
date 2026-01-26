@@ -32,4 +32,4 @@ export type FeedDebugMeta = {
 
 export type FeedData =
   | ({ feedType: TokenFeedType; tokens: BuiltToken[] } & { __debug?: FeedDebugMeta })
-  | ({ feedType: AccountFeedType; wallets: spCoinAccount[] } & { __debug?: FeedDebugMeta });
+  | ({ feedType: AccountFeedType; accountsXXXX: spCoinAccount[] } & { __debug?: FeedDebugMeta });

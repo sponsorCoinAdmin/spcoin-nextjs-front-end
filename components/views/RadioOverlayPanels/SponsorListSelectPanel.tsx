@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageSponsorRecipients.tsx
+// File: @/components/views/RadioOverlayPanels/SponsorListSelectPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
@@ -11,7 +11,6 @@ import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-
 
 // ✅ Provide the context AddressSelect expects (without going through the old wrapper)
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
@@ -27,9 +26,7 @@ export default function ManageSponsorRecipients() {
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
-  const activePanel: SP_COIN_DISPLAY | null = vClaim
-    ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-    : null;
+  const activePanel: SP_COIN_DISPLAY | null = vClaim ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
@@ -47,52 +44,57 @@ export default function ManageSponsorRecipients() {
   return <ManageSponsorRecipientsInner activePanel={activePanel} />;
 }
 
-function ManageSponsorRecipientsInner({
-  activePanel,
-}: {
-  activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
-}) {
+function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL }) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
   // ✅ UNSTAKING removed: listType is always claim rewards for this component
   const listType = LIST_TYPE.SPONSOR_CLAIM_REWARDS;
 
-  // ✅ Directly load sponsor accounts (same source as before)
+  // ✅ Directly load sponsor accounts
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
 
-  const wallets: spCoinAccount[] = useMemo(() => {
+  /**
+   * ✅ SSOT: accountsXXXX only
+   * If this is empty, upstream isn't producing accounts yet (which is what we want to discover).
+   */
+  const accounts: spCoinAccount[] = useMemo(() => {
     const anyData: any = feedData;
-    return Array.isArray(anyData?.wallets) ? (anyData.wallets as spCoinAccount[]) : [];
+    return Array.isArray(anyData?.accountsXXXX) ? (anyData.accountsXXXX as spCoinAccount[]) : [];
   }, [feedData]);
 
   useEffect(() => {
+    const anyData: any = feedData;
+
     debugLog.log?.('[data]', {
       activePanel: SP_COIN_DISPLAY[activePanel],
       listType: LIST_TYPE[listType],
       loading,
       error: error ?? null,
-      walletsLen: wallets.length,
-      sourceId: (feedData as any)?.__sourceId ?? '(missing __sourceId)',
-      sourceKind: (feedData as any)?.__sourceKind ?? '(missing __sourceKind)',
+
+      accountsLen: accounts.length,
+      hasAccountsXXXX: Array.isArray(anyData?.accountsXXXX),
+
+      sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
+      sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
     });
-  }, [activePanel, listType, loading, error, wallets.length, feedData]);
+  }, [activePanel, listType, loading, error, accounts.length, feedData]);
 
   const setWalletCallBack = useCallback(
-    (wallet?: spCoinAccount) => {
-      if (!wallet?.address) {
-        debugLog.log?.('[setWalletCallBack] ignored (no wallet/address)', { wallet });
+    (account?: spCoinAccount) => {
+      if (!account?.address) {
+        debugLog.log?.('[setWalletCallBack] ignored (no account/address)', { account });
         return;
       }
 
       debugLog.log?.('[setWalletCallBack]', {
         activePanel: SP_COIN_DISPLAY[activePanel],
         listType: LIST_TYPE[listType],
-        addressPreview: String(wallet.address).slice(0, 12),
-        name: (wallet as any)?.name,
+        addressPreview: String(account.address).slice(0, 12),
+        name: (account as any)?.name,
       });
 
-      // 1) Store selected wallet in ExchangeContext
+      // 1) Store selected account in ExchangeContext
       ctx?.setExchangeContext(
         (prev) => {
           if (!prev) return prev;
@@ -100,7 +102,7 @@ function ManageSponsorRecipientsInner({
             ...prev,
             accounts: {
               ...prev.accounts,
-              sponsorAccount: wallet,
+              sponsorAccount: account,
             },
           };
         },
@@ -117,7 +119,7 @@ function ManageSponsorRecipientsInner({
     [activePanel, ctx, listType, openPanel],
   );
 
-  // Minimal render states (feel free to style later)
+  // Minimal render states
   if (loading) {
     return (
       <div id="ManageSponsorRecipients" className="p-3 text-sm opacity-70">
@@ -137,9 +139,6 @@ function ManageSponsorRecipientsInner({
   /**
    * ✅ Key point:
    * Wrap AccountListRewardsPanel so AddressSelect has AssetSelectContext.
-   *
-   * We keep callbacks as no-ops / pass-through because we aren’t using the FSM
-   * commit path here anymore — AccountListRewardsPanel clicks are handled by setWalletCallBack.
    */
   return (
     <div id="ManageSponsorRecipients">
@@ -148,14 +147,14 @@ function ManageSponsorRecipientsInner({
           containerType={activePanel}
           feedTypeOverride={FEED_TYPE.SPONSOR_ACCOUNTS}
           closePanelCallback={() => {
-            /* no-op: this list is controlled by the overlay system */
+            /* no-op */
           }}
           setSelectedAssetCallback={() => {
-            /* no-op: we handle selection via setWalletCallBack */
+            /* no-op */
           }}
         >
           <AccountListRewardsPanel
-            walletList={wallets}
+            walletList={accounts} // component API still expects walletList
             setWalletCallBack={setWalletCallBack}
             containerType={activePanel}
             listType={listType}

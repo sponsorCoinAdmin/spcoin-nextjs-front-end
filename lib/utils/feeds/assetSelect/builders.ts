@@ -4,11 +4,7 @@ import type { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
-import {
-  getLogoURL,
-  getWalletLogoURL,
-  getTokenLogoURL,
-} from '@/lib/context/helpers/assetHelpers';
+import { getLogoURL, getWalletLogoURL, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -36,7 +32,12 @@ function parseJson(input: unknown): any {
 
 /* ─────────────────────── core normalizers ─────────────────────── */
 
-/** Normalize a sparse account JSON entry into a spCoinAccount */
+/**
+ * Normalize a sparse account JSON entry into a spCoinAccount.
+ *
+ * NOTE: Kept as `buildWalletObj` for backwards compatibility with existing imports,
+ * but it produces a spCoinAccount (an "account") and is used to populate `accountsXXXX`.
+ */
 export function buildWalletObj(a: any): spCoinAccount {
   const address = (a?.address as Address) || (BURN_ADDRESS as Address);
   return {
@@ -52,6 +53,7 @@ export function buildWalletObj(a: any): spCoinAccount {
 export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken> {
   const address = String(t?.address ?? '').toLowerCase();
   let logoURL: string;
+
   try {
     logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
   } catch {
@@ -68,18 +70,21 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
   } as BuiltToken;
 }
 
-/* ─────────────────────────── new conveniences ─────────────────────────── */
+/* ─────────────────────────── conveniences ─────────────────────────── */
 
 export async function buildTokenFromJson(rawToken: unknown, chainId: number): Promise<BuiltToken> {
   return buildTokenObj(parseJson(rawToken), chainId);
 }
 
-export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<spCoinAccount[]> {
+/**
+ * ✅ SSOT helper: parse/load/normalize into spCoinAccount[]
+ * (preferred name; output is "accounts")
+ */
+export async function buildAccountsFromJson(rawAccountSpec: unknown): Promise<spCoinAccount[]> {
   const spec = parseJson(rawAccountSpec);
 
-  // ✅ This is the “before we go to public/assets/accounts” log.
-  // We log the exact spec being passed into loadAccounts().
-  debugLog.log?.('[buildWalletsFromJson] calling loadAccounts(spec)', {
+  // Log the exact spec being passed into loadAccounts().
+  debugLog.log?.('[buildAccountsFromJson] calling loadAccounts(spec)', {
     specType: typeof spec,
     isArray: Array.isArray(spec),
     keys: spec && typeof spec === 'object' && !Array.isArray(spec) ? Object.keys(spec).slice(0, 20) : undefined,
@@ -87,7 +92,8 @@ export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<spC
   });
 
   const accounts = await loadAccounts(spec);
-  debugLog.log?.('[buildWalletsFromJson] loadAccounts returned', {
+
+  debugLog.log?.('[buildAccountsFromJson] loadAccounts returned', {
     count: accounts.length,
     sample: accounts.slice(0, 3).map((a) => a.address),
   });
@@ -95,13 +101,28 @@ export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<spC
   return accounts.map(buildWalletObj);
 }
 
+/** Convenience: first account from any account spec */
+export async function buildAccountFromJsonFirst(rawAccountSpec: unknown): Promise<spCoinAccount | null> {
+  const acc = await buildAccountsFromJson(rawAccountSpec);
+  return acc[0] ?? null;
+}
+
+/**
+ * Backwards-compatible wrappers (keep existing imports working),
+ * but they still return "accounts" and NEVER create/feed `wallets` output.
+ */
+export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<spCoinAccount[]> {
+  return buildAccountsFromJson(rawAccountSpec);
+}
+
 export async function buildWalletFromJsonFirst(rawAccountSpec: unknown): Promise<spCoinAccount | null> {
-  const ws = await buildWalletsFromJson(rawAccountSpec);
-  return ws[0] ?? null;
+  return buildAccountFromJsonFirst(rawAccountSpec);
 }
 
 /**
  * Feed-style converter: give a JSON (object/string) + FEED_TYPE and get a FeedData bundle.
+ *
+ * ✅ HARD RULE: Account feeds return `accountsXXXX` (never `wallets`)
  */
 export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, rawJson: unknown): Promise<FeedData> {
   const json = parseJson(rawJson);
@@ -119,20 +140,22 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
     case FEED_TYPE.SPONSOR_ACCOUNTS:
     case FEED_TYPE.MANAGE_RECIPIENTS:
     case FEED_TYPE.MANAGE_AGENTS: {
+      // NOTE: loadAccounts can accept object specs or arrays; we keep passing through `json`.
       const accounts = await loadAccounts(json);
-      const wallets = accounts.map(buildWalletObj);
+      const accountsXXXX = accounts.map(buildWalletObj);
 
-      debugLog.log?.('[feedDataFromJson] built wallets', {
+      debugLog.log?.('[feedDataFromJson] built accountsXXXX', {
         feedTypeLabel: FEED_TYPE[feedType],
-        walletsLen: wallets.length,
-        sample: wallets.slice(0, 3).map((w) => w.address),
+        accountsLen: accountsXXXX.length,
+        sample: accountsXXXX.slice(0, 3).map((a) => a.address),
       });
 
-      return { feedType: feedType as any, wallets };
+      // ✅ SSOT output for account feeds
+      return { feedType: feedType as any, accountsXXXX };
     }
 
     case FEED_TYPE.TOKEN_LIST: {
-      const list = Array.isArray(json) ? json : (json ? [json] : []);
+      const list = Array.isArray(json) ? json : json ? [json] : [];
       const tokens = await Promise.all(list.map((t) => buildTokenObj(t, chainId)));
 
       debugLog.log?.('[feedDataFromJson] built tokens', {
@@ -148,6 +171,8 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
         feedType,
         feedTypeLabel: FEED_TYPE[feedType],
       });
+
+      // safest empty
       return { feedType: FEED_TYPE.TOKEN_LIST, tokens: [] };
     }
   }

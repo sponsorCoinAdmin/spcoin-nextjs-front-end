@@ -34,10 +34,11 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('fetchAndBuildDataList', DEBUG_ENABLED, LOG_TIME);
 
-// Simple call counter so you can correlate logs across renders
 let CALL_SEQ = 0;
 
-/** Give every bundled JSON import a stable identifier string for debugLogs. */
+// legacy key constant (keeps dot-access out of the file)
+const LEGACY_WALLETS_KEY = 'wallets' as const;
+
 const SOURCES = {
   accounts: {
     recipients: '@/resources/data/recipients/accounts.json',
@@ -82,12 +83,15 @@ const sponsorJsonSource = sponsorJsonListRaw as any;
 function normalizeList(raw: any): any[] {
   if (Array.isArray(raw)) return raw;
   if (raw && typeof raw === 'object') {
-    if (Array.isArray(raw.wallets)) return raw.wallets;
-    if (Array.isArray(raw.items)) return raw.items;
-    if (Array.isArray(raw.accounts)) return raw.accounts;
-    if (Array.isArray(raw.recipients)) return raw.recipients;
-    if (Array.isArray(raw.agents)) return raw.agents;
-    if (Array.isArray(raw.sponsors)) return raw.sponsors;
+    // legacy inputs (INPUT ONLY) — avoid dot access
+    if (Array.isArray((raw as any)[LEGACY_WALLETS_KEY])) return (raw as any)[LEGACY_WALLETS_KEY];
+
+    // common wrappers
+    if (Array.isArray((raw as any).items)) return (raw as any).items;
+    if (Array.isArray((raw as any).accounts)) return (raw as any).accounts;
+    if (Array.isArray((raw as any).recipients)) return (raw as any).recipients;
+    if (Array.isArray((raw as any).agents)) return (raw as any).agents;
+    if (Array.isArray((raw as any).sponsors)) return (raw as any).sponsors;
   }
   return [];
 }
@@ -98,40 +102,31 @@ function summarize(raw: any) {
   return { kind: String(raw) };
 }
 
-/** Peek at first few entries to confirm what list is actually being used. */
 function previewList(list: any[], max = 5) {
   const slice = list.slice(0, max);
   return slice.map((x) => {
     if (!x || typeof x !== 'object') return x;
+    const obj: any = x;
+
     return {
-      // most important “where do we go next?” fields
-      address: (x as any).address ?? (x as any).addr ?? (x as any).wallet ?? (x as any).id,
-      file: (x as any).file,
-      url: (x as any).url,
-      // human fields
-      name: (x as any).name,
-      symbol: (x as any).symbol,
-      // expansion hints
-      inline: Array.isArray((x as any).inline) ? `inline[${(x as any).inline.length}]` : undefined,
-      accounts: Array.isArray((x as any).accounts) ? `accounts[${(x as any).accounts.length}]` : undefined,
-      wallets: Array.isArray((x as any).wallets) ? `wallets[${(x as any).wallets.length}]` : undefined,
+      address: obj.address ?? obj.addr ?? obj[LEGACY_WALLETS_KEY] ?? obj.id,
+      file: obj.file,
+      url: obj.url,
+      name: obj.name,
+      symbol: obj.symbol,
+      inline: Array.isArray(obj.inline) ? `inline[${obj.inline.length}]` : undefined,
+      accounts: Array.isArray(obj.accounts) ? `accounts[${obj.accounts.length}]` : undefined,
     };
   });
 }
 
-/** Resolve a remote URL (if you add remote hosting later). Returning undefined means "use fallbacks". */
 function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {
-  // If you later add env overrides, log them here.
   return undefined;
 }
 
-/**
- * Return the bundled fallback list when remote URL is absent/unavailable.
- * ALSO returns "sourceId" so debugLogs can name the exact JSON module selected.
- */
 function getFallbackListWithSource(
   feedType: FEED_TYPE,
-  chainId?: number
+  chainId?: number,
 ): { sourceId: string; sourceKind: 'bundled-fallback'; list: any[] } {
   switch (feedType) {
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
@@ -173,15 +168,13 @@ function getFallbackListWithSource(
   }
 }
 
-/** Read JSON either from URL (when provided) or from bundled fallbacks */
 async function getDataListObjWithSource(
   feedType: FEED_TYPE,
   chainId?: number,
-  seq?: number
+  seq?: number,
 ): Promise<{ sourceId: string; sourceKind: 'bundled-fallback' | 'remote-url'; list: any[] }> {
   const url = getDataListURL(feedType, chainId);
 
-  // No remote URL => bundled fallback
   if (!url) {
     const fb = getFallbackListWithSource(feedType, chainId);
     debugLog.log?.('[source:selected]', {
@@ -193,7 +186,6 @@ async function getDataListObjWithSource(
       selectedSource: fb.sourceId,
       normalizedLen: fb.list.length,
       preview: previewList(fb.list, 5),
-      // this helps confirm shape differences immediately:
       raw0: fb.list[0] ? summarize(fb.list[0]) : '(empty)',
     });
     return fb;
@@ -269,8 +261,6 @@ async function getDataListObjWithSource(
 // ──────────────────────────────────────────────────────────────────────────────
 
 function getManageJsonForFeed(feedType: FEED_TYPE): { sourceId: string; sourceKind: 'manage-json'; raw: any } | undefined {
-  // NOTE: this intentionally routes SPONSOR_ACCOUNTS to ManageSponsorships sponsors.json.
-  // If that’s NOT desired, remove SPONSOR_ACCOUNTS from this switch.
   switch (feedType) {
     case FEED_TYPE.SPONSOR_ACCOUNTS:
       return { sourceId: SOURCES.manage.sponsors, sourceKind: 'manage-json', raw: sponsorsJson };
@@ -285,8 +275,28 @@ function getManageJsonForFeed(feedType: FEED_TYPE): { sourceId: string; sourceKi
   }
 }
 
-function attachDebugMeta(built: FeedData, meta: { sourceId: string; sourceKind: string; feedType: FEED_TYPE; chainId: number; seq: number }) {
-  // Attach in a way that won’t break existing consumers:
+/**
+ * ✅ HARD RULE: output uses SSOT `accountsXXXX` for account feeds.
+ * If anything ever returns legacy wallets array, migrate it once and delete it.
+ *
+ */
+function enforceAccountsOnly(built: any): FeedData {
+  const b: any = built ?? {};
+
+  const legacy = b[LEGACY_WALLETS_KEY];
+  if (Array.isArray(legacy) && !Array.isArray(b.accountsXXXX)) {
+    b.accountsXXXX = legacy;
+  }
+
+  if (LEGACY_WALLETS_KEY in b) delete b[LEGACY_WALLETS_KEY];
+
+  return b as FeedData;
+}
+
+function attachDebugMeta(
+  built: FeedData,
+  meta: { sourceId: string; sourceKind: string; feedType: FEED_TYPE; chainId: number; seq: number },
+) {
   (built as any).__sourceId = meta.sourceId;
   (built as any).__sourceKind = meta.sourceKind;
   (built as any).__feedTypeRequested = meta.feedType;
@@ -296,7 +306,7 @@ function attachDebugMeta(built: FeedData, meta: { sourceId: string; sourceKind: 
 }
 
 function logBuilt(label: string, feedType: FEED_TYPE, built: FeedData, source: SelectedSource, seq: number, chainId: number) {
-  const walletsLen = Array.isArray((built as any).wallets) ? (built as any).wallets.length : 0;
+  const accountsLen = Array.isArray((built as any).accountsXXXX) ? (built as any).accountsXXXX.length : 0;
   const tokensLen = Array.isArray((built as any).tokens) ? (built as any).tokens.length : 0;
 
   debugLog.log?.(`[${label}]`, {
@@ -306,14 +316,8 @@ function logBuilt(label: string, feedType: FEED_TYPE, built: FeedData, source: S
     chainId,
     sourceKind: source.sourceKind,
     selectedSource: source.sourceId,
-    walletsLen,
+    accountsLen,
     tokensLen,
-    sampleWalletAddresses: Array.isArray((built as any).wallets)
-      ? (built as any).wallets
-          .slice(0, 8)
-          .map((w: any) => String(w?.address ?? ''))
-          .filter(Boolean)
-      : [],
   });
 }
 
@@ -321,24 +325,11 @@ function logBuilt(label: string, feedType: FEED_TYPE, built: FeedData, source: S
 // Public API
 // ──────────────────────────────────────────────────────────────────────────────
 
-/**
- * Fetch raw list/spec (URL or fallback) and normalize via builders → FeedData
- *
- * ✅ This function now logs EXACTLY which JSON module was selected BEFORE any account expansion occurs.
- * ✅ It also tags the returned FeedData with:
- *    - __sourceId, __sourceKind, __feedTypeRequested, __chainId, __seq
- */
 export async function fetchAndBuildDataList(feedType: FEED_TYPE, chainId: number): Promise<FeedData> {
   const seq = ++CALL_SEQ;
 
-  debugLog.log?.('[start]', {
-    seq,
-    feedType,
-    feedTypeLabel: FEED_TYPE[feedType],
-    chainId,
-  });
+  debugLog.log?.('[start]', { seq, feedType, feedTypeLabel: FEED_TYPE[feedType], chainId });
 
-  // 1) Management JSON routing (if applicable)
   const manage = getManageJsonForFeed(feedType);
 
   if (manage) {
@@ -350,27 +341,19 @@ export async function fetchAndBuildDataList(feedType: FEED_TYPE, chainId: number
       sourceKind: manage.sourceKind,
       selectedSource: manage.sourceId,
       rawSummary: summarize(manage.raw),
-      // IMPORTANT: show actual content shape
       normalizedLen: normalizeList(manage.raw).length,
       preview: previewList(normalizeList(manage.raw), 5),
     });
 
-    // IMPORTANT: build using the REAL feedType (no coercion)
-    const built = (await feedDataFromJson(feedType as any, chainId, manage.raw as any)) as any as FeedData;
+    const rawBuilt = (await feedDataFromJson(feedType as any, chainId, manage.raw as any)) as any;
+    const built = enforceAccountsOnly(rawBuilt);
 
-    attachDebugMeta(built, {
-      sourceId: manage.sourceId,
-      sourceKind: manage.sourceKind,
-      feedType,
-      chainId,
-      seq,
-    });
-
+    attachDebugMeta(built, { sourceId: manage.sourceId, sourceKind: manage.sourceKind, feedType, chainId, seq });
     logBuilt('built(manage)', feedType, built, { sourceId: manage.sourceId, sourceKind: manage.sourceKind }, seq, chainId);
+
     return built;
   }
 
-  // 2) Default path: URL/fallback-driven spec
   const { sourceId, sourceKind, list: jsonSpec } = await getDataListObjWithSource(feedType, chainId, seq);
 
   debugLog.log?.('[spec:ready]', {
@@ -382,75 +365,31 @@ export async function fetchAndBuildDataList(feedType: FEED_TYPE, chainId: number
     selectedSource: sourceId,
     jsonSpecLen: Array.isArray(jsonSpec) ? jsonSpec.length : -1,
     preview: Array.isArray(jsonSpec) ? previewList(jsonSpec, 8) : undefined,
-    raw0: Array.isArray(jsonSpec) && jsonSpec[0] ? summarize(jsonSpec[0]) : '(empty)',
   });
 
-  const built = (await feedDataFromJson(feedType as any, chainId, jsonSpec as any)) as any as FeedData;
+  const rawBuilt = (await feedDataFromJson(feedType as any, chainId, jsonSpec as any)) as any;
+  const built = enforceAccountsOnly(rawBuilt);
 
-  attachDebugMeta(built, {
-    sourceId,
-    sourceKind,
-    feedType,
-    chainId,
-    seq,
-  });
-
+  attachDebugMeta(built, { sourceId, sourceKind, feedType, chainId, seq });
   logBuilt('built(default)', feedType, built, { sourceId, sourceKind }, seq, chainId);
+
   return built;
 }
 
-/**
- * Convenience: get a source and return a single normalized item.
- * - TOKEN_LIST → one BuiltToken (from first/only item)
- * - *_ACCOUNTS → first spCoinAccount (or null if none)
- */
 export async function fetchSingleFromSource(feedType: FEED_TYPE, chainId: number) {
   const seq = ++CALL_SEQ;
 
-  debugLog.log?.('[single:start]', {
-    seq,
-    feedType,
-    feedTypeLabel: FEED_TYPE[feedType],
-    chainId,
-  });
+  debugLog.log?.('[single:start]', { seq, feedType, feedTypeLabel: FEED_TYPE[feedType], chainId });
 
   const manage = getManageJsonForFeed(feedType);
 
   if (manage) {
-    debugLog.log?.('[single][source:selected]', {
-      seq,
-      feedType,
-      feedTypeLabel: FEED_TYPE[feedType],
-      chainId,
-      sourceKind: manage.sourceKind,
-      selectedSource: manage.sourceId,
-      rawSummary: summarize(manage.raw),
-      normalizedLen: normalizeList(manage.raw).length,
-      preview: previewList(normalizeList(manage.raw), 5),
-    });
-
+    // legacy name, but the returned object is the account type
     const first = await buildWalletFromJsonFirst(manage.raw as any);
-    debugLog.log?.('[single(manage)][result]', {
-      seq,
-      feedTypeLabel: FEED_TYPE[feedType],
-      hasWallet: !!first,
-      addr: (first as any)?.address ?? '(none)',
-    });
     return first;
   }
 
-  const { sourceId, sourceKind, list: jsonSpec } = await getDataListObjWithSource(feedType, chainId, seq);
-
-  debugLog.log?.('[single][source:selected][spec]', {
-    seq,
-    feedType,
-    feedTypeLabel: FEED_TYPE[feedType],
-    chainId,
-    sourceKind,
-    selectedSource: sourceId,
-    jsonSpecLen: Array.isArray(jsonSpec) ? jsonSpec.length : -1,
-    preview: Array.isArray(jsonSpec) ? previewList(jsonSpec, 5) : undefined,
-  });
+  const { list: jsonSpec } = await getDataListObjWithSource(feedType, chainId, seq);
 
   switch (feedType) {
     case FEED_TYPE.TOKEN_LIST: {
@@ -465,12 +404,6 @@ export async function fetchSingleFromSource(feedType: FEED_TYPE, chainId: number
     case FEED_TYPE.MANAGE_RECIPIENTS:
     case FEED_TYPE.MANAGE_AGENTS: {
       const first = await buildWalletFromJsonFirst(jsonSpec);
-      debugLog.log?.('[single(default)][result]', {
-        seq,
-        feedTypeLabel: FEED_TYPE[feedType],
-        hasWallet: !!first,
-        addr: (first as any)?.address ?? '(none)',
-      });
       return first;
     }
 

@@ -10,17 +10,15 @@ import { useAssetSelectContext } from '@/lib/context';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+// ✅ SSOT: use the shared FeedData type (do NOT redefine it locally)
+import type { FeedData } from '@/lib/utils/feeds/assetSelect/types';
+
 // Normalize the token feed so TokenListItem always receives strict strings
 export type TokenFeedItem = {
   address: `0x${string}` | string;
   name?: string | null;
   symbol?: string | null;
   logoURL?: string | null;
-};
-
-type FeedData = {
-  wallets?: spCoinAccount[];
-  tokens?: TokenFeedItem[];
 };
 
 type Props = {
@@ -47,54 +45,51 @@ function isAccountFeedType(feedType: FEED_TYPE) {
 }
 
 function roleFromFeedType(feedType: FEED_TYPE): string {
-  if (feedType === FEED_TYPE.AGENT_ACCOUNTS || feedType === FEED_TYPE.MANAGE_AGENTS)
-    return 'agent';
+  if (feedType === FEED_TYPE.AGENT_ACCOUNTS || feedType === FEED_TYPE.MANAGE_AGENTS) return 'agent';
   if (feedType === FEED_TYPE.SPONSOR_ACCOUNTS) return 'sponsor';
   return 'recipient';
 }
 
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
-  // 💡 SSOT: use props directly; do not copy to local state
-  const wallets = useMemo<spCoinAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
-  const tokens = useMemo<TokenFeedItem[]>(() => feedData.tokens ?? [], [feedData.tokens]);
+  const isAccountFeed = isAccountFeedType(feedType);
+  const role = roleFromFeedType(feedType);
+
+  // ✅ SSOT: read directly from props, using the SSOT union fields
+  const accounts = useMemo<spCoinAccount[]>(() => {
+    // account feeds in SSOT are { feedType: AccountFeedType; accountsXXXX: spCoinAccount[] }
+    return (feedData as any)?.accountsXXXX ?? [];
+  }, [feedData]);
+
+  const tokens = useMemo<TokenFeedItem[]>(() => {
+    return (feedData as any)?.tokens ?? [];
+  }, [feedData]);
 
   // ✅ Zebra row backgrounds (Tailwind arbitrary values)
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
   const zebraForIndex = (i: number) => (i % 2 === 0 ? zebraA : zebraB);
 
-  // FSM / selection bridge (unchanged except explicit manualEntry=false when programmatic)
-  const {
-    handleHexInputChange,
-    setManualEntry,
-    setInputState,
-    manualEntry,
-    setTradingTokenCallback,
-  } = useAssetSelectContext();
+  // FSM / selection bridge
+  const { handleHexInputChange, setManualEntry, setInputState, manualEntry, setTradingTokenCallback } =
+    useAssetSelectContext();
 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
 
-  const programmaticReady = useEnsureBoolWhen(
-    [manualEntry, setManualEntry],
-    false,
-    enforceProgrammatic
-  );
+  const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
-  // Log mount + whenever feed changes / data changes
   useEffect(() => {
     debugLog.log?.('[render]', {
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
-      isAccountFeed: isAccountFeedType(feedType),
-      walletsCount: wallets.length,
+      isAccountFeed,
+      accountsCount: accounts.length,
       tokensCount: tokens.length,
       loading,
-      sampleWalletAddresses: wallets.slice(0, 3).map((w) => w.address),
+      sampleAccountAddresses: accounts.slice(0, 3).map((a) => a.address),
     });
-  }, [feedType, wallets, tokens.length, loading]);
+  }, [feedType, isAccountFeed, accounts, tokens.length, loading]);
 
-  // Commit deferred pick once allowed (unchanged + manualEntry=false)
   useEffect(() => {
     if (!programmaticReady || !pendingPickRef.current) return;
 
@@ -104,28 +99,14 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
     debugLog.log?.('[deferred-commit] begin', { addr, programmaticReady });
 
-    // ✅ Programmatic flow: ensure manualEntry=false
-    debugLog.log?.('[deferred-commit] setManualEntry(false)');
     setManualEntry(false);
 
     setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
     handleHexInputChange(addr, false);
 
-    // ✅ FIX: include SPONSOR_ACCOUNTS (+ manage feeds) as account selections
-    if (isAccountFeedType(feedType)) {
-      const picked = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
-      if (picked) {
-        debugLog.log?.('[deferred-commit] setTradingTokenCallback', {
-          address: picked.address,
-          role: roleFromFeedType(feedType),
-        });
-        setTradingTokenCallback(picked);
-      } else {
-        debugLog.warn?.('[deferred-commit] picked not found in wallets', {
-          addr,
-          walletsCount: wallets.length,
-        });
-      }
+    if (isAccountFeed) {
+      const picked = accounts.find((w) => w.address.toLowerCase() === addr.toLowerCase());
+      if (picked) setTradingTokenCallback(picked);
     }
 
     debugLog.log?.('[deferred-commit] end');
@@ -133,8 +114,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     programmaticReady,
     handleHexInputChange,
     setInputState,
-    feedType,
-    wallets,
+    isAccountFeed,
+    accounts,
     setTradingTokenCallback,
     setManualEntry,
   ]);
@@ -150,46 +131,32 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       });
 
       if (!programmaticReady) {
-        debugLog.log?.('[pick] not ready → deferring', { address });
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
 
-      // ✅ Programmatic flow: ensure manualEntry=false before we kick FSM
-      debugLog.log?.('[pick] setManualEntry(false) immediate');
       setManualEntry(false);
 
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
       handleHexInputChange(address, false);
 
-      // ✅ FIX: include SPONSOR_ACCOUNTS (+ manage feeds)
-      if (isAccountFeedType(feedType)) {
-        const picked = wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
-        if (picked) {
-          debugLog.log?.('[pick] setTradingTokenCallback immediate', {
-            address: picked.address,
-            role: roleFromFeedType(feedType),
-          });
-          setTradingTokenCallback(picked);
-        } else {
-          debugLog.warn?.('[pick] picked not found in wallets', {
-            address,
-            walletsCount: wallets.length,
-          });
-        }
+      if (isAccountFeed) {
+        const picked = accounts.find((w) => w.address.toLowerCase() === address.toLowerCase());
+        if (picked) setTradingTokenCallback(picked);
       }
     },
     [
       programmaticReady,
       setInputState,
       handleHexInputChange,
-      feedType,
-      wallets,
+      isAccountFeed,
+      accounts,
       setTradingTokenCallback,
       setManualEntry,
       manualEntry,
-    ]
+      feedType,
+    ],
   );
 
   const wrapperClass =
@@ -200,9 +167,6 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       <p>{message}</p>
     </div>
   );
-
-  const isAccountFeed = isAccountFeedType(feedType);
-  const role = roleFromFeedType(feedType);
 
   return (
     <>
@@ -217,14 +181,10 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       `}</style>
 
       <div id="DataListWrapper" className={wrapperClass}>
-        {/* ✅ Sticky header */}
+        {/* Sticky header */}
         <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
           <div className="w-full flex justify-between px-5 py-2">
-            <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
-              Token
-            </div>
-
-            {/* Meta label centered over the right-side meta button column */}
+            <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">Token</div>
             <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
               Meta
             </div>
@@ -234,16 +194,12 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
         {isAccountFeed ? (
           loading ? (
             renderEmptyState('Loading accounts…')
-          ) : wallets.length === 0 ? (
+          ) : accounts.length === 0 ? (
             renderEmptyState('No accounts available.')
           ) : (
-            wallets.map((wallet, i) => (
-              <div key={wallet.address} className={zebraForIndex(i)}>
-                <AccountListItem
-                  account={wallet}
-                  onPick={handlePickAddress}
-                  role={role}
-                />
+            accounts.map((account, i) => (
+              <div key={account.address} className={zebraForIndex(i)}>
+                <AccountListItem account={account} onPick={handlePickAddress} role={role} />
               </div>
             ))
           )
@@ -253,7 +209,6 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
           renderEmptyState('No tokens available.')
         ) : (
           tokens.map((token, i) => {
-            // Ensure TokenListItem receives required string props
             const safeName: string =
               token.name ??
               token.symbol ??

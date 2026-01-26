@@ -1,4 +1,4 @@
-// File: @/lib/utils/feeds/assetSelect/useFeedData.ts
+// File: @/lib/utils/feeds/assetSelect/hooks/useFeedData.ts
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -16,6 +16,16 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('useFeedData', DEBUG_ENABLED, LOG_TIME);
 
+function isAccountFeedType(feedType: FEED_TYPE) {
+  return (
+    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+    feedType === FEED_TYPE.AGENT_ACCOUNTS ||
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
+    feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
+    feedType === FEED_TYPE.MANAGE_AGENTS
+  );
+}
+
 export function useFeedData(feedType: FEED_TYPE) {
   const [chainId] = useAppChainId();
   const [feedData, setFeedData] = useState<FeedData | null>(null);
@@ -28,13 +38,7 @@ export function useFeedData(feedType: FEED_TYPE) {
     const seq = ++seqRef.current;
     const chain = Number(chainId);
 
-    const isAccountFeed =
-      feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
-      feedType === FEED_TYPE.AGENT_ACCOUNTS ||
-      feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
-      feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
-      feedType === FEED_TYPE.MANAGE_AGENTS;
-
+    const isAccountFeed = isAccountFeedType(feedType);
     setLoading(isAccountFeed);
 
     debugLog.log?.('[start]', {
@@ -42,6 +46,7 @@ export function useFeedData(feedType: FEED_TYPE) {
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
       chainId: chain,
+      isAccountFeed,
     });
 
     (async () => {
@@ -61,10 +66,14 @@ export function useFeedData(feedType: FEED_TYPE) {
           seq,
           feedTypeLabel: FEED_TYPE[feedType],
           chainId: chain,
-          // ✅ This is the exact JSON identifier *if* fetchAndBuildDataList provides it
+
+          // debug meta (if provided)
           sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
           sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
-          walletsLen: Array.isArray(anyData?.wallets) ? anyData.wallets.length : 0,
+
+          // ✅ SSOT: accountsXXXX only
+          accountsXXXXLen: Array.isArray(anyData?.accountsXXXX) ? anyData.accountsXXXX.length : 0,
+
           tokensLen: Array.isArray(anyData?.tokens) ? anyData.tokens.length : 0,
         });
       } catch (e: any) {

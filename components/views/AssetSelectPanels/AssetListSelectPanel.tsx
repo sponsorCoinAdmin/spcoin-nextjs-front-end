@@ -1,23 +1,21 @@
 // File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
-import AccountListRewardsPanel from '@/components/views/RadioOverlayPanels/AccountListRewardsPanel'
+import AccountListRewardsPanel from '@/components/views/RadioOverlayPanels/AccountListRewardsPanel';
 
 import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import {
-  FEED_TYPE,
-  SP_COIN_DISPLAY,
-  LIST_TYPE,
-  type spCoinAccount,
-} from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, LIST_TYPE, type spCoinAccount } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
+
+// ✅ SSOT: same FeedData type used by DataListSelect
+import type { FeedData } from '@/lib/utils/feeds/assetSelect/types';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -27,6 +25,27 @@ type Props = {
   /** Mandatory (temporary): forces callers to decide what UI/actions this list should render */
   listType: LIST_TYPE;
 };
+
+function isTokenFeedType(feedType: FEED_TYPE) {
+  return feedType === FEED_TYPE.TOKEN_LIST;
+}
+
+function isAccountFeedType(feedType: FEED_TYPE) {
+  return (
+    feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+    feedType === FEED_TYPE.AGENT_ACCOUNTS ||
+    feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
+    feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
+    feedType === FEED_TYPE.MANAGE_AGENTS
+  );
+}
+
+/** ✅ Prefer SSOT accountsXXXX, fallback to legacy wallets while migrating */
+function getAccountsFromFeed(feedData: any): spCoinAccount[] {
+  if (Array.isArray(feedData?.accountsXXXX)) return feedData.accountsXXXX as spCoinAccount[];
+  if (Array.isArray(feedData?.wallets)) return feedData.wallets as spCoinAccount[];
+  return [];
+}
 
 export default function AssetListSelectPanel({ listType }: Props) {
   const assetCtx = useAssetSelectContext() as any;
@@ -41,11 +60,8 @@ export default function AssetListSelectPanel({ listType }: Props) {
     setTradingTokenCallback,
   } = assetCtx;
 
-  // containerType might not be in the TS type, so we grab it via `as any`
   const containerType: SP_COIN_DISPLAY | undefined = assetCtx.containerType;
-
-  const containerLabel =
-    containerType != null ? SP_COIN_DISPLAY[containerType] : 'UNKNOWN';
+  const containerLabel = containerType != null ? SP_COIN_DISPLAY[containerType] : 'UNKNOWN';
 
   debugLog.log?.('[context]', {
     instanceId,
@@ -58,32 +74,44 @@ export default function AssetListSelectPanel({ listType }: Props) {
   });
 
   const { feedData, loading } = useFeedData(feedType);
-  const safeFeedData = feedData ?? { wallets: [], tokens: [] };
 
-  // Narrow the union for logging
-  const walletsCount =
-    feedData && 'wallets' in feedData && Array.isArray(feedData.wallets)
-      ? feedData.wallets.length
-      : 0;
+  /**
+   * ✅ Always return a valid SSOT FeedData shape
+   * - Token feeds: { feedType: TOKEN_LIST, tokens: [] }
+   * - Account feeds: { feedType: <account feed>, accountsXXXX: [] }
+   *
+   * NOTE: we do NOT invent `wallets` here; legacy is only a fallback reader.
+   */
+  const safeFeedData: FeedData = useMemo(() => {
+    if (feedData) return feedData;
 
+    if (isTokenFeedType(feedType)) {
+      return { feedType: FEED_TYPE.TOKEN_LIST, tokens: [] };
+    }
+
+    // account feeds
+    return { feedType: feedType as any, accountsXXXX: [] };
+  }, [feedData, feedType]);
+
+  // Logging counts (accountsXXXX first, wallets fallback)
+  const accounts = useMemo(() => getAccountsFromFeed(safeFeedData as any), [safeFeedData]);
+
+  const accountsCount = accounts.length;
   const tokensCount =
-    feedData && 'tokens' in feedData && Array.isArray(feedData.tokens)
-      ? feedData.tokens.length
-      : 0;
+    safeFeedData && Array.isArray((safeFeedData as any).tokens) ? (safeFeedData as any).tokens.length : 0;
 
   debugLog.log?.('[feedData snapshot]', {
     loading,
-    walletsCount,
+    accountsCount,
     tokensCount,
+    hasAccountsXXXX: Array.isArray((safeFeedData as any)?.accountsXXXX),
+    legacyWalletsLen: Array.isArray((safeFeedData as any)?.wallets) ? (safeFeedData as any).wallets.length : 0,
   });
 
-  // ✅ Manage view is now driven by listType (NOT feedType)
-  // This allows a single feed (e.g. SPONSOR_ACCOUNTS) to have multiple list behaviors.
+  // ✅ Manage view is driven by listType (NOT feedType)
   const isManageView =
-    listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS ||
-    listType === LIST_TYPE.SPONSOR_UNSPONSOR;
+    listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS || listType === LIST_TYPE.SPONSOR_UNSPONSOR;
 
-  // Branch: only non-manage feeds get the AddressSelect header
   const showAddressBar = !isManageView;
 
   useEffect(() => {
@@ -97,19 +125,14 @@ export default function AssetListSelectPanel({ listType }: Props) {
       showAddressBar,
       containerType,
       containerLabel,
+      isAccountFeed: isAccountFeedType(feedType),
     });
   }, [instanceId, feedType, listType, isManageView, showAddressBar, containerType, containerLabel]);
 
-  // Wallets are the input for AccountListRewardsPanel
-  const wallets: spCoinAccount[] = (safeFeedData as any).wallets ?? [];
-
-  // When a wallet is picked in AccountListRewardsPanel, push it through
-  // the same FSM bridge that DataListSelect uses for account feeds.
-  const setWalletCallBack = (wallet?: spCoinAccount) => {
-    if (!wallet?.address) {
-      debugLog.log?.('[setWalletCallBack] called with no wallet/address', {
-        wallet,
-      });
+  // When an account is picked in AccountListRewardsPanel, push it through the same FSM bridge.
+  const setWalletCallBack = (account?: spCoinAccount) => {
+    if (!account?.address) {
+      debugLog.log?.('[setWalletCallBack] called with no account/address', { account });
       return;
     }
 
@@ -119,15 +142,14 @@ export default function AssetListSelectPanel({ listType }: Props) {
       listType,
       listTypeLabel: LIST_TYPE[listType],
       manualEntry,
-      addressPreview: wallet.address.slice(0, 10),
+      addressPreview: account.address.slice(0, 10),
     });
 
-    // Programmatic commit: mirror DataListSelect account behavior
     setManualEntry(false);
     setInputState(InputState.EMPTY_INPUT, 'AssetListSelectPanel (AccountListRewardsPanel)');
-    handleHexInputChange(wallet.address, false);
+    handleHexInputChange(account.address, false);
 
-    setTradingTokenCallback(wallet);
+    setTradingTokenCallback(account);
   };
 
   return (
@@ -138,13 +160,11 @@ export default function AssetListSelectPanel({ listType }: Props) {
       data-feed-type={feedType}
       data-list-type={listType}
     >
-      {/* Header: only for non-manage feeds */}
       {showAddressBar && <AddressSelect callingParent="AssetListSelectPanel" />}
 
-      {/* Body: either generic DataListSelect or the richer AccountListRewardsPanel */}
       {isManageView ? (
         <AccountListRewardsPanel
-          walletList={wallets}
+          walletList={accounts} // component API still expects walletList
           setWalletCallBack={setWalletCallBack}
           containerType={containerType as SP_COIN_DISPLAY}
           listType={listType}
