@@ -51,7 +51,7 @@ export default function Recipient() {
   const recipientWebsite = selectedRecipient?.website;
   const connectedWebsite = activeAccount?.website;
 
-  // 🔎 Extra debug so we can verify the wallet JSON fields are present (incl. `website`)
+  // 🔎 Extra debug so we can verify the account JSON fields are present (incl. `website`)
   useEffect(() => {
     if (!DEBUG_ENABLED) return;
     dbg('query url =', queryUrlParam);

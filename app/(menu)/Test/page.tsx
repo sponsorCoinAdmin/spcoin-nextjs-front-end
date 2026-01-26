@@ -20,86 +20,86 @@ export default function TestPage() {
   const {
     showContext = false,
     showWallets = false,
-    showPanels = false,
     showToDo = false,
     showFSMTracePanel = false,
   } = pageAny;
 
   const [quickSwitch, setQuickSwitch] = useState<string>('');
 
-  const updateExchangePage = useCallback((updates: any) => {
-    setState((prev: any) => ({
-      ...prev,
-      page: {
-        ...prev?.page,
-        exchangePage: {
-          ...(prev?.page?.exchangePage ?? {}),
-          ...updates,
+  const updateExchangePage = useCallback(
+    (updates: any) => {
+      setState((prev: any) => ({
+        ...prev,
+        page: {
+          ...prev?.page,
+          exchangePage: {
+            ...(prev?.page?.exchangePage ?? {}),
+            ...updates,
+          },
         },
-      },
-    }));
-  }, [setState]);
+      }));
+    },
+    [setState]
+  );
 
   // Dropdown is visible only when no tab is open
-  const showRunTest = !(showContext || showWallets || showPanels || showToDo || showFSMTracePanel);
+  const showRunTest = !(showContext || showWallets || showToDo || showFSMTracePanel);
 
   // Open exactly one tab at a time
   const resetFlags = {
     showContext: false,
     showWallets: false,
-    showPanels: false,
     showToDo: false,
     showFSMTracePanel: false,
   } as const;
 
-  const handleQuickSwitch = useCallback((value: string) => {
-    if (!value) return;
+  const handleQuickSwitch = useCallback(
+    (value: string) => {
+      if (!value) return;
 
-    switch (value) {
-      case 'context':
-        updateExchangePage({
-          ...resetFlags,
-          showContext: true,
-          // Context tab can manage its own internal options (expand, active display) if needed.
-        });
-        break;
-      case 'fsm':
-        updateExchangePage({
-          ...resetFlags,
-          showFSMTracePanel: true,
-        });
-        break;
-      case 'wallets':
-        updateExchangePage({
-          ...resetFlags,
-          showWallets: true,
-        });
-        break;
-      case 'panels':
-        updateExchangePage({
-          ...resetFlags,
-          showPanels: true,
-        });
-        break;
-      case 'todo':
-        updateExchangePage({
-          ...resetFlags,
-          showToDo: true,
-        });
-        break;
-      default:
-        break;
-    }
+      switch (value) {
+        case 'context':
+          updateExchangePage({
+            ...resetFlags,
+            showContext: true,
+            // Context tab can manage its own internal options (expand, active display) if needed.
+          });
+          break;
+        case 'fsm':
+          updateExchangePage({
+            ...resetFlags,
+            showFSMTracePanel: true,
+          });
+          break;
+        case 'wallets':
+          updateExchangePage({
+            ...resetFlags,
+            showWallets: true,
+          });
+          break;
+        case 'todo':
+          updateExchangePage({
+            ...resetFlags,
+            showToDo: true,
+          });
+          break;
+        default:
+          break;
+      }
 
-    // Reset so the same option can be selected again later
-    setQuickSwitch('');
-  }, [updateExchangePage]);
+      // Reset so the same option can be selected again later
+      setQuickSwitch('');
+    },
+    [updateExchangePage]
+  );
 
   return (
     <div className="space-y-6 p-6">
       {showRunTest && (
         <div className="w-full flex justify-center mb-4">
-          <label htmlFor="quickSwitchSelect" className="sr-only">Run Test</label>
+          <label htmlFor="quickSwitchSelect" className="sr-only">
+            Run Test
+          </label>
           <select
             id="quickSwitchSelect"
             className={buttonClasses}
@@ -112,8 +112,7 @@ export default function TestPage() {
             <option value="context">Exchange Context</option>
             <option value="fsm">FSM Trace</option>
             <option value="wallets">Test Wallets</option>
-            <option value="panels">Panels</option>
-            <option value="todo">ToDo's</option>
+            <option value="todo">ToDo&apos;s</option>
           </select>
         </div>
       )}
