@@ -9,7 +9,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import { useAccount } from 'wagmi';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { getJson } from '@/lib/rest/http';
@@ -26,13 +26,13 @@ const debugLog = createDebugLogger(
   LOG_TIME,
 );
 
-const ActiveAccountContext = createContext<WalletAccount | undefined>(
+const ActiveAccountContext = createContext<spCoinAccount | undefined>(
   undefined,
 );
 
 // 🔹 UI-level hook (RecipientSite, etc.)
 // Note: this is separate from the ExchangeContext nested hook
-export const useActiveAccount = (): WalletAccount | undefined =>
+export const useActiveAccount = (): spCoinAccount | undefined =>
   useContext(ActiveAccountContext);
 
 export function ActiveAccountProvider({ children }: { children: ReactNode }) {
@@ -40,7 +40,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
 
   // ✅ Local state again — no dependency on ExchangeContext
   const [activeAccount, setActiveAccount] = useState<
-    WalletAccount | undefined
+    spCoinAccount | undefined
   >(undefined);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const metadata = await getJson<WalletAccount>(accountPath, {
+        const metadata = await getJson<spCoinAccount>(accountPath, {
           timeoutMs: 8000,
           retries: 0,
           accept: 'application/json',
@@ -78,7 +78,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
           },
         });
 
-        const wallet: WalletAccount = { ...metadata, address };
+        const wallet: spCoinAccount = { ...metadata, address };
 
         if (!ac.signal.aborted) {
           setActiveAccount(wallet);
@@ -89,7 +89,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
           debugLog.log?.('[ActiveAccount] website =', wallet.website);
         }
       } catch {
-        const fallback: WalletAccount = {
+        const fallback: spCoinAccount = {
           address,
           type: 'ERC20_WALLET',
           description: `Account ${address} not registered on this site`,

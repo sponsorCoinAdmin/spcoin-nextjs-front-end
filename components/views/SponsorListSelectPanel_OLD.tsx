@@ -4,7 +4,7 @@
 import {
   FEED_TYPE,
   SP_COIN_DISPLAY,
-  type WalletAccount,
+  type spCoinAccount,
   type TokenContract,
   LIST_TYPE,
 } from '@/lib/structure';
@@ -40,15 +40,15 @@ function SponsorListSelectPanel_OLDInner() {
   const commitSponsor =
     (commits as any).commitSponsor ??
     (commits as any).commitRecipient ??
-    ((a: WalletAccount) => {
+    ((a: spCoinAccount) => {
       // last-resort: do nothing but avoid crash
       console.warn('No commitSponsor/commitRecipient found; selected sponsor:', a);
     });
 
-  const handleCommit = (asset: WalletAccount | TokenContract) => {
+  const handleCommit = (asset: spCoinAccount | TokenContract) => {
     const isToken = typeof (asset as any)?.decimals === 'number';
     if (isToken) return;
-    commitSponsor(asset as WalletAccount);
+    commitSponsor(asset as spCoinAccount);
   };
 
   return (

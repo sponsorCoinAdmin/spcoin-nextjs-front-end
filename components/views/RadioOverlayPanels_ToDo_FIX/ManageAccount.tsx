@@ -3,13 +3,13 @@
 
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { AccountType } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 
 type Props = {
-  wallet?: WalletAccount;
+  wallet?: spCoinAccount;
 };
 
 type ToDoMode = 'claimRewards' | 'unstakeSponsorships';

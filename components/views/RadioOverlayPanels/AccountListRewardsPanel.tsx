@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
@@ -22,8 +22,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
-  walletList: WalletAccount[];
-  setWalletCallBack: (wallet?: WalletAccount) => void;
+  walletList: spCoinAccount[];
+  setWalletCallBack: (wallet?: spCoinAccount) => void;
 
   /** REQUIRED: selector panel container type */
   containerType: SP_COIN_DISPLAY;

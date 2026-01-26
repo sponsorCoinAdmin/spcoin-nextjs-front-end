@@ -1,7 +1,7 @@
 // File: @/components/views/AssetSelectPanels/TokenListSelectPanel.tsx
 'use client';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type WalletAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
@@ -30,7 +30,7 @@ function TokenListSelectPanelInner({
   const { commitToken } = useSelectionCommit();
   const side = activePanel === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ? 'sell' : 'buy';
 
-  const handleCommit = (asset: WalletAccount | TokenContract) => {
+  const handleCommit = (asset: spCoinAccount | TokenContract) => {
     const isToken = typeof (asset as any)?.decimals === 'number';
     if (!isToken) return;
     commitToken(asset as TokenContract, side);

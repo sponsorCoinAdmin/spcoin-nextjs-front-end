@@ -66,7 +66,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
-  // RECIPIENT selection (WalletAccount-like → bypass token-only checks)
+  // RECIPIENT selection (spCoinAccount-like → bypass token-only checks)
   [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
@@ -77,7 +77,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
-  // AGENT selection (WalletAccount-like → bypass token-only checks)
+  // AGENT selection (spCoinAccount-like → bypass token-only checks)
   [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
@@ -88,7 +88,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
 
-  // SPONSOR selection (WalletAccount-like → bypass token-only checks)
+  // SPONSOR selection (spCoinAccount-like → bypass token-only checks)
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,

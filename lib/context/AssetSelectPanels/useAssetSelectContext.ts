@@ -6,7 +6,7 @@ import type {
   SP_COIN_DISPLAY,
   FEED_TYPE,
   TokenContract,
-  WalletAccount,
+  spCoinAccount,
 } from '@/lib/structure';
 import type { InputState } from '@/lib/structure/assetSelection';
 
@@ -28,7 +28,7 @@ export interface AssetSelectContextType {
 
   // Final validated token or wallet
   setValidatedToken: (token?: TokenContract) => void;
-  setValidatedWallet: (wallet?: WalletAccount) => void;
+  setValidatedWallet: (wallet?: spCoinAccount) => void;
 
   // Dump tools
   dumpFSMContext: (header?: string) => void;

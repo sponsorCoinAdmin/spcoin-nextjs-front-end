@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, LIST_TYPE, type WalletAccount } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, LIST_TYPE, type spCoinAccount } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -61,9 +61,9 @@ function ManageSponsorRecipientsInner({
   // ✅ Directly load sponsor accounts (same source as before)
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
 
-  const wallets: WalletAccount[] = useMemo(() => {
+  const wallets: spCoinAccount[] = useMemo(() => {
     const anyData: any = feedData;
-    return Array.isArray(anyData?.wallets) ? (anyData.wallets as WalletAccount[]) : [];
+    return Array.isArray(anyData?.wallets) ? (anyData.wallets as spCoinAccount[]) : [];
   }, [feedData]);
 
   useEffect(() => {
@@ -79,7 +79,7 @@ function ManageSponsorRecipientsInner({
   }, [activePanel, listType, loading, error, wallets.length, feedData]);
 
   const setWalletCallBack = useCallback(
-    (wallet?: WalletAccount) => {
+    (wallet?: spCoinAccount) => {
       if (!wallet?.address) {
         debugLog.log?.('[setWalletCallBack] ignored (no wallet/address)', { wallet });
         return;

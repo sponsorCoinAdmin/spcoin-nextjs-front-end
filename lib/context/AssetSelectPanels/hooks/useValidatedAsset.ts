@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -11,14 +11,14 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_FSM === 'true';
 const debugLog = createDebugLogger('useValidatedAsset', DEBUG_ENABLED, LOG_TIME);
 
-function sameAsset(a?: TokenContract | WalletAccount, b?: TokenContract | WalletAccount) {
+function sameAsset(a?: TokenContract | spCoinAccount, b?: TokenContract | spCoinAccount) {
   if (!a && !b) return true;
   if (!a || !b) return false;
-  // WalletAccount has `address`; TokenContract has `address` (Address type)
+  // spCoinAccount has `address`; TokenContract has `address` (Address type)
   return (a as any).address === (b as any).address && (a as any).symbol === (b as any).symbol;
 }
 
-export function useValidatedAsset<T extends TokenContract | WalletAccount>() {
+export function useValidatedAsset<T extends TokenContract | spCoinAccount>() {
   const [validatedAsset, setValidatedAssetRaw] = useState<T | undefined>(undefined);
 
   const setValidatedAsset = useCallback((next?: T) => {

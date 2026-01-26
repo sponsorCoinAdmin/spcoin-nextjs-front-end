@@ -1,7 +1,7 @@
 import { useExchangeContext } from '@/lib/context/hooks';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 
-export const useRecipientAccount = (): [WalletAccount | undefined, (w: WalletAccount | undefined) => void] => {
+export const useRecipientAccount = (): [spCoinAccount | undefined, (w: spCoinAccount | undefined) => void] => {
   const { exchangeContext, setRecipientAccount } = useExchangeContext();
   return [exchangeContext?.accounts?.recipientAccount, setRecipientAccount];
 };

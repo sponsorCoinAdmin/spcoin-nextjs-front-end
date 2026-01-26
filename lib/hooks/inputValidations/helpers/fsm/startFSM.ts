@@ -4,7 +4,7 @@
 import type { MutableRefObject } from 'react';
 import type {
   SP_COIN_DISPLAY,
-  WalletAccount,
+  spCoinAccount,
   TokenContract,
 } from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
@@ -50,7 +50,7 @@ type StartFSMArgs = {
 export type StartFSMResult =
   | {
       finalState: InputState;
-      asset?: WalletAccount | TokenContract;
+      asset?: spCoinAccount | TokenContract;
     }
   | null;
 
@@ -121,12 +121,12 @@ export async function startFSM(
   // Inline FSM loop (previously runFSM)
   // ─────────────────────────────────────────────
   let state = InputState.VALIDATE_ADDRESS;
-  const assetAcc: Partial<TokenContract | WalletAccount> = {};
+  const assetAcc: Partial<TokenContract | spCoinAccount> = {};
   let seeded = false;
   const maxSteps = 30;
 
   const mergeAssetPatch = (
-    patch?: Partial<TokenContract | WalletAccount>,
+    patch?: Partial<TokenContract | spCoinAccount>,
   ) => {
     if (!patch) return;
 
@@ -190,7 +190,7 @@ export async function startFSM(
   traceSink.onFinish(finalState);
 
   const committedAsset =
-    (assetAcc as WalletAccount | TokenContract | undefined);
+    (assetAcc as spCoinAccount | TokenContract | undefined);
   const hasAddr = Boolean((committedAsset as any)?.address);
 
   const isCommit =

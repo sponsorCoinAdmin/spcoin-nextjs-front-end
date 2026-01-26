@@ -3,7 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WalletAccount, AccountAddress } from '../structure/types';
+import type { spCoinAccount, AccountAddress } from '../structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import {
   normalizeAddressForAssets,
@@ -22,17 +22,17 @@ const debugLog = createDebugLogger('loadAccounts', DEBUG_ENABLED, LOG_TIME);
  * Otherwise, it scans `public/assets/accounts/` for wallet.json files.
  *
  * @param jsonAccountFileList - Optional list of AccountAddress objects.
- * @returns Promise<WalletAccount[]>
+ * @returns Promise<spCoinAccount[]>
  */
 export async function loadAccounts(
   jsonAccountFileList?: AccountAddress[],
-): Promise<WalletAccount[]> {
+): Promise<spCoinAccount[]> {
   debugLog.log?.('🔄 Starting loadAccounts on the server…', {
     hasList: !!jsonAccountFileList,
     listLength: jsonAccountFileList?.length ?? 0,
   });
 
-  const accounts: WalletAccount[] = [];
+  const accounts: spCoinAccount[] = [];
   const accountsDir = path.join(process.cwd(), 'public', 'assets', 'accounts'); // ✅ Correct server-side path
 
   debugLog.log?.('📜 jsonAccountFileList', jsonAccountFileList ?? null);
@@ -61,7 +61,7 @@ export async function loadAccounts(
       if (fs.existsSync(accountFilePath)) {
         try {
           const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-          const account: WalletAccount = JSON.parse(accountData);
+          const account: spCoinAccount = JSON.parse(accountData);
 
           // Centralized logo URL builder (address stays in its original case)
           if (!account.logoURL) {
@@ -112,13 +112,13 @@ export async function loadAccounts(
         if (fs.existsSync(accountFilePath)) {
           try {
             const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-            const account: WalletAccount = JSON.parse(accountData);
+            const account: spCoinAccount = JSON.parse(accountData);
 
             if (!account.logoURL) {
               // Prefer the address from JSON if present; fall back to folder name
               const addrForLogo =
                 account.address ??
-                (`0x${accountFolder.slice(2)}` as WalletAccount['address']);
+                (`0x${accountFolder.slice(2)}` as spCoinAccount['address']);
               account.logoURL = getWalletLogoURL(addrForLogo);
             }
 

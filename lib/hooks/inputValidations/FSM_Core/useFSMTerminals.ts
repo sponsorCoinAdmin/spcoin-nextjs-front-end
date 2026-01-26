@@ -1,13 +1,13 @@
 // File: @/lib/hooks/inputValidations/FSM_Core/useFSMTerminals.ts
 import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure/assetSelection';
-import type { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type UseFSMTerminalsArgs = {
   inputState: InputState;
-  validatedAsset?: TokenContract | WalletAccount;
-  onForwardAsset: (asset: TokenContract | WalletAccount) => void;
+  validatedAsset?: TokenContract | spCoinAccount;
+  onForwardAsset: (asset: TokenContract | spCoinAccount) => void;
   onClose: (fromUser: boolean) => void;
   onCleanup: () => void; // reset local/input/FSM state for next open
   debug?: boolean;

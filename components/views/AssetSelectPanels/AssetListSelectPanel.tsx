@@ -17,7 +17,7 @@ import {
   FEED_TYPE,
   SP_COIN_DISPLAY,
   LIST_TYPE,
-  type WalletAccount,
+  type spCoinAccount,
 } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
@@ -103,11 +103,11 @@ export default function AssetListSelectPanel({ listType }: Props) {
   }, [instanceId, feedType, listType, isManageView, showAddressBar, containerType, containerLabel]);
 
   // Wallets are the input for AccountListRewardsPanel
-  const wallets: WalletAccount[] = (safeFeedData as any).wallets ?? [];
+  const wallets: spCoinAccount[] = (safeFeedData as any).wallets ?? [];
 
   // When a wallet is picked in AccountListRewardsPanel, push it through
   // the same FSM bridge that DataListSelect uses for account feeds.
-  const setWalletCallBack = (wallet?: WalletAccount) => {
+  const setWalletCallBack = (wallet?: spCoinAccount) => {
     if (!wallet?.address) {
       debugLog.log?.('[setWalletCallBack] called with no wallet/address', {
         wallet,

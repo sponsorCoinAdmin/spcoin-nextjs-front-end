@@ -9,7 +9,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import CloseButton from '@/components/views/Buttons/CloseButton';
-import { SP_COIN_DISPLAY as SP_TREE, type WalletAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY as SP_TREE, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -30,15 +30,15 @@ export default function TradeContainerHeader() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
 
   const accounts = exchangeContext?.accounts ?? {};
-  const recipientAccount = accounts.recipientAccount as WalletAccount | undefined;
-  const agentAccount = accounts.agentAccount as WalletAccount | undefined;
-  const sponsorAccount = accounts.sponsorAccount as WalletAccount | undefined;
+  const recipientAccount = accounts.recipientAccount as spCoinAccount | undefined;
+  const agentAccount = accounts.agentAccount as spCoinAccount | undefined;
+  const sponsorAccount = accounts.sponsorAccount as spCoinAccount | undefined;
 
   const agentDetailOpen = isVisible(SP_TREE.AGENT_ACCOUNT_PANEL);
   const recipientDetailOpen = isVisible(SP_TREE.RECIPIENT_ACCOUNT_PANEL);
   const sponsorDetailOpen = isVisible(SP_TREE.SPONSOR_ACCOUNT_PANEL);
 
-  let headerWallet: WalletAccount | undefined;
+  let headerWallet: spCoinAccount | undefined;
   if (agentDetailOpen && agentAccount) headerWallet = agentAccount;
   else if (recipientDetailOpen && recipientAccount) headerWallet = recipientAccount;
   else if (sponsorDetailOpen && sponsorAccount) headerWallet = sponsorAccount;

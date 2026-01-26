@@ -13,7 +13,7 @@ import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/Pane
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
  */
-export interface WalletAccount {
+export interface spCoinAccount {
   name: string;
   symbol: string;
   type: string;
@@ -61,13 +61,13 @@ export type ContractRecs = {
  * All known accounts tracked by the app.
  */
 export type Accounts = {
-  activeAccount?: WalletAccount;
-  sponsorAccount?: WalletAccount;
-  recipientAccount?: WalletAccount;
-  agentAccount?: WalletAccount;
-  sponsorAccounts?: WalletAccount[];
-  recipientAccounts?: WalletAccount[];
-  agentAccounts?: WalletAccount[];
+  activeAccount?: spCoinAccount;
+  sponsorAccount?: spCoinAccount;
+  recipientAccount?: spCoinAccount;
+  agentAccount?: spCoinAccount;
+  sponsorAccounts?: spCoinAccount[];
+  recipientAccounts?: spCoinAccount[];
+  agentAccounts?: spCoinAccount[];
 };
 
 /**

@@ -1,10 +1,10 @@
 // File: @/lib/hooks/inputValidations/types/validationTypes.ts
 
-import type { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, spCoinAccount } from '@/lib/structure';
 
-export type AgentAccount = WalletAccount;
-export type SponsorAccount = WalletAccount;
-export type ValidAddressAccount = WalletAccount | SponsorAccount | AgentAccount;
+export type AgentAccount = spCoinAccount;
+export type SponsorAccount = spCoinAccount;
+export type ValidAddressAccount = spCoinAccount | SponsorAccount | AgentAccount;
 export type ValidatedAsset = TokenContract | ValidAddressAccount;
 
 export interface TokenMetadata {

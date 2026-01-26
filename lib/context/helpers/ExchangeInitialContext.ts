@@ -1,7 +1,7 @@
 // File: @/lib/context/helpers/initExchangeContext.ts
 
 import type {
-  WalletAccount,
+  spCoinAccount,
   NetworkElement,
   ExchangeContext,
 } from '@/lib/structure';
@@ -67,10 +67,10 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
 
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get('defaultRecipient') as
-        | WalletAccount
+        | spCoinAccount
         | undefined,
       agentAccount: initialContextMap.get('defaultAgent') as
-        | WalletAccount
+        | spCoinAccount
         | undefined,
       sponsorAccounts: [],
       recipientAccounts: [],

@@ -4,7 +4,7 @@ import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type {
   ExchangeContext as ExchangeContextTypeOnly,
-  WalletAccount,
+  spCoinAccount,
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
@@ -166,7 +166,7 @@ export function useProviderWatchers({
       const next = clone(prevCtx);
 
       if (nextSlice.address && isConnected) {
-        const current = next.accounts.activeAccount ?? ({} as WalletAccount);
+        const current = next.accounts.activeAccount ?? ({} as spCoinAccount);
         next.accounts.activeAccount = {
           ...current,
           address: nextSlice.address as Address,

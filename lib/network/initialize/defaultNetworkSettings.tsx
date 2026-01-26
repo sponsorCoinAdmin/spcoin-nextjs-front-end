@@ -10,7 +10,7 @@ import type {
   TradeData,
   ExchangeContext,
   NetworkElement,
-  WalletAccount,
+  spCoinAccount,
 } from '@/lib/structure';
 import {
   TRADE_DIRECTION,
@@ -90,9 +90,9 @@ const getInitialContext = (
     network: initialContextMap.get('networkHeader') as NetworkElement,
     accounts: {
       recipientAccount: initialContextMap.get('defaultRecipient') as
-        | WalletAccount
+        | spCoinAccount
         | undefined,
-      agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
+      agentAccount: initialContextMap.get('defaultAgent') as spCoinAccount | undefined,
       sponsorAccount: undefined,
       sponsorAccounts: [],
       recipientAccounts: [],

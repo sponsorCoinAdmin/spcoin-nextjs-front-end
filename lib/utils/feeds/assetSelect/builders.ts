@@ -2,7 +2,7 @@
 
 import type { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
 import {
   getLogoURL,
@@ -36,8 +36,8 @@ function parseJson(input: unknown): any {
 
 /* ─────────────────────── core normalizers ─────────────────────── */
 
-/** Normalize a sparse account JSON entry into a WalletAccount */
-export function buildWalletObj(a: any): WalletAccount {
+/** Normalize a sparse account JSON entry into a spCoinAccount */
+export function buildWalletObj(a: any): spCoinAccount {
   const address = (a?.address as Address) || (BURN_ADDRESS as Address);
   return {
     address,
@@ -45,7 +45,7 @@ export function buildWalletObj(a: any): WalletAccount {
     symbol: a?.symbol ?? 'N/A',
     // Always derive; do NOT rely on JSON-provided logoURL
     logoURL: getWalletLogoURL(address),
-  } as WalletAccount;
+  } as spCoinAccount;
 }
 
 /** Normalize a token JSON entry into a BuiltToken (async to resolve logos) */
@@ -74,7 +74,7 @@ export async function buildTokenFromJson(rawToken: unknown, chainId: number): Pr
   return buildTokenObj(parseJson(rawToken), chainId);
 }
 
-export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<WalletAccount[]> {
+export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<spCoinAccount[]> {
   const spec = parseJson(rawAccountSpec);
 
   // ✅ This is the “before we go to public/assets/accounts” log.
@@ -95,7 +95,7 @@ export async function buildWalletsFromJson(rawAccountSpec: unknown): Promise<Wal
   return accounts.map(buildWalletObj);
 }
 
-export async function buildWalletFromJsonFirst(rawAccountSpec: unknown): Promise<WalletAccount | null> {
+export async function buildWalletFromJsonFirst(rawAccountSpec: unknown): Promise<spCoinAccount | null> {
   const ws = await buildWalletsFromJson(rawAccountSpec);
   return ws[0] ?? null;
 }

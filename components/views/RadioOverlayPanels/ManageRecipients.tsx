@@ -5,7 +5,7 @@ import React, { useEffect, useContext, useCallback } from 'react';
 import {
   FEED_TYPE,
   SP_COIN_DISPLAY,
-  type WalletAccount,
+  type spCoinAccount,
   type TokenContract,
   LIST_TYPE,
 } from '@/lib/structure';
@@ -48,7 +48,7 @@ function ManageRecipientsInner() {
   const { openPanel } = usePanelTree();
 
   const handleCommit = useCallback(
-    (asset: WalletAccount | TokenContract) => {
+    (asset: spCoinAccount | TokenContract) => {
       const isToken = typeof (asset as any)?.decimals === 'number';
 
       debugLog.log?.('[handleCommit]', {
@@ -62,7 +62,7 @@ function ManageRecipientsInner() {
       // This panel is for recipient *wallets*, not tokens
       if (isToken) return;
 
-      const wallet = asset as WalletAccount;
+      const wallet = asset as spCoinAccount;
 
       // 1️⃣ Set recipientAccount in ExchangeContext
       ctx?.setExchangeContext(

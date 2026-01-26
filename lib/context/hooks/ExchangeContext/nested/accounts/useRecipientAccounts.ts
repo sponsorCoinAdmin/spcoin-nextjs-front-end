@@ -1,24 +1,24 @@
 // File: @/lib/context/hooks/ExchangeContext/nested/accounts/useRecipientAccounts.ts
 'use client';
 
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { useAccounts } from '../useAccounts';
 
 export function useRecipientAccounts(): [
-  WalletAccount[],
-  (next: WalletAccount[] | ((prev: WalletAccount[]) => WalletAccount[])) => void,
+  spCoinAccount[],
+  (next: spCoinAccount[] | ((prev: spCoinAccount[]) => spCoinAccount[])) => void,
 ] {
   const [accounts, setAccounts] = useAccounts();
   const recipients = accounts.recipientAccounts ?? [];
 
   const setRecipients = (
-    next: WalletAccount[] | ((prev: WalletAccount[]) => WalletAccount[]),
+    next: spCoinAccount[] | ((prev: spCoinAccount[]) => spCoinAccount[]),
   ) => {
     setAccounts((prev) => {
       const current = prev.recipientAccounts ?? [];
       const updated =
         typeof next === 'function'
-          ? (next as (p: WalletAccount[]) => WalletAccount[])(current)
+          ? (next as (p: spCoinAccount[]) => spCoinAccount[])(current)
           : next;
       return {
         ...prev,

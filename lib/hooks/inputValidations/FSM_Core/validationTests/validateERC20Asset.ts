@@ -27,7 +27,7 @@ const NATIVE_SENTINEL = (
   NATIVE_TOKEN_ADDRESS ?? '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 ).toLowerCase();
 
-// Panels that should resolve to WalletAccount, not TokenContract
+// Panels that should resolve to spCoinAccount, not TokenContract
 const ACCOUNT_LIKE_PANELS = new Set<SP_COIN_DISPLAY>([
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD,
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD,
@@ -78,7 +78,7 @@ export async function validateERC20Asset(
     return { nextState: InputState.RETURN_VALIDATED_ASSET };
   }
 
-  // Account-like flows: build WalletAccount via assetPatch & finish
+  // Account-like flows: build spCoinAccount via assetPatch & finish
   if (ACCOUNT_LIKE_PANELS.has(containerType)) {
     debugLog.log?.('🟡 Account-like panel branch', {
       containerType,

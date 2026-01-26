@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useCallback, useRef, useMemo, useEffect } from 'react';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -20,7 +20,7 @@ const debugLog = createDebugLogger(
 );
 
 interface Props {
-  recipientAccount?: WalletAccount;
+  recipientAccount?: spCoinAccount;
 }
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {

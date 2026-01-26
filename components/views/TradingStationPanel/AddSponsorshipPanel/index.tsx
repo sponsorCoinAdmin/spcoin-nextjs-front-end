@@ -7,7 +7,7 @@ import Link from 'next/link';
 import type { Address } from 'viem';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import type { WalletAccount } from '@/lib/structure/types';
+import type { spCoinAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
@@ -86,7 +86,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
   const [buyTokenContract] = useBuyTokenContract();
 
-  const recipientWallet: WalletAccount | undefined =
+  const recipientWallet: spCoinAccount | undefined =
     exchangeContext.accounts.recipientAccount;
 
   // ── State ────────────────────────────────────────────────────────────────────

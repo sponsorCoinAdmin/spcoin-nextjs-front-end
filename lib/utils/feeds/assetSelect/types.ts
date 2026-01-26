@@ -1,7 +1,7 @@
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 
 // Used by TokenListItem and DataListSelect
 export type BuiltToken = {
@@ -32,4 +32,4 @@ export type FeedDebugMeta = {
 
 export type FeedData =
   | ({ feedType: TokenFeedType; tokens: BuiltToken[] } & { __debug?: FeedDebugMeta })
-  | ({ feedType: AccountFeedType; wallets: WalletAccount[] } & { __debug?: FeedDebugMeta });
+  | ({ feedType: AccountFeedType; wallets: spCoinAccount[] } & { __debug?: FeedDebugMeta });

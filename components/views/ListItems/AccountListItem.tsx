@@ -4,7 +4,7 @@
 import React, { memo, useMemo } from 'react';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -19,7 +19,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('AccountListItem', DEBUG_ENABLED, LOG_TIME);
 
 type AccountListItemProps = {
-  account: WalletAccount;
+  account: spCoinAccount;
   role: string; // may be passed by parent; unused locally
   onPick: (address: string) => void; // wired to avatar click
 };

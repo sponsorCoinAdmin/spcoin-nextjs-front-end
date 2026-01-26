@@ -4,7 +4,7 @@ import {
   type ExchangeContext as ExchangeContextTypeOnly,
   type TRADE_DIRECTION,
   type TokenContract,
-  type WalletAccount,
+  type spCoinAccount,
 } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -69,7 +69,7 @@ function summarizeToken(t?: TokenContract) {
 
 export function useProviderSetters(setExchangeContext: SetExchange) {
   /* Accounts */
-  const setRecipientAccount = (wallet: WalletAccount | undefined) =>
+  const setRecipientAccount = (wallet: spCoinAccount | undefined) =>
     setExchangeContext((p) => {
       if (p.accounts.recipientAccount === wallet) {
         log.log?.('[setRecipientAccount] no-op (same reference)');
@@ -82,7 +82,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
     }, 'setRecipientAccount');
 
   // ➕ NEW: Agent account (mirror of recipient)
-  const setAgentAccount = (wallet: WalletAccount | undefined) =>
+  const setAgentAccount = (wallet: spCoinAccount | undefined) =>
     setExchangeContext((p) => {
       if (p.accounts.agentAccount === wallet) {
         log.log?.('[setAgentAccount] no-op (same reference)');

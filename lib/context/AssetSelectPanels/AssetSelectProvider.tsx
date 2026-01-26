@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 
 import { AssetSelectContext } from './useAssetSelectContext';
-import type { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
@@ -35,7 +35,7 @@ const debugLog = createDebugLogger(
 type Props = {
   children: ReactNode;
   closePanelCallback: (fromUser?: boolean) => void;
-  setSelectedAssetCallback: (asset: TokenContract | WalletAccount) => void;
+  setSelectedAssetCallback: (asset: TokenContract | spCoinAccount) => void;
   containerType: SP_COIN_DISPLAY;
   initialPanelBag?: AssetSelectBag;
   /** Optional: force a specific FEED_TYPE instead of inferring from containerType */
@@ -144,7 +144,7 @@ export const AssetSelectProvider = ({
     setValidatedAsset,
     validatedAssetNarrow,
     setValidatedAssetNarrow,
-  } = useValidatedAsset<TokenContract | WalletAccount>();
+  } = useValidatedAsset<TokenContract | spCoinAccount>();
 
   // Bridge to FSM (peerAddress is derived inside useFSMBridge)
   const {
@@ -168,7 +168,7 @@ export const AssetSelectProvider = ({
     validatedAsset,
     setValidatedAsset,
     fireClosePanel: (fromUser?: boolean) => closePanelCallback(fromUser),
-    fireSetTradingToken: (asset: TokenContract | WalletAccount) =>
+    fireSetTradingToken: (asset: TokenContract | spCoinAccount) =>
       setSelectedAssetCallback(asset),
     resetPreview,
     showAssetPreview,
@@ -201,7 +201,7 @@ export const AssetSelectProvider = ({
   ]);
 
   // Log when validatedAsset changes (guarded)
-  const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(
+  const prevValidatedRef = useRef<TokenContract | spCoinAccount | undefined>(
     undefined
   );
   useEffect(() => {
@@ -280,7 +280,7 @@ export const AssetSelectProvider = ({
   );
 
   const setValidatedAssetLogged = useCallback(
-    (asset?: TokenContract | WalletAccount) => {
+    (asset?: TokenContract | spCoinAccount) => {
       const a: any = asset;
       debugLog.log?.('[setValidatedAsset]', {
         instanceId,
@@ -298,7 +298,7 @@ export const AssetSelectProvider = ({
 
   // Parent bridges (log who is committing/closing)
   const setTradingTokenCallbackCtx = useCallback(
-    (asset: TokenContract | WalletAccount) => {
+    (asset: TokenContract | spCoinAccount) => {
       const a: any = asset;
       debugLog.log?.('[setTradingTokenCallback]', {
         instanceId,
@@ -373,7 +373,7 @@ export const AssetSelectProvider = ({
   );
 
   // Required by the type; keep as no-op unless you intend to support it
-  const setValidatedWallet = useCallback((_?: WalletAccount) => {
+  const setValidatedWallet = useCallback((_?: spCoinAccount) => {
     /* no-op: deprecated */
   }, []);
 

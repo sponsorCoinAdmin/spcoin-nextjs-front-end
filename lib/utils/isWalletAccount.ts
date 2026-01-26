@@ -1,7 +1,7 @@
 // lib/utils/isWalletAccount.ts
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 
-export function isWalletAccount(obj: any): obj is WalletAccount {
+export function isWalletAccount(obj: any): obj is spCoinAccount {
   return (
     obj &&
     typeof obj.address === 'string' &&

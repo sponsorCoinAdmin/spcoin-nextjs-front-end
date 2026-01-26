@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import {
   useSellTokenContract,
@@ -20,8 +20,8 @@ export type UseSelectionCommit = {
   commitSellToken: (t: TokenContract) => void;
   commitToken: (t: TokenContract, side: 'buy' | 'sell') => void;
 
-  commitRecipient: (w: WalletAccount) => void;
-  commitAgent: (w: WalletAccount) => void;
+  commitRecipient: (w: spCoinAccount) => void;
+  commitAgent: (w: spCoinAccount) => void;
 
   finish: () => void; // closes via stack POP (header-close behavior)
 };
@@ -96,7 +96,7 @@ export function useSelectionCommit(): UseSelectionCommit {
   );
 
   const commitRecipient = useCallback(
-    (w: WalletAccount) => {
+    (w: spCoinAccount) => {
       const addr = (w as any)?.address;
       const name = (w as any)?.name;
 
@@ -123,7 +123,7 @@ export function useSelectionCommit(): UseSelectionCommit {
   );
 
   const commitAgent = useCallback(
-    (w: WalletAccount) => {
+    (w: spCoinAccount) => {
       const addr = (w as any)?.address;
       const name = (w as any)?.name;
 

@@ -7,7 +7,7 @@ import type {
   FEED_TYPE,
   SP_COIN_DISPLAY,
   TokenContract,
-  WalletAccount,
+  spCoinAccount,
 } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
@@ -33,11 +33,11 @@ type BridgeParams = {
   /** Live manualEntry value from parent */
   manualEntry: boolean;
 
-  validatedAsset?: TokenContract | WalletAccount;
-  setValidatedAsset: (next?: TokenContract | WalletAccount) => void;
+  validatedAsset?: TokenContract | spCoinAccount;
+  setValidatedAsset: (next?: TokenContract | spCoinAccount) => void;
 
   fireClosePanel: (fromUser: boolean) => void;
-  fireSetTradingToken: (asset: TokenContract | WalletAccount) => void;
+  fireSetTradingToken: (asset: TokenContract | spCoinAccount) => void;
 
   // UI preview funcs
   resetPreview: () => void;

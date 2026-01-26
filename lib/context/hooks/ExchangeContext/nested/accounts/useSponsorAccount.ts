@@ -1,17 +1,17 @@
 // File: @/lib/context/hooks/ExchangeContext/nested/accounts/useSponsorAccount.ts
 'use client';
 
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { useAccounts } from '../useAccounts';
 
 export function useSponsorAccount(): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] {
   const [accounts, setAccounts] = useAccounts();
   const sponsor = accounts.sponsorAccount;
 
-  const setSponsor = (next: WalletAccount | undefined) => {
+  const setSponsor = (next: spCoinAccount | undefined) => {
     setAccounts((prev) => ({
       ...prev,
       sponsorAccount: next,

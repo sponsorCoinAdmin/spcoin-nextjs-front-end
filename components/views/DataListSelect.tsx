@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
@@ -19,7 +19,7 @@ export type TokenFeedItem = {
 };
 
 type FeedData = {
-  wallets?: WalletAccount[];
+  wallets?: spCoinAccount[];
   tokens?: TokenFeedItem[];
 };
 
@@ -55,7 +55,7 @@ function roleFromFeedType(feedType: FEED_TYPE): string {
 
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   // 💡 SSOT: use props directly; do not copy to local state
-  const wallets = useMemo<WalletAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
+  const wallets = useMemo<spCoinAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
   const tokens = useMemo<TokenFeedItem[]>(() => feedData.tokens ?? [], [feedData.tokens]);
 
   // ✅ Zebra row backgrounds (Tailwind arbitrary values)

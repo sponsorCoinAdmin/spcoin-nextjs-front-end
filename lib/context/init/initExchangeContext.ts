@@ -1,7 +1,7 @@
 // File: @/lib/context/init/initExchangeContext.ts
 import { sanitizeExchangeContext } from '../helpers/ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from '../helpers/loadLocalExchangeContext';
-import type { WalletAccount, ExchangeContext } from '@/lib/structure';
+import type { spCoinAccount, ExchangeContext } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 import type { Address } from 'viem';
@@ -203,7 +203,7 @@ function makeWalletFallback(
   addr: Address,
   status: STATUS,
   description: string,
-): WalletAccount {
+): spCoinAccount {
   return {
     address: addr,
     type: 'ERC20_WALLET',
@@ -217,12 +217,12 @@ function makeWalletFallback(
   };
 }
 
-type WalletJson = Partial<WalletAccount> & {
+type WalletJson = Partial<spCoinAccount> & {
   balance?: string | number | bigint;
 };
 
 /** RESTful metadata loader (no plain). */
-async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
+async function loadWalletMetadata(addr: Address): Promise<spCoinAccount> {
   // 🔁 Only change: use centralized helper for the wallet.json path
   const url = getWalletJsonURL(addr);
 

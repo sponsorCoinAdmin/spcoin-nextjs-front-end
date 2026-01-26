@@ -5,7 +5,7 @@
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -28,8 +28,8 @@ const warnMissingAccounts = () => {
 /* -------------------------------------------------------------------------- */
 
 const useActiveAccount = (): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -40,7 +40,7 @@ const useActiveAccount = (): [
 
   const activeAccount = accounts?.activeAccount;
 
-  const setActiveAccount = (next: WalletAccount | undefined) => {
+  const setActiveAccount = (next: spCoinAccount | undefined) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -59,8 +59,8 @@ const useActiveAccount = (): [
 };
 
 const useSponsorAccount = (): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -71,7 +71,7 @@ const useSponsorAccount = (): [
 
   const sponsorAccount = accounts?.sponsorAccount;
 
-  const setSponsorAccount = (next: WalletAccount | undefined) => {
+  const setSponsorAccount = (next: spCoinAccount | undefined) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -90,8 +90,8 @@ const useSponsorAccount = (): [
 };
 
 const useRecipientAccount = (): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -102,7 +102,7 @@ const useRecipientAccount = (): [
 
   const recipientAccount = accounts?.recipientAccount;
 
-  const setRecipientAccount = (next: WalletAccount | undefined) => {
+  const setRecipientAccount = (next: spCoinAccount | undefined) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -121,8 +121,8 @@ const useRecipientAccount = (): [
 };
 
 const useAgentAccount = (): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -133,7 +133,7 @@ const useAgentAccount = (): [
 
   const agentAccount = accounts?.agentAccount;
 
-  const setAgentAccount = (next: WalletAccount | undefined) => {
+  const setAgentAccount = (next: spCoinAccount | undefined) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -152,8 +152,8 @@ const useAgentAccount = (): [
 };
 
 const useSponsorAccounts = (): [
-  WalletAccount[],
-  (next: WalletAccount[]) => void,
+  spCoinAccount[],
+  (next: spCoinAccount[]) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -164,7 +164,7 @@ const useSponsorAccounts = (): [
 
   const sponsorAccounts = accounts?.sponsorAccounts ?? [];
 
-  const setSponsorAccounts = (next: WalletAccount[]) => {
+  const setSponsorAccounts = (next: spCoinAccount[]) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -183,8 +183,8 @@ const useSponsorAccounts = (): [
 };
 
 const useRecipientAccounts = (): [
-  WalletAccount[],
-  (next: WalletAccount[]) => void,
+  spCoinAccount[],
+  (next: spCoinAccount[]) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -195,7 +195,7 @@ const useRecipientAccounts = (): [
 
   const recipientAccounts = accounts?.recipientAccounts ?? [];
 
-  const setRecipientAccounts = (next: WalletAccount[]) => {
+  const setRecipientAccounts = (next: spCoinAccount[]) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -214,8 +214,8 @@ const useRecipientAccounts = (): [
 };
 
 const useAgentAccounts = (): [
-  WalletAccount[],
-  (next: WalletAccount[]) => void,
+  spCoinAccount[],
+  (next: spCoinAccount[]) => void,
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const accounts = exchangeContext.accounts;
@@ -226,7 +226,7 @@ const useAgentAccounts = (): [
 
   const agentAccounts = accounts?.agentAccounts ?? [];
 
-  const setAgentAccounts = (next: WalletAccount[]) => {
+  const setAgentAccounts = (next: spCoinAccount[]) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {

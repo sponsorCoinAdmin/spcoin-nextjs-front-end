@@ -3,22 +3,22 @@
 
 import { useAccounts } from '../useAccounts';
 
-// Infer Accounts + WalletAccount type from useAccounts
+// Infer Accounts + spCoinAccount type from useAccounts
 type Accounts = ReturnType<typeof useAccounts>[0];
-type WalletAccount = Accounts['activeAccount'];
+type spCoinAccount = Accounts['activeAccount'];
 
 export function useRecipientAccount(): [
-  WalletAccount | undefined,
-  (next: WalletAccount | undefined) => void,
+  spCoinAccount | undefined,
+  (next: spCoinAccount | undefined) => void,
 ] {
   const [accounts, setAccounts] = useAccounts();
 
   // If recipientAccount doesn't exist yet on the type, you may need to add it
   // to your ExchangeAccounts shape. For now we assert it's the same kind of thing
   // as activeAccount.
-  const recipient = accounts.recipientAccount as WalletAccount | undefined;
+  const recipient = accounts.recipientAccount as spCoinAccount | undefined;
 
-  const setRecipient = (next: WalletAccount | undefined) => {
+  const setRecipient = (next: spCoinAccount | undefined) => {
     // Explicit type for prev avoids the "implicitly has any type" warning
     setAccounts((prev: Accounts) => ({
       ...prev,

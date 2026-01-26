@@ -402,7 +402,7 @@ export async function fetchAndBuildDataList(feedType: FEED_TYPE, chainId: number
 /**
  * Convenience: get a source and return a single normalized item.
  * - TOKEN_LIST → one BuiltToken (from first/only item)
- * - *_ACCOUNTS → first WalletAccount (or null if none)
+ * - *_ACCOUNTS → first spCoinAccount (or null if none)
  */
 export async function fetchSingleFromSource(feedType: FEED_TYPE, chainId: number) {
   const seq = ++CALL_SEQ;

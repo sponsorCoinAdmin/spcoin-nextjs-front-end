@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   FEED_TYPE,
   SP_COIN_DISPLAY,
-  WalletAccount,
+  spCoinAccount,
   TokenContract,
 } from '@/lib/structure';
 
@@ -33,7 +33,7 @@ interface UseFSMStateManagerParams {
   // ⬇️ NEW: per-instance bypass (prop-driven)
   bypassFSM?: boolean;
 
-  setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
+  setValidatedAsset: (asset: spCoinAccount | TokenContract | undefined) => void;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
 }

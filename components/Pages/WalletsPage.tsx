@@ -6,13 +6,13 @@ import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import agentJsonList from '@/resources/data/agents/accounts.json';
 import recipientJsonList from '@/resources/data/recipients/accounts.json';
 import sponsorJsonList from '@/resources/data/sponsors/accounts.json';
-import type { WalletAccount } from '@/lib/structure';
+import type { spCoinAccount } from '@/lib/structure';
 import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 
 const walletOptions = ['All', 'Agents', 'Recipients', 'Sponsors'] as const;
 
 export default function WalletsPage() {
-    const [walletCache, setWalletCache] = useState<Record<string, WalletAccount[]>>({
+    const [walletCache, setWalletCache] = useState<Record<string, spCoinAccount[]>>({
         All: [],
         Recipients: [],
         Agents: [],
@@ -21,7 +21,7 @@ export default function WalletsPage() {
 
     const [typeOfWallets, setTypeOfWallets] =
         useState<(typeof walletOptions)[number]>('All');
-    const [wallets, setWallets] = useState<WalletAccount[]>([]);
+    const [wallets, setWallets] = useState<spCoinAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
@@ -119,7 +119,7 @@ export default function WalletsPage() {
                         <p className="text-center text-base text-red-400">Error: {err}</p>
                     ) : (
                         <ul className="list-none p-0 m-0">
-                            {wallets.map((wallet: WalletAccount, index) => (
+                            {wallets.map((wallet: spCoinAccount, index) => (
                                 <li
                                     key={`${typeOfWallets}-${wallet.address}-${index}`}
                                     className={`flex items-center p-3 mb-2 rounded ${index % 2 === 0

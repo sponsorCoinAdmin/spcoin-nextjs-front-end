@@ -13,7 +13,7 @@ import type {
   TRADE_DIRECTION,
   TokenContract,
   ErrorMessage,
-  WalletAccount,
+  spCoinAccount,
   NetworkElement,
 } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -79,7 +79,7 @@ export type ExchangeContextType = {
   setBuyTokenContract: (contract: TokenContract | undefined) => void;
   setTradeDirection: (type: TRADE_DIRECTION) => void;
   setSlippageBps: (bps: number) => void;
-  setRecipientAccount: (wallet: WalletAccount | undefined) => void;
+  setRecipientAccount: (wallet: spCoinAccount | undefined) => void;
   setAppChainId: (chainId: number) => void;
 
   errorMessage: ErrorMessage | undefined;

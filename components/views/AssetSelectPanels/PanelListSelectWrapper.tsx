@@ -3,7 +3,7 @@
 
 import { useMemo, useCallback, useEffect } from 'react';
 import { SP_COIN_DISPLAY, LIST_TYPE, FEED_TYPE } from '@/lib/structure';
-import type { WalletAccount, TokenContract } from '@/lib/structure';
+import type { spCoinAccount, TokenContract } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -28,7 +28,7 @@ type Props = {
   listType: LIST_TYPE;
   instancePrefix: string;
   peerAddress?: `0x${string}`;
-  onCommit: (asset: WalletAccount | TokenContract) => void;
+  onCommit: (asset: spCoinAccount | TokenContract) => void;
   suppressAutoClose?: boolean;
 };
 
@@ -132,7 +132,7 @@ function PanelListSelectWrapperInner({
   );
 
   const handleCommit = useCallback(
-    (asset: WalletAccount | TokenContract) => {
+    (asset: spCoinAccount | TokenContract) => {
       // ... your existing buy/sell updates ...
 
       // ✅ ensure prop is "read" here

@@ -1,7 +1,7 @@
 // File: @/lib/context/helpers/assetHelpers.ts
 
 import type { Address } from 'viem';
-import { FEED_TYPE, type WalletAccount } from '@/lib/structure';
+import { FEED_TYPE, type spCoinAccount } from '@/lib/structure';
 import { headOk, get } from '@/lib/rest/http';
 
 // Minimal client-side existence cache for logo paths
@@ -250,10 +250,10 @@ export function getAssetInfoURL(
 }
 
 /**
- * Legacy-style account logo helper (used where a full WalletAccount is available).
+ * Legacy-style account logo helper (used where a full spCoinAccount is available).
  * Delegates to the wallet logo helper so account logos share the same behavior.
  */
-export function getAccountLogo(account?: WalletAccount): string {
+export function getAccountLogo(account?: spCoinAccount): string {
   if (!account) return defaultMissingImage;
   return getWalletLogoURL(account.address);
 }
@@ -271,9 +271,9 @@ export function getWalletJsonURL(address?: string): string {
 }
 
 /**
- * Helper for account metadata JSON when a WalletAccount object is available.
+ * Helper for account metadata JSON when a spCoinAccount object is available.
  */
-export function getAccountWalletJsonURL(account?: WalletAccount): string {
+export function getAccountWalletJsonURL(account?: spCoinAccount): string {
   if (!account) return '';
   return getWalletJsonURL(account.address);
 }
