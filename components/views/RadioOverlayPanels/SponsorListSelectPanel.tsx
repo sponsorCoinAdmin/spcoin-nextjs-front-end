@@ -154,7 +154,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
           }}
         >
           <AccountListRewardsPanel
-            walletList={accounts} // component API still expects walletList
+            accountList={accounts} // component API still expects accountList
             setWalletCallBack={setWalletCallBack}
             containerType={activePanel}
             listType={listType}

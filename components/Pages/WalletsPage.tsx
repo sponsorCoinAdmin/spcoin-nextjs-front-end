@@ -35,26 +35,26 @@ export default function WalletsPage() {
 
         setLoading(true);
 
-        let walletList;
+        let accountList;
 
         switch (typeOfWallets) {
             case 'Recipients':
-                walletList = recipientJsonList;
+                accountList = recipientJsonList;
                 break;
             case 'Agents':
-                walletList = agentJsonList;
+                accountList = agentJsonList;
                 break;
             case 'Sponsors':
-                walletList = sponsorJsonList;
+                accountList = sponsorJsonList;
                 break;
             default:
-                walletList = [...recipientJsonList, ...agentJsonList];
+                accountList = [...recipientJsonList, ...agentJsonList];
                 break;
         }
 
         let cancelled = false;
         try {
-            const downloadedWallets = await loadAccounts(walletList);
+            const downloadedWallets = await loadAccounts(accountList);
             if (cancelled) return;
 
             setWallets(downloadedWallets);

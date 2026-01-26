@@ -22,7 +22,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
-  walletList: spCoinAccount[];
+  accountList: spCoinAccount[];
   setWalletCallBack: (wallet?: spCoinAccount) => void;
 
   /** REQUIRED: selector panel container type */
@@ -225,7 +225,7 @@ function ExpandWrap({ open, children }: { open: boolean; children: React.ReactNo
   );
 }
 
-export default function AccountListRewardsPanel({ walletList, setWalletCallBack, containerType, listType }: Props) {
+export default function AccountListRewardsPanel({ accountList, setWalletCallBack, containerType, listType }: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
@@ -344,8 +344,8 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
         label: undefined,
       } as PendingClaim);
 
-    const isTotal = pending.accountId < 0 || pending.accountId >= walletList.length;
-    const row = isTotal ? undefined : walletList[pending.accountId];
+    const isTotal = pending.accountId < 0 || pending.accountId >= accountList.length;
+    const row = isTotal ? undefined : accountList[pending.accountId];
 
     const addressText =
       row && typeof (row as any).address === 'string'
@@ -382,7 +382,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
       rowAccount,
       sponsorConnected: connected ? connected.address : '(not connected)',
     });
-  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList, listType]);
+  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
   const actionButtonLabel = listType === LIST_TYPE.SPONSOR_UNSPONSOR ? 'Unsponsor' : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS ? 'Claim' : 'Action';
 
@@ -646,7 +646,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
           </thead>
 
           <tbody>
-            {walletList.map((w, i) => {
+            {accountList.map((w, i) => {
               const zebra = i % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
 
               const addressText =
@@ -681,8 +681,8 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
               const showRow4 = effectiveWalletOpenRows3to5;
               const showRow5 = effectiveWalletOpenRows3to5;
 
-              const revIndex = walletList.length - 1 - i;
-              const rw = walletList[revIndex];
+              const revIndex = accountList.length - 1 - i;
+              const rw = accountList[revIndex];
 
               const rwAddressText =
                 typeof (rw as any).address === 'string'
@@ -775,7 +775,7 @@ export default function AccountListRewardsPanel({ walletList, setWalletCallBack,
             })}
 
             {(() => {
-              const isA = walletList.length % 2 === 0;
+              const isA = accountList.length % 2 === 0;
               const zebra = isA ? msTableTw.rowA : msTableTw.rowB;
               const actionTw = msTableTw.btnGreen;
 
