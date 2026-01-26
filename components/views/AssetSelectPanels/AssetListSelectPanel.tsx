@@ -1,5 +1,3 @@
-
-
 // File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
