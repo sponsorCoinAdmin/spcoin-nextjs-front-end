@@ -141,13 +141,13 @@ export default function AssetListSelectPanel({ listType }: Props) {
   }, [instanceId, feedType, listType, isManageView, showAddressBar, containerType, containerLabel]);
 
   // When an account is picked in AccountListRewardsPanel, push it through the same FSM bridge.
-  const setWalletCallBack = (account?: spCoinAccount) => {
+  const setAccountCallBack = (account?: spCoinAccount) => {
     if (!account?.address) {
-      debugLog.log?.('[setWalletCallBack] called with no account/address', { account });
+      debugLog.log?.('[setAccountCallBack] called with no account/address', { account });
       return;
     }
 
-    debugLog.log?.('[setWalletCallBack]', {
+    debugLog.log?.('[setAccountCallBack]', {
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
       listType,
@@ -176,7 +176,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
       {isManageView ? (
         <AccountListRewardsPanel
           accountList={accounts} // component API still expects accountList (prop name only)
-          setWalletCallBack={setWalletCallBack}
+          setAccountCallBack={setAccountCallBack}
           containerType={containerType as SP_COIN_DISPLAY}
           listType={listType}
         />

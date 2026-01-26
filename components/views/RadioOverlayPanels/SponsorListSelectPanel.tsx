@@ -80,14 +80,14 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
     });
   }, [activePanel, listType, loading, error, accounts.length, feedData]);
 
-  const setWalletCallBack = useCallback(
+  const setAccountCallBack = useCallback(
     (account?: spCoinAccount) => {
       if (!account?.address) {
-        debugLog.log?.('[setWalletCallBack] ignored (no account/address)', { account });
+        debugLog.log?.('[setAccountCallBack] ignored (no account/address)', { account });
         return;
       }
 
-      debugLog.log?.('[setWalletCallBack]', {
+      debugLog.log?.('[setAccountCallBack]', {
         activePanel: SP_COIN_DISPLAY[activePanel],
         listType: LIST_TYPE[listType],
         addressPreview: String(account.address).slice(0, 12),
@@ -106,13 +106,13 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
             },
           };
         },
-        `ManageSponsorRecipients:setWalletCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
+        `ManageSponsorRecipients:setAccountCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
       );
 
       // 2) Open sponsor detail panel
       openPanel(
         SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-        `ManageSponsorRecipients:setWalletCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+        `ManageSponsorRecipients:setAccountCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
         activePanel,
       );
     },
@@ -155,7 +155,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
         >
           <AccountListRewardsPanel
             accountList={accounts} // component API still expects accountList
-            setWalletCallBack={setWalletCallBack}
+            setAccountCallBack={setAccountCallBack}
             containerType={activePanel}
             listType={listType}
           />

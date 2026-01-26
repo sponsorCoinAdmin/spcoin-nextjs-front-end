@@ -23,7 +23,7 @@ const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TI
 
 type Props = {
   accountList: spCoinAccount[];
-  setWalletCallBack: (wallet?: spCoinAccount) => void;
+  setAccountCallBack: (wallet?: spCoinAccount) => void;
 
   /** REQUIRED: selector panel container type */
   containerType: SP_COIN_DISPLAY;
@@ -225,7 +225,7 @@ function ExpandWrap({ open, children }: { open: boolean; children: React.ReactNo
   );
 }
 
-export default function AccountListRewardsPanel({ accountList, setWalletCallBack, containerType, listType }: Props) {
+export default function AccountListRewardsPanel({ accountList, setAccountCallBack, containerType, listType }: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
@@ -709,7 +709,7 @@ export default function AccountListRewardsPanel({ accountList, setWalletCallBack
                           onMouseEnter={() => onRowEnter(w?.name ?? '')}
                           onMouseMove={onRowMove}
                           onMouseLeave={onRowLeave}
-                          onClick={() => setWalletCallBack(w)}
+                          onClick={() => setAccountCallBack(w)}
                           aria-label={`Open ${accountRole1}s reconfigure`}
                           data-role={accountRole1}
                           data-address={addressText}
@@ -738,7 +738,7 @@ export default function AccountListRewardsPanel({ accountList, setWalletCallBack
                           onMouseEnter={() => onRowEnter(rw?.name ?? '')}
                           onMouseMove={onRowMove}
                           onMouseLeave={onRowLeave}
-                          onClick={() => setWalletCallBack(rw)}
+                          onClick={() => setAccountCallBack(rw)}
                           aria-label={`Open ${accountRole2}s reconfigure`}
                           data-role={accountRole2}
                           data-address={rwAddressText}
