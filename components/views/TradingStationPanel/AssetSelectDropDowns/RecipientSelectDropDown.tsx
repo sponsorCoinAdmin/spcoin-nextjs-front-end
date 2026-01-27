@@ -73,7 +73,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
       e.stopPropagation();
 
       debugLog.log?.('📂 Opening Recipient dialog');
-      openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, {
+      openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD, {
         methodName: 'RecipientSelectDropDown:showRecipientListSelectPanel',
       });
     },
