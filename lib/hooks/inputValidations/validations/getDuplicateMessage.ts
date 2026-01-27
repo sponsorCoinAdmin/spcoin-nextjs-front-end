@@ -16,7 +16,7 @@ export function getDuplicateMessage(containerType: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
       return 'Buy Address Cannot Be the Same as Sell Address';
 
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD:
+    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
       return 'Recipient Address Cannot Match Sender';
 
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD:

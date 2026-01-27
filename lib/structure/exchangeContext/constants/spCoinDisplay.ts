@@ -19,7 +19,7 @@ export const MAIN_OVERLAY_GROUP = [
   SP.SELL_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)
-  SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
+  SP.RECIPIENT_LIST_SELECT_PANEL,
   SP.AGENT_LIST_SELECT_PANEL_OLD,
 
   // System / misc overlays

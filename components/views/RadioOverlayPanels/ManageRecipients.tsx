@@ -22,15 +22,15 @@ const debugLog = createDebugLogger('ManageRecipients', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Recipients list:
- * - List visibility: RECIPIENT_LIST_SELECT_PANEL_OLD (opened by ManageSponsorshipsPanel.openOnly)
+ * - List visibility: RECIPIENT_LIST_SELECT_PANEL (opened by ManageSponsorshipsPanel.openOnly)
  * - Detail visibility: RECIPIENT_ACCOUNT_PANEL (ManageRecipient + PanelGate)
  * - Selection source: FEED_TYPE.MANAGE_RECIPIENTS via PanelListSelectWrapper
  */
 export default function ManageRecipients() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
   useEffect(() => {
-    debugLog.log?.('[visibility] RECIPIENT_LIST_SELECT_PANEL_OLD', { visible });
+    debugLog.log?.('[visibility] RECIPIENT_LIST_SELECT_PANEL', { visible });
     if (visible) {
       debugLog.log?.('OPENING ManageRecipients');
     }
@@ -100,15 +100,15 @@ function ManageRecipientsInner() {
   );
 
   debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
-    panel: 'RECIPIENT_LIST_SELECT_PANEL_OLD',
+    panel: 'RECIPIENT_LIST_SELECT_PANEL',
     feedType: 'MANAGE_RECIPIENTS',
     instancePrefix: 'recipient',
   });
 
   return (
-    <div id="RECIPIENT_LIST_SELECT_PANEL_OLD">
+    <div id="RECIPIENT_LIST_SELECT_PANEL">
       <PanelListSelectWrapper
-        panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD}
+        panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
         feedType={FEED_TYPE.MANAGE_RECIPIENTS}
         listType={SP_COIN_DISPLAY.RECIPIENTS}
         instancePrefix="recipient"
