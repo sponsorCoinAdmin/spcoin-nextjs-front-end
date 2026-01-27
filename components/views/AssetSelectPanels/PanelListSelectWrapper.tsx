@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo, useCallback, useEffect } from 'react';
-import { SP_COIN_DISPLAY, LIST_TYPE, FEED_TYPE } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import type { spCoinAccount, TokenContract } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -21,11 +21,18 @@ const LOG_TIME = false as const;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('PanelListSelectWrapper', DEBUG_ENABLED, LOG_TIME);
 
-// KEEP your existing Props type here
+// ✅ SSOT: listType is now expressed using SP_COIN_DISPLAY only.
+// Keep this union narrow to prevent passing arbitrary display IDs.
+export type ASSET_LIST_MODE =
+  | SP_COIN_DISPLAY.AGENTS
+  | SP_COIN_DISPLAY.RECIPIENTS
+  | SP_COIN_DISPLAY.SPONSORS
+  | SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
+
 type Props = {
   panel: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
-  listType: LIST_TYPE;
+  listType: ASSET_LIST_MODE;
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: spCoinAccount | TokenContract) => void;
@@ -61,6 +68,7 @@ export default function PanelListSelectWrapper({
     feedTypeOverride: feedType,
     feedTypeOverrideLabel: FEED_TYPE[feedType],
     listType,
+    listTypeLabel: SP_COIN_DISPLAY[listType],
     instancePrefix,
   });
 
@@ -116,6 +124,7 @@ function PanelListSelectWrapperInner({
       feedTypeOverride: feedType,
       feedTypeOverrideLabel: FEED_TYPE[feedType],
       listType,
+      listTypeLabel: SP_COIN_DISPLAY[listType],
       instancePrefix,
       peerAddressPreview: peerAddress ? `${peerAddress.slice(0, 10)}…` : '(none)',
       hasInitialBag: !!initialPanelBag,

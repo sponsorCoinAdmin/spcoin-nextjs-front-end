@@ -5,7 +5,7 @@ import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } 
 import Image from 'next/image';
 
 import type { spCoinAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY, AccountType, LIST_TYPE } from '@/lib/structure';
+import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 import ToDo from '@/lib/utils/components/ToDo';
@@ -21,6 +21,12 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
+type REWARDS_LIST_MODE =
+  | SP_COIN_DISPLAY.AGENTS
+  | SP_COIN_DISPLAY.RECIPIENTS
+  | SP_COIN_DISPLAY.SPONSORS
+  | SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
+
 type Props = {
   accountList: spCoinAccount[];
   setAccountCallBack: (wallet?: spCoinAccount) => void;
@@ -28,8 +34,8 @@ type Props = {
   /** REQUIRED: selector panel container type */
   containerType: SP_COIN_DISPLAY;
 
-  /** Mandatory (temporary): determines which actions/columns this list should show */
-  listType: LIST_TYPE;
+  /** SSOT: determines which actions/columns this list should show */
+  listType: REWARDS_LIST_MODE;
 };
 
 type PendingClaim = {
@@ -225,7 +231,12 @@ function ExpandWrap({ open, children }: { open: boolean; children: React.ReactNo
   );
 }
 
-export default function AccountListRewardsPanel({ accountList, setAccountCallBack, containerType, listType }: Props) {
+export default function AccountListRewardsPanel({
+  accountList,
+  setAccountCallBack,
+  containerType,
+  listType,
+}: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
@@ -375,6 +386,7 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
 
     debugLog.log?.('[ToDo]', {
       listType,
+      listTypeLabel: SP_COIN_DISPLAY[listType],
       pending,
       label,
       isTotal,
@@ -384,7 +396,12 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
     });
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
-  const actionButtonLabel = listType === LIST_TYPE.SPONSOR_UNSPONSOR ? 'Unsponsor' : listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS ? 'Claim' : 'Action';
+  const actionButtonLabel =
+    listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS
+      ? 'Unsponsor'
+      : listType === SP_COIN_DISPLAY.SPONSORS
+        ? 'Claim'
+        : 'Action';
 
   const onRowEnter = (name?: string | null) => setTip((t) => ({ ...t, show: true, text: name ?? '' }));
   const onRowMove: React.MouseEventHandler = (e) => setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
@@ -604,7 +621,14 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
 
   return (
     <>
-      <AddressSelect defaultAddress={undefined} bypassDefaultFsm callingParent={'ManageAccount'} useActiveAddr={true} shortAddr={true} preText={inputAccountText} />
+      <AddressSelect
+        defaultAddress={undefined}
+        bypassDefaultFsm
+        callingParent={'ManageAccount'}
+        useActiveAddr={true}
+        shortAddr={true}
+        preText={inputAccountText}
+      />
 
       {tip.show && tip.text ? (
         <div
@@ -618,12 +642,16 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
       <div
         id={`${idPrefix}Wrapper`}
         className={`${msTableTw.wrapper} !mt-0 mt-0 mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto`}
-        data-list-type={LIST_TYPE[listType]}
+        data-list-type={SP_COIN_DISPLAY[listType]}
       >
         <table className={`min-w-full ${msTableTw.table}`}>
           <thead>
             <tr className={`${msTableTw.theadRow} sticky top-0 z-20`}>
-              <th style={{ width: '50%' }} scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW} ${ROW_OUTLINE_TW}`}>
+              <th
+                style={{ width: '50%' }}
+                scope="col"
+                className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW} ${ROW_OUTLINE_TW}`}
+              >
                 <div className="w-full flex items-center gap-2">
                   <button
                     type="button"
@@ -632,14 +660,22 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
                     title={effectiveChevronOpenPending ? 'Close all wallet rows' : 'Open all account rows'}
                     onClick={() => setGlobalChevronOpen(!effectiveChevronOpenPending)}
                   >
-                    {effectiveChevronOpenPending ? <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} /> : <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />}
+                    {effectiveChevronOpenPending ? (
+                      <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                    ) : (
+                      <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                    )}
                   </button>
 
                   <span className="truncate">{accountRole1}</span>
                 </div>
               </th>
 
-              <th style={{ width: '50%' }} scope="col" className={`${msTableTw.th} ${msTableTw.thPad3} text-left ${CELL_RIGHT_OUTLINE_TW} ${ROW_OUTLINE_TW}`}>
+              <th
+                style={{ width: '50%' }}
+                scope="col"
+                className={`${msTableTw.th} ${msTableTw.thPad3} text-left ${CELL_RIGHT_OUTLINE_TW} ${ROW_OUTLINE_TW}`}
+              >
                 {accountRole2}
               </th>
             </tr>
@@ -701,7 +737,10 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
               return (
                 <React.Fragment key={stableKey}>
                   <tr className={ROW_OUTLINE_TW}>
-                    <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}>
+                    <td
+                      style={{ width: '50%' }}
+                      className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
+                    >
                       <div className="w-full flex items-center gap-2 min-w-0">
                         <button
                           type="button"
@@ -724,13 +763,20 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
                         </button>
 
                         <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
-                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">{w?.name ?? 'Unknown'}</div>
-                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">{w?.symbol ?? ''}</div>
+                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">
+                            {w?.name ?? 'Unknown'}
+                          </div>
+                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">
+                            {w?.symbol ?? ''}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_RIGHT_OUTLINE_TW}`}>
+                    <td
+                      style={{ width: '50%' }}
+                      className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_RIGHT_OUTLINE_TW}`}
+                    >
                       <div className="w-full flex items-center gap-2 min-w-0">
                         <button
                           type="button"
@@ -753,8 +799,12 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
                         </button>
 
                         <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
-                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">{rw?.name ?? 'Unknown'}</div>
-                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">{rw?.symbol ?? ''}</div>
+                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">
+                            {rw?.name ?? 'Unknown'}
+                          </div>
+                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">
+                            {rw?.symbol ?? ''}
+                          </div>
                         </div>
                       </div>
                     </td>

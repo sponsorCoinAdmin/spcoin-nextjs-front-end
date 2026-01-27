@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, LIST_TYPE, type spCoinAccount } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -48,8 +48,8 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
 
-  // ✅ UNSTAKING removed: listType is always claim rewards for this component
-  const listType = LIST_TYPE.SPONSOR_CLAIM_REWARDS;
+  // ✅ SSOT: listType expressed via SP_COIN_DISPLAY (sponsor claim flow)
+  const listType = SP_COIN_DISPLAY.SPONSORS;
 
   // ✅ Directly load sponsor accounts
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
@@ -68,7 +68,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
     debugLog.log?.('[data]', {
       activePanel: SP_COIN_DISPLAY[activePanel],
-      listType: LIST_TYPE[listType],
+      listType: SP_COIN_DISPLAY[listType],
       loading,
       error: error ?? null,
 
@@ -89,7 +89,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
       debugLog.log?.('[setAccountCallBack]', {
         activePanel: SP_COIN_DISPLAY[activePanel],
-        listType: LIST_TYPE[listType],
+        listType: SP_COIN_DISPLAY[listType],
         addressPreview: String(account.address).slice(0, 12),
         name: (account as any)?.name,
       });

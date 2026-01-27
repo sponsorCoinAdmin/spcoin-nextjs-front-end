@@ -1,7 +1,7 @@
 // File: @/components/views/AssetSelectPanels/RecipientListSelectPanel.tsx
 'use client';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract, LIST_TYPE } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
@@ -27,7 +27,7 @@ function RecipientListSelectPanelInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD}
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-      listType={LIST_TYPE.UNDEFINED} 
+      listType={SP_COIN_DISPLAY.RECIPIENTS}
       instancePrefix="recipient"
       onCommit={handleCommit}
     />

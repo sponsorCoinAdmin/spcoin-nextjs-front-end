@@ -11,7 +11,7 @@ import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, LIST_TYPE, type spCoinAccount } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 // ✅ SSOT: same FeedData type used by DataListSelect
@@ -24,9 +24,16 @@ const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TI
 // keep dot-access out of the file
 const LEGACY_WALLETS_KEY = 'wallets' as const;
 
+// ✅ SSOT: list type is now expressed using SP_COIN_DISPLAY only
+export type ASSET_LIST_MODE =
+  | SP_COIN_DISPLAY.AGENTS
+  | SP_COIN_DISPLAY.RECIPIENTS
+  | SP_COIN_DISPLAY.SPONSORS
+  | SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
+
 type Props = {
-  /** Mandatory (temporary): forces callers to decide what UI/actions this list should render */
-  listType: LIST_TYPE;
+  /** SSOT: which “mode” this list is in */
+  listType: ASSET_LIST_MODE;
 };
 
 function isTokenFeedType(feedType: FEED_TYPE) {
@@ -75,7 +82,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
     feedType,
     feedTypeLabel: FEED_TYPE[feedType],
     listType,
-    listTypeLabel: LIST_TYPE[listType],
+    listTypeLabel: SP_COIN_DISPLAY[listType],
     containerType,
     containerLabel,
   });
@@ -121,7 +128,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
 
   // ✅ Manage view is driven by listType (NOT feedType)
   const isManageView =
-    listType === LIST_TYPE.SPONSOR_CLAIM_REWARDS || listType === LIST_TYPE.SPONSOR_UNSPONSOR;
+    listType === SP_COIN_DISPLAY.SPONSORS || listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
 
   const showAddressBar = !isManageView;
 
@@ -131,7 +138,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
       listType,
-      listTypeLabel: LIST_TYPE[listType],
+      listTypeLabel: SP_COIN_DISPLAY[listType],
       isManageView,
       showAddressBar,
       containerType,
@@ -151,7 +158,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
       listType,
-      listTypeLabel: LIST_TYPE[listType],
+      listTypeLabel: SP_COIN_DISPLAY[listType],
       manualEntry,
       addressPreview: account.address.slice(0, 10),
     });

@@ -6,7 +6,6 @@ import {
   SP_COIN_DISPLAY,
   type spCoinAccount,
   type TokenContract,
-  LIST_TYPE,
 } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
@@ -55,7 +54,7 @@ function SponsorListSelectPanel_OLDInner() {
     <PanelListSelectWrapper
       panel={SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL}
       feedType={FEED_TYPE.SPONSOR_ACCOUNTS}
-      listType={LIST_TYPE.UNDEFINED}
+      listType={SP_COIN_DISPLAY.SPONSORS}
       instancePrefix="sponsor"
       onCommit={handleCommit}
     />

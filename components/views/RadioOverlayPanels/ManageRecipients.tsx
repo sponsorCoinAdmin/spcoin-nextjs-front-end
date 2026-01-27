@@ -7,7 +7,6 @@ import {
   SP_COIN_DISPLAY,
   type spCoinAccount,
   type TokenContract,
-  LIST_TYPE,
 } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -18,8 +17,7 @@ import PanelListSelectWrapper from '@/components/views/AssetSelectPanels/PanelLi
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_RECIPIENTS === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_RECIPIENTS === 'true';
 const debugLog = createDebugLogger('ManageRecipients', DEBUG_ENABLED, LOG_TIME);
 
 /**
@@ -83,9 +81,7 @@ function ManageRecipientsInner() {
       //     any toTrading(MAIN_TRADING_PANEL) transition.
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
-          debugLog.log?.(
-            '[handleCommit] deferred open of RECIPIENT_ACCOUNT_PANEL after transitions',
-          );
+          debugLog.log?.('[handleCommit] deferred open of RECIPIENT_ACCOUNT_PANEL after transitions');
           openPanel(
             SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
             'ManageRecipients:handleCommit(deferred open RECIPIENT_ACCOUNT_PANEL)',
@@ -93,9 +89,7 @@ function ManageRecipientsInner() {
         }, 0);
       } else {
         // Fallback (shouldn’t really hit because we’re in a client component)
-        debugLog.log?.(
-          '[handleCommit] non-window environment; opening RECIPIENT_ACCOUNT_PANEL immediately',
-        );
+        debugLog.log?.('[handleCommit] non-window environment; opening RECIPIENT_ACCOUNT_PANEL immediately');
         openPanel(
           SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
           'ManageRecipients:handleCommit(open RECIPIENT_ACCOUNT_PANEL)',
@@ -116,7 +110,7 @@ function ManageRecipientsInner() {
       <PanelListSelectWrapper
         panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD}
         feedType={FEED_TYPE.MANAGE_RECIPIENTS}
-        listType={LIST_TYPE.UNDEFINED}
+        listType={SP_COIN_DISPLAY.RECIPIENTS}
         instancePrefix="recipient"
         onCommit={handleCommit}
       />
