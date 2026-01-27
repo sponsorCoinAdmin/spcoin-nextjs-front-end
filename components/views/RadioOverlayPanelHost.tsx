@@ -8,7 +8,6 @@ import PanelGate from '@/components/utility/PanelGate';
 import {
   AgentListSelectPanel,
   RecipientListSelectPanel,
-  SponsorListSelectPanel_OLD,
   TokenListSelectPanel,
 } from '@/components/views/AssetSelectPanels';
 
@@ -69,7 +68,6 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Select / aux overlays ───────────────────────── */}
       <AgentListSelectPanel />
       <RecipientListSelectPanel />
-      <SponsorListSelectPanel_OLD />
       <TokenListSelectPanel />
 
       <ErrorMessagePanel />
