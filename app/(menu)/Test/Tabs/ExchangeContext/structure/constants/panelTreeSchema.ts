@@ -20,10 +20,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
-    // ✅ Manage LIST views (NEW + OLD)
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
 
-    // ✅ OLD list overlays (legacy behavior)
     SPCD.RECIPIENT_LIST_SELECT_PANEL_OLD,
     SPCD.AGENT_LIST_SELECT_PANEL_OLD,
 
