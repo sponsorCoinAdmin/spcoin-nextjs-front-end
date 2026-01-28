@@ -13,8 +13,6 @@ import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import AssetListSelectPanel from './AssetListSelectPanel';
 
-import { AssetSelectLayout } from '@/components/views/AssetSelectPanels/AssetSelectLayout';
-
 import type { AssetSelectBag as UnionBag } from '@/lib/context/structure/types/panelBag';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -162,10 +160,7 @@ function PanelListSelectWrapperInner({
         initialPanelBag={initialPanelBag}
         feedTypeOverride={feedType}
       >
-        {/* Force a consistent flex + min-h-0 + single scroll container wrapper */}
-        {/* <AssetSelectLayout className="h-full w-full min-h-0" scrollClassName="min-h-0"> */}
-          <AssetListSelectPanel listType={listType} />
-        {/* </AssetSelectLayout> */}
+        <AssetListSelectPanel listType={listType} />
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );
