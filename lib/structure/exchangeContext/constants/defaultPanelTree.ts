@@ -57,6 +57,14 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
  * - MANAGE_PENDING_REWARDS is nested under MANAGE_SPONSORSHIPS_PANEL.
  * - SPONSOR_ACCOUNT_PANEL is mounted once at the overlay level.
  * - TOKEN_CONTRACT_PANEL is modeled as a first-class overlay panel.
+ *
+ * Tree Panel fix:
+ * - ACCOUNT_LIST_REWARDS_PANEL children order matches registry
+ * - Each pending/unstake node owns exactly ONE mode child:
+ *    PENDING_SPONSOR_COINS   -> SPONSORS
+ *    PENDING_RECIPIENT_COINS -> RECIPIENTS
+ *    PENDING_AGENT_COINS     -> AGENTS
+ *    UNSPONSOR_SP_COINS      -> SPONSORS
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
@@ -92,12 +100,12 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       node(SP.STAKING_SPCOINS_PANEL, false),
 
-      // Sponsor list select (parent) + sub-panels
+      // ✅ Account list rewards (parent) + fixed single-mode children per node
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
-        node(SP.UNSPONSOR_SP_COINS, false),
-        node(SP.PENDING_SPONSOR_COINS, false),
-        node(SP.PENDING_RECIPIENT_COINS, false),
-        node(SP.PENDING_AGENT_COINS, false),
+        node(SP.PENDING_SPONSOR_COINS, false, [node(SP.SPONSORS, false)]),
+        node(SP.PENDING_RECIPIENT_COINS, false, [node(SP.RECIPIENTS, false)]),
+        node(SP.PENDING_AGENT_COINS, false, [node(SP.AGENTS, false)]),
+        node(SP.UNSPONSOR_SP_COINS, false, [node(SP.SPONSORS, false)]),
       ]),
 
       // Detail overlays
@@ -155,6 +163,7 @@ const DEFAULT_FLAT = flattenPanelTree(defaultSpCoinPanelTree);
 
 export const DEFAULT_PANEL_ORDER: readonly SP[] = DEFAULT_FLAT.map((p) => p.panel) as readonly SP[];
 
+/** Seed persisted panel visibility from the canonical authored tree */
 export function seedPanelsFromDefault(): FlatPanel[] {
   return DEFAULT_FLAT.filter((p) => !NON_PERSISTED_PANELS.has(p.panel));
 }

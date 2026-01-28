@@ -18,38 +18,17 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useManageSponsorships } from '../RadioOverlayPanels_ToDo_FIX/useManageSponsorships';
 import { msTableTw } from './msTableTw';
 
+// ✅ Centralized rewards selection logic (shared with Tree Panel)
+import {
+  type RewardsMode,
+  openRewardsModeWithPanels,
+} from '@/lib/structure/exchangeContext/helpers/rewardsTreeActions';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
 const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = { onClose?: () => void };
-
-type RewardsMode =
-  | SP_COIN_DISPLAY.SPONSORS
-  | SP_COIN_DISPLAY.RECIPIENTS
-  | SP_COIN_DISPLAY.AGENTS
-  | SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
-
-const REWARDS_MODES: RewardsMode[] = [
-  SP_COIN_DISPLAY.SPONSORS,
-  SP_COIN_DISPLAY.RECIPIENTS,
-  SP_COIN_DISPLAY.AGENTS,
-  SP_COIN_DISPLAY.UNSPONSOR_SP_COINS,
-];
-
-// These panels act like “config flags” for which Claim button(s) appear in the list rows.
-const CLAIM_PENDING_PANELS: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.PENDING_SPONSOR_COINS,
-  SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS,
-  SP_COIN_DISPLAY.PENDING_AGENT_COINS,
-];
-
-function getClaimPendingPanelForMode(mode: RewardsMode): SP_COIN_DISPLAY | null {
-  if (mode === SP_COIN_DISPLAY.SPONSORS) return SP_COIN_DISPLAY.PENDING_SPONSOR_COINS;
-  if (mode === SP_COIN_DISPLAY.RECIPIENTS) return SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS;
-  if (mode === SP_COIN_DISPLAY.AGENTS) return SP_COIN_DISPLAY.PENDING_AGENT_COINS;
-  return null; // UNSPONSOR_SP_COINS doesn't map to a CLAIM_PENDING_* panel
-}
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const ctx = useContext(ExchangeContextState);
@@ -77,6 +56,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   /**
    * Use the source-of-truth `openPanel()` only.
+   * Stake is "excepted" (it should NOT participate in rewards radio logic).
    */
   const openOverlay = useCallback(
     (id: SP_COIN_DISPLAY) => {
@@ -87,44 +67,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   );
 
   /**
-   * Pending → (Sponsors/Recipients/Agents/Staked) acts like a radio-mode selector:
-   * 1) close other mode enums
-   * 2) open selected mode
-   * 3) set CLAIM_PENDING_* config flag for the selected mode (and close the others)
-   * 4) open the shared container panel (ACCOUNT_LIST_REWARDS_PANEL)
+   * ✅ Delegates rewards-mode radio behavior to shared helper
+   * so Tree Panel selection + in-panel selection stay identical.
    */
   const openRewardsMode = useCallback(
     (mode: RewardsMode) => {
-      debugLog.log?.('openRewardsMode', {
-        mode: SP_COIN_DISPLAY[mode],
-        modes: REWARDS_MODES.map((m) => SP_COIN_DISPLAY[m]),
+      debugLog.log?.('openRewardsMode', { mode: SP_COIN_DISPLAY[mode] });
+
+      openRewardsModeWithPanels({
+        mode,
+        openPanel: (id, reason) => openPanel(id as any, reason),
+        closePanel: (id, reason) => closePanel(id as any, reason),
+        reasonPrefix: 'ManageSponsorshipsPanel:openRewardsMode',
+        ensureManagePending: true,
       });
-
-      // 1) Close all other modes (radio)
-      for (const m of REWARDS_MODES) {
-        if (Number(m) !== Number(mode)) {
-          closePanel(m, `ManageSponsorshipsPanel:openRewardsMode(close ${SP_COIN_DISPLAY[m]})`);
-        }
-      }
-
-      // 2) Open selected mode
-      openPanel(mode, `ManageSponsorshipsPanel:openRewardsMode(open ${SP_COIN_DISPLAY[mode]})`);
-
-      // 3) Claim config flags (radio)
-      const claimPanel = getClaimPendingPanelForMode(mode);
-      for (const p of CLAIM_PENDING_PANELS) {
-        if (claimPanel && Number(p) === Number(claimPanel)) {
-          openPanel(p, `ManageSponsorshipsPanel:openRewardsMode(open ${SP_COIN_DISPLAY[p]})`);
-        } else {
-          closePanel(p, `ManageSponsorshipsPanel:openRewardsMode(close ${SP_COIN_DISPLAY[p]})`);
-        }
-      }
-
-      // 4) Open the shared container panel
-      openPanel(
-        SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
-        `ManageSponsorshipsPanel:openRewardsMode(open ACCOUNT_LIST_REWARDS_PANEL via ${SP_COIN_DISPLAY[mode]})`,
-      );
     },
     [openPanel, closePanel],
   );

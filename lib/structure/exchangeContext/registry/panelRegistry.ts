@@ -64,7 +64,7 @@ const TRADING_CHILDREN: readonly SP[] = [
  *   [-] PENDING_SPONSOR_COINS
  *   [+] PENDING_RECIPIENT_COINS
  *   [+] PENDING_AGENT_COINS
- *   [+] UNSPONSOR_SP_COINS
+ *   [-] UNSPONSOR_SP_COINS
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
   SP.PENDING_SPONSOR_COINS,
@@ -74,12 +74,13 @@ const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
 ] as const;
 
 /**
- * Each CLAIM_PENDING_* node shares the same mode selector children.
- *
- * NOTE: SP.SPONSORS / SP.RECIPIENTS / SP.AGENTS are defined ONCE in PANEL_DEFS,
- * but can appear as children under multiple parents (GUI tree / structural mapping).
+ * ✅ Tree Panel fix:
+ * Each pending/unstake node owns exactly ONE mode child.
  */
-const REWARDS_MODE_CHILDREN: readonly SP[] = [SP.SPONSORS, SP.RECIPIENTS, SP.AGENTS] as const;
+const PENDING_SPONSOR_CHILDREN: readonly SP[] = [SP.SPONSORS] as const;
+const PENDING_RECIPIENT_CHILDREN: readonly SP[] = [SP.RECIPIENTS] as const;
+const PENDING_AGENT_CHILDREN: readonly SP[] = [SP.AGENTS] as const;
+const UNSPONSOR_CHILDREN: readonly SP[] = [SP.SPONSORS] as const;
 
 /**
  * Primary overlay container under MAIN_TRADING_PANEL
@@ -195,25 +196,29 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: ACCOUNT_LIST_REWARDS_CHILDREN,
   }),
 
-  // ✅ Claim panels now own the mode selector children
+  // ✅ Claim panels now own ONLY the appropriate single mode selector child
   def({
     id: SP.PENDING_SPONSOR_COINS,
     kind: 'panel',
-    children: REWARDS_MODE_CHILDREN,
+    children: PENDING_SPONSOR_CHILDREN,
   }),
   def({
     id: SP.PENDING_RECIPIENT_COINS,
     kind: 'panel',
-    children: REWARDS_MODE_CHILDREN,
+    children: PENDING_RECIPIENT_CHILDREN,
   }),
   def({
     id: SP.PENDING_AGENT_COINS,
     kind: 'panel',
-    children: REWARDS_MODE_CHILDREN,
+    children: PENDING_AGENT_CHILDREN,
   }),
 
-  // Unstake panel (leaf)
-  def({ id: SP.UNSPONSOR_SP_COINS, kind: 'panel' }),
+  // ✅ Unstake panel now has a single child: SPONSORS
+  def({
+    id: SP.UNSPONSOR_SP_COINS,
+    kind: 'panel',
+    children: UNSPONSOR_CHILDREN,
+  }),
 
   // Detail overlays
   def({ id: SP.AGENT_ACCOUNT_PANEL, kind: 'panel' }),

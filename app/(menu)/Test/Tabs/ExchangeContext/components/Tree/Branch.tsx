@@ -6,10 +6,10 @@ import Row from './Row';
 import { quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import {
-  MAIN_OVERLAY_GROUP,
-  NON_INDEXED_PANELS,
-} from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_OVERLAY_GROUP, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+
+// ✅ NEW: shared rewards radio logic (same as ManageSponsorshipsPanel)
+import { panelToRewardsMode, openRewardsModeWithPanels } from '@/lib/structure/exchangeContext/helpers/rewardsTreeActions';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
@@ -42,8 +42,7 @@ const getVirtualId = (v: any): number | null => {
 };
 
 // This page renders VIRTUAL nodes: { id|panel, name, visible, children }
-const looksLikeVirtualPanelNode = (v: any) =>
-  v && getVirtualId(v) != null && 'visible' in v;
+const looksLikeVirtualPanelNode = (v: any) => v && getVirtualId(v) != null && 'visible' in v;
 
 const nameForVirtual = (v: any): string => {
   if (!looksLikeVirtualPanelNode(v)) return '';
@@ -83,8 +82,7 @@ function formatDisplayStackItem(idxLabel: string, v: any): string {
   const idNum = Number(v?.id);
   const safeId = Number.isFinite(idNum) ? idNum : 'N/A';
 
-  const name =
-    typeof v?.name === 'string' && v.name.trim().length ? String(v.name) : 'N/A';
+  const name = typeof v?.name === 'string' && v.name.trim().length ? String(v.name) : 'N/A';
 
   return `${idxLabel} { id: ${safeId}, name: "${name}" }`;
 }
@@ -114,9 +112,7 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
 
   // Find TRADE_CONTAINER_HEADER inside MAIN_TRADING_PANEL.children
   const idx = mainChildren.findIndex(
-    (c) =>
-      looksLikeVirtualPanelNode(c) &&
-      Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+    (c) => looksLikeVirtualPanelNode(c) && Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
   );
   if (idx < 0) return mainNode;
 
@@ -130,32 +126,18 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
   const tradeHeaderLeaf = { ...tradeHeader, children: [] };
 
   // MAIN children become: [ ...before, tradeHeaderLeaf, ...tradeKids, ...after ]
-  const nextChildren = [
-    ...mainChildren.slice(0, idx),
-    tradeHeaderLeaf,
-    ...tradeKids,
-    ...mainChildren.slice(idx + 1),
-  ];
+  const nextChildren = [...mainChildren.slice(0, idx), tradeHeaderLeaf, ...tradeKids, ...mainChildren.slice(idx + 1)];
 
   return { ...mainNode, children: nextChildren };
 }
 
-const Branch: React.FC<BranchProps> = ({
-  label,
-  value,
-  depth,
-  path,
-  exp,
-  togglePath,
-  enumRegistry,
-  dense,
-}) => {
+const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   /**
    * ✅ Contract:
    * Tree only calls openPanel / closePanel.
    * Stack membership + visibility semantics are handled inside usePanelTree.
    */
-  const { openPanel, closePanel } = usePanelTree();
+  const { openPanel, closePanel, isVisible } = usePanelTree();
 
   const isArray = Array.isArray(value);
 
@@ -163,18 +145,13 @@ const Branch: React.FC<BranchProps> = ({
    * ✅ GUI-only shaping of spCoinPanelTree (roots array).
    * If this Branch node is the "spCoinPanelTree" array, transform only the MAIN_TRADING_PANEL root.
    */
-  const guiValue =
-    isArray && label === 'spCoinPanelTree'
-      ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n))
-      : value;
+  const guiValue = isArray && label === 'spCoinPanelTree' ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n)) : value;
 
   const isObject = guiValue !== null && typeof guiValue === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
   // dot-path classifiers for *virtual* panel nodes
-  const isPanelArrayItem =
-    /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) &&
-    looksLikeVirtualPanelNode(guiValue);
+  const isPanelArrayItem = /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) && looksLikeVirtualPanelNode(guiValue);
 
   /**
    * ✅ displayStack items: always-open, no +/- and no nested fields
@@ -220,9 +197,7 @@ const Branch: React.FC<BranchProps> = ({
     const text = formatDisplayStackItem(label, guiValue);
 
     return (
-      <div
-        className={`font-mono flex items-center ${lineClass} text-slate-200 m-0 p-0`}
-      >
+      <div className={`font-mono flex items-center ${lineClass} text-slate-200 m-0 p-0`}>
         <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
         <span className="text-[#5981F3]">{text}</span>
       </div>
@@ -233,9 +208,7 @@ const Branch: React.FC<BranchProps> = ({
   // BRANCH NODES (objects & arrays)
   // ──────────────────────────────────────────────────────────────
   if (isBranch) {
-    const numEntries = isArray
-      ? (guiValue as any[]).length
-      : Object.keys(guiValue as object).length;
+    const numEntries = isArray ? (guiValue as any[]).length : Object.keys(guiValue as object).length;
     const hasEntries = numEntries > 0;
 
     // Expanded state:
@@ -262,12 +235,32 @@ const Branch: React.FC<BranchProps> = ({
         const invoker = 'Branch:onRowClick(tree)';
 
         if (!currentlyVisible) {
-          // ✅ openPanel always shows; stack push happens only if stack-member (inside usePanelTree)
+          // ✅ Rewards subtree special behavior:
+          // Use the shared helper, BUT pass isVisible() so it won't re-open ACCOUNT_LIST_REWARDS_PANEL
+          // (prevents duplicate displayStack pushes when tree-clicking children).
+          const mode = panelToRewardsMode(panelId as any);
+          if (mode != null) {
+            openRewardsModeWithPanels({
+              mode,
+              openPanel: (id, reason) => openPanel(id as any, reason),
+              closePanel: (id, reason) => closePanel(id as any, reason),
+              reasonPrefix: 'TreePanel:openRewardsMode',
+              ensureManagePending: true,
+              isVisible: (id) => isVisible(id as any),
+            });
+
+            // Keep GUI open so you can see the node you clicked + its children
+            ensureOpen(path);
+            ensureOpen(`${path}.children`);
+            return;
+          }
+
+          // ✅ default behavior (non-rewards panels)
           openPanel(panelId as any, invoker);
           ensureOpen(path);
           ensureOpen(`${path}.children`);
         } else {
-          // ✅ closePanel(panel) always hides THAT panel; stack remove happens only if stack-member
+          // ✅ close only the clicked panel (consistent with existing tree behavior)
           closePanel(panelId as any, invoker);
         }
       } else if (hasEntries && !isDisplayStackContainer) {
@@ -298,9 +291,7 @@ const Branch: React.FC<BranchProps> = ({
               const childPath = `${path}.${k}`;
               const childVal = (guiValue as any[])[Number(k)];
 
-              const childLabel = looksLikeVirtualPanelNode(childVal)
-                ? formatChildLabel(childVal, k)
-                : `[${k}]`;
+              const childLabel = looksLikeVirtualPanelNode(childVal) ? formatChildLabel(childVal, k) : `[${k}]`;
 
               return (
                 <Branch
@@ -326,13 +317,7 @@ const Branch: React.FC<BranchProps> = ({
           text={label}
           path={path}
           depth={depth}
-          open={
-            hasEntries
-              ? isPanelArrayItem
-                ? (guiValue as any)?.visible === true
-                : expanded
-              : undefined
-          }
+          open={hasEntries ? (isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) : undefined}
           clickable={isPanelArrayItem || (hasEntries && !isDisplayStackContainer)}
           onClick={onRowClick}
           dense={dense}
@@ -340,17 +325,11 @@ const Branch: React.FC<BranchProps> = ({
         {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
-            const childVal = isArray
-              ? (guiValue as any[])[Number(k)]
-              : (guiValue as any)[k];
+            const childVal = isArray ? (guiValue as any[])[Number(k)] : (guiValue as any)[k];
 
             let childLabel = isArray ? `[${k}]` : k;
 
-            if (
-              isArray &&
-              PANEL_ARRAY_LABELS.has(label) &&
-              looksLikeVirtualPanelNode(childVal)
-            ) {
+            if (isArray && PANEL_ARRAY_LABELS.has(label) && looksLikeVirtualPanelNode(childVal)) {
               childLabel = formatChildLabel(childVal, k);
             }
 
@@ -375,9 +354,7 @@ const Branch: React.FC<BranchProps> = ({
   // ──────────────────────────────────────────────────────────────
   // LEAF NODES (primitives)
   // ──────────────────────────────────────────────────────────────
-  const lineClass = dense
-    ? 'flex items-center leading-tight'
-    : 'flex items-center leading-6';
+  const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
 
   const content =
@@ -386,11 +363,7 @@ const Branch: React.FC<BranchProps> = ({
         {label === 'id' && !SHOW_IDS ? null : (
           <>
             {`${label}(${guiValue}): `}
-            <span className="text-[#5981F3]">
-              {typeof enumForKey[guiValue] === 'string'
-                ? enumForKey[guiValue]
-                : `[${guiValue}]`}
-            </span>
+            <span className="text-[#5981F3]">{typeof enumForKey[guiValue] === 'string' ? enumForKey[guiValue] : `[${guiValue}]`}</span>
           </>
         )}
       </>
