@@ -8,7 +8,7 @@ import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
 
 /** Visibility gate only. */
 export default function AgentListSelectPanel() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   if (!visible) return null;
   return <AgentListSelectPanelInner />;
 }
@@ -25,7 +25,7 @@ function AgentListSelectPanelInner() {
 
   return (
     <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD}
+      panel={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
       feedType={FEED_TYPE.AGENT_ACCOUNTS}
       listType={SP_COIN_DISPLAY.AGENTS}
       instancePrefix="agent"

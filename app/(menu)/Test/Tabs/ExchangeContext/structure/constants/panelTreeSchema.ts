@@ -23,7 +23,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
 
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL_OLD,
+    SPCD.AGENT_LIST_SELECT_PANEL,
 
     // Errors / hub
     SPCD.ERROR_MESSAGE_PANEL,
@@ -121,7 +121,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   // ✅ OLD list overlays (legacy behavior)
   [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'list',
-  [SPCD.AGENT_LIST_SELECT_PANEL_OLD]: 'list',
+  [SPCD.AGENT_LIST_SELECT_PANEL]: 'list',
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
@@ -172,7 +172,7 @@ export const GROUPS = {
 
     // ✅ OLD list overlays
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL_OLD,
+    SPCD.AGENT_LIST_SELECT_PANEL,
 
     // ✅ Rewards sub-panels
     SPCD.PENDING_SPONSOR_COINS,

@@ -85,7 +85,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ✅ OLD: legacy list overlays (kept during migration)
       node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
-      node(SP.AGENT_LIST_SELECT_PANEL_OLD, false),
+      node(SP.AGENT_LIST_SELECT_PANEL, false),
 
       node(SP.ERROR_MESSAGE_PANEL, false),
 

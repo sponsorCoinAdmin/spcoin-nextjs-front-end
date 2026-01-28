@@ -78,7 +78,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // AGENT selection (spCoinAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD]: {
+  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

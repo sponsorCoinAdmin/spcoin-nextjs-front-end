@@ -20,7 +20,7 @@ export const MAIN_OVERLAY_GROUP = [
 
   // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL_OLD,
+  SP.AGENT_LIST_SELECT_PANEL,
 
   // System / misc overlays
   SP.ERROR_MESSAGE_PANEL,

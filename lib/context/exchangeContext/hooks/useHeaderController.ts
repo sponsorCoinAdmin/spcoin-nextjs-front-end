@@ -40,7 +40,7 @@ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFact
 
 /** Default titles (STATIC only) */
 const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
-  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD]: 'Select Sponsors Agent',
+  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: 'Select Sponsors Agent',
   [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: 'Select a Token to Buy',
   [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
   [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: 'Select Recipient to Sponsor',
@@ -108,7 +108,7 @@ const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
   SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
 
-  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD,
+  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
   SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
@@ -135,7 +135,7 @@ export function useHeaderController() {
   const recipientDetail = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL);
   const sponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
-  const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD);
+  const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
@@ -167,7 +167,7 @@ export function useHeaderController() {
       [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: recipientDetail,
       [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: sponsorDetail,
 
-      [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD]: agentList,
+      [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
       [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: sponsorList,
 
       [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: staking,

@@ -18,7 +18,7 @@ export type RecipientSelectBag = {
 };
 
 export type AgentSelectBag = {
-  type: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD;
+  type: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
   defaultAgentId?: string;
 };
 

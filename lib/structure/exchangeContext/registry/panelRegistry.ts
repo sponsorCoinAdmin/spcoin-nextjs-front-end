@@ -100,7 +100,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // ✅ OLD: legacy list overlays (kept during migration)
   SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL_OLD,
+  SP.AGENT_LIST_SELECT_PANEL,
 
   // Errors / hub
   SP.ERROR_MESSAGE_PANEL,
@@ -177,7 +177,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // ✅ OLD: legacy list overlays (kept during migration)
   def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list' }),
-  def({ id: SP.AGENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
+  def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'list' }),
 
   def({ id: SP.ERROR_MESSAGE_PANEL, kind: 'panel' }),
 
