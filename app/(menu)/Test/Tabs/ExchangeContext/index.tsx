@@ -19,12 +19,10 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 
 // List views
-import ManageRecipients from '@/components/views/RadioOverlayPanels/ManageRecipients';
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 
 // Detail views
-import ManageAgent from '@/components/views/RadioOverlayPanels/ManageAgent';
 import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
 import ManageSponsor from '@/components/views/RadioOverlayPanels/ManageSponsor';
 
@@ -235,20 +233,14 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
             <ManageSponsorshipsPanel />
           </PanelGate>
-          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
-            <ManageRecipients />
-          </PanelGate>
-
+ 
           {/* Sponsors list rewards panel */}
           <PanelGate panel={SP.ACCOUNT_LIST_REWARDS_PANEL}>
             <ManageSponsorRecipients />
           </PanelGate>
 
           {/* Manage DETAIL views */}
-          <PanelGate panel={SP.AGENT_ACCOUNT_PANEL}>
-            <ManageAgent />
-          </PanelGate>
-          <PanelGate panel={SP.RECIPIENT_ACCOUNT_PANEL}>
+           <PanelGate panel={SP.RECIPIENT_ACCOUNT_PANEL}>
             <ManageRecipient />
           </PanelGate>
           <PanelGate panel={SP.SPONSOR_ACCOUNT_PANEL}>
