@@ -1,7 +1,7 @@
 // File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
@@ -77,6 +77,16 @@ export default function AssetListSelectPanel({ listType }: Props) {
   const containerType: SP_COIN_DISPLAY | undefined = assetCtx.containerType;
   const containerLabel = containerType != null ? SP_COIN_DISPLAY[containerType] : 'UNKNOWN';
 
+  // ✅ keep latest values for mount/unmount logs (avoids stale captures)
+  const latestRef = useRef({
+    instanceId,
+    feedType,
+    listType,
+    containerType,
+    containerLabel,
+  });
+  latestRef.current = { instanceId, feedType, listType, containerType, containerLabel };
+
   debugLog.log?.('[context]', {
     instanceId,
     feedType,
@@ -87,14 +97,47 @@ export default function AssetListSelectPanel({ listType }: Props) {
     containerLabel,
   });
 
+  // ✅ mount identity + duplicate-instance detection
+  useEffect(() => {
+    const mountId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const snap = latestRef.current;
+
+    debugLog.log?.('[MOUNT]', {
+      mountId,
+      instanceId: snap.instanceId,
+      feedType: snap.feedType,
+      feedTypeLabel: FEED_TYPE[snap.feedType],
+      listType: snap.listType,
+      listTypeLabel: SP_COIN_DISPLAY[snap.listType],
+      containerType: snap.containerType,
+      containerLabel: snap.containerLabel,
+    });
+
+    // If there are multiple, it strongly suggests you mounted the panel twice
+    if (typeof window !== 'undefined') {
+      const count = document.querySelectorAll('#AssetListSelectPanel').length;
+      debugLog.log?.('[dom] #AssetListSelectPanel count', { mountId, count });
+    }
+
+    return () => {
+      const end = latestRef.current;
+      debugLog.log?.('[UNMOUNT]', {
+        mountId,
+        instanceId: end.instanceId,
+        feedType: end.feedType,
+        feedTypeLabel: FEED_TYPE[end.feedType],
+        listType: end.listType,
+        listTypeLabel: SP_COIN_DISPLAY[end.listType],
+      });
+    };
+  }, []);
+
   const { feedData, loading } = useFeedData(feedType);
 
   /**
    * ✅ Always return a valid SSOT FeedData shape
    * - Token feeds: { feedType: TOKEN_LIST, tokens: [] }
    * - Account feeds: { feedType: <account feed>, accountsXXXX: [] }
-   *
-   * NOTE: we do NOT invent legacy wallets here; legacy is only a fallback reader.
    */
   const safeFeedData: FeedData = useMemo(() => {
     if (feedData) return feedData;

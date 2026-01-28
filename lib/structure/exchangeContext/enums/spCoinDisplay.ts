@@ -57,5 +57,5 @@ export enum SP_COIN_DISPLAY {
 
   // Legacy list overlays (migration)
   AGENT_LIST_SELECT_PANEL_OLD,
-  RECIPIENT_LIST_SELECT_PANEL_OLD,
+  RECIPIENT_LIST_SELECT_PANEL,
 }

@@ -98,7 +98,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.SELL_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)
-  SP.RECIPIENT_LIST_SELECT_PANEL_OLD,
+  SP.RECIPIENT_LIST_SELECT_PANEL,
   SP.AGENT_LIST_SELECT_PANEL_OLD,
 
   // Errors / hub
@@ -175,7 +175,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
 
   // ✅ OLD: legacy list overlays (kept during migration)
-  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
+  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.AGENT_LIST_SELECT_PANEL_OLD, kind: 'list' }),
 
   def({ id: SP.ERROR_MESSAGE_PANEL, kind: 'panel' }),

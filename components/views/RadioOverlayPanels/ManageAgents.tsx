@@ -2,13 +2,7 @@
 'use client';
 
 import React, { useEffect, useContext, useCallback } from 'react';
-import {
-  FEED_TYPE,
-  SP_COIN_DISPLAY,
-  type spCoinAccount,
-  type TokenContract,
-} from '@/lib/structure';
-
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
@@ -20,86 +14,49 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_AGENTS === 'true';
 const debugLog = createDebugLogger('ManageAgents', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * Agents list:
- * - List visibility: AGENT_LIST_SELECT_PANEL_OLD (opened by ManageSponsorshipsPanel.openOnly)
- * - Detail visibility: AGENT_ACCOUNT_PANEL (ManageAgent + PanelGate)
- * - Selection source: FEED_TYPE.MANAGE_AGENTS via PanelListSelectWrapper
- */
 export default function ManageAgents() {
   const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL_OLD);
+  const ctx = useContext(ExchangeContextState);
+  const { openPanel } = usePanelTree();
 
   useEffect(() => {
     debugLog.log?.('[visibility] AGENT_LIST_SELECT_PANEL_OLD', { visible });
-    if (visible) {
-      debugLog.log?.('OPENING ManageAgents');
-    }
+    if (visible) debugLog.log?.('OPENING ManageAgents');
   }, [visible]);
 
   debugLog.log?.('[render]', { visible });
 
-  return <ManageAgentsInner />;
-}
-
-function ManageAgentsInner() {
-  const ctx = useContext(ExchangeContextState);
-  const { openPanel } = usePanelTree();
+  if (!visible) return null; // ✅ critical (prevents hidden mounting)
 
   const handleCommit = useCallback(
     (asset: spCoinAccount | TokenContract) => {
       const isToken = typeof (asset as any)?.decimals === 'number';
-
-      debugLog.log?.('[handleCommit]', {
-        isToken,
-        assetPreview: {
-          address: (asset as any)?.address,
-          name: (asset as any)?.name,
-        },
-      });
-
-      // This panel is for agent *wallets*, not tokens
       if (isToken) return;
 
       const wallet = asset as spCoinAccount;
 
-      // 1️⃣ Set agentAccount in ExchangeContext
       ctx?.setExchangeContext(
         (prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            accounts: {
-              ...prev.accounts,
-              agentAccount: wallet,
-            },
+            accounts: { ...prev.accounts, agentAccount: wallet },
           };
         },
         'ManageAgents:handleCommit(agentAccount)',
       );
 
-      // 2️⃣ Defer opening AGENT_ACCOUNT_PANEL so it runs *after*
-      //     any toTrading(MAIN_TRADING_PANEL) transition.
-      if (typeof window !== 'undefined') {
-        window.setTimeout(() => {
-          debugLog.log?.('[handleCommit] deferred open of AGENT_ACCOUNT_PANEL after transitions');
-          openPanel(
-            SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
-            'ManageAgents:handleCommit(deferred open AGENT_ACCOUNT_PANEL)',
-          );
-        }, 0);
-      } else {
-        // Fallback (shouldn’t really hit because we’re in a client component)
-        debugLog.log?.('[handleCommit] non-window environment; opening AGENT_ACCOUNT_PANEL immediately');
+      window.setTimeout(() => {
         openPanel(
           SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
-          'ManageAgents:handleCommit(open AGENT_ACCOUNT_PANEL)',
+          'ManageAgents:handleCommit(deferred open AGENT_ACCOUNT_PANEL)',
         );
-      }
+      }, 0);
     },
     [ctx, openPanel],
   );
 
-  debugLog.log?.('[inner] mounting PanelListSelectWrapper', {
+  debugLog.log?.('[mounting PanelListSelectWrapper]', {
     panel: 'AGENT_LIST_SELECT_PANEL_OLD',
     feedType: 'MANAGE_AGENTS',
     instancePrefix: 'agent',

@@ -189,7 +189,7 @@ export default function ExchangeContextUsageExamples() {
         </button>
 
         <button
-          onClick={() => openWithParent(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD, 'openRecipientList')}
+          onClick={() => openWithParent(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'openRecipientList')}
         >
           Open RECIPIENT panel
         </button>

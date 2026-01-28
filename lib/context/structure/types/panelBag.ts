@@ -13,7 +13,7 @@ export type TokenSelectBag = {
 };
 
 export type RecipientSelectBag = {
-  type: SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD;
+  type: SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
   defaultRecipient?: string;
 };
 

@@ -11,7 +11,7 @@ export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
         return 'buy';
       case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
         return 'sell';
-      case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD:
+      case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
         return 'recipient';
       default:
         return 'main';

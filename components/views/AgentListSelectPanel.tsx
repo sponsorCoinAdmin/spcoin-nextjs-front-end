@@ -1,4 +1,4 @@
-// File: @/components/views/AssetSelectPanels/AgentListSelectPanel.tsx
+// File: @/components/views/AgentListSelectPanel.tsx
 'use client';
 
 import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';

@@ -67,7 +67,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // RECIPIENT selection (spCoinAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL_OLD]: {
+  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

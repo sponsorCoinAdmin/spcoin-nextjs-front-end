@@ -1,7 +1,7 @@
 // File: @/components/views/AssetSelectPanels/PanelListSelectWrapper.tsx
 'use client';
 
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import type { spCoinAccount, TokenContract } from '@/lib/structure';
 
@@ -45,6 +45,15 @@ function makeInitialPanelBag(panel: SP_COIN_DISPLAY, peerAddress?: `0x${string}`
   // ... your existing switch ...
   return undefined;
 }
+
+/**
+ * Tailwind-only "hide scrollbar" (no CSS file):
+ * - scrollbar-width: none (Firefox)
+ * - -ms-overflow-style: none (IE/Edge legacy)
+ * - ::-webkit-scrollbar { display: none } (Chrome/Safari)
+ */
+const HIDE_SCROLLBAR_TW =
+  '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
 
 export default function PanelListSelectWrapper({
   panel,
@@ -109,6 +118,9 @@ function PanelListSelectWrapperInner({
 
   const initialPanelBag = useMemo(() => makeInitialPanelBag(panel, peerAddress), [panel, peerAddress]);
 
+  // The ONE scroll container we control (AssetSelectLayout's middle div)
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     debugLog.log?.('[inner:mount]', {
       panel,
@@ -152,6 +164,29 @@ function PanelListSelectWrapperInner({
     [onCommit, closeTop, suppressAutoClose],
   );
 
+  /**
+   * Capture wheel BEFORE children (rows), and force-scroll our container.
+   * Fixes cases where wheel events target row DIVs and scrollTop never changes.
+   */
+  const onWheelCapture = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    if (el.scrollHeight > el.clientHeight) {
+      el.scrollTop += e.deltaY;
+      e.preventDefault();
+    }
+
+    debugLog.log?.('[wheel:capture]', {
+      deltaY: e.deltaY,
+      targetTag: (e.target as any)?.tagName,
+      targetClass: (e.target as any)?.className,
+      clientHeight: el.clientHeight,
+      scrollHeight: el.scrollHeight,
+      scrollTop: el.scrollTop,
+    });
+  }, []);
+
   return (
     <AssetSelectDisplayProvider instanceId={chainScopedInstanceId}>
       <AssetSelectProvider
@@ -162,10 +197,17 @@ function PanelListSelectWrapperInner({
         initialPanelBag={initialPanelBag}
         feedTypeOverride={feedType}
       >
-        {/* Force a consistent flex + min-h-0 + single scroll container wrapper */}
-        {/* <AssetSelectLayout className="h-full w-full min-h-0" scrollClassName="min-h-0"> */}
-          <AssetListSelectPanel listType={listType} />
-        {/* </AssetSelectLayout> */}
+        {/* ✅ Rounded corners must be on the OUTER viewport that clips the scroll area */}
+        <AssetSelectLayout
+          ref={scrollRef}
+          className="h-full w-full min-h-0 rounded-[15px] overflow-hidden"
+          scrollClassName={`min-h-0 overscroll-contain ${HIDE_SCROLLBAR_TW}`}
+        >
+          {/* Wheel capture boundary */}
+          <div className="h-full w-full min-h-0" onWheelCapture={onWheelCapture}>
+            <AssetListSelectPanel listType={listType} />
+          </div>
+        </AssetSelectLayout>
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );

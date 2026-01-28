@@ -224,7 +224,7 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.SELL_LIST_SELECT_PANEL}>
             <TokenListSelectPanel />
           </PanelGate>
-          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL_OLD}>
+          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
             <RecipientListSelectPanel />
           </PanelGate>
           <PanelGate panel={SP.AGENT_LIST_SELECT_PANEL_OLD}>
@@ -235,7 +235,7 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
             <ManageSponsorshipsPanel />
           </PanelGate>
-          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL_OLD}>
+          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
             <ManageRecipients />
           </PanelGate>
 

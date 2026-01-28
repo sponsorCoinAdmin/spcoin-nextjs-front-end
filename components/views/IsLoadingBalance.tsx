@@ -1,3 +1,5 @@
+// File: @/components/views/IsLoadingBalance
+
 import React from 'react';
 import styles from '@/styles/Exchange.module.css';
 

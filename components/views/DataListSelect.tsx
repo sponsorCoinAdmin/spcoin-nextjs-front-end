@@ -78,6 +78,75 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ Debug helper: scroll container metrics
+  const dumpScroll = useCallback(
+    (tag: string) => {
+      const el = wrapperRef.current;
+      if (!el) return;
+
+      const cs = window.getComputedStyle(el);
+      debugLog.log?.(`[scroll:${tag}]`, {
+        feedType,
+        feedTypeLabel: FEED_TYPE[feedType],
+        isAccountFeed,
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight,
+        scrollTop: el.scrollTop,
+        overflowY: cs.overflowY,
+        overflowX: cs.overflowX,
+      });
+    },
+    [feedType, isAccountFeed],
+  );
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    dumpScroll('init');
+
+    const onScroll = () => dumpScroll('onScroll');
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    // also log after a tick (layout settled)
+    const t = window.setTimeout(() => dumpScroll('postLayout'), 50);
+
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      window.clearTimeout(t);
+    };
+  }, [dumpScroll, accounts.length, tokens.length]);
+
+  // ✅ Wheel logging to prove whether container can scroll
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      // Only logs when enabled, so safe
+      debugLog.log?.('[wheel]', {
+        feedType,
+        feedTypeLabel: FEED_TYPE[feedType],
+        deltaY: e.deltaY,
+        targetTag: (e.target as HTMLElement | null)?.tagName,
+        targetId: (e.target as HTMLElement | null)?.id ?? '',
+        targetClass: (e.target as HTMLElement | null)?.className ?? '',
+      });
+
+      // Super important: does the scroll container have scrollable content?
+      debugLog.log?.('[wheel:metrics]', {
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight,
+        scrollTop: el.scrollTop,
+      });
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: true });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [feedType]);
+
   useEffect(() => {
     debugLog.log?.('[render]', {
       feedType,
@@ -160,7 +229,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   );
 
   const wrapperClass =
-    'flex flex-col flex-1 min-h-0 overflow-y-auto overflow-hidden bg-[#243056] text-[#5981F3] rounded-[20px] p-0 box-border';
+    'DataListWrapper flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#243056] text-[#5981F3] rounded-[20px] p-0 box-border';
 
   const renderEmptyState = (message: string) => (
     <div className="flex flex-1 items-center justify-center">
@@ -170,17 +239,23 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   return (
     <>
-      <style jsx>{`
-        #DataListWrapper {
+      {/* ✅ GLOBAL class-based styling (no duplicate IDs) */}
+      <style jsx global>{`
+        .DataListWrapper {
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
-        #DataListWrapper::-webkit-scrollbar {
+        .DataListWrapper::-webkit-scrollbar {
           display: none;
         }
       `}</style>
 
-      <div id="DataListWrapper" className={wrapperClass}>
+      <div
+        ref={wrapperRef}
+        className={wrapperClass}
+        data-feed-type={feedType}
+        data-feed-type-label={FEED_TYPE[feedType]}
+      >
         {/* Sticky header */}
         <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
           <div className="w-full flex justify-between px-5 py-2">
@@ -216,7 +291,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
             const safeSymbol: string = token.symbol ?? '';
 
             return (
-              <div key={token.address} className={zebraForIndex(i)}>
+              <div key={String(token.address)} className={zebraForIndex(i)}>
                 <TokenListItem
                   name={safeName}
                   symbol={safeSymbol}
