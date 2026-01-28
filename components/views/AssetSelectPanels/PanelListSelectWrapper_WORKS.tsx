@@ -13,7 +13,6 @@ import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import AssetListSelectPanel from './AssetListSelectPanel';
 
-import { AssetSelectLayout } from '@/components/views/AssetSelectPanels/AssetSelectLayout';
 
 import type { AssetSelectBag as UnionBag } from '@/lib/context/structure/types/panelBag';
 
@@ -118,7 +117,6 @@ function PanelListSelectWrapperInner({
 
   const initialPanelBag = useMemo(() => makeInitialPanelBag(panel, peerAddress), [panel, peerAddress]);
 
-  // The ONE scroll container we control (AssetSelectLayout's middle div)
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -197,17 +195,10 @@ function PanelListSelectWrapperInner({
         initialPanelBag={initialPanelBag}
         feedTypeOverride={feedType}
       >
-        {/* ✅ Rounded corners must be on the OUTER viewport that clips the scroll area */}
-        <AssetSelectLayout
-          ref={scrollRef}
-          className="h-full w-full min-h-0 rounded-[15px] overflow-hidden"
-          scrollClassName={`min-h-0 overscroll-contain ${HIDE_SCROLLBAR_TW}`}
-        >
           {/* Wheel capture boundary */}
           <div className="h-full w-full min-h-0" onWheelCapture={onWheelCapture}>
             <AssetListSelectPanel listType={listType} />
           </div>
-        </AssetSelectLayout>
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );
