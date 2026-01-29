@@ -4,10 +4,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Address } from 'viem';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import type { spCoinAccount } from '@/lib/structure/types';
+import type { spCoinAccount } from '@/lib/structure';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
@@ -23,8 +22,7 @@ import {
 } from '@/lib/context/hooks';
 import { isSpCoin, isBuySpCoin } from '@/lib/spCoin/coreUtils';
 
-// ✅ REST helpers
-import { fetchRecipientMeta, type RecipientMeta } from '@/lib/rest/recipientMeta';
+// ✅ Wallet resolution helper (still used)
 import { resolveWallet } from '@/lib/rest/resolveWallet';
 
 // ✅ ToDo overlay
@@ -91,9 +89,6 @@ const AddSponsorShipPanel: React.FC = () => {
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [showToDo, setShowToDo] = useState<boolean>(false);
-  const [recipientMeta, setRecipientMeta] = useState<RecipientMeta | undefined>(
-    undefined,
-  );
 
   // ── Debug: mount / wallet changes ────────────────────────────────────────────
   useEffect(() => {
@@ -135,33 +130,6 @@ const AddSponsorShipPanel: React.FC = () => {
       );
     }
   }, [recipientListVisible, manageStakingVisible, tradingVisible]);
-
-  // Fetch wallet.json for selected recipient (from /public)
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const addr = recipientWallet?.address?.trim();
-      if (!addr) {
-        debugLog.log?.('No recipient address; clearing recipientMeta');
-        setRecipientMeta(undefined);
-        return;
-      }
-      try {
-        debugLog.log?.('Fetching recipientMeta for address:', addr);
-        const meta = await fetchRecipientMeta(addr as Address);
-        if (!cancelled) {
-          debugLog.log?.('recipientMeta fetched:', meta || '(none)');
-          setRecipientMeta(meta);
-        }
-      } catch (err: any) {
-        debugLog.warn?.('recipientMeta get error:', err?.message || err);
-        if (!cancelled) setRecipientMeta(undefined);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [recipientWallet?.address]);
 
   // ── Callbacks ────────────────────────────────────────────────────────────────
   const toggleSponsorRateConfig = useCallback(() => {
@@ -206,7 +174,6 @@ const AddSponsorShipPanel: React.FC = () => {
     );
 
     // ✅ Toggle the inline button based on *current buy token*
-    // Requirement: open ADD_SPONSORSHIP_BUTTON if isSpCoin(tradeData.buyTokenContract)
     if (isBuySpCoin(tradeData)) {
       openPanel(
         SP_TREE.ADD_SPONSORSHIP_BUTTON,
@@ -220,7 +187,7 @@ const AddSponsorShipPanel: React.FC = () => {
       );
     }
 
-    // Keep your existing intent (close STAKING panel conditionally)
+    // Keep existing intent (close STAKING panel conditionally)
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
       closePanel(
         SP_TREE.STAKING_SPCOINS_PANEL,
@@ -252,7 +219,10 @@ const AddSponsorShipPanel: React.FC = () => {
   }, []);
 
   const effectiveWebsite = useMemo(() => {
-    const fallbackMeta: Pick<RecipientMeta, 'address' | 'website'> | undefined =
+    // ✅ No component-level fetch. Use context as SSOT.
+    const fallbackMeta:
+      | { address: `0x${string}`; website?: string }
+      | undefined =
       recipientWallet?.address
         ? {
             address: recipientWallet.address as `0x${string}`,
@@ -262,22 +232,22 @@ const AddSponsorShipPanel: React.FC = () => {
 
     const resolved = resolveWallet({
       queryUrl: pageQueryUrl,
-      recipientMeta: recipientMeta ?? fallbackMeta,
+      recipientMeta: fallbackMeta, // no remote/meta fetch here
       connectedWebsite: exchangeContext.accounts?.activeAccount?.website ?? null,
       fallbackBaseUrl: fallbackBase,
     });
 
     debugLog.log?.('effectiveWebsite resolved →', resolved, {
       queryUrl: pageQueryUrl,
-      recipientMeta,
+      recipientMeta: fallbackMeta,
       walletWebsite: (recipientWallet as any)?.website,
       connectedWebsite: exchangeContext.accounts?.activeAccount?.website,
       fallbackBase,
     });
+
     return resolved;
   }, [
     pageQueryUrl,
-    recipientMeta,
     recipientWallet?.address,
     (recipientWallet as any)?.website,
     exchangeContext.accounts?.activeAccount?.website,

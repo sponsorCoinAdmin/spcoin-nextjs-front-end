@@ -8,6 +8,10 @@ import { initExchangeContext } from '@/lib/context/init/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/providers/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
+// ✅ SSOT account hydration
+import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
+import type { Address } from 'viem';
+
 import type {
   ExchangeContext as ExchangeContextTypeOnly,
   TRADE_DIRECTION,
@@ -107,6 +111,22 @@ const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function'
     ? structuredClone(o)
     : (JSON.parse(JSON.stringify(o)) as T);
+
+const lower = (s?: string) => (s ? s.toLowerCase() : s);
+
+/**
+ * "Hydrated enough" heuristic for spCoinAccount.
+ * We only use this to avoid duplicate hydration + avoid leaving activeAccount partial.
+ */
+const isHydratedAccount = (a?: spCoinAccount) => {
+  if (!a?.address) return false;
+  return Boolean(
+    (a.name && a.name.trim().length) ||
+      (a.symbol && a.symbol.trim().length) ||
+      (a.website && a.website.trim().length) ||
+      (a.description && a.description.trim().length),
+  );
+};
 
 /* ------------------------------ Trace helpers ------------------------------ */
 
@@ -228,7 +248,9 @@ const normalizeSettingsDisplayStack = (ctx: any) => {
   const raw = ctx.settings.displayStack;
   const nodesFromDisplay = normalizeDisplayStackNodes(raw);
   const nodes =
-    nodesFromDisplay.length > 0 ? nodesFromDisplay : toNodes(normalizeIdArray(raw));
+    nodesFromDisplay.length > 0
+      ? nodesFromDisplay
+      : toNodes(normalizeIdArray(raw));
 
   ctx.settings.displayStack = nodes;
 };
@@ -488,12 +510,24 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
-  const lastAppliedAddrRef = useRef<string | undefined>(undefined);
+  /**
+   * ✅ ACTIVE ACCOUNT HYDRATION (SSOT)
+   *
+   * Removes the two address-only effects:
+   * - provider:syncActiveAccount
+   * - provider:rehydrateRepairActiveAccount
+   *
+   * And replaces them with ONE SSOT hydration effect that:
+   * - hydrates metadata via hydrateAccountFromAddress()
+   * - avoids duplicate hydration if already hydrated for the same address
+   * - last-write-wins to avoid races on rapid account switching
+   */
+  const activeHydrateReqRef = useRef(0);
 
   useEffect(() => {
     if (!contextState) return;
 
-    const nextAddr = isConnected ? (address ?? undefined) : undefined;
+    const nextAddr = isConnected ? (address?.trim() as Address | undefined) : undefined;
 
     if (!isConnected || !nextAddr) {
       debugLog.log?.(
@@ -502,46 +536,41 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (
-      lastAppliedAddrRef.current === nextAddr &&
-      contextState.accounts?.activeAccount?.address === nextAddr
-    ) {
-      return;
-    }
+    const current = contextState.accounts?.activeAccount;
+    const currentAddr = current?.address ? (current.address as string) : undefined;
 
-    setExchangeContext(
-      (prev) => {
-        const next = clone(prev);
-        (next as any).accounts = (next as any).accounts ?? {};
-        (next as any).accounts.activeAccount = {
-          ...((next as any).accounts.activeAccount ?? {}),
-          address: nextAddr,
-        };
-        return next;
-      },
-      'provider:syncActiveAccount',
-    );
+    const sameAddr =
+      !!currentAddr && lower(currentAddr) === lower(nextAddr as unknown as string);
 
-    lastAppliedAddrRef.current = nextAddr;
-  }, [contextState, isConnected, address]);
+    // If already fully hydrated for this address, do nothing.
+    if (sameAddr && isHydratedAccount(current)) return;
 
-  useEffect(() => {
-    if (!contextState) return;
-    if (isConnected && address && !contextState.accounts?.activeAccount?.address) {
+    const reqId = ++activeHydrateReqRef.current;
+
+    (async () => {
+      // Preserve balance only if same address; otherwise don't smear.
+      const existingBalance =
+        sameAddr && typeof (current as any)?.balance === 'bigint'
+          ? ((current as any).balance as bigint)
+          : 0n;
+
+      const hydrated = await hydrateAccountFromAddress(nextAddr, {
+        balance: existingBalance,
+      });
+
+      // last-write-wins
+      if (reqId !== activeHydrateReqRef.current) return;
+
       setExchangeContext(
         (prev) => {
           const next = clone(prev);
           (next as any).accounts = (next as any).accounts ?? {};
-          (next as any).accounts.activeAccount = {
-            ...((next as any).accounts.activeAccount ?? {}),
-            address,
-          };
+          (next as any).accounts.activeAccount = hydrated;
           return next;
         },
-        'provider:rehydrateRepairActiveAccount',
+        'provider:hydrateActiveAccount',
       );
-      lastAppliedAddrRef.current = address;
-    }
+    })();
   }, [contextState, isConnected, address, setExchangeContext]);
 
   const prevAppChainIdRef = useRef<number | undefined>(undefined);

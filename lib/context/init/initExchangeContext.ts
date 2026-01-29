@@ -1,14 +1,17 @@
 // File: @/lib/context/init/initExchangeContext.ts
 import { sanitizeExchangeContext } from '../helpers/ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from '../helpers/loadLocalExchangeContext';
-import type { spCoinAccount, ExchangeContext } from '@/lib/structure';
+import type { ExchangeContext } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getJson } from '@/lib/rest/http'; // ← REST helper
-import { getWalletJsonURL } from '@/lib/context/helpers/assetHelpers';
+
+// ✅ SSOT account hydration (wallet.json + logo derivation)
+import {
+  hydrateAccountFromAddress,
+  makeWalletFallback,
+} from '@/lib/context/helpers/accountHydration';
 
 const LOG_TIME = false;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
@@ -28,7 +31,7 @@ const debugLog = createDebugLogger(
 /**
  * NOTE (contract with ExchangeProvider):
  * - Hydrates ExchangeContext from localStorage (if present) and sanitizes it for the given chainId.
- * - May enrich `accounts.activeAccount` with metadata for a connected wallet.
+ * - May enrich `accounts.activeAccount` with metadata for a wallet address (via SSOT helper).
  * - Does NOT create or mutate any panel state (`settings.spCoinPanelTree`, etc.). Panel state is owned by the Provider.
  */
 export async function initExchangeContext(
@@ -157,15 +160,21 @@ export async function initExchangeContext(
     logPanelSnapshot('post-sanitize', getPanelsArray(sanitized));
   }
 
-  // 3) Optionally enrich with wallet metadata (client-only; no panel changes)
-  if (isConnected && address && isProbablyClient() && isAddress(address)) {
+  // 3) ✅ Enrich activeAccount metadata using SSOT
+  //
+  // IMPORTANT:
+  // - Do NOT gate on isConnected; activeAccount can persist even when wallet disconnected.
+  // - Only hydrate when we have a valid address.
+  if (address && isAddress(address)) {
     try {
-      const meta = await loadWalletMetadata(address);
-      sanitized.accounts.activeAccount = meta;
+      sanitized.accounts.activeAccount = await hydrateAccountFromAddress(
+        address as any,
+        { fallbackStatus: STATUS.MESSAGE_ERROR },
+      );
     } catch (err) {
-      debugLog.error?.('⛔ Wallet metadata load failed; falling back.', err);
+      debugLog.error?.('⛔ Wallet hydration threw unexpectedly; falling back.', err);
       sanitized.accounts.activeAccount = makeWalletFallback(
-        address,
+        address as any,
         STATUS.MESSAGE_ERROR,
         `Account ${address} metadata could not be loaded`,
       );
@@ -173,88 +182,6 @@ export async function initExchangeContext(
   }
 
   return sanitized;
-}
-
-/* ────────────────────────────── helpers ────────────────────────────── */
-
-function isProbablyClient() {
-  return typeof window !== 'undefined' && typeof document !== 'undefined';
-}
-
-function toBigIntSafe(value: unknown): bigint {
-  try {
-    if (typeof value === 'bigint') return value;
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return BigInt(Math.trunc(value));
-    }
-    if (typeof value === 'string') {
-      // Accept decimal or hex strings
-      const trimmed = value.trim();
-      if (/^0x[0-9a-fA-F]+$/.test(trimmed)) return BigInt(trimmed);
-      if (/^-?\d+$/.test(trimmed)) return BigInt(trimmed);
-    }
-  } catch {
-    /* ignore */
-  }
-  return 0n;
-}
-
-function makeWalletFallback(
-  addr: Address,
-  status: STATUS,
-  description: string,
-): spCoinAccount {
-  return {
-    address: addr,
-    type: 'ERC20_WALLET',
-    name: '',
-    symbol: '',
-    website: '',
-    status,
-    description,
-    logoURL: '/assets/miscellaneous/SkullAndBones.png',
-    balance: 0n,
-  };
-}
-
-type WalletJson = Partial<spCoinAccount> & {
-  balance?: string | number | bigint;
-};
-
-/** RESTful metadata loader (no plain). */
-async function loadWalletMetadata(addr: Address): Promise<spCoinAccount> {
-  // 🔁 Only change: use centralized helper for the wallet.json path
-  const url = getWalletJsonURL(addr);
-
-  let json: WalletJson | undefined;
-  try {
-    json = await getJson<WalletJson>(url, {
-      timeoutMs: 6000,
-      retries: 1,
-      accept: 'application/json',
-      init: { cache: 'no-store' },
-    });
-  } catch {
-    return makeWalletFallback(
-      addr,
-      STATUS.MESSAGE_ERROR,
-      `Account ${addr} not registered on this site`,
-    );
-  }
-
-  const balance = toBigIntSafe(json?.balance);
-
-  return {
-    address: addr,
-    type: json?.type ?? 'ERC20_WALLET',
-    name: json?.name ?? '',
-    symbol: json?.symbol ?? '',
-    website: json?.website ?? '',
-    status: STATUS.INFO,
-    description: json?.description ?? '',
-    logoURL: json?.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
-    balance,
-  };
 }
 
 /* ────────────────────────────── diagnostics (read-only) ────────────────────────────── */
@@ -345,9 +272,7 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     .filter(([id]) => !byId.has(id))
     .map(([id]) => id);
   const wrongVisibility = mustIncludeOnBoot
-    .filter(
-      ([id, vis]) => byId.has(id) && !!byId.get(id)!.visible !== vis,
-    )
+    .filter(([id, vis]) => byId.has(id) && !!byId.get(id)!.visible !== vis)
     .map(([id, vis]) => ({
       id,
       expected: vis,

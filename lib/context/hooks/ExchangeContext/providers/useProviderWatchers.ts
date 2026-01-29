@@ -1,4 +1,5 @@
-// File: @/lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
+// File: @/lib/context/hooks/ExchangeContext/hooks/useProviderWatchers.ts
+
 import { useEffect, useRef } from 'react';
 import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -10,9 +11,14 @@ import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/Pane
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
+// ✅ SSOT account hydration
+import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
+
 /* ------------------------------- utils -------------------------------- */
 
-const lower = (a?: string | Address) => (a ? (a as string).toLowerCase() : undefined);
+const lower = (a?: string | Address) =>
+  a ? (a as string).toLowerCase() : undefined;
+
 const shallowEqual = <T extends Record<string, any>>(a?: T, b?: T) => {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -24,15 +30,37 @@ const shallowEqual = <T extends Record<string, any>>(a?: T, b?: T) => {
 };
 
 const clone = <T,>(o: T): T =>
-  typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+  typeof structuredClone === 'function'
+    ? structuredClone(o)
+    : JSON.parse(JSON.stringify(o));
+
+/**
+ * "Hydrated enough" = wallet.json likely applied.
+ * Prevents duplicate hydration on boot (initExchangeContext already hydrated)
+ * and avoids re-fetching on wagmi churn when address is unchanged.
+ */
+const isHydratedAccount = (a?: spCoinAccount) => {
+  if (!a?.address) return false;
+  return Boolean(
+    (a.name && a.name.trim().length) ||
+      (a.symbol && a.symbol.trim().length) ||
+      (a.website && a.website.trim().length) ||
+      (a.description && a.description.trim().length),
+  );
+};
 
 /* ----------------------- Flat panel visibility helpers ---------------------- */
 
 function anyVisible(panels: SpCoinPanelTree, ids: SP_COIN_DISPLAY[]): boolean {
-  return panels.some((n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible);
+  return panels.some(
+    (n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible,
+  );
 }
 
-function setOverlayVisible(panels: SpCoinPanelTree, targetId: SP_COIN_DISPLAY): SpCoinPanelTree {
+function setOverlayVisible(
+  panels: SpCoinPanelTree,
+  targetId: SP_COIN_DISPLAY,
+): SpCoinPanelTree {
   const next = clone(panels);
   for (const n of next) {
     if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
@@ -46,7 +74,7 @@ function setOverlayVisible(panels: SpCoinPanelTree, targetId: SP_COIN_DISPLAY): 
 
 type SetExchange = (
   updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
-  hookName?: string
+  hookName?: string,
 ) => void;
 
 type Params = {
@@ -72,7 +100,11 @@ export function useProviderWatchers({
 }: Params) {
   const prevWagmiChainRef = useRef<number | undefined>();
   const prevCtxChainRef = useRef<number | undefined>();
-  const prevAccountRef = useRef<{ address?: string; status?: string; connected?: boolean }>();
+  const prevAccountRef = useRef<{
+    address?: string;
+    status?: string;
+    connected?: boolean;
+  }>();
   const prevTokensRef = useRef<{ sell?: string; buy?: string }>();
 
   const isFirstWagmiRunRef = useRef(true);
@@ -94,18 +126,21 @@ export function useProviderWatchers({
 
     if (prevWagmi === nextWagmi) return;
 
-    setExchangeContext((prevCtx) => {
-      const next = clone(prevCtx);
-      const currentCtxChain = next.network?.chainId;
+    setExchangeContext(
+      (prevCtx) => {
+        const next = clone(prevCtx);
+        const currentCtxChain = next.network?.chainId;
 
-      next.network = resolveNetworkElement(nextWagmi, next.network);
+        next.network = resolveNetworkElement(nextWagmi, next.network);
 
-      if (currentCtxChain !== nextWagmi) {
-        next.tradeData.sellTokenContract = undefined;
-        next.tradeData.buyTokenContract = undefined;
-      }
-      return next;
-    }, 'watcher:wagmiChain');
+        if (currentCtxChain !== nextWagmi) {
+          next.tradeData.sellTokenContract = undefined;
+          next.tradeData.buyTokenContract = undefined;
+        }
+        return next;
+      },
+      'watcher:wagmiChain',
+    );
 
     prevWagmiChainRef.current = nextWagmi;
     prevTokensRef.current = { sell: undefined, buy: undefined };
@@ -114,7 +149,10 @@ export function useProviderWatchers({
   /* --------------- context/app chain watcher (UI/local) ---------------- */
   useEffect(() => {
     const ctxChain =
-      (typeof appChainId === 'number' ? appChainId : contextState?.network?.chainId);
+      typeof appChainId === 'number'
+        ? appChainId
+        : contextState?.network?.chainId;
+
     if (!contextState) return;
     if (ctxChain == null) return;
 
@@ -127,30 +165,35 @@ export function useProviderWatchers({
     const prevCtxChain = prevCtxChainRef.current ?? ctxChain;
     if (ctxChain === prevCtxChain) return;
 
-    const isLocalChange = !isConnected || (wagmiChainId != null && ctxChain !== wagmiChainId);
+    const isLocalChange =
+      !isConnected || (wagmiChainId != null && ctxChain !== wagmiChainId);
+
     if (!isLocalChange) {
       prevCtxChainRef.current = ctxChain;
       return;
     }
 
-    setExchangeContext((prevCtx) => {
-      const next = clone(prevCtx);
-      const currentCtxChain = next.network?.chainId;
+    setExchangeContext(
+      (prevCtx) => {
+        const next = clone(prevCtx);
+        const currentCtxChain = next.network?.chainId;
 
-      next.network = resolveNetworkElement(ctxChain, next.network);
+        next.network = resolveNetworkElement(ctxChain, next.network);
 
-      if (currentCtxChain !== ctxChain) {
-        next.tradeData.sellTokenContract = undefined;
-        next.tradeData.buyTokenContract = undefined;
-      }
-      return next;
-    }, 'watcher:contextChain');
+        if (currentCtxChain !== ctxChain) {
+          next.tradeData.sellTokenContract = undefined;
+          next.tradeData.buyTokenContract = undefined;
+        }
+        return next;
+      },
+      'watcher:contextChain',
+    );
 
     prevCtxChainRef.current = ctxChain;
     prevTokensRef.current = { sell: undefined, buy: undefined };
   }, [appChainId, contextState, isConnected, wagmiChainId, setExchangeContext]);
 
-  /* ------------------- account watcher (balances/addr) ------------------ */
+  /* ------------------- account watcher (deduped hydration) ------------------ */
   useEffect(() => {
     if (!contextState) return;
 
@@ -162,26 +205,64 @@ export function useProviderWatchers({
     };
     if (shallowEqual(prev, nextSlice)) return;
 
-    setExchangeContext((prevCtx) => {
-      const next = clone(prevCtx);
+    const nextAddr = nextSlice.address?.trim();
+    const ctxAcct = contextState.accounts?.activeAccount;
 
-      if (nextSlice.address && isConnected) {
-        const current = next.accounts.activeAccount ?? ({} as spCoinAccount);
-        next.accounts.activeAccount = {
-          ...current,
-          address: nextSlice.address as Address,
-        };
-      } else {
-        next.accounts.activeAccount = undefined as any;
-      }
+    // ✅ Stop duplicate boot hydration:
+    // initExchangeContext already hydrated this address -> don't re-fetch.
+    if (
+      nextAddr &&
+      lower(ctxAcct?.address) === lower(nextAddr) &&
+      isHydratedAccount(ctxAcct)
+    ) {
+      prevAccountRef.current = nextSlice;
+      return;
+    }
 
-      if (next.tradeData.sellTokenContract) next.tradeData.sellTokenContract.balance = 0n;
-      if (next.tradeData.buyTokenContract) next.tradeData.buyTokenContract.balance = 0n;
+    // ✅ On disconnect, do NOT clear activeAccount (existing behavior)
+    let cancelled = false;
 
-      return next;
-    }, 'watcher:account');
+    (async () => {
+      if (!nextAddr) return;
+
+      // ✅ Preserve balance only if SAME address (avoid smearing)
+      const existingBalance =
+        lower(ctxAcct?.address) === lower(nextAddr) ? (ctxAcct?.balance ?? 0n) : 0n;
+
+      const hydrated = await hydrateAccountFromAddress(nextAddr as Address, {
+        balance: existingBalance,
+      });
+
+      if (cancelled) return;
+
+      setExchangeContext(
+        (prevCtx) => {
+          const next = clone(prevCtx);
+
+          // ✅ Last-write-wins: if address changed mid-fetch, ignore this write
+          const currentAddr = (address ?? '').trim();
+          if (!currentAddr || lower(currentAddr) !== lower(nextAddr)) return next;
+
+          next.accounts.activeAccount = hydrated;
+
+          // Preserve previous behavior: reset token balances on account change
+          if (next.tradeData.sellTokenContract)
+            next.tradeData.sellTokenContract.balance = 0n;
+          if (next.tradeData.buyTokenContract)
+            next.tradeData.buyTokenContract.balance = 0n;
+
+          return next;
+        },
+        'watcher:account:hydrate',
+      );
+    })();
 
     prevAccountRef.current = nextSlice;
+
+    return () => {
+      cancelled = true;
+    };
+    // NOTE: include `address` so the stale-write guard sees latest
   }, [address, accountStatus, isConnected, contextState, setExchangeContext]);
 
   /* ---------- tokens watcher (dedupe + auto-close selection UI) --------- */
@@ -197,15 +278,21 @@ export function useProviderWatchers({
 
     // A) Prevent duplicate token selection
     if (sellAddr && buyAddr && sellAddr === buyAddr) {
-      setExchangeContext((prevCtx) => {
-        const next = clone(prevCtx);
-        next.tradeData.buyTokenContract = undefined;
-        return next;
-      }, 'watcher:tokens:dedupe');
+      setExchangeContext(
+        (prevCtx) => {
+          const next = clone(prevCtx);
+          next.tradeData.buyTokenContract = undefined;
+          return next;
+        },
+        'watcher:tokens:dedupe',
+      );
     }
 
     // B) Auto-close selection overlay when a token is committed
-    const root = contextState.settings?.spCoinPanelTree as SpCoinPanelTree | undefined;
+    const root = contextState.settings?.spCoinPanelTree as
+      | SpCoinPanelTree
+      | undefined;
+
     const selectOpen = root
       ? anyVisible(root, [
           SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
@@ -214,14 +301,17 @@ export function useProviderWatchers({
       : false;
 
     if ((sellAddr || buyAddr) && selectOpen && root) {
-      setExchangeContext((prevCtx) => {
-        const next = clone(prevCtx);
-        next.settings.spCoinPanelTree = setOverlayVisible(
-          next.settings.spCoinPanelTree as SpCoinPanelTree,
-          SP_COIN_DISPLAY.TRADING_STATION_PANEL
-        );
-        return next;
-      }, 'watcher:tokens:autoClose');
+      setExchangeContext(
+        (prevCtx) => {
+          const next = clone(prevCtx);
+          next.settings.spCoinPanelTree = setOverlayVisible(
+            next.settings.spCoinPanelTree as SpCoinPanelTree,
+            SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+          );
+          return next;
+        },
+        'watcher:tokens:autoClose',
+      );
     }
 
     prevTokensRef.current = nextSlice;
