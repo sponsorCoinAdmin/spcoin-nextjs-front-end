@@ -1,13 +1,15 @@
 // File: @/lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
-import type React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+
+// ✅ ExchangeContext access (for activeAccount.logoURL + address)
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 // Read env once, with a safe fallback
 const AGENT_WALLET_TITLE =
@@ -122,8 +124,22 @@ const DISPLAY_PRIORITY = [
 type PriorityDisplay = (typeof DISPLAY_PRIORITY)[number];
 
 export function useHeaderController() {
-  const { closePanel } = usePanelTree();
+  // IMPORTANT: we need openPanel (not closePanel) for clicking the logo.
+  const panelTree = usePanelTree();
+  const openPanel =
+    (panelTree as any).openPanel ??
+    (panelTree as any).showPanel ??
+    (panelTree as any).setPanelVisible;
+  const closePanel = (panelTree as any).closePanel;
+
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+  // ✅ ExchangeContext access (for activeAccount.logoURL + address)
+  const exchangeCtx = useContext(ExchangeContextState);
+  const activeAccountLogoURL =
+    exchangeCtx?.exchangeContext?.accounts?.activeAccount?.logoURL;
+  const activeAccountAddress =
+    exchangeCtx?.exchangeContext?.accounts?.activeAccount?.address;
 
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
@@ -208,10 +224,79 @@ export function useHeaderController() {
     );
   }, [currentDisplay, rewardsState]);
 
+  /**
+   * ✅ LEFT ELEMENT BEHAVIOR
+   * - Overrides still win if registered.
+   * - For ACCOUNT_LIST_REWARDS_PANEL, show activeAccount logo as a clickable button
+   *   that OPENS SPONSOR_ACCOUNT_PANEL.
+   *
+   * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
+   */
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
-    return factory ? factory() : null;
-  }, [currentDisplay]);
+    if (factory) return factory();
+
+    if (currentDisplay !== SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) return null;
+    if (!activeAccountLogoURL) return null;
+
+    const sizePx = 38;
+
+    return React.createElement(
+      'button',
+      {
+        type: 'button',
+        className: 'bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none',
+        'aria-label': 'Open Sponsor Account',
+        'data-role': 'ActiveAccount',
+        'data-address': activeAccountAddress ?? '',
+        onClick: () => {
+          suppressNextOverlayClose('Header:ActiveLogo->SponsorAccount', 'HeaderController');
+
+          // ✅ Open the Sponsor Account panel (not closePanel)
+          if (typeof openPanel === 'function') {
+            // common signatures:
+            // - openPanel(panelId, reason?)
+            // - showPanel(panelId, true, reason?)
+            // - setPanelVisible(panelId, true)
+            try {
+              // try (panelId, reason)
+              openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, 'Header:ActiveLogoClick');
+              return;
+            } catch {}
+
+            try {
+              // try (panelId, true, reason)
+              openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, true, 'Header:ActiveLogoClick');
+              return;
+            } catch {}
+
+            try {
+              // try ({ panel, visible })
+              openPanel({ panel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, visible: true });
+              return;
+            } catch {}
+          }
+
+          // last resort fallback: if you only have closePanel in this build, do nothing loudly
+          // (keeping silent in prod; add console.warn if you want)
+        },
+      },
+      React.createElement('img', {
+        src: activeAccountLogoURL,
+        alt: 'Active Account logo',
+        width: sizePx,
+        height: sizePx,
+        loading: 'lazy',
+        decoding: 'async',
+        className: 'h-[38px] w-[38px] object-contain rounded bg-transparent',
+      }),
+    );
+  }, [
+    currentDisplay,
+    activeAccountLogoURL,
+    activeAccountAddress,
+    openPanel,
+  ]);
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
@@ -225,7 +310,10 @@ export function useHeaderController() {
         e?.stopPropagation?.();
       } catch {}
 
-      closePanel('HeaderController:onClose(pop)', e as any);
+      // keep your original close behavior
+      if (typeof closePanel === 'function') {
+        closePanel('HeaderController:onClose(pop)', e as any);
+      }
     },
     [closePanel],
   );
