@@ -7,6 +7,26 @@ import type { spCoinAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
 import { getJson } from '@/lib/rest/http';
 import { getWalletJsonURL, getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false as const;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_ACCOUNT_HYDRATION === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true' || // optional: piggyback existing
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
+
+const debugLog = createDebugLogger('accountHydration', DEBUG_ENABLED, LOG_TIME);
+
+/**
+ * Optional discovery override.
+ *
+ * IMPORTANT:
+ * - For browser fetch(), these should be URL paths (e.g. "/assets/accounts/"), not filesystem ("public/assets/...").
+ * - If user mistakenly sets "public/assets/accounts/", we normalize it to "/assets/accounts/".
+ */
+const ENV_ACCOUNT_PATH_RAW = process.env.NEXT_PUBLIC_ACCOUNT_PATH;
+
+/* ----------------------------- types ----------------------------- */
 
 type WalletJson = Partial<spCoinAccount> & {
   balance?: string | number | bigint;
@@ -47,13 +67,81 @@ function toBigIntSafe(value: unknown): bigint {
 }
 
 function coerceStatus(raw: unknown): STATUS {
-  // If wallet.json stores the exact enum value, accept it.
   if (typeof raw === 'string') {
     const v = raw as any;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     if (Object.values(STATUS as any).includes(v)) return v as STATUS;
   }
   return STATUS.INFO;
+}
+
+function summarizeOut(out: spCoinAccount) {
+  return {
+    address: out.address,
+    name: out.name,
+    symbol: out.symbol,
+    type: (out as any).type,
+    website: (out as any).website,
+    descriptionLen: typeof (out as any).description === 'string' ? (out as any).description.length : undefined,
+    status: (out as any).status,
+    hasLogo: Boolean(out.logoURL),
+    balance: typeof (out as any).balance === 'bigint' ? (out as any).balance.toString() : String((out as any).balance ?? ''),
+  };
+}
+
+/**
+ * Normalize an env "base path" into a URL base usable by fetch().
+ * Examples:
+ *  - "public/assets/accounts/" -> "/assets/accounts/"
+ *  - "/assets/accounts"        -> "/assets/accounts/"
+ *  - "assets/accounts"         -> "/assets/accounts/"
+ */
+function normalizeEnvBasePath(raw?: string): string | undefined {
+  const s = (raw ?? '').trim();
+  if (!s) return undefined;
+
+  // If user accidentally includes "public/", drop it (public is web root)
+  let out = s.replace(/\\/g, '/'); // windows slashes -> url slashes
+  if (out.startsWith('public/')) out = out.slice('public'.length); // keep leading "/assets/..."
+  if (!out.startsWith('/')) out = '/' + out;
+  if (!out.endsWith('/')) out += '/';
+
+  // Guard: if they set "/public/assets/..." (rare), also fix
+  if (out.startsWith('/public/')) out = out.slice('/public'.length);
+
+  return out;
+}
+
+/**
+ * Folder naming convention:
+ * Your repo uses uppercase "0X..." directories (confirmed by logs).
+ */
+function toAccountFolderKey(addr: Address): string {
+  const a = String(addr).trim();
+  // wallet.json folders are "0X..." uppercase
+  return a.toUpperCase().replace(/^0X/, '0X');
+}
+
+/**
+ * If NEXT_PUBLIC_ACCOUNT_PATH is set, build URLs from it.
+ * Otherwise fall back to assetHelpers.
+ */
+function getWalletJsonURL_SSOT(addr: Address): string {
+  const base = normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW);
+  if (base) {
+    const key = toAccountFolderKey(addr);
+    return `${base}${key}/wallet.json`;
+  }
+  return getWalletJsonURL(addr);
+}
+
+function getWalletLogoURL_SSOT(addr: Address): string {
+  const base = normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW);
+  if (base) {
+    const key = toAccountFolderKey(addr);
+    return `${base}${key}/logo.png`;
+  }
+  return getWalletLogoURL(addr);
 }
 
 /** Consistent fallback shape for "not registered / missing wallet.json". */
@@ -63,29 +151,36 @@ export function makeWalletFallback(
   description: string,
   balance?: bigint,
 ): spCoinAccount {
-  return {
+  const out: spCoinAccount = {
     address: addr,
-    type: 'ERC20_WALLET',
+    type: 'ERC20_WALLET' as any,
     name: '',
     symbol: '',
-    website: '',
+    website: '' as any,
     status,
-    description,
-    logoURL: getWalletLogoURL(addr) || defaultMissingImage,
+    description: description as any,
+    logoURL: getWalletLogoURL_SSOT(addr) || defaultMissingImage,
     balance: typeof balance === 'bigint' ? balance : 0n,
   };
+
+  debugLog.warn?.('[makeWalletFallback]', {
+    addr,
+    status,
+    description,
+    balance: (out as any).balance?.toString?.(),
+    logoURL: out.logoURL,
+    envAccountPath: ENV_ACCOUNT_PATH_RAW ?? null,
+    envAccountPathNormalized: normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW) ?? null,
+  });
+
+  return out;
 }
 
 /* ----------------------------- main SSOT ----------------------------- */
 
 /**
  * ✅ SSOT: Hydrate a full spCoinAccount from `/public/assets/accounts/<ADDR>/wallet.json`.
- *
- * Rules:
- * - Reads wallet.json via getWalletJsonURL()
- * - Always derives logoURL via getWalletLogoURL() (unless allowJsonLogoURL)
- * - Preserves/overrides balance if opts.balance is provided
- * - Returns a complete spCoinAccount suitable for ExchangeContext.accounts.activeAccount
+ * If NEXT_PUBLIC_ACCOUNT_PATH is present, it is used as the base for discovery.
  */
 export async function hydrateAccountFromAddress(
   address: Address,
@@ -93,8 +188,18 @@ export async function hydrateAccountFromAddress(
 ): Promise<spCoinAccount> {
   const addr = (address ?? '').trim() as Address;
 
+  debugLog.log?.('[hydrateAccountFromAddress] enter', {
+    addr,
+    isClient: isProbablyClient(),
+    allowJsonLogoURL: !!opts.allowJsonLogoURL,
+    hasBalanceOverride: typeof opts.balance === 'bigint',
+    fallbackStatus: opts.fallbackStatus,
+    envAccountPath: ENV_ACCOUNT_PATH_RAW ?? null,
+    envAccountPathNormalized: normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW) ?? null,
+  });
+
   if (!addr || !isAddress(addr)) {
-    // Unknown / invalid address
+    debugLog.warn?.('[hydrateAccountFromAddress] invalid address', { addr });
     return makeWalletFallback(
       (addr || ('0x0000000000000000000000000000000000000000' as Address)) as Address,
       opts.fallbackStatus ?? STATUS.MESSAGE_ERROR,
@@ -103,8 +208,8 @@ export async function hydrateAccountFromAddress(
     );
   }
 
-  // Avoid SSR fetches (and hydration mismatch). Caller should re-run on client anyway.
   if (!isProbablyClient()) {
+    debugLog.warn?.('[hydrateAccountFromAddress] SSR guard hit (no fetch)', { addr });
     return makeWalletFallback(
       addr,
       opts.fallbackStatus ?? STATUS.INFO,
@@ -113,7 +218,8 @@ export async function hydrateAccountFromAddress(
     );
   }
 
-  const url = getWalletJsonURL(addr);
+  const url = getWalletJsonURL_SSOT(addr);
+  debugLog.log?.('[hydrateAccountFromAddress] wallet.json URL', { addr, url });
 
   let json: WalletJson | undefined;
   try {
@@ -124,7 +230,23 @@ export async function hydrateAccountFromAddress(
       init: { cache: 'no-store' },
       forceParse: true,
     });
-  } catch {
+
+    debugLog.log?.('[hydrateAccountFromAddress] wallet.json fetched OK', {
+      addr,
+      url,
+      keys: json && typeof json === 'object' ? Object.keys(json).slice(0, 30) : null,
+      name: json?.name,
+      symbol: json?.symbol,
+      type: (json as any)?.type,
+      status: (json as any)?.status,
+    });
+  } catch (err: any) {
+    debugLog.warn?.('[hydrateAccountFromAddress] wallet.json fetch FAILED -> fallback', {
+      addr,
+      url,
+      err: String(err?.message ?? err),
+    });
+
     return makeWalletFallback(
       addr,
       opts.fallbackStatus ?? STATUS.MESSAGE_ERROR,
@@ -133,25 +255,28 @@ export async function hydrateAccountFromAddress(
     );
   }
 
-  const balance =
-    typeof opts.balance === 'bigint' ? opts.balance : toBigIntSafe(json?.balance);
+  const balance = typeof opts.balance === 'bigint' ? opts.balance : toBigIntSafe(json?.balance);
 
   // Default: always derive logoURL (filesystem convention)
-  const derivedLogo = getWalletLogoURL(addr) || defaultMissingImage;
+  const derivedLogo = getWalletLogoURL_SSOT(addr) || defaultMissingImage;
   const logoURL =
-    opts.allowJsonLogoURL && typeof json?.logoURL === 'string' && json.logoURL.trim().length
-      ? String(json.logoURL)
+    opts.allowJsonLogoURL && typeof (json as any)?.logoURL === 'string' && String((json as any).logoURL).trim().length
+      ? String((json as any).logoURL)
       : derivedLogo;
 
-  return {
+  const out: spCoinAccount = {
     address: addr,
-    type: typeof json?.type === 'string' ? json.type : 'ERC20_WALLET',
+    type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_WALLET' as any),
     name: typeof json?.name === 'string' ? json.name : '',
     symbol: typeof json?.symbol === 'string' ? json.symbol : '',
-    website: typeof json?.website === 'string' ? json.website : '',
-    description: typeof json?.description === 'string' ? json.description : '',
-    status: coerceStatus(json?.status),
+    website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
+    description: typeof (json as any)?.description === 'string' ? (json as any).description : ('' as any),
+    status: coerceStatus((json as any)?.status),
     logoURL,
     balance,
   };
+
+  debugLog.log?.('[hydrateAccountFromAddress] exit (hydrated)', summarizeOut(out));
+
+  return out;
 }
