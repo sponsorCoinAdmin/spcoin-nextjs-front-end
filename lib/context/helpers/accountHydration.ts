@@ -4,7 +4,7 @@
 import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
-import { STATUS } from '@/lib/structure';
+import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { getJson } from '@/lib/rest/http';
 import { getWalletJsonURL, getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -25,6 +25,9 @@ const debugLog = createDebugLogger('accountHydration', DEBUG_ENABLED, LOG_TIME);
  * - If user mistakenly sets "public/assets/accounts/", we normalize it to "/assets/accounts/".
  */
 const ENV_ACCOUNT_PATH_RAW = process.env.NEXT_PUBLIC_ACCOUNT_PATH;
+
+// legacy key constant (keeps dot-access out of the file)
+const LEGACY_WALLETS_KEY = 'wallets' as const;
 
 /* ----------------------------- types ----------------------------- */
 
@@ -102,7 +105,7 @@ function normalizeEnvBasePath(raw?: string): string | undefined {
 
   // If user accidentally includes "public/", drop it (public is web root)
   let out = s.replace(/\\/g, '/'); // windows slashes -> url slashes
-  if (out.startsWith('public/')) out = out.slice('public'.length); // keep leading "/assets/..."
+  if (out.startsWith('public/')) out = out.slice('public'.length);
   if (!out.startsWith('/')) out = '/' + out;
   if (!out.endsWith('/')) out += '/';
 
@@ -143,6 +146,8 @@ function getWalletLogoURL_SSOT(addr: Address): string {
   }
   return getWalletLogoURL(addr);
 }
+
+/* ----------------------------- SSOT fallbacks ----------------------------- */
 
 /** Consistent fallback shape for "not registered / missing wallet.json". */
 export function makeWalletFallback(
@@ -279,4 +284,137 @@ export async function hydrateAccountFromAddress(
   debugLog.log?.('[hydrateAccountFromAddress] exit (hydrated)', summarizeOut(out));
 
   return out;
+}
+
+/* ----------------------------- (ex-builders) feed building ----------------------------- */
+
+function normalizeList(raw: any): any[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    // legacy inputs (INPUT ONLY)
+    if (Array.isArray((raw as any)[LEGACY_WALLETS_KEY])) return (raw as any)[LEGACY_WALLETS_KEY];
+
+    // common wrappers
+    if (Array.isArray((raw as any).items)) return (raw as any).items;
+    if (Array.isArray((raw as any).accounts)) return (raw as any).accounts;
+    if (Array.isArray((raw as any).recipients)) return (raw as any).recipients;
+    if (Array.isArray((raw as any).agents)) return (raw as any).agents;
+    if (Array.isArray((raw as any).sponsors)) return (raw as any).sponsors;
+    if (Array.isArray((raw as any).tokens)) return (raw as any).tokens;
+  }
+  return [];
+}
+
+function pickAddressFromSpec(spec: any): Address | undefined {
+  if (!spec) return undefined;
+  if (typeof spec === 'string' && isAddress(spec)) return spec as Address;
+  if (typeof spec === 'object') {
+    const a = (spec.address ?? spec.addr ?? spec.id) as unknown;
+    if (typeof a === 'string' && isAddress(a)) return a as Address;
+  }
+  return undefined;
+}
+
+/**
+ * Build a spCoinAccount from a JSON "spec" entry using SSOT hydration.
+ * - If spec has an address: hydrate from wallet.json and overlay any inline fields.
+ * - If no valid address: returns a consistent fallback (error status).
+ */
+async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {
+  const addr = pickAddressFromSpec(spec);
+
+  const balanceOverride =
+    typeof spec === 'object' && spec
+      ? (typeof spec.balance === 'bigint' ? spec.balance : toBigIntSafe(spec.balance))
+      : undefined;
+
+  if (!addr) {
+    return makeWalletFallback(
+      '0x0000000000000000000000000000000000000000' as Address,
+      STATUS.MESSAGE_ERROR,
+      'Invalid wallet address',
+      balanceOverride,
+    );
+  }
+
+  const hydrated = await hydrateAccountFromAddress(addr, {
+    balance: typeof balanceOverride === 'bigint' ? balanceOverride : undefined,
+    // allow JSON to override logo only if explicitly requested elsewhere; keep default false.
+    allowJsonLogoURL: false,
+  });
+
+  // Overlay any inline/user-provided fields without breaking SSOT fields unless explicitly present.
+  if (spec && typeof spec === 'object') {
+    const out: spCoinAccount = {
+      ...hydrated,
+      // allow common overrides if provided (eg in manage JSON)
+      name: typeof spec.name === 'string' ? spec.name : hydrated.name,
+      symbol: typeof spec.symbol === 'string' ? spec.symbol : hydrated.symbol,
+      website: typeof spec.website === 'string' ? spec.website : (hydrated as any).website,
+      description: typeof spec.description === 'string' ? spec.description : (hydrated as any).description,
+      status: spec.status ? coerceStatus(spec.status) : (hydrated as any).status,
+      balance: typeof balanceOverride === 'bigint' ? balanceOverride : (hydrated as any).balance,
+    };
+
+    // if they provided an explicit logoURL in spec, keep it (rare, but manage json sometimes needs it)
+    if (typeof spec.logoURL === 'string' && spec.logoURL.trim().length) out.logoURL = spec.logoURL.trim();
+
+    return out;
+  }
+
+  return hydrated;
+}
+
+/**
+ * Replacement for builders.buildTokenFromJson.
+ * Keep it permissive: pass through JSON with chainId attached (if absent).
+ */
+export function buildTokenFromJson(tokenJson: any, chainId: number) {
+  if (!tokenJson || typeof tokenJson !== 'object') return null;
+  const out: any = { ...tokenJson };
+  if (out.chainId == null) out.chainId = chainId;
+  return out;
+}
+
+/**
+ * Replacement for builders.buildWalletFromJsonFirst.
+ */
+export async function buildWalletFromJsonFirst(raw: any): Promise<spCoinAccount | null> {
+  const list = normalizeList(raw);
+  const first = list[0];
+  if (!first) return null;
+  return buildAccountFromJsonSpec(first);
+}
+
+/**
+ * Replacement for builders.feedDataFromJson.
+ *
+ * ✅ HARD RULE: account feeds return `spCoinAccounts`.
+ * Tokens return `tokens`.
+ */
+export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw: any): Promise<FeedData> {
+  switch (feedType) {
+    case FEED_TYPE.TOKEN_LIST: {
+      const list = normalizeList(raw);
+      const tokens = list.map((t) => buildTokenFromJson(t, chainId)).filter(Boolean);
+      return { tokens } as any;
+    }
+
+    case FEED_TYPE.RECIPIENT_ACCOUNTS:
+    case FEED_TYPE.AGENT_ACCOUNTS:
+    case FEED_TYPE.SPONSOR_ACCOUNTS:
+    case FEED_TYPE.MANAGE_RECIPIENTS:
+    case FEED_TYPE.MANAGE_AGENTS: {
+      const list = normalizeList(raw);
+      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x)));
+      return { spCoinAccounts } as any;
+    }
+
+    default: {
+      // permissive fallback: try accounts first, else tokens
+      const list = normalizeList(raw);
+      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x)));
+      return { spCoinAccounts } as any;
+    }
+  }
 }

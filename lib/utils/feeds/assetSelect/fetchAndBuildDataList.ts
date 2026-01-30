@@ -3,8 +3,8 @@
 
 import { FEED_TYPE, type FeedData } from '@/lib/structure';
 
-// ✅ Helpers from builders.ts
-import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from './builders';
+// ✅ Now from accountHydration (SSOT) — builders deleted.
+import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from '@/lib/context/helpers/accountHydration';
 
 // ✅ Management JSON placeholders (temporary stand-ins for on-chain reads)
 import sponsorsJson from '@/resources/data/spCoinMockTokenRequest/ManageSponsorships/sponsors.json';
@@ -277,7 +277,6 @@ function getManageJsonForFeed(feedType: FEED_TYPE): { sourceId: string; sourceKi
 /**
  * ✅ HARD RULE: output uses SSOT `spCoinAccounts` for account feeds.
  * If anything ever returns legacy wallets array, migrate it once and delete it.
- *
  */
 function enforceAccountsOnly(built: any): FeedData {
   const b: any = built ?? {};
