@@ -1,8 +1,7 @@
 // File: @/lib/utils/feeds/assetSelect/fetchAndBuildDataList.ts
 'use client';
 
-import { FEED_TYPE } from '@/lib/structure';
-import type { FeedData } from './types';
+import { FEED_TYPE, type FeedData } from '@/lib/structure';
 
 // ✅ Helpers from builders.ts
 import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from './builders';
@@ -276,7 +275,7 @@ function getManageJsonForFeed(feedType: FEED_TYPE): { sourceId: string; sourceKi
 }
 
 /**
- * ✅ HARD RULE: output uses SSOT `accountsXXXX` for account feeds.
+ * ✅ HARD RULE: output uses SSOT `spCoinAccounts` for account feeds.
  * If anything ever returns legacy wallets array, migrate it once and delete it.
  *
  */
@@ -284,8 +283,8 @@ function enforceAccountsOnly(built: any): FeedData {
   const b: any = built ?? {};
 
   const legacy = b[LEGACY_WALLETS_KEY];
-  if (Array.isArray(legacy) && !Array.isArray(b.accountsXXXX)) {
-    b.accountsXXXX = legacy;
+  if (Array.isArray(legacy) && !Array.isArray(b.spCoinAccounts)) {
+    b.spCoinAccounts = legacy;
   }
 
   if (LEGACY_WALLETS_KEY in b) delete b[LEGACY_WALLETS_KEY];
@@ -306,7 +305,7 @@ function attachDebugMeta(
 }
 
 function logBuilt(label: string, feedType: FEED_TYPE, built: FeedData, source: SelectedSource, seq: number, chainId: number) {
-  const accountsLen = Array.isArray((built as any).accountsXXXX) ? (built as any).accountsXXXX.length : 0;
+  const accountsLen = Array.isArray((built as any).spCoinAccounts) ? (built as any).spCoinAccounts.length : 0;
   const tokensLen = Array.isArray((built as any).tokens) ? (built as any).tokens.length : 0;
 
   debugLog.log?.(`[${label}]`, {

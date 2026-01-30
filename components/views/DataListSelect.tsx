@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-import type { spCoinAccount } from '@/lib/structure';
+import type { FeedData, spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
@@ -11,7 +11,6 @@ import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // ✅ SSOT: use the shared FeedData type (do NOT redefine it locally)
-import type { FeedData } from '@/lib/utils/feeds/assetSelect/types';
 
 // Normalize the token feed so TokenListItem always receives strict strings
 export type TokenFeedItem = {
@@ -56,8 +55,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   // ✅ SSOT: read directly from props, using the SSOT union fields
   const accounts = useMemo<spCoinAccount[]>(() => {
-    // account feeds in SSOT are { feedType: AccountFeedType; accountsXXXX: spCoinAccount[] }
-    return (feedData as any)?.accountsXXXX ?? [];
+    // account feeds in SSOT are { feedType: AccountFeedType; spCoinAccounts: spCoinAccount[] }
+    return (feedData as any)?.spCoinAccounts ?? [];
   }, [feedData]);
 
   const tokens = useMemo<TokenFeedItem[]>(() => {

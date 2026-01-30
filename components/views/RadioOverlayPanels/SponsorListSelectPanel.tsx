@@ -55,12 +55,12 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
 
   /**
-   * ✅ SSOT: accountsXXXX only
+   * ✅ SSOT: spCoinAccounts only
    * If this is empty, upstream isn't producing accounts yet (which is what we want to discover).
    */
   const accounts: spCoinAccount[] = useMemo(() => {
     const anyData: any = feedData;
-    return Array.isArray(anyData?.accountsXXXX) ? (anyData.accountsXXXX as spCoinAccount[]) : [];
+    return Array.isArray(anyData?.spCoinAccounts) ? (anyData.spCoinAccounts as spCoinAccount[]) : [];
   }, [feedData]);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
       error: error ?? null,
 
       accountsLen: accounts.length,
-      hasAccountsXXXX: Array.isArray(anyData?.accountsXXXX),
+      hasSpCoinAccounts: Array.isArray(anyData?.spCoinAccounts),
 
       sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
       sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',

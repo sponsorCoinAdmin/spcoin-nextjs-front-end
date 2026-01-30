@@ -2,10 +2,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FEED_TYPE } from '@/lib/structure';
+import { FEED_TYPE, type FeedData } from '@/lib/structure';
 import { useAppChainId } from '@/lib/context/hooks';
 import { fetchAndBuildDataList } from '../fetchAndBuildDataList';
-import type { FeedData } from '../types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
@@ -71,8 +70,8 @@ export function useFeedData(feedType: FEED_TYPE) {
           sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
           sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
 
-          // ✅ SSOT: accountsXXXX only
-          accountsXXXXLen: Array.isArray(anyData?.accountsXXXX) ? anyData.accountsXXXX.length : 0,
+          // ✅ SSOT: spCoinAccounts only
+          spCoinAccountsLen: Array.isArray(anyData?.spCoinAccounts) ? anyData.spCoinAccounts.length : 0,
 
           tokensLen: Array.isArray(anyData?.tokens) ? anyData.tokens.length : 0,
         });

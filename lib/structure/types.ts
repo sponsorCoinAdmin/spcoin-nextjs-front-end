@@ -9,6 +9,7 @@ import type {
   SP_COIN_DISPLAY, // provider enum
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { FEED_TYPE } from '@/lib/structure';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
@@ -164,3 +165,25 @@ export const ERROR_CODES = {
   PRICE_FETCH_ERROR: 2001,
   INVALID_TOKENS: 3001,
 } as const;
+
+
+// ✅ Expand union to include SPONSOR + manage feeds
+export type AccountFeedType =
+  | FEED_TYPE.RECIPIENT_ACCOUNTS
+  | FEED_TYPE.AGENT_ACCOUNTS
+  | FEED_TYPE.SPONSOR_ACCOUNTS
+  | FEED_TYPE.MANAGE_RECIPIENTS
+  | FEED_TYPE.MANAGE_AGENTS;
+
+export type TokenFeedType = FEED_TYPE.TOKEN_LIST;
+
+// ✅ Optional debug metadata we can attach without breaking UI
+export type FeedDebugMeta = {
+  sourceId?: string;        // e.g. "@/resources/data/sponsors/accounts.json"
+  sourceKind?: string;      // e.g. "bundled-resource" | "manage-json" | "remote-url"
+  resolvedUrl?: string;     // if remote later
+};
+
+export type FeedData =
+  | ({ feedType: TokenFeedType; tokens: TokenContract[] } & { __debug?: FeedDebugMeta })
+  | ({ feedType: AccountFeedType; spCoinAccounts: spCoinAccount[] } & { __debug?: FeedDebugMeta });

@@ -11,11 +11,10 @@ import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type FeedData, type spCoinAccount } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 // ✅ SSOT: same FeedData type used by DataListSelect
-import type { FeedData } from '@/lib/utils/feeds/assetSelect/types';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -50,9 +49,9 @@ function isAccountFeedType(feedType: FEED_TYPE) {
   );
 }
 
-/** ✅ Prefer SSOT accountsXXXX, fallback to legacy wallets while migrating */
+/** ✅ Prefer SSOT spCoinAccounts, fallback to legacy wallets while migrating */
 function getAccountsFromFeed(feedData: any): spCoinAccount[] {
-  if (Array.isArray(feedData?.accountsXXXX)) return feedData.accountsXXXX as spCoinAccount[];
+  if (Array.isArray(feedData?.spCoinAccounts)) return feedData.spCoinAccounts as spCoinAccount[];
 
   // legacy fallback (bracket access avoids ".wallets" grep hits)
   const legacy = feedData?.[LEGACY_WALLETS_KEY];
@@ -137,7 +136,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
   /**
    * ✅ Always return a valid SSOT FeedData shape
    * - Token feeds: { feedType: TOKEN_LIST, tokens: [] }
-   * - Account feeds: { feedType: <account feed>, accountsXXXX: [] }
+   * - Account feeds: { feedType: <account feed>, spCoinAccounts: [] }
    */
   const safeFeedData: FeedData = useMemo(() => {
     if (feedData) return feedData;
@@ -147,10 +146,10 @@ export default function AssetListSelectPanel({ listType }: Props) {
     }
 
     // account feeds
-    return { feedType: feedType as any, accountsXXXX: [] };
+    return { feedType: feedType as any, spCoinAccounts: [] };
   }, [feedData, feedType]);
 
-  // Logging counts (accountsXXXX first, legacy fallback)
+  // Logging counts (spCoinAccounts first, legacy fallback)
   const accounts = useMemo(() => getAccountsFromFeed(safeFeedData as any), [safeFeedData]);
 
   const accountsCount = accounts.length;
@@ -165,7 +164,7 @@ export default function AssetListSelectPanel({ listType }: Props) {
     loading,
     accountsCount,
     tokensCount,
-    hasAccountsXXXX: Array.isArray((safeFeedData as any)?.accountsXXXX),
+    hasSpCoinAccounts: Array.isArray((safeFeedData as any)?.spCoinAccounts),
     legacyWalletsLen,
   });
 
