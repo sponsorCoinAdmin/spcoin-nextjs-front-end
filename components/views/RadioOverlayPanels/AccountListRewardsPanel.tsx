@@ -3,6 +3,7 @@
 
 import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import type { spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
@@ -12,8 +13,6 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import AddressSelect from '../AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-
 
 import { msTableTw } from './msTableTw';
 
@@ -61,6 +60,20 @@ function getInputAccountText(opts: { vAgents: boolean; vRecipients: boolean; vSp
   return 'Active Account:';
 }
 
+function getAddressText(w: any): string {
+  if (typeof w?.address === 'string') return w.address;
+
+  const a = w?.address as Record<string, unknown> | undefined;
+  if (!a) return 'N/A';
+
+  const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+  try {
+    return cand ? String(cand) : JSON.stringify(a);
+  } catch {
+    return 'N/A';
+  }
+}
+
 /**
  * Row + image sizing to match DataListSelect’s AccountListItem sizing.
  */
@@ -78,7 +91,7 @@ const COIN_ROW_BTN_TW = 'scale-[1.0] origin-center';
 const COIN_ROW_MIN_H_TW = 'min-h-[34px]';
 
 /**
- * ✅ NEW: width of nested col[0] for account type rows
+ * ✅ width of nested col[0] for account type rows
  */
 const COL_0_ACCOUNT_TYPE = '88px';
 
@@ -117,7 +130,6 @@ const LS_CHEVRON_OPEN_KEY = 'spcoin:chevron_down_open_pending';
 type SubRowKey = 'staked' | 'sponsor' | 'recipient' | 'agent';
 type SubRowOpenState = Partial<Record<SubRowKey, boolean>> & { all?: boolean };
 type OpenByWalletKey = Record<string, SubRowOpenState>;
-
 const EMPTY_SUBROWS: SubRowOpenState = Object.freeze({});
 
 /**
@@ -232,12 +244,54 @@ function ExpandWrap({ open, children }: { open: boolean; children: React.ReactNo
   );
 }
 
-export default function AccountListRewardsPanel({
-  accountList,
-  setAccountCallBack,
-  containerType,
-  listType,
-}: Props) {
+function AccountCell({
+  account,
+  roleLabel,
+  addressText,
+  onPick,
+  onRowEnter,
+  onRowMove,
+  onRowLeave,
+}: {
+  account: spCoinAccount;
+  roleLabel: string;
+  addressText: string;
+  onPick: (a: spCoinAccount) => void;
+  onRowEnter: (name?: string | null) => void;
+  onRowMove: React.MouseEventHandler;
+  onRowLeave: () => void;
+}) {
+  return (
+    <div className="w-full flex items-center gap-2 min-w-0">
+      <button
+        type="button"
+        className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
+        onMouseEnter={() => onRowEnter(account?.name ?? '')}
+        onMouseMove={onRowMove}
+        onMouseLeave={onRowLeave}
+        onClick={() => onPick(account)}
+        aria-label={`Open ${roleLabel}s reconfigure`}
+        data-role={roleLabel}
+        data-address={addressText}
+      >
+        <Image
+          src={(account as any)?.logoURL || '/assets/miscellaneous/placeholder.png'}
+          alt={`${account?.name ?? 'Wallet'} logo`}
+          width={DATALIST_IMG_PX}
+          height={DATALIST_IMG_PX}
+          className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
+        />
+      </button>
+
+      <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
+        <div className="w-full font-semibold truncate !text-[#5981F3] text-left">{account?.name ?? 'Unknown'}</div>
+        <div className="w-full text-sm truncate !text-[#5981F3] text-left">{(account as any)?.symbol ?? ''}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function AccountListRewardsPanel({ accountList, setAccountCallBack, containerType, listType }: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
@@ -272,7 +326,6 @@ export default function AccountListRewardsPanel({
     if (!hasLs) return;
 
     const resolvedOpen = lsOpen === 'true';
-
     setChevronOpenPending(resolvedOpen);
     setPanelVisibleEverywhere(ctx, SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING, resolvedOpen);
   }, [cfgChevronOpen, ctx]);
@@ -286,9 +339,7 @@ export default function AccountListRewardsPanel({
       setChevronOpenPending(open);
 
       try {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(LS_CHEVRON_OPEN_KEY, String(open));
-        }
+        if (typeof window !== 'undefined') window.localStorage.setItem(LS_CHEVRON_OPEN_KEY, String(open));
       } catch {
         // no-op
       }
@@ -299,7 +350,13 @@ export default function AccountListRewardsPanel({
   );
 
   const accountType: AccountType = useMemo(() => {
-    const derived = vAgents ? AccountType.AGENT : vRecipients ? AccountType.RECIPIENT : vSponsors ? AccountType.SPONSOR : AccountType.SPONSOR;
+    const derived = vAgents
+      ? AccountType.AGENT
+      : vRecipients
+        ? AccountType.RECIPIENT
+        : vSponsors
+          ? AccountType.SPONSOR
+          : AccountType.SPONSOR;
 
     debugLog.log?.('[derive accountType (mode-based)]', {
       vAgents,
@@ -359,21 +416,8 @@ export default function AccountListRewardsPanel({
     const isTotal = pending.accountId < 0 || pending.accountId >= accountList.length;
     const row = isTotal ? undefined : accountList[pending.accountId];
 
-    const addressText =
-      row && typeof (row as any).address === 'string'
-        ? (row as any).address
-        : (() => {
-            const a = (row as any)?.address as Record<string, unknown> | undefined;
-            if (!a) return 'N/A';
-            const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-            try {
-              return cand ? String(cand) : JSON.stringify(a);
-            } catch {
-              return 'N/A';
-            }
-          })();
-
-    const rowName = row?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
+    const addressText = row ? getAddressText(row as any) : 'N/A';
+    const rowName = (row as any)?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
     const rowAccount =
       (row as any)?.account ??
       (row as any)?.address ??
@@ -403,6 +447,8 @@ export default function AccountListRewardsPanel({
       : listType === SP_COIN_DISPLAY.SPONSORS
         ? 'Claim'
         : 'Action';
+
+  const actionButtonText = actionButtonLabel === 'Claim' ? 'Claim All' : actionButtonLabel;
 
   const onRowEnter = (name?: string | null) => setTip((t) => ({ ...t, show: true, text: name ?? '' }));
   const onRowMove: React.MouseEventHandler = (e) => setTip((t) => ({ ...t, x: e.clientX, y: e.clientY }));
@@ -466,7 +512,11 @@ export default function AccountListRewardsPanel({
           title={isOpen ? 'Close all SpCoin Account Rows' : 'Open all SpCoin Account Rows'}
           onClick={() => setWalletRows3to5Open(walletKey, !isOpen)}
         >
-          {isOpen ? <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} /> : <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />}
+          {isOpen ? (
+            <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+          ) : (
+            <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+          )}
         </button>
       );
 
@@ -485,7 +535,12 @@ export default function AccountListRewardsPanel({
                 <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
                   <div className="min-w-0 flex items-center gap-2">
                     {renderChevronBtn(isOpen)}
-                    <div className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>Rewards</div>
+                    <div
+                      className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                      style={{ width: COL_0_ACCOUNT_TYPE }}
+                    >
+                      Rewards
+                    </div>
                     <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
                   </div>
 
@@ -510,20 +565,22 @@ export default function AccountListRewardsPanel({
           <td colSpan={2} className={`${msTableTw.td} !p-0 ${nestedCellTw}`}>
             <ExpandWrap open={open}>
               <div className={`${COIN_ROW_MIN_H_TW} flex items-center justify-center`}>
-                <div className="w-full text-center truncate text-[14.3px] leading-[1.15] !text-[#5981F3]">Sponsor Coin Sponsorship Details</div>
+                <div className="w-full text-center truncate text-[14.3px] leading-[1.15] !text-[#5981F3]">
+                  Sponsor Coin Sponsorship Details
+                </div>
               </div>
             </ExpandWrap>
           </td>
         </tr>
       );
 
-      /**
-       * ✅ Agent/Sponsor/Recipient:
-       * - 2 columns: col[0]=label, col[1]=valueText ("0.0")
-       * - valueText is LEFT-justified in col[1]
-       * - no Claim button
-       */
-      const renderNestedClaimRow = (open: boolean, label: string, valueText: string, type: AccountType, withChevron?: boolean) => {
+      const renderNestedClaimRow = (
+        open: boolean,
+        label: string,
+        valueText: string,
+        type: AccountType,
+        withChevron?: boolean,
+      ) => {
         const btnTw = msTableTw.btnGreen;
 
         const isUnstakeRow = label === 'Staked';
@@ -538,18 +595,26 @@ export default function AccountListRewardsPanel({
         if (!isUnstakeRow) {
           return (
             <tr aria-hidden={!open}>
-              <td className={`${msTableTw.td} !p-0 ${nestedCellTw} ${nestedVdivTw} ${fgTw} align-middle !text-left`} title={labelTitle}>
+              <td
+                className={`${msTableTw.td} !p-0 ${nestedCellTw} ${nestedVdivTw} ${fgTw} align-middle !text-left`}
+                title={labelTitle}
+              >
                 <ExpandWrap open={open}>
                   <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} w-full flex items-center gap-2`}>
                     {withChevron ? renderChevronBtn(rewardsOpen) : null}
-                    <div className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>{label}</div>
+                    <div
+                      className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                      style={{ width: COL_0_ACCOUNT_TYPE }}
+                    >
+                      {label}
+                    </div>
                   </div>
                 </ExpandWrap>
               </td>
 
               <td className={`${msTableTw.td} !p-0 ${nestedCellTw} ${fgTw} align-middle !text-left`} title={labelTitle}>
                 <ExpandWrap open={open}>
-                  <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} w-full flex items-center justify-start pl-2`}>
+                  <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} w-full flex items-center justify-start`}>
                     <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
                   </div>
                 </ExpandWrap>
@@ -566,7 +631,12 @@ export default function AccountListRewardsPanel({
                 <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
                   <div className={`min-w-0 flex items-center gap-2 ${fgTw}`}>
                     {withChevron ? renderChevronBtn(rewardsOpen) : null}
-                    <div className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis`}>{label}</div>
+                    <div
+                      className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                      style={{ width: COL_0_ACCOUNT_TYPE }}
+                    >
+                      {label}
+                    </div>
                     <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
                   </div>
 
@@ -603,11 +673,8 @@ export default function AccountListRewardsPanel({
 
               <tbody>
                 {renderNestedRewardsRow()}
-
                 {renderNestedClaimRow(stakedOpen, 'Staked', '0.0', AccountType.SPONSOR, true)}
-
                 {renderNestedTokenContractRow(tokenRowVisible)}
-
                 {renderNestedClaimRow(showRow3, 'Sponsor', '0.0', AccountType.SPONSOR)}
                 {renderNestedClaimRow(showRow4, 'Recipient', '0.0', AccountType.RECIPIENT)}
                 {renderNestedClaimRow(showRow5, 'Agent', '0.0', AccountType.AGENT)}
@@ -686,29 +753,12 @@ export default function AccountListRewardsPanel({
             {accountList.map((w, i) => {
               const zebra = i % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
 
-              const addressText =
-                typeof (w as any).address === 'string'
-                  ? (w as any).address
-                  : (() => {
-                      const a = (w as any)?.address as Record<string, unknown> | undefined;
-                      if (!a) return 'N/A';
-                      const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-                      try {
-                        return cand ? String(cand) : JSON.stringify(a);
-                      } catch {
-                        return 'N/A';
-                      }
-                    })();
-
+              const addressText = getAddressText(w as any);
               const walletKey = String((w as any)?.id ?? addressText ?? i);
               const stableKey = (w as any)?.id ?? `${i}-${addressText}`;
 
               const st = openByWalletKey[walletKey] ?? EMPTY_SUBROWS;
-              const openSponsor = !!st.sponsor;
-              const openRecipient = !!st.recipient;
-              const openAgent = !!st.agent;
-
-              const walletOpenRows3to5 = openSponsor && openRecipient && openAgent;
+              const walletOpenRows3to5 = !!st.sponsor && !!st.recipient && !!st.agent;
               const effectiveWalletOpenRows3to5 = cfgChevronOpen || walletOpenRows3to5;
 
               const rewardsOpen = effectiveWalletOpenRows3to5;
@@ -720,20 +770,7 @@ export default function AccountListRewardsPanel({
 
               const revIndex = accountList.length - 1 - i;
               const rw = accountList[revIndex];
-
-              const rwAddressText =
-                typeof (rw as any).address === 'string'
-                  ? (rw as any).address
-                  : (() => {
-                      const a = (rw as any)?.address as Record<string, unknown> | undefined;
-                      if (!a) return 'N/A';
-                      const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
-                      try {
-                        return cand ? String(cand) : JSON.stringify(a);
-                      } catch {
-                        return 'N/A';
-                      }
-                    })();
+              const rwAddressText = getAddressText(rw as any);
 
               return (
                 <React.Fragment key={stableKey}>
@@ -742,72 +779,30 @@ export default function AccountListRewardsPanel({
                       style={{ width: '50%' }}
                       className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
                     >
-                      <div className="w-full flex items-center gap-2 min-w-0">
-                        <button
-                          type="button"
-                          className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
-                          onMouseEnter={() => onRowEnter(w?.name ?? '')}
-                          onMouseMove={onRowMove}
-                          onMouseLeave={onRowLeave}
-                          onClick={() => setAccountCallBack(w)}
-                          aria-label={`Open ${accountRole1}s reconfigure`}
-                          data-role={accountRole1}
-                          data-address={addressText}
-                        >
-                          <Image
-                            src={(w as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                            alt={`${w.name ?? 'Wallet'} logo`}
-                            width={DATALIST_IMG_PX}
-                            height={DATALIST_IMG_PX}
-                            className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
-                          />
-                        </button>
-
-                        <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
-                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">
-                            {w?.name ?? 'Unknown'}
-                          </div>
-                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">
-                            {w?.symbol ?? ''}
-                          </div>
-                        </div>
-                      </div>
+                      <AccountCell
+                        account={w}
+                        roleLabel={accountRole1}
+                        addressText={addressText}
+                        onPick={setAccountCallBack}
+                        onRowEnter={onRowEnter}
+                        onRowMove={onRowMove}
+                        onRowLeave={onRowLeave}
+                      />
                     </td>
 
                     <td
                       style={{ width: '50%' }}
                       className={`${zebra} ${msTableTw.td5} px-0 ${DATALIST_ROW_PY_TW} align-middle ${CELL_RIGHT_OUTLINE_TW}`}
                     >
-                      <div className="w-full flex items-center gap-2 min-w-0">
-                        <button
-                          type="button"
-                          className="bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none"
-                          onMouseEnter={() => onRowEnter(rw?.name ?? '')}
-                          onMouseMove={onRowMove}
-                          onMouseLeave={onRowLeave}
-                          onClick={() => setAccountCallBack(rw)}
-                          aria-label={`Open ${accountRole2}s reconfigure`}
-                          data-role={accountRole2}
-                          data-address={rwAddressText}
-                        >
-                          <Image
-                            src={(rw as any).logoURL || '/assets/miscellaneous/placeholder.png'}
-                            alt={`${rw?.name ?? 'Wallet'} logo`}
-                            width={DATALIST_IMG_PX}
-                            height={DATALIST_IMG_PX}
-                            className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}
-                          />
-                        </button>
-
-                        <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
-                          <div className="w-full font-semibold truncate !text-[#5981F3] text-left">
-                            {rw?.name ?? 'Unknown'}
-                          </div>
-                          <div className="w-full text-sm truncate !text-[#5981F3] text-left">
-                            {rw?.symbol ?? ''}
-                          </div>
-                        </div>
-                      </div>
+                      <AccountCell
+                        account={rw}
+                        roleLabel={accountRole2}
+                        addressText={rwAddressText}
+                        onPick={setAccountCallBack}
+                        onRowEnter={onRowEnter}
+                        onRowMove={onRowMove}
+                        onRowLeave={onRowLeave}
+                      />
                     </td>
                   </tr>
 
@@ -826,30 +821,40 @@ export default function AccountListRewardsPanel({
             })}
 
             {(() => {
-              const isA = accountList.length % 2 === 0;
-              const zebra = isA ? msTableTw.rowA : msTableTw.rowB;
+              const zebra = accountList.length % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
               const actionTw = msTableTw.btnGreen;
 
               return (
-                // ✅ FIX: clean, valid DOM id (previous value accidentally included pasted markup)
                 <tr id="REWARDS_TABLE_TOTAL" className={ROW_OUTLINE_TW}>
-                  <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}>
-                    <div className={msTableTw.tdInnerCenter5}>
-                      <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>
+                  <td
+                    style={{ width: '50%' }}
+                    className={`${zebra} ${msTableTw.td5} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
+                  >
+                    {/* Match Rewards row feel + align with logo-left margin */}
+                    <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center gap-2 pl-[7px]`}>
+                      <div
+                        className={`${COIN_ROW_TEXT_TW} text-[19.5px] leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                        style={{ width: COL_0_ACCOUNT_TYPE }}
+                      >
+                        Total
+                      </div>
                     </div>
                   </td>
 
                   <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td} ${CELL_RIGHT_OUTLINE_TW}`}>
-                    <div className="w-full flex items-center justify-between gap-2">
-                      <div className={msTableTw.tdInnerCenter}>0</div>
+                    {/* Match Rewards row feel + align "0.0" start position */}
+                    <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
+                      <div className="min-w-0 flex items-center gap-2">
+                        <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
+                      </div>
 
                       <button
                         type="button"
                         className={`${actionTw} ${BTN_XPAD_HALF_TW} !min-w-0 !w-auto inline-flex shrink-0`}
-                        aria-label={`${actionButtonLabel} total`}
-                        onClick={() => claimRewards(accountType, -1, `${actionButtonLabel} (TOTAL)`)}
+                        aria-label={`${actionButtonText} total`}
+                        onClick={() => claimRewards(accountType, -1, `${actionButtonText} (TOTAL)`)}
                       >
-                        {actionButtonLabel}
+                        {actionButtonText}
                       </button>
                     </div>
                   </td>

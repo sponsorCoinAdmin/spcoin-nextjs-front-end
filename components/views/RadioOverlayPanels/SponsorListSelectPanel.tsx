@@ -1,4 +1,3 @@
-// File: @/components/views/RadioOverlayPanels/SponsorListSelectPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
@@ -56,7 +55,6 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
   /**
    * ✅ SSOT: spCoinAccounts only
-   * If this is empty, upstream isn't producing accounts yet (which is what we want to discover).
    */
   const accounts: spCoinAccount[] = useMemo(() => {
     const anyData: any = feedData;
@@ -137,11 +135,15 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
   }
 
   /**
-   * ✅ Key point:
-   * Wrap AccountListRewardsPanel so AddressSelect has AssetSelectContext.
+   * ✅ FIX:
+   * Enforce the SAME scroll contract that TokenList/RecipientList path gets via AssetListSelectPanel:
+   * - h-full: gives the subtree a real height
+   * - min-h-0: allows children to shrink so overflow-y-auto can work
+   * - flex flex-col: enables a header + scroll-body pattern
+   * - overflow-hidden: ensures rounded borders clip correctly when the scroll slot is inside
    */
   return (
-    <div id="ManageSponsorRecipients">
+    <div id="ManageSponsorRecipients" className="h-full min-h-0 w-full flex flex-col overflow-hidden">
       <AssetSelectDisplayProvider>
         <AssetSelectProvider
           containerType={activePanel}
