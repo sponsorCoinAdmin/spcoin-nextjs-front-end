@@ -828,8 +828,9 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
 <tr id="REWARDS_TABLE_TOTAL" className={ROW_OUTLINE_TW}>
   <td colSpan={2} className={`${zebra} ${msTableTw.td} !p-0`}>
     <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
-      <div className="min-w-0 flex items-center gap-2">
-        {/* EXACT chevron footprint (invisible clone of the real one) */}
+      {/* LEFT GROUP: keep value start EXACTLY like Rewards row */}
+      <div className="min-w-0 flex items-center gap-2 relative">
+        {/* 1) invisible chevron clone = EXACT chevron footprint */}
         <button
           type="button"
           className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_DOWN} flex items-center justify-center shrink-0 invisible`}
@@ -839,18 +840,27 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
           <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
         </button>
 
-        {/* label column: 50% larger ONLY for "Total" */}
-        <div
-          className={`${COIN_ROW_TEXT_TW} text-[19.5px] leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
-          style={{ width: COL_0_ACCOUNT_TYPE }}
-        >
-          Total
-        </div>
+        {/* 2) invisible label spacer = EXACT 88px column */}
+        <div className="shrink-0" style={{ width: COL_0_ACCOUNT_TYPE }} aria-hidden="true" />
 
-        {/* value: EXACT same styling as Rewards row */}
+        {/* 3) value (col2) — this will now line up with Rewards col2 */}
         <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
+
+        {/* OVERLAY: visible "Total" aligned to image-left + 10px buffer */}
+        <div
+          className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none"
+          aria-hidden="true"
+        >
+          <div
+            className={`${COIN_ROW_TEXT_TW} text-[19.5px] leading-[1.15] whitespace-nowrap`}
+            style={{ width: COL_0_ACCOUNT_TYPE }}
+          >
+            Total
+          </div>
+        </div>
       </div>
 
+      {/* RIGHT BUTTON */}
       <button
         type="button"
         className={`${actionTw} ${BTN_XPAD_HALF_TW} !min-w-0 !w-auto inline-flex shrink-0`}
@@ -862,6 +872,7 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
     </div>
   </td>
 </tr>
+
 
               );
             })()}
