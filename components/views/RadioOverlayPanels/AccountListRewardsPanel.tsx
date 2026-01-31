@@ -825,40 +825,44 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
               const actionTw = msTableTw.btnGreen;
 
               return (
-                <tr id="REWARDS_TABLE_TOTAL" className={ROW_OUTLINE_TW}>
-                  <td
-                    style={{ width: '50%' }}
-                    className={`${zebra} ${msTableTw.td5} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}
-                  >
-                    {/* Match Rewards row feel + align with logo-left margin */}
-                    <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center gap-2 pl-[7px]`}>
-                      <div
-                        className={`${COIN_ROW_TEXT_TW} text-[19.5px] leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
-                        style={{ width: COL_0_ACCOUNT_TYPE }}
-                      >
-                        Total
-                      </div>
-                    </div>
-                  </td>
+<tr id="REWARDS_TABLE_TOTAL" className={ROW_OUTLINE_TW}>
+  <td colSpan={2} className={`${zebra} ${msTableTw.td} !p-0`}>
+    <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
+      <div className="min-w-0 flex items-center gap-2">
+        {/* EXACT chevron footprint (invisible clone of the real one) */}
+        <button
+          type="button"
+          className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_DOWN} flex items-center justify-center shrink-0 invisible`}
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+        </button>
 
-                  <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td} ${CELL_RIGHT_OUTLINE_TW}`}>
-                    {/* Match Rewards row feel + align "0.0" start position */}
-                    <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
-                      <div className="min-w-0 flex items-center gap-2">
-                        <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
-                      </div>
+        {/* label column: 50% larger ONLY for "Total" */}
+        <div
+          className={`${COIN_ROW_TEXT_TW} text-[19.5px] leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+          style={{ width: COL_0_ACCOUNT_TYPE }}
+        >
+          Total
+        </div>
 
-                      <button
-                        type="button"
-                        className={`${actionTw} ${BTN_XPAD_HALF_TW} !min-w-0 !w-auto inline-flex shrink-0`}
-                        aria-label={`${actionButtonText} total`}
-                        onClick={() => claimRewards(accountType, -1, `${actionButtonText} (TOTAL)`)}
-                      >
-                        {actionButtonText}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+        {/* value: EXACT same styling as Rewards row */}
+        <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
+      </div>
+
+      <button
+        type="button"
+        className={`${actionTw} ${BTN_XPAD_HALF_TW} !min-w-0 !w-auto inline-flex shrink-0`}
+        aria-label={`${actionButtonText} total`}
+        onClick={() => claimRewards(accountType, -1, `${actionButtonText} (TOTAL)`)}
+      >
+        {actionButtonText}
+      </button>
+    </div>
+  </td>
+</tr>
+
               );
             })()}
           </tbody>
