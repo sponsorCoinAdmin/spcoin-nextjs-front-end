@@ -14,6 +14,7 @@ import AddressSelect from '../AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+
 import { msTableTw } from './msTableTw';
 
 // ✅ Use the requested debug logger config
@@ -644,7 +645,7 @@ export default function AccountListRewardsPanel({
         className={`${msTableTw.wrapper} !mt-0 mt-0 mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto`}
         data-list-type={SP_COIN_DISPLAY[listType]}
       >
-        <table className={`min-w-full ${msTableTw.table}`}>
+        <table id="ACCOUNT_LIST_REWARDS_TABLE" className={`min-w-full ${msTableTw.table}`}>
           <thead>
             <tr className={`${msTableTw.theadRow} sticky top-0 z-20`}>
               <th
@@ -830,7 +831,8 @@ export default function AccountListRewardsPanel({
               const actionTw = msTableTw.btnGreen;
 
               return (
-                <tr className={ROW_OUTLINE_TW}>
+                // ✅ FIX: clean, valid DOM id (previous value accidentally included pasted markup)
+                <tr id="REWARDS_TABLE_TOTAL" className={ROW_OUTLINE_TW}>
                   <td style={{ width: '50%' }} className={`${zebra} ${msTableTw.td5} ${CELL_LEFT_OUTLINE_TW} ${CELL_VDIV_TW}`}>
                     <div className={msTableTw.tdInnerCenter5}>
                       <span className="text-xl md:text-2xl font-bold tracking-wide">Total</span>

@@ -1,11 +1,11 @@
 // File: @/components/views/ManageSponsorships/msTableTw.ts
 
 export const msTableTw = {
+  // ✅ Scroll MUST live on the element that also gets a constrained height (flex-1/min-h-0)
   wrapper:
     'border-black -mt-[18px] overflow-x-auto overflow-y-auto rounded-xl border border-black ' +
     '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
 
-  // ✅ THIS is the key change:
   table: 'min-w-full border-separate border-spacing-0',
 
   theadRow: 'bg-[#2b2b2b] border-b border-black',

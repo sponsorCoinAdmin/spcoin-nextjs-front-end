@@ -122,7 +122,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
   // Minimal render states
   if (loading) {
     return (
-      <div id="ManageSponsorRecipients" className="p-3 text-sm opacity-70">
+      <div id="ManageSponsorRecipientsLoading" className="p-3 text-sm opacity-70">
         Loading sponsor accounts…
       </div>
     );
@@ -130,7 +130,7 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
   if (error) {
     return (
-      <div id="ManageSponsorRecipients" className="p-3 text-sm opacity-70">
+      <div id="ManageSponsorRecipientsError" className="p-3 text-sm opacity-70">
         Failed to load sponsor accounts: {error}
       </div>
     );

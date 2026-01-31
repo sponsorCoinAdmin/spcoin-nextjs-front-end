@@ -120,8 +120,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       </div>
 
       {showSummaryTable && (
-        <div id="MANAGE_SPONSORSHIPS_TABLE" className={`${msTableTw.wrapper} mb-1`}>
-          <table className={`${msTableTw.table} min-w-full`}>
+        <div className={`${msTableTw.wrapper} mb-1`}>
+          <table id="MANAGE_SPONSORSHIPS_TABLE" className={`${msTableTw.table} min-w-full`}>
             <thead>
               <tr className={msTableTw.theadRow}>
                 <th scope="col" className={`${msTableTw.th5} ${msTableTw.th5Pad3} ${msTableTw.colFit}`}>
