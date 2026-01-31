@@ -1,11 +1,12 @@
 [
-  { "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "name": "Ethereum", "symbol": "ETH" },
-  { "address": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512", "name": "Sponsor Coin", "symbol": "SpCoin" },
-  { "address": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9", "name": "Wrapped Ethereum", "symbol": "WETH" },
-  { "address": "0x123456789abcdef", "name": "Incomplete Token Address", "symbol": "INCOMPLETE" },
-  { "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1", "name": "Token Not Found on HARDHAT Network", "symbol": "MISSING" },
-  { "address": "", "name": "Empty Token Address", "symbol": "ENPTY" },
-  { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3", "name": "Chicken Coin", "symbol": "CHKN" },
-  { "address": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0", "name": "USD Coin", "symbol": "USDC" },
-  { "address": "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9", "name": "Tether USD", "symbol": "USDT" }
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+  "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
+
+  "0x123456789abcdef",
+  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+  "",
+  "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+  "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+  "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9"
 ]

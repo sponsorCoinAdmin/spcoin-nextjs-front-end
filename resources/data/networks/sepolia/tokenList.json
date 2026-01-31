@@ -1,13 +1,14 @@
 [
-  { "address": "0xbaba55c7dce20782fbe8b275216f16d262a70754", "name": "Sponsor Coin", "symbol": "SpCoin" },
-  { "address": "0x0f1a713859fb1d1afac99fe2d20caf639560ec83", "name": "USD Coin", "symbol": "USDC" },
-  { "address": "0x5e0350d43423b8cd5304a237c723accd37a3acea", "name": "Matic Token", "symbol": "MATIC" },
-  { "address": "0xa0458174681784b65b7da3ed74d3d50e5dd308d2", "name": "Shiba Inu", "symbol": "SHIB" },
-  { "address": "0x123456789abcdef", "name": "Incomplete Token Address", "symbol": "INCOMPLETE" },
-  { "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1", "name": "Token Not Found on Sepolia Network", "symbol": "MISSING" },
-  { "address": "", "name": "Empty Token Address", "symbol": "EMPTY" },
-  { "address": "0xadd8ad605fe57064903a3defc3b4ed676992bba6", "name": "Tether USD", "symbol": "USDT" },
-  { "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "name": "Uniswap", "symbol": "UNI" },
-  { "address": "0x536bcbe548cef2ce493932fefcec059dda4d5579", "name": "Wrapped Bitcoin", "symbol": "WBTC" },
-  { "address": "0xfff9976782d46cc05630d1f6ebab18b2324d6b14", "name": "Wrapped Ethereum", "symbol": "WETH" }
+  "0xbaba55c7dce20782fbe8b275216f16d262a70754",
+  "0x0f1a713859fb1d1afac99fe2d20caf639560ec83",
+  "0x5e0350d43423b8cd5304a237c723accd37a3acea",
+  "0xa0458174681784b65b7da3ed74d3d50e5dd308d2",
+
+  "0x123456789abcdef",
+  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+  "",
+  "0xadd8ad605fe57064903a3defc3b4ed676992bba6",
+  "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+  "0x536bcbe548cef2ce493932fefcec059dda4d5579",
+  "0xfff9976782d46cc05630d1f6ebab18b2324d6b14"
 ]

@@ -1,19 +1,11 @@
 [
-  { "address": "0xc2816250c07ae56c1583e5f2b0e67f7d7f42d562", "name": "Sponsor Coin", "symbol": "SpCoin" },
-  { "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "name": "Ethereum", "symbol": "ETH" },
-  { "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631", "name": "AERO", "symbol": "AeroDrome Exchange" },
-  { "address": "0xbc45647ea894030a4e9801ec03479739fa2485f0", "name": "Basenji Meme Coin", "symbol": "BENJI" },
-  { "address": "0x532f27101965dd16442e59d40670faf5ebb142e4", "name": "Brett Meme Coin", "symbol": "BRETT" },
-  { "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "name": "USD Coin Staked", "symbol": "USDC" },
-  { "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2", "name": "Tether USD", "symbol": "USDT" },
-  { "address": "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", "name": "Dai Stablecoin", "symbol": "DAI" },
-  { "address": "0x4200000000000000000000000000000000000006", "name": "Wrapped Ethereum", "symbol": "WETH" },
-  { "address": "0x0555e30da8f98308edb960aa94c0db47230d2b9c", "name": "Wrapped Bitcoin", "symbol": "WBTC" },
-  { "address": "0x123456789abcdef", "name": "Incomplete Token Address", "symbol": "INCOMPLETE" },
-  { "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1", "name": "Token Not Found on BASE Network", "symbol": "MISSING" },
-  { "address": "", "name": "Empty Token Address", "symbol": "EMPTY" },
-  { "address": "0xe868c3d83ec287c01bcb533a33d197d9bfa79dad", "name": "Matic Token", "symbol": "MATIC" },
-  { "address": "0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290", "name": "Uniswap", "symbol": "UNI" },
-  { "address": "0x239b9c1f24f3423062b0d364796e07ee905e9fce", "name": "Shiba Inu", "symbol": "SHIB" },
-  { "address": "0x63706e401c06ac8513145b7687a14804d17f814b", "name": "AAVE", "symbol": "AAVE" }
+  "0xc2816250c07ae56c1583e5f2b0e67f7d7f42d562",
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+  "0xbc45647ea894030a4e9801ec03479739fa2485f0",
+  "0x532f27101965dd16442e59d40670faf5ebb142e4",
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "0x4200000000000000000000000000000000000006",
+  "0x123456789abcdef",
+  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1"
 ]

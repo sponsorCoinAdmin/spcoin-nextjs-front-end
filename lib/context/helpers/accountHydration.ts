@@ -26,6 +26,22 @@ const debugLog = createDebugLogger('accountHydration', DEBUG_ENABLED, LOG_TIME);
  */
 const ENV_ACCOUNT_PATH_RAW = process.env.NEXT_PUBLIC_ACCOUNT_PATH;
 
+/**
+ * Token discovery override.
+ *
+ * IMPORTANT:
+ * - This MUST be a URL path rooted at the web root (e.g. "/assets/blockchains/"),
+ *   NOT "public/assets/..." (because "public" is not part of the URL).
+ *
+ * Example:
+ *   NEXT_PUBLIC_TOKEN_PATH=/assets/blockchains/
+ *
+ * Expected asset layout:
+ *   public/assets/blockchains/<chainId>/contracts/<0XADDRESS>/info.json
+ *   public/assets/blockchains/<chainId>/contracts/<0XADDRESS>/logo.png
+ */
+const ENV_TOKEN_PATH_RAW = process.env.NEXT_PUBLIC_TOKEN_PATH;
+
 // legacy key constant (keeps dot-access out of the file)
 const LEGACY_WALLETS_KEY = 'wallets' as const;
 
@@ -47,6 +63,15 @@ type HydrateOpts = {
   /** Optional override for fallback status when metadata missing. */
   fallbackStatus?: STATUS;
 };
+
+type TokenInfoJson = {
+  name?: string;
+  symbol?: string;
+  decimals?: number;
+  id?: string;
+};
+
+const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 /* ----------------------------- small utils ----------------------------- */
 
@@ -126,6 +151,15 @@ function toAccountFolderKey(addr: Address): string {
 }
 
 /**
+ * Token contract folder naming convention:
+ * Your repo uses uppercase "0X..." directories.
+ */
+function toTokenFolderKey(addr: Address): string {
+  const a = String(addr).trim();
+  return a.toUpperCase().replace(/^0X/, '0X');
+}
+
+/**
  * If NEXT_PUBLIC_ACCOUNT_PATH is set, build URLs from it.
  * Otherwise fall back to assetHelpers.
  */
@@ -138,13 +172,36 @@ function getWalletJsonURL_SSOT(addr: Address): string {
   return getWalletJsonURL(addr);
 }
 
-function getWalletLogoURL_SSOT(addr: Address): string {
+/**
+ * Account logo url (SSOT)
+ */
+function getAccountLogoURL_SSOT(addr: Address): string {
   const base = normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW);
   if (base) {
     const key = toAccountFolderKey(addr);
     return `${base}${key}/logo.png`;
   }
   return getWalletLogoURL(addr);
+}
+
+/**
+ * Token info url (SSOT)
+ */
+function getTokenInfoURL_SSOT(chainId: number, addr: Address): string | undefined {
+  const base = normalizeEnvBasePath(ENV_TOKEN_PATH_RAW);
+  if (!base) return undefined;
+  const key = toTokenFolderKey(addr);
+  return `${base}${chainId}/contracts/${key}/info.json`;
+}
+
+/**
+ * Token logo url (SSOT)
+ */
+function getTokenLogoURL_SSOT(chainId: number, addr: Address): string | undefined {
+  const base = normalizeEnvBasePath(ENV_TOKEN_PATH_RAW);
+  if (!base) return undefined;
+  const key = toTokenFolderKey(addr);
+  return `${base}${chainId}/contracts/${key}/logo.png`;
 }
 
 /* ----------------------------- SSOT fallbacks ----------------------------- */
@@ -164,7 +221,7 @@ export function makeWalletFallback(
     website: '' as any,
     status,
     description: description as any,
-    logoURL: getWalletLogoURL_SSOT(addr) || defaultMissingImage,
+    logoURL: getAccountLogoURL_SSOT(addr) || defaultMissingImage,
     balance: typeof balance === 'bigint' ? balance : 0n,
   };
 
@@ -187,10 +244,7 @@ export function makeWalletFallback(
  * ✅ SSOT: Hydrate a full spCoinAccount from `/public/assets/accounts/<ADDR>/wallet.json`.
  * If NEXT_PUBLIC_ACCOUNT_PATH is present, it is used as the base for discovery.
  */
-export async function hydrateAccountFromAddress(
-  address: Address,
-  opts: HydrateOpts = {},
-): Promise<spCoinAccount> {
+export async function hydrateAccountFromAddress(address: Address, opts: HydrateOpts = {}): Promise<spCoinAccount> {
   const addr = (address ?? '').trim() as Address;
 
   debugLog.log?.('[hydrateAccountFromAddress] enter', {
@@ -215,12 +269,7 @@ export async function hydrateAccountFromAddress(
 
   if (!isProbablyClient()) {
     debugLog.warn?.('[hydrateAccountFromAddress] SSR guard hit (no fetch)', { addr });
-    return makeWalletFallback(
-      addr,
-      opts.fallbackStatus ?? STATUS.INFO,
-      'Wallet metadata available on client only',
-      opts.balance,
-    );
+    return makeWalletFallback(addr, opts.fallbackStatus ?? STATUS.INFO, 'Wallet metadata available on client only', opts.balance);
   }
 
   const url = getWalletJsonURL_SSOT(addr);
@@ -252,20 +301,17 @@ export async function hydrateAccountFromAddress(
       err: String(err?.message ?? err),
     });
 
-    return makeWalletFallback(
-      addr,
-      opts.fallbackStatus ?? STATUS.MESSAGE_ERROR,
-      `Account ${addr} not registered on this site`,
-      opts.balance,
-    );
+    return makeWalletFallback(addr, opts.fallbackStatus ?? STATUS.MESSAGE_ERROR, `Account ${addr} not registered on this site`, opts.balance);
   }
 
   const balance = typeof opts.balance === 'bigint' ? opts.balance : toBigIntSafe(json?.balance);
 
   // Default: always derive logoURL (filesystem convention)
-  const derivedLogo = getWalletLogoURL_SSOT(addr) || defaultMissingImage;
+  const derivedLogo = getAccountLogoURL_SSOT(addr) || defaultMissingImage;
   const logoURL =
-    opts.allowJsonLogoURL && typeof (json as any)?.logoURL === 'string' && String((json as any).logoURL).trim().length
+    opts.allowJsonLogoURL &&
+    typeof (json as any)?.logoURL === 'string' &&
+    String((json as any).logoURL).trim().length
       ? String((json as any).logoURL)
       : derivedLogo;
 
@@ -284,6 +330,54 @@ export async function hydrateAccountFromAddress(
   debugLog.log?.('[hydrateAccountFromAddress] exit (hydrated)', summarizeOut(out));
 
   return out;
+}
+
+/* ----------------------------- token SSOT hydration ----------------------------- */
+
+async function hydrateTokenFromAddress(chainId: number, address: Address) {
+  const addr = (address ?? '').trim() as Address;
+
+  // Special-case: native ETH placeholder (no contracts/<addr> folder unless you create it)
+  if (addr.toLowerCase() === NATIVE_ETH_PLACEHOLDER.toLowerCase()) {
+    return {
+      address: addr,
+      chainId,
+      name: 'Ethereum',
+      symbol: 'ETH',
+      decimals: 18,
+      // If you have a local ETH icon, swap this:
+      logoURL: defaultMissingImage,
+    } as any;
+  }
+
+  const logoURL = getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage;
+  const infoURL = getTokenInfoURL_SSOT(chainId, addr);
+
+  if (!infoURL) {
+    return { address: addr, chainId, name: '', symbol: '', decimals: undefined, logoURL } as any;
+  }
+
+  try {
+    const json = await getJson<TokenInfoJson>(infoURL, {
+      timeoutMs: 6000,
+      retries: 1,
+      accept: 'application/json',
+      init: { cache: 'no-store' },
+      forceParse: true,
+    });
+
+    return {
+      address: addr,
+      chainId,
+      name: typeof json?.name === 'string' ? json.name : '',
+      symbol: typeof json?.symbol === 'string' ? json.symbol : '',
+      decimals: typeof json?.decimals === 'number' ? json.decimals : undefined,
+      logoURL,
+    } as any;
+  } catch {
+    // info.json missing -> still show logo (if present), else missing image
+    return { address: addr, chainId, name: '', symbol: '', decimals: undefined, logoURL } as any;
+  }
 }
 
 /* ----------------------------- (ex-builders) feed building ----------------------------- */
@@ -324,9 +418,7 @@ async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {
   const addr = pickAddressFromSpec(spec);
 
   const balanceOverride =
-    typeof spec === 'object' && spec
-      ? (typeof spec.balance === 'bigint' ? spec.balance : toBigIntSafe(spec.balance))
-      : undefined;
+    typeof spec === 'object' && spec ? (typeof spec.balance === 'bigint' ? spec.balance : toBigIntSafe(spec.balance)) : undefined;
 
   if (!addr) {
     return makeWalletFallback(
@@ -367,12 +459,62 @@ async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {
 
 /**
  * Replacement for builders.buildTokenFromJson.
- * Keep it permissive: pass through JSON with chainId attached (if absent).
+ *
+ * ✅ Supports:
+ * - Option A: string address entries in tokenList.json
+ * - Legacy: object entries
+ *
+ * ✅ Invalid entries become visible "error rows" (do not drop).
  */
 export function buildTokenFromJson(tokenJson: any, chainId: number) {
-  if (!tokenJson || typeof tokenJson !== 'object') return null;
-  const out: any = { ...tokenJson };
-  if (out.chainId == null) out.chainId = chainId;
+  const rawAddr =
+    typeof tokenJson === 'string'
+      ? tokenJson
+      : tokenJson && typeof tokenJson === 'object'
+        ? (tokenJson.address ?? tokenJson.id ?? tokenJson.addr)
+        : '';
+
+  const addr = typeof rawAddr === 'string' ? rawAddr.trim() : String(rawAddr ?? '').trim();
+
+  // Invalid entry => show error row (do NOT drop)
+  if (!addr || !isAddress(addr)) {
+    const fallbackName =
+      tokenJson && typeof tokenJson === 'object' && typeof tokenJson.name === 'string'
+        ? tokenJson.name
+        : 'Invalid token address';
+
+    const fallbackSymbol =
+      tokenJson && typeof tokenJson === 'object' && typeof tokenJson.symbol === 'string'
+        ? tokenJson.symbol
+        : 'INVALID';
+
+    return {
+      address: addr || '(empty)',
+      chainId,
+      name: fallbackName,
+      symbol: fallbackSymbol,
+      decimals: undefined,
+      logoURL: defaultMissingImage,
+      __invalid: true,
+    } as any;
+  }
+
+  const out: any = {
+    ...(tokenJson && typeof tokenJson === 'object' ? tokenJson : {}),
+    address: addr,
+    chainId,
+  };
+
+  const explicitLogo =
+    typeof out.logoURL === 'string' && out.logoURL.trim().length
+      ? out.logoURL.trim()
+      : typeof out.logoURI === 'string' && out.logoURI.trim().length
+        ? out.logoURI.trim()
+        : undefined;
+
+  out.logoURL = explicitLogo ?? getTokenLogoURL_SSOT(chainId, addr as Address) ?? defaultMissingImage;
+  if (out.infoURL == null) out.infoURL = getTokenInfoURL_SSOT(chainId, addr as Address);
+
   return out;
 }
 
@@ -391,13 +533,31 @@ export async function buildWalletFromJsonFirst(raw: any): Promise<spCoinAccount 
  *
  * ✅ HARD RULE: account feeds return `spCoinAccounts`.
  * Tokens return `tokens`.
+ *
+ * ✅ Token feeds (Option A) hydrate name/symbol/decimals from SSOT info.json.
+ * ✅ Invalid entries show as error rows.
  */
 export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw: any): Promise<FeedData> {
   switch (feedType) {
     case FEED_TYPE.TOKEN_LIST: {
       const list = normalizeList(raw);
-      const tokens = list.map((t) => buildTokenFromJson(t, chainId)).filter(Boolean);
-      return { tokens } as any;
+
+      // normalize first (includes invalid rows)
+      const prelim = list.map((t) => buildTokenFromJson(t, chainId)).filter(Boolean) as any[];
+
+      // hydrate valid tokens from SSOT info.json; invalid rows remain as-is
+      const tokens = await Promise.all(
+        prelim.map(async (t) => {
+          if (t?.__invalid) return t;
+          const a = t?.address;
+          if (typeof a === 'string' && isAddress(a)) {
+            return hydrateTokenFromAddress(chainId, a as Address);
+          }
+          return t;
+        }),
+      );
+
+      return { feedType: FEED_TYPE.TOKEN_LIST, tokens } as any;
     }
 
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
