@@ -502,7 +502,6 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
       // ✅ REMOVE ALL NESTED TABLE CELL BORDERS
       const nestedCellTw = '';
       const nestedOuterTw = '';
-      const nestedVdivTw = '';
 
       const renderChevronBtn = (isOpen: boolean) => (
         <button
@@ -592,36 +591,65 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
 
         const fgTw = getClaimRowFgTw(label);
 
-        if (!isUnstakeRow) {
-          return (
-            <tr aria-hidden={!open}>
-              <td
-                className={`${msTableTw.td} !p-0 ${nestedCellTw} ${nestedVdivTw} ${fgTw} align-middle !text-left`}
-                title={labelTitle}
-              >
-                <ExpandWrap open={open}>
-                  <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} w-full flex items-center gap-2`}>
-                    {withChevron ? renderChevronBtn(rewardsOpen) : null}
-                    <div
-                      className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
-                      style={{ width: COL_0_ACCOUNT_TYPE }}
-                    >
-                      {label}
-                    </div>
-                  </div>
-                </ExpandWrap>
-              </td>
+if (!isUnstakeRow) {
+  const isIndentedLabel = label === 'Sponsor' || label === 'Recipient' || label === 'Agent';
 
-              <td className={`${msTableTw.td} !p-0 ${nestedCellTw} ${fgTw} align-middle !text-left`} title={labelTitle}>
-                <ExpandWrap open={open}>
-                  <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} w-full flex items-center justify-start`}>
-                    <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
+  return (
+    <tr aria-hidden={!open}>
+      <td
+        colSpan={2}
+        className={`${msTableTw.td} !p-0 ${nestedCellTw} ${fgTw} align-middle !text-left`}
+        title={labelTitle}
+      >
+        <ExpandWrap open={open}>
+          <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
+            {/* LEFT GROUP: value alignment is driven by invisible chevron + invisible 88px label spacer */}
+            <div className="min-w-0 flex items-center gap-2 relative">
+              {/* 1) reserve exact chevron footprint (so 0.0 lines up with Total/Rewards) */}
+              {withChevron ? (
+                renderChevronBtn(rewardsOpen)
+              ) : (
+                <button
+                  type="button"
+                  className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_DOWN} flex items-center justify-center shrink-0 invisible`}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                >
+                  <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
+                </button>
+              )}
+
+              {/* 2) reserve exact 88px label column */}
+              <div className="shrink-0" style={{ width: COL_0_ACCOUNT_TYPE }} aria-hidden="true" />
+
+              {/* 3) value (now matches Total's value start) */}
+              <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
+
+              {/* OVERLAY label so it left-aligns with Total (10px from row left) */}
+              {isIndentedLabel ? (
+                <div
+                  className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none"
+                  aria-hidden="true"
+                >
+                  <div
+                    className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis`}
+                    style={{ width: COL_0_ACCOUNT_TYPE }}
+                  >
+                    {label}
                   </div>
-                </ExpandWrap>
-              </td>
-            </tr>
-          );
-        }
+                </div>
+              ) : null}
+            </div>
+
+            {/* no right-side button for these rows */}
+            <div className="shrink-0" />
+          </div>
+        </ExpandWrap>
+      </td>
+    </tr>
+  );
+}
+
 
         // Staked row (spans both cols)
         return (
