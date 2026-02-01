@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/AccountListRewardsPanel.tsx
+// File: @/components/views/RadioOverlayPanels/AccountListRewardsPanel/index.tsx
 'use client';
 
 import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from 'react';
@@ -11,10 +11,10 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import AddressSelect from '../AssetSelectPanels/AddressSelect';
+import AddressSelect from '../../AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { msTableTw } from './msTableTw';
+import { msTableTw } from '../msTableTw';
 
 // ✅ Use the requested debug logger config
 const LOG_TIME = false;
