@@ -1,4 +1,4 @@
-// Dir: @/components/views/RadioOverlayPanels/AccountListRewardsPanel
+// Dir: @/components/views/RadioOverlayPanels/AccountListPending Rewards by Account TypePanel
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
@@ -30,18 +30,18 @@ export function getAddressText(w: any): string {
 }
 
 export function getActionButtonAriaLabel(buttonText: string, label: string) {
-  if (buttonText === 'Claim' && label === 'Sponsor') return 'Claim Sponsor SpCoin Rewards';
-  if (buttonText === 'Claim' && label === 'Recipient') return 'Claim Recipient SpCoin Rewards';
-  if (buttonText === 'Claim' && label === 'Agent') return 'Claim Agent SpCoin Rewards';
+  if (buttonText === 'Claim' && label === 'Sponsor') return 'Claim Sponsor SpCoin Pending Rewards by Account Type';
+  if (buttonText === 'Claim' && label === 'Recipient') return 'Claim Recipient SpCoin Pending Rewards by Account Type';
+  if (buttonText === 'Claim' && label === 'Agent') return 'Claim Agent SpCoin Pending Rewards by Account Type';
   if (buttonText === 'Unstake' && label === 'Staked') return 'Unstake SpCoins';
   return `${buttonText} ${label}`;
 }
 
 export function getRowLabelTitle(label: string) {
   if (label === 'Staked') return 'Staked SpCoin Quantity';
-  if (label === 'Sponsor') return 'Pending Sponsor SpCoin Rewards';
-  if (label === 'Recipient') return 'Pending Recipient SpCoin Rewards';
-  if (label === 'Agent') return 'Pending Agent SpCoin Rewards';
+  if (label === 'Sponsor') return 'Pending Sponsor SpCoin Pending Rewards by Account Type';
+  if (label === 'Recipient') return 'Pending Recipient SpCoin Pending Rewards by Account Type';
+  if (label === 'Agent') return 'Pending Agent SpCoin Pending Rewards by Account Type';
   return '';
 }
 
@@ -103,7 +103,7 @@ export function setPanelVisibleEverywhere(ctx: any, panel: SP_COIN_DISPLAY, visi
             },
           };
         },
-        'AccountListRewardsPanel:chevronToggle',
+        'AccountListPending Rewards by Account TypePanel:chevronToggle',
       );
     }
   } catch {

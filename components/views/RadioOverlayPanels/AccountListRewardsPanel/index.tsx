@@ -1,4 +1,4 @@
-// Dir: @/components/views/RadioOverlayPanels/AccountListRewardsPanel
+// Dir: @\components\views\RadioOverlayPanels\AccountListRewardsPanel\index.tsx
 'use client';
 
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';

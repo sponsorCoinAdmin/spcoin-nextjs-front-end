@@ -30,6 +30,10 @@ export const msTableTw = {
   tdInner5: 'w-full flex items-center',
   tdInnerCenter5: 'w-full flex items-center justify-center',
 
+  // ✅ left-justified inner wrappers for numeric/amount cells
+  tdInnerLeft: 'w-full flex items-center justify-start',
+  tdInnerLeft5: 'w-full flex items-center justify-start',
+
   linkCell:
     'border-0 w-full text-left flex items-center px-3 font-inherit text-inherit cursor-pointer hover:text-[#ec8840ff]',
   linkCell5:
