@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+// import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -77,7 +77,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   );
 
   /**
-   * ✅ Down chevron opens the Rewards by Account Type group and hides the Pending row.
+   * Pending row opens the group (and the Pending row disappears).
    */
   const onOpenRewardsByAccountType = useCallback(() => {
     if (!pendingVisible) {
@@ -86,7 +86,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   }, [pendingVisible, openPanel]);
 
   /**
-   * ✅ Up chevron closes the Rewards by Account Type group and re-shows the Pending row.
+   * Pending Rewards by Account Type row closes the group (and Pending row reappears).
    */
   const onCloseRewardsByAccountType = useCallback(() => {
     if (pendingVisible) {
@@ -115,54 +115,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const col0Style: React.CSSProperties = { width: COL_0_WIDTH, minWidth: COL_0_WIDTH, maxWidth: COL_0_WIDTH };
 
   /**
-   * ✅ Pending + Rewards-by-Account header share the same BG (rowA)
+   * Pending + group header share same styling
    */
   const pendingRowBg = msTableTw.rowA;
   const pendingCellTw = `${pendingRowBg} ${msTableTw.td5} ${vLine}`;
   const pendingTextTw = 'text-white';
   const pendingBtnTw = `${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap} ${leftAlignedLinkBtn} ${pendingTextTw}`;
-
-  /**
-   * ✅ Chevron styling (matches Claim button style)
-   * - DOWN = GREEN (open)
-   * - UP   = ORANGE (close)
-   * - icon is white
-   */
-  const CHEVRON_ICON_TW = 'h-[16px] w-[16px] text-white';
-  const CHEVRON_BTN_BOX_TW =
-    '!min-w-0 !w-[26px] !h-[26px] !p-0 inline-flex items-center justify-center rounded-md';
-
-  const ChevronDownOpenBtn = useCallback(
-    ({ onClick }: { onClick: () => void }) => (
-      <button
-        type="button"
-        className={`${msTableTw.btnGreen} ${CHEVRON_BTN_BOX_TW}`}
-        onClick={onClick}
-        aria-label="Open Pending Rewards by Account Type"
-        title="Open Pending Rewards by Account Type"
-      >
-        <ChevronDown className={CHEVRON_ICON_TW} />
-      </button>
-    ),
-    [],
-  );
-
-  const ChevronUpCloseBtn = useCallback(
-    ({ onClick }: { onClick: () => void }) => (
-      <button
-        type="button"
-        className={`${msTableTw.btnOrange} ${CHEVRON_BTN_BOX_TW}`}
-        onClick={onClick}
-        aria-label="Close Pending Rewards by Account Type"
-        title="Close Pending Rewards by Account Type"
-      >
-        <ChevronUp className={CHEVRON_ICON_TW} />
-      </button>
-    ),
-    [],
-  );
-
-  if (!isActive) return null;
 
   return (
     <div id="MANAGE_SPONSORSHIPS_PANEL">
@@ -246,7 +204,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap} ${leftAlignedLinkBtn}`}
                     onClick={() => openRewardsMode(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS)}
                     aria-label="Open Staked list"
-                    title="SpCoins Staked for Sponsorship Rewards"
+                    title="Manage SpCoin Contracts."
                   >
                     Staked
                   </button>
@@ -275,12 +233,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               {!pendingVisible && (
                 <tr className={msTableTw.rowBorder}>
                   <td style={col0Style} className={pendingCellTw}>
-                    <div className={pendingBtnTw} title="Open Pending Rewards by Account Type">
-                      <span className="inline-flex items-center gap-2">
-                        <ChevronDownOpenBtn onClick={onOpenRewardsByAccountType} />
-                        <span>Pending</span>
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      className={pendingBtnTw}
+                      onClick={onOpenRewardsByAccountType}
+                      aria-label="Open Pending Rewards by Account Type"
+                      title="Open Pending Rewards by Account Type"
+                    >
+                      Pending
+                    </button>
                   </td>
 
                   <td className={`${pendingRowBg} ${msTableTw.td} ${vLine}`}>
@@ -311,12 +272,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               {pendingVisible && (
                 <tr className={msTableTw.rowBorder}>
                   <td style={col0Style} className={pendingCellTw}>
-                    <div className={pendingBtnTw} title="Close Pending Rewards by Account Type">
-                      <span className="inline-flex items-center gap-2">
-                        <ChevronUpCloseBtn onClick={onCloseRewardsByAccountType} />
-                        <span>Pending Rewards by Account Type</span>
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      className={pendingBtnTw}
+                      onClick={onCloseRewardsByAccountType}
+                      aria-label="Close Pending Rewards by Account Type"
+                      title="Close Pending Rewards by Account Type"
+                    >
+                      Pending Rewards by Account Type
+                    </button>
                   </td>
 
                   <td className={`${pendingRowBg} ${msTableTw.td} ${vLine}`}>
