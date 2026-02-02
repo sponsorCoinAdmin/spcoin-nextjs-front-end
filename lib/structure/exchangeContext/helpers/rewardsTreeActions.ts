@@ -5,15 +5,27 @@ export type RewardsMode = SP.SPONSORS | SP.RECIPIENTS | SP.AGENTS | SP.UNSPONSOR
 
 export const REWARDS_MODES: RewardsMode[] = [SP.SPONSORS, SP.RECIPIENTS, SP.AGENTS, SP.UNSPONSOR_SP_COINS];
 
-export const CLAIM_PENDING_PANELS: SP[] = [SP.PENDING_SPONSOR_COINS, SP.PENDING_RECIPIENT_COINS, SP.PENDING_AGENT_COINS];
+export const CLAIM_PENDING_PANELS: SP[] = [
+  SP.PENDING_SPONSOR_COINS,
+  SP.PENDING_RECIPIENT_COINS,
+  SP.PENDING_AGENT_COINS,
+];
 
 function getClaimPendingPanelForMode(mode: RewardsMode): SP | null {
   switch (mode) {
-    case SP.SPONSORS: return SP.PENDING_SPONSOR_COINS;
-    case SP.RECIPIENTS: return SP.PENDING_RECIPIENT_COINS;
-    case SP.AGENTS: return SP.PENDING_AGENT_COINS;
-    case SP.UNSPONSOR_SP_COINS: return SP.PENDING_SPONSOR_COINS;
-    default: return null;
+    case SP.SPONSORS:
+      return SP.PENDING_SPONSOR_COINS;
+    case SP.RECIPIENTS:
+      return SP.PENDING_RECIPIENT_COINS;
+    case SP.AGENTS:
+      return SP.PENDING_AGENT_COINS;
+
+    // ✅ FIX: Unsponsor is NOT a "pending claim" mode, so it must not open any PENDING_* panel.
+    case SP.UNSPONSOR_SP_COINS:
+      return null;
+
+    default:
+      return null;
   }
 }
 
@@ -37,6 +49,7 @@ export function panelToRewardsMode(panel: SP): RewardsMode | null {
  * 1) Close other rewards modes (radio)
  * 2) Open selected rewards mode
  * 3) Claim config flags (radio): open the matching PENDING_* and close the other PENDING_*
+ *    ✅ BUT for UNSPONSOR_SP_COINS, close all PENDING_* panels (do not open any)
  * 4) Ensure ACCOUNT_LIST_REWARDS_PANEL is open (✅ BUT do not re-open if already visible)
  *
  * NOTE:
@@ -83,10 +96,12 @@ export function openRewardsModeWithPanels(args: {
 
   // 3) Claim config flags (radio)
   const claimPanel = getClaimPendingPanelForMode(mode);
+
   for (const p of CLAIM_PENDING_PANELS) {
     if (claimPanel && Number(p) === Number(claimPanel)) {
       openPanel(p, `${reasonPrefix}:open ${SP[p]}`);
     } else {
+      // ✅ If claimPanel is null (UNSPONSOR), this closes ALL pending claim flags.
       closePanel(p, `${reasonPrefix}:close ${SP[p]}`);
     }
   }

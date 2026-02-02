@@ -12,8 +12,7 @@ import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/us
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 // Read env once, with a safe fallback
-const AGENT_WALLET_TITLE =
-  process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
+const AGENT_WALLET_TITLE = process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
 
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
@@ -50,7 +49,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Select a Sponsor',
-  [SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL]: 'Sponsorship Account Management',
+  // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())
   [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: 'Manage Recipient Account',
   [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
   [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: 'Manage Sponsor Account',
@@ -60,15 +59,21 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: 'Pending Rewards Page',
 };
 
-function getRewardsHeaderTitle(opts: {
-  claimSponsor: boolean;
-  claimRecipient: boolean;
-  claimAgent: boolean;
-  unSponsor: boolean;
-}): string {
-  if (opts.claimSponsor) return 'Pending Sponsor Rewards';
-  if (opts.claimRecipient) return 'Pending Recipient Rewards';
-  if (opts.claimAgent) return 'Pending Agent Rewards';
+function getRewardsHeaderTitle(
+  opts: {
+    claimSponsor: boolean;
+    claimRecipient: boolean;
+    claimAgent: boolean;
+    unSponsor: boolean;
+  },
+  name?: string,
+): string {
+  const n = (name ?? '').trim();
+  const label = n.length ? n : 'Sponsor Coin';
+
+  if (opts.claimSponsor) return `${label}'s Sponsor Rewards`;
+  if (opts.claimRecipient) return `${label}'s Recipient Rewards`;
+  if (opts.claimAgent) return `${label}'s Agent Rewards`;
 
   // ✅ NEW: UNSPONSOR_SP_COINS child-mode title
   if (opts.unSponsor) return 'Allocated Sponsorships';
@@ -84,10 +89,19 @@ function titleFor(
     claimAgent: boolean;
     unSponsor: boolean;
   },
+  manageName?: string,
 ): string {
   if (display === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL && rewardsState) {
-    return getRewardsHeaderTitle(rewardsState);
+    return getRewardsHeaderTitle(rewardsState, manageName);
   }
+
+  // ✅ dynamic Manage Sponsorships title
+  if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
+    const n = (manageName ?? '').trim();
+    const label = n.length ? n : 'Sponsor Coin';
+    return `${label}'s Account Management`;
+  }
+
   return DEFAULT_TITLES[display] ?? 'Main Panel Header';
 }
 
@@ -127,19 +141,25 @@ export function useHeaderController() {
   // IMPORTANT: we need openPanel (not closePanel) for clicking the logo.
   const panelTree = usePanelTree();
   const openPanel =
-    (panelTree as any).openPanel ??
-    (panelTree as any).showPanel ??
-    (panelTree as any).setPanelVisible;
+    (panelTree as any).openPanel ?? (panelTree as any).showPanel ?? (panelTree as any).setPanelVisible;
   const closePanel = (panelTree as any).closePanel;
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // ✅ ExchangeContext access (for activeAccount.logoURL + address)
+  // ✅ ExchangeContext access (for activeAccount.logoURL + address + name)
   const exchangeCtx = useContext(ExchangeContextState);
-  const activeAccountLogoURL =
-    exchangeCtx?.exchangeContext?.accounts?.activeAccount?.logoURL;
-  const activeAccountAddress =
-    exchangeCtx?.exchangeContext?.accounts?.activeAccount?.address;
+  const activeAccount = exchangeCtx?.exchangeContext?.accounts?.activeAccount;
+
+  const activeAccountLogoURL = activeAccount?.logoURL;
+  const activeAccountAddress = activeAccount?.address;
+
+  // Try common name fields (adjust if your model uses a different key)
+  const activeAccountName =
+    (activeAccount as any)?.name ??
+    (activeAccount as any)?.accountName ??
+    (activeAccount as any)?.label ??
+    (activeAccount as any)?.displayName ??
+    '';
 
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
@@ -221,14 +241,15 @@ export function useHeaderController() {
     return titleFor(
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
+      activeAccountName,
     );
-  }, [currentDisplay, rewardsState]);
+  }, [currentDisplay, rewardsState, activeAccountName]);
 
   /**
    * ✅ LEFT ELEMENT BEHAVIOR
    * - Overrides still win if registered.
-   * - For ACCOUNT_LIST_REWARDS_PANEL, show activeAccount logo as a clickable button
-   *   that OPENS SPONSOR_ACCOUNT_PANEL.
+   * - For ACCOUNT_LIST_REWARDS_PANEL AND MANAGE_SPONSORSHIPS_PANEL:
+   *   show activeAccount logo as a clickable button that OPENS SPONSOR_ACCOUNT_PANEL.
    *
    * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
    */
@@ -236,7 +257,11 @@ export function useHeaderController() {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();
 
-    if (currentDisplay !== SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) return null;
+    const showActiveLogo =
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+
+    if (!showActiveLogo) return null;
     if (!activeAccountLogoURL) return null;
 
     const sizePx = 38;
@@ -252,33 +277,22 @@ export function useHeaderController() {
         onClick: () => {
           suppressNextOverlayClose('Header:ActiveLogo->SponsorAccount', 'HeaderController');
 
-          // ✅ Open the Sponsor Account panel (not closePanel)
           if (typeof openPanel === 'function') {
-            // common signatures:
-            // - openPanel(panelId, reason?)
-            // - showPanel(panelId, true, reason?)
-            // - setPanelVisible(panelId, true)
             try {
-              // try (panelId, reason)
               openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, 'Header:ActiveLogoClick');
               return;
             } catch {}
 
             try {
-              // try (panelId, true, reason)
               openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, true, 'Header:ActiveLogoClick');
               return;
             } catch {}
 
             try {
-              // try ({ panel, visible })
               openPanel({ panel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, visible: true });
               return;
             } catch {}
           }
-
-          // last resort fallback: if you only have closePanel in this build, do nothing loudly
-          // (keeping silent in prod; add console.warn if you want)
         },
       },
       React.createElement('img', {
@@ -291,12 +305,7 @@ export function useHeaderController() {
         className: 'h-[38px] w-[38px] object-contain rounded bg-transparent',
       }),
     );
-  }, [
-    currentDisplay,
-    activeAccountLogoURL,
-    activeAccountAddress,
-    openPanel,
-  ]);
+  }, [currentDisplay, activeAccountLogoURL, activeAccountAddress, openPanel]);
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
