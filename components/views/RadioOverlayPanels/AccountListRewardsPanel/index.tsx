@@ -36,18 +36,31 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function AccountListRewardsPanel({ accountList, setAccountCallBack, containerType, listType }: Props) {
+function isPendingPanel(p: SP_COIN_DISPLAY) {
+  return (
+    p === SP_COIN_DISPLAY.PENDING_SPONSOR_COINS ||
+    p === SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS ||
+    p === SP_COIN_DISPLAY.PENDING_AGENT_COINS
+  );
+}
+
+export default function AccountListRewardsPanel({
+  accountList,
+  setAccountCallBack,
+  containerType,
+  listType,
+}: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  const vAgents = usePanelVisible(SP_COIN_DISPLAY.AGENTS);
-  const vRecipients = usePanelVisible(SP_COIN_DISPLAY.RECIPIENTS);
-  const vSponsors = usePanelVisible(SP_COIN_DISPLAY.SPONSORS);
-
+  // ✅ Pending-mode flags (these are now the ONLY “mode” signals)
   const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_COINS);
   const cfgClaimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS);
   const cfgClaimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_COINS);
 
+  // ✅ Unsponsor / Staked mode
   const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
+
+  // ✅ Global chevron state (UI-only)
   const cfgChevronOpen: boolean = usePanelVisible(SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING);
 
   const { effectiveChevronOpenPending, setGlobalChevronOpen } = useChevronOpenPending(
@@ -58,26 +71,38 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
 
   const [openByWalletKey, setOpenByWalletKey] = useState<Record<string, SubRowOpenState>>({});
 
-  const accountType = useMemo((): AccountType => {
-    const derived = vAgents
-      ? AccountType.AGENT
-      : vRecipients
-        ? AccountType.RECIPIENT
-        : vSponsors
-          ? AccountType.SPONSOR
-          : AccountType.SPONSOR;
+  /**
+   * ✅ Derive “mode” booleans WITHOUT SPONSORS/RECIPIENTS/AGENTS panels.
+   * We synthesize vAgents/vRecipients/vSponsors purely for the UI helpers.
+   */
+  const { vAgents, vRecipients, vSponsors } = useMemo(() => {
+    if (cfgClaimAgent) return { vAgents: true, vRecipients: false, vSponsors: false };
+    if (cfgClaimRecipient) return { vAgents: false, vRecipients: true, vSponsors: false };
 
-    debugLog.log?.('[derive accountType (mode-based)]', {
-      vAgents,
-      vRecipients,
-      vSponsors,
+    // Sponsor mode includes:
+    // - Pending Sponsor Rewards
+    // - Unsponsor flow (still “Sponsor-side” accounts)
+    if (cfgClaimSponsor || showUnSponsorRow) return { vAgents: false, vRecipients: false, vSponsors: true };
+
+    // Fallback default
+    return { vAgents: false, vRecipients: false, vSponsors: true };
+  }, [cfgClaimAgent, cfgClaimRecipient, cfgClaimSponsor, showUnSponsorRow]);
+
+  const accountType = useMemo((): AccountType => {
+    const derived = vAgents ? AccountType.AGENT : vRecipients ? AccountType.RECIPIENT : AccountType.SPONSOR;
+
+    debugLog.log?.('[derive accountType (pending-mode)]', {
+      cfgClaimSponsor,
+      cfgClaimRecipient,
+      cfgClaimAgent,
+      showUnSponsorRow,
       derived,
       derivedLabel: AccountType[derived] ?? String(derived),
       containerType,
     });
 
     return derived;
-  }, [vAgents, vRecipients, vSponsors, containerType]);
+  }, [vAgents, vRecipients, cfgClaimSponsor, cfgClaimRecipient, cfgClaimAgent, showUnSponsorRow, containerType]);
 
   const inputAccountText = useMemo(
     () => getInputAccountText({ vAgents, vRecipients, vSponsors }),
@@ -98,11 +123,20 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
     if (cfgClaimSponsor) return { accountRole1: 'Recipient', accountRole2: 'Agent' };
     if (cfgClaimRecipient) return { accountRole1: 'Sponsor', accountRole2: 'Agent' };
     if (cfgClaimAgent) return { accountRole1: 'Recipient', accountRole2: 'Sponsor' };
+
+    // UNSPONSOR (staked) or default view
     return { accountRole1: 'Accounts', accountRole2: 'Accounts' };
   }, [cfgClaimSponsor, cfgClaimRecipient, cfgClaimAgent]);
 
   const showRewardsRow = cfgClaimSponsor || cfgClaimRecipient || cfgClaimAgent;
-  const idPrefix = useMemo(() => (vRecipients ? 'mr' : vSponsors ? 'ms' : vAgents ? 'ma' : 'acct'), [vAgents, vRecipients, vSponsors]);
+
+  // ✅ idPrefix no longer depends on SPONSORS/RECIPIENTS/AGENTS visibility panels
+  const idPrefix = useMemo(() => {
+    if (cfgClaimRecipient) return 'mr';
+    if (cfgClaimAgent) return 'ma';
+    // sponsor pending OR unsponsor OR fallback
+    return 'ms';
+  }, [cfgClaimRecipient, cfgClaimAgent]);
 
   const claimRewards = useCallback((type: AccountType, accountId: number, label?: string) => {
     pendingClaimRef.current = { type, accountId, label };
@@ -136,8 +170,14 @@ export default function AccountListRewardsPanel({ accountList, setAccountCallBac
     });
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
+  // ✅ listType should now be PENDING_* or UNSPONSOR_* (not SPONSORS)
   const actionButtonLabel =
-    listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS ? 'Unsponsor' : listType === SP_COIN_DISPLAY.SPONSORS ? 'Claim' : 'Action';
+    listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS
+      ? 'Unsponsor'
+      : isPendingPanel(listType)
+        ? 'Claim'
+        : 'Action';
+
   const actionButtonText = actionButtonLabel === 'Claim' ? 'Claim All' : actionButtonLabel;
 
   const onRowEnter = (name?: string | null) => setTip((t) => ({ ...t, show: true, text: name ?? '' }));
