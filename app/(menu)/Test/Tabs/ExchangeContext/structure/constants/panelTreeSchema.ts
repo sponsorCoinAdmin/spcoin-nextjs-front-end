@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v7';
+export const schemaVersion = 'v8';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -20,8 +20,10 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
+    // ✅ Rewards list overlay root
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
 
+    // ✅ OLD list overlays (legacy behavior)
     SPCD.RECIPIENT_LIST_SELECT_PANEL,
     SPCD.AGENT_LIST_SELECT_PANEL,
 
@@ -65,20 +67,11 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
   //
-  // [-][8] ACCOUNT_LIST_REWARDS_PANEL
-  //     [-] [0] PENDING_SPONSOR_COINS
-  //         [-] [0] SPONSORS
-  //         [+] [1] RECIPIENTS
-  //         [+] [2] AGENTS
-  //     [+] [1] PENDING_RECIPIENT_COINS
-  //         [-] [0] SPONSORS
-  //         [+] [1] RECIPIENTS
-  //         [+] [2] AGENTS
-  //     [+] [2] PENDING_AGENT_COINS
-  //         [-] [0] SPONSORS
-  //         [+] [1] RECIPIENTS
-  //         [+] [2] AGENTS
-  //     [+] [3] UNSPONSOR_SP_COINS
+  // [-] ACCOUNT_LIST_REWARDS_PANEL
+  //     [-] PENDING_SPONSOR_COINS
+  //     [+] PENDING_RECIPIENT_COINS
+  //     [+] PENDING_AGENT_COINS
+  //     [+] UNSPONSOR_SP_COINS
   //
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
     SPCD.PENDING_SPONSOR_COINS,
@@ -87,10 +80,11 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.UNSPONSOR_SP_COINS,
   ],
 
-  // ✅ Each claim panel shows the same mode selectors underneath
-  [SPCD.PENDING_SPONSOR_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
-  [SPCD.PENDING_RECIPIENT_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
-  [SPCD.PENDING_AGENT_COINS]: [SPCD.SPONSORS, SPCD.RECIPIENTS, SPCD.AGENTS],
+  // ✅ No synthetic "mode selector" children anymore
+  [SPCD.PENDING_SPONSOR_COINS]: [],
+  [SPCD.PENDING_RECIPIENT_COINS]: [],
+  [SPCD.PENDING_AGENT_COINS]: [],
+  [SPCD.UNSPONSOR_SP_COINS]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -108,13 +102,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
 
-  // ✅ NEW list overlay root
+  // ✅ Rewards list overlay root
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: 'panel',
-
-  // ✅ Mode selectors (appear under each CLAIM_PENDING_* node)
-  [SPCD.SPONSORS]: 'panel',
-  [SPCD.RECIPIENTS]: 'panel',
-  [SPCD.AGENTS]: 'panel',
 
   // ✅ NEW chevron pending flags (persisted UI state; not a visual panel)
   [SPCD.CHEVRON_DOWN_OPEN_PENDING]: 'control',
@@ -159,13 +148,8 @@ export const GROUPS = {
 
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
-    // ✅ NEW list overlay root
+    // ✅ Rewards list overlay root
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
-
-    // ✅ Mode selectors (now nested under CLAIM_PENDING_* in the GUI tree)
-    SPCD.SPONSORS,
-    SPCD.RECIPIENTS,
-    SPCD.AGENTS,
 
     // ✅ NEW chevron pending flags (persisted UI state)
     SPCD.CHEVRON_DOWN_OPEN_PENDING,

@@ -76,11 +76,14 @@ const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
 /**
  * ✅ Tree Panel fix:
  * Each pending/unstake node owns exactly ONE mode child.
+ *
+ * Since we removed the old mode panels completely, these nodes no longer have
+ * synthetic "mode children".
  */
-const PENDING_SPONSOR_CHILDREN: readonly SP[] = [SP.SPONSORS] as const;
-const PENDING_RECIPIENT_CHILDREN: readonly SP[] = [SP.RECIPIENTS] as const;
-const PENDING_AGENT_CHILDREN: readonly SP[] = [SP.AGENTS] as const;
-const UNSPONSOR_CHILDREN: readonly SP[] = [SP.SPONSORS] as const;
+const PENDING_SPONSOR_CHILDREN: readonly SP[] = [] as const;
+const PENDING_RECIPIENT_CHILDREN: readonly SP[] = [] as const;
+const PENDING_AGENT_CHILDREN: readonly SP[] = [] as const;
+const UNSPONSOR_CHILDREN: readonly SP[] = [] as const;
 
 /**
  * Primary overlay container under MAIN_TRADING_PANEL
@@ -167,11 +170,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
 
-  // ✅ Mode selector panels (can appear under multiple parents)
-  def({ id: SP.SPONSORS, kind: 'panel' }),
-  def({ id: SP.RECIPIENTS, kind: 'panel' }),
-  def({ id: SP.AGENTS, kind: 'panel' }),
-
   // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)
   def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
 
@@ -196,7 +194,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: ACCOUNT_LIST_REWARDS_CHILDREN,
   }),
 
-  // ✅ Claim panels now own ONLY the appropriate single mode selector child
+  // ✅ Claim panels now have NO synthetic "mode child" panels
   def({
     id: SP.PENDING_SPONSOR_COINS,
     kind: 'panel',
@@ -213,7 +211,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: PENDING_AGENT_CHILDREN,
   }),
 
-  // ✅ Unstake panel now has a single child: SPONSORS
+  // ✅ Unstake panel now has no synthetic child panels
   def({
     id: SP.UNSPONSOR_SP_COINS,
     kind: 'panel',
