@@ -61,6 +61,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     [openPanel],
   );
 
+  // ✅ Rewards mode is now PENDING_*_COINS (plus UNSPONSOR_SP_COINS).
   const openRewardsMode = useCallback(
     (mode: RewardsMode) => {
       debugLog.log?.('openRewardsMode', { mode: SP_COIN_DISPLAY[mode] });
@@ -71,6 +72,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         closePanel: (id, reason) => closePanel(id as any, reason),
         reasonPrefix: 'ManageSponsorshipsPanel:openRewardsMode',
         ensureManagePending: true,
+        // Optional: if you have a visibility hook handy later, pass it here to avoid duplicate pushes.
+        // isVisible: (id) => usePanelVisible(id) <-- can't call hooks here; keep undefined.
       });
     },
     [openPanel, closePanel],
@@ -302,7 +305,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.SPONSORS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_SPONSOR_COINS)}
                         aria-label="Open Claim Sponsors Rewards panel"
                         title="Available Sponsor Rewards"
                       >
@@ -336,7 +339,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.RECIPIENTS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS)}
                         aria-label="Open Claim Recipients Rewards panel"
                         title="Available Recipient Rewards"
                       >
@@ -370,7 +373,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.AGENTS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_AGENT_COINS)}
                         aria-label="Open Claim Agents Rewards panel"
                         title="Available Agent Rewards"
                       >

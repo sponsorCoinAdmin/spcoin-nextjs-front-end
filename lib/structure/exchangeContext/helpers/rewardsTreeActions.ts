@@ -1,41 +1,46 @@
 // File: @/lib/structure/exchangeContext/helpers/rewardsTreeActions.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-export type RewardsMode = SP.SPONSORS | SP.RECIPIENTS | SP.AGENTS | SP.UNSPONSOR_SP_COINS;
+/**
+ * ✅ Rewards "modes" are ONLY:
+ * - Pending claim panels (per account type)
+ * - Unstake flow
+ *
+ * 🚫 Removed completely:
+ * - SPONSORS
+ * - RECIPIENTS
+ * - AGENTS
+ */
+export type RewardsMode =
+  | SP.PENDING_SPONSOR_COINS
+  | SP.PENDING_RECIPIENT_COINS
+  | SP.PENDING_AGENT_COINS
+  | SP.UNSPONSOR_SP_COINS;
 
-export const REWARDS_MODES: RewardsMode[] = [SP.SPONSORS, SP.RECIPIENTS, SP.AGENTS, SP.UNSPONSOR_SP_COINS];
+/** ✅ Radio group list for rewards selection */
+export const REWARDS_MODES: RewardsMode[] = [
+  SP.PENDING_SPONSOR_COINS,
+  SP.PENDING_RECIPIENT_COINS,
+  SP.PENDING_AGENT_COINS,
+  SP.UNSPONSOR_SP_COINS,
+];
 
+/** ✅ Pending claim flags */
 export const CLAIM_PENDING_PANELS: SP[] = [
   SP.PENDING_SPONSOR_COINS,
   SP.PENDING_RECIPIENT_COINS,
   SP.PENDING_AGENT_COINS,
 ];
 
-function getClaimPendingPanelForMode(mode: RewardsMode): SP | null {
-  switch (mode) {
-    case SP.SPONSORS:
-      return SP.PENDING_SPONSOR_COINS;
-    case SP.RECIPIENTS:
-      return SP.PENDING_RECIPIENT_COINS;
-    case SP.AGENTS:
-      return SP.PENDING_AGENT_COINS;
-
-    // ✅ FIX: Unsponsor is NOT a "pending claim" mode, so it must not open any PENDING_* panel.
-    case SP.UNSPONSOR_SP_COINS:
-      return null;
-
-    default:
-      return null;
-  }
-}
-
+/**
+ * ✅ Tree can open either the mode panel OR any panel that should behave like a mode.
+ * Now the only "mode panels" are the PENDING_* panels and UNSPONSOR.
+ */
 export function panelToRewardsMode(panel: SP): RewardsMode | null {
-  // Tree can open either the mode panel OR the pending panel; both map to a mode.
-  if (panel === SP.PENDING_SPONSOR_COINS || panel === SP.SPONSORS) return SP.SPONSORS;
-  if (panel === SP.PENDING_RECIPIENT_COINS || panel === SP.RECIPIENTS) return SP.RECIPIENTS;
-  if (panel === SP.PENDING_AGENT_COINS || panel === SP.AGENTS) return SP.AGENTS;
+  if (panel === SP.PENDING_SPONSOR_COINS) return SP.PENDING_SPONSOR_COINS;
+  if (panel === SP.PENDING_RECIPIENT_COINS) return SP.PENDING_RECIPIENT_COINS;
+  if (panel === SP.PENDING_AGENT_COINS) return SP.PENDING_AGENT_COINS;
 
-  // Staked / Unstake flow is its own rewards-mode in your design
   if (panel === SP.UNSPONSOR_SP_COINS) return SP.UNSPONSOR_SP_COINS;
 
   return null;
@@ -45,63 +50,48 @@ export function panelToRewardsMode(panel: SP): RewardsMode | null {
  * ✅ Single Source of Truth for rewards selection behavior.
  *
  * Behavior:
- * 0) If selecting a pending-mode (Sponsors/Recipients/Agents), ensure MANAGE_PENDING_REWARDS is open
+ * 0) If selecting a PENDING_* panel, ensure MANAGE_PENDING_REWARDS is open
  * 1) Close other rewards modes (radio)
- * 2) Open selected rewards mode
- * 3) Claim config flags (radio): open the matching PENDING_* and close the other PENDING_*
- *    ✅ BUT for UNSPONSOR_SP_COINS, close all PENDING_* panels (do not open any)
- * 4) Ensure ACCOUNT_LIST_REWARDS_PANEL is open (✅ BUT do not re-open if already visible)
- *
- * NOTE:
- * - "Stake" is intentionally NOT part of this helper (stake panel is excepted).
+ * 2) Open selected mode
+ * 3) Pending-claim flags (radio):
+ *    - If selected mode is a PENDING_* panel: open it and close other PENDING_*
+ *    - If selected mode is UNSPONSOR_SP_COINS: close ALL PENDING_* panels
+ * 4) Ensure ACCOUNT_LIST_REWARDS_PANEL is open (✅ but don't re-open if already visible)
  */
 export function openRewardsModeWithPanels(args: {
   mode: RewardsMode;
   openPanel: (id: SP, reason: string) => void;
   closePanel: (id: SP, reason: string) => void;
   reasonPrefix: string;
-
-  /**
-   * If true, will open MANAGE_PENDING_REWARDS whenever selecting Sponsors/Recipients/Agents.
-   * Defaults to true to keep tree + ManageSponsorshipsPanel behavior consistent.
-   */
   ensureManagePending?: boolean;
-
-  /**
-   * ✅ Optional visibility check.
-   * If provided, we will avoid calling openPanel() for ACCOUNT_LIST_REWARDS_PANEL
-   * when it's already visible, preventing duplicate displayStack pushes.
-   */
   isVisible?: (id: SP) => boolean;
 }) {
   const { mode, openPanel, closePanel, reasonPrefix, isVisible } = args;
   const ensureManagePending = args.ensureManagePending ?? true;
 
-  const isPendingMode = mode === SP.SPONSORS || mode === SP.RECIPIENTS || mode === SP.AGENTS;
+  const isPendingClaimMode =
+    mode === SP.PENDING_SPONSOR_COINS || mode === SP.PENDING_RECIPIENT_COINS || mode === SP.PENDING_AGENT_COINS;
 
-  // 0) Ensure Pending section is visible when selecting a pending mode
-  if (ensureManagePending && isPendingMode) {
+  // 0) Ensure Pending section is visible when selecting a pending-claim mode
+  if (ensureManagePending && isPendingClaimMode) {
     openPanel(SP.MANAGE_PENDING_REWARDS, `${reasonPrefix}:open ${SP[SP.MANAGE_PENDING_REWARDS]}`);
   }
 
   // 1) Close other modes (radio)
   for (const m of REWARDS_MODES) {
     if (Number(m) !== Number(mode)) {
-      closePanel(m, `${reasonPrefix}:close ${SP[m]}`);
+      closePanel(m as unknown as SP, `${reasonPrefix}:close ${SP[m as unknown as SP]}`);
     }
   }
 
   // 2) Open selected mode
-  openPanel(mode, `${reasonPrefix}:open ${SP[mode]}`);
+  openPanel(mode as unknown as SP, `${reasonPrefix}:open ${SP[mode as unknown as SP]}`);
 
-  // 3) Claim config flags (radio)
-  const claimPanel = getClaimPendingPanelForMode(mode);
-
+  // 3) Pending-claim flags (radio)
   for (const p of CLAIM_PENDING_PANELS) {
-    if (claimPanel && Number(p) === Number(claimPanel)) {
+    if (isPendingClaimMode && Number(p) === Number(mode)) {
       openPanel(p, `${reasonPrefix}:open ${SP[p]}`);
     } else {
-      // ✅ If claimPanel is null (UNSPONSOR), this closes ALL pending claim flags.
       closePanel(p, `${reasonPrefix}:close ${SP[p]}`);
     }
   }
