@@ -24,7 +24,6 @@ export default function RecipientListSelectPanel() {
 
   return (
     <PanelListSelectWrapper
-      panel={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
       onCommit={handleCommit}
     />
   );

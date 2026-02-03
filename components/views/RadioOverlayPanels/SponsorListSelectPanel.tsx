@@ -1,3 +1,4 @@
+// File: @/components/views/RadioOverlayPanels/SponsorListSelectPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
@@ -19,13 +20,15 @@ import AccountListRewardsPanel from './AccountListRewardsPanel';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';
 
-const debugLog = createDebugLogger('ManageSponsorRecipients', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function ManageSponsorRecipients() {
+export default function SponsorListSelectPanel() {
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
-  const activePanel: SP_COIN_DISPLAY | null = vClaim ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL : null;
+  const activePanel: SP_COIN_DISPLAY | null = vClaim
+    ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+    : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
@@ -40,15 +43,16 @@ export default function ManageSponsorRecipients() {
   // ✅ If detail is open, do NOT render the list UI.
   if (vSponsorDetail) return null;
 
-  return <ManageSponsorRecipientsInner activePanel={activePanel} />;
+  return <SponsorListSelectInner activePanel={activePanel} />;
 }
 
-function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL }) {
+function SponsorListSelectInner({
+  activePanel,
+}: {
+  activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
+}) {
   const ctx = useContext(ExchangeContextState);
   const { openPanel } = usePanelTree();
-
-  // ✅ SSOT: listType expressed via SP_COIN_DISPLAY (sponsor claim flow)
-  const listType = SP_COIN_DISPLAY.SPONSORS;
 
   // ✅ Directly load sponsor accounts
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
@@ -58,7 +62,9 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
    */
   const accounts: spCoinAccount[] = useMemo(() => {
     const anyData: any = feedData;
-    return Array.isArray(anyData?.spCoinAccounts) ? (anyData.spCoinAccounts as spCoinAccount[]) : [];
+    return Array.isArray(anyData?.spCoinAccounts)
+      ? (anyData.spCoinAccounts as spCoinAccount[])
+      : [];
   }, [feedData]);
 
   useEffect(() => {
@@ -66,7 +72,6 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
     debugLog.log?.('[data]', {
       activePanel: SP_COIN_DISPLAY[activePanel],
-      listType: SP_COIN_DISPLAY[listType],
       loading,
       error: error ?? null,
 
@@ -76,18 +81,19 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
       sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
       sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
     });
-  }, [activePanel, listType, loading, error, accounts.length, feedData]);
+  }, [activePanel, loading, error, accounts.length, feedData]);
 
   const setAccountCallBack = useCallback(
     (account?: spCoinAccount) => {
       if (!account?.address) {
-        debugLog.log?.('[setAccountCallBack] ignored (no account/address)', { account });
+        debugLog.log?.('[setAccountCallBack] ignored (no account/address)', {
+          account,
+        });
         return;
       }
 
       debugLog.log?.('[setAccountCallBack]', {
         activePanel: SP_COIN_DISPLAY[activePanel],
-        listType: SP_COIN_DISPLAY[listType],
         addressPreview: String(account.address).slice(0, 12),
         name: (account as any)?.name,
       });
@@ -104,23 +110,23 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
             },
           };
         },
-        `ManageSponsorRecipients:setAccountCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
+        `SponsorListSelectPanel:setAccountCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
       );
 
       // 2) Open sponsor detail panel
       openPanel(
         SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-        `ManageSponsorRecipients:setAccountCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
+        `SponsorListSelectPanel:setAccountCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
         activePanel,
       );
     },
-    [activePanel, ctx, listType, openPanel],
+    [activePanel, ctx, openPanel],
   );
 
   // Minimal render states
   if (loading) {
     return (
-      <div id="ManageSponsorRecipientsLoading" className="p-3 text-sm opacity-70">
+      <div id="SponsorListSelectLoading" className="p-3 text-sm opacity-70">
         Loading sponsor accounts…
       </div>
     );
@@ -128,22 +134,17 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
 
   if (error) {
     return (
-      <div id="ManageSponsorRecipientsError" className="p-3 text-sm opacity-70">
+      <div id="SponsorListSelectError" className="p-3 text-sm opacity-70">
         Failed to load sponsor accounts: {error}
       </div>
     );
   }
 
-  /**
-   * ✅ FIX:
-   * Enforce the SAME scroll contract that TokenList/RecipientList path gets via AssetListSelectPanel:
-   * - h-full: gives the subtree a real height
-   * - min-h-0: allows children to shrink so overflow-y-auto can work
-   * - flex flex-col: enables a header + scroll-body pattern
-   * - overflow-hidden: ensures rounded borders clip correctly when the scroll slot is inside
-   */
   return (
-    <div id="ManageSponsorRecipients" className="h-full min-h-0 w-full flex flex-col overflow-hidden">
+    <div
+      id="SponsorListSelectPanel"
+      className="h-full min-h-0 w-full flex flex-col overflow-hidden"
+    >
       <AssetSelectDisplayProvider>
         <AssetSelectProvider
           containerType={activePanel}
@@ -156,10 +157,9 @@ function ManageSponsorRecipientsInner({ activePanel }: { activePanel: SP_COIN_DI
           }}
         >
           <AccountListRewardsPanel
-            accountList={accounts} // component API still expects accountList
+            accountList={accounts}
             setAccountCallBack={setAccountCallBack}
             containerType={activePanel}
-            listType={listType}
           />
         </AssetSelectProvider>
       </AssetSelectDisplayProvider>
