@@ -2,11 +2,11 @@
 'use client';
 
 import { useMemo, useCallback, useEffect } from 'react';
-import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { spCoinAccount, TokenContract } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { useActiveRadioPanel } from '@/lib/context/exchangeContext/hooks/useActiveRadioPanel';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 import { AssetSelectProvider } from '@/lib/context';
@@ -14,27 +14,15 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import AssetListSelectPanel from './AssetListSelectPanel';
 
 import type { AssetSelectBag as UnionBag } from '@/lib/context/structure/types/panelBag';
-
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('PanelListSelectWrapper', DEBUG_ENABLED, LOG_TIME);
 
-export type ASSET_LIST_MODE =
-  | SP_COIN_DISPLAY.AGENTS
-  | SP_COIN_DISPLAY.RECIPIENTS
-  | SP_COIN_DISPLAY.SPONSORS
-  | SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
-
 type Props = {
-  panel: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE;
-  listType: ASSET_LIST_MODE;
-  instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: spCoinAccount | TokenContract) => void;
-  suppressAutoClose?: boolean;
 };
 
 function makeInitialPanelBag(panel: SP_COIN_DISPLAY, peerAddress?: `0x${string}`): UnionBag | undefined {
@@ -44,123 +32,56 @@ function makeInitialPanelBag(panel: SP_COIN_DISPLAY, peerAddress?: `0x${string}`
   return undefined;
 }
 
-export default function PanelListSelectWrapper({
-  panel,
-  feedType,
-  listType,
-  instancePrefix,
-  peerAddress,
-  onCommit,
-  suppressAutoClose,
-}: Props) {
-  const visible = usePanelVisible(panel);
+export default function PanelListSelectWrapper({ peerAddress, onCommit }: Props) {
+  const panel = useActiveRadioPanel();
+  if (panel == null) return null;
 
-  debugLog.log?.('[gate]', {
-    visible,
-    panel,
-    panelLabel: SP_COIN_DISPLAY[panel],
-    feedTypeOverride: feedType,
-    feedTypeOverrideLabel: FEED_TYPE[feedType],
-    listType,
-    listTypeLabel: SP_COIN_DISPLAY[listType],
-    instancePrefix,
-  });
-
-  if (!visible) return null;
-
-  return (
-    <PanelListSelectWrapperInner
-      panel={panel}
-      feedType={feedType}
-      listType={listType}
-      instancePrefix={instancePrefix}
-      peerAddress={peerAddress}
-      onCommit={onCommit}
-      suppressAutoClose={suppressAutoClose}
-    />
-  );
-}
-
-function PanelListSelectWrapperInner({
-  panel,
-  feedType,
-  listType,
-  instancePrefix,
-  peerAddress,
-  onCommit,
-  suppressAutoClose,
-}: Props) {
   const { exchangeContext } = useExchangeContext();
   const { closeTop } = usePanelTransitions();
 
-  // Use appChainId (source of truth for app network)
   const appChainId = exchangeContext?.network?.appChainId ?? 1;
 
-  // ✅ Stable per-panel instance (prevents remount/scroll reset when chain id resolves)
-  const instanceId = useMemo(
-    () => `${instancePrefix.toUpperCase()}_${SP_COIN_DISPLAY[panel]}`,
-    [instancePrefix, panel],
-  );
-
-  // ✅ Chain-scoped id for any caches that truly must be per-chain
+  // Generate a stable instance id based on panel + chain
+  const instanceId = useMemo(() => `${SP_COIN_DISPLAY[panel]}`, [panel]);
   const chainScopedInstanceId = useMemo(() => `${instanceId}_${appChainId}`, [instanceId, appChainId]);
 
   const initialPanelBag = useMemo(() => makeInitialPanelBag(panel, peerAddress), [panel, peerAddress]);
 
   useEffect(() => {
-    debugLog.log?.('[inner:mount]', {
+    debugLog.log?.('[mount]', {
       panel,
       panelLabel: SP_COIN_DISPLAY[panel],
       appChainId,
       instanceId,
       chainScopedInstanceId,
-      feedTypeOverride: feedType,
-      feedTypeOverrideLabel: FEED_TYPE[feedType],
-      listType,
-      listTypeLabel: SP_COIN_DISPLAY[listType],
-      instancePrefix,
       peerAddressPreview: peerAddress ? `${peerAddress.slice(0, 10)}…` : '(none)',
       hasInitialBag: !!initialPanelBag,
       initialBagType: (initialPanelBag as any)?.type,
     });
-  }, [
-    panel,
-    appChainId,
-    instanceId,
-    chainScopedInstanceId,
-    feedType,
-    listType,
-    instancePrefix,
-    peerAddress,
-    initialPanelBag,
-  ]);
+  }, [panel, appChainId, instanceId, chainScopedInstanceId, peerAddress, initialPanelBag]);
 
-  const closeForProvider = useCallback(
-    (_fromUser?: boolean) => {
-      if (!suppressAutoClose) closeTop('PanelListSelectWrapper:closeForProvider(pop)');
-    },
-    [closeTop, suppressAutoClose],
-  );
+  const handleClose = useCallback(() => {
+    closeTop('PanelListSelectWrapper:closeTop');
+  }, [closeTop]);
 
   const handleCommit = useCallback(
     (asset: spCoinAccount | TokenContract) => {
       onCommit(asset);
-      if (!suppressAutoClose) closeTop('PanelListSelectWrapper:handleCommit(pop)');
+      closeTop('PanelListSelectWrapper:handleCommit(close)');
     },
-    [onCommit, closeTop, suppressAutoClose],
+    [onCommit, closeTop],
   );
 
   return (
     <AssetSelectDisplayProvider instanceId={chainScopedInstanceId}>
       <AssetSelectProvider
-        key={instanceId} // ✅ stable; no surprise remount on chain resolve
-        closePanelCallback={closeForProvider}
+        key={instanceId}
+        closePanelCallback={handleClose}
         setSelectedAssetCallback={handleCommit}
         containerType={panel}
         initialPanelBag={initialPanelBag}
-        feedTypeOverride={feedType}
       >
-        <AssetListSelectPanel listType={listType} />
+        <AssetListSelectPanel />
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );

@@ -26,7 +26,6 @@ const BasePreviewCard: React.FC<Props> = ({
   onInfoClick,
   onContextMenu,
   onError,
-  // Match DataListSelect avatar size (8 * 4 = 32px)
   width = 32,
   height = 32,
 }) => {
@@ -51,7 +50,6 @@ const BasePreviewCard: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Right block: info icon aligned with DataListSelect */}
       <div
         className="ml-auto flex items-center justify-center cursor-pointer rounded w-8 h-8 text-lg font-bold text-white flex-none"
         onClick={(e) => {
