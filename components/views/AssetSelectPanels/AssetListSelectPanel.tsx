@@ -14,9 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { FEED_TYPE, type FeedData, type spCoinAccount, type SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
-import type { REWARDS_LIST_MODE } from '@/components/views/RadioOverlayPanels/AccountListRewardsPanel/types';
-
-// ✅ new global util (you said it's now utilized)
+// ✅ global util
 import { deriveFeedTypeFromDisplay } from '@/lib/utils/feeds/deriveFeedTypeFromDisplay';
 
 const LOG_TIME = false;
@@ -32,27 +30,6 @@ function isTokenFeedType(feedType: FEED_TYPE) {
 
 function isManageFeedType(feedType: FEED_TYPE) {
   return feedType === FEED_TYPE.MANAGE_RECIPIENTS || feedType === FEED_TYPE.MANAGE_AGENTS;
-}
-
-/**
- * Map FEED_TYPE -> REWARDS_LIST_MODE.
- *
- * NOTE:
- * REWARDS_LIST_MODE is a *type only* (no runtime enum/const), so we can't reference
- * REWARDS_LIST_MODE.AGENTS etc.
- */
-function feedTypeToRewardsListMode(feedType: FEED_TYPE): REWARDS_LIST_MODE {
-  switch (feedType) {
-    case FEED_TYPE.MANAGE_AGENTS:
-      return 'AGENTS' as unknown as REWARDS_LIST_MODE;
-
-    case FEED_TYPE.MANAGE_RECIPIENTS:
-      return 'RECIPIENTS' as unknown as REWARDS_LIST_MODE;
-
-    default:
-      // fallback (should not happen unless rewards panel is rendered for non-manage feedType)
-      return 'RECIPIENTS' as unknown as REWARDS_LIST_MODE;
-  }
 }
 
 /** Prefer SSOT spCoinAccounts, fallback to legacy wallets while migrating */
@@ -100,11 +77,9 @@ export default function AssetListSelectPanel() {
   const isManageView = isManageFeedType(feedType);
   const showAddressBar = !isManageView;
 
-  const rewardsListType = useMemo(() => feedTypeToRewardsListMode(feedType), [feedType]);
-
   // mount logs without stale captures
-  const latestRef = useRef({ instanceId, feedType, isManageView, showAddressBar, rewardsListType });
-  latestRef.current = { instanceId, feedType, isManageView, showAddressBar, rewardsListType };
+  const latestRef = useRef({ instanceId, feedType, isManageView, showAddressBar });
+  latestRef.current = { instanceId, feedType, isManageView, showAddressBar };
 
   useEffect(() => {
     const mountId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -117,7 +92,6 @@ export default function AssetListSelectPanel() {
       feedTypeLabel: FEED_TYPE[snap.feedType],
       isManageView: snap.isManageView,
       showAddressBar: snap.showAddressBar,
-      rewardsListType: snap.rewardsListType,
       containerType,
     });
 
@@ -128,7 +102,6 @@ export default function AssetListSelectPanel() {
         instanceId: end.instanceId,
         feedType: end.feedType,
         feedTypeLabel: FEED_TYPE[end.feedType],
-        rewardsListType: end.rewardsListType,
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,7 +137,6 @@ export default function AssetListSelectPanel() {
       className="flex flex-col h-full w-full rounded-[15px] overflow-hidden min-h-0 gap-[4px]"
       data-instance={instanceId}
       data-feed-type={feedType}
-      data-rewards-list-type={rewardsListType}
     >
       {showAddressBar && <AddressSelect callingParent="AssetListSelectPanel" />}
 
@@ -173,7 +145,6 @@ export default function AssetListSelectPanel() {
           accountList={accounts}
           setAccountCallBack={setAccountCallBack}
           containerType={containerType}
-          listType={rewardsListType}
         />
       ) : (
         <DataListSelect feedData={safeFeedData} loading={loading} feedType={feedType} />

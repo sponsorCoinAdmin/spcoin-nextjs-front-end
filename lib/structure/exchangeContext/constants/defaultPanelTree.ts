@@ -60,11 +60,8 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
  *
  * Tree Panel fix:
  * - ACCOUNT_LIST_REWARDS_PANEL children order matches registry
- * - Each pending/unstake node owns exactly ONE mode child:
- *    PENDING_SPONSOR_COINS   -> SPONSORS
- *    PENDING_RECIPIENT_COINS -> RECIPIENTS
- *    PENDING_AGENT_COINS     -> AGENTS
- *    UNSPONSOR_SP_COINS      -> SPONSORS
+ * - Each pending/unstake node previously owned a single-mode child (SPONSORS/RECIPIENTS/AGENTS),
+ *   but those panels no longer exist; the mode is derived from the parent node / feed.
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
@@ -78,10 +75,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // ─────────────── Radio overlays (siblings) ───────────────
       node(SP.BUY_LIST_SELECT_PANEL, false),
       node(SP.SELL_LIST_SELECT_PANEL, false),
-
-      // ✅ NEW: first-class list overlays (modeled like Sponsor list)
-      node(SP.RECIPIENTS, false),
-      node(SP.AGENTS, false),
 
       // ✅ OLD: legacy list overlays (kept during migration)
       node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
@@ -100,12 +93,12 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       node(SP.STAKING_SPCOINS_PANEL, false),
 
-      // ✅ Account list rewards (parent) + fixed single-mode children per node
+      // ✅ Account list rewards (parent) + pending/unstake nodes (no mode children)
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
-        node(SP.PENDING_SPONSOR_COINS, false, [node(SP.SPONSORS, false)]),
-        node(SP.PENDING_RECIPIENT_COINS, false, [node(SP.RECIPIENTS, false)]),
-        node(SP.PENDING_AGENT_COINS, false, [node(SP.AGENTS, false)]),
-        node(SP.UNSPONSOR_SP_COINS, false, [node(SP.SPONSORS, false)]),
+        node(SP.PENDING_SPONSOR_COINS, false),
+        node(SP.PENDING_RECIPIENT_COINS, false),
+        node(SP.PENDING_AGENT_COINS, false),
+        node(SP.UNSPONSOR_SP_COINS, false),
       ]),
 
       // Detail overlays

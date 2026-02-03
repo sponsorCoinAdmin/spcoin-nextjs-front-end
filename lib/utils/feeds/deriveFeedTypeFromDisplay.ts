@@ -9,15 +9,12 @@ import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE | undefined {
   switch (display) {
     // First-class list overlays
-    case SP_COIN_DISPLAY.AGENTS:
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
       return FEED_TYPE.AGENT_ACCOUNTS;
 
-    case SP_COIN_DISPLAY.RECIPIENTS:
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
 
-    case SP_COIN_DISPLAY.SPONSORS:
       return FEED_TYPE.SPONSOR_ACCOUNTS;
 
     // Manage-style overlays

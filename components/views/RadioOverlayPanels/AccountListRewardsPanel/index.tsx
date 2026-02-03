@@ -1,10 +1,10 @@
-// Dir: @\components\views\RadioOverlayPanels\AccountListRewardsPanel\index.tsx
+// File: @/components/views/RadioOverlayPanels/AccountListRewardsPanel/index.tsx
 'use client';
 
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
+import { AccountType, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
@@ -16,7 +16,9 @@ import { msTableTw } from '../msTableTw';
 import AccountCell from './AccountCell';
 import RewardsSubTable from './RewardsSubTable';
 import TotalRow from './TotalRow';
-import type { PendingClaim, Props, SubRowOpenState } from './types';
+
+import type { PendingClaim, SubRowOpenState } from './types';
+
 import {
   CELL_LEFT_OUTLINE_TW,
   CELL_RIGHT_OUTLINE_TW,
@@ -36,6 +38,12 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('AssetListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
+export type Props = {
+  accountList: spCoinAccount[];
+  setAccountCallBack: (account?: spCoinAccount) => void;
+  containerType: SP_COIN_DISPLAY;
+};
+
 function isPendingPanel(p: SP_COIN_DISPLAY) {
   return (
     p === SP_COIN_DISPLAY.PENDING_SPONSOR_COINS ||
@@ -48,16 +56,15 @@ export default function AccountListRewardsPanel({
   accountList,
   setAccountCallBack,
   containerType,
-  listType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  // ✅ Pending-mode flags (these are now the ONLY “mode” signals)
+  // ✅ Pending-mode flags (SSOT for mode)
   const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_COINS);
   const cfgClaimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS);
   const cfgClaimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_COINS);
 
-  // ✅ Unsponsor / Staked mode
+  // ✅ Unsponsor / Staked mode (SSOT for mode)
   const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS);
 
   // ✅ Global chevron state (UI-only)
@@ -70,6 +77,18 @@ export default function AccountListRewardsPanel({
   );
 
   const [openByWalletKey, setOpenByWalletKey] = useState<Record<string, SubRowOpenState>>({});
+
+  /**
+   * ✅ Derive list type internally (no prop required).
+   * Priority: UNSPONSOR > pending sponsor > pending recipient > pending agent > default.
+   */
+  const listType: SP_COIN_DISPLAY = useMemo(() => {
+    if (showUnSponsorRow) return SP_COIN_DISPLAY.UNSPONSOR_SP_COINS;
+    if (cfgClaimSponsor) return SP_COIN_DISPLAY.PENDING_SPONSOR_COINS;
+    if (cfgClaimRecipient) return SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS;
+    if (cfgClaimAgent) return SP_COIN_DISPLAY.PENDING_AGENT_COINS;
+    return SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
+  }, [showUnSponsorRow, cfgClaimSponsor, cfgClaimRecipient, cfgClaimAgent]);
 
   /**
    * ✅ Derive “mode” booleans WITHOUT SPONSORS/RECIPIENTS/AGENTS panels.
@@ -99,10 +118,21 @@ export default function AccountListRewardsPanel({
       derived,
       derivedLabel: AccountType[derived] ?? String(derived),
       containerType,
+      listType,
+      listTypeLabel: SP_COIN_DISPLAY[listType],
     });
 
     return derived;
-  }, [vAgents, vRecipients, cfgClaimSponsor, cfgClaimRecipient, cfgClaimAgent, showUnSponsorRow, containerType]);
+  }, [
+    vAgents,
+    vRecipients,
+    cfgClaimSponsor,
+    cfgClaimRecipient,
+    cfgClaimAgent,
+    showUnSponsorRow,
+    containerType,
+    listType,
+  ]);
 
   const inputAccountText = useMemo(
     () => getInputAccountText({ vAgents, vRecipients, vSponsors }),
@@ -163,6 +193,7 @@ export default function AccountListRewardsPanel({
 
     debugLog.log?.('[ToDo]', {
       listType,
+      listTypeLabel: SP_COIN_DISPLAY[listType],
       pending,
       isTotal,
       rowName,
@@ -170,13 +201,8 @@ export default function AccountListRewardsPanel({
     });
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
-  // ✅ listType should now be PENDING_* or UNSPONSOR_* (not SPONSORS)
   const actionButtonLabel =
-    listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS
-      ? 'Unsponsor'
-      : isPendingPanel(listType)
-        ? 'Claim'
-        : 'Action';
+    listType === SP_COIN_DISPLAY.UNSPONSOR_SP_COINS ? 'Unsponsor' : isPendingPanel(listType) ? 'Claim' : 'Action';
 
   const actionButtonText = actionButtonLabel === 'Claim' ? 'Claim All' : actionButtonLabel;
 
@@ -242,7 +268,9 @@ export default function AccountListRewardsPanel({
                 <div className="w-full flex items-center gap-2">
                   <button
                     type="button"
-                    className={`m-0 p-0 rounded-md ${effectiveChevronOpenPending ? GLOBAL_CHEVRON_UP_BG : GLOBAL_CHEVRON_DOWN_BG} flex items-center justify-center`}
+                    className={`m-0 p-0 rounded-md ${
+                      effectiveChevronOpenPending ? GLOBAL_CHEVRON_UP_BG : GLOBAL_CHEVRON_DOWN_BG
+                    } flex items-center justify-center`}
                     aria-label={
                       effectiveChevronOpenPending
                         ? 'Chevron Up (Close all wallet rows)'
@@ -273,7 +301,7 @@ export default function AccountListRewardsPanel({
           </thead>
 
           <tbody>
-            {accountList.map((w, i) => {
+            {accountList.map((w: spCoinAccount, i: number) => {
               const zebra = i % 2 === 0 ? msTableTw.rowA : msTableTw.rowB;
 
               const addressText = getAddressText(w as any);
@@ -292,7 +320,7 @@ export default function AccountListRewardsPanel({
               const showRow5 = effectiveWalletOpenRows3to5;
 
               const revIndex = accountList.length - 1 - i;
-              const rw = accountList[revIndex];
+              const rw = accountList[revIndex] as spCoinAccount;
               const rwAddressText = getAddressText(rw as any);
 
               return (
