@@ -15,6 +15,8 @@ export const MAIN_OVERLAY_GROUP = [
   SP.TRADING_STATION_PANEL,
 
   // Token selectors
+  SP.PANEL_LIST_SELECT_PANEL,
+  SP.TOKEN_LIST_SELECT_PANEL,
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
 
@@ -29,8 +31,11 @@ export const MAIN_OVERLAY_GROUP = [
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
 
-  // Sponsor list + detail overlays
+  // Rewards list overlay root
   SP.ACCOUNT_LIST_REWARDS_PANEL,
+
+  // Shared / detail overlays
+  SP.ACCOUNT_PANEL,
   SP.SPONSOR_ACCOUNT_PANEL,
   SP.AGENT_ACCOUNT_PANEL,
   SP.RECIPIENT_ACCOUNT_PANEL,
@@ -48,8 +53,6 @@ export const MANAGE_SCOPED = [] as const satisfies readonly SP[];
 /**
  * Stack components.
  * Right now it’s the same as main overlays (since manage-scoped is empty).
- *
- * NOTE: keep this as its own literal list (don’t alias) so it can diverge safely later.
  */
 export const STACK_COMPONENTS = [...MAIN_OVERLAY_GROUP] as const satisfies readonly SP[];
 
@@ -60,9 +63,15 @@ export const STACK_COMPONENTS = [...MAIN_OVERLAY_GROUP] as const satisfies reado
  * `usePanelTree` performs membership checks using Number(panel),
  * so these sets MUST be numeric to avoid enum-instance / import-path mismatches.
  */
-export const IS_MAIN_OVERLAY: ReadonlySet<number> = new Set(MAIN_OVERLAY_GROUP.map(Number));
-export const IS_MANAGE_SCOPED: ReadonlySet<number> = new Set(MANAGE_SCOPED.map(Number));
-export const IS_STACK_COMPONENT: ReadonlySet<number> = new Set(STACK_COMPONENTS.map(Number));
+export const IS_MAIN_OVERLAY: ReadonlySet<number> = new Set(
+  MAIN_OVERLAY_GROUP.map(Number),
+);
+export const IS_MANAGE_SCOPED: ReadonlySet<number> = new Set(
+  MANAGE_SCOPED.map(Number),
+);
+export const IS_STACK_COMPONENT: ReadonlySet<number> = new Set(
+  STACK_COMPONENTS.map(Number),
+);
 
 /** Dev-only guard against accidental duplicates */
 if (process.env.NODE_ENV !== 'production') {
@@ -73,7 +82,9 @@ if (process.env.NODE_ENV !== 'production') {
       if (s.has(id)) {
         // eslint-disable-next-line no-console
         console.error(`[spCoinDisplay] Duplicate in ${label}:`, v, SP[v]);
-        throw new Error(`[spCoinDisplay] Duplicate in ${label}: ${String(v)} (${SP[v]})`);
+        throw new Error(
+          `[spCoinDisplay] Duplicate in ${label}: ${String(v)} (${SP[v]})`,
+        );
       }
       s.add(id);
     }

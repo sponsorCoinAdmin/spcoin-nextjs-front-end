@@ -22,7 +22,7 @@ import type {
 } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { MUST_INCLUDE_ON_BOOT } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -193,7 +193,6 @@ const toNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
 /**
  * ✅ STACK FILTER (boot-time):
  * displayStack must ONLY contain stack-eligible overlays (IS_STACK_COMPONENT).
- * This prevents non-stack panels like SELL_SELECT_PANEL from being persisted.
  */
 const filterToStackComponents = (ids: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] => {
   const out: SP_COIN_DISPLAY[] = [];
@@ -215,9 +214,6 @@ const filterToStackComponents = (ids: SP_COIN_DISPLAY[]): SP_COIN_DISPLAY[] => {
  * ✅ SINGLE SOURCE OF TRUTH:
  * - ONLY: ctx.settings.displayStack
  * - NEVER: ctx.displayStack (root)
- *
- * If legacy root exists and settings is empty, migrate once.
- * Then ALWAYS delete ctx.displayStack.
  */
 const enforceSettingsDisplayStackOnly = (ctx: any) => {
   if (!ctx || typeof ctx !== 'object') return;
@@ -258,9 +254,6 @@ const normalizeSettingsDisplayStack = (ctx: any) => {
 /**
  * Cold-boot fallback:
  * Build displayStack from visible panels + CHILDREN hierarchy.
- *
- * NOTE: This returns a "visible path" which includes non-stack nodes.
- * We MUST filter it through IS_STACK_COMPONENT before persisting.
  */
 const getChildren = (panel: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
   const maybe = (CHILDREN as unknown as Record<number, SP_COIN_DISPLAY[]>)[
@@ -349,19 +342,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       enforceSettingsDisplayStackOnly(nextBase as any);
       normalizeSettingsDisplayStack(nextBase as any);
 
-      if (TRACE_DISPLAYSTACK) {
-        const s = (nextBase as any).settings;
-        // eslint-disable-next-line no-console
-        console.log('[TRACE] next.settings stack summary', summarizeStacks(s));
-        // eslint-disable-next-line no-console
-        console.log('[TRACE] next.settings.displayStack', s.displayStack);
-      }
-
       const nextStr = stringifyBigInt(nextBase);
       if (prevStr === nextStr) {
         if (TRACE_DISPLAYSTACK) {
-          // eslint-disable-next-line no-console
-          console.log('[TRACE] no-op update (prevStr === nextStr)');
           // eslint-disable-next-line no-console
           console.groupEnd();
         }
@@ -377,17 +360,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         ...(normalized as any).settings,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
-
-      if (DEBUG_ENABLED) {
-        // eslint-disable-next-line no-console
-        console.log('[ExchangeProvider][persist]', {
-          hook: _hookName,
-          persistedDisplayStack: (normalized as any).settings.displayStack,
-          persistedIds: idsFromNodes((normalized as any).settings.displayStack).map(
-            Number,
-          ),
-        });
-      }
 
       persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
 
@@ -423,7 +395,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       enforceSettingsDisplayStackOnly(base as any);
 
       const settingsAny = (base as any).settings ?? {};
-      const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
+
+      // NOTE: persisted panels are stored as a *flat* list (SpCoinPanelTree).
+      const storedPanels =
+        settingsAny.spCoinPanelTree as SpCoinPanelTree | undefined;
 
       const repaired = repairPanels(
         isMainPanels(storedPanels) ? storedPanels : undefined,
@@ -443,7 +418,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           ? idsFromNodes(storedNodes)
           : normalizeIdArray(settingsAny.displayStack);
 
-      // ✅ filter out non-stack ids like SELL_SELECT_PANEL
       const storedIds = filterToStackComponents(storedIdsRaw);
 
       // --- cold boot derive stack ---
@@ -452,7 +426,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
       );
 
-      // ✅ filter derived path down to overlays only
       const derivedIds = filterToStackComponents(derivedIdsRaw);
 
       const chosenIds = storedIds.length > 0 ? storedIds : derivedIds;
@@ -460,12 +433,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const nextSettings: any = {
         ...settingsAny,
-        spCoinPanelTree: flatPanels.map((n: any) => ({
-          panel: n.panel,
-          name: n.name,
-          visible: n.visible,
-        })),
-        displayStack: chosenNodes, // ✅ canonical + filtered
+        // ✅ Persist with stable names so tree viewers never show blank rows.
+        spCoinPanelTree: ensurePanelNamesInMemory(flatPanels),
+        displayStack: chosenNodes,
         spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
@@ -483,17 +453,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         'ExchangeContext.settings',
       );
 
-      (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
-
       // ✅ store in state without root displayStack
       enforceSettingsDisplayStackOnly(base as any);
 
       setContextState(base as ExchangeContextTypeOnly);
-      debugLog.log?.('✅ initExchangeContext boot complete', {
-        bootStoredStackRaw: storedIdsRaw.map(Number),
-        bootDerivedPathRaw: derivedIdsRaw.map(Number),
-        bootChosenStackFiltered: chosenIds.map(Number),
-      });
     })();
   }, [wagmiReady, wagmiChainId, isConnected, address]);
 
@@ -510,24 +473,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
-  /**
-   * ✅ ACTIVE ACCOUNT HYDRATION (SSOT)
-   *
-   * Removes the two address-only effects:
-   * - provider:syncActiveAccount
-   * - provider:rehydrateRepairActiveAccount
-   *
-   * And replaces them with ONE SSOT hydration effect that:
-   * - hydrates metadata via hydrateAccountFromAddress()
-   * - avoids duplicate hydration if already hydrated for the same address
-   * - last-write-wins to avoid races on rapid account switching
-   */
   const activeHydrateReqRef = useRef(0);
 
   useEffect(() => {
     if (!contextState) return;
 
-    const nextAddr = isConnected ? (address?.trim() as Address | undefined) : undefined;
+    const nextAddr = isConnected
+      ? (address?.trim() as Address | undefined)
+      : undefined;
 
     if (!isConnected || !nextAddr) {
       debugLog.log?.(
@@ -542,13 +495,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     const sameAddr =
       !!currentAddr && lower(currentAddr) === lower(nextAddr as unknown as string);
 
-    // If already fully hydrated for this address, do nothing.
     if (sameAddr && isHydratedAccount(current)) return;
 
     const reqId = ++activeHydrateReqRef.current;
 
     (async () => {
-      // Preserve balance only if same address; otherwise don't smear.
       const existingBalance =
         sameAddr && typeof (current as any)?.balance === 'bigint'
           ? ((current as any).balance as bigint)
@@ -558,7 +509,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         balance: existingBalance,
       });
 
-      // last-write-wins
       if (reqId !== activeHydrateReqRef.current) return;
 
       setExchangeContext(

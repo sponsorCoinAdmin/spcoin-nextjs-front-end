@@ -255,6 +255,7 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
   const byId = new Map<number, FlatPanel>();
   for (const p of panels) byId.set(p.panel, p);
 
+  // NOTE: keep this list aligned with MUST_INCLUDE_ON_BOOT in defaultPanelTree.ts
   const mustIncludeOnBoot: Array<[number, boolean]> = [
     [SP.MAIN_TRADING_PANEL, true],
     [SP.TRADE_CONTAINER_HEADER, true],
@@ -264,9 +265,18 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     [SP.SWAP_ARROW_BUTTON, true],
     [SP.CONNECT_TRADE_BUTTON, true],
     [SP.FEE_DISCLOSURE, true],
+
+    // ✅ New persisted overlays (ensure presence on legacy trees)
+    [SP.PANEL_LIST_SELECT_PANEL, false],
+    [SP.ACCOUNT_PANEL, false],
+
+    // ✅ TOKEN_CONTRACT_PANEL is now persisted; keep it in boot checks
+    [SP.TOKEN_CONTRACT_PANEL, false],
   ];
 
-  const neverPersist: number[] = [SP.TOKEN_CONTRACT_PANEL];
+  // Panels that should never be present in the persisted tree.
+  // (Empty for now; TOKEN_CONTRACT_PANEL is a first-class overlay.)
+  const neverPersist: number[] = [];
 
   const missing = mustIncludeOnBoot
     .filter(([id]) => !byId.has(id))

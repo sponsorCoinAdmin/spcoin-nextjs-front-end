@@ -11,7 +11,12 @@ export interface ExchangeContextWithPanels {
    * PERSISTED: Flat list of panels (NO children). This is the storage shape.
    *
    * – If this is an empty array, the app should seed from authored defaults.
-   * – Do NOT persist transient/overlay children here.
+   * – Do NOT persist runtime-expanded children here.
+   *
+   * NOTE:
+   * - This list should include first-class overlays in MAIN_OVERLAY_GROUP
+   *   (e.g., PANEL_LIST_SELECT_PANEL, ACCOUNT_PANEL, TOKEN_CONTRACT_PANEL, etc.)
+   *   so they survive refreshes.
    */
   spCoinPanelTree: SpCoinPanelTree;
 

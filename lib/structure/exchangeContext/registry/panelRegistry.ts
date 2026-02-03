@@ -58,13 +58,6 @@ const TRADING_CHILDREN: readonly SP[] = [
 
 /**
  * ACCOUNT_LIST_REWARDS_PANEL children (order matters)
- *
- * ✅ Desired shape:
- * [-] ACCOUNT_LIST_REWARDS_PANEL
- *   [-] PENDING_SPONSOR_COINS
- *   [+] PENDING_RECIPIENT_COINS
- *   [+] PENDING_AGENT_COINS
- *   [-] UNSPONSOR_SP_COINS
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
   SP.PENDING_SPONSOR_COINS,
@@ -87,17 +80,14 @@ const UNSPONSOR_CHILDREN: readonly SP[] = [] as const;
 
 /**
  * Primary overlay container under MAIN_TRADING_PANEL
- *
- * ✅ Manage panels are first-class overlays mounted here.
- * ✅ EXCEPTION: MANAGE_PENDING_REWARDS is NOT a sibling overlay; it is nested under MANAGE_SPONSORSHIPS_PANEL.
- *
- * NOTE: Do NOT duplicate ids here.
  */
 const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Core overlay
   SP.TRADING_STATION_PANEL,
 
   // Token selectors
+  SP.PANEL_LIST_SELECT_PANEL,
+  SP.TOKEN_LIST_SELECT_PANEL,
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
 
@@ -115,12 +105,11 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Rewards list overlay (parent)
   SP.ACCOUNT_LIST_REWARDS_PANEL,
 
-  // Detail overlays
+  // Shared / detail overlays
+  SP.ACCOUNT_PANEL,
+  SP.SPONSOR_ACCOUNT_PANEL,
   SP.AGENT_ACCOUNT_PANEL,
   SP.RECIPIENT_ACCOUNT_PANEL,
-
-  // ✅ Shared detail panel should live at same level as other overlays
-  SP.SPONSOR_ACCOUNT_PANEL,
 
   // Token contract overlay
   SP.TOKEN_CONTRACT_PANEL,
@@ -132,9 +121,6 @@ const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as cons
 
 /**
  * Helper to auto-set overlay flag from action-model set.
- * Avoids repeating `overlay: true` all over the file.
- *
- * NOTE: IS_MAIN_OVERLAY is numeric (Set<number>), so compare with Number(d.id).
  */
 const def = (d: Omit<PanelDef, 'overlay'>): PanelDef => ({
   ...d,
@@ -167,6 +153,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // Token selector overlays
+  def({ id: SP.PANEL_LIST_SELECT_PANEL, kind: 'list' }),
+  def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.SELL_LIST_SELECT_PANEL, kind: 'list' }),
 
@@ -218,10 +206,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: UNSPONSOR_CHILDREN,
   }),
 
-  // Detail overlays
+  // Shared / detail overlays
+  def({ id: SP.ACCOUNT_PANEL, kind: 'panel' }),
+  def({ id: SP.SPONSOR_ACCOUNT_PANEL, kind: 'panel' }),
   def({ id: SP.AGENT_ACCOUNT_PANEL, kind: 'panel' }),
   def({ id: SP.RECIPIENT_ACCOUNT_PANEL, kind: 'panel' }),
-  def({ id: SP.SPONSOR_ACCOUNT_PANEL, kind: 'panel' }),
 
   // Staking/unstaking overlays
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),

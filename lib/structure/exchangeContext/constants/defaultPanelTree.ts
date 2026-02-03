@@ -1,6 +1,9 @@
 // File: @/lib/structure/exchangeContext/constants/defaultPanelTree.ts
 
-import type { SpCoinPanelTree, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type {
+  SpCoinPanelTree,
+  PanelNode,
+} from '@/lib/structure/exchangeContext/types/PanelNode';
 import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -22,10 +25,6 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
 
 /**
  * Panels that should NOT be persisted/seeded from the canonical tree.
- *
- * NOTE:
- * - TOKEN_CONTRACT_PANEL is now a first-class overlay (radio member),
- *   so it must be part of the canonical tree + seed.
  */
 export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
@@ -40,6 +39,11 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.FEE_DISCLOSURE, true],
   [SP.AFFILIATE_FEE, false],
 
+  // ✅ Ensure overlays exist even for older persisted trees
+  [SP.PANEL_LIST_SELECT_PANEL, false],
+  [SP.TOKEN_LIST_SELECT_PANEL, false],
+  [SP.ACCOUNT_PANEL, false],
+
   // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
   [SP.TOKEN_CONTRACT_PANEL, false],
 
@@ -52,16 +56,6 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
 
 /**
  * Canonical authored tree for the SponsorCoin UI.
- *
- * Notes:
- * - MANAGE_PENDING_REWARDS is nested under MANAGE_SPONSORSHIPS_PANEL.
- * - SPONSOR_ACCOUNT_PANEL is mounted once at the overlay level.
- * - TOKEN_CONTRACT_PANEL is modeled as a first-class overlay panel.
- *
- * Tree Panel fix:
- * - ACCOUNT_LIST_REWARDS_PANEL children order matches registry
- * - Each pending/unstake node previously owned a single-mode child (SPONSORS/RECIPIENTS/AGENTS),
- *   but those panels no longer exist; the mode is derived from the parent node / feed.
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
@@ -73,6 +67,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       ]),
 
       // ─────────────── Radio overlays (siblings) ───────────────
+      node(SP.PANEL_LIST_SELECT_PANEL, false),
+      node(SP.TOKEN_LIST_SELECT_PANEL, false),
       node(SP.BUY_LIST_SELECT_PANEL, false),
       node(SP.SELL_LIST_SELECT_PANEL, false),
 
@@ -101,7 +97,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.UNSPONSOR_SP_COINS, false),
       ]),
 
-      // Detail overlays
+      // Shared / detail overlays
+      node(SP.ACCOUNT_PANEL, false),
       node(SP.AGENT_ACCOUNT_PANEL, false),
       node(SP.RECIPIENT_ACCOUNT_PANEL, false),
       node(SP.SPONSOR_ACCOUNT_PANEL, false),

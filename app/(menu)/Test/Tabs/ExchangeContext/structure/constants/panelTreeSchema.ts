@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v8';
+export const schemaVersion = 'v9';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -17,6 +17,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.TRADING_STATION_PANEL,
 
     // Token selectors
+    SPCD.PANEL_LIST_SELECT_PANEL,
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
@@ -31,7 +32,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.ERROR_MESSAGE_PANEL,
     SPCD.MANAGE_SPONSORSHIPS_PANEL,
 
-    // ✅ Manage DETAIL views
+    // ✅ Shared + Manage DETAIL views
+    SPCD.ACCOUNT_PANEL,
     SPCD.AGENT_ACCOUNT_PANEL,
     SPCD.RECIPIENT_ACCOUNT_PANEL,
     SPCD.SPONSOR_ACCOUNT_PANEL,
@@ -99,6 +101,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.ADD_SPONSORSHIP_PANEL]: 'panel',
   [SPCD.CONFIG_SPONSORSHIP_PANEL]: 'panel',
 
+  // Token selector overlays
+  [SPCD.PANEL_LIST_SELECT_PANEL]: 'list',
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
 
@@ -120,7 +124,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.PENDING_AGENT_COINS]: 'panel',
   [SPCD.UNSPONSOR_SP_COINS]: 'panel',
 
-  // ✅ Manage DETAIL views
+  // ✅ Shared + Manage DETAIL views
+  [SPCD.ACCOUNT_PANEL]: 'panel',
   [SPCD.AGENT_ACCOUNT_PANEL]: 'panel',
   [SPCD.RECIPIENT_ACCOUNT_PANEL]: 'panel',
   [SPCD.SPONSOR_ACCOUNT_PANEL]: 'panel',
@@ -140,9 +145,10 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
 // Optional grouping (updated to include manage panels)
 export const GROUPS = {
-  TOKEN_SELECT_LISTS: [SPCD.BUY_LIST_SELECT_PANEL, SPCD.SELL_LIST_SELECT_PANEL] as SPCD[],
+  TOKEN_SELECT_LISTS: [SPCD.PANEL_LIST_SELECT_PANEL, SPCD.BUY_LIST_SELECT_PANEL, SPCD.SELL_LIST_SELECT_PANEL] as SPCD[],
 
   MODALS_AND_LISTS: [
+    SPCD.PANEL_LIST_SELECT_PANEL,
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
@@ -164,7 +170,8 @@ export const GROUPS = {
     SPCD.PENDING_AGENT_COINS,
     SPCD.UNSPONSOR_SP_COINS,
 
-    // Detail panels
+    // Shared + detail panels
+    SPCD.ACCOUNT_PANEL,
     SPCD.RECIPIENT_ACCOUNT_PANEL,
     SPCD.AGENT_ACCOUNT_PANEL,
     SPCD.SPONSOR_ACCOUNT_PANEL,

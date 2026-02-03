@@ -51,11 +51,15 @@ export enum SP_COIN_DISPLAY {
 
   // First-class list overlays (new)
   ACCOUNT_LIST_REWARDS_PANEL,
-  // AGENTS,
-  // RECIPIENTS,
-  // SPONSORS,
 
   // Legacy list overlays (migration)
   AGENT_LIST_SELECT_PANEL,
   RECIPIENT_LIST_SELECT_PANEL,
+
+  // Token / account overlays
+  TOKEN_LIST_SELECT_PANEL,
+  ACCOUNT_PANEL,
+
+  // ✅ NEW: Panel selector overlay (append-only)
+  PANEL_LIST_SELECT_PANEL,
 }
