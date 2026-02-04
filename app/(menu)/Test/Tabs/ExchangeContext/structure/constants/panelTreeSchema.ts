@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v9';
+export const schemaVersion = 'v10';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -38,7 +38,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.RECIPIENT_ACCOUNT_PANEL,
     SPCD.SPONSOR_ACCOUNT_PANEL,
 
-    // (Optional legacy) SPCD.TOKEN_CONTRACT_PANEL,
+    // ✅ Token contract overlay (show in tree)
+    SPCD.TOKEN_CONTRACT_PANEL,
   ],
 
   // ✅ Desired output: CONFIG_SLIPPAGE_PANEL is nested under TRADING_STATION_PANEL
@@ -61,25 +62,29 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // SELL_SELECT_PANEL (with MANAGE_SPONSORSHIPS_BUTTON nested under it),
   // SWAP_ARROW_BUTTON,
   // BUY_SELECT_PANEL
-  [SPCD.EXCHANGE_TRADING_PAIR]: [SPCD.SELL_SELECT_PANEL, SPCD.SWAP_ARROW_BUTTON, SPCD.BUY_SELECT_PANEL],
+  [SPCD.EXCHANGE_TRADING_PAIR]: [
+    SPCD.SELL_SELECT_PANEL,
+    SPCD.SWAP_ARROW_BUTTON,
+    SPCD.BUY_SELECT_PANEL,
+  ],
 
   [SPCD.SELL_SELECT_PANEL]: [SPCD.MANAGE_SPONSORSHIPS_BUTTON],
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
   [SPCD.ADD_SPONSORSHIP_PANEL]: [SPCD.CONFIG_SPONSORSHIP_PANEL],
 
   // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
-  //
-  // [-] ACCOUNT_LIST_REWARDS_PANEL
-  //     [-] SPONSOR_STATE
-  //     [+] RECIPIENT_STATE
-  //     [+] AGENT_STATE
-  //     [+] UNSPONSOR_STATE
-  //
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
     SPCD.SPONSOR_STATE,
     SPCD.RECIPIENT_STATE,
     SPCD.AGENT_STATE,
     SPCD.UNSPONSOR_STATE,
+  ],
+
+  // ✅ ACCOUNT_PANEL should also expose the state children in the panel tree
+  [SPCD.ACCOUNT_PANEL]: [
+    SPCD.SPONSOR_STATE,
+    SPCD.RECIPIENT_STATE,
+    SPCD.AGENT_STATE,
   ],
 
   // ✅ No synthetic "mode selector" children anymore
@@ -118,7 +123,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
-  // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL
+  // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL / ACCOUNT_PANEL
   [SPCD.SPONSOR_STATE]: 'panel',
   [SPCD.RECIPIENT_STATE]: 'panel',
   [SPCD.AGENT_STATE]: 'panel',
@@ -140,12 +145,18 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  [SPCD.TOKEN_CONTRACT_PANEL]: 'panel', // legacy/test UI support
+
+  // ✅ show token contract node in this UI
+  [SPCD.TOKEN_CONTRACT_PANEL]: 'panel',
 };
 
 // Optional grouping (updated to include manage panels)
 export const GROUPS = {
-  TOKEN_SELECT_LISTS: [SPCD.PANEL_LIST_SELECT_PANEL, SPCD.BUY_LIST_SELECT_PANEL, SPCD.SELL_LIST_SELECT_PANEL] as SPCD[],
+  TOKEN_SELECT_LISTS: [
+    SPCD.PANEL_LIST_SELECT_PANEL,
+    SPCD.BUY_LIST_SELECT_PANEL,
+    SPCD.SELL_LIST_SELECT_PANEL,
+  ] as SPCD[],
 
   MODALS_AND_LISTS: [
     SPCD.PANEL_LIST_SELECT_PANEL,
@@ -170,11 +181,16 @@ export const GROUPS = {
     SPCD.AGENT_STATE,
     SPCD.UNSPONSOR_STATE,
 
-    // Shared + detail panels
+    // ✅ Account panel also exposes the same state children
     SPCD.ACCOUNT_PANEL,
+
+    // Shared + detail panels
     SPCD.RECIPIENT_ACCOUNT_PANEL,
     SPCD.AGENT_ACCOUNT_PANEL,
     SPCD.SPONSOR_ACCOUNT_PANEL,
+
+    // Token contract overlay
+    SPCD.TOKEN_CONTRACT_PANEL,
 
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],

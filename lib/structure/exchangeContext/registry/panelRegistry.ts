@@ -67,6 +67,20 @@ const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
 ] as const;
 
 /**
+ * ✅ ACCOUNT_PANEL children (order matters)
+ *
+ * NOTE:
+ * These are the SAME state nodes already used under ACCOUNT_LIST_REWARDS_PANEL.
+ * We only model the *structural* relationship here so the panel tree UI can show
+ * them nested under ACCOUNT_PANEL as well.
+ */
+const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
+  SP.SPONSOR_STATE,
+  SP.RECIPIENT_STATE,
+  SP.AGENT_STATE,
+] as const;
+
+/**
  * ✅ Tree Panel fix:
  * Each pending/unstake node owns exactly ONE mode child.
  *
@@ -207,7 +221,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // Shared / detail overlays
-  def({ id: SP.ACCOUNT_PANEL, kind: 'panel' }),
+  def({
+    id: SP.ACCOUNT_PANEL,
+    kind: 'panel',
+    children: ACCOUNT_PANEL_CHILDREN,
+  }),
   def({ id: SP.SPONSOR_ACCOUNT_PANEL, kind: 'panel' }),
   def({ id: SP.AGENT_ACCOUNT_PANEL, kind: 'panel' }),
   def({ id: SP.RECIPIENT_ACCOUNT_PANEL, kind: 'panel' }),
@@ -315,3 +333,5 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+
+
