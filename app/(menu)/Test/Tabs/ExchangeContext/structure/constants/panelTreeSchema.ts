@@ -70,23 +70,23 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
   //
   // [-] ACCOUNT_LIST_REWARDS_PANEL
-  //     [-] PENDING_SPONSOR_COINS
-  //     [+] PENDING_RECIPIENT_COINS
-  //     [+] PENDING_AGENT_COINS
-  //     [+] UNSPONSOR_SP_COINS
+  //     [-] SPONSOR_STATE
+  //     [+] RECIPIENT_STATE
+  //     [+] AGENT_STATE
+  //     [+] UNSPONSOR_STATE
   //
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
-    SPCD.PENDING_SPONSOR_COINS,
-    SPCD.PENDING_RECIPIENT_COINS,
-    SPCD.PENDING_AGENT_COINS,
-    SPCD.UNSPONSOR_SP_COINS,
+    SPCD.SPONSOR_STATE,
+    SPCD.RECIPIENT_STATE,
+    SPCD.AGENT_STATE,
+    SPCD.UNSPONSOR_STATE,
   ],
 
   // ✅ No synthetic "mode selector" children anymore
-  [SPCD.PENDING_SPONSOR_COINS]: [],
-  [SPCD.PENDING_RECIPIENT_COINS]: [],
-  [SPCD.PENDING_AGENT_COINS]: [],
-  [SPCD.UNSPONSOR_SP_COINS]: [],
+  [SPCD.SPONSOR_STATE]: [],
+  [SPCD.RECIPIENT_STATE]: [],
+  [SPCD.AGENT_STATE]: [],
+  [SPCD.UNSPONSOR_STATE]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -119,10 +119,10 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
   // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL
-  [SPCD.PENDING_SPONSOR_COINS]: 'panel',
-  [SPCD.PENDING_RECIPIENT_COINS]: 'panel',
-  [SPCD.PENDING_AGENT_COINS]: 'panel',
-  [SPCD.UNSPONSOR_SP_COINS]: 'panel',
+  [SPCD.SPONSOR_STATE]: 'panel',
+  [SPCD.RECIPIENT_STATE]: 'panel',
+  [SPCD.AGENT_STATE]: 'panel',
+  [SPCD.UNSPONSOR_STATE]: 'panel',
 
   // ✅ Shared + Manage DETAIL views
   [SPCD.ACCOUNT_PANEL]: 'panel',
@@ -165,10 +165,10 @@ export const GROUPS = {
     SPCD.AGENT_LIST_SELECT_PANEL,
 
     // ✅ Rewards sub-panels
-    SPCD.PENDING_SPONSOR_COINS,
-    SPCD.PENDING_RECIPIENT_COINS,
-    SPCD.PENDING_AGENT_COINS,
-    SPCD.UNSPONSOR_SP_COINS,
+    SPCD.SPONSOR_STATE,
+    SPCD.RECIPIENT_STATE,
+    SPCD.AGENT_STATE,
+    SPCD.UNSPONSOR_STATE,
 
     // Shared + detail panels
     SPCD.ACCOUNT_PANEL,

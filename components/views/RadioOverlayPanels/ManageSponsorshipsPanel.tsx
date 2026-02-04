@@ -15,7 +15,7 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { useManageSponsorships } from '../RadioOverlayPanels_ToDo_FIX/useManageSponsorships';
+import { useManageSponsorships } from './AccountPanel/hooks/useManageSponsorships';
 import { msTableTw } from './msTableTw';
 
 // ✅ Centralized rewards selection logic (shared with Tree Panel)
@@ -61,7 +61,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     [openPanel],
   );
 
-  // ✅ Rewards mode is now PENDING_*_COINS (plus UNSPONSOR_SP_COINS).
+  // ✅ Rewards mode is now PENDING_*_COINS (plus UNSPONSOR_STATE).
   const openRewardsMode = useCallback(
     (mode: RewardsMode) => {
       debugLog.log?.('openRewardsMode', { mode: SP_COIN_DISPLAY[mode] });
@@ -205,7 +205,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   <button
                     type="button"
                     className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap} ${leftAlignedLinkBtn}`}
-                    onClick={() => openRewardsMode(SP_COIN_DISPLAY.UNSPONSOR_SP_COINS)}
+                    onClick={() => openRewardsMode(SP_COIN_DISPLAY.UNSPONSOR_STATE)}
                     aria-label="Open Staked list"
                     title="Manage SpCoin Contracts."
                   >
@@ -305,7 +305,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_SPONSOR_COINS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.SPONSOR_STATE)}
                         aria-label="Open Claim Sponsors Rewards panel"
                         title="Available Sponsor Rewards"
                       >
@@ -339,7 +339,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.RECIPIENT_STATE)}
                         aria-label="Open Claim Recipients Rewards panel"
                         title="Available Recipient Rewards"
                       >
@@ -373,7 +373,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_AGENT_COINS)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.AGENT_STATE)}
                         aria-label="Open Claim Agents Rewards panel"
                         title="Available Agent Rewards"
                       >

@@ -91,10 +91,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ✅ Account list rewards (parent) + pending/unstake nodes (no mode children)
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
-        node(SP.PENDING_SPONSOR_COINS, false),
-        node(SP.PENDING_RECIPIENT_COINS, false),
-        node(SP.PENDING_AGENT_COINS, false),
-        node(SP.UNSPONSOR_SP_COINS, false),
+        node(SP.SPONSOR_STATE, false),
+        node(SP.RECIPIENT_STATE, false),
+        node(SP.AGENT_STATE, false),
+        node(SP.UNSPONSOR_STATE, false),
       ]),
 
       // Shared / detail overlays

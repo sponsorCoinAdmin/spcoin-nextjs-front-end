@@ -8,7 +8,7 @@ import {
   useRegisterHeaderTitle,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageAccount from '../RadioOverlayPanels_ToDo_FIX/ManageAccount';
+import ManageAccount from './AccountPanel/ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';

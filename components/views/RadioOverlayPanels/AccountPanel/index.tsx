@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageSponsor.tsx
+// File: @/components/views/RadioOverlayPanels/AccountPanel/index.tsx
 'use client';
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
@@ -7,32 +7,37 @@ import {
   useRegisterHeaderLeft,
   useRegisterHeaderTitle,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageAccount from './AccountPanel/ManageAccount';
+import ManageAccount from './ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 type Props = { onClose?: () => void };
 
-export default function ManageSponsor(_props: Props) {
+export default function AccountPanel(_props: Props) {
+  // ✅ CRITICAL: Only render when ACCOUNT_PANEL is visible
+  const vAccountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+  if (!vAccountPanel) return null;
+
   const ctx = useContext(ExchangeContextState);
 
   const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
   const logoURL = sponsorWallet?.logoURL;
   const hasSponsor = !!sponsorWallet;
 
-  // Header title
+  // ✅ Header title for ACCOUNT_PANEL
   useRegisterHeaderTitle(
-    SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
+    SP_COIN_DISPLAY.ACCOUNT_PANEL,
     hasSponsor ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}` : 'Sponsor (none selected)',
   );
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
-  // Left header logo (square, no crop)
+  // ✅ Left header logo for ACCOUNT_PANEL
   useRegisterHeaderLeft(
-    SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
+    SP_COIN_DISPLAY.ACCOUNT_PANEL,
     useMemo(
       () =>
         () => (
@@ -71,7 +76,7 @@ export default function ManageSponsor(_props: Props) {
   ]);
 
   return (
-    <div id="SPONSOR_ACCOUNT_PANEL">
+    <div id="ACCOUNT_PANEL">
       {hasSponsor ? (
         <ManageAccount wallet={sponsorWallet} />
       ) : (
@@ -91,7 +96,7 @@ export default function ManageSponsor(_props: Props) {
           opacity={0.5}
           color="#ff1a1a"
           zIndex={2000}
-          onDismiss={() => doToDo()}
+          onDismiss={doToDo}
         />
       )}
     </div>

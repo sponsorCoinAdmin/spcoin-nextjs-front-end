@@ -12,24 +12,24 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
  * - AGENTS
  */
 export type RewardsMode =
-  | SP.PENDING_SPONSOR_COINS
-  | SP.PENDING_RECIPIENT_COINS
-  | SP.PENDING_AGENT_COINS
-  | SP.UNSPONSOR_SP_COINS;
+  | SP.SPONSOR_STATE
+  | SP.RECIPIENT_STATE
+  | SP.AGENT_STATE
+  | SP.UNSPONSOR_STATE;
 
 /** ✅ Radio group list for rewards selection */
 export const REWARDS_MODES: RewardsMode[] = [
-  SP.PENDING_SPONSOR_COINS,
-  SP.PENDING_RECIPIENT_COINS,
-  SP.PENDING_AGENT_COINS,
-  SP.UNSPONSOR_SP_COINS,
+  SP.SPONSOR_STATE,
+  SP.RECIPIENT_STATE,
+  SP.AGENT_STATE,
+  SP.UNSPONSOR_STATE,
 ];
 
 /** ✅ Pending claim flags */
 export const CLAIM_PENDING_PANELS: SP[] = [
-  SP.PENDING_SPONSOR_COINS,
-  SP.PENDING_RECIPIENT_COINS,
-  SP.PENDING_AGENT_COINS,
+  SP.SPONSOR_STATE,
+  SP.RECIPIENT_STATE,
+  SP.AGENT_STATE,
 ];
 
 /**
@@ -37,11 +37,11 @@ export const CLAIM_PENDING_PANELS: SP[] = [
  * Now the only "mode panels" are the PENDING_* panels and UNSPONSOR.
  */
 export function panelToRewardsMode(panel: SP): RewardsMode | null {
-  if (panel === SP.PENDING_SPONSOR_COINS) return SP.PENDING_SPONSOR_COINS;
-  if (panel === SP.PENDING_RECIPIENT_COINS) return SP.PENDING_RECIPIENT_COINS;
-  if (panel === SP.PENDING_AGENT_COINS) return SP.PENDING_AGENT_COINS;
+  if (panel === SP.SPONSOR_STATE) return SP.SPONSOR_STATE;
+  if (panel === SP.RECIPIENT_STATE) return SP.RECIPIENT_STATE;
+  if (panel === SP.AGENT_STATE) return SP.AGENT_STATE;
 
-  if (panel === SP.UNSPONSOR_SP_COINS) return SP.UNSPONSOR_SP_COINS;
+  if (panel === SP.UNSPONSOR_STATE) return SP.UNSPONSOR_STATE;
 
   return null;
 }
@@ -55,7 +55,7 @@ export function panelToRewardsMode(panel: SP): RewardsMode | null {
  * 2) Open selected mode
  * 3) Pending-claim flags (radio):
  *    - If selected mode is a PENDING_* panel: open it and close other PENDING_*
- *    - If selected mode is UNSPONSOR_SP_COINS: close ALL PENDING_* panels
+ *    - If selected mode is UNSPONSOR_STATE: close ALL PENDING_* panels
  * 4) Ensure ACCOUNT_LIST_REWARDS_PANEL is open (✅ but don't re-open if already visible)
  */
 export function openRewardsModeWithPanels(args: {
@@ -70,7 +70,7 @@ export function openRewardsModeWithPanels(args: {
   const ensureManagePending = args.ensureManagePending ?? true;
 
   const isPendingClaimMode =
-    mode === SP.PENDING_SPONSOR_COINS || mode === SP.PENDING_RECIPIENT_COINS || mode === SP.PENDING_AGENT_COINS;
+    mode === SP.SPONSOR_STATE || mode === SP.RECIPIENT_STATE || mode === SP.AGENT_STATE;
 
   // 0) Ensure Pending section is visible when selecting a pending-claim mode
   if (ensureManagePending && isPendingClaimMode) {

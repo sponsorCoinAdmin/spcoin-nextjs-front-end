@@ -60,10 +60,10 @@ const TRADING_CHILDREN: readonly SP[] = [
  * ACCOUNT_LIST_REWARDS_PANEL children (order matters)
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
-  SP.PENDING_SPONSOR_COINS,
-  SP.PENDING_RECIPIENT_COINS,
-  SP.PENDING_AGENT_COINS,
-  SP.UNSPONSOR_SP_COINS,
+  SP.SPONSOR_STATE,
+  SP.RECIPIENT_STATE,
+  SP.AGENT_STATE,
+  SP.UNSPONSOR_STATE,
 ] as const;
 
 /**
@@ -184,24 +184,24 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // ✅ Claim panels now have NO synthetic "mode child" panels
   def({
-    id: SP.PENDING_SPONSOR_COINS,
+    id: SP.SPONSOR_STATE,
     kind: 'panel',
     children: PENDING_SPONSOR_CHILDREN,
   }),
   def({
-    id: SP.PENDING_RECIPIENT_COINS,
+    id: SP.RECIPIENT_STATE,
     kind: 'panel',
     children: PENDING_RECIPIENT_CHILDREN,
   }),
   def({
-    id: SP.PENDING_AGENT_COINS,
+    id: SP.AGENT_STATE,
     kind: 'panel',
     children: PENDING_AGENT_CHILDREN,
   }),
 
   // ✅ Unstake panel now has no synthetic child panels
   def({
-    id: SP.UNSPONSOR_SP_COINS,
+    id: SP.UNSPONSOR_STATE,
     kind: 'panel',
     children: UNSPONSOR_CHILDREN,
   }),

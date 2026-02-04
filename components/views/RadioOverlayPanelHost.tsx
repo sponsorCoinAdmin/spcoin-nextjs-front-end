@@ -13,6 +13,7 @@ import {
 
 import { ErrorMessagePanel } from '@/components/views';
 
+import AccountPanel from '@/components/views/RadioOverlayPanels/AccountPanel';
 import ManageAgent from '@/components/views/RadioOverlayPanels/ManageAgent';
 import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
 import ManageSponsor from '@/components/views/RadioOverlayPanels/ManageSponsor';
@@ -42,6 +43,10 @@ export default function RadioOverlayPanelHost() {
       </PanelGate>
 
       {/* ───────────────────────── Detail overlays (must be mounted) ───────────────────────── */}
+      <PanelGate panel={SP_COIN_DISPLAY.ACCOUNT_PANEL}>
+        <AccountPanel />
+      </PanelGate>
+
       <PanelGate panel={SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL}>
         <ManageAgent />
       </PanelGate>

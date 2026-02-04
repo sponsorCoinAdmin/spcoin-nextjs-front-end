@@ -24,14 +24,14 @@ export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE |
       return undefined;
 
     // Sponsor list select sub-panels (if they should reuse existing feeds)
-    case SP_COIN_DISPLAY.PENDING_AGENT_COINS:
+    case SP_COIN_DISPLAY.AGENT_STATE:
       return FEED_TYPE.AGENT_ACCOUNTS;
 
-    case SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS:
+    case SP_COIN_DISPLAY.RECIPIENT_STATE:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
 
-    case SP_COIN_DISPLAY.PENDING_SPONSOR_COINS:
-    case SP_COIN_DISPLAY.UNSPONSOR_SP_COINS:
+    case SP_COIN_DISPLAY.SPONSOR_STATE:
+    case SP_COIN_DISPLAY.UNSPONSOR_STATE:
       return FEED_TYPE.SPONSOR_ACCOUNTS;
 
     // Trading overlays (if they show token lists)

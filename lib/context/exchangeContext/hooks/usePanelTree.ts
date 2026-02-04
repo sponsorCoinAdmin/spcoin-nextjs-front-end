@@ -258,10 +258,10 @@ export function usePanelTree() {
         SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
         // ✅ NEW children (sub-panels / modes)
-        SP_COIN_DISPLAY.UNSPONSOR_SP_COINS,
-        SP_COIN_DISPLAY.PENDING_SPONSOR_COINS,
-        SP_COIN_DISPLAY.PENDING_RECIPIENT_COINS,
-        SP_COIN_DISPLAY.PENDING_AGENT_COINS,
+        SP_COIN_DISPLAY.UNSPONSOR_STATE,
+        SP_COIN_DISPLAY.SPONSOR_STATE,
+        SP_COIN_DISPLAY.RECIPIENT_STATE,
+        SP_COIN_DISPLAY.AGENT_STATE,
       ]),
     }),
     [manageContainer, manageScoped],
