@@ -8,9 +8,6 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { MAIN_OVERLAY_GROUP, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
-// ✅ NEW: shared rewards radio logic (same as ManageSponsorshipsPanel)
-import { panelToRewardsMode, openRewardsModeWithPanels } from '@/lib/structure/exchangeContext/helpers/rewardsTreeActions';
-
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
 const SHOW_VIS = process.env.NEXT_PUBLIC_TREE_SHOW_VISIBILITY !== 'false';
@@ -112,7 +109,8 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
 
   // Find TRADE_CONTAINER_HEADER inside MAIN_TRADING_PANEL.children
   const idx = mainChildren.findIndex(
-    (c) => looksLikeVirtualPanelNode(c) && Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+    (c) =>
+      looksLikeVirtualPanelNode(c) && Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
   );
   if (idx < 0) return mainNode;
 
@@ -126,10 +124,25 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
   const tradeHeaderLeaf = { ...tradeHeader, children: [] };
 
   // MAIN children become: [ ...before, tradeHeaderLeaf, ...tradeKids, ...after ]
-  const nextChildren = [...mainChildren.slice(0, idx), tradeHeaderLeaf, ...tradeKids, ...mainChildren.slice(idx + 1)];
+  const nextChildren = [
+    ...mainChildren.slice(0, idx),
+    tradeHeaderLeaf,
+    ...tradeKids,
+    ...mainChildren.slice(idx + 1),
+  ];
 
   return { ...mainNode, children: nextChildren };
 }
+
+// ✅ ACCOUNT_PANEL “mode” nodes should behave like a radio group *when ACCOUNT_PANEL is visible*
+const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.ACTIVE_SPONSOR,
+  SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
+  SP_COIN_DISPLAY.ACTIVE_AGENT,
+] as const;
+
+const isAccountPanelMode = (id: number): id is (typeof ACCOUNT_PANEL_MODES)[number] =>
+  ACCOUNT_PANEL_MODES.some((m) => Number(m) === Number(id));
 
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   /**
@@ -145,7 +158,8 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    * ✅ GUI-only shaping of spCoinPanelTree (roots array).
    * If this Branch node is the "spCoinPanelTree" array, transform only the MAIN_TRADING_PANEL root.
    */
-  const guiValue = isArray && label === 'spCoinPanelTree' ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n)) : value;
+  const guiValue =
+    isArray && label === 'spCoinPanelTree' ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n)) : value;
 
   const isObject = guiValue !== null && typeof guiValue === 'object' && !isArray;
   const isBranch = isArray || isObject;
@@ -234,35 +248,32 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         const currentlyVisible = !!(guiValue as any).visible;
         const invoker = 'Branch:onRowClick(tree)';
 
-        if (!currentlyVisible) {
-          // ✅ Rewards subtree special behavior:
-          // Use the shared helper, BUT pass isVisible() so it won't re-open ACCOUNT_LIST_REWARDS_PANEL
-          // (prevents duplicate displayStack pushes when tree-clicking children).
-          const mode = panelToRewardsMode(panelId as any);
-          if (mode != null) {
-            openRewardsModeWithPanels({
-              mode,
-              openPanel: (id, reason) => openPanel(id as any, reason),
-              closePanel: (id, reason) => closePanel(id as any, reason),
-              reasonPrefix: 'TreePanel:openRewardsMode',
-              ensureManagePending: true,
-              isVisible: (id) => isVisible(id as any),
-            });
+        // If currently visible, clicking acts as a toggle OFF (allows "none" selected)
+        if (currentlyVisible) {
+          closePanel(panelId as any, invoker);
+          return;
+        }
 
-            // Keep GUI open so you can see the node you clicked + its children
-            ensureOpen(path);
-            ensureOpen(`${path}.children`);
-            return;
+        // ✅ ACCOUNT_PANEL mode radio behavior:
+        // If ACCOUNT_PANEL is visible, then ACTIVE_SPONSOR/ACTIVE_RECIPIENT/ACTIVE_AGENT are treated as a radio group here.
+        // This is context-aware and does NOT open ACCOUNT_LIST_REWARDS_PANEL.
+        const accountPanelVisible = isVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+        if (accountPanelVisible && isAccountPanelMode(panelId)) {
+          for (const m of ACCOUNT_PANEL_MODES) {
+            if (Number(m) !== Number(panelId)) {
+              closePanel(m as any, 'TreePanel:accountPanelMode:closeOther');
+            }
           }
-
-          // ✅ default behavior (non-rewards panels)
-          openPanel(panelId as any, invoker);
+          openPanel(panelId as any, 'TreePanel:accountPanelMode:openSelected');
           ensureOpen(path);
           ensureOpen(`${path}.children`);
-        } else {
-          // ✅ close only the clicked panel (consistent with existing tree behavior)
-          closePanel(panelId as any, invoker);
+          return;
         }
+
+        // ✅ default behavior (no rewards helper logic)
+        openPanel(panelId as any, invoker);
+        ensureOpen(path);
+        ensureOpen(`${path}.children`);
       } else if (hasEntries && !isDisplayStackContainer) {
         togglePath(path);
       }
@@ -363,7 +374,9 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         {label === 'id' && !SHOW_IDS ? null : (
           <>
             {`${label}(${guiValue}): `}
-            <span className="text-[#5981F3]">{typeof enumForKey[guiValue] === 'string' ? enumForKey[guiValue] : `[${guiValue}]`}</span>
+            <span className="text-[#5981F3]">
+              {typeof enumForKey[guiValue] === 'string' ? enumForKey[guiValue] : `[${guiValue}]`}
+            </span>
           </>
         )}
       </>

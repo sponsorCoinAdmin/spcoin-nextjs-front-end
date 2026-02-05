@@ -1,18 +1,12 @@
 // File: @/components/views/RadioOverlayPanels/AccountPanel/index.tsx
 'use client';
 
-import React, { useCallback, useContext, useMemo, useState } from 'react';
-import Image from 'next/image';
-import {
-  useRegisterHeaderLeft,
-  useRegisterHeaderTitle,
-} from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import React, { useCallback, useContext, useState } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageAccount from './ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 type Props = { onClose?: () => void };
 
@@ -24,36 +18,7 @@ export default function AccountPanel(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
   const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
-  const logoURL = sponsorWallet?.logoURL;
   const hasSponsor = !!sponsorWallet;
-
-  // ✅ Header title for ACCOUNT_PANEL
-  useRegisterHeaderTitle(
-    SP_COIN_DISPLAY.ACCOUNT_PANEL,
-    hasSponsor ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}` : 'Sponsor (none selected)',
-  );
-
-  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
-
-  // ✅ Left header logo for ACCOUNT_PANEL
-  useRegisterHeaderLeft(
-    SP_COIN_DISPLAY.ACCOUNT_PANEL,
-    useMemo(
-      () =>
-        () => (
-          <div className="relative h-10 w-10 shrink-0 m-0 -ml-2.5">
-            <Image
-              src={resolvedLogo}
-              alt="Sponsor Logo"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        ),
-      [resolvedLogo],
-    ),
-  );
 
   const [showToDo, setShowToDo] = useState<boolean>(false);
 

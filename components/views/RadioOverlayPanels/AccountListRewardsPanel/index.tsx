@@ -46,9 +46,9 @@ export type Props = {
 
 function isPendingPanel(p: SP_COIN_DISPLAY) {
   return (
-    p === SP_COIN_DISPLAY.SPONSOR_STATE ||
-    p === SP_COIN_DISPLAY.RECIPIENT_STATE ||
-    p === SP_COIN_DISPLAY.AGENT_STATE
+    p === SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS ||
+    p === SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS ||
+    p === SP_COIN_DISPLAY.PENDING_AGENT_REWARDS
   );
 }
 
@@ -60,12 +60,12 @@ export default function AccountListRewardsPanel({
   const ctx = useContext(ExchangeContextState);
 
   // ✅ Pending-mode flags (SSOT for mode)
-  const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_STATE);
-  const cfgClaimRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_STATE);
-  const cfgClaimSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_STATE);
+  const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS);
+  const cfgClaimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS);
+  const cfgClaimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS);
 
   // ✅ Unsponsor / Staked mode (SSOT for mode)
-  const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_STATE);
+  const showUnSponsorRow = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS);
 
   // ✅ Global chevron state (UI-only)
   const cfgChevronOpen: boolean = usePanelVisible(SP_COIN_DISPLAY.CHEVRON_DOWN_OPEN_PENDING);
@@ -83,10 +83,10 @@ export default function AccountListRewardsPanel({
    * Priority: UNSPONSOR > pending sponsor > pending recipient > pending agent > default.
    */
   const listType: SP_COIN_DISPLAY = useMemo(() => {
-    if (showUnSponsorRow) return SP_COIN_DISPLAY.UNSPONSOR_STATE;
-    if (cfgClaimSponsor) return SP_COIN_DISPLAY.SPONSOR_STATE;
-    if (cfgClaimRecipient) return SP_COIN_DISPLAY.RECIPIENT_STATE;
-    if (cfgClaimAgent) return SP_COIN_DISPLAY.AGENT_STATE;
+    if (showUnSponsorRow) return SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS;
+    if (cfgClaimSponsor) return SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS;
+    if (cfgClaimRecipient) return SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS;
+    if (cfgClaimAgent) return SP_COIN_DISPLAY.PENDING_AGENT_REWARDS;
     return SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
   }, [showUnSponsorRow, cfgClaimSponsor, cfgClaimRecipient, cfgClaimAgent]);
 
@@ -202,7 +202,7 @@ export default function AccountListRewardsPanel({
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
   const actionButtonLabel =
-    listType === SP_COIN_DISPLAY.UNSPONSOR_STATE ? 'Unsponsor' : isPendingPanel(listType) ? 'Claim' : 'Action';
+    listType === SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS ? 'Unsponsor' : isPendingPanel(listType) ? 'Claim' : 'Action';
 
   const actionButtonText = actionButtonLabel === 'Claim' ? 'Claim All' : actionButtonLabel;
 

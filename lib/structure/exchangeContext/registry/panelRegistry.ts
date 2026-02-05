@@ -60,24 +60,19 @@ const TRADING_CHILDREN: readonly SP[] = [
  * ACCOUNT_LIST_REWARDS_PANEL children (order matters)
  */
 const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
-  SP.SPONSOR_STATE,
-  SP.RECIPIENT_STATE,
-  SP.AGENT_STATE,
-  SP.UNSPONSOR_STATE,
+  SP.PENDING_SPONSOR_REWARDS,
+  SP.PENDING_RECIPIENT_REWARDS,
+  SP.PENDING_AGENT_REWARDS,
+  SP.ACTIVE_SPONSORSHIPS,
 ] as const;
 
 /**
  * ✅ ACCOUNT_PANEL children (order matters)
- *
- * NOTE:
- * These are the SAME state nodes already used under ACCOUNT_LIST_REWARDS_PANEL.
- * We only model the *structural* relationship here so the panel tree UI can show
- * them nested under ACCOUNT_PANEL as well.
  */
 const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
-  SP.SPONSOR_STATE,
-  SP.RECIPIENT_STATE,
-  SP.AGENT_STATE,
+  SP.ACTIVE_SPONSOR,
+  SP.ACTIVE_RECIPIENT,
+  SP.ACTIVE_AGENT,
 ] as const;
 
 /**
@@ -198,27 +193,32 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // ✅ Claim panels now have NO synthetic "mode child" panels
   def({
-    id: SP.SPONSOR_STATE,
+    id: SP.PENDING_SPONSOR_REWARDS,
     kind: 'panel',
     children: PENDING_SPONSOR_CHILDREN,
   }),
   def({
-    id: SP.RECIPIENT_STATE,
+    id: SP.PENDING_RECIPIENT_REWARDS,
     kind: 'panel',
     children: PENDING_RECIPIENT_CHILDREN,
   }),
   def({
-    id: SP.AGENT_STATE,
+    id: SP.PENDING_AGENT_REWARDS,
     kind: 'panel',
     children: PENDING_AGENT_CHILDREN,
   }),
 
   // ✅ Unstake panel now has no synthetic child panels
   def({
-    id: SP.UNSPONSOR_STATE,
+    id: SP.ACTIVE_SPONSORSHIPS,
     kind: 'panel',
     children: UNSPONSOR_CHILDREN,
   }),
+
+  // ✅ ACCOUNT_PANEL state children (active nodes)
+  def({ id: SP.ACTIVE_SPONSOR, kind: 'panel', children: [] }),
+  def({ id: SP.ACTIVE_RECIPIENT, kind: 'panel', children: [] }),
+  def({ id: SP.ACTIVE_AGENT, kind: 'panel', children: [] }),
 
   // Shared / detail overlays
   def({
@@ -333,5 +333,3 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-
-

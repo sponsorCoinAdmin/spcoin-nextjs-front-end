@@ -49,6 +49,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Select a Sponsor',
+
   // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())
   [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: 'Manage Recipient Account',
   [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
@@ -57,6 +58,9 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
 
   // Fallback label for the rewards panel (dynamic title computed in titleFor())
   [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: 'Pending Rewards Page',
+
+  // Fallback for account panel when no active child is visible
+  [SP_COIN_DISPLAY.ACCOUNT_PANEL]: 'Accounts',
 };
 
 function getRewardsHeaderTitle(
@@ -75,10 +79,32 @@ function getRewardsHeaderTitle(
   if (opts.claimRecipient) return `${label}'s Recipient Rewards`;
   if (opts.claimAgent) return `${label}'s Agent Rewards`;
 
-  // ✅ NEW: UNSPONSOR_STATE child-mode title
+  // ✅ NEW: ACTIVE_SPONSORSHIPS child-mode title
   if (opts.unSponsor) return 'Allocated Sponsorships';
 
   return 'Pending Rewards Page';
+}
+
+/**
+ * ✅ ACCOUNT_PANEL header title logic
+ */
+function getAccountsHeaderTitle(
+  opts: {
+    activeSponsor: boolean;
+    activeRecipient: boolean;
+    activeAgent: boolean;
+  },
+  name?: string,
+): string {
+  const n = (name ?? '').trim();
+  const label = n.length ? n : 'Sponsor Coin';
+
+  if (opts.activeSponsor) return `${label}'s Sponsor Account`;
+  if (opts.activeRecipient) return `${label}'s Recipient Account`;
+  if (opts.activeAgent) return `${label}'s Agent Account`;
+
+  // ✅ Default when ACCOUNT_PANEL is selected but no active child is visible
+  return `${label}'s Account`;
 }
 
 function titleFor(
@@ -89,10 +115,19 @@ function titleFor(
     claimAgent: boolean;
     unSponsor: boolean;
   },
+  accountsState?: {
+    activeSponsor: boolean;
+    activeRecipient: boolean;
+    activeAgent: boolean;
+  },
   manageName?: string,
 ): string {
   if (display === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL && rewardsState) {
     return getRewardsHeaderTitle(rewardsState, manageName);
+  }
+
+  if (display === SP_COIN_DISPLAY.ACCOUNT_PANEL && accountsState) {
+    return getAccountsHeaderTitle(accountsState, manageName);
   }
 
   // ✅ dynamic Manage Sponsorships title
@@ -127,10 +162,11 @@ const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
+  // ✅ Include ACCOUNT_PANEL in header selection priority
+  SP_COIN_DISPLAY.ACCOUNT_PANEL,
+
   SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
-
   SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-
   SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,
 ] as const;
@@ -141,7 +177,9 @@ export function useHeaderController() {
   // IMPORTANT: we need openPanel (not closePanel) for clicking the logo.
   const panelTree = usePanelTree();
   const openPanel =
-    (panelTree as any).openPanel ?? (panelTree as any).showPanel ?? (panelTree as any).setPanelVisible;
+    (panelTree as any).openPanel ??
+    (panelTree as any).showPanel ??
+    (panelTree as any).setPanelVisible;
   const closePanel = (panelTree as any).closePanel;
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -174,22 +212,34 @@ export function useHeaderController() {
   const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
-  const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
+  // ✅ ACCOUNT_PANEL visibility
+  const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
+  const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
 
   const error = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
   const trading = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
   // ✅ rewards-subpanel visibility used to compute dynamic header title
-  const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_STATE);
-  const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_STATE);
-  const claimAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_STATE);
-  const unSponsor = usePanelVisible(SP_COIN_DISPLAY.UNSPONSOR_STATE);
+  const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS);
+  const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS);
+  const claimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS);
+  const unSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS);
 
   const rewardsState = useMemo(
     () => ({ claimSponsor, claimRecipient, claimAgent, unSponsor }),
     [claimSponsor, claimRecipient, claimAgent, unSponsor],
+  );
+
+  // ✅ ACCOUNT_PANEL active sub-view visibility (dynamic title)
+  const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
+  const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
+  const activeAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
+
+  const accountsState = useMemo(
+    () => ({ activeSponsor, activeRecipient, activeAgent }),
+    [activeSponsor, activeRecipient, activeAgent],
   );
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
@@ -206,8 +256,9 @@ export function useHeaderController() {
       [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
       [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: sponsorList,
 
-      [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: staking,
+      [SP_COIN_DISPLAY.ACCOUNT_PANEL]: accountPanel,
 
+      [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: staking,
       [SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL]: manageHub,
 
       [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: error,
@@ -228,6 +279,7 @@ export function useHeaderController() {
     sponsorDetail,
     agentList,
     sponsorList,
+    accountPanel,
     staking,
     manageHub,
     error,
@@ -241,24 +293,26 @@ export function useHeaderController() {
     return titleFor(
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
       activeAccountName,
     );
-  }, [currentDisplay, rewardsState, activeAccountName]);
+  }, [currentDisplay, rewardsState, accountsState, activeAccountName]);
 
   /**
    * ✅ LEFT ELEMENT BEHAVIOR
    * - Overrides still win if registered.
-   * - For ACCOUNT_LIST_REWARDS_PANEL AND MANAGE_SPONSORSHIPS_PANEL:
-   *   show activeAccount logo as a clickable button that OPENS SPONSOR_ACCOUNT_PANEL.
+   * - For ACCOUNT_LIST_REWARDS_PANEL AND ACCOUNT_PANEL AND MANAGE_SPONSORSHIPS_PANEL:
+   *   show activeAccount logo as a clickable button that OPENS ACCOUNT_PANEL.
    *
    * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
    */
-  const leftElement = useMemo(() => {
+    const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();
 
     const showActiveLogo =
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ||
       currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
     if (!showActiveLogo) return null;
@@ -266,34 +320,39 @@ export function useHeaderController() {
 
     const sizePx = 38;
 
+    const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
+
     return React.createElement(
       'button',
       {
         type: 'button',
-        className: 'bg-transparent p-0 m-0 hover:opacity-90 focus:outline-none',
-        'aria-label': 'Open Sponsor Account',
+        className: `bg-transparent p-0 m-0 focus:outline-none ${isAccountPanelActive ? '' : 'hover:opacity-90'}`,
+        'aria-label': isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
         'data-role': 'ActiveAccount',
         'data-address': activeAccountAddress ?? '',
-        onClick: () => {
-          suppressNextOverlayClose('Header:ActiveLogo->SponsorAccount', 'HeaderController');
+        disabled: isAccountPanelActive,
+        onClick: isAccountPanelActive
+          ? undefined
+          : () => {
+              suppressNextOverlayClose('Header:ActiveLogo->AccountPanel', 'HeaderController');
 
-          if (typeof openPanel === 'function') {
-            try {
-              openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, 'Header:ActiveLogoClick');
-              return;
-            } catch {}
+              if (typeof openPanel === 'function') {
+                try {
+                  openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
+                  return;
+                } catch {}
 
-            try {
-              openPanel(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, true, 'Header:ActiveLogoClick');
-              return;
-            } catch {}
+                try {
+                  openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, true, 'Header:ActiveLogoClick');
+                  return;
+                } catch {}
 
-            try {
-              openPanel({ panel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL, visible: true });
-              return;
-            } catch {}
-          }
-        },
+                try {
+                  openPanel({ panel: SP_COIN_DISPLAY.ACCOUNT_PANEL, visible: true });
+                  return;
+                } catch {}
+              }
+            },
       },
       React.createElement('img', {
         src: activeAccountLogoURL,
@@ -302,7 +361,9 @@ export function useHeaderController() {
         height: sizePx,
         loading: 'lazy',
         decoding: 'async',
-        className: 'h-[38px] w-[38px] object-contain rounded bg-transparent',
+        className: `h-[38px] w-[38px] object-contain rounded bg-transparent ${
+          isAccountPanelActive ? 'cursor-default' : 'cursor-pointer'
+        }`,
       }),
     );
   }, [currentDisplay, activeAccountLogoURL, activeAccountAddress, openPanel]);
@@ -319,7 +380,6 @@ export function useHeaderController() {
         e?.stopPropagation?.();
       } catch {}
 
-      // keep your original close behavior
       if (typeof closePanel === 'function') {
         closePanel('HeaderController:onClose(pop)', e as any);
       }

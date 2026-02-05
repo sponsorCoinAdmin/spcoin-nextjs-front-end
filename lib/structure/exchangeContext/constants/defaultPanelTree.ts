@@ -44,6 +44,11 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.TOKEN_LIST_SELECT_PANEL, false],
   [SP.ACCOUNT_PANEL, false],
 
+  // ✅ Ensure ACCOUNT_PANEL children exist even for older persisted trees
+  [SP.ACTIVE_SPONSOR, false],
+  [SP.ACTIVE_RECIPIENT, false],
+  [SP.ACTIVE_AGENT, false],
+
   // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
   [SP.TOKEN_CONTRACT_PANEL, false],
 
@@ -91,17 +96,17 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ✅ Account list rewards (parent) + pending/unstake nodes
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
-        node(SP.SPONSOR_STATE, false),
-        node(SP.RECIPIENT_STATE, false),
-        node(SP.AGENT_STATE, false),
-        node(SP.UNSPONSOR_STATE, false),
+        node(SP.PENDING_SPONSOR_REWARDS, false),
+        node(SP.PENDING_RECIPIENT_REWARDS, false),
+        node(SP.PENDING_AGENT_REWARDS, false),
+        node(SP.ACTIVE_SPONSORSHIPS, false),
       ]),
 
-      // ✅ ACCOUNT_PANEL should show mode children in the tree
+      // ✅ FIX: ACCOUNT_PANEL should show ACTIVE_* children in the tree
       node(SP.ACCOUNT_PANEL, false, [
-        node(SP.SPONSOR_STATE, false),
-        node(SP.RECIPIENT_STATE, false),
-        node(SP.AGENT_STATE, false),
+        node(SP.ACTIVE_SPONSOR, false),
+        node(SP.ACTIVE_RECIPIENT, false),
+        node(SP.ACTIVE_AGENT, false),
       ]),
 
       // Shared / detail overlays

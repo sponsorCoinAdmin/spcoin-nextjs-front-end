@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v10';
+export const schemaVersion = 'v11';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -74,24 +74,29 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
-    SPCD.SPONSOR_STATE,
-    SPCD.RECIPIENT_STATE,
-    SPCD.AGENT_STATE,
-    SPCD.UNSPONSOR_STATE,
+    SPCD.PENDING_SPONSOR_REWARDS,
+    SPCD.PENDING_RECIPIENT_REWARDS,
+    SPCD.PENDING_AGENT_REWARDS,
+    SPCD.ACTIVE_SPONSORSHIPS,
   ],
 
-  // ✅ ACCOUNT_PANEL should also expose the state children in the panel tree
+  // ✅ FIX: ACCOUNT_PANEL desired subtree:
   [SPCD.ACCOUNT_PANEL]: [
-    SPCD.SPONSOR_STATE,
-    SPCD.RECIPIENT_STATE,
-    SPCD.AGENT_STATE,
+    SPCD.ACTIVE_SPONSOR,
+    SPCD.ACTIVE_RECIPIENT,
+    SPCD.ACTIVE_AGENT,
   ],
 
-  // ✅ No synthetic "mode selector" children anymore
-  [SPCD.SPONSOR_STATE]: [],
-  [SPCD.RECIPIENT_STATE]: [],
-  [SPCD.AGENT_STATE]: [],
-  [SPCD.UNSPONSOR_STATE]: [],
+  // ✅ Leaf nodes
+  [SPCD.PENDING_SPONSOR_REWARDS]: [],
+  [SPCD.PENDING_RECIPIENT_REWARDS]: [],
+  [SPCD.PENDING_AGENT_REWARDS]: [],
+  [SPCD.ACTIVE_SPONSORSHIPS]: [],
+
+  // ✅ NEW leaf nodes under ACCOUNT_PANEL
+  [SPCD.ACTIVE_SPONSOR]: [],
+  [SPCD.ACTIVE_RECIPIENT]: [],
+  [SPCD.ACTIVE_AGENT]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -123,11 +128,16 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
-  // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL / ACCOUNT_PANEL
-  [SPCD.SPONSOR_STATE]: 'panel',
-  [SPCD.RECIPIENT_STATE]: 'panel',
-  [SPCD.AGENT_STATE]: 'panel',
-  [SPCD.UNSPONSOR_STATE]: 'panel',
+  // ✅ Sub-panels under ACCOUNT_LIST_REWARDS_PANEL
+  [SPCD.PENDING_SPONSOR_REWARDS]: 'panel',
+  [SPCD.PENDING_RECIPIENT_REWARDS]: 'panel',
+  [SPCD.PENDING_AGENT_REWARDS]: 'panel',
+  [SPCD.ACTIVE_SPONSORSHIPS]: 'panel',
+
+  // ✅ NEW: ACCOUNT_PANEL children kinds
+  [SPCD.ACTIVE_SPONSOR]: 'panel',
+  [SPCD.ACTIVE_RECIPIENT]: 'panel',
+  [SPCD.ACTIVE_AGENT]: 'panel',
 
   // ✅ Shared + Manage DETAIL views
   [SPCD.ACCOUNT_PANEL]: 'panel',
@@ -176,12 +186,17 @@ export const GROUPS = {
     SPCD.AGENT_LIST_SELECT_PANEL,
 
     // ✅ Rewards sub-panels
-    SPCD.SPONSOR_STATE,
-    SPCD.RECIPIENT_STATE,
-    SPCD.AGENT_STATE,
-    SPCD.UNSPONSOR_STATE,
+    SPCD.PENDING_SPONSOR_REWARDS,
+    SPCD.PENDING_RECIPIENT_REWARDS,
+    SPCD.PENDING_AGENT_REWARDS,
+    SPCD.ACTIVE_SPONSORSHIPS,
 
-    // ✅ Account panel also exposes the same state children
+    // ✅ Account panel state children (new)
+    SPCD.ACTIVE_SPONSOR,
+    SPCD.ACTIVE_RECIPIENT,
+    SPCD.ACTIVE_AGENT,
+
+    // ✅ Account panel node
     SPCD.ACCOUNT_PANEL,
 
     // Shared + detail panels

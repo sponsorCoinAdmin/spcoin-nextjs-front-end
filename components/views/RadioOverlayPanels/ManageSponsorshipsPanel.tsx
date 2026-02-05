@@ -18,9 +18,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useManageSponsorships } from './AccountPanel/hooks/useManageSponsorships';
 import { msTableTw } from './msTableTw';
 
-// ✅ Centralized rewards selection logic (shared with Tree Panel)
-import { type RewardsMode, openRewardsModeWithPanels } from '@/lib/structure/exchangeContext/helpers/rewardsTreeActions';
-
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORSHIPS === 'true';
 const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
@@ -29,6 +26,13 @@ type Props = { onClose?: () => void };
 
 // ✅ fixed left column width ONLY (others flex)
 const COL_0_WIDTH = '105px';
+
+// ✅ Rewards modes supported by this panel
+type RewardsMode =
+  | SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS
+  | SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS
+  | SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS
+  | SP_COIN_DISPLAY.PENDING_AGENT_REWARDS;
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const ctx = useContext(ExchangeContextState);
@@ -61,22 +65,49 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     [openPanel],
   );
 
-  // ✅ Rewards mode is now PENDING_*_COINS (plus UNSPONSOR_STATE).
+  /**
+   * ✅ Rewards mode switching (inlined; replaces rewardsTreeActions.openRewardsModeWithPanels)
+   * Opens ACCOUNT_LIST_REWARDS_PANEL, then opens the selected rewards subpanel
+   * while closing the others so only one mode is active.
+   */
   const openRewardsMode = useCallback(
     (mode: RewardsMode) => {
       debugLog.log?.('openRewardsMode', { mode: SP_COIN_DISPLAY[mode] });
 
-      openRewardsModeWithPanels({
-        mode,
-        openPanel: (id, reason) => openPanel(id as any, reason),
-        closePanel: (id, reason) => closePanel(id as any, reason),
-        reasonPrefix: 'ManageSponsorshipsPanel:openRewardsMode',
-        ensureManagePending: true,
-        // Optional: if you have a visibility hook handy later, pass it here to avoid duplicate pushes.
-        // isVisible: (id) => usePanelVisible(id) <-- can't call hooks here; keep undefined.
-      });
+      const reasonPrefix = 'ManageSponsorshipsPanel:openRewardsMode';
+      const reason = (msg: string) => `${reasonPrefix}:${msg}`;
+
+      // 1) Ensure the rewards "parent" panel is open
+      openPanel(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL, reason('open(ACCOUNT_LIST_REWARDS_PANEL)'));
+
+      // 2) Close all reward sub-panels first (so only one mode is active)
+      const allModes: RewardsMode[] = [
+        SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
+        SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
+        SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
+        SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
+      ];
+
+      for (const m of allModes) {
+        if (m !== mode) {
+          closePanel(m, reason(`close(${SP_COIN_DISPLAY[m]})`));
+        }
+      }
+
+      // 3) Open the selected mode
+      openPanel(mode, reason(`open(${SP_COIN_DISPLAY[mode]})`));
+
+      // 4) If choosing a pending mode, ensure the "Pending Rewards by Account Type" group is expanded
+      const isPendingMode =
+        mode === SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS ||
+        mode === SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS ||
+        mode === SP_COIN_DISPLAY.PENDING_AGENT_REWARDS;
+
+      if (isPendingMode && !pendingVisible) {
+        openPanel(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS, reason('open(MANAGE_PENDING_REWARDS)'));
+      }
     },
-    [openPanel, closePanel],
+    [openPanel, closePanel, pendingVisible],
   );
 
   /**
@@ -205,7 +236,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                   <button
                     type="button"
                     className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap} ${leftAlignedLinkBtn}`}
-                    onClick={() => openRewardsMode(SP_COIN_DISPLAY.UNSPONSOR_STATE)}
+                    onClick={() => openRewardsMode(SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS)}
                     aria-label="Open Staked list"
                     title="Manage SpCoin Contracts."
                   >
@@ -305,7 +336,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.SPONSOR_STATE)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS)}
                         aria-label="Open Claim Sponsors Rewards panel"
                         title="Available Sponsor Rewards"
                       >
@@ -339,7 +370,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.RECIPIENT_STATE)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS)}
                         aria-label="Open Claim Recipients Rewards panel"
                         title="Available Recipient Rewards"
                       >
@@ -373,7 +404,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                       <button
                         type="button"
                         className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap}`}
-                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.AGENT_STATE)}
+                        onClick={() => openRewardsMode(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS)}
                         aria-label="Open Claim Agents Rewards panel"
                         title="Available Agent Rewards"
                       >

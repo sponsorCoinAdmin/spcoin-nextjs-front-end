@@ -148,9 +148,7 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
     ids.push(Number(item));
   }
 
-  return ids
-    .filter((x) => Number.isFinite(x))
-    .map((x) => x as SP_COIN_DISPLAY);
+  return ids.filter((x) => Number.isFinite(x)).map((x) => x as SP_COIN_DISPLAY);
 };
 
 export function usePanelTree() {
@@ -179,32 +177,37 @@ export function usePanelTree() {
   }, [exchangeContext]);
 
   // ✅ Hydration repair: ensure newly-added panels exist in persisted flat tree
-  // Without this, older persisted spCoinPanelTree snapshots will never include TOKEN_CONTRACT_PANEL,
-  // so it won't participate in visibilityMap/radio/stack behavior.
+  // Without this, older persisted spCoinPanelTree snapshots will never include newer panels,
+  // so they won't participate in visibilityMap/radio/stack behavior.
   useEffect(() => {
     const tree = (exchangeContext as any)?.settings?.spCoinPanelTree;
 
     // If there's no persisted tree yet, don't repair here (defaults/boot seeding handles it)
     if (!Array.isArray(tree)) return;
 
-    // If already present, noop
-    if (
-      list.some(
-        (e) =>
-          Number(e.panel) === Number(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL),
-      )
-    ) {
-      return;
-    }
+    const REQUIRED = [
+      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+      SP_COIN_DISPLAY.ACTIVE_SPONSOR,
+      SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
+      SP_COIN_DISPLAY.ACTIVE_AGENT,
+    ];
 
-    // Repair persisted tree by injecting the missing panel (default visible=false)
+    // If already present, noop
+    const hasAll = REQUIRED.every((p) =>
+      list.some((e) => Number(e.panel) === Number(p)),
+    );
+    if (hasAll) return;
+
+    // Repair persisted tree by injecting missing panels (default visible=false)
     try {
       (setExchangeContext as any)(
         (prev: any) => {
           const flat0 = flattenPanelTree(prev?.settings?.spCoinPanelTree, KNOWN);
           let next = flat0;
 
-          next = ensurePanelPresent(next, SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
+          for (const p of REQUIRED) {
+            next = ensurePanelPresent(next, p);
+          }
 
           // noop if nothing changed
           if (next.length === flat0.length) return prev;
@@ -214,10 +217,10 @@ export function usePanelTree() {
         'usePanelTree:repairPersistedTree',
       );
     } catch {
-      // Fallback: use local safe wrapper below if the context setter rejects direct calls
-      // (This should be rare, but keeps repair robust.)
       // eslint-disable-next-line no-console
-      console.warn('[usePanelTree] repairPersistedTree failed via direct set; will retry via safe wrapper.');
+      console.warn(
+        '[usePanelTree] repairPersistedTree failed via direct set; will retry via safe wrapper.',
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchangeContext, list]);
@@ -258,10 +261,10 @@ export function usePanelTree() {
         SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
         // ✅ NEW children (sub-panels / modes)
-        SP_COIN_DISPLAY.UNSPONSOR_STATE,
-        SP_COIN_DISPLAY.SPONSOR_STATE,
-        SP_COIN_DISPLAY.RECIPIENT_STATE,
-        SP_COIN_DISPLAY.AGENT_STATE,
+        SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
+        SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
+        SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
+        SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
       ]),
     }),
     [manageContainer, manageScoped],
