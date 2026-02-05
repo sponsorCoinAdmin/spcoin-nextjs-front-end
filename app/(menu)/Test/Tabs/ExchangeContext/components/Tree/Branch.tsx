@@ -144,6 +144,17 @@ const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
 const isAccountPanelMode = (id: number): id is (typeof ACCOUNT_PANEL_MODES)[number] =>
   ACCOUNT_PANEL_MODES.some((m) => Number(m) === Number(id));
 
+// ✅ Rewards group nodes should behave like a radio group (or none selected)
+const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
+  SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
+  SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
+  SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
+] as const;
+
+const isRewardsGroupMode = (id: number): id is (typeof REWARDS_GROUP_MODES)[number] =>
+  REWARDS_GROUP_MODES.some((m) => Number(m) === Number(id));
+
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   /**
    * ✅ Contract:
@@ -256,7 +267,6 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
 
         // ✅ ACCOUNT_PANEL mode radio behavior:
         // If ACCOUNT_PANEL is visible, then ACTIVE_SPONSOR/ACTIVE_RECIPIENT/ACTIVE_AGENT are treated as a radio group here.
-        // This is context-aware and does NOT open ACCOUNT_LIST_REWARDS_PANEL.
         const accountPanelVisible = isVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
         if (accountPanelVisible && isAccountPanelMode(panelId)) {
           for (const m of ACCOUNT_PANEL_MODES) {
@@ -270,7 +280,22 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           return;
         }
 
-        // ✅ default behavior (no rewards helper logic)
+        // ✅ REWARDS GROUP radio behavior (the 4 panels):
+        // If one is being opened, close the other 3 first, then open the selected one.
+        // If the selected one is already visible, clicking toggles it OFF (handled above).
+        if (isRewardsGroupMode(panelId)) {
+          for (const m of REWARDS_GROUP_MODES) {
+            if (Number(m) !== Number(panelId)) {
+              closePanel(m as any, 'TreePanel:rewardsGroupMode:closeOther');
+            }
+          }
+          openPanel(panelId as any, 'TreePanel:rewardsGroupMode:openSelected');
+          ensureOpen(path);
+          ensureOpen(`${path}.children`);
+          return;
+        }
+
+        // ✅ default behavior
         openPanel(panelId as any, invoker);
         ensureOpen(path);
         ensureOpen(`${path}.children`);

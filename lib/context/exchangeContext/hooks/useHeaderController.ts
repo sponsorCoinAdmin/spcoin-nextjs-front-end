@@ -302,11 +302,17 @@ export function useHeaderController() {
    * ✅ LEFT ELEMENT BEHAVIOR
    * - Overrides still win if registered.
    * - For ACCOUNT_LIST_REWARDS_PANEL AND ACCOUNT_PANEL AND MANAGE_SPONSORSHIPS_PANEL:
-   *   show activeAccount logo as a clickable button that OPENS ACCOUNT_PANEL.
+   *   show activeAccount logo as a clickable button.
+   *
+   * Rules:
+   * - If ACCOUNT_PANEL is active: do nothing.
+   * - If ACCOUNT_LIST_REWARDS_PANEL is active: open an ACTIVE_* panel based on the rewards child mode,
+   *   then open ACCOUNT_PANEL.
+   * - Otherwise (e.g. MANAGE_SPONSORSHIPS_PANEL): open ACCOUNT_PANEL.
    *
    * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
    */
-    const leftElement = useMemo(() => {
+  const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();
 
@@ -336,22 +342,24 @@ export function useHeaderController() {
           : () => {
               suppressNextOverlayClose('Header:ActiveLogo->AccountPanel', 'HeaderController');
 
-              if (typeof openPanel === 'function') {
-                try {
-                  openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
-                  return;
-                } catch {}
+              // If we're in rewards overlay, pre-select the correct ACTIVE_* mode before opening ACCOUNT_PANEL.
+              if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
+                const modeToOpen =
+                  unSponsor || claimSponsor
+                    ? SP_COIN_DISPLAY.ACTIVE_SPONSOR
+                    : claimRecipient
+                      ? SP_COIN_DISPLAY.ACTIVE_RECIPIENT
+                      : claimAgent
+                        ? SP_COIN_DISPLAY.ACTIVE_AGENT
+                        : null;
 
-                try {
-                  openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, true, 'Header:ActiveLogoClick');
-                  return;
-                } catch {}
-
-                try {
-                  openPanel({ panel: SP_COIN_DISPLAY.ACCOUNT_PANEL, visible: true });
-                  return;
-                } catch {}
+                if (modeToOpen != null) {
+                  openPanel(modeToOpen, 'Header:ActiveLogoClick:preselectAccountMode');
+                }
               }
+
+              // ✅ No fallbacks: single, canonical call
+              openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
             },
       },
       React.createElement('img', {
@@ -366,7 +374,17 @@ export function useHeaderController() {
         }`,
       }),
     );
-  }, [currentDisplay, activeAccountLogoURL, activeAccountAddress, openPanel]);
+  }, [
+    currentDisplay,
+    activeAccountLogoURL,
+    activeAccountAddress,
+    openPanel,
+    // rewards child flags used for mapping
+    claimSponsor,
+    claimRecipient,
+    claimAgent,
+    unSponsor,
+  ]);
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
