@@ -1,7 +1,7 @@
 // File: @/lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -79,7 +79,6 @@ function getRewardsHeaderTitle(
   if (opts.claimRecipient) return `${label}'s Recipient Rewards`;
   if (opts.claimAgent) return `${label}'s Agent Rewards`;
 
-  // ✅ NEW: ACTIVE_SPONSORSHIPS child-mode title
   if (opts.unSponsor) return 'Allocated Sponsorships';
 
   return 'Pending Rewards Page';
@@ -103,7 +102,6 @@ function getAccountsHeaderTitle(
   if (opts.activeRecipient) return `${label}'s Recipient Account`;
   if (opts.activeAgent) return `${label}'s Agent Account`;
 
-  // ✅ Default when ACCOUNT_PANEL is selected but no active child is visible
   return `${label}'s Account`;
 }
 
@@ -130,7 +128,6 @@ function titleFor(
     return getAccountsHeaderTitle(accountsState, manageName);
   }
 
-  // ✅ dynamic Manage Sponsorships title
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
     const n = (manageName ?? '').trim();
     const label = n.length ? n : 'Sponsor Coin';
@@ -162,7 +159,6 @@ const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
-  // ✅ Include ACCOUNT_PANEL in header selection priority
   SP_COIN_DISPLAY.ACCOUNT_PANEL,
 
   SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL,
@@ -173,25 +169,37 @@ const DISPLAY_PRIORITY = [
 
 type PriorityDisplay = (typeof DISPLAY_PRIORITY)[number];
 
+type RewardsRoleMode = 'sponsor' | 'recipient' | 'agent' | 'none';
+
+function deriveRewardsRoleMode(opts: {
+  unSponsor: boolean;
+  claimSponsor: boolean;
+  claimRecipient: boolean;
+  claimAgent: boolean;
+}): RewardsRoleMode {
+  if (opts.unSponsor || opts.claimSponsor) return 'sponsor';
+  if (opts.claimRecipient) return 'recipient';
+  if (opts.claimAgent) return 'agent';
+  return 'none';
+}
+
 export function useHeaderController() {
-  // IMPORTANT: we need openPanel (not closePanel) for clicking the logo.
   const panelTree = usePanelTree();
-  const openPanel =
-    (panelTree as any).openPanel ??
-    (panelTree as any).showPanel ??
-    (panelTree as any).setPanelVisible;
+  const openPanel = (panelTree as any).openPanel;
   const closePanel = (panelTree as any).closePanel;
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // ✅ ExchangeContext access (for activeAccount.logoURL + address + name)
+  // ✅ ExchangeContext access (for activeAccount + writable accounts fields)
   const exchangeCtx = useContext(ExchangeContextState);
-  const activeAccount = exchangeCtx?.exchangeContext?.accounts?.activeAccount;
+  const exchangeContext = (exchangeCtx as any)?.exchangeContext;
+  const setExchangeContext = (exchangeCtx as any)?.setExchangeContext;
+
+  const activeAccount = exchangeContext?.accounts?.activeAccount;
 
   const activeAccountLogoURL = activeAccount?.logoURL;
   const activeAccountAddress = activeAccount?.address;
 
-  // Try common name fields (adjust if your model uses a different key)
   const activeAccountName =
     (activeAccount as any)?.name ??
     (activeAccount as any)?.accountName ??
@@ -212,7 +220,6 @@ export function useHeaderController() {
   const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
-  // ✅ ACCOUNT_PANEL visibility
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
@@ -221,7 +228,7 @@ export function useHeaderController() {
   const error = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
   const trading = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
-  // ✅ rewards-subpanel visibility used to compute dynamic header title
+  // ✅ rewards-subpanel visibility (children of ACCOUNT_LIST_REWARDS_PANEL)
   const claimSponsor = usePanelVisible(SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS);
   const claimRecipient = usePanelVisible(SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS);
   const claimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS);
@@ -241,6 +248,119 @@ export function useHeaderController() {
     () => ({ activeSponsor, activeRecipient, activeAgent }),
     [activeSponsor, activeRecipient, activeAgent],
   );
+
+  /**
+   * ✅ Populate accounts.sponsorAccount / recipientAccount / agentAccount
+   * AND force a reload when the rewards "role mode" changes.
+   *
+   * Role mode rules:
+   * - ACTIVE_SPONSORSHIPS OR PENDING_SPONSOR_REWARDS -> sponsor mode
+   * - PENDING_RECIPIENT_REWARDS -> recipient mode
+   * - PENDING_AGENT_REWARDS -> agent mode
+   */
+  const lastRewardsRoleModeRef = useRef<RewardsRoleMode>('none');
+
+  useEffect(() => {
+    if (typeof setExchangeContext !== 'function') return;
+    if (!activeAccount) return;
+
+    const nextMode = deriveRewardsRoleMode({
+      unSponsor,
+      claimSponsor,
+      claimRecipient,
+      claimAgent,
+    });
+
+    // If none of the modes are active, do nothing (don’t stomp selections)
+    if (nextMode === 'none') return;
+
+    const prevMode = lastRewardsRoleModeRef.current;
+
+    // ✅ Only "reload" on *mode changes* after the initial mode is established.
+    const modeChanged = prevMode !== 'none' && prevMode !== nextMode;
+
+    // update ref immediately to avoid double-trigger on rapid flips
+    lastRewardsRoleModeRef.current = nextMode;
+
+    setExchangeContext(
+      (prev: any) => {
+        const prevEx = prev?.exchangeContext ?? prev;
+        const prevAccounts = prevEx?.accounts ?? {};
+
+        const nextSponsor = nextMode === 'sponsor' ? activeAccount : undefined;
+        const nextRecipient = nextMode === 'recipient' ? activeAccount : undefined;
+        const nextAgent = nextMode === 'agent' ? activeAccount : undefined;
+
+        const curSponsorAddr = prevAccounts?.sponsorAccount?.address ?? null;
+        const curRecipientAddr = prevAccounts?.recipientAccount?.address ?? null;
+        const curAgentAddr = prevAccounts?.agentAccount?.address ?? null;
+
+        const nextSponsorAddr = nextSponsor?.address ?? null;
+        const nextRecipientAddr = nextRecipient?.address ?? null;
+        const nextAgentAddr = nextAgent?.address ?? null;
+
+        const roleAccountsUnchanged =
+          curSponsorAddr === nextSponsorAddr &&
+          curRecipientAddr === nextRecipientAddr &&
+          curAgentAddr === nextAgentAddr;
+
+        const nextReloadNonce = modeChanged ? Number(prevAccounts?.reloadNonce ?? 0) + 1 : prevAccounts?.reloadNonce;
+
+        // No-op if already in desired state and no reload needed
+        if (roleAccountsUnchanged && !modeChanged) return prev;
+
+        const writeAccounts = {
+          ...prevAccounts,
+          activeAccount: prevAccounts.activeAccount ?? activeAccount,
+          sponsorAccount: nextSponsor,
+          recipientAccount: nextRecipient,
+          agentAccount: nextAgent,
+          ...(modeChanged ? { reloadNonce: nextReloadNonce } : null),
+        };
+
+        if (prev?.exchangeContext) {
+          return {
+            ...prev,
+            exchangeContext: {
+              ...prev.exchangeContext,
+              accounts: writeAccounts,
+            },
+          };
+        }
+
+        return {
+          ...prev,
+          accounts: writeAccounts,
+          activeAccount: prevAccounts.activeAccount ?? activeAccount,
+        };
+      },
+      'useHeaderController:setRoleAccountFromRewardsMode',
+    );
+
+    // ✅ Best-effort reload hooks if your accounts model exposes one
+    if (modeChanged) {
+      try {
+        exchangeContext?.accounts?.reload?.('rewardsModeChanged');
+      } catch {}
+      try {
+        exchangeContext?.accounts?.reloadAccounts?.('rewardsModeChanged');
+      } catch {}
+      try {
+        exchangeContext?.accounts?.refresh?.('rewardsModeChanged');
+      } catch {}
+      try {
+        exchangeContext?.accounts?.refreshAccounts?.('rewardsModeChanged');
+      } catch {}
+    }
+  }, [
+    setExchangeContext,
+    exchangeContext,
+    activeAccount,
+    unSponsor,
+    claimSponsor,
+    claimRecipient,
+    claimAgent,
+  ]);
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
@@ -300,14 +420,10 @@ export function useHeaderController() {
 
   /**
    * ✅ LEFT ELEMENT BEHAVIOR
-   * - Overrides still win if registered.
-   * - For ACCOUNT_LIST_REWARDS_PANEL AND ACCOUNT_PANEL AND MANAGE_SPONSORSHIPS_PANEL:
-   *   show activeAccount logo as a clickable button.
    *
    * Rules:
    * - If ACCOUNT_PANEL is active: do nothing.
-   * - If ACCOUNT_LIST_REWARDS_PANEL is active: open an ACTIVE_* panel based on the rewards child mode,
-   *   then open ACCOUNT_PANEL.
+   * - If ACCOUNT_LIST_REWARDS_PANEL is active: open ACTIVE_* based on rewards child mode, then open ACCOUNT_PANEL.
    * - Otherwise (e.g. MANAGE_SPONSORSHIPS_PANEL): open ACCOUNT_PANEL.
    *
    * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
@@ -325,7 +441,6 @@ export function useHeaderController() {
     if (!activeAccountLogoURL) return null;
 
     const sizePx = 38;
-
     const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
 
     return React.createElement(
@@ -342,7 +457,6 @@ export function useHeaderController() {
           : () => {
               suppressNextOverlayClose('Header:ActiveLogo->AccountPanel', 'HeaderController');
 
-              // If we're in rewards overlay, pre-select the correct ACTIVE_* mode before opening ACCOUNT_PANEL.
               if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
                 const modeToOpen =
                   unSponsor || claimSponsor
@@ -358,7 +472,6 @@ export function useHeaderController() {
                 }
               }
 
-              // ✅ No fallbacks: single, canonical call
               openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
             },
       },
@@ -379,7 +492,6 @@ export function useHeaderController() {
     activeAccountLogoURL,
     activeAccountAddress,
     openPanel,
-    // rewards child flags used for mapping
     claimSponsor,
     claimRecipient,
     claimAgent,
