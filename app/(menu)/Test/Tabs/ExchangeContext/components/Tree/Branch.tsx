@@ -110,7 +110,8 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
   // Find TRADE_CONTAINER_HEADER inside MAIN_TRADING_PANEL.children
   const idx = mainChildren.findIndex(
     (c) =>
-      looksLikeVirtualPanelNode(c) && Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
+      looksLikeVirtualPanelNode(c) &&
+      Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
   );
   if (idx < 0) return mainNode;
 
@@ -134,34 +135,16 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
   return { ...mainNode, children: nextChildren };
 }
 
-// ✅ ACCOUNT_PANEL “mode” nodes should behave like a radio group *when ACCOUNT_PANEL is visible*
-const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.ACTIVE_SPONSOR,
-  SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
-  SP_COIN_DISPLAY.ACTIVE_AGENT,
-] as const;
-
-const isAccountPanelMode = (id: number): id is (typeof ACCOUNT_PANEL_MODES)[number] =>
-  ACCOUNT_PANEL_MODES.some((m) => Number(m) === Number(id));
-
-// ✅ Rewards group nodes should behave like a radio group (or none selected)
-const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
-  SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
-  SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
-  SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
-] as const;
-
-const isRewardsGroupMode = (id: number): id is (typeof REWARDS_GROUP_MODES)[number] =>
-  REWARDS_GROUP_MODES.some((m) => Number(m) === Number(id));
-
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   /**
    * ✅ Contract:
    * Tree only calls openPanel / closePanel.
    * Stack membership + visibility semantics are handled inside usePanelTree.
+   *
+   * NOTE: "radio group" logic for ACCOUNT_PANEL and ACCOUNT_LIST_REWARDS_PANEL
+   * has been removed from this UI component and is now enforced in usePanelTree().
    */
-  const { openPanel, closePanel, isVisible } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
 
   const isArray = Array.isArray(value);
 
@@ -170,13 +153,16 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    * If this Branch node is the "spCoinPanelTree" array, transform only the MAIN_TRADING_PANEL root.
    */
   const guiValue =
-    isArray && label === 'spCoinPanelTree' ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n)) : value;
+    isArray && label === 'spCoinPanelTree'
+      ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n))
+      : value;
 
   const isObject = guiValue !== null && typeof guiValue === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
   // dot-path classifiers for *virtual* panel nodes
-  const isPanelArrayItem = /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) && looksLikeVirtualPanelNode(guiValue);
+  const isPanelArrayItem =
+    /(\.(spCoinPanelTree|children)\.\d+$)/.test(path) && looksLikeVirtualPanelNode(guiValue);
 
   /**
    * ✅ displayStack items: always-open, no +/- and no nested fields
@@ -265,37 +251,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           return;
         }
 
-        // ✅ ACCOUNT_PANEL mode radio behavior:
-        // If ACCOUNT_PANEL is visible, then ACTIVE_SPONSOR/ACTIVE_RECIPIENT/ACTIVE_AGENT are treated as a radio group here.
-        const accountPanelVisible = isVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
-        if (accountPanelVisible && isAccountPanelMode(panelId)) {
-          for (const m of ACCOUNT_PANEL_MODES) {
-            if (Number(m) !== Number(panelId)) {
-              closePanel(m as any, 'TreePanel:accountPanelMode:closeOther');
-            }
-          }
-          openPanel(panelId as any, 'TreePanel:accountPanelMode:openSelected');
-          ensureOpen(path);
-          ensureOpen(`${path}.children`);
-          return;
-        }
-
-        // ✅ REWARDS GROUP radio behavior (the 4 panels):
-        // If one is being opened, close the other 3 first, then open the selected one.
-        // If the selected one is already visible, clicking toggles it OFF (handled above).
-        if (isRewardsGroupMode(panelId)) {
-          for (const m of REWARDS_GROUP_MODES) {
-            if (Number(m) !== Number(panelId)) {
-              closePanel(m as any, 'TreePanel:rewardsGroupMode:closeOther');
-            }
-          }
-          openPanel(panelId as any, 'TreePanel:rewardsGroupMode:openSelected');
-          ensureOpen(path);
-          ensureOpen(`${path}.children`);
-          return;
-        }
-
-        // ✅ default behavior
+        // ✅ default behavior ONLY (radio behavior enforced in usePanelTree)
         openPanel(panelId as any, invoker);
         ensureOpen(path);
         ensureOpen(`${path}.children`);
@@ -327,7 +283,9 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
               const childPath = `${path}.${k}`;
               const childVal = (guiValue as any[])[Number(k)];
 
-              const childLabel = looksLikeVirtualPanelNode(childVal) ? formatChildLabel(childVal, k) : `[${k}]`;
+              const childLabel = looksLikeVirtualPanelNode(childVal)
+                ? formatChildLabel(childVal, k)
+                : `[${k}]`;
 
               return (
                 <Branch

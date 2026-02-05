@@ -151,6 +151,29 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
   return ids.filter((x) => Number.isFinite(x)).map((x) => x as SP_COIN_DISPLAY);
 };
 
+/* ───────────────────────────── Exclusivity groups (radio or none) ───────────────────────────── */
+
+// ACCOUNT_PANEL children: exactly 0 or 1 visible
+const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.ACTIVE_SPONSOR,
+  SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
+  SP_COIN_DISPLAY.ACTIVE_AGENT,
+] as const;
+
+const isAccountPanelMode = (p: SP_COIN_DISPLAY) =>
+  ACCOUNT_PANEL_MODES.some((x) => Number(x) === Number(p));
+
+// Rewards modes: exactly 0 or 1 visible
+const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
+  SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
+  SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
+  SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
+] as const;
+
+const isRewardsGroupMode = (p: SP_COIN_DISPLAY) =>
+  REWARDS_GROUP_MODES.some((x) => Number(x) === Number(p));
+
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
@@ -177,8 +200,6 @@ export function usePanelTree() {
   }, [exchangeContext]);
 
   // ✅ Hydration repair: ensure newly-added panels exist in persisted flat tree
-  // Without this, older persisted spCoinPanelTree snapshots will never include newer panels,
-  // so they won't participate in visibilityMap/radio/stack behavior.
   useEffect(() => {
     const tree = (exchangeContext as any)?.settings?.spCoinPanelTree;
 
@@ -192,13 +213,9 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.ACTIVE_AGENT,
     ];
 
-    // If already present, noop
-    const hasAll = REQUIRED.every((p) =>
-      list.some((e) => Number(e.panel) === Number(p)),
-    );
+    const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));
     if (hasAll) return;
 
-    // Repair persisted tree by injecting missing panels (default visible=false)
     try {
       (setExchangeContext as any)(
         (prev: any) => {
@@ -209,9 +226,7 @@ export function usePanelTree() {
             next = ensurePanelPresent(next, p);
           }
 
-          // noop if nothing changed
           if (next.length === flat0.length) return prev;
-
           return writeFlatTree(prev, next);
         },
         'usePanelTree:repairPersistedTree',
@@ -251,16 +266,8 @@ export function usePanelTree() {
       defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       manageSponsorPanel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
 
-      /**
-       * ✅ Sponsor detail panel may be opened with a "parent" reference
-       * from any Sponsor list-select context:
-       *   - ACCOUNT_LIST_REWARDS_PANEL
-       *   - NEW sub-panels under ACCOUNT_LIST_REWARDS_PANEL (future panel control)
-       */
       sponsorAllowedParents: new Set<number>([
         SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
-
-        // ✅ NEW children (sub-panels / modes)
         SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
         SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
         SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
@@ -681,6 +688,39 @@ export function usePanelTree() {
     [getPersistedDisplayStackIds, persistDisplayStack],
   );
 
+  /**
+   * ✅ Internal close used by openPanel to enforce exclusivity.
+   * Mirrors closePanel(panel, ...) behavior but avoids recursion.
+   */
+  const closePanelInternal = useCallback(
+    (panel: SP_COIN_DISPLAY, traceId: number, invoker: string) => {
+      const navInvoker = tagInvoker('NAV_CLOSE', invoker);
+
+      logAction(traceId, 'closePanelInternal (exclusivity) called', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker: navInvoker,
+        visibleBefore_store: panelStore.isVisible(panel),
+      });
+
+      const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
+
+      const hideInvoker =
+        ALLOW_EMPTY_GLOBAL_OVERLAY && isGlobalOverlay(panel) && nextStack.length === 0
+          ? tagHideInvoker(invoker)
+          : navInvoker;
+
+      hideDisplay(panel, hideInvoker);
+    },
+    [
+      tagInvoker,
+      logAction,
+      removeIfStackMember,
+      hideDisplay,
+      isGlobalOverlay,
+      tagHideInvoker,
+    ],
+  );
+
   /* ------------------------------ PUBLIC API (single source of truth) -------------------------------- */
 
   const openPanel = useCallback(
@@ -695,6 +735,25 @@ export function usePanelTree() {
         isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
         isNonIndexed: NON_INDEXED.has(Number(panel)),
       });
+
+      // ✅ Enforce “radio or none” at the source of truth:
+      // If you are opening a mode in either group, close the other modes FIRST.
+      // This fixes the "must close the current open panel first" behavior.
+      if (isAccountPanelMode(panel)) {
+        for (const other of ACCOUNT_PANEL_MODES) {
+          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
+            closePanelInternal(other, traceId, `openPanel:${navInvoker}:accountPanelMode:closeOther`);
+          }
+        }
+      }
+
+      if (isRewardsGroupMode(panel)) {
+        for (const other of REWARDS_GROUP_MODES) {
+          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
+            closePanelInternal(other, traceId, `openPanel:${navInvoker}:rewardsMode:closeOther`);
+          }
+        }
+      }
 
       const stackBefore = getPersistedDisplayStackIds();
       const nextStack = pushIfStackMember(panel, traceId, `openPanel:${navInvoker}`);
@@ -721,6 +780,7 @@ export function usePanelTree() {
       pushIfStackMember,
       showDisplay,
       debugLog,
+      closePanelInternal,
     ],
   );
 
