@@ -1,68 +1,64 @@
 // File: @/components/views/RadioOverlayPanels/AccountPanel/index.tsx
 'use client';
 
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageAccount from './ManageAccount';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import ToDo from '@/lib/utils/components/ToDo';
 
 type Props = { onClose?: () => void };
 
+type ActiveAccountMember = 'ACTIVE_SPONSOR' | 'ACTIVE_RECIPIENT' | 'ACTIVE_AGENT' | 'NONE';
+
 export default function AccountPanel(_props: Props) {
-  // ✅ CRITICAL: Only render when ACCOUNT_PANEL is visible
+  // Parent panel visibility
   const vAccountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
-  if (!vAccountPanel) return null;
+
+  // ✅ Same methodology as header: read child visibility directly
+  const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
+  const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
+  const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
 
   const ctx = useContext(ExchangeContextState);
+  const accounts = ctx?.exchangeContext?.accounts;
 
-  const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
-  const hasSponsor = !!sponsorWallet;
+  // Derive activeMember from the actual visible child flags
+  const activeMember: ActiveAccountMember = useMemo(() => {
+    if (vActiveSponsor) return 'ACTIVE_SPONSOR';
+    if (vActiveRecipient) return 'ACTIVE_RECIPIENT';
+    if (vActiveAgent) return 'ACTIVE_AGENT';
+    return 'NONE';
+  }, [vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  const [showToDo, setShowToDo] = useState<boolean>(false);
+  // Active account = the selected account object based on active child
+  const activeWallet = useMemo(() => {
+    if (!accounts) return undefined;
 
-  const doToDo = useCallback(() => {
-    setShowToDo(false);
-    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-    const name = sponsorWallet?.name ?? 'N/A';
-    const addr = sponsorWallet?.address ?? '(no sponsor selected)';
-    const msg =
-      'ToDo: (Not Yet Implemented)\n' +
-      `Manage Sponsor actions for: ${name}\n` +
-      `Sponsor address: ${addr}\n` +
-      `Connected account: ${connected ? connected.address : '(none connected)'}`;
-    // eslint-disable-next-line no-alert
-    alert(msg);
-  }, [
-    ctx?.exchangeContext?.accounts?.activeAccount,
-    sponsorWallet?.name,
-    sponsorWallet?.address,
-  ]);
+    if (activeMember === 'ACTIVE_SPONSOR') return accounts.sponsorAccount;
+    if (activeMember === 'ACTIVE_RECIPIENT') return (accounts as any).recipientAccount;
+    if (activeMember === 'ACTIVE_AGENT') return (accounts as any).agentAccount;
+
+    return undefined;
+  }, [accounts, activeMember]);
+
+  // Replaces hasSponsor: true only if the ACTIVE_* selection has an account object
+  const isActiveAccount = !!activeWallet;
+
+  // ✅ early return AFTER hooks
+  if (!vAccountPanel) return null;
 
   return (
     <div id="ACCOUNT_PANEL">
-      {hasSponsor ? (
-        <ManageAccount wallet={sponsorWallet} />
+      {isActiveAccount ? (
+        <ManageAccount account={activeWallet as any} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
-          <p className="mb-2 font-semibold">No sponsor selected.</p>
+          <p className="mb-2 font-semibold">No active account selected.</p>
           <p className="m-0">
-            Open the <strong>Sponsors</strong> list and choose a sponsor to manage.
-            Once selected, this panel will show the sponsor&apos;s wallet details.
+            Select a <strong>Sponsor</strong>, <strong>Recipient</strong>, or <strong>Agent</strong> to manage.
           </p>
         </div>
-      )}
-
-      {showToDo && (
-        <ToDo
-          show
-          message="ToDo"
-          opacity={0.5}
-          color="#ff1a1a"
-          zIndex={2000}
-          onDismiss={doToDo}
-        />
       )}
     </div>
   );

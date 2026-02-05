@@ -8,10 +8,6 @@ import { AccountType } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 
-type Props = {
-  wallet?: spCoinAccount;
-};
-
 type ToDoMode = 'claimRewards' | 'unstakeSponsorships';
 
 type PendingAction = {
@@ -55,28 +51,32 @@ function formatShortAddress(addr: string) {
   return ` ${start} ... ${end} `;
 }
 
-export default function ManageAccount({ wallet }: Props) {
-  // ✅ Hooks must run on every render (even when wallet is undefined)
+type Props = {
+  account?: spCoinAccount;
+};
+
+export default function ManageAccount({ account }: Props) {
+  // ✅ Hooks must run on every render (even when account is undefined)
   const ctx = useContext(ExchangeContextState);
 
-  // Derive a best-effort AccountType from wallet metadata; default to AGENT
+  // Derive a best-effort AccountType from account metadata; default to AGENT
   const accountType: AccountType = useMemo(() => {
-    const t = (wallet as any)?.type?.toString().toLowerCase?.() ?? '';
+    const t = (account as any)?.type?.toString().toLowerCase?.() ?? '';
     if (t.includes('recipient')) return AccountType.RECIPIENT;
     if (t.includes('sponsor')) return AccountType.SPONSOR;
     if (t.includes('agent')) return AccountType.AGENT;
-    const n = (wallet as any)?.name?.toString().toLowerCase?.() ?? '';
+    const n = (account as any)?.name?.toString().toLowerCase?.() ?? '';
     if (n.includes('recipient')) return AccountType.RECIPIENT;
     if (n.includes('sponsor')) return AccountType.SPONSOR;
     return AccountType.AGENT;
-  }, [wallet]);
+  }, [account]);
 
-  const address = addressToText(wallet?.address);
-  const name = fallback(wallet?.name);
-  const symbol = fallback(wallet?.symbol);
-  const description = fallback(wallet?.description);
-  const logoURL = (wallet?.logoURL ?? '').toString().trim();
-  const website = (wallet?.website ?? '').toString().trim();
+  const address = addressToText(account?.address);
+  const name = fallback(account?.name);
+  const symbol = fallback(account?.symbol);
+  const description = fallback(account?.description);
+  const logoURL = (account?.logoURL ?? '').toString().trim();
+  const website = (account?.website ?? '').toString().trim();
   const stakedBalance = 0;
   const pendingBalance = 0;
 
@@ -135,8 +135,8 @@ export default function ManageAccount({ wallet }: Props) {
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
-  // After hooks have run, you can short-circuit rendering if no wallet
-  if (!wallet) return null;
+  // After hooks have run, you can short-circuit rendering if no account
+  if (!account) return null;
 
   // ✅ Deposit account display WITHOUT AssetSelectProvider
   const depositAddrRaw = ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '';
