@@ -8,7 +8,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 
-// ✅ ExchangeContext access (for activeAccount.logoURL + address)
+// ✅ ExchangeContext access (for accounts.* + address/logo)
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 // Read env once, with a safe fallback
@@ -95,6 +95,7 @@ function getAccountsHeaderTitle(
   },
   name?: string,
 ): string {
+  // If no account provided (undefined / empty), keep it generic
   const n = (name ?? '').trim();
   const label = n.length ? n : 'Sponsor Coin';
 
@@ -183,6 +184,16 @@ function deriveRewardsRoleMode(opts: {
   return 'none';
 }
 
+function getAccountDisplayName(acct: any): string {
+  return (
+    (acct as any)?.name ??
+    (acct as any)?.accountName ??
+    (acct as any)?.label ??
+    (acct as any)?.displayName ??
+    ''
+  );
+}
+
 export function useHeaderController() {
   const panelTree = usePanelTree();
   const openPanel = (panelTree as any).openPanel;
@@ -195,17 +206,8 @@ export function useHeaderController() {
   const exchangeContext = (exchangeCtx as any)?.exchangeContext;
   const setExchangeContext = (exchangeCtx as any)?.setExchangeContext;
 
-  const activeAccount = exchangeContext?.accounts?.activeAccount;
-
-  const activeAccountLogoURL = activeAccount?.logoURL;
-  const activeAccountAddress = activeAccount?.address;
-
-  const activeAccountName =
-    (activeAccount as any)?.name ??
-    (activeAccount as any)?.accountName ??
-    (activeAccount as any)?.label ??
-    (activeAccount as any)?.displayName ??
-    '';
+  const accounts = exchangeContext?.accounts;
+  const activeAccount = accounts?.activeAccount;
 
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
@@ -239,7 +241,7 @@ export function useHeaderController() {
     [claimSponsor, claimRecipient, claimAgent, unSponsor],
   );
 
-  // ✅ ACCOUNT_PANEL active sub-view visibility (dynamic title)
+  // ✅ ACCOUNT_PANEL active sub-view visibility (dynamic title + header account source)
   const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
   const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
   const activeAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
@@ -400,6 +402,35 @@ export function useHeaderController() {
     trading,
   ]);
 
+  /**
+   * ✅ KEY FIX (your requirement):
+   * When ACCOUNT_PANEL is active, the header MUST use:
+   * - ACTIVE_SPONSOR    -> accounts.sponsorAccount
+   * - ACTIVE_RECIPIENT  -> accounts.recipientAccount
+   * - ACTIVE_AGENT      -> accounts.agentAccount
+   * If none are active or the role account is missing, header name/logo becomes undefined.
+   *
+   * Otherwise (other panels), keep using accounts.activeAccount (existing behavior).
+   */
+  const headerAccount = useMemo(() => {
+    if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL) {
+      if (activeSponsor) return accounts?.sponsorAccount;
+      if (activeRecipient) return (accounts as any)?.recipientAccount;
+      if (activeAgent) return (accounts as any)?.agentAccount;
+      return undefined;
+    }
+    return activeAccount;
+  }, [currentDisplay, activeSponsor, activeRecipient, activeAgent, accounts, activeAccount]);
+
+  const headerAccountLogoURL = (headerAccount as any)?.logoURL;
+  const headerAccountAddress = (headerAccount as any)?.address;
+
+  const headerAccountName = useMemo(() => {
+    if (!headerAccount) return undefined;
+    const n = getAccountDisplayName(headerAccount).toString().trim();
+    return n.length ? n : undefined;
+  }, [headerAccount]);
+
   const title = useMemo(() => {
     const override = headerTitleOverrides.get(currentDisplay);
     if (override) return override;
@@ -408,9 +439,9 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
-      activeAccountName,
+      headerAccountName, // ✅ now derived from ACTIVE_* role account (or undefined)
     );
-  }, [currentDisplay, rewardsState, accountsState, activeAccountName]);
+  }, [currentDisplay, rewardsState, accountsState, headerAccountName]);
 
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
@@ -422,7 +453,7 @@ export function useHeaderController() {
       currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
     if (!showActiveLogo) return null;
-    if (!activeAccountLogoURL) return null;
+    if (!headerAccountLogoURL) return null;
 
     const sizePx = 38;
     const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
@@ -434,7 +465,7 @@ export function useHeaderController() {
         className: `bg-transparent p-0 m-0 focus:outline-none ${isAccountPanelActive ? '' : 'hover:opacity-90'}`,
         'aria-label': isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
         'data-role': 'ActiveAccount',
-        'data-address': activeAccountAddress ?? '',
+        'data-address': headerAccountAddress ?? '',
         disabled: isAccountPanelActive,
         onClick: isAccountPanelActive
           ? undefined
@@ -460,7 +491,7 @@ export function useHeaderController() {
             },
       },
       React.createElement('img', {
-        src: activeAccountLogoURL,
+        src: headerAccountLogoURL,
         alt: 'Active Account logo',
         width: sizePx,
         height: sizePx,
@@ -473,8 +504,8 @@ export function useHeaderController() {
     );
   }, [
     currentDisplay,
-    activeAccountLogoURL,
-    activeAccountAddress,
+    headerAccountLogoURL,
+    headerAccountAddress,
     openPanel,
     claimSponsor,
     claimRecipient,

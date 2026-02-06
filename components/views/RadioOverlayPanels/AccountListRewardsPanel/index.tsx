@@ -6,6 +6,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { AccountType, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import AddressSelect from '../../AssetSelectPanels/AddressSelect';
@@ -52,12 +54,35 @@ function isPendingPanel(p: SP_COIN_DISPLAY) {
   );
 }
 
+type RoleKind = 'sponsor' | 'recipient' | 'agent' | 'unknown';
+
+function roleLabelToRoleKind(roleLabel: string): RoleKind {
+  const s = (roleLabel ?? '').toString().trim().toLowerCase();
+  if (s === 'recipient') return 'recipient';
+  if (s === 'agent') return 'agent';
+  if (s === 'sponsor') return 'sponsor';
+  return 'unknown';
+}
+
+function roleKindToAccountPanelMode(role: RoleKind): SP_COIN_DISPLAY | null {
+  if (role === 'recipient') return SP_COIN_DISPLAY.ACTIVE_RECIPIENT;
+  if (role === 'agent') return SP_COIN_DISPLAY.ACTIVE_AGENT;
+  if (role === 'sponsor') return SP_COIN_DISPLAY.ACTIVE_SPONSOR;
+  return null;
+}
+
 export default function AccountListRewardsPanel({
   accountList,
   setAccountCallBack,
   containerType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
+
+  // ✅ panel navigation (openPanel)
+  const panelTree = usePanelTree();
+  const openPanel = (panelTree as any)?.openPanel as
+    | ((p: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => void)
+    | undefined;
 
   // ✅ Pending-mode flags (SSOT for mode)
   const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS);
@@ -101,7 +126,8 @@ export default function AccountListRewardsPanel({
     // Sponsor mode includes:
     // - Pending Sponsor Rewards
     // - Unsponsor flow (still “Sponsor-side” accounts)
-    if (cfgClaimSponsor || showUnSponsorRow) return { vAgents: false, vRecipients: false, vSponsors: true };
+    if (cfgClaimSponsor || showUnSponsorRow)
+      return { vAgents: false, vRecipients: false, vSponsors: true };
 
     // Fallback default
     return { vAgents: false, vRecipients: false, vSponsors: true };
@@ -202,7 +228,11 @@ export default function AccountListRewardsPanel({
   }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, accountList, listType]);
 
   const actionButtonLabel =
-    listType === SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS ? 'Unsponsor' : isPendingPanel(listType) ? 'Claim' : 'Action';
+    listType === SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS
+      ? 'Unsponsor'
+      : isPendingPanel(listType)
+        ? 'Claim'
+        : 'Action';
 
   const actionButtonText = actionButtonLabel === 'Claim' ? 'Claim All' : actionButtonLabel;
 
@@ -230,6 +260,106 @@ export default function AccountListRewardsPanel({
       return DEFAULT;
     },
     [cfgClaimSponsor, cfgClaimAgent, cfgClaimRecipient],
+  );
+
+  /**
+   * ✅ NEW: ensure ExchangeContext role account is set BEFORE opening ACTIVE_* + ACCOUNT_PANEL
+   *
+   * Writes into BOTH shapes supported in your app:
+   * - ctx.exchangeContext.accounts.<role>Account   (nested)
+   * - ctx.accounts.<role>Account                  (root legacy)
+   */
+  const setRoleAccountInContext = useCallback(
+    (role: RoleKind, picked?: spCoinAccount) => {
+      if (!picked) return;
+
+      const setter = (ctx as any)?.setExchangeContext as
+        | ((updater: any, hookName?: string) => void)
+        | undefined;
+
+      if (typeof setter !== 'function') return;
+
+      const key =
+        role === 'sponsor' ? 'sponsorAccount' : role === 'recipient' ? 'recipientAccount' : role === 'agent' ? 'agentAccount' : null;
+
+      if (!key) return;
+
+      setter(
+        (prev: any) => {
+          const prevEx = prev?.exchangeContext ?? prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+
+          const alreadySame =
+            String(prevAccounts?.[key]?.address ?? '') === String((picked as any)?.address ?? '');
+
+          // Keep object identity stable if no actual change
+          if (alreadySame) return prev;
+
+          const writeAccounts = {
+            ...prevAccounts,
+            [key]: picked,
+          };
+
+          // Preserve both possible shapes
+          if (prev?.exchangeContext) {
+            return {
+              ...prev,
+              exchangeContext: {
+                ...prev.exchangeContext,
+                accounts: writeAccounts,
+              },
+              // optional mirror
+              accounts: {
+                ...(prev?.accounts ?? {}),
+                [key]: picked,
+              },
+            };
+          }
+
+          return {
+            ...prev,
+            accounts: {
+              ...(prev?.accounts ?? {}),
+              ...writeAccounts,
+            },
+          };
+        },
+        `AccountListRewardsPanel:setRoleAccount:${role}`,
+      );
+    },
+    [ctx],
+  );
+
+  /**
+   * ✅ NEW: when a logo is picked in either column:
+   * 1) setExchangeContext accounts.<role>Account = picked
+   * 2) call existing setAccountCallBack(picked)
+   * 3) open ACTIVE_* matching that column’s role label
+   * 4) open ACCOUNT_PANEL
+   */
+  const handlePickForRole = useCallback(
+    (roleLabel: string, picked?: spCoinAccount) => {
+      const role = roleLabelToRoleKind(roleLabel);
+
+      // 1) set role account in ExchangeContext first
+      setRoleAccountInContext(role, picked);
+
+      // 2) preserve current behavior (parent selection callback)
+      try {
+        setAccountCallBack?.(picked);
+      } catch {}
+
+      // 3/4) open correct panels
+      const modeToOpen = roleKindToAccountPanelMode(role);
+      if (!modeToOpen) return;
+      if (typeof openPanel !== 'function') return;
+
+      suppressNextOverlayClose('AccountListRewardsPanel:pick->AccountPanel', 'AccountListRewardsPanel');
+
+      openPanel(modeToOpen, `AccountListRewardsPanel:pick:${roleLabel}`);
+      openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, `AccountListRewardsPanel:openAccountPanel`);
+    },
+    [setRoleAccountInContext, setAccountCallBack, openPanel],
   );
 
   return (
@@ -334,7 +464,7 @@ export default function AccountListRewardsPanel({
                         account={w}
                         roleLabel={accountRole1}
                         addressText={addressText}
-                        onPick={setAccountCallBack}
+                        onPick={(picked?: spCoinAccount) => handlePickForRole(accountRole1, picked)}
                         onRowEnter={onRowEnter}
                         onRowMove={onRowMove}
                         onRowLeave={onRowLeave}
@@ -349,7 +479,7 @@ export default function AccountListRewardsPanel({
                         account={rw}
                         roleLabel={accountRole2}
                         addressText={rwAddressText}
-                        onPick={setAccountCallBack}
+                        onPick={(picked?: spCoinAccount) => handlePickForRole(accountRole2, picked)}
                         onRowEnter={onRowEnter}
                         onRowMove={onRowMove}
                         onRowLeave={onRowLeave}
