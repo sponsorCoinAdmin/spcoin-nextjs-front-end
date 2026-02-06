@@ -14,8 +14,6 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-type Props = { onClose?: () => void };
-
 // 🔧 Debug for this module
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -23,17 +21,19 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('ManageRecipient', DEBUG_ENABLED, LOG_TIME);
 
+type Props = { onClose?: () => void };
+
 export default function ManageRecipient(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  const recipientWallet = ctx?.exchangeContext?.accounts?.recipientAccount;
-  const logoURL = recipientWallet?.logoURL;
+  const recipientAccount = ctx?.exchangeContext?.accounts?.recipientAccount;
+  const logoURL = recipientAccount?.logoURL;
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
   // Title + left header avatar for the RECIPIENT detail panel
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
-    `Recipient ${recipientWallet?.name ?? 'N/A'}`,
+    `Recipient ${recipientAccount?.name ?? 'N/A'}`,
   );
 
   useRegisterHeaderLeft(
@@ -58,13 +58,13 @@ export default function ManageRecipient(_props: Props) {
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
   debugLog.log?.('render', {
-    recipientAddress: recipientWallet?.address,
-    recipientName: recipientWallet?.name,
+    recipientAddress: recipientAccount?.address,
+    recipientName: recipientAccount?.name,
   });
 
   return (
     <div id="RECIPIENT_ACCOUNT_PANEL">
-      <ManageAccount wallet={recipientWallet} />
+      <ManageAccount account={recipientAccount} />
       {!showToDo && (
         <ToDo
           show

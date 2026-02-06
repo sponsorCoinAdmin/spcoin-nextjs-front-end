@@ -18,12 +18,12 @@ type Props = { onClose?: () => void };
 export default function ManageAgent(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  const agentWallet = ctx?.exchangeContext?.accounts?.agentAccount;
-  const logoURL = agentWallet?.logoURL;
+  const agentAccount = ctx?.exchangeContext?.accounts?.agentAccount;
+  const logoURL = agentAccount?.logoURL;
 
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
-    `Agent ${agentWallet?.name ?? 'N/A'}`,
+    `Agent ${agentAccount?.name ?? 'N/A'}`,
   );
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
@@ -51,7 +51,7 @@ export default function ManageAgent(_props: Props) {
 
   return (
     <div id="AGENT_ACCOUNT_PANEL">
-      <ManageAccount wallet={agentWallet} />
+      <ManageAccount account={agentAccount} />
       {!showToDo && (
         <ToDo
           show

@@ -18,14 +18,14 @@ type Props = { onClose?: () => void };
 export default function ManageSponsor(_props: Props) {
   const ctx = useContext(ExchangeContextState);
 
-  const sponsorWallet = ctx?.exchangeContext?.accounts?.sponsorAccount;
-  const logoURL = sponsorWallet?.logoURL;
-  const hasSponsor = !!sponsorWallet;
+  const sponsorAccount = ctx?.exchangeContext?.accounts?.sponsorAccount;
+  const logoURL = sponsorAccount?.logoURL;
+  const hasSponsor = !!sponsorAccount;
 
   // Header title
   useRegisterHeaderTitle(
     SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-    hasSponsor ? `Sponsor ${sponsorWallet?.name ?? 'N/A'}` : 'Sponsor (none selected)',
+    hasSponsor ? `Sponsor ${sponsorAccount?.name ?? 'N/A'}` : 'Sponsor (none selected)',
   );
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
@@ -55,8 +55,8 @@ export default function ManageSponsor(_props: Props) {
   const doToDo = useCallback(() => {
     setShowToDo(false);
     const connected = ctx?.exchangeContext?.accounts?.activeAccount;
-    const name = sponsorWallet?.name ?? 'N/A';
-    const addr = sponsorWallet?.address ?? '(no sponsor selected)';
+    const name = sponsorAccount?.name ?? 'N/A';
+    const addr = sponsorAccount?.address ?? '(no sponsor selected)';
     const msg =
       'ToDo: (Not Yet Implemented)\n' +
       `Manage Sponsor actions for: ${name}\n` +
@@ -66,20 +66,20 @@ export default function ManageSponsor(_props: Props) {
     alert(msg);
   }, [
     ctx?.exchangeContext?.accounts?.activeAccount,
-    sponsorWallet?.name,
-    sponsorWallet?.address,
+    sponsorAccount?.name,
+    sponsorAccount?.address,
   ]);
 
   return (
     <div id="SPONSOR_ACCOUNT_PANEL">
       {hasSponsor ? (
-        <ManageAccount wallet={sponsorWallet} />
+        <ManageAccount account={sponsorAccount} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No sponsor selected.</p>
           <p className="m-0">
             Open the <strong>Sponsors</strong> list and choose a sponsor to manage.
-            Once selected, this panel will show the sponsor&apos;s wallet details.
+            Once selected, this panel will show the sponsor&apos;s account details.
           </p>
         </div>
       )}

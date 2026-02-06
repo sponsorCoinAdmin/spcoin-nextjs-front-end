@@ -79,12 +79,12 @@ export default function ManageAccount({ account }: Props) {
   // After hooks have run, you can short-circuit rendering if no account
   if (!account) return null;
 
-  // ✅ This is the connected/active wallet address shown in the pill
+  // ✅ This is the connected/active account address shown in the pill
   const depositAddrRaw = ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '';
   const depositAddr = formatShortAddress(String(depositAddrRaw ?? '').trim());
 
   return (
-    <div id="msWallet">
+    <div id="ACCOUNT_PANEL">
       {/* Active Account header (short label pill) */}
       {depositAddr ? (
         <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">
@@ -96,10 +96,10 @@ export default function ManageAccount({ account }: Props) {
       ) : null}
 
       <div
-        id="MANAGE WALLET"
+        id="MANAGE ACCOUNT"
         className="mb-4 mt-0 overflow-x-auto overflow-y-auto rounded-xl border border-black"
       >
-        <table id="MANAGE WALLET TABLE" className="min-w-full border-collapse">
+        <table id="MANAGE ACCOUNT TABLE" className="min-w-full border-collapse">
           <thead>
             {/* ✅ Match AccountListRewardsPanel header background color */}
             <tr className={`${msTableTw.theadRow} border-b border-black`}>
