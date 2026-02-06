@@ -253,10 +253,10 @@ export function useHeaderController() {
    * ✅ Populate accounts.sponsorAccount / recipientAccount / agentAccount
    * AND force a reload when the rewards "role mode" changes.
    *
-   * Role mode rules:
-   * - ACTIVE_SPONSORSHIPS OR PENDING_SPONSOR_REWARDS -> sponsor mode
-   * - PENDING_RECIPIENT_REWARDS -> recipient mode
-   * - PENDING_AGENT_REWARDS -> agent mode
+   * FIX:
+   * - Do NOT overwrite user selections.
+   * - Only fill the role account if it's currently empty.
+   * - Do NOT clear other role accounts to undefined.
    */
   const lastRewardsRoleModeRef = useRef<RewardsRoleMode>('none');
 
@@ -287,34 +287,36 @@ export function useHeaderController() {
         const prevEx = prev?.exchangeContext ?? prev;
         const prevAccounts = prevEx?.accounts ?? {};
 
-        const nextSponsor = nextMode === 'sponsor' ? activeAccount : undefined;
-        const nextRecipient = nextMode === 'recipient' ? activeAccount : undefined;
-        const nextAgent = nextMode === 'agent' ? activeAccount : undefined;
+        const nextReloadNonce = modeChanged
+          ? Number(prevAccounts?.reloadNonce ?? 0) + 1
+          : prevAccounts?.reloadNonce;
 
-        const curSponsorAddr = prevAccounts?.sponsorAccount?.address ?? null;
-        const curRecipientAddr = prevAccounts?.recipientAccount?.address ?? null;
-        const curAgentAddr = prevAccounts?.agentAccount?.address ?? null;
+        const sponsorEmpty = !prevAccounts?.sponsorAccount?.address;
+        const recipientEmpty = !prevAccounts?.recipientAccount?.address;
+        const agentEmpty = !prevAccounts?.agentAccount?.address;
 
-        const nextSponsorAddr = nextSponsor?.address ?? null;
-        const nextRecipientAddr = nextRecipient?.address ?? null;
-        const nextAgentAddr = nextAgent?.address ?? null;
+        const rolePatch =
+          nextMode === 'sponsor'
+            ? sponsorEmpty
+              ? { sponsorAccount: activeAccount }
+              : null
+            : nextMode === 'recipient'
+              ? recipientEmpty
+                ? { recipientAccount: activeAccount }
+                : null
+              : nextMode === 'agent'
+                ? agentEmpty
+                  ? { agentAccount: activeAccount }
+                  : null
+                : null;
 
-        const roleAccountsUnchanged =
-          curSponsorAddr === nextSponsorAddr &&
-          curRecipientAddr === nextRecipientAddr &&
-          curAgentAddr === nextAgentAddr;
-
-        const nextReloadNonce = modeChanged ? Number(prevAccounts?.reloadNonce ?? 0) + 1 : prevAccounts?.reloadNonce;
-
-        // No-op if already in desired state and no reload needed
-        if (roleAccountsUnchanged && !modeChanged) return prev;
+        // No-op if we'd only overwrite an existing selection and no reload is needed
+        if (!rolePatch && !modeChanged) return prev;
 
         const writeAccounts = {
           ...prevAccounts,
           activeAccount: prevAccounts.activeAccount ?? activeAccount,
-          sponsorAccount: nextSponsor,
-          recipientAccount: nextRecipient,
-          agentAccount: nextAgent,
+          ...(rolePatch ? rolePatch : null),
           ...(modeChanged ? { reloadNonce: nextReloadNonce } : null),
         };
 
@@ -352,15 +354,7 @@ export function useHeaderController() {
         exchangeContext?.accounts?.refreshAccounts?.('rewardsModeChanged');
       } catch {}
     }
-  }, [
-    setExchangeContext,
-    exchangeContext,
-    activeAccount,
-    unSponsor,
-    claimSponsor,
-    claimRecipient,
-    claimAgent,
-  ]);
+  }, [setExchangeContext, exchangeContext, activeAccount, unSponsor, claimSponsor, claimRecipient, claimAgent]);
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
@@ -418,16 +412,6 @@ export function useHeaderController() {
     );
   }, [currentDisplay, rewardsState, accountsState, activeAccountName]);
 
-  /**
-   * ✅ LEFT ELEMENT BEHAVIOR
-   *
-   * Rules:
-   * - If ACCOUNT_PANEL is active: do nothing.
-   * - If ACCOUNT_LIST_REWARDS_PANEL is active: open ACTIVE_* based on rewards child mode, then open ACCOUNT_PANEL.
-   * - Otherwise (e.g. MANAGE_SPONSORSHIPS_PANEL): open ACCOUNT_PANEL.
-   *
-   * NOTE: file is `.ts` so we avoid JSX and use React.createElement().
-   */
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();

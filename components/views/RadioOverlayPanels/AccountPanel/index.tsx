@@ -15,7 +15,7 @@ export default function AccountPanel(_props: Props) {
   // Parent panel visibility
   const vAccountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
-  // ✅ Same methodology as header: read child visibility directly
+  // Read child visibility directly
   const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
   const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
   const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
@@ -31,18 +31,17 @@ export default function AccountPanel(_props: Props) {
     return 'NONE';
   }, [vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  // Active account = the selected account object based on active child
+  // Active wallet based on active child
   const activeWallet = useMemo(() => {
     if (!accounts) return undefined;
 
     if (activeMember === 'ACTIVE_SPONSOR') return accounts.sponsorAccount;
-    if (activeMember === 'ACTIVE_RECIPIENT') return (accounts as any).recipientAccount;
-    if (activeMember === 'ACTIVE_AGENT') return (accounts as any).agentAccount;
+    if (activeMember === 'ACTIVE_RECIPIENT') return accounts.recipientAccount;
+    if (activeMember === 'ACTIVE_AGENT') return accounts.agentAccount;
 
     return undefined;
   }, [accounts, activeMember]);
 
-  // Replaces hasSponsor: true only if the ACTIVE_* selection has an account object
   const isActiveAccount = !!activeWallet;
 
   // ✅ early return AFTER hooks

@@ -1,14 +1,10 @@
-// File: @/lib/context/hooks/selectionCommit/useSelectionCommit.ts
+// File: @/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
 'use client';
 
 import { useCallback } from 'react';
 import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import {
-  useSellTokenContract,
-  useBuyTokenContract,
-  useExchangeContext,
-} from '@/lib/context/hooks';
+import { useSellTokenContract, useBuyTokenContract, useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -108,11 +104,30 @@ export function useSelectionCommit(): UseSelectionCommit {
       log.log?.('commitRecipient', { address: addr, name });
 
       setExchangeContext(
-        (prev) => {
-          const next: any = structuredClone(prev);
-          next.accounts = next.accounts ?? {};
-          next.accounts.recipientAccount = w;
-          return next;
+        (prev: any) => {
+          const prevEx = prev?.exchangeContext ?? prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+
+          const writeAccounts = {
+            ...prevAccounts,
+            recipientAccount: w,
+          };
+
+          // ✅ Preserve both shapes (nested vs root)
+          if (prev?.exchangeContext) {
+            return {
+              ...prev,
+              exchangeContext: {
+                ...prev.exchangeContext,
+                accounts: writeAccounts,
+              },
+            };
+          }
+
+          return {
+            ...prev,
+            accounts: writeAccounts,
+          };
         },
         'useSelectionCommit:recipient',
       );
@@ -135,11 +150,30 @@ export function useSelectionCommit(): UseSelectionCommit {
       log.log?.('commitAgent', { address: addr, name });
 
       setExchangeContext(
-        (prev) => {
-          const next: any = structuredClone(prev);
-          next.accounts = next.accounts ?? {};
-          next.accounts.agentAccount = w;
-          return next;
+        (prev: any) => {
+          const prevEx = prev?.exchangeContext ?? prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+
+          const writeAccounts = {
+            ...prevAccounts,
+            agentAccount: w,
+          };
+
+          // ✅ Preserve both shapes (nested vs root)
+          if (prev?.exchangeContext) {
+            return {
+              ...prev,
+              exchangeContext: {
+                ...prev.exchangeContext,
+                accounts: writeAccounts,
+              },
+            };
+          }
+
+          return {
+            ...prev,
+            accounts: writeAccounts,
+          };
         },
         'useSelectionCommit:agent',
       );
