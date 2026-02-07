@@ -7,45 +7,6 @@ let SEEDED = false;
 
 const nameOf = (id: SP_COIN_DISPLAY) => SP_COIN_DISPLAY[id] ?? String(id);
 
-export function seedNavStackOnceFromVisibility(opts: {
-  map: Record<number, boolean>;
-  overlays: SP_COIN_DISPLAY[];
-  manageContainer: SP_COIN_DISPLAY;
-  manageScoped: SP_COIN_DISPLAY[];
-  manageSponsorPanel: SP_COIN_DISPLAY;
-  push: (p: SP_COIN_DISPLAY) => void;
-}) {
-  const { map, overlays, manageContainer, manageScoped, manageSponsorPanel, push } =
-    opts;
-
-  if (SEEDED) return;
-  if (!Object.values(map).some(Boolean)) return;
-
-  SEEDED = true;
-
-  const isVis = (id: SP_COIN_DISPLAY) => !!map[Number(id)];
-
-  // Build the intended seed deterministically from visibility.
-  const fresh: SP_COIN_DISPLAY[] = [];
-
-  const activeOverlay = overlays.find((id) => isVis(id)) ?? null;
-  if (activeOverlay) fresh.push(activeOverlay);
-
-  if (activeOverlay && Number(activeOverlay) === Number(manageContainer)) {
-    const activeScoped = manageScoped.find((id) => isVis(id)) ?? null;
-    if (activeScoped) fresh.push(activeScoped);
-    if (isVis(manageSponsorPanel)) fresh.push(manageSponsorPanel);
-  }
-
-  // Push in order (pushNav already avoids "same-top" spam).
-  for (const p of fresh) push(p);
-
-  // eslint-disable-next-line no-console
-  console.log('[panelTree] seeded NAV_STACK from map', {
-    seeded: fresh.map((p) => ({ id: Number(p), name: nameOf(p) })),
-  });
-}
-
 /**
  * Debug dump helper.
  * If you want stack printed, pass it in explicitly.

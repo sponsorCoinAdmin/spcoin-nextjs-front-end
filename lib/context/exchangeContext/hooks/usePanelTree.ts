@@ -259,7 +259,6 @@ export function usePanelTree() {
     manageScoped,
   ]);
 
-  // ✅ manageCfg no longer includes manageSponsorPanel / sponsorAllowedParents
   const manageCfg: ManageScopeConfig = useMemo(
     () => ({
       known: KNOWN,
