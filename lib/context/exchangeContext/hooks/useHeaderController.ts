@@ -400,4 +400,3 @@ export function useHeaderController() {
     currentDisplay,
   };
 }
-go
