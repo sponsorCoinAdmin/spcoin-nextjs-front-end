@@ -28,20 +28,8 @@ export default function TradeContainerHeader() {
 
   // ✅ New contract: usePanelTree exposes ONLY openPanel/closePanel as the public API.
   const { openPanel, closePanel, isVisible } = usePanelTree();
-
-  const accounts = exchangeContext?.accounts ?? {};
-  const recipientAccount = accounts.recipientAccount as spCoinAccount | undefined;
-  const agentAccount = accounts.agentAccount as spCoinAccount | undefined;
-  const sponsorAccount = accounts.sponsorAccount as spCoinAccount | undefined;
-
-  const agentDetailOpen = isVisible(SP_TREE.AGENT_ACCOUNT_PANEL);
-  const recipientDetailOpen = isVisible(SP_TREE.RECIPIENT_ACCOUNT_PANEL);
-  const sponsorDetailOpen = isVisible(SP_TREE.SPONSOR_ACCOUNT_PANEL);
-
+ 
   let headerWallet: spCoinAccount | undefined;
-  if (agentDetailOpen && agentAccount) headerWallet = agentAccount;
-  else if (recipientDetailOpen && recipientAccount) headerWallet = recipientAccount;
-  else if (sponsorDetailOpen && sponsorAccount) headerWallet = sponsorAccount;
 
   const logoSrc = headerWallet ? getAccountLogo(headerWallet) : null;
 

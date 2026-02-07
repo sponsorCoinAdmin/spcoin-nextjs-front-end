@@ -109,11 +109,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.ACTIVE_AGENT, false),
       ]),
 
-      // Shared / detail overlays
-      node(SP.AGENT_ACCOUNT_PANEL, false),
-      node(SP.RECIPIENT_ACCOUNT_PANEL, false),
-      node(SP.SPONSOR_ACCOUNT_PANEL, false),
-
       // Aux panels
       node(SP.ADD_SPONSORSHIP_PANEL, false),
       node(SP.CONFIG_SPONSORSHIP_PANEL, false),

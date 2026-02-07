@@ -89,6 +89,7 @@ const UNSPONSOR_CHILDREN: readonly SP[] = [] as const;
 
 /**
  * Primary overlay container under MAIN_TRADING_PANEL
+
  */
 const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Core overlay
@@ -116,9 +117,6 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // Shared / detail overlays
   SP.ACCOUNT_PANEL,
-  SP.SPONSOR_ACCOUNT_PANEL,
-  SP.AGENT_ACCOUNT_PANEL,
-  SP.RECIPIENT_ACCOUNT_PANEL,
 
   // Token contract overlay
   SP.TOKEN_CONTRACT_PANEL,
@@ -226,9 +224,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     kind: 'panel',
     children: ACCOUNT_PANEL_CHILDREN,
   }),
-  def({ id: SP.SPONSOR_ACCOUNT_PANEL, kind: 'panel' }),
-  def({ id: SP.AGENT_ACCOUNT_PANEL, kind: 'panel' }),
-  def({ id: SP.RECIPIENT_ACCOUNT_PANEL, kind: 'panel' }),
 
   // Staking/unstaking overlays
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),

@@ -36,9 +36,6 @@ export const MAIN_OVERLAY_GROUP = [
 
   // Shared / detail overlays
   SP.ACCOUNT_PANEL,
-  SP.SPONSOR_ACCOUNT_PANEL,
-  SP.AGENT_ACCOUNT_PANEL,
-  SP.RECIPIENT_ACCOUNT_PANEL,
 
   // Token contract overlay (if you want it stackable/radio, keep it here; otherwise remove)
   SP.TOKEN_CONTRACT_PANEL,

@@ -88,9 +88,6 @@ export const PANELS: readonly PanelDef[] = [
   overlay(SP.STAKING_SPCOINS_PANEL, 'panel', false),
 
   // Detail/manage overlays (full-screen overlays in the same radio set)
-  overlay(SP.AGENT_ACCOUNT_PANEL, 'panel', false),
-  overlay(SP.RECIPIENT_ACCOUNT_PANEL, 'panel', false),
-  overlay(SP.SPONSOR_ACCOUNT_PANEL, 'panel', false),
 
   /**
    * ✅ Pending Rewards is LOCAL/INLINE state under Manage Sponsorships.

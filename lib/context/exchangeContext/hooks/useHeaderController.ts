@@ -12,7 +12,8 @@ import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/us
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 // Read env once, with a safe fallback
-const AGENT_WALLET_TITLE = process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
+const AGENT_WALLET_TITLE =
+  process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
 
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
@@ -51,9 +52,6 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Select a Sponsor',
 
   // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())
-  [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: 'Manage Recipient Account',
-  [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: 'Manage Agent Account',
-  [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: 'Manage Sponsor Account',
   [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
 
   // Fallback label for the rewards panel (dynamic title computed in titleFor())
@@ -153,10 +151,6 @@ const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
 
-  SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL,
-  SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL,
-  SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
@@ -214,10 +208,6 @@ export function useHeaderController() {
   const sellList = usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
   const buyList = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
   const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
-
-  const agentDetail = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL);
-  const recipientDetail = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL);
-  const sponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
   const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
@@ -356,7 +346,15 @@ export function useHeaderController() {
         exchangeContext?.accounts?.refreshAccounts?.('rewardsModeChanged');
       } catch {}
     }
-  }, [setExchangeContext, exchangeContext, activeAccount, unSponsor, claimSponsor, claimRecipient, claimAgent]);
+  }, [
+    setExchangeContext,
+    exchangeContext,
+    activeAccount,
+    unSponsor,
+    claimSponsor,
+    claimRecipient,
+    claimAgent,
+  ]);
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
@@ -364,10 +362,6 @@ export function useHeaderController() {
       [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: sellList,
       [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: buyList,
       [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
-
-      [SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL]: agentDetail,
-      [SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL]: recipientDetail,
-      [SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL]: sponsorDetail,
 
       [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
       [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: sponsorList,
@@ -390,9 +384,6 @@ export function useHeaderController() {
     sellList,
     buyList,
     recipientList,
-    agentDetail,
-    recipientDetail,
-    sponsorDetail,
     agentList,
     sponsorList,
     accountPanel,
@@ -439,7 +430,7 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
-      headerAccountName, // ✅ now derived from ACTIVE_* role account (or undefined)
+      headerAccountName,
     );
   }, [currentDisplay, rewardsState, accountsState, headerAccountName]);
 
@@ -462,7 +453,9 @@ export function useHeaderController() {
       'button',
       {
         type: 'button',
-        className: `bg-transparent p-0 m-0 focus:outline-none ${isAccountPanelActive ? '' : 'hover:opacity-90'}`,
+        className: `bg-transparent p-0 m-0 focus:outline-none ${
+          isAccountPanelActive ? '' : 'hover:opacity-90'
+        }`,
         'aria-label': isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
         'data-role': 'ActiveAccount',
         'data-address': headerAccountAddress ?? '',

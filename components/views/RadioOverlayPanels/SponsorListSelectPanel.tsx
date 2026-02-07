@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useContext, useMemo } from 'react';
 import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
@@ -24,7 +23,6 @@ const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_
 
 export default function SponsorListSelectPanel() {
   const vClaim = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
-  const vSponsorDetail = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL);
 
   const activePanel: SP_COIN_DISPLAY | null = vClaim
     ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
@@ -33,15 +31,11 @@ export default function SponsorListSelectPanel() {
   useEffect(() => {
     debugLog.log?.('[visibility]', {
       vClaim,
-      vSponsorDetail,
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
-  }, [vClaim, vSponsorDetail, activePanel]);
+  }, [vClaim, activePanel]);
 
   if (!activePanel) return null;
-
-  // ✅ If detail is open, do NOT render the list UI.
-  if (vSponsorDetail) return null;
 
   return <SponsorListSelectInner activePanel={activePanel} />;
 }
@@ -52,7 +46,6 @@ function SponsorListSelectInner({
   activePanel: SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
 }) {
   const ctx = useContext(ExchangeContextState);
-  const { openPanel } = usePanelTree();
 
   // ✅ Directly load sponsor accounts
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
@@ -98,7 +91,7 @@ function SponsorListSelectInner({
         name: (account as any)?.name,
       });
 
-      // 1) Store selected account in ExchangeContext
+      // ✅ Store selected account in ExchangeContext (no detail-panel open here)
       ctx?.setExchangeContext(
         (prev) => {
           if (!prev) return prev;
@@ -112,15 +105,8 @@ function SponsorListSelectInner({
         },
         `SponsorListSelectPanel:setAccountCallBack(${SP_COIN_DISPLAY[activePanel]}:sponsorAccount)`,
       );
-
-      // 2) Open sponsor detail panel
-      openPanel(
-        SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-        `SponsorListSelectPanel:setAccountCallBack(open SPONSOR_ACCOUNT_PANEL from ${SP_COIN_DISPLAY[activePanel]})`,
-        activePanel,
-      );
     },
-    [activePanel, ctx, openPanel],
+    [activePanel, ctx],
   );
 
   // Minimal render states

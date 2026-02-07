@@ -34,9 +34,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // ✅ Shared + Manage DETAIL views
     SPCD.ACCOUNT_PANEL,
-    SPCD.AGENT_ACCOUNT_PANEL,
-    SPCD.RECIPIENT_ACCOUNT_PANEL,
-    SPCD.SPONSOR_ACCOUNT_PANEL,
+
 
     // ✅ Token contract overlay (show in tree)
     SPCD.TOKEN_CONTRACT_PANEL,
@@ -141,9 +139,6 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   // ✅ Shared + Manage DETAIL views
   [SPCD.ACCOUNT_PANEL]: 'panel',
-  [SPCD.AGENT_ACCOUNT_PANEL]: 'panel',
-  [SPCD.RECIPIENT_ACCOUNT_PANEL]: 'panel',
-  [SPCD.SPONSOR_ACCOUNT_PANEL]: 'panel',
 
   [SPCD.ADD_SPONSORSHIP_BUTTON]: 'button',
   [SPCD.MANAGE_SPONSORSHIPS_BUTTON]: 'button',
@@ -198,11 +193,6 @@ export const GROUPS = {
 
     // ✅ Account panel node
     SPCD.ACCOUNT_PANEL,
-
-    // Shared + detail panels
-    SPCD.RECIPIENT_ACCOUNT_PANEL,
-    SPCD.AGENT_ACCOUNT_PANEL,
-    SPCD.SPONSOR_ACCOUNT_PANEL,
 
     // Token contract overlay
     SPCD.TOKEN_CONTRACT_PANEL,
