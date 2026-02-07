@@ -1,6 +1,6 @@
 // File: @/lib/structure/exchangeContext/utils/validateAndNormalizePanelTree.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 export type PanelEntry = { panel: SP; visible: boolean };
@@ -55,7 +55,7 @@ function stableSortByEnumOrder(entries: PanelEntry[]): PanelEntry[] {
  * - Coerces visible to boolean
  * - Dedupes by keeping the last occurrence per panel
  * - Adds any missing known panels with visible=false
- * - Reconciles overlays: if >1 visible, keep the first in MAIN_OVERLAY_GROUP order
+ * - Reconciles overlays: if >1 visible, keep the first in MAIN_RADIO_OVERLAY_PANELS order
  */
 export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
   const notes: string[] = [];
@@ -99,8 +99,8 @@ export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
   }
   let normalized = Array.from(byId.values());
 
-  // Overlay reconciliation: keep first visible in MAIN_OVERLAY_GROUP order
-  const overlayOrder = MAIN_OVERLAY_GROUP.slice();
+  // Overlay reconciliation: keep first visible in MAIN_RADIO_OVERLAY_PANELS order
+  const overlayOrder = MAIN_RADIO_OVERLAY_PANELS.slice();
   const visibleOverlays = overlayOrder.filter((id) => byId.get(id)?.visible);
   if (visibleOverlays.length > 1) {
     const keep = visibleOverlays[0];

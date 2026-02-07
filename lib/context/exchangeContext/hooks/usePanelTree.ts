@@ -6,7 +6,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
 import {
-  MAIN_OVERLAY_GROUP,
+  MAIN_RADIO_OVERLAY_PANELS,
   PANEL_DEFS,
   CHILDREN,
 } from '@/lib/structure/exchangeContext/registry/panelRegistry';
@@ -242,7 +242,7 @@ export function usePanelTree() {
 
   const visibilityMap = useMemo(() => toVisibilityMap(list), [list]);
 
-  const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
+  const overlays = useMemo(() => MAIN_RADIO_OVERLAY_PANELS.slice(), []);
   const isGlobalOverlay = useCallback((p: SP_COIN_DISPLAY) => overlays.includes(p), [
     overlays,
   ]);

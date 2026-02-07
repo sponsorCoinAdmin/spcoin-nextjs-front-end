@@ -4,7 +4,7 @@
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { useActiveRadioPanel } from '@/lib/context/exchangeContext/hooks/useActiveRadioPanel';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
-import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
+import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 import { isAddress } from 'viem';
 
 function hasValidAddress(a: any): a is { address: string } {

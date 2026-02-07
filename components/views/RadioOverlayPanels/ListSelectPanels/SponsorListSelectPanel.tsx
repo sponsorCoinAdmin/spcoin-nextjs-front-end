@@ -14,7 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 // ✅ Provide the context AddressSelect expects (without going through the old wrapper)
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import AccountListRewardsPanel from './AccountListRewardsPanel';
+import AccountListRewardsPanel from '../AccountListRewardsPanel';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'true';

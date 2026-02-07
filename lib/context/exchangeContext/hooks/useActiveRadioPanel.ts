@@ -4,7 +4,7 @@
 import { useSyncExternalStore } from 'react';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 type SP = SP_COIN_DISPLAY;
 
@@ -16,14 +16,14 @@ export function useActiveRadioPanel(): SP | undefined {
   return useSyncExternalStore(
     (cb) => {
       // subscribe to all panels in the radio group
-      const unsubs = (MAIN_OVERLAY_GROUP as readonly SP[]).map((id) => panelStore.subscribePanel(id, cb));
+      const unsubs = (MAIN_RADIO_OVERLAY_PANELS as readonly SP[]).map((id) => panelStore.subscribePanel(id, cb));
       return () => {
         for (const u of unsubs) u?.();
       };
     },
     () => {
       // snapshot: find the first visible panel in the radio group
-      for (const id of MAIN_OVERLAY_GROUP as readonly SP[]) {
+      for (const id of MAIN_RADIO_OVERLAY_PANELS as readonly SP[]) {
         if (panelStore.getPanelSnapshot(id)) return id;
       }
       return undefined;

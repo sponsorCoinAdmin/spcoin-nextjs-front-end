@@ -14,7 +14,7 @@ import {
 import { ErrorMessagePanel } from '@/components/views';
 
 import AccountPanel from '@/components/views/RadioOverlayPanels/AccountPanel';
-import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
+import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoinsPanel';
 

@@ -2,7 +2,7 @@
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { PANEL_DEFS, MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { PANEL_DEFS, MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { NON_PERSISTED_PANELS } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 const nameOf = (id: number) => (SP as any)[id] ?? String(id);
@@ -41,7 +41,7 @@ export function validateAndRepairPanels(input: PanelNode[]) {
   }
 
   // 3) Overlay group: enforce a single visible overlay, prefer TRADING_STATION_PANEL
-  const overlayIds = new Set<number>(MAIN_OVERLAY_GROUP as number[]);
+  const overlayIds = new Set<number>(MAIN_RADIO_OVERLAY_PANELS as number[]);
   const visibleOverlays = [...map.values()].filter((n) => overlayIds.has(n.panel) && n.visible);
 
   if (visibleOverlays.length > 1) {

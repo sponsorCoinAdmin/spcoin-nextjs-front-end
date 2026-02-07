@@ -10,7 +10,7 @@ import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
  * - These are mutually exclusive overlays (radio behavior).
  * - Do NOT put child-mode panels here (ex: AGENTS, RECIPIENTS, SPONSORS).
  */
-export const MAIN_OVERLAY_GROUP = [
+export const MAIN_RADIO_OVERLAY_PANELS = [
   // Core trading overlay
   SP.TRADING_STATION_PANEL,
 
@@ -51,7 +51,7 @@ export const MANAGE_SCOPED = [] as const satisfies readonly SP[];
  * Stack components.
  * Right now it’s the same as main overlays (since manage-scoped is empty).
  */
-export const STACK_COMPONENTS = [...MAIN_OVERLAY_GROUP] as const satisfies readonly SP[];
+export const STACK_COMPONENTS = [...MAIN_RADIO_OVERLAY_PANELS] as const satisfies readonly SP[];
 
 /**
  * ✅ Fast membership checks (action-model helpers).
@@ -60,8 +60,8 @@ export const STACK_COMPONENTS = [...MAIN_OVERLAY_GROUP] as const satisfies reado
  * `usePanelTree` performs membership checks using Number(panel),
  * so these sets MUST be numeric to avoid enum-instance / import-path mismatches.
  */
-export const IS_MAIN_OVERLAY: ReadonlySet<number> = new Set(
-  MAIN_OVERLAY_GROUP.map(Number),
+export const IS_MAIN_RADIO_OVERLAY_PANEL: ReadonlySet<number> = new Set(
+  MAIN_RADIO_OVERLAY_PANELS.map(Number),
 );
 export const IS_MANAGE_SCOPED: ReadonlySet<number> = new Set(
   MANAGE_SCOPED.map(Number),
@@ -87,7 +87,7 @@ if (process.env.NODE_ENV !== 'production') {
     }
   };
 
-  checkUnique('MAIN_OVERLAY_GROUP', MAIN_OVERLAY_GROUP);
+  checkUnique('MAIN_RADIO_OVERLAY_PANELS', MAIN_RADIO_OVERLAY_PANELS);
   checkUnique('MANAGE_SCOPED', MANAGE_SCOPED);
   checkUnique('STACK_COMPONENTS', STACK_COMPONENTS);
 }

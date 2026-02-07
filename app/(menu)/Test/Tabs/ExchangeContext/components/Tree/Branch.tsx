@@ -6,7 +6,7 @@ import Row from './Row';
 import { quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { MAIN_OVERLAY_GROUP, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_RADIO_OVERLAY_PANELS, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
@@ -67,7 +67,7 @@ function formatChildLabel(childVal: any, defaultIndex: string): string {
   if (NON_INDEXED_PANELS.has(id as any)) return displayName;
 
   // 2) For overlays (including TRADING_STATION_PANEL), index by overlay order
-  const overlayPos = (MAIN_OVERLAY_GROUP as unknown as number[]).indexOf(id);
+  const overlayPos = (MAIN_RADIO_OVERLAY_PANELS as unknown as number[]).indexOf(id);
   if (overlayPos >= 0) return `[${overlayPos}] ${displayName}`;
 
   // 3) Fallback to the raw array index
