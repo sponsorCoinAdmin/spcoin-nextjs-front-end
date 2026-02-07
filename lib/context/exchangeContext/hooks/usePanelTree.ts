@@ -247,8 +247,10 @@ export function usePanelTree() {
     overlays,
   ]);
 
+  // Manage container is still used for legacy compat / branch-close logic
   const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
+  // NEW model: no manage-scoped nested radio
   const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
     return [];
   }, []);
@@ -257,6 +259,7 @@ export function usePanelTree() {
     manageScoped,
   ]);
 
+  // ✅ manageCfg no longer includes manageSponsorPanel / sponsorAllowedParents
   const manageCfg: ManageScopeConfig = useMemo(
     () => ({
       known: KNOWN,
@@ -264,15 +267,6 @@ export function usePanelTree() {
       manageContainer,
       manageScoped,
       defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-      manageSponsorPanel: SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL,
-
-      sponsorAllowedParents: new Set<number>([
-        SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
-        SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
-        SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
-        SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
-        SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
-      ]),
     }),
     [manageContainer, manageScoped],
   );
@@ -292,7 +286,6 @@ export function usePanelTree() {
     [],
   );
 
-  const sponsorParentRef = useRef<SP_COIN_DISPLAY | null>(null);
   const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
 
   const getActiveManageScoped = useCallback((_flat: PanelEntry[]) => null, []);
@@ -456,7 +449,6 @@ export function usePanelTree() {
       isManageRadioChild,
       isManageAnyChild,
       withName,
-      sponsorParentRef,
       manageScopedHistoryRef,
       getActiveManageScoped,
       pushManageScopedHistory,
@@ -736,13 +728,15 @@ export function usePanelTree() {
         isNonIndexed: NON_INDEXED.has(Number(panel)),
       });
 
-      // ✅ Enforce “radio or none” at the source of truth:
-      // If you are opening a mode in either group, close the other modes FIRST.
-      // This fixes the "must close the current open panel first" behavior.
+      // ✅ Enforce “radio or none” at the source of truth
       if (isAccountPanelMode(panel)) {
         for (const other of ACCOUNT_PANEL_MODES) {
           if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(other, traceId, `openPanel:${navInvoker}:accountPanelMode:closeOther`);
+            closePanelInternal(
+              other,
+              traceId,
+              `openPanel:${navInvoker}:accountPanelMode:closeOther`,
+            );
           }
         }
       }
@@ -750,7 +744,11 @@ export function usePanelTree() {
       if (isRewardsGroupMode(panel)) {
         for (const other of REWARDS_GROUP_MODES) {
           if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(other, traceId, `openPanel:${navInvoker}:rewardsMode:closeOther`);
+            closePanelInternal(
+              other,
+              traceId,
+              `openPanel:${navInvoker}:rewardsMode:closeOther`,
+            );
           }
         }
       }
@@ -758,7 +756,6 @@ export function usePanelTree() {
       const stackBefore = getPersistedDisplayStackIds();
       const nextStack = pushIfStackMember(panel, traceId, `openPanel:${navInvoker}`);
 
-      // ✅ showDisplay (was showInternal)
       showDisplay(panel, navInvoker, parent);
 
       if (DEBUG_STACK) {
@@ -813,7 +810,6 @@ export function usePanelTree() {
           ? tagHideInvoker(invoker)
           : navInvoker;
 
-      // ✅ hideDisplay (was hideInternal)
       hideDisplay(panel, hideInvoker, arg);
       return;
     }
@@ -846,7 +842,6 @@ export function usePanelTree() {
         ? tagHideInvoker(invoker)
         : navInvoker;
 
-    // ✅ hideDisplay (was hideInternal)
     hideDisplay(popped, hideInvoker, arg);
   }
 

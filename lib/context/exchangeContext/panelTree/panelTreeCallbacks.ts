@@ -23,7 +23,6 @@ import {
 import {
   closeManageBranch,
   setScopedRadio,
-  pickSponsorParent,
   ensureManageContainerAndDefaultChild,
   type ManageScopeConfig,
 } from './panelTreeManageScope';
@@ -132,7 +131,6 @@ export type PanelTreeCallbacksDeps = {
 
   withName: (e: PanelEntry) => PanelEntry;
 
-  sponsorParentRef: React.MutableRefObject<SP_COIN_DISPLAY | null>;
   manageScopedHistoryRef: React.MutableRefObject<SP_COIN_DISPLAY[]>;
 
   getActiveManageScoped: (flat: PanelEntry[]) => SP_COIN_DISPLAY | null;
@@ -161,7 +159,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     isManageRadioChild,
     isManageAnyChild,
     withName,
-    sponsorParentRef,
     manageScopedHistoryRef,
     getActiveManageScoped,
     pushManageScopedHistory,
@@ -176,7 +173,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
    * - a stack component
    * - a global overlay radio member
    * - a manage branch member that gets auto-closed
-   *
    */
   const isPendingRewards = (p: SP_COIN_DISPLAY) =>
     Number(p) === Number(SP_COIN_DISPLAY.MANAGE_PENDING_REWARDS);
@@ -211,7 +207,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   const openPanel = (
     panel: SP_COIN_DISPLAY,
     invoker?: string,
-    parent?: SP_COIN_DISPLAY,
+    _parent?: SP_COIN_DISPLAY,
   ) => {
     logAction('openPanel', panel, invoker);
     if (!known.has(Number(panel))) return;
@@ -252,37 +248,9 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         const openingManageContainer =
           Number(panel) === Number(manageCfg.manageContainer);
 
-        const openingSponsorDetail =
-          Number(panel) === Number(manageCfg.manageSponsorPanel);
-
         const openingManageRadioChild = isManageRadioChild(panel);
 
         let flat = ensurePanelPresent(flat0, panel);
-
-        if (openingSponsorDetail) {
-          sponsorParentRef.current = pickSponsorParent(
-            flat0,
-            manageCfg,
-            sponsorParentRef,
-            parent,
-          );
-
-          flat = ensurePanelPresent(flat, manageCfg.manageSponsorPanel);
-
-          const next = applyGlobalRadio(
-            flat,
-            overlays,
-            manageCfg.manageSponsorPanel,
-            withName,
-          ).map((e) =>
-            e.panel === manageCfg.manageSponsorPanel
-              ? { ...withName(e), visible: true }
-              : e,
-          );
-
-          safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
-          return writeFlatTree(prev as any, next) as any;
-        }
 
         if (openingManageRadioChild) {
           const prevScoped = getActiveManageScoped(flat0);
@@ -416,7 +384,6 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
             // ✅ CRITICAL FIX:
             // If closing a radio overlay and NOTHING can be restored, do NOT force-open a default.
-            // This prevents TRADING_STATION_PANEL from re-opening when the stack becomes empty.
             if (!restoredResult.restored) {
               // leave overlays as-is (all closed is allowed)
             } else if (!ALLOW_EMPTY_GLOBAL_OVERLAY) {

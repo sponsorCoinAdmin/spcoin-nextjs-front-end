@@ -24,9 +24,6 @@ export type ManageScopeConfig = {
    * Default manage panel (landing panel). In the new model this equals manageContainer.
    */
   defaultManageChild: SP_COIN_DISPLAY;
-
-  manageSponsorPanel: SP_COIN_DISPLAY;
-  sponsorAllowedParents: Set<number>;
 };
 
 const isPendingRewards = (p: SP_COIN_DISPLAY) =>
@@ -62,13 +59,12 @@ export function computeManageDescendantsSet(
 }
 
 export function makeManagePredicates(
-  cfg: ManageScopeConfig,
+  _cfg: ManageScopeConfig,
   manageScopedSet: Set<number>,
   manageDescendantsSet: Set<number>,
 ) {
   // NEW model: manageScopedSet is empty => always false.
-  const isManageRadioChild = (p: SP_COIN_DISPLAY) =>
-    manageScopedSet.has(Number(p)) && Number(p) !== Number(cfg.manageSponsorPanel);
+  const isManageRadioChild = (p: SP_COIN_DISPLAY) => manageScopedSet.has(Number(p));
 
   /**
    * NEW model: usually false unless you still nest children under manageContainer in registry.
@@ -145,40 +141,11 @@ export function setScopedRadio(
   });
 }
 
-export function pickSponsorParent(
-  flat0: PanelEntry[],
-  cfg: ManageScopeConfig,
-  sponsorParentRef: { current: SP_COIN_DISPLAY | null },
-  explicit?: SP_COIN_DISPLAY,
-): SP_COIN_DISPLAY {
-  const explicitOk =
-    typeof explicit === 'number' && cfg.sponsorAllowedParents.has(Number(explicit));
-  if (explicitOk) return explicit as SP_COIN_DISPLAY;
-
-  const remembered = sponsorParentRef.current;
-  if (
-    typeof remembered === 'number' &&
-    cfg.sponsorAllowedParents.has(Number(remembered))
-  ) {
-    return remembered;
-  }
-
-  // Infer from currently-visible allowed parent.
-  const m0 = toVisibilityMap(flat0);
-  for (const idNum of cfg.sponsorAllowedParents) {
-    if (m0[idNum]) return idNum as SP_COIN_DISPLAY;
-  }
-
-  // Default to landing/manage panel in the new model.
-  return cfg.defaultManageChild;
-}
-
 /**
  * OLD model: ensure container and default child if none visible.
  * NEW model: manageScoped is empty, so:
  * - anyChildVisible is always false
  * - we ensure defaultManageChild (landing panel) is opened (via setScopedRadioFn)
- * - sponsor detail OFF
  */
 export function ensureManageContainerAndDefaultChild(
   flat: PanelEntry[],
@@ -189,19 +156,11 @@ export function ensureManageContainerAndDefaultChild(
   const map0 = toVisibilityMap(flat);
   const anyChildVisible = cfg.manageScoped.some((id) => !!map0[Number(id)]);
 
-  let next = flat;
   if (!anyChildVisible) {
-    next = setScopedRadioFn(flat, cfg.defaultManageChild);
-  } else {
-    next = flat.map((e) =>
-      e.panel === cfg.manageContainer ? { ...withName(e), visible: true } : e,
-    );
+    return setScopedRadioFn(flat, cfg.defaultManageChild);
   }
 
-  // sponsor detail OFF
-  next = next.map((e) =>
-    e.panel === cfg.manageSponsorPanel ? { ...withName(e), visible: false } : e,
+  return flat.map((e) =>
+    e.panel === cfg.manageContainer ? { ...withName(e), visible: true } : e,
   );
-
-  return next;
 }
