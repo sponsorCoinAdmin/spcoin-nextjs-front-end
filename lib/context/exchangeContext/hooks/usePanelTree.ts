@@ -712,6 +712,66 @@ export function usePanelTree() {
     ],
   );
 
+  /* ------------------------------ Accounts sync for pending rewards (Option A) ------------------------------ */
+
+  const syncRoleAccountForPending = useCallback(
+    (panel: SP_COIN_DISPLAY, traceId: number, navInvoker: string) => {
+      const accounts = (exchangeContext as any)?.accounts;
+      const activeAccount = accounts?.activeAccount;
+
+      // Only act if we have a valid activeAccount
+      if (!activeAccount?.address) return;
+
+      let patch: any = null;
+
+      if (Number(panel) === Number(SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS)) {
+        patch = { sponsorAccount: activeAccount };
+      } else if (Number(panel) === Number(SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS)) {
+        patch = { recipientAccount: activeAccount };
+      } else if (Number(panel) === Number(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS)) {
+        patch = { agentAccount: activeAccount };
+      } else {
+        return;
+      }
+
+      logAction(traceId, 'syncRoleAccountForPending', {
+        panel: { id: Number(panel), name: nameOf(panel) },
+        invoker: navInvoker,
+        activeAccountPreview: String(activeAccount?.address ?? '').slice(0, 12),
+        patchKeys: Object.keys(patch),
+      });
+
+      setExchangeContextSafe(
+        (prev: any) => {
+          const prevEx = prev?.exchangeContext ?? prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+          const prevActive = prevAccounts?.activeAccount ?? activeAccount;
+
+          // Skip if already set to same address (avoid extra writes)
+          const nextAccounts = { ...prevAccounts, activeAccount: prevActive, ...patch };
+
+          if (prev?.exchangeContext) {
+            return {
+              ...prev,
+              exchangeContext: {
+                ...prev.exchangeContext,
+                accounts: nextAccounts,
+              },
+            };
+          }
+
+          return {
+            ...prev,
+            accounts: nextAccounts,
+            activeAccount: prevActive,
+          };
+        },
+        'usePanelTree:openPanel:syncRoleAccountForPending',
+      );
+    },
+    [exchangeContext, setExchangeContextSafe, logAction],
+  );
+
   /* ------------------------------ PUBLIC API (single source of truth) -------------------------------- */
 
   const openPanel = useCallback(
@@ -726,6 +786,9 @@ export function usePanelTree() {
         isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
         isNonIndexed: NON_INDEXED.has(Number(panel)),
       });
+
+      // ✅ Option A: sync accounts immediately when opening pending rewards panels
+      syncRoleAccountForPending(panel, traceId, navInvoker);
 
       // ✅ Enforce “radio or none” at the source of truth
       if (isAccountPanelMode(panel)) {
@@ -772,6 +835,7 @@ export function usePanelTree() {
       nextTraceId,
       tagInvoker,
       logAction,
+      syncRoleAccountForPending,
       getPersistedDisplayStackIds,
       pushIfStackMember,
       showDisplay,

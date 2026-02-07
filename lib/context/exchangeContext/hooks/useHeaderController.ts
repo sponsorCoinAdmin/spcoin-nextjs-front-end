@@ -1,7 +1,7 @@
 // File: @/lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -93,7 +93,6 @@ function getAccountsHeaderTitle(
   },
   name?: string,
 ): string {
-  // If no account provided (undefined / empty), keep it generic
   const n = (name ?? '').trim();
   const label = n.length ? n : 'Sponsor Coin';
 
@@ -164,20 +163,6 @@ const DISPLAY_PRIORITY = [
 
 type PriorityDisplay = (typeof DISPLAY_PRIORITY)[number];
 
-type RewardsRoleMode = 'sponsor' | 'recipient' | 'agent' | 'none';
-
-function deriveRewardsRoleMode(opts: {
-  unSponsor: boolean;
-  claimSponsor: boolean;
-  claimRecipient: boolean;
-  claimAgent: boolean;
-}): RewardsRoleMode {
-  if (opts.unSponsor || opts.claimSponsor) return 'sponsor';
-  if (opts.claimRecipient) return 'recipient';
-  if (opts.claimAgent) return 'agent';
-  return 'none';
-}
-
 function getAccountDisplayName(acct: any): string {
   return (
     (acct as any)?.name ??
@@ -195,10 +180,9 @@ export function useHeaderController() {
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // ✅ ExchangeContext access (for activeAccount + writable accounts fields)
+  // ✅ ExchangeContext access (for accounts.* + address/logo)
   const exchangeCtx = useContext(ExchangeContextState);
   const exchangeContext = (exchangeCtx as any)?.exchangeContext;
-  const setExchangeContext = (exchangeCtx as any)?.setExchangeContext;
 
   const accounts = exchangeContext?.accounts;
   const activeAccount = accounts?.activeAccount;
@@ -241,121 +225,6 @@ export function useHeaderController() {
     [activeSponsor, activeRecipient, activeAgent],
   );
 
-  /**
-   * ✅ Populate accounts.sponsorAccount / recipientAccount / agentAccount
-   * AND force a reload when the rewards "role mode" changes.
-   *
-   * FIX:
-   * - Do NOT overwrite user selections.
-   * - Only fill the role account if it's currently empty.
-   * - Do NOT clear other role accounts to undefined.
-   */
-  const lastRewardsRoleModeRef = useRef<RewardsRoleMode>('none');
-
-  useEffect(() => {
-    if (typeof setExchangeContext !== 'function') return;
-    if (!activeAccount) return;
-
-    const nextMode = deriveRewardsRoleMode({
-      unSponsor,
-      claimSponsor,
-      claimRecipient,
-      claimAgent,
-    });
-
-    // If none of the modes are active, do nothing (don’t stomp selections)
-    if (nextMode === 'none') return;
-
-    const prevMode = lastRewardsRoleModeRef.current;
-
-    // ✅ Only "reload" on *mode changes* after the initial mode is established.
-    const modeChanged = prevMode !== 'none' && prevMode !== nextMode;
-
-    // update ref immediately to avoid double-trigger on rapid flips
-    lastRewardsRoleModeRef.current = nextMode;
-
-    setExchangeContext(
-      (prev: any) => {
-        const prevEx = prev?.exchangeContext ?? prev;
-        const prevAccounts = prevEx?.accounts ?? {};
-
-        const nextReloadNonce = modeChanged
-          ? Number(prevAccounts?.reloadNonce ?? 0) + 1
-          : prevAccounts?.reloadNonce;
-
-        const sponsorEmpty = !prevAccounts?.sponsorAccount?.address;
-        const recipientEmpty = !prevAccounts?.recipientAccount?.address;
-        const agentEmpty = !prevAccounts?.agentAccount?.address;
-
-        const rolePatch =
-          nextMode === 'sponsor'
-            ? sponsorEmpty
-              ? { sponsorAccount: activeAccount }
-              : null
-            : nextMode === 'recipient'
-              ? recipientEmpty
-                ? { recipientAccount: activeAccount }
-                : null
-              : nextMode === 'agent'
-                ? agentEmpty
-                  ? { agentAccount: activeAccount }
-                  : null
-                : null;
-
-        // No-op if we'd only overwrite an existing selection and no reload is needed
-        if (!rolePatch && !modeChanged) return prev;
-
-        const writeAccounts = {
-          ...prevAccounts,
-          activeAccount: prevAccounts.activeAccount ?? activeAccount,
-          ...(rolePatch ? rolePatch : null),
-          ...(modeChanged ? { reloadNonce: nextReloadNonce } : null),
-        };
-
-        if (prev?.exchangeContext) {
-          return {
-            ...prev,
-            exchangeContext: {
-              ...prev.exchangeContext,
-              accounts: writeAccounts,
-            },
-          };
-        }
-
-        return {
-          ...prev,
-          accounts: writeAccounts,
-          activeAccount: prevAccounts.activeAccount ?? activeAccount,
-        };
-      },
-      'useHeaderController:setRoleAccountFromRewardsMode',
-    );
-
-    // ✅ Best-effort reload hooks if your accounts model exposes one
-    if (modeChanged) {
-      try {
-        exchangeContext?.accounts?.reload?.('rewardsModeChanged');
-      } catch {}
-      try {
-        exchangeContext?.accounts?.reloadAccounts?.('rewardsModeChanged');
-      } catch {}
-      try {
-        exchangeContext?.accounts?.refresh?.('rewardsModeChanged');
-      } catch {}
-      try {
-        exchangeContext?.accounts?.refreshAccounts?.('rewardsModeChanged');
-      } catch {}
-    }
-  }, [
-    setExchangeContext,
-    exchangeContext,
-    activeAccount,
-    unSponsor,
-    claimSponsor,
-    claimRecipient,
-    claimAgent,
-  ]);
-
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
       [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
@@ -394,14 +263,8 @@ export function useHeaderController() {
   ]);
 
   /**
-   * ✅ KEY FIX (your requirement):
-   * When ACCOUNT_PANEL is active, the header MUST use:
-   * - ACTIVE_SPONSOR    -> accounts.sponsorAccount
-   * - ACTIVE_RECIPIENT  -> accounts.recipientAccount
-   * - ACTIVE_AGENT      -> accounts.agentAccount
-   * If none are active or the role account is missing, header name/logo becomes undefined.
-   *
-   * Otherwise (other panels), keep using accounts.activeAccount (existing behavior).
+   * When ACCOUNT_PANEL is active, the header uses role accounts.
+   * Otherwise it uses accounts.activeAccount.
    */
   const headerAccount = useMemo(() => {
     if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL) {
@@ -465,6 +328,7 @@ export function useHeaderController() {
           : () => {
               suppressNextOverlayClose('Header:ActiveLogo->AccountPanel', 'HeaderController');
 
+              // If rewards panel is active, preselect account mode before opening ACCOUNT_PANEL
               if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
                 const modeToOpen =
                   unSponsor || claimSponsor
@@ -536,3 +400,4 @@ export function useHeaderController() {
     currentDisplay,
   };
 }
+go
