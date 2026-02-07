@@ -3,8 +3,6 @@
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-let SEEDED = false;
-
 const nameOf = (id: SP_COIN_DISPLAY) => SP_COIN_DISPLAY[id] ?? String(id);
 
 /**
@@ -63,9 +61,4 @@ export function dumpNavStack(
     visibleCountFromMap: visibleFromMap.length,
     visibleFromMap,
   });
-}
-
-// Optional: lets you reset between hot reloads/tests
-export function __unsafeResetNavSeedForTests() {
-  SEEDED = false;
 }

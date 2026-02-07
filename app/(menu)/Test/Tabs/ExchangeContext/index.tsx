@@ -22,9 +22,6 @@ import PanelGate from '@/components/utility/PanelGate';
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 
-// Detail views
-import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
-import ManageSponsor from '@/components/views/RadioOverlayPanels/ManageSponsor';
 
 // Select / aux overlays
 import {
@@ -239,13 +236,6 @@ export default function ExchangeContextTab() {
             <ManageSponsorRecipients />
           </PanelGate>
 
-          {/* Manage DETAIL views */}
-           <PanelGate panel={SP.RECIPIENT_ACCOUNT_PANEL}>
-            <ManageRecipient />
-          </PanelGate>
-          <PanelGate panel={SP.SPONSOR_ACCOUNT_PANEL}>
-            <ManageSponsor />
-          </PanelGate>
         </div>
       </PanelGate>
     </div>

@@ -14,9 +14,6 @@ import {
 import { ErrorMessagePanel } from '@/components/views';
 
 import AccountPanel from '@/components/views/RadioOverlayPanels/AccountPanel';
-import ManageAgent from '@/components/views/RadioOverlayPanels/ManageAgent';
-import ManageRecipient from '@/components/views/RadioOverlayPanels/ManageRecipient';
-import ManageSponsor from '@/components/views/RadioOverlayPanels/ManageSponsor';
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoinsPanel';
@@ -45,18 +42,6 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Detail overlays (must be mounted) ───────────────────────── */}
       <PanelGate panel={SP_COIN_DISPLAY.ACCOUNT_PANEL}>
         <AccountPanel />
-      </PanelGate>
-
-      <PanelGate panel={SP_COIN_DISPLAY.AGENT_ACCOUNT_PANEL}>
-        <ManageAgent />
-      </PanelGate>
-
-      <PanelGate panel={SP_COIN_DISPLAY.RECIPIENT_ACCOUNT_PANEL}>
-        <ManageRecipient />
-      </PanelGate>
-
-      <PanelGate panel={SP_COIN_DISPLAY.SPONSOR_ACCOUNT_PANEL}>
-        <ManageSponsor />
       </PanelGate>
 
       {/* ───────────────────────── Select / aux overlays ───────────────────────── */}
