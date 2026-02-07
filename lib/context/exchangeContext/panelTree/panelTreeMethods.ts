@@ -33,9 +33,6 @@ export type PanelTreeMethodsDeps = {
 
   // Name helper
   withName: (e: PanelEntry) => PanelEntry;
-
-  // sponsor detail restore fallback
-  sponsorParentRef: React.MutableRefObject<SP_COIN_DISPLAY | null>;
 };
 
 /**
@@ -55,7 +52,6 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
     parentsOf,
     pickParentForChild,
     withName,
-    sponsorParentRef,
   } = deps;
 
   return function activatePanel(
@@ -68,8 +64,6 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
     const targetIsManageScoped = isManageRadioChild(target);
     const targetIsManageContainer =
       Number(target) === Number(manageCfg.manageContainer);
-    const targetIsSponsorDetail =
-      Number(target) === Number(manageCfg.manageSponsorPanel);
 
     /* 1) Global overlay */
     if (targetIsGlobal) {
@@ -84,18 +78,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       const setScoped = (fi: PanelEntry[], p: SP_COIN_DISPLAY) =>
         setScopedRadio(fi, p, manageCfg, isManageRadioChild, withName, true);
 
-      flat = ensureManageContainerAndDefaultChild(
-        flat,
-        manageCfg,
-        withName,
-        setScoped,
-      );
-
-      return flat.map((e) =>
-        e.panel === manageCfg.manageSponsorPanel
-          ? { ...withName(e), visible: false }
-          : e,
-      );
+      return ensureManageContainerAndDefaultChild(flat, manageCfg, withName, setScoped);
     }
 
     /* 3) Manage scoped child */
@@ -103,7 +86,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
       flat = ensurePanelPresent(flat, manageCfg.manageContainer);
       flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
 
-      flat = setScopedRadio(
+      return setScopedRadio(
         flat,
         target,
         manageCfg,
@@ -111,41 +94,9 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
         withName,
         true,
       );
-
-      return flat.map((e) =>
-        e.panel === manageCfg.manageSponsorPanel
-          ? { ...withName(e), visible: false }
-          : e,
-      );
     }
 
-    /* 4) Sponsor detail */
-    if (targetIsSponsorDetail) {
-      flat = ensurePanelPresent(flat, manageCfg.manageContainer);
-      flat = applyGlobalRadio(flat, overlays, manageCfg.manageContainer, withName);
-
-      const parentScoped =
-        sponsorParentRef.current ?? manageCfg.defaultManageChild;
-
-      flat = setScopedRadio(
-        flat,
-        parentScoped,
-        manageCfg,
-        isManageRadioChild,
-        withName,
-        true,
-      );
-
-      flat = ensurePanelPresent(flat, manageCfg.manageSponsorPanel);
-
-      return flat.map((e) =>
-        e.panel === manageCfg.manageSponsorPanel
-          ? { ...withName(e), visible: true }
-          : e,
-      );
-    }
-
-    /* 5) Regular panels (multi-parent walk) */
+    /* 4) Regular panels (multi-parent walk) */
     const vis0 = toVisibilityMap(flat);
     const chain: SP_COIN_DISPLAY[] = [];
     let cur: SP_COIN_DISPLAY = target;
@@ -208,10 +159,7 @@ export function createActivatePanel(deps: PanelTreeMethodsDeps) {
 export const nameOf = (id: SP_COIN_DISPLAY) =>
   (SP_COIN_DISPLAY as any)?.[id] ?? String(id);
 
-export function summarizeVis(
-  map: Record<number, boolean>,
-  ids: SP_COIN_DISPLAY[],
-) {
+export function summarizeVis(map: Record<number, boolean>, ids: SP_COIN_DISPLAY[]) {
   return ids.map((id) => ({
     id: Number(id),
     name: nameOf(id),
