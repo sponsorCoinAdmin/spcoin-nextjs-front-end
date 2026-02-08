@@ -4,7 +4,7 @@ import type { ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
 const EXCHANGE_CONTEXT_TREE_DISPLAY_MAP = 'exchangeContext';
@@ -12,7 +12,7 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
 
-/** Normalize MAIN_OVERLAY_GROUP visibility:
+/** Normalize MAIN_RADIO_OVERLAY_PANELS visibility:
  *  - If 0 overlays visible: do nothing (allow empty)
  *  - If 1 overlay visible: do nothing
  *  - If >1 overlays visible: collapse to the first visible (stable)
@@ -20,7 +20,7 @@ const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIM
 function normalizeOverlayVisibility(
   flat: Array<{ panel: SP_COIN_DISPLAY; visible: boolean }>,
 ): void {
-  const overlays = flat.filter((p) => MAIN_OVERLAY_GROUP.includes(p.panel));
+  const overlays = flat.filter((p) => MAIN_RADIO_OVERLAY_PANELS.includes(p.panel));
   const visible = overlays.filter((p) => p.visible);
 
   if (DEBUG_ENABLED) {
@@ -37,7 +37,7 @@ function normalizeOverlayVisibility(
   const chosen = visible[0]!.panel;
 
   for (const p of flat) {
-    if (MAIN_OVERLAY_GROUP.includes(p.panel)) {
+    if (MAIN_RADIO_OVERLAY_PANELS.includes(p.panel)) {
       p.visible = p.panel === chosen;
     }
   }

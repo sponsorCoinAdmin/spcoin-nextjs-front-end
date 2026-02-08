@@ -199,7 +199,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
   };
 
   const radioGroupsPriority: RadioGroup[] = [
-    { name: 'MAIN_OVERLAY_GROUP', members: overlays },
+    { name: 'MAIN_RADIO_OVERLAY_PANELS', members: overlays },
   ];
 
   /* ---------------- open ---------------- */

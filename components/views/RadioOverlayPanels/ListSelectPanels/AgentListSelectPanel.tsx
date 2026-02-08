@@ -4,7 +4,7 @@
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
-import PanelListSelectWrapper from './AssetSelectPanels/PanelListSelectWrapper';
+import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 
 /** Visibility gate only. */
 export default function AgentListSelectPanel() {

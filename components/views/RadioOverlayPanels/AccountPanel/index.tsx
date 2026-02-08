@@ -4,7 +4,7 @@
 import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageAccount from './ManageAccount';
+import ManageAccount from './AccointInfo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = { onClose?: () => void };

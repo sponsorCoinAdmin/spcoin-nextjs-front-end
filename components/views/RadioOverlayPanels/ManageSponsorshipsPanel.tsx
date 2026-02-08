@@ -1,7 +1,7 @@
 // File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 // import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -15,7 +15,6 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { useManageSponsorships } from './AccountPanel/hooks/useManageSponsorships';
 import { msTableTw } from './msTableTw';
 
 const LOG_TIME = false;
@@ -33,6 +32,8 @@ type RewardsMode =
   | SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS
   | SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS
   | SP_COIN_DISPLAY.PENDING_AGENT_REWARDS;
+
+type ToDoMode = 'claimRewards' | 'claimAllSponsorshipRewards' | 'unstakeAllSponsorships';
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const ctx = useContext(ExchangeContextState);
@@ -55,7 +56,53 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     });
   }, [isActive, activeAccount, defaultAddr, pendingVisible]);
 
-  const { showToDo, claimRewards, claimAllToDo, unstakeAllSponsorships, doToDo } = useManageSponsorships(ctx);
+  // ───────────────────────── ToDo overlay (inlined; replaces deleted hook) ─────────────────────────
+  const [showToDo, setShowToDo] = useState(false);
+  const todoModeRef = useRef<ToDoMode>('claimRewards');
+  const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
+
+  const claimRewards = useCallback((actType: AccountType) => {
+    todoModeRef.current = 'claimRewards';
+    accountTypeRef.current = actType;
+    setShowToDo(true);
+  }, []);
+
+  const claimAllToDo = useCallback(() => {
+    todoModeRef.current = 'claimAllSponsorshipRewards';
+    accountTypeRef.current = 'ALL';
+    setShowToDo(true);
+  }, []);
+
+  const unstakeAllSponsorships = useCallback(() => {
+    todoModeRef.current = 'unstakeAllSponsorships';
+    accountTypeRef.current = AccountType.SPONSOR;
+    setShowToDo(true);
+  }, []);
+
+  const doToDo = useCallback(() => {
+    setShowToDo(false);
+
+    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
+    const connectedAddr = connected ? String((connected as any)?.address ?? '') : '(none connected)';
+
+    // eslint-disable-next-line no-alert
+    if (todoModeRef.current === 'unstakeAllSponsorships') {
+      alert(`ToDo: (Not Yet Implemented)\nUnstake All Sponsorships:\nFor account: ${connectedAddr}`);
+      return;
+    }
+
+    // eslint-disable-next-line no-alert
+    if (todoModeRef.current === 'claimAllSponsorshipRewards') {
+      alert(`ToDo: (Not Yet Implemented)\nClaim all Sponsorship Rewards\nFor Account: ${connectedAddr}`);
+      return;
+    }
+
+    // Default: Claim Rewards
+    const sel = String(accountTypeRef.current);
+    const what = sel === 'ALL' ? sel : `${sel}(s)`;
+    // eslint-disable-next-line no-alert
+    alert(`ToDo: (Not Yet Implemented)\nClaim: ${what} Rewards\nFor account: ${connectedAddr}`);
+  }, [ctx]);
 
   const openOverlay = useCallback(
     (id: SP_COIN_DISPLAY) => {
@@ -298,11 +345,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </tr>
               )}
 
-              {/* Pending Rewards by Account Type row (shown ONLY when group is OPEN)
-                  - SAME alignment/styling as Pending row
-                  - white text
-                  - NO 0.0 and NO Claim All on this row
-               */}
+              {/* Pending Rewards by Account Type row (shown ONLY when group is OPEN) */}
               {pendingVisible && (
                 <tr className={msTableTw.rowBorder}>
                   <td style={col0Style} className={pendingCellTw}>
@@ -327,7 +370,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </tr>
               )}
 
-              {/* Sponsor/Recipient/Apent group rows (shown ONLY when group is OPEN) */}
+              {/* Sponsor/Recipient/Agent group rows (shown ONLY when group is OPEN) */}
               {pendingVisible && (
                 <>
                   {/* Sponsors */}
@@ -398,7 +441,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     </td>
                   </tr>
 
-                  {/* Apent */}
+                  {/* Agent */}
                   <tr className={msTableTw.rowBorder}>
                     <td style={col0Style} className={`${msTableTw.rowB} ${msTableTw.td5} ${vLine}`}>
                       <button
@@ -409,7 +452,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                         title="Available Agent Rewards"
                       >
                         <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-                        Apent
+                        Agent
                       </button>
                     </td>
 
