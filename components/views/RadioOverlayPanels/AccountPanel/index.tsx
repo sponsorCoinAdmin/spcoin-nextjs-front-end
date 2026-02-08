@@ -6,6 +6,10 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import DisplayInfo from './AccointInfo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ACCOUNT_PANEL === 'true';
+const debugLog = createDebugLogger('AccountPanelEmpty', DEBUG_ENABLED, false);
 
 type Props = { onClose?: () => void };
 
@@ -46,6 +50,20 @@ export default function AccountPanel(_props: Props) {
 
   // ✅ early return AFTER hooks
   if (!vAccountPanel) return null;
+
+  if (!isActiveAccount) {
+    debugLog.log?.('[empty]', {
+      vAccountPanel,
+      vActiveSponsor,
+      vActiveRecipient,
+      vActiveAgent,
+      activeMember,
+      hasAccounts: !!accounts,
+      sponsorAddr: accounts?.sponsorAccount?.address,
+      recipientAddr: accounts?.recipientAccount?.address,
+      agentAddr: accounts?.agentAccount?.address,
+    });
+  }
 
   return (
     <div id="ACCOUNT_PANEL">

@@ -3,7 +3,9 @@
 
 import { useCallback } from 'react';
 import type { TokenContract, spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useSellTokenContract, useBuyTokenContract, useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -26,6 +28,7 @@ export type UseSelectionCommit = {
 export function useSelectionCommit(): UseSelectionCommit {
   // ✅ closeTop = POP top-of-stack (same as header X)
   const { closeTop } = usePanelTransitions();
+  const { openPanel } = usePanelTree();
 
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
@@ -55,9 +58,14 @@ export function useSelectionCommit(): UseSelectionCommit {
 
       log.log?.('commitBuyToken', { address: addr, symbol: sym });
       setBuyTokenContract(t);
+      openPanel(SP_COIN_DISPLAY.BUY_TOKEN, 'useSelectionCommit:commitBuyToken');
+      openPanel(
+        SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+        'useSelectionCommit:commitBuyToken',
+      );
       finish();
     },
-    [setBuyTokenContract, finish],
+    [setBuyTokenContract, openPanel, finish],
   );
 
   const commitSellToken = useCallback(
@@ -72,9 +80,14 @@ export function useSelectionCommit(): UseSelectionCommit {
 
       log.log?.('commitSellToken', { address: addr, symbol: sym });
       setSellTokenContract(t);
+      openPanel(SP_COIN_DISPLAY.SELL_TOKEN, 'useSelectionCommit:commitSellToken');
+      openPanel(
+        SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+        'useSelectionCommit:commitSellToken',
+      );
       finish();
     },
-    [setSellTokenContract, finish],
+    [setSellTokenContract, openPanel, finish],
   );
 
   const commitToken = useCallback(

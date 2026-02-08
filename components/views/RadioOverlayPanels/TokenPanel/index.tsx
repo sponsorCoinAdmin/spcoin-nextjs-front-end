@@ -1,14 +1,19 @@
 // File: @/components/views/RadioOverlayPanels/TokenPanel/index.tsx
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
-import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
+import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ Use the same table theme module used by AccountListRewardsPanel
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_TOKEN_PANEL === 'true';
+const debugLog = createDebugLogger('TokenPanel', DEBUG_ENABLED, false);
+const emptyLog = createDebugLogger('TokenPanelEmpty', DEBUG_ENABLED, false);
 
 type Props = { onClose?: () => void };
 
@@ -51,30 +56,69 @@ export default function TokenPanel(_props: Props) {
   // ✅ Single visibility gate
   const vTokenPanel = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
 
-  // ✅ Context (hooks must run before any early return)
-  const ctx = useContext(ExchangeContextState);
-  const ex = ctx?.exchangeContext;
+  // ✅ Read child visibility directly (BUY_TOKEN / SELL_TOKEN)
+  const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
 
-  // ✅ Resolve the “selected token contract” from context.
-  // Update/trim these candidates to match your real model.
-  const tokenContract: spCoinAccount | undefined =
-    (ex as any)?.tokenContract ??
-    (ex as any)?.tokens?.activeToken ??
-    (ex as any)?.activeTokenContract ??
-    (ex as any)?.accounts?.tokenContractAccount ??
-    (ex as any)?.accounts?.activeTokenContract ??
-    undefined;
+  // ✅ Source of truth: use the same token hooks as the rest of the app
+  const [sellToken] = useSellTokenContract();
+  const [buyToken] = useBuyTokenContract();
+
+  // ✅ Resolve active token side from visible child flags
+  const activeTokenSide = useMemo(() => {
+    if (vBuyToken) return 'BUY_TOKEN';
+    if (vSellToken) return 'SELL_TOKEN';
+    return 'NONE';
+  }, [vBuyToken, vSellToken]);
+
+  const tokenContract: TokenContract | undefined =
+    activeTokenSide === 'BUY_TOKEN'
+      ? buyToken
+      : activeTokenSide === 'SELL_TOKEN'
+        ? sellToken
+        : buyToken ?? sellToken;
+
+  useEffect(() => {
+    if (!DEBUG_ENABLED) return;
+    debugLog.log?.('[TokenPanel] state', {
+      vTokenPanel,
+      vBuyToken,
+      vSellToken,
+      activeTokenSide,
+      buyTokenAddr: buyToken?.address,
+      sellTokenAddr: sellToken?.address,
+      resolvedAddr: tokenContract?.address,
+    });
+  }, [
+    vTokenPanel,
+    vBuyToken,
+    vSellToken,
+    activeTokenSide,
+    buyToken?.address,
+    sellToken?.address,
+    tokenContract?.address,
+  ]);
+
+  const isVisible = vTokenPanel || vBuyToken || vSellToken;
 
   // ✅ early return AFTER hooks
-  if (!vTokenPanel) return null;
+  if (!isVisible) return null;
 
   // Empty state (fixed wording)
   if (!tokenContract) {
+    emptyLog.log?.('[empty]', {
+      vTokenPanel,
+      vBuyToken,
+      vSellToken,
+      activeTokenSide,
+      buyTokenAddr: buyToken?.address,
+      sellTokenAddr: sellToken?.address,
+    });
     return (
       <div id="TOKEN_CONTRACT_PANEL">
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No token contract selected.</p>
-          <p className="m-0">Select a token contract to view its details.</p>
+          <p className="m-0">Select a buy or sell token to view its details.</p>
         </div>
       </div>
     );
@@ -83,9 +127,9 @@ export default function TokenPanel(_props: Props) {
   const address = addressToText(tokenContract.address);
   const name = fallback(tokenContract.name);
   const symbol = fallback(tokenContract.symbol);
-  const description = fallback(tokenContract.description);
+  const description = fallback((tokenContract as any)?.description);
   const logoURL = (tokenContract.logoURL ?? '').toString().trim();
-  const website = (tokenContract.website ?? '').toString().trim();
+  const website = ((tokenContract as any)?.website ?? '').toString().trim();
 
   // If these are not applicable for token contracts, delete the rows entirely.
   const stakedBalance = 0;
