@@ -45,12 +45,16 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.ACCOUNT_PANEL, false],
 
   // ✅ Ensure ACCOUNT_PANEL children exist even for older persisted trees
-  [SP.ACTIVE_SPONSOR, false],
-  [SP.ACTIVE_RECIPIENT, false],
-  [SP.ACTIVE_AGENT, false],
+  [SP.SPONSOR_ACCOUNT, false],
+  [SP.RECIPIENT_ACCOUNT, false],
+  [SP.AGENT_ACCOUNT, false],
 
   // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
   [SP.TOKEN_CONTRACT_PANEL, false],
+
+  // ✅ Ensure TOKEN_CONTRACT_PANEL children exist even for older persisted trees
+  [SP.BUY_TOKEN, false],
+  [SP.SELL_TOKEN, false],
 
   // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
   [SP.MANAGE_SPONSORSHIPS_PANEL, false],
@@ -83,8 +87,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       node(SP.ERROR_MESSAGE_PANEL, false),
 
-      // ✅ Token contract overlay MUST be part of overlay tree now
-      node(SP.TOKEN_CONTRACT_PANEL, false),
+      // ✅ Token contract overlay MUST be part of overlay tree now (with children)
+      node(SP.TOKEN_CONTRACT_PANEL, false, [
+        node(SP.BUY_TOKEN, false),
+        node(SP.SELL_TOKEN, false),
+      ]),
 
       // ✅ Chevron pending flags (persisted UI state; not a visible overlay)
       node(SP.CHEVRON_DOWN_OPEN_PENDING, false),
@@ -102,11 +109,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.ACTIVE_SPONSORSHIPS, false),
       ]),
 
-      // ✅ FIX: ACCOUNT_PANEL should show ACTIVE_* children in the tree
+      // ✅ ACCOUNT_PANEL should show role children in the tree
       node(SP.ACCOUNT_PANEL, false, [
-        node(SP.ACTIVE_SPONSOR, false),
-        node(SP.ACTIVE_RECIPIENT, false),
-        node(SP.ACTIVE_AGENT, false),
+        node(SP.SPONSOR_ACCOUNT, false),
+        node(SP.RECIPIENT_ACCOUNT, false),
+        node(SP.AGENT_ACCOUNT, false),
       ]),
 
       // Aux panels

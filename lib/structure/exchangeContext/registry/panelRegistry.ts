@@ -70,10 +70,16 @@ const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
  * ✅ ACCOUNT_PANEL children (order matters)
  */
 const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
-  SP.ACTIVE_SPONSOR,
-  SP.ACTIVE_RECIPIENT,
-  SP.ACTIVE_AGENT,
+  SP.SPONSOR_ACCOUNT,
+  SP.RECIPIENT_ACCOUNT,
+  SP.AGENT_ACCOUNT,
 ] as const;
+
+/**
+ * ✅ TOKEN_CONTRACT_PANEL children (order matters)
+ * NOTE: these are NOT stack overlays; they're mode children under the token contract container.
+ */
+const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
 
 /**
  * ✅ Tree Panel fix:
@@ -214,9 +220,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // ✅ ACCOUNT_PANEL state children (active nodes)
-  def({ id: SP.ACTIVE_SPONSOR, kind: 'panel', children: [] }),
-  def({ id: SP.ACTIVE_RECIPIENT, kind: 'panel', children: [] }),
-  def({ id: SP.ACTIVE_AGENT, kind: 'panel', children: [] }),
+  def({ id: SP.SPONSOR_ACCOUNT, kind: 'panel', children: [] }),
+  def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
+  def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),
+
+  // ✅ TOKEN_CONTRACT_PANEL mode children
+  def({ id: SP.BUY_TOKEN, kind: 'panel', children: [] }),
+  def({ id: SP.SELL_TOKEN, kind: 'panel', children: [] }),
 
   // Shared / detail overlays
   def({
@@ -228,8 +238,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Staking/unstaking overlays
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
 
-  // Token contract overlay
-  def({ id: SP.TOKEN_CONTRACT_PANEL, kind: 'list' }),
+  // Token contract overlay (container)
+  // NOTE: This is not a stack overlay. It is a structural parent in the tree.
+  def({
+    id: SP.TOKEN_CONTRACT_PANEL,
+    kind: 'panel',
+    children: TOKEN_CONTRACT_PANEL_CHILDREN,
+  }),
 
   // Inline / auxiliary
   def({

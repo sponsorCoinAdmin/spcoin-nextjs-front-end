@@ -7,6 +7,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ ExchangeContext access (for accounts.* + address/logo)
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
@@ -49,7 +50,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: 'Select a Token to Sell',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
-  [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Select a Sponsor',
+  [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Token Contract',
 
   // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())
   [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
@@ -103,6 +104,25 @@ function getAccountsHeaderTitle(
   return `${label}'s Account`;
 }
 
+/**
+ * ✅ TOKEN_CONTRACT_PANEL header title logic
+ */
+function getTokenContractHeaderTitle(
+  opts: {
+    activeBuyToken: boolean;
+    activeSellToken: boolean;
+  },
+  symbols?: { buySymbol?: string; sellSymbol?: string },
+): string {
+  const buySym = (symbols?.buySymbol ?? '').trim() || 'Token';
+  const sellSym = (symbols?.sellSymbol ?? '').trim() || 'Token';
+
+  if (opts.activeSellToken) return `Sell ${sellSym} Token`;
+  if (opts.activeBuyToken) return `Buy ${buySym} Token`;
+
+  return 'Token Contract';
+}
+
 function titleFor(
   display: SP_COIN_DISPLAY,
   rewardsState?: {
@@ -116,6 +136,12 @@ function titleFor(
     activeRecipient: boolean;
     activeAgent: boolean;
   },
+  tokenState?: {
+    activeBuyToken: boolean;
+    activeSellToken: boolean;
+    buySymbol?: string;
+    sellSymbol?: string;
+  },
   manageName?: string,
 ): string {
   if (display === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL && rewardsState) {
@@ -124,6 +150,13 @@ function titleFor(
 
   if (display === SP_COIN_DISPLAY.ACCOUNT_PANEL && accountsState) {
     return getAccountsHeaderTitle(accountsState, manageName);
+  }
+
+  if (display === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL && tokenState) {
+    return getTokenContractHeaderTitle(tokenState, {
+      buySymbol: tokenState.buySymbol,
+      sellSymbol: tokenState.sellSymbol,
+    });
   }
 
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
@@ -197,6 +230,8 @@ export function useHeaderController() {
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+  const buyTokenPanel = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellTokenPanel = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -216,13 +251,26 @@ export function useHeaderController() {
   );
 
   // ✅ ACCOUNT_PANEL active sub-view visibility (dynamic title + header account source)
-  const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
-  const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
-  const activeAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
+  const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
+  const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
+  const activeAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
 
   const accountsState = useMemo(
     () => ({ activeSponsor, activeRecipient, activeAgent }),
     [activeSponsor, activeRecipient, activeAgent],
+  );
+
+  const [buyToken] = useBuyTokenContract();
+  const [sellToken] = useSellTokenContract();
+
+  const tokenState = useMemo(
+    () => ({
+      activeBuyToken: buyTokenPanel,
+      activeSellToken: sellTokenPanel,
+      buySymbol: buyToken?.symbol,
+      sellSymbol: sellToken?.symbol,
+    }),
+    [buyTokenPanel, sellTokenPanel, buyToken?.symbol, sellToken?.symbol],
   );
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
@@ -293,9 +341,10 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
+      currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL ? tokenState : undefined,
       headerAccountName,
     );
-  }, [currentDisplay, rewardsState, accountsState, headerAccountName]);
+  }, [currentDisplay, rewardsState, accountsState, tokenState, headerAccountName]);
 
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
@@ -332,11 +381,11 @@ export function useHeaderController() {
               if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
                 const modeToOpen =
                   unSponsor || claimSponsor
-                    ? SP_COIN_DISPLAY.ACTIVE_SPONSOR
+                    ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
                     : claimRecipient
-                      ? SP_COIN_DISPLAY.ACTIVE_RECIPIENT
+                      ? SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
                       : claimAgent
-                        ? SP_COIN_DISPLAY.ACTIVE_AGENT
+                        ? SP_COIN_DISPLAY.AGENT_ACCOUNT
                         : null;
 
                 if (modeToOpen != null) {

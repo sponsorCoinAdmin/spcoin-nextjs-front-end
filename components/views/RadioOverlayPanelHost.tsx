@@ -41,10 +41,8 @@ export default function RadioOverlayPanelHost() {
         <AccountPanel />
       </PanelGate>
 
-      {/* ✅ Token Contract detail overlay (must be mounted) */}
-      <PanelGate panel={SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL}>
-        <TokenPanel />
-      </PanelGate>
+      {/* ✅ Token Contract detail overlay (self-gated; must always be mounted) */}
+      <TokenPanel />
 
       {/* ───────────────────────── Select / aux overlays ───────────────────────── */}
       <AgentListSelectPanel />
