@@ -99,7 +99,7 @@ export default function TokenPanel(_props: Props) {
     tokenContract?.address,
   ]);
 
-  const isVisible = vTokenPanel || vBuyToken || vSellToken;
+  const isVisible = vTokenPanel;
 
   // ✅ early return AFTER hooks
   if (!isVisible) return null;
@@ -209,7 +209,7 @@ export default function TokenPanel(_props: Props) {
             </tr>
 
             <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>pendingBalance</td>
+              <td className={`${zebraB} ${cell}`}>TOKpendingBalance</td>
               <td className={`${zebraB} ${cell}`}>{pendingBalance}</td>
             </tr>
 
