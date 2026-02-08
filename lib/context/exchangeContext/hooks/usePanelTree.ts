@@ -890,6 +890,19 @@ export function usePanelTree() {
         isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
       });
 
+      // ✅ If closing TOKEN_CONTRACT_PANEL, also close its mode children
+      if (Number(panel) === Number(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL)) {
+        for (const child of TOKEN_CONTRACT_PANEL_MODES) {
+          if (panelStore.isVisible(child)) {
+            closePanelInternal(
+              child,
+              traceId,
+              `closePanel:${navInvoker}:tokenContractPanel:closeChild`,
+            );
+          }
+        }
+      }
+
       const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
 
       const hideInvoker =

@@ -105,7 +105,7 @@ export default function TokenPanel(_props: Props) {
   if (!isVisible) return null;
 
   // Empty state (fixed wording)
-  if (!tokenContract) {
+  if (!tokenContract || (!vBuyToken && !vSellToken)) {
     emptyLog.log?.('[empty]', {
       vTokenPanel,
       vBuyToken,
@@ -114,11 +114,21 @@ export default function TokenPanel(_props: Props) {
       buyTokenAddr: buyToken?.address,
       sellTokenAddr: sellToken?.address,
     });
+    const title = vSellToken
+      ? 'No sell token contract selected.'
+      : vBuyToken
+        ? 'No buy token contract selected.'
+        : 'No buy or sell token contract selected.';
+    const body = vSellToken
+      ? 'Select a sell token to view its details.'
+      : vBuyToken
+        ? 'Select a buy token to view its details.'
+        : 'Select a buy or sell token to view its details.';
     return (
       <div id="TOKEN_CONTRACT_PANEL">
-        <div className="p-4 text-sm text-slate-200">
-          <p className="mb-2 font-semibold">No token contract selected.</p>
-          <p className="m-0">Select a buy or sell token to view its details.</p>
+        <div className="p-4 text-sm text-slate-200 text-center">
+          <p className="mb-2 font-semibold">{title}</p>
+          <p className="m-0">{body}</p>
         </div>
       </div>
     );
