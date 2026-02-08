@@ -14,6 +14,8 @@ import {
 import { ErrorMessagePanel } from '@/components/views';
 
 import AccountPanel from '@/components/views/RadioOverlayPanels/AccountPanel';
+import TokenPanel from '@/components/views/RadioOverlayPanels/TokenPanel'; // ✅ add this
+
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoinsPanel';
@@ -26,15 +28,10 @@ export default function RadioOverlayPanelHost() {
   return (
     <>
       {/* ───────────────────────── Main overlays (radio group) ───────────────────────── */}
-      {/* Main trading station (TRADING_STATION_PANEL) */}
       <TradingStationPanel />
-
-      {/* Manage Trading spCoins overlay (STAKING_SPCOINS_PANEL) */}
       <StakingSpCoins />
-
       <ManageSponsorRecipients />
 
-      {/* Top-level overlay panels (radio group) */}
       <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
         <ManageSponsorshipsPanel />
       </PanelGate>
@@ -42,6 +39,11 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Detail overlays (must be mounted) ───────────────────────── */}
       <PanelGate panel={SP_COIN_DISPLAY.ACCOUNT_PANEL}>
         <AccountPanel />
+      </PanelGate>
+
+      {/* ✅ Token Contract detail overlay (must be mounted) */}
+      <PanelGate panel={SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL}>
+        <TokenPanel />
       </PanelGate>
 
       {/* ───────────────────────── Select / aux overlays ───────────────────────── */}

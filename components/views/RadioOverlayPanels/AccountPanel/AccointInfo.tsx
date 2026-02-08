@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageAccount.tsx
+// File: @/components/views/ManageSponsorships/AccountInfo.tsx
 'use client';
 
 import React, { useContext, useMemo } from 'react';

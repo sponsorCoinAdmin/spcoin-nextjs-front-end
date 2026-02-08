@@ -5,8 +5,8 @@ import React from 'react';
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
-import PanelListSelectWrapper from '../AssetSelectPanels/PanelListSelectWrapper';
 import { isAddress } from 'viem';
+import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 
 function hasValidAddress(a: any): a is { address: string } {
   return typeof a?.address === 'string' && isAddress(a.address);
