@@ -51,9 +51,9 @@ export default function ManageAccount({ account }: Props) {
   const ctx = useContext(ExchangeContextState);
 
   // ✅ ACCOUNT_PANEL child visibility (to label the “Deposit Account” row correctly)
-  const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
-  const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
-  const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
+  const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
+  const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
+  const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
 
   const depositLabel = useMemo(() => {
     if (vActiveSponsor) return 'Sponsor Account:';

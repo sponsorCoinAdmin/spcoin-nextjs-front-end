@@ -155,9 +155,9 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
 
 // ACCOUNT_PANEL children: exactly 0 or 1 visible
 const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.ACTIVE_SPONSOR,
-  SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
-  SP_COIN_DISPLAY.ACTIVE_AGENT,
+  SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
+  SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
+  SP_COIN_DISPLAY.AGENT_ACCOUNT,
 ] as const;
 
 const isAccountPanelMode = (p: SP_COIN_DISPLAY) =>
@@ -208,9 +208,9 @@ export function usePanelTree() {
 
     const REQUIRED = [
       SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
-      SP_COIN_DISPLAY.ACTIVE_SPONSOR,
-      SP_COIN_DISPLAY.ACTIVE_RECIPIENT,
-      SP_COIN_DISPLAY.ACTIVE_AGENT,
+      SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
+      SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
+      SP_COIN_DISPLAY.AGENT_ACCOUNT,
     ];
 
     const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));

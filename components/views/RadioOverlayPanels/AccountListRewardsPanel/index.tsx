@@ -65,9 +65,9 @@ function roleLabelToRoleKind(roleLabel: string): RoleKind {
 }
 
 function roleKindToAccountPanelMode(role: RoleKind): SP_COIN_DISPLAY | null {
-  if (role === 'recipient') return SP_COIN_DISPLAY.ACTIVE_RECIPIENT;
-  if (role === 'agent') return SP_COIN_DISPLAY.ACTIVE_AGENT;
-  if (role === 'sponsor') return SP_COIN_DISPLAY.ACTIVE_SPONSOR;
+  if (role === 'recipient') return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT;
+  if (role === 'agent') return SP_COIN_DISPLAY.AGENT_ACCOUNT;
+  if (role === 'sponsor') return SP_COIN_DISPLAY.SPONSOR_ACCOUNT;
   return null;
 }
 
