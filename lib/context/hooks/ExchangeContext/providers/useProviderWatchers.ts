@@ -9,7 +9,7 @@ import type {
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ SSOT account hydration
 import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
@@ -63,7 +63,7 @@ function setOverlayVisible(
 ): SpCoinPanelTree {
   const next = clone(panels);
   for (const n of next) {
-    if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
+    if (MAIN_RADIO_OVERLAY_PANELS.includes(n.panel as SP_COIN_DISPLAY)) {
       n.visible = (n.panel as SP_COIN_DISPLAY) === targetId;
     }
   }

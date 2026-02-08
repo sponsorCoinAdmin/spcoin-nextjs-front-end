@@ -11,7 +11,7 @@ import {
   NON_PERSISTED_PANELS,
   MUST_INCLUDE_ON_BOOT,
 } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 /* --------------------------------- Version --------------------------------- */
@@ -21,7 +21,7 @@ export const PANEL_SCHEMA_VERSION = 2;
 /* ------------------------------- PanelBootstrap ---------------------------- */
 
 /**
- * Post-mount bootstrap which ensures a MAIN_OVERLAY_GROUP panel is selected.
+ * Post-mount bootstrap which ensures a MAIN_RADIO_OVERLAY_PANELS panel is selected.
  * If nothing is active, it opens TRADING_STATION_PANEL once on mount.
  */
 export function PanelBootstrap() {
@@ -167,7 +167,7 @@ export function ensureRequiredPanels(
 /** Zero/one visible overlay; prefer TRADING_STATION_PANEL if multiple. */
 export function reconcileOverlayVisibility(flat: PanelNode[]): PanelNode[] {
   const isOverlay = (id: number) =>
-    MAIN_OVERLAY_GROUP.includes(id as SP_COIN_DISPLAY);
+    MAIN_RADIO_OVERLAY_PANELS.includes(id as SP_COIN_DISPLAY);
 
   const visible = flat.filter((n) => isOverlay(n.panel) && n.visible);
   if (visible.length <= 1) return flat;

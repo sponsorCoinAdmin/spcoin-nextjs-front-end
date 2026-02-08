@@ -12,10 +12,10 @@
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 import {
-  MAIN_OVERLAY_GROUP as MAIN_OVERLAY_GROUP_MODEL,
+  MAIN_RADIO_OVERLAY_PANELS as MAIN_RADIO_OVERLAY_PANELS_MODEL,
   MANAGE_SCOPED as MANAGE_SCOPED_MODEL,
   STACK_COMPONENTS as STACK_COMPONENTS_MODEL,
-  IS_MAIN_OVERLAY,
+  IS_MAIN_RADIO_OVERLAY_PANEL,
   IS_MANAGE_SCOPED,
   IS_STACK_COMPONENT,
 } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
@@ -131,7 +131,7 @@ const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as cons
  */
 const def = (d: Omit<PanelDef, 'overlay'>): PanelDef => ({
   ...d,
-  ...(IS_MAIN_OVERLAY.has(Number(d.id)) ? { overlay: true } : null),
+  ...(IS_MAIN_RADIO_OVERLAY_PANEL.has(Number(d.id)) ? { overlay: true } : null),
 });
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -277,11 +277,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
 /* ─────────────────────────────── Derived Helpers ─────────────────────────────── */
 
-export const MAIN_OVERLAY_GROUP: readonly SP[] = MAIN_OVERLAY_GROUP_MODEL;
+export const MAIN_RADIO_OVERLAY_PANELS: readonly SP[] = MAIN_RADIO_OVERLAY_PANELS_MODEL;
 export const MANAGE_SCOPED: readonly SP[] = MANAGE_SCOPED_MODEL;
 export const STACK_COMPONENTS: readonly SP[] = STACK_COMPONENTS_MODEL;
 
-export { IS_MAIN_OVERLAY, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
+export { IS_MAIN_RADIO_OVERLAY_PANEL, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MAIN_TRADING_PANEL,

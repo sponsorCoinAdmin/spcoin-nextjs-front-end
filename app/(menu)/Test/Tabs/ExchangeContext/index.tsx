@@ -19,7 +19,7 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 
 // List views
-import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/SponsorListSelectPanel';
+import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 
 

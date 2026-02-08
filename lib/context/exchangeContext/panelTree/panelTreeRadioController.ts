@@ -111,7 +111,7 @@ function summarizeStackTail(stack: readonly SP_COIN_DISPLAY[], tail = 12) {
 /* ───────────────────────────── Generic Radio Helpers ───────────────────────────── */
 
 export type RadioGroup = {
-  /** Optional label for debugging (e.g., "MAIN_OVERLAY_GROUP", "MANAGE_SCOPED") */
+  /** Optional label for debugging (e.g., "MAIN_RADIO_OVERLAY_PANELS", "MANAGE_SCOPED") */
   name?: string;
   /** The members that behave as a radio group */
   members: readonly SP_COIN_DISPLAY[];

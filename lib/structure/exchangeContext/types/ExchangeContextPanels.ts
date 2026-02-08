@@ -14,7 +14,7 @@ export interface ExchangeContextWithPanels {
    * – Do NOT persist runtime-expanded children here.
    *
    * NOTE:
-   * - This list should include first-class overlays in MAIN_OVERLAY_GROUP
+   * - This list should include first-class overlays in MAIN_RADIO_OVERLAY_PANELS
    *   (e.g., PANEL_LIST_SELECT_PANEL, ACCOUNT_PANEL, TOKEN_CONTRACT_PANEL, etc.)
    *   so they survive refreshes.
    */
