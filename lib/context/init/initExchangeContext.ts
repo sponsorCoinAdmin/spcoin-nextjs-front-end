@@ -267,7 +267,6 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     [SP.FEE_DISCLOSURE, true],
 
     // ✅ New persisted overlays (ensure presence on legacy trees)
-    [SP.PANEL_LIST_SELECT_PANEL, false],
     [SP.ACCOUNT_PANEL, false],
 
     // ✅ TOKEN_CONTRACT_PANEL is now persisted; keep it in boot checks

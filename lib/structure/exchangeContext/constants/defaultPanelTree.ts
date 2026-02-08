@@ -40,7 +40,6 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.AFFILIATE_FEE, false],
 
   // ✅ Ensure overlays exist even for older persisted trees
-  [SP.PANEL_LIST_SELECT_PANEL, false],
   [SP.TOKEN_LIST_SELECT_PANEL, false],
   [SP.ACCOUNT_PANEL, false],
 
@@ -76,7 +75,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       ]),
 
       // ─────────────── Radio overlays (siblings) ───────────────
-      node(SP.PANEL_LIST_SELECT_PANEL, false),
       node(SP.TOKEN_LIST_SELECT_PANEL, false),
       node(SP.BUY_LIST_SELECT_PANEL, false),
       node(SP.SELL_LIST_SELECT_PANEL, false),

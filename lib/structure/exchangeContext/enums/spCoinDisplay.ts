@@ -59,9 +59,6 @@ export enum SP_COIN_DISPLAY {
   TOKEN_LIST_SELECT_PANEL,
   ACCOUNT_PANEL,
 
-  // ✅ NEW: Panel selector overlay (append-only)
-  PANEL_LIST_SELECT_PANEL,
-
   // ✅ NEW: TOKEN_CONTRACT_PANEL children (append-only)
   BUY_TOKEN,
   SELL_TOKEN,

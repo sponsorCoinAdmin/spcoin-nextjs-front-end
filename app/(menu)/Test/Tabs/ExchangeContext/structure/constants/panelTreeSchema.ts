@@ -17,7 +17,6 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.TRADING_STATION_PANEL,
 
     // Token selectors
-    SPCD.PANEL_LIST_SELECT_PANEL,
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
@@ -117,7 +116,6 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.CONFIG_SPONSORSHIP_PANEL]: 'panel',
 
   // Token selector overlays
-  [SPCD.PANEL_LIST_SELECT_PANEL]: 'list',
   [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.SELL_LIST_SELECT_PANEL]: 'list',
 
@@ -169,13 +167,11 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 // Optional grouping (updated to include manage panels)
 export const GROUPS = {
   TOKEN_SELECT_LISTS: [
-    SPCD.PANEL_LIST_SELECT_PANEL,
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
   ] as SPCD[],
 
   MODALS_AND_LISTS: [
-    SPCD.PANEL_LIST_SELECT_PANEL,
     SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.SELL_LIST_SELECT_PANEL,
 
