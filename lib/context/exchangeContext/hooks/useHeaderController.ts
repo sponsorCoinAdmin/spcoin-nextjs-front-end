@@ -216,9 +216,9 @@ export function useHeaderController() {
   );
 
   // ✅ ACCOUNT_PANEL active sub-view visibility (dynamic title + header account source)
-  const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_SPONSOR);
-  const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_RECIPIENT);
-  const activeAgent = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_AGENT);
+  const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
+  const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
+  const activeAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
 
   const accountsState = useMemo(
     () => ({ activeSponsor, activeRecipient, activeAgent }),
@@ -332,11 +332,11 @@ export function useHeaderController() {
               if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
                 const modeToOpen =
                   unSponsor || claimSponsor
-                    ? SP_COIN_DISPLAY.ACTIVE_SPONSOR
+                    ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
                     : claimRecipient
-                      ? SP_COIN_DISPLAY.ACTIVE_RECIPIENT
+                      ? SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
                       : claimAgent
-                        ? SP_COIN_DISPLAY.ACTIVE_AGENT
+                        ? SP_COIN_DISPLAY.AGENT_ACCOUNT
                         : null;
 
                 if (modeToOpen != null) {

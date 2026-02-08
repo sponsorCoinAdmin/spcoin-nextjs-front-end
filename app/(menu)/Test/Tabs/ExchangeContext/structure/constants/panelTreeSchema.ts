@@ -80,9 +80,9 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ FIX: ACCOUNT_PANEL desired subtree:
   [SPCD.ACCOUNT_PANEL]: [
-    SPCD.ACTIVE_SPONSOR,
-    SPCD.ACTIVE_RECIPIENT,
-    SPCD.ACTIVE_AGENT,
+    SPCD.SPONSOR_ACCOUNT,
+    SPCD.RECIPIENT_ACCOUNT,
+    SPCD.AGENT_ACCOUNT,
   ],
 
   // ✅ Leaf nodes
@@ -92,9 +92,9 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.ACTIVE_SPONSORSHIPS]: [],
 
   // ✅ NEW leaf nodes under ACCOUNT_PANEL
-  [SPCD.ACTIVE_SPONSOR]: [],
-  [SPCD.ACTIVE_RECIPIENT]: [],
-  [SPCD.ACTIVE_AGENT]: [],
+  [SPCD.SPONSOR_ACCOUNT]: [],
+  [SPCD.RECIPIENT_ACCOUNT]: [],
+  [SPCD.AGENT_ACCOUNT]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -133,9 +133,9 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.ACTIVE_SPONSORSHIPS]: 'panel',
 
   // ✅ NEW: ACCOUNT_PANEL children kinds
-  [SPCD.ACTIVE_SPONSOR]: 'panel',
-  [SPCD.ACTIVE_RECIPIENT]: 'panel',
-  [SPCD.ACTIVE_AGENT]: 'panel',
+  [SPCD.SPONSOR_ACCOUNT]: 'panel',
+  [SPCD.RECIPIENT_ACCOUNT]: 'panel',
+  [SPCD.AGENT_ACCOUNT]: 'panel',
 
   // ✅ Shared + Manage DETAIL views
   [SPCD.ACCOUNT_PANEL]: 'panel',
@@ -187,9 +187,9 @@ export const GROUPS = {
     SPCD.ACTIVE_SPONSORSHIPS,
 
     // ✅ Account panel state children (new)
-    SPCD.ACTIVE_SPONSOR,
-    SPCD.ACTIVE_RECIPIENT,
-    SPCD.ACTIVE_AGENT,
+    SPCD.SPONSOR_ACCOUNT,
+    SPCD.RECIPIENT_ACCOUNT,
+    SPCD.AGENT_ACCOUNT,
 
     // ✅ Account panel node
     SPCD.ACCOUNT_PANEL,

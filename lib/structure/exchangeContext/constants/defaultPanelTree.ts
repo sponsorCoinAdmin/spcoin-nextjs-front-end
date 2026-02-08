@@ -45,9 +45,9 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.ACCOUNT_PANEL, false],
 
   // ✅ Ensure ACCOUNT_PANEL children exist even for older persisted trees
-  [SP.ACTIVE_SPONSOR, false],
-  [SP.ACTIVE_RECIPIENT, false],
-  [SP.ACTIVE_AGENT, false],
+  [SP.SPONSOR_ACCOUNT, false],
+  [SP.RECIPIENT_ACCOUNT, false],
+  [SP.AGENT_ACCOUNT, false],
 
   // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
   [SP.TOKEN_CONTRACT_PANEL, false],
@@ -104,9 +104,9 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ✅ FIX: ACCOUNT_PANEL should show ACTIVE_* children in the tree
       node(SP.ACCOUNT_PANEL, false, [
-        node(SP.ACTIVE_SPONSOR, false),
-        node(SP.ACTIVE_RECIPIENT, false),
-        node(SP.ACTIVE_AGENT, false),
+        node(SP.SPONSOR_ACCOUNT, false),
+        node(SP.RECIPIENT_ACCOUNT, false),
+        node(SP.AGENT_ACCOUNT, false),
       ]),
 
       // Aux panels
