@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v11';
+export const schemaVersion = 'v12';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -34,7 +34,6 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // ✅ Shared + Manage DETAIL views
     SPCD.ACCOUNT_PANEL,
-
 
     // ✅ Token contract overlay (show in tree)
     SPCD.TOKEN_CONTRACT_PANEL,
@@ -85,16 +84,24 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.AGENT_ACCOUNT,
   ],
 
+  // ✅ NEW: TOKEN_CONTRACT_PANEL desired subtree:
+  // Matches ACCOUNT_PANEL behavior (children visible as modes)
+  [SPCD.TOKEN_CONTRACT_PANEL]: [SPCD.BUY_TOKEN, SPCD.SELL_TOKEN],
+
   // ✅ Leaf nodes
   [SPCD.PENDING_SPONSOR_REWARDS]: [],
   [SPCD.PENDING_RECIPIENT_REWARDS]: [],
   [SPCD.PENDING_AGENT_REWARDS]: [],
   [SPCD.ACTIVE_SPONSORSHIPS]: [],
 
-  // ✅ NEW leaf nodes under ACCOUNT_PANEL
+  // ✅ ACCOUNT_PANEL leaf nodes
   [SPCD.SPONSOR_ACCOUNT]: [],
   [SPCD.RECIPIENT_ACCOUNT]: [],
   [SPCD.AGENT_ACCOUNT]: [],
+
+  // ✅ TOKEN_CONTRACT_PANEL leaf nodes
+  [SPCD.BUY_TOKEN]: [],
+  [SPCD.SELL_TOKEN]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -132,7 +139,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.PENDING_AGENT_REWARDS]: 'panel',
   [SPCD.ACTIVE_SPONSORSHIPS]: 'panel',
 
-  // ✅ NEW: ACCOUNT_PANEL children kinds
+  // ✅ ACCOUNT_PANEL children kinds
   [SPCD.SPONSOR_ACCOUNT]: 'panel',
   [SPCD.RECIPIENT_ACCOUNT]: 'panel',
   [SPCD.AGENT_ACCOUNT]: 'panel',
@@ -153,6 +160,10 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 
   // ✅ show token contract node in this UI
   [SPCD.TOKEN_CONTRACT_PANEL]: 'panel',
+
+  // ✅ NEW: TOKEN_CONTRACT_PANEL children kinds
+  [SPCD.BUY_TOKEN]: 'panel',
+  [SPCD.SELL_TOKEN]: 'panel',
 };
 
 // Optional grouping (updated to include manage panels)
@@ -186,7 +197,7 @@ export const GROUPS = {
     SPCD.PENDING_AGENT_REWARDS,
     SPCD.ACTIVE_SPONSORSHIPS,
 
-    // ✅ Account panel state children (new)
+    // ✅ Account panel state children
     SPCD.SPONSOR_ACCOUNT,
     SPCD.RECIPIENT_ACCOUNT,
     SPCD.AGENT_ACCOUNT,
@@ -194,8 +205,10 @@ export const GROUPS = {
     // ✅ Account panel node
     SPCD.ACCOUNT_PANEL,
 
-    // Token contract overlay
+    // ✅ Token contract overlay + children
     SPCD.TOKEN_CONTRACT_PANEL,
+    SPCD.BUY_TOKEN,
+    SPCD.SELL_TOKEN,
 
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],

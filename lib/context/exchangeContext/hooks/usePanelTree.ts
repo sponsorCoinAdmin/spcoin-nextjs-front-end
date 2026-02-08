@@ -163,6 +163,15 @@ const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
 const isAccountPanelMode = (p: SP_COIN_DISPLAY) =>
   ACCOUNT_PANEL_MODES.some((x) => Number(x) === Number(p));
 
+// ✅ TOKEN_CONTRACT_PANEL children: exactly 0 or 1 visible
+const TOKEN_CONTRACT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.BUY_TOKEN,
+  SP_COIN_DISPLAY.SELL_TOKEN,
+] as const;
+
+const isTokenContractPanelMode = (p: SP_COIN_DISPLAY) =>
+  TOKEN_CONTRACT_PANEL_MODES.some((x) => Number(x) === Number(p));
+
 // Rewards modes: exactly 0 or 1 visible
 const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
   SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
@@ -208,6 +217,8 @@ export function usePanelTree() {
 
     const REQUIRED = [
       SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+      SP_COIN_DISPLAY.BUY_TOKEN,
+      SP_COIN_DISPLAY.SELL_TOKEN,
       SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
       SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
       SP_COIN_DISPLAY.AGENT_ACCOUNT,
@@ -798,6 +809,19 @@ export function usePanelTree() {
               other,
               traceId,
               `openPanel:${navInvoker}:accountPanelMode:closeOther`,
+            );
+          }
+        }
+      }
+
+      // ✅ NEW: Token contract modes are mutually exclusive
+      if (isTokenContractPanelMode(panel)) {
+        for (const other of TOKEN_CONTRACT_PANEL_MODES) {
+          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
+            closePanelInternal(
+              other,
+              traceId,
+              `openPanel:${navInvoker}:tokenContractMode:closeOther`,
             );
           }
         }

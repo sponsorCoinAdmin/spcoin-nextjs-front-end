@@ -76,6 +76,12 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
 ] as const;
 
 /**
+ * ✅ TOKEN_CONTRACT_PANEL children (order matters)
+ * NOTE: these are NOT stack overlays; they're mode children under the token contract container.
+ */
+const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
+
+/**
  * ✅ Tree Panel fix:
  * Each pending/unstake node owns exactly ONE mode child.
  *
@@ -218,6 +224,10 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),
 
+  // ✅ TOKEN_CONTRACT_PANEL mode children
+  def({ id: SP.BUY_TOKEN, kind: 'panel', children: [] }),
+  def({ id: SP.SELL_TOKEN, kind: 'panel', children: [] }),
+
   // Shared / detail overlays
   def({
     id: SP.ACCOUNT_PANEL,
@@ -228,8 +238,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Staking/unstaking overlays
   def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
 
-  // Token contract overlay
-  def({ id: SP.TOKEN_CONTRACT_PANEL, kind: 'list' }),
+  // Token contract overlay (container)
+  // NOTE: This is not a stack overlay. It is a structural parent in the tree.
+  def({
+    id: SP.TOKEN_CONTRACT_PANEL,
+    kind: 'panel',
+    children: TOKEN_CONTRACT_PANEL_CHILDREN,
+  }),
 
   // Inline / auxiliary
   def({

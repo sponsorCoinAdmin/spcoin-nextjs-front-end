@@ -4,7 +4,7 @@
 import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageAccount from './AccointInfo';
+import DisplayInfo from './AccointInfo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = { onClose?: () => void };
@@ -50,7 +50,7 @@ export default function AccountPanel(_props: Props) {
   return (
     <div id="ACCOUNT_PANEL">
       {isActiveAccount ? (
-        <ManageAccount account={activeWallet as any} />
+        <DisplayInfo account={activeWallet as any} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No active account selected.</p>

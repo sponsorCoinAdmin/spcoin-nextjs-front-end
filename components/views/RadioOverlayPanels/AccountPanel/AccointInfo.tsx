@@ -46,7 +46,7 @@ type Props = {
   account?: spCoinAccount;
 };
 
-export default function ManageAccount({ account }: Props) {
+export default function DisplayInfo({ account }: Props) {
   // ✅ Hooks must run on every render (even when account is undefined)
   const ctx = useContext(ExchangeContextState);
 
