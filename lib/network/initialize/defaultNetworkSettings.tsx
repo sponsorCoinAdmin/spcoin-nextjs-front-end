@@ -34,6 +34,7 @@ const defaultInitialTradeData: TradeData = {
   tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
   sellTokenContract: undefined,
   buyTokenContract: undefined,
+  previewTokenContract: undefined,
   rateRatio: 0,
   slippage: {
     bps: 100,

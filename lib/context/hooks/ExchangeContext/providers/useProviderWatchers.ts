@@ -136,6 +136,7 @@ export function useProviderWatchers({
         if (currentCtxChain !== nextWagmi) {
           next.tradeData.sellTokenContract = undefined;
           next.tradeData.buyTokenContract = undefined;
+          next.tradeData.previewTokenContract = undefined;
         }
         return next;
       },
@@ -183,6 +184,7 @@ export function useProviderWatchers({
         if (currentCtxChain !== ctxChain) {
           next.tradeData.sellTokenContract = undefined;
           next.tradeData.buyTokenContract = undefined;
+          next.tradeData.previewTokenContract = undefined;
         }
         return next;
       },

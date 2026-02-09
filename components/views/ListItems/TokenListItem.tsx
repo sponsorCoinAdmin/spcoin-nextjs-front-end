@@ -4,7 +4,8 @@
 import React from 'react';
 import BaseListRow from './BaseListRow';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { usePanelTree, usePreviewTokenContract } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 
 type TokenListItemProps = {
   name: string;
@@ -17,6 +18,30 @@ type TokenListItemProps = {
 const TokenListItem = React.memo(function TokenListItem({
   name, symbol, address, logoURL, confirmAssetCallback,
 }: TokenListItemProps) {
+  const { openPanel } = usePanelTree();
+  const [, setPreviewTokenContract] = usePreviewTokenContract();
+
+  const previewToken = (): TokenContract => ({
+    address: address as any,
+    name,
+    symbol,
+    logoURL,
+    balance: 0n,
+  });
+
+  const openPreview = () => {
+    setPreviewTokenContract(previewToken());
+    openPanel(
+      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+      'TokenListItem:openTokenContractPanel',
+    );
+    openPanel(
+      SP_COIN_DISPLAY.PREVIEW_TOKEN,
+      'TokenListItem:openPreviewToken',
+      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+    );
+  };
+
   return (
     <BaseListRow
       avatarSrc={logoURL || defaultMissingImage}
@@ -25,8 +50,8 @@ const TokenListItem = React.memo(function TokenListItem({
       onAvatarClick={() => confirmAssetCallback(address)}
       titleClassName="font-semibold truncate !text-[#5981F3]"
       subtitleClassName="text-sm truncate !text-[#5981F3]"  // ← force blue
-      onInfoClick={() => alert(`${name} Object:\n${stringifyBigInt({ name, symbol, address, logoURL })}`)}
-      onInfoContextMenu={() => alert(`${name} Logo URL: ${logoURL || defaultMissingImage}`)}
+      onInfoClick={openPreview}
+      onInfoContextMenu={openPreview}
     />
   );
 });

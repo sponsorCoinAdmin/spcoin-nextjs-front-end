@@ -61,4 +61,5 @@ export enum SP_COIN_DISPLAY {
   // ✅ NEW: TOKEN_CONTRACT_PANEL children (append-only)
   BUY_TOKEN,
   SELL_TOKEN,
+  PREVIEW_TOKEN,
 }

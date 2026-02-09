@@ -197,6 +197,13 @@ export const sanitizeExchangeContext = (
           balance: (raw as any).tradeData.buyTokenContract.balance ?? 0n,
         }
       : defaultContext.tradeData.buyTokenContract,
+    previewTokenContract: (raw as any).tradeData?.previewTokenContract
+      ? {
+          ...defaultContext.tradeData.previewTokenContract,
+          ...(raw as any).tradeData.previewTokenContract,
+          balance: (raw as any).tradeData.previewTokenContract.balance ?? 0n,
+        }
+      : defaultContext.tradeData.previewTokenContract,
     rateRatio:
       (raw as any).tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
     slippage: {

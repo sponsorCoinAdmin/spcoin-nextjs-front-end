@@ -14,7 +14,7 @@ export * from './nestedHooks/useTradeDirection';
 
 
 // Concrete file in this folder:
-export * from './nestedHooks/useTokenContracts'; // provides useSellTokenContract/useBuyTokenContract
+export * from './nestedHooks/useTokenContracts'; // provides useSellTokenContract/useBuyTokenContract/usePreviewTokenContract
 
 // Panel-tree visibility API (concrete file, not a barrel)
 export * from '../exchangeContext/hooks/usePanelTree';

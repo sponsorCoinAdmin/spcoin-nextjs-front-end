@@ -7,7 +7,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
-import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
+import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ ExchangeContext access (for accounts.* + address/logo)
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
@@ -110,12 +110,15 @@ function getTokenContractHeaderTitle(
   opts: {
     activeBuyToken: boolean;
     activeSellToken: boolean;
+    activePreviewToken?: boolean;
   },
-  symbols?: { buySymbol?: string; sellSymbol?: string },
+  symbols?: { buySymbol?: string; sellSymbol?: string; previewSymbol?: string },
 ): string {
   const buySym = (symbols?.buySymbol ?? '').trim() || 'Token';
   const sellSym = (symbols?.sellSymbol ?? '').trim() || 'Token';
+  const previewSym = (symbols?.previewSymbol ?? '').trim() || 'Token';
 
+  if (opts.activePreviewToken) return `Preview ${previewSym} Token`;
   if (opts.activeSellToken) return `Sell ${sellSym} Token`;
   if (opts.activeBuyToken) return `Buy ${buySym} Token`;
 
@@ -138,8 +141,10 @@ function titleFor(
   tokenState?: {
     activeBuyToken: boolean;
     activeSellToken: boolean;
+    activePreviewToken?: boolean;
     buySymbol?: string;
     sellSymbol?: string;
+    previewSymbol?: string;
   },
   manageName?: string,
 ): string {
@@ -236,6 +241,7 @@ export function useHeaderController() {
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
   const buyTokenPanel = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
   const sellTokenPanel = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const previewTokenPanel = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_TOKEN);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -266,15 +272,18 @@ export function useHeaderController() {
 
   const [buyToken] = useBuyTokenContract();
   const [sellToken] = useSellTokenContract();
+  const [previewToken] = usePreviewTokenContract();
 
   const tokenState = useMemo(
     () => ({
       activeBuyToken: buyTokenPanel,
       activeSellToken: sellTokenPanel,
+      activePreviewToken: previewTokenPanel,
       buySymbol: buyToken?.symbol,
       sellSymbol: sellToken?.symbol,
+      previewSymbol: previewToken?.symbol,
     }),
-    [buyTokenPanel, sellTokenPanel, buyToken?.symbol, sellToken?.symbol],
+    [buyTokenPanel, sellTokenPanel, previewTokenPanel, buyToken?.symbol, sellToken?.symbol, previewToken?.symbol],
   );
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {

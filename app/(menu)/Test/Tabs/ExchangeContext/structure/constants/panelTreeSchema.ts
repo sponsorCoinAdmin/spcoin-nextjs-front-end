@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v13';
+export const schemaVersion = 'v14';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -84,7 +84,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ NEW: TOKEN_CONTRACT_PANEL desired subtree:
   // Matches ACCOUNT_PANEL behavior (children visible as modes)
-  [SPCD.TOKEN_CONTRACT_PANEL]: [SPCD.BUY_TOKEN, SPCD.SELL_TOKEN],
+  [SPCD.TOKEN_CONTRACT_PANEL]: [SPCD.BUY_TOKEN, SPCD.SELL_TOKEN, SPCD.PREVIEW_TOKEN],
 
   // ✅ Leaf nodes
   [SPCD.PENDING_SPONSOR_REWARDS]: [],
@@ -100,6 +100,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // ✅ TOKEN_CONTRACT_PANEL leaf nodes
   [SPCD.BUY_TOKEN]: [],
   [SPCD.SELL_TOKEN]: [],
+  [SPCD.PREVIEW_TOKEN]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -160,6 +161,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ NEW: TOKEN_CONTRACT_PANEL children kinds
   [SPCD.BUY_TOKEN]: 'panel',
   [SPCD.SELL_TOKEN]: 'panel',
+  [SPCD.PREVIEW_TOKEN]: 'panel',
 };
 
 // Optional grouping (updated to include manage panels)
@@ -201,6 +203,7 @@ export const GROUPS = {
     SPCD.TOKEN_CONTRACT_PANEL,
     SPCD.BUY_TOKEN,
     SPCD.SELL_TOKEN,
+    SPCD.PREVIEW_TOKEN,
 
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],

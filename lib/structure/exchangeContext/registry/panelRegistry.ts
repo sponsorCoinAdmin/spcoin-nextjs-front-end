@@ -79,7 +79,11 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
  * ✅ TOKEN_CONTRACT_PANEL children (order matters)
  * NOTE: these are NOT stack overlays; they're mode children under the token contract container.
  */
-const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
+const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [
+  SP.BUY_TOKEN,
+  SP.SELL_TOKEN,
+  SP.PREVIEW_TOKEN,
+] as const;
 
 /**
  * ✅ TOKEN_LIST_SELECT_PANEL children (order matters)
@@ -226,6 +230,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // ✅ TOKEN_CONTRACT_PANEL mode children
   def({ id: SP.BUY_TOKEN, kind: 'panel', children: [] }),
   def({ id: SP.SELL_TOKEN, kind: 'panel', children: [] }),
+  def({ id: SP.PREVIEW_TOKEN, kind: 'panel', children: [] }),
 
   // Shared / detail overlays
   def({

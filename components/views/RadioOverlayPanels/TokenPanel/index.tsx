@@ -5,7 +5,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
-import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
+import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ Use the same table theme module used by AccountListRewardsPanel
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
@@ -59,24 +59,29 @@ export default function TokenPanel(_props: Props) {
   // ✅ Read child visibility directly (BUY_TOKEN / SELL_TOKEN)
   const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
   const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const vPreviewToken = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_TOKEN);
 
   // ✅ Source of truth: use the same token hooks as the rest of the app
   const [sellToken] = useSellTokenContract();
   const [buyToken] = useBuyTokenContract();
+  const [previewToken, setPreviewTokenContract] = usePreviewTokenContract();
 
   // ✅ Resolve active token side from visible child flags
   const activeTokenSide = useMemo(() => {
+    if (vPreviewToken) return 'PREVIEW_TOKEN';
     if (vBuyToken) return 'BUY_TOKEN';
     if (vSellToken) return 'SELL_TOKEN';
     return 'NONE';
-  }, [vBuyToken, vSellToken]);
+  }, [vPreviewToken, vBuyToken, vSellToken]);
 
   const tokenContract: TokenContract | undefined =
-    activeTokenSide === 'BUY_TOKEN'
-      ? buyToken
-      : activeTokenSide === 'SELL_TOKEN'
-        ? sellToken
-        : buyToken ?? sellToken;
+    activeTokenSide === 'PREVIEW_TOKEN'
+      ? previewToken
+      : activeTokenSide === 'BUY_TOKEN'
+        ? buyToken
+        : activeTokenSide === 'SELL_TOKEN'
+          ? sellToken
+          : previewToken ?? buyToken ?? sellToken;
 
   useEffect(() => {
     if (!DEBUG_ENABLED) return;
@@ -84,20 +89,30 @@ export default function TokenPanel(_props: Props) {
       vTokenPanel,
       vBuyToken,
       vSellToken,
+      vPreviewToken,
       activeTokenSide,
       buyTokenAddr: buyToken?.address,
       sellTokenAddr: sellToken?.address,
+      previewTokenAddr: previewToken?.address,
       resolvedAddr: tokenContract?.address,
     });
   }, [
     vTokenPanel,
     vBuyToken,
     vSellToken,
+    vPreviewToken,
     activeTokenSide,
     buyToken?.address,
     sellToken?.address,
+    previewToken?.address,
     tokenContract?.address,
   ]);
+
+  useEffect(() => {
+    if (vTokenPanel) return;
+    if (!previewToken) return;
+    setPreviewTokenContract(undefined);
+  }, [vTokenPanel, previewToken, setPreviewTokenContract]);
 
   const isVisible = vTokenPanel;
 
@@ -105,25 +120,31 @@ export default function TokenPanel(_props: Props) {
   if (!isVisible) return null;
 
   // Empty state (fixed wording)
-  if (!tokenContract || (!vBuyToken && !vSellToken)) {
+  if (!tokenContract || (!vBuyToken && !vSellToken && !vPreviewToken)) {
     emptyLog.log?.('[empty]', {
       vTokenPanel,
       vBuyToken,
       vSellToken,
+      vPreviewToken,
       activeTokenSide,
       buyTokenAddr: buyToken?.address,
       sellTokenAddr: sellToken?.address,
+      previewTokenAddr: previewToken?.address,
     });
-    const title = vSellToken
-      ? 'No sell token contract selected.'
-      : vBuyToken
-        ? 'No buy token contract selected.'
-        : 'No buy or sell token contract selected.';
-    const body = vSellToken
-      ? 'Select a sell token to view its details.'
-      : vBuyToken
-        ? 'Select a buy token to view its details.'
-        : 'Select a buy or sell token to view its details.';
+    const title = vPreviewToken
+      ? 'No preview token selected.'
+      : vSellToken
+        ? 'No sell token contract selected.'
+        : vBuyToken
+          ? 'No buy token contract selected.'
+          : 'No token contract selected.';
+    const body = vPreviewToken
+      ? 'Select a token to preview its details.'
+      : vSellToken
+        ? 'Select a sell token to view its details.'
+        : vBuyToken
+          ? 'Select a buy token to view its details.'
+          : 'Select a token to view its details.';
     return (
       <div id="TOKEN_CONTRACT_PANEL">
         <div className="p-4 text-sm text-slate-200 text-center">

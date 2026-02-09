@@ -265,6 +265,34 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
       return next;
     }, 'setBuyTokenContract');
 
+  const setPreviewTokenContract = (contract: TokenContract | undefined) =>
+    setExchangeContext((p) => {
+      const curr = p.tradeData.previewTokenContract;
+
+      if (curr === contract) {
+        log.log?.('[setPreviewTokenContract] no-op (same reference)', summarizeToken(curr));
+        return p;
+      }
+
+      if (!hasMeaningfulDiff(curr, contract)) {
+        log.log?.('[setPreviewTokenContract] no-op (no meaningful diff)', {
+          curr: summarizeToken(curr),
+          next: summarizeToken(contract),
+        });
+        return p;
+      }
+
+      const next = structuredClone(p);
+      next.tradeData.previewTokenContract = contract;
+
+      log.log?.('[setPreviewTokenContract] wrote', {
+        prev: summarizeToken(curr),
+        next: summarizeToken(contract),
+      });
+
+      return next;
+    }, 'setPreviewTokenContract');
+
   const setTradeDirection = (type: TRADE_DIRECTION) =>
     setExchangeContext((p) => {
       if (p.tradeData.tradeDirection === type) {
@@ -322,6 +350,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
     // Contracts & trade params
     setSellTokenContract,
     setBuyTokenContract,
+    setPreviewTokenContract,
     setTradeDirection,
     setSlippageBps,
     setAppChainId,
