@@ -135,17 +135,23 @@ const toDisplayStackNodes = (ids: SP_COIN_DISPLAY[]): DISPLAY_STACK_NODE[] =>
  * - older experimental: [{displayTypeId,...}]
  * - mixed (defensive)
  */
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+const mapLegacyPanelId = (id: number): number =>
+  SP_COIN_DISPLAY[id as SP_COIN_DISPLAY] === LEGACY_BUY_LIST_NAME
+    ? SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
+    : id;
+
 const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
   if (!Array.isArray(raw)) return [];
   const ids: number[] = [];
 
   for (const item of raw as any[]) {
     if (item && typeof item === 'object') {
-      if ('id' in item) ids.push(Number((item as any).id));
-      else if ('displayTypeId' in item) ids.push(Number((item as any).displayTypeId));
+      if ('id' in item) ids.push(mapLegacyPanelId(Number((item as any).id)));
+      else if ('displayTypeId' in item) ids.push(mapLegacyPanelId(Number((item as any).displayTypeId)));
       continue;
     }
-    ids.push(Number(item));
+    ids.push(mapLegacyPanelId(Number(item)));
   }
 
   return ids.filter((x) => Number.isFinite(x)).map((x) => x as SP_COIN_DISPLAY);

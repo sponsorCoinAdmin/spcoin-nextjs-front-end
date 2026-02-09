@@ -3,7 +3,8 @@
 
 import React, { memo } from 'react';
 import Image from 'next/image';
-import info_png from '@/public/assets/miscellaneous/info1.png';
+import checkGray from '@/public/assets/miscellaneous/check-gray.svg';
+import checkGreen from '@/public/assets/miscellaneous/check-green.svg';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 type BaseListRowProps = {
   avatarSrc: string;
@@ -29,12 +30,15 @@ function BaseListRow({
   subtitleClassName = 'text-sm truncate',  // ← no color hard-coding
 }: BaseListRowProps) {
   return (
-    <div className={`w-full flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 ${className ?? ''}`}>
+    <div
+      className={`w-full min-h-[50px] max-h-[50px] flex items-center justify-between px-5 hover:bg-spCoin_Blue-900 ${className ?? ''}`}
+    >
       <div className="flex items-center gap-3">
         <button
           type="button"
           className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0"
-          onClick={onAvatarClick}
+          onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+          onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onInfoContextMenu?.(); }}
           aria-label={`${title} logo action`}
           title={`${title} logo`}
         >
@@ -58,13 +62,27 @@ function BaseListRow({
 
       <button
         type="button"
-        className="relative top-2.5 py-3 rounded w-8 h-0 flex items-center justify-center"
-        onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
-        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onInfoContextMenu?.(); }}
-        aria-label="Info"
-        title="Info"
+        className="rounded w-8 flex items-center justify-center group"
+        onClick={onAvatarClick}
+        aria-label="Select"
+        title="Select"
       >
-        <Image src={info_png} alt="Info" width={20} height={20} />
+        <span className="relative block h-[26px] w-[26px]">
+          <Image
+            src={checkGray}
+            alt="Unchecked"
+            width={26}
+            height={26}
+            className="absolute inset-0 opacity-100 transition-opacity group-hover:opacity-0"
+          />
+          <Image
+            src={checkGreen}
+            alt="Checked"
+            width={26}
+            height={26}
+            className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100"
+          />
+        </span>
       </button>
     </div>
   );

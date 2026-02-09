@@ -15,8 +15,6 @@ export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE |
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
 
-      return FEED_TYPE.SPONSOR_ACCOUNTS;
-
     // Manage-style overlays
     case SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL:
       // If you need "manage agents vs manage recipients" you must read it from context
@@ -36,6 +34,7 @@ export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE |
 
     // Trading overlays (if they show token lists)
     case SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL:
+    case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
       return FEED_TYPE.TOKEN_LIST;
 
     default:

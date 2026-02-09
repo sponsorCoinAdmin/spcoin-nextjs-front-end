@@ -12,6 +12,11 @@ export type NormalizeResult = {
 
 // --- helpers ---
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+
+function mapLegacyPanelId(id: number): number {
+  return SP[id as SP] === LEGACY_BUY_LIST_NAME ? SP.TOKEN_LIST_SELECT_PANEL : id;
+}
 
 function flatten(nodes: any[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
@@ -21,7 +26,7 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
       if (n && typeof n === 'object') {
         const p = (n as any).panel;
         const v = !!(n as any).visible;
-        if (isNumber(p)) out.push({ panel: p as SP, visible: v });
+        if (isNumber(p)) out.push({ panel: mapLegacyPanelId(p) as SP, visible: v });
         if (Array.isArray((n as any).children)) walk((n as any).children);
       }
     }
@@ -39,7 +44,10 @@ function uniqLastByPanel(list: PanelEntry[]): PanelEntry[] {
 function allEnumPanels(): SP[] {
   // numeric valued members only
   const nums = Object.values(SP).filter((v) => typeof v === 'number') as number[];
-  return nums.filter((n) => n !== SP.TOKEN_CONTRACT_PANEL).map((n) => n as SP);
+  return nums
+    .filter((n) => n !== SP.TOKEN_CONTRACT_PANEL)
+    .filter((n) => SP[n as SP] !== LEGACY_BUY_LIST_NAME)
+    .map((n) => n as SP);
 }
 
 function stableSortByEnumOrder(entries: PanelEntry[]): PanelEntry[] {
@@ -75,7 +83,10 @@ export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
   const knownPanels = new Set<number>(allEnumPanels());
 
   // Drop invalid panels, coerce boolean
-  const filtered = (flat || []).filter((e) => knownPanels.has(e.panel)).map((e) => ({ panel: e.panel, visible: !!e.visible }));
+  const filtered = (flat || [])
+    .map((e) => ({ panel: mapLegacyPanelId(e.panel), visible: !!e.visible }))
+    .filter((e) => knownPanels.has(e.panel))
+    .map((e) => ({ panel: e.panel, visible: !!e.visible }));
   if (filtered.length !== (flat || []).length) {
     repaired = true;
     notes.push('dropped-unknown-panels');

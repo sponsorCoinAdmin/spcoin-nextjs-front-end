@@ -153,6 +153,12 @@ const normalizeIdArray = (arr: unknown): SP_COIN_DISPLAY[] => {
     .map((x) => x as SP_COIN_DISPLAY);
 };
 
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+const mapLegacyPanelId = (id: number): number =>
+  SP_COIN_DISPLAY[id as SP_COIN_DISPLAY] === LEGACY_BUY_LIST_NAME
+    ? SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
+    : id;
+
 const normalizeDisplayStackNodes = (arr: unknown): DISPLAY_STACK_NODE[] => {
   if (!Array.isArray(arr)) return [];
   const out: DISPLAY_STACK_NODE[] = [];
@@ -160,14 +166,14 @@ const normalizeDisplayStackNodes = (arr: unknown): DISPLAY_STACK_NODE[] => {
   for (const it of arr as any[]) {
     // allow legacy numbers
     if (typeof it === 'number' || typeof it === 'string') {
-      const id = Number(it);
+      const id = mapLegacyPanelId(Number(it));
       if (!Number.isFinite(id)) continue;
       out.push({ id: id as SP_COIN_DISPLAY, name: panelName(id as any) });
       continue;
     }
 
     if (!it || typeof it !== 'object') continue;
-    const id = Number((it as any).id);
+    const id = mapLegacyPanelId(Number((it as any).id));
     if (!Number.isFinite(id)) continue;
 
     const name =

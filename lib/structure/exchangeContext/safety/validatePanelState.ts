@@ -6,6 +6,11 @@ import { PANEL_DEFS, MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeC
 import { NON_PERSISTED_PANELS } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 const nameOf = (id: number) => (SP as any)[id] ?? String(id);
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+const mapLegacyPanelId = (id: number, name?: string): number => {
+  const label = (name ?? nameOf(id)) as string;
+  return label === LEGACY_BUY_LIST_NAME ? SP.TOKEN_LIST_SELECT_PANEL : id;
+};
 
 const ALLOWED_IDS = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
@@ -19,7 +24,8 @@ export function validateAndRepairPanels(input: PanelNode[]) {
 
   // 1) Filter to known + persistable; de-dupe by id
   for (const n of input || []) {
-    const id = Number(n?.panel);
+    const rawId = Number(n?.panel);
+    const id = mapLegacyPanelId(rawId, n?.name);
     if (!Number.isFinite(id)) continue;
     if (!ALLOWED_IDS.has(id)) {
       reasons.push(`Dropped unknown panel id ${id}`);

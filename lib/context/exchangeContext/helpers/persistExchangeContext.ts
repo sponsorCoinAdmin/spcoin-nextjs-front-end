@@ -109,6 +109,12 @@ function toNode(idNum: number, nameMaybe?: unknown): DISPLAY_STACK_NODE {
  * - legacy: number[]
  * - older experimental: [{displayTypeId,displayTypeName}]
  */
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+const mapLegacyPanelId = (id: number): number =>
+  SP_COIN_DISPLAY[id as SP_COIN_DISPLAY] === LEGACY_BUY_LIST_NAME
+    ? SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
+    : id;
+
 function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
   if (!Array.isArray(arr)) return [];
   const out: DISPLAY_STACK_NODE[] = [];
@@ -116,7 +122,7 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
   for (const it of arr as any[]) {
     // tolerate ids-only arrays
     if (typeof it === 'number' || typeof it === 'string') {
-      const id = Number(it);
+      const id = mapLegacyPanelId(Number(it));
       if (!Number.isFinite(id)) continue;
       out.push(toNode(id));
       continue;
@@ -125,14 +131,14 @@ function normalizeDisplayStackNodes(arr: unknown): DISPLAY_STACK_NODE[] {
     if (!isRecord(it)) continue;
 
     if ('id' in it) {
-      const id = Number((it as any).id);
+      const id = mapLegacyPanelId(Number((it as any).id));
       if (!Number.isFinite(id)) continue;
       out.push(toNode(id, (it as any).name));
       continue;
     }
 
     if ('displayTypeId' in it) {
-      const id = Number((it as any).displayTypeId);
+      const id = mapLegacyPanelId(Number((it as any).displayTypeId));
       if (!Number.isFinite(id)) continue;
       out.push(toNode(id, (it as any).displayTypeName));
       continue;

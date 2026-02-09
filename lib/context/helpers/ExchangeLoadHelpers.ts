@@ -52,6 +52,11 @@ function normalizeOverlayVisibility(
 /* -------------------- displayStack normalization -------------------- */
 
 type DISPLAY_STACK_NODE = { id: SP_COIN_DISPLAY; name: string };
+const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
+const mapLegacyPanelId = (id: number): number =>
+  SP_COIN_DISPLAY[id as SP_COIN_DISPLAY] === LEGACY_BUY_LIST_NAME
+    ? SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
+    : id;
 
 function normalizeDisplayStackNodes(raw: unknown): DISPLAY_STACK_NODE[] {
   if (!Array.isArray(raw)) return [];
@@ -60,7 +65,7 @@ function normalizeDisplayStackNodes(raw: unknown): DISPLAY_STACK_NODE[] {
   for (const it of raw as any[]) {
     // tolerate ids-only
     if (typeof it === 'number' || typeof it === 'string') {
-      const id = Number(it);
+      const id = mapLegacyPanelId(Number(it));
       if (!Number.isFinite(id)) continue;
       out.push({ id: id as SP_COIN_DISPLAY, name: panelName(id as any) });
       continue;
@@ -69,7 +74,7 @@ function normalizeDisplayStackNodes(raw: unknown): DISPLAY_STACK_NODE[] {
     if (!it || typeof it !== 'object') continue;
 
     if ('id' in it) {
-      const id = Number((it as any).id);
+      const id = mapLegacyPanelId(Number((it as any).id));
       if (!Number.isFinite(id)) continue;
       const name =
         typeof (it as any).name === 'string' && String((it as any).name).trim().length
@@ -81,7 +86,7 @@ function normalizeDisplayStackNodes(raw: unknown): DISPLAY_STACK_NODE[] {
 
     // tolerate legacy mirror, if it appears
     if ('displayTypeId' in it) {
-      const id = Number((it as any).displayTypeId);
+      const id = mapLegacyPanelId(Number((it as any).displayTypeId));
       if (!Number.isFinite(id)) continue;
       const name =
         typeof (it as any).displayTypeName === 'string' &&
@@ -163,12 +168,13 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       rawTree
         .filter((n) => n && typeof n.panel === 'number')
         .map((n) => ({
-          panel: n.panel as SP_COIN_DISPLAY,
+          panel: mapLegacyPanelId(n.panel as SP_COIN_DISPLAY) as SP_COIN_DISPLAY,
           visible: !!n.visible,
           name: typeof n.name === 'string' ? n.name : undefined,
         }))
         .filter(
           (n) =>
+            SP_COIN_DISPLAY[n.panel] !== LEGACY_BUY_LIST_NAME &&
             n.panel !== SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL &&
             n.panel !== SP_COIN_DISPLAY.UNDEFINED,
         );
