@@ -82,6 +82,11 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
 const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
 
 /**
+ * ✅ TOKEN_LIST_SELECT_PANEL children (order matters)
+ */
+const TOKEN_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
+
+/**
  * ✅ Tree Panel fix:
  * Each pending/unstake node owns exactly ONE mode child.
  *
@@ -165,7 +170,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // Token selector overlays
   def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
-  def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list' }),
+  def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),
 
   // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)
   def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
