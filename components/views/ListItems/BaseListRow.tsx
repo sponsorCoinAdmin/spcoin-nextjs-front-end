@@ -37,7 +37,11 @@ function BaseListRow({
         <button
           type="button"
           className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0"
-          onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            alert('Avatar clicked');
+            onInfoClick?.();
+          }}
           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onInfoContextMenu?.(); }}
           aria-label={`${title} logo action`}
           title={`${title} logo`}

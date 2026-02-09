@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
@@ -60,6 +61,9 @@ export default function TokenPanel(_props: Props) {
   const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
   const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
   const vPreviewToken = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_TOKEN);
+  const vTokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+
+  const { openPanel, closePanel } = usePanelTree();
 
   // ✅ Source of truth: use the same token hooks as the rest of the app
   const [sellToken] = useSellTokenContract();
@@ -114,10 +118,19 @@ export default function TokenPanel(_props: Props) {
     setPreviewTokenContract(undefined);
   }, [vTokenPanel, previewToken, setPreviewTokenContract]);
 
+  useEffect(() => {
+    if (!vTokenPanel) return;
+    if (!vPreviewToken) return;
+    if (previewToken) return;
+    if (vTokenList) return;
+    openPanel(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'TokenPanel:missingPreview->openList');
+    closePanel(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL, 'TokenPanel:missingPreview->closeSelf');
+  }, [vTokenPanel, vPreviewToken, previewToken, vTokenList, openPanel, closePanel]);
+
   const isVisible = vTokenPanel;
 
   // ✅ early return AFTER hooks
-  if (!isVisible) return null;
+  if (!isVisible || vTokenList) return null;
 
   // Empty state (fixed wording)
   if (!tokenContract || (!vBuyToken && !vSellToken && !vPreviewToken)) {
@@ -132,7 +145,7 @@ export default function TokenPanel(_props: Props) {
       previewTokenAddr: previewToken?.address,
     });
     const title = vPreviewToken
-      ? 'No preview token selected.'
+      ? 'No preview, buy or sell token selected.'
       : vSellToken
         ? 'No sell token contract selected.'
         : vBuyToken

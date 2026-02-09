@@ -18,7 +18,7 @@ type TokenListItemProps = {
 const TokenListItem = React.memo(function TokenListItem({
   name, symbol, address, logoURL, confirmAssetCallback,
 }: TokenListItemProps) {
-  const { openPanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
   const [, setPreviewTokenContract] = usePreviewTokenContract();
 
   const previewToken = (): TokenContract => ({
@@ -31,6 +31,10 @@ const TokenListItem = React.memo(function TokenListItem({
 
   const openPreview = () => {
     setPreviewTokenContract(previewToken());
+    closePanel(
+      SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
+      'TokenListItem:openPreviewToken:closeList',
+    );
     openPanel(
       SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
       'TokenListItem:openTokenContractPanel',
