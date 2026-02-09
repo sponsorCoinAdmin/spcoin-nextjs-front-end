@@ -213,9 +213,6 @@ export default function ExchangeContextTab() {
           </PanelGate>
 
           {/* Token/address selectors + hub/error */}
-          <PanelGate panel={SP.BUY_LIST_SELECT_PANEL}>
-            <TokenListSelectPanel />
-          </PanelGate>
           <PanelGate panel={SP.TOKEN_LIST_SELECT_PANEL}>
             <TokenListSelectPanel />
           </PanelGate>

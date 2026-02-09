@@ -5,9 +5,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // ---- Panel-specific bags ----
 export type TokenSelectBag = {
-  type:
-    | SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
-    | SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
+  type: SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
   /** Opposite side’s committed address */
   peerAddress?: string | Address;
 };
@@ -47,5 +45,4 @@ export type AssetSelectBag =
 // ---- Type guard helpers ----
 export const isTokenSelectBag = (b?: AssetSelectBag): b is TokenSelectBag =>
   !!b &&
-  (b.type === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
-    b.type === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+  b.type === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;

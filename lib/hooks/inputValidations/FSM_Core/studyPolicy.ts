@@ -44,17 +44,6 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RETURN_VALIDATED_ASSET]: false,
   },
 
-  // BUY token list (full token pipeline)
-  [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: {
-    [StudyId.VALIDATE_ADDRESS]: true,
-    [StudyId.TEST_DUPLICATE_INPUT]: true,
-    [StudyId.VALIDATE_PREVIEW]: true,
-    [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: true,
-    [StudyId.VALIDATE_EXISTS_ON_CHAIN]: true,
-    [StudyId.RESOLVE_ERC20_ASSET]: true,
-    [StudyId.RETURN_VALIDATED_ASSET]: true,
-  },
-
   // SELL token list (full token pipeline)
   [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,

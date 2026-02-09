@@ -159,9 +159,10 @@ function titleFor(
   }
 
   if (display === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && tokenState) {
-    if (tokenState.activeBuyToken) return 'Select a Token to Buy';
-    if (tokenState.activeSellToken) return 'Select a Token to Sell';
-    return 'Select a Token';
+    return getTokenContractHeaderTitle(tokenState, {
+      buySymbol: tokenState.buySymbol,
+      sellSymbol: tokenState.sellSymbol,
+    });
   }
 
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {

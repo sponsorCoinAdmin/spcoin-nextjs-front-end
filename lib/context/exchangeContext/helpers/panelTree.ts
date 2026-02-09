@@ -86,7 +86,6 @@ export function openOnly<M extends Record<string, unknown> = Record<string, unkn
  *   MAIN_TRADING_PANEL
  *     TRADE_CONTAINER_HEADER
  *     TRADING_STATION_PANEL
- *     BUY_LIST_SELECT_PANEL
  *     ...
  *
  * This does NOT affect storage/persistence; it only reshapes for rendering.

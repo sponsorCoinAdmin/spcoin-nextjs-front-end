@@ -74,7 +74,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       ]),
 
       // ─────────────── Radio overlays (siblings) ───────────────
-      node(SP.BUY_LIST_SELECT_PANEL, false),
       node(SP.TOKEN_LIST_SELECT_PANEL, false),
 
       // ✅ OLD: legacy list overlays (kept during migration)

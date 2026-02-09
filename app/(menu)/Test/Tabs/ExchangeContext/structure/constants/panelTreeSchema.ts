@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v12';
+export const schemaVersion = 'v13';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -17,7 +17,6 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.TRADING_STATION_PANEL,
 
     // Token selectors
-    SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.TOKEN_LIST_SELECT_PANEL,
 
     // ✅ Rewards list overlay root
@@ -116,7 +115,6 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.CONFIG_SPONSORSHIP_PANEL]: 'panel',
 
   // Token selector overlays
-  [SPCD.BUY_LIST_SELECT_PANEL]: 'list',
   [SPCD.TOKEN_LIST_SELECT_PANEL]: 'list',
 
   // ✅ Rewards list overlay root
@@ -167,12 +165,10 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
 // Optional grouping (updated to include manage panels)
 export const GROUPS = {
   TOKEN_SELECT_LISTS: [
-    SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.TOKEN_LIST_SELECT_PANEL,
   ] as SPCD[],
 
   MODALS_AND_LISTS: [
-    SPCD.BUY_LIST_SELECT_PANEL,
     SPCD.TOKEN_LIST_SELECT_PANEL,
 
     SPCD.MANAGE_SPONSORSHIPS_PANEL,

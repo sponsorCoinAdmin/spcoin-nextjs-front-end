@@ -30,7 +30,7 @@
         │                 │           └── <BaseSelectPanel> (BUY)
         │                 │                 ├── <input /> ← user edits amount
         │                 │                 ├── <TokenSelectDropDown>
-        │                 │                 │     └── onClick → setSpCoinDisplay(BUY_LIST_SELECT_PANEL)
+        │                 │                 │     └── onClick → setSpCoinDisplay(TOKEN_LIST_SELECT_PANEL)
         │                 │                 ├── isContainerVisible → <TokenSelectScrollPanel>
         │                 │                 │     └── <TokenListSelectPanel>
         │                 │                 │           └── <AssetListSelectPanel>

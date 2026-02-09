@@ -15,7 +15,6 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
   SP.TRADING_STATION_PANEL,
 
   // Token selectors
-  SP.BUY_LIST_SELECT_PANEL,
   SP.TOKEN_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)

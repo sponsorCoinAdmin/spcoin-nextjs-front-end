@@ -11,8 +11,6 @@ export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
 
   return useMemo(() => {
     switch (containerType) {
-      case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
-        return 'buy';
       case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
         if (sellMode) return 'sell';
         if (buyMode) return 'buy';

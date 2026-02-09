@@ -20,6 +20,19 @@ export default function TokenListSelectPanel() {
 
   if (!listVisible) return null;
 
+  if (!buyMode && !sellMode) {
+    const title = 'No buy or sell token contract selected.';
+    const body = 'Select a buy or sell token to view its details.';
+    return (
+      <div id="TOKEN_LIST_SELECT_PANEL">
+        <div className="p-4 text-sm text-slate-200 text-center">
+          <p className="mb-2 font-semibold">{title}</p>
+          <p className="m-0">{body}</p>
+        </div>
+      </div>
+    );
+  }
+
   // Side is derived from token mode flags
   const side = sellMode ? 'sell' : buyMode ? 'buy' : 'sell';
 

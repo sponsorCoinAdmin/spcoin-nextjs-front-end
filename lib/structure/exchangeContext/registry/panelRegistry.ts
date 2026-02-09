@@ -107,7 +107,6 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.TRADING_STATION_PANEL,
 
   // Token selectors
-  SP.BUY_LIST_SELECT_PANEL,
   SP.TOKEN_LIST_SELECT_PANEL,
 
   // ✅ OLD: legacy list overlays (kept during migration)
@@ -169,7 +168,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // Token selector overlays
-  def({ id: SP.BUY_LIST_SELECT_PANEL, kind: 'list' }),
   def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),
 
   // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)

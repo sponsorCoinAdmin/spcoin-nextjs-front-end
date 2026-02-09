@@ -73,7 +73,6 @@ export const PANELS: readonly PanelDef[] = [
    * Children of TRADE_CONTAINER_HEADER
    */
   overlay(SP.TRADING_STATION_PANEL, 'panel', true),
-  overlay(SP.BUY_LIST_SELECT_PANEL, 'list', true),
   overlay(SP.TOKEN_LIST_SELECT_PANEL, 'list', true),
 
   overlay(SP.RECIPIENT_LIST_SELECT_PANEL, 'list', false),
