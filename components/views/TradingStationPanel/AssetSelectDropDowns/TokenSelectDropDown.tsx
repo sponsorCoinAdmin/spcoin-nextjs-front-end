@@ -31,7 +31,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
   // ✅ new transitions API
   const { openOverlay } = usePanelTransitions();
-  const { isVisible } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
   const lastOpenAtRef = useRef<number | null>(null);
@@ -87,12 +87,13 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       const check = (label: string) => {
         const now = performance.now();
         const v = isVisible(panel);
-        const sellV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-        const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+        const listV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
         debugLog.log?.(
           `[post-check:${label}] +${Math.round(
             now - (lastOpenAtRef.current ?? t0),
-          )}ms { panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`,
+          )}ms { panel=${SP_COIN_DISPLAY[panel]}, list=${listV}, buyMode=${buyMode}, sellMode=${sellMode} }`,
         );
         if (!v && now - (lastOpenAtRef.current ?? t0) < 300) {
           debugLog.warn?.(
@@ -132,20 +133,25 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
       // ✅ open via generic openOverlay
       if (isSellRoot) {
+        // SELL dropdown -> use SELL_TOKEN mode
+        openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
         openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       } else {
-        openOverlay(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, { methodName });
-        schedulePostChecks(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+        // BUY dropdown -> use BUY_TOKEN mode
+        openPanel(SP_COIN_DISPLAY.BUY_TOKEN, `${methodName}:setBuyMode`);
+        openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
+        schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       }
 
-      const sellNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-      const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+      const listNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
       debugLog.log?.(
-        `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`,
+        `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} } (isSellRoot=${isSellRoot})`,
       );
     },
-    [isSellRoot, openOverlay, isVisible, schedulePostChecks],
+    [isSellRoot, openOverlay, openPanel, isVisible, schedulePostChecks],
   );
 
   function displaySymbol(token: TokenContract) {

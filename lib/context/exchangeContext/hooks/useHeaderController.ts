@@ -44,10 +44,9 @@ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFact
 /** Default titles (STATIC only) */
 const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: 'Select Sponsors Agent',
-  [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: 'Select a Token to Buy',
   [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
   [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: 'Select Recipient to Sponsor',
-  [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token to Sell',
+  [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Token Contract',
@@ -159,6 +158,12 @@ function titleFor(
     });
   }
 
+  if (display === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && tokenState) {
+    if (tokenState.activeBuyToken) return 'Select a Token to Buy';
+    if (tokenState.activeSellToken) return 'Select a Token to Sell';
+    return 'Select a Token';
+  }
+
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
     const n = (manageName ?? '').trim();
     const label = n.length ? n : 'Sponsor Coin';
@@ -180,7 +185,6 @@ type AnyCloseEvent = {
 const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
   SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
 
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
@@ -223,7 +227,6 @@ export function useHeaderController() {
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
   const sellList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-  const buyList = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
   const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
   const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
@@ -277,7 +280,6 @@ export function useHeaderController() {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
       [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
       [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: sellList,
-      [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: buyList,
       [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
 
       [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
@@ -299,7 +301,6 @@ export function useHeaderController() {
   }, [
     tokenList,
     sellList,
-    buyList,
     recipientList,
     agentList,
     sponsorList,
@@ -341,7 +342,10 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
-      currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL ? tokenState : undefined,
+      currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL ||
+        currentDisplay === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
+        ? tokenState
+        : undefined,
       headerAccountName,
     );
   }, [currentDisplay, rewardsState, accountsState, tokenState, headerAccountName]);

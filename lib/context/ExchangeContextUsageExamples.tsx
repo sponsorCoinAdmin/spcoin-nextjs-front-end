@@ -44,7 +44,6 @@ export default function ExchangeContextUsageExamples() {
 
   const activePanelLabel = useMemo(() => {
     if (isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL)) return 'TOKEN_LIST_SELECT_PANEL';
-    if (isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)) return 'BUY_LIST_SELECT_PANEL';
     return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
   }, [isVisible, activeMainOverlay]);
 
@@ -177,13 +176,19 @@ export default function ExchangeContextUsageExamples() {
 
         {/* Panel-tree test controls with parent tags */}
         <button
-          onClick={() => openWithParent(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'openSellList')}
+          onClick={() => {
+            openPanel(SP_COIN_DISPLAY.SELL_TOKEN, tag('openSellList:setSellMode'));
+            openWithParent(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'openSellList');
+          }}
         >
           Open SELL panel
         </button>
 
         <button
-          onClick={() => openWithParent(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'openBuyList')}
+          onClick={() => {
+            openPanel(SP_COIN_DISPLAY.BUY_TOKEN, tag('openBuyList:setBuyMode'));
+            openWithParent(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'openBuyList');
+          }}
         >
           Open BUY panel
         </button>

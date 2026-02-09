@@ -954,7 +954,7 @@ export function usePanelTree() {
 
   const isTokenScrollVisible = useMemo(
     () =>
-      visibilityMap[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
+      visibilityMap[SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL],
     [visibilityMap],

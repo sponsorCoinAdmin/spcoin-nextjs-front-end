@@ -5,6 +5,7 @@ import type { TokenContract } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 import { tokenContractsEqual } from '@/components/shared/utils/isDuplicateAddress';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 // Import the provider state directly to avoid barrel ↔ barrel cycles
 import { ExchangeContextState } from '../../ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -116,8 +117,8 @@ export const useBuyTokenAddress = (): string | undefined => {
 /**
  * Peer token address for duplicate detection.
  *
- * - In BUY_LIST_SELECT_PANEL: peer = current SELL token address.
- * - In TOKEN_LIST_SELECT_PANEL: peer = current BUY token address.
+ * - TOKEN_LIST_SELECT_PANEL + SELL_TOKEN active: peer = current BUY token address.
+ * - TOKEN_LIST_SELECT_PANEL + BUY_TOKEN active (or fallback): peer = current SELL token address.
  * - Other containers: no peer (undefined).
  *
  * Returns a plain string so it can be passed directly into FSM `peerAddress`.
@@ -127,14 +128,15 @@ export const usePeerTokenAddress = (
 ): string | undefined => {
   const sellAddr = useSellTokenAddress();
   const buyAddr = useBuyTokenAddress();
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
 
   switch (containerType) {
-    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
-      // Selecting BUY token → compare against SELL
-      return sellAddr ?? undefined;
-
     case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
-      // Selecting SELL token → compare against BUY
+      // SELL_TOKEN active => selecting SELL, compare against BUY
+      if (sellMode) return buyAddr ?? undefined;
+      // BUY_TOKEN active => selecting BUY, compare against SELL
+      if (buyMode) return sellAddr ?? undefined;
       return buyAddr ?? undefined;
 
     default:

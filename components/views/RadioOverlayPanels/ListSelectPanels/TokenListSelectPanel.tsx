@@ -2,7 +2,7 @@
 'use client';
 
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
-import { useActiveRadioPanel } from '@/lib/context/exchangeContext/hooks/useActiveRadioPanel';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 import { isAddress } from 'viem';
@@ -13,18 +13,15 @@ function hasValidAddress(a: any): a is { address: string } {
 
 /** Token list overlay (BUY or SELL). Active panel is derived from radio overlay state. */
 export default function TokenListSelectPanel() {
-  const activePanel = useActiveRadioPanel();
   const { commitToken } = useSelectionCommit();
+  const listVisible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
 
-  // Only handle token list overlays here
-  const side =
-    activePanel === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
-      ? 'sell'
-      : activePanel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
-        ? 'buy'
-        : null;
+  if (!listVisible) return null;
 
-  if (!side) return null;
+  // Side is derived from token mode flags
+  const side = sellMode ? 'sell' : buyMode ? 'buy' : 'sell';
 
   const handleCommit = (asset: spCoinAccount | TokenContract) => {
     if (!hasValidAddress(asset)) return;

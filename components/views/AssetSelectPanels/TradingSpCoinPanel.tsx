@@ -77,7 +77,7 @@ function SpCoinComponent() {
 
   // ✅ New transitions API
   const { openOverlay } = usePanelTransitions();
-  const { isVisible } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
   const lastOpenAtRef = useRef<number | null>(null);
@@ -143,12 +143,13 @@ function SpCoinComponent() {
       const check = (label: string) => {
         const now = performance.now();
         const v = isVisible(panel);
-        const sellV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-        const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+        const listV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
         dropdownDebugLog.log?.(
           `[post-check:${label}] +${Math.round(
             now - (lastOpenAtRef.current ?? t0),
-          )}ms { panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`,
+          )}ms { panel=${SP_COIN_DISPLAY[panel]}, list=${listV}, buyMode=${buyMode}, sellMode=${sellMode} }`,
         );
         // If we see it already closed within 250ms, warn loudly
         if (!v && now - (lastOpenAtRef.current ?? t0) < 300) {
@@ -194,17 +195,19 @@ function SpCoinComponent() {
       lastOpenAtRef.current = performance.now();
 
       // ✅ SELL list only for this module (new API)
+      openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
       openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
       schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
       // Immediate snapshot after open
-      const sellNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-      const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+      const listNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
       dropdownDebugLog.log?.(
-        `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} }`,
+        `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} }`,
       );
     },
-    [openOverlay, isVisible, schedulePostChecks],
+    [openOverlay, openPanel, isVisible, schedulePostChecks],
   );
 
   function displaySymbol(token: TokenContract) {

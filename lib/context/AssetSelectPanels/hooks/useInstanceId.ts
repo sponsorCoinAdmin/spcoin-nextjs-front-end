@@ -3,18 +3,24 @@
 
 import { useMemo } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+
   return useMemo(() => {
     switch (containerType) {
       case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
         return 'buy';
       case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
+        if (sellMode) return 'sell';
+        if (buyMode) return 'buy';
         return 'sell';
       case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
         return 'recipient';
       default:
         return 'main';
     }
-  }, [containerType]);
+  }, [containerType, buyMode, sellMode]);
 }

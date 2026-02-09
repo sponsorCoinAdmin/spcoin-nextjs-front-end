@@ -8,6 +8,7 @@ import type { TokenContract } from '@/lib/structure';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { TokenPanelContext } from '../../../../app/(menu)/Test/Tabs/ExchangeContext/hooks/useTokenPanelContext';
 import { useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 interface Props {
@@ -29,13 +30,19 @@ export const TokenPanelProvider = ({ containerType, children }: Props) => {
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+
+  // List overlay mode mapping:
+  // SELL_TOKEN => SELL selection
+  // BUY_TOKEN  => BUY selection
   const isSellContainer =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL ||
-    containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
+    (containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && sellMode);
 
   const isBuyContainer =
     containerType === SP_COIN_DISPLAY.BUY_SELECT_PANEL ||
-    containerType === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
+    (containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && buyMode);
 
   // required by TokenPanelContextType
   const dumpTokenContext = useCallback(

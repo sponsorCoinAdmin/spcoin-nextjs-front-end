@@ -294,10 +294,7 @@ export function useProviderWatchers({
       | undefined;
 
     const selectOpen = root
-      ? anyVisible(root, [
-          SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
-          SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
-        ])
+      ? anyVisible(root, [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL])
       : false;
 
     if ((sellAddr || buyAddr) && selectOpen && root) {
