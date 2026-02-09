@@ -296,7 +296,7 @@ export function useProviderWatchers({
     const selectOpen = root
       ? anyVisible(root, [
           SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
-          SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+          SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
         ])
       : false;
 

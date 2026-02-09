@@ -37,7 +37,7 @@ export enum SP_COIN_DISPLAY {
   MANAGE_SPONSORSHIPS_PANEL,
 
   // Trading list overlays
-  SELL_LIST_SELECT_PANEL,
+  TOKEN_LIST_SELECT_PANEL,
   SELL_SELECT_PANEL,
   TOKEN_CONTRACT_PANEL, // never persist (container only)
   STAKING_SPCOINS_PANEL,
@@ -56,7 +56,6 @@ export enum SP_COIN_DISPLAY {
   RECIPIENT_LIST_SELECT_PANEL,
 
   // Token / account overlays
-  TOKEN_LIST_SELECT_PANEL,
   ACCOUNT_PANEL,
 
   // ✅ NEW: TOKEN_CONTRACT_PANEL children (append-only)

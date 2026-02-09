@@ -117,7 +117,7 @@ export const useBuyTokenAddress = (): string | undefined => {
  * Peer token address for duplicate detection.
  *
  * - In BUY_LIST_SELECT_PANEL: peer = current SELL token address.
- * - In SELL_LIST_SELECT_PANEL: peer = current BUY token address.
+ * - In TOKEN_LIST_SELECT_PANEL: peer = current BUY token address.
  * - Other containers: no peer (undefined).
  *
  * Returns a plain string so it can be passed directly into FSM `peerAddress`.
@@ -133,7 +133,7 @@ export const usePeerTokenAddress = (
       // Selecting BUY token → compare against SELL
       return sellAddr ?? undefined;
 
-    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
       // Selecting SELL token → compare against BUY
       return buyAddr ?? undefined;
 

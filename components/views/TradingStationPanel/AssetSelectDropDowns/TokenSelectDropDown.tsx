@@ -87,7 +87,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       const check = (label: string) => {
         const now = performance.now();
         const v = isVisible(panel);
-        const sellV = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+        const sellV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
         const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
         debugLog.log?.(
           `[post-check:${label}] +${Math.round(
@@ -132,14 +132,14 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
       // ✅ open via generic openOverlay
       if (isSellRoot) {
-        openOverlay(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, { methodName });
-        schedulePostChecks(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+        openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
+        schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       } else {
         openOverlay(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
       }
 
-      const sellNow = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+      const sellNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
       debugLog.log?.(
         `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`,

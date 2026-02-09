@@ -74,7 +74,7 @@ export const PANELS: readonly PanelDef[] = [
    */
   overlay(SP.TRADING_STATION_PANEL, 'panel', true),
   overlay(SP.BUY_LIST_SELECT_PANEL, 'list', true),
-  overlay(SP.SELL_LIST_SELECT_PANEL, 'list', true),
+  overlay(SP.TOKEN_LIST_SELECT_PANEL, 'list', true),
 
   overlay(SP.RECIPIENT_LIST_SELECT_PANEL, 'list', false),
   overlay(SP.AGENT_LIST_SELECT_PANEL, 'list', false),

@@ -40,8 +40,8 @@ export function markTrailingFeedIfPresent(header: string, feed?: FEED_TYPE): str
  * any extra trailing feed stuck on later will stand out via TRAILING markers.
  *
  * Examples:
- *  🧮 [FEED<<TOKEN_LIST>>] SELL_LIST_SELECT_PANEL for Address 0x...
- *  🧮 SELL_LIST_SELECT_PANEL for Address 0x...                     (when feed omitted)
+ *  🧮 [FEED<<TOKEN_LIST>>] TOKEN_LIST_SELECT_PANEL for Address 0x...
+ *  🧮 TOKEN_LIST_SELECT_PANEL for Address 0x...                     (when feed omitted)
  */
 export function headerLine(
   containerType: SP_COIN_DISPLAY,

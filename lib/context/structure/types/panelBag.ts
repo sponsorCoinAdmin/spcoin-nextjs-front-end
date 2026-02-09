@@ -7,7 +7,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 export type TokenSelectBag = {
   type:
     | SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
-    | SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
+    | SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
   /** Opposite side’s committed address */
   peerAddress?: string | Address;
 };
@@ -48,4 +48,4 @@ export type AssetSelectBag =
 export const isTokenSelectBag = (b?: AssetSelectBag): b is TokenSelectBag =>
   !!b &&
   (b.type === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
-    b.type === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+    b.type === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);

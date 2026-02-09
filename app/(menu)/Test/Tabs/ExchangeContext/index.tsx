@@ -216,7 +216,7 @@ export default function ExchangeContextTab() {
           <PanelGate panel={SP.BUY_LIST_SELECT_PANEL}>
             <TokenListSelectPanel />
           </PanelGate>
-          <PanelGate panel={SP.SELL_LIST_SELECT_PANEL}>
+          <PanelGate panel={SP.TOKEN_LIST_SELECT_PANEL}>
             <TokenListSelectPanel />
           </PanelGate>
           <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>

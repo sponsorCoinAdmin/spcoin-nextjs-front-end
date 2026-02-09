@@ -47,7 +47,7 @@ export function useTokenSelection({
   // ✅ Determine panel role correctly (supports SELECT and LIST variants)
   const isSellPanel =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL ||
-    containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
+    containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
   const chosenFrom = isSellPanel ? 'SELL' : 'BUY';
 
   // 🔎 READ store snapshot

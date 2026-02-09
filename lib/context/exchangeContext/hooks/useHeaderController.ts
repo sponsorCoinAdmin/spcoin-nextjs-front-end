@@ -47,7 +47,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: 'Select a Token to Buy',
   [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
   [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: 'Select Recipient to Sponsor',
-  [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: 'Select a Token to Sell',
+  [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token to Sell',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
   [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Token Contract',
@@ -179,7 +179,7 @@ type AnyCloseEvent = {
  */
 const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
-  SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
 
@@ -222,7 +222,7 @@ export function useHeaderController() {
 
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
-  const sellList = usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+  const sellList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const buyList = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
   const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
@@ -276,7 +276,7 @@ export function useHeaderController() {
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
       [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
-      [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: sellList,
+      [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: sellList,
       [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: buyList,
       [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
 

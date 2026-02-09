@@ -11,7 +11,7 @@
         │                 │     │     └── <BaseSelectPanel> (SELL)
         │                 │     │           ├── <input /> ← user edits amount
         │                 │     │           ├── <TokenSelectDropDown>
-        │                 │     │           │     └── onClick → setSpCoinDisplay(SELL_LIST_SELECT_PANEL)
+        │                 │     │           │     └── onClick → setSpCoinDisplay(TOKEN_LIST_SELECT_PANEL)
         │                 │     │           ├── isContainerVisible → <TokenSelectScrollPanel>
         │                 │     │           │     └── <TokenListSelectPanel>
         │                 │     │           │           └── <AssetListSelectPanel>

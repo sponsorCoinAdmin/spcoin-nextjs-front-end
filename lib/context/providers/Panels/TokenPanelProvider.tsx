@@ -31,7 +31,7 @@ export const TokenPanelProvider = ({ containerType, children }: Props) => {
 
   const isSellContainer =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL ||
-    containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
+    containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
 
   const isBuyContainer =
     containerType === SP_COIN_DISPLAY.BUY_SELECT_PANEL ||

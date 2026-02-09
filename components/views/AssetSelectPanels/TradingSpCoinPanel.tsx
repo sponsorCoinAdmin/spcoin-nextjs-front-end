@@ -143,7 +143,7 @@ function SpCoinComponent() {
       const check = (label: string) => {
         const now = performance.now();
         const v = isVisible(panel);
-        const sellV = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+        const sellV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
         const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
         dropdownDebugLog.log?.(
           `[post-check:${label}] +${Math.round(
@@ -194,11 +194,11 @@ function SpCoinComponent() {
       lastOpenAtRef.current = performance.now();
 
       // ✅ SELL list only for this module (new API)
-      openOverlay(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, { methodName });
-      schedulePostChecks(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+      openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
+      schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
       // Immediate snapshot after open
-      const sellNow = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+      const sellNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
       dropdownDebugLog.log?.(
         `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} }`,

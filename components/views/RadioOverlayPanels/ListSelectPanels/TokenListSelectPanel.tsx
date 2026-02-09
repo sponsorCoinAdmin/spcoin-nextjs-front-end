@@ -18,7 +18,7 @@ export default function TokenListSelectPanel() {
 
   // Only handle token list overlays here
   const side =
-    activePanel === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL
+    activePanel === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
       ? 'sell'
       : activePanel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
         ? 'buy'

@@ -19,7 +19,7 @@ export function useFeedType(containerType: SP_COIN_DISPLAY): FEED_TYPE {
         return FEED_TYPE.AGENT_ACCOUNTS;
 
       case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
-      case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+      case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
       default:
         return FEED_TYPE.TOKEN_LIST;
     }

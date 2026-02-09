@@ -56,7 +56,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // SELL token list (full token pipeline)
-  [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: {
+  [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

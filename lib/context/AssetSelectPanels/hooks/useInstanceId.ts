@@ -9,7 +9,7 @@ export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
     switch (containerType) {
       case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
         return 'buy';
-      case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+      case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
         return 'sell';
       case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
         return 'recipient';

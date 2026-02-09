@@ -10,7 +10,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
  */
 export function getDuplicateMessage(containerType: SP_COIN_DISPLAY): string {
   switch (containerType) {
-    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
       return 'Sell Address Cannot Be the Same as Buy Address';
 
     case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
