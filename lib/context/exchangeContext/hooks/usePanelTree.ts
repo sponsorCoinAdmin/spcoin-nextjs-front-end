@@ -169,11 +169,11 @@ const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
 const isAccountPanelMode = (p: SP_COIN_DISPLAY) =>
   ACCOUNT_PANEL_MODES.some((x) => Number(x) === Number(p));
 
-// ✅ TOKEN_CONTRACT_PANEL children: exactly 0 or 1 visible
+// ✅ TOKEN_PANEL children: exactly 0 or 1 visible
 const TOKEN_CONTRACT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.BUY_TOKEN,
-  SP_COIN_DISPLAY.SELL_TOKEN,
-  SP_COIN_DISPLAY.PREVIEW_TOKEN,
+  SP_COIN_DISPLAY.BUY_CONTRACT,
+  SP_COIN_DISPLAY.SELL_CONTRACT,
+  SP_COIN_DISPLAY.PREVIEW_CONTRACT,
 ] as const;
 
 const isTokenContractPanelMode = (p: SP_COIN_DISPLAY) =>
@@ -223,10 +223,10 @@ export function usePanelTree() {
     if (!Array.isArray(tree)) return;
 
     const REQUIRED = [
-      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
-      SP_COIN_DISPLAY.BUY_TOKEN,
-      SP_COIN_DISPLAY.SELL_TOKEN,
-      SP_COIN_DISPLAY.PREVIEW_TOKEN,
+      SP_COIN_DISPLAY.TOKEN_PANEL,
+      SP_COIN_DISPLAY.BUY_CONTRACT,
+      SP_COIN_DISPLAY.SELL_CONTRACT,
+      SP_COIN_DISPLAY.PREVIEW_CONTRACT,
       SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
       SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
       SP_COIN_DISPLAY.AGENT_ACCOUNT,
@@ -898,8 +898,8 @@ export function usePanelTree() {
         isStackComponent: IS_STACK_COMPONENT.has(Number(panel)),
       });
 
-      // ✅ If closing TOKEN_CONTRACT_PANEL, also close its mode children
-      if (Number(panel) === Number(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL)) {
+      // ✅ If closing TOKEN_PANEL, also close its mode children
+      if (Number(panel) === Number(SP_COIN_DISPLAY.TOKEN_PANEL)) {
         for (const child of TOKEN_CONTRACT_PANEL_MODES) {
           if (panelStore.isVisible(child)) {
             closePanelInternal(
@@ -964,7 +964,7 @@ export function usePanelTree() {
     () =>
       visibilityMap[SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL] ||
-      visibilityMap[SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL],
+      visibilityMap[SP_COIN_DISPLAY.TOKEN_PANEL],
     [visibilityMap],
   );
 

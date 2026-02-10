@@ -6,8 +6,8 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
-  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
 
   return useMemo(() => {
     switch (containerType) {

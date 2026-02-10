@@ -39,7 +39,7 @@ export enum SP_COIN_DISPLAY {
   // Trading list overlays
   TOKEN_LIST_SELECT_PANEL,
   SELL_SELECT_PANEL,
-  TOKEN_CONTRACT_PANEL, // never persist (container only)
+  TOKEN_PANEL, // never persist (container only)
   STAKING_SPCOINS_PANEL,
   SWAP_ARROW_BUTTON,
   TRADE_CONTAINER_HEADER,
@@ -58,8 +58,8 @@ export enum SP_COIN_DISPLAY {
   // Token / account overlays
   ACCOUNT_PANEL,
 
-  // ✅ NEW: TOKEN_CONTRACT_PANEL children (append-only)
-  BUY_TOKEN,
-  SELL_TOKEN,
-  PREVIEW_TOKEN,
+  // ✅ NEW: TOKEN_PANEL children (append-only)
+  BUY_CONTRACT,
+  SELL_CONTRACT,
+  PREVIEW_CONTRACT,
 }

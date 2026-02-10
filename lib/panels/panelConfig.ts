@@ -79,7 +79,7 @@ export const PANELS: readonly PanelDef[] = [
   overlay(SP.AGENT_LIST_SELECT_PANEL, 'list', false),
   overlay(SP.ACCOUNT_LIST_REWARDS_PANEL, 'list', false),
 
-  overlay(SP.TOKEN_CONTRACT_PANEL, 'list', false),
+  overlay(SP.TOKEN_PANEL, 'list', false),
   overlay(SP.ERROR_MESSAGE_PANEL, 'panel', false),
 
   // Manage overlays as first-class main overlays

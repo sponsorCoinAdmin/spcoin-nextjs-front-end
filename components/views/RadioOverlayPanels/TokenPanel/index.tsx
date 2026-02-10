@@ -50,17 +50,17 @@ function formatShortAddress(addr: string) {
 
 /**
  * TokenPanel
- * - Single gate: TOKEN_CONTRACT_PANEL
+ * - Single gate: TOKEN_PANEL
  * - Displays info for the currently selected token contract (from context)
  */
 export default function TokenPanel(_props: Props) {
   // ✅ Single visibility gate
-  const vTokenPanel = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
+  const vTokenPanel = usePanelVisible(SP_COIN_DISPLAY.TOKEN_PANEL);
 
-  // ✅ Read child visibility directly (BUY_TOKEN / SELL_TOKEN)
-  const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
-  const vPreviewToken = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_TOKEN);
+  // ✅ Read child visibility directly (BUY_CONTRACT / SELL_CONTRACT)
+  const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const vPreviewToken = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_CONTRACT);
   const vTokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
   const { openPanel, closePanel } = usePanelTree();
@@ -73,18 +73,18 @@ export default function TokenPanel(_props: Props) {
 
   // ✅ Resolve active token side from visible child flags
   const activeTokenSide = useMemo(() => {
-    if (vPreviewToken) return 'PREVIEW_TOKEN';
-    if (vBuyToken) return 'BUY_TOKEN';
-    if (vSellToken) return 'SELL_TOKEN';
+    if (vPreviewToken) return 'PREVIEW_CONTRACT';
+    if (vBuyToken) return 'BUY_CONTRACT';
+    if (vSellToken) return 'SELL_CONTRACT';
     return 'NONE';
   }, [vPreviewToken, vBuyToken, vSellToken]);
 
   const tokenContract: TokenContract | undefined =
-    activeTokenSide === 'PREVIEW_TOKEN'
+    activeTokenSide === 'PREVIEW_CONTRACT'
       ? previewToken
-      : activeTokenSide === 'BUY_TOKEN'
+      : activeTokenSide === 'BUY_CONTRACT'
         ? buyToken
-        : activeTokenSide === 'SELL_TOKEN'
+        : activeTokenSide === 'SELL_CONTRACT'
           ? sellToken
           : previewToken ?? buyToken ?? sellToken;
 
@@ -122,9 +122,9 @@ export default function TokenPanel(_props: Props) {
     if (previewSource) {
       const next =
         previewSource === 'BUY'
-          ? SP_COIN_DISPLAY.BUY_TOKEN
+          ? SP_COIN_DISPLAY.BUY_CONTRACT
           : previewSource === 'SELL'
-            ? SP_COIN_DISPLAY.SELL_TOKEN
+            ? SP_COIN_DISPLAY.SELL_CONTRACT
             : null;
       if (next != null) {
         openPanel(next, 'TokenPanel:closePreview:restoreMode');
@@ -150,7 +150,7 @@ export default function TokenPanel(_props: Props) {
     if (previewToken) return;
     if (vTokenList) return;
     openPanel(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'TokenPanel:missingPreview->openList');
-    closePanel(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL, 'TokenPanel:missingPreview->closeSelf');
+    closePanel(SP_COIN_DISPLAY.TOKEN_PANEL, 'TokenPanel:missingPreview->closeSelf');
   }, [vTokenPanel, vPreviewToken, previewToken, vTokenList, openPanel, closePanel]);
 
   const isVisible = vTokenPanel;
@@ -185,7 +185,7 @@ export default function TokenPanel(_props: Props) {
           ? 'Select a buy token to view its details.'
           : 'Select a token to view its details.';
     return (
-      <div id="TOKEN_CONTRACT_PANEL">
+      <div id="TOKEN_PANEL">
         <div className="p-4 text-sm text-slate-200 text-center">
           <p className="mb-2 font-semibold">{title}</p>
           <p className="m-0">{body}</p>
@@ -214,7 +214,7 @@ export default function TokenPanel(_props: Props) {
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
   return (
-    <div id="TOKEN_CONTRACT_PANEL">
+    <div id="TOKEN_PANEL">
       {/* Contract Address header pill */}
       {pillAddr ? (
         <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">

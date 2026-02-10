@@ -269,12 +269,12 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     // ✅ New persisted overlays (ensure presence on legacy trees)
     [SP.ACCOUNT_PANEL, false],
 
-    // ✅ TOKEN_CONTRACT_PANEL is now persisted; keep it in boot checks
-    [SP.TOKEN_CONTRACT_PANEL, false],
+    // ✅ TOKEN_PANEL is now persisted; keep it in boot checks
+    [SP.TOKEN_PANEL, false],
   ];
 
   // Panels that should never be present in the persisted tree.
-  // (Empty for now; TOKEN_CONTRACT_PANEL is a first-class overlay.)
+  // (Empty for now; TOKEN_PANEL is a first-class overlay.)
   const neverPersist: number[] = [];
 
   const missing = mustIncludeOnBoot

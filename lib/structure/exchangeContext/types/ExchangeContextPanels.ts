@@ -15,7 +15,7 @@ export interface ExchangeContextWithPanels {
    *
    * NOTE:
    * - This list should include first-class overlays in MAIN_RADIO_OVERLAY_PANELS
-   *   (e.g., ACCOUNT_PANEL, TOKEN_CONTRACT_PANEL, etc.)
+   *   (e.g., ACCOUNT_PANEL, TOKEN_PANEL, etc.)
    *   so they survive refreshes.
    */
   spCoinPanelTree: SpCoinPanelTree;

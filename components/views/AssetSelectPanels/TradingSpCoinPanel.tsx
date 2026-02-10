@@ -144,8 +144,8 @@ function SpCoinComponent() {
         const now = performance.now();
         const v = isVisible(panel);
         const listV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
         dropdownDebugLog.log?.(
           `[post-check:${label}] +${Math.round(
             now - (lastOpenAtRef.current ?? t0),
@@ -195,14 +195,14 @@ function SpCoinComponent() {
       lastOpenAtRef.current = performance.now();
 
       // ✅ SELL list only for this module (new API)
-      openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
+      openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, `${methodName}:setSellMode`);
       openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
       schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
       // Immediate snapshot after open
       const listNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
       dropdownDebugLog.log?.(
         `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} }`,
       );

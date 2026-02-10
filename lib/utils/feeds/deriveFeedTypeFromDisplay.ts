@@ -33,7 +33,7 @@ export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE |
       return FEED_TYPE.SPONSOR_ACCOUNTS;
 
     // Trading overlays (if they show token lists)
-    case SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL:
+    case SP_COIN_DISPLAY.TOKEN_PANEL:
     case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
       return FEED_TYPE.TOKEN_LIST;
 

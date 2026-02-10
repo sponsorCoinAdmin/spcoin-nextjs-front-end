@@ -76,19 +76,19 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
 ] as const;
 
 /**
- * ✅ TOKEN_CONTRACT_PANEL children (order matters)
+ * ✅ TOKEN_PANEL children (order matters)
  * NOTE: these are NOT stack overlays; they're mode children under the token contract container.
  */
 const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [
-  SP.BUY_TOKEN,
-  SP.SELL_TOKEN,
-  SP.PREVIEW_TOKEN,
+  SP.BUY_CONTRACT,
+  SP.SELL_CONTRACT,
+  SP.PREVIEW_CONTRACT,
 ] as const;
 
 /**
  * ✅ TOKEN_LIST_SELECT_PANEL children (order matters)
  */
-const TOKEN_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_TOKEN, SP.SELL_TOKEN] as const;
+const TOKEN_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_CONTRACT, SP.SELL_CONTRACT] as const;
 
 /**
  * ✅ Tree Panel fix:
@@ -131,7 +131,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.ACCOUNT_PANEL,
 
   // Token contract overlay
-  SP.TOKEN_CONTRACT_PANEL,
+  SP.TOKEN_PANEL,
 ] as const;
 
 const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as const;
@@ -227,10 +227,10 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),
 
-  // ✅ TOKEN_CONTRACT_PANEL mode children
-  def({ id: SP.BUY_TOKEN, kind: 'panel', children: [] }),
-  def({ id: SP.SELL_TOKEN, kind: 'panel', children: [] }),
-  def({ id: SP.PREVIEW_TOKEN, kind: 'panel', children: [] }),
+  // ✅ TOKEN_PANEL mode children
+  def({ id: SP.BUY_CONTRACT, kind: 'panel', children: [] }),
+  def({ id: SP.SELL_CONTRACT, kind: 'panel', children: [] }),
+  def({ id: SP.PREVIEW_CONTRACT, kind: 'panel', children: [] }),
 
   // Shared / detail overlays
   def({
@@ -245,7 +245,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Token contract overlay (container)
   // NOTE: This is not a stack overlay. It is a structural parent in the tree.
   def({
-    id: SP.TOKEN_CONTRACT_PANEL,
+    id: SP.TOKEN_PANEL,
     kind: 'panel',
     children: TOKEN_CONTRACT_PANEL_CHILDREN,
   }),

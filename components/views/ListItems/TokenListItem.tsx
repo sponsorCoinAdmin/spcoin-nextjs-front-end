@@ -22,8 +22,8 @@ const TokenListItem = React.memo(function TokenListItem({
   const { openPanel } = usePanelTree();
   const [, setPreviewTokenContract] = usePreviewTokenContract();
   const [, setPreviewTokenSource] = usePreviewTokenSource();
-  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
 
   const previewToken = (): TokenContract => ({
     address: address as any,
@@ -38,13 +38,13 @@ const TokenListItem = React.memo(function TokenListItem({
     setPreviewTokenSource(buyMode ? 'BUY' : sellMode ? 'SELL' : null);
     setPreviewTokenContract(token);
     openPanel(
-      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+      SP_COIN_DISPLAY.TOKEN_PANEL,
       'TokenListItem:openTokenContractPanel',
     );
     openPanel(
-      SP_COIN_DISPLAY.PREVIEW_TOKEN,
+      SP_COIN_DISPLAY.PREVIEW_CONTRACT,
       'TokenListItem:openPreviewToken',
-      SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+      SP_COIN_DISPLAY.TOKEN_PANEL,
     );
   };
 

@@ -88,8 +88,8 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         const now = performance.now();
         const v = isVisible(panel);
         const listV = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+        const buyMode = isVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+        const sellMode = isVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
         debugLog.log?.(
           `[post-check:${label}] +${Math.round(
             now - (lastOpenAtRef.current ?? t0),
@@ -133,20 +133,20 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
       // ✅ open via generic openOverlay
       if (isSellRoot) {
-        // SELL dropdown -> use SELL_TOKEN mode
-        openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
+        // SELL dropdown -> use SELL_CONTRACT mode
+        openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, `${methodName}:setSellMode`);
         openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       } else {
-        // BUY dropdown -> use BUY_TOKEN mode
-        openPanel(SP_COIN_DISPLAY.BUY_TOKEN, `${methodName}:setBuyMode`);
+        // BUY dropdown -> use BUY_CONTRACT mode
+        openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, `${methodName}:setBuyMode`);
         openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
         schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       }
 
       const listNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+      const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+      const sellModeNow = isVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
       debugLog.log?.(
         `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} } (isSellRoot=${isSellRoot})`,
       );
@@ -164,11 +164,11 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
       const methodName = 'TokenSelectDropDown:openTokenContractPanel';
       if (isSellRoot) {
-        openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
+        openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, `${methodName}:setSellMode`);
       } else {
-        openPanel(SP_COIN_DISPLAY.BUY_TOKEN, `${methodName}:setBuyMode`);
+        openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, `${methodName}:setBuyMode`);
       }
-      openPanel(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL, `${methodName}:openTokenContractPanel`);
+      openPanel(SP_COIN_DISPLAY.TOKEN_PANEL, `${methodName}:openTokenContractPanel`);
     },
     [isSellRoot, openPanel, tokenContract],
   );

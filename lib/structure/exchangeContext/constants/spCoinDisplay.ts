@@ -35,7 +35,7 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
   SP.ACCOUNT_PANEL,
 
   // Token contract overlay (if you want it stackable/radio, keep it here; otherwise remove)
-  SP.TOKEN_CONTRACT_PANEL,
+  SP.TOKEN_PANEL,
 ] as const satisfies readonly SP[];
 
 /**

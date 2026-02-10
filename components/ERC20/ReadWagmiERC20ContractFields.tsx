@@ -12,7 +12,7 @@ const ReadWagmiERC20ContractFields = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
    return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi ERC20 Fields for Token Contract({TOKEN_CONTRACT_ADDRESS})</h2>
+      <h2>Reading Wagmi ERC20 Fields for PREVIEW_CONTRACT({TOKEN_CONTRACT_ADDRESS})</h2>
       Token Name   : {tokenContract?.name} <br/>
       Symbol       : {tokenContract?.symbol} <br/>
       Decimals     : {tokenContract?.decimals} <br/>

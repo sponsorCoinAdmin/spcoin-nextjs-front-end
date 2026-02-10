@@ -177,7 +177,7 @@ export default function ExchangeContextUsageExamples() {
         {/* Panel-tree test controls with parent tags */}
         <button
           onClick={() => {
-            openPanel(SP_COIN_DISPLAY.SELL_TOKEN, tag('openSellList:setSellMode'));
+            openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, tag('openSellList:setSellMode'));
             openWithParent(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'openSellList');
           }}
         >
@@ -186,7 +186,7 @@ export default function ExchangeContextUsageExamples() {
 
         <button
           onClick={() => {
-            openPanel(SP_COIN_DISPLAY.BUY_TOKEN, tag('openBuyList:setBuyMode'));
+            openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, tag('openBuyList:setBuyMode'));
             openWithParent(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'openBuyList');
           }}
         >

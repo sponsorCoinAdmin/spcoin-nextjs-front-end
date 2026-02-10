@@ -58,9 +58,9 @@ export function useSelectionCommit(): UseSelectionCommit {
 
       log.log?.('commitBuyToken', { address: addr, symbol: sym });
       setBuyTokenContract(t);
-      openPanel(SP_COIN_DISPLAY.BUY_TOKEN, 'useSelectionCommit:commitBuyToken');
+      openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, 'useSelectionCommit:commitBuyToken');
       openPanel(
-        SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+        SP_COIN_DISPLAY.TOKEN_PANEL,
         'useSelectionCommit:commitBuyToken',
       );
       finish();
@@ -80,9 +80,9 @@ export function useSelectionCommit(): UseSelectionCommit {
 
       log.log?.('commitSellToken', { address: addr, symbol: sym });
       setSellTokenContract(t);
-      openPanel(SP_COIN_DISPLAY.SELL_TOKEN, 'useSelectionCommit:commitSellToken');
+      openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, 'useSelectionCommit:commitSellToken');
       openPanel(
-        SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+        SP_COIN_DISPLAY.TOKEN_PANEL,
         'useSelectionCommit:commitSellToken',
       );
       finish();

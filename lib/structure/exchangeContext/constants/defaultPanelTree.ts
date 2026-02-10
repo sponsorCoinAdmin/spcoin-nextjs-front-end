@@ -47,13 +47,13 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.RECIPIENT_ACCOUNT, false],
   [SP.AGENT_ACCOUNT, false],
 
-  // ✅ Ensure TOKEN_CONTRACT_PANEL exists even for older persisted trees
-  [SP.TOKEN_CONTRACT_PANEL, false],
+  // ✅ Ensure TOKEN_PANEL exists even for older persisted trees
+  [SP.TOKEN_PANEL, false],
 
-  // ✅ Ensure TOKEN_CONTRACT_PANEL children exist even for older persisted trees
-  [SP.BUY_TOKEN, false],
-  [SP.SELL_TOKEN, false],
-  [SP.PREVIEW_TOKEN, false],
+  // ✅ Ensure TOKEN_PANEL children exist even for older persisted trees
+  [SP.BUY_CONTRACT, false],
+  [SP.SELL_CONTRACT, false],
+  [SP.PREVIEW_CONTRACT, false],
 
   // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
   [SP.MANAGE_SPONSORSHIPS_PANEL, false],
@@ -84,10 +84,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.ERROR_MESSAGE_PANEL, false),
 
       // ✅ Token contract overlay MUST be part of overlay tree now (with children)
-      node(SP.TOKEN_CONTRACT_PANEL, false, [
-        node(SP.BUY_TOKEN, false),
-        node(SP.SELL_TOKEN, false),
-        node(SP.PREVIEW_TOKEN, false),
+      node(SP.TOKEN_PANEL, false, [
+        node(SP.BUY_CONTRACT, false),
+        node(SP.SELL_CONTRACT, false),
+        node(SP.PREVIEW_CONTRACT, false),
       ]),
 
       // ✅ Chevron pending flags (persisted UI state; not a visible overlay)

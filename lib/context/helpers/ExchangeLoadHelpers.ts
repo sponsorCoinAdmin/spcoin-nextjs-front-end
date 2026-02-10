@@ -175,7 +175,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
         .filter(
           (n) =>
             SP_COIN_DISPLAY[n.panel] !== LEGACY_BUY_LIST_NAME &&
-            n.panel !== SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL &&
+            n.panel !== SP_COIN_DISPLAY.TOKEN_PANEL &&
             n.panel !== SP_COIN_DISPLAY.UNDEFINED,
         );
 

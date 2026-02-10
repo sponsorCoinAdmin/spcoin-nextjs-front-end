@@ -30,12 +30,12 @@ export const TokenPanelProvider = ({ containerType, children }: Props) => {
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
 
   // List overlay mode mapping:
-  // SELL_TOKEN => SELL selection
-  // BUY_TOKEN  => BUY selection
+  // SELL_CONTRACT => SELL selection
+  // BUY_CONTRACT  => BUY selection
   const isSellContainer =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL ||
     (containerType === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && sellMode);

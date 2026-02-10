@@ -15,8 +15,8 @@ function hasValidAddress(a: any): a is { address: string } {
 export default function TokenListSelectPanel() {
   const { commitToken } = useSelectionCommit();
   const listVisible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
 
   if (!listVisible) return null;
 

@@ -49,7 +49,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
-  [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: 'Token Contract',
+  [SP_COIN_DISPLAY.TOKEN_PANEL]: 'Token Panel',
 
   // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())
   [SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL]: 'Staking Your Sponsor Coins',
@@ -104,7 +104,7 @@ function getAccountsHeaderTitle(
 }
 
 /**
- * ✅ TOKEN_CONTRACT_PANEL header title logic
+ * ✅ TOKEN_PANEL header title logic
  */
 function getTokenContractHeaderTitle(
   opts: {
@@ -122,7 +122,7 @@ function getTokenContractHeaderTitle(
   if (opts.activeSellToken) return `Sell ${sellSym} Token`;
   if (opts.activeBuyToken) return `Buy ${buySym} Token`;
 
-  return 'Token Contract';
+  return 'Token Panel';
 }
 
 function titleFor(
@@ -156,7 +156,7 @@ function titleFor(
     return getAccountsHeaderTitle(accountsState, manageName);
   }
 
-  if (display === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL && tokenState) {
+  if (display === SP_COIN_DISPLAY.TOKEN_PANEL && tokenState) {
     return getTokenContractHeaderTitle(tokenState, {
       buySymbol: tokenState.buySymbol,
       sellSymbol: tokenState.sellSymbol,
@@ -189,7 +189,7 @@ type AnyCloseEvent = {
  * Reorder/add items here.
  */
 const DISPLAY_PRIORITY = [
-  SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
+  SP_COIN_DISPLAY.TOKEN_PANEL,
   SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
 
@@ -231,7 +231,7 @@ export function useHeaderController() {
   const activeAccount = accounts?.activeAccount;
 
   // Read each visibility exactly once
-  const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL);
+  const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_PANEL);
   const sellList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
 
@@ -239,9 +239,9 @@ export function useHeaderController() {
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
-  const buyTokenPanel = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
-  const sellTokenPanel = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
-  const previewTokenPanel = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_TOKEN);
+  const buyTokenPanel = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellTokenPanel = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const previewTokenPanel = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_CONTRACT);
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -288,7 +288,7 @@ export function useHeaderController() {
 
   const currentDisplay = useMemo<SP_COIN_DISPLAY>(() => {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
-      [SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL]: tokenList,
+      [SP_COIN_DISPLAY.TOKEN_PANEL]: tokenList,
       [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: sellList,
       [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
 
@@ -352,7 +352,7 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
-      currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.TOKEN_PANEL ||
         currentDisplay === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
         ? tokenState
         : undefined,
@@ -364,7 +364,7 @@ export function useHeaderController() {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();
 
-    if (currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL) {
+    if (currentDisplay === SP_COIN_DISPLAY.TOKEN_PANEL) {
       const previewLogo = (previewToken as any)?.logoURL;
       const buyLogo = (buyToken as any)?.logoURL;
       const sellLogo = (sellToken as any)?.logoURL;
