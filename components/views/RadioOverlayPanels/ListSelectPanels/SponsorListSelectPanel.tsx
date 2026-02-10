@@ -22,18 +22,22 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'tru
 const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function SponsorListSelectPanel() {
+  const vRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vSponsorList = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
 
   const activePanel: SP_COIN_DISPLAY | null = vSponsorList
     ? SP_COIN_DISPLAY.SPONSOR_LIST
-    : null;
+    : vRewards
+      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+      : null;
 
   useEffect(() => {
     debugLog.log?.('[visibility]', {
       vSponsorList,
+      vRewards,
       activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
     });
-  }, [vSponsorList, activePanel]);
+  }, [vSponsorList, vRewards, activePanel]);
 
   if (!activePanel) return null;
 
@@ -43,7 +47,7 @@ export default function SponsorListSelectPanel() {
 function SponsorListSelectInner({
   activePanel,
 }: {
-  activePanel: SP_COIN_DISPLAY.SPONSOR_LIST;
+  activePanel: SP_COIN_DISPLAY.SPONSOR_LIST | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
 }) {
   const ctx = useContext(ExchangeContextState);
 
