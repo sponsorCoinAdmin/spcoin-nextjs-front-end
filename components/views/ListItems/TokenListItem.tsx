@@ -19,7 +19,7 @@ type TokenListItemProps = {
 const TokenListItem = React.memo(function TokenListItem({
   name, symbol, address, logoURL, confirmAssetCallback,
 }: TokenListItemProps) {
-  const { openPanel, closePanel } = usePanelTree();
+  const { openPanel } = usePanelTree();
   const [, setPreviewTokenContract] = usePreviewTokenContract();
   const [, setPreviewTokenSource] = usePreviewTokenSource();
   const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
