@@ -23,6 +23,7 @@ const debugLog = createDebugLogger('PanelListSelectWrapper', DEBUG_ENABLED, LOG_
 type Props = {
   peerAddress?: `0x${string}`;
   onCommit: (asset: spCoinAccount | TokenContract) => void;
+  containerTypeOverride?: SP_COIN_DISPLAY;
 };
 
 function makeInitialPanelBag(panel: SP_COIN_DISPLAY, peerAddress?: `0x${string}`): UnionBag | undefined {
@@ -32,9 +33,10 @@ function makeInitialPanelBag(panel: SP_COIN_DISPLAY, peerAddress?: `0x${string}`
   return undefined;
 }
 
-export default function PanelListSelectWrapper({ peerAddress, onCommit }: Props) {
+export default function PanelListSelectWrapper({ peerAddress, onCommit, containerTypeOverride }: Props) {
   const panel = useActiveRadioPanel();
-  if (panel == null) return null;
+  const containerType = containerTypeOverride ?? panel;
+  if (containerType == null) return null;
 
   const { exchangeContext } = useExchangeContext();
   const { closeTop } = usePanelTransitions();
@@ -42,15 +44,15 @@ export default function PanelListSelectWrapper({ peerAddress, onCommit }: Props)
   const appChainId = exchangeContext?.network?.appChainId ?? 1;
 
   // Generate a stable instance id based on panel + chain
-  const instanceId = useMemo(() => `${SP_COIN_DISPLAY[panel]}`, [panel]);
+  const instanceId = useMemo(() => `${SP_COIN_DISPLAY[containerType]}`, [containerType]);
   const chainScopedInstanceId = useMemo(() => `${instanceId}_${appChainId}`, [instanceId, appChainId]);
 
-  const initialPanelBag = useMemo(() => makeInitialPanelBag(panel, peerAddress), [panel, peerAddress]);
+  const initialPanelBag = useMemo(() => makeInitialPanelBag(containerType, peerAddress), [containerType, peerAddress]);
 
   useEffect(() => {
     debugLog.log?.('[mount]', {
-      panel,
-      panelLabel: SP_COIN_DISPLAY[panel],
+      panel: containerType,
+      panelLabel: SP_COIN_DISPLAY[containerType],
       appChainId,
       instanceId,
       chainScopedInstanceId,
@@ -78,7 +80,7 @@ export default function PanelListSelectWrapper({ peerAddress, onCommit }: Props)
         key={instanceId}
         closePanelCallback={handleClose}
         setSelectedAssetCallback={handleCommit}
-        containerType={panel}
+        containerType={containerType}
         initialPanelBag={initialPanelBag}
       >
         <AssetListSelectPanel />

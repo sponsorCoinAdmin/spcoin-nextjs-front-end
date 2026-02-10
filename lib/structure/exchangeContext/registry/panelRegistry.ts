@@ -76,6 +76,15 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
 ] as const;
 
 /**
+ * ✅ ACCOUNT_LIST_SELECT_PANEL children (order matters)
+ */
+const ACCOUNT_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [
+  SP.SPONSOR_LIST,
+  SP.RECIPIENT_LIST,
+  SP.AGENT_LIST,
+] as const;
+
+/**
  * ✅ TOKEN_PANEL children (order matters)
  * NOTE: these are NOT stack overlays; they're mode children under the token contract container.
  */
@@ -113,9 +122,8 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Token selectors
   SP.TOKEN_LIST_SELECT_PANEL,
 
-  // ✅ OLD: legacy list overlays (kept during migration)
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  // ✅ Account list selector (new)
+  SP.ACCOUNT_LIST_SELECT_PANEL,
 
   // Errors / hub
   SP.ERROR_MESSAGE_PANEL,
@@ -177,9 +185,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)
   def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
 
-  // ✅ OLD: legacy list overlays (kept during migration)
-  def({ id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list' }),
-  def({ id: SP.AGENT_LIST_SELECT_PANEL, kind: 'list' }),
+  // ✅ Account list selector overlay (container)
+  def({ id: SP.ACCOUNT_LIST_SELECT_PANEL, kind: 'list', children: ACCOUNT_LIST_SELECT_PANEL_CHILDREN }),
 
   def({ id: SP.ERROR_MESSAGE_PANEL, kind: 'panel' }),
 
@@ -231,6 +238,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.BUY_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.SELL_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.PREVIEW_CONTRACT, kind: 'panel', children: [] }),
+
+  // ✅ ACCOUNT_LIST_SELECT_PANEL mode children
+  def({ id: SP.SPONSOR_LIST, kind: 'list', children: [] }),
+  def({ id: SP.RECIPIENT_LIST, kind: 'list', children: [] }),
+  def({ id: SP.AGENT_LIST, kind: 'list', children: [] }),
 
   // Shared / detail overlays
   def({

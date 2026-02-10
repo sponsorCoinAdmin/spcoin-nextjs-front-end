@@ -17,9 +17,8 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
   // Token selectors
   SP.TOKEN_LIST_SELECT_PANEL,
 
-  // ✅ OLD: legacy list overlays (kept during migration)
-  SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  // ✅ Account list selector (new)
+  SP.ACCOUNT_LIST_SELECT_PANEL,
 
   // System / misc overlays
   SP.ERROR_MESSAGE_PANEL,

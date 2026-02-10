@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v14';
+export const schemaVersion = 'v15';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -19,12 +19,11 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // Token selectors
     SPCD.TOKEN_LIST_SELECT_PANEL,
 
+    // ✅ Account list selector overlay (new)
+    SPCD.ACCOUNT_LIST_SELECT_PANEL,
+
     // ✅ Rewards list overlay root
     SPCD.ACCOUNT_LIST_REWARDS_PANEL,
-
-    // ✅ OLD list overlays (legacy behavior)
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
 
     // Errors / hub
     SPCD.ERROR_MESSAGE_PANEL,
@@ -82,6 +81,9 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.AGENT_ACCOUNT,
   ],
 
+  // ✅ ACCOUNT_LIST_SELECT_PANEL desired subtree:
+  [SPCD.ACCOUNT_LIST_SELECT_PANEL]: [SPCD.SPONSOR_LIST, SPCD.RECIPIENT_LIST, SPCD.AGENT_LIST],
+
   // ✅ NEW: TOKEN_PANEL desired subtree:
   // Matches ACCOUNT_PANEL behavior (children visible as modes)
   [SPCD.TOKEN_PANEL]: [SPCD.BUY_CONTRACT, SPCD.SELL_CONTRACT, SPCD.PREVIEW_CONTRACT],
@@ -101,6 +103,11 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.BUY_CONTRACT]: [],
   [SPCD.SELL_CONTRACT]: [],
   [SPCD.PREVIEW_CONTRACT]: [],
+
+  // ✅ ACCOUNT_LIST_SELECT_PANEL leaf nodes
+  [SPCD.SPONSOR_LIST]: [],
+  [SPCD.RECIPIENT_LIST]: [],
+  [SPCD.AGENT_LIST]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -124,9 +131,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ NEW chevron pending flags (persisted UI state; not a visual panel)
   [SPCD.CHEVRON_DOWN_OPEN_PENDING]: 'control',
 
-  // ✅ OLD list overlays (legacy behavior)
-  [SPCD.RECIPIENT_LIST_SELECT_PANEL]: 'list',
-  [SPCD.AGENT_LIST_SELECT_PANEL]: 'list',
+  // ✅ Account list selector overlay
+  [SPCD.ACCOUNT_LIST_SELECT_PANEL]: 'list',
 
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
@@ -158,6 +164,11 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ show token contract node in this UI
   [SPCD.TOKEN_PANEL]: 'panel',
 
+  // ✅ ACCOUNT_LIST_SELECT_PANEL children kinds
+  [SPCD.SPONSOR_LIST]: 'list',
+  [SPCD.RECIPIENT_LIST]: 'list',
+  [SPCD.AGENT_LIST]: 'list',
+
   // ✅ NEW: TOKEN_PANEL children kinds
   [SPCD.BUY_CONTRACT]: 'panel',
   [SPCD.SELL_CONTRACT]: 'panel',
@@ -181,9 +192,11 @@ export const GROUPS = {
     // ✅ NEW chevron pending flags (persisted UI state)
     SPCD.CHEVRON_DOWN_OPEN_PENDING,
 
-    // ✅ OLD list overlays
-    SPCD.RECIPIENT_LIST_SELECT_PANEL,
-    SPCD.AGENT_LIST_SELECT_PANEL,
+    // ✅ Account list selector overlay + children
+    SPCD.ACCOUNT_LIST_SELECT_PANEL,
+    SPCD.SPONSOR_LIST,
+    SPCD.RECIPIENT_LIST,
+    SPCD.AGENT_LIST,
 
     // ✅ Rewards sub-panels
     SPCD.PENDING_SPONSOR_REWARDS,

@@ -9,6 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -28,6 +29,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
 
   // ✅ New transitions API
   const { openOverlay } = usePanelTransitions();
+  const { openPanel } = usePanelTree();
 
   const logoFromAddr = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
   const logoSrc = useMemo(
@@ -73,11 +75,15 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
       e.stopPropagation();
 
       debugLog.log?.('📂 Opening Recipient dialog');
-      openOverlay(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, {
+      openPanel(
+        SP_COIN_DISPLAY.RECIPIENT_LIST,
+        'RecipientSelectDropDown:setRecipientListMode',
+      );
+      openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL, {
         methodName: 'RecipientSelectDropDown:showRecipientListSelectPanel',
       });
     },
-    [openOverlay],
+    [openOverlay, openPanel],
   );
 
   return (

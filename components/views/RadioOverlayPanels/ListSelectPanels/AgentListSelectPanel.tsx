@@ -8,7 +8,7 @@ import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapp
 
 /** Visibility gate only. */
 export default function AgentListSelectPanel() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST);
   if (!visible) return null;
   return <AgentListSelectPanelInner />;
 }
@@ -26,6 +26,7 @@ function AgentListSelectPanelInner() {
   return (
     <PanelListSelectWrapper
       onCommit={handleCommit}
+      containerTypeOverride={SP_COIN_DISPLAY.AGENT_LIST}
     />
   );
 }

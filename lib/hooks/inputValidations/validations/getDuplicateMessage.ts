@@ -14,9 +14,11 @@ export function getDuplicateMessage(containerType: SP_COIN_DISPLAY): string {
       return 'Sell Address Cannot Be the Same as Buy Address';
 
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENT_LIST:
       return 'Recipient Address Cannot Match Sender';
 
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENT_LIST:
       return 'Agent Address Cannot Match Connected Account';
 
     default:

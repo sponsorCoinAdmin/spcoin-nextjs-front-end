@@ -194,7 +194,10 @@ export default function ExchangeContextUsageExamples() {
         </button>
 
         <button
-          onClick={() => openWithParent(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'openRecipientList')}
+          onClick={() => {
+            openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST, tag('openRecipientList:setRecipientMode'));
+            openWithParent(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL, 'openRecipientList');
+          }}
         >
           Open RECIPIENT panel
         </button>

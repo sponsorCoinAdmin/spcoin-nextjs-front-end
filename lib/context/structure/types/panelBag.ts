@@ -11,13 +11,18 @@ export type TokenSelectBag = {
 };
 
 export type RecipientSelectBag = {
-  type: SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
+  type: SP_COIN_DISPLAY.RECIPIENT_LIST | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
   defaultRecipient?: string;
 };
 
 export type AgentSelectBag = {
-  type: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
+  type: SP_COIN_DISPLAY.AGENT_LIST | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
   defaultAgentId?: string;
+};
+
+export type SponsorSelectBag = {
+  type: SP_COIN_DISPLAY.SPONSOR_LIST;
+  defaultSponsorId?: string;
 };
 
 export type ErrorMessageBag = {
@@ -39,6 +44,7 @@ export type AssetSelectBag =
   | TokenSelectBag
   | RecipientSelectBag
   | AgentSelectBag
+  | SponsorSelectBag
   | ErrorMessageBag
   | SimplePanelBag;
 

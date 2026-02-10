@@ -179,6 +179,16 @@ const TOKEN_CONTRACT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
 const isTokenContractPanelMode = (p: SP_COIN_DISPLAY) =>
   TOKEN_CONTRACT_PANEL_MODES.some((x) => Number(x) === Number(p));
 
+// ✅ ACCOUNT_LIST_SELECT_PANEL children: exactly 0 or 1 visible
+const ACCOUNT_LIST_SELECT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.SPONSOR_LIST,
+  SP_COIN_DISPLAY.RECIPIENT_LIST,
+  SP_COIN_DISPLAY.AGENT_LIST,
+] as const;
+
+const isAccountListSelectMode = (p: SP_COIN_DISPLAY) =>
+  ACCOUNT_LIST_SELECT_PANEL_MODES.some((x) => Number(x) === Number(p));
+
 // Rewards modes: exactly 0 or 1 visible
 const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
   SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
@@ -230,6 +240,10 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
       SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
       SP_COIN_DISPLAY.AGENT_ACCOUNT,
+      SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL,
+      SP_COIN_DISPLAY.SPONSOR_LIST,
+      SP_COIN_DISPLAY.RECIPIENT_LIST,
+      SP_COIN_DISPLAY.AGENT_LIST,
     ];
 
     const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));
@@ -835,6 +849,19 @@ export function usePanelTree() {
         }
       }
 
+      // ✅ NEW: Account list select modes are mutually exclusive
+      if (isAccountListSelectMode(panel)) {
+        for (const other of ACCOUNT_LIST_SELECT_PANEL_MODES) {
+          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
+            closePanelInternal(
+              other,
+              traceId,
+              `openPanel:${navInvoker}:accountListMode:closeOther`,
+            );
+          }
+        }
+      }
+
       if (isRewardsGroupMode(panel)) {
         for (const other of REWARDS_GROUP_MODES) {
           if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
@@ -911,6 +938,19 @@ export function usePanelTree() {
         }
       }
 
+      // ✅ If closing ACCOUNT_LIST_SELECT_PANEL, also close its mode children
+      if (Number(panel) === Number(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL)) {
+        for (const child of ACCOUNT_LIST_SELECT_PANEL_MODES) {
+          if (panelStore.isVisible(child)) {
+            closePanelInternal(
+              child,
+              traceId,
+              `closePanel:${navInvoker}:accountListPanel:closeChild`,
+            );
+          }
+        }
+      }
+
       const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
 
       const hideInvoker =
@@ -963,6 +1003,7 @@ export function usePanelTree() {
   const isTokenScrollVisible = useMemo(
     () =>
       visibilityMap[SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL] ||
+      visibilityMap[SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL] ||
       visibilityMap[SP_COIN_DISPLAY.TOKEN_PANEL],
     [visibilityMap],

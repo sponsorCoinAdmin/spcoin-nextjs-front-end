@@ -16,7 +16,12 @@ export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
         if (buyMode) return 'buy';
         return 'sell';
       case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+      case SP_COIN_DISPLAY.RECIPIENT_LIST:
         return 'recipient';
+      case SP_COIN_DISPLAY.AGENT_LIST:
+        return 'agent';
+      case SP_COIN_DISPLAY.SPONSOR_LIST:
+        return 'sponsor';
       default:
         return 'main';
     }

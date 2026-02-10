@@ -8,9 +8,14 @@ type RadioNode = { panel: SP_COIN_DISPLAY; visible: boolean; children?: RadioNod
 // Map flat overlay IDs to radio top-level IDs (if the enums differ)
 const RADIO_ALIAS: Partial<Record<SP_COIN_DISPLAY, SP_COIN_DISPLAY>> = {
   [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
-  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL,
+  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL,
 };
+
+const LEGACY_OVERLAYS: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+];
 
 /**
  * Policy:
@@ -26,7 +31,9 @@ export function reconcilePanelState(
 ) {
   // 1) Find selected overlay from current flat state
   const selectedFromFlat = flat.find(
-    (e) => MAIN_RADIO_OVERLAY_PANELS.includes(e.panel) && e.visible,
+    (e) =>
+      (MAIN_RADIO_OVERLAY_PANELS.includes(e.panel) || LEGACY_OVERLAYS.includes(e.panel)) &&
+      e.visible,
   )?.panel;
 
   // 2) Use fallback ONLY if explicitly provided by the caller
@@ -35,10 +42,14 @@ export function reconcilePanelState(
   // 3) Nothing selected => leave overlay group EMPTY (0 visible)
   if (selectedFlat == null) {
     for (const e of flat) {
-      if (MAIN_RADIO_OVERLAY_PANELS.includes(e.panel)) e.visible = false;
+      if (MAIN_RADIO_OVERLAY_PANELS.includes(e.panel) || LEGACY_OVERLAYS.includes(e.panel)) {
+        e.visible = false;
+      }
     }
     for (const n of radio) {
-      if (MAIN_RADIO_OVERLAY_PANELS.includes(n.panel)) n.visible = false;
+      if (MAIN_RADIO_OVERLAY_PANELS.includes(n.panel) || LEGACY_OVERLAYS.includes(n.panel)) {
+        n.visible = false;
+      }
     }
     return;
   }
@@ -48,11 +59,15 @@ export function reconcilePanelState(
 
   // 5) Normalize flat overlays: exactly one visible
   for (const e of flat) {
-    if (MAIN_RADIO_OVERLAY_PANELS.includes(e.panel)) e.visible = e.panel === selectedFlat;
+    if (MAIN_RADIO_OVERLAY_PANELS.includes(e.panel) || LEGACY_OVERLAYS.includes(e.panel)) {
+      e.visible = e.panel === selectedFlat;
+    }
   }
 
   // 6) Normalize radio overlays: exactly one visible
   for (const n of radio) {
-    if (MAIN_RADIO_OVERLAY_PANELS.includes(n.panel)) n.visible = n.panel === selectedRadio;
+    if (MAIN_RADIO_OVERLAY_PANELS.includes(n.panel) || LEGACY_OVERLAYS.includes(n.panel)) {
+      n.visible = n.panel === selectedRadio;
+    }
   }
 }

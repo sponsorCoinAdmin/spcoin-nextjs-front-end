@@ -41,11 +41,17 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
 
   // ✅ Ensure overlays exist even for older persisted trees
   [SP.ACCOUNT_PANEL, false],
+  [SP.ACCOUNT_LIST_SELECT_PANEL, false],
 
   // ✅ Ensure ACCOUNT_PANEL children exist even for older persisted trees
   [SP.SPONSOR_ACCOUNT, false],
   [SP.RECIPIENT_ACCOUNT, false],
   [SP.AGENT_ACCOUNT, false],
+
+  // ✅ Ensure ACCOUNT_LIST_SELECT_PANEL children exist even for older persisted trees
+  [SP.SPONSOR_LIST, false],
+  [SP.RECIPIENT_LIST, false],
+  [SP.AGENT_LIST, false],
 
   // ✅ Ensure TOKEN_PANEL exists even for older persisted trees
   [SP.TOKEN_PANEL, false],
@@ -77,9 +83,12 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // ─────────────── Radio overlays (siblings) ───────────────
       node(SP.TOKEN_LIST_SELECT_PANEL, false),
 
-      // ✅ OLD: legacy list overlays (kept during migration)
-      node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
-      node(SP.AGENT_LIST_SELECT_PANEL, false),
+      // ✅ Account list selector overlay (with children)
+      node(SP.ACCOUNT_LIST_SELECT_PANEL, false, [
+        node(SP.SPONSOR_LIST, false),
+        node(SP.RECIPIENT_LIST, false),
+        node(SP.AGENT_LIST, false),
+      ]),
 
       node(SP.ERROR_MESSAGE_PANEL, false),
 

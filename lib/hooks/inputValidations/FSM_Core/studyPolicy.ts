@@ -65,6 +65,15 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
+  [SP_COIN_DISPLAY.RECIPIENT_LIST]: {
+    [StudyId.VALIDATE_ADDRESS]: true,
+    [StudyId.TEST_DUPLICATE_INPUT]: true,
+    [StudyId.VALIDATE_PREVIEW]: true,
+    [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
+    [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
+  },
 
   // AGENT selection (spCoinAccount-like → bypass token-only checks)
   [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: {
@@ -76,9 +85,18 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
     [StudyId.RESOLVE_ERC20_ASSET]: true,
     [StudyId.RETURN_VALIDATED_ASSET]: true,
   },
+  [SP_COIN_DISPLAY.AGENT_LIST]: {
+    [StudyId.VALIDATE_ADDRESS]: true,
+    [StudyId.TEST_DUPLICATE_INPUT]: true,
+    [StudyId.VALIDATE_PREVIEW]: true,
+    [StudyId.PREVIEW_CONTRACT_EXISTS_LOCALLY]: false,
+    [StudyId.VALIDATE_EXISTS_ON_CHAIN]: false,
+    [StudyId.RESOLVE_ERC20_ASSET]: true,
+    [StudyId.RETURN_VALIDATED_ASSET]: true,
+  },
 
   // SPONSOR selection (spCoinAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.TOKEN_PANEL]: {
+  [SP_COIN_DISPLAY.SPONSOR_LIST]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,

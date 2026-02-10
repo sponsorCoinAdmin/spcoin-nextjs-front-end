@@ -10,10 +10,15 @@ export function deriveFeedTypeFromDisplay(display: SP_COIN_DISPLAY): FEED_TYPE |
   switch (display) {
     // First-class list overlays
     case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENT_LIST:
       return FEED_TYPE.AGENT_ACCOUNTS;
 
     case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENT_LIST:
       return FEED_TYPE.RECIPIENT_ACCOUNTS;
+
+    case SP_COIN_DISPLAY.SPONSOR_LIST:
+      return FEED_TYPE.SPONSOR_ACCOUNTS;
 
     // Manage-style overlays
     case SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL:

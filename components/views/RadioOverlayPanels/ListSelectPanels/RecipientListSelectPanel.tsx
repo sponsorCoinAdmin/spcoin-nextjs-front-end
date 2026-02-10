@@ -13,7 +13,7 @@ function hasValidAddress(a: any): a is { address: string } {
 }
 
 export default function RecipientListSelectPanel() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST);
   const { commitRecipient } = useSelectionCommit();
 
   if (!visible) return null;
@@ -23,5 +23,5 @@ export default function RecipientListSelectPanel() {
     commitRecipient(asset as spCoinAccount);
   };
 
-  return <PanelListSelectWrapper onCommit={handleCommit} />;
+  return <PanelListSelectWrapper onCommit={handleCommit} containerTypeOverride={SP_COIN_DISPLAY.RECIPIENT_LIST} />;
 }

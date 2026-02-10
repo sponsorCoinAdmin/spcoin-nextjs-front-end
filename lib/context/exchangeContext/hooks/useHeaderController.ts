@@ -43,9 +43,8 @@ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFact
 
 /** Default titles (STATIC only) */
 const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
-  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: 'Select Sponsors Agent',
+  [SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL]: 'Select Account',
   [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
-  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: 'Select Recipient to Sponsor',
   [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
   [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
@@ -138,6 +137,11 @@ function titleFor(
     activeRecipient: boolean;
     activeAgent: boolean;
   },
+  accountListState?: {
+    activeSponsor: boolean;
+    activeRecipient: boolean;
+    activeAgent: boolean;
+  },
   tokenState?: {
     activeBuyToken: boolean;
     activeSellToken: boolean;
@@ -170,6 +174,13 @@ function titleFor(
     return 'Select a Token';
   }
 
+  if (display === SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL && accountListState) {
+    if (accountListState.activeSponsor) return 'Select Sponsor';
+    if (accountListState.activeRecipient) return 'Select Recipient';
+    if (accountListState.activeAgent) return 'Select Agent';
+    return 'Select Account';
+  }
+
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
     const n = (manageName ?? '').trim();
     const label = n.length ? n : 'Sponsor Coin';
@@ -191,9 +202,7 @@ type AnyCloseEvent = {
 const DISPLAY_PRIORITY = [
   SP_COIN_DISPLAY.TOKEN_PANEL,
   SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
-  SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-
-  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL,
 
   SP_COIN_DISPLAY.ACCOUNT_PANEL,
@@ -233,9 +242,7 @@ export function useHeaderController() {
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_PANEL);
   const sellList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
-  const recipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
-
-  const agentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+  const accountListSelect = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL);
   const sponsorList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
 
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
@@ -265,9 +272,18 @@ export function useHeaderController() {
   const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
   const activeAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
 
+  const activeSponsorList = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
+  const activeRecipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST);
+  const activeAgentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST);
+
   const accountsState = useMemo(
     () => ({ activeSponsor, activeRecipient, activeAgent }),
     [activeSponsor, activeRecipient, activeAgent],
+  );
+
+  const accountListState = useMemo(
+    () => ({ activeSponsor: activeSponsorList, activeRecipient: activeRecipientList, activeAgent: activeAgentList }),
+    [activeSponsorList, activeRecipientList, activeAgentList],
   );
 
   const [buyToken] = useBuyTokenContract();
@@ -290,9 +306,7 @@ export function useHeaderController() {
     const visibleByDisplay: Record<PriorityDisplay, boolean> = {
       [SP_COIN_DISPLAY.TOKEN_PANEL]: tokenList,
       [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: sellList,
-      [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: recipientList,
-
-      [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: agentList,
+      [SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL]: accountListSelect,
       [SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]: sponsorList,
 
       [SP_COIN_DISPLAY.ACCOUNT_PANEL]: accountPanel,
@@ -311,8 +325,7 @@ export function useHeaderController() {
   }, [
     tokenList,
     sellList,
-    recipientList,
-    agentList,
+    accountListSelect,
     sponsorList,
     accountPanel,
     staking,
@@ -352,13 +365,14 @@ export function useHeaderController() {
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ? accountsState : undefined,
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL ? accountListState : undefined,
       currentDisplay === SP_COIN_DISPLAY.TOKEN_PANEL ||
         currentDisplay === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL
         ? tokenState
         : undefined,
-      headerAccountName,
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL ? undefined : headerAccountName,
     );
-  }, [currentDisplay, rewardsState, accountsState, tokenState, headerAccountName]);
+  }, [currentDisplay, rewardsState, accountsState, accountListState, tokenState, headerAccountName]);
 
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
