@@ -9,7 +9,7 @@ import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStor
 
 // ✅ for readable names
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
-import type { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 const LOG_TIME_PERSIST = false;
 const DEBUG_ENABLED_PERSIST =
