@@ -938,18 +938,8 @@ export function usePanelTree() {
         }
       }
 
-      // ✅ If closing ACCOUNT_LIST_SELECT_PANEL, also close its mode children
-      if (Number(panel) === Number(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL)) {
-        for (const child of ACCOUNT_LIST_SELECT_PANEL_MODES) {
-          if (panelStore.isVisible(child)) {
-            closePanelInternal(
-              child,
-              traceId,
-              `closePanel:${navInvoker}:accountListPanel:closeChild`,
-            );
-          }
-        }
-      }
+      // NOTE: Do NOT auto-close ACCOUNT_LIST_SELECT_PANEL children.
+      // Child modes are stateful and should remain active across parent closes.
 
       const { nextStack } = removeIfStackMember(panel, traceId, `closePanel:${navInvoker}`);
 

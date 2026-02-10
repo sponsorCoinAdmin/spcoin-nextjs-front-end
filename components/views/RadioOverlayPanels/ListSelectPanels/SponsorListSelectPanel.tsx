@@ -23,7 +23,9 @@ const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_
 
 export default function SponsorListSelectPanel() {
   const vRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
-  const vSponsorList = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
+  const vAccountList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL);
+  const vSponsorListRaw = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
+  const vSponsorList = vAccountList && vSponsorListRaw;
 
   const activePanel: SP_COIN_DISPLAY | null = vSponsorList
     ? SP_COIN_DISPLAY.SPONSOR_LIST

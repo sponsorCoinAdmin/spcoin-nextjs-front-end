@@ -13,7 +13,9 @@ function hasValidAddress(a: any): a is { address: string } {
 }
 
 export default function RecipientListSelectPanel() {
-  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST);
+  const vAccountList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL);
+  const vRecipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST);
+  const visible = vAccountList && vRecipientList;
   const { commitRecipient } = useSelectionCommit();
 
   if (!visible) return null;
