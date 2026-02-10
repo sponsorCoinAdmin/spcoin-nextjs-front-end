@@ -277,7 +277,7 @@ export default function AddressSelect({
                 rounded-[22px]
               "
             >
-              <span className="w-full text-center font-mono break-all">
+              <span className="w-full text-center font-mono break-all" title={baseDisplayAddress}>
                 {formattedAddress}
               </span>
             </div>
