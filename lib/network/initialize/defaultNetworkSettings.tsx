@@ -35,6 +35,7 @@ const defaultInitialTradeData: TradeData = {
   sellTokenContract: undefined,
   buyTokenContract: undefined,
   previewTokenContract: undefined,
+  previewTokenSource: null,
   rateRatio: 0,
   slippage: {
     bps: 100,

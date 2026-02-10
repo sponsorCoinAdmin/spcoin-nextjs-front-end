@@ -1,12 +1,12 @@
 // File: @/components/views/RadioOverlayPanels/TokenPanel/index.tsx
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
-import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
+import { useBuyTokenContract, usePreviewTokenContract, usePreviewTokenSource, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ Use the same table theme module used by AccountListRewardsPanel
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
@@ -69,6 +69,7 @@ export default function TokenPanel(_props: Props) {
   const [sellToken] = useSellTokenContract();
   const [buyToken] = useBuyTokenContract();
   const [previewToken, setPreviewTokenContract] = usePreviewTokenContract();
+  const [previewSource, setPreviewTokenSource] = usePreviewTokenSource();
 
   // ✅ Resolve active token side from visible child flags
   const activeTokenSide = useMemo(() => {
@@ -112,11 +113,36 @@ export default function TokenPanel(_props: Props) {
     tokenContract?.address,
   ]);
 
+  const prevVisibleRef = useRef<boolean>(false);
   useEffect(() => {
-    if (vTokenPanel) return;
-    if (!previewToken) return;
-    setPreviewTokenContract(undefined);
-  }, [vTokenPanel, previewToken, setPreviewTokenContract]);
+    const wasVisible = prevVisibleRef.current;
+    prevVisibleRef.current = vTokenPanel;
+    if (!wasVisible || vTokenPanel) return;
+
+    if (previewSource) {
+      const next =
+        previewSource === 'BUY'
+          ? SP_COIN_DISPLAY.BUY_TOKEN
+          : previewSource === 'SELL'
+            ? SP_COIN_DISPLAY.SELL_TOKEN
+            : null;
+      if (next != null) {
+        openPanel(next, 'TokenPanel:closePreview:restoreMode');
+      } else {
+        openPanel(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'TokenPanel:closePreview:openList');
+      }
+    }
+
+    if (previewToken) setPreviewTokenContract(undefined);
+    if (previewSource) setPreviewTokenSource(null);
+  }, [
+    vTokenPanel,
+    previewToken,
+    previewSource,
+    openPanel,
+    setPreviewTokenContract,
+    setPreviewTokenSource,
+  ]);
 
   useEffect(() => {
     if (!vTokenPanel) return;
@@ -168,7 +194,8 @@ export default function TokenPanel(_props: Props) {
     );
   }
 
-  const address = addressToText(tokenContract.address);
+  const fullAddr = String(tokenContract.address ?? '').trim();
+  const address = addressToText(fullAddr || tokenContract.address);
   const name = fallback(tokenContract.name);
   const symbol = fallback(tokenContract.symbol);
   const description = fallback((tokenContract as any)?.description);
@@ -179,7 +206,7 @@ export default function TokenPanel(_props: Props) {
   const stakedBalance = 0;
   const pendingBalance = 0;
 
-  const pillAddr = formatShortAddress(String(tokenContract.address ?? '').trim());
+  const pillAddr = formatShortAddress(fullAddr);
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -193,7 +220,9 @@ export default function TokenPanel(_props: Props) {
         <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">
           <span className="whitespace-nowrap">Token Contract:</span>
           <div className="flex-1 min-w-0 flex items-center justify-center px-1 py-1 gap-2 bg-[#243056] text-[#5981F3] text-base w-full mb-0 rounded-[22px]">
-            <span className="w-full text-center font-mono break-all">{pillAddr}</span>
+            <span className="w-full text-center font-mono break-all" title={fullAddr}>
+              {pillAddr}
+            </span>
           </div>
         </div>
       ) : null}
@@ -243,7 +272,7 @@ export default function TokenPanel(_props: Props) {
             </tr>
 
             <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>TOKpendingBalance</td>
+              <td className={`${zebraB} ${cell}`}>pendingBalance</td>
               <td className={`${zebraB} ${cell}`}>{pendingBalance}</td>
             </tr>
 

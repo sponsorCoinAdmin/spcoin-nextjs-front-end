@@ -4,8 +4,9 @@
 import React from 'react';
 import BaseListRow from './BaseListRow';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
-import { usePanelTree, usePreviewTokenContract } from '@/lib/context/hooks';
+import { usePanelTree, usePreviewTokenContract, usePreviewTokenSource } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 type TokenListItemProps = {
   name: string;
@@ -20,6 +21,9 @@ const TokenListItem = React.memo(function TokenListItem({
 }: TokenListItemProps) {
   const { openPanel, closePanel } = usePanelTree();
   const [, setPreviewTokenContract] = usePreviewTokenContract();
+  const [, setPreviewTokenSource] = usePreviewTokenSource();
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_TOKEN);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_TOKEN);
 
   const previewToken = (): TokenContract => ({
     address: address as any,
@@ -30,11 +34,9 @@ const TokenListItem = React.memo(function TokenListItem({
   });
 
   const openPreview = () => {
-    setPreviewTokenContract(previewToken());
-    closePanel(
-      SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
-      'TokenListItem:openPreviewToken:closeList',
-    );
+    const token = previewToken();
+    setPreviewTokenSource(buyMode ? 'BUY' : sellMode ? 'SELL' : null);
+    setPreviewTokenContract(token);
     openPanel(
       SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL,
       'TokenListItem:openTokenContractPanel',

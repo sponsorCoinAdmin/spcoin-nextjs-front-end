@@ -293,6 +293,18 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
       return next;
     }, 'setPreviewTokenContract');
 
+  const setPreviewTokenSource = (source: 'BUY' | 'SELL' | null) =>
+    setExchangeContext((p) => {
+      if (p.tradeData.previewTokenSource === source) {
+        log.log?.('[setPreviewTokenSource] no-op', source);
+        return p;
+      }
+      const next = structuredClone(p);
+      next.tradeData.previewTokenSource = source;
+      log.log?.('[setPreviewTokenSource] wrote', source);
+      return next;
+    }, 'setPreviewTokenSource');
+
   const setTradeDirection = (type: TRADE_DIRECTION) =>
     setExchangeContext((p) => {
       if (p.tradeData.tradeDirection === type) {
@@ -351,6 +363,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
     setSellTokenContract,
     setBuyTokenContract,
     setPreviewTokenContract,
+    setPreviewTokenSource,
     setTradeDirection,
     setSlippageBps,
     setAppChainId,

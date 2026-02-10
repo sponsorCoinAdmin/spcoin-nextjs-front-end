@@ -154,6 +154,25 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     [isSellRoot, openOverlay, openPanel, isVisible, schedulePostChecks],
   );
 
+  const openTokenContractPanel = useCallback(
+    (e?: React.SyntheticEvent) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!tokenContract) return;
+
+      const methodName = 'TokenSelectDropDown:openTokenContractPanel';
+      if (isSellRoot) {
+        openPanel(SP_COIN_DISPLAY.SELL_TOKEN, `${methodName}:setSellMode`);
+      } else {
+        openPanel(SP_COIN_DISPLAY.BUY_TOKEN, `${methodName}:setBuyMode`);
+      }
+      openPanel(SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL, `${methodName}:openTokenContractPanel`);
+    },
+    [isSellRoot, openPanel, tokenContract],
+  );
+
   function displaySymbol(token: TokenContract) {
     if (DEBUG_ENABLED) {
       const msg = stringifyBigInt(token);
@@ -180,7 +199,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
             loading="lazy"
             decoding="async"
             onMouseDown={stopMouseDown}
-            onClick={openTokenSelectPanel}
+            onClick={openTokenContractPanel}
             onError={handleMissingLogoURL}
             data-testid="token-dropdown-avatar"
           />

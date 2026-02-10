@@ -139,6 +139,34 @@ export const usePreviewTokenContract = (): [
   return [token, setToken];
 };
 
+export const usePreviewTokenSource = (): [
+  'BUY' | 'SELL' | null | undefined,
+  (source: 'BUY' | 'SELL' | null) => void
+] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContextDirect();
+  const source = exchangeContext?.tradeData?.previewTokenSource;
+
+  const setSource = (nextSource: 'BUY' | 'SELL' | null) => {
+    const prev = exchangeContext?.tradeData?.previewTokenSource ?? null;
+    if (prev === nextSource) return;
+
+    debugHookChange('previewTokenSource', prev, nextSource);
+
+    setExchangeContext(
+      (p) => ({
+        ...p,
+        tradeData: {
+          ...p.tradeData,
+          previewTokenSource: nextSource,
+        },
+      }),
+      'usePreviewTokenSource:setSource'
+    );
+  };
+
+  return [source, setSource];
+};
+
 /** Shorthand: just the sell token address. */
 export const useSellTokenAddress = (): string | undefined => {
   const [sellTokenContract] = useSellTokenContract();

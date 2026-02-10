@@ -81,6 +81,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       sellTokenContract: undefined,
       buyTokenContract: undefined,
       previewTokenContract: undefined,
+      previewTokenSource: null,
       rateRatio: 1,
       slippage: {
         bps: 200,

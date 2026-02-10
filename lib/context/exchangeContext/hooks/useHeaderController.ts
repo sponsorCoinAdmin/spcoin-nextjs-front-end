@@ -114,9 +114,9 @@ function getTokenContractHeaderTitle(
   },
   symbols?: { buySymbol?: string; sellSymbol?: string; previewSymbol?: string },
 ): string {
-  const buySym = (symbols?.buySymbol ?? '').trim() || 'Token';
-  const sellSym = (symbols?.sellSymbol ?? '').trim() || 'Token';
-  const previewSym = (symbols?.previewSymbol ?? '').trim() || 'Token';
+  const buySym = (symbols?.buySymbol ?? '').trim() || 'Undefined';
+  const sellSym = (symbols?.sellSymbol ?? '').trim() || 'Undefined';
+  const previewSym = (symbols?.previewSymbol ?? '').trim() || 'Undefined';
 
   if (opts.activePreviewToken) return `Preview ${previewSym} Token`;
   if (opts.activeSellToken) return `Sell ${sellSym} Token`;
@@ -160,14 +160,14 @@ function titleFor(
     return getTokenContractHeaderTitle(tokenState, {
       buySymbol: tokenState.buySymbol,
       sellSymbol: tokenState.sellSymbol,
+      previewSymbol: tokenState.previewSymbol,
     });
   }
 
   if (display === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL && tokenState) {
-    return getTokenContractHeaderTitle(tokenState, {
-      buySymbol: tokenState.buySymbol,
-      sellSymbol: tokenState.sellSymbol,
-    });
+    if (tokenState.activeBuyToken) return 'Select Buy Token';
+    if (tokenState.activeSellToken) return 'Select Sell Token';
+    return 'Select a Token';
   }
 
   if (display === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL) {
@@ -364,6 +364,31 @@ export function useHeaderController() {
     const factory = headerLeftOverrides.get(currentDisplay);
     if (factory) return factory();
 
+    if (currentDisplay === SP_COIN_DISPLAY.TOKEN_CONTRACT_PANEL) {
+      const previewLogo = (previewToken as any)?.logoURL;
+      const buyLogo = (buyToken as any)?.logoURL;
+      const sellLogo = (sellToken as any)?.logoURL;
+      const tokenLogo =
+        previewLogo ||
+        (tokenState?.activeBuyToken ? buyLogo : null) ||
+        (tokenState?.activeSellToken ? sellLogo : null) ||
+        buyLogo ||
+        sellLogo;
+
+      if (tokenLogo) {
+        const sizePx = 38;
+        return React.createElement('img', {
+          src: tokenLogo,
+          alt: 'Token logo',
+          width: sizePx,
+          height: sizePx,
+          loading: 'lazy',
+          decoding: 'async',
+          className: 'h-[38px] w-[38px] object-contain rounded bg-transparent',
+        });
+      }
+    }
+
     const showActiveLogo =
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ||
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ||
@@ -424,6 +449,10 @@ export function useHeaderController() {
     );
   }, [
     currentDisplay,
+    previewToken,
+    buyToken,
+    sellToken,
+    tokenState,
     headerAccountLogoURL,
     headerAccountAddress,
     openPanel,

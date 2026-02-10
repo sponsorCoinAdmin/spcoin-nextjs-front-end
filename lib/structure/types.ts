@@ -137,6 +137,7 @@ export type TradeData = {
   buyTokenContract?: TokenContract;
   sellTokenContract?: TokenContract;
   previewTokenContract?: TokenContract;
+  previewTokenSource?: 'BUY' | 'SELL' | null;
   rateRatio: number;
   slippage: Slippage;
   tradeDirection: TRADE_DIRECTION;

@@ -82,6 +82,7 @@ export type ExchangeContextType = {
   setSellTokenContract: (contract: TokenContract | undefined) => void;
   setBuyTokenContract: (contract: TokenContract | undefined) => void;
   setPreviewTokenContract: (contract: TokenContract | undefined) => void;
+  setPreviewTokenSource: (source: 'BUY' | 'SELL' | null) => void;
   setTradeDirection: (type: TRADE_DIRECTION) => void;
   setSlippageBps: (bps: number) => void;
   setRecipientAccount: (wallet: spCoinAccount | undefined) => void;
@@ -476,6 +477,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setSellTokenContract,
     setBuyTokenContract,
     setPreviewTokenContract,
+    setPreviewTokenSource,
     setTradeDirection,
     setSlippageBps,
     setAppChainId,
@@ -564,6 +566,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       setSellTokenContract(undefined);
       setBuyTokenContract(undefined);
       setPreviewTokenContract(undefined);
+      setPreviewTokenSource(null);
 
       prevAppChainIdRef.current = appId;
     }
@@ -573,6 +576,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setSellTokenContract,
     setBuyTokenContract,
     setPreviewTokenContract,
+    setPreviewTokenSource,
   ]);
 
   useEffect(() => {
@@ -622,6 +626,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setSellTokenContract,
         setBuyTokenContract,
         setPreviewTokenContract,
+        setPreviewTokenSource,
         setTradeDirection,
         setSlippageBps,
         setRecipientAccount,
