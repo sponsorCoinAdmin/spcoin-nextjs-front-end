@@ -61,6 +61,9 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.SELL_CONTRACT, false],
   [SP.PREVIEW_CONTRACT, false],
 
+  // ✅ Ensure staking sub-panel exists even for older persisted trees
+  [SP.STAKE_TRADING_SPCOINS_PANEL, false],
+
   // ✅ Manage panels are first-class overlays; ensure the landing panel exists.
   [SP.MANAGE_SPONSORSHIPS_PANEL, false],
 
@@ -105,7 +108,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // ─────────────── Manage overlays (still overlays, but with an inline child) ───────────────
       node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
 
-      node(SP.STAKING_SPCOINS_PANEL, false),
+      node(SP.STAKING_SPCOINS_PANEL, false, [
+        node(SP.STAKE_TRADING_SPCOINS_PANEL, false),
+        node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
+        node(SP.CONNECT_TRADE_BUTTON, true),
+      ]),
 
       // ✅ Account list rewards (parent) + pending/unstake nodes
       node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
@@ -122,13 +129,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.AGENT_ACCOUNT, false),
       ]),
 
-      // Aux panels
-      node(SP.ADD_SPONSORSHIP_PANEL, false),
-      node(SP.CONFIG_SPONSORSHIP_PANEL, false),
-
       // Default-on widgets
       node(SP.SWAP_ARROW_BUTTON, true),
-      node(SP.CONNECT_TRADE_BUTTON, true),
       node(SP.FEE_DISCLOSURE, true),
 
       // Default-off widget

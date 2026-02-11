@@ -50,8 +50,6 @@ const EXCHANGE_TRADING_PAIR_CHILDREN: readonly SP[] = [
 const TRADING_CHILDREN: readonly SP[] = [
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.EXCHANGE_TRADING_PAIR,
-  SP.ADD_SPONSORSHIP_PANEL,
-  SP.CONNECT_TRADE_BUTTON,
   SP.FEE_DISCLOSURE,
   SP.AFFILIATE_FEE,
 ] as const;
@@ -252,7 +250,16 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // Staking/unstaking overlays
-  def({ id: SP.STAKING_SPCOINS_PANEL, kind: 'panel' }),
+  def({
+    id: SP.STAKING_SPCOINS_PANEL,
+    kind: 'panel',
+    children: [
+      SP.STAKE_TRADING_SPCOINS_PANEL,
+      SP.ADD_SPONSORSHIP_PANEL,
+      SP.CONNECT_TRADE_BUTTON,
+    ],
+  }),
+  def({ id: SP.STAKE_TRADING_SPCOINS_PANEL, kind: 'panel', children: [] }),
 
   // Token contract overlay (container)
   // NOTE: This is not a stack overlay. It is a structural parent in the tree.

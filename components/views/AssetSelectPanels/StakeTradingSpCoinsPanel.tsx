@@ -1,4 +1,4 @@
-// File: @/components/views/AssetSelectPanels/TradingSpCoinPanel.tsx
+// File: @/components/views/AssetSelectPanels/StakeTradingSpCoinsPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -502,14 +502,10 @@ function BaseSelectPanel({ containerType }: { containerType: ContainerType }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// TradingSpCoinPanel root (SELL-only)
+// StakeTradingSpCoinsPanel root (SELL-only)
 // ──────────────────────────────────────────────────────────────────────────────
 
-export default function TradingSpCoinPanel() {
-  const { isVisible } = usePanelTree();
-  const stakingPanelVisible = isVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
-  if (!stakingPanelVisible) return null;
-
+export default function StakeTradingSpCoinsPanel() {
   // SELL-select-only for this module
   return <BaseSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />;
 }

@@ -98,15 +98,18 @@ export const PANELS: readonly PanelDef[] = [
   // Trading view subtree (non-radio)
   child(SP.SELL_SELECT_PANEL, 'panel', SP.TRADING_STATION_PANEL, true),
   child(SP.BUY_SELECT_PANEL, 'panel', SP.TRADING_STATION_PANEL, true),
-  child(SP.ADD_SPONSORSHIP_PANEL, 'panel', SP.TRADING_STATION_PANEL, false),
+  child(SP.ADD_SPONSORSHIP_PANEL, 'panel', SP.STAKING_SPCOINS_PANEL, false),
   child(SP.CONFIG_SPONSORSHIP_PANEL, 'panel', SP.ADD_SPONSORSHIP_PANEL, false),
+
+  // Staking subtree
+  child(SP.STAKE_TRADING_SPCOINS_PANEL, 'panel', SP.STAKING_SPCOINS_PANEL, false),
 
   // Optional trading config panel (if used)
   child(SP.CONFIG_SLIPPAGE_PANEL, 'panel', SP.TRADING_STATION_PANEL, false),
 
   // Inline controls under Trading
   child(SP.SWAP_ARROW_BUTTON, 'control', SP.TRADING_STATION_PANEL, true),
-  child(SP.CONNECT_TRADE_BUTTON, 'control', SP.TRADING_STATION_PANEL, true),
+  child(SP.CONNECT_TRADE_BUTTON, 'control', SP.STAKING_SPCOINS_PANEL, true),
   child(SP.FEE_DISCLOSURE, 'control', SP.TRADING_STATION_PANEL, true),
   child(SP.AFFILIATE_FEE, 'control', SP.TRADING_STATION_PANEL, true),
 

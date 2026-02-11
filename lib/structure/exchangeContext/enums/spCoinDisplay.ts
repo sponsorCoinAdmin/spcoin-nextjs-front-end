@@ -68,4 +68,7 @@ export enum SP_COIN_DISPLAY {
   SPONSOR_LIST,
   RECIPIENT_LIST,
   AGENT_LIST,
+
+  // ✅ NEW: staking sub-panel (append-only)
+  STAKE_TRADING_SPCOINS_PANEL,
 }

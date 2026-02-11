@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v15';
+export const schemaVersion = 'v17';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -18,6 +18,9 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // Token selectors
     SPCD.TOKEN_LIST_SELECT_PANEL,
+
+    // ✅ Staking overlay (with its own children)
+    SPCD.STAKING_SPCOINS_PANEL,
 
     // ✅ Account list selector overlay (new)
     SPCD.ACCOUNT_LIST_SELECT_PANEL,
@@ -43,11 +46,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     // trading pair container
     SPCD.EXCHANGE_TRADING_PAIR,
 
-    // other inline panels under trading
-    SPCD.ADD_SPONSORSHIP_PANEL,
-
     // controls
-    SPCD.CONNECT_TRADE_BUTTON,
     SPCD.FEE_DISCLOSURE,
     SPCD.AFFILIATE_FEE,
   ],
@@ -65,6 +64,13 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.SELL_SELECT_PANEL]: [SPCD.MANAGE_SPONSORSHIPS_BUTTON],
   [SPCD.BUY_SELECT_PANEL]: [SPCD.ADD_SPONSORSHIP_BUTTON],
   [SPCD.ADD_SPONSORSHIP_PANEL]: [SPCD.CONFIG_SPONSORSHIP_PANEL],
+
+  // ✅ STAKING_SPCOINS_PANEL desired subtree:
+  [SPCD.STAKING_SPCOINS_PANEL]: [
+    SPCD.STAKE_TRADING_SPCOINS_PANEL,
+    SPCD.ADD_SPONSORSHIP_PANEL,
+    SPCD.CONNECT_TRADE_BUTTON,
+  ],
 
   // ✅ ACCOUNT_LIST_REWARDS_PANEL desired subtree:
   [SPCD.ACCOUNT_LIST_REWARDS_PANEL]: [
@@ -108,11 +114,16 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.SPONSOR_LIST]: [],
   [SPCD.RECIPIENT_LIST]: [],
   [SPCD.AGENT_LIST]: [],
+
+  // ✅ STAKE_TRADING_SPCOINS_PANEL leaf node
+  [SPCD.STAKE_TRADING_SPCOINS_PANEL]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.MAIN_TRADING_PANEL]: 'panel',
   [SPCD.TRADING_STATION_PANEL]: 'panel',
+  [SPCD.STAKING_SPCOINS_PANEL]: 'panel',
+  [SPCD.STAKE_TRADING_SPCOINS_PANEL]: 'panel',
 
   [SPCD.CONFIG_SLIPPAGE_PANEL]: 'panel',
   [SPCD.EXCHANGE_TRADING_PAIR]: 'panel',
