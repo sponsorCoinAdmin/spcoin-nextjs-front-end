@@ -12,10 +12,6 @@ import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } fr
 // ✅ ExchangeContext access (for accounts.* + address/logo)
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-// Read env once, with a safe fallback
-const AGENT_WALLET_TITLE =
-  process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
-
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
 export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
