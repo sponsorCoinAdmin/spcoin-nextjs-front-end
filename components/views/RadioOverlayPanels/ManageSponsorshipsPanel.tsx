@@ -285,7 +285,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     className={`${msTableTw.tdInner5} ${msTableTw.linkCell5} ${col1NoWrap} ${leftAlignedLinkBtn}`}
                     onClick={() => openRewardsMode(SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS)}
                     aria-label="Open Staked list"
-                    title="Manage SpCoin Contracts."
+                    title="Manage SpCoin Staking Contracts."
                   >
                     Staked
                   </button>

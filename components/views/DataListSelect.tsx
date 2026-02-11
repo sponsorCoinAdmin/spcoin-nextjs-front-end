@@ -258,9 +258,11 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
         {/* Sticky header */}
         <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
           <div className="w-full flex justify-between px-5 py-2">
-            <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">Token</div>
+            <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
+              Token Meta
+            </div>
             <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
-              Meta
+              Select
             </div>
           </div>
         </div>

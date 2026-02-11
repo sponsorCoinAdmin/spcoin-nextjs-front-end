@@ -54,6 +54,7 @@ const TokenListItem = React.memo(function TokenListItem({
       title={name}
       subtitle={symbol}
       onAvatarClick={() => confirmAssetCallback(address)}
+      selectTitle={`Select ${name} (${symbol || 'N/A'})`}
       titleClassName="font-semibold truncate !text-[#5981F3]"
       subtitleClassName="text-sm truncate !text-[#5981F3]"  // ← force blue
       onInfoClick={openPreview}
