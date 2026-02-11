@@ -12,10 +12,6 @@ import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } fr
 // ✅ ExchangeContext access (for accounts.* + address/logo)
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-// Read env once, with a safe fallback
-const AGENT_WALLET_TITLE =
-  process.env.NEXT_PUBLIC_AGENT_WALLET_TITLE ?? 'Sponsor Coin Exchange';
-
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
 export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
@@ -47,7 +43,7 @@ const DEFAULT_TITLES: Partial<Record<SP_COIN_DISPLAY, string>> = {
   [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]: 'Error Message Panel',
   [SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL]: 'Select a Token',
   [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]: 'Sponsor Rate Configuration',
-  [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: AGENT_WALLET_TITLE,
+  [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: 'Trading Station',
   [SP_COIN_DISPLAY.TOKEN_PANEL]: 'Token Panel',
 
   // NOTE: MANAGE_SPONSORSHIPS_PANEL title is dynamic (computed in titleFor())

@@ -13,6 +13,7 @@ type BaseListRowProps = {
   onAvatarClick: () => void;               // mandatory
   onInfoClick?: () => void;
   onInfoContextMenu?: () => void;
+  selectTitle?: string;
   className?: string;
   titleClassName?: string;
   subtitleClassName?: string;              // ← caller controls symbol style
@@ -25,10 +26,13 @@ function BaseListRow({
   onAvatarClick,
   onInfoClick,
   onInfoContextMenu,
+  selectTitle,
   className,
   titleClassName = 'font-semibold truncate text-[#5981F3]',
   subtitleClassName = 'text-sm truncate',  // ← no color hard-coding
 }: BaseListRowProps) {
+  const selectLabel = selectTitle ?? 'Select';
+  const metaLabel = `${subtitle || title} Meta Data`;
   return (
     <div
       className={`w-full min-h-[50px] max-h-[50px] flex items-center justify-between px-5 hover:bg-spCoin_Blue-900 ${className ?? ''}`}
@@ -40,7 +44,7 @@ function BaseListRow({
           onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onInfoContextMenu?.(); }}
           aria-label={`${title} logo action`}
-          title={`${title} logo`}
+          title={metaLabel}
         >
           <img
             className="h-full w-full object-contain"
@@ -65,7 +69,7 @@ function BaseListRow({
         className="rounded w-8 flex items-center justify-center group"
         onClick={onAvatarClick}
         aria-label="Select"
-        title="Select"
+        title={selectLabel}
       >
         <span className="relative block h-[26px] w-[26px]">
           <Image
