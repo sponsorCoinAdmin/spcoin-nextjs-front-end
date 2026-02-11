@@ -244,6 +244,7 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.SPONSOR_LIST,
       SP_COIN_DISPLAY.RECIPIENT_LIST,
       SP_COIN_DISPLAY.AGENT_LIST,
+      SP_COIN_DISPLAY.STAKE_TRADING_SPCOINS_PANEL,
     ];
 
     const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));

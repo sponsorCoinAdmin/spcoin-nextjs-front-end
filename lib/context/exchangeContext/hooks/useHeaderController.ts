@@ -489,10 +489,20 @@ export function useHeaderController() {
       } catch {}
 
       if (typeof closePanel === 'function') {
+        // If no overlay is active, close the MAIN_TRADING_PANEL itself.
+        if (currentDisplay === SP_COIN_DISPLAY.UNDEFINED) {
+          closePanel(
+            SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
+            'HeaderController:onClose(close-main)',
+            e as any,
+          );
+          return;
+        }
+
         closePanel('HeaderController:onClose(pop)', e as any);
       }
     },
-    [closePanel],
+    [closePanel, currentDisplay],
   );
 
   return {

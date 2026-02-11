@@ -18,7 +18,7 @@ import TokenPanel from '@/components/views/RadioOverlayPanels/TokenPanel'; // �
 
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
-import StakingSpCoins from '@/components/views/RadioOverlayPanels/StakingSpCoinsPanel';
+import StakingSpCoinsPanel from '@/components/views/RadioOverlayPanels/StakingSpCoinsPanel';
 
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
@@ -29,7 +29,7 @@ export default function RadioOverlayPanelHost() {
     <>
       {/* ───────────────────────── Main overlays (radio group) ───────────────────────── */}
       <TradingStationPanel />
-      <StakingSpCoins />
+      <StakingSpCoinsPanel />
       <ManageSponsorRecipients />
 
       <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>

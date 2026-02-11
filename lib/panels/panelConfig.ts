@@ -101,6 +101,9 @@ export const PANELS: readonly PanelDef[] = [
   child(SP.ADD_SPONSORSHIP_PANEL, 'panel', SP.TRADING_STATION_PANEL, false),
   child(SP.CONFIG_SPONSORSHIP_PANEL, 'panel', SP.ADD_SPONSORSHIP_PANEL, false),
 
+  // Staking subtree
+  child(SP.STAKE_TRADING_SPCOINS_PANEL, 'panel', SP.STAKING_SPCOINS_PANEL, false),
+
   // Optional trading config panel (if used)
   child(SP.CONFIG_SLIPPAGE_PANEL, 'panel', SP.TRADING_STATION_PANEL, false),
 
