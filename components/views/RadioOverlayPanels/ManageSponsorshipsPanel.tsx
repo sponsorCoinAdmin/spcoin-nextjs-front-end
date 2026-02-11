@@ -205,7 +205,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   return (
     <div id="MANAGE_SPONSORSHIPS_PANEL">
-      <div className="mb-[1.375rem]">
+      <div className="mb-0">
         <AssetSelectDisplayProvider>
           <AssetSelectProvider
             containerType={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}
@@ -225,7 +225,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       </div>
 
       {showSummaryTable && (
-        <div className={`${msTableTw.wrapper} mb-1`}>
+        <div className={`${msTableTw.wrapper} !mt-0 mt-0 mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto`}>
           <table id="MANAGE_SPONSORSHIPS_TABLE" className={`${msTableTw.table} table-fixed min-w-full`}>
             <colgroup>
               <col style={{ width: COL_0_WIDTH }} />

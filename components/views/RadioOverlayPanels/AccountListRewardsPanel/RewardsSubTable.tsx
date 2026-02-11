@@ -2,8 +2,6 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-
 import { AccountType } from '@/lib/structure';
 import type { AccountType as AccountTypeT } from '@/lib/structure';
 import { msTableTw } from '../msTableTw';
@@ -11,16 +9,12 @@ import { msTableTw } from '../msTableTw';
 import ExpandWrap from './ExpandWrap';
 import {
   BTN_XPAD_HALF_TW,
-  CHEVRON_FG_TW,
-  CHEVRON_ICON_TW,
   COIN_ROW_BTN_TW,
   COIN_ROW_MIN_H_TW,
   COIN_ROW_PY_TW,
   COIN_ROW_TEXT_TW,
   COIN_ROW_VALUE_TW,
   COL_0_ACCOUNT_TYPE,
-  ROW_CHEVRON_BG_DOWN,
-  ROW_CHEVRON_BG_UP,
 } from './constants';
 import { getActionButtonAriaLabel, getRowLabelTitle } from './utils';
 
@@ -59,25 +53,15 @@ export default function RewardsSubTable({
 }) {
   const nestedCellTw = '';
   const nestedOuterTw = '';
-
-  const renderChevronBtn = useCallback(
-    (isOpen: boolean) => (
-      <button
-        type="button"
-        className={`m-0 p-0 rounded-md ${isOpen ? ROW_CHEVRON_BG_UP : ROW_CHEVRON_BG_DOWN} flex items-center justify-center shrink-0`}
-        aria-label={isOpen ? 'Close all SpCoin Account Rows' : 'Open all SpCoin Account Rows'}
-        title={isOpen ? 'Close all SpCoin Account Rows' : 'Open all SpCoin Account Rows'}
-        onClick={() => onSetWalletRows3to5Open(walletKey, !isOpen)}
-      >
-        {isOpen ? (
-          <ChevronUp className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-        ) : (
-          <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
-        )}
-      </button>
-    ),
-    [onSetWalletRows3to5Open, walletKey],
-  );
+  const rewardsDetailsTitle = tokenRowVisible
+    ? 'Hide Rewards Contract Details'
+    : 'Show Rewards Contract Details';
+  const stakedDetailsTitle = tokenRowVisible
+    ? 'Hide Staked Contract Details'
+    : 'Show Staked Contract Details';
+  const toggleRows3to5 = useCallback(() => {
+    onSetWalletRows3to5Open(walletKey, !rewardsOpen);
+  }, [onSetWalletRows3to5Open, walletKey, rewardsOpen]);
 
   const renderNestedRewardsRow = () => {
     if (!showRewardsRow) return null;
@@ -92,13 +76,16 @@ export default function RewardsSubTable({
           <ExpandWrap open={true}>
             <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
               <div className="min-w-0 flex items-center gap-2">
-                {renderChevronBtn(rewardsOpen)}
-                <div
-                  className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                <button
+                  type="button"
+                  onClick={toggleRows3to5}
+                  className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0 text-left cursor-pointer hover:text-[#ec8840ff] transition-colors pl-[10px]`}
                   style={{ width: COL_0_ACCOUNT_TYPE }}
+                  aria-label={rewardsDetailsTitle}
+                  title={rewardsDetailsTitle}
                 >
                   Rewards
-                </div>
+                </button>
                 <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>0.0</div>
               </div>
 
@@ -153,15 +140,14 @@ export default function RewardsSubTable({
               <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
                 <div className="min-w-0 flex items-center gap-2 relative">
                   {withChevron ? (
-                    renderChevronBtn(rewardsOpen)
+                    null
                   ) : (
                     <button
                       type="button"
-                      className={`m-0 p-0 rounded-md ${ROW_CHEVRON_BG_DOWN} flex items-center justify-center shrink-0 invisible`}
+                      className="m-0 p-0 rounded-md flex items-center justify-center shrink-0 invisible"
                       aria-hidden="true"
                       tabIndex={-1}
                     >
-                      <ChevronDown className={`${CHEVRON_ICON_TW} ${CHEVRON_FG_TW}`} />
                     </button>
                   )}
 
@@ -194,13 +180,16 @@ export default function RewardsSubTable({
           <ExpandWrap open={open}>
             <div className={`${COIN_ROW_MIN_H_TW} ${COIN_ROW_PY_TW} flex items-center justify-between gap-2`}>
               <div className={`min-w-0 flex items-center gap-2 ${fgTw}`}>
-                {withChevron ? renderChevronBtn(rewardsOpen) : null}
-                <div
-                  className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0`}
+                <button
+                  type="button"
+                  onClick={toggleRows3to5}
+                  className={`${COIN_ROW_TEXT_TW} whitespace-nowrap overflow-hidden text-ellipsis shrink-0 text-left cursor-pointer hover:text-[#ec8840ff] transition-colors pl-[10px]`}
                   style={{ width: COL_0_ACCOUNT_TYPE }}
+                  aria-label={label === 'Staked' ? stakedDetailsTitle : rewardsDetailsTitle}
+                  title={label === 'Staked' ? stakedDetailsTitle : rewardsDetailsTitle}
                 >
                   {label}
-                </div>
+                </button>
                 <div className={`${COIN_ROW_VALUE_TW} min-w-0 truncate`}>{valueText}</div>
               </div>
 
