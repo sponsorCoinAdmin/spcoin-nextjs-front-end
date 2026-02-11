@@ -40,6 +40,7 @@ export default function AccountCell({
         <Image
           src={(account as any)?.logoURL || '/assets/miscellaneous/placeholder.png'}
           alt={`${account?.name ?? 'Wallet'} logo`}
+          title={`${roleLabel} ${account?.name ?? 'Unknown'} Account Details`}
           width={DATALIST_IMG_PX}
           height={DATALIST_IMG_PX}
           className={`${DATALIST_IMG_TW} object-contain rounded bg-transparent`}

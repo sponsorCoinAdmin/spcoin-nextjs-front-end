@@ -409,6 +409,18 @@ export function useHeaderController() {
 
     const sizePx = 38;
     const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
+    const headerName = (headerAccountName ?? '').trim() || 'Unknown';
+    const rewardsRoleLabel = unSponsor || claimSponsor
+      ? 'Sponsor'
+      : claimRecipient
+        ? 'Recipient'
+        : claimAgent
+          ? 'Agent'
+          : 'Account';
+    const headerLogoTitle =
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+        ? `${rewardsRoleLabel} ${headerName} Account Details`
+        : 'Active Account';
 
     return React.createElement(
       'button',
@@ -418,6 +430,7 @@ export function useHeaderController() {
           isAccountPanelActive ? '' : 'hover:opacity-90'
         }`,
         'aria-label': isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
+        title: headerLogoTitle,
         'data-role': 'ActiveAccount',
         'data-address': headerAccountAddress ?? '',
         disabled: isAccountPanelActive,
@@ -448,6 +461,7 @@ export function useHeaderController() {
       React.createElement('img', {
         src: headerAccountLogoURL,
         alt: 'Active Account logo',
+        title: headerLogoTitle,
         width: sizePx,
         height: sizePx,
         loading: 'lazy',
