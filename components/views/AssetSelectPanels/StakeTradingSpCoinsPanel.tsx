@@ -438,7 +438,7 @@ function BaseSelectPanelInner() {
     <div
       id="BaseSelectPanelInner"
       className={clsx(
-        'relative mt-[5px] mb-[5px]',
+        'relative',
         'rounded-[12px] overflow-hidden',
       )}
     >

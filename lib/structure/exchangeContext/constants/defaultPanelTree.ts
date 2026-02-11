@@ -129,6 +129,9 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.AGENT_ACCOUNT, false),
       ]),
 
+      // Aux panels
+      node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
+
       // Default-on widgets
       node(SP.SWAP_ARROW_BUTTON, true),
       node(SP.FEE_DISCLOSURE, true),

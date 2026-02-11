@@ -7,12 +7,13 @@ import ConnectTradeButton from '@/components/views/Buttons/ConnectTradeButton';
 import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel';
 
 import PanelGate from '@/components/utility/PanelGate';
+import { TSP_TW } from '@/components/views/TradingStationPanel/lib/twSettingConfig';
 
 export default function StakingSpCoinsPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL}>
-      <div id="StakingSpCoinsPanel">
+      <div id="StakingSpCoinsPanel" className={`flex flex-col ${TSP_TW.gap}`}>
         <PanelGate panel={SP_COIN_DISPLAY.STAKE_TRADING_SPCOINS_PANEL}>
           <StakeTradingSpCoinsPanel />
         </PanelGate>

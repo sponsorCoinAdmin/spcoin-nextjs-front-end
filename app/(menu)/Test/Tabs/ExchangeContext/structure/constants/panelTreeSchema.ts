@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v17';
+export const schemaVersion = 'v19';
 
 // ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
@@ -45,6 +45,9 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
     // trading pair container
     SPCD.EXCHANGE_TRADING_PAIR,
+
+    // other inline panels under trading
+    SPCD.ADD_SPONSORSHIP_PANEL,
 
     // controls
     SPCD.FEE_DISCLOSURE,
