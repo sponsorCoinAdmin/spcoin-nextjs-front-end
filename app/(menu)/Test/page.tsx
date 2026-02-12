@@ -1,7 +1,7 @@
 // File: @/app/(menu)/Test/page.tsx
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
@@ -22,6 +22,7 @@ export default function TestPage() {
   const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
   const { dumpNavStack } = usePanelTree();
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(72);
 
   // Use a loose shape so we can evolve flags without fighting types here
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -142,10 +143,29 @@ export default function TestPage() {
     router.push('/Exchange');
   }, [hideContext, router]);
 
+  useEffect(() => {
+    const measure = () => {
+      const header = document.querySelector('header');
+      const next = header instanceof HTMLElement ? header.offsetHeight : 72;
+      setHeaderHeight(next > 0 ? next : 72);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
   return (
-    <div className="p-6">
-      <div className="flex gap-4">
-        <div className="flex-1">
+    <div
+      className="overflow-hidden p-6"
+      style={{
+        height: `calc(100dvh - ${headerHeight}px)`,
+        overflowX: 'hidden',
+        overflowY: 'hidden',
+      }}
+    >
+      <div className="flex h-full gap-4 overflow-hidden">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <div className="mb-4 flex flex-wrap items-center gap-4">
             <label htmlFor="quickSwitchSelect" className="sr-only">
               Run Test
@@ -203,8 +223,8 @@ export default function TestPage() {
           {showToDo && <ToDoTab />}
         </div>
 
-        <div className="flex-1 border-l border-slate-700 pl-4">
-          <div className="flex min-h-screen flex-col items-center justify-between p-24">
+        <div className="min-w-0 flex-1 overflow-hidden border-l border-slate-700 pl-4">
+          <div className="flex h-full min-h-0 flex-col items-center justify-between p-24">
             <PriceView />
           </div>
         </div>
