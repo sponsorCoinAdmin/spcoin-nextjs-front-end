@@ -28,6 +28,13 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
+  const tokenSymbol = tokenContract?.symbol ?? 'Token';
+  const logoTitle = isSellRoot
+    ? `You are Selling ${tokenSymbol}`
+    : `You are Buying ${tokenSymbol}`;
+  const chevronTitle = isSellRoot
+    ? 'Select a new Token to Sell'
+    : 'Select a new Token to Buy';
 
   // ✅ new transitions API
   const { openOverlay } = usePanelTransitions();
@@ -195,6 +202,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
             id="TokenSelectDropDownImage.png"
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
+            title={logoTitle}
             src={logoURL}
             loading="lazy"
             decoding="async"
@@ -213,6 +221,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
+        title={chevronTitle}
         onMouseDown={stopMouseDown}
         onClick={openTokenSelectPanel}
         data-testid="token-dropdown-chevron"

@@ -18,6 +18,7 @@ export type UseSelectionCommit = {
   commitSellToken: (t: TokenContract) => void;
   commitToken: (t: TokenContract, side: 'buy' | 'sell') => void;
 
+  commitSponsor: (w: spCoinAccount) => void;
   commitRecipient: (w: spCoinAccount) => void;
   commitAgent: (w: spCoinAccount) => void;
 
@@ -150,6 +151,51 @@ export function useSelectionCommit(): UseSelectionCommit {
     [setExchangeContext, finish],
   );
 
+  const commitSponsor = useCallback(
+    (w: spCoinAccount) => {
+      const addr = (w as any)?.address;
+      const name = (w as any)?.name;
+
+      if (!w || !addr) {
+        log.warn?.('commitSponsor aborted: missing wallet or address', { wallet: w });
+        return;
+      }
+
+      log.log?.('commitSponsor', { address: addr, name });
+
+      setExchangeContext(
+        (prev: any) => {
+          const prevEx = prev?.exchangeContext ?? prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+
+          const writeAccounts = {
+            ...prevAccounts,
+            sponsorAccount: w,
+          };
+
+          if (prev?.exchangeContext) {
+            return {
+              ...prev,
+              exchangeContext: {
+                ...prev.exchangeContext,
+                accounts: writeAccounts,
+              },
+            };
+          }
+
+          return {
+            ...prev,
+            accounts: writeAccounts,
+          };
+        },
+        'useSelectionCommit:sponsor',
+      );
+
+      finish();
+    },
+    [setExchangeContext, finish],
+  );
+
   const commitAgent = useCallback(
     (w: spCoinAccount) => {
       const addr = (w as any)?.address;
@@ -200,6 +246,7 @@ export function useSelectionCommit(): UseSelectionCommit {
     commitBuyToken,
     commitSellToken,
     commitToken,
+    commitSponsor,
     commitRecipient,
     commitAgent,
     finish,

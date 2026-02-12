@@ -2,14 +2,17 @@
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
+import { isAddress } from 'viem';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 
 // ✅ Provide the context AddressSelect expects (without going through the old wrapper)
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
@@ -27,31 +30,51 @@ export default function SponsorListSelectPanel() {
   const vSponsorListRaw = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
   const vSponsorList = vAccountList && vSponsorListRaw;
 
-  const activePanel: SP_COIN_DISPLAY | null = vSponsorList
-    ? SP_COIN_DISPLAY.SPONSOR_LIST
-    : vRewards
-      ? SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
-      : null;
-
   useEffect(() => {
     debugLog.log?.('[visibility]', {
       vSponsorList,
       vRewards,
-      activePanel: activePanel != null ? SP_COIN_DISPLAY[activePanel] : null,
+      activePanel: vSponsorList
+        ? SP_COIN_DISPLAY[SP_COIN_DISPLAY.SPONSOR_LIST]
+        : vRewards
+        ? SP_COIN_DISPLAY[SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL]
+        : null,
     });
-  }, [vSponsorList, vRewards, activePanel]);
+  }, [vSponsorList, vRewards]);
 
-  if (!activePanel) return null;
+  if (vSponsorList) return <SponsorListSelectPanelInner />;
+  if (!vRewards) return null;
 
-  return <SponsorListSelectInner activePanel={activePanel} />;
+  return <SponsorListRewardsPanelInner />;
 }
 
-function SponsorListSelectInner({
-  activePanel,
-}: {
-  activePanel: SP_COIN_DISPLAY.SPONSOR_LIST | SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
-}) {
+function hasValidAddress(a: any): a is { address: string } {
+  return typeof a?.address === 'string' && isAddress(a.address);
+}
+
+function SponsorListSelectPanelInner() {
+  const { commitSponsor } = useSelectionCommit();
+
+  const handleCommit = (asset: spCoinAccount | TokenContract) => {
+    if (!hasValidAddress(asset)) return;
+    commitSponsor(asset as spCoinAccount);
+  };
+
+  return (
+    <div id="SPONSOR_LIST">
+      <div id="ACCOUNT_LIST_SELECT_PANEL">
+        <PanelListSelectWrapper
+          onCommit={handleCommit}
+          containerTypeOverride={SP_COIN_DISPLAY.SPONSOR_LIST}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SponsorListRewardsPanelInner() {
   const ctx = useContext(ExchangeContextState);
+  const activePanel = SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL;
 
   // ✅ Directly load sponsor accounts
   const { feedData, loading, error } = useFeedData(FEED_TYPE.SPONSOR_ACCOUNTS);
@@ -134,16 +157,9 @@ function SponsorListSelectInner({
 
   return (
     <div
-      id={
-        activePanel === SP_COIN_DISPLAY.SPONSOR_LIST
-          ? 'SPONSOR_LIST'
-          : 'ACCOUNT_LIST_REWARDS_PANEL'
-      }
+      id="ACCOUNT_LIST_REWARDS_PANEL"
       className="h-full min-h-0 w-full flex flex-col overflow-hidden"
     >
-      {activePanel === SP_COIN_DISPLAY.SPONSOR_LIST && (
-        <div id="SPONSOR_LIST" className="hidden" aria-hidden="true" />
-      )}
       <div id="ACCOUNT_LIST_SELECT_PANEL">
       <AssetSelectDisplayProvider>
         <AssetSelectProvider

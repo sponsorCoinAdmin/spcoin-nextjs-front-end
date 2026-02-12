@@ -86,13 +86,17 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
     [openOverlay, openPanel],
   );
 
-  const openRecipientTokenPanel = useCallback(
+  const openRecipientAccountPanel = useCallback(
     (e: React.SyntheticEvent) => {
       e.preventDefault();
       e.stopPropagation();
       openPanel(
-        SP_COIN_DISPLAY.TOKEN_PANEL,
-        'RecipientSelectDropDown:openRecipientTokenPanel',
+        SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
+        'RecipientSelectDropDown:openRecipientAccountPanel:setRecipientMode',
+      );
+      openPanel(
+        SP_COIN_DISPLAY.ACCOUNT_PANEL,
+        'RecipientSelectDropDown:openRecipientAccountPanel:openAccountPanel',
       );
     },
     [openPanel],
@@ -113,7 +117,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
             className="h-9 w-9 mr-2 rounded-md"
             src={logoSrc}
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={openRecipientTokenPanel}
+            onClick={openRecipientAccountPanel}
             onError={handleLogoError}
           />
           {recipientAccount.symbol}
