@@ -90,7 +90,7 @@ export default function ExchangeContextTab() {
     const s = readPagesState();
     return typeof s.showGui === 'boolean' ? s.showGui : true;
   });
-  const [showExchange, setShowExchange] = useState<boolean>(() => {
+  const [showExchange] = useState<boolean>(() => {
     const s = readPagesState();
     return typeof s.showExchange === 'boolean' ? s.showExchange : true;
   });
@@ -113,7 +113,6 @@ export default function ExchangeContextTab() {
   }, [showGui, expandContext, showExchange]);
 
   const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
-  const onToggleExchange = useCallback(() => setShowExchange((prev) => !prev), []);
   const onTogglePath = useCallback((path: string) => togglePath(path), [togglePath]);
 
   const containerClass = useMemo(() => {
@@ -157,8 +156,6 @@ export default function ExchangeContextTab() {
             showGui={showGui}
             onLog={logContext}
             onClose={hideContext}
-            onToggleExchange={onToggleExchange}
-            showExchange={showExchange}
           />
 
           <Row text="Exchange Context" depth={0} open />

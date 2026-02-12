@@ -8,6 +8,7 @@ import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestWallets';
 import ToDoTab from './Tabs/ToDo';
+import PriceView from '@/app/(menu)/Exchange/Price';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
@@ -39,11 +40,8 @@ export default function TestPage() {
         },
       }));
     },
-    [setState]
+    [setState],
   );
-
-  // Dropdown is visible only when no tab is open
-  const showRunTest = !(showContext || showWallets || showToDo || showFSMTracePanel);
 
   // Open exactly one tab at a time
   const resetFlags = {
@@ -62,7 +60,6 @@ export default function TestPage() {
           updateExchangePage({
             ...resetFlags,
             showContext: true,
-            // Context tab can manage its own internal options (expand, active display) if needed.
           });
           break;
         case 'fsm':
@@ -90,13 +87,13 @@ export default function TestPage() {
       // Reset so the same option can be selected again later
       setQuickSwitch('');
     },
-    [updateExchangePage]
+    [updateExchangePage],
   );
 
   return (
-    <div className="space-y-6 p-6">
-      {showRunTest && (
-        <div className="w-full flex justify-center mb-4">
+    <div className="p-6">
+      <div className="flex gap-4">
+        <div className="flex-1 space-y-6">
           <label htmlFor="quickSwitchSelect" className="sr-only">
             Run Test
           </label>
@@ -114,15 +111,20 @@ export default function TestPage() {
             <option value="wallets">Test Wallets</option>
             <option value="todo">ToDo&apos;s</option>
           </select>
-        </div>
-      )}
 
-      {/* Tabs: each owns its own Close/Hide button and updates PageState.
-          When a tab closes itself, all flags become false → the dropdown reappears. */}
-      {showContext && <ExchangeContextTab />}
-      {showWallets && <TestWalletsTab />}
-      {showFSMTracePanel && <FSMTraceTab />}
-      {showToDo && <ToDoTab />}
+          {/* Tabs: each owns its own Close/Hide button and updates PageState. */}
+          {showContext && <ExchangeContextTab />}
+          {showWallets && <TestWalletsTab />}
+          {showFSMTracePanel && <FSMTraceTab />}
+          {showToDo && <ToDoTab />}
+        </div>
+
+        <div className="flex-1 border-l border-slate-700 pl-4">
+          <div className="h-full min-h-[240px] pt-[48px]">
+            <PriceView />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
