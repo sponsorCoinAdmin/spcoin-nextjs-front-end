@@ -22,7 +22,7 @@ export default function TradingStationPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
-      <div id="TradingStationPanel" className={`flex flex-col ${TSP_TW.gap}`}>
+      <div id="TRADING_STATION_PANEL" className={`flex flex-col ${TSP_TW.gap}`}>
         <ConfigSlippagePanel />
 
         {/* ✅ NEW: gate the trading-pair container by EXCHANGE_TRADING_PAIR */}

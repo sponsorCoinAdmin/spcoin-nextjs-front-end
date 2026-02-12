@@ -86,8 +86,21 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
     [openOverlay, openPanel],
   );
 
+  const openRecipientTokenPanel = useCallback(
+    (e: React.SyntheticEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openPanel(
+        SP_COIN_DISPLAY.TOKEN_PANEL,
+        'RecipientSelectDropDown:openRecipientTokenPanel',
+      );
+    },
+    [openPanel],
+  );
+
   return (
     <div
+      id="RECIPIENT_SELECT_DROP_DOWN"
       className="flex items-center cursor-pointer"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={showRecipientListSelectPanel}
@@ -96,8 +109,11 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
         <>
           <img
             alt={recipientAccount.name ?? 'Recipient'}
+            title={`${recipientAccount.name ?? 'Recipient'} Meta Data`}
             className="h-9 w-9 mr-2 rounded-md"
             src={logoSrc}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={openRecipientTokenPanel}
             onError={handleLogoError}
           />
           {recipientAccount.symbol}
@@ -105,7 +121,12 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
       ) : (
         <> &nbsp; Select Recipient: </>
       )}
-      <ChevronDown size={16} className="ml-2" />
+      <span className="ml-2 inline-flex" title="Select a Recipient to Sponsor">
+        <ChevronDown
+          size={16}
+          aria-label="Select a Recipient to Sponsor"
+        />
+      </span>
     </div>
   );
 };

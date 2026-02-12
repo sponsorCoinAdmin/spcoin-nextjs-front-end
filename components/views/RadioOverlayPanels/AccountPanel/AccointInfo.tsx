@@ -84,7 +84,7 @@ export default function DisplayInfo({ account }: Props) {
   const depositAddr = formatShortAddress(String(depositAddrRaw ?? '').trim());
 
   return (
-    <div id="ACCOUNT_PANEL">
+    <div id="ACCOUNT_INFO">
       {/* Active Account header (short label pill) */}
       {depositAddr ? (
         <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">
