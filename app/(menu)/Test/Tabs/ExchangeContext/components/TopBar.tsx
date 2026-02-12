@@ -10,8 +10,6 @@ const buttonClasses =
 type Props = {
   expanded: boolean;
   onToggleExpand: () => void;
-  onToggleGui: () => void;
-  showGui: boolean;
   onLog: () => void;
   onClose: () => void;
 };
@@ -19,8 +17,6 @@ type Props = {
 const TopBar: React.FC<Props> = ({
   expanded,
   onToggleExpand,
-  onToggleGui,
-  showGui,
   onLog,
   onClose,
 }) => {
@@ -44,10 +40,6 @@ const TopBar: React.FC<Props> = ({
       <div className="flex flex-wrap items-center justify-center gap-4 py-2">
         <button onClick={onToggleExpand} className={buttonClasses}>
           {expanded ? 'Collapse Context' : 'Expand Context'}
-        </button>
-
-        <button onClick={onToggleGui} className={buttonClasses}>
-          {showGui ? 'Hide GUI' : 'Show GUI'}
         </button>
 
         <button onClick={onLog} className={buttonClasses}>

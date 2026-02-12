@@ -1,15 +1,13 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useExpandCollapse } from './hooks/useExpandCollapse';
 import { useExchangePageState } from './hooks/useExchangePageState';
-import TopBar from './components/TopBar';
 import TreeView from './components/Tree/TreeView';
 import Row from './components/Tree/Row';
 import { enumRegistry } from './state/enumRegistry';
-import PriceView from '@/app/(menu)/Exchange/Price';
 
 // Virtual tree builder (page-local)
 import { useVirtualPanelTree } from './hooks/useVirtualPanelTree';
@@ -53,7 +51,10 @@ function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
   }));
 }
 
-type PagesState = { showGui?: boolean; expanded?: boolean; showExchange?: boolean };
+type PagesState = { expanded?: boolean };
+type ExchangeContextTabProps = {
+  onToggleAllReady?: (toggleAllFn: (nextExpand: boolean) => void) => void;
+};
 
 function readPagesState(): PagesState {
   try {
@@ -74,9 +75,9 @@ function writePagesState(patch: PagesState) {
   }
 }
 
-export default function ExchangeContextTab() {
+export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContextTabProps) {
   const { exchangeContext } = useExchangeContext();
-  const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
+  const { expandContext, setExpandContext } = useExchangePageState();
   const { ui, toggleAll, togglePath, restRaw } = useExpandCollapse(exchangeContext, expandContext);
 
   // Build the virtual (display-only) tree from the builder
@@ -85,15 +86,6 @@ export default function ExchangeContextTab() {
     () => addNamesShallow(tree as unknown as NamedVirtualNode[]),
     [tree]
   );
-
-  const [showGui, setShowGui] = useState<boolean>(() => {
-    const s = readPagesState();
-    return typeof s.showGui === 'boolean' ? s.showGui : true;
-  });
-  const [showExchange] = useState<boolean>(() => {
-    const s = readPagesState();
-    return typeof s.showExchange === 'boolean' ? s.showExchange : true;
-  });
 
   // Restore initial expand state
   useEffect(() => {
@@ -109,27 +101,14 @@ export default function ExchangeContextTab() {
 
   // Persist UI prefs
   useEffect(() => {
-    writePagesState({ showGui, expanded: expandContext, showExchange });
-  }, [showGui, expandContext, showExchange]);
+    writePagesState({ expanded: expandContext });
+  }, [expandContext]);
 
-  const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
+  useEffect(() => {
+    onToggleAllReady?.(toggleAll);
+  }, [onToggleAllReady, toggleAll]);
+
   const onTogglePath = useCallback((path: string) => togglePath(path), [togglePath]);
-
-  const containerClass = useMemo(() => {
-    if (!showGui && !showExchange) return 'px-4';
-    if (showGui && showExchange) return 'px-4 flex gap-4';
-    return 'px-4';
-  }, [showGui, showExchange]);
-
-  const leftPaneClass = useMemo(() => {
-    if (!showExchange) return 'hidden';
-    return showGui ? 'flex-1' : 'w-full';
-  }, [showGui, showExchange]);
-
-  const rightPaneClass = useMemo(() => {
-    if (!showGui) return 'hidden';
-    return showExchange ? 'flex-1 border-l border-slate-700' : 'w-full';
-  }, [showGui, showExchange]);
 
   const settingsObj = useMemo(() => {
     const realSettings = (exchangeContext as any)?.settings ?? {};
@@ -140,61 +119,33 @@ export default function ExchangeContextTab() {
   }, [exchangeContext, treeWithNames]);
 
   return (
-    <div className="space-y-4">
-      <div className={containerClass}>
-        {/* LEFT PANE (Exchange tree) */}
-        <div className={leftPaneClass}>
-          <TopBar
-            expanded={expandContext}
-            onToggleExpand={() => {
-              const next = !expandContext;
-              setExpandContext(next);
-              toggleAll(next);
-              writePagesState({ expanded: next });
-            }}
-            onToggleGui={onToggleShowGui}
-            showGui={showGui}
-            onLog={logContext}
-            onClose={hideContext}
-          />
+    <div className="space-y-0">
+      <Row text="Exchange Context" depth={0} open />
 
-          <Row text="Exchange Context" depth={0} open />
+      {/* Settings */}
+      <TreeView
+        label="settings"
+        value={settingsObj}
+        exp={ui.exp}
+        onTogglePath={onTogglePath}
+        enumRegistry={enumRegistry}
+        dense
+        rootDepth={1}
+      />
 
-          {/* Settings */}
-          <TreeView
-            label="settings"
-            value={settingsObj}
-            exp={ui.exp}
-            onTogglePath={onTogglePath}
-            enumRegistry={enumRegistry}
-            dense
-            rootDepth={1}
-          />
-
-          {/* Everything except settings */}
-          {Object.keys(restRaw).map((k) => (
-            <TreeView
-              key={`rest.${k}`}
-              label={k}
-              value={(restRaw as any)[k]}
-              exp={ui.exp}
-              onTogglePath={onTogglePath}
-              enumRegistry={enumRegistry}
-              dense
-              rootDepth={1}
-            />
-          ))}
-        </div>
-
-        {/* RIGHT PANE (GUI/Price) */}
-        <div className={rightPaneClass}>
-          {showGui && (
-            <div className="h-full min-h-[240px] pt-[48px]">
-              <PriceView />
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Everything except settings */}
+      {Object.keys(restRaw).map((k) => (
+        <TreeView
+          key={`rest.${k}`}
+          label={k}
+          value={(restRaw as any)[k]}
+          exp={ui.exp}
+          onTogglePath={onTogglePath}
+          enumRegistry={enumRegistry}
+          dense
+          rootDepth={1}
+        />
+      ))}
 
       {/* ─────────────────────────────────────────────────────────────── */}
       {/* 🔐 PANEL REGISTRY (kept hidden so panels appear in the tree)   */}
