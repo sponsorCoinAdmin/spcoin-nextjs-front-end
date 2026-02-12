@@ -1,7 +1,7 @@
 // File: @/app/(menu)/Test/page.tsx
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
@@ -30,6 +30,7 @@ export default function TestPage() {
     showWallets = false,
     showToDo = false,
     showFSMTracePanel = false,
+    selectedTestTab,
   } = pageAny;
 
   const updateExchangePage = useCallback(
@@ -65,24 +66,28 @@ export default function TestPage() {
           updateExchangePage({
             ...resetFlags,
             showContext: true,
+            selectedTestTab: 'context',
           });
           break;
         case 'fsm':
           updateExchangePage({
             ...resetFlags,
             showFSMTracePanel: true,
+            selectedTestTab: 'fsm',
           });
           break;
         case 'wallets':
           updateExchangePage({
             ...resetFlags,
             showWallets: true,
+            selectedTestTab: 'wallets',
           });
           break;
         case 'todo':
           updateExchangePage({
             ...resetFlags,
             showToDo: true,
+            selectedTestTab: 'todo',
           });
           break;
         default:
@@ -93,15 +98,38 @@ export default function TestPage() {
     [updateExchangePage],
   );
 
-  const selectedTab = showContext
-    ? 'context'
-    : showFSMTracePanel
-      ? 'fsm'
-      : showWallets
-        ? 'wallets'
-        : showToDo
-          ? 'todo'
-          : 'context';
+  const selectedTab =
+    selectedTestTab === 'context' ||
+    selectedTestTab === 'fsm' ||
+    selectedTestTab === 'wallets' ||
+    selectedTestTab === 'todo'
+      ? selectedTestTab
+      : showContext
+        ? 'context'
+        : showFSMTracePanel
+          ? 'fsm'
+          : showWallets
+            ? 'wallets'
+            : showToDo
+              ? 'todo'
+              : 'context';
+
+  useEffect(() => {
+    const hasOpenTab = showContext || showWallets || showToDo || showFSMTracePanel;
+    if (hasOpenTab) return;
+
+    switch (selectedTab) {
+      case 'fsm':
+      case 'wallets':
+      case 'todo':
+      case 'context':
+        handleQuickSwitch(selectedTab);
+        break;
+      default:
+        handleQuickSwitch('context');
+        break;
+    }
+  }, [selectedTab, showContext, showWallets, showToDo, showFSMTracePanel, handleQuickSwitch]);
 
   const onToggleExpand = useCallback(() => {
     const next = !expandContext;
