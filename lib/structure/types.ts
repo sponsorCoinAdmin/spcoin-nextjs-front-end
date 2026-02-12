@@ -74,7 +74,7 @@ export type Accounts = {
 /**
  * ✅ Settings for view/panel management and API provider choice.
  * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
- * - `spCoinPanelTree` persists the full panel tree (new visibility model).
+ * - `spCoinPanelTree` is runtime panel tree state.
  *
  * ✅ Persisted NAV stack is now readable in Local Storage:
  *   - id is authoritative
@@ -91,6 +91,15 @@ export type Settings = {
 
   /** Persisted panel tree */
   spCoinPanelTree: SpCoinPanelTree;
+
+  /**
+   * Persisted visible members list (compact storage shape).
+   * Presence in this list means visible=true.
+   */
+  visiblePanelTreeMembers?: Array<{
+    panel: SP_COIN_DISPLAY;
+    name: string;
+  }>;
 
   /** Persisted stack of navigated panels (authoritative id, derived name) */
   displayStack: DISPLAY_STACK_NODE[];

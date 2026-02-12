@@ -45,13 +45,14 @@ import {
 } from '@/lib/context/exchangeContext/helpers/panelBootstrap';
 
 import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persistExchangeContext';
+import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
 // ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
-import { CHILDREN } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { CHILDREN, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ STACK gate: only these may appear in displayStack
 import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
@@ -138,6 +139,20 @@ const summarizeStacks = (settings: any) => {
     displayStackType: Array.isArray(ds) ? 'array' : typeof ds,
     displayStackLen: Array.isArray(ds) ? ds.length : 0,
   };
+};
+
+const hasVisiblePanelTreeMembersInLocalStorage = (): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const raw = window.localStorage.getItem(EXCHANGE_CONTEXT_LS_KEY);
+    if (!raw) return false;
+
+    const parsed = JSON.parse(raw) as any;
+    return Array.isArray(parsed?.settings?.visiblePanelTreeMembers);
+  } catch {
+    return false;
+  }
 };
 
 /* ----------------------- DisplayStack hydration helpers ------------------- */
@@ -305,6 +320,23 @@ const computeVisibleDisplayStackFromPanels = (
   return path;
 };
 
+const expandVisiblePanelMembers = (
+  members: Array<{ panel: number }>,
+): SpCoinPanelTree => {
+  const visibleSet = new Set<number>();
+  for (const n of members) {
+    const id = Number((n as any)?.panel);
+    if (!Number.isFinite(id)) continue;
+    visibleSet.add(id);
+  }
+
+  return PANEL_DEFS.map((d) => ({
+    panel: d.id,
+    name: panelName(Number(d.id) as any),
+    visible: visibleSet.has(Number(d.id)),
+  }));
+};
+
 /* --------------------------------- Provider -------------------------------- */
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
@@ -352,6 +384,17 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const nextStr = stringifyBigInt(nextBase);
       if (prevStr === nextStr) {
+        if (!hasVisiblePanelTreeMembersInLocalStorage()) {
+          const normalized = clone(nextBase);
+          enforceSettingsDisplayStackOnly(normalized as any);
+          normalizeSettingsDisplayStack(normalized as any);
+          (normalized as any).settings = {
+            ...(normalized as any).settings,
+            spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
+          };
+          persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
+        }
+
         if (TRACE_DISPLAYSTACK) {
           // eslint-disable-next-line no-console
           console.groupEnd();
@@ -405,8 +448,19 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
 
       // NOTE: persisted panels are stored as a *flat* list (SpCoinPanelTree).
-      const storedPanels =
+      const storedPanelsRaw =
         settingsAny.spCoinPanelTree as SpCoinPanelTree | undefined;
+      const visibleMembersRaw = settingsAny.visiblePanelTreeMembers as
+        | Array<{ panel: number }>
+        | undefined;
+
+      const storedPanels =
+        Array.isArray(visibleMembersRaw)
+          ? expandVisiblePanelMembers(visibleMembersRaw as any)
+          : settingsAny.spCoinPanelTreeCompact === true &&
+            Array.isArray(storedPanelsRaw)
+            ? expandVisiblePanelMembers(storedPanelsRaw as any)
+          : storedPanelsRaw;
 
       const repaired = repairPanels(
         isMainPanels(storedPanels) ? storedPanels : undefined,

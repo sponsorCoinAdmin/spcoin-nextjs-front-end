@@ -13,6 +13,7 @@ import {
 } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 /* --------------------------------- Version --------------------------------- */
 
@@ -26,15 +27,21 @@ export const PANEL_SCHEMA_VERSION = 2;
  */
 export function PanelBootstrap() {
   const { activeMainOverlay, openPanel } = usePanelTree();
+  const { exchangeContext } = useExchangeContext();
   const did = useRef(false);
 
   useEffect(() => {
     if (did.current) return;
     did.current = true;
 
+    // If this key exists (even as []), treat it as authoritative persisted intent.
+    const hasPersistedVisibleMembers = Array.isArray(
+      (exchangeContext as any)?.settings?.visiblePanelTreeMembers,
+    );
+
     // Only pick a default if nothing is selected (rare),
     // so we never override a persisted choice.
-    if (activeMainOverlay == null) {
+    if (activeMainOverlay == null && !hasPersistedVisibleMembers) {
       queueMicrotask(() =>
         openPanel(
           SP_COIN_DISPLAY.TRADING_STATION_PANEL,
@@ -42,7 +49,7 @@ export function PanelBootstrap() {
         ),
       );
     }
-  }, [activeMainOverlay, openPanel]);
+  }, [activeMainOverlay, openPanel, exchangeContext]);
 
   return null;
 }

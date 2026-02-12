@@ -218,6 +218,44 @@ function lsPeek(key: string) {
   }
 }
 
+function compactPanelTreeSettings(coerced: ExchangeContext): ExchangeContext {
+  const settings = ((coerced as any)?.settings ?? {}) as any;
+  const rawTree = Array.isArray(settings?.spCoinPanelTree)
+    ? settings.spCoinPanelTree
+    : null;
+
+  if (!rawTree) return coerced;
+
+  const visibleMembers = rawTree
+    .filter((n: any) => Number.isFinite(Number(n?.panel)) && !!n?.visible)
+    .map((n: any) => {
+      const id = Number(n.panel) as SP_COIN_DISPLAY;
+      return {
+        panel: id,
+        name:
+          typeof n?.name === 'string' && n.name.trim().length
+            ? n.name
+            : panelName(id as any),
+      };
+    });
+
+  // Persist only the visible members list (no boolean flags).
+  // Runtime still uses settings.spCoinPanelTree in memory.
+  const {
+    spCoinPanelTree: _dropTree,
+    spCoinPanelTreeCompact: _dropCompact,
+    ...restSettings
+  } = settings;
+
+  return {
+    ...(coerced as any),
+    settings: {
+      ...restSettings,
+      visiblePanelTreeMembers: visibleMembers,
+    },
+  } as ExchangeContext;
+}
+
 export function persistWithOptDiff(
   prev: ExchangeContext | undefined,
   next: ExchangeContext,
@@ -261,7 +299,9 @@ export function persistWithOptDiff(
 
   try {
     // ✅ normalize + remove root displayStack (WITHOUT mutating state)
-    const coerced = enforceSettingsDisplayStackOnly(next);
+    const coerced = compactPanelTreeSettings(
+      enforceSettingsDisplayStackOnly(next),
+    );
 
     if (DEBUG_ENABLED_PERSIST) {
       debugPersist.log?.('[PersistExchangeContext] settings snapshot', {

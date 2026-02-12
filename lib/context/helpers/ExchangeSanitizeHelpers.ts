@@ -101,6 +101,14 @@ export const sanitizeExchangeContext = (
     delete sanitizedSettings.spCoinPanelTree;
   }
 
+  // Preserve compact persisted visible members (storage key rename).
+  const visibleMembers = prevSettings.visiblePanelTreeMembers;
+  if (Array.isArray(visibleMembers)) {
+    sanitizedSettings.visiblePanelTreeMembers = visibleMembers;
+  } else if (typeof visibleMembers !== 'undefined') {
+    delete sanitizedSettings.visiblePanelTreeMembers;
+  }
+
   // ----- NETWORK
   // Start with defaults, then overlay whatever was stored.
   let sanitizedNetwork = {
