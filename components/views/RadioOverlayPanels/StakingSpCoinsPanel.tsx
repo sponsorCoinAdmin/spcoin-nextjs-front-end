@@ -13,7 +13,7 @@ export default function StakingSpCoinsPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL}>
-      <div id="StakingSpCoinsPanel" className={`flex flex-col ${TSP_TW.gap}`}>
+      <div id="STAKING_SPCOINS_PANEL" className={`flex flex-col ${TSP_TW.gap}`}>
         <PanelGate panel={SP_COIN_DISPLAY.STAKE_TRADING_SPCOINS_PANEL}>
           <StakeTradingSpCoinsPanel />
         </PanelGate>

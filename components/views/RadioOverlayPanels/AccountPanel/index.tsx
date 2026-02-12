@@ -67,6 +67,15 @@ export default function AccountPanel(_props: Props) {
 
   return (
     <div id="ACCOUNT_PANEL">
+      {activeMember === 'SPONSOR_ACCOUNT' && (
+        <div id="SPONSOR_ACCOUNT" className="hidden" aria-hidden="true" />
+      )}
+      {activeMember === 'RECIPIENT_ACCOUNT' && (
+        <div id="RECIPIENT_ACCOUNT" className="hidden" aria-hidden="true" />
+      )}
+      {activeMember === 'AGENT_ACCOUNT' && (
+        <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
+      )}
       {isActiveAccount ? (
         <DisplayInfo account={activeWallet as any} />
       ) : (

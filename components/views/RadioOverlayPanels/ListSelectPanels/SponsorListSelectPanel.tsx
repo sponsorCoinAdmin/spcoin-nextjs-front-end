@@ -134,9 +134,17 @@ function SponsorListSelectInner({
 
   return (
     <div
-      id="SponsorListSelectPanel"
+      id={
+        activePanel === SP_COIN_DISPLAY.SPONSOR_LIST
+          ? 'SPONSOR_LIST'
+          : 'ACCOUNT_LIST_REWARDS_PANEL'
+      }
       className="h-full min-h-0 w-full flex flex-col overflow-hidden"
     >
+      {activePanel === SP_COIN_DISPLAY.SPONSOR_LIST && (
+        <div id="SPONSOR_LIST" className="hidden" aria-hidden="true" />
+      )}
+      <div id="ACCOUNT_LIST_SELECT_PANEL">
       <AssetSelectDisplayProvider>
         <AssetSelectProvider
           containerType={activePanel}
@@ -155,6 +163,7 @@ function SponsorListSelectInner({
           />
         </AssetSelectProvider>
       </AssetSelectDisplayProvider>
+      </div>
     </div>
   );
 }

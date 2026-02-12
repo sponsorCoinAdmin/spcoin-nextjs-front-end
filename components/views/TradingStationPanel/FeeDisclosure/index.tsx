@@ -12,7 +12,7 @@ const FeeDisclosure = () => {
   if (!show) return null;
 
   return (
-    <div className="relative top-[2px] left-[4px] text-[#94a3b8] text-[14px]">
+    <div id="FEE_DISCLOSURE" className="relative top-[2px] left-[4px] text-[#94a3b8] text-[14px]">
       Fee Disclosures
       <Image
         src={cog_png}

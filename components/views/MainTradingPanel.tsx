@@ -21,7 +21,8 @@ const AGENT_SUB_TITLE =
 export default function MainTradingPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
-      <div id="MainPage_ID" style={{ position: 'relative' }}>
+      <div id="MAIN_TRADING_PANEL" style={{ position: 'relative' }}>
+        <div id="UNDEFINED" className="hidden" aria-hidden="true" />
         {/* 🟢 Debug HUD: current active main overlay */}
         {SHOW_ACTIVE && (
           <div
@@ -62,7 +63,9 @@ export default function MainTradingPanel() {
 
         <div id="mainTradingPanel" className={styles.mainTradingPanel}>
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
-            <TradeContainerHeader />
+            <div id="TRADE_CONTAINER_HEADER">
+              <TradeContainerHeader />
+            </div>
           </PanelGate>
 
           {/* All radio/overlay panels are mounted here */}

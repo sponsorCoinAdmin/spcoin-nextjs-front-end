@@ -10,5 +10,9 @@ export default function SellSelectPanel() {
   const { isVisible } = usePanelTree();
   const sellVisible = isVisible(SP_TREE.SELL_SELECT_PANEL);
   if (!sellVisible) return null;
-  return <BaseSelectPanel containerType={SP_ROOT.SELL_SELECT_PANEL} />;
+  return (
+    <div id="SELL_SELECT_PANEL">
+      <BaseSelectPanel containerType={SP_ROOT.SELL_SELECT_PANEL} />
+    </div>
+  );
 }

@@ -315,11 +315,11 @@ function BaseSelectPanelInner() {
 
   return (
     <div
-      id='BaseSelectPanelInner'
+      id="BaseSelectPanelInner"
       className={clsx('relative', 'rounded-[12px] overflow-hidden')}
     >
       <input
-        id='TokenPanelInputAmount'
+        id="TokenPanelInputAmount"
         className={clsx(
           'w-full h-[106px] indent-[10px] pt-[10px]',
           'bg-[#1f2639] text-[#94a3b8] text-[25px]',

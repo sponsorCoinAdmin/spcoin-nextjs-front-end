@@ -99,7 +99,7 @@ export default function ErrorAssetPreview() {
 
   return (
     <div
-      id='ErrorAssetPreview'
+      id="ErrorAssetPreview"
       data-instance={instanceId}
       data-input-state={inputState}
       data-input-state-name={stateName}

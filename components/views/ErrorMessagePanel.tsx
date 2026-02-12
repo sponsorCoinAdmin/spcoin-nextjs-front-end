@@ -27,7 +27,7 @@ function ErrorMessagePanelInner() {
 
   return (
     <div
-      id="ErrorMessagePanel"
+      id="ERROR_MESSAGE_PANEL"
       className="flex flex-col gap-3 w-full rounded-[15px] overflow-hidden p-4
                  border border-red-500/40 bg-red-900/20 text-red-100"
       role="alert"

@@ -215,6 +215,9 @@ export default function TokenPanel(_props: Props) {
 
   return (
     <div id="TOKEN_PANEL">
+      {vBuyToken && <div id="BUY_CONTRACT" className="hidden" aria-hidden="true" />}
+      {vSellToken && <div id="SELL_CONTRACT" className="hidden" aria-hidden="true" />}
+      {vPreviewToken && <div id="PREVIEW_CONTRACT" className="hidden" aria-hidden="true" />}
       {/* Contract Address header pill */}
       {pillAddr ? (
         <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">

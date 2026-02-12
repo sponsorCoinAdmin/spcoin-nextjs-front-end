@@ -275,7 +275,7 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
-      id="AddSponsorshipPanel"
+      id="ADD_SPONSORSHIP_PANEL"
       className={`
         relative
         ${TSP_TW.container} ${TSP_TW.gap}

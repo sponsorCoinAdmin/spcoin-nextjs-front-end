@@ -109,7 +109,7 @@ const BuySellSwapArrowButton = () => {
   // This row sits between Sell and Buy and pulls itself upward
   return (
 <div
-  id='BuySellSwapArrowButton'
+  id="SWAP_ARROW_BUTTON"
   onClick={handleClick}
   className={`
     relative

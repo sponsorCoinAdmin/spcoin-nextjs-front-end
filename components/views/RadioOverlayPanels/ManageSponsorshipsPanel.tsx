@@ -205,6 +205,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   return (
     <div id="MANAGE_SPONSORSHIPS_PANEL">
+      {pendingVisible && (
+        <div id="MANAGE_PENDING_REWARDS" className="hidden" aria-hidden="true" />
+      )}
       <div className="mb-0">
         <AssetSelectDisplayProvider>
           <AssetSelectProvider

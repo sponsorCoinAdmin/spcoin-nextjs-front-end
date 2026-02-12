@@ -26,9 +26,15 @@ function AgentListSelectPanelInner() {
   };
 
   return (
-    <PanelListSelectWrapper
-      onCommit={handleCommit}
-      containerTypeOverride={SP_COIN_DISPLAY.AGENT_LIST}
-    />
+    <div id="AGENT_LIST_SELECT_PANEL">
+      <div id="ACCOUNT_LIST_SELECT_PANEL">
+        <div id="AGENT_LIST">
+          <PanelListSelectWrapper
+            onCommit={handleCommit}
+            containerTypeOverride={SP_COIN_DISPLAY.AGENT_LIST}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

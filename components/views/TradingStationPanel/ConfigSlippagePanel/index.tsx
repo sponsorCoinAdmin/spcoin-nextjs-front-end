@@ -52,7 +52,7 @@ const ConfigSlippagePanel: React.FC = () => {
 
   return (
     <div
-      id="ConfigSlippagePanel"
+      id="CONFIG_SLIPPAGE_PANEL"
       className="
         bg-[#1f2639] text-[#94a3b8]
         border-0 h-[45px]

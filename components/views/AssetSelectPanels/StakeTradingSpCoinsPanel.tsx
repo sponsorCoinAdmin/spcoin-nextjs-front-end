@@ -507,5 +507,9 @@ function BaseSelectPanel({ containerType }: { containerType: ContainerType }) {
 
 export default function StakeTradingSpCoinsPanel() {
   // SELL-select-only for this module
-  return <BaseSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />;
+  return (
+    <div id="STAKE_TRADING_SPCOINS_PANEL">
+      <BaseSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL} />
+    </div>
+  );
 }

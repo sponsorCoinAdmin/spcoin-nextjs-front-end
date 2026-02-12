@@ -82,7 +82,7 @@ export default function ManageSponsorsButton() {
 
   return (
     <div
-      id="manageSponsorshipsDiv"
+      id="MANAGE_SPONSORSHIPS_BUTTON"
       className={styles.manageSponsorshipsDiv}
       role="button"
       tabIndex={0}

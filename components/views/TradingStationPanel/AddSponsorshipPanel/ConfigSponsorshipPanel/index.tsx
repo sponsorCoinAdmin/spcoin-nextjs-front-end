@@ -60,7 +60,7 @@ const ConfigSlippagePanel: React.FC = () => {
 
   return (
     <div
-      id="SponsorRateConfig_ID"
+      id="CONFIG_SPONSORSHIP_PANEL"
       className="bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] rounded-b-[12px]"
     >
       <div className="relative">

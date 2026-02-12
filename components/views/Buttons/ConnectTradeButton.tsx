@@ -18,7 +18,7 @@ const ConnectTradeButton = ({ isLoadingPrice }: Props) => {
   if (!show) return null;
 
   return (
-    <div id="ConnectTradeButton">
+    <div id="CONNECT_TRADE_BUTTON">
       {!walletAddress ? <CustomConnectButton /> : <ExchangeButton isLoadingPrice={isLoadingPrice} />}
     </div>
   );

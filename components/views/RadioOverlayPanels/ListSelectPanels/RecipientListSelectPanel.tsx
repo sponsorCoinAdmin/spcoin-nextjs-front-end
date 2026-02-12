@@ -25,5 +25,16 @@ export default function RecipientListSelectPanel() {
     commitRecipient(asset as spCoinAccount);
   };
 
-  return <PanelListSelectWrapper onCommit={handleCommit} containerTypeOverride={SP_COIN_DISPLAY.RECIPIENT_LIST} />;
+  return (
+    <div id="RECIPIENT_LIST_SELECT_PANEL">
+      <div id="ACCOUNT_LIST_SELECT_PANEL">
+        <div id="RECIPIENT_LIST">
+          <PanelListSelectWrapper
+            onCommit={handleCommit}
+            containerTypeOverride={SP_COIN_DISPLAY.RECIPIENT_LIST}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }

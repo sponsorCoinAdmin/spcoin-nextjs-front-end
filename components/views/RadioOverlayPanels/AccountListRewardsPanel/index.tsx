@@ -186,14 +186,6 @@ export default function AccountListRewardsPanel({
 
   const showRewardsRow = cfgClaimSponsor || cfgClaimRecipient || cfgClaimAgent;
 
-  // ✅ idPrefix no longer depends on SPONSORS/RECIPIENTS/AGENTS visibility panels
-  const idPrefix = useMemo(() => {
-    if (cfgClaimRecipient) return 'mr';
-    if (cfgClaimAgent) return 'ma';
-    // sponsor pending OR unsponsor OR fallback
-    return 'ms';
-  }, [cfgClaimRecipient, cfgClaimAgent]);
-
   const claimRewards = useCallback((type: AccountType, accountId: number, label?: string) => {
     pendingClaimRef.current = { type, accountId, label };
     setShowToDo(true);
@@ -383,10 +375,25 @@ export default function AccountListRewardsPanel({
       ) : null}
 
       <div
-        id={`${idPrefix}Wrapper`}
+        id="ACCOUNT_LIST_REWARDS_PANEL"
         className={`${msTableTw.wrapper} !mt-0 mt-0 mt-3 mb-0 max-h-[45vh] md:max-h-[59vh] overflow-x-auto overflow-y-auto`}
         data-list-type={SP_COIN_DISPLAY[listType]}
       >
+        {listType === SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS && (
+          <div id="ACTIVE_SPONSORSHIPS" className="hidden" aria-hidden="true" />
+        )}
+        {listType === SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS && (
+          <div id="PENDING_SPONSOR_REWARDS" className="hidden" aria-hidden="true" />
+        )}
+        {listType === SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS && (
+          <div id="PENDING_RECIPIENT_REWARDS" className="hidden" aria-hidden="true" />
+        )}
+        {listType === SP_COIN_DISPLAY.PENDING_AGENT_REWARDS && (
+          <div id="PENDING_AGENT_REWARDS" className="hidden" aria-hidden="true" />
+        )}
+        {cfgChevronOpen && (
+          <div id="CHEVRON_DOWN_OPEN_PENDING" className="hidden" aria-hidden="true" />
+        )}
         <table id="ACCOUNT_LIST_REWARDS_TABLE" className={`min-w-full ${msTableTw.table}`}>
           <thead>
             <tr className={`${msTableTw.theadRow} sticky top-0 z-20`}>

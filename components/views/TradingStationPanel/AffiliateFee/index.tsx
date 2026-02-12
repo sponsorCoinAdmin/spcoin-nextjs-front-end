@@ -37,7 +37,7 @@ const AffiliateFee = ({ priceResponse }: Props) => {
   }, [show, priceResponse?.grossBuyAmount, decimals, symbol]);
 
   if (!text) return null;
-  return <div id="AffiliateFee" className="text-slate-400">{text}</div>;
+  return <div id="AFFILIATE_FEE" className="text-slate-400">{text}</div>;
 };
 
 export default AffiliateFee;

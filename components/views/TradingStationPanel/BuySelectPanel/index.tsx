@@ -11,5 +11,9 @@ export default function BuySelectPanel() {
   const { isVisible } = usePanelTree();
   const buyVisible = isVisible(SP_TREE.BUY_SELECT_PANEL);
   if (!buyVisible) return null;
-  return <BaseSelectPanel containerType={SP_ROOT.BUY_SELECT_PANEL} />;
+  return (
+    <div id="BUY_SELECT_PANEL">
+      <BaseSelectPanel containerType={SP_ROOT.BUY_SELECT_PANEL} />
+    </div>
+  );
 }

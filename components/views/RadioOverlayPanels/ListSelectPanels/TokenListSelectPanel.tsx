@@ -41,5 +41,10 @@ export default function TokenListSelectPanel() {
     commitToken(asset as TokenContract, side);
   };
 
-  return <PanelListSelectWrapper onCommit={handleCommit} />;
+  return (
+    <div id="TOKEN_LIST_SELECT_PANEL">
+      {buyMode && <div id="BUY_LIST_SELECT_PANEL" className="hidden" aria-hidden="true" />}
+      <PanelListSelectWrapper onCommit={handleCommit} />
+    </div>
+  );
 }

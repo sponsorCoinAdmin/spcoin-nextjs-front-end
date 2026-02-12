@@ -84,7 +84,7 @@ export default function AddSponsorshipButton() {
 
   return (
     <div
-      id="addSponsorshipDiv"
+      id="ADD_SPONSORSHIP_BUTTON"
       className={styles.addSponsorshipDiv}
       role="button"
       tabIndex={0}
