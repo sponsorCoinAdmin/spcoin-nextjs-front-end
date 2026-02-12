@@ -11,9 +11,10 @@ import BaseListRow from '@/components/views/ListItems/BaseListRow';
 
 import { useAssetSelectContext } from '@/lib/context';
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
-import { FEED_TYPE } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-import { useAppChainId } from '@/lib/context/hooks';
+import { useAppChainId, usePanelTree, usePreviewTokenContract, usePreviewTokenSource } from '@/lib/context/hooks';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 import {
   defaultMissingImage,
@@ -35,6 +36,11 @@ const debugLog = createDebugLogger(
 
 export default function RenderAssetPreview() {
   const [chainId] = useAppChainId();
+  const { openPanel } = usePanelTree();
+  const [, setPreviewTokenContract] = usePreviewTokenContract();
+  const [, setPreviewTokenSource] = usePreviewTokenSource();
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
   const ctx: any = useAssetSelectContext();
 
   const {
@@ -176,21 +182,52 @@ export default function RenderAssetPreview() {
 
   const onInfoClick = () => {
     if (feedType === FEED_TYPE.TOKEN_LIST) {
-      alert(`${name} Object:\n${stringifyBigInt(validatedAsset)}`);
+      if (!address) return;
+
+      const token: TokenContract = {
+        address: address as any,
+        name,
+        symbol,
+        logoURL: avatarSrc,
+        balance: 0n,
+      };
+
+      setPreviewTokenSource(buyMode ? 'BUY' : sellMode ? 'SELL' : null);
+      setPreviewTokenContract(token);
+      openPanel(
+        SP_COIN_DISPLAY.TOKEN_PANEL,
+        'RenderAssetPreview:onInfoClick(openTokenPanel)',
+      );
+      openPanel(
+        SP_COIN_DISPLAY.PREVIEW_CONTRACT,
+        'RenderAssetPreview:onInfoClick(openPreviewToken)',
+        SP_COIN_DISPLAY.TOKEN_PANEL,
+      );
+
+      debugLog.log?.('[onInfoClick] opened TOKEN_PANEL preview', {
+        address,
+        name,
+        symbol,
+      });
     } else {
-      alert(`Wallet JSON:\n${JSON.stringify(validatedAsset, null, 2)}`);
+      debugLog.log?.('[onInfoClick] wallet object', {
+        name,
+        wallet: validatedAsset,
+      });
     }
   };
 
   const onInfoContextMenu = () => {
     if (feedType === FEED_TYPE.TOKEN_LIST) {
-      alert(`${name} Logo URL: ${avatarSrc}`);
+      debugLog.log?.('[onInfoContextMenu] token logo URL', {
+        name,
+        avatarSrc,
+      });
     } else {
-      alert(
-        `${name} Record:\n${stringifyBigInt(
-          validatedAsset.logoURL || '',
-        )}`,
-      );
+      debugLog.log?.('[onInfoContextMenu] wallet logo record', {
+        name,
+        logoURL: stringifyBigInt(validatedAsset.logoURL || ''),
+      });
     }
   };
 

@@ -2,9 +2,12 @@
 'use client';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+const LOCAL_HEADER_KEY = 'latestFSMHeader';
+const LOCAL_TRACE_KEY = 'latestFSMTrace';
 const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
+const LIVE_SYNC_MS = 250;
 
 let clearTrace: (() => void) | null = null;
 let clearHeader: (() => void) | null = null;
@@ -15,22 +18,22 @@ const debugLog = createDebugLogger('FSMTracePanel', DEBUG_ENABLED, LOG_TIME);
 
 export function clearFSMHeaderFromMemory(): void {
   try {
-    localStorage.removeItem('latestFSMHeader');
+    localStorage.removeItem(LOCAL_HEADER_KEY);
     debugLog.log('Cleared latestFSMHeader from localStorage');
     if (clearHeader) clearHeader();
   } catch {
-    debugLog.error('[FSMTracePanel] ❌ Failed to clear FSM Header');
+    debugLog.error('[FSMTracePanel] Failed to clear FSM Header');
   }
 }
 
 export function clearFSMTraceFromMemory(): void {
   try {
-    localStorage.removeItem('latestFSMTrace');
+    localStorage.removeItem(LOCAL_TRACE_KEY);
     localStorage.removeItem(LOCAL_TRACE_LINES_KEY);
     debugLog.log('Cleared FSM trace from localStorage');
     if (clearTrace) clearTrace();
   } catch {
-    debugLog.error('[FSMTracePanel] ❌ Failed to clear FSM trace');
+    debugLog.error('[FSMTracePanel] Failed to clear FSM trace');
   }
 }
 
@@ -38,15 +41,16 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
   const [traceLines, setTraceLines] = useState<string | null>(null);
   const [headerString, setHeaderString] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<string | null>(null);
+  const lastRawHeaderRef = useRef<string | null>(null);
+  const lastRawTraceRef = useRef<string | null>(null);
+  const tracePreRef = useRef<HTMLPreElement | null>(null);
 
   useEffect(() => {
     clearTrace = () => {
-      debugLog.log('🔁 clearTrace called');
       setTraceLines(null);
     };
 
     clearHeader = () => {
-      debugLog.log('🔁 clearHeader called');
       setHeaderString(null);
       setTimestamp(null);
     };
@@ -60,58 +64,78 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
   useEffect(() => {
     if (!visible) return;
 
-    try {
-      const rawHeader = localStorage.getItem('latestFSMHeader');
-      const rawLines = localStorage.getItem(LOCAL_TRACE_LINES_KEY);
+    const syncFromStorage = () => {
+      try {
+        const rawHeader = localStorage.getItem(LOCAL_HEADER_KEY);
+        const rawLines = localStorage.getItem(LOCAL_TRACE_LINES_KEY);
 
-      if (rawLines) setTraceLines(rawLines);
-      else setTraceLines(null);
-
-      if (rawHeader) {
-        try {
-          const parsedHeader = JSON.parse(rawHeader);
-          const { timestamp: ts, ...rest } = parsedHeader ?? {};
-          setHeaderString(JSON.stringify(rest, null, 2));
-          setTimestamp(ts ?? null);
-        } catch {
-          debugLog.warn('[FSMTracePanel] ⚠️ Failed to parse rawHeader; showing raw text');
-          setHeaderString(rawHeader);
-          setTimestamp(null);
+        if (rawLines !== lastRawTraceRef.current) {
+          lastRawTraceRef.current = rawLines;
+          setTraceLines(rawLines);
         }
-      } else {
+
+        if (rawHeader !== lastRawHeaderRef.current) {
+          lastRawHeaderRef.current = rawHeader;
+
+          if (rawHeader) {
+            try {
+              const parsedHeader = JSON.parse(rawHeader);
+              const { timestamp: ts, ...rest } = parsedHeader ?? {};
+              setHeaderString(JSON.stringify(rest, null, 2));
+              setTimestamp(ts ?? null);
+            } catch {
+              debugLog.warn('[FSMTracePanel] Failed to parse rawHeader; showing raw text');
+              setHeaderString(rawHeader);
+              setTimestamp(null);
+            }
+          } else {
+            setHeaderString(null);
+            setTimestamp(null);
+          }
+        }
+      } catch {
+        debugLog.error('[FSMTracePanel] Failed to load FSM trace');
+        setTraceLines(null);
         setHeaderString(null);
         setTimestamp(null);
       }
-    } catch {
-      debugLog.error('[FSMTracePanel] ❌ Failed to load FSM trace');
-      setTraceLines(null);
-      setHeaderString(null);
-      setTimestamp(null);
-    }
+    };
+
+    syncFromStorage();
+
+    const intervalId = window.setInterval(syncFromStorage, LIVE_SYNC_MS);
+
+    const onStorage = (event: StorageEvent) => {
+      if (
+        event.key === LOCAL_HEADER_KEY ||
+        event.key === LOCAL_TRACE_LINES_KEY ||
+        event.key === null
+      ) {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('storage', onStorage);
+    };
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const el = tracePreRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [traceLines, visible]);
 
   if (!visible) return null;
 
   return (
-    <div>
-      <div className="mb-[6px] flex flex-wrap gap-4">
-        <button
-          onClick={clearFSMHeaderFromMemory}
-          className="rounded bg-[#243056] px-4 py-2 text-sm font-medium text-[#5981F3] hover:text-green-500"
-        >
-          🧹 Clear FSM Header
-        </button>
-
-        <button
-          onClick={clearFSMTraceFromMemory}
-          className="rounded bg-[#243056] px-4 py-2 text-sm font-medium text-[#5981F3] hover:text-green-500"
-        >
-          🧹 Clear FSM Trace
-        </button>
-      </div>
-
+    <div className="flex h-full min-h-0 flex-col">
       <h3 className="text-lg font-semibold">
-        📊 Last FSM State Trace{timestamp ? `: ${timestamp}` : ''}
+        Latest FSM State Trace{timestamp ? `: ${timestamp}` : ''}
       </h3>
 
       {headerString && (
@@ -120,7 +144,10 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
         </pre>
       )}
 
-      <pre className="mt-2 whitespace-pre-wrap rounded bg-gray-900 p-1 text-lg text-green-300">
+      <pre
+        ref={tracePreRef}
+        className="scrollbar-hide mt-2 min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap rounded bg-gray-900 p-1 text-lg text-green-300"
+      >
         {traceLines ?? '[No FSM trace lines found]'}
       </pre>
     </div>

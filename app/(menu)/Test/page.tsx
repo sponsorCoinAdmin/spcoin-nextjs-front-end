@@ -6,23 +6,30 @@ import { useRouter } from 'next/navigation';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestWallets';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
+import {
+  clearFSMHeaderFromMemory,
+  clearFSMTraceFromMemory,
+} from '@/components/debug/FSMTracePanel';
 
 const buttonClasses =
-  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
 
 export default function TestPage() {
   const router = useRouter();
   const { state, setState } = usePageState();
+  const { exchangeContext } = useExchangeContext();
   const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
   const { dumpNavStack } = usePanelTree();
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
   const [headerHeight, setHeaderHeight] = useState(72);
+  const [fsmPanelKey, setFsmPanelKey] = useState(0);
 
   // Use a loose shape so we can evolve flags without fighting types here
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -114,6 +121,12 @@ export default function TestPage() {
             : showToDo
               ? 'todo'
               : 'context';
+  const activeAccount = exchangeContext?.accounts?.activeAccount;
+  const activeAccountText =
+    activeAccount?.name?.trim() ||
+    activeAccount?.symbol?.trim() ||
+    activeAccount?.address?.trim() ||
+    'N/A';
 
   useEffect(() => {
     const hasOpenTab = showContext || showWallets || showToDo || showFSMTracePanel;
@@ -143,6 +156,16 @@ export default function TestPage() {
     router.push('/Exchange');
   }, [hideContext, router]);
 
+  const clearFSMHeader = useCallback(() => {
+    clearFSMHeaderFromMemory();
+    setFsmPanelKey((k) => k + 1);
+  }, []);
+
+  const clearFSMTrace = useCallback(() => {
+    clearFSMTraceFromMemory();
+    setFsmPanelKey((k) => k + 1);
+  }, []);
+
   useEffect(() => {
     const measure = () => {
       const header = document.querySelector('header');
@@ -166,26 +189,26 @@ export default function TestPage() {
     >
       <div className="flex h-full gap-4 overflow-hidden">
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="mb-4 flex flex-wrap items-center gap-4">
-            <label htmlFor="quickSwitchSelect" className="sr-only">
-              Run Test
-            </label>
-            <select
-              id="quickSwitchSelect"
-              className={buttonClasses}
-              value={selectedTab}
-              onChange={(e) => handleQuickSwitch(e.target.value)}
-              aria-label="Open Sponsor Coin Test Data"
-              title="Open Sponsor Coin Test Data"
-            >
-              <option value="context">Exchange Context</option>
-              <option value="fsm">FSM Trace</option>
-              <option value="wallets">Test Wallets</option>
-              <option value="todo">ToDo&apos;s</option>
-            </select>
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-4 bg-[#192134] pb-2">
+              <label htmlFor="quickSwitchSelect" className="sr-only">
+                Run Test
+              </label>
+              <select
+                id="quickSwitchSelect"
+                className={buttonClasses}
+                value={selectedTab}
+                onChange={(e) => handleQuickSwitch(e.target.value)}
+                aria-label="Open Sponsor Coin Test Data"
+                title="Open Sponsor Coin Test Data"
+              >
+                <option value="context">Exchange Context</option>
+                <option value="fsm">FSM Trace</option>
+                <option value="wallets">Sponsor Accounts</option>
+                <option value="todo">ToDo&apos;s</option>
+              </select>
 
-            {showContext && (
-              <>
+              {showContext && (
                 <div className="flex flex-wrap items-center gap-2">
                   <button onClick={onToggleExpand} className={buttonClasses}>
                     {expandContext ? 'Collapse Context' : 'Expand Context'}
@@ -197,33 +220,60 @@ export default function TestPage() {
                     Panel Stack Dump
                   </button>
                 </div>
-                <button
-                  onClick={onCloseContext}
-                  aria-label="Close Context"
-                  title="Close Context"
-                  className="ml-auto h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-                  type="button"
-                >
-                  ×
-                </button>
-              </>
-            )}
-          </div>
+              )}
 
-          {/* Tabs: each owns its own Close/Hide button and updates PageState. */}
-          {showContext && (
-            <ExchangeContextTab
-              onToggleAllReady={(toggleAllFn) => {
-                toggleAllRef.current = toggleAllFn;
-              }}
-            />
-          )}
-          {showWallets && <TestWalletsTab />}
-          {showFSMTracePanel && <FSMTraceTab />}
-          {showToDo && <ToDoTab />}
+              {selectedTab === 'fsm' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={clearFSMHeader} className={buttonClasses}>
+                    Clear FSM Header
+                  </button>
+                  <button onClick={clearFSMTrace} className={buttonClasses}>
+                    Clear FSM Trace
+                  </button>
+                </div>
+              )}
+
+              {selectedTab === 'wallets' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={buttonClasses}>Active Account::</span>
+                  <input
+                    readOnly
+                    value={activeAccountText}
+                    className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 min-w-[260px]"
+                    aria-label="Active Account"
+                    title={activeAccountText}
+                  />
+                </div>
+              )}
+
+              <button
+                onClick={onCloseContext}
+                aria-label="Close Context"
+                title="Close Context"
+                className="ml-auto h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
+                type="button"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+              {/* Tabs: each owns its own Close/Hide button and updates PageState. */}
+              {showContext && (
+                <ExchangeContextTab
+                  onToggleAllReady={(toggleAllFn) => {
+                    toggleAllRef.current = toggleAllFn;
+                  }}
+                />
+              )}
+              {showWallets && <TestWalletsTab />}
+              {showFSMTracePanel && <FSMTraceTab panelKey={fsmPanelKey} />}
+              {showToDo && <ToDoTab />}
+            </div>
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1 overflow-hidden border-l border-slate-700 pl-4">
+        <div className="scrollbar-hide min-w-0 flex-1 overflow-y-auto overflow-x-hidden border-l border-slate-700 pl-4">
           <div className="flex h-full min-h-0 flex-col items-center justify-between p-24">
             <PriceView />
           </div>
@@ -232,3 +282,4 @@ export default function TestPage() {
     </div>
   );
 }
+

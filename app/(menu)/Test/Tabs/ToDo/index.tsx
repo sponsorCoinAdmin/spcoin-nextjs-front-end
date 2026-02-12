@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { usePageState } from '@/lib/context/PageStateContext';
 
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
 import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields';
@@ -16,51 +15,14 @@ import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20
 
 export default function ToDoTab() {
   const { exchangeContext } = useExchangeContext();
-  const { setState } = usePageState();
 
   const tokenAddress = useMemo(
     () => exchangeContext?.tradeData?.sellTokenContract?.address,
     [exchangeContext]
   );
 
-  const updateExchangePage = useCallback((updates: any) => {
-    setState((prev: any) => ({
-      ...prev,
-      page: {
-        ...prev?.page,
-        exchangePage: {
-          ...(prev?.page?.exchangePage ?? {}),
-          ...updates,
-        },
-      },
-    }));
-  }, [setState]);
-
-  const hideToDo = useCallback(() => {
-    updateExchangePage({ showToDo: false });
-  }, [updateExchangePage]);
-
   return (
     <div className="space-y-6">
-      {/* Top bar: consistent with other tabs — centered controls (none) + Close X at top-right, shifted up 15px */}
-      <div className="relative w-full -mt-[15px]">
-        {/* Centered controls placeholder to keep layout consistent */}
-        <div className="flex flex-wrap items-center justify-center gap-4 py-2">
-          {/* (No buttons here yet) */}
-        </div>
-
-        {/* Top-right Close "X" (double text size) */}
-        <button
-          onClick={hideToDo}
-          aria-label="Close ToDo"
-          title="Close ToDo"
-          className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
-                     hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-        >
-          X
-        </button>
-      </div>
-
       {!tokenAddress ? (
         <div className="text-sm text-gray-400">
           Select a token to view ERC-20 details here.

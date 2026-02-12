@@ -99,3 +99,13 @@ footer {
 #msTable thead th {
   background-color: #2b2b2b !important;
 }
+
+/* Hide scrollbar visuals while preserving scroll behavior */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and old Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
