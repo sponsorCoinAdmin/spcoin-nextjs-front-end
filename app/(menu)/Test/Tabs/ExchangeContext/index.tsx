@@ -142,25 +142,25 @@ export default function ExchangeContextTab() {
 
   return (
     <div className="space-y-4">
-      <TopBar
-        expanded={expandContext}
-        onToggleExpand={() => {
-          const next = !expandContext;
-          setExpandContext(next);
-          toggleAll(next);
-          writePagesState({ expanded: next });
-        }}
-        onToggleGui={onToggleShowGui}
-        showGui={showGui}
-        onLog={logContext}
-        onClose={hideContext}
-        onToggleExchange={onToggleExchange}
-        showExchange={showExchange}
-      />
-
       <div className={containerClass}>
         {/* LEFT PANE (Exchange tree) */}
         <div className={leftPaneClass}>
+          <TopBar
+            expanded={expandContext}
+            onToggleExpand={() => {
+              const next = !expandContext;
+              setExpandContext(next);
+              toggleAll(next);
+              writePagesState({ expanded: next });
+            }}
+            onToggleGui={onToggleShowGui}
+            showGui={showGui}
+            onLog={logContext}
+            onClose={hideContext}
+            onToggleExchange={onToggleExchange}
+            showExchange={showExchange}
+          />
+
           <Row text="Exchange Context" depth={0} open />
 
           {/* Settings */}

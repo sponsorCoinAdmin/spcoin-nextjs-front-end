@@ -14,10 +14,6 @@ type Props = {
   showGui: boolean;
   onLog: () => void;
   onClose: () => void;
-
-  /** controls the left panel (Exchange) visibility */
-  onToggleExchange?: () => void;
-  showExchange?: boolean;
 };
 
 const TopBar: React.FC<Props> = ({
@@ -27,13 +23,7 @@ const TopBar: React.FC<Props> = ({
   showGui,
   onLog,
   onClose,
-  onToggleExchange,
-  showExchange,
 }) => {
-  // Safe fallbacks so this file doesn't break callers until they wire the new props.
-  const handleToggleExchange = onToggleExchange ?? (() => {});
-  const isExchangeVisible = showExchange ?? true;
-
   // Panel branch dump (debug)
   const { dumpNavStack } = usePanelTree();
 
@@ -54,10 +44,6 @@ const TopBar: React.FC<Props> = ({
       <div className="flex flex-wrap items-center justify-center gap-4 py-2">
         <button onClick={onToggleExpand} className={buttonClasses}>
           {expanded ? 'Collapse Context' : 'Expand Context'}
-        </button>
-
-        <button onClick={handleToggleExchange} className={buttonClasses}>
-          {isExchangeVisible ? 'Hide Context' : 'Show Context'}
         </button>
 
         <button onClick={onToggleGui} className={buttonClasses}>
