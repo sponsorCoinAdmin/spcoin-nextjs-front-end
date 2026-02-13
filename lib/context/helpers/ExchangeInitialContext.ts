@@ -60,6 +60,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       // ✅ REQUIRED by Settings: initialize empty persisted nav stack
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
+      showTestNets: false,
     },
     accounts: {
       // 🔹 Wallet-linked account (mirrors wagmi connection)

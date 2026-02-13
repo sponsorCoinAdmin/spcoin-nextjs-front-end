@@ -109,6 +109,9 @@ export type Settings = {
    * False or undefined means "started from defaults" (no LS data).
    */
   hydratedFromLocalStorage?: boolean;
+
+  /** Show/hide testnets in network selector dropdown. */
+  showTestNets?: boolean;
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */

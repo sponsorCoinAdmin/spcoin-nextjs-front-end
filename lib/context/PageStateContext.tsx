@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface ExchangePageState {
   showContext?: boolean;
@@ -36,17 +36,7 @@ const PageStateContext = createContext<{
 });
 
 export const PageStateProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<PageStateTree>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('PageStateContext');
-      return saved ? (JSON.parse(saved) as PageStateTree) : defaultState;
-    }
-    return defaultState;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('PageStateContext', JSON.stringify(state));
-  }, [state]);
+  const [state, setState] = useState<PageStateTree>(defaultState);
 
   return (
     <PageStateContext.Provider value={{ state, setState }}>

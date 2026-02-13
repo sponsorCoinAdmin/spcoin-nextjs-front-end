@@ -10,7 +10,7 @@ import {
   useDisconnect,
   useSwitchChain,
 } from 'wagmi';
-import { useAppChainId } from '@/lib/context/hooks';
+import { useAppChainId, useExchangeContext } from '@/lib/context/hooks';
 
 import ConnectMainButton from './ConnectMainButton';
 import ConnectDropDown from './ConnectDropDown';
@@ -19,7 +19,6 @@ import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
 import { useDropDownPortal } from './hooks/useDropDownPortal';
-import { usePersistentState } from './hooks/usePersistentState'; // optional
 
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
@@ -59,6 +58,7 @@ export default function ConnectNetworkButton({
 
   // 🔹 App chain id (single source of truth for UI/network selection)
   const [appChainId, setAppChainId] = useAppChainId();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   // wallet actions (with cancel/pending guards)
   const { connectMetaMask, switchTo } = useWalletActions({
@@ -70,11 +70,13 @@ export default function ConnectNetworkButton({
     closeDropdown: close,
   });
 
-  // testnet toggle (persisted)
-  const [showTestNets, setShowTestNets] = usePersistentState<boolean>(
-    'ck_show_testnets',
-    false,
-  );
+  // testnet toggle (persisted in ExchangeContext.settings)
+  const showTestNets = Boolean(exchangeContext?.settings?.showTestNets);
+
+  React.useEffect(() => {
+    // Cleanup legacy standalone key after migration.
+    window.localStorage.removeItem('ck_show_testnets');
+  }, []);
 
   return (
     <ConnectKitButton.Custom>
@@ -217,7 +219,18 @@ export default function ConnectNetworkButton({
                   mainnetOptions={mainnetOptions}
                   testnetOptions={testnetOptions}
                   showTestNets={showTestNets}
-                  onToggleShowTestNets={() => setShowTestNets((v) => !v)}
+                  onToggleShowTestNets={() =>
+                    setExchangeContext(
+                      (prev) => ({
+                        ...prev,
+                        settings: {
+                          ...prev.settings,
+                          showTestNets: !Boolean(prev.settings?.showTestNets),
+                        },
+                      }),
+                      'ConnectNetworkButton:onToggleShowTestNets',
+                    )
+                  }
                 />
               </DropDownPortal>
             )}

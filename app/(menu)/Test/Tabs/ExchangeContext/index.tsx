@@ -31,7 +31,6 @@ import {
 // Core header/panel components (registered here so they’re visible in the tree)
 import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
-import { TEST_EXCHANGE_CONTEXT_PAGES } from '@/lib/context/exchangeContext/localStorageKeys';
 
 type NamedVirtualNode = {
   id: number;
@@ -51,33 +50,13 @@ function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
   }));
 }
 
-type PagesState = { expanded?: boolean };
 type ExchangeContextTabProps = {
   onToggleAllReady?: (toggleAllFn: (nextExpand: boolean) => void) => void;
 };
 
-function readPagesState(): PagesState {
-  try {
-    if (typeof window === 'undefined') return {};
-    const raw = window.localStorage.getItem(TEST_EXCHANGE_CONTEXT_PAGES);
-    return raw ? (JSON.parse(raw) as PagesState) : {};
-  } catch {
-    return {};
-  }
-}
-function writePagesState(patch: PagesState) {
-  try {
-    const current = readPagesState();
-    const next = { ...current, ...patch };
-    window.localStorage.setItem(TEST_EXCHANGE_CONTEXT_PAGES, JSON.stringify(next));
-  } catch {
-    /* ignore */
-  }
-}
-
 export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContextTabProps) {
   const { exchangeContext } = useExchangeContext();
-  const { expandContext, setExpandContext } = useExchangePageState();
+  const { expandContext } = useExchangePageState();
   const { ui, toggleAll, togglePath, restRaw } = useExpandCollapse(exchangeContext, expandContext);
 
   // Build the virtual (display-only) tree from the builder
@@ -86,23 +65,6 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
     () => addNamesShallow(tree as unknown as NamedVirtualNode[]),
     [tree]
   );
-
-  // Restore initial expand state
-  useEffect(() => {
-    const { expanded } = readPagesState();
-    if (typeof expanded === 'boolean') {
-      // Keep the header's toggle in sync with last state,
-      // but DO NOT stomp the per-branch expansion map on boot.
-      setExpandContext(expanded);
-      // ❌ Do NOT call toggleAll(expanded) here.
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Persist UI prefs
-  useEffect(() => {
-    writePagesState({ expanded: expandContext });
-  }, [expandContext]);
 
   useEffect(() => {
     onToggleAllReady?.(toggleAll);

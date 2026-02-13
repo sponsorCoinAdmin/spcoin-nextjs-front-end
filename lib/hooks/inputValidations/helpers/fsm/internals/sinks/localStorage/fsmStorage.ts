@@ -30,7 +30,13 @@ export function getPrevLines(): string {
 
 export function appendLines(lines: string | string[]) {
   const prev = getPrevLines();
-  const block = Array.isArray(lines) ? lines.join('\n') : lines;
-  const combined = [prev, block].filter(Boolean).join('\n');
+  const blockRaw = Array.isArray(lines) ? lines.join('\n') : lines;
+  const normalize = (s: string) => s.replace(/\r\n/g, '\n');
+  const ensureTrailingNewline = (s: string) => (s.endsWith('\n') ? s : `${s}\n`);
+
+  const prevNorm = prev ? ensureTrailingNewline(normalize(prev)) : '';
+  const blockNorm = blockRaw ? ensureTrailingNewline(normalize(blockRaw)) : '';
+  const combined = `${prevNorm}${blockNorm}`;
+
   localStorage.setItem(LOCAL_TRACE_LINES_KEY, combined);
 }
