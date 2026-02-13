@@ -61,8 +61,8 @@ function SponsorListSelectPanelInner() {
   };
 
   return (
-    <div id="SPONSOR_LIST">
-      <div id="ACCOUNT_LIST_SELECT_PANEL">
+    <div id="SPONSOR_LIST" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <div id="ACCOUNT_LIST_SELECT_PANEL" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
         <PanelListSelectWrapper
           onCommit={handleCommit}
           containerTypeOverride={SP_COIN_DISPLAY.SPONSOR_LIST}
@@ -160,7 +160,7 @@ function SponsorListRewardsPanelInner() {
       id="ACCOUNT_LIST_REWARDS_PANEL"
       className="h-full min-h-0 w-full flex flex-col overflow-hidden"
     >
-      <div id="ACCOUNT_LIST_SELECT_PANEL">
+      <div id="ACCOUNT_LIST_SELECT_PANEL" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <AssetSelectDisplayProvider>
         <AssetSelectProvider
           containerType={activePanel}

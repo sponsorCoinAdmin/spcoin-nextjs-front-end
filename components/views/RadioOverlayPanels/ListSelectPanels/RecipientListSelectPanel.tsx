@@ -26,9 +26,9 @@ export default function RecipientListSelectPanel() {
   };
 
   return (
-    <div id="RECIPIENT_LIST_SELECT_PANEL">
-      <div id="ACCOUNT_LIST_SELECT_PANEL">
-        <div id="RECIPIENT_LIST">
+    <div id="RECIPIENT_LIST_SELECT_PANEL" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <div id="ACCOUNT_LIST_SELECT_PANEL" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+        <div id="RECIPIENT_LIST" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
           <PanelListSelectWrapper
             onCommit={handleCommit}
             containerTypeOverride={SP_COIN_DISPLAY.RECIPIENT_LIST}

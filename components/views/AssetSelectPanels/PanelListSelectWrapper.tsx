@@ -75,16 +75,20 @@ export default function PanelListSelectWrapper({ peerAddress, onCommit, containe
   );
 
   return (
-    <AssetSelectDisplayProvider instanceId={chainScopedInstanceId}>
-      <AssetSelectProvider
-        key={instanceId}
-        closePanelCallback={handleClose}
-        setSelectedAssetCallback={handleCommit}
-        containerType={containerType}
-        initialPanelBag={initialPanelBag}
-      >
-        <AssetListSelectPanel />
-      </AssetSelectProvider>
-    </AssetSelectDisplayProvider>
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <AssetSelectDisplayProvider instanceId={chainScopedInstanceId}>
+        <AssetSelectProvider
+          key={instanceId}
+          closePanelCallback={handleClose}
+          setSelectedAssetCallback={handleCommit}
+          containerType={containerType}
+          initialPanelBag={initialPanelBag}
+        >
+          <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+            <AssetListSelectPanel />
+          </div>
+        </AssetSelectProvider>
+      </AssetSelectDisplayProvider>
+    </div>
   );
 }
