@@ -48,9 +48,8 @@ export function headerLine(
   hex: string,
   feed?: FEED_TYPE
 ) {
-  const feedLabel = feedLabelOf(feed);
-  const prefix = feedLabel ? `${FEED_START}${feedLabel}${FEED_END} ` : '';
-  const header = `🧮 ${prefix}${SP_COIN_DISPLAY[containerType]} for Address ${hex}`;
+  void feed;
+  const header = `🧮 ${SP_COIN_DISPLAY[containerType]} FSM Address: ${hex}`;
   return header;
 }
 

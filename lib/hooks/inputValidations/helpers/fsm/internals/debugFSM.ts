@@ -4,9 +4,6 @@
 import { InputState } from '@/lib/structure/assetSelection';
 import { FEED_TYPE } from '@/lib/structure';
 
-export const LATEST_FSM_TRACE_KEY = 'latestFSMTrace';
-export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
-
 export function getStateIcon(state: InputState): string {
   switch (state) {
     case InputState.EMPTY_INPUT: return '🕳️';
@@ -69,16 +66,20 @@ export function formatTrace(
     return 'No FSM trace found.';
   }
 
-  const lines: string[] = [];
-  for (let i = 0; i < trace.length - 1; i++) {
-    const from = trace[i];
-    const to = trace[i + 1];
-    if (from === to) continue; // collapse no-op transitions
-    const color = i === 0 ? '🟢' : '🟡';
-    lines.push(`${color} ${getStateIcon(from)} ${InputState[from]} → ${getStateIcon(to)} ${InputState[to]}`);
+  const collapsed: InputState[] = [];
+  for (let i = 0; i < trace.length; i++) {
+    const s = trace[i];
+    if (i === 0 || s !== trace[i - 1]) collapsed.push(s);
   }
-  if (trace.length === 1) {
-    lines.push(`🟢 ${getStateIcon(trace[0])} ${InputState[trace[0]]}`);
+
+  const lines: string[] = [];
+  for (let i = 0; i < collapsed.length; i++) {
+    const s = collapsed[i];
+    const color = i === 0 ? '🟢' : '🟡';
+    const isLast = i === collapsed.length - 1;
+    lines.push(
+      `${color} ${getStateIcon(s)} ${InputState[s]}(${s})${isLast ? '' : ' →'}`,
+    );
   }
 
   // Optional sanitized header

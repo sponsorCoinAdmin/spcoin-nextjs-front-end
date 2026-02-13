@@ -5,7 +5,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEffect, useRef, useState } from 'react';
 
 const LOCAL_HEADER_KEY = 'latestFSMHeader';
-const LOCAL_TRACE_KEY = 'latestFSMTrace';
 const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 const LIVE_SYNC_MS = 250;
 
@@ -28,7 +27,6 @@ export function clearFSMHeaderFromMemory(): void {
 
 export function clearFSMTraceFromMemory(): void {
   try {
-    localStorage.removeItem(LOCAL_TRACE_KEY);
     localStorage.removeItem(LOCAL_TRACE_LINES_KEY);
     debugLog.log('Cleared FSM trace from localStorage');
     if (clearTrace) clearTrace();
