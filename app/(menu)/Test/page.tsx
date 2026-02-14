@@ -7,16 +7,13 @@ import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
-import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestAccounts';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
-import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
+import type { AccountFilter } from '@/components/Pages/AccountsPage';
 import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
@@ -26,6 +23,7 @@ const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
 
 type TestTab = 'context' | 'fsm' | 'wallets' | 'todo';
+const accountFilterOptions: AccountFilter[] = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'];
 
 export default function TestPage() {
   const router = useRouter();
@@ -36,6 +34,7 @@ export default function TestPage() {
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
   const [headerHeight, setHeaderHeight] = useState(72);
   const [fsmPanelKey, setFsmPanelKey] = useState(0);
+  const [walletFilter, setWalletFilter] = useState<AccountFilter>('All Accounts');
 
   // Use a loose shape so we can evolve flags without fighting types here
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -199,6 +198,26 @@ export default function TestPage() {
                 <option value="todo">ToDo&apos;s</option>
               </select>
 
+              {selectedTab === 'wallets' && (
+                <div className="inline-flex items-center gap-3">
+                  {accountFilterOptions.map((option) => (
+                    <label key={option} className="inline-flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="testAccountFilter"
+                        value={option}
+                        checked={walletFilter === option}
+                        onChange={() => setWalletFilter(option)}
+                        className="mr-2"
+                      />
+                      <span className={walletFilter === option ? 'text-green-400' : ''}>
+                        {option}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
               {selectedTab === 'context' && (
                 <div className="flex flex-wrap items-center gap-2">
                   <button onClick={onToggleExpand} className={buttonClasses}>
@@ -226,27 +245,6 @@ export default function TestPage() {
 
               {selectedTab === 'wallets' && (
                 <div className="mr-auto inline-flex items-center justify-start gap-2 min-w-0">
-                  <span className="text-sm font-medium text-[#5981F3] whitespace-nowrap">
-                    Active Account:
-                  </span>
-                  <div className="min-w-0" style={{ width: `${addressBoxWidthCh}ch` }}>
-                  <AssetSelectDisplayProvider>
-                    <AssetSelectProvider
-                      containerType={SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL}
-                      closePanelCallback={() => {}}
-                      setSelectedAssetCallback={() => {}}
-                    >
-                      <AddressSelect
-                        callingParent="TestPage"
-                        defaultAddress={defaultAddr}
-                        bypassDefaultFsm
-                        useActiveAddr
-                        makeEditable={false}
-                        showPreview={false}
-                      />
-                    </AssetSelectProvider>
-                  </AssetSelectDisplayProvider>
-                  </div>
                 </div>
               )}
 
@@ -270,7 +268,12 @@ export default function TestPage() {
                   }}
                 />
               )}
-              {selectedTab === 'wallets' && <TestWalletsTab />}
+              {selectedTab === 'wallets' && (
+                <TestWalletsTab
+                  selectedFilter={walletFilter}
+                  onSelectedFilterChange={setWalletFilter}
+                />
+              )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}
               {selectedTab === 'todo' && <ToDoTab />}
             </div>

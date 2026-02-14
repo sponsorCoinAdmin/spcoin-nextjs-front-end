@@ -8,14 +8,27 @@ import recipientJsonList from '@/resources/data/recipients/accounts.json';
 import sponsorJsonList from '@/resources/data/sponsors/accounts.json';
 import type { spCoinAccount } from '@/lib/structure';
 import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 const accontOptions = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
+export type AccountFilter = (typeof accontOptions)[number];
 
 type AccountsPageProps = {
     activeAccountText?: string;
+    selectedFilter?: AccountFilter;
+    onSelectedFilterChange?: (next: AccountFilter) => void;
+    showFilterControls?: boolean;
 };
 
-export default function AccountsPage({ activeAccountText }: AccountsPageProps) {
+export default function AccountsPage({
+    activeAccountText,
+    selectedFilter,
+    onSelectedFilterChange,
+    showFilterControls = true,
+}: AccountsPageProps) {
     const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
         All: [],
         Recipients: [],
@@ -23,11 +36,14 @@ export default function AccountsPage({ activeAccountText }: AccountsPageProps) {
         Sponsors: [],
     });
 
-    const [typeOfAcconts, setTypeOfAcconts] =
-        useState<(typeof accontOptions)[number]>('All Accounts');
+    const [internalTypeOfAcconts, setInternalTypeOfAcconts] =
+        useState<AccountFilter>('All Accounts');
+    const typeOfAcconts = selectedFilter ?? internalTypeOfAcconts;
+    const setTypeOfAcconts = onSelectedFilterChange ?? setInternalTypeOfAcconts;
     const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
+    const addressBoxWidthCh = Math.min(Math.max((activeAccountText ?? '').length, 22), 34);
 
     const fetchAcconts = async (forceReload = false) => {
         setErr(null);
@@ -88,35 +104,47 @@ export default function AccountsPage({ activeAccountText }: AccountsPageProps) {
             <div className="w-full border-[#444] text-white flex flex-col items-center">
                 <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-start w-full">
                     {activeAccountText && (
-                        <div className="flex items-center gap-2 mr-4">
-                            <span className="text-sm font-medium text-[#5981F3] whitespace-nowrap">
+                        <div className="mr-auto inline-flex items-center justify-start gap-2 min-w-0">
+                            <span className="text-sm text-slate-300/80 whitespace-nowrap">
                                 Active Account:
                             </span>
-                            <input
-                                readOnly
-                                value={activeAccountText}
-                                className="px-3 py-1 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 min-w-[280px]"
-                                aria-label="Active Account"
-                                title={activeAccountText}
-                            />
+                            <div className="min-w-0" style={{ width: `${addressBoxWidthCh}ch` }}>
+                                <AssetSelectDisplayProvider>
+                                    <AssetSelectProvider
+                                        containerType={SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL}
+                                        closePanelCallback={() => {}}
+                                        setSelectedAssetCallback={() => {}}
+                                    >
+                                        <AddressSelect
+                                            callingParent="AccountsPage"
+                                            defaultAddress={activeAccountText}
+                                            bypassDefaultFsm
+                                            useActiveAddr
+                                            makeEditable={false}
+                                            showPreview={false}
+                                        />
+                                    </AssetSelectProvider>
+                                </AssetSelectDisplayProvider>
+                            </div>
                         </div>
                     )}
 
-                    {accontOptions.map(option => (
-                        <label key={option} className="flex items-center cursor-pointer">
-                            <input
-                                type="radio"
-                                name="accountFilter"
-                                value={option}
-                                checked={typeOfAcconts === option}
-                                onChange={() => setTypeOfAcconts(option)}
-                                className="mr-2"
-                            />
-                            <span className={typeOfAcconts === option ? 'text-green-400' : ''}>
-                                {option}
-                            </span>
-                        </label>
-                    ))}
+                    {showFilterControls &&
+                        accontOptions.map(option => (
+                            <label key={option} className="flex items-center cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="accountFilter"
+                                    value={option}
+                                    checked={typeOfAcconts === option}
+                                    onChange={() => setTypeOfAcconts(option)}
+                                    className="mr-2"
+                                />
+                                <span className={typeOfAcconts === option ? 'text-green-400' : ''}>
+                                    {option}
+                                </span>
+                            </label>
+                        ))}
                 </div>
             </div>
 
