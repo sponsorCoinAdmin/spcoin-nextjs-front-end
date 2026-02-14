@@ -101,11 +101,11 @@ export default function AccountsPage({
         <div>
             {/* Full-width Header Panel */}
             <div className="w-full border-[#444] text-white flex flex-col items-center">
-                <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-start w-full">
+                <div className="flex items-center gap-3 text-[16px] mb-3 flex-wrap justify-center w-full">
                     {activeAccountText && (
-                        <div className="mr-4 inline-flex shrink-0 items-center justify-start gap-2">
+                        <div className="inline-flex shrink-0 items-center justify-center gap-2">
                             <span className="text-sm text-slate-300/80 whitespace-nowrap">
-                                Active Account:
+                                Active Accounts:
                             </span>
                             <div
                                 className="shrink-0 max-w-none"
