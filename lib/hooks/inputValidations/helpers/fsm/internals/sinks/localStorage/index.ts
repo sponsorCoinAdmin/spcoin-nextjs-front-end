@@ -46,8 +46,7 @@ export function createLocalStorageTraceSink(): TraceSink {
   return {
     onStart({ containerType, debouncedHexInput, feedType }: TraceStartArgs) {
       const normalizedInput = (debouncedHexInput ?? '').trim().toLowerCase();
-      shouldPersistRun =
-        normalizedInput.length > 0 && normalizedInput !== lastPersistedInput;
+      shouldPersistRun = normalizedInput !== lastPersistedInput;
 
       if (!shouldPersistRun) {
         runTrace = [];
