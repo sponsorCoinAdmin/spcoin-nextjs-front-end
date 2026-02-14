@@ -39,6 +39,9 @@ type Props = {
 
   /** Optional text prefix for the displayed address label. */
   preText?: string;
+
+  /** When true, input width tracks text size instead of filling available width. */
+  fitToText?: boolean;
 };
 
 export default function AddressSelect({
@@ -50,6 +53,7 @@ export default function AddressSelect({
   showPreview = true,
   shortAddr = false,
   preText,
+  fitToText = false,
 }: Props) {
   const {
     instanceId,
@@ -105,6 +109,7 @@ export default function AddressSelect({
     activeAddr: activeAddr || '(none)',
     shortAddr,
     preText: preText ?? '(undefined)',
+    fitToText,
   });
 
   // Enforce manualEntry=true when AddressSelect mounts
@@ -242,6 +247,7 @@ export default function AddressSelect({
 
   const showShortLabel = shortAddr && hasLabel;
   const showHexInput = !shortAddr;
+  const fitWidthCh = Math.max((baseDisplayAddress || '').length, 8);
 
   return (
     <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">
@@ -289,6 +295,8 @@ export default function AddressSelect({
       {showHexInput && (
         <HexAddressInput
           inputValue={validHexInput}
+          fullWidth={!fitToText}
+          fitWidthCh={fitToText ? fitWidthCh : undefined}
           onChange={(val) => {
             if (!makeEditable) {
               debugLog.log?.(

@@ -9,6 +9,8 @@ type HexAddressInputProps = {
   onChange: (val: string) => void;
   placeholder: string;
   statusEmoji?: string;
+  fullWidth?: boolean;
+  fitWidthCh?: number;
 };
 
 const LOG_TIME = false;
@@ -20,31 +22,34 @@ export default function HexAddressInput({
   onChange,
   placeholder,
   statusEmoji,
+  fullWidth = true,
+  fitWidthCh,
 }: HexAddressInputProps) {
   useEffect(() => {
-    debugLog.log('⚡ HexAddressInput rendered, current value:', inputValue);
+    debugLog.log('HexAddressInput rendered, current value:', inputValue);
   }, [inputValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // debugLog.log('✏️ [HexAddressInput]: HexAddressInput onChange fired with value:', e.target.value);
     onChange(e.target.value);
   };
+
+  const contentWidthCh = fitWidthCh ?? Math.max((inputValue || placeholder).length, 8);
+  const hasStatusEmoji = !!statusEmoji;
 
   return (
     <div
       className={`
         bg-[#243056]
         text-[#5981F3]
-        w-full
+        ${fullWidth ? 'w-full' : 'w-auto inline-flex'}
         mb-0
         rounded-[22px]
         flex
         items-center
-        px-3
-        gap-2
+        ${fullWidth ? 'px-3 gap-2' : 'px-2 gap-1'}
       `}
     >
-      <div className="text-lg">{statusEmoji}</div>
+      {hasStatusEmoji && <div className="text-lg">{statusEmoji}</div>}
       <input
         className={`
           bg-transparent
@@ -52,9 +57,11 @@ export default function HexAddressInput({
           outline-none
           text-white
           text-sm
-          w-full
+          ${fullWidth ? 'w-full' : 'w-auto'}
+          ${fullWidth ? '' : 'text-center'}
           py-2
         `}
+        style={!fullWidth ? { width: `${contentWidthCh}ch` } : undefined}
         autoComplete="off"
         placeholder={placeholder}
         value={inputValue}

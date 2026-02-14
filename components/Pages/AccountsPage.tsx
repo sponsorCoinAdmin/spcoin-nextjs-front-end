@@ -43,7 +43,6 @@ export default function AccountsPage({
     const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
-    const addressBoxWidthCh = Math.max((activeAccountText ?? '').length + 14, 48);
 
     const fetchAcconts = async (forceReload = false) => {
         setErr(null);
@@ -110,7 +109,6 @@ export default function AccountsPage({
                             </span>
                             <div
                                 className="shrink-0 max-w-none"
-                                style={{ width: 'fit-content', minWidth: `${addressBoxWidthCh}ch` }}
                             >
                                 <AssetSelectDisplayProvider>
                                     <AssetSelectProvider
@@ -125,6 +123,7 @@ export default function AccountsPage({
                                             useActiveAddr
                                             makeEditable={false}
                                             showPreview={false}
+                                            fitToText
                                         />
                                     </AssetSelectProvider>
                                 </AssetSelectDisplayProvider>
