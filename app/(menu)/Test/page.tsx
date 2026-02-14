@@ -199,9 +199,9 @@ export default function TestPage() {
               </select>
 
               {selectedTab === 'wallets' && (
-                <div className="inline-flex items-center gap-3">
+                <div className="inline-flex flex-1 items-center justify-center gap-3">
                   {accountFilterOptions.map((option) => (
-                    <label key={option} className="inline-flex items-center cursor-pointer">
+                    <label key={option} className="inline-flex items-center cursor-pointer text-[#5981F3]">
                       <input
                         type="radio"
                         name="testAccountFilter"
@@ -210,7 +210,7 @@ export default function TestPage() {
                         onChange={() => setWalletFilter(option)}
                         className="mr-2"
                       />
-                      <span className={walletFilter === option ? 'text-green-400' : ''}>
+                      <span className={walletFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
                         {option}
                       </span>
                     </label>
