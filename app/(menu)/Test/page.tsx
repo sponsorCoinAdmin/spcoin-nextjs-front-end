@@ -226,6 +226,9 @@ export default function TestPage() {
 
               {selectedTab === 'wallets' && (
                 <div className="inline-flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-[#5981F3] whitespace-nowrap">
+                    Active Account:
+                  </span>
                   <div className="min-w-0" style={{ width: `${addressBoxWidthCh}ch` }}>
                   <AssetSelectDisplayProvider>
                     <AssetSelectProvider
@@ -238,8 +241,7 @@ export default function TestPage() {
                         defaultAddress={defaultAddr}
                         bypassDefaultFsm
                         useActiveAddr
-                        preText="Active Account:"
-                        shortAddr
+                        makeEditable={false}
                         showPreview={false}
                       />
                     </AssetSelectProvider>
