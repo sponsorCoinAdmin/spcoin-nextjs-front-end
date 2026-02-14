@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import WalletsPage from '@/components/Pages/WalletsPage';
+import WalletsPage from '@/components/Pages/AccountsPage';
 
 export default function TestWalletsTab() {
   return (

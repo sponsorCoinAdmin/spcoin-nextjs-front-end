@@ -10,7 +10,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
-import TestWalletsTab from './Tabs/TestWallets';
+import TestWalletsTab from './Tabs/TestAccounts';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
 import {
@@ -35,7 +35,7 @@ export default function TestPage() {
   const pageAny: any = state.page?.exchangePage ?? {};
   const {
     showContext = false,
-    showWallets = false,
+    showAccounts = false,
     showToDo = false,
     showFSMTracePanel = false,
     selectedTestTab,
@@ -60,7 +60,7 @@ export default function TestPage() {
   // Open exactly one tab at a time
   const resetFlags = {
     showContext: false,
-    showWallets: false,
+    showAccounts: false,
     showToDo: false,
     showFSMTracePanel: false,
   } as const;
@@ -87,7 +87,7 @@ export default function TestPage() {
         case 'wallets':
           updateExchangePage({
             ...resetFlags,
-            showWallets: true,
+            showAccounts: true,
             selectedTestTab: 'wallets',
           });
           break;
@@ -116,7 +116,7 @@ export default function TestPage() {
         ? 'context'
         : showFSMTracePanel
           ? 'fsm'
-          : showWallets
+          : showAccounts
             ? 'wallets'
             : showToDo
               ? 'todo'
@@ -129,7 +129,7 @@ export default function TestPage() {
     'N/A';
 
   useEffect(() => {
-    const hasOpenTab = showContext || showWallets || showToDo || showFSMTracePanel;
+    const hasOpenTab = showContext || showAccounts || showToDo || showFSMTracePanel;
     if (hasOpenTab) return;
 
     switch (selectedTab) {
@@ -143,7 +143,7 @@ export default function TestPage() {
         handleQuickSwitch('context');
         break;
     }
-  }, [selectedTab, showContext, showWallets, showToDo, showFSMTracePanel, handleQuickSwitch]);
+  }, [selectedTab, showContext, showAccounts, showToDo, showFSMTracePanel, handleQuickSwitch]);
 
   const onToggleExpand = useCallback(() => {
     const next = !expandContext;
@@ -204,7 +204,7 @@ export default function TestPage() {
               >
                 <option value="context">Exchange Context</option>
                 <option value="fsm">FSM Trace</option>
-                <option value="wallets">Sponsor Accounts</option>
+                <option value="wallets">Account Lists</option>
                 <option value="todo">ToDo&apos;s</option>
               </select>
 
@@ -266,7 +266,7 @@ export default function TestPage() {
                   }}
                 />
               )}
-              {showWallets && <TestWalletsTab />}
+              {showAccounts && <TestWalletsTab />}
               {showFSMTracePanel && <FSMTraceTab panelKey={fsmPanelKey} />}
               {showToDo && <ToDoTab />}
             </div>

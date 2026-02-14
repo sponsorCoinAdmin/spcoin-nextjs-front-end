@@ -83,7 +83,7 @@ export default function WalletsPage() {
             {/* Full-width Header Panel */}
             <div className="w-full border-[#444] text-white flex flex-col items-center">
                 <h1 className="m-0 mt-2 text-[22px] font-bold">
-                    {typeOfWallets} Wallets
+                    {typeOfWallets} Accounts
                 </h1>
 
                 <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
@@ -91,7 +91,7 @@ export default function WalletsPage() {
                         <label key={option} className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
-                                name="walletFilter"
+                                name="accountFilter"
                                 value={option}
                                 checked={typeOfWallets === option}
                                 onChange={() => setTypeOfWallets(option)}

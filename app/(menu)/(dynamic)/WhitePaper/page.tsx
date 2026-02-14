@@ -1,4 +1,4 @@
-// File: @/app/(menu)/WhitePaper.tsx
+// File: @/app/(menu)/(dynamic)/WhitePaper/page.tsx
 'use client';
 
 import React from 'react';
