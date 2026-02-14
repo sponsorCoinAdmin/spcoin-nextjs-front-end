@@ -7,12 +7,16 @@ import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestAccounts';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
+import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
@@ -20,6 +24,8 @@ import {
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
+
+type TestTab = 'context' | 'fsm' | 'wallets' | 'todo';
 
 export default function TestPage() {
   const router = useRouter();
@@ -106,7 +112,7 @@ export default function TestPage() {
     [updateExchangePage],
   );
 
-  const selectedTab =
+  const selectedTab: TestTab =
     selectedTestTab === 'context' ||
     selectedTestTab === 'fsm' ||
     selectedTestTab === 'wallets' ||
@@ -118,32 +124,17 @@ export default function TestPage() {
           ? 'fsm'
           : showAccounts
             ? 'wallets'
-            : showToDo
+        : showToDo
               ? 'todo'
               : 'context';
   const activeAccount = exchangeContext?.accounts?.activeAccount;
-  const activeAccountText =
-    activeAccount?.name?.trim() ||
-    activeAccount?.symbol?.trim() ||
-    activeAccount?.address?.trim() ||
-    'N/A';
+  const defaultAddr = String(activeAccount?.address ?? '');
+  const addressBoxWidthCh = Math.min(Math.max(defaultAddr.length, 22), 34);
 
   useEffect(() => {
-    const hasOpenTab = showContext || showAccounts || showToDo || showFSMTracePanel;
-    if (hasOpenTab) return;
-
-    switch (selectedTab) {
-      case 'fsm':
-      case 'wallets':
-      case 'todo':
-      case 'context':
-        handleQuickSwitch(selectedTab);
-        break;
-      default:
-        handleQuickSwitch('context');
-        break;
-    }
-  }, [selectedTab, showContext, showAccounts, showToDo, showFSMTracePanel, handleQuickSwitch]);
+    // Keep legacy booleans synchronized to selected tab for callers that still read them.
+    handleQuickSwitch(selectedTab);
+  }, [selectedTab, handleQuickSwitch]);
 
   const onToggleExpand = useCallback(() => {
     const next = !expandContext;
@@ -190,7 +181,7 @@ export default function TestPage() {
       <div className="flex h-full gap-4 overflow-hidden">
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex h-full min-h-0 flex-col">
-            <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-4 bg-[#192134] pb-2">
+            <div className="sticky top-0 z-10 mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap bg-[#192134] pb-2">
               <label htmlFor="quickSwitchSelect" className="sr-only">
                 Run Test
               </label>
@@ -208,7 +199,7 @@ export default function TestPage() {
                 <option value="todo">ToDo&apos;s</option>
               </select>
 
-              {showContext && (
+              {selectedTab === 'context' && (
                 <div className="flex flex-wrap items-center gap-2">
                   <button onClick={onToggleExpand} className={buttonClasses}>
                     {expandContext ? 'Collapse Context' : 'Expand Context'}
@@ -234,15 +225,26 @@ export default function TestPage() {
               )}
 
               {selectedTab === 'wallets' && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={buttonClasses}>Active Account::</span>
-                  <input
-                    readOnly
-                    value={activeAccountText}
-                    className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 min-w-[260px]"
-                    aria-label="Active Account"
-                    title={activeAccountText}
-                  />
+                <div className="inline-flex items-center gap-2 min-w-0">
+                  <div className="min-w-0" style={{ width: `${addressBoxWidthCh}ch` }}>
+                  <AssetSelectDisplayProvider>
+                    <AssetSelectProvider
+                      containerType={SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL}
+                      closePanelCallback={() => {}}
+                      setSelectedAssetCallback={() => {}}
+                    >
+                      <AddressSelect
+                        callingParent="TestPage"
+                        defaultAddress={defaultAddr}
+                        bypassDefaultFsm
+                        useActiveAddr
+                        preText="Active Account:"
+                        shortAddr
+                        showPreview={false}
+                      />
+                    </AssetSelectProvider>
+                  </AssetSelectDisplayProvider>
+                  </div>
                 </div>
               )}
 
@@ -258,17 +260,17 @@ export default function TestPage() {
             </div>
 
             <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-              {/* Tabs: each owns its own Close/Hide button and updates PageState. */}
-              {showContext && (
+              {/* Single active tab host with common scroll behavior for all selections. */}
+              {selectedTab === 'context' && (
                 <ExchangeContextTab
                   onToggleAllReady={(toggleAllFn) => {
                     toggleAllRef.current = toggleAllFn;
                   }}
                 />
               )}
-              {showAccounts && <TestWalletsTab />}
-              {showFSMTracePanel && <FSMTraceTab panelKey={fsmPanelKey} />}
-              {showToDo && <ToDoTab />}
+              {selectedTab === 'wallets' && <TestWalletsTab />}
+              {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}
+              {selectedTab === 'todo' && <ToDoTab />}
             </div>
           </div>
         </div>

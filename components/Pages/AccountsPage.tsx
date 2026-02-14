@@ -1,4 +1,4 @@
-// File: @/components/Pages/WalletsPage.tsx
+// File: @/components/Pages/AccountsPage.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,27 +9,27 @@ import sponsorJsonList from '@/resources/data/sponsors/accounts.json';
 import type { spCoinAccount } from '@/lib/structure';
 import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 
-const walletOptions = ['All', 'Agents', 'Recipients', 'Sponsors'] as const;
+const accontOptions = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 
-export default function WalletsPage() {
-    const [walletCache, setWalletCache] = useState<Record<string, spCoinAccount[]>>({
+export default function AccountsPage() {
+    const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
         All: [],
         Recipients: [],
         Agents: [],
         Sponsors: [],
     });
 
-    const [typeOfWallets, setTypeOfWallets] =
-        useState<(typeof walletOptions)[number]>('All');
-    const [wallets, setWallets] = useState<spCoinAccount[]>([]);
+    const [typeOfAcconts, setTypeOfAcconts] =
+        useState<(typeof accontOptions)[number]>('All Accounts');
+    const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
-    const fetchWallets = async (forceReload = false) => {
+    const fetchAcconts = async (forceReload = false) => {
         setErr(null);
 
-        if (!forceReload && walletCache[typeOfWallets]?.length > 0) {
-            setWallets(walletCache[typeOfWallets]);
+        if (!forceReload && accontCache[typeOfAcconts]?.length > 0) {
+            setAcconts(accontCache[typeOfAcconts]);
             return;
         }
 
@@ -37,7 +37,7 @@ export default function WalletsPage() {
 
         let accountList;
 
-        switch (typeOfWallets) {
+        switch (typeOfAcconts) {
             case 'Recipients':
                 accountList = recipientJsonList;
                 break;
@@ -54,16 +54,16 @@ export default function WalletsPage() {
 
         let cancelled = false;
         try {
-            const downloadedWallets = await loadAccounts(accountList);
+            const downloadedAcconts = await loadAccounts(accountList);
             if (cancelled) return;
 
-            setWallets(downloadedWallets);
-            setWalletCache(prev => ({
+            setAcconts(downloadedAcconts);
+            setAccontCache(prev => ({
                 ...prev,
-                [typeOfWallets]: downloadedWallets,
+                [typeOfAcconts]: downloadedAcconts,
             }));
         } catch (e: any) {
-            if (!cancelled) setErr(e?.message ?? 'Failed to get wallets');
+            if (!cancelled) setErr(e?.message ?? 'Failed to get acconts');
         } finally {
             if (!cancelled) setLoading(false);
         }
@@ -74,43 +74,34 @@ export default function WalletsPage() {
     };
 
     useEffect(() => {
-        fetchWallets();
+        fetchAcconts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [typeOfWallets]);
+    }, [typeOfAcconts]);
 
     return (
         <div>
             {/* Full-width Header Panel */}
             <div className="w-full border-[#444] text-white flex flex-col items-center">
-                <h1 className="m-0 mt-2 text-[22px] font-bold">
-                    {typeOfWallets} Accounts
-                </h1>
-
                 <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
-                    {walletOptions.map(option => (
+                    {accontOptions.map(option => (
                         <label key={option} className="flex items-center cursor-pointer">
                             <input
                                 type="radio"
                                 name="accountFilter"
                                 value={option}
-                                checked={typeOfWallets === option}
-                                onChange={() => setTypeOfWallets(option)}
+                                checked={typeOfAcconts === option}
+                                onChange={() => setTypeOfAcconts(option)}
                                 className="mr-2"
                             />
-                            {option}
+                            <span className={typeOfAcconts === option ? 'text-green-400' : ''}>
+                                {option}
+                            </span>
                         </label>
                     ))}
-
-                    <button
-                        onClick={() => fetchWallets(true)}
-                        className="px-3 py-1.5 text-sm cursor-pointer border-0 bg-red-500 text-white rounded"
-                    >
-                        RELOAD
-                    </button>
                 </div>
             </div>
 
-            {/* Wallet List Section with Scrollable Pane */}
+            {/* Accont List Section with Scrollable Pane */}
             <main>
                 <div className="relative max-h-[500px] overflow-y-auto pr-2">
                     {loading ? (
@@ -119,16 +110,16 @@ export default function WalletsPage() {
                         <p className="text-center text-base text-red-400">Error: {err}</p>
                     ) : (
                         <ul className="list-none p-0 m-0">
-                            {wallets.map((wallet: spCoinAccount, index) => (
+                            {acconts.map((accont: spCoinAccount, index) => (
                                 <li
-                                    key={`${typeOfWallets}-${wallet.address}-${index}`}
+                                    key={`${typeOfAcconts}-${accont.address}-${index}`}
                                     className={`flex items-center p-3 mb-2 rounded ${index % 2 === 0
                                         ? 'bg-[#d6d6d6] text-[#000000]'   // light gray bg, black text
                                         : 'bg-[#000000] text-[#d6d6d6]'   // black bg, light gray text
                                         }`}
                                 >
                                     <img
-                                        src={getAccountLogo(wallet) || defaultMissingImage}
+                                        src={getAccountLogo(accont) || defaultMissingImage}
                                         alt="Logo"
                                         width={100}
                                         height={100}
@@ -136,10 +127,10 @@ export default function WalletsPage() {
                                     />
                                     <div className="text-inherit">
                                         <div className="text-lg font-bold mb-2">
-                                            {wallet.name || 'Unknown Wallet'}
+                                            {accont.name || 'Unknown Accont'}
                                         </div>
                                         <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                                            {JSON.stringify(wallet, null, 2)}
+                                            {JSON.stringify(accont, null, 2)}
                                         </pre>
                                     </div>
                                 </li>

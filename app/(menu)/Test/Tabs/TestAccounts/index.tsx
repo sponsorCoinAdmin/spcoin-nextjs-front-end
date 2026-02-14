@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import WalletsPage from '@/components/Pages/AccountsPage';
+import AccountsPage from '@/components/Pages/AccountsPage';
 
 export default function TestWalletsTab() {
   return (
     <div className="space-y-4">
       <div>
-        <WalletsPage />
+        <AccountsPage />
       </div>
     </div>
   );
