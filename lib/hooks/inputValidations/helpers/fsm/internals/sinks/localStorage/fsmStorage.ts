@@ -3,12 +3,23 @@
 
 import type { InputState } from '@/lib/structure/assetSelection';
 import { SEP_LINE } from './formatFSM';
+import { LAST_FSM_TRACE_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
-export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
+const LEGACY_TRACE_LINES_KEY = 'latestFSMTraceLines';
+export const LOCAL_TRACE_LINES_KEY = LAST_FSM_TRACE_KEY;
 
 export function getPrevLines(): string {
   try {
-    return localStorage.getItem(LOCAL_TRACE_LINES_KEY) || '';
+    const next = localStorage.getItem(LOCAL_TRACE_LINES_KEY);
+    if (next) return next;
+
+    // One-way fallback from old key name.
+    const legacy = localStorage.getItem(LEGACY_TRACE_LINES_KEY) || '';
+    if (legacy) {
+      localStorage.setItem(LOCAL_TRACE_LINES_KEY, legacy);
+      localStorage.removeItem(LEGACY_TRACE_LINES_KEY);
+    }
+    return legacy;
   } catch {
     return '';
   }

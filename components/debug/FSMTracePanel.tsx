@@ -3,9 +3,14 @@
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEffect, useRef, useState } from 'react';
+import {
+  LAST_FSM_TRACE_KEY,
+  LATEST_FSM_HEADER_KEY,
+} from '@/lib/context/exchangeContext/localStorageKeys';
 
-const LOCAL_HEADER_KEY = 'latestFSMHeader';
-const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
+const LOCAL_HEADER_KEY = LATEST_FSM_HEADER_KEY;
+const LOCAL_TRACE_LINES_KEY = LAST_FSM_TRACE_KEY;
+const LEGACY_TRACE_LINES_KEY = 'latestFSMTraceLines';
 const LIVE_SYNC_MS = 250;
 
 let clearTrace: (() => void) | null = null;
@@ -28,6 +33,7 @@ export function clearFSMHeaderFromMemory(): void {
 export function clearFSMTraceFromMemory(): void {
   try {
     localStorage.removeItem(LOCAL_TRACE_LINES_KEY);
+    localStorage.removeItem(LEGACY_TRACE_LINES_KEY);
     debugLog.log('Cleared FSM trace from localStorage');
     if (clearTrace) clearTrace();
   } catch {
@@ -107,6 +113,7 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
       if (
         event.key === LOCAL_HEADER_KEY ||
         event.key === LOCAL_TRACE_LINES_KEY ||
+        event.key === LEGACY_TRACE_LINES_KEY ||
         event.key === null
       ) {
         syncFromStorage();

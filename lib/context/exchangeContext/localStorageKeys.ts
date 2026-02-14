@@ -12,6 +12,7 @@ export const COLLAPSE_KEYS_MAP = 'CollapsedKeysMap';
 // FSM debug
 export const LATEST_FSM_HEADER_KEY = 'latestFSMHeader';
 export const LATEST_FSM_HEADER_LINES = 'latestFSMHeaderLines';
+export const LAST_FSM_TRACE_KEY = 'lastFsmTraceKey';
 
 // Header/tab state (stored in sessionStorage, but key lives here as single source of truth)
 export const HEADER_OPEN_TABS_KEY = 'header_open_tabs';
