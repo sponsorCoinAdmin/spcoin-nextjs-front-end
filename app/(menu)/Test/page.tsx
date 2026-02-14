@@ -225,7 +225,7 @@ export default function TestPage() {
               )}
 
               {selectedTab === 'wallets' && (
-                <div className="inline-flex items-center gap-2 min-w-0">
+                <div className="mr-auto inline-flex items-center justify-start gap-2 min-w-0">
                   <span className="text-sm font-medium text-[#5981F3] whitespace-nowrap">
                     Active Account:
                   </span>

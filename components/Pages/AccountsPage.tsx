@@ -11,7 +11,11 @@ import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/asset
 
 const accontOptions = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 
-export default function AccountsPage() {
+type AccountsPageProps = {
+    activeAccountText?: string;
+};
+
+export default function AccountsPage({ activeAccountText }: AccountsPageProps) {
     const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
         All: [],
         Recipients: [],
@@ -82,7 +86,22 @@ export default function AccountsPage() {
         <div>
             {/* Full-width Header Panel */}
             <div className="w-full border-[#444] text-white flex flex-col items-center">
-                <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
+                <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-start w-full">
+                    {activeAccountText && (
+                        <div className="flex items-center gap-2 mr-4">
+                            <span className="text-sm font-medium text-[#5981F3] whitespace-nowrap">
+                                Active Account:
+                            </span>
+                            <input
+                                readOnly
+                                value={activeAccountText}
+                                className="px-3 py-1 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 min-w-[280px]"
+                                aria-label="Active Account"
+                                title={activeAccountText}
+                            />
+                        </div>
+                    )}
+
                     {accontOptions.map(option => (
                         <label key={option} className="flex items-center cursor-pointer">
                             <input
