@@ -43,7 +43,7 @@ export default function AccountsPage({
     const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
-    const addressBoxWidthCh = Math.min(Math.max((activeAccountText ?? '').length, 22), 34);
+    const addressBoxWidthCh = Math.max((activeAccountText ?? '').length + 14, 48);
 
     const fetchAcconts = async (forceReload = false) => {
         setErr(null);
@@ -104,11 +104,14 @@ export default function AccountsPage({
             <div className="w-full border-[#444] text-white flex flex-col items-center">
                 <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-start w-full">
                     {activeAccountText && (
-                        <div className="mr-auto inline-flex items-center justify-start gap-2 min-w-0">
+                        <div className="mr-4 inline-flex shrink-0 items-center justify-start gap-2">
                             <span className="text-sm text-slate-300/80 whitespace-nowrap">
                                 Active Account:
                             </span>
-                            <div className="min-w-0" style={{ width: `${addressBoxWidthCh}ch` }}>
+                            <div
+                                className="shrink-0 max-w-none"
+                                style={{ width: 'fit-content', minWidth: `${addressBoxWidthCh}ch` }}
+                            >
                                 <AssetSelectDisplayProvider>
                                     <AssetSelectProvider
                                         containerType={SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL}
