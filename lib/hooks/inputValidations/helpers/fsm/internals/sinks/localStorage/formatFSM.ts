@@ -10,15 +10,10 @@ export const SEP_LINE =
 
 // Visible markers for the *intended* (prefix) feed
 const FEED_START = '[FEED<<';
-const FEED_END = '>>]';
 
 // Visible markers for a *trailing* (unexpected) feed appended downstream
 const TRAIL_START = '[TRAILING-FEED<<';
 const TRAIL_END = '>>]';
-
-function feedLabelOf(feed?: FEED_TYPE) {
-  return feed == null ? undefined : FEED_TYPE[feed] as string | undefined;
-}
 
 /** Public helper so emitters can mark unexpected trailing feed too */
 export function markTrailingFeedIfPresent(header: string, feed?: FEED_TYPE): string {

@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/hooks/useExpandCollapse.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/hooks/useExpandCollapse.ts
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

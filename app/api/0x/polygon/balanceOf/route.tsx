@@ -1,4 +1,4 @@
-// File: @/app/api/0x/polygon/balanceOf/route.tsx
+// File: app/api/0x/polygon/balanceOf/route.tsx
 'use server';
 
 import { getQueryVariable } from '@/lib/spCoin/coreUtils'

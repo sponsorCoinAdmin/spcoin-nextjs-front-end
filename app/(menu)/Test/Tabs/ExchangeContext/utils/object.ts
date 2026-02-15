@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/utils/object.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/utils/object.ts
 export function isObjectLike(v: any) {
   return v !== null && typeof v === 'object';
 }

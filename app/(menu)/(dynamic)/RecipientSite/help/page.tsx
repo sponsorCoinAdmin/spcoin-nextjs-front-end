@@ -1,4 +1,4 @@
-// File: @/app/(menu)/(dynamic)/RecipientSite/help/page.tsx
+// File: app/(menu)/(dynamic)/RecipientSite/help/page.tsx
 'use client';
 
 import React from 'react';

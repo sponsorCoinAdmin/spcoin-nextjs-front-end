@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Exchange/index.tsx
+// File: app/(menu)/Exchange/index.tsx
 
 import React from 'react';
 import PriceView from './Price';

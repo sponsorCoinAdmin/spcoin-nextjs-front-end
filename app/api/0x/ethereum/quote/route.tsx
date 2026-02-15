@@ -1,4 +1,4 @@
-// File: @/app/api/0x/ethereum/quote/route.tsx
+// File: app/api/0x/ethereum/quote/route.tsx
 'use server';
 
 import { BASE_URL } from '../networkConfig'

@@ -49,7 +49,7 @@ const LEGACY_WALLETS_KEY = 'wallets' as const;
 
 type WalletJson = Partial<spCoinAccount> & {
   balance?: string | number | bigint;
-  status?: unknown; // wallet.json may store string values
+  status?: unknown; // account.json may store string values
 };
 
 type HydrateOpts = {
@@ -146,7 +146,7 @@ function normalizeEnvBasePath(raw?: string): string | undefined {
  */
 function toAccountFolderKey(addr: Address): string {
   const a = String(addr).trim();
-  // wallet.json folders are "0X..." uppercase
+  // account.json folders are "0X..." uppercase
   return a.toUpperCase().replace(/^0X/, '0X');
 }
 
@@ -167,7 +167,7 @@ function getWalletJsonURL_SSOT(addr: Address): string {
   const base = normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW);
   if (base) {
     const key = toAccountFolderKey(addr);
-    return `${base}${key}/wallet.json`;
+    return `${base}${key}/account.json`;
   }
   return getWalletJsonURL(addr);
 }
@@ -206,7 +206,7 @@ function getTokenLogoURL_SSOT(chainId: number, addr: Address): string | undefine
 
 /* ----------------------------- SSOT fallbacks ----------------------------- */
 
-/** Consistent fallback shape for "not registered / missing wallet.json". */
+/** Consistent fallback shape for "not registered / missing account.json". */
 export function makeWalletFallback(
   addr: Address,
   status: STATUS,
@@ -241,7 +241,7 @@ export function makeWalletFallback(
 /* ----------------------------- main SSOT ----------------------------- */
 
 /**
- * ✅ SSOT: Hydrate a full spCoinAccount from `/public/assets/accounts/<ADDR>/wallet.json`.
+ * ✅ SSOT: Hydrate a full spCoinAccount from `/public/assets/accounts/<ADDR>/account.json`.
  * If NEXT_PUBLIC_ACCOUNT_PATH is present, it is used as the base for discovery.
  */
 export async function hydrateAccountFromAddress(address: Address, opts: HydrateOpts = {}): Promise<spCoinAccount> {
@@ -273,7 +273,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
   }
 
   const url = getWalletJsonURL_SSOT(addr);
-  debugLog.log?.('[hydrateAccountFromAddress] wallet.json URL', { addr, url });
+  debugLog.log?.('[hydrateAccountFromAddress] account.json URL', { addr, url });
 
   let json: WalletJson | undefined;
   try {
@@ -285,7 +285,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
       forceParse: true,
     });
 
-    debugLog.log?.('[hydrateAccountFromAddress] wallet.json fetched OK', {
+    debugLog.log?.('[hydrateAccountFromAddress] account.json fetched OK', {
       addr,
       url,
       keys: json && typeof json === 'object' ? Object.keys(json).slice(0, 30) : null,
@@ -295,7 +295,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
       status: (json as any)?.status,
     });
   } catch (err: any) {
-    debugLog.warn?.('[hydrateAccountFromAddress] wallet.json fetch FAILED -> fallback', {
+    debugLog.warn?.('[hydrateAccountFromAddress] account.json fetch FAILED -> fallback', {
       addr,
       url,
       err: String(err?.message ?? err),
@@ -411,7 +411,7 @@ function pickAddressFromSpec(spec: any): Address | undefined {
 
 /**
  * Build a spCoinAccount from a JSON "spec" entry using SSOT hydration.
- * - If spec has an address: hydrate from wallet.json and overlay any inline fields.
+ * - If spec has an address: hydrate from account.json and overlay any inline fields.
  * - If no valid address: returns a consistent fallback (error status).
  */
 async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {

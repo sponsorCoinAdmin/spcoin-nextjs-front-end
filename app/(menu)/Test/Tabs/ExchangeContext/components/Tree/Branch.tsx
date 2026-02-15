@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';

@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Markers.tsx
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Markers.tsx
 'use client';
 
 import React from 'react';

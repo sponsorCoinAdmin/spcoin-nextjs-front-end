@@ -35,7 +35,7 @@ const clone = <T,>(o: T): T =>
     : JSON.parse(JSON.stringify(o));
 
 /**
- * "Hydrated enough" = wallet.json likely applied.
+ * "Hydrated enough" = account.json likely applied.
  * Prevents duplicate hydration on boot (initExchangeContext already hydrated)
  * and avoids re-fetching on wagmi churn when address is unchanged.
  */

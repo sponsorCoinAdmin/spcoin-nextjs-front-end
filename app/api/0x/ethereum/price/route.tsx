@@ -1,4 +1,4 @@
-// File: @/app/api/0x/price/route.ts
+// File: app/api/0x/ethereum/price/route.tsx
 'use server';
 
 import { BASE_URL } from '../networkConfig';

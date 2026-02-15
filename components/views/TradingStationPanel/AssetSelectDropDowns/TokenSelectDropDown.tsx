@@ -217,15 +217,15 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         <>Select Token:</>
       )}
 
-      <ChevronDown
-        id="ChevronDown"
-        size={18}
-        className="ml-2 cursor-pointer"
+      <span
+        className="ml-2 inline-flex cursor-pointer"
         title={chevronTitle}
         onMouseDown={stopMouseDown}
         onClick={openTokenSelectPanel}
         data-testid="token-dropdown-chevron"
-      />
+      >
+        <ChevronDown id="ChevronDown" size={18} />
+      </span>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-// File: @/app/(menu)/ManageAccounts/page.tsx
+// File: app/(menu)/(dynamic)/(accounts)/ManageAccounts/page.tsx
 'use client';
 
 import React, { useState, useEffect, useContext } from 'react';

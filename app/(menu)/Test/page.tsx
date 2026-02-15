@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/page.tsx
+// File: app/(menu)/Test/page.tsx
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';

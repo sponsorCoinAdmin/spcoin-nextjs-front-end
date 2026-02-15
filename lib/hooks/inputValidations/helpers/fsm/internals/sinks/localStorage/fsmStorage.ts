@@ -1,7 +1,6 @@
 // File: @/lib/hooks/inputValidations/helpers/fsmStorage.ts
 'use client';
 
-import type { InputState } from '@/lib/structure/assetSelection';
 import { SEP_LINE } from './formatFSM';
 import { LAST_FSM_TRACE_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 

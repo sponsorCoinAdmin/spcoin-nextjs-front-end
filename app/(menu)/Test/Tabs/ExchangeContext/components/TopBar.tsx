@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/TopBar.tsx
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/TopBar.tsx
 'use client';
 
 import React, { useCallback } from 'react';

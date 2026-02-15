@@ -5,9 +5,9 @@
 import React, { useEffect, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import agentJsonList from '@/resources/data/agents/accounts.json';
-import recipientJsonList from '@/resources/data/recipients/accounts.json';
-import sponsorJsonList from '@/resources/data/sponsors/accounts.json';
+import agentJsonList from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
+import recipientJsonList from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
+import sponsorJsonList from '@/resources/data/mockFeeds/accounts/sponsors/accounts.json';
 import type { spCoinAccount } from '@/lib/structure';
 import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
@@ -44,10 +44,70 @@ function AccountsPage({
   const setTypeOfAcconts = onSelectedFilterChange ?? setInternalTypeOfAcconts;
   const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const PAGE_SIZE = 25;
+
+  const fetchAllAccontsPage = async (nextPage: number, replace = false) => {
+    if (nextPage <= 1) setLoading(true);
+    else setLoadingMore(true);
+    setErr(null);
+
+    try {
+      const res = await fetch(
+        `/api/spCoin/accounts?allData=true&page=${nextPage}&pageSize=${PAGE_SIZE}`,
+        { cache: 'no-store' },
+      );
+      if (!res.ok) throw new Error(`Failed to fetch acconts: ${res.status}`);
+      const payload = await res.json();
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      const mapped: spCoinAccount[] = items
+        .map((item: any) => {
+          const data = item?.data;
+          const address = item?.address;
+          if (!data || typeof data !== 'object') return null;
+          return {
+            ...data,
+            address: typeof data.address === 'string' ? data.address : address,
+          } as spCoinAccount;
+        })
+        .filter(Boolean);
+
+      setAcconts((prev) => {
+        if (replace) return mapped;
+        const seen = new Set(prev.map((a) => a.address?.toLowerCase?.() ?? ''));
+        const merged = [...prev];
+        for (const accont of mapped) {
+          const key = accont.address?.toLowerCase?.() ?? '';
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(accont);
+          }
+        }
+        return merged;
+      });
+      setPage(Number(payload?.page ?? nextPage));
+      setHasNextPage(Boolean(payload?.hasNextPage));
+    } catch (e: any) {
+      setErr(e?.message ?? 'Failed to get acconts');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
   const fetchAcconts = async (forceReload = false) => {
     setErr(null);
+
+    if (typeOfAcconts === 'All Accounts') {
+      if (!forceReload && acconts.length > 0) return;
+      setPage(1);
+      setHasNextPage(false);
+      await fetchAllAccontsPage(1, true);
+      return;
+    }
 
     if (!forceReload && accontCache[typeOfAcconts]?.length > 0) {
       setAcconts(accontCache[typeOfAcconts]);
@@ -56,20 +116,20 @@ function AccountsPage({
 
     setLoading(true);
 
-    let accountList;
+    let accountList: string[] = [];
 
     switch (typeOfAcconts) {
       case 'Recipients':
-        accountList = recipientJsonList;
+        accountList = recipientJsonList as string[];
         break;
       case 'Agents':
-        accountList = agentJsonList;
+        accountList = agentJsonList as string[];
         break;
       case 'Sponsors':
-        accountList = sponsorJsonList;
+        accountList = sponsorJsonList as string[];
         break;
       default:
-        accountList = [...recipientJsonList, ...agentJsonList];
+        accountList = [];
         break;
     }
 
@@ -98,6 +158,22 @@ function AccountsPage({
     fetchAcconts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeOfAcconts]);
+
+  useEffect(() => {
+    if (typeOfAcconts !== 'All Accounts' || !hasNextPage || loading || loadingMore) return;
+
+    const onScroll = () => {
+      const thresholdPx = 280;
+      const current = window.scrollY + window.innerHeight;
+      const full = document.documentElement.scrollHeight;
+      if (full - current <= thresholdPx && hasNextPage && !loadingMore && !loading) {
+        fetchAllAccontsPage(page + 1);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [typeOfAcconts, hasNextPage, loading, loadingMore, page]);
 
   return (
     <div>
@@ -156,34 +232,42 @@ function AccountsPage({
           ) : err ? (
             <p className="text-center text-base text-red-400">Error: {err}</p>
           ) : (
-            <ul className="list-none p-0 m-0">
-              {acconts.map((accont: spCoinAccount, index) => (
-                <li
-                  key={`${typeOfAcconts}-${accont.address}-${index}`}
-                  className={`flex items-center p-3 mb-2 rounded ${
-                    index % 2 === 0
-                      ? 'bg-[#d6d6d6] text-[#000000]'
-                      : 'bg-[#000000] text-[#d6d6d6]'
-                  }`}
-                >
-                  <img
-                    src={getAccountLogo(accont) || defaultMissingImage}
-                    alt="Logo"
-                    width={100}
-                    height={100}
-                    className="rounded-full border-2 border-gray-300 mr-3"
-                  />
-                  <div className="text-inherit">
-                    <div className="text-lg font-bold mb-2">
-                      {accont.name || 'Unknown Accont'}
+            <>
+              <ul className="list-none p-0 m-0">
+                {acconts.map((accont: spCoinAccount, index) => (
+                  <li
+                    key={`${typeOfAcconts}-${accont.address}-${index}`}
+                    className={`flex items-center p-3 mb-2 rounded ${
+                      index % 2 === 0
+                        ? 'bg-[#d6d6d6] text-[#000000]'
+                        : 'bg-[#000000] text-[#d6d6d6]'
+                    }`}
+                  >
+                    <img
+                      src={getAccountLogo(accont) || defaultMissingImage}
+                      alt="Logo"
+                      width={100}
+                      height={100}
+                      className="rounded-full border-2 border-gray-300 mr-3"
+                    />
+                    <div className="text-inherit">
+                      <div className="text-lg font-bold mb-2">
+                        {accont.name || 'Unknown Accont'}
+                      </div>
+                      <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
+                        {JSON.stringify(accont, null, 2)}
+                      </pre>
                     </div>
-                    <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                      {JSON.stringify(accont, null, 2)}
-                    </pre>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+              {typeOfAcconts === 'All Accounts' && loadingMore && (
+                <p className="text-center text-sm text-gray-400 py-3">Loading more accounts...</p>
+              )}
+              {typeOfAcconts === 'All Accounts' && !hasNextPage && acconts.length > 0 && (
+                <p className="text-center text-xs text-gray-500 py-2">End of list</p>
+              )}
+            </>
           )}
         </div>
       </main>

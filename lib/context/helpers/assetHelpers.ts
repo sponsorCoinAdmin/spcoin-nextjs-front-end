@@ -41,7 +41,7 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
 
 /**
  * Normalize an address into the canonical filesystem representation used
- * for on-disk directories (wallet.json, logo.png, etc).
+ * for on-disk directories (account.json, logo.png, etc).
  *
  * NOTE:
  * - We deliberately do NOT mutate any upstream state; callers should keep
@@ -259,15 +259,15 @@ export function getAccountLogo(account?: spCoinAccount): string {
 }
 
 /**
- * Helper for the account metadata JSON (wallet.json) path.
+ * Helper for the account metadata JSON (account.json) path.
  *
- * All callers that need `/assets/accounts/<addr>/wallet.json` should use this
+ * All callers that need `/assets/accounts/<addr>/account.json` should use this
  * so that directory case stays consistent across the app.
  */
 export function getWalletJsonURL(address?: string): string {
   const root = getWalletRoot(address);
   if (!root) return '';
-  return `${root}/wallet.json`;
+  return `${root}/account.json`;
 }
 
 /**

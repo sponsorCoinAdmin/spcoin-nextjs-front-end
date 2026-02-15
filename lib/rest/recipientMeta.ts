@@ -19,7 +19,7 @@ export type RecipientMeta = {
   symbol?: string;
   website?: string;
   logoURL?: string;
-  // add any other fields your wallet.json may include
+  // add any other fields your account.json may include
 };
 
 /**
@@ -35,7 +35,7 @@ export async function fetchRecipientMeta(
   // Canonical filesystem form (0X... uppercase) for directory paths
   const normalized = normalizeAddressForAssets(address);
 
-  // Primary location: /assets/accounts/<0X...>/wallet.json
+  // Primary location: /assets/accounts/<0X...>/account.json
   const primary = getWalletJsonURL(address);
 
   // Optional secondary base if you still use /resources/data/accounts
@@ -48,7 +48,7 @@ export async function fetchRecipientMeta(
   }
 
   if (normalized) {
-    candidates.push(`${secondaryBase}/${normalized}/wallet.json`);
+    candidates.push(`${secondaryBase}/${normalized}/account.json`);
   }
 
   debugLog.log?.('[recipientMeta] candidate URLs:', candidates);

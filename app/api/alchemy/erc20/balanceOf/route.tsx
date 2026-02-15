@@ -1,4 +1,4 @@
-// File: @/app/api/wagmi/getWagmiBalanceOfRec/route.ts
+// File: app/api/alchemy/erc20/balanceOf/route.tsx
 'use server';
 
 import { getURLParams } from '@/lib/getURLParams';

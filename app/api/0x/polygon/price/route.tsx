@@ -1,4 +1,4 @@
-// File: @/lib/api/0x/polygon/price/route.tsx
+// File: app/api/0x/polygon/price/route.tsx
 'use server';
 
 import { BASE_URL } from '../networkConfig'

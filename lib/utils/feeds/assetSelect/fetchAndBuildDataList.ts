@@ -6,10 +6,10 @@ import { FEED_TYPE, type FeedData } from '@/lib/structure';
 // ✅ Now from accountHydration (SSOT) — builders deleted.
 import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from '@/lib/context/helpers/accountHydration';
 
-// ✅ Management JSON placeholders (temporary stand-ins for on-chain reads)
-import sponsorsJson from '@/resources/data/spCoinMockTokenRequest/ManageSponsorships/sponsors.json';
-import recipientsJson from '@/resources/data/spCoinMockTokenRequest/ManageSponsorships/recipients.json';
-import agentsJson from '@/resources/data/spCoinMockTokenRequest/ManageSponsorships/agents.json';
+// ✅ Bundled account feeds
+import recipientsAccountsJson from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
+import agentsAccountsJson from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
+import sponsorsAccountsJson from '@/resources/data/mockFeeds/accounts/sponsors/accounts.json';
 
 // ✅ Bundled fallbacks
 import baseTokenListRaw from '@/resources/data/networks/base/tokenList.json';
@@ -17,10 +17,6 @@ import hardhatTokenListRaw from '@/resources/data/networks/hardhat/tokenList.jso
 import polygonTokenListRaw from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenListRaw from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.json';
-
-import recipientJsonListRaw from '@/resources/data/recipients/accounts.json';
-import agentJsonListRaw from '@/resources/data/agents/accounts.json';
-import sponsorJsonListRaw from '@/resources/data/sponsors/accounts.json';
 
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { getJson } from '@/lib/rest/http';
@@ -40,14 +36,14 @@ const LEGACY_WALLETS_KEY = 'wallets' as const;
 
 const SOURCES = {
   accounts: {
-    recipients: '@/resources/data/recipients/accounts.json',
-    agents: '@/resources/data/agents/accounts.json',
-    sponsors: '@/resources/data/sponsors/accounts.json',
+    recipients: '@/resources/data/mockFeeds/accounts/recipients/accounts.json',
+    agents: '@/resources/data/mockFeeds/accounts/agents/accounts.json',
+    sponsors: '@/resources/data/mockFeeds/accounts/sponsors/accounts.json',
   },
   manage: {
-    recipients: '@/components/views/ManageSponsorships/recipients.json',
-    agents: '@/components/views/ManageSponsorships/agents.json',
-    sponsors: '@/components/views/ManageSponsorships/sponsors.json',
+    recipients: '@/resources/data/mockFeeds/accounts/recipients/recipients.json',
+    agents: '@/resources/data/mockFeeds/accounts/agents/agents.json',
+    sponsors: '@/resources/data/mockFeeds/accounts/sponsors/sponsors.json',
   },
   tokenLists: {
     ethereum: '@/resources/data/networks/ethereum/tokenList.json',
@@ -55,6 +51,33 @@ const SOURCES = {
     polygon: '@/resources/data/networks/polygon/tokenList.json',
     hardhat: '@/resources/data/networks/hardhat/tokenList.json',
     sepolia: '@/resources/data/networks/sepolia/tokenList.json',
+  },
+} as const;
+
+const ACCOUNT_FEED_SOURCES = {
+  [FEED_TYPE.RECIPIENT_ACCOUNTS]: {
+    sourceId: SOURCES.accounts.recipients,
+    raw: recipientsAccountsJson as any,
+  },
+  [FEED_TYPE.AGENT_ACCOUNTS]: {
+    sourceId: SOURCES.accounts.agents,
+    raw: agentsAccountsJson as any,
+  },
+  [FEED_TYPE.SPONSOR_ACCOUNTS]: {
+    sourceId: SOURCES.accounts.sponsors,
+    raw: sponsorsAccountsJson as any,
+  },
+} as const;
+
+// Manage feeds currently reuse account feeds as placeholder data until dedicated sources are wired.
+const MANAGE_FEED_SOURCES = {
+  [FEED_TYPE.MANAGE_RECIPIENTS]: {
+    sourceId: SOURCES.manage.recipients,
+    raw: recipientsAccountsJson as any,
+  },
+  [FEED_TYPE.MANAGE_AGENTS]: {
+    sourceId: SOURCES.manage.agents,
+    raw: agentsAccountsJson as any,
   },
 } as const;
 
@@ -74,10 +97,6 @@ const hardhatTokenList = hardhatTokenListRaw as any[];
 const polygonTokenList = polygonTokenListRaw as any[];
 const sepoliaTokenList = sepoliaTokenListRaw as any[];
 const ethereumTokenList = ethereumTokenListRaw as any[];
-
-const recipientJsonSource = recipientJsonListRaw as any;
-const agentJsonSource = agentJsonListRaw as any;
-const sponsorJsonSource = sponsorJsonListRaw as any;
 
 function normalizeList(raw: any): any[] {
   if (Array.isArray(raw)) return raw;
@@ -127,24 +146,13 @@ function getFallbackListWithSource(
   feedType: FEED_TYPE,
   chainId?: number,
 ): { sourceId: string; sourceKind: 'bundled-fallback'; list: any[] } {
+  const accountSource = ACCOUNT_FEED_SOURCES[feedType as keyof typeof ACCOUNT_FEED_SOURCES];
+  if (accountSource) {
+    const list = normalizeList(accountSource.raw);
+    return { sourceId: accountSource.sourceId, sourceKind: 'bundled-fallback', list };
+  }
+
   switch (feedType) {
-    case FEED_TYPE.RECIPIENT_ACCOUNTS:
-    case FEED_TYPE.MANAGE_RECIPIENTS: {
-      const list = normalizeList(recipientJsonSource);
-      return { sourceId: SOURCES.accounts.recipients, sourceKind: 'bundled-fallback', list };
-    }
-
-    case FEED_TYPE.AGENT_ACCOUNTS:
-    case FEED_TYPE.MANAGE_AGENTS: {
-      const list = normalizeList(agentJsonSource);
-      return { sourceId: SOURCES.accounts.agents, sourceKind: 'bundled-fallback', list };
-    }
-
-    case FEED_TYPE.SPONSOR_ACCOUNTS: {
-      const list = normalizeList(sponsorJsonSource);
-      return { sourceId: SOURCES.accounts.sponsors, sourceKind: 'bundled-fallback', list };
-    }
-
     case FEED_TYPE.TOKEN_LIST: {
       switch (Number(chainId)) {
         case CHAIN_ID.ETHEREUM:
@@ -260,18 +268,9 @@ async function getDataListObjWithSource(
 // ──────────────────────────────────────────────────────────────────────────────
 
 function getManageJsonForFeed(feedType: FEED_TYPE): { sourceId: string; sourceKind: 'manage-json'; raw: any } | undefined {
-  switch (feedType) {
-    case FEED_TYPE.SPONSOR_ACCOUNTS:
-      return { sourceId: SOURCES.manage.sponsors, sourceKind: 'manage-json', raw: sponsorsJson };
-    case FEED_TYPE.AGENT_ACCOUNTS:
-    case FEED_TYPE.MANAGE_AGENTS:
-      return { sourceId: SOURCES.manage.agents, sourceKind: 'manage-json', raw: agentsJson };
-    case FEED_TYPE.RECIPIENT_ACCOUNTS:
-    case FEED_TYPE.MANAGE_RECIPIENTS:
-      return { sourceId: SOURCES.manage.recipients, sourceKind: 'manage-json', raw: recipientsJson };
-    default:
-      return undefined;
-  }
+  const manageSource = MANAGE_FEED_SOURCES[feedType as keyof typeof MANAGE_FEED_SOURCES];
+  if (!manageSource) return undefined;
+  return { sourceId: manageSource.sourceId, sourceKind: 'manage-json', raw: manageSource.raw };
 }
 
 /**

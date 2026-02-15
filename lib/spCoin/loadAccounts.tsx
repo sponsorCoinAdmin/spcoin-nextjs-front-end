@@ -19,13 +19,13 @@ const debugLog = createDebugLogger('loadAccounts', DEBUG_ENABLED, LOG_TIME);
 /**
  * Reads account file list from JSON and loads corresponding account data.
  * If jsonAccountFileList is provided, it loads specific accounts.
- * Otherwise, it scans `public/assets/accounts/` for wallet.json files.
+ * Otherwise, it scans `public/assets/accounts/` for account.json files.
  *
  * @param jsonAccountFileList - Optional list of AccountAddress objects.
  * @returns Promise<spCoinAccount[]>
  */
 export async function loadAccounts(
-  jsonAccountFileList?: AccountAddress[],
+  jsonAccountFileList?: Array<AccountAddress | string>,
 ): Promise<spCoinAccount[]> {
   debugLog.log?.('🔄 Starting loadAccounts on the server…', {
     hasList: !!jsonAccountFileList,
@@ -41,11 +41,13 @@ export async function loadAccounts(
   if (jsonAccountFileList && jsonAccountFileList.length > 0) {
     debugLog.log?.('🔎 Loading accounts from provided list…');
     for (const file of jsonAccountFileList) {
+      const rawAddress =
+        typeof file === 'string' ? file : (file as AccountAddress)?.address;
       // Use canonical filesystem folder name (0X... uppercase)
-      const folderName = normalizeAddressForAssets(file.address);
+      const folderName = normalizeAddressForAssets(rawAddress as any);
       if (!folderName) {
         console.error('❌ ERROR: Invalid account address in list', {
-          address: file.address,
+          address: rawAddress,
         });
         continue;
       }
@@ -53,7 +55,7 @@ export async function loadAccounts(
       const accountFilePath = path.join(
         accountsDir,
         folderName,
-        'wallet.json',
+        'account.json',
       );
 
       debugLog.log?.('📂 Checking account file', { accountFilePath });
@@ -84,7 +86,7 @@ export async function loadAccounts(
   } else {
     // ✅ If `jsonAccountFileList` is NOT provided, scan all `0x*` wallet directories
     debugLog.log?.(
-      '📂 No jsonAccountFileList provided. Scanning directory for wallet.json files…',
+      '📂 No jsonAccountFileList provided. Scanning directory for account.json files…',
       { accountsDir },
     );
 
@@ -104,7 +106,7 @@ export async function loadAccounts(
         const accountFilePath = path.join(
           accountsDir,
           accountFolder,
-          'wallet.json',
+          'account.json',
         );
 
         debugLog.log?.('📂 Checking wallet file', { accountFilePath });

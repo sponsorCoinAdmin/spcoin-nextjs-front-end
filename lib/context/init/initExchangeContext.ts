@@ -7,7 +7,7 @@ import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// ✅ SSOT account hydration (wallet.json + logo derivation)
+// ✅ SSOT account hydration (account.json + logo derivation)
 import {
   hydrateAccountFromAddress,
   makeWalletFallback,

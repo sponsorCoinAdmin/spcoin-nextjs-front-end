@@ -83,7 +83,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
         if (!ac.signal.aborted) {
           setActiveAccount(wallet);
           debugLog.log?.(
-            '[ActiveAccount] loaded wallet.json →',
+            '[ActiveAccount] loaded account.json →',
             stringifyBigInt(wallet),
           );
           debugLog.log?.('[ActiveAccount] website =', wallet.website);

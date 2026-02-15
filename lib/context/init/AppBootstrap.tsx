@@ -19,7 +19,7 @@ type AppBootstrapProps = {
 };
 
 export function AppBootstrap(_props: AppBootstrapProps) {
-  // 🔹 UI-level wallet (loaded from wallet.json or fallback)
+  // 🔹 UI-level wallet (loaded from account.json or fallback)
   const uiActiveAccount = useUiActiveAccount();
 
   // 🔹 ExchangeContext-level connected account

@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/state/enumRegistry.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/state/enumRegistry.ts
 import { FEED_TYPE, TRADE_DIRECTION } from '@/lib/structure';
 
 export const enumRegistry: Record<string, Record<number, string>> = {

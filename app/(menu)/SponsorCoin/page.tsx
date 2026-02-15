@@ -1,4 +1,4 @@
-// File: @/app/SponsorCoin/page.tsx
+// File: app/(menu)/SponsorCoin/page.tsx
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';

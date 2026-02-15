@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/hooks/useVirtualPanelTree.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/hooks/useVirtualPanelTree.ts
 'use client';
 
 import { useMemo } from 'react';

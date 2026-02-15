@@ -1,4 +1,4 @@
-// File: @/app/(menu)/layout.tsx
+// File: app/(menu)/layout.tsx
 
 import type { Metadata } from 'next'
 import '@/app/globals.css'

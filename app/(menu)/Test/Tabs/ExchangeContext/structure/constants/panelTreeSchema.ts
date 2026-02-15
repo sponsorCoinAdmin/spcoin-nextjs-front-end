@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
 import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';

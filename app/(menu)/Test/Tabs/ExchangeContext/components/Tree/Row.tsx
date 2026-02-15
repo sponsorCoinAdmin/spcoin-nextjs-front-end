@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Row.tsx
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Row.tsx
 'use client';
 
 import React, { useCallback } from 'react';

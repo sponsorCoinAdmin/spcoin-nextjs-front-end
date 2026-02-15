@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/utils/exCtxMapStorage.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/utils/exCtxMapStorage.ts
 'use client';
 
 import { EXCHANGE_CONTEXT_TREE_DISPLAY_MAP } from '@/lib/context/exchangeContext/localStorageKeys';

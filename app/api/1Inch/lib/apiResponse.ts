@@ -1,4 +1,4 @@
-// File: @/lib/api/oneInchResponse.ts
+// File: app/api/1Inch/lib/apiResponse.ts
 import { getURLParams } from '@/lib/getURLParams'
 import { getJson } from '@/lib/rest/http'
 import { createDebugLogger } from '@/lib/utils/debugLogger'

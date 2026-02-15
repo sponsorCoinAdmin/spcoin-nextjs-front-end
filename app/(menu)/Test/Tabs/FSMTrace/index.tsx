@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/FSMTrace/FSMTraceTab.tsx
+// File: app/(menu)/Test/Tabs/FSMTrace/index.tsx
 'use client';
 
 import React from 'react';

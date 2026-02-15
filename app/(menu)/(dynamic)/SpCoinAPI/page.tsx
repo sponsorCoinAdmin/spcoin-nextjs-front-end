@@ -1,3 +1,4 @@
+// File: app/(menu)/(dynamic)/SpCoinAPI/page.tsx
 'use client';
 
 import React, { useState } from 'react';

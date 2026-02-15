@@ -1,4 +1,4 @@
-// File: @/lib/api/0x/sepolia/price/route.tsx
+// File: app/api/0x/sepolia/price/route.tsx
 
 'use server';
 

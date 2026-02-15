@@ -1,4 +1,4 @@
-// File: @/lib/api/apiResponse.ts
+// File: app/api/0x/lib/apiResponse.ts
 import { getURLParams } from '@/lib/getURLParams'
 import { getJson } from '@/lib/rest/http'
 import { createDebugLogger } from '@/lib/utils/debugLogger'

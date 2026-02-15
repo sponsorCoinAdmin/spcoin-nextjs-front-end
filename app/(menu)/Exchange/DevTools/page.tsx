@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Exchange/DevTools/page.tsx
+// File: app/(menu)/Exchange/DevTools/page.tsx
 
 'use client';
 

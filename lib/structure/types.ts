@@ -201,7 +201,7 @@ export type TokenFeedType = FEED_TYPE.TOKEN_LIST;
 
 // ✅ Optional debug metadata we can attach without breaking UI
 export type FeedDebugMeta = {
-  sourceId?: string;        // e.g. "@/resources/data/sponsors/accounts.json"
+  sourceId?: string;        // e.g. "@/resources/data/mockFeeds/accounts/sponsors/accounts.json"
   sourceKind?: string;      // e.g. "bundled-resource" | "manage-json" | "remote-url"
   resolvedUrl?: string;     // if remote later
 };

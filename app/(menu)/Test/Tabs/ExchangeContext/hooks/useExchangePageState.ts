@@ -1,4 +1,4 @@
-// File: @/app/(menu)/Test/Tabs/ExchangeContext/hooks/useExchangePageState.ts
+// File: app/(menu)/Test/Tabs/ExchangeContext/hooks/useExchangePageState.ts
 'use client';
 
 import { useCallback } from 'react';
