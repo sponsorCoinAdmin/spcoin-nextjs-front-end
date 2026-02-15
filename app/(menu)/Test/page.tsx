@@ -18,17 +18,49 @@ import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
 } from '@/components/debug/FSMTracePanel';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
 
 type TestTab = 'context' | 'fsm' | 'wallets' | 'todo';
+type TestPageDisplay =
+  | SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT
+  | SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
+  | SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
+  | SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
 const accountFilterOptions: AccountFilter[] = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'];
+
+const buildTestPageFlags = (display: TestPageDisplay) => ({
+  TEST_PAGE_EXCHANGE_CONTEXT: display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
+  TEST_PAGE_FSM_TRACE: display === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE,
+  TEST_PAGE_ACCOUNT_LISTS: display === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS,
+  TEST_PAGE_TO_DOS: display === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS,
+});
+
+const getSelectedDisplayFromFlags = (
+  flags:
+    | {
+        TEST_PAGE_EXCHANGE_CONTEXT?: boolean;
+        TEST_PAGE_FSM_TRACE?: boolean;
+        TEST_PAGE_ACCOUNT_LISTS?: boolean;
+        TEST_PAGE_TO_DOS?: boolean;
+      }
+    | undefined,
+): TestPageDisplay | undefined => {
+  if (flags?.TEST_PAGE_EXCHANGE_CONTEXT) {
+    return SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
+  }
+  if (flags?.TEST_PAGE_FSM_TRACE) return SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE;
+  if (flags?.TEST_PAGE_ACCOUNT_LISTS) return SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS;
+  if (flags?.TEST_PAGE_TO_DOS) return SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
+  return undefined;
+};
 
 export default function TestPage() {
   const router = useRouter();
   const { state, setState } = usePageState();
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
   const { dumpNavStack } = usePanelTree();
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
@@ -45,6 +77,48 @@ export default function TestPage() {
     showFSMTracePanel = false,
     selectedTestTab,
   } = pageAny;
+  const selectedDisplay = getSelectedDisplayFromFlags(
+    exchangeContext?.settings?.testPage,
+  );
+  const legacySelectedDisplay = (exchangeContext as any)?.settings?.testPage
+    ?.selectedDisplay as TestPageDisplay | undefined;
+  const selectedDisplayResolved =
+    selectedDisplay ??
+    legacySelectedDisplay ??
+    SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
+
+  const selectedTabFromSettings: TestTab | undefined =
+    selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT
+      ? 'context'
+      : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
+        ? 'fsm'
+        : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
+          ? 'wallets'
+          : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+            ? 'todo'
+            : undefined;
+
+  const setTestPageSelectedDisplay = useCallback(
+    (display: TestPageDisplay) => {
+      setExchangeContext(
+        (prev) => {
+          const currentSelected = getSelectedDisplayFromFlags(
+            prev.settings?.testPage,
+          );
+          if (currentSelected === display) return prev;
+          return {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              testPage: buildTestPageFlags(display),
+            },
+          };
+        },
+        'TestPage:setTestPageSelectedDisplay',
+      );
+    },
+    [setExchangeContext],
+  );
 
   const updateExchangePage = useCallback(
     (updates: any) => {
@@ -73,9 +147,11 @@ export default function TestPage() {
   const handleQuickSwitch = useCallback(
     (value: string) => {
       if (!value) return;
+      let selectedDisplayFlag: TestPageDisplay | undefined;
 
       switch (value) {
         case 'context':
+          selectedDisplayFlag = SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
           updateExchangePage({
             ...resetFlags,
             showContext: true,
@@ -83,6 +159,7 @@ export default function TestPage() {
           });
           break;
         case 'fsm':
+          selectedDisplayFlag = SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE;
           updateExchangePage({
             ...resetFlags,
             showFSMTracePanel: true,
@@ -90,6 +167,7 @@ export default function TestPage() {
           });
           break;
         case 'wallets':
+          selectedDisplayFlag = SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS;
           updateExchangePage({
             ...resetFlags,
             showAccounts: true,
@@ -97,6 +175,7 @@ export default function TestPage() {
           });
           break;
         case 'todo':
+          selectedDisplayFlag = SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
           updateExchangePage({
             ...resetFlags,
             showToDo: true,
@@ -107,12 +186,16 @@ export default function TestPage() {
           break;
       }
 
+      if (selectedDisplayFlag !== undefined) {
+        setTestPageSelectedDisplay(selectedDisplayFlag);
+      }
     },
-    [updateExchangePage],
+    [setTestPageSelectedDisplay, updateExchangePage],
   );
 
   const selectedTab: TestTab =
-    selectedTestTab === 'context' ||
+    selectedTabFromSettings ??
+    (selectedTestTab === 'context' ||
     selectedTestTab === 'fsm' ||
     selectedTestTab === 'wallets' ||
     selectedTestTab === 'todo'
@@ -125,11 +208,7 @@ export default function TestPage() {
             ? 'wallets'
         : showToDo
               ? 'todo'
-              : 'context';
-  const activeAccount = exchangeContext?.accounts?.activeAccount;
-  const defaultAddr = String(activeAccount?.address ?? '');
-  const addressBoxWidthCh = Math.min(Math.max(defaultAddr.length, 22), 34);
-
+              : 'context');
   useEffect(() => {
     // Keep legacy booleans synchronized to selected tab for callers that still read them.
     handleQuickSwitch(selectedTab);

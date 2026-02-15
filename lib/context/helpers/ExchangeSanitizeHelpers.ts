@@ -1,6 +1,7 @@
 // File: @/lib/context/ExchangeSanitizeHelpers.ts
 
 import type { TradeData, ExchangeContext } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 import type {
   PanelNode,
@@ -62,6 +63,76 @@ function sanitizeDisplayStack(raw: any, sanitizedSettings: any) {
   // else: keep whatever defaultContext.settings had (if anything)
 }
 
+function mapDisplayToTestPageFlags(display?: number) {
+  return {
+    TEST_PAGE_EXCHANGE_CONTEXT:
+      display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
+    TEST_PAGE_FSM_TRACE: display === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE,
+    TEST_PAGE_ACCOUNT_LISTS:
+      display === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS,
+    TEST_PAGE_TO_DOS: display === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS,
+  };
+}
+
+function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
+  const testPageRaw = prevSettings?.testPage;
+  const nestedFlags =
+    testPageRaw && typeof testPageRaw === 'object' ? testPageRaw : undefined;
+  const legacyNestedFlags = testPageRaw?.testPage;
+  const hasTopLevelFlags =
+    !!nestedFlags &&
+    [
+      'TEST_PAGE_EXCHANGE_CONTEXT',
+      'TEST_PAGE_FSM_TRACE',
+      'TEST_PAGE_ACCOUNT_LISTS',
+      'TEST_PAGE_TO_DOS',
+    ].some((k) => typeof (nestedFlags as any)[k] === 'boolean');
+
+  if (hasTopLevelFlags) {
+    const selectedDisplay =
+      nestedFlags.TEST_PAGE_EXCHANGE_CONTEXT
+        ? SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT
+        : nestedFlags.TEST_PAGE_FSM_TRACE
+          ? SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
+          : nestedFlags.TEST_PAGE_ACCOUNT_LISTS
+            ? SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
+            : nestedFlags.TEST_PAGE_TO_DOS
+              ? SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+              : SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
+
+    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay);
+    return;
+  }
+
+  if (legacyNestedFlags && typeof legacyNestedFlags === 'object') {
+    const selectedDisplay =
+      legacyNestedFlags.TEST_PAGE_EXCHANGE_CONTEXT
+        ? SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT
+        : legacyNestedFlags.TEST_PAGE_FSM_TRACE
+          ? SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
+          : legacyNestedFlags.TEST_PAGE_ACCOUNT_LISTS
+            ? SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
+            : legacyNestedFlags.TEST_PAGE_TO_DOS
+              ? SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+              : SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
+
+    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay);
+    return;
+  }
+
+  const legacySelectedDisplay = testPageRaw?.selectedDisplay;
+  if (typeof legacySelectedDisplay === 'number') {
+    sanitizedSettings.testPage = mapDisplayToTestPageFlags(
+      legacySelectedDisplay,
+    );
+    return;
+  }
+
+  sanitizedSettings.testPage = mapDisplayToTestPageFlags(
+    SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
+  );
+}
+
 /**
  * Safely merges a raw (possibly partial or malformed) ExchangeContext object with defaults.
  * IMPORTANT:
@@ -91,6 +162,7 @@ export const sanitizeExchangeContext = (
 
   // ✅ enforce single source of truth for displayStack (settings only)
   sanitizeDisplayStack(raw as any, sanitizedSettings);
+  sanitizeTestPageSettings(prevSettings, sanitizedSettings);
 
   // Preserve persisted panel state if it looks like either the new tree or the old array
   const mpn = prevSettings.spCoinPanelTree;

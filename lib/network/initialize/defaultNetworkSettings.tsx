@@ -112,6 +112,12 @@ const getInitialContext = (
       // ✅ REQUIRED by Settings: initialize empty persisted nav stack
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
+      testPage: {
+        TEST_PAGE_EXCHANGE_CONTEXT: true,
+        TEST_PAGE_FSM_TRACE: false,
+        TEST_PAGE_ACCOUNT_LISTS: false,
+        TEST_PAGE_TO_DOS: false,
+      },
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,

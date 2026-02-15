@@ -112,6 +112,14 @@ export type Settings = {
 
   /** Show/hide testnets in network selector dropdown. */
   showTestNets?: boolean;
+
+  /** Test page UI selection persisted across reloads (mutually exclusive flags). */
+  testPage?: {
+    TEST_PAGE_EXCHANGE_CONTEXT: boolean;
+    TEST_PAGE_FSM_TRACE: boolean;
+    TEST_PAGE_ACCOUNT_LISTS: boolean;
+    TEST_PAGE_TO_DOS: boolean;
+  };
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */

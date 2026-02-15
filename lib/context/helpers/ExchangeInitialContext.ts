@@ -5,7 +5,10 @@ import type {
   NetworkElement,
   ExchangeContext,
 } from '@/lib/structure';
-import { API_TRADING_PROVIDER, TRADE_DIRECTION } from '@/lib/structure';
+import {
+  API_TRADING_PROVIDER,
+  TRADE_DIRECTION,
+} from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
@@ -61,6 +64,12 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
       showTestNets: false,
+      testPage: {
+        TEST_PAGE_EXCHANGE_CONTEXT: true,
+        TEST_PAGE_FSM_TRACE: false,
+        TEST_PAGE_ACCOUNT_LISTS: false,
+        TEST_PAGE_TO_DOS: false,
+      },
     },
     accounts: {
       // 🔹 Wallet-linked account (mirrors wagmi connection)

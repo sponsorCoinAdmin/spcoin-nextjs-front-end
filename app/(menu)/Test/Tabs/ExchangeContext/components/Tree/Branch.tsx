@@ -6,6 +6,7 @@ import Row from './Row';
 import { quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { MAIN_RADIO_OVERLAY_PANELS, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
@@ -145,6 +146,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    * has been removed from this UI component and is now enforced in usePanelTree().
    */
   const { openPanel, closePanel } = usePanelTree();
+  const { setExchangeContext } = useExchangeContext();
 
   const isArray = Array.isArray(value);
 
@@ -348,6 +350,55 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
   // ──────────────────────────────────────────────────────────────
   // LEAF NODES (primitives)
   // ──────────────────────────────────────────────────────────────
+  const testPageFlag =
+    label === 'TEST_PAGE_EXCHANGE_CONTEXT' ||
+    label === 'TEST_PAGE_FSM_TRACE' ||
+    label === 'TEST_PAGE_ACCOUNT_LISTS' ||
+    label === 'TEST_PAGE_TO_DOS'
+      ? label
+      : null;
+
+  const isTestPageOptionLeaf =
+    testPageFlag !== null &&
+    /rest\.settings\.testPage\.(TEST_PAGE_EXCHANGE_CONTEXT|TEST_PAGE_FSM_TRACE|TEST_PAGE_ACCOUNT_LISTS|TEST_PAGE_TO_DOS)$/.test(
+      path,
+    ) &&
+    typeof guiValue === 'boolean';
+
+  if (isTestPageOptionLeaf) {
+    const onSelectTestPageOption = () => {
+      const active = testPageFlag;
+      if (!active) return;
+      setExchangeContext(
+        (prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            testPage: {
+              TEST_PAGE_EXCHANGE_CONTEXT: active === 'TEST_PAGE_EXCHANGE_CONTEXT',
+              TEST_PAGE_FSM_TRACE: active === 'TEST_PAGE_FSM_TRACE',
+              TEST_PAGE_ACCOUNT_LISTS: active === 'TEST_PAGE_ACCOUNT_LISTS',
+              TEST_PAGE_TO_DOS: active === 'TEST_PAGE_TO_DOS',
+            },
+          },
+        }),
+        'Branch:selectTestPageOption',
+      );
+    };
+
+    return (
+      <Row
+        text={label}
+        path={path}
+        depth={depth}
+        open={Boolean(guiValue)}
+        clickable={true}
+        onClick={onSelectTestPageOption}
+        dense={dense}
+      />
+    );
+  }
+
   const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
 
