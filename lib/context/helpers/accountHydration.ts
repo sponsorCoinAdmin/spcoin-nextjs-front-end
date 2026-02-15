@@ -6,7 +6,8 @@ import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { getJson } from '@/lib/rest/http';
-import { getWalletJsonURL, getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { getAccountByAddress } from '@/lib/api';
+import { getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
@@ -160,19 +161,6 @@ function toTokenFolderKey(addr: Address): string {
 }
 
 /**
- * If NEXT_PUBLIC_ACCOUNT_PATH is set, build URLs from it.
- * Otherwise fall back to assetHelpers.
- */
-function getWalletJsonURL_SSOT(addr: Address): string {
-  const base = normalizeEnvBasePath(ENV_ACCOUNT_PATH_RAW);
-  if (base) {
-    const key = toAccountFolderKey(addr);
-    return `${base}${key}/account.json`;
-  }
-  return getWalletJsonURL(addr);
-}
-
-/**
  * Account logo url (SSOT)
  */
 function getAccountLogoURL_SSOT(addr: Address): string {
@@ -272,20 +260,17 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
     return makeWalletFallback(addr, opts.fallbackStatus ?? STATUS.INFO, 'Wallet metadata available on client only', opts.balance);
   }
 
-  const url = getWalletJsonURL_SSOT(addr);
-  debugLog.log?.('[hydrateAccountFromAddress] account.json URL', { addr, url });
+  const url = `/api/spCoin/accounts/${addr}`;
+  debugLog.log?.('[hydrateAccountFromAddress] account API URL', { addr, url });
 
   let json: WalletJson | undefined;
   try {
-    json = await getJson<WalletJson>(url, {
+    const response = await getAccountByAddress<WalletJson>(addr, {
       timeoutMs: 6000,
-      retries: 1,
-      accept: 'application/json',
-      init: { cache: 'no-store' },
-      forceParse: true,
     });
+    json = response?.data;
 
-    debugLog.log?.('[hydrateAccountFromAddress] account.json fetched OK', {
+    debugLog.log?.('[hydrateAccountFromAddress] account API fetched OK', {
       addr,
       url,
       keys: json && typeof json === 'object' ? Object.keys(json).slice(0, 30) : null,
@@ -295,7 +280,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
       status: (json as any)?.status,
     });
   } catch (err: any) {
-    debugLog.warn?.('[hydrateAccountFromAddress] account.json fetch FAILED -> fallback', {
+    debugLog.warn?.('[hydrateAccountFromAddress] account API fetch FAILED -> fallback', {
       addr,
       url,
       err: String(err?.message ?? err),

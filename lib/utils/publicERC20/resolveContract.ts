@@ -3,12 +3,11 @@ import { isAddress, type Address, type PublicClient } from 'viem';
 import type { TokenContract } from '@/lib/structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
-import { getJson, HttpError } from '@/lib/rest/http';
+import { getNativeTokenMeta } from '@/lib/api';
 
 const LOG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_CONTRACT === 'true';
 const debug = createDebugLogger('resolveContract', LOG_ENABLED);
 
-// ERC-20 metadata-only ABI (no balanceOf here)
 const erc20Abi = [
   { name: 'name', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'string' }] },
   { name: 'symbol', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'string' }] },
@@ -16,7 +15,6 @@ const erc20Abi = [
   { name: 'totalSupply', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// Minimal mapping so native tokens don’t show “NATIVE”
 const nativeSymbolByChain: Record<number, { name: string; symbol: string; decimals: number }> = {
   1: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   10: { name: 'Ether', symbol: 'ETH', decimals: 18 },
@@ -32,36 +30,19 @@ function isNativeSentinel(addr: string): boolean {
   return addr.toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
 }
 
-async function fetchNativeTokenMeta(
-  chainId: number
-): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
+async function fetchNativeTokenMetaSafe(
+  chainId: number,
+): Promise<{ name: string; symbol: string; decimals: number }> {
   const fallback = nativeSymbolByChain[chainId] ?? { name: 'Native Token', symbol: 'NATIVE', decimals: 18 };
   try {
-    const url = `/api/native-token/${chainId}`;
-    debug.log(`🌐 native meta → ${url}`);
-
-    const data = await getJson<{ name?: string; symbol?: string; decimals?: number }>(url, {
-      timeoutMs: 6000,
-      retries: 1,
-      backoffMs: 350,
-      accept: 'application/json',
-      forceParse: true,
-      init: { cache: 'no-store' },
-    });
-
-    debug.log('📦 native meta payload:', data);
-
+    const data = await getNativeTokenMeta(chainId, { timeoutMs: 6000 });
     return {
       name: typeof data?.name === 'string' ? data.name : fallback.name,
       symbol: typeof data?.symbol === 'string' ? data.symbol : fallback.symbol,
       decimals: Number.isFinite(data?.decimals) ? Number(data.decimals) : fallback.decimals,
     };
   } catch (err: any) {
-    if (err instanceof HttpError) {
-      debug.warn(`⚠️ native meta HTTP ${err.status} ${err.statusText} (${err.url}) :: ${err.bodyPreview ?? ''}`);
-    } else {
-      debug.error('❌ native meta get failed:', err?.message ?? err);
-    }
+    debug.error('native meta get failed:', err?.message ?? err);
     return fallback;
   }
 }
@@ -70,41 +51,29 @@ export async function resolveContract(
   tokenAddress: Address,
   chainId: number,
   publicClient: PublicClient,
-  _accountAddress?: Address
+  _accountAddress?: Address,
 ): Promise<TokenContract | undefined> {
   if (!tokenAddress) return undefined;
 
   const addrStr = String(tokenAddress);
-  debug.log('↪️ enter', { tokenAddress: addrStr, nativeConst: String(NATIVE_TOKEN_ADDRESS), chainId });
-
   if (!isAddress(tokenAddress)) {
-    debug.warn('⚠️ not a checksummed EVM address, aborting');
+    debug.warn('not a checksummed EVM address, aborting');
     return undefined;
   }
 
-  // Native path
   if (isNativeSentinel(addrStr)) {
-    debug.log('🟢 detected native sentinel, taking native path');
-
-    const meta = await fetchNativeTokenMeta(chainId);
-    const name = meta?.name ?? 'Native Token';
-    const symbol = meta?.symbol ?? 'NATIVE';
-    const decimals = meta?.decimals ?? 18;
-
-    const nativeToken: TokenContract = {
+    const meta = await fetchNativeTokenMetaSafe(chainId);
+    return {
       address: NATIVE_TOKEN_ADDRESS as Address,
-      name,
-      symbol,
-      decimals,
+      name: meta.name,
+      symbol: meta.symbol,
+      decimals: meta.decimals,
       totalSupply: 0n,
       balance: 0n,
       chainId,
     };
-    debug.log('✅ native token resolved (no balance)', nativeToken);
-    return nativeToken;
   }
 
-  // ERC-20 path
   try {
     const results = await publicClient.multicall({
       allowFailure: true,
@@ -117,12 +86,6 @@ export async function resolveContract(
     });
 
     const [nameRes, symbolRes, decimalsRes, totalSupplyRes] = results;
-    debug.log('🧪 multicall results (statuses)', {
-      name: nameRes.status,
-      symbol: symbolRes.status,
-      decimals: decimalsRes.status,
-      totalSupply: totalSupplyRes.status,
-    });
 
     const name =
       nameRes.status === 'success' && typeof nameRes.result === 'string' ? nameRes.result : 'Missing name';
@@ -133,7 +96,7 @@ export async function resolveContract(
     const totalSupply =
       totalSupplyRes.status === 'success' && typeof totalSupplyRes.result === 'bigint' ? totalSupplyRes.result : 0n;
 
-    const token: TokenContract = {
+    return {
       address: tokenAddress,
       name,
       symbol,
@@ -142,10 +105,8 @@ export async function resolveContract(
       balance: 0n,
       chainId,
     };
-    debug.log('✅ erc20 token resolved (no balance)', token);
-    return token;
   } catch (err: any) {
-    debug.error('❌ ERC-20 resolve failed:', err?.message ?? err);
+    debug.error('ERC-20 resolve failed:', err?.message ?? err);
     return undefined;
   }
 }

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { loadAccounts } from '@/lib/spCoin/loadAccounts';
+import { getAccountsBatch, getAccountsPage } from '@/lib/api';
 import agentJsonList from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
 import recipientJsonList from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
 import sponsorJsonList from '@/resources/data/mockFeeds/accounts/sponsors/accounts.json';
@@ -64,30 +64,28 @@ function AccountsPage({
   const isFetchingNextRef = useRef(false);
   const PAGE_SIZE = 25;
 
+  const mapApiItemsToAccounts = (items: any[]): spCoinAccount[] =>
+    items
+      .map((item: any) => {
+        const data = item?.data;
+        const address = item?.address;
+        if (!data || typeof data !== 'object') return null;
+        return {
+          ...data,
+          address: typeof data.address === 'string' ? data.address : address,
+        } as spCoinAccount;
+      })
+      .filter((x): x is spCoinAccount => x !== null);
+
   const fetchAllAccontsPage = async (nextPage: number, replace = false) => {
     if (nextPage <= 1) setLoading(true);
     else setLoadingMore(true);
     setErr(null);
 
     try {
-      const res = await fetch(
-        `/api/spCoin/accounts?allData=true&page=${nextPage}&pageSize=${PAGE_SIZE}`,
-        { cache: 'no-store' },
-      );
-      if (!res.ok) throw new Error(`Failed to fetch acconts: ${res.status}`);
-      const payload = await res.json();
+      const payload = await getAccountsPage<spCoinAccount>(nextPage, PAGE_SIZE);
       const items = Array.isArray(payload?.items) ? payload.items : [];
-      const mapped: spCoinAccount[] = items
-        .map((item: any) => {
-          const data = item?.data;
-          const address = item?.address;
-          if (!data || typeof data !== 'object') return null;
-          return {
-            ...data,
-            address: typeof data.address === 'string' ? data.address : address,
-          } as spCoinAccount;
-        })
-        .filter(Boolean);
+      const mapped: spCoinAccount[] = mapApiItemsToAccounts(items);
 
       setAcconts((prev) => {
         if (replace) return mapped;
@@ -159,7 +157,8 @@ function AccountsPage({
 
     let cancelled = false;
     try {
-      const downloadedAcconts = await loadAccounts(accountList);
+      const payload = await getAccountsBatch<spCoinAccount>(accountList);
+      const downloadedAcconts = mapApiItemsToAccounts(payload.items ?? []);
       if (cancelled) return;
 
       setAcconts(downloadedAcconts);

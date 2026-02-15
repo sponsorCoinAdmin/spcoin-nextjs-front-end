@@ -12,9 +12,8 @@ import { useAccount } from 'wagmi';
 import type { spCoinAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { getJson } from '@/lib/rest/http';
+import { getAccountByAddress } from '@/lib/api';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getWalletJsonURL } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -57,28 +56,13 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
     const ac = new AbortController();
 
     (async () => {
-      // Use centralized helper so address casing & path are consistent
-      const accountPath = getWalletJsonURL(address);
-
-      if (!accountPath) {
-        debugLog.warn?.(
-          '[ActiveAccount] getWalletJsonURL returned empty path',
-        );
-        return;
-      }
-
       try {
-        const metadata = await getJson<spCoinAccount>(accountPath, {
+        const metadata = await getAccountByAddress<spCoinAccount>(address, {
           timeoutMs: 8000,
-          retries: 0,
-          accept: 'application/json',
-          init: {
-            signal: ac.signal,
-            cache: 'no-store',
-          },
+          signal: ac.signal,
         });
 
-        const wallet: spCoinAccount = { ...metadata, address };
+        const wallet: spCoinAccount = { ...metadata.data, address };
 
         if (!ac.signal.aborted) {
           setActiveAccount(wallet);
