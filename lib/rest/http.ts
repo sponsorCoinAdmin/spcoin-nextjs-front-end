@@ -13,6 +13,10 @@ export type JsonOptions = GetOptions & {
   forceParse?: boolean;   // parse JSON even if content-type is wrong (default false)
 };
 
+export type WriteJsonOptions = JsonOptions & {
+  contentType?: string;   // default 'application/json'
+};
+
 /** Rich HTTP error that includes status and a small body preview. */
 export class HttpError extends Error {
   constructor(
@@ -150,6 +154,109 @@ export async function getJson<T>(url: string, opts: JsonOptions = {}): Promise<T
       text.slice(0, 200)
     );
   }
+}
+
+async function sendJson<T>(
+  method: 'POST' | 'PUT' | 'DELETE',
+  url: string,
+  body: unknown,
+  opts: WriteJsonOptions = {},
+): Promise<T> {
+  const {
+    accept = 'application/json',
+    contentType = 'application/json',
+    forceParse = false,
+    timeoutMs = 6000,
+    retries = 1,
+    backoffMs = 300,
+    init,
+  } = opts;
+
+  let attempt = 0;
+  let lastErr: unknown;
+
+  while (attempt <= retries) {
+    const { ctrl, clear } = startAbortTimer(timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method,
+        signal: ctrl.signal,
+        cache: init?.cache ?? 'no-store',
+        ...init,
+        headers: {
+          Accept: accept,
+          'Content-Type': contentType,
+          ...(init?.headers ?? {}),
+        },
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+      });
+      clear();
+
+      if (!res.ok) {
+        if ((res.status >= 500 && res.status < 600) || res.status === 408 || res.status === 429) {
+          if (attempt < retries) {
+            attempt++;
+            const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
+            await sleep(delay);
+            continue;
+          }
+        }
+
+        let preview = '';
+        try { preview = (await res.text()).slice(0, 200); } catch {}
+        throw new HttpError(
+          `${method} ${url} failed: ${res.status} ${res.statusText}`,
+          url,
+          res.status,
+          res.statusText,
+          preview
+        );
+      }
+
+      const ctype = res.headers.get('content-type') ?? '';
+      const looksLikeJson = /\bjson\b/i.test(ctype);
+
+      if (looksLikeJson || forceParse) {
+        return (await res.json()) as T;
+      }
+
+      try {
+        return (await res.json()) as T;
+      } catch {
+        const text = await res.text().catch(() => '');
+        throw new HttpError(
+          `Expected JSON but got '${ctype}'.`,
+          url,
+          res.status,
+          res.statusText,
+          text.slice(0, 200)
+        );
+      }
+    } catch (err) {
+      clear();
+      if (isTransientError(err) && attempt < retries) {
+        attempt++;
+        const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
+        await sleep(delay);
+        lastErr = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr ?? new Error(`${method} ${url} failed`);
+}
+
+export async function postJson<T>(url: string, body: unknown, opts: WriteJsonOptions = {}): Promise<T> {
+  return sendJson<T>('POST', url, body, opts);
+}
+
+export async function putJson<T>(url: string, body: unknown, opts: WriteJsonOptions = {}): Promise<T> {
+  return sendJson<T>('PUT', url, body, opts);
+}
+
+export async function deleteJson<T>(url: string, body: unknown, opts: WriteJsonOptions = {}): Promise<T> {
+  return sendJson<T>('DELETE', url, body, opts);
 }
 
 /** Convenience: GET plain text. */

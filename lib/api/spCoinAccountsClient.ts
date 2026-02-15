@@ -1,5 +1,5 @@
 // File: @/lib/api/spCoinAccountsClient.ts
-import { getJson } from '@/lib/rest/http';
+import { getJson, postJson } from '@/lib/rest/http';
 
 const BASE_PATH = '/api/spCoin/accounts';
 
@@ -30,39 +30,6 @@ export type AccountsBatchResponse<TData = unknown> = {
   missing: string[];
   invalid: string[];
 };
-
-function withTimeoutSignal(timeoutMs = 8000, externalSignal?: AbortSignal) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-
-  if (externalSignal) {
-    if (externalSignal.aborted) ctrl.abort();
-    else externalSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
-  }
-
-  return {
-    signal: ctrl.signal,
-    clear: () => clearTimeout(timer),
-  };
-}
-
-async function fetchJson<T>(
-  url: string,
-  init: RequestInit,
-  opts: FetchJsonOptions = {},
-): Promise<T> {
-  const { signal, clear } = withTimeoutSignal(opts.timeoutMs ?? 8000, opts.signal);
-  try {
-    const res = await fetch(url, { ...init, signal });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`${init.method ?? 'GET'} ${url} failed: ${res.status} ${res.statusText} ${body}`.trim());
-    }
-    return (await res.json()) as T;
-  } finally {
-    clear();
-  }
-}
 
 export async function getAccountsList(opts: FetchJsonOptions = {}): Promise<string[]> {
   return getJson<string[]>(BASE_PATH, {
@@ -107,17 +74,15 @@ export async function getAccountsBatch<TData = unknown>(
   addresses: string[],
   opts: FetchJsonOptions = {},
 ): Promise<AccountsBatchResponse<TData>> {
-  return fetchJson<AccountsBatchResponse<TData>>(
+  return postJson<AccountsBatchResponse<TData>>(
     BASE_PATH,
+    { addresses },
     {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-      body: JSON.stringify({ addresses }),
+      timeoutMs: opts.timeoutMs ?? 8000,
+      retries: 1,
+      accept: 'application/json',
+      forceParse: true,
+      init: { cache: 'no-store', signal: opts.signal },
     },
-    opts,
   );
 }
