@@ -13,7 +13,7 @@ import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/TestAccounts';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
-import type { AccountFilter } from '@/components/Pages/AccountsPage';
+import type { AccountFilter } from '@/app/(menu)/Test/Tabs/TestAccounts';
 import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
