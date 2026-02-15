@@ -2,7 +2,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangePageState } from './Tabs/ExchangeContext/hooks/useExchangePageState';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -22,6 +21,12 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
+const panelIconButtonBase =
+  'h-10 w-10 rounded-full flex items-center justify-center leading-none text-3xl select-none transition-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 active:scale-100';
+const panelIconButtonBlue =
+  `${panelIconButtonBase} bg-[#243056] text-[#5981F3] hover:bg-[#5981F3] hover:text-[#243056]`;
+const panelIconButtonGreen =
+  `${panelIconButtonBase} bg-green-900 text-green-300 hover:bg-green-500 hover:text-green-950`;
 
 type TestTab = 'context' | 'fsm' | 'wallets' | 'todo';
 type TestPageDisplay =
@@ -29,7 +34,9 @@ type TestPageDisplay =
   | SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
   | SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
   | SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
-const accountFilterOptions: AccountFilter[] = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'];
+const panelLayoutOptions = ['Both Open', 'Left Only', 'Right Only'] as const;
+type TestPanelLayout = (typeof panelLayoutOptions)[number];
+const accountFilterOptions: AccountFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
 
 const buildTestPageFlags = (display: TestPageDisplay) => ({
   TEST_PAGE_EXCHANGE_CONTEXT: display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
@@ -58,15 +65,40 @@ const getSelectedDisplayFromFlags = (
 };
 
 export default function TestPage() {
-  const router = useRouter();
   const { state, setState } = usePageState();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
+  const { expandContext, setExpandContext, logContext } = useExchangePageState();
   const { dumpNavStack } = usePanelTree();
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
+  const pageRootRef = useRef<HTMLDivElement | null>(null);
+  const lastWheelToggleAtRef = useRef(0);
   const [headerHeight, setHeaderHeight] = useState(72);
   const [fsmPanelKey, setFsmPanelKey] = useState(0);
-  const [walletFilter, setWalletFilter] = useState<AccountFilter>('All Accounts');
+  const persistedAccountFilterRaw = (exchangeContext as any)?.settings?.testPage?.accountFilter as
+    | AccountFilter
+    | undefined;
+  const persistedAccountFilter: AccountFilter | undefined = accountFilterOptions.includes(
+    persistedAccountFilterRaw as AccountFilter,
+  )
+    ? (persistedAccountFilterRaw as AccountFilter)
+    : undefined;
+  const persistedPanelLayoutRaw = (exchangeContext as any)?.settings?.testPage?.panelLayout as
+    | TestPanelLayout
+    | undefined;
+  const persistedPanelLayout: TestPanelLayout = panelLayoutOptions.includes(
+    persistedPanelLayoutRaw as TestPanelLayout,
+  )
+    ? (persistedPanelLayoutRaw as TestPanelLayout)
+    : 'Both Open';
+  const [walletFilter, setWalletFilter] = useState<AccountFilter>(
+    persistedAccountFilter ?? 'All Accounts',
+  );
+  const [showLeftPanel, setShowLeftPanel] = useState(
+    persistedPanelLayout !== 'Right Only',
+  );
+  const [showRightPanel, setShowRightPanel] = useState(
+    persistedPanelLayout !== 'Left Only',
+  );
 
   // Use a loose shape so we can evolve flags without fighting types here
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -110,7 +142,10 @@ export default function TestPage() {
             ...prev,
             settings: {
               ...prev.settings,
-              testPage: buildTestPageFlags(display),
+              testPage: {
+                ...((prev.settings?.testPage ?? {}) as any),
+                ...buildTestPageFlags(display),
+              } as any,
             },
           };
         },
@@ -119,6 +154,40 @@ export default function TestPage() {
     },
     [setExchangeContext],
   );
+
+  const setWalletFilterPersisted = useCallback(
+    (next: AccountFilter) => {
+      setWalletFilter(next);
+      setExchangeContext(
+        (prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            testPage: {
+              ...((prev.settings?.testPage ?? {}) as any),
+              accountFilter: next,
+            } as any,
+          },
+        }),
+        'TestPage:setWalletFilter',
+      );
+    },
+    [setExchangeContext],
+  );
+
+  useEffect(() => {
+    if (!persistedAccountFilter) return;
+    if (persistedAccountFilter !== walletFilter) {
+      setWalletFilter(persistedAccountFilter);
+    }
+  }, [persistedAccountFilter, walletFilter]);
+
+  useEffect(() => {
+    const nextLeft = persistedPanelLayout !== 'Right Only';
+    const nextRight = persistedPanelLayout !== 'Left Only';
+    if (nextLeft !== showLeftPanel) setShowLeftPanel(nextLeft);
+    if (nextRight !== showRightPanel) setShowRightPanel(nextRight);
+  }, [persistedPanelLayout]);
 
   const updateExchangePage = useCallback(
     (updates: any) => {
@@ -220,10 +289,20 @@ export default function TestPage() {
     toggleAllRef.current?.(next);
   }, [expandContext, setExpandContext]);
 
-  const onCloseContext = useCallback(() => {
-    hideContext();
-    router.push('/Exchange');
-  }, [hideContext, router]);
+  const onToggleLeftControl = useCallback(() => {
+    setShowLeftPanel(false);
+  }, []);
+  const onRestoreLeftPanel = useCallback(() => {
+    setShowLeftPanel(true);
+  }, []);
+  const onRestoreRightPanel = useCallback(() => {
+    setShowRightPanel(true);
+  }, []);
+  const onToggleRightControl = useCallback(() => {
+    // Keep one panel visible to avoid dead-end UI state.
+    if (!showLeftPanel) return;
+    setShowRightPanel(false);
+  }, [showLeftPanel]);
 
   const clearFSMHeader = useCallback(() => {
     clearFSMHeaderFromMemory();
@@ -247,8 +326,79 @@ export default function TestPage() {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
+  useEffect(() => {
+    const panelLayout: TestPanelLayout =
+      showLeftPanel && showRightPanel
+        ? 'Both Open'
+        : showLeftPanel
+          ? 'Left Only'
+          : showRightPanel
+            ? 'Right Only'
+            : 'Both Open';
+
+    setExchangeContext(
+      (prev) => {
+        const current = (prev.settings?.testPage as any)?.panelLayout as
+          | TestPanelLayout
+          | undefined;
+        if (current === panelLayout) return prev;
+        return {
+          ...prev,
+          settings: {
+            ...prev.settings,
+            testPage: {
+              ...((prev.settings?.testPage ?? {}) as any),
+              panelLayout,
+            } as any,
+          },
+        };
+      },
+      'TestPage:setPanelLayout',
+    );
+  }, [showLeftPanel, showRightPanel, setExchangeContext]);
+
+  useEffect(() => {
+    const root = pageRootRef.current;
+    if (!root) return;
+
+    const onWheel = (event: WheelEvent) => {
+      const absX = Math.abs(event.deltaX);
+      const absY = Math.abs(event.deltaY);
+      if (absX < 36 || absX <= absY) return;
+
+      const now = Date.now();
+      if (now - lastWheelToggleAtRef.current < 260) return;
+      lastWheelToggleAtRef.current = now;
+
+      // Rightward gesture: prefer right side (close left / restore right)
+      if (event.deltaX > 0) {
+        if (showLeftPanel && showRightPanel) {
+          setShowLeftPanel(false);
+          return;
+        }
+        if (!showRightPanel) {
+          setShowRightPanel(true);
+        }
+        return;
+      }
+
+      // Leftward gesture: prefer left side (close right / restore left)
+      if (showLeftPanel && showRightPanel) {
+        setShowRightPanel(false);
+        return;
+      }
+      if (!showLeftPanel) {
+        setShowLeftPanel(true);
+      }
+    };
+
+    root.addEventListener('wheel', onWheel, { passive: true });
+    return () => root.removeEventListener('wheel', onWheel);
+  }, [showLeftPanel, showRightPanel]);
+
   return (
     <div
+      ref={pageRootRef}
       className="overflow-hidden p-6"
       style={{
         height: `calc(100dvh - ${headerHeight}px)`,
@@ -257,9 +407,40 @@ export default function TestPage() {
       }}
     >
       <div className="flex h-full gap-4 overflow-hidden">
-        <div className="min-w-0 flex-1 overflow-hidden">
+        {!showLeftPanel && showRightPanel && (
+          <div className="w-10 shrink-0">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-center bg-[#192134] pb-2">
+              <button
+                onClick={onRestoreLeftPanel}
+                aria-label="Restore Left Panel"
+                title="Restore Left Panel"
+                className={panelIconButtonGreen}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                type="button"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+        {showLeftPanel && (
+        <div className={`min-w-0 overflow-hidden ${showRightPanel ? 'flex-1' : 'w-full'}`}>
           <div className="flex h-full min-h-0 flex-col">
             <div className="sticky top-0 z-10 mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap bg-[#192134] pb-2">
+              <div className="w-10 shrink-0 flex items-center justify-center">
+                {showRightPanel && (
+                  <button
+                    onClick={onToggleLeftControl}
+                    aria-label="Close Left Panel"
+                    title="Close Left Panel"
+                    className={panelIconButtonBlue}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    type="button"
+                  >
+                    {'\u00D7'}
+                  </button>
+                )}
+              </div>
               <label htmlFor="quickSwitchSelect" className="sr-only">
                 Run Test
               </label>
@@ -286,7 +467,7 @@ export default function TestPage() {
                         name="testAccountFilter"
                         value={option}
                         checked={walletFilter === option}
-                        onChange={() => setWalletFilter(option)}
+                        onChange={() => setWalletFilterPersisted(option)}
                         className="mr-2"
                       />
                       <span className={walletFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
@@ -327,15 +508,6 @@ export default function TestPage() {
                 </div>
               )}
 
-              <button
-                onClick={onCloseContext}
-                aria-label="Close Context"
-                title="Close Context"
-                className="ml-auto h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-                type="button"
-              >
-                &times;
-              </button>
             </div>
 
             <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -350,7 +522,7 @@ export default function TestPage() {
               {selectedTab === 'wallets' && (
                 <TestWalletsTab
                   selectedFilter={walletFilter}
-                  onSelectedFilterChange={setWalletFilter}
+                  onSelectedFilterChange={setWalletFilterPersisted}
                 />
               )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}
@@ -358,12 +530,47 @@ export default function TestPage() {
             </div>
           </div>
         </div>
+        )}
 
-        <div className="scrollbar-hide min-w-0 flex-1 overflow-y-auto overflow-x-hidden border-l border-slate-700 pl-4">
-          <div className="flex h-full min-h-0 flex-col items-center justify-between p-24">
+        {showRightPanel && (
+        <div className={`scrollbar-hide min-w-0 overflow-y-auto overflow-x-hidden ${showLeftPanel ? 'flex-1 border-l border-slate-700 pl-2' : 'w-full'}`}>
+          <div className="sticky top-0 z-10 mb-4 flex items-center justify-end bg-[#192134] pb-2">
+            {showLeftPanel && (
+              <div className="w-10 shrink-0 flex items-center justify-center">
+                <button
+                  onClick={onToggleRightControl}
+                  aria-label="Close Right Panel"
+                  title="Close Right Panel"
+                  className={panelIconButtonBlue}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  type="button"
+                >
+                  {'\u00D7'}
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex h-full min-h-0 flex-col items-center justify-between pt-12 px-6 pb-4">
             <PriceView />
           </div>
         </div>
+        )}
+        {!showRightPanel && showLeftPanel && (
+          <div className="w-10 shrink-0">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-center bg-[#192134] pb-2">
+              <button
+                onClick={onRestoreRightPanel}
+                aria-label="Restore Right Panel"
+                title="Restore Right Panel"
+                className={panelIconButtonGreen}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                type="button"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

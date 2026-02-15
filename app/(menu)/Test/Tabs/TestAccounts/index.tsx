@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import agentJsonList from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
@@ -15,11 +15,12 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-const accontOptions = ['Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
+const accontOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 export type AccountFilter = (typeof accontOptions)[number];
 
 type AccountsPageProps = {
   activeAccountText?: string;
+  activeAccount?: spCoinAccount | null;
   selectedFilter?: AccountFilter;
   onSelectedFilterChange?: (next: AccountFilter) => void;
   showFilterControls?: boolean;
@@ -27,11 +28,13 @@ type AccountsPageProps = {
 
 function AccountsPage({
   activeAccountText,
+  activeAccount,
   selectedFilter,
   onSelectedFilterChange,
   showFilterControls = true,
 }: AccountsPageProps) {
   const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
+    'Active Account': [],
     All: [],
     Recipients: [],
     Agents: [],
@@ -48,6 +51,9 @@ function AccountsPage({
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const scrollRootRef = useRef<HTMLElement | null>(null);
+  const isFetchingNextRef = useRef(false);
   const PAGE_SIZE = 25;
 
   const fetchAllAccontsPage = async (nextPage: number, replace = false) => {
@@ -95,11 +101,21 @@ function AccountsPage({
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      isFetchingNextRef.current = false;
     }
   };
 
   const fetchAcconts = async (forceReload = false) => {
     setErr(null);
+
+    if (typeOfAcconts === 'Active Account') {
+      const next = activeAccount ? [activeAccount] : [];
+      setAcconts(next);
+      setHasNextPage(false);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
 
     if (typeOfAcconts === 'All Accounts') {
       if (!forceReload && acconts.length > 0) return;
@@ -159,26 +175,90 @@ function AccountsPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeOfAcconts]);
 
-  useEffect(() => {
-    if (typeOfAcconts !== 'All Accounts' || !hasNextPage || loading || loadingMore) return;
+  const findScrollParent = (node: HTMLElement | null): HTMLElement | null => {
+    let cur: HTMLElement | null = node?.parentElement ?? null;
+    while (cur) {
+      const style = window.getComputedStyle(cur);
+      const y = style.overflowY;
+      if ((y === 'auto' || y === 'scroll') && cur.scrollHeight > cur.clientHeight) {
+        return cur;
+      }
+      cur = cur.parentElement;
+    }
+    return null;
+  };
 
-    const onScroll = () => {
-      const thresholdPx = 280;
-      const current = window.scrollY + window.innerHeight;
-      const full = document.documentElement.scrollHeight;
-      if (full - current <= thresholdPx && hasNextPage && !loadingMore && !loading) {
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    scrollRootRef.current = findScrollParent(loadMoreRef.current);
+  });
+
+  useEffect(() => {
+    if (typeOfAcconts !== 'All Accounts') return;
+    if (!loadMoreRef.current) return;
+
+    const root = scrollRootRef.current ?? findScrollParent(loadMoreRef.current);
+    scrollRootRef.current = root;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        if (!hasNextPage || loading || loadingMore || isFetchingNextRef.current) return;
+        isFetchingNextRef.current = true;
         fetchAllAccontsPage(page + 1);
+      },
+      {
+        root,
+        rootMargin: '300px 0px 300px 0px',
+        threshold: 0,
+      },
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [typeOfAcconts, hasNextPage, loading, loadingMore, page]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const root = scrollRootRef.current;
+      const isWindowScroll = !root;
+      const viewport = isWindowScroll ? window.innerHeight : root.clientHeight;
+      const smallStep = 80;
+      const pageStep = Math.max(120, Math.floor(viewport * 0.85));
+
+      let delta = 0;
+      if (event.key === 'ArrowDown') delta = smallStep;
+      else if (event.key === 'ArrowUp') delta = -smallStep;
+      else if (event.key === 'PageDown') delta = pageStep;
+      else if (event.key === 'PageUp') delta = -pageStep;
+      else return;
+
+      event.preventDefault();
+      if (isWindowScroll) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      } else {
+        root.scrollBy({ top: delta, behavior: 'smooth' });
       }
     };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [typeOfAcconts, hasNextPage, loading, loadingMore, page]);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   return (
     <div>
-      <div className="w-full border-[#444] text-white flex flex-col items-center">
-        <div className="flex items-center gap-3 text-[16px] mb-3 flex-wrap justify-center w-full">
+      <div className="sticky top-0 z-20 bg-[#192134] w-full border-[#444] text-white flex flex-col items-center pb-1">
+        <div className="flex items-center gap-3 text-[16px] mb-1 flex-wrap justify-center w-full">
           {activeAccountText && (
             <div className="inline-flex shrink-0 items-center justify-center gap-2">
               <span className="text-sm text-slate-300/80 whitespace-nowrap">
@@ -267,6 +347,7 @@ function AccountsPage({
               {typeOfAcconts === 'All Accounts' && !hasNextPage && acconts.length > 0 && (
                 <p className="text-center text-xs text-gray-500 py-2">End of list</p>
               )}
+              {typeOfAcconts === 'All Accounts' && <div ref={loadMoreRef} className="h-2 w-full" />}
             </>
           )}
         </div>
@@ -285,7 +366,7 @@ export default function TestWalletsTab({
   onSelectedFilterChange,
 }: TestWalletsTabProps) {
   const { exchangeContext } = useExchangeContext();
-  const activeAccount = exchangeContext?.accounts?.activeAccount;
+  const activeAccount = exchangeContext?.accounts?.activeAccount as spCoinAccount | null | undefined;
   const activeAccountText = activeAccount?.address?.trim() || 'N/A';
 
   return (
@@ -293,6 +374,7 @@ export default function TestWalletsTab({
       <div>
         <AccountsPage
           activeAccountText={activeAccountText}
+          activeAccount={activeAccount ?? null}
           selectedFilter={selectedFilter}
           onSelectedFilterChange={onSelectedFilterChange}
           showFilterControls={false}
