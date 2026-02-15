@@ -34,7 +34,7 @@ function toInt(value: string | null, fallback: number): number {
 
 function normalizeAddressFolderName(folderName: string): string | null {
   const trimmed = folderName.trim();
-  if (!/^0x[0-9a-fA-F]{40}$/.test(trimmed)) return null;
+  if (!/^0[xX][0-9a-fA-F]{40}$/.test(trimmed)) return null;
   return `0x${trimmed.slice(2).toLowerCase()}`;
 }
 
