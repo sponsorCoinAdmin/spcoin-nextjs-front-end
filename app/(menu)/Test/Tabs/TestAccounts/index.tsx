@@ -15,6 +15,14 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
+function safeStringify(value: unknown): string {
+  return JSON.stringify(
+    value,
+    (_key, v) => (typeof v === 'bigint' ? v.toString() : v),
+    2,
+  );
+}
+
 const accontOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 export type AccountFilter = (typeof accontOptions)[number];
 
@@ -335,7 +343,7 @@ function AccountsPage({
                         {accont.name || 'Unknown Accont'}
                       </div>
                       <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                        {JSON.stringify(accont, null, 2)}
+                        {safeStringify(accont)}
                       </pre>
                     </div>
                   </li>
