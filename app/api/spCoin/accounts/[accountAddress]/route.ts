@@ -13,7 +13,7 @@ type RouteContext = { params: Promise<{ accountAddress: string }> };
 type Target = 'account' | 'logo';
 
 function isAddress(value: string): boolean {
-  return /^0x[0-9a-fA-F]{40}$/.test(value);
+  return /^0[xX][0-9a-fA-F]{40}$/.test(value);
 }
 
 function normalizeAddress(value: string): string {
@@ -48,6 +48,45 @@ async function readLogoBuffer(request: Request): Promise<Buffer> {
     throw new Error('Empty request body for logo target.');
   }
   return buffer;
+}
+
+export async function GET(
+  _request: NextRequest,
+  context: RouteContext,
+) {
+  const { accountAddress } = await context.params;
+  const rawAddress = accountAddress ?? '';
+  if (!isAddress(rawAddress)) {
+    return NextResponse.json(
+      { error: 'Invalid accountAddress. Expected 0x + 40 hex chars.' },
+      { status: 400, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  const address = normalizeAddress(rawAddress);
+  const folder = toFolderName(address);
+  const filePath = path.join(ACCOUNTS_DIR, folder, 'account.json');
+
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const data = JSON.parse(raw);
+    return NextResponse.json(
+      {
+        address,
+        data,
+      },
+      { status: 200, headers: { 'Cache-Control': 'no-store' } },
+    );
+  } catch {
+    return NextResponse.json(
+      {
+        error: 'Account not found',
+        address,
+        file: `/assets/accounts/${folder}/account.json`,
+      },
+      { status: 404, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
 }
 
 export async function PUT(

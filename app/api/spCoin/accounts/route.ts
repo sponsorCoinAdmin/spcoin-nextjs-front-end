@@ -21,6 +21,10 @@ type AccountDirectoryRow = {
   folderName: string;
 };
 
+type BatchQueryBody = {
+  addresses?: string[];
+};
+
 function toBoolean(value: string | null): boolean {
   if (!value) return false;
   return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
@@ -30,6 +34,18 @@ function toInt(value: string | null, fallback: number): number {
   if (!value) return fallback;
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function isAddress(value: string): boolean {
+  return /^0[xX][0-9a-fA-F]{40}$/.test(value);
+}
+
+function normalizeAddress(value: string): string {
+  return `0x${value.slice(2).toLowerCase()}`;
+}
+
+function toFolderName(normalizedAddress: string): string {
+  return `0X${normalizedAddress.slice(2).toUpperCase()}`;
 }
 
 function normalizeAddressFolderName(folderName: string): string | null {
@@ -58,6 +74,19 @@ async function loadAccountData(row: AccountDirectoryRow): Promise<AccountRow | n
   try {
     const raw = await fs.readFile(filePath, 'utf8');
     return { address: row.address, data: JSON.parse(raw) };
+  } catch {
+    return null;
+  }
+}
+
+async function loadAccountDataByAddress(rawAddress: string): Promise<AccountRow | null> {
+  if (!isAddress(rawAddress)) return null;
+  const address = normalizeAddress(rawAddress);
+  const folderName = toFolderName(address);
+  const filePath = path.join(ACCOUNTS_DIR, folderName, 'account.json');
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return { address, data: JSON.parse(raw) };
   } catch {
     return null;
   }
@@ -110,6 +139,56 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error: 'Failed to read accounts directory',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as BatchQueryBody;
+    const addresses = Array.isArray(body?.addresses) ? body.addresses : [];
+
+    if (!addresses.length) {
+      return NextResponse.json(
+        { error: 'POST /api/spCoin/accounts requires body: { "addresses": string[] }' },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const unique = Array.from(
+      new Set(
+        addresses
+          .map((a) => (typeof a === 'string' ? a.trim() : ''))
+          .filter(Boolean),
+      ),
+    );
+
+    const valid = unique.filter(isAddress);
+    const invalid = unique.filter((a) => !isAddress(a));
+
+    const rows = await Promise.all(valid.map(loadAccountDataByAddress));
+    const items = rows.filter((row): row is AccountRow => row !== null);
+    const found = new Set(items.map((x) => x.address));
+    const missing = valid.map(normalizeAddress).filter((a) => !found.has(a));
+
+    return NextResponse.json(
+      {
+        items,
+        countRequested: unique.length,
+        countValid: valid.length,
+        countFound: items.length,
+        missing,
+        invalid,
+      },
+      { status: 200, headers: { 'Cache-Control': 'no-store' } },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Failed to process batch request',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500, headers: { 'Cache-Control': 'no-store' } },

@@ -4,6 +4,8 @@
 This folder contains two account APIs:
 
 - `GET /api/spCoin/accounts`
+- `POST /api/spCoin/accounts`
+- `GET /api/spCoin/accounts/{accountAddress}`
 - `PUT|POST /api/spCoin/accounts/{accountAddress}`
 
 ## 1) List Accounts
@@ -144,4 +146,71 @@ Example response:
 
 - `400` invalid address or invalid request body.
 - `500` filesystem/read-write failure.
+
+## 5) Read Single Account
+
+Endpoint:
+
+- `GET /api/spCoin/accounts/{accountAddress}`
+
+Behavior:
+
+- Reads `public/assets/accounts/<0XADDRESS>/account.json`.
+
+Example:
+
+```bash
+curl -s "http://localhost:3000/api/spCoin/accounts/0x000000000000000000000000000000000000007e"
+```
+
+Example response:
+
+```json
+{
+  "address": "0x000000000000000000000000000000000000007e",
+  "data": {
+    "address": "0X000000000000000000000000000000000000007e",
+    "name": "Agent X"
+  }
+}
+```
+
+## 6) Batch Read Accounts (POST)
+
+Endpoint:
+
+- `POST /api/spCoin/accounts`
+
+Body:
+
+- `{ "addresses": ["0x...", "0X..."] }`
+
+Example:
+
+```bash
+curl -X POST "http://localhost:3000/api/spCoin/accounts" \
+  -H "Content-Type: application/json" \
+  -d "{\"addresses\":[\"0x000000000000000000000000000000000000007e\",\"0x000000000000000000000000000000000000007f\"]}"
+```
+
+Example response:
+
+```json
+{
+  "items": [
+    {
+      "address": "0x000000000000000000000000000000000000007e",
+      "data": {
+        "address": "0X000000000000000000000000000000000000007e",
+        "name": "Agent X"
+      }
+    }
+  ],
+  "countRequested": 2,
+  "countValid": 2,
+  "countFound": 1,
+  "missing": ["0x000000000000000000000000000000000000007f"],
+  "invalid": []
+}
+```
 
