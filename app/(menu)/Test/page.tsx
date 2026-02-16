@@ -14,7 +14,7 @@ import TestTokensTab from './Tabs/Tokens';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
 import type { AccountFilter } from '@/app/(menu)/Test/Tabs/Accounts';
-import type { AccountFilter as TokenFilter } from '@/app/(menu)/Test/Tabs/Tokens';
+import type { TokenFilter } from '@/app/(menu)/Test/Tabs/Tokens';
 import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
@@ -47,7 +47,6 @@ type TestPageDisplay =
 const panelLayoutOptions = ['Both Open', 'Left Only', 'Right Only'] as const;
 type TestPanelLayout = (typeof panelLayoutOptions)[number];
 const accountFilterOptions: AccountFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
-const tokenFilterOptions: TokenFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
 type TokenListNetworkValue = `${number}` | typeof ALL_NETWORKS_VALUE;
 
 const buildTestPageFlags = (display: TestPageDisplay) => ({
@@ -121,7 +120,7 @@ export default function TestPage() {
   const persistedTokenFilterRaw = (exchangeContext as any)?.settings?.testPage?.tokenFilter as
     | TokenFilter
     | undefined;
-  const persistedTokenFilter: TokenFilter | undefined = tokenFilterOptions.includes(
+  const persistedTokenFilter: TokenFilter | undefined = accountFilterOptions.includes(
     persistedTokenFilterRaw as TokenFilter,
   )
     ? (persistedTokenFilterRaw as TokenFilter)
@@ -639,7 +638,7 @@ export default function TestPage() {
               )}
 
               {selectedTab === 'tokens' && (
-                <div className="inline-flex flex-1 items-center justify-center gap-3">
+                <div className="inline-flex flex-1 items-center justify-start gap-3">
                   <label htmlFor="Token_List_Select" className="sr-only">
                     Token List Network
                   </label>
@@ -668,21 +667,6 @@ export default function TestPage() {
                       className="h-4 w-4 accent-[#5981F3] cursor-pointer"
                     />
                   </label>
-                  {tokenFilterOptions.map((option) => (
-                    <label key={option} className="inline-flex items-center cursor-pointer text-[#5981F3]">
-                      <input
-                        type="radio"
-                        name="testTokenFilter"
-                        value={option}
-                        checked={tokenFilter === option}
-                        onChange={() => setTokenFilterPersisted(option)}
-                        className="mr-2"
-                      />
-                      <span className={tokenFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
-                        {option}
-                      </span>
-                    </label>
-                  ))}
                 </div>
               )}
 
@@ -737,6 +721,8 @@ export default function TestPage() {
                 <TestTokensTab
                   selectedFilter={tokenFilter}
                   onSelectedFilterChange={setTokenFilterPersisted}
+                  selectedNetwork={tokenListNetwork}
+                  showTestNets={showTestNets}
                 />
               )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}

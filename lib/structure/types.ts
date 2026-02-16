@@ -122,6 +122,7 @@ export type Settings = {
     TEST_PAGE_TOKEN_LISTS: boolean;
     accountFilter?: string;
     tokenFilter?: string;
+    tokenListNetwork?: string;
     panelLayout?: string;
   };
 };

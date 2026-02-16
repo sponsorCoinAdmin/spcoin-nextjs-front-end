@@ -68,8 +68,6 @@ export default function DisplayInfo({ account }: Props) {
   const description = fallback(account?.description);
   const logoURL = (account?.logoURL ?? '').toString().trim();
   const website = (account?.website ?? '').toString().trim();
-  const stakedBalance = 0;
-  const pendingBalance = 0;
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -112,7 +110,16 @@ export default function DisplayInfo({ account }: Props) {
             </tr>
           </thead>
           <tbody>
-            {/* address first */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>Name</td>
+              <td className={`${zebraA} ${cell}`}>{name}</td>
+            </tr>
+
+            <tr className="border-b border-black">
+              <td className={`${zebraB} ${cell}`}>Symbol</td>
+              <td className={`${zebraB} ${cell}`}>{symbol}</td>
+            </tr>
+
             <tr className="border-b border-black">
               <td className={`${zebraA} ${cell}`}>address:</td>
               <td className={`${zebraA} ${cell}`}>
@@ -120,42 +127,9 @@ export default function DisplayInfo({ account }: Props) {
               </td>
             </tr>
 
-            {/* logoURL (URL only) */}
             <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>logoURL:</td>
+              <td className={`${zebraB} ${cell}`}>webSite</td>
               <td className={`${zebraB} ${cell}`}>
-                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
-              </td>
-            </tr>
-
-            {/* Name */}
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>Name</td>
-              <td className={`${zebraA} ${cell}`}>{name}</td>
-            </tr>
-
-            {/* Symbol */}
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>Symbol</td>
-              <td className={`${zebraB} ${cell}`}>{symbol}</td>
-            </tr>
-
-            {/* stakedBalance */}
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>stakedBalance</td>
-              <td className={`${zebraA} ${cell}`}>{stakedBalance}</td>
-            </tr>
-
-            {/* pendingBalance */}
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>pendingBalance</td>
-              <td className={`${zebraB} ${cell}`}>{pendingBalance}</td>
-            </tr>
-
-            {/* webSite */}
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>webSite</td>
-              <td className={`${zebraA} ${cell}`}>
                 {website ? (
                   <a
                     href={website}
@@ -171,7 +145,13 @@ export default function DisplayInfo({ account }: Props) {
               </td>
             </tr>
 
-            {/* description */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>logoURL:</td>
+              <td className={`${zebraA} ${cell}`}>
+                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
+              </td>
+            </tr>
+
             <tr>
               <td className={`${zebraB} ${cell}`}>description:</td>
               <td className={`${zebraB} ${cell}`}>{description}</td>

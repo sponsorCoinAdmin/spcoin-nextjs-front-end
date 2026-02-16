@@ -269,7 +269,7 @@ function AccountsPage({
           {activeAccountText && (
             <div className="inline-flex shrink-0 items-center justify-center gap-2">
               <span className="text-sm text-slate-300/80 whitespace-nowrap">
-                Active Accounts:
+                Active Account:
               </span>
               <div className="shrink-0 max-w-none">
                 <AssetSelectDisplayProvider>

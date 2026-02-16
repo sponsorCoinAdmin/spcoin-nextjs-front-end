@@ -138,7 +138,13 @@ function previewList(list: any[], max = 5) {
   });
 }
 
-function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {
+function getDataListURL(feedType: FEED_TYPE, chainId?: number): string | undefined {
+  if (feedType === FEED_TYPE.TOKEN_LIST) {
+    const parsedChainId = Number(chainId);
+    if (Number.isFinite(parsedChainId) && parsedChainId > 0) {
+      return `/api/spCoin/tokens?chainId=${parsedChainId}`;
+    }
+  }
   return undefined;
 }
 

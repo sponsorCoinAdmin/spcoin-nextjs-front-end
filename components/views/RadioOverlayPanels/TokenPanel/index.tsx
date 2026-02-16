@@ -202,10 +202,6 @@ export default function TokenPanel(_props: Props) {
   const logoURL = (tokenContract.logoURL ?? '').toString().trim();
   const website = ((tokenContract as any)?.website ?? '').toString().trim();
 
-  // If these are not applicable for token contracts, delete the rows entirely.
-  const stakedBalance = 0;
-  const pendingBalance = 0;
-
   const pillAddr = formatShortAddress(fullAddr);
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
@@ -245,20 +241,6 @@ export default function TokenPanel(_props: Props) {
 
           <tbody>
             <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>address</td>
-              <td className={`${zebraA} ${cell}`}>
-                <span className="font-mono break-all">{fallback(address)}</span>
-              </td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>logoURL</td>
-              <td className={`${zebraB} ${cell}`}>
-                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
-              </td>
-            </tr>
-
-            <tr className="border-b border-black">
               <td className={`${zebraA} ${cell}`}>name</td>
               <td className={`${zebraA} ${cell}`}>{name}</td>
             </tr>
@@ -268,20 +250,16 @@ export default function TokenPanel(_props: Props) {
               <td className={`${zebraB} ${cell}`}>{symbol}</td>
             </tr>
 
-            {/* If not relevant for token contracts, delete these two rows */}
             <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>stakedBalance</td>
-              <td className={`${zebraA} ${cell}`}>{stakedBalance}</td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>pendingBalance</td>
-              <td className={`${zebraB} ${cell}`}>{pendingBalance}</td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>website</td>
+              <td className={`${zebraA} ${cell}`}>address</td>
               <td className={`${zebraA} ${cell}`}>
+                <span className="font-mono break-all">{fallback(address)}</span>
+              </td>
+            </tr>
+
+            <tr className="border-b border-black">
+              <td className={`${zebraB} ${cell}`}>website</td>
+              <td className={`${zebraB} ${cell}`}>
                 {website ? (
                   <a
                     href={website}
@@ -294,6 +272,13 @@ export default function TokenPanel(_props: Props) {
                 ) : (
                   'N/A'
                 )}
+              </td>
+            </tr>
+
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>logoURL</td>
+              <td className={`${zebraA} ${cell}`}>
+                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
               </td>
             </tr>
 

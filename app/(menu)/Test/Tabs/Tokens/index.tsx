@@ -1,19 +1,14 @@
 // File: app/(menu)/Test/Tabs/Tokens/index.tsx
-
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { TokenContract } from '@/lib/structure';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import {
+  ALL_NETWORKS_VALUE,
+} from '@/lib/utils/network';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { getAccountsBatch, getAccountsPage } from '@/lib/api';
-import agentJsonList from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
-import recipientJsonList from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
-import sponsorJsonList from '@/resources/data/mockFeeds/accounts/sponsors/accounts.json';
-import type { spCoinAccount } from '@/lib/structure';
-import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/assetHelpers';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
-import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import AddressSelect from '@/components/views/AssetSelectPanels/AddressSelect';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { getTokensPage, type TokenApiItem } from '@/lib/api';
 
 function safeStringify(value: unknown): string {
   return JSON.stringify(
@@ -23,288 +18,142 @@ function safeStringify(value: unknown): string {
   );
 }
 
-const accontOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
-export type AccountFilter = (typeof accontOptions)[number];
+const tokenOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
+export type TokenFilter = (typeof tokenOptions)[number];
+export type AccountFilter = TokenFilter;
 
-type AccountsPageProps = {
-  activeAccountText?: string;
-  activeAccount?: spCoinAccount | null;
-  selectedFilter?: AccountFilter;
-  onSelectedFilterChange?: (next: AccountFilter) => void;
+type TokenListNetworkValue = `${number}` | typeof ALL_NETWORKS_VALUE;
+
+type TokensPageProps = {
+  selectedFilter?: TokenFilter;
+  onSelectedFilterChange?: (next: TokenFilter) => void;
+  selectedNetwork?: TokenListNetworkValue;
+  showTestNets?: boolean;
   showFilterControls?: boolean;
 };
 
-function AccountsPage({
-  activeAccountText,
-  activeAccount,
+function TokensPage({
   selectedFilter,
   onSelectedFilterChange,
+  selectedNetwork,
+  showTestNets = false,
   showFilterControls = true,
-}: AccountsPageProps) {
-  const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
-    'Active Account': [],
-    All: [],
-    Recipients: [],
-    Agents: [],
-    Sponsors: [],
-  });
-
-  const [internalTypeOfAcconts, setInternalTypeOfAcconts] =
-    useState<AccountFilter>('All Accounts');
-  const typeOfAcconts = selectedFilter ?? internalTypeOfAcconts;
-  const setTypeOfAcconts = onSelectedFilterChange ?? setInternalTypeOfAcconts;
-  const [acconts, setAcconts] = useState<spCoinAccount[]>([]);
+}: TokensPageProps) {
+  const { exchangeContext } = useExchangeContext();
+  const [tokens, setTokens] = useState<TokenContract[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const scrollRootRef = useRef<HTMLElement | null>(null);
-  const isFetchingNextRef = useRef(false);
-  const PAGE_SIZE = 25;
+  const [internalTokenType, setInternalTokenType] =
+    useState<TokenFilter>('All Accounts');
+  const tokenType = selectedFilter ?? internalTokenType;
+  const setTokenType = onSelectedFilterChange ?? setInternalTokenType;
 
-  const mapApiItemsToAccounts = (items: any[]): spCoinAccount[] =>
-    items
-      .map((item: any) => {
-        const data = item?.data;
-        const address = item?.address;
-        if (!data || typeof data !== 'object') return null;
-        return {
-          ...data,
-          address: typeof data.address === 'string' ? data.address : address,
-        } as spCoinAccount;
-      })
-      .filter((x): x is spCoinAccount => x !== null);
+  const activeTokenAddress = useMemo(() => {
+    const candidate =
+      exchangeContext?.tradeData?.previewTokenContract?.address ??
+      exchangeContext?.tradeData?.sellTokenContract?.address ??
+      exchangeContext?.tradeData?.buyTokenContract?.address;
+    return typeof candidate === 'string' ? candidate.toLowerCase() : '';
+  }, [exchangeContext]);
 
-  const fetchAllAccontsPage = async (nextPage: number, replace = false) => {
-    if (nextPage <= 1) setLoading(true);
-    else setLoadingMore(true);
-    setErr(null);
+  useEffect(() => {
+    let cancelled = false;
 
-    try {
-      const payload = await getAccountsPage<spCoinAccount>(nextPage, PAGE_SIZE);
-      const items = Array.isArray(payload?.items) ? payload.items : [];
-      const mapped: spCoinAccount[] = mapApiItemsToAccounts(items);
+    const loadTokens = async () => {
+      setLoading(true);
+      setErr(null);
 
-      setAcconts((prev) => {
-        if (replace) return mapped;
-        const seen = new Set(prev.map((a) => a.address?.toLowerCase?.() ?? ''));
-        const merged = [...prev];
-        for (const accont of mapped) {
-          const key = accont.address?.toLowerCase?.() ?? '';
+      try {
+        const target = selectedNetwork ?? ALL_NETWORKS_VALUE;
+        const PAGE_SIZE = 200;
+        const allItems: Array<TokenApiItem<any>> = [];
+        let page = 1;
+        let hasNextPage = true;
+
+        while (hasNextPage) {
+          const payload = await getTokensPage<any>(page, PAGE_SIZE, {
+            allNetworks: target === ALL_NETWORKS_VALUE,
+            chainId: target === ALL_NETWORKS_VALUE ? undefined : Number(target),
+          });
+          if (!Array.isArray(payload?.items) || payload.items.length === 0) break;
+          allItems.push(...payload.items);
+          hasNextPage = Boolean(payload.hasNextPage);
+          page += 1;
+        }
+
+        const allTokens: TokenContract[] = allItems.map((item) => {
+          const data = (item?.data ?? {}) as any;
+          const address =
+            typeof data.address === 'string'
+              ? data.address
+              : item.address;
+          return {
+            ...data,
+            address,
+            chainId: Number(data.chainId ?? item.chainId),
+            logoURL:
+              typeof data.logoURL === 'string' && data.logoURL.trim()
+                ? data.logoURL
+                : defaultMissingImage,
+          } as TokenContract;
+        });
+
+        const deduped: TokenContract[] = [];
+        const seen = new Set<string>();
+        for (const token of allTokens) {
+          const chainPart = Number(token?.chainId ?? 0);
+          const addressPart =
+            typeof token?.address === 'string' ? token.address.toLowerCase() : '';
+          const key = `${chainPart}:${addressPart}`;
           if (!seen.has(key)) {
             seen.add(key);
-            merged.push(accont);
+            deduped.push(token);
           }
         }
-        return merged;
-      });
-      setPage(Number(payload?.page ?? nextPage));
-      setHasNextPage(Boolean(payload?.hasNextPage));
-    } catch (e: any) {
-      setErr(e?.message ?? 'Failed to get acconts');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      isFetchingNextRef.current = false;
-    }
-  };
 
-  const fetchAcconts = async (forceReload = false) => {
-    setErr(null);
+        if (cancelled) return;
+        setTokens(deduped);
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? 'Failed to load tokens');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-    if (typeOfAcconts === 'Active Account') {
-      const next = activeAccount ? [activeAccount] : [];
-      setAcconts(next);
-      setHasNextPage(false);
-      setLoading(false);
-      setLoadingMore(false);
-      return;
-    }
-
-    if (typeOfAcconts === 'All Accounts') {
-      if (!forceReload && acconts.length > 0) return;
-      setPage(1);
-      setHasNextPage(false);
-      await fetchAllAccontsPage(1, true);
-      return;
-    }
-
-    if (!forceReload && accontCache[typeOfAcconts]?.length > 0) {
-      setAcconts(accontCache[typeOfAcconts]);
-      return;
-    }
-
-    setLoading(true);
-
-    let accountList: string[] = [];
-
-    switch (typeOfAcconts) {
-      case 'Recipients':
-        accountList = recipientJsonList as string[];
-        break;
-      case 'Agents':
-        accountList = agentJsonList as string[];
-        break;
-      case 'Sponsors':
-        accountList = sponsorJsonList as string[];
-        break;
-      default:
-        accountList = [];
-        break;
-    }
-
-    let cancelled = false;
-    try {
-      const payload = await getAccountsBatch<spCoinAccount>(accountList);
-      const downloadedAcconts = mapApiItemsToAccounts(payload.items ?? []);
-      if (cancelled) return;
-
-      setAcconts(downloadedAcconts);
-      setAccontCache((prev) => ({
-        ...prev,
-        [typeOfAcconts]: downloadedAcconts,
-      }));
-    } catch (e: any) {
-      if (!cancelled) setErr(e?.message ?? 'Failed to get acconts');
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
-
+    loadTokens();
     return () => {
       cancelled = true;
     };
-  };
+  }, [selectedNetwork, showTestNets]);
 
-  useEffect(() => {
-    fetchAcconts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeOfAcconts]);
-
-  const findScrollParent = (node: HTMLElement | null): HTMLElement | null => {
-    let cur: HTMLElement | null = node?.parentElement ?? null;
-    while (cur) {
-      const style = window.getComputedStyle(cur);
-      const y = style.overflowY;
-      if ((y === 'auto' || y === 'scroll') && cur.scrollHeight > cur.clientHeight) {
-        return cur;
-      }
-      cur = cur.parentElement;
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
-    scrollRootRef.current = findScrollParent(loadMoreRef.current);
-  });
-
-  useEffect(() => {
-    if (typeOfAcconts !== 'All Accounts') return;
-    if (!loadMoreRef.current) return;
-
-    const root = scrollRootRef.current ?? findScrollParent(loadMoreRef.current);
-    scrollRootRef.current = root;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting) return;
-        if (!hasNextPage || loading || loadingMore || isFetchingNextRef.current) return;
-        isFetchingNextRef.current = true;
-        fetchAllAccontsPage(page + 1);
-      },
-      {
-        root,
-        rootMargin: '300px 0px 300px 0px',
-        threshold: 0,
-      },
-    );
-
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [typeOfAcconts, hasNextPage, loading, loadingMore, page]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-
-      const root = scrollRootRef.current;
-      const isWindowScroll = !root;
-      const viewport = isWindowScroll ? window.innerHeight : root.clientHeight;
-      const smallStep = 80;
-      const pageStep = Math.max(120, Math.floor(viewport * 0.85));
-
-      let delta = 0;
-      if (event.key === 'ArrowDown') delta = smallStep;
-      else if (event.key === 'ArrowUp') delta = -smallStep;
-      else if (event.key === 'PageDown') delta = pageStep;
-      else if (event.key === 'PageUp') delta = -pageStep;
-      else return;
-
-      event.preventDefault();
-      if (isWindowScroll) {
-        window.scrollBy({ top: delta, behavior: 'smooth' });
-      } else {
-        root.scrollBy({ top: delta, behavior: 'smooth' });
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  const visibleTokens =
+    tokenType === 'Active Account' && activeTokenAddress
+      ? tokens.filter(
+          (token) =>
+            typeof token.address === 'string' &&
+            token.address.toLowerCase() === activeTokenAddress,
+        )
+      : tokens;
 
   return (
     <div>
       <div className="sticky top-0 z-20 bg-[#192134] w-full border-[#444] text-white flex flex-col items-center pb-1">
         <div className="flex items-center gap-3 text-[16px] mb-1 flex-wrap justify-center w-full">
-          {activeAccountText && (
-            <div className="inline-flex shrink-0 items-center justify-center gap-2">
-              <span className="text-sm text-slate-300/80 whitespace-nowrap">
-                Active Accounts:
-              </span>
-              <div className="shrink-0 max-w-none">
-                <AssetSelectDisplayProvider>
-                  <AssetSelectProvider
-                    containerType={SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL}
-                    closePanelCallback={() => {}}
-                    setSelectedAssetCallback={() => {}}
-                  >
-                    <AddressSelect
-                      callingParent="AccountsPage"
-                      defaultAddress={activeAccountText}
-                      bypassDefaultFsm
-                      useActiveAddr
-                      makeEditable={false}
-                      showPreview={false}
-                      fitToText
-                    />
-                  </AssetSelectProvider>
-                </AssetSelectDisplayProvider>
-              </div>
-            </div>
-          )}
-
+          <span className="text-sm text-slate-300/80 whitespace-nowrap">
+            Active Account: {activeTokenAddress || 'N/A'}
+          </span>
           {showFilterControls &&
-            accontOptions.map((option) => (
+            tokenOptions.map((option) => (
               <label key={option} className="flex items-center cursor-pointer">
                 <input
                   type="radio"
-                  name="accountFilter"
+                  name="tokenFilter"
                   value={option}
-                  checked={typeOfAcconts === option}
-                  onChange={() => setTypeOfAcconts(option)}
+                  checked={tokenType === option}
+                  onChange={() => setTokenType(option)}
                   className="mr-2"
                 />
-                <span className={typeOfAcconts === option ? 'text-green-400' : ''}>
+                <span className={tokenType === option ? 'text-green-400' : ''}>
                   {option}
                 </span>
               </label>
@@ -321,9 +170,9 @@ function AccountsPage({
           ) : (
             <>
               <ul className="list-none p-0 m-0">
-                {acconts.map((accont: spCoinAccount, index) => (
+                {visibleTokens.map((token: TokenContract, index) => (
                   <li
-                    key={`${typeOfAcconts}-${accont.address}-${index}`}
+                    key={`${tokenType}-${token.chainId}-${token.address}-${index}`}
                     className={`flex items-center p-3 mb-2 rounded ${
                       index % 2 === 0
                         ? 'bg-[#d6d6d6] text-[#000000]'
@@ -331,30 +180,26 @@ function AccountsPage({
                     }`}
                   >
                     <img
-                      src={getAccountLogo(accont) || defaultMissingImage}
-                      alt="Logo"
+                      src={token.logoURL || defaultMissingImage}
+                      alt="Token Logo"
                       width={100}
                       height={100}
                       className="rounded-full border-2 border-gray-300 mr-3"
                     />
                     <div className="text-inherit">
                       <div className="text-lg font-bold mb-2">
-                        {accont.name || 'Unknown Accont'}
+                        {token.name || token.symbol || 'Unknown Token'}
                       </div>
                       <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                        {safeStringify(accont)}
+                        {safeStringify(token)}
                       </pre>
                     </div>
                   </li>
                 ))}
               </ul>
-              {typeOfAcconts === 'All Accounts' && loadingMore && (
-                <p className="text-center text-sm text-gray-400 py-3">Loading more accounts...</p>
+              {!loading && !err && visibleTokens.length === 0 && (
+                <p className="text-center text-sm text-gray-400 py-2">No tokens found.</p>
               )}
-              {typeOfAcconts === 'All Accounts' && !hasNextPage && acconts.length > 0 && (
-                <p className="text-center text-xs text-gray-500 py-2">End of list</p>
-              )}
-              {typeOfAcconts === 'All Accounts' && <div ref={loadMoreRef} className="h-2 w-full" />}
             </>
           )}
         </div>
@@ -363,27 +208,27 @@ function AccountsPage({
   );
 }
 
-type TestWalletsTabProps = {
-  selectedFilter?: AccountFilter;
-  onSelectedFilterChange?: (next: AccountFilter) => void;
+type TestTokensTabProps = {
+  selectedFilter?: TokenFilter;
+  onSelectedFilterChange?: (next: TokenFilter) => void;
+  selectedNetwork?: TokenListNetworkValue;
+  showTestNets?: boolean;
 };
 
-export default function TestWalletsTab({
+export default function TestTokensTab({
   selectedFilter,
   onSelectedFilterChange,
-}: TestWalletsTabProps) {
-  const { exchangeContext } = useExchangeContext();
-  const activeAccount = exchangeContext?.accounts?.activeAccount as spCoinAccount | null | undefined;
-  const activeAccountText = activeAccount?.address?.trim() || 'N/A';
-
+  selectedNetwork,
+  showTestNets,
+}: TestTokensTabProps) {
   return (
     <div className="space-y-4">
       <div>
-        <AccountsPage
-          activeAccountText={activeAccountText}
-          activeAccount={activeAccount ?? null}
+        <TokensPage
           selectedFilter={selectedFilter}
           onSelectedFilterChange={onSelectedFilterChange}
+          selectedNetwork={selectedNetwork}
+          showTestNets={showTestNets}
           showFilterControls={false}
         />
       </div>
