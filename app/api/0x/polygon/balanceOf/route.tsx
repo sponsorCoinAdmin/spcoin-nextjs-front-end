@@ -1,14 +1,29 @@
 // File: app/api/0x/polygon/balanceOf/route.tsx
 'use server';
 
-import { getQueryVariable } from '@/lib/spCoin/coreUtils'
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
-import { getURLParams } from "@/lib/getURLParams";
+import {
+  badRequest,
+  getOptionalChainId,
+  getRequiredAddress,
+  ok,
+  readErc20,
+} from '@/app/api/wagmi/erc20/_shared';
 
 export async function GET(req: Request) {
-  const params = getURLParams(req.url);
-  const tokenAddress = getQueryVariable(params, "tokenAddress")
+  try {
+    const url = new URL(req.url);
+    const tokenAddress = getRequiredAddress(url, ['tokenAddress', 'token', 'address']);
+    const ownerAddress = getRequiredAddress(url, ['ownerAddress', 'owner', 'accountAddress', 'account']);
+    const chainId = getOptionalChainId(url);
 
-  const wagmiBalance = await getWagmiBalanceOfRec(tokenAddress)
-  return new Response(JSON.stringify(wagmiBalance))
+    const value = (await readErc20('balanceOf', tokenAddress, [ownerAddress], chainId)) as bigint;
+    return ok({
+      tokenAddress,
+      ownerAddress,
+      chainId: chainId ?? null,
+      value,
+    });
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Invalid request');
+  }
 }

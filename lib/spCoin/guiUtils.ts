@@ -3,9 +3,10 @@
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import type { ExchangeContext, TokenContract } from '@/lib/structure';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
+import { getWagmiBalanceOfRec, readContractBalanceOf } from '@/lib/wagmi/getWagmiBalanceOfRec';
 import { isAddress } from 'ethers';
 import type { Address } from 'viem';
+import { formatUnits } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
@@ -153,14 +154,21 @@ const updateBalance = async (
 
   if (activeAccountAddr) {
     try {
-      const retResponse = await getWagmiBalanceOfRec(tokenContract.address);
-      balance = retResponse.formatted;
+      const rawBalance = await readContractBalanceOf(
+        tokenContract.address,
+        activeAccountAddr,
+      );
+      const decimals =
+        typeof tokenContract.decimals === 'number' ? tokenContract.decimals : 18;
+      balance = formatUnits(rawBalance, decimals);
       setBalance(balance);
       success = true;
 
       debugLog.log?.('[updateBalance] balance updated', {
         activeAccountAddr,
         tokenAddress: tokenContract.address,
+        rawBalance: rawBalance.toString(),
+        decimals,
         balance,
       });
     } catch (error: any) {

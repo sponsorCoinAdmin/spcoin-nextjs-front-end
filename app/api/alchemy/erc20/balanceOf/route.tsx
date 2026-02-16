@@ -1,25 +1,30 @@
 // File: app/api/alchemy/erc20/balanceOf/route.tsx
 'use server';
 
-import { getURLParams } from '@/lib/getURLParams';
-import { getQueryVariable } from '@/lib/spCoin/coreUtils';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-
-const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_SERVER_DEBUG_LOG_USE_GET_BALANCE === 'true';
-const debugLog = createDebugLogger('getWagmiBalanceOfRecRoute', DEBUG_ENABLED, LOG_TIME);
+import {
+  badRequest,
+  getOptionalChainId,
+  getRequiredAddress,
+  ok,
+  readErc20,
+} from '@/app/api/wagmi/erc20/_shared';
 
 export async function GET(req: Request) {
-  const params = getURLParams(req.url);
-  const tokenAddress = getQueryVariable(params, 'tokenAddress');
+  try {
+    const url = new URL(req.url);
+    const tokenAddress = getRequiredAddress(url, ['tokenAddress', 'token', 'address']);
+    const ownerAddress = getRequiredAddress(url, ['ownerAddress', 'owner', 'accountAddress', 'account']);
+    const chainId = getOptionalChainId(url);
 
-  const wagmiBalance = await getWagmiBalanceOfRec(tokenAddress);
+    const value = (await readErc20('balanceOf', tokenAddress, [ownerAddress], chainId)) as bigint;
 
-  debugLog.log?.('wagmiBalance', {
-    tokenAddress,
-    wagmiBalance,
-  });
-
-  return new Response(JSON.stringify(wagmiBalance));
+    return ok({
+      tokenAddress,
+      ownerAddress,
+      chainId: chainId ?? null,
+      value,
+    });
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : 'Invalid request');
+  }
 }
