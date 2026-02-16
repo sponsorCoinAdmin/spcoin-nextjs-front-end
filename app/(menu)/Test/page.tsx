@@ -9,15 +9,19 @@ import { useExchangeContext } from '@/lib/context/hooks';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
-import TestWalletsTab from './Tabs/TestAccounts';
+import TestWalletsTab from './Tabs/Accounts';
+import TestTokensTab from './Tabs/Tokens';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
-import type { AccountFilter } from '@/app/(menu)/Test/Tabs/TestAccounts';
+import type { AccountFilter } from '@/app/(menu)/Test/Tabs/Accounts';
+import type { AccountFilter as TokenFilter } from '@/app/(menu)/Test/Tabs/Tokens';
 import {
   clearFSMHeaderFromMemory,
   clearFSMTraceFromMemory,
 } from '@/components/debug/FSMTracePanel';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
+import { toggleShowTestNetsUpdater } from '@/lib/utils/network';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
@@ -28,22 +32,44 @@ const panelIconButtonBlue =
 const panelIconButtonGreen =
   `${panelIconButtonBase} bg-green-900 text-green-300 hover:bg-green-500 hover:text-green-950`;
 
-type TestTab = 'context' | 'fsm' | 'wallets' | 'todo';
+type TestTab = 'context' | 'fsm' | 'wallets' | 'tokens' | 'todo';
 type TestPageDisplay =
   | SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT
   | SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
   | SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
-  | SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
+  | SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+  | SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS;
 const panelLayoutOptions = ['Both Open', 'Left Only', 'Right Only'] as const;
 type TestPanelLayout = (typeof panelLayoutOptions)[number];
 const accountFilterOptions: AccountFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
+const tokenFilterOptions: TokenFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
+const ALL_NETWORKS_VALUE = 'ALL_NETWORKS';
+const tokenListNetworkOptions = [
+  { value: String(CHAIN_ID.ETHEREUM), label: 'Ethereum' },
+  { value: String(CHAIN_ID.BASE), label: 'Base' },
+  { value: String(CHAIN_ID.POLYGON), label: 'Polygon' },
+  { value: String(CHAIN_ID.SEPOLIA), label: 'Sepolia' },
+  { value: String(CHAIN_ID.HARDHAT), label: 'HardHat' },
+  { value: ALL_NETWORKS_VALUE, label: 'All Networks' },
+] as const;
+type TokenListNetworkValue = (typeof tokenListNetworkOptions)[number]['value'];
 
 const buildTestPageFlags = (display: TestPageDisplay) => ({
   TEST_PAGE_EXCHANGE_CONTEXT: display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
   TEST_PAGE_FSM_TRACE: display === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE,
   TEST_PAGE_ACCOUNT_LISTS: display === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS,
   TEST_PAGE_TO_DOS: display === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS,
+  TEST_PAGE_TOKEN_LISTS: display === SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS,
 });
+
+const hasAllTestPageDisplayFlags = (flags: any): boolean =>
+  !!flags &&
+  typeof flags === 'object' &&
+  typeof flags.TEST_PAGE_EXCHANGE_CONTEXT === 'boolean' &&
+  typeof flags.TEST_PAGE_FSM_TRACE === 'boolean' &&
+  typeof flags.TEST_PAGE_ACCOUNT_LISTS === 'boolean' &&
+  typeof flags.TEST_PAGE_TO_DOS === 'boolean' &&
+  typeof flags.TEST_PAGE_TOKEN_LISTS === 'boolean';
 
 const getSelectedDisplayFromFlags = (
   flags:
@@ -52,6 +78,7 @@ const getSelectedDisplayFromFlags = (
         TEST_PAGE_FSM_TRACE?: boolean;
         TEST_PAGE_ACCOUNT_LISTS?: boolean;
         TEST_PAGE_TO_DOS?: boolean;
+        TEST_PAGE_TOKEN_LISTS?: boolean;
       }
     | undefined,
 ): TestPageDisplay | undefined => {
@@ -61,6 +88,7 @@ const getSelectedDisplayFromFlags = (
   if (flags?.TEST_PAGE_FSM_TRACE) return SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE;
   if (flags?.TEST_PAGE_ACCOUNT_LISTS) return SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS;
   if (flags?.TEST_PAGE_TO_DOS) return SP_COIN_DISPLAY.TEST_PAGE_TO_DOS;
+  if (flags?.TEST_PAGE_TOKEN_LISTS) return SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS;
   return undefined;
 };
 
@@ -69,6 +97,7 @@ export default function TestPage() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { expandContext, setExpandContext, logContext } = useExchangePageState();
   const { dumpNavStack } = usePanelTree();
+  const showTestNets = Boolean((exchangeContext as any)?.settings?.showTestNets);
   const toggleAllRef = useRef<((nextExpand: boolean) => void) | null>(null);
   const pageRootRef = useRef<HTMLDivElement | null>(null);
   const lastWheelToggleAtRef = useRef(0);
@@ -93,6 +122,42 @@ export default function TestPage() {
   const [walletFilter, setWalletFilter] = useState<AccountFilter>(
     persistedAccountFilter ?? 'All Accounts',
   );
+  const persistedTokenFilterRaw = (exchangeContext as any)?.settings?.testPage?.tokenFilter as
+    | TokenFilter
+    | undefined;
+  const persistedTokenFilter: TokenFilter | undefined = tokenFilterOptions.includes(
+    persistedTokenFilterRaw as TokenFilter,
+  )
+    ? (persistedTokenFilterRaw as TokenFilter)
+    : undefined;
+  const appChainIdRaw = (exchangeContext as any)?.network?.appChainId as number | undefined;
+  const appChainValue = appChainIdRaw != null ? String(appChainIdRaw) : '';
+  const effectiveTokenListNetworkOptions = tokenListNetworkOptions.filter((option) => {
+    if (showTestNets) return true;
+    return (
+      option.value !== String(CHAIN_ID.SEPOLIA) &&
+      option.value !== String(CHAIN_ID.HARDHAT)
+    );
+  });
+  const appChainIsInTokenListOptions = effectiveTokenListNetworkOptions.some(
+    (option) => option.value === appChainValue,
+  );
+  const tokenListDefaultNetwork: TokenListNetworkValue = (appChainIsInTokenListOptions
+    ? appChainValue
+    : String(CHAIN_ID.ETHEREUM)) as TokenListNetworkValue;
+  const persistedTokenListNetworkRaw = (exchangeContext as any)?.settings?.testPage
+    ?.tokenListNetwork as string | undefined;
+  const persistedTokenListNetwork: TokenListNetworkValue | undefined = effectiveTokenListNetworkOptions.some(
+    (option) => option.value === persistedTokenListNetworkRaw,
+  )
+    ? (persistedTokenListNetworkRaw as TokenListNetworkValue)
+    : undefined;
+  const [tokenFilter, setTokenFilter] = useState<TokenFilter>(
+    persistedTokenFilter ?? 'All Accounts',
+  );
+  const [tokenListNetwork, setTokenListNetwork] = useState<TokenListNetworkValue>(
+    persistedTokenListNetwork ?? tokenListDefaultNetwork,
+  );
   const [showLeftPanel, setShowLeftPanel] = useState(
     persistedPanelLayout !== 'Right Only',
   );
@@ -105,6 +170,7 @@ export default function TestPage() {
   const {
     showContext = false,
     showAccounts = false,
+    showTokens = false,
     showToDo = false,
     showFSMTracePanel = false,
     selectedTestTab,
@@ -124,26 +190,31 @@ export default function TestPage() {
       ? 'context'
       : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE
         ? 'fsm'
-        : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
-          ? 'wallets'
-          : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
-            ? 'todo'
-            : undefined;
+      : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
+        ? 'wallets'
+        : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS
+          ? 'tokens'
+        : selectedDisplayResolved === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+          ? 'todo'
+          : undefined;
 
   const setTestPageSelectedDisplay = useCallback(
     (display: TestPageDisplay) => {
       setExchangeContext(
         (prev) => {
+          const prevTestPage = (prev.settings?.testPage ?? {}) as any;
           const currentSelected = getSelectedDisplayFromFlags(
-            prev.settings?.testPage,
+            prevTestPage,
           );
-          if (currentSelected === display) return prev;
+          if (currentSelected === display && hasAllTestPageDisplayFlags(prevTestPage)) {
+            return prev;
+          }
           return {
             ...prev,
             settings: {
               ...prev.settings,
               testPage: {
-                ...((prev.settings?.testPage ?? {}) as any),
+                ...prevTestPage,
                 ...buildTestPageFlags(display),
               } as any,
             },
@@ -175,12 +246,99 @@ export default function TestPage() {
     [setExchangeContext],
   );
 
+  const setTokenFilterPersisted = useCallback(
+    (next: TokenFilter) => {
+      setTokenFilter(next);
+      setExchangeContext(
+        (prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            testPage: {
+              ...((prev.settings?.testPage ?? {}) as any),
+              tokenFilter: next,
+            } as any,
+          },
+        }),
+        'TestPage:setTokenFilter',
+      );
+    },
+    [setExchangeContext],
+  );
+
+  const setTokenListNetworkPersisted = useCallback(
+    (next: TokenListNetworkValue) => {
+      setTokenListNetwork(next);
+      setExchangeContext(
+        (prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            testPage: {
+              ...((prev.settings?.testPage ?? {}) as any),
+              tokenListNetwork: next,
+            } as any,
+          },
+        }),
+        'TestPage:setTokenListNetwork',
+      );
+    },
+    [setExchangeContext],
+  );
+
+  const onToggleShowTestNets = useCallback(() => {
+    setExchangeContext(
+      toggleShowTestNetsUpdater,
+      'TestPage:onToggleShowTestNets',
+    );
+  }, [setExchangeContext]);
+
   useEffect(() => {
     if (!persistedAccountFilter) return;
     if (persistedAccountFilter !== walletFilter) {
       setWalletFilter(persistedAccountFilter);
     }
   }, [persistedAccountFilter, walletFilter]);
+
+  useEffect(() => {
+    if (!persistedTokenFilter) return;
+    if (persistedTokenFilter !== tokenFilter) {
+      setTokenFilter(persistedTokenFilter);
+    }
+  }, [persistedTokenFilter, tokenFilter]);
+
+  useEffect(() => {
+    if (persistedTokenListNetwork && persistedTokenListNetwork !== tokenListNetwork) {
+      setTokenListNetwork(persistedTokenListNetwork);
+      return;
+    }
+    if (!persistedTokenListNetwork && tokenListNetwork !== tokenListDefaultNetwork) {
+      setTokenListNetwork(tokenListDefaultNetwork);
+    }
+  }, [persistedTokenListNetwork, tokenListNetwork, tokenListDefaultNetwork]);
+
+  useEffect(() => {
+    const flags = (exchangeContext?.settings?.testPage ?? {}) as any;
+    if (hasAllTestPageDisplayFlags(flags)) return;
+
+    const selected =
+      getSelectedDisplayFromFlags(flags) ??
+      SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
+
+    setExchangeContext(
+      (prev) => ({
+        ...prev,
+        settings: {
+          ...prev.settings,
+          testPage: {
+            ...((prev.settings?.testPage ?? {}) as any),
+            ...buildTestPageFlags(selected),
+          } as any,
+        },
+      }),
+      'TestPage:backfillTestPageFlags',
+    );
+  }, [exchangeContext?.settings?.testPage, setExchangeContext]);
 
   useEffect(() => {
     const nextLeft = persistedPanelLayout !== 'Right Only';
@@ -209,6 +367,7 @@ export default function TestPage() {
   const resetFlags = {
     showContext: false,
     showAccounts: false,
+    showTokens: false,
     showToDo: false,
     showFSMTracePanel: false,
   } as const;
@@ -251,6 +410,14 @@ export default function TestPage() {
             selectedTestTab: 'todo',
           });
           break;
+        case 'tokens':
+          selectedDisplayFlag = SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS;
+          updateExchangePage({
+            ...resetFlags,
+            showTokens: true,
+            selectedTestTab: 'tokens',
+          });
+          break;
         default:
           break;
       }
@@ -267,6 +434,7 @@ export default function TestPage() {
     (selectedTestTab === 'context' ||
     selectedTestTab === 'fsm' ||
     selectedTestTab === 'wallets' ||
+    selectedTestTab === 'tokens' ||
     selectedTestTab === 'todo'
       ? selectedTestTab
       : showContext
@@ -275,6 +443,8 @@ export default function TestPage() {
           ? 'fsm'
           : showAccounts
             ? 'wallets'
+        : showTokens
+            ? 'tokens'
         : showToDo
               ? 'todo'
               : 'context');
@@ -455,6 +625,7 @@ export default function TestPage() {
                 <option value="context">Exchange Context</option>
                 <option value="fsm">FSM Trace</option>
                 <option value="wallets">Account Lists</option>
+                <option value="tokens">Token Lists</option>
                 <option value="todo">ToDo&apos;s</option>
               </select>
 
@@ -471,6 +642,54 @@ export default function TestPage() {
                         className="mr-2"
                       />
                       <span className={walletFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
+                        {option}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {selectedTab === 'tokens' && (
+                <div className="inline-flex flex-1 items-center justify-center gap-3">
+                  <label htmlFor="Token_List_Select" className="sr-only">
+                    Token List Network
+                  </label>
+                  <select
+                    id="Token_List_Select"
+                    className={buttonClasses}
+                    value={tokenListNetwork}
+                    onChange={(e) =>
+                      setTokenListNetworkPersisted(e.target.value as TokenListNetworkValue)
+                    }
+                    aria-label="Token List Network"
+                    title="Token List Network"
+                  >
+                    {effectiveTokenListNetworkOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="inline-flex items-center gap-2 text-[#5981F3] cursor-pointer select-none">
+                    <span>Test Nets</span>
+                    <input
+                      type="checkbox"
+                      checked={showTestNets}
+                      onChange={onToggleShowTestNets}
+                      className="h-4 w-4 accent-[#5981F3] cursor-pointer"
+                    />
+                  </label>
+                  {tokenFilterOptions.map((option) => (
+                    <label key={option} className="inline-flex items-center cursor-pointer text-[#5981F3]">
+                      <input
+                        type="radio"
+                        name="testTokenFilter"
+                        value={option}
+                        checked={tokenFilter === option}
+                        onChange={() => setTokenFilterPersisted(option)}
+                        className="mr-2"
+                      />
+                      <span className={tokenFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
                         {option}
                       </span>
                     </label>
@@ -523,6 +742,12 @@ export default function TestPage() {
                 <TestWalletsTab
                   selectedFilter={walletFilter}
                   onSelectedFilterChange={setWalletFilterPersisted}
+                />
+              )}
+              {selectedTab === 'tokens' && (
+                <TestTokensTab
+                  selectedFilter={tokenFilter}
+                  onSelectedFilterChange={setTokenFilterPersisted}
                 />
               )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}

@@ -119,6 +119,10 @@ export type Settings = {
     TEST_PAGE_FSM_TRACE: boolean;
     TEST_PAGE_ACCOUNT_LISTS: boolean;
     TEST_PAGE_TO_DOS: boolean;
+    TEST_PAGE_TOKEN_LISTS: boolean;
+    accountFilter?: string;
+    tokenFilter?: string;
+    panelLayout?: string;
   };
 };
 

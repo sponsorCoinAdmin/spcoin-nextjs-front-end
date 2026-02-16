@@ -354,13 +354,14 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     label === 'TEST_PAGE_EXCHANGE_CONTEXT' ||
     label === 'TEST_PAGE_FSM_TRACE' ||
     label === 'TEST_PAGE_ACCOUNT_LISTS' ||
-    label === 'TEST_PAGE_TO_DOS'
+    label === 'TEST_PAGE_TO_DOS' ||
+    label === 'TEST_PAGE_TOKEN_LISTS'
       ? label
       : null;
 
   const isTestPageOptionLeaf =
     testPageFlag !== null &&
-    /rest\.settings\.testPage\.(TEST_PAGE_EXCHANGE_CONTEXT|TEST_PAGE_FSM_TRACE|TEST_PAGE_ACCOUNT_LISTS|TEST_PAGE_TO_DOS)$/.test(
+    /rest\.settings\.testPage\.(TEST_PAGE_EXCHANGE_CONTEXT|TEST_PAGE_FSM_TRACE|TEST_PAGE_ACCOUNT_LISTS|TEST_PAGE_TO_DOS|TEST_PAGE_TOKEN_LISTS)$/.test(
       path,
     ) &&
     typeof guiValue === 'boolean';
@@ -375,10 +376,12 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           settings: {
             ...prev.settings,
             testPage: {
+              ...((prev.settings?.testPage ?? {}) as any),
               TEST_PAGE_EXCHANGE_CONTEXT: active === 'TEST_PAGE_EXCHANGE_CONTEXT',
               TEST_PAGE_FSM_TRACE: active === 'TEST_PAGE_FSM_TRACE',
               TEST_PAGE_ACCOUNT_LISTS: active === 'TEST_PAGE_ACCOUNT_LISTS',
               TEST_PAGE_TO_DOS: active === 'TEST_PAGE_TO_DOS',
+              TEST_PAGE_TOKEN_LISTS: active === 'TEST_PAGE_TOKEN_LISTS',
             },
           },
         }),

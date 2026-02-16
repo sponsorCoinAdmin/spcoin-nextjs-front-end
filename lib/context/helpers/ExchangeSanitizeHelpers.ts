@@ -63,14 +63,17 @@ function sanitizeDisplayStack(raw: any, sanitizedSettings: any) {
   // else: keep whatever defaultContext.settings had (if anything)
 }
 
-function mapDisplayToTestPageFlags(display?: number) {
+function mapDisplayToTestPageFlags(display?: number, prev?: any) {
   return {
+    ...(prev && typeof prev === 'object' ? prev : {}),
     TEST_PAGE_EXCHANGE_CONTEXT:
       display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
     TEST_PAGE_FSM_TRACE: display === SP_COIN_DISPLAY.TEST_PAGE_FSM_TRACE,
     TEST_PAGE_ACCOUNT_LISTS:
       display === SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS,
     TEST_PAGE_TO_DOS: display === SP_COIN_DISPLAY.TEST_PAGE_TO_DOS,
+    TEST_PAGE_TOKEN_LISTS:
+      display === SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS,
   };
 }
 
@@ -86,6 +89,7 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
       'TEST_PAGE_FSM_TRACE',
       'TEST_PAGE_ACCOUNT_LISTS',
       'TEST_PAGE_TO_DOS',
+      'TEST_PAGE_TOKEN_LISTS',
     ].some((k) => typeof (nestedFlags as any)[k] === 'boolean');
 
   if (hasTopLevelFlags) {
@@ -98,9 +102,11 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
             ? SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
             : nestedFlags.TEST_PAGE_TO_DOS
               ? SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+              : nestedFlags.TEST_PAGE_TOKEN_LISTS
+                ? SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS
               : SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
 
-    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay);
+    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay, nestedFlags);
     return;
   }
 
@@ -114,9 +120,11 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
             ? SP_COIN_DISPLAY.TEST_PAGE_ACCOUNT_LISTS
             : legacyNestedFlags.TEST_PAGE_TO_DOS
               ? SP_COIN_DISPLAY.TEST_PAGE_TO_DOS
+              : legacyNestedFlags.TEST_PAGE_TOKEN_LISTS
+                ? SP_COIN_DISPLAY.TEST_PAGE_TOKEN_LISTS
               : SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT;
 
-    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay);
+    sanitizedSettings.testPage = mapDisplayToTestPageFlags(selectedDisplay, testPageRaw);
     return;
   }
 
@@ -124,12 +132,14 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
   if (typeof legacySelectedDisplay === 'number') {
     sanitizedSettings.testPage = mapDisplayToTestPageFlags(
       legacySelectedDisplay,
+      testPageRaw,
     );
     return;
   }
 
   sanitizedSettings.testPage = mapDisplayToTestPageFlags(
     SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
+    testPageRaw,
   );
 }
 

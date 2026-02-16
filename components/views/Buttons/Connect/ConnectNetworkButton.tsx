@@ -19,6 +19,7 @@ import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
 import { useDropDownPortal } from './hooks/useDropDownPortal';
+import { toggleShowTestNetsUpdater } from '@/lib/utils/network';
 
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
@@ -221,13 +222,7 @@ export default function ConnectNetworkButton({
                   showTestNets={showTestNets}
                   onToggleShowTestNets={() =>
                     setExchangeContext(
-                      (prev) => ({
-                        ...prev,
-                        settings: {
-                          ...prev.settings,
-                          showTestNets: !Boolean(prev.settings?.showTestNets),
-                        },
-                      }),
+                      toggleShowTestNetsUpdater,
                       'ConnectNetworkButton:onToggleShowTestNets',
                     )
                   }

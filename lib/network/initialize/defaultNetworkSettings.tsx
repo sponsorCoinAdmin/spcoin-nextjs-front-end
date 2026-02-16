@@ -117,6 +117,7 @@ const getInitialContext = (
         TEST_PAGE_FSM_TRACE: false,
         TEST_PAGE_ACCOUNT_LISTS: false,
         TEST_PAGE_TO_DOS: false,
+        TEST_PAGE_TOKEN_LISTS: false,
       },
     },
     errorMessage: undefined,
