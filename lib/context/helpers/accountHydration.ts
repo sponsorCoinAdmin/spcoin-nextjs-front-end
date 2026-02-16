@@ -6,7 +6,7 @@ import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { getJson } from '@/lib/rest/http';
-import { getAccountByAddress } from '@/lib/api';
+import { getAccountByAddress, getAccountsBatch, getTokensBatch } from '@/lib/api';
 import { getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -73,6 +73,8 @@ type TokenInfoJson = {
 };
 
 const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const ACCOUNT_BATCH_PAGE_SIZE = 25;
+const TOKEN_BATCH_PAGE_SIZE = 25;
 
 /* ----------------------------- small utils ----------------------------- */
 
@@ -93,6 +95,10 @@ function toBigIntSafe(value: unknown): bigint {
     /* ignore */
   }
   return 0n;
+}
+
+function normalizeAddressLower(value: string): Address {
+  return (`0x${value.slice(2).toLowerCase()}`) as Address;
 }
 
 function coerceStatus(raw: unknown): STATUS {
@@ -116,6 +122,13 @@ function summarizeOut(out: spCoinAccount) {
     hasLogo: Boolean(out.logoURL),
     balance: typeof (out as any).balance === 'bigint' ? (out as any).balance.toString() : String((out as any).balance ?? ''),
   };
+}
+
+function chunk<T>(arr: readonly T[], size: number): T[][] {
+  if (size <= 0) return [arr.slice() as T[]];
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size) as T[]);
+  return out;
 }
 
 /**
@@ -317,6 +330,75 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
   return out;
 }
 
+async function hydrateAccountsFromSpecsBatch(specs: any[]): Promise<Map<string, spCoinAccount>> {
+  const addresses = specs
+    .map((spec) => pickAddressFromSpec(spec))
+    .filter((a): a is Address => Boolean(a))
+    .map((a) => normalizeAddressLower(a));
+
+  if (!addresses.length) return new Map<string, spCoinAccount>();
+
+  const uniqueAddresses = Array.from(new Set(addresses));
+  const pages = chunk(uniqueAddresses, ACCOUNT_BATCH_PAGE_SIZE);
+  const out = new Map<string, spCoinAccount>();
+
+  await Promise.all(
+    pages.map(async (page, pageIndex) => {
+      try {
+        const response = await getAccountsBatch<WalletJson>(page, {
+          timeoutMs: 20000,
+        });
+
+        for (const item of response.items ?? []) {
+          if (!item?.address || !isAddress(item.address)) continue;
+          const addr = normalizeAddressLower(item.address);
+          const json = item.data;
+
+          const hydrated: spCoinAccount = {
+            address: addr,
+            type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_WALLET' as any),
+            name: typeof json?.name === 'string' ? json.name : '',
+            symbol: typeof json?.symbol === 'string' ? json.symbol : '',
+            website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
+            description: typeof (json as any)?.description === 'string' ? (json as any).description : ('' as any),
+            status: coerceStatus((json as any)?.status),
+            logoURL: getAccountLogoURL_SSOT(addr) || defaultMissingImage,
+            balance: toBigIntSafe((json as any)?.balance),
+          };
+
+          out.set(addr.toLowerCase(), hydrated);
+        }
+      } catch (err: any) {
+        debugLog.warn?.('[hydrateAccountsFromSpecsBatch] batch failed; fallback to per-address', {
+          pageIndex,
+          pageSize: page.length,
+          message: String(err?.message ?? err),
+        });
+
+        await Promise.all(
+          page.map(async (addr) => {
+            try {
+              const hydrated = await hydrateAccountFromAddress(addr);
+              out.set(addr.toLowerCase(), hydrated);
+            } catch {
+              // Keep missing entries unresolved so callers emit consistent fallback rows.
+            }
+          }),
+        );
+      }
+    }),
+  );
+
+  debugLog.log?.('[hydrateAccountsFromSpecsBatch] complete', {
+    requested: uniqueAddresses.length,
+    hydrated: out.size,
+    chunks: pages.length,
+    chunkSize: ACCOUNT_BATCH_PAGE_SIZE,
+  });
+
+  return out;
+}
+
 /* ----------------------------- token SSOT hydration ----------------------------- */
 
 async function hydrateTokenFromAddress(chainId: number, address: Address) {
@@ -399,7 +481,10 @@ function pickAddressFromSpec(spec: any): Address | undefined {
  * - If spec has an address: hydrate from account.json and overlay any inline fields.
  * - If no valid address: returns a consistent fallback (error status).
  */
-async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {
+async function buildAccountFromJsonSpec(
+  spec: any,
+  prefetchedByAddress?: Map<string, spCoinAccount>,
+): Promise<spCoinAccount> {
   const addr = pickAddressFromSpec(spec);
 
   const balanceOverride =
@@ -414,11 +499,14 @@ async function buildAccountFromJsonSpec(spec: any): Promise<spCoinAccount> {
     );
   }
 
-  const hydrated = await hydrateAccountFromAddress(addr, {
-    balance: typeof balanceOverride === 'bigint' ? balanceOverride : undefined,
-    // allow JSON to override logo only if explicitly requested elsewhere; keep default false.
-    allowJsonLogoURL: false,
-  });
+  const prefetched = prefetchedByAddress?.get(normalizeAddressLower(addr).toLowerCase());
+  const hydrated =
+    prefetched ??
+    (await hydrateAccountFromAddress(addr, {
+      balance: typeof balanceOverride === 'bigint' ? balanceOverride : undefined,
+      // allow JSON to override logo only if explicitly requested elsewhere; keep default false.
+      allowJsonLogoURL: false,
+    }));
 
   // Overlay any inline/user-provided fields without breaking SSOT fields unless explicitly present.
   if (spec && typeof spec === 'object') {
@@ -529,6 +617,10 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
 
       // normalize first (includes invalid rows)
       const prelim = list.map((t) => buildTokenFromJson(t, chainId)).filter(Boolean) as any[];
+      const validAddresses = prelim
+        .map((t) => t?.address)
+        .filter((a): a is Address => typeof a === 'string' && isAddress(a));
+      const prefetchedByAddress = await hydrateTokensFromAddressesBatch(chainId, validAddresses);
 
       // hydrate valid tokens from SSOT info.json; invalid rows remain as-is
       const tokens = await Promise.all(
@@ -536,6 +628,19 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
           if (t?.__invalid) return t;
           const a = t?.address;
           if (typeof a === 'string' && isAddress(a)) {
+            const key = normalizeAddressLower(a as Address).toLowerCase();
+            const prefetched = prefetchedByAddress.get(key);
+            if (prefetched && typeof prefetched === 'object') {
+              return {
+                ...prefetched,
+                address: normalizeAddressLower(a as Address),
+                chainId,
+                logoURL:
+                  typeof prefetched.logoURL === 'string' && prefetched.logoURL.trim().length
+                    ? prefetched.logoURL
+                    : getTokenLogoURL_SSOT(chainId, a as Address) ?? defaultMissingImage,
+              };
+            }
             return hydrateTokenFromAddress(chainId, a as Address);
           }
           return t;
@@ -551,15 +656,64 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
     case FEED_TYPE.MANAGE_RECIPIENTS:
     case FEED_TYPE.MANAGE_AGENTS: {
       const list = normalizeList(raw);
-      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x)));
+      const prefetchedByAddress = await hydrateAccountsFromSpecsBatch(list);
+      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x, prefetchedByAddress)));
       return { spCoinAccounts } as any;
     }
 
     default: {
       // permissive fallback: try accounts first, else tokens
       const list = normalizeList(raw);
-      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x)));
+      const prefetchedByAddress = await hydrateAccountsFromSpecsBatch(list);
+      const spCoinAccounts = await Promise.all(list.map((x) => buildAccountFromJsonSpec(x, prefetchedByAddress)));
       return { spCoinAccounts } as any;
     }
   }
+}
+
+async function hydrateTokensFromAddressesBatch(
+  chainId: number,
+  addresses: Address[],
+): Promise<Map<string, any>> {
+  const uniqueAddresses = Array.from(
+    new Set(addresses.map((a) => normalizeAddressLower(a))),
+  );
+  if (!uniqueAddresses.length) return new Map<string, any>();
+
+  const pages = chunk(uniqueAddresses, TOKEN_BATCH_PAGE_SIZE);
+  const out = new Map<string, any>();
+
+  await Promise.all(
+    pages.map(async (page, pageIndex) => {
+      try {
+        const response = await getTokensBatch<any>(
+          { chainId, addresses: page },
+          { timeoutMs: 20000 },
+        );
+
+        for (const item of response.items ?? []) {
+          const rawAddr = item?.address;
+          if (typeof rawAddr !== 'string' || !isAddress(rawAddr)) continue;
+          out.set(normalizeAddressLower(rawAddr).toLowerCase(), item?.data ?? null);
+        }
+      } catch (err: any) {
+        debugLog.warn?.('[hydrateTokensFromAddressesBatch] batch failed; fallback to per-token', {
+          chainId,
+          pageIndex,
+          pageSize: page.length,
+          message: String(err?.message ?? err),
+        });
+      }
+    }),
+  );
+
+  debugLog.log?.('[hydrateTokensFromAddressesBatch] complete', {
+    chainId,
+    requested: uniqueAddresses.length,
+    hydrated: out.size,
+    chunks: pages.length,
+    chunkSize: TOKEN_BATCH_PAGE_SIZE,
+  });
+
+  return out;
 }

@@ -15,6 +15,27 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('useFeedData', DEBUG_ENABLED, LOG_TIME);
 
+type CacheEntry = {
+  data: FeedData;
+  expiresAt: number;
+};
+
+const DEFAULT_FEED_CACHE_TTL_MS = 60_000;
+
+function parsePositiveMsEnv(name: string): number | undefined {
+  const raw = Number(process.env[name]);
+  return Number.isFinite(raw) && raw > 0 ? raw : undefined;
+}
+
+const FEED_CACHE_TTL_MS = parsePositiveMsEnv('NEXT_PUBLIC_ASSET_SELECT_FEED_TTL_MS') ?? DEFAULT_FEED_CACHE_TTL_MS;
+const ACCOUNT_FEED_CACHE_TTL_MS =
+  parsePositiveMsEnv('NEXT_PUBLIC_ASSET_SELECT_ACCOUNT_FEED_TTL_MS') ?? FEED_CACHE_TTL_MS;
+const TOKEN_FEED_CACHE_TTL_MS =
+  parsePositiveMsEnv('NEXT_PUBLIC_ASSET_SELECT_TOKEN_FEED_TTL_MS') ?? FEED_CACHE_TTL_MS;
+
+const feedCache = new Map<string, CacheEntry>();
+const inFlightFeedRequests = new Map<string, Promise<FeedData>>();
+
 function isAccountFeedType(feedType: FEED_TYPE) {
   return (
     feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
@@ -23,6 +44,14 @@ function isAccountFeedType(feedType: FEED_TYPE) {
     feedType === FEED_TYPE.MANAGE_RECIPIENTS ||
     feedType === FEED_TYPE.MANAGE_AGENTS
   );
+}
+
+function getCacheKey(feedType: FEED_TYPE, chainId: number) {
+  return `${feedType}:${chainId}`;
+}
+
+function ttlForFeedType(feedType: FEED_TYPE): number {
+  return isAccountFeedType(feedType) ? ACCOUNT_FEED_CACHE_TTL_MS : TOKEN_FEED_CACHE_TTL_MS;
 }
 
 export function useFeedData(feedType: FEED_TYPE) {
@@ -36,21 +65,57 @@ export function useFeedData(feedType: FEED_TYPE) {
     let cancelled = false;
     const seq = ++seqRef.current;
     const chain = Number(chainId);
+    const key = getCacheKey(feedType, chain);
+    const now = Date.now();
+    const ttlMs = ttlForFeedType(feedType);
 
     const isAccountFeed = isAccountFeedType(feedType);
+    const cached = feedCache.get(key);
+    const isFresh = !!cached && cached.expiresAt > now;
+
+    if (isFresh) {
+      setFeedData(cached.data);
+      setError(undefined);
+      setLoading(false);
+
+      debugLog.log?.('[cache-hit]', {
+        seq,
+        key,
+        feedType,
+        feedTypeLabel: FEED_TYPE[feedType],
+        chainId: chain,
+        ttlMs,
+        expiresInMs: cached.expiresAt - now,
+      });
+
+      return () => {
+        cancelled = true;
+        debugLog.log?.('[cleanup]', { seq, key, source: 'cache-hit' });
+      };
+    }
+
     setLoading(isAccountFeed);
 
     debugLog.log?.('[start]', {
       seq,
+      key,
       feedType,
       feedTypeLabel: FEED_TYPE[feedType],
       chainId: chain,
       isAccountFeed,
+      ttlMs,
+      cacheState: cached ? 'expired' : 'miss',
     });
 
     (async () => {
       try {
-        const data = await fetchAndBuildDataList(feedType, chain);
+        let request = inFlightFeedRequests.get(key);
+        if (!request) {
+          request = fetchAndBuildDataList(feedType, chain);
+          inFlightFeedRequests.set(key, request);
+        }
+
+        const data = await request;
         const anyData: any = data;
 
         if (cancelled) {
@@ -58,11 +123,17 @@ export function useFeedData(feedType: FEED_TYPE) {
           return;
         }
 
+        feedCache.set(key, {
+          data,
+          expiresAt: Date.now() + ttlMs,
+        });
+
         setFeedData(data);
         setError(undefined);
 
         debugLog.log?.('[success]', {
           seq,
+          key,
           feedTypeLabel: FEED_TYPE[feedType],
           chainId: chain,
 
@@ -74,6 +145,7 @@ export function useFeedData(feedType: FEED_TYPE) {
           spCoinAccountsLen: Array.isArray(anyData?.spCoinAccounts) ? anyData.spCoinAccounts.length : 0,
 
           tokensLen: Array.isArray(anyData?.tokens) ? anyData.tokens.length : 0,
+          ttlMs,
         });
       } catch (e: any) {
         if (cancelled) return;
@@ -86,13 +158,14 @@ export function useFeedData(feedType: FEED_TYPE) {
           message: e?.message ?? String(e),
         });
       } finally {
+        inFlightFeedRequests.delete(key);
         if (!cancelled) setLoading(false);
       }
     })();
 
     return () => {
       cancelled = true;
-      debugLog.log?.('[cleanup]', { seq });
+      debugLog.log?.('[cleanup]', { seq, key, source: 'network' });
     };
   }, [feedType, chainId]);
 
