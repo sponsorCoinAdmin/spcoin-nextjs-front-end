@@ -7,7 +7,7 @@ import { formatUnits, erc20Abi } from 'viem';
 
 import type { TokenContract, ContractRecs } from '@/lib/structure';
 import { BURN_ADDRESS } from '@/lib/structure';
-import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { getBlockChainName } from '@/lib/utils/network';
 import { useAppChainId } from '@/lib/context/hooks';
 
 /* ----------------------------- Read helpers (wagmi) ----------------------------- */

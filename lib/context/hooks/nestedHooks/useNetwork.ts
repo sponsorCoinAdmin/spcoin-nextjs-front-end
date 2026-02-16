@@ -9,7 +9,7 @@ import {
   getBlockChainName,
   getBlockChainLogoURL,
   getBlockExplorerURL,
-} from '@/lib/context/helpers/NetworkHelpers';
+} from '@/lib/utils/network';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

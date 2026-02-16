@@ -20,8 +20,13 @@ import {
   clearFSMTraceFromMemory,
 } from '@/components/debug/FSMTracePanel';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
-import { toggleShowTestNetsUpdater } from '@/lib/utils/network';
+import {
+  ALL_NETWORKS_VALUE,
+  resolveAppChainId,
+  getTokenListNetworkOptions,
+  getDefaultTokenListNetworkValue,
+  toggleShowTestNetsUpdater,
+} from '@/lib/utils/network';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
@@ -43,16 +48,7 @@ const panelLayoutOptions = ['Both Open', 'Left Only', 'Right Only'] as const;
 type TestPanelLayout = (typeof panelLayoutOptions)[number];
 const accountFilterOptions: AccountFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
 const tokenFilterOptions: TokenFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
-const ALL_NETWORKS_VALUE = 'ALL_NETWORKS';
-const tokenListNetworkOptions = [
-  { value: String(CHAIN_ID.ETHEREUM), label: 'Ethereum' },
-  { value: String(CHAIN_ID.BASE), label: 'Base' },
-  { value: String(CHAIN_ID.POLYGON), label: 'Polygon' },
-  { value: String(CHAIN_ID.SEPOLIA), label: 'Sepolia' },
-  { value: String(CHAIN_ID.HARDHAT), label: 'HardHat' },
-  { value: ALL_NETWORKS_VALUE, label: 'All Networks' },
-] as const;
-type TokenListNetworkValue = (typeof tokenListNetworkOptions)[number]['value'];
+type TokenListNetworkValue = `${number}` | typeof ALL_NETWORKS_VALUE;
 
 const buildTestPageFlags = (display: TestPageDisplay) => ({
   TEST_PAGE_EXCHANGE_CONTEXT: display === SP_COIN_DISPLAY.TEST_PAGE_EXCHANGE_CONTEXT,
@@ -130,21 +126,14 @@ export default function TestPage() {
   )
     ? (persistedTokenFilterRaw as TokenFilter)
     : undefined;
-  const appChainIdRaw = (exchangeContext as any)?.network?.appChainId as number | undefined;
-  const appChainValue = appChainIdRaw != null ? String(appChainIdRaw) : '';
-  const effectiveTokenListNetworkOptions = tokenListNetworkOptions.filter((option) => {
-    if (showTestNets) return true;
-    return (
-      option.value !== String(CHAIN_ID.SEPOLIA) &&
-      option.value !== String(CHAIN_ID.HARDHAT)
-    );
-  });
-  const appChainIsInTokenListOptions = effectiveTokenListNetworkOptions.some(
-    (option) => option.value === appChainValue,
+  const appChainIdRaw = resolveAppChainId(
+    (exchangeContext as any)?.network?.appChainId,
   );
-  const tokenListDefaultNetwork: TokenListNetworkValue = (appChainIsInTokenListOptions
-    ? appChainValue
-    : String(CHAIN_ID.ETHEREUM)) as TokenListNetworkValue;
+  const effectiveTokenListNetworkOptions = getTokenListNetworkOptions(showTestNets);
+  const tokenListDefaultNetwork = getDefaultTokenListNetworkValue(
+    appChainIdRaw,
+    showTestNets,
+  ) as TokenListNetworkValue;
   const persistedTokenListNetworkRaw = (exchangeContext as any)?.settings?.testPage
     ?.tokenListNetwork as string | undefined;
   const persistedTokenListNetwork: TokenListNetworkValue | undefined = effectiveTokenListNetworkOptions.some(

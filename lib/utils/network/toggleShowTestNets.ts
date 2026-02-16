@@ -11,4 +11,3 @@ export const toggleShowTestNetsUpdater = (
     showTestNets: !Boolean(prev.settings?.showTestNets),
   },
 });
-

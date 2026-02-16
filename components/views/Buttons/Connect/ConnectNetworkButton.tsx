@@ -19,7 +19,11 @@ import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
 import { useDropDownPortal } from './hooks/useDropDownPortal';
-import { toggleShowTestNetsUpdater } from '@/lib/utils/network';
+import {
+  toggleShowTestNetsUpdater,
+  resolveAppChainId,
+  getEffectiveChainId,
+} from '@/lib/utils/network';
 
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
@@ -82,26 +86,18 @@ export default function ConnectNetworkButton({
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, address, truncatedAddress, chain, show }) => {
-        const normalizedAppChainId =
-          typeof appChainId === 'number' && appChainId > 0 ? appChainId : undefined;
-
-        const normalizedWalletChainId =
-          typeof walletChainId === 'number' && walletChainId > 0
-            ? walletChainId
-            : undefined;
-
-        const normalizedChainId =
-          typeof chain?.id === 'number' && chain.id > 0 ? chain.id : undefined;
-
-        const fallbackId = allOptions[0]?.id;
+        const normalizedAppChainId = resolveAppChainId(appChainId);
+        const normalizedWalletChainId = resolveAppChainId(walletChainId);
+        const normalizedChainId = resolveAppChainId(chain?.id);
+        const fallbackId = resolveAppChainId(allOptions[0]?.id);
 
         // 🔹 Base id for app/network selection:
         //     appChainId (SSoT) → ConnectKit chain → wallet chain → first option
-        const baseId =
-          normalizedAppChainId ??
-          normalizedChainId ??
-          normalizedWalletChainId ??
-          fallbackId;
+        const baseId = getEffectiveChainId({
+          appChainId: normalizedAppChainId,
+          walletChainId: normalizedChainId ?? normalizedWalletChainId,
+          fallbackChainId: fallbackId,
+        });
 
         // 🔹 Current network id for display & dropdown
         // When connected, we *still* let appChainId lead; ConnectKit chain is
@@ -111,8 +107,7 @@ export default function ConnectNetworkButton({
             ? normalizedAppChainId ?? normalizedChainId ?? normalizedWalletChainId
             : normalizedAppChainId) ?? baseId;
 
-        const numericCurrentId =
-          typeof currentId === 'number' && currentId > 0 ? currentId : undefined;
+        const numericCurrentId = resolveAppChainId(currentId, baseId);
 
         // label
         const opt = findById(numericCurrentId);

@@ -1,7 +1,7 @@
 // File: @/lib/network/initialize/appNetworkController.tsx
 'use client';
 
-import { useNetworkController } from '@/lib/context/hooks/ExchangeContext/nested/network/useNetworkController';
+import { useNetworkController } from '@/lib/utils/network/hooks';
 
 export function AppNetworkController() {
   // This hook applies Cases A–E:

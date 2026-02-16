@@ -1,6 +1,5 @@
+// File: @/lib/utils/network/hooks/useNetworkController.ts
 'use client';
-
-// File: @/lib/context/hooks/ExchangeContext/nested/network/useNetworkController.ts
 
 /**
  * useNetworkController

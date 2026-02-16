@@ -7,7 +7,7 @@ import { ChevronDown } from 'lucide-react';
 import networks from '@/lib/network/initialize/networks.json';
 
 import { useAppChainId, useExchangeContext } from '@/lib/context/hooks';
-import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';
+import { getBlockChainLogoURL } from '@/lib/utils/network';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/coreUtils';
 
 type NetworkLike =

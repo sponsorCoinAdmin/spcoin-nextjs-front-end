@@ -19,8 +19,8 @@ export * from './nestedHooks/useTokenContracts'; // provides useSellTokenContrac
 // Panel-tree visibility API (concrete file, not a barrel)
 export * from '../exchangeContext/hooks/usePanelTree';
 
-// Named re-export (concrete file, not a barrel)
-export * from './ExchangeContext/nested/network/useAppChainId';
+// Network hooks (barrel)
+export * from '../../utils/network/hooks';
 
 import { useContext } from 'react';
 import { ExchangeContextState } from '../ExchangeProvider';

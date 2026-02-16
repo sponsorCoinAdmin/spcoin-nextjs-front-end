@@ -7,7 +7,7 @@ import { formatUnits } from 'viem'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import type { TokenContract, ContractRecs} from '@/lib/structure';
 import { BURN_ADDRESS } from '@/lib/structure'
-import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { getBlockChainName } from '@/lib/utils/network';
 import { useAppChainId } from '../context/hooks'
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {

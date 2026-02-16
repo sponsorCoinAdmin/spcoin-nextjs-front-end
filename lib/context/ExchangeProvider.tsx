@@ -6,7 +6,7 @@ import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
 import { initExchangeContext } from '@/lib/context/init/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/providers/useProviderSetters';
-import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
+import { deriveNetworkFromApp } from '@/lib/utils/network';
 
 // ✅ SSOT account hydration
 import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';

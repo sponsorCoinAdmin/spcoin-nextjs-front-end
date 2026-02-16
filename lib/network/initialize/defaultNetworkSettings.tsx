@@ -1,11 +1,6 @@
 // File: @/lib/network/initialize/defaultNetworkSettings.tsx
 'use client';
 
-import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
-import defaultSepoliaSettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
-
 import type {
   TradeData,
   ExchangeContext,
@@ -22,8 +17,12 @@ import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/Pane
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import {
+  getDefaultNetworkSettings,
+  normalizeChainId,
+} from '@/lib/utils/network';
 
-// ✅ displayStack node type (strict shape: [{id,name}])
+// displayStack node type (strict shape: [{id,name}])
 import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
 
 const LOG_TIME = false;
@@ -77,7 +76,7 @@ function buildDefaultSpCoinPanelTree(): SpCoinPanelTree {
 const initialContext = () => {
   const chainId: number = CHAIN_ID.ETHEREUM; // default startup network
   const exchangeContext: ExchangeContext = getInitialContext(chainId);
-  logger.log('🟢 [initialContext] Initialized ExchangeContext:', exchangeContext);
+  logger.log('initialContext Initialized ExchangeContext:', exchangeContext);
   return { exchangeContext };
 };
 
@@ -86,7 +85,7 @@ const getInitialContext = (
 ): ExchangeContext => {
   const chainId = normalizeChainId(chain);
   const initialContextMap = getInitialContextMap(chainId);
-  logger.log(`🛠️ [getInitialContext] Generating context for chainId: ${chainId}`);
+  logger.log(`[getInitialContext] Generating context for chainId: ${chainId}`);
 
   const exchangeContext: ExchangeContext = {
     network: initialContextMap.get('networkHeader') as NetworkElement,
@@ -106,10 +105,10 @@ const getInitialContext = (
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
 
-      // ✅ satisfy required Settings.spCoinPanelTree with a full tree root
+      // satisfy required Settings.spCoinPanelTree with a full tree root
       spCoinPanelTree: buildDefaultSpCoinPanelTree(),
 
-      // ✅ REQUIRED by Settings: initialize empty persisted nav stack
+      // REQUIRED by Settings: initialize empty persisted nav stack
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
       testPage: {
@@ -124,70 +123,14 @@ const getInitialContext = (
     apiErrorMessage: undefined,
   };
 
-  logger.log('✅ [getInitialContext] InitialContext constructed:', exchangeContext);
+  logger.log('[getInitialContext] InitialContext constructed:', exchangeContext);
   return exchangeContext;
 };
 
 function getInitialContextMap(chain: number) {
   const initialNetworkContext = getDefaultNetworkSettings(chain);
-  logger.log(`📦 [getInitialContextMap] Network settings loaded for chain: ${chain}`);
+  logger.log(`[getInitialContextMap] Network settings loaded for chain: ${chain}`);
   return new Map(Object.entries(initialNetworkContext));
 }
-
-/** Accepts number | string | {id:number}, returns a numeric CHAIN_ID. Defaults to ETHEREUM. */
-function normalizeChainId(chain: number | string | { id: number } | undefined): number {
-  if (typeof chain === 'number' && Number.isFinite(chain)) return chain;
-
-  if (typeof chain === 'object' && chain && typeof chain.id === 'number') {
-    return chain.id;
-  }
-
-  if (typeof chain === 'string') {
-    const key = chain.toLowerCase();
-    switch (key) {
-      case 'ethereum':
-      case 'mainnet':
-      case 'eth':
-        return CHAIN_ID.ETHEREUM;
-      case 'polygon':
-      case 'matic':
-        return CHAIN_ID.POLYGON;
-      case 'hardhat':
-        return CHAIN_ID.HARDHAT;
-      case 'sepolia':
-        return CHAIN_ID.SEPOLIA;
-      case 'base':
-        return CHAIN_ID.BASE;
-      case 'goerli':
-        return CHAIN_ID.GOERLI;
-      default:
-        return CHAIN_ID.ETHEREUM;
-    }
-  }
-
-  return CHAIN_ID.ETHEREUM;
-}
-
-const getDefaultNetworkSettings = (chain: number) => {
-  switch (chain) {
-    case CHAIN_ID.ETHEREUM:
-      logger.log('🔗 [getDefaultNetworkSettings] Using Ethereum settings');
-      return defaultEthereumSettings;
-    case CHAIN_ID.POLYGON:
-      logger.log('🔗 [getDefaultNetworkSettings] Using Polygon settings');
-      return defaultPolygonSettings;
-    case CHAIN_ID.HARDHAT:
-      logger.log('🔗 [getDefaultNetworkSettings] Using Hardhat settings');
-      return defaultHardHatSettings;
-    case CHAIN_ID.SEPOLIA:
-      logger.log('🔗 [getDefaultNetworkSettings] Using Sepolia settings');
-      return defaultSepoliaSettings;
-    default:
-      logger.warn(
-        '⚠️ [getDefaultNetworkSettings] Unknown chain, defaulting to Ethereum',
-      );
-      return defaultEthereumSettings;
-  }
-};
 
 export { getDefaultNetworkSettings, getInitialContext, getInitialContextMap, initialContext };

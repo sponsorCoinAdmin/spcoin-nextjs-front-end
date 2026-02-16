@@ -8,7 +8,7 @@ import type {
   spCoinAccount,
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
+import { resolveNetworkElement } from '@/lib/utils/network';
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ SSOT account hydration
