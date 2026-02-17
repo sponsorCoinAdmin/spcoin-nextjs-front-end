@@ -91,26 +91,40 @@ export default function CreateAccountPage() {
     <main className="mx-auto max-w-3xl p-6 text-white">
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
-      <div className="mb-4 flex items-center gap-4">
-        <label className="w-56 text-right" title={fieldTitles.publicKey}>
-          Account Public Key
-        </label>
-        <div className="flex-1">
-          <input
-            type="text"
-            value={publicKey}
-            readOnly
-            placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
-            title="Required for Code Account Operations"
-            className={requiredInputClasses}
-            onMouseEnter={() => setHoveredInput('publicKey')}
-            onMouseLeave={() => setHoveredInput(null)}
-          />
-          {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="w-56" />
+          <div className="flex flex-1 items-center [&>div]:w-full [&>div]:inline-flex [&>div>div]:w-full [&>div>div>button]:w-full [&>div>div>button]:justify-center [&>div>div>button]:!bg-[#E5B94F] [&>div>div>button]:!text-black">
+            <ConnectNetworkButtonProps
+              showName={false}
+              showSymbol={true}
+              showChevron={true}
+              showConnect={true}
+              showDisconnect={false}
+              showHoverBg={true}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <label className="w-56 text-right" title={fieldTitles.publicKey}>
+            Account Public Key
+          </label>
+          <div className="flex-1">
+            <input
+              type="text"
+              value={publicKey}
+              readOnly
+              placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
+              title="Required for Code Account Operations"
+              className={requiredInputClasses}
+              onMouseEnter={() => setHoveredInput('publicKey')}
+              onMouseLeave={() => setHoveredInput(null)}
+            />
+            {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
+          </div>
+        </div>
+
         {[
           {
             label: 'Name',
@@ -206,19 +220,6 @@ export default function CreateAccountPage() {
         {formData.logoUrl ? (
           <p className="ml-[15rem] mt-1 text-sm text-white/80">{formData.logoUrl}</p>
         ) : null}
-        <div className="flex items-center gap-4">
-          <div className="w-56" />
-          <div className="flex flex-1 items-center">
-            <ConnectNetworkButtonProps
-              showName={false}
-              showSymbol={true}
-              showChevron={true}
-              showConnect={true}
-              showDisconnect={false}
-              showHoverBg={true}
-            />
-          </div>
-        </div>
       </form>
     </main>
   );
