@@ -120,7 +120,7 @@ export default function CreateAccountPage() {
             value={publicKey}
             readOnly
             placeholder={hoveredInput === 'publicKey' ? fieldTitles.publicKey : 'Required'}
-            title={fieldTitles.publicKey}
+            title="Required for Code Account Operations"
             className={requiredInputClasses}
             onMouseEnter={() => setHoveredInput('publicKey')}
             onMouseLeave={() => setHoveredInput(null)}
@@ -209,7 +209,7 @@ export default function CreateAccountPage() {
                   value={formData.infuraKey}
                   onChange={handleChange}
                   placeholder={hoveredInput === 'infuraKey' ? fieldTitles.infuraKey : 'Required'}
-                  title={fieldTitles.infuraKey}
+                  title="Required for Code Account Operations"
                   className={requiredInputClasses}
                   onMouseEnter={() => setHoveredInput('infuraKey')}
                   onMouseLeave={() => setHoveredInput(null)}
@@ -234,7 +234,7 @@ export default function CreateAccountPage() {
                   value={formData.connectKitKey}
                   onChange={handleChange}
                   placeholder={hoveredInput === 'connectKitKey' ? fieldTitles.connectKitKey : 'Required'}
-                  title={fieldTitles.connectKitKey}
+                  title="Required for Code Account Operations"
                   className={requiredInputClasses}
                   onMouseEnter={() => setHoveredInput('connectKitKey')}
                   onMouseLeave={() => setHoveredInput(null)}
@@ -268,7 +268,7 @@ export default function CreateAccountPage() {
                 value={formData[name as keyof AccountFormData]}
                 onChange={handleChange}
                 placeholder={hoveredInput === name ? title : 'Optional'}
-                title={title}
+                title="Optional for Privacy"
                 className={optionalInputClasses}
                 onMouseEnter={() => setHoveredInput(name)}
                 onMouseLeave={() => setHoveredInput(null)}
