@@ -11,6 +11,7 @@ import ExchangeContextTab from './Tabs/ExchangeContext';
 import FSMTraceTab from './Tabs/FSMTrace';
 import TestWalletsTab from './Tabs/Accounts';
 import TestTokensTab from './Tabs/Tokens';
+import type { TokenTextMode } from './Tabs/Tokens';
 import ToDoTab from './Tabs/ToDo';
 import PriceView from '@/app/(menu)/Exchange/Price';
 import type { AccountFilter } from '@/app/(menu)/Test/Tabs/Accounts';
@@ -47,6 +48,7 @@ type TestPageDisplay =
 const panelLayoutOptions = ['Both Open', 'Left Only', 'Right Only'] as const;
 type TestPanelLayout = (typeof panelLayoutOptions)[number];
 const accountFilterOptions: AccountFilter[] = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'];
+const tokenTextModeOptions: TokenTextMode[] = ['Summary', 'Standard', 'Expanded'];
 type TokenListNetworkValue = `${number}` | typeof ALL_NETWORKS_VALUE;
 
 const buildTestPageFlags = (display: TestPageDisplay) => ({
@@ -142,6 +144,17 @@ export default function TestPage() {
     : undefined;
   const [tokenFilter, setTokenFilter] = useState<TokenFilter>(
     persistedTokenFilter ?? 'All Accounts',
+  );
+  const persistedTokenTextModeRaw = (exchangeContext as any)?.settings?.testPage?.tokenTextMode as
+    | TokenTextMode
+    | undefined;
+  const persistedTokenTextMode: TokenTextMode | undefined = tokenTextModeOptions.includes(
+    persistedTokenTextModeRaw as TokenTextMode,
+  )
+    ? (persistedTokenTextModeRaw as TokenTextMode)
+    : undefined;
+  const [tokenTextMode, setTokenTextMode] = useState<TokenTextMode>(
+    persistedTokenTextMode ?? 'Standard',
   );
   const [tokenListNetwork, setTokenListNetwork] = useState<TokenListNetworkValue>(
     persistedTokenListNetwork ?? tokenListDefaultNetwork,
@@ -281,6 +294,29 @@ export default function TestPage() {
     );
   }, [setExchangeContext]);
 
+  const cycleTokenTextModePersisted = useCallback(() => {
+    const next: TokenTextMode =
+      tokenTextMode === 'Summary'
+        ? 'Standard'
+        : tokenTextMode === 'Standard'
+          ? 'Expanded'
+          : 'Summary';
+    setTokenTextMode(next);
+    setExchangeContext(
+      (prev) => ({
+        ...prev,
+        settings: {
+          ...prev.settings,
+          testPage: {
+            ...((prev.settings?.testPage ?? {}) as any),
+            tokenTextMode: next,
+          } as any,
+        },
+      }),
+      'TestPage:cycleTokenTextMode',
+    );
+  }, [setExchangeContext, tokenTextMode]);
+
   useEffect(() => {
     if (!persistedAccountFilter) return;
     if (persistedAccountFilter !== walletFilter) {
@@ -294,6 +330,13 @@ export default function TestPage() {
       setTokenFilter(persistedTokenFilter);
     }
   }, [persistedTokenFilter, tokenFilter]);
+
+  useEffect(() => {
+    if (!persistedTokenTextMode) return;
+    if (persistedTokenTextMode !== tokenTextMode) {
+      setTokenTextMode(persistedTokenTextMode);
+    }
+  }, [persistedTokenTextMode, tokenTextMode]);
 
   useEffect(() => {
     if (persistedTokenListNetwork && persistedTokenListNetwork !== tokenListNetwork) {
@@ -639,6 +682,16 @@ export default function TestPage() {
 
               {selectedTab === 'tokens' && (
                 <div className="inline-flex flex-1 items-center justify-start gap-3">
+                  <button
+                    id="TEST_ROW_TOKEN_TEXT_MODE_TOGGLE"
+                    type="button"
+                    onClick={cycleTokenTextModePersisted}
+                    className={buttonClasses}
+                    title={`${tokenTextMode} Display. Click to cycle.`}
+                    aria-label="Toggle token text mode"
+                  >
+                    {tokenTextMode} Display
+                  </button>
                   <label htmlFor="Token_List_Select" className="sr-only">
                     Token List Network
                   </label>
@@ -659,7 +712,7 @@ export default function TestPage() {
                     ))}
                   </select>
                   <label className="inline-flex items-center gap-2 text-[#5981F3] cursor-pointer select-none">
-                    <span>Test Nets</span>
+                    <span>Show Test Nets</span>
                     <input
                       type="checkbox"
                       checked={showTestNets}
@@ -723,6 +776,7 @@ export default function TestPage() {
                   onSelectedFilterChange={setTokenFilterPersisted}
                   selectedNetwork={tokenListNetwork}
                   showTestNets={showTestNets}
+                  textMode={tokenTextMode}
                 />
               )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}

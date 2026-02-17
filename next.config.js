@@ -44,9 +44,23 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: `/createRecipient`,
+        destination: `/createAccount?type=Recipient`,
+        permanent: false,
+      },
+      {
         source: `/websites/:site`,
         destination: `/websites/:site/index.html`,
         permanent: false,
+      },
+    ];
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: `/createAccount`,
+        destination: `/CreateAccount`,
       },
     ];
   },

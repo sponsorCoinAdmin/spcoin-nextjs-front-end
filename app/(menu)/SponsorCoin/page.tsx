@@ -3,7 +3,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 
 function useTogglePortal<T extends HTMLElement>() {
@@ -52,6 +52,7 @@ function openHeaderTab(href: string) {
 }
 
 export default function SponsorCoinPage() {
+  const router = useRouter();
   const {
     visible: showSpCoinPortal,
     portalRef,
@@ -60,16 +61,36 @@ export default function SponsorCoinPage() {
   } = useTogglePortal<HTMLDivElement>();
 
   const cardStyle =
-    'group p-4 rounded-xl bg-[#0E111B] hover:bg-[rgb(79,86,101)] cursor-pointer transition-colors duration-200';
+    'group flex h-full flex-col p-4 rounded-xl bg-[#0E111B] hover:bg-[rgb(79,86,101)] transition-colors duration-200';
   const headerStyle =
     'text-xl font-semibold mb-2 text-center text-[#5981F3] group-hover:text-[#000000] transition-colors';
   const paragraphStyle =
     'text-sm text-white group-hover:text-[#FFFFFF] transition-colors text-left';
+  const cardButtonStyle =
+    'w-56 rounded bg-[#243056] px-4 py-2 text-center text-sm font-medium text-[#5981F3] transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+  const [selectedAccountType, setSelectedAccountType] = useState<'Sponsor' | 'Recipient' | 'Agent' | null>(
+    null,
+  );
+  const createAccountHref = selectedAccountType
+    ? `/createAccount?type=${encodeURIComponent(selectedAccountType)}`
+    : '/createAccount';
 
   // Helper to attach to Link onClick for dynamic tabs
   const onOpenTab = useCallback((href: string) => {
     openHeaderTab(href);
   }, []);
+
+  const openCardPath = useCallback(
+    (href: string) => {
+      onOpenTab(href);
+      router.push(href);
+    },
+    [onOpenTab, router],
+  );
+
+  const handleOpenCreateAccount = useCallback(() => {
+    openCardPath(createAccountHref);
+  }, [createAccountHref, openCardPath]);
 
   return (
     <main
@@ -109,79 +130,114 @@ export default function SponsorCoinPage() {
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Exchange is primary nav, not a dynamic tab */}
-                <Link href="/Exchange" className={cardStyle}>
+                <div className={cardStyle}>
                   <h2 className={headerStyle}>SponsorCoin Exchange</h2>
                   <p className={paragraphStyle}>
                     Trade on SponsorCoin Exchange and be eligible for future SponsorCoin drops.
                   </p>
-                </Link>
+                  <div className="mt-auto pt-4 flex w-full justify-center">
+                    <button
+                      type="button"
+                      onClick={() => openCardPath('/Exchange')}
+                      className={cardButtonStyle}
+                    >
+                      Open Exchange
+                    </button>
+                  </div>
+                </div>
 
-                {/* Dynamic tab: Manage Accounts */}
-                <Link
-                  href="/ManageAccounts"
-                  className={cardStyle}
-                  onClick={() => onOpenTab('/ManageAccounts')}
-                >
-                  <h2 className={headerStyle}>Manage Your SponsorCoin Accounts</h2>
+                {/* Dynamic tab: Create account */}
+                <div className={cardStyle}>
+                  <h2 className={headerStyle}>Create an Account.</h2>
+                  <div className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5">
+                    {(['Sponsor', 'Recipient', 'Agent'] as const).map((role) => {
+                      const selected = selectedAccountType === role;
+                      return (
+                        <label
+                          key={role}
+                          className="inline-flex items-center gap-2 cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedAccountType((prev) => (prev === role ? null : role));
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="createAccountType"
+                            checked={selected}
+                            readOnly
+                            className="sr-only"
+                          />
+                          <span
+                            aria-hidden="true"
+                            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#5981F3]"
+                          >
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${
+                                selected ? 'bg-white' : 'bg-transparent'
+                              }`}
+                            />
+                          </span>
+                          <span className={selected ? 'text-green-400' : 'text-[#5981F3]'}>{role}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                   <p className={paragraphStyle}>
-                    Whether you are a sponsor, agent, or recipient, you can view or edit SponsorCoin accounts
-                    and balances, manage sponsorship relationships, and claim rewards.
+                    Set up a SponsorCoin account and choose a role before opening the create account page.
                   </p>
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Dynamic tab: Sponsor Me */}
-                <Link
-                  href="/SponsorMe"
-                  className={cardStyle}
-                  onClick={() => onOpenTab('/SponsorMe')}
-                >
-                  <h2 className={headerStyle}>Create a "Sponsor Me" Account</h2>
-                  <p className={paragraphStyle}>
-                    Set up a SponsorCoin recipient account to receive crypto credit rewards through your
-                    SponsorCoin relationships.
-                  </p>
-                </Link>
-
-                {/* Dynamic tab: Create Agent */}
-                <Link
-                  href="/CreateAgent"
-                  className={cardStyle}
-                  onClick={() => onOpenTab('/CreateAgent')}
-                >
-                  <h2 className={headerStyle}>Create an Agent Account</h2>
-                  <p className={paragraphStyle}>
-                    As an agent, you can create an account to manage sponsorships and receive rewards.
-                  </p>
-                </Link>
+                  <div className="mt-auto pt-4 flex w-full justify-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleOpenCreateAccount();
+                      }}
+                      className={cardButtonStyle}
+                    >
+                      Continue to Create Account
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Dynamic tab: SpCoin API */}
-                <Link
-                  href="/SpCoinAPI"
-                  className={cardStyle}
-                  onClick={() => onOpenTab('/SpCoinAPI')}
-                >
+                <div className={cardStyle}>
                   <h2 className={headerStyle}>SpCoin API for Developers</h2>
                   <p className={paragraphStyle}>
                     Connect to the BlockCoin token using SponsorCoin’s APIs for advanced development. The
                     SponsorCoin Exchange was built using these APIs.
                   </p>
-                </Link>
+                  <div className="mt-auto pt-4 flex w-full justify-center">
+                    <button
+                      type="button"
+                      onClick={() => openCardPath('/SpCoinAPI')}
+                      className={cardButtonStyle}
+                    >
+                      Open SpCoin API
+                    </button>
+                  </div>
+                </div>
 
                 {/* Dynamic tab: White Paper */}
-                <Link
-                  href="/WhitePaper"
-                  className={cardStyle}
-                  onClick={() => onOpenTab('/WhitePaper')}
-                >
+                <div className={cardStyle}>
                   <h2 className={headerStyle}>SponsorCoin White Paper</h2>
                   <p className={paragraphStyle}>
                     Read the SponsorCoin white paper and learn more about the project.
                   </p>
-                </Link>
+                  <div className="mt-auto pt-4 flex w-full justify-center">
+                    <button
+                      type="button"
+                      onClick={() => openCardPath('/WhitePaper')}
+                      className={cardButtonStyle}
+                    >
+                      Open White Paper
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

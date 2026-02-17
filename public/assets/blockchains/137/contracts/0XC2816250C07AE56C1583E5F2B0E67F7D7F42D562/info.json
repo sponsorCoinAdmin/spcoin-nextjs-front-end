@@ -7,5 +7,27 @@
     "description": "Alchemy allows users to create a tokenized DAO for any NFT. Turn your NFTs into liquid, community controlled assets that can be traded, vote and control all your NFTs. Create funds, communities, split collections between friends and all with no coding or technical experience.",
     "explorer": "https://etherscan.io/token/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
     "status": "active",
-    "id": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562"
+    "id": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+    "links": [
+        {
+            "name": "sponsorCoin",
+            "url": "https://ghttps://sponsorcoin.org/Exchange"
+        },
+        {
+            "name": "test",
+            "url": "https://https://sponsorcoin.org/Test"
+        },
+        {
+            "name": "Create a Recipient Account",
+            "url": "https://sponsorcoin.org/CreateAccount?"
+        },
+        {
+            "name": "Create a Recipient Account",
+            "url": "https://sponsorcoin.org/WhitePaper"
+        },
+        {
+            "name": "API",
+            "url": "https://sponsorcoin.org/SpCoinAPI"
+        }
+    ]
 }

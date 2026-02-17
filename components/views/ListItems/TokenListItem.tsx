@@ -13,11 +13,17 @@ type TokenListItemProps = {
   symbol: string;
   address: string;
   logoURL?: string;
+  textMode?: 'Summary' | 'Standard' | 'Expanded';
   confirmAssetCallback: (address: string) => void;
 };
 
 const TokenListItem = React.memo(function TokenListItem({
-  name, symbol, address, logoURL, confirmAssetCallback,
+  name,
+  symbol,
+  address,
+  logoURL,
+  textMode = 'Standard',
+  confirmAssetCallback,
 }: TokenListItemProps) {
   const { openPanel } = usePanelTree();
   const [, setPreviewTokenContract] = usePreviewTokenContract();
@@ -48,11 +54,35 @@ const TokenListItem = React.memo(function TokenListItem({
     );
   };
 
+  const shortAddress =
+    address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
+
+  const text = (() => {
+    if (textMode === 'Summary') {
+      const summaryTitle = (symbol || '').trim() || name;
+      return {
+        title: summaryTitle,
+        subtitle: undefined as string | undefined,
+      };
+    }
+    if (textMode === 'Expanded') {
+      const expandedSubtitle = [symbol, shortAddress].filter(Boolean).join(' • ');
+      return {
+        title: name,
+        subtitle: expandedSubtitle || shortAddress,
+      };
+    }
+    return {
+      title: name,
+      subtitle: symbol,
+    };
+  })();
+
   return (
     <BaseListRow
       avatarSrc={logoURL || defaultMissingImage}
-      title={name}
-      subtitle={symbol}
+      title={text.title}
+      subtitle={text.subtitle}
       onAvatarClick={() => confirmAssetCallback(address)}
       selectTitle={`Select ${name} (${symbol || 'N/A'})`}
       titleClassName="font-semibold truncate !text-[#5981F3]"

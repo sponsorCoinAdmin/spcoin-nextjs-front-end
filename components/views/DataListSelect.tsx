@@ -20,6 +20,8 @@ export type TokenFeedItem = {
   logoURL?: string | null;
 };
 
+type TokenTextMode = 'Summary' | 'Standard' | 'Expanded';
+
 type Props = {
   /** SSOT: pre-populated, normalized data. No internal mirroring. */
   feedData: FeedData;
@@ -49,9 +51,30 @@ function roleFromFeedType(feedType: FEED_TYPE): string {
   return 'recipient';
 }
 
+function normalizeTokenLabel(value: unknown): string {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function isSpCoinLikeToken(token: TokenFeedItem): boolean {
+  const name = normalizeTokenLabel(token?.name);
+  const symbol = normalizeTokenLabel(token?.symbol);
+  return (
+    name === 'spcoin' ||
+    name === 'sponsorcoin' ||
+    name === 'socoin' ||
+    symbol === 'spcoin' ||
+    symbol === 'sponsorcoin' ||
+    symbol === 'socoin'
+  );
+}
+
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   const isAccountFeed = isAccountFeedType(feedType);
+  const isTokenFeed = feedType === FEED_TYPE.TOKEN_LIST;
   const role = roleFromFeedType(feedType);
+  const [tokenTextMode, setTokenTextMode] = useState<TokenTextMode>('Standard');
 
   // ✅ SSOT: read directly from props, using the SSOT union fields
   const accounts = useMemo<spCoinAccount[]>(() => {
@@ -62,6 +85,19 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const tokens = useMemo<TokenFeedItem[]>(() => {
     return (feedData as any)?.tokens ?? [];
   }, [feedData]);
+
+  const orderedTokens = useMemo<TokenFeedItem[]>(() => {
+    const pinned: TokenFeedItem[] = [];
+    const rest: TokenFeedItem[] = [];
+    for (const token of tokens) {
+      if (isSpCoinLikeToken(token)) {
+        pinned.push(token);
+      } else {
+        rest.push(token);
+      }
+    }
+    return [...pinned, ...rest];
+  }, [tokens]);
 
   // ✅ Zebra row backgrounds (Tailwind arbitrary values)
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
@@ -230,6 +266,14 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const wrapperClass =
     'DataListWrapper flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#243056] text-[#5981F3] rounded-[20px] p-0 box-border';
 
+  const cycleTokenTextMode = useCallback(() => {
+    setTokenTextMode((prev) => {
+      if (prev === 'Summary') return 'Standard';
+      if (prev === 'Standard') return 'Expanded';
+      return 'Summary';
+    });
+  }, []);
+
   const renderEmptyState = (message: string) => (
     <div className="flex flex-1 items-center justify-center">
       <p>{message}</p>
@@ -257,10 +301,22 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       >
         {/* Sticky header */}
         <div className="sticky top-0 z-20 border-b border-black bg-[#2b2b2b]">
-          <div className="w-full flex justify-between px-5 py-2">
+          <div className="w-full flex items-center justify-between gap-2 px-5 py-2">
             <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
               Token Meta
             </div>
+            {isTokenFeed ? (
+              <button
+                id="TOKEN_LIST_TEXT_MODE_TOGGLE"
+                type="button"
+                onClick={cycleTokenTextMode}
+                className="rounded border border-sky-300/70 bg-sky-950/30 px-3 py-1 text-xs font-semibold tracking-wide text-sky-100 hover:bg-sky-900/40"
+                title={`Text Mode: ${tokenTextMode}. Click to cycle.`}
+                aria-label="Toggle token text mode"
+              >
+                Text: {tokenTextMode}
+              </button>
+            ) : null}
             <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
               Select
             </div>
@@ -281,10 +337,10 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
           )
         ) : loading ? (
           renderEmptyState('Loading tokens…')
-        ) : tokens.length === 0 ? (
+        ) : orderedTokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (
-          tokens.map((token, i) => {
+          orderedTokens.map((token, i) => {
             const safeName: string =
               token.name ??
               token.symbol ??
@@ -298,6 +354,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
                   symbol={safeSymbol}
                   address={token.address as `0x${string}` | string}
                   logoURL={token.logoURL ?? undefined}
+                  textMode={tokenTextMode}
                   confirmAssetCallback={handlePickAddress}
                 />
               </div>

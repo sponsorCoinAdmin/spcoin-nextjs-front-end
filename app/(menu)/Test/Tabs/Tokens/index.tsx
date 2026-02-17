@@ -18,9 +18,45 @@ function safeStringify(value: unknown): string {
   );
 }
 
+function renderJsonWithLinks(json: string) {
+  const urlRegex = /(https?:\/\/[^\s"']+)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = urlRegex.exec(json)) !== null) {
+    const url = match[0];
+    const start = match.index;
+    const end = start + url.length;
+    if (start > lastIndex) parts.push(json.slice(lastIndex, start));
+    parts.push(
+      <a
+        key={`${start}-${url}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-blue-300 hover:text-blue-200"
+      >
+        {url}
+      </a>,
+    );
+    lastIndex = end;
+  }
+
+  if (lastIndex < json.length) parts.push(json.slice(lastIndex));
+  return parts;
+}
+
+function isSponsorCoinToken(token: TokenContract): boolean {
+  const name = String((token as any)?.name ?? '').trim().toLowerCase();
+  const symbol = String((token as any)?.symbol ?? '').trim().toLowerCase();
+  return name === 'sponsorcoin' || name === 'spcoin' || symbol === 'sponsorcoin' || symbol === 'spcoin';
+}
+
 const tokenOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 export type TokenFilter = (typeof tokenOptions)[number];
 export type AccountFilter = TokenFilter;
+export type TokenTextMode = 'Summary' | 'Standard' | 'Expanded';
 
 type TokenListNetworkValue = `${number}` | typeof ALL_NETWORKS_VALUE;
 
@@ -30,6 +66,7 @@ type TokensPageProps = {
   selectedNetwork?: TokenListNetworkValue;
   showTestNets?: boolean;
   showFilterControls?: boolean;
+  textMode?: TokenTextMode;
 };
 
 function TokensPage({
@@ -38,6 +75,7 @@ function TokensPage({
   selectedNetwork,
   showTestNets = false,
   showFilterControls = true,
+  textMode = 'Standard',
 }: TokensPageProps) {
   const { exchangeContext } = useExchangeContext();
   const [tokens, setTokens] = useState<TokenContract[]>([]);
@@ -135,6 +173,40 @@ function TokensPage({
         )
       : tokens;
 
+  const orderedVisibleTokens = useMemo(() => {
+    const pinned: TokenContract[] = [];
+    const rest: TokenContract[] = [];
+    for (const token of visibleTokens) {
+      if (isSponsorCoinToken(token)) {
+        pinned.push(token);
+      } else {
+        rest.push(token);
+      }
+    }
+    return [...pinned, ...rest];
+  }, [visibleTokens]);
+
+  const shortAddress = (value?: string) => {
+    if (!value) return 'N/A';
+    if (value.length <= 12) return value;
+    return `${value.slice(0, 6)}...${value.slice(-4)}`;
+  };
+
+  const tokenWebsite = (token: TokenContract): string => {
+    const raw = (token as any)?.website ?? (token as any)?.siteUrl ?? (token as any)?.url;
+    if (typeof raw === 'string' && raw.trim().length > 0) return raw;
+    const nested = (token as any)?.links?.website ?? (token as any)?.urls?.website;
+    if (typeof nested === 'string' && nested.trim().length > 0) return nested;
+    return 'N/A';
+  };
+
+  const tokenStatus = (token: TokenContract): string => {
+    const raw = (token as any)?.status ?? (token as any)?.state ?? (token as any)?.isActive;
+    if (typeof raw === 'string' && raw.trim().length > 0) return raw;
+    if (typeof raw === 'boolean') return raw ? 'active' : 'inactive';
+    return 'N/A';
+  };
+
   return (
     <div>
       <div className="sticky top-0 z-20 bg-[#192134] w-full border-[#444] text-white flex flex-col items-center pb-1">
@@ -170,7 +242,7 @@ function TokensPage({
           ) : (
             <>
               <ul className="list-none p-0 m-0">
-                {visibleTokens.map((token: TokenContract, index) => (
+                {orderedVisibleTokens.map((token: TokenContract, index) => (
                   <li
                     key={`${tokenType}-${token.chainId}-${token.address}-${index}`}
                     className={`flex items-center p-3 mb-2 rounded ${
@@ -187,17 +259,30 @@ function TokensPage({
                       className="rounded-full border-2 border-gray-300 mr-3"
                     />
                     <div className="text-inherit">
-                      <div className="text-lg font-bold mb-2">
-                        {token.name || token.symbol || 'Unknown Token'}
-                      </div>
-                      <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                        {safeStringify(token)}
-                      </pre>
+                      <div className="text-lg font-bold mb-2">{token.name || token.symbol || 'Unknown Token'}</div>
+                      {textMode === 'Summary' ? (
+                        <div className="ml-3 text-sm">
+                          <div>Symbol: {token.symbol || 'N/A'}</div>
+                          <div>Address: {shortAddress(token.address)}</div>
+                        </div>
+                      ) : textMode === 'Standard' ? (
+                        <div className="ml-3 text-sm space-y-1">
+                          <div>Symbol: {token.symbol || 'N/A'}</div>
+                          <div>Address: {shortAddress(token.address)}</div>
+                          <div>Decimals: {String((token as any)?.decimals ?? 'N/A')}</div>
+                          <div>Website: {tokenWebsite(token)}</div>
+                          <div>Status: {tokenStatus(token)}</div>
+                        </div>
+                      ) : (
+                        <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
+                          {renderJsonWithLinks(safeStringify(token))}
+                        </pre>
+                      )}
                     </div>
                   </li>
                 ))}
               </ul>
-              {!loading && !err && visibleTokens.length === 0 && (
+              {!loading && !err && orderedVisibleTokens.length === 0 && (
                 <p className="text-center text-sm text-gray-400 py-2">No tokens found.</p>
               )}
             </>
@@ -213,6 +298,7 @@ type TestTokensTabProps = {
   onSelectedFilterChange?: (next: TokenFilter) => void;
   selectedNetwork?: TokenListNetworkValue;
   showTestNets?: boolean;
+  textMode?: TokenTextMode;
 };
 
 export default function TestTokensTab({
@@ -220,6 +306,7 @@ export default function TestTokensTab({
   onSelectedFilterChange,
   selectedNetwork,
   showTestNets,
+  textMode,
 }: TestTokensTabProps) {
   return (
     <div className="space-y-4">
@@ -230,6 +317,7 @@ export default function TestTokensTab({
           selectedNetwork={selectedNetwork}
           showTestNets={showTestNets}
           showFilterControls={false}
+          textMode={textMode}
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-// File: app/(menu)/(dynamic)/(accounts)/SponsorMe/page.tsx
+// File: app/(menu)/(dynamic)/(accounts)/createRecipient/page.tsx
 'use client';
 
 import React, { useState, useContext, useEffect } from 'react';
@@ -70,12 +70,12 @@ export default function CreateRecipientAccountPage() {
   return (
     <main className="max-w-3xl mx-auto p-6 text-white">
       <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">
-        Create a Sponsor Me (Recipient) Account
+        Create an Account (Recipient) Account
       </h1>
 
       {/* Public Key (read-only, populated from connected account like ManageAccounts) */}
       <div className="mb-6 flex items-center gap-4">
-        <label className="w-56 text-right">Public Key</label>
+        <label className="w-56 text-right">Account Public Key</label>
         <div className="flex-1">
           <input
             type="text"
