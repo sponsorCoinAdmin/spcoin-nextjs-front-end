@@ -71,6 +71,9 @@ export default function SponsorCoinPage() {
     null,
   );
   const [suspendCreateCardHover, setSuspendCreateCardHover] = useState(false);
+  const createCardHeaderStyle = suspendCreateCardHover
+    ? 'text-xl font-semibold mb-2 text-center text-[#5981F3] transition-colors'
+    : headerStyle;
   const createAccountHref = selectedAccountType
     ? `/createAccount?type=${encodeURIComponent(selectedAccountType)}`
     : '/createAccount';
@@ -145,7 +148,7 @@ export default function SponsorCoinPage() {
                   className={`${cardBaseStyle} ${suspendCreateCardHover ? '' : cardHoverStyle} cursor-pointer`}
                   onClick={handleOpenCreateAccount}
                 >
-                  <h2 className={headerStyle}>Create an Account.</h2>
+                  <h2 className={createCardHeaderStyle}>Create an Account.</h2>
                   <div
                     className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5"
                     onMouseEnter={() => setSuspendCreateCardHover(true)}
