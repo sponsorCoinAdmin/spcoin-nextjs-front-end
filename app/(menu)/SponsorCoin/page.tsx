@@ -150,9 +150,13 @@ export default function SponsorCoinPage() {
                 >
                   <h2 className={createCardHeaderStyle}>Create an Account.</h2>
                   <div
-                    className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5"
+                    className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5 cursor-default"
                     onMouseEnter={() => setSuspendCreateCardHover(true)}
                     onMouseLeave={() => setSuspendCreateCardHover(false)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                   >
                     {(['Sponsor', 'Recipient', 'Agent'] as const).map((role) => {
                       const selected = selectedAccountType === role;
