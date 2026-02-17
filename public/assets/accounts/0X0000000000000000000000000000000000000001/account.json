@@ -1,9 +1,8 @@
-{
-  "name": "Born Free",
-  "symbol": "FREE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site BornFree",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000001"
+﻿{
+    "name":  "Born Free",
+    "symbol":  "FREE",
+    "address":  "0X0000000000000000000000000000000000000001",
+    "website":  "",
+    "description":  "This is the description for site BornFree",
+    "status":  "test"
 }

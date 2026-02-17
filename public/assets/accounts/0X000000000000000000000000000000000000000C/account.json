@@ -1,9 +1,8 @@
-{
-  "name": "Dogs R Us",
-  "symbol": "WOOF",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site AnimalShelter3",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000000c"
+﻿{
+    "name":  "Dogs R Us",
+    "symbol":  "WOOF",
+    "address":  "0X000000000000000000000000000000000000000c",
+    "website":  "",
+    "description":  "This is the description for site AnimalShelter3",
+    "status":  "test"
 }

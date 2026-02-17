@@ -1,9 +1,8 @@
-{
-  "name": "Fix The Roads",
-  "symbol": "ROADS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site FixTheRoads",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000002"
+﻿{
+    "name":  "Fix The Roads",
+    "symbol":  "ROADS",
+    "address":  "0X0000000000000000000000000000000000000002",
+    "website":  "",
+    "description":  "This is the description for site FixTheRoads",
+    "status":  "test"
 }

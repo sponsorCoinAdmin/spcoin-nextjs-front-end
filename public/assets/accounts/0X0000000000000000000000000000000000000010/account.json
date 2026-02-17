@@ -1,9 +1,8 @@
-{
-  "name": "Vote Pierre",
-  "symbol": "PIERRE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site VotePierre",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000010"
+﻿{
+    "name":  "Vote Pierre",
+    "symbol":  "PIERRE",
+    "address":  "0X0000000000000000000000000000000000000010",
+    "website":  "",
+    "description":  "This is the description for site VotePierre",
+    "status":  "test"
 }

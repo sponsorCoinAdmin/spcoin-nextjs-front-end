@@ -1,9 +1,8 @@
-{
-  "name": "Moe Howard",
-  "symbol": "MOE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site MoeHoward",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000008a"
+﻿{
+    "name":  "Moe Howard",
+    "symbol":  "MOE",
+    "address":  "0X000000000000000000000000000000000000008a",
+    "website":  "",
+    "description":  "This is the description for site MoeHoward",
+    "status":  "test"
 }

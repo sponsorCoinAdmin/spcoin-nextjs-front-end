@@ -1,9 +1,8 @@
-{
-  "name": "Harry Jones",
-  "symbol": "HARRY",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Man1",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000085"
+﻿{
+    "name":  "Harry Jones",
+    "symbol":  "HARRY",
+    "address":  "0X0000000000000000000000000000000000000085",
+    "website":  "",
+    "description":  "This is the description for site Man1",
+    "status":  "test"
 }

@@ -1,9 +1,8 @@
-{
-  "name": "Fluffie",
-  "symbol": "CAT",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Cat2",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000075"
+﻿{
+    "name":  "Fluffie",
+    "symbol":  "CAT",
+    "address":  "0X0000000000000000000000000000000000000075",
+    "website":  "",
+    "description":  "This is the description for site Cat2",
+    "status":  "test"
 }

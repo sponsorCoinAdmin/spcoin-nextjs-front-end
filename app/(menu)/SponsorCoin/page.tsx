@@ -67,16 +67,6 @@ export default function SponsorCoinPage() {
     'text-xl font-semibold mb-2 text-center text-[#5981F3] group-hover:text-[#000000] transition-colors';
   const paragraphStyle =
     'text-sm text-white group-hover:text-[#FFFFFF] transition-colors text-left';
-  const [selectedAccountType, setSelectedAccountType] = useState<'Sponsor' | 'Recipient' | 'Agent' | null>(
-    null,
-  );
-  const [suspendCreateCardHover, setSuspendCreateCardHover] = useState(false);
-  const createCardHeaderStyle = suspendCreateCardHover
-    ? 'text-xl font-semibold mb-2 text-center text-[#5981F3] transition-colors'
-    : headerStyle;
-  const createAccountHref = selectedAccountType
-    ? `/createAccount?type=${encodeURIComponent(selectedAccountType)}`
-    : '/createAccount';
 
   // Helper to attach to Link onClick for dynamic tabs
   const onOpenTab = useCallback((href: string) => {
@@ -92,8 +82,8 @@ export default function SponsorCoinPage() {
   );
 
   const handleOpenCreateAccount = useCallback(() => {
-    openCardPath(createAccountHref);
-  }, [createAccountHref, openCardPath]);
+    openCardPath('/createAccount');
+  }, [openCardPath]);
 
   return (
     <main
@@ -145,55 +135,12 @@ export default function SponsorCoinPage() {
 
                 {/* Dynamic tab: Create account */}
                 <div
-                  className={`${cardBaseStyle} ${suspendCreateCardHover ? '' : cardHoverStyle} cursor-pointer`}
+                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
                   onClick={handleOpenCreateAccount}
                 >
-                  <h2 className={createCardHeaderStyle}>Create an Account.</h2>
-                  <div
-                    className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5 cursor-default"
-                    onMouseEnter={() => setSuspendCreateCardHover(true)}
-                    onMouseLeave={() => setSuspendCreateCardHover(false)}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    {(['Sponsor', 'Recipient', 'Agent'] as const).map((role) => {
-                      const selected = selectedAccountType === role;
-                      return (
-                        <label
-                          key={role}
-                          className="inline-flex items-center gap-2 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSelectedAccountType((prev) => (prev === role ? null : role));
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="createAccountType"
-                            checked={selected}
-                            readOnly
-                            className="sr-only"
-                          />
-                          <span
-                            aria-hidden="true"
-                            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#5981F3]"
-                          >
-                            <span
-                              className={`h-2.5 w-2.5 rounded-full ${
-                                selected ? 'bg-white' : 'bg-transparent'
-                              }`}
-                            />
-                          </span>
-                          <span className={selected ? 'text-green-400' : 'text-[#5981F3]'}>{role}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                  <h2 className={headerStyle}>Create a Sponsor Coin Account.</h2>
                   <p className={paragraphStyle}>
-                    Set up a SponsorCoin account and choose a role before opening the create account page.
+                    Set up a SponsorCoin account which can be used as a Sponsor, Recipient, or Agent Account. You need a Metamask account to create a SponsorCoin account.
                   </p>
                 </div>
               </div>

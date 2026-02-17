@@ -1,9 +1,8 @@
-{
-  "name": "Edwin Mars",
-  "symbol": "MARS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Man5",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000089"
+﻿{
+    "name":  "Edwin Mars",
+    "symbol":  "MARS",
+    "address":  "0X0000000000000000000000000000000000000089",
+    "website":  "",
+    "description":  "This is the description for site Man5",
+    "status":  "test"
 }

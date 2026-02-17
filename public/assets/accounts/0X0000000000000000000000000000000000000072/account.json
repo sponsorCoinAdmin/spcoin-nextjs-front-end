@@ -1,9 +1,8 @@
-{
-  "name": "Anonymous White",
-  "symbol": "A_WHITE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site AnonymousWhite",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000072"
+﻿{
+    "name":  "Anonymous White",
+    "symbol":  "A_WHITE",
+    "address":  "0X0000000000000000000000000000000000000072",
+    "website":  "",
+    "description":  "This is the description for site AnonymousWhite",
+    "status":  "test"
 }

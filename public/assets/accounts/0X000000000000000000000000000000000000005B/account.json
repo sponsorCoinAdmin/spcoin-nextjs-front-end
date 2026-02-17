@@ -1,9 +1,8 @@
-{
-  "name": "Save The Whales",
-  "symbol": "WHALES",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site SaveTheWhales",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000005b"
+﻿{
+    "name":  "Save The Whales",
+    "symbol":  "WHALES",
+    "address":  "0X000000000000000000000000000000000000005b",
+    "website":  "",
+    "description":  "This is the description for site SaveTheWhales",
+    "status":  "test"
 }

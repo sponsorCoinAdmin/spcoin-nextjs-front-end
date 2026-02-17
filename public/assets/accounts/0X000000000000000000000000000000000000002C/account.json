@@ -1,9 +1,8 @@
-{
-  "name": "Help the Homeless",
-  "symbol": "HELP",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Homeless",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000002c"
+﻿{
+    "name":  "Help the Homeless",
+    "symbol":  "HELP",
+    "address":  "0X000000000000000000000000000000000000002c",
+    "website":  "",
+    "description":  "This is the description for site Homeless",
+    "status":  "test"
 }

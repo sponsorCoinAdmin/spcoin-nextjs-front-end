@@ -1,9 +1,8 @@
-{
-  "name": "Help Our Veterans",
-  "symbol": "VETERANS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Veterans",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000009"
+﻿{
+    "name":  "Help Our Veterans",
+    "symbol":  "VETERANS",
+    "address":  "0X0000000000000000000000000000000000000009",
+    "website":  "",
+    "description":  "This is the description for site Veterans",
+    "status":  "test"
 }

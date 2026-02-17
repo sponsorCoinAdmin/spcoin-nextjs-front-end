@@ -63,7 +63,7 @@ export async function loadAccounts(
       if (fs.existsSync(accountFilePath)) {
         try {
           const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-          const account: spCoinAccount = JSON.parse(accountData);
+          const account: spCoinAccount = JSON.parse(accountData.replace(/^\uFEFF/, ''));
 
           // Centralized logo URL builder (address stays in its original case)
           if (!account.logoURL) {
@@ -114,7 +114,7 @@ export async function loadAccounts(
         if (fs.existsSync(accountFilePath)) {
           try {
             const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-            const account: spCoinAccount = JSON.parse(accountData);
+            const account: spCoinAccount = JSON.parse(accountData.replace(/^\uFEFF/, ''));
 
             if (!account.logoURL) {
               // Prefer the address from JSON if present; fall back to folder name

@@ -1,9 +1,8 @@
-{
-  "name": "Chimpanzee",
-  "symbol": "APE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Monkey2",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000008c"
+﻿{
+    "name":  "Chimpanzee",
+    "symbol":  "APE",
+    "address":  "0X000000000000000000000000000000000000008c",
+    "website":  "",
+    "description":  "This is the description for site Monkey2",
+    "status":  "test"
 }

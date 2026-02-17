@@ -1,9 +1,8 @@
-{
-  "name": "Save The Big Cats",
-  "symbol": "BIG_CATS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site SaveTheTiger6",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000005"
+﻿{
+    "name":  "Save The Big Cats",
+    "symbol":  "BIG_CATS",
+    "address":  "0X0000000000000000000000000000000000000005",
+    "website":  "",
+    "description":  "This is the description for site SaveTheTiger6",
+    "status":  "test"
 }

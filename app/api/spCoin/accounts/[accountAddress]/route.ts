@@ -69,7 +69,7 @@ export async function GET(
 
   try {
     const raw = await fs.readFile(filePath, 'utf8');
-    const data = JSON.parse(raw);
+    const data = JSON.parse(raw.replace(/^\uFEFF/, ''));
     return NextResponse.json(
       {
         address,

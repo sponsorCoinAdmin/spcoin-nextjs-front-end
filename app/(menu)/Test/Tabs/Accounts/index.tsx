@@ -23,6 +23,35 @@ function safeStringify(value: unknown): string {
   );
 }
 
+function renderJsonWithLinks(json: string) {
+  const urlRegex = /(https?:\/\/[^\s"']+)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = urlRegex.exec(json)) !== null) {
+    const url = match[0];
+    const start = match.index;
+    const end = start + url.length;
+    if (start > lastIndex) parts.push(json.slice(lastIndex, start));
+    parts.push(
+      <a
+        key={`${start}-${url}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-bold underline text-blue-700 hover:text-blue-800"
+      >
+        {url}
+      </a>,
+    );
+    lastIndex = end;
+  }
+
+  if (lastIndex < json.length) parts.push(json.slice(lastIndex));
+  return parts;
+}
+
 const accontOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
 export type AccountFilter = (typeof accontOptions)[number];
 
@@ -342,7 +371,7 @@ function AccountsPage({
                         {accont.name || 'Unknown Accont'}
                       </div>
                       <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
-                        {safeStringify(accont)}
+                        {renderJsonWithLinks(safeStringify(accont))}
                       </pre>
                     </div>
                   </li>

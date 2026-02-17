@@ -1,9 +1,8 @@
-{
-  "name": "Support Biden",
-  "symbol": "BIDEN",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Biden1",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000000e"
+﻿{
+    "name":  "Support Biden",
+    "symbol":  "BIDEN",
+    "address":  "0X000000000000000000000000000000000000000e",
+    "website":  "",
+    "description":  "This is the description for site Biden1",
+    "status":  "test"
 }

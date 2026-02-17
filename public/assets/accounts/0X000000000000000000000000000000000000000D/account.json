@@ -1,9 +1,8 @@
-{
-  "name": "N.Y.S.E Animal Shelter",
-  "symbol": "NYAS",
-  "type": "ERC20_WALLET",
-  "  website": "",
-  "description": "This is the description for site AnimalShelter4",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000000d"
+﻿{
+    "name":  "N.Y.S.E Animal Shelter",
+    "symbol":  "NYAS",
+    "address":  "0X000000000000000000000000000000000000000d",
+    "website":  "",
+    "description":  "This is the description for site AnimalShelter4",
+    "status":  "test"
 }

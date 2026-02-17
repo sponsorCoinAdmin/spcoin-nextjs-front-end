@@ -1,9 +1,8 @@
-{
-  "name": "David Menzies at Rebel",
-  "symbol": "DAVID",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site RebelNews3",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000003e"
+﻿{
+    "name":  "David Menzies at Rebel",
+    "symbol":  "DAVID",
+    "address":  "0X000000000000000000000000000000000000003e",
+    "website":  "",
+    "description":  "This is the description for site RebelNews3",
+    "status":  "test"
 }

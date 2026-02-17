@@ -1,9 +1,8 @@
-{
-  "name": "Joe Samual",
-  "symbol": "JOE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Man3",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000087"
+﻿{
+    "name":  "Joe Samual",
+    "symbol":  "JOE",
+    "address":  "0X0000000000000000000000000000000000000087",
+    "website":  "",
+    "description":  "This is the description for site Man3",
+    "status":  "test"
 }

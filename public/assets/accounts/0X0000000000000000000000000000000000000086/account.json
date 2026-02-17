@@ -1,9 +1,8 @@
-{
-  "name": "George Power",
-  "symbol": "MAN",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Man2",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000086"
+﻿{
+    "name":  "George Power",
+    "symbol":  "MAN",
+    "address":  "0X0000000000000000000000000000000000000086",
+    "website":  "",
+    "description":  "This is the description for site Man2",
+    "status":  "test"
 }

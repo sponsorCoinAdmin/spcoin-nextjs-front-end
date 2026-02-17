@@ -1,9 +1,8 @@
-{
-  "name": "Mogly Jungle Book",
-  "symbol": "MOGLY",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site JungleBookMogly",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000007e"
+﻿{
+    "name":  "Mogly Jungle Book",
+    "symbol":  "MOGLY",
+    "address":  "0X000000000000000000000000000000000000007e",
+    "website":  "",
+    "description":  "This is the description for site JungleBookMogly",
+    "status":  "test"
 }

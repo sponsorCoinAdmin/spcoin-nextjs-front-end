@@ -1,9 +1,8 @@
-{
-  "name": "Judy Smith",
-  "symbol": "LADY",
-  "type": "ERC20_WALLET",
-  "website": "https://www.bornfreeusa.org",
-  "description": "This is the description for site Lady2",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000080"
+﻿{
+    "name":  "Judy Smith",
+    "symbol":  "LADY",
+    "address":  "0X0000000000000000000000000000000000000080",
+    "website":  "https://www.bornfreeusa.org",
+    "description":  "This is the description for site Lady2",
+    "status":  "test"
 }

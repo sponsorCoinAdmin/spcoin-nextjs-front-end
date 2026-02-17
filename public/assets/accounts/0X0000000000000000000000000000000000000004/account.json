@@ -1,9 +1,8 @@
-{
-  "name": "Fund Republican",
-  "symbol": "RP_1",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Republican1",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000004"
+﻿{
+    "name":  "Fund Republican",
+    "symbol":  "RP_1",
+    "address":  "0X0000000000000000000000000000000000000004",
+    "website":  "",
+    "description":  "This is the description for site Republican1",
+    "status":  "test"
 }

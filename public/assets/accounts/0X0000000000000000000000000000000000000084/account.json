@@ -1,9 +1,8 @@
-{
-  "name": "Larry Fine",
-  "symbol": "LARRY",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site LarryFine",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000084"
+﻿{
+    "name":  "Larry Fine",
+    "symbol":  "LARRY",
+    "address":  "0X0000000000000000000000000000000000000084",
+    "website":  "",
+    "description":  "This is the description for site LarryFine",
+    "status":  "test"
 }

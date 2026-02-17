@@ -1,9 +1,8 @@
-{
-  "name": "Rebel News",
-  "symbol": "R_NEWS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site RebelNews2",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000003d"
+﻿{
+    "name":  "Rebel News",
+    "symbol":  "R_NEWS",
+    "address":  "0X000000000000000000000000000000000000003d",
+    "website":  "",
+    "description":  "This is the description for site RebelNews2",
+    "status":  "test"
 }

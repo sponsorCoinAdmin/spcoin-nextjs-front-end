@@ -1,9 +1,8 @@
-{
-  "name": "Bugs Bunny",
-  "symbol": "BUGS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Bugs Bunny",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000073"
+﻿{
+    "name":  "Bugs Bunny",
+    "symbol":  "BUGS",
+    "address":  "0X0000000000000000000000000000000000000073",
+    "website":  "",
+    "description":  "This is the description for site Bugs Bunny",
+    "status":  "test"
 }

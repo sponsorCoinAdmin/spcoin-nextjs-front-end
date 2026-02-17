@@ -1,9 +1,8 @@
-{
-  "name": "Fred Flintstone1",
-  "symbol": "FRED",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site FredFlintstone1",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000007a"
+﻿{
+    "name":  "Fred Flintstone1",
+    "symbol":  "FRED",
+    "address":  "0X000000000000000000000000000000000000007a",
+    "website":  "",
+    "description":  "This is the description for site FredFlintstone1",
+    "status":  "test"
 }

@@ -1,9 +1,8 @@
-{
-  "name": "Red Cross",
-  "symbol": "RC",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site RedCross",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000003f"
+﻿{
+    "name":  "Red Cross",
+    "symbol":  "RC",
+    "address":  "0X000000000000000000000000000000000000003f",
+    "website":  "",
+    "description":  "This is the description for site RedCross",
+    "status":  "test"
 }

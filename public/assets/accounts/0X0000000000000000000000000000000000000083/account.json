@@ -1,9 +1,8 @@
-{
-  "name": "Chickie Babe",
-  "symbol": "CHICK",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Lady5",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000083"
+﻿{
+    "name":  "Chickie Babe",
+    "symbol":  "CHICK",
+    "address":  "0X0000000000000000000000000000000000000083",
+    "website":  "",
+    "description":  "This is the description for site Lady5",
+    "status":  "test"
 }

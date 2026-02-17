@@ -73,7 +73,8 @@ async function loadAccountData(row: AccountDirectoryRow): Promise<AccountRow | n
 
   try {
     const raw = await fs.readFile(filePath, 'utf8');
-    return { address: row.address, data: JSON.parse(raw) };
+    const normalized = raw.replace(/^\uFEFF/, '');
+    return { address: row.address, data: JSON.parse(normalized) };
   } catch {
     return null;
   }
@@ -86,7 +87,8 @@ async function loadAccountDataByAddress(rawAddress: string): Promise<AccountRow 
   const filePath = path.join(ACCOUNTS_DIR, folderName, 'account.json');
   try {
     const raw = await fs.readFile(filePath, 'utf8');
-    return { address, data: JSON.parse(raw) };
+    const normalized = raw.replace(/^\uFEFF/, '');
+    return { address, data: JSON.parse(normalized) };
   } catch {
     return null;
   }

@@ -1,9 +1,8 @@
-{
-  "name": "Support MAGA",
-  "symbol": "MAGA",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Trump3",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000006"
+﻿{
+    "name":  "Support MAGA",
+    "symbol":  "MAGA",
+    "address":  "0X0000000000000000000000000000000000000006",
+    "website":  "",
+    "description":  "This is the description for site Trump3",
+    "status":  "test"
 }

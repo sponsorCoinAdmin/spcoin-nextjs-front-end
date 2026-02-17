@@ -1,9 +1,8 @@
-{
-  "name": "Born Free USA",
-  "symbol": "FREE",
-  "type": "ERC20_WALLET",
-  "website": "https://www.bornfreeusa.org",
-  "description": "This is the description for site BornFree2",
-  "status": "test",
-  "address": "0X96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+﻿{
+    "name":  "Born Free USA",
+    "symbol":  "FREE",
+    "address":  "0X96f03e32D5fAb2A729ab4C815fbc959C202B0A67",
+    "website":  "https://www.bornfreeusa.org",
+    "description":  "This is the description for site BornFree2",
+    "status":  "test"
 }

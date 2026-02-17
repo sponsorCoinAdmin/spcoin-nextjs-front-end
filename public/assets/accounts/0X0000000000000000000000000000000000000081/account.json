@@ -1,9 +1,8 @@
-{
-  "name": "Linda Lance",
-  "symbol": "LINDA",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Lady3",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000081"
+﻿{
+    "name":  "Linda Lance",
+    "symbol":  "LINDA",
+    "address":  "0X0000000000000000000000000000000000000081",
+    "website":  "",
+    "description":  "This is the description for site Lady3",
+    "status":  "test"
 }

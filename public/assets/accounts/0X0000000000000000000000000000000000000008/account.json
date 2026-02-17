@@ -1,9 +1,8 @@
-{
-  "name": "Support Unicef",
-  "symbol": "UNICEF",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Unicef",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000008"
+﻿{
+    "name":  "Support Unicef",
+    "symbol":  "UNICEF",
+    "address":  "0X0000000000000000000000000000000000000008",
+    "website":  "",
+    "description":  "This is the description for site Unicef",
+    "status":  "test"
 }

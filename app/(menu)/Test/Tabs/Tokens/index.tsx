@@ -35,7 +35,7 @@ function renderJsonWithLinks(json: string) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline text-blue-300 hover:text-blue-200"
+        className="font-bold underline text-blue-700 hover:text-blue-800"
       >
         {url}
       </a>,
@@ -186,11 +186,7 @@ function TokensPage({
     return [...pinned, ...rest];
   }, [visibleTokens]);
 
-  const shortAddress = (value?: string) => {
-    if (!value) return 'N/A';
-    if (value.length <= 12) return value;
-    return `${value.slice(0, 6)}...${value.slice(-4)}`;
-  };
+  const fullAddress = (value?: string) => (value && value.trim().length ? value : 'N/A');
 
   const tokenWebsite = (token: TokenContract): string => {
     const raw = (token as any)?.website ?? (token as any)?.siteUrl ?? (token as any)?.url;
@@ -263,12 +259,12 @@ function TokensPage({
                       {textMode === 'Summary' ? (
                         <div className="ml-3 text-sm">
                           <div>Symbol: {token.symbol || 'N/A'}</div>
-                          <div>Address: {shortAddress(token.address)}</div>
+                          <div>Address: {fullAddress(token.address)}</div>
                         </div>
                       ) : textMode === 'Standard' ? (
                         <div className="ml-3 text-sm space-y-1">
                           <div>Symbol: {token.symbol || 'N/A'}</div>
-                          <div>Address: {shortAddress(token.address)}</div>
+                          <div>Address: {fullAddress(token.address)}</div>
                           <div>Decimals: {String((token as any)?.decimals ?? 'N/A')}</div>
                           <div>Website: {tokenWebsite(token)}</div>
                           <div>Status: {tokenStatus(token)}</div>

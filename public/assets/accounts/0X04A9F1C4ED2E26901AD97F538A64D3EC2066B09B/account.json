@@ -1,9 +1,8 @@
-{
-  "name": "Save The Siberian",
-  "symbol": "TIGER",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site SaveTheTiger2",
-  "status": "test",
-  "address": "0X04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+﻿{
+    "name":  "Save The Siberian",
+    "symbol":  "TIGER",
+    "address":  "0X04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b",
+    "website":  "",
+    "description":  "This is the description for site SaveTheTiger2",
+    "status":  "test"
 }

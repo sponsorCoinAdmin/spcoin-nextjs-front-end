@@ -1,9 +1,8 @@
-{
-  "name": "Granny",
-  "symbol": "NAN",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Granny",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000007d"
+﻿{
+    "name":  "Granny",
+    "symbol":  "NAN",
+    "address":  "0X000000000000000000000000000000000000007d",
+    "website":  "",
+    "description":  "This is the description for site Granny",
+    "status":  "test"
 }

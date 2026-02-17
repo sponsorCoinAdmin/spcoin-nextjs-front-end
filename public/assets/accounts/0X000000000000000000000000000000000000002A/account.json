@@ -1,9 +1,8 @@
-{
-  "name": "Food Bank",
-  "symbol": "FOOD",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site FoodBank",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000002a"
+﻿{
+    "name":  "Food Bank",
+    "symbol":  "FOOD",
+    "address":  "0X000000000000000000000000000000000000002a",
+    "website":  "",
+    "description":  "This is the description for site FoodBank",
+    "status":  "test"
 }

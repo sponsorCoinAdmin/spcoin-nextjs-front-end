@@ -1,9 +1,8 @@
-{
-  "name": "Yosemite Sam",
-  "symbol": "SAM",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site YosemiteSam",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000090"
+﻿{
+    "name":  "Yosemite Sam",
+    "symbol":  "SAM",
+    "address":  "0X0000000000000000000000000000000000000090",
+    "website":  "",
+    "description":  "This is the description for site YosemiteSam",
+    "status":  "test"
 }

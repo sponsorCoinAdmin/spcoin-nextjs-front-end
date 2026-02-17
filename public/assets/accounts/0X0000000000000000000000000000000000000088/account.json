@@ -1,9 +1,8 @@
-{
-  "name": "Steven Mallie",
-  "symbol": "STEVE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Man4",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000088"
+﻿{
+    "name":  "Steven Mallie",
+    "symbol":  "STEVE",
+    "address":  "0X0000000000000000000000000000000000000088",
+    "website":  "",
+    "description":  "This is the description for site Man4",
+    "status":  "test"
 }

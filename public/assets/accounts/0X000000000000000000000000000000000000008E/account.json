@@ -1,9 +1,8 @@
-{
-  "name": "Tweety Bird",
-  "symbol": "TWEET",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site TweetyBird",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000008e"
+﻿{
+    "name":  "Tweety Bird",
+    "symbol":  "TWEET",
+    "address":  "0X000000000000000000000000000000000000008e",
+    "website":  "",
+    "description":  "This is the description for site TweetyBird",
+    "status":  "test"
 }

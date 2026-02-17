@@ -1,9 +1,8 @@
-{
-  "name": "Clean The Parks",
-  "symbol": "PARKS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site CleanTheParks",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000001e"
+﻿{
+    "name":  "Clean The Parks",
+    "symbol":  "PARKS",
+    "address":  "0X000000000000000000000000000000000000001e",
+    "website":  "",
+    "description":  "This is the description for site CleanTheParks",
+    "status":  "test"
 }

@@ -1,9 +1,8 @@
-{
-  "name": "Alina Love",
-  "symbol": "LOVE",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Lady4",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000082"
+﻿{
+    "name":  "Alina Love",
+    "symbol":  "LOVE",
+    "address":  "0X0000000000000000000000000000000000000082",
+    "website":  "",
+    "description":  "This is the description for site Lady4",
+    "status":  "test"
 }

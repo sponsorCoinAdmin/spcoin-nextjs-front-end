@@ -1,9 +1,8 @@
-{
-  "name": "Suzie",
-  "symbol": "GIRL",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Girl1",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000007c"
+﻿{
+    "name":  "Suzie",
+    "symbol":  "GIRL",
+    "address":  "0X000000000000000000000000000000000000007c",
+    "website":  "",
+    "description":  "This is the description for site Girl1",
+    "status":  "test"
 }

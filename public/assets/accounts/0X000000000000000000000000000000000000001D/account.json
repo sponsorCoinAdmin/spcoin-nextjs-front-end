@@ -1,9 +1,8 @@
-{
-  "name": "Childrens Wish",
-  "symbol": "WISH",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site ChildrensWishFoundation2",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000001d"
+﻿{
+    "name":  "Childrens Wish",
+    "symbol":  "WISH",
+    "address":  "0X000000000000000000000000000000000000001d",
+    "website":  "",
+    "description":  "This is the description for site ChildrensWishFoundation2",
+    "status":  "test"
 }

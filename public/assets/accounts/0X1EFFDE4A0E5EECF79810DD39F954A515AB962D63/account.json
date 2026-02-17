@@ -1,9 +1,8 @@
-{
-  "name": "Floppy",
-  "symbol": "FLOPS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Dog3",
-  "status": "test",
-  "address": "0X0000000000000000000000000000000000000079"
+﻿{
+    "name":  "Floppy",
+    "symbol":  "FLOPS",
+    "address":  "0X0000000000000000000000000000000000000079",
+    "website":  "",
+    "description":  "This is the description for site Dog3",
+    "status":  "test"
 }

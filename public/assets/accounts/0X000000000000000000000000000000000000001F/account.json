@@ -1,9 +1,8 @@
-{
-  "name": "Democratic Party",
-  "symbol": "DP",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Democrat",
-  "status": "test",
-  "address": "0X000000000000000000000000000000000000001f"
+﻿{
+    "name":  "Democratic Party",
+    "symbol":  "DP",
+    "address":  "0X000000000000000000000000000000000000001f",
+    "website":  "",
+    "description":  "This is the description for site Democrat",
+    "status":  "test"
 }
