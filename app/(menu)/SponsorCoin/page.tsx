@@ -60,17 +60,17 @@ export default function SponsorCoinPage() {
     toggleOnBackgroundClick,
   } = useTogglePortal<HTMLDivElement>();
 
-  const cardStyle =
-    'group flex h-full flex-col p-4 rounded-xl bg-[#0E111B] hover:bg-[rgb(79,86,101)] transition-colors duration-200';
+  const cardBaseStyle =
+    'group flex h-full flex-col p-4 rounded-xl bg-[#0E111B] transition-colors duration-200';
+  const cardHoverStyle = 'hover:bg-[#5981F3]/35';
   const headerStyle =
     'text-xl font-semibold mb-2 text-center text-[#5981F3] group-hover:text-[#000000] transition-colors';
   const paragraphStyle =
     'text-sm text-white group-hover:text-[#FFFFFF] transition-colors text-left';
-  const cardButtonStyle =
-    'w-56 rounded bg-[#243056] px-4 py-2 text-center text-sm font-medium text-[#5981F3] transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
   const [selectedAccountType, setSelectedAccountType] = useState<'Sponsor' | 'Recipient' | 'Agent' | null>(
     null,
   );
+  const [suspendCreateCardHover, setSuspendCreateCardHover] = useState(false);
   const createAccountHref = selectedAccountType
     ? `/createAccount?type=${encodeURIComponent(selectedAccountType)}`
     : '/createAccount';
@@ -130,26 +130,27 @@ export default function SponsorCoinPage() {
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Exchange is primary nav, not a dynamic tab */}
-                <div className={cardStyle}>
+                <div
+                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
+                  onClick={() => openCardPath('/Exchange')}
+                >
                   <h2 className={headerStyle}>SponsorCoin Exchange</h2>
                   <p className={paragraphStyle}>
                     Trade on SponsorCoin Exchange and be eligible for future SponsorCoin drops.
                   </p>
-                  <div className="mt-auto pt-4 flex w-full justify-center">
-                    <button
-                      type="button"
-                      onClick={() => openCardPath('/Exchange')}
-                      className={cardButtonStyle}
-                    >
-                      Open Exchange
-                    </button>
-                  </div>
                 </div>
 
                 {/* Dynamic tab: Create account */}
-                <div className={cardStyle}>
+                <div
+                  className={`${cardBaseStyle} ${suspendCreateCardHover ? '' : cardHoverStyle} cursor-pointer`}
+                  onClick={handleOpenCreateAccount}
+                >
                   <h2 className={headerStyle}>Create an Account.</h2>
-                  <div className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5">
+                  <div
+                    className="mt-2 mb-3 flex w-full flex-wrap items-center justify-center gap-5"
+                    onMouseEnter={() => setSuspendCreateCardHover(true)}
+                    onMouseLeave={() => setSuspendCreateCardHover(false)}
+                  >
                     {(['Sponsor', 'Recipient', 'Agent'] as const).map((role) => {
                       const selected = selectedAccountType === role;
                       return (
@@ -187,56 +188,31 @@ export default function SponsorCoinPage() {
                   <p className={paragraphStyle}>
                     Set up a SponsorCoin account and choose a role before opening the create account page.
                   </p>
-                  <div className="mt-auto pt-4 flex w-full justify-center">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleOpenCreateAccount();
-                      }}
-                      className={cardButtonStyle}
-                    >
-                      Continue to Create Account
-                    </button>
-                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Dynamic tab: SpCoin API */}
-                <div className={cardStyle}>
+                <div
+                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
+                  onClick={() => openCardPath('/SpCoinAPI')}
+                >
                   <h2 className={headerStyle}>SpCoin API for Developers</h2>
                   <p className={paragraphStyle}>
                     Connect to the BlockCoin token using SponsorCoin’s APIs for advanced development. The
                     SponsorCoin Exchange was built using these APIs.
                   </p>
-                  <div className="mt-auto pt-4 flex w-full justify-center">
-                    <button
-                      type="button"
-                      onClick={() => openCardPath('/SpCoinAPI')}
-                      className={cardButtonStyle}
-                    >
-                      Open SpCoin API
-                    </button>
-                  </div>
                 </div>
 
                 {/* Dynamic tab: White Paper */}
-                <div className={cardStyle}>
+                <div
+                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
+                  onClick={() => openCardPath('/WhitePaper')}
+                >
                   <h2 className={headerStyle}>SponsorCoin White Paper</h2>
                   <p className={paragraphStyle}>
                     Read the SponsorCoin white paper and learn more about the project.
                   </p>
-                  <div className="mt-auto pt-4 flex w-full justify-center">
-                    <button
-                      type="button"
-                      onClick={() => openCardPath('/WhitePaper')}
-                      className={cardButtonStyle}
-                    >
-                      Open White Paper
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
