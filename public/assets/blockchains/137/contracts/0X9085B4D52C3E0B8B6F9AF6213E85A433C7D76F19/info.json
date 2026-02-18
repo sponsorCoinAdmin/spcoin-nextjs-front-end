@@ -1,28 +1,28 @@
 {
-    "name": "OWL",
-    "website": "https://owldao.io",
-    "description": "OwlDAO - Build the Best Casino Solution on Ethereum Networks.",
-    "explorer": "https://polygonscan.com/token/0x9085B4d52c3e0B8B6F9AF6213E85A433c7D76f19",
-    "type": "POLYGON",
-    "symbol": "OWL",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x9085B4d52c3e0B8B6F9AF6213E85A433c7D76f19",
-    "tags": [
-        "defi"
-    ],
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/OWLDAOio"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/owlDAO"
-        },
-        {
-            "name": "discord",
-            "url": "https://discord.com/invite/8MUcukEKnC"
-        }
-    ]
+    "name":  "OWL",
+    "website":  "https://owldao.io",
+    "description":  "OwlDAO - Build the Best Casino Solution on Ethereum Networks.",
+    "explorer":  "https://polygonscan.com/token/0x9085B4d52c3e0B8B6F9AF6213E85A433c7D76f19",
+    "symbol":  "OWL",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/137/contracts/0X9085B4D52C3E0B8B6F9AF6213E85A433C7D76F19/logo.png",
+    "id":  "0x9085B4d52c3e0B8B6F9AF6213E85A433c7D76f19",
+    "tags":  [
+                 "defi"
+             ],
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/OWLDAOio"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/owlDAO"
+                  },
+                  {
+                      "name":  "discord",
+                      "url":  "https://discord.com/invite/8MUcukEKnC"
+                  }
+              ]
 }

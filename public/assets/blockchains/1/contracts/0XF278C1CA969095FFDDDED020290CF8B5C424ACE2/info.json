@@ -1,11 +1,11 @@
 {
-    "name": "RUFF",
-    "symbol": "RUFF",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "As an architecture combining block chain and internet of things (IoT), Ruff Chain includes a public chain for development as well as a distributed operating system.",
-    "website": "http://ruffchain.com/",
-    "explorer": "https://etherscan.io/token/0xf278c1CA969095ffddDED020290cf8B5C424AcE2",
-    "status": "active",
-    "id": "0xf278c1CA969095ffddDED020290cf8B5C424AcE2"
+    "name":  "RUFF",
+    "symbol":  "RUFF",
+    "decimals":  18,
+    "description":  "As an architecture combining block chain and internet of things (IoT), Ruff Chain includes a public chain for development as well as a distributed operating system.",
+    "website":  "http://ruffchain.com/",
+    "explorer":  "https://etherscan.io/token/0xf278c1CA969095ffddDED020290cf8B5C424AcE2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF278C1CA969095FFDDDED020290CF8B5C424ACE2/logo.png",
+    "id":  "0xf278c1CA969095ffddDED020290cf8B5C424AcE2"
 }

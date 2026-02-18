@@ -1,11 +1,11 @@
 {
-    "name": "WETH",
-    "symbol": "WETH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://weth.io/",
-    "explorer": "https://etherscan.io/token/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    "status": "active",
-    "id": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    "name":  "WETH",
+    "symbol":  "WETH",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://weth.io/",
+    "explorer":  "https://etherscan.io/token/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC02AAA39B223FE8D0A0E5C4F27EAD9083C756CC2/logo.png",
+    "id":  "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 }

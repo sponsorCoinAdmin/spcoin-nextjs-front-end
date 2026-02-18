@@ -1,11 +1,11 @@
 {
-    "name": "IdeaChain",
-    "symbol": "ICH",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "ICH It is a digital currency to support inventors and preserve their rights with smart and innovative solutions.",
-    "website": "https://ideachaincoin.com/",
-    "explorer": "https://etherscan.io/token/0xf8483E2d6560585C02D46bF7B3186Bf154a96166",
-    "status": "active",
-    "id": "0xf8483E2d6560585C02D46bF7B3186Bf154a96166"
+    "name":  "IdeaChain",
+    "symbol":  "ICH",
+    "decimals":  8,
+    "description":  "ICH It is a digital currency to support inventors and preserve their rights with smart and innovative solutions.",
+    "website":  "https://ideachaincoin.com/",
+    "explorer":  "https://etherscan.io/token/0xf8483E2d6560585C02D46bF7B3186Bf154a96166",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF8483E2D6560585C02D46BF7B3186BF154A96166/logo.png",
+    "id":  "0xf8483E2d6560585C02D46bF7B3186Bf154a96166"
 }

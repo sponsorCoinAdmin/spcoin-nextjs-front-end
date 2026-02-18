@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Progressive",
     "symbol":  "PC_4",
-    "address":  "0X000000000000000000000000000000000000003a",
+    "address":  "0X000000000000000000000000000000000000003A",
     "website":  "",
     "description":  "This is the description for site PC_4",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000003A/logo.png",
     "status":  "test"
 }

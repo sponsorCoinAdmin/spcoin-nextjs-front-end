@@ -1,11 +1,11 @@
 {
-    "name": "Dusk",
-    "symbol": "DUSKG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xAf4D36C8c744F345E060345b6eAf4E899eC7547c",
-    "status": "active",
-    "id": "0xAf4D36C8c744F345E060345b6eAf4E899eC7547c"
+    "name":  "Dusk",
+    "symbol":  "DUSKG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xAf4D36C8c744F345E060345b6eAf4E899eC7547c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XAF4D36C8C744F345E060345B6EAF4E899EC7547C/logo.png",
+    "id":  "0xAf4D36C8c744F345E060345b6eAf4E899eC7547c"
 }

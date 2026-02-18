@@ -1,11 +1,11 @@
 {
-    "name": "WrapUSDT",
-    "website": "https://ecocelium.io",
-    "description": "Wrapped version of Tether (USDT)",
-    "explorer": "https://etherscan.io/token/0x2ACFf9cc74B104CD8540E9a2F691f22d3BD924d7",
-    "type": "ERC20",
-    "symbol": "eUSDT",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x2ACFf9cc74B104CD8540E9a2F691f22d3BD924d7"
+    "name":  "WrapUSDT",
+    "website":  "https://ecocelium.io",
+    "description":  "Wrapped version of Tether (USDT)",
+    "explorer":  "https://etherscan.io/token/0x2ACFf9cc74B104CD8540E9a2F691f22d3BD924d7",
+    "symbol":  "eUSDT",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2ACFF9CC74B104CD8540E9A2F691F22D3BD924D7/logo.png",
+    "id":  "0x2ACFf9cc74B104CD8540E9a2F691f22d3BD924d7"
 }

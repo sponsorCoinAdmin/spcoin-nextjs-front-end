@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Vote Pierre",
     "symbol":  "PIERRE",
     "address":  "0X0000000000000000000000000000000000000010",
     "website":  "",
     "description":  "This is the description for site VotePierre",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000010/logo.png",
     "status":  "test"
 }
+

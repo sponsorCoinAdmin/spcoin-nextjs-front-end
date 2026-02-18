@@ -1,11 +1,11 @@
 {
-    "name": "Cindicator Token",
-    "symbol": "CND",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Meet Stoic — Cindicator's newest crypto trading product.",
-    "website": "https://cindicator.com",
-    "explorer": "https://etherscan.io/token/0xd4c435F5B09F855C3317c8524Cb1F586E42795fa",
-    "status": "active",
-    "id": "0xd4c435F5B09F855C3317c8524Cb1F586E42795fa"
+    "name":  "Cindicator Token",
+    "symbol":  "CND",
+    "decimals":  18,
+    "description":  "Meet Stoic — Cindicator\u0027s newest crypto trading product.",
+    "website":  "https://cindicator.com",
+    "explorer":  "https://etherscan.io/token/0xd4c435F5B09F855C3317c8524Cb1F586E42795fa",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD4C435F5B09F855C3317C8524CB1F586E42795FA/logo.png",
+    "id":  "0xd4c435F5B09F855C3317c8524Cb1F586E42795fa"
 }

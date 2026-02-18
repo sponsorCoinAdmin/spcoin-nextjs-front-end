@@ -1,11 +1,11 @@
 {
-    "name": "Bidao",
-    "symbol": "BID",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Bidao® is building a chain agnostic trustless stablecoin and decentralized finance ecosystem. Moreover the Bidao® Token can be staked to earn extra rewards.",
-    "website": "https://bidaochain.com/",
-    "explorer": "https://etherscan.io/token/0x25e1474170c4c0aA64fa98123bdc8dB49D7802fa",
-    "status": "active",
-    "id": "0x25e1474170c4c0aA64fa98123bdc8dB49D7802fa"
+    "name":  "Bidao",
+    "symbol":  "BID",
+    "decimals":  18,
+    "description":  "Bidao® is building a chain agnostic trustless stablecoin and decentralized finance ecosystem. Moreover the Bidao® Token can be staked to earn extra rewards.",
+    "website":  "https://bidaochain.com/",
+    "explorer":  "https://etherscan.io/token/0x25e1474170c4c0aA64fa98123bdc8dB49D7802fa",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X25E1474170C4C0AA64FA98123BDC8DB49D7802FA/logo.png",
+    "id":  "0x25e1474170c4c0aA64fa98123bdc8dB49D7802fa"
 }

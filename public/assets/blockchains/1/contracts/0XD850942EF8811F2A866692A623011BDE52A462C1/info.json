@@ -1,11 +1,11 @@
 {
-    "name": "VeChain Token",
-    "type": "ERC20",
-    "symbol": "VEN",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0xd850942ef8811f2a866692a623011bde52a462c1",
-    "status": "active",
-    "id": "0xD850942eF8811f2A866692A623011bDE52a462C1"
+    "name":  "VeChain Token",
+    "symbol":  "VEN",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0xd850942ef8811f2a866692a623011bde52a462c1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD850942EF8811F2A866692A623011BDE52A462C1/logo.png",
+    "id":  "0xD850942eF8811f2A866692A623011bDE52a462C1"
 }

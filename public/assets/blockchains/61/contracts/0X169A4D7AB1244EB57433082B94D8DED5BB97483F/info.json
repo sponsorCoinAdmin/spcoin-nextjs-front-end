@@ -1,11 +1,11 @@
 {
-    "name": "BitUnits Fermium",
-    "symbol": "BFM",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x169a4d7aB1244eB57433082B94d8ded5BB97483f",
-    "status": "active",
-    "id": "0x169a4d7aB1244eB57433082B94d8ded5BB97483f"
+    "name":  "BitUnits Fermium",
+    "symbol":  "BFM",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x169a4d7aB1244eB57433082B94d8ded5BB97483f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X169A4D7AB1244EB57433082B94D8DED5BB97483F/logo.png",
+    "id":  "0x169a4d7aB1244eB57433082B94d8ded5BB97483f"
 }

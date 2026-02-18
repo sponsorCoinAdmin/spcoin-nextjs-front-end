@@ -1,12 +1,12 @@
 {
-    "name": "Ambrosus",
-    "website": "http://ambrosus.com",
-    "description": "The Ambrosus network is a blockchain-based ecosystem for supply chains, ensuring the origin, quality, compliance, and proper handling of items tracked by the network.",
-    "explorer": "https://etherscan.io/token/0x4DC3643DbC642b72C158E7F3d2ff232df61cb6CE",
-    "research": "https://research.binance.com/en/projects/ambrosus",
-    "type": "ERC20",
-    "symbol": "AMB",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x4DC3643DbC642b72C158E7F3d2ff232df61cb6CE"
+    "name":  "Ambrosus",
+    "website":  "http://ambrosus.com",
+    "description":  "The Ambrosus network is a blockchain-based ecosystem for supply chains, ensuring the origin, quality, compliance, and proper handling of items tracked by the network.",
+    "explorer":  "https://etherscan.io/token/0x4DC3643DbC642b72C158E7F3d2ff232df61cb6CE",
+    "research":  "https://research.binance.com/en/projects/ambrosus",
+    "symbol":  "AMB",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4DC3643DBC642B72C158E7F3D2FF232DF61CB6CE/logo.png",
+    "id":  "0x4DC3643DbC642b72C158E7F3d2ff232df61cb6CE"
 }

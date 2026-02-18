@@ -1,11 +1,11 @@
 {
-    "name": "Med. Cannabis Note",
-    "symbol": "₵",
-    "type": "ERC20",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x7F77a0cc3caCE8c58ccE9D153c070f312D1a1088",
-    "status": "spam",
-    "id": "0x7F77a0cc3caCE8c58ccE9D153c070f312D1a1088"
+    "name":  "Med. Cannabis Note",
+    "symbol":  "₵",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x7F77a0cc3caCE8c58ccE9D153c070f312D1a1088",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X7F77A0CC3CACE8C58CCE9D153C070F312D1A1088/logo.png",
+    "id":  "0x7F77a0cc3caCE8c58ccE9D153c070f312D1a1088"
 }

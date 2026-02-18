@@ -1,36 +1,36 @@
 {
-    "name": "Route",
-    "website": "https://www.routerprotocol.com/",
-    "description": "Router Protocol is a crosschain-liquidity aggregator platform that was built to seamlessly provide bridging infrastructure between current and emerging Layer 1 and Layer 2 blockchain solutions.",
-    "explorer": "https://snowtrace.io/token/0xf44Ff799eA2bBFeC96f9A50498209AAc3C2b3b8b",
-    "type": "AVALANCHE",
-    "symbol": "ROUTE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xf44Ff799eA2bBFeC96f9A50498209AAc3C2b3b8b",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/router-protocol"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/routerprotocol"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/route/"
-        },
-        {
-            "name": "medium",
-            "url": "https://routerprotocol.medium.com/"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/routerprotocol"
-        }
-    ],
-    "tags": [
-        "staking"
-    ]
+    "name":  "Route",
+    "website":  "https://www.routerprotocol.com/",
+    "description":  "Router Protocol is a crosschain-liquidity aggregator platform that was built to seamlessly provide bridging infrastructure between current and emerging Layer 1 and Layer 2 blockchain solutions.",
+    "explorer":  "https://snowtrace.io/token/0xf44Ff799eA2bBFeC96f9A50498209AAc3C2b3b8b",
+    "symbol":  "ROUTE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XF44FF799EA2BBFEC96F9A50498209AAC3C2B3B8B/logo.png",
+    "id":  "0xf44Ff799eA2bBFeC96f9A50498209AAc3C2b3b8b",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/router-protocol"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/routerprotocol"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/route/"
+                  },
+                  {
+                      "name":  "medium",
+                      "url":  "https://routerprotocol.medium.com/"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/routerprotocol"
+                  }
+              ],
+    "tags":  [
+                 "staking"
+             ]
 }

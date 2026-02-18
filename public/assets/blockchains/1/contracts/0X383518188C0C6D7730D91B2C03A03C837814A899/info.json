@@ -1,11 +1,11 @@
 {
-    "name": "OlympusDAO",
-    "symbol": "OHM",
-    "type": "ERC20",
-    "decimals": 9,
-    "description": "Olympus (OHM) aims to become a decentralized reserve currency that is community owned, governed by a DAO, and backed by decentralized assets.",
-    "website": "https://olympusdao.finance",
-    "explorer": "https://etherscan.io/token/0x383518188C0C6d7730D91b2c03a03C837814a899",
-    "status": "active",
-    "id": "0x383518188C0C6d7730D91b2c03a03C837814a899"
+    "name":  "OlympusDAO",
+    "symbol":  "OHM",
+    "decimals":  9,
+    "description":  "Olympus (OHM) aims to become a decentralized reserve currency that is community owned, governed by a DAO, and backed by decentralized assets.",
+    "website":  "https://olympusdao.finance",
+    "explorer":  "https://etherscan.io/token/0x383518188C0C6d7730D91b2c03a03C837814a899",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X383518188C0C6D7730D91B2C03A03C837814A899/logo.png",
+    "id":  "0x383518188C0C6d7730D91b2c03a03C837814a899"
 }

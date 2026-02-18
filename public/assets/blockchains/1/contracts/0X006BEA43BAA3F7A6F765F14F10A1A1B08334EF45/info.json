@@ -1,11 +1,11 @@
 {
-    "name": "Stox",
-    "symbol": "STX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.stox.com/en",
-    "explorer": "https://etherscan.io/token/0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45",
-    "status": "active",
-    "id": "0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45"
+    "name":  "Stox",
+    "symbol":  "STX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.stox.com/en",
+    "explorer":  "https://etherscan.io/token/0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X006BEA43BAA3F7A6F765F14F10A1A1B08334EF45/logo.png",
+    "id":  "0x006BeA43Baa3f7A6f765F14f10A1a1b08334EF45"
 }

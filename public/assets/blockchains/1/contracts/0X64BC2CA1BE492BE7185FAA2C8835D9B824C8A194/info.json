@@ -1,25 +1,25 @@
 {
-    "name": "Big Time",
-    "website": "https://bigtime.gg/",
-    "description": "The $BIGTIME Token is the main cryptocurrency that drives Big Time’s in-game economy. $BIGTIME randomly drops in-game by playing with at least one charged Hourglass equipped.",
-    "explorer": "https://etherscan.io/token/0x64Bc2cA1Be492bE7185FAA2c8835d9b824c8a194",
-    "type": "ERC20",
-    "symbol": "BIGTIME",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x64Bc2cA1Be492bE7185FAA2c8835d9b824c8a194",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/big-time/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/playbigtime"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/big-time/"
-        }
-    ]
+    "name":  "Big Time",
+    "website":  "https://bigtime.gg/",
+    "description":  "The $BIGTIME Token is the main cryptocurrency that drives Big Time’s in-game economy. $BIGTIME randomly drops in-game by playing with at least one charged Hourglass equipped.",
+    "explorer":  "https://etherscan.io/token/0x64Bc2cA1Be492bE7185FAA2c8835d9b824c8a194",
+    "symbol":  "BIGTIME",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X64BC2CA1BE492BE7185FAA2C8835D9B824C8A194/logo.png",
+    "id":  "0x64Bc2cA1Be492bE7185FAA2c8835d9b824c8a194",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/big-time/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/playbigtime"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/big-time/"
+                  }
+              ]
 }

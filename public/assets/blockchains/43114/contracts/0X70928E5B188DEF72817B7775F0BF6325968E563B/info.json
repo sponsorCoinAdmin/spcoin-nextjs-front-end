@@ -1,14 +1,14 @@
 {
-    "name": "LUNA (Portal)",
-    "symbol": "LUNA",
-    "type": "AVALANCHE",
-    "decimals": 6,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://terra.money",
-    "explorer": "https://snowtrace.io/token/0x70928E5B188def72817b7775F0BF6325968e563B",
-    "status": "active",
-    "id": "0x70928E5B188def72817b7775F0BF6325968e563B",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "LUNA (Portal)",
+    "symbol":  "LUNA",
+    "decimals":  6,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://terra.money",
+    "explorer":  "https://snowtrace.io/token/0x70928E5B188def72817b7775F0BF6325968e563B",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0X70928E5B188DEF72817B7775F0BF6325968E563B/logo.png",
+    "id":  "0x70928E5B188def72817b7775F0BF6325968e563B",
+    "tags":  [
+                 "wrapped"
+             ]
 }

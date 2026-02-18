@@ -1,11 +1,11 @@
 {
-    "name": "DISTX",
-    "website": "https://distx.io",
-    "description": "DISTX is an automated private sale platform, allowing token creators and token users to come together in a safe, decentralized and automated sale.",
-    "explorer": "https://etherscan.io/token/0x4B4701f3f827E1331fb22FF8e2BEaC24b17Eb055",
-    "type": "ERC20",
-    "symbol": "DISTX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x4B4701f3f827E1331fb22FF8e2BEaC24b17Eb055"
+    "name":  "DISTX",
+    "website":  "https://distx.io",
+    "description":  "DISTX is an automated private sale platform, allowing token creators and token users to come together in a safe, decentralized and automated sale.",
+    "explorer":  "https://etherscan.io/token/0x4B4701f3f827E1331fb22FF8e2BEaC24b17Eb055",
+    "symbol":  "DISTX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4B4701F3F827E1331FB22FF8E2BEAC24B17EB055/logo.png",
+    "id":  "0x4B4701f3f827E1331fb22FF8e2BEaC24b17Eb055"
 }

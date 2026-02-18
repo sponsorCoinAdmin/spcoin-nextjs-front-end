@@ -1,17 +1,17 @@
 {
-    "name": "USDA",
-    "symbol": "USDA",
-    "website": "https://www.angle.money/usda",
-    "description": "Supercharge your DeFi journey with USDA, the most complete & reliable yield-bearing U.S. Dollar stablecoin",
-    "explorer": "https://basescan.org/token/0x0000206329b97DB379d5E1Bf586BbDB969C63274",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x0000206329b97DB379d5E1Bf586BbDB969C63274",
-    "type": "BASE",
-    "links": [
-        {
-            "name": "twitter",
-            "url": "https://x.com/AngleProtocol"
-        }
-    ]
+    "name":  "USDA",
+    "symbol":  "USDA",
+    "website":  "https://www.angle.money/usda",
+    "description":  "Supercharge your DeFi journey with USDA, the most complete \u0026 reliable yield-bearing U.S. Dollar stablecoin",
+    "explorer":  "https://basescan.org/token/0x0000206329b97DB379d5E1Bf586BbDB969C63274",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X0000206329B97DB379D5E1BF586BBDB969C63274/logo.png",
+    "id":  "0x0000206329b97DB379d5E1Bf586BbDB969C63274",
+    "links":  [
+                  {
+                      "name":  "twitter",
+                      "url":  "https://x.com/AngleProtocol"
+                  }
+              ]
 }

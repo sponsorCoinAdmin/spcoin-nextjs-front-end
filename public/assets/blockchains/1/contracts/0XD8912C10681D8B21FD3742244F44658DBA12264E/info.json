@@ -1,11 +1,11 @@
 {
-    "name": "Pluton",
-    "symbol": "PLU",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Plutus is an incredibly secure crypto-friendly finance app.",
-    "website": "https://plutus.it",
-    "explorer": "https://etherscan.io/token/0xD8912C10681D8B21Fd3742244f44658dBA12264E",
-    "status": "active",
-    "id": "0xD8912C10681D8B21Fd3742244f44658dBA12264E"
+    "name":  "Pluton",
+    "symbol":  "PLU",
+    "decimals":  18,
+    "description":  "Plutus is an incredibly secure crypto-friendly finance app.",
+    "website":  "https://plutus.it",
+    "explorer":  "https://etherscan.io/token/0xD8912C10681D8B21Fd3742244f44658dBA12264E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD8912C10681D8B21FD3742244F44658DBA12264E/logo.png",
+    "id":  "0xD8912C10681D8B21Fd3742244f44658dBA12264E"
 }

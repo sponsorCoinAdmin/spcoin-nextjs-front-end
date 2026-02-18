@@ -1,11 +1,11 @@
 {
-    "name": "Decentralized Crypto Token",
-    "symbol": "DCTO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "DCTO Project Cryptocurrency Latest News",
-    "website": "https://dctoproject.org",
-    "explorer": "https://etherscan.io/token/0x9CCbd05d4d25c745d49F5e6BF17e09113Eb4c769",
-    "status": "active",
-    "id": "0x9CCbd05d4d25c745d49F5e6BF17e09113Eb4c769"
+    "name":  "Decentralized Crypto Token",
+    "symbol":  "DCTO",
+    "decimals":  18,
+    "description":  "DCTO Project Cryptocurrency Latest News",
+    "website":  "https://dctoproject.org",
+    "explorer":  "https://etherscan.io/token/0x9CCbd05d4d25c745d49F5e6BF17e09113Eb4c769",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9CCBD05D4D25C745D49F5E6BF17E09113EB4C769/logo.png",
+    "id":  "0x9CCbd05d4d25c745d49F5e6BF17e09113Eb4c769"
 }

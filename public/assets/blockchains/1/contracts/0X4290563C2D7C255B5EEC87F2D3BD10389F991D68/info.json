@@ -1,11 +1,11 @@
 {
-    "name": "UnlimitedIP Token",
-    "symbol": "UIP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "UIP (short for UnlimitedIP ) is a recreational copyright intelligent trading platform created by Link Entertainments Technology based on EOS.",
-    "website": "http://www.unlimitedip.io/",
-    "explorer": "https://etherscan.io/token/0x4290563C2D7c255B5EEC87f2D3bD10389f991d68",
-    "status": "active",
-    "id": "0x4290563C2D7c255B5EEC87f2D3bD10389f991d68"
+    "name":  "UnlimitedIP Token",
+    "symbol":  "UIP",
+    "decimals":  18,
+    "description":  "UIP (short for UnlimitedIP ) is a recreational copyright intelligent trading platform created by Link Entertainments Technology based on EOS.",
+    "website":  "http://www.unlimitedip.io/",
+    "explorer":  "https://etherscan.io/token/0x4290563C2D7c255B5EEC87f2D3bD10389f991d68",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4290563C2D7C255B5EEC87F2D3BD10389F991D68/logo.png",
+    "id":  "0x4290563C2D7c255B5EEC87f2D3bD10389f991d68"
 }

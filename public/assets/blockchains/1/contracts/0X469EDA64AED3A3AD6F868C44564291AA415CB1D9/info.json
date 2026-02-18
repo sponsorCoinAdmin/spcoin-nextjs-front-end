@@ -1,11 +1,11 @@
 {
-    "name": "FLUX",
-    "symbol": "FLUX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://damcrypto.com",
-    "explorer": "https://etherscan.io/token/0x469eDA64aEd3A3Ad6f868c44564291aA415cB1d9",
-    "status": "active",
-    "id": "0x469eDA64aEd3A3Ad6f868c44564291aA415cB1d9"
+    "name":  "FLUX",
+    "symbol":  "FLUX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://damcrypto.com",
+    "explorer":  "https://etherscan.io/token/0x469eDA64aEd3A3Ad6f868c44564291aA415cB1d9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X469EDA64AED3A3AD6F868C44564291AA415CB1D9/logo.png",
+    "id":  "0x469eDA64aEd3A3Ad6f868c44564291aA415cB1d9"
 }

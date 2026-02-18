@@ -1,11 +1,11 @@
 {
-    "name": "SPANK",
-    "symbol": "SPANK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "A cryptoeconomic powered adult entertainment ecosystem built on the Ethereum network.",
-    "website": "https://spankchain.com/",
-    "explorer": "https://etherscan.io/token/0x42d6622deCe394b54999Fbd73D108123806f6a18",
-    "status": "active",
-    "id": "0x42d6622deCe394b54999Fbd73D108123806f6a18"
+    "name":  "SPANK",
+    "symbol":  "SPANK",
+    "decimals":  18,
+    "description":  "A cryptoeconomic powered adult entertainment ecosystem built on the Ethereum network.",
+    "website":  "https://spankchain.com/",
+    "explorer":  "https://etherscan.io/token/0x42d6622deCe394b54999Fbd73D108123806f6a18",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X42D6622DECE394B54999FBD73D108123806F6A18/logo.png",
+    "id":  "0x42d6622deCe394b54999Fbd73D108123806f6a18"
 }

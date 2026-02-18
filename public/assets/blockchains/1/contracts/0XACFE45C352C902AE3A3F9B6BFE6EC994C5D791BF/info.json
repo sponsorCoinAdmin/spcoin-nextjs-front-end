@@ -1,12 +1,12 @@
 {
-    "name": "megaBONK",
-    "website": "https://www.megabonk.com/",
-    "description": "megaBONK is a community defi project focused on creating & minting NFTs with a one-click NFT minter.",
-    "explorer": "https://etherscan.io/token/0xacfe45c352c902ae3a3f9b6bfe6ec994c5d791bf",
-    "research": "https://bonktoken.medium.com/",
-    "type": "ERC20",
-    "symbol": "mBONK",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xacFe45C352C902ae3A3F9B6bfE6eC994c5D791BF"
+    "name":  "megaBONK",
+    "website":  "https://www.megabonk.com/",
+    "description":  "megaBONK is a community defi project focused on creating \u0026 minting NFTs with a one-click NFT minter.",
+    "explorer":  "https://etherscan.io/token/0xacfe45c352c902ae3a3f9b6bfe6ec994c5d791bf",
+    "research":  "https://bonktoken.medium.com/",
+    "symbol":  "mBONK",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XACFE45C352C902AE3A3F9B6BFE6EC994C5D791BF/logo.png",
+    "id":  "0xacFe45C352C902ae3A3F9B6bfE6eC994c5D791BF"
 }

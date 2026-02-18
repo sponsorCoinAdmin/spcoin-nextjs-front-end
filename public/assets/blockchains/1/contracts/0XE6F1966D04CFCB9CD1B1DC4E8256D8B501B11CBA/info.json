@@ -1,21 +1,21 @@
 {
-    "name": "SafeEarth",
-    "website": "https://safeearthcrypto.com/",
-    "description": "Autonomous Yield and Liquidity Generation Charity Protocol",
-    "explorer": "https://etherscan.io/token/0xE6F1966d04CfcB9cd1B1dC4E8256D8b501b11CbA",
-    "type": "ERC20",
-    "symbol": "SAFEEARTH",
-    "decimals": 9,
-    "status": "active",
-    "id": "0xE6F1966d04CfcB9cd1B1dC4E8256D8b501b11CbA",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/SafeEarthETH"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/SafeEarthETH"
-        }
-    ]
+    "name":  "SafeEarth",
+    "website":  "https://safeearthcrypto.com/",
+    "description":  "Autonomous Yield and Liquidity Generation Charity Protocol",
+    "explorer":  "https://etherscan.io/token/0xE6F1966d04CfcB9cd1B1dC4E8256D8b501b11CbA",
+    "symbol":  "SAFEEARTH",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE6F1966D04CFCB9CD1B1DC4E8256D8B501B11CBA/logo.png",
+    "id":  "0xE6F1966d04CfcB9cd1B1dC4E8256D8b501b11CbA",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/SafeEarthETH"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/SafeEarthETH"
+                  }
+              ]
 }

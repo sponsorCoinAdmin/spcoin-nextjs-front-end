@@ -1,11 +1,11 @@
 {
-    "name": "HOLD",
-    "symbol": "HOLD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "HOLD is a revolutionary card that provides instant cash against cryptocurrency collateral. Leverage the power of your portfolio without having to sell it.",
-    "website": "https://hold.co",
-    "explorer": "https://etherscan.io/token/0xD6e1401a079922469e9b965Cb090ea6fF64C6839",
-    "status": "active",
-    "id": "0xD6e1401a079922469e9b965Cb090ea6fF64C6839"
+    "name":  "HOLD",
+    "symbol":  "HOLD",
+    "decimals":  18,
+    "description":  "HOLD is a revolutionary card that provides instant cash against cryptocurrency collateral. Leverage the power of your portfolio without having to sell it.",
+    "website":  "https://hold.co",
+    "explorer":  "https://etherscan.io/token/0xD6e1401a079922469e9b965Cb090ea6fF64C6839",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD6E1401A079922469E9B965CB090EA6FF64C6839/logo.png",
+    "id":  "0xD6e1401a079922469e9b965Cb090ea6fF64C6839"
 }

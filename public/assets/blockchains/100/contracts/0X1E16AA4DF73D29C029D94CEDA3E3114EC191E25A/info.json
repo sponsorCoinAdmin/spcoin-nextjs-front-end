@@ -1,11 +1,11 @@
 {
-    "name": "Moons",
-    "type": "XDAI",
-    "symbol": "XMOON",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://blockscout.com/xdai/mainnet/contractss/0x1e16aa4Df73d29C029d94CeDa3e3114EC191E25A",
-    "status": "active",
-    "id": "0x1e16aa4Df73d29C029d94CeDa3e3114EC191E25A"
+    "name":  "Moons",
+    "symbol":  "XMOON",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://blockscout.com/xdai/mainnet/contractss/0x1e16aa4Df73d29C029d94CeDa3e3114EC191E25A",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/100/contracts/0X1E16AA4DF73D29C029D94CEDA3E3114EC191E25A/logo.png",
+    "id":  "0x1e16aa4Df73d29C029d94CeDa3e3114EC191E25A"
 }

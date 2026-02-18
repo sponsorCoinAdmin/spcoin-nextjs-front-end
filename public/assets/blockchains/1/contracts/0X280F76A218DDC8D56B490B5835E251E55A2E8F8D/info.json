@@ -1,11 +1,11 @@
 {
-    "name": "Strike UNI",
-    "symbol": "sUNI",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Strike Finance collateral cryptocurrency",
-    "explorer": "https://etherscan.io/token/0x280f76a218DDC8d56B490B5835e251E55a2e8F8d",
-    "status": "active",
-    "id": "0x280f76a218DDC8d56B490B5835e251E55a2e8F8d",
-    "website": "https://strike.org"
+    "name":  "Strike UNI",
+    "symbol":  "sUNI",
+    "decimals":  18,
+    "description":  "Strike Finance collateral cryptocurrency",
+    "explorer":  "https://etherscan.io/token/0x280f76a218DDC8d56B490B5835e251E55a2e8F8d",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X280F76A218DDC8D56B490B5835E251E55A2E8F8D/logo.png",
+    "id":  "0x280f76a218DDC8d56B490B5835e251E55a2e8F8d",
+    "website":  "https://strike.org"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Strike ETH",
-    "symbol": "sETH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Strike Finance collateral cryptocurrency",
-    "explorer": "https://etherscan.io/token/0xbEe9Cf658702527b0AcB2719c1FAA29EdC006a92",
-    "status": "active",
-    "id": "0xbEe9Cf658702527b0AcB2719c1FAA29EdC006a92",
-    "website": "https://strike.org"
+    "name":  "Strike ETH",
+    "symbol":  "sETH",
+    "decimals":  18,
+    "description":  "Strike Finance collateral cryptocurrency",
+    "explorer":  "https://etherscan.io/token/0xbEe9Cf658702527b0AcB2719c1FAA29EdC006a92",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBEE9CF658702527B0ACB2719C1FAA29EDC006A92/logo.png",
+    "id":  "0xbEe9Cf658702527b0AcB2719c1FAA29EdC006a92",
+    "website":  "https://strike.org"
 }

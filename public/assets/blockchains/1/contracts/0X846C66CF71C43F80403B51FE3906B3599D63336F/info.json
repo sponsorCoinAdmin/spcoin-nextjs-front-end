@@ -1,11 +1,11 @@
 {
-    "name": "PumaPay",
-    "symbol": "PMA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "PumaPay was built on top of the Ethereum blockchain.",
-    "website": "https://pumapay.io",
-    "explorer": "https://etherscan.io/token/0x846C66cf71C43f80403B51fE3906B3599D63336f",
-    "status": "active",
-    "id": "0x846C66cf71C43f80403B51fE3906B3599D63336f"
+    "name":  "PumaPay",
+    "symbol":  "PMA",
+    "decimals":  18,
+    "description":  "PumaPay was built on top of the Ethereum blockchain.",
+    "website":  "https://pumapay.io",
+    "explorer":  "https://etherscan.io/token/0x846C66cf71C43f80403B51fE3906B3599D63336f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X846C66CF71C43F80403B51FE3906B3599D63336F/logo.png",
+    "id":  "0x846C66cf71C43f80403B51fE3906B3599D63336f"
 }

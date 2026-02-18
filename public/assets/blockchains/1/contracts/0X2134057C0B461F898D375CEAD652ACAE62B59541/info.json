@@ -1,11 +1,11 @@
 {
-    "name": "CoxxxCoin",
-    "symbol": "CXC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x2134057C0b461F898D375Cead652Acae62b59541",
-    "status": "active",
-    "id": "0x2134057C0b461F898D375Cead652Acae62b59541"
+    "name":  "CoxxxCoin",
+    "symbol":  "CXC",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x2134057C0b461F898D375Cead652Acae62b59541",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2134057C0B461F898D375CEAD652ACAE62B59541/logo.png",
+    "id":  "0x2134057C0b461F898D375Cead652Acae62b59541"
 }

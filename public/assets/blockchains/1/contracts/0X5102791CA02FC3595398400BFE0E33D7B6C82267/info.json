@@ -1,11 +1,11 @@
 {
-    "name": "LEADCOIN",
-    "symbol": "LDC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "LeadCoin empowers businesses to sell their unused leads and buy hot leads from other businesses. Sellers automatically share their unused leads in real-time. LeadCoin’s matching algorithm then analyzes and matches leads to buyers.",
-    "website": "https://www.leadcoin.network/",
-    "explorer": "https://etherscan.io/token/0x5102791cA02FC3595398400BFE0e33d7B6C82267",
-    "status": "active",
-    "id": "0x5102791cA02FC3595398400BFE0e33d7B6C82267"
+    "name":  "LEADCOIN",
+    "symbol":  "LDC",
+    "decimals":  18,
+    "description":  "LeadCoin empowers businesses to sell their unused leads and buy hot leads from other businesses. Sellers automatically share their unused leads in real-time. LeadCoin’s matching algorithm then analyzes and matches leads to buyers.",
+    "website":  "https://www.leadcoin.network/",
+    "explorer":  "https://etherscan.io/token/0x5102791cA02FC3595398400BFE0e33d7B6C82267",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5102791CA02FC3595398400BFE0E33D7B6C82267/logo.png",
+    "id":  "0x5102791cA02FC3595398400BFE0e33d7B6C82267"
 }

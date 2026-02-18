@@ -1,11 +1,11 @@
 {
-    "name": "UltrainGas",
-    "symbol": "UGAS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "UltrainGas (UGAS) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://www.ultrain.io",
-    "explorer": "https://etherscan.io/token/0x8716Fc5Da009D3A208f0178b637a50F4ef42400F",
-    "status": "active",
-    "id": "0x8716Fc5Da009D3A208f0178b637a50F4ef42400F"
+    "name":  "UltrainGas",
+    "symbol":  "UGAS",
+    "decimals":  18,
+    "description":  "UltrainGas (UGAS) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://www.ultrain.io",
+    "explorer":  "https://etherscan.io/token/0x8716Fc5Da009D3A208f0178b637a50F4ef42400F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8716FC5DA009D3A208F0178B637A50F4EF42400F/logo.png",
+    "id":  "0x8716Fc5Da009D3A208f0178b637a50F4ef42400F"
 }

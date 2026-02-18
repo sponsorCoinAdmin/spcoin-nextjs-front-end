@@ -1,11 +1,11 @@
 {
-    "name": "Grano Protocol",
-    "website": "https://granoprotocol.org",
-    "description": "Grano Protocol is digital money built for everyone as a unique reserve asset.",
-    "explorer": "https://etherscan.io/token/0x16Fd77bb3af8A29b295ff50fA6BE88432dE0B35b",
-    "type": "ERC20",
-    "symbol": "GRANO",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x16Fd77bb3af8A29b295ff50fA6BE88432dE0B35b"
+    "name":  "Grano Protocol",
+    "website":  "https://granoprotocol.org",
+    "description":  "Grano Protocol is digital money built for everyone as a unique reserve asset.",
+    "explorer":  "https://etherscan.io/token/0x16Fd77bb3af8A29b295ff50fA6BE88432dE0B35b",
+    "symbol":  "GRANO",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X16FD77BB3AF8A29B295FF50FA6BE88432DE0B35B/logo.png",
+    "id":  "0x16Fd77bb3af8A29b295ff50fA6BE88432dE0B35b"
 }

@@ -1,21 +1,21 @@
 {
-    "name": "TAOCat by Virtuals",
-    "symbol": "TAOCAT",
-    "decimals": 18,
-    "type": "BASE",
-    "website": "https://www.masa.ai/",
-    "description": "Meet TAO Cat, Bittensor's most adorable TAO maxi. As Bittensor's first self-improving AI Agent, she's got that pure Bittensor DNA running through her code – natively powered by both Bittensor and Virtuals, and crafted by the Masa team",
-    "explorer": "https://basescan.org/token/0x7a5f5ccd46ebd7ac30615836d988ca3bd57412b3",
-    "status": "active",
-    "id": "0x7A5f5CcD46EBd7aC30615836D988ca3BD57412b3",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/taocat_agent"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/taocat-by-virtuals-masa/"
-        }
-    ]
+    "name":  "TAOCat by Virtuals",
+    "symbol":  "TAOCAT",
+    "decimals":  18,
+    "website":  "https://www.masa.ai/",
+    "description":  "Meet TAO Cat, Bittensor\u0027s most adorable TAO maxi. As Bittensor\u0027s first self-improving AI Agent, she\u0027s got that pure Bittensor DNA running through her code – natively powered by both Bittensor and Virtuals, and crafted by the Masa team",
+    "explorer":  "https://basescan.org/token/0x7a5f5ccd46ebd7ac30615836d988ca3bd57412b3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X7A5F5CCD46EBD7AC30615836D988CA3BD57412B3/logo.png",
+    "id":  "0x7A5f5CcD46EBd7aC30615836D988ca3BD57412b3",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/taocat_agent"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/taocat-by-virtuals-masa/"
+                  }
+              ]
 }

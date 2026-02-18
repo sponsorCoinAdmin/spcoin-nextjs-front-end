@@ -1,11 +1,11 @@
 {
-    "name": "Bread",
-    "website": "https://brd.com",
-    "description": "BRD bills itself as 'the simple and secure onramp to bitcoin, ethereum, and other digital currencies'.",
-    "explorer": "https://etherscan.io/token/0x558EC3152e2eb2174905cd19AeA4e34A23DE9aD6",
-    "type": "ERC20",
-    "symbol": "BRD",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x558EC3152e2eb2174905cd19AeA4e34A23DE9aD6"
+    "name":  "Bread",
+    "website":  "https://brd.com",
+    "description":  "BRD bills itself as \u0027the simple and secure onramp to bitcoin, ethereum, and other digital currencies\u0027.",
+    "explorer":  "https://etherscan.io/token/0x558EC3152e2eb2174905cd19AeA4e34A23DE9aD6",
+    "symbol":  "BRD",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X558EC3152E2EB2174905CD19AEA4E34A23DE9AD6/logo.png",
+    "id":  "0x558EC3152e2eb2174905cd19AeA4e34A23DE9aD6"
 }

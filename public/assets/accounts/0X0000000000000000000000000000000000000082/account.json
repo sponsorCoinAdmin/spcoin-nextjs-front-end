@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Alina Love",
     "symbol":  "LOVE",
     "address":  "0X0000000000000000000000000000000000000082",
     "website":  "",
     "description":  "This is the description for site Lady4",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000082/logo.png",
     "status":  "test"
 }
+

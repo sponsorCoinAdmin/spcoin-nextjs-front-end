@@ -1,21 +1,21 @@
 {
-    "name": "Orbit Protocol",
-    "symbol": "ORBIT",
-    "type": "BLAST",
-    "description": "Orbit is a decentralized liquidity protocol that facilitates the lending and borrowing of Blast assets. Orbit's innovation is to make use of Blast's native yield to provide a better lending / borrowing experience.",
-    "decimals": 18,
-    "website": "https://orbitlending.io/",
-    "explorer": "https://blastscan.io/token/0x42e12d42b3d6c4a74a88a61063856756ea2db357",
-    "status": "active",
-    "id": "0x42E12D42b3d6C4A74a88A61063856756Ea2DB357",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/orbitlending"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/orbit-protocol/"
-        }
-    ]
+    "name":  "Orbit Protocol",
+    "symbol":  "ORBIT",
+    "description":  "Orbit is a decentralized liquidity protocol that facilitates the lending and borrowing of Blast assets. Orbit\u0027s innovation is to make use of Blast\u0027s native yield to provide a better lending / borrowing experience.",
+    "decimals":  18,
+    "website":  "https://orbitlending.io/",
+    "explorer":  "https://blastscan.io/token/0x42e12d42b3d6c4a74a88a61063856756ea2db357",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/81457/contracts/0X42E12D42B3D6C4A74A88A61063856756EA2DB357/logo.png",
+    "id":  "0x42E12D42b3d6C4A74a88A61063856756Ea2DB357",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/orbitlending"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/orbit-protocol/"
+                  }
+              ]
 }

@@ -1,15 +1,15 @@
 {
-    "name": "Kyber Network",
-    "website": "https://kyber.network",
-    "description": "Kyber Network’s on-chain liquidity protocol allows decentralized token swaps to be integrated into any application, enabling value exchange to be performed seamlessly between all parties in the ecosystem.",
-    "explorer": "https://optimistic.etherscan.io/token/0xa00E3A3511aAC35cA78530c85007AFCd31753819",
-    "type": "OPTIMISM",
-    "symbol": "KNC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xa00E3A3511aAC35cA78530c85007AFCd31753819",
-    "tags": [
-        "defi",
-        "governance"
-    ]
+    "name":  "Kyber Network",
+    "website":  "https://kyber.network",
+    "description":  "Kyber Network’s on-chain liquidity protocol allows decentralized token swaps to be integrated into any application, enabling value exchange to be performed seamlessly between all parties in the ecosystem.",
+    "explorer":  "https://optimistic.etherscan.io/token/0xa00E3A3511aAC35cA78530c85007AFCd31753819",
+    "symbol":  "KNC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/69/contracts/0XA00E3A3511AAC35CA78530C85007AFCD31753819/logo.png",
+    "id":  "0xa00E3A3511aAC35cA78530c85007AFCd31753819",
+    "tags":  [
+                 "defi",
+                 "governance"
+             ]
 }

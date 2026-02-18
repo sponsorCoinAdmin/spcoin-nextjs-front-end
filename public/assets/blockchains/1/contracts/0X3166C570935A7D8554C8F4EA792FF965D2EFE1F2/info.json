@@ -1,11 +1,11 @@
 {
-    "name": "Q DAO Governance token v1.0",
-    "symbol": "QDAO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://qdefi.io/en",
-    "explorer": "https://etherscan.io/token/0x3166C570935a7D8554c8f4eA792ff965D2EFe1f2",
-    "status": "active",
-    "id": "0x3166C570935a7D8554c8f4eA792ff965D2EFe1f2"
+    "name":  "Q DAO Governance token v1.0",
+    "symbol":  "QDAO",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://qdefi.io/en",
+    "explorer":  "https://etherscan.io/token/0x3166C570935a7D8554c8f4eA792ff965D2EFe1f2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3166C570935A7D8554C8F4EA792FF965D2EFE1F2/logo.png",
+    "id":  "0x3166C570935a7D8554c8f4eA792ff965D2EFe1f2"
 }

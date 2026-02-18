@@ -1,11 +1,11 @@
 {
-    "name": "Auctus",
-    "website": "https://auctus.org",
-    "description": "Auctus will be the utility token at the heart of the DeFi products developed by Auctus.",
-    "explorer": "https://etherscan.io/token/0xc12d099be31567add4e4e4d0D45691C3F58f5663",
-    "type": "ERC20",
-    "symbol": "AUC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xc12d099be31567add4e4e4d0D45691C3F58f5663"
+    "name":  "Auctus",
+    "website":  "https://auctus.org",
+    "description":  "Auctus will be the utility token at the heart of the DeFi products developed by Auctus.",
+    "explorer":  "https://etherscan.io/token/0xc12d099be31567add4e4e4d0D45691C3F58f5663",
+    "symbol":  "AUC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC12D099BE31567ADD4E4E4D0D45691C3F58F5663/logo.png",
+    "id":  "0xc12d099be31567add4e4e4d0D45691C3F58f5663"
 }

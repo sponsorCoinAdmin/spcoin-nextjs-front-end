@@ -1,11 +1,11 @@
 {
-    "name": "Aave ZRX",
-    "symbol": "aZRX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave ZRX is an interest bearing token pegged 1:1 to the underlying ZRX deposited in Aave. aZRX accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0xDf7FF54aAcAcbFf42dfe29DD6144A69b629f8C9e",
-    "status": "active",
-    "id": "0xDf7FF54aAcAcbFf42dfe29DD6144A69b629f8C9e"
+    "name":  "Aave ZRX",
+    "symbol":  "aZRX",
+    "decimals":  18,
+    "description":  "Aave ZRX is an interest bearing token pegged 1:1 to the underlying ZRX deposited in Aave. aZRX accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0xDf7FF54aAcAcbFf42dfe29DD6144A69b629f8C9e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XDF7FF54AACACBFF42DFE29DD6144A69B629F8C9E/logo.png",
+    "id":  "0xDf7FF54aAcAcbFf42dfe29DD6144A69b629f8C9e"
 }

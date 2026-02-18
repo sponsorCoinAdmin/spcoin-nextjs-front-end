@@ -1,11 +1,11 @@
 {
-    "name": "DeFiat Points",
-    "website": "https://defiat.net/",
-    "description": "DeFiat Points is the secondary, inflationary asset of the DeFiat ecosystem, granted for network participation.",
-    "explorer": "https://etherscan.io/token/0x8c9d8f5CC3427F460e20F63b36992f74AA19e27d",
-    "type": "ERC20",
-    "symbol": "DFTP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x8c9d8f5CC3427F460e20F63b36992f74AA19e27d"
+    "name":  "DeFiat Points",
+    "website":  "https://defiat.net/",
+    "description":  "DeFiat Points is the secondary, inflationary asset of the DeFiat ecosystem, granted for network participation.",
+    "explorer":  "https://etherscan.io/token/0x8c9d8f5CC3427F460e20F63b36992f74AA19e27d",
+    "symbol":  "DFTP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8C9D8F5CC3427F460E20F63B36992F74AA19E27D/logo.png",
+    "id":  "0x8c9d8f5CC3427F460e20F63b36992f74AA19e27d"
 }

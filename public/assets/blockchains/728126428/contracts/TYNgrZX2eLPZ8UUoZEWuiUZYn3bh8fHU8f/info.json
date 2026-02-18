@@ -1,11 +1,11 @@
 {
-    "name": "YLToken",
-    "symbol": "YL",
-    "type": "TRC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token20/TYNgrZX2eLPZ8UUoZEWuiUZYn3bh8fHU8f",
-    "status": "spam",
-    "id": "TYNgrZX2eLPZ8UUoZEWuiUZYn3bh8fHU8f"
+    "name":  "YLToken",
+    "symbol":  "YL",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token20/TYNgrZX2eLPZ8UUoZEWuiUZYn3bh8fHU8f",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/TYNgrZX2eLPZ8UUoZEWuiUZYn3bh8fHU8f/logo.png",
+    "id":  "TYNgrZX2eLPZ8UUoZEWuiUZYn3bh8fHU8f"
 }

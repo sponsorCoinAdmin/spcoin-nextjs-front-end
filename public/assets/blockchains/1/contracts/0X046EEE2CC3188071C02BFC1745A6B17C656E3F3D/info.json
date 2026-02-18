@@ -1,25 +1,25 @@
 {
-    "name": "Rollbit Coin",
-    "website": "https://rollbit.com/",
-    "description": "RLB is Rollbit's native token. It introduces 'RLB Lottery' which includes a prize pool grown from a share of Rollbit's casino profits.",
-    "explorer": "https://etherscan.io/token/0x046eee2cc3188071c02bfc1745a6b17c656e3f3d",
-    "type": "ERC20",
-    "symbol": "RLB",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x046EeE2cc3188071C02BfC1745A6b17c656e3f3d",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/rollbit-coin/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/rollbitcom"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/rollbit-coin/"
-        }
-    ]
+    "name":  "Rollbit Coin",
+    "website":  "https://rollbit.com/",
+    "description":  "RLB is Rollbit\u0027s native token. It introduces \u0027RLB Lottery\u0027 which includes a prize pool grown from a share of Rollbit\u0027s casino profits.",
+    "explorer":  "https://etherscan.io/token/0x046eee2cc3188071c02bfc1745a6b17c656e3f3d",
+    "symbol":  "RLB",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X046EEE2CC3188071C02BFC1745A6B17C656E3F3D/logo.png",
+    "id":  "0x046EeE2cc3188071C02BfC1745A6b17c656e3f3d",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/rollbit-coin/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/rollbitcom"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/rollbit-coin/"
+                  }
+              ]
 }

@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Vote Trudeau",
     "symbol":  "TRUDEAU",
     "address":  "0X0000000000000000000000000000000000000011",
     "website":  "",
     "description":  "This is the description for site VoteTrudeau",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000011/logo.png",
     "status":  "test"
 }
+

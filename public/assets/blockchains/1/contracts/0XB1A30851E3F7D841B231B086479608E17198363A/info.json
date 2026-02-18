@@ -1,11 +1,11 @@
 {
-    "name": "HOMEROS",
-    "symbol": "HMR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Homeros is a blockchain-based platform made exclusively for the gaming community.",
-    "website": "https://homerosnet.com",
-    "explorer": "https://etherscan.io/token/0xB1A30851E3f7d841b231B086479608e17198363A",
-    "status": "active",
-    "id": "0xB1A30851E3f7d841b231B086479608e17198363A"
+    "name":  "HOMEROS",
+    "symbol":  "HMR",
+    "decimals":  18,
+    "description":  "Homeros is a blockchain-based platform made exclusively for the gaming community.",
+    "website":  "https://homerosnet.com",
+    "explorer":  "https://etherscan.io/token/0xB1A30851E3f7d841b231B086479608e17198363A",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB1A30851E3F7D841B231B086479608E17198363A/logo.png",
+    "id":  "0xB1A30851E3f7d841b231B086479608e17198363A"
 }

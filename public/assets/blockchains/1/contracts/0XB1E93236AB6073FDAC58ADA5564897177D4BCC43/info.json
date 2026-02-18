@@ -1,11 +1,11 @@
 {
-    "name": "Seele",
-    "website": "https://seelen.pro/index_en.html",
-    "description": "Seele created 'Neural Consensus Algorithm'. It transforms the consensus problem into an asynchronous request, processing and sorting data in a large-scale environment based on 'micro-real numbers'.",
-    "explorer": "https://etherscan.io/token/0xb1e93236ab6073fdac58ada5564897177d4bcc43",
-    "type": "ERC20",
-    "symbol": "Seele",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xB1e93236ab6073fdAC58adA5564897177D4bcC43"
+    "name":  "Seele",
+    "website":  "https://seelen.pro/index_en.html",
+    "description":  "Seele created \u0027Neural Consensus Algorithm\u0027. It transforms the consensus problem into an asynchronous request, processing and sorting data in a large-scale environment based on \u0027micro-real numbers\u0027.",
+    "explorer":  "https://etherscan.io/token/0xb1e93236ab6073fdac58ada5564897177d4bcc43",
+    "symbol":  "Seele",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB1E93236AB6073FDAC58ADA5564897177D4BCC43/logo.png",
+    "id":  "0xB1e93236ab6073fdAC58adA5564897177D4bcC43"
 }

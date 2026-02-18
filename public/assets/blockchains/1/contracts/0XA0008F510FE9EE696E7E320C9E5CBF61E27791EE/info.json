@@ -1,11 +1,11 @@
 {
-    "name": "GMB",
-    "symbol": "GMB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "GAMB is the decentralized marketplace of the future with no decision making unit other than the owners of the marketplace themselves.",
-    "website": "https://gamb.io",
-    "explorer": "https://etherscan.io/token/0xA0008F510fE9eE696E7E320C9e5cbf61E27791Ee",
-    "status": "active",
-    "id": "0xA0008F510fE9eE696E7E320C9e5cbf61E27791Ee"
+    "name":  "GMB",
+    "symbol":  "GMB",
+    "decimals":  18,
+    "description":  "GAMB is the decentralized marketplace of the future with no decision making unit other than the owners of the marketplace themselves.",
+    "website":  "https://gamb.io",
+    "explorer":  "https://etherscan.io/token/0xA0008F510fE9eE696E7E320C9e5cbf61E27791Ee",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA0008F510FE9EE696E7E320C9E5CBF61E27791EE/logo.png",
+    "id":  "0xA0008F510fE9eE696E7E320C9e5cbf61E27791Ee"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Origo",
-    "symbol": "OGO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://origo.network",
-    "explorer": "https://etherscan.io/token/0xFF0E5e014cf97e0615cb50F6f39Da6388E2FaE6E",
-    "status": "active",
-    "id": "0xFF0E5e014cf97e0615cb50F6f39Da6388E2FaE6E"
+    "name":  "Origo",
+    "symbol":  "OGO",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://origo.network",
+    "explorer":  "https://etherscan.io/token/0xFF0E5e014cf97e0615cb50F6f39Da6388E2FaE6E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFF0E5E014CF97E0615CB50F6F39DA6388E2FAE6E/logo.png",
+    "id":  "0xFF0E5e014cf97e0615cb50F6f39Da6388E2FaE6E"
 }

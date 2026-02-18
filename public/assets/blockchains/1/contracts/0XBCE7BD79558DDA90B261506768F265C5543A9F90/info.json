@@ -1,11 +1,11 @@
 {
-    "name": "TKNT",
-    "description": "TKN Betting Platform",
-    "website": "https://tknt.io",
-    "explorer": "https://etherscan.io/token/0xbce7bd79558dda90b261506768f265c5543a9f90",
-    "type": "ERC20",
-    "symbol": "TKNT",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xbcE7BD79558dda90B261506768f265c5543A9f90"
+    "name":  "TKNT",
+    "description":  "TKN Betting Platform",
+    "website":  "https://tknt.io",
+    "explorer":  "https://etherscan.io/token/0xbce7bd79558dda90b261506768f265c5543a9f90",
+    "symbol":  "TKNT",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBCE7BD79558DDA90B261506768F265C5543A9F90/logo.png",
+    "id":  "0xbcE7BD79558dda90B261506768f265c5543A9f90"
 }

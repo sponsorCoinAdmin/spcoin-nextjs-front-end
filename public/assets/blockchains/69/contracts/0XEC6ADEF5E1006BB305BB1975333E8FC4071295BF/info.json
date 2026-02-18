@@ -1,21 +1,21 @@
 {
-    "name": "Cartesi Token",
-    "symbol": "CTSI",
-    "type": "OPTIMISM",
-    "description": "Cartesi Rollups is a modular execution layer that elevates simple smart contracts to decentralized Linux runtime.",
-    "decimals": 18,
-    "website": "https://cartesi.io",
-    "explorer": "https://optimistic.etherscan.io/token/0xEc6adef5E1006bb305bB1975333e8fc4071295bf",
-    "status": "active",
-    "id": "0xEc6adef5E1006bb305bB1975333e8fc4071295bf",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/cartesiproject"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/cartesiproject"
-        }
-    ]
+    "name":  "Cartesi Token",
+    "symbol":  "CTSI",
+    "description":  "Cartesi Rollups is a modular execution layer that elevates simple smart contracts to decentralized Linux runtime.",
+    "decimals":  18,
+    "website":  "https://cartesi.io",
+    "explorer":  "https://optimistic.etherscan.io/token/0xEc6adef5E1006bb305bB1975333e8fc4071295bf",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/69/contracts/0XEC6ADEF5E1006BB305BB1975333E8FC4071295BF/logo.png",
+    "id":  "0xEc6adef5E1006bb305bB1975333e8fc4071295bf",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/cartesiproject"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/cartesiproject"
+                  }
+              ]
 }

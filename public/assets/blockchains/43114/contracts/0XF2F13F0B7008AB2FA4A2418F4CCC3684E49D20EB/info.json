@@ -1,14 +1,14 @@
 {
-    "name": "MATIC (Portal from Polygon)",
-    "symbol": "MATICpo",
-    "type": "AVALANCHE",
-    "decimals": 18,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://polygon.technology/",
-    "explorer": "https://snowtrace.io/token/0xf2f13f0B7008ab2FA4A2418F4ccC3684E49D20Eb",
-    "status": "active",
-    "id": "0xf2f13f0B7008ab2FA4A2418F4ccC3684E49D20Eb",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "MATIC (Portal from Polygon)",
+    "symbol":  "MATICpo",
+    "decimals":  18,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://polygon.technology/",
+    "explorer":  "https://snowtrace.io/token/0xf2f13f0B7008ab2FA4A2418F4ccC3684E49D20Eb",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XF2F13F0B7008AB2FA4A2418F4CCC3684E49D20EB/logo.png",
+    "id":  "0xf2f13f0B7008ab2FA4A2418F4ccC3684E49D20Eb",
+    "tags":  [
+                 "wrapped"
+             ]
 }

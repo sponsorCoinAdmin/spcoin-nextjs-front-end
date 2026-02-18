@@ -1,11 +1,11 @@
 {
-    "name": "IUNGO token",
-    "symbol": "ING",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Decentralised global wireless internet provider.",
-    "website": "https://iungo.network",
-    "explorer": "https://etherscan.io/token/0x24dDFf6D8B8a42d835af3b440De91f3386554Aa4",
-    "status": "active",
-    "id": "0x24dDFf6D8B8a42d835af3b440De91f3386554Aa4"
+    "name":  "IUNGO token",
+    "symbol":  "ING",
+    "decimals":  18,
+    "description":  "Decentralised global wireless internet provider.",
+    "website":  "https://iungo.network",
+    "explorer":  "https://etherscan.io/token/0x24dDFf6D8B8a42d835af3b440De91f3386554Aa4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X24DDFF6D8B8A42D835AF3B440DE91F3386554AA4/logo.png",
+    "id":  "0x24dDFf6D8B8a42d835af3b440De91f3386554Aa4"
 }

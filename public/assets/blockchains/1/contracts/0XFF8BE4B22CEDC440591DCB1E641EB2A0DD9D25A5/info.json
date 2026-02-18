@@ -1,11 +1,11 @@
 {
-    "name": "URACToken",
-    "symbol": "URAC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.uranus.io/",
-    "explorer": "https://etherscan.io/token/0xff8Be4B22CeDC440591dcB1E641EB2a0dd9d25A5",
-    "status": "active",
-    "id": "0xff8Be4B22CeDC440591dcB1E641EB2a0dd9d25A5"
+    "name":  "URACToken",
+    "symbol":  "URAC",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.uranus.io/",
+    "explorer":  "https://etherscan.io/token/0xff8Be4B22CeDC440591dcB1E641EB2a0dd9d25A5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFF8BE4B22CEDC440591DCB1E641EB2A0DD9D25A5/logo.png",
+    "id":  "0xff8Be4B22CeDC440591dcB1E641EB2a0dd9d25A5"
 }

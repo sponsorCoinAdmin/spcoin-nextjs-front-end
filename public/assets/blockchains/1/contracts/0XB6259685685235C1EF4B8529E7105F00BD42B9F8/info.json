@@ -1,11 +1,11 @@
 {
-    "name": "RRChain",
-    "symbol": "RRC",
-    "type": "ERC20",
-    "decimals": 2,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xB6259685685235c1eF4B8529e7105f00BD42b9f8",
-    "status": "active",
-    "id": "0xB6259685685235c1eF4B8529e7105f00BD42b9f8"
+    "name":  "RRChain",
+    "symbol":  "RRC",
+    "decimals":  2,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xB6259685685235c1eF4B8529e7105f00BD42b9f8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB6259685685235C1EF4B8529E7105F00BD42B9F8/logo.png",
+    "id":  "0xB6259685685235c1eF4B8529e7105f00BD42b9f8"
 }

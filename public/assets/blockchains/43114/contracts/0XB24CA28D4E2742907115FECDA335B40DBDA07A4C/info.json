@@ -1,14 +1,14 @@
 {
-    "name": "USD Coin (Portal from Ethereum)",
-    "symbol": "USDCet",
-    "type": "AVALANCHE",
-    "decimals": 6,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://www.circle.com/en/usdc",
-    "explorer": "https://snowtrace.io/token/0xB24CA28D4e2742907115fECda335b40dbda07a4C",
-    "status": "active",
-    "id": "0xB24CA28D4e2742907115fECda335b40dbda07a4C",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "USD Coin (Portal from Ethereum)",
+    "symbol":  "USDCet",
+    "decimals":  6,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://www.circle.com/en/usdc",
+    "explorer":  "https://snowtrace.io/token/0xB24CA28D4e2742907115fECda335b40dbda07a4C",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XB24CA28D4E2742907115FECDA335B40DBDA07A4C/logo.png",
+    "id":  "0xB24CA28D4e2742907115fECda335b40dbda07a4C",
+    "tags":  [
+                 "wrapped"
+             ]
 }

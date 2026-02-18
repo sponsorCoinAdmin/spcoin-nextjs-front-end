@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Fund Republican",
     "symbol":  "RP_1",
     "address":  "0X0000000000000000000000000000000000000004",
     "website":  "",
     "description":  "This is the description for site Republican1",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000004/logo.png",
     "status":  "test"
 }
+

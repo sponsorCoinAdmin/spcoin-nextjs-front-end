@@ -1,14 +1,14 @@
 {
-    "name": "Cream Finance",
-    "website": "https://cream.finance",
-    "description": "Cream - Crypto Rules Everything Around Me",
-    "explorer": "https://etherscan.io/token/0x2ba592F78dB6436527729929AAf6c908497cB200",
-    "type": "ERC20",
-    "symbol": "CREAM",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x2ba592F78dB6436527729929AAf6c908497cB200",
-    "tags": [
-        "governance"
-    ]
+    "name":  "Cream Finance",
+    "website":  "https://cream.finance",
+    "description":  "Cream - Crypto Rules Everything Around Me",
+    "explorer":  "https://etherscan.io/token/0x2ba592F78dB6436527729929AAf6c908497cB200",
+    "symbol":  "CREAM",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2BA592F78DB6436527729929AAF6C908497CB200/logo.png",
+    "id":  "0x2ba592F78dB6436527729929AAf6c908497cB200",
+    "tags":  [
+                 "governance"
+             ]
 }

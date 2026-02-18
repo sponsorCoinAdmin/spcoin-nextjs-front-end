@@ -1,11 +1,11 @@
 {
-    "name": "Aave UniLINKETH",
-    "website": "https://aave.com",
-    "description": "Aave UniLINKETH is an interest bearing token pegged 1:1 to the underlying LINK and ETH deposited in the Uniswap Market of Aave Protocol.",
-    "explorer": "https://etherscan.io/token/0x9548DB8b1cA9b6c757485e7861918b640390169c",
-    "type": "ERC20",
-    "symbol": "aUniLINKETH",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x9548DB8b1cA9b6c757485e7861918b640390169c"
+    "name":  "Aave UniLINKETH",
+    "website":  "https://aave.com",
+    "description":  "Aave UniLINKETH is an interest bearing token pegged 1:1 to the underlying LINK and ETH deposited in the Uniswap Market of Aave Protocol.",
+    "explorer":  "https://etherscan.io/token/0x9548DB8b1cA9b6c757485e7861918b640390169c",
+    "symbol":  "aUniLINKETH",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9548DB8B1CA9B6C757485E7861918B640390169C/logo.png",
+    "id":  "0x9548DB8b1cA9b6c757485e7861918b640390169c"
 }

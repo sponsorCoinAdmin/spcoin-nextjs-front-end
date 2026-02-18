@@ -1,11 +1,11 @@
 {
-    "name": "Blockcloud",
-    "symbol": "BLOC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Blockcloud (BLOC) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://www.block-cloud.io",
-    "explorer": "https://etherscan.io/token/0x6F919D67967a97EA36195A2346d9244E60FE0dDB",
-    "status": "active",
-    "id": "0x6F919D67967a97EA36195A2346d9244E60FE0dDB"
+    "name":  "Blockcloud",
+    "symbol":  "BLOC",
+    "decimals":  18,
+    "description":  "Blockcloud (BLOC) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://www.block-cloud.io",
+    "explorer":  "https://etherscan.io/token/0x6F919D67967a97EA36195A2346d9244E60FE0dDB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6F919D67967A97EA36195A2346D9244E60FE0DDB/logo.png",
+    "id":  "0x6F919D67967a97EA36195A2346d9244E60FE0dDB"
 }

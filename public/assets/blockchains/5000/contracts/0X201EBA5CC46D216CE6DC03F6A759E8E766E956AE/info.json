@@ -1,24 +1,24 @@
 {
-    "name": "Tether USD",
-    "website": "https://bridge.mantle.xyz/",
-    "description": "Tether USD - Mantle Bridged (USDT) is a cryptocurrency with a value meant to mirror the value of the U.S. dollar.",
-    "explorer": "https://explorer.mantle.xyz/address/0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
-    "type": "MANTLE",
-    "symbol": "USDT",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
-    "tags": [
-        "stablecoin"
-    ],
-    "links": [
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/mantle-bridged-usdt-mantle"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/tether/"
-        }
-    ]
+    "name":  "Tether USD",
+    "website":  "https://bridge.mantle.xyz/",
+    "description":  "Tether USD - Mantle Bridged (USDT) is a cryptocurrency with a value meant to mirror the value of the U.S. dollar.",
+    "explorer":  "https://explorer.mantle.xyz/address/0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
+    "symbol":  "USDT",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/5000/contracts/0X201EBA5CC46D216CE6DC03F6A759E8E766E956AE/logo.png",
+    "id":  "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
+    "tags":  [
+                 "stablecoin"
+             ],
+    "links":  [
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/mantle-bridged-usdt-mantle"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/tether/"
+                  }
+              ]
 }

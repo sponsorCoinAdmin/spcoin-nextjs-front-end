@@ -1,11 +1,11 @@
 {
-    "name": "BTU Protocol",
-    "symbol": "BTU",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "BTU Protocol is a peer-to-peer booking protocol.",
-    "website": "https://www.btu-protocol.com",
-    "explorer": "https://etherscan.io/token/0xb683D83a532e2Cb7DFa5275eED3698436371cc9f",
-    "status": "active",
-    "id": "0xb683D83a532e2Cb7DFa5275eED3698436371cc9f"
+    "name":  "BTU Protocol",
+    "symbol":  "BTU",
+    "decimals":  18,
+    "description":  "BTU Protocol is a peer-to-peer booking protocol.",
+    "website":  "https://www.btu-protocol.com",
+    "explorer":  "https://etherscan.io/token/0xb683D83a532e2Cb7DFa5275eED3698436371cc9f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB683D83A532E2CB7DFA5275EED3698436371CC9F/logo.png",
+    "id":  "0xb683D83a532e2Cb7DFa5275eED3698436371cc9f"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "HAVY",
-    "symbol": "HAVY",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "https://www.havy.io",
-    "explorer": "https://etherscan.io/token/0x7C2E5b7ec572199D3841f6a38F7D4868BD0798f1",
-    "status": "active",
-    "id": "0x7C2E5b7ec572199D3841f6a38F7D4868BD0798f1"
+    "name":  "HAVY",
+    "symbol":  "HAVY",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "https://www.havy.io",
+    "explorer":  "https://etherscan.io/token/0x7C2E5b7ec572199D3841f6a38F7D4868BD0798f1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7C2E5B7EC572199D3841F6A38F7D4868BD0798F1/logo.png",
+    "id":  "0x7C2E5b7ec572199D3841f6a38F7D4868BD0798f1"
 }

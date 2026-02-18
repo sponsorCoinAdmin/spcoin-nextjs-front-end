@@ -1,11 +1,11 @@
 {
-    "name": "Covesting Token",
-    "website": "https://covesting.io",
-    "description": "COV is a utility token designed to be used by members within the Covesting ecosystem.",
-    "explorer": "https://etherscan.io/token/0xADA86b1b313D1D5267E3FC0bB303f0A2b66D0Ea7",
-    "type": "ERC20",
-    "symbol": "COV",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xADA86b1b313D1D5267E3FC0bB303f0A2b66D0Ea7"
+    "name":  "Covesting Token",
+    "website":  "https://covesting.io",
+    "description":  "COV is a utility token designed to be used by members within the Covesting ecosystem.",
+    "explorer":  "https://etherscan.io/token/0xADA86b1b313D1D5267E3FC0bB303f0A2b66D0Ea7",
+    "symbol":  "COV",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XADA86B1B313D1D5267E3FC0BB303F0A2B66D0EA7/logo.png",
+    "id":  "0xADA86b1b313D1D5267E3FC0bB303f0A2b66D0Ea7"
 }

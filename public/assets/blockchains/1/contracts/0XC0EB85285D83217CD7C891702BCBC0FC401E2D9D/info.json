@@ -1,11 +1,11 @@
 {
-    "name": "Hive Project Token",
-    "symbol": "HVN",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Hive Coin is a cryptocurrency, with the new blockchain technology and smart contracts, companies no longer need centralized intermediaries for transactions or financing. The blockchain grants absolute transparency, integrity and immutability of the data stored in the system.",
-    "website": "https://www.hiveterminal.com/",
-    "explorer": "https://etherscan.io/token/0xC0Eb85285d83217CD7c891702bcbC0FC401E2D9D",
-    "status": "active",
-    "id": "0xC0Eb85285d83217CD7c891702bcbC0FC401E2D9D"
+    "name":  "Hive Project Token",
+    "symbol":  "HVN",
+    "decimals":  8,
+    "description":  "Hive Coin is a cryptocurrency, with the new blockchain technology and smart contracts, companies no longer need centralized intermediaries for transactions or financing. The blockchain grants absolute transparency, integrity and immutability of the data stored in the system.",
+    "website":  "https://www.hiveterminal.com/",
+    "explorer":  "https://etherscan.io/token/0xC0Eb85285d83217CD7c891702bcbC0FC401E2D9D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC0EB85285D83217CD7C891702BCBC0FC401E2D9D/logo.png",
+    "id":  "0xC0Eb85285d83217CD7c891702bcbC0FC401E2D9D"
 }

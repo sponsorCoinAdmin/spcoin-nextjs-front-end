@@ -1,11 +1,11 @@
 {
-    "name": "FFToken",
-    "symbol": "FF",
-    "type": "TRC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token20/TYxoK7DAvfze7ByWA7LYnzcoLxdKQpjrD1",
-    "status": "spam",
-    "id": "TYxoK7DAvfze7ByWA7LYnzcoLxdKQpjrD1"
+    "name":  "FFToken",
+    "symbol":  "FF",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token20/TYxoK7DAvfze7ByWA7LYnzcoLxdKQpjrD1",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/TYxoK7DAvfze7ByWA7LYnzcoLxdKQpjrD1/logo.png",
+    "id":  "TYxoK7DAvfze7ByWA7LYnzcoLxdKQpjrD1"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "United Traders Token",
-    "symbol": "UTT",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "United Traders, found online at UnitedTraders.com. offers an investment marketplace, Access to multiple exchanges, and online financial education materials.",
-    "website": "https://uttoken.io/",
-    "explorer": "https://etherscan.io/token/0x16f812Be7FfF02cAF662B85d5d58a5da6572D4Df",
-    "status": "active",
-    "id": "0x16f812Be7FfF02cAF662B85d5d58a5da6572D4Df"
+    "name":  "United Traders Token",
+    "symbol":  "UTT",
+    "decimals":  8,
+    "description":  "United Traders, found online at UnitedTraders.com. offers an investment marketplace, Access to multiple exchanges, and online financial education materials.",
+    "website":  "https://uttoken.io/",
+    "explorer":  "https://etherscan.io/token/0x16f812Be7FfF02cAF662B85d5d58a5da6572D4Df",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X16F812BE7FFF02CAF662B85D5D58A5DA6572D4DF/logo.png",
+    "id":  "0x16f812Be7FfF02cAF662B85d5d58a5da6572D4Df"
 }

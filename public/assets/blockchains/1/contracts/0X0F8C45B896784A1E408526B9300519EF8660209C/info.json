@@ -1,11 +1,11 @@
 {
-    "name": "XMAX",
-    "symbol": "XMX",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "XMAX Token (XMX) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "http://www.xmx.com",
-    "explorer": "https://etherscan.io/token/0x0f8c45B896784A1E408526B9300519ef8660209c",
-    "status": "active",
-    "id": "0x0f8c45B896784A1E408526B9300519ef8660209c"
+    "name":  "XMAX",
+    "symbol":  "XMX",
+    "decimals":  8,
+    "description":  "XMAX Token (XMX) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "http://www.xmx.com",
+    "explorer":  "https://etherscan.io/token/0x0f8c45B896784A1E408526B9300519ef8660209c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0F8C45B896784A1E408526B9300519EF8660209C/logo.png",
+    "id":  "0x0f8c45B896784A1E408526B9300519ef8660209c"
 }

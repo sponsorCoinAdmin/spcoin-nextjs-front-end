@@ -1,21 +1,21 @@
 {
-    "name": "Piccolo Inu",
-    "type": "ERC20",
-    "symbol": "PINU",
-    "decimals": 9,
-    "website": "https://www.piccoloinu.com",
-    "description": "PINU is a custom and unique NFT Marketplace DAPP, which will allow users to mint, sell, buy and trade their NFT's. In addition to the gaming platform, where they will be able to trade / play with their cards, they'll be able to show them to other users.",
-    "explorer": "https://etherscan.io/token/0x3a1311B8C404629E38f61D566cefEFed083B9670",
-    "status": "active",
-    "id": "0x3a1311B8C404629E38f61D566cefEFed083B9670",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/piccolo-inu/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/piccolo-inu"
-        }
-    ]
+    "name":  "Piccolo Inu",
+    "symbol":  "PINU",
+    "decimals":  9,
+    "website":  "https://www.piccoloinu.com",
+    "description":  "PINU is a custom and unique NFT Marketplace DAPP, which will allow users to mint, sell, buy and trade their NFT\u0027s. In addition to the gaming platform, where they will be able to trade / play with their cards, they\u0027ll be able to show them to other users.",
+    "explorer":  "https://etherscan.io/token/0x3a1311B8C404629E38f61D566cefEFed083B9670",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3A1311B8C404629E38F61D566CEFEFED083B9670/logo.png",
+    "id":  "0x3a1311B8C404629E38f61D566cefEFed083B9670",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/piccolo-inu/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/piccolo-inu"
+                  }
+              ]
 }

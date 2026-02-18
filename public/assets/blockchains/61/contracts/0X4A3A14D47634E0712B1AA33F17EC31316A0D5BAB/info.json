@@ -1,11 +1,11 @@
 {
-    "name": "Litecoin Classic Token",
-    "symbol": "LCT",
-    "type": "ETC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x4a3a14d47634E0712B1Aa33f17EC31316a0D5BAB",
-    "status": "active",
-    "id": "0x4a3a14d47634E0712B1Aa33f17EC31316a0D5BAB"
+    "name":  "Litecoin Classic Token",
+    "symbol":  "LCT",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x4a3a14d47634E0712B1Aa33f17EC31316a0D5BAB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X4A3A14D47634E0712B1AA33F17EC31316A0D5BAB/logo.png",
+    "id":  "0x4a3a14d47634E0712B1Aa33f17EC31316a0D5BAB"
 }

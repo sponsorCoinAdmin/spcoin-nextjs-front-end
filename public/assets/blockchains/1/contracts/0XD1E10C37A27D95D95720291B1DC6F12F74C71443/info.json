@@ -1,11 +1,11 @@
 {
-    "name": "Cosmo Coin",
-    "type": "ERC20",
-    "symbol": "COSM",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0xd1e10c37a27d95d95720291b1dc6f12f74c71443",
-    "status": "active",
-    "id": "0xD1E10C37A27d95D95720291b1Dc6f12F74C71443"
+    "name":  "Cosmo Coin",
+    "symbol":  "COSM",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0xd1e10c37a27d95d95720291b1dc6f12f74c71443",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD1E10C37A27D95D95720291B1DC6F12F74C71443/logo.png",
+    "id":  "0xD1E10C37A27d95D95720291b1Dc6f12F74C71443"
 }

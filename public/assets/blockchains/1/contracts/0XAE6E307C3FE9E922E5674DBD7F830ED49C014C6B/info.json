@@ -1,21 +1,21 @@
 {
-    "name": "CREDI",
-    "website": "https://credefi.finance/",
-    "description": "Credefi connects crypto lenders with SME borrowers from the fiat economy. Their platform enables decentralized and secured lending to portfolios of businesses, protecting lenders while providing them fixed APY that is uncorrelated with crypto markets’ volatility.",
-    "explorer": "https://etherscan.io/token/0xaE6e307c3Fe9E922E5674DBD7F830Ed49c014c6B",
-    "type": "ERC20",
-    "symbol": "CREDI",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xaE6e307c3Fe9E922E5674DBD7F830Ed49c014c6B",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/credefi_finance"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/credefi"
-        }
-    ]
+    "name":  "CREDI",
+    "website":  "https://credefi.finance/",
+    "description":  "Credefi connects crypto lenders with SME borrowers from the fiat economy. Their platform enables decentralized and secured lending to portfolios of businesses, protecting lenders while providing them fixed APY that is uncorrelated with crypto markets’ volatility.",
+    "explorer":  "https://etherscan.io/token/0xaE6e307c3Fe9E922E5674DBD7F830Ed49c014c6B",
+    "symbol":  "CREDI",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAE6E307C3FE9E922E5674DBD7F830ED49C014C6B/logo.png",
+    "id":  "0xaE6e307c3Fe9E922E5674DBD7F830Ed49c014c6B",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/credefi_finance"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/credefi"
+                  }
+              ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Color Coin",
-    "symbol": "CLR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Color Platform is devoted to bringing the opportunities of a decentralized platform for daily life.",
-    "website": "https://color-platform.org/~colors/en/",
-    "explorer": "https://etherscan.io/token/0x2396FBC0e2E3AE4B7206EbDb5706e2a5920349CB",
-    "status": "active",
-    "id": "0x2396FBC0e2E3AE4B7206EbDb5706e2a5920349CB"
+    "name":  "Color Coin",
+    "symbol":  "CLR",
+    "decimals":  18,
+    "description":  "Color Platform is devoted to bringing the opportunities of a decentralized platform for daily life.",
+    "website":  "https://color-platform.org/~colors/en/",
+    "explorer":  "https://etherscan.io/token/0x2396FBC0e2E3AE4B7206EbDb5706e2a5920349CB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2396FBC0E2E3AE4B7206EBDB5706E2A5920349CB/logo.png",
+    "id":  "0x2396FBC0e2E3AE4B7206EbDb5706e2a5920349CB"
 }

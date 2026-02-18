@@ -1,11 +1,11 @@
 {
-    "name": "Prime DAI",
-    "website": "https://omgswap.in/",
-    "description": "pDAI is a stable assets for OMGSwap & O-DEX",
-    "explorer": "https://etherscan.io/token/0x9043d4d51C9d2e31e3F169de4551E416970c27Ef",
-    "type": "ERC20",
-    "symbol": "pDAI",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x9043d4d51C9d2e31e3F169de4551E416970c27Ef"
+    "name":  "Prime DAI",
+    "website":  "https://omgswap.in/",
+    "description":  "pDAI is a stable assets for OMGSwap \u0026 O-DEX",
+    "explorer":  "https://etherscan.io/token/0x9043d4d51C9d2e31e3F169de4551E416970c27Ef",
+    "symbol":  "pDAI",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9043D4D51C9D2E31E3F169DE4551E416970C27EF/logo.png",
+    "id":  "0x9043d4d51C9d2e31e3F169de4551E416970c27Ef"
 }

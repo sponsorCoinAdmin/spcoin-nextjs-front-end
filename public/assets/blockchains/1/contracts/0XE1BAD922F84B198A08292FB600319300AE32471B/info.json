@@ -1,11 +1,11 @@
 {
-    "name": "[FCT] FirmaChain Token",
-    "symbol": "FCT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://firmachain.org",
-    "explorer": "https://etherscan.io/token/0xE1bAD922F84b198A08292FB600319300ae32471b",
-    "status": "active",
-    "id": "0xE1bAD922F84b198A08292FB600319300ae32471b"
+    "name":  "[FCT] FirmaChain Token",
+    "symbol":  "FCT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://firmachain.org",
+    "explorer":  "https://etherscan.io/token/0xE1bAD922F84b198A08292FB600319300ae32471b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE1BAD922F84B198A08292FB600319300AE32471B/logo.png",
+    "id":  "0xE1bAD922F84b198A08292FB600319300ae32471b"
 }

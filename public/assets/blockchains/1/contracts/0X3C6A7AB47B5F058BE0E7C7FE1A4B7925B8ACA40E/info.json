@@ -1,11 +1,11 @@
 {
-    "name": "Cajutel",
-    "symbol": "CAJ",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Solar powered high speed internet for West Africa.",
-    "website": "https://cajutel.io/",
-    "explorer": "https://etherscan.io/token/0x3C6A7aB47B5F058Be0e7C7fE1A4b7925B8aCA40e",
-    "status": "active",
-    "id": "0x3C6A7aB47B5F058Be0e7C7fE1A4b7925B8aCA40e"
+    "name":  "Cajutel",
+    "symbol":  "CAJ",
+    "decimals":  18,
+    "description":  "Solar powered high speed internet for West Africa.",
+    "website":  "https://cajutel.io/",
+    "explorer":  "https://etherscan.io/token/0x3C6A7aB47B5F058Be0e7C7fE1A4b7925B8aCA40e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3C6A7AB47B5F058BE0E7C7FE1A4B7925B8ACA40E/logo.png",
+    "id":  "0x3C6A7aB47B5F058Be0e7C7fE1A4b7925B8aCA40e"
 }

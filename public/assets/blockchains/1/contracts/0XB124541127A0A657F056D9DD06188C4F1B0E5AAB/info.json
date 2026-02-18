@@ -1,11 +1,11 @@
 {
-    "name": "Aave UNI V1",
-    "symbol": "aUNI V1",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave UNI V1 is an interest bearing token pegged 1:1 to the underlying UNI deposited in Aave V1. aUNI V1 accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0xB124541127A0A657f056D9Dd06188c4F1b0e5aab",
-    "status": "active",
-    "id": "0xB124541127A0A657f056D9Dd06188c4F1b0e5aab"
+    "name":  "Aave UNI V1",
+    "symbol":  "aUNI V1",
+    "decimals":  18,
+    "description":  "Aave UNI V1 is an interest bearing token pegged 1:1 to the underlying UNI deposited in Aave V1. aUNI V1 accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0xB124541127A0A657f056D9Dd06188c4F1b0e5aab",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB124541127A0A657F056D9DD06188C4F1B0E5AAB/logo.png",
+    "id":  "0xB124541127A0A657f056D9Dd06188c4F1b0e5aab"
 }

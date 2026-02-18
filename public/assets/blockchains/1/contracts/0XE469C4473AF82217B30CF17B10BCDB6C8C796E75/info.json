@@ -1,11 +1,11 @@
 {
-    "name": "EXRP Network",
-    "symbol": "EXRN",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "Connecting the blockchains using crosschain gateway built with smart contracts.",
-    "website": "https://exrnchain.com/",
-    "explorer": "https://etherscan.io/token/0xe469c4473af82217B30CF17b10BcDb6C8c796e75",
-    "status": "active",
-    "id": "0xe469c4473af82217B30CF17b10BcDb6C8c796e75"
+    "name":  "EXRP Network",
+    "symbol":  "EXRN",
+    "decimals":  0,
+    "description":  "Connecting the blockchains using crosschain gateway built with smart contracts.",
+    "website":  "https://exrnchain.com/",
+    "explorer":  "https://etherscan.io/token/0xe469c4473af82217B30CF17b10BcDb6C8c796e75",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE469C4473AF82217B30CF17B10BCDB6C8C796E75/logo.png",
+    "id":  "0xe469c4473af82217B30CF17b10BcDb6C8c796e75"
 }

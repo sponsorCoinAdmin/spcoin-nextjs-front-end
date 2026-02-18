@@ -1,17 +1,17 @@
 {
-    "name": "NYAN",
-    "website": "https://nyan.finance",
-    "description": "Nyan is a decentralized hedge fund using on-chain governance",
-    "explorer": "https://etherscan.io/token/0xC9cE70A381910D0a90B30d408CC9C7705ee882de",
-    "type": "ERC20",
-    "symbol": "NYAN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xC9cE70A381910D0a90B30d408CC9C7705ee882de",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/geass-zero/nyan.finance"
-        }
-    ]
+    "name":  "NYAN",
+    "website":  "https://nyan.finance",
+    "description":  "Nyan is a decentralized hedge fund using on-chain governance",
+    "explorer":  "https://etherscan.io/token/0xC9cE70A381910D0a90B30d408CC9C7705ee882de",
+    "symbol":  "NYAN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC9CE70A381910D0A90B30D408CC9C7705EE882DE/logo.png",
+    "id":  "0xC9cE70A381910D0a90B30d408CC9C7705ee882de",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/geass-zero/nyan.finance"
+                  }
+              ]
 }

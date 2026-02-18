@@ -1,18 +1,18 @@
 {
-    "name": "Community Token",
-    "website": "https://communitytoken.io/",
-    "description": "Community Token (COM) is an ERC-20 token that empowers the crypto community with collective due diligence on emerging investment opportunities.",
-    "explorer": "https://etherscan.io/token/0x1B4052d98fb1888C2Bf3B8d3b930e0aFf8A910dF",
-    "research": "https://medium.com/@communitytoken",
-    "type": "ERC20",
-    "symbol": "COM",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x1B4052d98fb1888C2Bf3B8d3b930e0aFf8A910dF",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/ComToken"
-        }
-    ]
+    "name":  "Community Token",
+    "website":  "https://communitytoken.io/",
+    "description":  "Community Token (COM) is an ERC-20 token that empowers the crypto community with collective due diligence on emerging investment opportunities.",
+    "explorer":  "https://etherscan.io/token/0x1B4052d98fb1888C2Bf3B8d3b930e0aFf8A910dF",
+    "research":  "https://medium.com/@communitytoken",
+    "symbol":  "COM",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1B4052D98FB1888C2BF3B8D3B930E0AFF8A910DF/logo.png",
+    "id":  "0x1B4052d98fb1888C2Bf3B8d3b930e0aFf8A910dF",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/ComToken"
+                  }
+              ]
 }

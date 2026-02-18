@@ -1,11 +1,11 @@
 {
-    "name": "Xplosive Ethereum",
-    "website": "https://xeth.finance/",
-    "description": "A Rebase-Inflationary, Burn Deflationary Currency.",
-    "explorer": "https://etherscan.io/token/0xaA19673aA1b483a5c4f73B446B4f851629a7e7D6",
-    "type": "ERC20",
-    "symbol": "xETH",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xaA19673aA1b483a5c4f73B446B4f851629a7e7D6"
+    "name":  "Xplosive Ethereum",
+    "website":  "https://xeth.finance/",
+    "description":  "A Rebase-Inflationary, Burn Deflationary Currency.",
+    "explorer":  "https://etherscan.io/token/0xaA19673aA1b483a5c4f73B446B4f851629a7e7D6",
+    "symbol":  "xETH",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAA19673AA1B483A5C4F73B446B4F851629A7E7D6/logo.png",
+    "id":  "0xaA19673aA1b483a5c4f73B446B4f851629a7e7D6"
 }

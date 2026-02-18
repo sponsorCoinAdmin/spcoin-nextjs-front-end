@@ -1,11 +1,11 @@
 {
-    "name": "Cardstack",
-    "type": "ERC20",
-    "symbol": "CARD",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0xb07ec2c28834b889b1ce527ca0f19364cd38935c",
-    "status": "active",
-    "id": "0xB07ec2c28834B889b1CE527Ca0F19364cD38935c"
+    "name":  "Cardstack",
+    "symbol":  "CARD",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0xb07ec2c28834b889b1ce527ca0f19364cd38935c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB07EC2C28834B889B1CE527CA0F19364CD38935C/logo.png",
+    "id":  "0xB07ec2c28834B889b1CE527Ca0F19364cD38935c"
 }

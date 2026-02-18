@@ -1,11 +1,11 @@
 {
-    "name": "UPX",
-    "symbol": "UPX",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "Universal Ðecentralized Asset Platform - a Blockchain Middleware for Tokenizing Everything",
-    "website": "https://www.udap.io",
-    "explorer": "https://explorer.binance.org/asset/UPX-F3E",
-    "status": "active",
-    "id": "UPX-F3E"
+    "name":  "UPX",
+    "symbol":  "UPX",
+    "decimals":  8,
+    "description":  "Universal Ðecentralized Asset Platform - a Blockchain Middleware for Tokenizing Everything",
+    "website":  "https://www.udap.io",
+    "explorer":  "https://explorer.binance.org/asset/UPX-F3E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/UPX-F3E/logo.png",
+    "id":  "UPX-F3E"
 }

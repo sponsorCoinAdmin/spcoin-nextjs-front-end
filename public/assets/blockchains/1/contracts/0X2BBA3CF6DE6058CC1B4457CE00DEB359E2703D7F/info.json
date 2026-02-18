@@ -1,11 +1,11 @@
 {
-    "name": "HashCoin",
-    "symbol": "HSC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.hashfuture.io/#home",
-    "explorer": "https://etherscan.io/token/0x2bBA3CF6DE6058cc1B4457Ce00deb359E2703d7F",
-    "status": "active",
-    "id": "0x2bBA3CF6DE6058cc1B4457Ce00deb359E2703d7F"
+    "name":  "HashCoin",
+    "symbol":  "HSC",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.hashfuture.io/#home",
+    "explorer":  "https://etherscan.io/token/0x2bBA3CF6DE6058cc1B4457Ce00deb359E2703d7F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2BBA3CF6DE6058CC1B4457CE00DEB359E2703D7F/logo.png",
+    "id":  "0x2bBA3CF6DE6058cc1B4457Ce00deb359E2703d7F"
 }

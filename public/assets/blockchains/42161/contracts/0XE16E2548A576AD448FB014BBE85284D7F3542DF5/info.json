@@ -1,21 +1,21 @@
 {
-    "name": "Lumoz",
-    "website": "https://lumoz.org/",
-    "description": "Lumoz is a globally distributed modular computing protocol, offering a powerful, secure, and flexible computing platform for users worldwide.",
-    "explorer": "https://arbiscan.io/token/0xE16e2548A576ad448FB014bBE85284D7f3542dF5",
-    "type": "ARBITRUM",
-    "symbol": "MOZ",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xE16e2548A576ad448FB014bBE85284D7f3542dF5",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/LumozOrg"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/lumoz/"
-        }
-    ]
+    "name":  "Lumoz",
+    "website":  "https://lumoz.org/",
+    "description":  "Lumoz is a globally distributed modular computing protocol, offering a powerful, secure, and flexible computing platform for users worldwide.",
+    "explorer":  "https://arbiscan.io/token/0xE16e2548A576ad448FB014bBE85284D7f3542dF5",
+    "symbol":  "MOZ",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/42161/contracts/0XE16E2548A576AD448FB014BBE85284D7F3542DF5/logo.png",
+    "id":  "0xE16e2548A576ad448FB014bBE85284D7f3542dF5",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/LumozOrg"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/lumoz/"
+                  }
+              ]
 }

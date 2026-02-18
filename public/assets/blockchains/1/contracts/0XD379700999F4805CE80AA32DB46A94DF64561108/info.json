@@ -1,17 +1,17 @@
 {
-    "name": "Dextrust",
-    "website": "https://dextrust.org/",
-    "description": "A community driven decentralized exchange platform",
-    "explorer": "https://etherscan.io/token/0xd379700999F4805Ce80aa32DB46A94dF64561108",
-    "type": "ERC20",
-    "symbol": "DETS",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xd379700999F4805Ce80aa32DB46A94dF64561108",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/dextrustdefi"
-        }
-    ]
+    "name":  "Dextrust",
+    "website":  "https://dextrust.org/",
+    "description":  "A community driven decentralized exchange platform",
+    "explorer":  "https://etherscan.io/token/0xd379700999F4805Ce80aa32DB46A94dF64561108",
+    "symbol":  "DETS",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD379700999F4805CE80AA32DB46A94DF64561108/logo.png",
+    "id":  "0xd379700999F4805Ce80aa32DB46A94dF64561108",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/dextrustdefi"
+                  }
+              ]
 }

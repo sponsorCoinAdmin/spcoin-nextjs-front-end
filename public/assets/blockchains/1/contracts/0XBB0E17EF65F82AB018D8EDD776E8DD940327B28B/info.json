@@ -1,16 +1,16 @@
 {
-    "name": "Axie Infinity Shard",
-    "website": "https://axieinfinity.com",
-    "description": "Axie Infinity Shards are Axie Infinity's governance token.",
-    "explorer": "https://etherscan.io/token/0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
-    "research": "https://research.binance.com/en/projects/axie-infinity",
-    "type": "ERC20",
-    "symbol": "AXS",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
-    "tags": [
-        "gamefi",
-        "nft"
-    ]
+    "name":  "Axie Infinity Shard",
+    "website":  "https://axieinfinity.com",
+    "description":  "Axie Infinity Shards are Axie Infinity\u0027s governance token.",
+    "explorer":  "https://etherscan.io/token/0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
+    "research":  "https://research.binance.com/en/projects/axie-infinity",
+    "symbol":  "AXS",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBB0E17EF65F82AB018D8EDD776E8DD940327B28B/logo.png",
+    "id":  "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
+    "tags":  [
+                 "gamefi",
+                 "nft"
+             ]
 }

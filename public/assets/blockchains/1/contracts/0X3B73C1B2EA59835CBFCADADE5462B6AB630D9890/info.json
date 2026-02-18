@@ -1,11 +1,11 @@
 {
-    "name": "ChainSwap.com Governance Token",
-    "website": "https://chainswap.com/",
-    "description": "ChainSwap is a cross-chain asset bridge & application hub for smart chains.",
-    "explorer": "https://etherscan.io/token/0x3B73c1B2ea59835cbfcADade5462b6aB630D9890",
-    "type": "ERC20",
-    "symbol": "TOKEN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x3B73c1B2ea59835cbfcADade5462b6aB630D9890"
+    "name":  "ChainSwap.com Governance Token",
+    "website":  "https://chainswap.com/",
+    "description":  "ChainSwap is a cross-chain asset bridge \u0026 application hub for smart chains.",
+    "explorer":  "https://etherscan.io/token/0x3B73c1B2ea59835cbfcADade5462b6aB630D9890",
+    "symbol":  "TOKEN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3B73C1B2EA59835CBFCADADE5462B6AB630D9890/logo.png",
+    "id":  "0x3B73c1B2ea59835cbfcADade5462b6aB630D9890"
 }

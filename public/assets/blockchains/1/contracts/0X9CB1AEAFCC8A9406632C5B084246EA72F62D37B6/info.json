@@ -1,11 +1,11 @@
 {
-    "name": "LBK",
-    "symbol": "LBK",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "LBank releases its own exchange token 'LBK'. LBK will benefit from the blockchain technology and digital financial operation capabilities of LBank, and combined with the community-self-governance concept.",
-    "website": "https://www.lbank.info/",
-    "explorer": "https://etherscan.io/token/0x9cB1AEaFcc8A9406632C5B084246Ea72f62d37b6",
-    "status": "active",
-    "id": "0x9cB1AEaFcc8A9406632C5B084246Ea72f62d37b6"
+    "name":  "LBK",
+    "symbol":  "LBK",
+    "decimals":  8,
+    "description":  "LBank releases its own exchange token \u0027LBK\u0027. LBK will benefit from the blockchain technology and digital financial operation capabilities of LBank, and combined with the community-self-governance concept.",
+    "website":  "https://www.lbank.info/",
+    "explorer":  "https://etherscan.io/token/0x9cB1AEaFcc8A9406632C5B084246Ea72f62d37b6",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9CB1AEAFCC8A9406632C5B084246EA72F62D37B6/logo.png",
+    "id":  "0x9cB1AEaFcc8A9406632C5B084246Ea72f62d37b6"
 }

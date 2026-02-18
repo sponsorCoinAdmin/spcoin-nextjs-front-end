@@ -1,17 +1,17 @@
 {
-    "name": "USDS",
-    "symbol": "USDS",
-    "website": "https://sky.money/",
-    "description": "Cryptocurrency, also referred to as “crypto,” is a type of digital currency that uses cryptography to help improve the security and overall user control of associated transactions",
-    "explorer": "https://arbiscan.io/token/0x6491c05A82219b8D1479057361ff1654749b876b",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x6491c05A82219b8D1479057361ff1654749b876b",
-    "type": "ARBITRUM",
-    "links": [
-        {
-            "name": "twitter",
-            "url": "https://x.com/SkyEcosystem"
-        }
-    ]
+    "name":  "USDS",
+    "symbol":  "USDS",
+    "website":  "https://sky.money/",
+    "description":  "Cryptocurrency, also referred to as “crypto,” is a type of digital currency that uses cryptography to help improve the security and overall user control of associated transactions",
+    "explorer":  "https://arbiscan.io/token/0x6491c05A82219b8D1479057361ff1654749b876b",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/42161/contracts/0X6491C05A82219B8D1479057361FF1654749B876B/logo.png",
+    "id":  "0x6491c05A82219b8D1479057361ff1654749b876b",
+    "links":  [
+                  {
+                      "name":  "twitter",
+                      "url":  "https://x.com/SkyEcosystem"
+                  }
+              ]
 }

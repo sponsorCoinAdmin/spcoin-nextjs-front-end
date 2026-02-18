@@ -1,11 +1,11 @@
 {
-    "name": "Statera",
-    "symbol": "STA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Metronome Desktop Wallet.",
-    "website": "https://stateratoken.com",
-    "explorer": "https://etherscan.io/token/0xa7DE087329BFcda5639247F96140f9DAbe3DeED1",
-    "status": "active",
-    "id": "0xa7DE087329BFcda5639247F96140f9DAbe3DeED1"
+    "name":  "Statera",
+    "symbol":  "STA",
+    "decimals":  18,
+    "description":  "Metronome Desktop Wallet.",
+    "website":  "https://stateratoken.com",
+    "explorer":  "https://etherscan.io/token/0xa7DE087329BFcda5639247F96140f9DAbe3DeED1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA7DE087329BFCDA5639247F96140F9DABE3DEED1/logo.png",
+    "id":  "0xa7DE087329BFcda5639247F96140f9DAbe3DeED1"
 }

@@ -1,25 +1,25 @@
 {
-    "name": "UTU Coin",
-    "website": "http://protocol.utu.io/",
-    "description": "Utility token that powers the trust infrastructure of the internet.",
-    "explorer": "https://etherscan.io/token/0xa58a4f5c4Bb043d2CC1E170613B74e767c94189B",
-    "type": "ERC20",
-    "symbol": "UTU",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xa58a4f5c4Bb043d2CC1E170613B74e767c94189B",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/utu-protocol/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/UTU_trust"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/UTUtrust"
-        }
-    ]
+    "name":  "UTU Coin",
+    "website":  "http://protocol.utu.io/",
+    "description":  "Utility token that powers the trust infrastructure of the internet.",
+    "explorer":  "https://etherscan.io/token/0xa58a4f5c4Bb043d2CC1E170613B74e767c94189B",
+    "symbol":  "UTU",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA58A4F5C4BB043D2CC1E170613B74E767C94189B/logo.png",
+    "id":  "0xa58a4f5c4Bb043d2CC1E170613B74e767c94189B",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/utu-protocol/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/UTU_trust"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/UTUtrust"
+                  }
+              ]
 }

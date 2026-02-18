@@ -1,11 +1,11 @@
 {
-    "name": "Bitgear",
-    "symbol": "GEAR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Bitgear aims to create a bridge and aggregate decentralized and centralized exchanges all in one platform.",
-    "website": "https://bitgear.io",
-    "explorer": "https://etherscan.io/token/0x1b980e05943dE3dB3a459C72325338d327B6F5a9",
-    "status": "active",
-    "id": "0x1b980e05943dE3dB3a459C72325338d327B6F5a9"
+    "name":  "Bitgear",
+    "symbol":  "GEAR",
+    "decimals":  18,
+    "description":  "Bitgear aims to create a bridge and aggregate decentralized and centralized exchanges all in one platform.",
+    "website":  "https://bitgear.io",
+    "explorer":  "https://etherscan.io/token/0x1b980e05943dE3dB3a459C72325338d327B6F5a9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1B980E05943DE3DB3A459C72325338D327B6F5A9/logo.png",
+    "id":  "0x1b980e05943dE3dB3a459C72325338d327B6F5a9"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "WPPTOKEN",
-    "symbol": "WPP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "http://wppenergy.io",
-    "explorer": "https://etherscan.io/token/0x056dD20b01799E9C1952c7c9a5ff4409a6110085",
-    "status": "active",
-    "id": "0x056dD20b01799E9C1952c7c9a5ff4409a6110085"
+    "name":  "WPPTOKEN",
+    "symbol":  "WPP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "http://wppenergy.io",
+    "explorer":  "https://etherscan.io/token/0x056dD20b01799E9C1952c7c9a5ff4409a6110085",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X056DD20B01799E9C1952C7C9A5FF4409A6110085/logo.png",
+    "id":  "0x056dD20b01799E9C1952c7c9a5ff4409a6110085"
 }

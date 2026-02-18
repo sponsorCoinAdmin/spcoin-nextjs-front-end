@@ -1,21 +1,21 @@
 {
-    "name": "Zeebu",
-    "type": "BASE",
-    "symbol": "ZBU",
-    "decimals": 18,
-    "website": "https://www.zeebu.com/",
-    "description": "Zeebu is a telecom carrier business.",
-    "explorer": "https://basescan.org/token/0x2C8C89C442436CC6C0a77943E09c8Daf49Da3161",
-    "status": "active",
-    "id": "0x2C8C89C442436CC6C0a77943E09c8Daf49Da3161",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/zeebuofficial"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/zeebu/"
-        }
-    ]
+    "name":  "Zeebu",
+    "symbol":  "ZBU",
+    "decimals":  18,
+    "website":  "https://www.zeebu.com/",
+    "description":  "Zeebu is a telecom carrier business.",
+    "explorer":  "https://basescan.org/token/0x2C8C89C442436CC6C0a77943E09c8Daf49Da3161",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X2C8C89C442436CC6C0A77943E09C8DAF49DA3161/logo.png",
+    "id":  "0x2C8C89C442436CC6C0a77943E09c8Daf49Da3161",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/zeebuofficial"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/zeebu/"
+                  }
+              ]
 }

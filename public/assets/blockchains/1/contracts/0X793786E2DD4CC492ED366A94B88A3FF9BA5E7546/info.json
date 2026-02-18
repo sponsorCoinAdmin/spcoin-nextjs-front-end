@@ -1,21 +1,21 @@
 {
-    "name": "AXIA TOKEN",
-    "website": "https://axiaprotocol.io",
-    "description": " Axia Protocol is a Decentralized platform for Cryptocurrency Index Fund management.",
-    "explorer": "https://etherscan.io/token/0x793786e2dd4Cc492ed366a94B88a3Ff9ba5E7546",
-    "type": "ERC20",
-    "symbol": "AXIAv3",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x793786e2dd4Cc492ed366a94B88a3Ff9ba5E7546",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/axiaprotocol"
-        },
-        {
-            "name": "whitepaper",
-            "url": "https://axiaprotocol.io/Axia%20Protocol%20Whitepaper%202020.pdf"
-        }
-    ]
+    "name":  "AXIA TOKEN",
+    "website":  "https://axiaprotocol.io",
+    "description":  " Axia Protocol is a Decentralized platform for Cryptocurrency Index Fund management.",
+    "explorer":  "https://etherscan.io/token/0x793786e2dd4Cc492ed366a94B88a3Ff9ba5E7546",
+    "symbol":  "AXIAv3",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X793786E2DD4CC492ED366A94B88A3FF9BA5E7546/logo.png",
+    "id":  "0x793786e2dd4Cc492ed366a94B88a3Ff9ba5E7546",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/axiaprotocol"
+                  },
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://axiaprotocol.io/Axia%20Protocol%20Whitepaper%202020.pdf"
+                  }
+              ]
 }

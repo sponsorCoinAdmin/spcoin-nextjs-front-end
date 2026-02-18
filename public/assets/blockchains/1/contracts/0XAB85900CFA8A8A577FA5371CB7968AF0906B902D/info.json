@@ -1,11 +1,11 @@
 {
-    "name": "Health, Technology &amp; Agriculture Token",
-    "type": "ERC20",
-    "symbol": "HTA",
-    "decimals": 10,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0xab85900cfa8a8a577fa5371cb7968af0906b902d",
-    "status": "active",
-    "id": "0xab85900CFa8a8a577fa5371cb7968aF0906B902d"
+    "name":  "Health, Technology \u0026amp; Agriculture Token",
+    "symbol":  "HTA",
+    "decimals":  10,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0xab85900cfa8a8a577fa5371cb7968af0906b902d",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAB85900CFA8A8A577FA5371CB7968AF0906B902D/logo.png",
+    "id":  "0xab85900CFa8a8a577fa5371cb7968aF0906B902d"
 }

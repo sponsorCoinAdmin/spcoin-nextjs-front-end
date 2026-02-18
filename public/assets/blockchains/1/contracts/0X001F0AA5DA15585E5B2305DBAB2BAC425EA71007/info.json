@@ -1,11 +1,11 @@
 {
-    "name": "IPSX",
-    "symbol": "IPSX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://ip.sx/",
-    "explorer": "https://etherscan.io/token/0x001F0aA5dA15585e5b2305DbaB2bac425ea71007",
-    "status": "active",
-    "id": "0x001F0aA5dA15585e5b2305DbaB2bac425ea71007"
+    "name":  "IPSX",
+    "symbol":  "IPSX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://ip.sx/",
+    "explorer":  "https://etherscan.io/token/0x001F0aA5dA15585e5b2305DbaB2bac425ea71007",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X001F0AA5DA15585E5B2305DBAB2BAC425EA71007/logo.png",
+    "id":  "0x001F0aA5dA15585e5b2305DbaB2bac425ea71007"
 }

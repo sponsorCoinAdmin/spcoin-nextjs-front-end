@@ -1,11 +1,11 @@
 {
-    "name": "vKet",
-    "symbol": "KET",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xFe6e2CBd2E28b3A6F43aa17f58d9AC5D6fA19B99",
-    "status": "active",
-    "id": "0xFe6e2CBd2E28b3A6F43aa17f58d9AC5D6fA19B99"
+    "name":  "vKet",
+    "symbol":  "KET",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xFe6e2CBd2E28b3A6F43aa17f58d9AC5D6fA19B99",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFE6E2CBD2E28B3A6F43AA17F58D9AC5D6FA19B99/logo.png",
+    "id":  "0xFe6e2CBd2E28b3A6F43aa17f58d9AC5D6fA19B99"
 }

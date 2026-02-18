@@ -1,11 +1,11 @@
 {
-    "name": "First Internet Football Association",
-    "symbol": "FIFA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The ISIKC blockchain-based loyalty platform is reportedly built by a team that understands technology and the construction materials market.",
-    "website": "https://www.isikc.io",
-    "explorer": "https://etherscan.io/token/0x423FfB66AECC906361d79F87d85dB310897bDB6D",
-    "status": "active",
-    "id": "0x423FfB66AECC906361d79F87d85dB310897bDB6D"
+    "name":  "First Internet Football Association",
+    "symbol":  "FIFA",
+    "decimals":  18,
+    "description":  "The ISIKC blockchain-based loyalty platform is reportedly built by a team that understands technology and the construction materials market.",
+    "website":  "https://www.isikc.io",
+    "explorer":  "https://etherscan.io/token/0x423FfB66AECC906361d79F87d85dB310897bDB6D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X423FFB66AECC906361D79F87D85DB310897BDB6D/logo.png",
+    "id":  "0x423FfB66AECC906361d79F87d85dB310897bDB6D"
 }

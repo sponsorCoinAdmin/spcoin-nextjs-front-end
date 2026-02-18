@@ -1,11 +1,11 @@
 {
-    "name": "Iconiq Lab Token",
-    "symbol": "ICNQ",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Iconiq Lab is the world’s rst batch-driven accelerator program for prospective ICO projects. Through our own token launch, we will raise the capital necessary to provide seed funding to the best projects and management teams interested in launching an ICO.",
-    "website": "https://iconicholding.com/icnq-token/",
-    "explorer": "https://etherscan.io/token/0xB3e2Cb7CccfE139f8FF84013823Bf22dA6B6390A",
-    "status": "active",
-    "id": "0xB3e2Cb7CccfE139f8FF84013823Bf22dA6B6390A"
+    "name":  "Iconiq Lab Token",
+    "symbol":  "ICNQ",
+    "decimals":  18,
+    "description":  "Iconiq Lab is the world’s rst batch-driven accelerator program for prospective ICO projects. Through our own token launch, we will raise the capital necessary to provide seed funding to the best projects and management teams interested in launching an ICO.",
+    "website":  "https://iconicholding.com/icnq-token/",
+    "explorer":  "https://etherscan.io/token/0xB3e2Cb7CccfE139f8FF84013823Bf22dA6B6390A",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB3E2CB7CCCFE139F8FF84013823BF22DA6B6390A/logo.png",
+    "id":  "0xB3e2Cb7CccfE139f8FF84013823Bf22dA6B6390A"
 }

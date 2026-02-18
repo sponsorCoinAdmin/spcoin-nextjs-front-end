@@ -1,11 +1,11 @@
 {
-    "name": "DEW",
-    "symbol": "DEW",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "DEW is a Decentralized Exchange and also a gateway to the global blockchain securities market, through an almighty account, you can trade Blockchain Assets, Stocks, Futures, Forex, ETF, Bet Contract etc.",
-    "website": "https://www.dew.one/",
-    "explorer": "https://etherscan.io/token/0x20E94867794dBA030Ee287F1406E100d03C84Cd3",
-    "status": "active",
-    "id": "0x20E94867794dBA030Ee287F1406E100d03C84Cd3"
+    "name":  "DEW",
+    "symbol":  "DEW",
+    "decimals":  18,
+    "description":  "DEW is a Decentralized Exchange and also a gateway to the global blockchain securities market, through an almighty account, you can trade Blockchain Assets, Stocks, Futures, Forex, ETF, Bet Contract etc.",
+    "website":  "https://www.dew.one/",
+    "explorer":  "https://etherscan.io/token/0x20E94867794dBA030Ee287F1406E100d03C84Cd3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X20E94867794DBA030EE287F1406E100D03C84CD3/logo.png",
+    "id":  "0x20E94867794dBA030Ee287F1406E100d03C84Cd3"
 }

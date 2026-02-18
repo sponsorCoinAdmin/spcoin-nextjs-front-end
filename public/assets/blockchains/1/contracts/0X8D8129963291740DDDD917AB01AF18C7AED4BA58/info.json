@@ -1,11 +1,11 @@
 {
-    "name": "MineBee",
-    "symbol": "MB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "MineBee is developing a turnkey solution that will address the mining industries multi-faceted problems through MineBee solution, MineBee contract, and MineBee open market.",
-    "website": "https://minebee.io/",
-    "explorer": "https://etherscan.io/token/0x8D8129963291740dDDd917ab01af18c7aed4BA58",
-    "status": "active",
-    "id": "0x8D8129963291740dDDd917ab01af18c7aed4BA58"
+    "name":  "MineBee",
+    "symbol":  "MB",
+    "decimals":  18,
+    "description":  "MineBee is developing a turnkey solution that will address the mining industries multi-faceted problems through MineBee solution, MineBee contract, and MineBee open market.",
+    "website":  "https://minebee.io/",
+    "explorer":  "https://etherscan.io/token/0x8D8129963291740dDDd917ab01af18c7aed4BA58",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8D8129963291740DDDD917AB01AF18C7AED4BA58/logo.png",
+    "id":  "0x8D8129963291740dDDd917ab01af18c7aed4BA58"
 }

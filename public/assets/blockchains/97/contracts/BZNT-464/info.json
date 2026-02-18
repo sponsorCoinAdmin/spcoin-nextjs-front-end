@@ -1,11 +1,11 @@
 {
-    "name": "Bezant Token",
-    "symbol": "BZNT",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "Bezant is a decentralized payment protocol that allows content creators and online merchants to setup stores and send/receive payments internationally.",
-    "website": "https://bezant.io/",
-    "explorer": "https://explorer.binance.org/asset/BZNT-464",
-    "status": "active",
-    "id": "BZNT-464"
+    "name":  "Bezant Token",
+    "symbol":  "BZNT",
+    "decimals":  8,
+    "description":  "Bezant is a decentralized payment protocol that allows content creators and online merchants to setup stores and send/receive payments internationally.",
+    "website":  "https://bezant.io/",
+    "explorer":  "https://explorer.binance.org/asset/BZNT-464",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/BZNT-464/logo.png",
+    "id":  "BZNT-464"
 }

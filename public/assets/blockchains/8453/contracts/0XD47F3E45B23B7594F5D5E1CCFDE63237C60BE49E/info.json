@@ -1,21 +1,21 @@
 {
-    "name": "BSX",
-    "symbol": "BSX",
-    "type": "BASE",
-    "decimals": 18,
-    "description": "BSX is developing the fastest, simplest, and most secure perpetuals DEX on the market.",
-    "website": "https://www.bsx.exchange/",
-    "explorer": "https://basescan.org/token/0xD47F3E45B23b7594F5d5e1CcFde63237c60BE49e",
-    "status": "active",
-    "id": "0xD47F3E45B23b7594F5d5e1CcFde63237c60BE49e",
-    "links": [
-      {
-        "name": "x",
-        "url": "https://x.com/bsx_labs"
-      },
-      {
-        "name": "coinmarketcap",
-        "url": "https://coinmarketcap.com/currencies/bsx/"
-      }
-    ]
-  }
+    "name":  "BSX",
+    "symbol":  "BSX",
+    "decimals":  18,
+    "description":  "BSX is developing the fastest, simplest, and most secure perpetuals DEX on the market.",
+    "website":  "https://www.bsx.exchange/",
+    "explorer":  "https://basescan.org/token/0xD47F3E45B23b7594F5d5e1CcFde63237c60BE49e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0XD47F3E45B23B7594F5D5E1CCFDE63237C60BE49E/logo.png",
+    "id":  "0xD47F3E45B23b7594F5d5e1CcFde63237c60BE49e",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/bsx_labs"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/bsx/"
+                  }
+              ]
+}

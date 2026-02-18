@@ -1,11 +1,11 @@
 {
-    "name": "Props Token",
-    "symbol": "PROPS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": " Props’ open-source infrastructure creates a decentralized network of apps operated by independent developers, who share an underlying token, benefiting from collective network effects.",
-    "website": "https://www.propsproject.com",
-    "explorer": "https://etherscan.io/token/0x6fe56C0bcdD471359019FcBC48863d6c3e9d4F41",
-    "status": "active",
-    "id": "0x6fe56C0bcdD471359019FcBC48863d6c3e9d4F41"
+    "name":  "Props Token",
+    "symbol":  "PROPS",
+    "decimals":  18,
+    "description":  " Props’ open-source infrastructure creates a decentralized network of apps operated by independent developers, who share an underlying token, benefiting from collective network effects.",
+    "website":  "https://www.propsproject.com",
+    "explorer":  "https://etherscan.io/token/0x6fe56C0bcdD471359019FcBC48863d6c3e9d4F41",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6FE56C0BCDD471359019FCBC48863D6C3E9D4F41/logo.png",
+    "id":  "0x6fe56C0bcdD471359019FcBC48863d6c3e9d4F41"
 }

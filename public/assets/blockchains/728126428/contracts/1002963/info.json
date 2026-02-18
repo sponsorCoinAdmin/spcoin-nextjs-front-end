@@ -1,11 +1,11 @@
 {
-    "name": "TURBOTHUNDERPAY",
-    "symbol": "TTRP",
-    "type": "TRC10",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token/1002963",
-    "status": "spam",
-    "id": "1002963"
+    "name":  "TURBOTHUNDERPAY",
+    "symbol":  "TTRP",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token/1002963",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/1002963/logo.png",
+    "id":  "1002963"
 }

@@ -1,21 +1,21 @@
 {
-    "name": "Landwolf",
-    "type": "ERC20",
-    "symbol": "WOLF",
-    "decimals": 18,
-    "website": "https://boysclubwolf.com/",
-    "description": "Wolf is one of the Boy’s Club, best friends with Andy and Pepe",
-    "explorer": "https://etherscan.io/token/0x67466be17df832165f8c80a5a120ccc652bd7e69",
-    "status": "active",
-    "id": "0x67466BE17df832165F8C80a5A120CCc652bD7E69",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/Wolf0x67"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/landwolf-coin/"
-        }
-    ]
+    "name":  "Landwolf",
+    "symbol":  "WOLF",
+    "decimals":  18,
+    "website":  "https://boysclubwolf.com/",
+    "description":  "Wolf is one of the Boy’s Club, best friends with Andy and Pepe",
+    "explorer":  "https://etherscan.io/token/0x67466be17df832165f8c80a5a120ccc652bd7e69",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X67466BE17DF832165F8C80A5A120CCC652BD7E69/logo.png",
+    "id":  "0x67466BE17df832165F8C80a5A120CCc652bD7E69",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/Wolf0x67"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/landwolf-coin/"
+                  }
+              ]
 }

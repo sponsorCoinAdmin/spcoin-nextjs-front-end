@@ -1,11 +1,11 @@
 {
-    "name": "Honey",
-    "type": "XDAI",
-    "symbol": "HNY",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://blockscout.com/xdai/mainnet/contractss/0x71850b7E9Ee3f13Ab46d67167341E4bDc905Eef9",
-    "status": "active",
-    "id": "0x71850b7E9Ee3f13Ab46d67167341E4bDc905Eef9"
+    "name":  "Honey",
+    "symbol":  "HNY",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://blockscout.com/xdai/mainnet/contractss/0x71850b7E9Ee3f13Ab46d67167341E4bDc905Eef9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/100/contracts/0X71850B7E9EE3F13AB46D67167341E4BDC905EEF9/logo.png",
+    "id":  "0x71850b7E9Ee3f13Ab46d67167341E4bDc905Eef9"
 }

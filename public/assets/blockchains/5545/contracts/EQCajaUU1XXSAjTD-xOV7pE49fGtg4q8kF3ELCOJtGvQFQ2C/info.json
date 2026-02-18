@@ -1,15 +1,15 @@
 {
-    "address": "EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
-    "name": "Wrapped TON",
-    "type": "JETTON",
-    "symbol": "WTON",
-    "decimals": 9,
-    "description": "Wrapped TON Coin",
-    "status": "active",
-    "explorer": "https://tonscan.org/address/EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
-    "id": "EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
-    "website": "https://megaton.fi/",
-    "tags": [
-        "wrapped"
-    ]
+    "address":  "EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
+    "name":  "Wrapped TON",
+    "symbol":  "WTON",
+    "decimals":  9,
+    "description":  "Wrapped TON Coin",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/5545/contracts/EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C/logo.png",
+    "explorer":  "https://tonscan.org/address/EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
+    "id":  "EQCajaUU1XXSAjTD-xOV7pE49fGtg4q8kF3ELCOJtGvQFQ2C",
+    "website":  "https://megaton.fi/",
+    "tags":  [
+                 "wrapped"
+             ]
 }

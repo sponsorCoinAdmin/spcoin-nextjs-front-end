@@ -1,11 +1,11 @@
 {
-    "name": "CM - 1C565951",
-    "symbol": "CM",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xC69b72dd5ECa6e4d1FC2582279Fd5fC80aF71808",
-    "status": "spam",
-    "id": "0xC69b72dd5ECa6e4d1FC2582279Fd5fC80aF71808"
+    "name":  "CM - 1C565951",
+    "symbol":  "CM",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xC69b72dd5ECa6e4d1FC2582279Fd5fC80aF71808",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0XC69B72DD5ECA6E4D1FC2582279FD5FC80AF71808/logo.png",
+    "id":  "0xC69b72dd5ECa6e4d1FC2582279Fd5fC80aF71808"
 }

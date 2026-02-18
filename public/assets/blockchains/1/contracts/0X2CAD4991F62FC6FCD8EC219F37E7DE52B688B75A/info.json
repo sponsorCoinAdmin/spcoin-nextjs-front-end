@@ -1,11 +1,11 @@
 {
-    "name": "Schain Wallet",
-    "website": "https://schainwallet.com",
-    "description": "Schain Wallet is mobile defi wallet designed to help people staking and earn profit, storage, transfer coin & token with security and lower fees",
-    "explorer": "https://etherscan.io/token/0x2cAd4991f62fc6Fcd8EC219f37E7DE52B688B75A",
-    "type": "ERC20",
-    "symbol": "SCHA",
-    "decimals": 0,
-    "status": "active",
-    "id": "0x2cAd4991f62fc6Fcd8EC219f37E7DE52B688B75A"
+    "name":  "Schain Wallet",
+    "website":  "https://schainwallet.com",
+    "description":  "Schain Wallet is mobile defi wallet designed to help people staking and earn profit, storage, transfer coin \u0026 token with security and lower fees",
+    "explorer":  "https://etherscan.io/token/0x2cAd4991f62fc6Fcd8EC219f37E7DE52B688B75A",
+    "symbol":  "SCHA",
+    "decimals":  0,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2CAD4991F62FC6FCD8EC219F37E7DE52B688B75A/logo.png",
+    "id":  "0x2cAd4991f62fc6Fcd8EC219f37E7DE52B688B75A"
 }

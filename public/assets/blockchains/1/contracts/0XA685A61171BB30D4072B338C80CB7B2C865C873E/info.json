@@ -1,11 +1,11 @@
 {
-    "name": "Aave MANA",
-    "symbol": "aMANA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave MANA is an interest bearing token pegged 1:1 to the underlying MANA deposited in Aave. aMANA accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0xa685a61171bb30d4072B338c80Cb7b2c865c873E",
-    "status": "active",
-    "id": "0xa685a61171bb30d4072B338c80Cb7b2c865c873E"
+    "name":  "Aave MANA",
+    "symbol":  "aMANA",
+    "decimals":  18,
+    "description":  "Aave MANA is an interest bearing token pegged 1:1 to the underlying MANA deposited in Aave. aMANA accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0xa685a61171bb30d4072B338c80Cb7b2c865c873E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA685A61171BB30D4072B338C80CB7B2C865C873E/logo.png",
+    "id":  "0xa685a61171bb30d4072B338c80Cb7b2c865c873E"
 }

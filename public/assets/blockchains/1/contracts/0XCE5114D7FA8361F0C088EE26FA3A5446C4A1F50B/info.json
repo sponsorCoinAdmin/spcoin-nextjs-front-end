@@ -1,11 +1,11 @@
 {
-    "name": "Blue Whale eXchange",
-    "symbol": "BWX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Our Blueprint for Decentralized Sharing Economy and Smart City Engine!",
-    "website": "https://www.bluewhale.foundation",
-    "explorer": "https://etherscan.io/token/0xce5114d7fa8361F0c088EE26FA3A5446C4a1f50b",
-    "status": "active",
-    "id": "0xce5114d7fa8361F0c088EE26FA3A5446C4a1f50b"
+    "name":  "Blue Whale eXchange",
+    "symbol":  "BWX",
+    "decimals":  18,
+    "description":  "Our Blueprint for Decentralized Sharing Economy and Smart City Engine!",
+    "website":  "https://www.bluewhale.foundation",
+    "explorer":  "https://etherscan.io/token/0xce5114d7fa8361F0c088EE26FA3A5446C4a1f50b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XCE5114D7FA8361F0C088EE26FA3A5446C4A1F50B/logo.png",
+    "id":  "0xce5114d7fa8361F0c088EE26FA3A5446C4a1f50b"
 }

@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Larry Fine",
     "symbol":  "LARRY",
     "address":  "0X0000000000000000000000000000000000000084",
     "website":  "",
     "description":  "This is the description for site LarryFine",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000084/logo.png",
     "status":  "test"
 }
+

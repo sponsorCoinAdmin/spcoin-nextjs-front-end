@@ -1,11 +1,11 @@
 {
-    "name": "RedRabbitToken",
-    "symbol": "REDRA",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x7D2D8ad6d6c689B583fBd91f7b54C4395815de30",
-    "status": "spam",
-    "id": "0x7D2D8ad6d6c689B583fBd91f7b54C4395815de30"
+    "name":  "RedRabbitToken",
+    "symbol":  "REDRA",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x7D2D8ad6d6c689B583fBd91f7b54C4395815de30",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X7D2D8AD6D6C689B583FBD91F7B54C4395815DE30/logo.png",
+    "id":  "0x7D2D8ad6d6c689B583fBd91f7b54C4395815de30"
 }

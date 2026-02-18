@@ -1,11 +1,11 @@
 {
-    "name": "Chicken",
-    "website": "https://chickenswap.org/#/",
-    "description": "KFC token has a swap business.",
-    "explorer": "https://etherscan.io/token/0xE63684BcF2987892CEfB4caA79BD21b34e98A291",
-    "type": "ERC20",
-    "symbol": "KFC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xE63684BcF2987892CEfB4caA79BD21b34e98A291"
+    "name":  "Chicken",
+    "website":  "https://chickenswap.org/#/",
+    "description":  "KFC token has a swap business.",
+    "explorer":  "https://etherscan.io/token/0xE63684BcF2987892CEfB4caA79BD21b34e98A291",
+    "symbol":  "KFC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE63684BCF2987892CEFB4CAA79BD21B34E98A291/logo.png",
+    "id":  "0xE63684BcF2987892CEfB4caA79BD21b34e98A291"
 }

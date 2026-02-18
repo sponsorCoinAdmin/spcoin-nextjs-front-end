@@ -1,11 +1,11 @@
 {
-    "name": "Ether Klown",
-    "symbol": "KLOWN2",
-    "type": "ETC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x2B682bd9d5c31E67a95cbdF0292017C02E51923C",
-    "status": "active",
-    "id": "0x2B682bd9d5c31E67a95cbdF0292017C02E51923C"
+    "name":  "Ether Klown",
+    "symbol":  "KLOWN2",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x2B682bd9d5c31E67a95cbdF0292017C02E51923C",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X2B682BD9D5C31E67A95CBDF0292017C02E51923C/logo.png",
+    "id":  "0x2B682bd9d5c31E67a95cbdF0292017C02E51923C"
 }

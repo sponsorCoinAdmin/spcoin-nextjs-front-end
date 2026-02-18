@@ -1,14 +1,14 @@
 {
-    "name": "FOR",
-    "website": "https://theforceprotocol.com/",
-    "description": "The Force Token (FOR) is a utility token, it is the governance token of ForTube system.",
-    "explorer": "https://etherscan.io/token/0x1FCdcE58959f536621d76f5b7FfB955baa5A672F",
-    "type": "ERC20",
-    "symbol": "FOR",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x1FCdcE58959f536621d76f5b7FfB955baa5A672F",
-    "tags": [
-        "governance"
-    ]
+    "name":  "FOR",
+    "website":  "https://theforceprotocol.com/",
+    "description":  "The Force Token (FOR) is a utility token, it is the governance token of ForTube system.",
+    "explorer":  "https://etherscan.io/token/0x1FCdcE58959f536621d76f5b7FfB955baa5A672F",
+    "symbol":  "FOR",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1FCDCE58959F536621D76F5B7FFB955BAA5A672F/logo.png",
+    "id":  "0x1FCdcE58959f536621d76f5b7FfB955baa5A672F",
+    "tags":  [
+                 "governance"
+             ]
 }

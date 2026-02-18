@@ -1,36 +1,36 @@
 {
-    "name": "Cherry Token",
-    "website": "https://cherry.network",
-    "description": "Trustless, distributed storage for decentralized applications",
-    "explorer": "https://polygonscan.com/token/0x8f36Cc333F55B09Bb71091409A3d7ADE399e3b1C",
-    "type": "POLYGON",
-    "symbol": "CHER",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x8f36Cc333F55B09Bb71091409A3d7ADE399e3b1C",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/cherrynetwork"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/cherry_network"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/cherrynetwork"
-        },
-        {
-            "name": "medium",
-            "url": "https://medium.com/@cherryproject"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/cherry-network"
-        }
-    ],
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "Cherry Token",
+    "website":  "https://cherry.network",
+    "description":  "Trustless, distributed storage for decentralized applications",
+    "explorer":  "https://polygonscan.com/token/0x8f36Cc333F55B09Bb71091409A3d7ADE399e3b1C",
+    "symbol":  "CHER",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/137/contracts/0X8F36CC333F55B09BB71091409A3D7ADE399E3B1C/logo.png",
+    "id":  "0x8f36Cc333F55B09Bb71091409A3d7ADE399e3b1C",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/cherrynetwork"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/cherry_network"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/cherrynetwork"
+                  },
+                  {
+                      "name":  "medium",
+                      "url":  "https://medium.com/@cherryproject"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/cherry-network"
+                  }
+              ],
+    "tags":  [
+                 "wrapped"
+             ]
 }

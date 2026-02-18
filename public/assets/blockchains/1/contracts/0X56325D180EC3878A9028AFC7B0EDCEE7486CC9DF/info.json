@@ -1,11 +1,11 @@
 {
-    "name": "Fountain 3",
-    "symbol": "FTN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x56325d180Ec3878A9028AfC7B0EDCEe7486Cc9df",
-    "status": "active",
-    "id": "0x56325d180Ec3878A9028AfC7B0EDCEe7486Cc9df"
+    "name":  "Fountain 3",
+    "symbol":  "FTN",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x56325d180Ec3878A9028AfC7B0EDCEe7486Cc9df",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X56325D180EC3878A9028AFC7B0EDCEE7486CC9DF/logo.png",
+    "id":  "0x56325d180Ec3878A9028AfC7B0EDCEe7486Cc9df"
 }

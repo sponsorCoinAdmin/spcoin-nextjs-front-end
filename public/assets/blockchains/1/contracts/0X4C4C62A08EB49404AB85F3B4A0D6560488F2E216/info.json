@@ -1,11 +1,11 @@
 {
-    "name": "Sparkles Light",
-    "symbol": "Spark",
-    "type": "ERC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x4c4c62A08eb49404aB85f3b4A0d6560488f2E216",
-    "status": "spam",
-    "id": "0x4c4c62A08eb49404aB85f3b4A0d6560488f2E216"
+    "name":  "Sparkles Light",
+    "symbol":  "Spark",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x4c4c62A08eb49404aB85f3b4A0d6560488f2E216",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X4C4C62A08EB49404AB85F3B4A0D6560488F2E216/logo.png",
+    "id":  "0x4c4c62A08eb49404aB85f3b4A0d6560488f2E216"
 }

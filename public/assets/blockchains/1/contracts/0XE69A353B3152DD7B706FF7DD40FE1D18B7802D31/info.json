@@ -1,11 +1,11 @@
 {
-    "name": "AdHive Token",
-    "symbol": "ADH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "AdHive is the World's first AI-controlled Influencer Marketing platform.",
-    "website": "https://adhive.tv",
-    "explorer": "https://etherscan.io/token/0xE69a353b3152Dd7b706ff7dD40fe1d18b7802d31",
-    "status": "active",
-    "id": "0xE69a353b3152Dd7b706ff7dD40fe1d18b7802d31"
+    "name":  "AdHive Token",
+    "symbol":  "ADH",
+    "decimals":  18,
+    "description":  "AdHive is the World\u0027s first AI-controlled Influencer Marketing platform.",
+    "website":  "https://adhive.tv",
+    "explorer":  "https://etherscan.io/token/0xE69a353b3152Dd7b706ff7dD40fe1d18b7802d31",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE69A353B3152DD7B706FF7DD40FE1D18B7802D31/logo.png",
+    "id":  "0xE69a353b3152Dd7b706ff7dD40fe1d18b7802d31"
 }

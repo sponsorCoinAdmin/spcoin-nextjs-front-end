@@ -1,14 +1,14 @@
 {
-    "name": "Tether USD (Portal from Solana)",
-    "symbol": "USDTso",
-    "type": "AVALANCHE",
-    "decimals": 6,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://tether.to/",
-    "explorer": "https://snowtrace.io/token/0xF0FF231e3F1A50F83136717f287ADAB862f89431",
-    "status": "active",
-    "id": "0xF0FF231e3F1A50F83136717f287ADAB862f89431",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "Tether USD (Portal from Solana)",
+    "symbol":  "USDTso",
+    "decimals":  6,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://tether.to/",
+    "explorer":  "https://snowtrace.io/token/0xF0FF231e3F1A50F83136717f287ADAB862f89431",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XF0FF231E3F1A50F83136717F287ADAB862F89431/logo.png",
+    "id":  "0xF0FF231e3F1A50F83136717f287ADAB862f89431",
+    "tags":  [
+                 "wrapped"
+             ]
 }

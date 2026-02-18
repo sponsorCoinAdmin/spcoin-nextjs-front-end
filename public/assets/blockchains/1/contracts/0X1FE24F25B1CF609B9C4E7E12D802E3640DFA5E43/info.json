@@ -1,17 +1,17 @@
 {
-    "name": "ChainGuardians Governance Token",
-    "website": "https://chainguardians.io",
-    "description": "ChainGuardians Blockchain Video Game Defi Platform.",
-    "explorer": "https://etherscan.io/token/0x1fe24f25b1cf609b9c4e7e12d802e3640dfa5e43",
-    "type": "ERC20",
-    "symbol": "CGG",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x1fE24F25b1Cf609B9c4e7E12D802e3640dFA5e43",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/chainguardians"
-        }
-    ]
+    "name":  "ChainGuardians Governance Token",
+    "website":  "https://chainguardians.io",
+    "description":  "ChainGuardians Blockchain Video Game Defi Platform.",
+    "explorer":  "https://etherscan.io/token/0x1fe24f25b1cf609b9c4e7e12d802e3640dfa5e43",
+    "symbol":  "CGG",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1FE24F25B1CF609B9C4E7E12D802E3640DFA5E43/logo.png",
+    "id":  "0x1fE24F25b1Cf609B9c4e7E12D802e3640dFA5e43",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/chainguardians"
+                  }
+              ]
 }

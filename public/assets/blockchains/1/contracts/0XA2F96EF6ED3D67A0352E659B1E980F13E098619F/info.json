@@ -1,11 +1,11 @@
 {
-    "name": "Random Number Generator",
-    "symbol": "RNG",
-    "type": "ERC20",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xa2f96EF6ed3d67A0352e659B1E980f13e098619F",
-    "status": "active",
-    "id": "0xa2f96EF6ed3d67A0352e659B1E980f13e098619F"
+    "name":  "Random Number Generator",
+    "symbol":  "RNG",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xa2f96EF6ed3d67A0352e659B1E980f13e098619F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA2F96EF6ED3D67A0352E659B1E980F13E098619F/logo.png",
+    "id":  "0xa2f96EF6ed3d67A0352e659B1E980f13e098619F"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "TrueCAD",
-    "symbol": "TCADB",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "We're on a mission to open access to financial opportunities and global trade",
-    "website": "https://trusttoken.com",
-    "explorer": "https://explorer.binance.org/asset/TCADB-888",
-    "status": "active",
-    "id": "TCADB-888"
+    "name":  "TrueCAD",
+    "symbol":  "TCADB",
+    "decimals":  8,
+    "description":  "We\u0027re on a mission to open access to financial opportunities and global trade",
+    "website":  "https://trusttoken.com",
+    "explorer":  "https://explorer.binance.org/asset/TCADB-888",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/TCADB-888/logo.png",
+    "id":  "TCADB-888"
 }

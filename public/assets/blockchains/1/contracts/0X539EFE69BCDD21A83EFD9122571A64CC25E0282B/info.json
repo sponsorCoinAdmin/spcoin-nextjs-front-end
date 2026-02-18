@@ -1,11 +1,11 @@
 {
-    "name": "Ethereum Blue",
-    "symbol": "BLUE",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Decentralized 2-Factor Authentication, Blacklisting, Whitelisting, Auto Smart Contract Scanning, & more.",
-    "website": "https://www.blueprotocol.com/",
-    "explorer": "https://etherscan.io/token/0x539EfE69bCDd21a83eFD9122571a64CC25e0282b",
-    "status": "active",
-    "id": "0x539EfE69bCDd21a83eFD9122571a64CC25e0282b"
+    "name":  "Ethereum Blue",
+    "symbol":  "BLUE",
+    "decimals":  8,
+    "description":  "Decentralized 2-Factor Authentication, Blacklisting, Whitelisting, Auto Smart Contract Scanning, \u0026 more.",
+    "website":  "https://www.blueprotocol.com/",
+    "explorer":  "https://etherscan.io/token/0x539EfE69bCDd21a83eFD9122571a64CC25e0282b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X539EFE69BCDD21A83EFD9122571A64CC25E0282B/logo.png",
+    "id":  "0x539EfE69bCDd21a83eFD9122571a64CC25e0282b"
 }

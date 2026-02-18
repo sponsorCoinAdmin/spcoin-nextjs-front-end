@@ -1,11 +1,11 @@
 {
-    "name": "EOS",
-    "type": "ERC20",
-    "symbol": "EOS",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0",
-    "status": "active",
-    "id": "0x86Fa049857E0209aa7D9e616F7eb3b3B78ECfdb0"
+    "name":  "EOS",
+    "symbol":  "EOS",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X86FA049857E0209AA7D9E616F7EB3B3B78ECFDB0/logo.png",
+    "id":  "0x86Fa049857E0209aa7D9e616F7eb3b3B78ECfdb0"
 }

@@ -1,25 +1,25 @@
 {
-    "name": "Moola Market",
-    "website": "https://www.moola.market/",
-    "description": "Moola is a non-custodial liquidity protocol built on the Celo blockchain that is democratizing access to yield and credit.",
-    "explorer": "https://explorer.celo.org/mainnet/address/0x17700282592D6917F6A73D0bF8AcCf4D578c131e",
-    "type": "CELO",
-    "symbol": "MOO",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x17700282592D6917F6A73D0bF8AcCf4D578c131e",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/moola-celo-usd/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/Moola_Market"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/moolamarket"
-        }
-    ]
+    "name":  "Moola Market",
+    "website":  "https://www.moola.market/",
+    "description":  "Moola is a non-custodial liquidity protocol built on the Celo blockchain that is democratizing access to yield and credit.",
+    "explorer":  "https://explorer.celo.org/mainnet/address/0x17700282592D6917F6A73D0bF8AcCf4D578c131e",
+    "symbol":  "MOO",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/42220/contracts/0X17700282592D6917F6A73D0BF8ACCF4D578C131E/logo.png",
+    "id":  "0x17700282592D6917F6A73D0bF8AcCf4D578c131e",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/moola-celo-usd/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/Moola_Market"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/moolamarket"
+                  }
+              ]
 }

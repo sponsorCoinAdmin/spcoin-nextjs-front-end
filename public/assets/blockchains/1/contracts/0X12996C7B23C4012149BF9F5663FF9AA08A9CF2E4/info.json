@@ -1,21 +1,21 @@
 {
-    "name": "White Yorkshire",
-    "type": "ERC20",
-    "symbol": "WSH",
-    "decimals": 18,
-    "website": "https://wsh-token.com/",
-    "description": "White Yorkshire (WSH) is a meme-themed cryptocurrency project that aims to combine the charm of memes with the innovation of blockchain technology.",
-    "explorer": "https://etherscan.io/token/0x12996C7B23c4012149bf9F5663FF9Aa08A9cF2E4",
-    "status": "active",
-    "id": "0x12996C7B23c4012149bf9F5663FF9Aa08A9cF2E4",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/WshToken"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/wsh_token"
-        }
-    ]
+    "name":  "White Yorkshire",
+    "symbol":  "WSH",
+    "decimals":  18,
+    "website":  "https://wsh-token.com/",
+    "description":  "White Yorkshire (WSH) is a meme-themed cryptocurrency project that aims to combine the charm of memes with the innovation of blockchain technology.",
+    "explorer":  "https://etherscan.io/token/0x12996C7B23c4012149bf9F5663FF9Aa08A9cF2E4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X12996C7B23C4012149BF9F5663FF9AA08A9CF2E4/logo.png",
+    "id":  "0x12996C7B23c4012149bf9F5663FF9Aa08A9cF2E4",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/WshToken"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/wsh_token"
+                  }
+              ]
 }

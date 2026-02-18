@@ -1,11 +1,11 @@
 {
-    "name": "e-Money EUR stablecoin",
-    "website": "https://e-money.com",
-    "description": "ERC20 version of the e-Money EUR stablecoin",
-    "explorer": "https://etherscan.io/token/0x0BaDD7aF129EFAc1f7bB7253716A589cc5E6c17c",
-    "type": "ERC20",
-    "symbol": "EEUR",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x0BaDD7aF129EFAc1f7bB7253716A589cc5E6c17c"
+    "name":  "e-Money EUR stablecoin",
+    "website":  "https://e-money.com",
+    "description":  "ERC20 version of the e-Money EUR stablecoin",
+    "explorer":  "https://etherscan.io/token/0x0BaDD7aF129EFAc1f7bB7253716A589cc5E6c17c",
+    "symbol":  "EEUR",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0BADD7AF129EFAC1F7BB7253716A589CC5E6C17C/logo.png",
+    "id":  "0x0BaDD7aF129EFAc1f7bB7253716A589cc5E6c17c"
 }

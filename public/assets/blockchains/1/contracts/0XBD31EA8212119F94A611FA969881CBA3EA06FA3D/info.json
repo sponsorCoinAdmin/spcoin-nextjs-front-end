@@ -1,14 +1,14 @@
 {
-    "name": "LUNA (Portal)",
-    "type": "ERC20",
-    "symbol": "LUNA",
-    "decimals": 6,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://terra.money",
-    "explorer": "https://etherscan.io/token/0xbd31EA8212119f94A611FA969881CBa3EA06Fa3d",
-    "status": "active",
-    "id": "0xbd31EA8212119f94A611FA969881CBa3EA06Fa3d",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "LUNA (Portal)",
+    "symbol":  "LUNA",
+    "decimals":  6,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://terra.money",
+    "explorer":  "https://etherscan.io/token/0xbd31EA8212119f94A611FA969881CBa3EA06Fa3d",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBD31EA8212119F94A611FA969881CBA3EA06FA3D/logo.png",
+    "id":  "0xbd31EA8212119f94A611FA969881CBa3EA06Fa3d",
+    "tags":  [
+                 "wrapped"
+             ]
 }

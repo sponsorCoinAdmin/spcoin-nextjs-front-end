@@ -1,11 +1,11 @@
 {
-    "name": "LHO Token",
-    "symbol": "LHO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xAC65dc06C8444C6545A94Ce961496258Aa860Cb9",
-    "status": "spam",
-    "id": "0xAC65dc06C8444C6545A94Ce961496258Aa860Cb9"
+    "name":  "LHO Token",
+    "symbol":  "LHO",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xAC65dc06C8444C6545A94Ce961496258Aa860Cb9",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0XAC65DC06C8444C6545A94CE961496258AA860CB9/logo.png",
+    "id":  "0xAC65dc06C8444C6545A94Ce961496258Aa860Cb9"
 }

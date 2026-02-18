@@ -1,11 +1,11 @@
 {
-    "name": "Big Oily Orange Boob",
-    "type": "ERC20",
-    "symbol": "$BOOB",
-    "decimals": 9,
-    "website": "https://coinboob.com",
-    "description": "Big Oily Orange Boob ($BOOB) is an innovative community token with a serious motive: we intend to raise awareness & funds for breast cancer. Indeed, women have been left out of most projects so far. Buy building partnerships with influent female role model, we will change that.",
-    "explorer": "https://etherscan.io/token/0xca5f1Bd4B47ECe13a7ca753202F284D9Edd85d8A",
-    "status": "active",
-    "id": "0xca5f1Bd4B47ECe13a7ca753202F284D9Edd85d8A"
+    "name":  "Big Oily Orange Boob",
+    "symbol":  "$BOOB",
+    "decimals":  9,
+    "website":  "https://coinboob.com",
+    "description":  "Big Oily Orange Boob ($BOOB) is an innovative community token with a serious motive: we intend to raise awareness \u0026 funds for breast cancer. Indeed, women have been left out of most projects so far. Buy building partnerships with influent female role model, we will change that.",
+    "explorer":  "https://etherscan.io/token/0xca5f1Bd4B47ECe13a7ca753202F284D9Edd85d8A",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XCA5F1BD4B47ECE13A7CA753202F284D9EDD85D8A/logo.png",
+    "id":  "0xca5f1Bd4B47ECe13a7ca753202F284D9Edd85d8A"
 }

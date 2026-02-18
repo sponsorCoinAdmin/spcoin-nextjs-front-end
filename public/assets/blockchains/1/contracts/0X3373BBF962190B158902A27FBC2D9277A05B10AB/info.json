@@ -1,11 +1,11 @@
 {
-    "name": "EGOLD",
-    "symbol": "EGD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x3373bbF962190B158902A27Fbc2d9277A05b10Ab",
-    "status": "active",
-    "id": "0x3373bbF962190B158902A27Fbc2d9277A05b10Ab"
+    "name":  "EGOLD",
+    "symbol":  "EGD",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x3373bbF962190B158902A27Fbc2d9277A05b10Ab",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3373BBF962190B158902A27FBC2D9277A05B10AB/logo.png",
+    "id":  "0x3373bbF962190B158902A27Fbc2d9277A05b10Ab"
 }

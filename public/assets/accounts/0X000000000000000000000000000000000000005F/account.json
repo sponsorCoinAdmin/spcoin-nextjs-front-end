@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Make America Great Again",
     "symbol":  "MAGA",
-    "address":  "0X000000000000000000000000000000000000005f",
+    "address":  "0X000000000000000000000000000000000000005F",
     "website":  "",
     "description":  "This is the description for site Trump2",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000005F/logo.png",
     "status":  "test"
 }

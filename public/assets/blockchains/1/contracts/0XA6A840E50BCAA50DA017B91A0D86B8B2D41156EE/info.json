@@ -1,11 +1,11 @@
 {
-    "name": "EchoLink",
-    "symbol": "EKO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "EKO is a blockchain based system that provides verified education, skill, and work experience information.",
-    "website": "https://echolink.info",
-    "explorer": "https://etherscan.io/token/0xa6a840E50bCaa50dA017b91A0D86B8b2d41156EE",
-    "status": "active",
-    "id": "0xa6a840E50bCaa50dA017b91A0D86B8b2d41156EE"
+    "name":  "EchoLink",
+    "symbol":  "EKO",
+    "decimals":  18,
+    "description":  "EKO is a blockchain based system that provides verified education, skill, and work experience information.",
+    "website":  "https://echolink.info",
+    "explorer":  "https://etherscan.io/token/0xa6a840E50bCaa50dA017b91A0D86B8b2d41156EE",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA6A840E50BCAA50DA017B91A0D86B8B2D41156EE/logo.png",
+    "id":  "0xa6a840E50bCaa50dA017b91A0D86B8b2d41156EE"
 }

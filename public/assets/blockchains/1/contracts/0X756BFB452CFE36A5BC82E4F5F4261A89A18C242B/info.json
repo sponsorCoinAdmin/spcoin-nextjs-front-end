@@ -1,14 +1,14 @@
 {
-    "name": "Marinade staked SOL (Portal)",
-    "type": "ERC20",
-    "symbol": "mSOL",
-    "decimals": 9,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://marinade.finance/",
-    "explorer": "https://etherscan.io/token/0x756bFb452cFE36A5Bc82e4F5f4261A89a18c242b",
-    "status": "active",
-    "id": "0x756bFb452cFE36A5Bc82e4F5f4261A89a18c242b",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "Marinade staked SOL (Portal)",
+    "symbol":  "mSOL",
+    "decimals":  9,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://marinade.finance/",
+    "explorer":  "https://etherscan.io/token/0x756bFb452cFE36A5Bc82e4F5f4261A89a18c242b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X756BFB452CFE36A5BC82E4F5F4261A89A18C242B/logo.png",
+    "id":  "0x756bFb452cFE36A5Bc82e4F5f4261A89a18c242b",
+    "tags":  [
+                 "wrapped"
+             ]
 }

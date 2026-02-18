@@ -1,11 +1,11 @@
 {
-    "name": "Monolith TKN",
-    "symbol": "TKN",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Monolith is an Ethereum-powered solution allowing users to spend ETH and ERC-20 in real-life, the way users are used to: with a debit card accepted anywhere.",
-    "website": "https://monolith.xyz",
-    "explorer": "https://etherscan.io/token/0xaAAf91D9b90dF800Df4F55c205fd6989c977E73a",
-    "status": "active",
-    "id": "0xaAAf91D9b90dF800Df4F55c205fd6989c977E73a"
+    "name":  "Monolith TKN",
+    "symbol":  "TKN",
+    "decimals":  8,
+    "description":  "Monolith is an Ethereum-powered solution allowing users to spend ETH and ERC-20 in real-life, the way users are used to: with a debit card accepted anywhere.",
+    "website":  "https://monolith.xyz",
+    "explorer":  "https://etherscan.io/token/0xaAAf91D9b90dF800Df4F55c205fd6989c977E73a",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAAAF91D9B90DF800DF4F55C205FD6989C977E73A/logo.png",
+    "id":  "0xaAAf91D9b90dF800Df4F55c205fd6989c977E73a"
 }

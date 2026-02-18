@@ -1,11 +1,11 @@
 {
-    "name": "openANX Token",
-    "symbol": "OAX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Developing and promoting a sustainable digital asset ecosystem for the future.",
-    "website": "https://www.oax.org",
-    "explorer": "https://etherscan.io/token/0x701C244b988a513c945973dEFA05de933b23Fe1D",
-    "status": "active",
-    "id": "0x701C244b988a513c945973dEFA05de933b23Fe1D"
+    "name":  "openANX Token",
+    "symbol":  "OAX",
+    "decimals":  18,
+    "description":  "Developing and promoting a sustainable digital asset ecosystem for the future.",
+    "website":  "https://www.oax.org",
+    "explorer":  "https://etherscan.io/token/0x701C244b988a513c945973dEFA05de933b23Fe1D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X701C244B988A513C945973DEFA05DE933B23FE1D/logo.png",
+    "id":  "0x701C244b988a513c945973dEFA05de933b23Fe1D"
 }

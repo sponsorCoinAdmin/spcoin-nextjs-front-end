@@ -1,11 +1,11 @@
 {
-    "name": "DEX",
-    "symbol": "DEX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "DEX is issued by CoinBit's Mining Exchange.",
-    "website": "https://www.coinbit.co.kr/",
-    "explorer": "https://etherscan.io/token/0x497bAEF294c11a5f0f5Bea3f2AdB3073DB448B56",
-    "status": "active",
-    "id": "0x497bAEF294c11a5f0f5Bea3f2AdB3073DB448B56"
+    "name":  "DEX",
+    "symbol":  "DEX",
+    "decimals":  18,
+    "description":  "DEX is issued by CoinBit\u0027s Mining Exchange.",
+    "website":  "https://www.coinbit.co.kr/",
+    "explorer":  "https://etherscan.io/token/0x497bAEF294c11a5f0f5Bea3f2AdB3073DB448B56",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X497BAEF294C11A5F0F5BEA3F2ADB3073DB448B56/logo.png",
+    "id":  "0x497bAEF294c11a5f0f5Bea3f2AdB3073DB448B56"
 }

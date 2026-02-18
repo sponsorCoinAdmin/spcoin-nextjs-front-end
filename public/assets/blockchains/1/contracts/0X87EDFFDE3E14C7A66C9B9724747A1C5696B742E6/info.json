@@ -1,11 +1,11 @@
 {
-    "name": "Swag Token",
-    "website": "https://swag.finance",
-    "description": "Decentralizing the Global Adult Entertainment Industry",
-    "explorer": "https://etherscan.io/token/0x87eDfFDe3E14c7a66c9b9724747a1C5696b742e6",
-    "type": "ERC20",
-    "symbol": "SWAG",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x87eDfFDe3E14c7a66c9b9724747a1C5696b742e6"
+    "name":  "Swag Token",
+    "website":  "https://swag.finance",
+    "description":  "Decentralizing the Global Adult Entertainment Industry",
+    "explorer":  "https://etherscan.io/token/0x87eDfFDe3E14c7a66c9b9724747a1C5696b742e6",
+    "symbol":  "SWAG",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X87EDFFDE3E14C7A66C9B9724747A1C5696B742E6/logo.png",
+    "id":  "0x87eDfFDe3E14c7a66c9b9724747a1C5696b742e6"
 }

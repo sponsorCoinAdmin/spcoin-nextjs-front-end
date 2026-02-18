@@ -1,11 +1,11 @@
 {
-    "name": "QuadrantProtocol",
-    "symbol": "eQUAD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Quadrant Protocol is the engine that powers Quadrant's data mapping capabilities.",
-    "website": "https://www.quadrantprotocol.com/#",
-    "explorer": "https://etherscan.io/token/0xC28e931814725BbEB9e670676FaBBCb694Fe7DF2",
-    "status": "active",
-    "id": "0xC28e931814725BbEB9e670676FaBBCb694Fe7DF2"
+    "name":  "QuadrantProtocol",
+    "symbol":  "eQUAD",
+    "decimals":  18,
+    "description":  "Quadrant Protocol is the engine that powers Quadrant\u0027s data mapping capabilities.",
+    "website":  "https://www.quadrantprotocol.com/#",
+    "explorer":  "https://etherscan.io/token/0xC28e931814725BbEB9e670676FaBBCb694Fe7DF2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC28E931814725BBEB9E670676FABBCB694FE7DF2/logo.png",
+    "id":  "0xC28e931814725BbEB9e670676FaBBCb694Fe7DF2"
 }

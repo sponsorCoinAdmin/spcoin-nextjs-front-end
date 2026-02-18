@@ -1,24 +1,24 @@
 {
-    "name": "BEND Token",
-    "website": "https://www.benddao.xyz/",
-    "description": "BEND is the governance token of BendDAO which is a peer-to-pool based NFT liquidity protocol.",
-    "explorer": "https://etherscan.io/token/0x0d02755a5700414B26FF040e1dE35D337DF56218",
-    "type": "ERC20",
-    "symbol": "BEND",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x0d02755a5700414B26FF040e1dE35D337DF56218",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/BendDAO"
-        },
-        {
-            "name": "github",
-            "url": "https://github.com/BendDAO/"
-        }
-    ],
-    "tags": [
-        "nft"
-    ]
+    "name":  "BEND Token",
+    "website":  "https://www.benddao.xyz/",
+    "description":  "BEND is the governance token of BendDAO which is a peer-to-pool based NFT liquidity protocol.",
+    "explorer":  "https://etherscan.io/token/0x0d02755a5700414B26FF040e1dE35D337DF56218",
+    "symbol":  "BEND",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0D02755A5700414B26FF040E1DE35D337DF56218/logo.png",
+    "id":  "0x0d02755a5700414B26FF040e1dE35D337DF56218",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/BendDAO"
+                  },
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/BendDAO/"
+                  }
+              ],
+    "tags":  [
+                 "nft"
+             ]
 }

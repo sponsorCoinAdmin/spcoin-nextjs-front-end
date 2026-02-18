@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Judy\u0027s Leukemia",
     "symbol":  "JUDY",
-    "address":  "0X000000000000000000000000000000000000005c",
+    "address":  "0X000000000000000000000000000000000000005C",
     "website":  "",
     "description":  "This is the description for site SickGirl",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000005C/logo.png",
     "status":  "test"
 }

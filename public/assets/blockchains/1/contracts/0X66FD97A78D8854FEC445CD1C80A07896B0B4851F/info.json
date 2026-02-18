@@ -1,11 +1,11 @@
 {
-    "name": "Lunch Money",
-    "symbol": "LMY",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Lunch Money is an ERC20 token built on the Ethereum Blockchain.",
-    "website": "http://lunchmoney.io",
-    "explorer": "https://etherscan.io/token/0x66fD97a78d8854fEc445cd1C80a07896B0b4851f",
-    "status": "active",
-    "id": "0x66fD97a78d8854fEc445cd1C80a07896B0b4851f"
+    "name":  "Lunch Money",
+    "symbol":  "LMY",
+    "decimals":  18,
+    "description":  "Lunch Money is an ERC20 token built on the Ethereum Blockchain.",
+    "website":  "http://lunchmoney.io",
+    "explorer":  "https://etherscan.io/token/0x66fD97a78d8854fEc445cd1C80a07896B0b4851f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X66FD97A78D8854FEC445CD1C80A07896B0B4851F/logo.png",
+    "id":  "0x66fD97a78d8854fEc445cd1C80a07896B0b4851f"
 }

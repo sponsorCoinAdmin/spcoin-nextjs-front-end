@@ -1,11 +1,11 @@
 {
-    "name": "Qelax",
-    "symbol": "QLXG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x4fab5005176F5E4c00988623c35107cCB40dC19D",
-    "status": "active",
-    "id": "0x4fab5005176F5E4c00988623c35107cCB40dC19D"
+    "name":  "Qelax",
+    "symbol":  "QLXG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x4fab5005176F5E4c00988623c35107cCB40dC19D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X4FAB5005176F5E4C00988623C35107CCB40DC19D/logo.png",
+    "id":  "0x4fab5005176F5E4c00988623c35107cCB40dC19D"
 }

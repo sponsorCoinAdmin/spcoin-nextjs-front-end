@@ -1,11 +1,11 @@
 {
-    "name": "ClearCoin",
-    "symbol": "XCLR",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "ClearCoin makes buying and selling of media on the blockchain simple and seamless. Its platform powers a system allowing for complete data transparency everyone can trust.",
-    "website": "http://clearcoin.co",
-    "explorer": "https://etherscan.io/token/0x1E26b3D07E57F453caE30F7DDd2f945f5bF3EF33",
-    "status": "active",
-    "id": "0x1E26b3D07E57F453caE30F7DDd2f945f5bF3EF33"
+    "name":  "ClearCoin",
+    "symbol":  "XCLR",
+    "decimals":  8,
+    "description":  "ClearCoin makes buying and selling of media on the blockchain simple and seamless. Its platform powers a system allowing for complete data transparency everyone can trust.",
+    "website":  "http://clearcoin.co",
+    "explorer":  "https://etherscan.io/token/0x1E26b3D07E57F453caE30F7DDd2f945f5bF3EF33",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1E26B3D07E57F453CAE30F7DDD2F945F5BF3EF33/logo.png",
+    "id":  "0x1E26b3D07E57F453caE30F7DDd2f945f5bF3EF33"
 }

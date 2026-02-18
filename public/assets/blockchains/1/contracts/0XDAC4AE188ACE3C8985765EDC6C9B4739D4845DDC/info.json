@@ -1,11 +1,11 @@
 {
-    "name": "InterValue",
-    "symbol": "INVE",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "http://www.inve.one",
-    "explorer": "https://etherscan.io/token/0xDAC4AE188AcE3C8985765eDc6C9B4739D4845DdC",
-    "status": "active",
-    "id": "0xDAC4AE188AcE3C8985765eDc6C9B4739D4845DdC"
+    "name":  "InterValue",
+    "symbol":  "INVE",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "http://www.inve.one",
+    "explorer":  "https://etherscan.io/token/0xDAC4AE188AcE3C8985765eDc6C9B4739D4845DdC",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XDAC4AE188ACE3C8985765EDC6C9B4739D4845DDC/logo.png",
+    "id":  "0xDAC4AE188AcE3C8985765eDc6C9B4739D4845DdC"
 }

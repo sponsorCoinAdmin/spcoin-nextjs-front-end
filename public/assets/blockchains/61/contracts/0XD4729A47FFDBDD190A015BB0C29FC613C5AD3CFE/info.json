@@ -1,11 +1,11 @@
 {
-    "name": "BCash Classic",
-    "symbol": "BCHC",
-    "type": "ETC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xD4729a47FFDBDd190a015BB0C29fC613c5aD3cFE",
-    "status": "active",
-    "id": "0xD4729a47FFDBDd190a015BB0C29fC613c5aD3cFE"
+    "name":  "BCash Classic",
+    "symbol":  "BCHC",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xD4729a47FFDBDd190a015BB0C29fC613c5aD3cFE",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XD4729A47FFDBDD190A015BB0C29FC613C5AD3CFE/logo.png",
+    "id":  "0xD4729a47FFDBDd190a015BB0C29fC613c5aD3cFE"
 }

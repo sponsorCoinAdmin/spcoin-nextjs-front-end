@@ -1,11 +1,11 @@
 {
-    "name": "UNIFI",
-    "website": "https://UNIFIDEFI.com",
-    "description": "UNIFI is a Defi coin used to interact in the UNifi decentralized financial eco-sysytem ",
-    "explorer": "https://etherscan.io/token/0x0eF3b2024ae079e6dBC2b37435cE30d2731F0101",
-    "type": "ERC20",
-    "symbol": "UNIFI",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x0eF3b2024ae079e6dBC2b37435cE30d2731F0101"
+    "name":  "UNIFI",
+    "website":  "https://UNIFIDEFI.com",
+    "description":  "UNIFI is a Defi coin used to interact in the UNifi decentralized financial eco-sysytem ",
+    "explorer":  "https://etherscan.io/token/0x0eF3b2024ae079e6dBC2b37435cE30d2731F0101",
+    "symbol":  "UNIFI",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0EF3B2024AE079E6DBC2B37435CE30D2731F0101/logo.png",
+    "id":  "0x0eF3b2024ae079e6dBC2b37435cE30d2731F0101"
 }

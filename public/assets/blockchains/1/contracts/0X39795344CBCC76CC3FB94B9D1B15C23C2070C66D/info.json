@@ -1,11 +1,11 @@
 {
-    "name": "Seigniorage Shares",
-    "website": "https://dollarprotocol.com",
-    "description": "Seigniorage Share (SHARE) is the speculation and governance token into the Dollar Protocol. Holders get seigniorage paid in Dollar (USD) token pro-rata.",
-    "explorer": "https://etherscan.io/token/0x39795344CBCc76cC3Fb94B9D1b15C23c2070C66D",
-    "type": "ERC20",
-    "symbol": "SHARE",
-    "decimals": 9,
-    "status": "active",
-    "id": "0x39795344CBCc76cC3Fb94B9D1b15C23c2070C66D"
+    "name":  "Seigniorage Shares",
+    "website":  "https://dollarprotocol.com",
+    "description":  "Seigniorage Share (SHARE) is the speculation and governance token into the Dollar Protocol. Holders get seigniorage paid in Dollar (USD) token pro-rata.",
+    "explorer":  "https://etherscan.io/token/0x39795344CBCc76cC3Fb94B9D1b15C23c2070C66D",
+    "symbol":  "SHARE",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X39795344CBCC76CC3FB94B9D1B15C23C2070C66D/logo.png",
+    "id":  "0x39795344CBCc76cC3Fb94B9D1b15C23c2070C66D"
 }

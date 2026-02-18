@@ -1,11 +1,11 @@
 {
-    "name": "VOLT",
-    "symbol": "ACDC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "VOLT is a platform that allows centralized platforms such as Uber, to be developed in a decentralized manner and enables direct delivery through P2P.",
-    "website": "https://volttech.io/",
-    "explorer": "https://etherscan.io/token/0xFc44EC51C80e35A87Bc2140299B1636eC83DFb04",
-    "status": "active",
-    "id": "0xFc44EC51C80e35A87Bc2140299B1636eC83DFb04"
+    "name":  "VOLT",
+    "symbol":  "ACDC",
+    "decimals":  18,
+    "description":  "VOLT is a platform that allows centralized platforms such as Uber, to be developed in a decentralized manner and enables direct delivery through P2P.",
+    "website":  "https://volttech.io/",
+    "explorer":  "https://etherscan.io/token/0xFc44EC51C80e35A87Bc2140299B1636eC83DFb04",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFC44EC51C80E35A87BC2140299B1636EC83DFB04/logo.png",
+    "id":  "0xFc44EC51C80e35A87Bc2140299B1636eC83DFb04"
 }

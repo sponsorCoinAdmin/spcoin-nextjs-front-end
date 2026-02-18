@@ -1,11 +1,11 @@
 {
-    "name": "Humanity First Token",
-    "symbol": "BHFT",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://explorer.binance.org/asset/BHFT-BBE",
-    "status": "active",
-    "id": "BHFT-BBE"
+    "name":  "Humanity First Token",
+    "symbol":  "BHFT",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://explorer.binance.org/asset/BHFT-BBE",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/BHFT-BBE/logo.png",
+    "id":  "BHFT-BBE"
 }

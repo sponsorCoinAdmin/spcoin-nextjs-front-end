@@ -1,11 +1,11 @@
 {
-    "name": "MorCrypto Coin 2",
-    "symbol": "MOR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "MorCrypto Coin 2 (MOR) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://morcrypto-exchange.com",
-    "explorer": "https://etherscan.io/token/0xae746520FfDB15d0505e32f1d6e9a2b4ab866572",
-    "status": "active",
-    "id": "0xae746520FfDB15d0505e32f1d6e9a2b4ab866572"
+    "name":  "MorCrypto Coin 2",
+    "symbol":  "MOR",
+    "decimals":  18,
+    "description":  "MorCrypto Coin 2 (MOR) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://morcrypto-exchange.com",
+    "explorer":  "https://etherscan.io/token/0xae746520FfDB15d0505e32f1d6e9a2b4ab866572",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAE746520FFDB15D0505E32F1D6E9A2B4AB866572/logo.png",
+    "id":  "0xae746520FfDB15d0505e32f1d6e9a2b4ab866572"
 }

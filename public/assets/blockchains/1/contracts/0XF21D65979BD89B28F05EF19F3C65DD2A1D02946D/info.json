@@ -1,11 +1,11 @@
 {
-    "name": "BloodyPercent",
-    "symbol": "BPC",
-    "type": "ERC20",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xF21D65979bD89b28f05EF19F3c65dd2A1D02946D",
-    "status": "active",
-    "id": "0xF21D65979bD89b28f05EF19F3c65dd2A1D02946D"
+    "name":  "BloodyPercent",
+    "symbol":  "BPC",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xF21D65979bD89b28f05EF19F3c65dd2A1D02946D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF21D65979BD89B28F05EF19F3C65DD2A1D02946D/logo.png",
+    "id":  "0xF21D65979bD89b28f05EF19F3c65dd2A1D02946D"
 }

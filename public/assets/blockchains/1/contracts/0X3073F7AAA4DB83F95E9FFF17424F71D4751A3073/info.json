@@ -1,29 +1,28 @@
 {
-    "name": "Movement",
-    "type": "ERC20",
-    "symbol": "MOVE",
-    "decimals": 8,
-    "description": "Movement Network is an ecosystem of Modular Move-Based Blockchains that enables developers to build secure, performant, and interoperable blockchain applications, bridging the gap between Move and EVM ecosystems.",
-    "website": "https://www.movementnetwork.xyz/",
-    "explorer": "https://etherscan.io/token/0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
-    "id": "0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
-    "status": "active",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/movementfdn"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/movement/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/movement"
-        }
-    ],
-    "tags": [
-        "defi"
-    ]
+    "name":  "Movement",
+    "symbol":  "MOVE",
+    "decimals":  8,
+    "description":  "Movement Network is an ecosystem of Modular Move-Based Blockchains that enables developers to build secure, performant, and interoperable blockchain applications, bridging the gap between Move and EVM ecosystems.",
+    "website":  "https://www.movementnetwork.xyz/",
+    "explorer":  "https://etherscan.io/token/0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
+    "id":  "0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3073F7AAA4DB83F95E9FFF17424F71D4751A3073/logo.png",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/movementfdn"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/movement/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/movement"
+                  }
+              ],
+    "tags":  [
+                 "defi"
+             ]
 }
-    

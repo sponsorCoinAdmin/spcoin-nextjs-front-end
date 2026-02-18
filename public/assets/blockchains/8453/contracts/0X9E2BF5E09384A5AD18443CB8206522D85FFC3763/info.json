@@ -1,24 +1,24 @@
 {
-    "name": "Shiro Neko",
-    "type": "BASE",
-    "symbol": "SHIRO",
-    "decimals": 18,
-    "description": "Shiro Neko, “White Cat” in Japanese, is embarking on a journey to prove himself in the crypto sphere. Under the mentorship of the legendary Shiba Inu, Shiro learns the ways of blockchain, striving to build his own legacy with $SHIRO.",
-    "website": "https://shironekobase.xyz/",
-    "explorer": "https://basescan.org/token/0x9E2Bf5e09384A5Ad18443CB8206522d85ffc3763",
-    "id": "0x9E2Bf5e09384A5Ad18443CB8206522d85ffc3763",
-    "status": "active",
-    "tags": [
-        "memes"
-    ],
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/shironekoonbase"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/shiro-neko-base/"
-        }
-    ]
+    "name":  "Shiro Neko",
+    "symbol":  "SHIRO",
+    "decimals":  18,
+    "description":  "Shiro Neko, “White Cat” in Japanese, is embarking on a journey to prove himself in the crypto sphere. Under the mentorship of the legendary Shiba Inu, Shiro learns the ways of blockchain, striving to build his own legacy with $SHIRO.",
+    "website":  "https://shironekobase.xyz/",
+    "explorer":  "https://basescan.org/token/0x9E2Bf5e09384A5Ad18443CB8206522d85ffc3763",
+    "id":  "0x9E2Bf5e09384A5Ad18443CB8206522d85ffc3763",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X9E2BF5E09384A5AD18443CB8206522D85FFC3763/logo.png",
+    "tags":  [
+                 "memes"
+             ],
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/shironekoonbase"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/shiro-neko-base/"
+                  }
+              ]
 }

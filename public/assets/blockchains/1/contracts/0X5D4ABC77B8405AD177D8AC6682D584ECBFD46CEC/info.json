@@ -1,11 +1,11 @@
 {
-    "name": "Primas Token",
-    "symbol": "PST",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Primas is a platform for high-quality content centred in Distributed Trusted Content Protocol or DTCP.",
-    "website": "https://primas.io/",
-    "explorer": "https://etherscan.io/token/0x5d4ABC77B8405aD177d8ac6682D584ecbFd46CEc",
-    "status": "active",
-    "id": "0x5d4ABC77B8405aD177d8ac6682D584ecbFd46CEc"
+    "name":  "Primas Token",
+    "symbol":  "PST",
+    "decimals":  18,
+    "description":  "Primas is a platform for high-quality content centred in Distributed Trusted Content Protocol or DTCP.",
+    "website":  "https://primas.io/",
+    "explorer":  "https://etherscan.io/token/0x5d4ABC77B8405aD177d8ac6682D584ecbFd46CEc",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5D4ABC77B8405AD177D8AC6682D584ECBFD46CEC/logo.png",
+    "id":  "0x5d4ABC77B8405aD177d8ac6682D584ecbFd46CEc"
 }

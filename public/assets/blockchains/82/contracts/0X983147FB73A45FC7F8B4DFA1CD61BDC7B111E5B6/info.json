@@ -1,11 +1,11 @@
 {
-    "name": "ETH from Ethereum on Meter",
-    "symbol": "ETH",
-    "type": "METER",
-    "decimals": 18,
-    "explorer": "https://scan.meter.io/address/0x983147FB73A45FC7F8B4DFA1cd61Bdc7b111e5b6",
-    "status": "active",
-    "id": "0x983147FB73A45FC7F8B4DFA1cd61Bdc7b111e5b6",
-    "website": "https://ethereum.org/",
-    "description": "-"
+    "name":  "ETH from Ethereum on Meter",
+    "symbol":  "ETH",
+    "decimals":  18,
+    "explorer":  "https://scan.meter.io/address/0x983147FB73A45FC7F8B4DFA1cd61Bdc7b111e5b6",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/82/contracts/0X983147FB73A45FC7F8B4DFA1CD61BDC7B111E5B6/logo.png",
+    "id":  "0x983147FB73A45FC7F8B4DFA1cd61Bdc7b111e5b6",
+    "website":  "https://ethereum.org/",
+    "description":  "-"
 }

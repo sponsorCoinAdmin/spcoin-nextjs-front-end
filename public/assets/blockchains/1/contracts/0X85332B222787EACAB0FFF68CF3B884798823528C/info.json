@@ -1,11 +1,11 @@
 {
-    "name": "WinETHFree",
-    "symbol": "winethfree.com (Win ETH Free)",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x85332b222787EacAb0fFf68cf3b884798823528C",
-    "status": "spam",
-    "id": "0x85332b222787EacAb0fFf68cf3b884798823528C"
+    "name":  "WinETHFree",
+    "symbol":  "winethfree.com (Win ETH Free)",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x85332b222787EacAb0fFf68cf3b884798823528C",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X85332B222787EACAB0FFF68CF3B884798823528C/logo.png",
+    "id":  "0x85332b222787EacAb0fFf68cf3b884798823528C"
 }

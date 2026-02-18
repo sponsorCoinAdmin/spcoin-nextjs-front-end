@@ -1,17 +1,17 @@
 {
-    "name": "BLACK ROCK",
-    "website": "https://www.blackrockonbase.com/",
-    "description": "Just a Black Rock on Base.",
-    "explorer": "https://basescan.org/token/0xEcE7B98bD817ee5B1F2f536dAf34D0B6af8Bb542",
-    "type": "BASE",
-    "symbol": "ROCK",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xEcE7B98bD817ee5B1F2f536dAf34D0B6af8Bb542",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/blackrockonbase"
-        }
-    ]
+    "name":  "BLACK ROCK",
+    "website":  "https://www.blackrockonbase.com/",
+    "description":  "Just a Black Rock on Base.",
+    "explorer":  "https://basescan.org/token/0xEcE7B98bD817ee5B1F2f536dAf34D0B6af8Bb542",
+    "symbol":  "ROCK",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0XECE7B98BD817EE5B1F2F536DAF34D0B6AF8BB542/logo.png",
+    "id":  "0xEcE7B98bD817ee5B1F2f536dAf34D0B6af8Bb542",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/blackrockonbase"
+                  }
+              ]
 }

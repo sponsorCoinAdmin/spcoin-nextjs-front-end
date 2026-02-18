@@ -1,28 +1,28 @@
 {
-    "name": "BTRST",
-    "website": "https://www.usebraintrust.com/",
-    "description": "Braintrust is a decentralized talent network that connects knowledge workers with companies. Braintrust was built and continues to be upgraded by its community. BTRST is the governance and staking token used to power the network.",
-    "explorer": "https://etherscan.io/token/0x799ebfabe77a6e34311eeee9825190b9ece32824",
-    "type": "ERC20",
-    "symbol": "BTRST",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x799ebfABE77a6E34311eeEe9825190B9ECe32824",
-    "tags": [
-        "defi"
-    ],
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/usebraintrust"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/braintrustofficial"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/braintrust/"
-        }
-    ]
+    "name":  "BTRST",
+    "website":  "https://www.usebraintrust.com/",
+    "description":  "Braintrust is a decentralized talent network that connects knowledge workers with companies. Braintrust was built and continues to be upgraded by its community. BTRST is the governance and staking token used to power the network.",
+    "explorer":  "https://etherscan.io/token/0x799ebfabe77a6e34311eeee9825190b9ece32824",
+    "symbol":  "BTRST",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X799EBFABE77A6E34311EEEE9825190B9ECE32824/logo.png",
+    "id":  "0x799ebfABE77a6E34311eeEe9825190B9ECe32824",
+    "tags":  [
+                 "defi"
+             ],
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/usebraintrust"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/braintrustofficial"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/braintrust/"
+                  }
+              ]
 }

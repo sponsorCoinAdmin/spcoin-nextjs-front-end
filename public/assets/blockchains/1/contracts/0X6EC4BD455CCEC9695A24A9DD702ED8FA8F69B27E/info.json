@@ -1,11 +1,11 @@
 {
-    "name": "Eco Finances",
-    "symbol": "EFC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x6eC4Bd455ccEc9695A24A9DD702ed8fa8f69b27e",
-    "status": "spam",
-    "id": "0x6eC4Bd455ccEc9695A24A9DD702ed8fa8f69b27e"
+    "name":  "Eco Finances",
+    "symbol":  "EFC",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x6eC4Bd455ccEc9695A24A9DD702ed8fa8f69b27e",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X6EC4BD455CCEC9695A24A9DD702ED8FA8F69B27E/logo.png",
+    "id":  "0x6eC4Bd455ccEc9695A24A9DD702ed8fa8f69b27e"
 }

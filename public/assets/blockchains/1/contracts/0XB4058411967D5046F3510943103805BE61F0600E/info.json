@@ -1,11 +1,11 @@
 {
-    "name": "STONK",
-    "symbol": "STONK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "$STONK is an indicator for DeFi. $STONK's value is derived from a balancer pool of DeFi's class leading protocol-layer contracts, consisting of COMP, LINK , KNC, ETH, SNX, REP, LRC. By investing in $STONK, you are investing in an index fund of DeFi's leading projects. Value in $STONK and value in the pool directly benefits all DeFi projects involved.",
-    "website": "https://stonk.dev/",
-    "explorer": "https://etherscan.io/token/0xb4058411967D5046f3510943103805be61f0600E",
-    "status": "active",
-    "id": "0xb4058411967D5046f3510943103805be61f0600E"
+    "name":  "STONK",
+    "symbol":  "STONK",
+    "decimals":  18,
+    "description":  "$STONK is an indicator for DeFi. $STONK\u0027s value is derived from a balancer pool of DeFi\u0027s class leading protocol-layer contracts, consisting of COMP, LINK , KNC, ETH, SNX, REP, LRC. By investing in $STONK, you are investing in an index fund of DeFi\u0027s leading projects. Value in $STONK and value in the pool directly benefits all DeFi projects involved.",
+    "website":  "https://stonk.dev/",
+    "explorer":  "https://etherscan.io/token/0xb4058411967D5046f3510943103805be61f0600E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB4058411967D5046F3510943103805BE61F0600E/logo.png",
+    "id":  "0xb4058411967D5046f3510943103805be61f0600E"
 }

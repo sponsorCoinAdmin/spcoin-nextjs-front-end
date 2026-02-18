@@ -1,7 +1,8 @@
 {
-  "chainId": 11155111,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Sepolia Testnet",
-  "symbol": "ETH",
-  "decimals": 18
+    "chainId":  11155111,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "Sepolia Testnet",
+    "symbol":  "ETH",
+    "decimals":  18,
+    "logoURL":  "assets/blockchains/11155111/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png"
 }

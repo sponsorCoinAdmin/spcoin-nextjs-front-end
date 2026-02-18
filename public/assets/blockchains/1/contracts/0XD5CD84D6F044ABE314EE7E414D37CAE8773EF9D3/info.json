@@ -1,17 +1,17 @@
 {
-    "name": "Harmony",
-    "website": "https://www.harmony.one",
-    "description": "Harmony Bridged Token on Ethereum",
-    "explorer": "https://etherscan.io/token/0xD5cd84D6f044AbE314Ee7E414d37cae8773ef9D3",
-    "type": "ERC20",
-    "symbol": "ONE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xD5cd84D6f044AbE314Ee7E414d37cae8773ef9D3",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/harmonyprotocol"
-        }
-    ]
+    "name":  "Harmony",
+    "website":  "https://www.harmony.one",
+    "description":  "Harmony Bridged Token on Ethereum",
+    "explorer":  "https://etherscan.io/token/0xD5cd84D6f044AbE314Ee7E414d37cae8773ef9D3",
+    "symbol":  "ONE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD5CD84D6F044ABE314EE7E414D37CAE8773EF9D3/logo.png",
+    "id":  "0xD5cd84D6f044AbE314Ee7E414d37cae8773ef9D3",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/harmonyprotocol"
+                  }
+              ]
 }

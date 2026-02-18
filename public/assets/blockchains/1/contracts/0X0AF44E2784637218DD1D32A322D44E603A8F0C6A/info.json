@@ -1,11 +1,11 @@
 {
-    "name": "MatryxToken",
-    "symbol": "MTX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://matryx.ai",
-    "explorer": "https://etherscan.io/token/0x0AF44e2784637218dD1D32A322D44e603A8f0c6A",
-    "status": "active",
-    "id": "0x0AF44e2784637218dD1D32A322D44e603A8f0c6A"
+    "name":  "MatryxToken",
+    "symbol":  "MTX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://matryx.ai",
+    "explorer":  "https://etherscan.io/token/0x0AF44e2784637218dD1D32A322D44e603A8f0c6A",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0AF44E2784637218DD1D32A322D44E603A8F0C6A/logo.png",
+    "id":  "0x0AF44e2784637218dD1D32A322D44e603A8f0c6A"
 }

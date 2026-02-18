@@ -1,26 +1,27 @@
 {
-  "chainId": 59144,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Linea",
-  "symbol": "ETH",
-  "decimals": 18,
-  "website": "https://www.lynex.fi/",
-  "description": "Lynex stands as a cutting-edge decentralized exchange (DEX), liquidity layer, and ALM aggregator on the Linea blockchain. This robust platform revolutionizes DeFi activities by offering token swapping, seamless liquidity provision, and governance through the innovative veLYNX voting mechanism.",
-  "explorer": "https://lineascan.build/token/0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af",
-  "status": "active",
-  "id": "0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af",
-  "links": [
-    {
-      "name": "x",
-      "url": "https://x.com/LynexFi"
-    },
-    {
-      "name": "telegram",
-      "url": "https://t.me/lynexfi"
-    },
-    {
-      "name": "coinmarketcap",
-      "url": "https://coinmarketcap.com/currencies/lynex/"
-    }
-  ]
+    "chainId":  59144,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "Linea",
+    "symbol":  "ETH",
+    "decimals":  18,
+    "website":  "https://www.lynex.fi/",
+    "description":  "Lynex stands as a cutting-edge decentralized exchange (DEX), liquidity layer, and ALM aggregator on the Linea blockchain. This robust platform revolutionizes DeFi activities by offering token swapping, seamless liquidity provision, and governance through the innovative veLYNX voting mechanism.",
+    "explorer":  "https://lineascan.build/token/0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/59144/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png",
+    "id":  "0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/LynexFi"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/lynexfi"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/lynex/"
+                  }
+              ]
 }

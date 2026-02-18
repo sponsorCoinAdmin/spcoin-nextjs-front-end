@@ -1,17 +1,17 @@
 {
-    "name": "Gyro Dollar",
-    "website": "https://gyro.finance/",
-    "description": "Revolution in resilience: put stablecoin risk control on autopilot.",
-    "explorer": "https://etherscan.io/token/0xe07f9d810a48ab5c3c914ba3ca53af14e4491e8a",
-    "type": "ERC20",
-    "symbol": "GYD",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xe07F9D810a48ab5c3c914BA3cA53AF14E4491e8A",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/gyrostable"
-        }
-    ]
+    "name":  "Gyro Dollar",
+    "website":  "https://gyro.finance/",
+    "description":  "Revolution in resilience: put stablecoin risk control on autopilot.",
+    "explorer":  "https://etherscan.io/token/0xe07f9d810a48ab5c3c914ba3ca53af14e4491e8a",
+    "symbol":  "GYD",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE07F9D810A48AB5C3C914BA3CA53AF14E4491E8A/logo.png",
+    "id":  "0xe07F9D810a48ab5c3c914BA3cA53AF14E4491e8A",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/gyrostable"
+                  }
+              ]
 }

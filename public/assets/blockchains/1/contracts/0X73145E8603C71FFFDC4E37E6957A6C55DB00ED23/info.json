@@ -1,11 +1,11 @@
 {
-    "name": "NaGa",
-    "website": "https://nagatrade.com",
-    "description": "Binary options trading platform",
-    "explorer": "https://etherscan.io/token/0x73145E8603c71FFfDC4E37E6957a6C55dB00ED23",
-    "type": "ERC20",
-    "symbol": "NLP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x73145E8603c71FFfDC4E37E6957a6C55dB00ED23"
+    "name":  "NaGa",
+    "website":  "https://nagatrade.com",
+    "description":  "Binary options trading platform",
+    "explorer":  "https://etherscan.io/token/0x73145E8603c71FFfDC4E37E6957a6C55dB00ED23",
+    "symbol":  "NLP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X73145E8603C71FFFDC4E37E6957A6C55DB00ED23/logo.png",
+    "id":  "0x73145E8603c71FFfDC4E37E6957a6C55dB00ED23"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Onyx S&P 500 Short",
-    "symbol": "OSPVS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xFFA52DCE6Eb5695436BE96CA9b7Df63382e4c34d",
-    "status": "active",
-    "id": "0xFFA52DCE6Eb5695436BE96CA9b7Df63382e4c34d"
+    "name":  "Onyx S\u0026P 500 Short",
+    "symbol":  "OSPVS",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xFFA52DCE6Eb5695436BE96CA9b7Df63382e4c34d",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFFA52DCE6EB5695436BE96CA9B7DF63382E4C34D/logo.png",
+    "id":  "0xFFA52DCE6Eb5695436BE96CA9b7Df63382e4c34d"
 }

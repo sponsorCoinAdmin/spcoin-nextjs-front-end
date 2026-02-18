@@ -1,11 +1,11 @@
 {
-    "name": "Fulcrum Perpetual Long WBTC-DAI 3x v2",
-    "symbol": "dLWBTC3x",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "pTokens, which give exposure to a desired short or leveraged position.",
-    "website": "https://bzx.network/",
-    "explorer": "https://etherscan.io/token/0x038e1b56b615fF3dD20e0BD4C7e91c7EE07d3508",
-    "status": "active",
-    "id": "0x038e1b56b615fF3dD20e0BD4C7e91c7EE07d3508"
+    "name":  "Fulcrum Perpetual Long WBTC-DAI 3x v2",
+    "symbol":  "dLWBTC3x",
+    "decimals":  18,
+    "description":  "pTokens, which give exposure to a desired short or leveraged position.",
+    "website":  "https://bzx.network/",
+    "explorer":  "https://etherscan.io/token/0x038e1b56b615fF3dD20e0BD4C7e91c7EE07d3508",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X038E1B56B615FF3DD20E0BD4C7E91C7EE07D3508/logo.png",
+    "id":  "0x038e1b56b615fF3dD20e0BD4C7e91c7EE07d3508"
 }

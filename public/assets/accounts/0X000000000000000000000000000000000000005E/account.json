@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Stop Drug Abuse",
     "symbol":  "DRUGS",
-    "address":  "0X000000000000000000000000000000000000005e",
+    "address":  "0X000000000000000000000000000000000000005E",
     "website":  "",
     "description":  "This is the description for site StopDrugAbuse",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000005E/logo.png",
     "status":  "test"
 }

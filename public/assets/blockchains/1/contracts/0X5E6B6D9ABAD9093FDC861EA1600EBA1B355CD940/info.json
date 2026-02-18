@@ -1,11 +1,11 @@
 {
-    "name": "IOT on Chain",
-    "symbol": "ITC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "A secure IoT light operating system driven by blockchain technology.",
-    "website": "https://iotchain.io/",
-    "explorer": "https://etherscan.io/token/0x5E6b6d9aBAd9093fdc861Ea1600eBa1b355Cd940",
-    "status": "active",
-    "id": "0x5E6b6d9aBAd9093fdc861Ea1600eBa1b355Cd940"
+    "name":  "IOT on Chain",
+    "symbol":  "ITC",
+    "decimals":  18,
+    "description":  "A secure IoT light operating system driven by blockchain technology.",
+    "website":  "https://iotchain.io/",
+    "explorer":  "https://etherscan.io/token/0x5E6b6d9aBAd9093fdc861Ea1600eBa1b355Cd940",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5E6B6D9ABAD9093FDC861EA1600EBA1B355CD940/logo.png",
+    "id":  "0x5E6b6d9aBAd9093fdc861Ea1600eBa1b355Cd940"
 }

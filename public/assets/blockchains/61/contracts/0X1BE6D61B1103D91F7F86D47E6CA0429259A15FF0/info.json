@@ -1,11 +1,11 @@
 {
-    "name": "Bitcoin Classic Token",
-    "symbol": "BCT",
-    "type": "ETC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x1BE6D61B1103D91F7f86D47e6ca0429259A15ff0",
-    "status": "active",
-    "id": "0x1BE6D61B1103D91F7f86D47e6ca0429259A15ff0"
+    "name":  "Bitcoin Classic Token",
+    "symbol":  "BCT",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x1BE6D61B1103D91F7f86D47e6ca0429259A15ff0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X1BE6D61B1103D91F7F86D47E6CA0429259A15FF0/logo.png",
+    "id":  "0x1BE6D61B1103D91F7f86D47e6ca0429259A15ff0"
 }

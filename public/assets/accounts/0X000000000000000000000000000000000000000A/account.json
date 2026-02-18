@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Paws Prints Shelter",
     "symbol":  "PAW",
-    "address":  "0X000000000000000000000000000000000000000a",
+    "address":  "0X000000000000000000000000000000000000000A",
     "website":  "",
     "description":  "This is the description for site AnimalShelter1",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000000A/logo.png",
     "status":  "test"
 }

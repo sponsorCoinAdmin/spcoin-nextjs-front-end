@@ -1,11 +1,11 @@
 {
-    "name": "BitBall Treasure",
-    "symbol": "BTRS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Bitball Ecosystem: All in one crypto Solution. Peer to Peer digital currencies with Multiple utilities.",
-    "website": "https://bitball-btb.com",
-    "explorer": "https://etherscan.io/token/0x73C9275c3a2Dd84b5741fD59AEbF102C91Eb033F",
-    "status": "active",
-    "id": "0x73C9275c3a2Dd84b5741fD59AEbF102C91Eb033F"
+    "name":  "BitBall Treasure",
+    "symbol":  "BTRS",
+    "decimals":  18,
+    "description":  "Bitball Ecosystem: All in one crypto Solution. Peer to Peer digital currencies with Multiple utilities.",
+    "website":  "https://bitball-btb.com",
+    "explorer":  "https://etherscan.io/token/0x73C9275c3a2Dd84b5741fD59AEbF102C91Eb033F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X73C9275C3A2DD84B5741FD59AEBF102C91EB033F/logo.png",
+    "id":  "0x73C9275c3a2Dd84b5741fD59AEbF102C91Eb033F"
 }

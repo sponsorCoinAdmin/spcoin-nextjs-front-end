@@ -1,11 +1,11 @@
 {
-    "name": "yfBETA",
-    "website": "https://yfbeta.finance/",
-    "description": "yfBETA restructures the DeFi narrative to reward tokenholders. yfBETA uses yields generated from farming other protocols.",
-    "explorer": "https://etherscan.io/token/0x89eE58Af4871b474c30001982c3D7439C933c838",
-    "type": "ERC20",
-    "symbol": "YFBETA",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x89eE58Af4871b474c30001982c3D7439C933c838"
+    "name":  "yfBETA",
+    "website":  "https://yfbeta.finance/",
+    "description":  "yfBETA restructures the DeFi narrative to reward tokenholders. yfBETA uses yields generated from farming other protocols.",
+    "explorer":  "https://etherscan.io/token/0x89eE58Af4871b474c30001982c3D7439C933c838",
+    "symbol":  "YFBETA",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X89EE58AF4871B474C30001982C3D7439C933C838/logo.png",
+    "id":  "0x89eE58Af4871b474c30001982c3D7439C933c838"
 }

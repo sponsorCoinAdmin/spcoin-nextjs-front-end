@@ -1,11 +1,11 @@
 {
-    "name": "BBBtesttoken",
-    "symbol": "BBB",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x4479B4e96252B829934bA0f8fb8f5c96883DA7E5",
-    "status": "active",
-    "id": "0x4479B4e96252B829934bA0f8fb8f5c96883DA7E5"
+    "name":  "BBBtesttoken",
+    "symbol":  "BBB",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x4479B4e96252B829934bA0f8fb8f5c96883DA7E5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X4479B4E96252B829934BA0F8FB8F5C96883DA7E5/logo.png",
+    "id":  "0x4479B4e96252B829934bA0f8fb8f5c96883DA7E5"
 }

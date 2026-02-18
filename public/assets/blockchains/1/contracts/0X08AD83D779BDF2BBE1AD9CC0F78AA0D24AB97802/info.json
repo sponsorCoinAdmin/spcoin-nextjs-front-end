@@ -1,11 +1,11 @@
 {
-    "name": "Robonomics Web Services",
-    "website": "https://robonomics.network",
-    "description": "Robonomics parachain lifetime subscription token.",
-    "explorer": "https://etherscan.io/token/0x08AD83D779BDf2BBE1ad9cc0f78aa0D24AB97802",
-    "type": "ERC20",
-    "symbol": "RWS",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x08AD83D779BDf2BBE1ad9cc0f78aa0D24AB97802"
+    "name":  "Robonomics Web Services",
+    "website":  "https://robonomics.network",
+    "description":  "Robonomics parachain lifetime subscription token.",
+    "explorer":  "https://etherscan.io/token/0x08AD83D779BDf2BBE1ad9cc0f78aa0D24AB97802",
+    "symbol":  "RWS",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X08AD83D779BDF2BBE1AD9CC0F78AA0D24AB97802/logo.png",
+    "id":  "0x08AD83D779BDf2BBE1ad9cc0f78aa0D24AB97802"
 }

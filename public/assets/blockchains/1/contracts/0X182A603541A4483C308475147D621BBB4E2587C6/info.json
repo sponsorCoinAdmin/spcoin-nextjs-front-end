@@ -1,11 +1,11 @@
 {
-    "name": "ZBToken",
-    "symbol": "ZB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Zerobank is a legal ecosystem utilizing blockchain and smart contract.",
-    "website": "https://zerobank.cash/",
-    "explorer": "https://etherscan.io/token/0x182A603541a4483c308475147D621bbB4E2587c6",
-    "status": "active",
-    "id": "0x182A603541a4483c308475147D621bbB4E2587c6"
+    "name":  "ZBToken",
+    "symbol":  "ZB",
+    "decimals":  18,
+    "description":  "Zerobank is a legal ecosystem utilizing blockchain and smart contract.",
+    "website":  "https://zerobank.cash/",
+    "explorer":  "https://etherscan.io/token/0x182A603541a4483c308475147D621bbB4E2587c6",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X182A603541A4483C308475147D621BBB4E2587C6/logo.png",
+    "id":  "0x182A603541a4483c308475147D621bbB4E2587c6"
 }

@@ -1,32 +1,32 @@
 {
-    "name": "Pett AI",
-    "website": "https://www.pett.ai/",
-    "description": "PettAI is an AI-driven game merging advanced gameplay with intricate economics.",
-    "explorer": "https://basescan.org/token/0x02D4f76656C2B4f58430e91f8ac74896c9281Cb9",
-    "type": "BASE",
-    "symbol": "AIP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x02D4f76656C2B4f58430e91f8ac74896c9281Cb9",
-    "links": [
-        {
-            "name": "telegram",
-            "url": "https://t.me/pettaiofficial"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/Pett_ai"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/pett-ai/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/pettai"
-        }
-    ],
-    "tags": [
-        "gamefi"
-    ]
+    "name":  "Pett AI",
+    "website":  "https://www.pett.ai/",
+    "description":  "PettAI is an AI-driven game merging advanced gameplay with intricate economics.",
+    "explorer":  "https://basescan.org/token/0x02D4f76656C2B4f58430e91f8ac74896c9281Cb9",
+    "symbol":  "AIP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X02D4F76656C2B4F58430E91F8AC74896C9281CB9/logo.png",
+    "id":  "0x02D4f76656C2B4f58430e91f8ac74896c9281Cb9",
+    "links":  [
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/pettaiofficial"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/Pett_ai"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/pett-ai/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/pettai"
+                  }
+              ],
+    "tags":  [
+                 "gamefi"
+             ]
 }

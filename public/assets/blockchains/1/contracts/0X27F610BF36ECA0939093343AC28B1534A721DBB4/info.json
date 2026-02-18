@@ -1,11 +1,11 @@
 {
-    "name": "Wand Token",
-    "symbol": "WAND",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.wandx.co",
-    "explorer": "https://etherscan.io/token/0x27f610BF36ecA0939093343ac28b1534a721DBB4",
-    "status": "active",
-    "id": "0x27f610BF36ecA0939093343ac28b1534a721DBB4"
+    "name":  "Wand Token",
+    "symbol":  "WAND",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.wandx.co",
+    "explorer":  "https://etherscan.io/token/0x27f610BF36ecA0939093343ac28b1534a721DBB4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X27F610BF36ECA0939093343AC28B1534A721DBB4/logo.png",
+    "id":  "0x27f610BF36ecA0939093343ac28b1534a721DBB4"
 }

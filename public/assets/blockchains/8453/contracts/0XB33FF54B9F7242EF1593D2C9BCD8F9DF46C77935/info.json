@@ -1,21 +1,21 @@
 {
-    "name": "FAI",
-    "symbol": "FAI",
-    "decimals": 18,
-    "type": "BASE",
-    "website": "https://www.freysa.ai/",
-    "description": "Freysa is an evolving AI stack and agent, starting as the world's first adversarial agent game.",
-    "explorer": "https://basescan.org/token/0xb33Ff54b9F7242EF1593d2C9Bcd8f9df46c77935",
-    "status": "active",
-    "id": "0xb33Ff54b9F7242EF1593d2C9Bcd8f9df46c77935",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/freysa_ai"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/freysa-ai/"
-        }
-    ]
+    "name":  "FAI",
+    "symbol":  "FAI",
+    "decimals":  18,
+    "website":  "https://www.freysa.ai/",
+    "description":  "Freysa is an evolving AI stack and agent, starting as the world\u0027s first adversarial agent game.",
+    "explorer":  "https://basescan.org/token/0xb33Ff54b9F7242EF1593d2C9Bcd8f9df46c77935",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0XB33FF54B9F7242EF1593D2C9BCD8F9DF46C77935/logo.png",
+    "id":  "0xb33Ff54b9F7242EF1593d2C9Bcd8f9df46c77935",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/freysa_ai"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/freysa-ai/"
+                  }
+              ]
 }

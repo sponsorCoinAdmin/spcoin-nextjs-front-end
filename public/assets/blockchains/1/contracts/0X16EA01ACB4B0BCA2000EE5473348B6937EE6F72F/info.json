@@ -1,11 +1,11 @@
 {
-    "name": "Enecuum",
-    "symbol": "ENQ",
-    "type": "ERC20",
-    "decimals": 10,
-    "description": "Blockchain Mobile Network for decentralized application.",
-    "website": "https://new.enecuum.com/",
-    "explorer": "https://etherscan.io/token/0x16EA01aCB4b0Bca2000ee5473348B6937ee6f72F",
-    "status": "active",
-    "id": "0x16EA01aCB4b0Bca2000ee5473348B6937ee6f72F"
+    "name":  "Enecuum",
+    "symbol":  "ENQ",
+    "decimals":  10,
+    "description":  "Blockchain Mobile Network for decentralized application.",
+    "website":  "https://new.enecuum.com/",
+    "explorer":  "https://etherscan.io/token/0x16EA01aCB4b0Bca2000ee5473348B6937ee6f72F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X16EA01ACB4B0BCA2000EE5473348B6937EE6F72F/logo.png",
+    "id":  "0x16EA01aCB4b0Bca2000ee5473348B6937ee6f72F"
 }

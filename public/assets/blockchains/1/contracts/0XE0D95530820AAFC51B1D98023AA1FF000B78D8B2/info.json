@@ -1,11 +1,11 @@
 {
-    "name": "PressOne Token",
-    "symbol": "PRS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://press.one",
-    "explorer": "https://etherscan.io/token/0xe0D95530820aAfc51b1d98023AA1Ff000b78d8b2",
-    "status": "active",
-    "id": "0xe0D95530820aAfc51b1d98023AA1Ff000b78d8b2"
+    "name":  "PressOne Token",
+    "symbol":  "PRS",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://press.one",
+    "explorer":  "https://etherscan.io/token/0xe0D95530820aAfc51b1d98023AA1Ff000b78d8b2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE0D95530820AAFC51B1D98023AA1FF000B78D8B2/logo.png",
+    "id":  "0xe0D95530820aAfc51b1d98023AA1Ff000b78d8b2"
 }

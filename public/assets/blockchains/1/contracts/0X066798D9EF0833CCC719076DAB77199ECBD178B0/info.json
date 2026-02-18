@@ -1,11 +1,11 @@
 {
-    "name": "SAKE",
-    "website": "https://sakeswap.finance/",
-    "description": "sakeswap DAO token",
-    "explorer": "https://etherscan.io/token/0x066798d9ef0833ccc719076Dab77199eCbd178b0",
-    "type": "ERC20",
-    "symbol": "SAKE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x066798d9ef0833ccc719076Dab77199eCbd178b0"
+    "name":  "SAKE",
+    "website":  "https://sakeswap.finance/",
+    "description":  "sakeswap DAO token",
+    "explorer":  "https://etherscan.io/token/0x066798d9ef0833ccc719076Dab77199eCbd178b0",
+    "symbol":  "SAKE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X066798D9EF0833CCC719076DAB77199ECBD178B0/logo.png",
+    "id":  "0x066798d9ef0833ccc719076Dab77199eCbd178b0"
 }

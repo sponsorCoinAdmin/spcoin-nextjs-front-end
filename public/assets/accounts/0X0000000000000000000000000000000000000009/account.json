@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Help Our Veterans",
     "symbol":  "VETERANS",
     "address":  "0X0000000000000000000000000000000000000009",
     "website":  "",
     "description":  "This is the description for site Veterans",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000009/logo.png",
     "status":  "test"
 }
+

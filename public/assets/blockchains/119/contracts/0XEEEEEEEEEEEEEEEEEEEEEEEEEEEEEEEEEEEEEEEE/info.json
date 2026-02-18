@@ -1,12 +1,13 @@
 {
-  "chainId": 119,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "aleph.im NRC-20",
-  "symbol": "NULS",
-  "decimals": 18,
-  "website": "https://aleph.im",
-  "description": "Aleph.im is a cross-blockchain layer-2 networkspecifically focused on decentralized applications and their related infrastructure (storage, computing servers, security).",
-  "explorer": "https://nulscan.io/token/info?contractAddress=NULSd6HgyZkiqLnBzTaeSQfx1TNg2cqbzq51h",
-  "status": "active",
-  "id": "NULSd6HgyZkiqLnBzTaeSQfx1TNg2cqbzq51h"
+    "chainId":  119,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "aleph.im NRC-20",
+    "symbol":  "NULS",
+    "decimals":  18,
+    "website":  "https://aleph.im",
+    "description":  "Aleph.im is a cross-blockchain layer-2 networkspecifically focused on decentralized applications and their related infrastructure (storage, computing servers, security).",
+    "explorer":  "https://nulscan.io/token/info?contractAddress=NULSd6HgyZkiqLnBzTaeSQfx1TNg2cqbzq51h",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/119/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png",
+    "id":  "NULSd6HgyZkiqLnBzTaeSQfx1TNg2cqbzq51h"
 }

@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Support Sick Kids",
     "symbol":  "KIDS",
-    "address":  "0X000000000000000000000000000000000000005d",
+    "address":  "0X000000000000000000000000000000000000005D",
     "website":  "",
     "description":  "This is the description for site SickKids",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000005D/logo.png",
     "status":  "test"
 }

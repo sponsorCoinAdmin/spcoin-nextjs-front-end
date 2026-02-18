@@ -1,11 +1,11 @@
 {
-    "name": "Gastoken",
-    "type": "ERC20",
-    "symbol": "GST2",
-    "decimals": 2,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0x0000000000b3f879cb30fe243b4dfee438691c04",
-    "status": "active",
-    "id": "0x0000000000b3F879cb30FE243b4Dfee438691c04"
+    "name":  "Gastoken",
+    "symbol":  "GST2",
+    "decimals":  2,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0x0000000000b3f879cb30fe243b4dfee438691c04",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0000000000B3F879CB30FE243B4DFEE438691C04/logo.png",
+    "id":  "0x0000000000b3F879cb30FE243b4Dfee438691c04"
 }

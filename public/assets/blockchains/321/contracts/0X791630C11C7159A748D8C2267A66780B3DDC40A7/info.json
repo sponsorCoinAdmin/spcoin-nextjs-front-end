@@ -1,25 +1,25 @@
 {
-    "name": "Quant",
-    "symbol": "QNT",
-    "type": "KRC20",
-    "decimals": 18,
-    "description": "Blockchain operating system that connects the world’s networks and facilitates the development of multi-chain applications.",
-    "website": "https://www.quant.network/",
-    "explorer": "https://explorer.kcc.io/token/0x791630C11c7159A748d8c2267a66780B3DDC40a7",
-    "status": "active",
-    "id": "0x791630C11c7159A748d8c2267a66780B3DDC40a7",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/quant/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/quant_network"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/QuantOverledger"
-        }
-    ]
+    "name":  "Quant",
+    "symbol":  "QNT",
+    "decimals":  18,
+    "description":  "Blockchain operating system that connects the world’s networks and facilitates the development of multi-chain applications.",
+    "website":  "https://www.quant.network/",
+    "explorer":  "https://explorer.kcc.io/token/0x791630C11c7159A748d8c2267a66780B3DDC40a7",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/321/contracts/0X791630C11C7159A748D8C2267A66780B3DDC40A7/logo.png",
+    "id":  "0x791630C11c7159A748d8c2267a66780B3DDC40a7",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/quant/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/quant_network"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/QuantOverledger"
+                  }
+              ]
 }

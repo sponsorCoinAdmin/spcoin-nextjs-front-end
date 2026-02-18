@@ -1,11 +1,11 @@
 {
-    "name": "GOTOGODS",
-    "symbol": "OGODS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "An innovative platform that allows fans to book live meetings with STARS.",
-    "website": "https://www.gotogods.io/",
-    "explorer": "https://etherscan.io/token/0x1051a014E4b3F2bD08E5A7e52522f0F71628162B",
-    "status": "active",
-    "id": "0x1051a014E4b3F2bD08E5A7e52522f0F71628162B"
+    "name":  "GOTOGODS",
+    "symbol":  "OGODS",
+    "decimals":  18,
+    "description":  "An innovative platform that allows fans to book live meetings with STARS.",
+    "website":  "https://www.gotogods.io/",
+    "explorer":  "https://etherscan.io/token/0x1051a014E4b3F2bD08E5A7e52522f0F71628162B",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1051A014E4B3F2BD08E5A7E52522F0F71628162B/logo.png",
+    "id":  "0x1051a014E4b3F2bD08E5A7e52522f0F71628162B"
 }

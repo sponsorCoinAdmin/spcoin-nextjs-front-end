@@ -1,12 +1,12 @@
 {
-    "name": "Spider Finance",
-    "website": "https://spider.finance/",
-    "description": "SPIDER FINANCE IS A FULLY DECENTRALIZED PROTOCOL FOR GAME ON ETHEREUM.",
-    "explorer": "https://etherscan.io/token/0xf28D3dcc9b6582F1b2D49Ca850dB1360571cB633",
-    "research": "",
-    "type": "ERC20",
-    "symbol": "SPID",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xf28D3dcc9b6582F1b2D49Ca850dB1360571cB633"
+    "name":  "Spider Finance",
+    "website":  "https://spider.finance/",
+    "description":  "SPIDER FINANCE IS A FULLY DECENTRALIZED PROTOCOL FOR GAME ON ETHEREUM.",
+    "explorer":  "https://etherscan.io/token/0xf28D3dcc9b6582F1b2D49Ca850dB1360571cB633",
+    "research":  "",
+    "symbol":  "SPID",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF28D3DCC9B6582F1B2D49CA850DB1360571CB633/logo.png",
+    "id":  "0xf28D3dcc9b6582F1b2D49Ca850dB1360571cB633"
 }

@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Rebel News",
     "symbol":  "R_NEWS",
-    "address":  "0X000000000000000000000000000000000000003d",
+    "address":  "0X000000000000000000000000000000000000003D",
     "website":  "",
     "description":  "This is the description for site RebelNews2",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000003D/logo.png",
     "status":  "test"
 }

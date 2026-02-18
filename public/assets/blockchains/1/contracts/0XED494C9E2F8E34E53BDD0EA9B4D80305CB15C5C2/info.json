@@ -1,11 +1,11 @@
 {
-    "name": "CWV Chain",
-    "symbol": "CWV",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "CWV Chain (CWV) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://cwv.io",
-    "explorer": "https://etherscan.io/token/0xED494c9e2F8E34e53BDD0EA9B4d80305cb15C5c2",
-    "status": "active",
-    "id": "0xED494c9e2F8E34e53BDD0EA9B4d80305cb15C5c2"
+    "name":  "CWV Chain",
+    "symbol":  "CWV",
+    "decimals":  18,
+    "description":  "CWV Chain (CWV) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://cwv.io",
+    "explorer":  "https://etherscan.io/token/0xED494c9e2F8E34e53BDD0EA9B4d80305cb15C5c2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XED494C9E2F8E34E53BDD0EA9B4D80305CB15C5C2/logo.png",
+    "id":  "0xED494c9e2F8E34e53BDD0EA9B4d80305cb15C5c2"
 }

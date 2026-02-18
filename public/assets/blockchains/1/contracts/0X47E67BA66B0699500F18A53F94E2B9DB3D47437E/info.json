@@ -1,11 +1,11 @@
 {
-    "name": "PlayGame",
-    "symbol": "PXG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Powering real economy in the gaming world. Purchase virtual items and pool prize competition with cryptocurrencies.",
-    "website": "https://its.playgame.com/",
-    "explorer": "https://etherscan.io/token/0x47e67BA66b0699500f18A53F94E2b9dB3D47437e",
-    "status": "active",
-    "id": "0x47e67BA66b0699500f18A53F94E2b9dB3D47437e"
+    "name":  "PlayGame",
+    "symbol":  "PXG",
+    "decimals":  18,
+    "description":  "Powering real economy in the gaming world. Purchase virtual items and pool prize competition with cryptocurrencies.",
+    "website":  "https://its.playgame.com/",
+    "explorer":  "https://etherscan.io/token/0x47e67BA66b0699500f18A53F94E2b9dB3D47437e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X47E67BA66B0699500F18A53F94E2B9DB3D47437E/logo.png",
+    "id":  "0x47e67BA66b0699500f18A53F94E2b9dB3D47437e"
 }

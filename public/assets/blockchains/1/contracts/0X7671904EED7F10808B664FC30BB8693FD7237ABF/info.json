@@ -1,17 +1,17 @@
 {
-    "name": "Boolberry",
-    "website": "https://app.bbr.finance/",
-    "description": "New way of yield farming defi BITBERRY FINANCE",
-    "explorer": "https://etherscan.io/token/0x7671904eed7f10808b664fc30bb8693fd7237abf",
-    "type": "ERC20",
-    "symbol": "BBR",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x7671904eed7f10808B664fc30BB8693FD7237abF",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/bbr-defi/bbr-contracts"
-        }
-    ]
+    "name":  "Boolberry",
+    "website":  "https://app.bbr.finance/",
+    "description":  "New way of yield farming defi BITBERRY FINANCE",
+    "explorer":  "https://etherscan.io/token/0x7671904eed7f10808b664fc30bb8693fd7237abf",
+    "symbol":  "BBR",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7671904EED7F10808B664FC30BB8693FD7237ABF/logo.png",
+    "id":  "0x7671904eed7f10808B664fc30BB8693FD7237abF",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/bbr-defi/bbr-contracts"
+                  }
+              ]
 }

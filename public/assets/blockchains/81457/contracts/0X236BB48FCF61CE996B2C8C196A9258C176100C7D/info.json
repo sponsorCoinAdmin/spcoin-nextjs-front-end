@@ -1,17 +1,17 @@
 {
-    "name": "RabbitX",
-    "website": "https://rabbitx.io/",
-    "description": "RabbitX is a global permissionless perpetuals exchange built on Starknet.",
-    "explorer": "https://blastscan.io/token/0x236bb48fcf61ce996b2c8c196a9258c176100c7d",
-    "type": "BLAST",
-    "symbol": "RBX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x236bb48fcF61ce996B2C8C196a9258c176100c7d",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/rabbitx/"
-        }
-    ]
+    "name":  "RabbitX",
+    "website":  "https://rabbitx.io/",
+    "description":  "RabbitX is a global permissionless perpetuals exchange built on Starknet.",
+    "explorer":  "https://blastscan.io/token/0x236bb48fcf61ce996b2c8c196a9258c176100c7d",
+    "symbol":  "RBX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/81457/contracts/0X236BB48FCF61CE996B2C8C196A9258C176100C7D/logo.png",
+    "id":  "0x236bb48fcF61ce996B2C8C196a9258c176100c7d",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/rabbitx/"
+                  }
+              ]
 }

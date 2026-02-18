@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Save The Whales",
     "symbol":  "WHALES",
-    "address":  "0X000000000000000000000000000000000000005b",
+    "address":  "0X000000000000000000000000000000000000005B",
     "website":  "",
     "description":  "This is the description for site SaveTheWhales",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000005B/logo.png",
     "status":  "test"
 }

@@ -1,17 +1,17 @@
 {
-    "name": "DefiFarm",
-    "website": "https://dff.finance",
-    "description": "DefiFarm empowers blockchain networks to have state of the art privacy protection over smart contracts, DeFi, transactions, data.",
-    "explorer": "https://etherscan.io/token/0x132e2fDBA9C224D3d62f18aE79e0e8f4E4BE987D",
-    "type": "ERC20",
-    "symbol": "DFF",
-    "decimals": 8,
-    "status": "active",
-    "id": "0x132e2fDBA9C224D3d62f18aE79e0e8f4E4BE987D",
-    "links": [
-        {
-            "name": "whitepaper",
-            "url": "https://dff.finance/white-page.pdf"
-        }
-    ]
+    "name":  "DefiFarm",
+    "website":  "https://dff.finance",
+    "description":  "DefiFarm empowers blockchain networks to have state of the art privacy protection over smart contracts, DeFi, transactions, data.",
+    "explorer":  "https://etherscan.io/token/0x132e2fDBA9C224D3d62f18aE79e0e8f4E4BE987D",
+    "symbol":  "DFF",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X132E2FDBA9C224D3D62F18AE79E0E8F4E4BE987D/logo.png",
+    "id":  "0x132e2fDBA9C224D3d62f18aE79e0e8f4E4BE987D",
+    "links":  [
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://dff.finance/white-page.pdf"
+                  }
+              ]
 }

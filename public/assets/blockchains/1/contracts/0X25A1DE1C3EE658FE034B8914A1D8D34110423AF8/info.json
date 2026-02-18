@@ -1,11 +1,11 @@
 {
-    "name": "CheGuevara",
-    "symbol": "Che",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x25a1DE1C3eE658FE034B8914a1D8d34110423AF8",
-    "status": "spam",
-    "id": "0x25a1DE1C3eE658FE034B8914a1D8d34110423AF8"
+    "name":  "CheGuevara",
+    "symbol":  "Che",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x25a1DE1C3eE658FE034B8914a1D8d34110423AF8",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X25A1DE1C3EE658FE034B8914A1D8D34110423AF8/logo.png",
+    "id":  "0x25a1DE1C3eE658FE034B8914a1D8d34110423AF8"
 }

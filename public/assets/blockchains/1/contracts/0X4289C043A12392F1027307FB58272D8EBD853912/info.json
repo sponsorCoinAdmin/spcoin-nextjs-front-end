@@ -1,11 +1,11 @@
 {
-    "name": "AiLink Token",
-    "symbol": "ALI",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "AiLink Token (ALI) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "http://ailink.in/pc.html",
-    "explorer": "https://etherscan.io/token/0x4289c043A12392F1027307fB58272D8EBd853912",
-    "status": "active",
-    "id": "0x4289c043A12392F1027307fB58272D8EBd853912"
+    "name":  "AiLink Token",
+    "symbol":  "ALI",
+    "decimals":  18,
+    "description":  "AiLink Token (ALI) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "http://ailink.in/pc.html",
+    "explorer":  "https://etherscan.io/token/0x4289c043A12392F1027307fB58272D8EBd853912",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4289C043A12392F1027307FB58272D8EBD853912/logo.png",
+    "id":  "0x4289c043A12392F1027307fB58272D8EBd853912"
 }

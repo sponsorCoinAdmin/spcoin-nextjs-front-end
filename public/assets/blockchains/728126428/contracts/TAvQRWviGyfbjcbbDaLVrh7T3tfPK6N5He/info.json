@@ -1,11 +1,11 @@
 {
-    "name": "DYIToken",
-    "symbol": "DYI",
-    "type": "TRC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token20/TAvQRWviGyfbjcbbDaLVrh7T3tfPK6N5He",
-    "status": "spam",
-    "id": "TAvQRWviGyfbjcbbDaLVrh7T3tfPK6N5He"
+    "name":  "DYIToken",
+    "symbol":  "DYI",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token20/TAvQRWviGyfbjcbbDaLVrh7T3tfPK6N5He",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/TAvQRWviGyfbjcbbDaLVrh7T3tfPK6N5He/logo.png",
+    "id":  "TAvQRWviGyfbjcbbDaLVrh7T3tfPK6N5He"
 }

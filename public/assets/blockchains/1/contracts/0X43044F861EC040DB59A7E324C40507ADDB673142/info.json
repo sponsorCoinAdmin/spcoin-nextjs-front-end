@@ -1,11 +1,11 @@
 {
-    "name": "Cap",
-    "website": "https://cap.finance",
-    "description": "Cap is a protocol to trade the markets with stablecoins.",
-    "explorer": "https://etherscan.io/token/0x43044f861ec040DB59A7e324c40507adDb673142",
-    "type": "ERC20",
-    "symbol": "CAP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x43044f861ec040DB59A7e324c40507adDb673142"
+    "name":  "Cap",
+    "website":  "https://cap.finance",
+    "description":  "Cap is a protocol to trade the markets with stablecoins.",
+    "explorer":  "https://etherscan.io/token/0x43044f861ec040DB59A7e324c40507adDb673142",
+    "symbol":  "CAP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X43044F861EC040DB59A7E324C40507ADDB673142/logo.png",
+    "id":  "0x43044f861ec040DB59A7e324c40507adDb673142"
 }

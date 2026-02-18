@@ -1,29 +1,29 @@
 {
-    "name": "Wrapped Bitcoin",
-    "website": "https://wbtc.network",
-    "description": "Wrapped Bitcoin (WBTC) is the first ERC20 token backed 1:1 with Bitcoin.",
-    "explorer": "https://blastscan.io/token/0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
-    "type": "BLAST",
-    "symbol": "WBTC",
-    "decimals": 8,
-    "status": "active",
-    "id": "0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
-    "tags": [
-        "defi",
-        "wrapped"
-    ],
-    "links": [
-        {
-            "name": "whitepaper",
-            "url": "https://wbtc.network/assets/wrapped-tokens-whitepaper.pdf"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/wrapped-bitcoin/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/wrapped-bitcoin/"
-        }
-    ]
+    "name":  "Wrapped Bitcoin",
+    "website":  "https://wbtc.network",
+    "description":  "Wrapped Bitcoin (WBTC) is the first ERC20 token backed 1:1 with Bitcoin.",
+    "explorer":  "https://blastscan.io/token/0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
+    "symbol":  "WBTC",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/81457/contracts/0XF7BC58B8D8F97ADC129CFC4C9F45CE3C0E1D2692/logo.png",
+    "id":  "0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
+    "tags":  [
+                 "defi",
+                 "wrapped"
+             ],
+    "links":  [
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://wbtc.network/assets/wrapped-tokens-whitepaper.pdf"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/wrapped-bitcoin/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/wrapped-bitcoin/"
+                  }
+              ]
 }

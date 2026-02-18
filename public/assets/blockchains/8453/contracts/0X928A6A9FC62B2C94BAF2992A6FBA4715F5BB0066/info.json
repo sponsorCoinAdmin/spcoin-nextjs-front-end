@@ -1,21 +1,21 @@
 {
-    "name": "Rug World Assets",
-    "website": "https://rugwa.com/",
-    "description": "$RWA is a meme token.",
-    "explorer": "https://basescan.org/token/0x928a6a9fc62b2c94baf2992a6fba4715f5bb0066",
-    "type": "BASE",
-    "symbol": "RWA",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x928A6a9fc62b2C94BaF2992a6fBa4715f5Bb0066",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/rug-world-assets/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/RWABase"
-        }
-    ]
+    "name":  "Rug World Assets",
+    "website":  "https://rugwa.com/",
+    "description":  "$RWA is a meme token.",
+    "explorer":  "https://basescan.org/token/0x928a6a9fc62b2c94baf2992a6fba4715f5bb0066",
+    "symbol":  "RWA",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X928A6A9FC62B2C94BAF2992A6FBA4715F5BB0066/logo.png",
+    "id":  "0x928A6a9fc62b2C94BaF2992a6fBa4715f5Bb0066",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/rug-world-assets/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/RWABase"
+                  }
+              ]
 }

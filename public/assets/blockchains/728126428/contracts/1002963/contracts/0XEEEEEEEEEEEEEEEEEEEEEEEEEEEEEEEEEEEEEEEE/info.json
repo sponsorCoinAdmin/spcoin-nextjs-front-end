@@ -1,7 +1,8 @@
 {
-  "chainId": 1002963,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Ethereum",
-  "symbol": "???",
-  "decimals": 18
+    "chainId":  1002963,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "Ethereum",
+    "symbol":  "???",
+    "decimals":  18,
+    "logoURL":  "assets/blockchains/728126428/contracts/1002963/logo.png"
 }

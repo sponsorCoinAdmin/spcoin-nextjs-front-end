@@ -1,11 +1,11 @@
 {
-    "name": "MX Token",
-    "website": "https://mxc.com",
-    "description": "MX is the native token of the MXC trading platform. MX holders reportedly benefit from asset appreciation, rebates on platform revenue, supervision, and voting.",
-    "explorer": "https://etherscan.io/token/0x11eeF04c884E24d9B7B4760e7476D06ddF797f36",
-    "type": "ERC20",
-    "symbol": "MX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x11eeF04c884E24d9B7B4760e7476D06ddF797f36"
+    "name":  "MX Token",
+    "website":  "https://mxc.com",
+    "description":  "MX is the native token of the MXC trading platform. MX holders reportedly benefit from asset appreciation, rebates on platform revenue, supervision, and voting.",
+    "explorer":  "https://etherscan.io/token/0x11eeF04c884E24d9B7B4760e7476D06ddF797f36",
+    "symbol":  "MX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X11EEF04C884E24D9B7B4760E7476D06DDF797F36/logo.png",
+    "id":  "0x11eeF04c884E24d9B7B4760e7476D06ddF797f36"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "BF Token",
-    "symbol": "BFT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "BnKToTheFuture (BFT) is an online investment platform created to facilitate investments in equity and cryptoassets",
-    "website": "https://bf-token.bnktothefuture.com",
-    "explorer": "https://etherscan.io/token/0x01fF50f8b7f74E4f00580d9596cd3D0d6d6E326f",
-    "status": "active",
-    "id": "0x01fF50f8b7f74E4f00580d9596cd3D0d6d6E326f"
+    "name":  "BF Token",
+    "symbol":  "BFT",
+    "decimals":  18,
+    "description":  "BnKToTheFuture (BFT) is an online investment platform created to facilitate investments in equity and cryptoassets",
+    "website":  "https://bf-token.bnktothefuture.com",
+    "explorer":  "https://etherscan.io/token/0x01fF50f8b7f74E4f00580d9596cd3D0d6d6E326f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X01FF50F8B7F74E4F00580D9596CD3D0D6D6E326F/logo.png",
+    "id":  "0x01fF50f8b7f74E4f00580d9596cd3D0d6d6E326f"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "DOVU",
-    "website": "https://dovu.io",
-    "description": "A unified Token, Wallet and HUB for Carbon Offsetting",
-    "explorer": "https://etherscan.io/token/0xac3211a5025414Af2866FF09c23FC18bc97e79b1",
-    "type": "ERC20",
-    "symbol": "DOV",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xac3211a5025414Af2866FF09c23FC18bc97e79b1"
+    "name":  "DOVU",
+    "website":  "https://dovu.io",
+    "description":  "A unified Token, Wallet and HUB for Carbon Offsetting",
+    "explorer":  "https://etherscan.io/token/0xac3211a5025414Af2866FF09c23FC18bc97e79b1",
+    "symbol":  "DOV",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAC3211A5025414AF2866FF09C23FC18BC97E79B1/logo.png",
+    "id":  "0xac3211a5025414Af2866FF09c23FC18bc97e79b1"
 }

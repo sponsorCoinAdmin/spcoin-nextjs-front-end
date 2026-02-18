@@ -1,21 +1,21 @@
 {
-    "name": "Dogcoin",
-    "symbol": "DCOIN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Dogcoin is not just another token; it’s a revolutionary, pure, and honest project in the crypto space",
-    "website": "https://dogcoin.pet",
-    "explorer": "https://etherscan.io/token/0xf1BB41F9eD87e6c7E1F70e921b7B4bee1Df7Ae9c",
-    "status": "active",
-    "id": "0xf1BB41F9eD87e6c7E1F70e921b7B4bee1Df7Ae9c",
-    "links": [
-      {
-        "name": "x",
-        "url": "https://x.com/DogcoinEthereum"
-      },
-      {
-        "name": "coinmarketcap",
-        "url": "https://coinmarketcap.com/currencies/dogcoin-pet/"
-      }
-    ]
-} 
+    "name":  "Dogcoin",
+    "symbol":  "DCOIN",
+    "decimals":  18,
+    "description":  "Dogcoin is not just another token; it’s a revolutionary, pure, and honest project in the crypto space",
+    "website":  "https://dogcoin.pet",
+    "explorer":  "https://etherscan.io/token/0xf1BB41F9eD87e6c7E1F70e921b7B4bee1Df7Ae9c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF1BB41F9ED87E6C7E1F70E921B7B4BEE1DF7AE9C/logo.png",
+    "id":  "0xf1BB41F9eD87e6c7E1F70e921b7B4bee1Df7Ae9c",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/DogcoinEthereum"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/dogcoin-pet/"
+                  }
+              ]
+}

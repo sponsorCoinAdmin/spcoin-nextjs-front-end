@@ -1,11 +1,11 @@
 {
-    "name": "Cryptobuyer Token",
-    "symbol": "XPT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "At Cryptobuyer we offer multiple financial services in the same place, with the security, privacy and speed you deserve.",
-    "website": "https://cryptobuyer.io",
-    "explorer": "https://etherscan.io/token/0x08Aa0ed0040736dd28d4c8B16Ab453b368248d19",
-    "status": "active",
-    "id": "0x08Aa0ed0040736dd28d4c8B16Ab453b368248d19"
+    "name":  "Cryptobuyer Token",
+    "symbol":  "XPT",
+    "decimals":  18,
+    "description":  "At Cryptobuyer we offer multiple financial services in the same place, with the security, privacy and speed you deserve.",
+    "website":  "https://cryptobuyer.io",
+    "explorer":  "https://etherscan.io/token/0x08Aa0ed0040736dd28d4c8B16Ab453b368248d19",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X08AA0ED0040736DD28D4C8B16AB453B368248D19/logo.png",
+    "id":  "0x08Aa0ed0040736dd28d4c8B16Ab453b368248d19"
 }

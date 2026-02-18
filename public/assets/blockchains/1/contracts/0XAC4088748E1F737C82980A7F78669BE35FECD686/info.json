@@ -1,11 +1,11 @@
 {
-    "name": "Basecoin",
-    "symbol": "BAB",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xAC4088748E1f737C82980A7f78669bE35FecD686",
-    "status": "active",
-    "id": "0xAC4088748E1f737C82980A7f78669bE35FecD686"
+    "name":  "Basecoin",
+    "symbol":  "BAB",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xAC4088748E1f737C82980A7f78669bE35FecD686",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAC4088748E1F737C82980A7F78669BE35FECD686/logo.png",
+    "id":  "0xAC4088748E1f737C82980A7f78669bE35FecD686"
 }

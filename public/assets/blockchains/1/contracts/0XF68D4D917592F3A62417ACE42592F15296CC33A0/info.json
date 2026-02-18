@@ -1,28 +1,28 @@
 {
-    "name": "Coin hub",
-    "description": "Utility token",
-    "symbol": "CHB",
-    "type": "ERC20",
-    "decimals": 8,
-    "website": "https://thecoinhub.io/",
-    "explorer": "https://etherscan.io/token/0xf68D4d917592f3a62417aCE42592F15296cc33A0",
-    "status": "active",
-    "id": "0xf68D4d917592f3a62417aCE42592F15296cc33A0",
-    "links": [
-        {
-            "name": "telegram",
-            "url": "https://t.me/c0inhub"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/coinhubchb"
-        },
-        {
-            "name": "facebook",
-            "url": "https://facebook.com/Thecoinhub-102940902381599"
-        }
-    ],
-    "tags": [
-        "staking-native"
-    ]
+    "name":  "Coin hub",
+    "description":  "Utility token",
+    "symbol":  "CHB",
+    "decimals":  8,
+    "website":  "https://thecoinhub.io/",
+    "explorer":  "https://etherscan.io/token/0xf68D4d917592f3a62417aCE42592F15296cc33A0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF68D4D917592F3A62417ACE42592F15296CC33A0/logo.png",
+    "id":  "0xf68D4d917592f3a62417aCE42592F15296cc33A0",
+    "links":  [
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/c0inhub"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/coinhubchb"
+                  },
+                  {
+                      "name":  "facebook",
+                      "url":  "https://facebook.com/Thecoinhub-102940902381599"
+                  }
+              ],
+    "tags":  [
+                 "staking-native"
+             ]
 }

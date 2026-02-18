@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Save The Tiger",
     "symbol":  "SAVE_ME",
-    "address":  "0X000000000000000000000000000000000000004b",
+    "address":  "0X000000000000000000000000000000000000004B",
     "website":  "",
     "description":  "This is the description for site SaveTheTiger",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000004B/logo.png",
     "status":  "test"
 }

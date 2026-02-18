@@ -1,11 +1,11 @@
 {
-    "name": "1World",
-    "symbol": "1WO",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "1World is first of its kind media token and new generation Adsense. 1WO is used for increasing user engagement by sharing 10% ads revenue with participants and for buying ads.",
-    "website": "https://ico.1worldonline.com/",
-    "explorer": "https://etherscan.io/token/0xfDBc1aDc26F0F8f8606a5d63b7D3a3CD21c22B23",
-    "status": "active",
-    "id": "0xfDBc1aDc26F0F8f8606a5d63b7D3a3CD21c22B23"
+    "name":  "1World",
+    "symbol":  "1WO",
+    "decimals":  8,
+    "description":  "1World is first of its kind media token and new generation Adsense. 1WO is used for increasing user engagement by sharing 10% ads revenue with participants and for buying ads.",
+    "website":  "https://ico.1worldonline.com/",
+    "explorer":  "https://etherscan.io/token/0xfDBc1aDc26F0F8f8606a5d63b7D3a3CD21c22B23",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFDBC1ADC26F0F8F8606A5D63B7D3A3CD21C22B23/logo.png",
+    "id":  "0xfDBc1aDc26F0F8f8606a5d63b7D3a3CD21c22B23"
 }

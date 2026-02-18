@@ -1,11 +1,11 @@
 {
-    "name": "Ripio Credit Network",
-    "website": "https://ripiocredit.network",
-    "description": "A peer-to-peer credit network protocol based on co-signed smart contracts.",
-    "explorer": "https://etherscan.io/token/0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6",
-    "type": "ERC20",
-    "symbol": "RCN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6"
+    "name":  "Ripio Credit Network",
+    "website":  "https://ripiocredit.network",
+    "description":  "A peer-to-peer credit network protocol based on co-signed smart contracts.",
+    "explorer":  "https://etherscan.io/token/0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6",
+    "symbol":  "RCN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF970B8E36E23F7FC3FD752EEA86F8BE8D83375A6/logo.png",
+    "id":  "0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6"
 }

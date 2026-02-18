@@ -1,21 +1,21 @@
 {
-    "name": "imgnAI.com",
-    "website": "https://imgnai.com/",
-    "description": "$imgnAI is the creator token that powers the imgnAI platform - a suite of creative AI tools built for maximum fun, and maximum freedom.",
-    "explorer": "https://basescan.org/token/0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
-    "symbol": "imgnAI",
-    "type": "BASE",
-    "decimals": 9,
-    "status": "active",
-    "id": "0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/imgn_ai"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/imgnAI"
-        }
-    ]
+    "name":  "imgnAI.com",
+    "website":  "https://imgnai.com/",
+    "description":  "$imgnAI is the creator token that powers the imgnAI platform - a suite of creative AI tools built for maximum fun, and maximum freedom.",
+    "explorer":  "https://basescan.org/token/0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
+    "symbol":  "imgnAI",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X18E692C03DE43972FE81058F322FA542AE1A5E2C/logo.png",
+    "id":  "0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/imgn_ai"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/imgnAI"
+                  }
+              ]
 }

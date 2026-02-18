@@ -1,11 +1,11 @@
 {
-    "name": "FLIP Token",
-    "symbol": "FLP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://fliptoken.gameflip.com/",
-    "explorer": "https://etherscan.io/token/0x3a1Bda28AdB5B0a812a7CF10A1950c920F79BcD3",
-    "status": "active",
-    "id": "0x3a1Bda28AdB5B0a812a7CF10A1950c920F79BcD3"
+    "name":  "FLIP Token",
+    "symbol":  "FLP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://fliptoken.gameflip.com/",
+    "explorer":  "https://etherscan.io/token/0x3a1Bda28AdB5B0a812a7CF10A1950c920F79BcD3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3A1BDA28ADB5B0A812A7CF10A1950C920F79BCD3/logo.png",
+    "id":  "0x3a1Bda28AdB5B0a812a7CF10A1950c920F79BcD3"
 }

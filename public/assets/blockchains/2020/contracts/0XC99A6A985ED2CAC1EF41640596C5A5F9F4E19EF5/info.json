@@ -1,11 +1,11 @@
 {
-    "name": "Ronin Wrapped Ether",
-    "symbol": "WETH",
-    "type": "RONIN",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://weth.io/",
-    "explorer": "https://explorer.roninchain.com/token/0xc99a6A985eD2Cac1ef41640596C5A5f9F4E19Ef5",
-    "status": "active",
-    "id": "0xc99a6A985eD2Cac1ef41640596C5A5f9F4E19Ef5"
+    "name":  "Ronin Wrapped Ether",
+    "symbol":  "WETH",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://weth.io/",
+    "explorer":  "https://explorer.roninchain.com/token/0xc99a6A985eD2Cac1ef41640596C5A5f9F4E19Ef5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/2020/contracts/0XC99A6A985ED2CAC1EF41640596C5A5F9F4E19EF5/logo.png",
+    "id":  "0xc99a6A985eD2Cac1ef41640596C5A5f9F4E19Ef5"
 }

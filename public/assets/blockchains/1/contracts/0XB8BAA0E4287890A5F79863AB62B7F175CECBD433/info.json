@@ -1,15 +1,15 @@
 {
-    "name": "Swerve",
-    "website": "https://swerve.fi/",
-    "description": "A fork that's 100% community owned and governed.",
-    "explorer": "https://etherscan.io/token/0xB8BAa0e4287890a5F79863aB62b7F175ceCbD433",
-    "research": "https://research.binance.com/en/projects/swerve",
-    "type": "ERC20",
-    "symbol": "SWRV",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xB8BAa0e4287890a5F79863aB62b7F175ceCbD433",
-    "tags": [
-        "governance"
-    ]
+    "name":  "Swerve",
+    "website":  "https://swerve.fi/",
+    "description":  "A fork that\u0027s 100% community owned and governed.",
+    "explorer":  "https://etherscan.io/token/0xB8BAa0e4287890a5F79863aB62b7F175ceCbD433",
+    "research":  "https://research.binance.com/en/projects/swerve",
+    "symbol":  "SWRV",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB8BAA0E4287890A5F79863AB62B7F175CECBD433/logo.png",
+    "id":  "0xB8BAa0e4287890a5F79863aB62b7F175ceCbD433",
+    "tags":  [
+                 "governance"
+             ]
 }

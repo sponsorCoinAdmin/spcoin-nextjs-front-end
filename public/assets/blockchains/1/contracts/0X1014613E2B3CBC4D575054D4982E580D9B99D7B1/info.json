@@ -1,11 +1,11 @@
 {
-    "name": "BitCapitalVendorToken",
-    "symbol": "BCV",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Blockchain digital asset management.",
-    "website": "https://www.bitcv.com",
-    "explorer": "https://etherscan.io/token/0x1014613E2B3CBc4d575054D4982E580d9b99d7B1",
-    "status": "active",
-    "id": "0x1014613E2B3CBc4d575054D4982E580d9b99d7B1"
+    "name":  "BitCapitalVendorToken",
+    "symbol":  "BCV",
+    "decimals":  8,
+    "description":  "Blockchain digital asset management.",
+    "website":  "https://www.bitcv.com",
+    "explorer":  "https://etherscan.io/token/0x1014613E2B3CBc4d575054D4982E580d9b99d7B1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1014613E2B3CBC4D575054D4982E580D9B99D7B1/logo.png",
+    "id":  "0x1014613E2B3CBc4d575054D4982E580d9b99d7B1"
 }

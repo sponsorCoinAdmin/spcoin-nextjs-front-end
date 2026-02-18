@@ -1,11 +1,11 @@
 {
-    "name": "VINX",
-    "website": "https://vinxcoin.com/",
-    "description": "Asset Backed By Wine And Vineyard Investment Funds",
-    "explorer": "https://etherscan.io/token/0x010c282118aA76174CE5952572BA715CF60A0c9B",
-    "type": "ERC20",
-    "symbol": "VINX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x010c282118aA76174CE5952572BA715CF60A0c9B"
+    "name":  "VINX",
+    "website":  "https://vinxcoin.com/",
+    "description":  "Asset Backed By Wine And Vineyard Investment Funds",
+    "explorer":  "https://etherscan.io/token/0x010c282118aA76174CE5952572BA715CF60A0c9B",
+    "symbol":  "VINX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X010C282118AA76174CE5952572BA715CF60A0C9B/logo.png",
+    "id":  "0x010c282118aA76174CE5952572BA715CF60A0c9B"
 }

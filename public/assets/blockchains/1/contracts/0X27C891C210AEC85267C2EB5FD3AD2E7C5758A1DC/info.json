@@ -1,17 +1,17 @@
 {
-    "name": "Terawatt LED Token",
-    "website": "https://terawattled.com",
-    "description": "Terawatt is a patent-pending, renewable energy blockchain startup, with a strong focus on monetization and driving global L.E.D. adoption",
-    "explorer": "https://etherscan.io/token/0x27C891c210aEc85267c2Eb5Fd3aD2E7c5758a1dC",
-    "type": "ERC20",
-    "symbol": "LED",
-    "decimals": 0,
-    "status": "active",
-    "id": "0x27C891c210aEc85267c2Eb5Fd3aD2E7c5758a1dC",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/terawatt_led"
-        }
-    ]
+    "name":  "Terawatt LED Token",
+    "website":  "https://terawattled.com",
+    "description":  "Terawatt is a patent-pending, renewable energy blockchain startup, with a strong focus on monetization and driving global L.E.D. adoption",
+    "explorer":  "https://etherscan.io/token/0x27C891c210aEc85267c2Eb5Fd3aD2E7c5758a1dC",
+    "symbol":  "LED",
+    "decimals":  0,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X27C891C210AEC85267C2EB5FD3AD2E7C5758A1DC/logo.png",
+    "id":  "0x27C891c210aEc85267c2Eb5Fd3aD2E7c5758a1dC",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/terawatt_led"
+                  }
+              ]
 }

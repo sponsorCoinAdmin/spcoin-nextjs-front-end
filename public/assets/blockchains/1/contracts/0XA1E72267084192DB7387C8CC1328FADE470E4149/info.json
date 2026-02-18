@@ -1,11 +1,11 @@
 {
-    "name": "TrueFi TrueUSD",
-    "website": "https://truefi.io/",
-    "description": "TrueFi is an on-chain uncollateralized lending protocol. tfTUSD represents a users TUSD deposit into the protocol's lending pool",
-    "explorer": "https://etherscan.io/token/0xa1e72267084192Db7387c8CC1328fadE470e4149",
-    "decimals": 18,
-    "id": "0xa1e72267084192Db7387c8CC1328fadE470e4149",
-    "type": "ERC20",
-    "symbol": "tfTUSD",
-    "status": "active"
+    "name":  "TrueFi TrueUSD",
+    "website":  "https://truefi.io/",
+    "description":  "TrueFi is an on-chain uncollateralized lending protocol. tfTUSD represents a users TUSD deposit into the protocol\u0027s lending pool",
+    "explorer":  "https://etherscan.io/token/0xa1e72267084192Db7387c8CC1328fadE470e4149",
+    "decimals":  18,
+    "id":  "0xa1e72267084192Db7387c8CC1328fadE470e4149",
+    "symbol":  "tfTUSD",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA1E72267084192DB7387C8CC1328FADE470E4149/logo.png"
 }

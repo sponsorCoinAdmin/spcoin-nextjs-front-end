@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Food Bank",
     "symbol":  "FOOD",
-    "address":  "0X000000000000000000000000000000000000002a",
+    "address":  "0X000000000000000000000000000000000000002A",
     "website":  "",
     "description":  "This is the description for site FoodBank",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000002A/logo.png",
     "status":  "test"
 }

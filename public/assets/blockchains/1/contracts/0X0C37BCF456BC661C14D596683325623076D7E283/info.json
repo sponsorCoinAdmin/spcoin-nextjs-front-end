@@ -1,12 +1,12 @@
 {
-    "name": "Aeron",
-    "website": "https://aeron.aero",
-    "description": "Aeron – blockchain solutions for aviation safety.",
-    "explorer": "https://etherscan.io/token/0x0C37Bcf456bC661C14D596683325623076D7e283",
-    "research": "https://research.binance.com/en/projects/aeron",
-    "type": "ERC20",
-    "symbol": "ARNX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x0C37Bcf456bC661C14D596683325623076D7e283"
+    "name":  "Aeron",
+    "website":  "https://aeron.aero",
+    "description":  "Aeron – blockchain solutions for aviation safety.",
+    "explorer":  "https://etherscan.io/token/0x0C37Bcf456bC661C14D596683325623076D7e283",
+    "research":  "https://research.binance.com/en/projects/aeron",
+    "symbol":  "ARNX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0C37BCF456BC661C14D596683325623076D7E283/logo.png",
+    "id":  "0x0C37Bcf456bC661C14D596683325623076D7e283"
 }

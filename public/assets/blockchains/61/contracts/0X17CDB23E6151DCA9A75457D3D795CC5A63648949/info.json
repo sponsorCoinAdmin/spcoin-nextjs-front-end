@@ -1,11 +1,11 @@
 {
-    "name": "Uzel",
-    "symbol": "UZG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x17CDb23E6151Dca9A75457d3d795CC5A63648949",
-    "status": "active",
-    "id": "0x17CDb23E6151Dca9A75457d3d795CC5A63648949"
+    "name":  "Uzel",
+    "symbol":  "UZG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x17CDb23E6151Dca9A75457d3d795CC5A63648949",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X17CDB23E6151DCA9A75457D3D795CC5A63648949/logo.png",
+    "id":  "0x17CDb23E6151Dca9A75457d3d795CC5A63648949"
 }

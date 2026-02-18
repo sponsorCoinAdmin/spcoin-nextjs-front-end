@@ -1,11 +1,11 @@
 {
-    "name": "Viberate",
-    "symbol": "VIB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Viberate is a crowdsourced live music ecosystem and a blockchain-based marketplace where we're matching musicians with event organizers.",
-    "website": "https://www.viberate.io/",
-    "explorer": "https://etherscan.io/token/0x2C974B2d0BA1716E644c1FC59982a89DDD2fF724",
-    "status": "active",
-    "id": "0x2C974B2d0BA1716E644c1FC59982a89DDD2fF724"
+    "name":  "Viberate",
+    "symbol":  "VIB",
+    "decimals":  18,
+    "description":  "Viberate is a crowdsourced live music ecosystem and a blockchain-based marketplace where we\u0027re matching musicians with event organizers.",
+    "website":  "https://www.viberate.io/",
+    "explorer":  "https://etherscan.io/token/0x2C974B2d0BA1716E644c1FC59982a89DDD2fF724",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2C974B2D0BA1716E644C1FC59982A89DDD2FF724/logo.png",
+    "id":  "0x2C974B2d0BA1716E644c1FC59982a89DDD2fF724"
 }

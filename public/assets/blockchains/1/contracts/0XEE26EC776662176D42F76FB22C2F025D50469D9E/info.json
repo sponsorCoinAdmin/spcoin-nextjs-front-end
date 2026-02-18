@@ -1,11 +1,11 @@
 {
-    "name": "TOKEN 30S",
-    "symbol": "30S",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xEe26Ec776662176D42f76fB22c2f025D50469D9E",
-    "status": "active",
-    "id": "0xEe26Ec776662176D42f76fB22c2f025D50469D9E"
+    "name":  "TOKEN 30S",
+    "symbol":  "30S",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xEe26Ec776662176D42f76fB22c2f025D50469D9E",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEE26EC776662176D42F76FB22C2F025D50469D9E/logo.png",
+    "id":  "0xEe26Ec776662176D42f76fB22c2f025D50469D9E"
 }

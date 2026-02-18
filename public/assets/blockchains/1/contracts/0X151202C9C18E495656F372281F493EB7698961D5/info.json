@@ -1,11 +1,11 @@
 {
-    "name": "DEBITUM",
-    "symbol": "DEB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Debitum is a lending ecosystem that connects small businesses, investors and service providers - currently risk assessors",
-    "website": "https://debitum.network/",
-    "explorer": "https://etherscan.io/token/0x151202C9c18e495656f372281F493EB7698961D5",
-    "status": "active",
-    "id": "0x151202C9c18e495656f372281F493EB7698961D5"
+    "name":  "DEBITUM",
+    "symbol":  "DEB",
+    "decimals":  18,
+    "description":  "Debitum is a lending ecosystem that connects small businesses, investors and service providers - currently risk assessors",
+    "website":  "https://debitum.network/",
+    "explorer":  "https://etherscan.io/token/0x151202C9c18e495656f372281F493EB7698961D5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X151202C9C18E495656F372281F493EB7698961D5/logo.png",
+    "id":  "0x151202C9c18e495656f372281F493EB7698961D5"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "ExtraCurio",
-    "symbol": "CURIO",
-    "type": "ERC20",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x4b46636aFCb2BC4DD20C3D0424c4E1e6D296Fabe",
-    "status": "spam",
-    "id": "0x4b46636aFCb2BC4DD20C3D0424c4E1e6D296Fabe"
+    "name":  "ExtraCurio",
+    "symbol":  "CURIO",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x4b46636aFCb2BC4DD20C3D0424c4E1e6D296Fabe",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X4B46636AFCB2BC4DD20C3D0424C4E1E6D296FABE/logo.png",
+    "id":  "0x4b46636aFCb2BC4DD20C3D0424c4E1e6D296Fabe"
 }

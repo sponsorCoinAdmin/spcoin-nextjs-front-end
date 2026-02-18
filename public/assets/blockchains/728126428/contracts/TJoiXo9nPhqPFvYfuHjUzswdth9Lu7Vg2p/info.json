@@ -1,11 +1,11 @@
 {
-    "name": "DZGToken",
-    "symbol": "DZG",
-    "type": "TRC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token20/TJoiXo9nPhqPFvYfuHjUzswdth9Lu7Vg2p",
-    "status": "spam",
-    "id": "TJoiXo9nPhqPFvYfuHjUzswdth9Lu7Vg2p"
+    "name":  "DZGToken",
+    "symbol":  "DZG",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token20/TJoiXo9nPhqPFvYfuHjUzswdth9Lu7Vg2p",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/TJoiXo9nPhqPFvYfuHjUzswdth9Lu7Vg2p/logo.png",
+    "id":  "TJoiXo9nPhqPFvYfuHjUzswdth9Lu7Vg2p"
 }

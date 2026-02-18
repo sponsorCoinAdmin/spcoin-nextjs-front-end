@@ -1,11 +1,11 @@
 {
-    "name": "\"\"",
-    "symbol": "ETG",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "https://www.etgproject.org/",
-    "explorer": "https://etherscan.io/token/0x28c8d01FF633eA9Cd8fc6a451D7457889E698de6",
-    "status": "active",
-    "id": "0x28c8d01FF633eA9Cd8fc6a451D7457889E698de6"
+    "name":  "\"\"",
+    "symbol":  "ETG",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "https://www.etgproject.org/",
+    "explorer":  "https://etherscan.io/token/0x28c8d01FF633eA9Cd8fc6a451D7457889E698de6",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X28C8D01FF633EA9CD8FC6A451D7457889E698DE6/logo.png",
+    "id":  "0x28c8d01FF633eA9Cd8fc6a451D7457889E698de6"
 }

@@ -1,14 +1,14 @@
 {
-    "name": "SOL (Portal)",
-    "symbol": "SOL",
-    "type": "AVALANCHE",
-    "decimals": 9,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://solana.com/",
-    "explorer": "https://snowtrace.io/token/0xFE6B19286885a4F7F55AdAD09C3Cd1f906D2478F",
-    "status": "active",
-    "id": "0xFE6B19286885a4F7F55AdAD09C3Cd1f906D2478F",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "SOL (Portal)",
+    "symbol":  "SOL",
+    "decimals":  9,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://solana.com/",
+    "explorer":  "https://snowtrace.io/token/0xFE6B19286885a4F7F55AdAD09C3Cd1f906D2478F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XFE6B19286885A4F7F55ADAD09C3CD1F906D2478F/logo.png",
+    "id":  "0xFE6B19286885a4F7F55AdAD09C3Cd1f906D2478F",
+    "tags":  [
+                 "wrapped"
+             ]
 }

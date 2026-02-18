@@ -1,11 +1,11 @@
 {
-    "name": "NANJCOIN",
-    "symbol": "NANJ",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "NANJCOIN is a cryptocurrency created using blockchain technology with the goal of connecting people and sports in ways that previously didn’t exist.",
-    "website": "https://nanjcoin.com/",
-    "explorer": "https://etherscan.io/token/0xFFE02ee4C69eDf1b340fCaD64fbd6b37a7b9e265",
-    "status": "active",
-    "id": "0xFFE02ee4C69eDf1b340fCaD64fbd6b37a7b9e265"
+    "name":  "NANJCOIN",
+    "symbol":  "NANJ",
+    "decimals":  8,
+    "description":  "NANJCOIN is a cryptocurrency created using blockchain technology with the goal of connecting people and sports in ways that previously didn’t exist.",
+    "website":  "https://nanjcoin.com/",
+    "explorer":  "https://etherscan.io/token/0xFFE02ee4C69eDf1b340fCaD64fbd6b37a7b9e265",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFFE02EE4C69EDF1B340FCAD64FBD6B37A7B9E265/logo.png",
+    "id":  "0xFFE02ee4C69eDf1b340fCaD64fbd6b37a7b9e265"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "BitUnits",
-    "symbol": "UNITS",
-    "type": "ETC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xD1c10d433C888E6d1841fF924d0CE45157f0d5Cd",
-    "status": "active",
-    "id": "0xD1c10d433C888E6d1841fF924d0CE45157f0d5Cd"
+    "name":  "BitUnits",
+    "symbol":  "UNITS",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xD1c10d433C888E6d1841fF924d0CE45157f0d5Cd",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XD1C10D433C888E6D1841FF924D0CE45157F0D5CD/logo.png",
+    "id":  "0xD1c10d433C888E6d1841fF924d0CE45157f0d5Cd"
 }

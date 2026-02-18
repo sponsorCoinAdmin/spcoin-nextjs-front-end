@@ -1,11 +1,11 @@
 {
-    "name": "EVO",
-    "symbol": "EVO",
-    "type": "TRC10",
-    "decimals": 0,
-    "description": "Token to power the DApp Evolution Ecosystem, including TronChat, TronRadar, TronCollectibles and more.",
-    "website": "https://dappevolution.com/",
-    "explorer": "https://tronscan.io/#/token/1001757",
-    "status": "active",
-    "id": "1001757"
+    "name":  "EVO",
+    "symbol":  "EVO",
+    "decimals":  0,
+    "description":  "Token to power the DApp Evolution Ecosystem, including TronChat, TronRadar, TronCollectibles and more.",
+    "website":  "https://dappevolution.com/",
+    "explorer":  "https://tronscan.io/#/token/1001757",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/728126428/contracts/1001757/logo.png",
+    "id":  "1001757"
 }

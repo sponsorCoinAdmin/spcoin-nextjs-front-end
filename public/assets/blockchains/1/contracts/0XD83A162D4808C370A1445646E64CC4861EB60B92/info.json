@@ -1,11 +1,11 @@
 {
-    "name": "OxyCoin",
-    "symbol": "OXY",
-    "website": "https://oxy-coin.com",
-    "description": "OxyCoin (OXY) is an ERC20 Token that supplied 244,140,625,000,000,000,000 coins",
-    "explorer": "https://etherscan.io/token/0xD83A162d4808c370A1445646e64CC4861eB60b92",
-    "type": "ERC20",
-    "decimals": 8,
-    "status": "active",
-    "id": "0xD83A162d4808c370A1445646e64CC4861eB60b92"
+    "name":  "OxyCoin",
+    "symbol":  "OXY",
+    "website":  "https://oxy-coin.com",
+    "description":  "OxyCoin (OXY) is an ERC20 Token that supplied 244,140,625,000,000,000,000 coins",
+    "explorer":  "https://etherscan.io/token/0xD83A162d4808c370A1445646e64CC4861eB60b92",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD83A162D4808C370A1445646E64CC4861EB60B92/logo.png",
+    "id":  "0xD83A162d4808c370A1445646e64CC4861eB60b92"
 }

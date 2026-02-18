@@ -1,11 +1,11 @@
 {
-    "name": "SANtiment network token",
-    "symbol": "SAN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Tools to help you analyze the crypto market and find data-driven investing opportunities.",
-    "website": "https://santiment.net",
-    "explorer": "https://etherscan.io/token/0x7C5A0CE9267ED19B22F8cae653F198e3E8daf098",
-    "status": "active",
-    "id": "0x7C5A0CE9267ED19B22F8cae653F198e3E8daf098"
+    "name":  "SANtiment network token",
+    "symbol":  "SAN",
+    "decimals":  18,
+    "description":  "Tools to help you analyze the crypto market and find data-driven investing opportunities.",
+    "website":  "https://santiment.net",
+    "explorer":  "https://etherscan.io/token/0x7C5A0CE9267ED19B22F8cae653F198e3E8daf098",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7C5A0CE9267ED19B22F8CAE653F198E3E8DAF098/logo.png",
+    "id":  "0x7C5A0CE9267ED19B22F8cae653F198e3E8daf098"
 }

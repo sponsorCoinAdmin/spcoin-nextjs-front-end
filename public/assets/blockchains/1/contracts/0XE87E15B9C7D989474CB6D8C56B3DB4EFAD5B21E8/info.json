@@ -1,21 +1,21 @@
 {
-    "name": "Hokkaidu Inu",
-    "website": "https://hokk.finance/",
-    "description": "Leveraging community to build an inclusive financial ecosystem. We are Meme Utility",
-    "explorer": "https://etherscan.io/token/0xe87e15B9c7d989474Cb6d8c56b3DB4eFAD5b21E8",
-    "type": "ERC20",
-    "symbol": "HOKK",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xe87e15B9c7d989474Cb6d8c56b3DB4eFAD5b21E8",
-    "links": [
-        {
-            "name": "telegram",
-            "url": "https://t.me/HokkaidoInu"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/hokkaiduinu"
-        }
-    ]
+    "name":  "Hokkaidu Inu",
+    "website":  "https://hokk.finance/",
+    "description":  "Leveraging community to build an inclusive financial ecosystem. We are Meme Utility",
+    "explorer":  "https://etherscan.io/token/0xe87e15B9c7d989474Cb6d8c56b3DB4eFAD5b21E8",
+    "symbol":  "HOKK",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE87E15B9C7D989474CB6D8C56B3DB4EFAD5B21E8/logo.png",
+    "id":  "0xe87e15B9c7d989474Cb6d8c56b3DB4eFAD5b21E8",
+    "links":  [
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/HokkaidoInu"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/hokkaiduinu"
+                  }
+              ]
 }

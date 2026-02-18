@@ -1,11 +1,11 @@
 {
-    "name": "PiplCoin",
-    "symbol": "PIPL",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "https://piplcoin.com",
-    "explorer": "https://etherscan.io/token/0xE64509F0bf07ce2d29A7eF19A8A9bc065477C1B4",
-    "status": "active",
-    "id": "0xE64509F0bf07ce2d29A7eF19A8A9bc065477C1B4"
+    "name":  "PiplCoin",
+    "symbol":  "PIPL",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "https://piplcoin.com",
+    "explorer":  "https://etherscan.io/token/0xE64509F0bf07ce2d29A7eF19A8A9bc065477C1B4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE64509F0BF07CE2D29A7EF19A8A9BC065477C1B4/logo.png",
+    "id":  "0xE64509F0bf07ce2d29A7eF19A8A9bc065477C1B4"
 }

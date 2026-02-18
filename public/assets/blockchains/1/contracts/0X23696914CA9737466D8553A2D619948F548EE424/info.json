@@ -1,11 +1,11 @@
 {
-    "name": "Staked TrueFi",
-    "website": "https://truefi.io/",
-    "description": "TrueFi is an on-chain uncollateralized lending protocol. stkTRU represents a users TRU deposited into the protocol's staking contract",
-    "explorer": "https://etherscan.io/token/0x23696914Ca9737466D8553a2d619948f548Ee424",
-    "decimals": 8,
-    "id": "0x23696914Ca9737466D8553a2d619948f548Ee424",
-    "type": "ERC20",
-    "symbol": "stkTRU",
-    "status": "active"
+    "name":  "Staked TrueFi",
+    "website":  "https://truefi.io/",
+    "description":  "TrueFi is an on-chain uncollateralized lending protocol. stkTRU represents a users TRU deposited into the protocol\u0027s staking contract",
+    "explorer":  "https://etherscan.io/token/0x23696914Ca9737466D8553a2d619948f548Ee424",
+    "decimals":  8,
+    "id":  "0x23696914Ca9737466D8553a2d619948f548Ee424",
+    "symbol":  "stkTRU",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X23696914CA9737466D8553A2D619948F548EE424/logo.png"
 }

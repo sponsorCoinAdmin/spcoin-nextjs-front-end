@@ -1,11 +1,11 @@
 {
-    "name": "GNBU",
-    "website": "https://nimbusplatform.io",
-    "description": "Nimbus - Creating Value Based on Real Use cases for Digital Assets.",
-    "explorer": "https://etherscan.io/token/0x639ae8F3EEd18690bF451229d14953a5A5627b72",
-    "type": "ERC20",
-    "symbol": "GNBU",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x639ae8F3EEd18690bF451229d14953a5A5627b72"
+    "name":  "GNBU",
+    "website":  "https://nimbusplatform.io",
+    "description":  "Nimbus - Creating Value Based on Real Use cases for Digital Assets.",
+    "explorer":  "https://etherscan.io/token/0x639ae8F3EEd18690bF451229d14953a5A5627b72",
+    "symbol":  "GNBU",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X639AE8F3EED18690BF451229D14953A5A5627B72/logo.png",
+    "id":  "0x639ae8F3EEd18690bF451229d14953a5A5627b72"
 }

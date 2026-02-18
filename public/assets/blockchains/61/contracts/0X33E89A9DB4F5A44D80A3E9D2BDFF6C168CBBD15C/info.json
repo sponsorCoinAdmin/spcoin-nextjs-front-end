@@ -1,11 +1,11 @@
 {
-    "name": "Slyike",
-    "symbol": "SLYG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x33E89a9db4F5a44d80A3E9d2Bdff6c168cbbd15c",
-    "status": "active",
-    "id": "0x33E89a9db4F5a44d80A3E9d2Bdff6c168cbbd15c"
+    "name":  "Slyike",
+    "symbol":  "SLYG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x33E89a9db4F5a44d80A3E9d2Bdff6c168cbbd15c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X33E89A9DB4F5A44D80A3E9D2BDFF6C168CBBD15C/logo.png",
+    "id":  "0x33E89a9db4F5a44d80A3E9d2Bdff6c168cbbd15c"
 }

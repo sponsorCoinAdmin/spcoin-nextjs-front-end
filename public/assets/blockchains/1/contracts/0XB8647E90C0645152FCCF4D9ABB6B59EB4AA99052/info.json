@@ -1,11 +1,11 @@
 {
-    "name": "KEYFI Token",
-    "symbol": "KEYFI",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "KeyFi is an all-in-one platform for tracking, swapping, and staking your tokens, and more.",
-    "website": "https://keyfi.com",
-    "explorer": "https://etherscan.io/token/0xB8647e90C0645152Fccf4d9AbB6B59Eb4AA99052",
-    "status": "active",
-    "id": "0xB8647e90C0645152Fccf4d9AbB6B59Eb4AA99052"
+    "name":  "KEYFI Token",
+    "symbol":  "KEYFI",
+    "decimals":  18,
+    "description":  "KeyFi is an all-in-one platform for tracking, swapping, and staking your tokens, and more.",
+    "website":  "https://keyfi.com",
+    "explorer":  "https://etherscan.io/token/0xB8647e90C0645152Fccf4d9AbB6B59Eb4AA99052",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB8647E90C0645152FCCF4D9ABB6B59EB4AA99052/logo.png",
+    "id":  "0xB8647e90C0645152Fccf4d9AbB6B59Eb4AA99052"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "ARP",
-    "symbol": "ARP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922",
-    "status": "active",
-    "id": "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922"
+    "name":  "ARP",
+    "symbol":  "ARP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBEB6FDF4EF6CEB975157BE43CBE0047B248A8922/logo.png",
+    "id":  "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "InvestDigital Token",
-    "symbol": "IDT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x02C4C78C462E32cCa4a90Bc499bF411Fb7bc6aFB",
-    "status": "active",
-    "id": "0x02C4C78C462E32cCa4a90Bc499bF411Fb7bc6aFB"
+    "name":  "InvestDigital Token",
+    "symbol":  "IDT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x02C4C78C462E32cCa4a90Bc499bF411Fb7bc6aFB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X02C4C78C462E32CCA4A90BC499BF411FB7BC6AFB/logo.png",
+    "id":  "0x02C4C78C462E32cCa4a90Bc499bF411Fb7bc6aFB"
 }

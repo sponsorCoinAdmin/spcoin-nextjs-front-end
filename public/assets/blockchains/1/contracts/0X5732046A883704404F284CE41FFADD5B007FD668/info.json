@@ -1,11 +1,11 @@
 {
-    "name": "Bluzelle Token",
-    "symbol": "BLZ",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://bluzelle.com",
-    "explorer": "https://etherscan.io/token/0x5732046A883704404F284Ce41FfADd5b007FD668",
-    "status": "active",
-    "id": "0x5732046A883704404F284Ce41FfADd5b007FD668"
+    "name":  "Bluzelle Token",
+    "symbol":  "BLZ",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://bluzelle.com",
+    "explorer":  "https://etherscan.io/token/0x5732046A883704404F284Ce41FfADd5b007FD668",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5732046A883704404F284CE41FFADD5B007FD668/logo.png",
+    "id":  "0x5732046A883704404F284Ce41FfADd5b007FD668"
 }

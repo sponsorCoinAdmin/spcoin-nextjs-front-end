@@ -1,11 +1,11 @@
 {
-    "name": "Cartesi Token",
-    "symbol": "CTSI",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://cartesi.io",
-    "explorer": "https://etherscan.io/token/0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D",
-    "status": "active",
-    "id": "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D"
+    "name":  "Cartesi Token",
+    "symbol":  "CTSI",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://cartesi.io",
+    "explorer":  "https://etherscan.io/token/0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X491604C0FDF08347DD1FA4EE062A822A5DD06B5D/logo.png",
+    "id":  "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D"
 }

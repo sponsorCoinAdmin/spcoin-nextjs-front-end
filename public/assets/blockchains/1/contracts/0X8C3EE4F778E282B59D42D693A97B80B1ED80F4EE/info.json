@@ -1,17 +1,17 @@
 {
-    "name": "SatoPay",
-    "website": "https://satopay.network/",
-    "description": "Crypto Payment Gateway",
-    "explorer": "https://etherscan.io/token/0x8c3eE4F778E282B59D42d693A97b80b1ed80f4Ee",
-    "type": "ERC20",
-    "symbol": "STOP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x8c3eE4F778E282B59D42d693A97b80b1ed80f4Ee",
-    "links": [
-        {
-            "name": "whitepaper",
-            "url": "https://satopay.network/whitepapper.pdf"
-        }
-    ]
+    "name":  "SatoPay",
+    "website":  "https://satopay.network/",
+    "description":  "Crypto Payment Gateway",
+    "explorer":  "https://etherscan.io/token/0x8c3eE4F778E282B59D42d693A97b80b1ed80f4Ee",
+    "symbol":  "STOP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8C3EE4F778E282B59D42D693A97B80B1ED80F4EE/logo.png",
+    "id":  "0x8c3eE4F778E282B59D42d693A97b80b1ed80f4Ee",
+    "links":  [
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://satopay.network/whitepapper.pdf"
+                  }
+              ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "EHalal",
-    "symbol": "HAL",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xfEE0d0871EAe9dB0be0362e444d224927149F649",
-    "status": "active",
-    "id": "0xfEE0d0871EAe9dB0be0362e444d224927149F649"
+    "name":  "EHalal",
+    "symbol":  "HAL",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xfEE0d0871EAe9dB0be0362e444d224927149F649",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFEE0D0871EAE9DB0BE0362E444D224927149F649/logo.png",
+    "id":  "0xfEE0d0871EAe9dB0be0362e444d224927149F649"
 }

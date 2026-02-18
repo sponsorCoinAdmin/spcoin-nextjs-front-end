@@ -1,11 +1,11 @@
 {
-    "name": "FOTA",
-    "symbol": "FOTA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "FORTUNA is a global OTC derivatives market disciplined by algorithms while supporting transparent, real time, and full dose trading data supervision.",
-    "website": "https://www.fota.top/",
-    "explorer": "https://etherscan.io/token/0x4270bb238f6DD8B1c3ca01f96CA65b2647c06D3C",
-    "status": "active",
-    "id": "0x4270bb238f6DD8B1c3ca01f96CA65b2647c06D3C"
+    "name":  "FOTA",
+    "symbol":  "FOTA",
+    "decimals":  18,
+    "description":  "FORTUNA is a global OTC derivatives market disciplined by algorithms while supporting transparent, real time, and full dose trading data supervision.",
+    "website":  "https://www.fota.top/",
+    "explorer":  "https://etherscan.io/token/0x4270bb238f6DD8B1c3ca01f96CA65b2647c06D3C",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4270BB238F6DD8B1C3CA01F96CA65B2647C06D3C/logo.png",
+    "id":  "0x4270bb238f6DD8B1c3ca01f96CA65b2647c06D3C"
 }

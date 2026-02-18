@@ -1,11 +1,11 @@
 {
-    "name": "kwhcredit",
-    "type": "ERC20",
-    "symbol": "Euro",
-    "decimals": 8,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0xc8671e3eaad0793de26c4a7ba5ca10a992a80c7a",
-    "status": "active",
-    "id": "0xC8671e3eAAd0793de26c4a7Ba5ca10a992a80c7A"
+    "name":  "kwhcredit",
+    "symbol":  "Euro",
+    "decimals":  8,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0xc8671e3eaad0793de26c4a7ba5ca10a992a80c7a",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC8671E3EAAD0793DE26C4A7BA5CA10A992A80C7A/logo.png",
+    "id":  "0xC8671e3eAAd0793de26c4a7Ba5ca10a992a80c7A"
 }

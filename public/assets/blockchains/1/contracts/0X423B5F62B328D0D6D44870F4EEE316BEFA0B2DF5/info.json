@@ -1,11 +1,11 @@
 {
-    "name": "GoToken",
-    "symbol": "GOT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "GoNetwork (GOT) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://gonetwork.co/",
-    "explorer": "https://etherscan.io/token/0x423b5F62b328D0D6D44870F4Eee316befA0b2dF5",
-    "status": "active",
-    "id": "0x423b5F62b328D0D6D44870F4Eee316befA0b2dF5"
+    "name":  "GoToken",
+    "symbol":  "GOT",
+    "decimals":  18,
+    "description":  "GoNetwork (GOT) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://gonetwork.co/",
+    "explorer":  "https://etherscan.io/token/0x423b5F62b328D0D6D44870F4Eee316befA0b2dF5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X423B5F62B328D0D6D44870F4EEE316BEFA0B2DF5/logo.png",
+    "id":  "0x423b5F62b328D0D6D44870F4Eee316befA0b2dF5"
 }

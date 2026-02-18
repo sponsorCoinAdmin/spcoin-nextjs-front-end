@@ -1,11 +1,11 @@
 {
-    "name": "Paypolitan Token",
-    "website": "https://paypolitan.io",
-    "description": "PayPolitan offers mobile payments for fiat and cryptocurrencies with yield farming.",
-    "explorer": "https://etherscan.io/token/0x72630B1e3B42874bf335020Ba0249e3E9e47Bafc",
-    "type": "ERC20",
-    "symbol": "EPAN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x72630B1e3B42874bf335020Ba0249e3E9e47Bafc"
+    "name":  "Paypolitan Token",
+    "website":  "https://paypolitan.io",
+    "description":  "PayPolitan offers mobile payments for fiat and cryptocurrencies with yield farming.",
+    "explorer":  "https://etherscan.io/token/0x72630B1e3B42874bf335020Ba0249e3E9e47Bafc",
+    "symbol":  "EPAN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X72630B1E3B42874BF335020BA0249E3E9E47BAFC/logo.png",
+    "id":  "0x72630B1e3B42874bf335020Ba0249e3E9e47Bafc"
 }

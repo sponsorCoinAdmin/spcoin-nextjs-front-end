@@ -1,11 +1,11 @@
 {
-    "name": "BitUnits Brazil",
-    "symbol": "BRZL",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x24ccaAaE74041985e3D75712D5cce63b0bD9C4A3",
-    "status": "active",
-    "id": "0x24ccaAaE74041985e3D75712D5cce63b0bD9C4A3"
+    "name":  "BitUnits Brazil",
+    "symbol":  "BRZL",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x24ccaAaE74041985e3D75712D5cce63b0bD9C4A3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X24CCAAAE74041985E3D75712D5CCE63B0BD9C4A3/logo.png",
+    "id":  "0x24ccaAaE74041985e3D75712D5cce63b0bD9C4A3"
 }

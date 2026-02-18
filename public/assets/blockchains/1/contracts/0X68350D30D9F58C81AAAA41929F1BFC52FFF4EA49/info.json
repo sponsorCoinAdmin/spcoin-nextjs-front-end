@@ -1,11 +1,11 @@
 {
-    "name": "Rapidz",
-    "symbol": "RPZX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "RAPIDZ - reimagines the digital finance & payment experience and propels the crypto ecosystem to a broader audience.",
-    "website": "https://www.rapidz.io",
-    "explorer": "https://etherscan.io/token/0x68350d30D9F58C81aaaA41929f1bfC52FFf4Ea49",
-    "status": "active",
-    "id": "0x68350d30D9F58C81aaaA41929f1bfC52FFf4Ea49"
+    "name":  "Rapidz",
+    "symbol":  "RPZX",
+    "decimals":  18,
+    "description":  "RAPIDZ - reimagines the digital finance \u0026 payment experience and propels the crypto ecosystem to a broader audience.",
+    "website":  "https://www.rapidz.io",
+    "explorer":  "https://etherscan.io/token/0x68350d30D9F58C81aaaA41929f1bfC52FFf4Ea49",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X68350D30D9F58C81AAAA41929F1BFC52FFF4EA49/logo.png",
+    "id":  "0x68350d30D9F58C81aaaA41929f1bfC52FFf4Ea49"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Student Coin",
-    "symbol": "STU",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "BitJob is an ambitious and social project, based on Blockchain technology. Aimed at revolutionizing the way students make a living and gain occupational experience while still studying.",
-    "website": "https://bitjob.io/",
-    "explorer": "https://etherscan.io/token/0x0371A82e4A9d0A4312f3ee2Ac9c6958512891372",
-    "status": "active",
-    "id": "0x0371A82e4A9d0A4312f3ee2Ac9c6958512891372"
+    "name":  "Student Coin",
+    "symbol":  "STU",
+    "decimals":  18,
+    "description":  "BitJob is an ambitious and social project, based on Blockchain technology. Aimed at revolutionizing the way students make a living and gain occupational experience while still studying.",
+    "website":  "https://bitjob.io/",
+    "explorer":  "https://etherscan.io/token/0x0371A82e4A9d0A4312f3ee2Ac9c6958512891372",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0371A82E4A9D0A4312F3EE2AC9C6958512891372/logo.png",
+    "id":  "0x0371A82e4A9d0A4312f3ee2Ac9c6958512891372"
 }

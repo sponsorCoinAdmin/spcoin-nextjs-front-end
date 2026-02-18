@@ -1,11 +1,11 @@
 {
-    "name": "Chronobank TIME (EOL)",
-    "website": "https://chronobank.io",
-    "description": "TIME is an utility token of Chronobank ecosystem",
-    "explorer": "https://etherscan.io/token/0x6531f133e6deebe7f2dce5a0441aa7ef330b4e53",
-    "type": "ERC20",
-    "symbol": "TIME",
-    "decimals": 8,
-    "status": "active",
-    "id": "0x6531f133e6DeeBe7F2dcE5A0441aA7ef330B4e53"
+    "name":  "Chronobank TIME (EOL)",
+    "website":  "https://chronobank.io",
+    "description":  "TIME is an utility token of Chronobank ecosystem",
+    "explorer":  "https://etherscan.io/token/0x6531f133e6deebe7f2dce5a0441aa7ef330b4e53",
+    "symbol":  "TIME",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6531F133E6DEEBE7F2DCE5A0441AA7EF330B4E53/logo.png",
+    "id":  "0x6531f133e6DeeBe7F2dcE5A0441aA7ef330B4e53"
 }

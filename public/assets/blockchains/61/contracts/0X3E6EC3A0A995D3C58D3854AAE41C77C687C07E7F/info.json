@@ -1,11 +1,11 @@
 {
-    "name": "42 Coin",
-    "symbol": "42",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x3E6eC3A0A995d3c58d3854AaE41C77C687C07E7f",
-    "status": "active",
-    "id": "0x3E6eC3A0A995d3c58d3854AaE41C77C687C07E7f"
+    "name":  "42 Coin",
+    "symbol":  "42",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x3E6eC3A0A995d3c58d3854AaE41C77C687C07E7f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X3E6EC3A0A995D3C58D3854AAE41C77C687C07E7F/logo.png",
+    "id":  "0x3E6eC3A0A995d3c58d3854AaE41C77C687C07E7f"
 }

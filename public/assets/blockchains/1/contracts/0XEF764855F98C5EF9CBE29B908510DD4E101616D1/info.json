@@ -1,11 +1,11 @@
 {
-    "name": "FIRA",
-    "symbol": "FIRA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xeF764855F98C5Ef9cbe29b908510dd4e101616d1",
-    "status": "active",
-    "id": "0xeF764855F98C5Ef9cbe29b908510dd4e101616d1"
+    "name":  "FIRA",
+    "symbol":  "FIRA",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xeF764855F98C5Ef9cbe29b908510dd4e101616d1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEF764855F98C5EF9CBE29B908510DD4E101616D1/logo.png",
+    "id":  "0xeF764855F98C5Ef9cbe29b908510dd4e101616d1"
 }

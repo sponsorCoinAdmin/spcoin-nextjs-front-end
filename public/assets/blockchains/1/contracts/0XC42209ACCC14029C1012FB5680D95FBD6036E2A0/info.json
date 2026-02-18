@@ -1,11 +1,11 @@
 {
-    "name": "PayPie",
-    "symbol": "PPP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "PayPie (PPP) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://www.paypie.com",
-    "explorer": "https://etherscan.io/token/0xc42209aCcC14029c1012fB5680D95fBd6036E2a0",
-    "status": "active",
-    "id": "0xc42209aCcC14029c1012fB5680D95fBd6036E2a0"
+    "name":  "PayPie",
+    "symbol":  "PPP",
+    "decimals":  18,
+    "description":  "PayPie (PPP) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://www.paypie.com",
+    "explorer":  "https://etherscan.io/token/0xc42209aCcC14029c1012fB5680D95fBd6036E2a0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC42209ACCC14029C1012FB5680D95FBD6036E2A0/logo.png",
+    "id":  "0xc42209aCcC14029c1012fB5680D95fBd6036E2a0"
 }

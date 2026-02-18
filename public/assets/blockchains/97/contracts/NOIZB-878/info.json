@@ -1,11 +1,11 @@
 {
-    "name": "NOIZ Token",
-    "symbol": "NOIZB",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "A communication/marketing technology platform that aims to turn engagement into impact. ",
-    "website": "https://noizchain.com/",
-    "explorer": "https://explorer.binance.org/asset/NOIZB-878",
-    "status": "active",
-    "id": "NOIZB-878"
+    "name":  "NOIZ Token",
+    "symbol":  "NOIZB",
+    "decimals":  8,
+    "description":  "A communication/marketing technology platform that aims to turn engagement into impact. ",
+    "website":  "https://noizchain.com/",
+    "explorer":  "https://explorer.binance.org/asset/NOIZB-878",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/NOIZB-878/logo.png",
+    "id":  "NOIZB-878"
 }

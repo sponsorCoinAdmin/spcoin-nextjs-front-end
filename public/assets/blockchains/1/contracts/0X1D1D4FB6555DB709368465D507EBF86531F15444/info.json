@@ -1,11 +1,11 @@
 {
-    "name": "The Best Token",
-    "website": "https://thebesttoken.io",
-    "description": "The Best Token (a decentralized oracle) aims to address the Oracle problem on Ethereum.",
-    "explorer": "https://etherscan.io/token/0x1D1D4Fb6555db709368465D507Ebf86531f15444",
-    "type": "ERC20",
-    "symbol": "TBT",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x1D1D4Fb6555db709368465D507Ebf86531f15444"
+    "name":  "The Best Token",
+    "website":  "https://thebesttoken.io",
+    "description":  "The Best Token (a decentralized oracle) aims to address the Oracle problem on Ethereum.",
+    "explorer":  "https://etherscan.io/token/0x1D1D4Fb6555db709368465D507Ebf86531f15444",
+    "symbol":  "TBT",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1D1D4FB6555DB709368465D507EBF86531F15444/logo.png",
+    "id":  "0x1D1D4Fb6555db709368465D507Ebf86531f15444"
 }

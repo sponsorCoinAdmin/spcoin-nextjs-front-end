@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Bidanomics Works",
     "symbol":  "BIDEN",
-    "address":  "0X000000000000000000000000000000000000000f",
+    "address":  "0X000000000000000000000000000000000000000F",
     "website":  "",
     "description":  "This is the description for site Biden2",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000000F/logo.png",
     "status":  "test"
 }

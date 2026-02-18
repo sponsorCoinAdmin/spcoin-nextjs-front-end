@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Fix The Roads",
     "symbol":  "ROADS",
     "address":  "0X0000000000000000000000000000000000000002",
     "website":  "",
     "description":  "This is the description for site FixTheRoads",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000002/logo.png",
     "status":  "test"
 }
+

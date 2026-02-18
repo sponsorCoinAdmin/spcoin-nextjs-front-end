@@ -1,11 +1,11 @@
 {
-    "name": "YIELD",
-    "website": "https://yield-farming.io",
-    "description": "A trustable farming DeFi project",
-    "explorer": "https://etherscan.io/token/0x6768063279E2B185Dc0c972b97f11f231d0B45ad",
-    "type": "ERC20",
-    "symbol": "YIELD",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x6768063279E2B185Dc0c972b97f11f231d0B45ad"
+    "name":  "YIELD",
+    "website":  "https://yield-farming.io",
+    "description":  "A trustable farming DeFi project",
+    "explorer":  "https://etherscan.io/token/0x6768063279E2B185Dc0c972b97f11f231d0B45ad",
+    "symbol":  "YIELD",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6768063279E2B185DC0C972B97F11F231D0B45AD/logo.png",
+    "id":  "0x6768063279E2B185Dc0c972b97f11f231d0B45ad"
 }

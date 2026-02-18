@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Granny",
     "symbol":  "NAN",
-    "address":  "0X000000000000000000000000000000000000007d",
+    "address":  "0X000000000000000000000000000000000000007D",
     "website":  "",
     "description":  "This is the description for site Granny",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000007D/logo.png",
     "status":  "test"
 }

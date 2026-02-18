@@ -1,11 +1,11 @@
 {
-    "name": "Gawks",
-    "symbol": "GKG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xdfd0A6BeD91d7609a0d84389Dcb7AAb5877e6AfA",
-    "status": "active",
-    "id": "0xdfd0A6BeD91d7609a0d84389Dcb7AAb5877e6AfA"
+    "name":  "Gawks",
+    "symbol":  "GKG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xdfd0A6BeD91d7609a0d84389Dcb7AAb5877e6AfA",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XDFD0A6BED91D7609A0D84389DCB7AAB5877E6AFA/logo.png",
+    "id":  "0xdfd0A6BeD91d7609a0d84389Dcb7AAb5877e6AfA"
 }

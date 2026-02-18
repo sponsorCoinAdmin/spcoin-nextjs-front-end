@@ -1,11 +1,11 @@
 {
-    "name": "INMAX",
-    "symbol": "INX",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "INMAX is A dependable digital asset exchange and financial system.",
-    "website": "https://inmax.live",
-    "explorer": "https://etherscan.io/token/0x018d7D179350f1Bb9853D04982820E37ccE13a92",
-    "status": "active",
-    "id": "0x018d7D179350f1Bb9853D04982820E37ccE13a92"
+    "name":  "INMAX",
+    "symbol":  "INX",
+    "decimals":  8,
+    "description":  "INMAX is A dependable digital asset exchange and financial system.",
+    "website":  "https://inmax.live",
+    "explorer":  "https://etherscan.io/token/0x018d7D179350f1Bb9853D04982820E37ccE13a92",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X018D7D179350F1BB9853D04982820E37CCE13A92/logo.png",
+    "id":  "0x018d7D179350f1Bb9853D04982820E37ccE13a92"
 }

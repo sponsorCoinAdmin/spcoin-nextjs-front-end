@@ -1,29 +1,28 @@
 {
-    "name": "TalentProtocolToken",
-    "type": "BASE",
-    "symbol": "TALENT",
-    "decimals": 18,
-    "description": "Bringing verified reputation onchain to help great builders stand out.",
-    "website": "https://www.talentprotocol.com/",
-    "explorer": "https://basescan.org/token/0x9a33406165f562E16C3abD82fd1185482E01b49a",
-    "id": "0x9a33406165f562E16C3abD82fd1185482E01b49a",
-    "status": "active",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/TalentProtocol"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/talent-protocol/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/talent-protocol"
-        }
-    ],
-    "tags": [
-        "defi"
-    ]
+    "name":  "TalentProtocolToken",
+    "symbol":  "TALENT",
+    "decimals":  18,
+    "description":  "Bringing verified reputation onchain to help great builders stand out.",
+    "website":  "https://www.talentprotocol.com/",
+    "explorer":  "https://basescan.org/token/0x9a33406165f562E16C3abD82fd1185482E01b49a",
+    "id":  "0x9a33406165f562E16C3abD82fd1185482E01b49a",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X9A33406165F562E16C3ABD82FD1185482E01B49A/logo.png",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/TalentProtocol"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/talent-protocol/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/talent-protocol"
+                  }
+              ],
+    "tags":  [
+                 "defi"
+             ]
 }
-    

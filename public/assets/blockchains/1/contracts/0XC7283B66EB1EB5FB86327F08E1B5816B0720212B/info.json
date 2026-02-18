@@ -1,16 +1,16 @@
 {
-    "name": "Tribe",
-    "type": "ERC20",
-    "symbol": "TRIBE",
-    "decimals": 18,
-    "website": "https://fei.money",
-    "description": "The governance token for Fei Protocol",
-    "explorer": "https://etherscan.io/token/0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
-    "status": "active",
-    "id": "0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
-    "tags": [
-        "defi",
-        "stablecoin",
-        "governance"
-    ]
+    "name":  "Tribe",
+    "symbol":  "TRIBE",
+    "decimals":  18,
+    "website":  "https://fei.money",
+    "description":  "The governance token for Fei Protocol",
+    "explorer":  "https://etherscan.io/token/0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC7283B66EB1EB5FB86327F08E1B5816B0720212B/logo.png",
+    "id":  "0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
+    "tags":  [
+                 "defi",
+                 "stablecoin",
+                 "governance"
+             ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "SHIPS",
-    "symbol": "SHIPS",
-    "type": "TRC10",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://tronscan.io/#/token/1002672",
-    "status": "spam",
-    "id": "1002672"
+    "name":  "SHIPS",
+    "symbol":  "SHIPS",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://tronscan.io/#/token/1002672",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/728126428/contracts/1002672/logo.png",
+    "id":  "1002672"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Volt",
-    "symbol": "VOLT",
-    "type": "METER",
-    "decimals": 18,
-    "explorer": "https://scan.meter.io/address/0x8Df95e66Cb0eF38F91D2776DA3c921768982fBa0",
-    "status": "active",
-    "id": "0x8Df95e66Cb0eF38F91D2776DA3c921768982fBa0",
-    "description": "-",
-    "website": ""
+    "name":  "Volt",
+    "symbol":  "VOLT",
+    "decimals":  18,
+    "explorer":  "https://scan.meter.io/address/0x8Df95e66Cb0eF38F91D2776DA3c921768982fBa0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/82/contracts/0X8DF95E66CB0EF38F91D2776DA3C921768982FBA0/logo.png",
+    "id":  "0x8Df95e66Cb0eF38F91D2776DA3c921768982fBa0",
+    "description":  "-",
+    "website":  ""
 }

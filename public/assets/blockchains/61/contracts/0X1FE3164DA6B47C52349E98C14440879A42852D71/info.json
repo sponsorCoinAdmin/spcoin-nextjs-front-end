@@ -1,11 +1,11 @@
 {
-    "name": "Classic Cannabis Joints",
-    "symbol": "WEED",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x1Fe3164dA6B47C52349E98c14440879A42852D71",
-    "status": "active",
-    "id": "0x1Fe3164dA6B47C52349E98c14440879A42852D71"
+    "name":  "Classic Cannabis Joints",
+    "symbol":  "WEED",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x1Fe3164dA6B47C52349E98c14440879A42852D71",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X1FE3164DA6B47C52349E98C14440879A42852D71/logo.png",
+    "id":  "0x1Fe3164dA6B47C52349E98c14440879A42852D71"
 }

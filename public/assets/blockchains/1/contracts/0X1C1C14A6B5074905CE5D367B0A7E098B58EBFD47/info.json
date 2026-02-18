@@ -1,11 +1,11 @@
 {
-    "name": "FidexToken",
-    "symbol": "FEX",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "FIDEX Decentralized Exchange.",
-    "website": "https://fidex.market/",
-    "explorer": "https://etherscan.io/token/0x1C1C14A6B5074905Ce5d367B0A7E098b58EbFD47",
-    "status": "active",
-    "id": "0x1C1C14A6B5074905Ce5d367B0A7E098b58EbFD47"
+    "name":  "FidexToken",
+    "symbol":  "FEX",
+    "decimals":  8,
+    "description":  "FIDEX Decentralized Exchange.",
+    "website":  "https://fidex.market/",
+    "explorer":  "https://etherscan.io/token/0x1C1C14A6B5074905Ce5d367B0A7E098b58EbFD47",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1C1C14A6B5074905CE5D367B0A7E098B58EBFD47/logo.png",
+    "id":  "0x1C1C14A6B5074905Ce5d367B0A7E098b58EbFD47"
 }

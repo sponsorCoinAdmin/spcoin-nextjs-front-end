@@ -1,11 +1,11 @@
 {
-    "name": "Huptex",
-    "symbol": "HTX",
-    "type": "ERC20",
-    "decimals": 2,
-    "description": "HTX describes itself as a side-chain, relay matching node network for asset settlement and trading matching based on Ethereum.",
-    "website": "https://huptex.io/",
-    "explorer": "https://etherscan.io/token/0x38A0df9a08d18dc06CD91Fc7Ec94a0AcdF28D994",
-    "status": "active",
-    "id": "0x38A0df9a08d18dc06CD91Fc7Ec94a0AcdF28D994"
+    "name":  "Huptex",
+    "symbol":  "HTX",
+    "decimals":  2,
+    "description":  "HTX describes itself as a side-chain, relay matching node network for asset settlement and trading matching based on Ethereum.",
+    "website":  "https://huptex.io/",
+    "explorer":  "https://etherscan.io/token/0x38A0df9a08d18dc06CD91Fc7Ec94a0AcdF28D994",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X38A0DF9A08D18DC06CD91FC7EC94A0ACDF28D994/logo.png",
+    "id":  "0x38A0df9a08d18dc06CD91Fc7Ec94a0AcdF28D994"
 }

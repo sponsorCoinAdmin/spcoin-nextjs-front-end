@@ -1,11 +1,11 @@
 {
-    "name": "TAUR",
-    "symbol": "TAUR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x64786063A352b399d44de2875909D1229F120eBE",
-    "status": "active",
-    "id": "0x64786063A352b399d44de2875909D1229F120eBE"
+    "name":  "TAUR",
+    "symbol":  "TAUR",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x64786063A352b399d44de2875909D1229F120eBE",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X64786063A352B399D44DE2875909D1229F120EBE/logo.png",
+    "id":  "0x64786063A352b399d44de2875909D1229F120eBE"
 }

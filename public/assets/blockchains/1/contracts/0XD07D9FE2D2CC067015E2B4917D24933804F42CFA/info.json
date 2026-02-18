@@ -1,11 +1,11 @@
 {
-    "name": "Tolar Token",
-    "symbol": "TOL",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Tolar is an open source, community governed crypto-currency featuring scalable, fast, secure, and fair transactions.",
-    "website": "https://www.tolar.io/",
-    "explorer": "https://etherscan.io/token/0xd07D9Fe2d2cc067015E2b4917D24933804f42cFA",
-    "status": "active",
-    "id": "0xd07D9Fe2d2cc067015E2b4917D24933804f42cFA"
+    "name":  "Tolar Token",
+    "symbol":  "TOL",
+    "decimals":  18,
+    "description":  "Tolar is an open source, community governed crypto-currency featuring scalable, fast, secure, and fair transactions.",
+    "website":  "https://www.tolar.io/",
+    "explorer":  "https://etherscan.io/token/0xd07D9Fe2d2cc067015E2b4917D24933804f42cFA",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD07D9FE2D2CC067015E2B4917D24933804F42CFA/logo.png",
+    "id":  "0xd07D9Fe2d2cc067015E2b4917D24933804f42cFA"
 }

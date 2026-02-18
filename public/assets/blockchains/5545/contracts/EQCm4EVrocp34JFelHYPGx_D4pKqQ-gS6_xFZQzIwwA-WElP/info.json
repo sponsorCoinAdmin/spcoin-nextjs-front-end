@@ -1,11 +1,11 @@
 {
-    "address": "EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP",
-    "name": "Cock Fights Token",
-    "type": "JETTON",
-    "symbol": "CFT",
-    "decimals": 9,
-    "description": "Cock Fights Game Token",
-    "status": "active",
-    "explorer": "https://tonscan.org/address/EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP",
-    "id": "EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP"
+    "address":  "EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP",
+    "name":  "Cock Fights Token",
+    "symbol":  "CFT",
+    "decimals":  9,
+    "description":  "Cock Fights Game Token",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/5545/contracts/EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP/logo.png",
+    "explorer":  "https://tonscan.org/address/EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP",
+    "id":  "EQCm4EVrocp34JFelHYPGx_D4pKqQ-gS6_xFZQzIwwA-WElP"
 }

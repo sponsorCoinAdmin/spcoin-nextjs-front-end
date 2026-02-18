@@ -1,11 +1,11 @@
 {
-    "name": "Abe Token",
-    "symbol": "ABE",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xFF193c057339a328DCec72eB3eD3bfc399922C80",
-    "status": "active",
-    "id": "0xFF193c057339a328DCec72eB3eD3bfc399922C80"
+    "name":  "Abe Token",
+    "symbol":  "ABE",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xFF193c057339a328DCec72eB3eD3bfc399922C80",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFF193C057339A328DCEC72EB3ED3BFC399922C80/logo.png",
+    "id":  "0xFF193c057339a328DCec72eB3eD3bfc399922C80"
 }

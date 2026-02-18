@@ -1,11 +1,11 @@
 {
-    "name": "Hands Of Steel",
-    "website": "https://handsofsteel.money",
-    "description": "Our Seller Transfer Only Protocol Initiates Tax (STOP IT) actively taxes sellers while rewarding holders.",
-    "explorer": "https://etherscan.io/token/0x6f022E991ea21d26F85f6716c088e2864101dfEC",
-    "type": "ERC20",
-    "symbol": "STEEL",
-    "decimals": 0,
-    "status": "active",
-    "id": "0x6f022E991ea21d26F85f6716c088e2864101dfEC"
+    "name":  "Hands Of Steel",
+    "website":  "https://handsofsteel.money",
+    "description":  "Our Seller Transfer Only Protocol Initiates Tax (STOP IT) actively taxes sellers while rewarding holders.",
+    "explorer":  "https://etherscan.io/token/0x6f022E991ea21d26F85f6716c088e2864101dfEC",
+    "symbol":  "STEEL",
+    "decimals":  0,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6F022E991EA21D26F85F6716C088E2864101DFEC/logo.png",
+    "id":  "0x6f022E991ea21d26F85f6716c088e2864101dfEC"
 }

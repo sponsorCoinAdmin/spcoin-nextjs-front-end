@@ -1,11 +1,11 @@
 {
-    "name": "Dether",
-    "symbol": "DTH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://dether.io",
-    "explorer": "https://etherscan.io/token/0x5adc961D6AC3f7062D2eA45FEFB8D8167d44b190",
-    "status": "active",
-    "id": "0x5adc961D6AC3f7062D2eA45FEFB8D8167d44b190"
+    "name":  "Dether",
+    "symbol":  "DTH",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://dether.io",
+    "explorer":  "https://etherscan.io/token/0x5adc961D6AC3f7062D2eA45FEFB8D8167d44b190",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5ADC961D6AC3F7062D2EA45FEFB8D8167D44B190/logo.png",
+    "id":  "0x5adc961D6AC3f7062D2eA45FEFB8D8167d44b190"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Caspian Token",
-    "symbol": "CSP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Caspian is the company to provide institutional and experienced investors with a full-stack crypto trading and risk management platform.",
-    "website": "https://caspian.tech/",
-    "explorer": "https://etherscan.io/token/0xA6446D655a0c34bC4F05042EE88170D056CBAf45",
-    "status": "active",
-    "id": "0xA6446D655a0c34bC4F05042EE88170D056CBAf45"
+    "name":  "Caspian Token",
+    "symbol":  "CSP",
+    "decimals":  18,
+    "description":  "Caspian is the company to provide institutional and experienced investors with a full-stack crypto trading and risk management platform.",
+    "website":  "https://caspian.tech/",
+    "explorer":  "https://etherscan.io/token/0xA6446D655a0c34bC4F05042EE88170D056CBAf45",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA6446D655A0C34BC4F05042EE88170D056CBAF45/logo.png",
+    "id":  "0xA6446D655a0c34bC4F05042EE88170D056CBAf45"
 }

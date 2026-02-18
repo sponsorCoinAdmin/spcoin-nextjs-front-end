@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Children\u0027s Wish Foundation",
     "symbol":  "C.W.F.",
-    "address":  "0X000000000000000000000000000000000000001c",
+    "address":  "0X000000000000000000000000000000000000001C",
     "website":  "",
     "description":  "This is the description for site ChildrensWishFoundation1",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000001C/logo.png",
     "status":  "test"
 }

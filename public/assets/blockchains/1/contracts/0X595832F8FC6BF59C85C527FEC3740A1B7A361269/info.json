@@ -1,11 +1,11 @@
 {
-    "name": "Power Ledger",
-    "website": "https://powerledger.io",
-    "description": "Power Ledger (POWR), based in Australia, encourages us to imagine a world in which electricity is dependable, affordable and clean for everyone.",
-    "explorer": "https://etherscan.io/token/0x595832F8FC6BF59c85C527fEC3740A1b7a361269",
-    "type": "ERC20",
-    "symbol": "POWR",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x595832F8FC6BF59c85C527fEC3740A1b7a361269"
+    "name":  "Power Ledger",
+    "website":  "https://powerledger.io",
+    "description":  "Power Ledger (POWR), based in Australia, encourages us to imagine a world in which electricity is dependable, affordable and clean for everyone.",
+    "explorer":  "https://etherscan.io/token/0x595832F8FC6BF59c85C527fEC3740A1b7a361269",
+    "symbol":  "POWR",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X595832F8FC6BF59C85C527FEC3740A1B7A361269/logo.png",
+    "id":  "0x595832F8FC6BF59c85C527fEC3740A1b7a361269"
 }

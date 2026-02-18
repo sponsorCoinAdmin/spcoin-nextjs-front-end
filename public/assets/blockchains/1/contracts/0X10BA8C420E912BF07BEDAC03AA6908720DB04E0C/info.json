@@ -1,11 +1,11 @@
 {
-    "name": "Raise",
-    "symbol": "RAISE",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://raise.it/",
-    "explorer": "https://etherscan.io/token/0x10bA8C420e912bF07BEdaC03Aa6908720db04e0c",
-    "status": "active",
-    "id": "0x10bA8C420e912bF07BEdaC03Aa6908720db04e0c"
+    "name":  "Raise",
+    "symbol":  "RAISE",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://raise.it/",
+    "explorer":  "https://etherscan.io/token/0x10bA8C420e912bF07BEdaC03Aa6908720db04e0c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X10BA8C420E912BF07BEDAC03AA6908720DB04E0C/logo.png",
+    "id":  "0x10bA8C420e912bF07BEdaC03Aa6908720db04e0c"
 }

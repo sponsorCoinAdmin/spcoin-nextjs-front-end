@@ -1,11 +1,11 @@
 {
-    "name": "Wanchain MKR Crosschain Token",
-    "symbol": "MKR",
-    "type": "WAN20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://www.wanscan.org/token/0x350BB91c9c8eF4E8c0E19FBDC6a90a24BCB1Ec2a",
-    "status": "active",
-    "id": "0x350bb91C9C8Ef4e8C0e19fbdc6A90A24bcb1eC2A"
+    "name":  "Wanchain MKR Crosschain Token",
+    "symbol":  "MKR",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://www.wanscan.org/token/0x350BB91c9c8eF4E8c0E19FBDC6a90a24BCB1Ec2a",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/888/contracts/0X350BB91C9C8EF4E8C0E19FBDC6A90A24BCB1EC2A/logo.png",
+    "id":  "0x350bb91C9C8Ef4e8C0e19fbdc6A90A24bcb1eC2A"
 }

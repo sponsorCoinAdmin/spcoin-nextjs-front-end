@@ -1,11 +1,11 @@
 {
-    "name": "GAT Token",
-    "symbol": "GAT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.gatcoin.io/",
-    "explorer": "https://etherscan.io/token/0x687174f8C49ceb7729D925C3A961507ea4Ac7b28",
-    "status": "active",
-    "id": "0x687174f8C49ceb7729D925C3A961507ea4Ac7b28"
+    "name":  "GAT Token",
+    "symbol":  "GAT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.gatcoin.io/",
+    "explorer":  "https://etherscan.io/token/0x687174f8C49ceb7729D925C3A961507ea4Ac7b28",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X687174F8C49CEB7729D925C3A961507EA4AC7B28/logo.png",
+    "id":  "0x687174f8C49ceb7729D925C3A961507ea4Ac7b28"
 }

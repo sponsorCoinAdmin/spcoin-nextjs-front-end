@@ -1,11 +1,11 @@
 {
-    "name": "USDX",
-    "symbol": "USDX",
-    "type": "KAVA",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://www.mintscan.io/kava",
-    "status": "active",
-    "id": "usdx"
+    "name":  "USDX",
+    "symbol":  "USDX",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://www.mintscan.io/kava",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/2222/contracts/usdx/logo.png",
+    "id":  "usdx"
 }

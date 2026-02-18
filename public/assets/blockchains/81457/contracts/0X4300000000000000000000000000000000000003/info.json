@@ -1,21 +1,21 @@
 {
-    "name": "USDB",
-    "symbol": "USDB",
-    "type": "BLAST",
-    "description": "Blast's native stablecoin.",
-    "decimals": 18,
-    "website": "https://blast.io/en",
-    "explorer": "https://blastscan.io/token/0x4300000000000000000000000000000000000003",
-    "status": "active",
-    "id": "0x4300000000000000000000000000000000000003",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/blast_l2"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/usdb/"
-        }
-    ]
+    "name":  "USDB",
+    "symbol":  "USDB",
+    "description":  "Blast\u0027s native stablecoin.",
+    "decimals":  18,
+    "website":  "https://blast.io/en",
+    "explorer":  "https://blastscan.io/token/0x4300000000000000000000000000000000000003",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/81457/contracts/0X4300000000000000000000000000000000000003/logo.png",
+    "id":  "0x4300000000000000000000000000000000000003",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/blast_l2"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/usdb/"
+                  }
+              ]
 }

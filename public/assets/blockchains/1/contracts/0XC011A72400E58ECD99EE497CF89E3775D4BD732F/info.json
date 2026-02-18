@@ -1,11 +1,11 @@
 {
-    "name": "Synthetix Network Token",
-    "website": "https://synthetix.io",
-    "description": "The Synthetix platform enables the creation of on-chain synthetic assets (Synths) that track the value of assets in the real world.",
-    "explorer": "https://etherscan.io/token/0xC011A72400E58ecD99Ee497CF89E3775d4bd732F",
-    "type": "ERC20",
-    "symbol": "SNX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xC011A72400E58ecD99Ee497CF89E3775d4bd732F"
+    "name":  "Synthetix Network Token",
+    "website":  "https://synthetix.io",
+    "description":  "The Synthetix platform enables the creation of on-chain synthetic assets (Synths) that track the value of assets in the real world.",
+    "explorer":  "https://etherscan.io/token/0xC011A72400E58ecD99Ee497CF89E3775d4bd732F",
+    "symbol":  "SNX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC011A72400E58ECD99EE497CF89E3775D4BD732F/logo.png",
+    "id":  "0xC011A72400E58ecD99Ee497CF89E3775d4bd732F"
 }

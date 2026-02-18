@@ -1,11 +1,11 @@
 {
-    "name": "Tenset",
-    "symbol": "10SET",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The Bridge Between Crypto & Stock Market",
-    "website": "https://tenset.io/",
-    "explorer": "https://etherscan.io/token/0x7FF4169a6B5122b664c51c95727d87750eC07c84",
-    "status": "active",
-    "id": "0x7FF4169a6B5122b664c51c95727d87750eC07c84"
+    "name":  "Tenset",
+    "symbol":  "10SET",
+    "decimals":  18,
+    "description":  "The Bridge Between Crypto \u0026 Stock Market",
+    "website":  "https://tenset.io/",
+    "explorer":  "https://etherscan.io/token/0x7FF4169a6B5122b664c51c95727d87750eC07c84",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7FF4169A6B5122B664C51C95727D87750EC07C84/logo.png",
+    "id":  "0x7FF4169a6B5122b664c51c95727d87750eC07c84"
 }

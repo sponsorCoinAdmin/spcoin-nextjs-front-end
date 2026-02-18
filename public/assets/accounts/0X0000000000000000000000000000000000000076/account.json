@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Curly Howard",
     "symbol":  "CURLY",
     "address":  "0X0000000000000000000000000000000000000076",
     "website":  "",
     "description":  "This is the description for site CurlyHoward",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000076/logo.png",
     "status":  "test"
 }
+

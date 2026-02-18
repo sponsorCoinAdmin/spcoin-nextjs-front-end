@@ -1,11 +1,11 @@
 {
-    "name": "IceToken",
-    "website": "https://popsicle.finance",
-    "description": "Popsicle finance is a next-gen cross-chain liquidity provider (LP) yield optimization platform",
-    "explorer": "https://etherscan.io/token/0xf16e81dce15B08F326220742020379B855B87DF9",
-    "type": "ERC20",
-    "symbol": "ICE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xf16e81dce15B08F326220742020379B855B87DF9"
+    "name":  "IceToken",
+    "website":  "https://popsicle.finance",
+    "description":  "Popsicle finance is a next-gen cross-chain liquidity provider (LP) yield optimization platform",
+    "explorer":  "https://etherscan.io/token/0xf16e81dce15B08F326220742020379B855B87DF9",
+    "symbol":  "ICE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF16E81DCE15B08F326220742020379B855B87DF9/logo.png",
+    "id":  "0xf16e81dce15B08F326220742020379B855B87DF9"
 }

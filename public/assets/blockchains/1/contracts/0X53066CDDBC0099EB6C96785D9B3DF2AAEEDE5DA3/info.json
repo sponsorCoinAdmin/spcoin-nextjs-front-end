@@ -1,11 +1,11 @@
 {
-    "name": "Penta Network Token",
-    "symbol": "PNT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.penta.global",
-    "explorer": "https://etherscan.io/token/0x53066cdDBc0099eb6c96785d9b3DF2AAeEDE5DA3",
-    "status": "active",
-    "id": "0x53066cdDBc0099eb6c96785d9b3DF2AAeEDE5DA3"
+    "name":  "Penta Network Token",
+    "symbol":  "PNT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.penta.global",
+    "explorer":  "https://etherscan.io/token/0x53066cdDBc0099eb6c96785d9b3DF2AAeEDE5DA3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X53066CDDBC0099EB6C96785D9B3DF2AAEEDE5DA3/logo.png",
+    "id":  "0x53066cdDBc0099eb6c96785d9b3DF2AAeEDE5DA3"
 }

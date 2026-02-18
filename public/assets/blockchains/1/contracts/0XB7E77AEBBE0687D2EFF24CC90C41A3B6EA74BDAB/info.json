@@ -1,11 +1,11 @@
 {
-    "name": "ProjectWITH",
-    "symbol": "WIKEN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "ProjectWITH (WIKEN) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://projectwith.io",
-    "explorer": "https://etherscan.io/token/0xb7e77aEbBe0687d2EfF24Cc90c41A3b6eA74bdAB",
-    "status": "active",
-    "id": "0xb7e77aEbBe0687d2EfF24Cc90c41A3b6eA74bdAB"
+    "name":  "ProjectWITH",
+    "symbol":  "WIKEN",
+    "decimals":  18,
+    "description":  "ProjectWITH (WIKEN) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://projectwith.io",
+    "explorer":  "https://etherscan.io/token/0xb7e77aEbBe0687d2EfF24Cc90c41A3b6eA74bdAB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB7E77AEBBE0687D2EFF24CC90C41A3B6EA74BDAB/logo.png",
+    "id":  "0xb7e77aEbBe0687d2EfF24Cc90c41A3b6eA74bdAB"
 }

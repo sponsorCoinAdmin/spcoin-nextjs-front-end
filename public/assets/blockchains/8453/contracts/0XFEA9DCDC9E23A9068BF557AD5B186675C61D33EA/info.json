@@ -1,17 +1,17 @@
 {
-   "name": "Based Shiba Inu",
-   "type": "BASE",
-   "symbol": "BSHIB",
-   "decimals": 18,
-   "website": "http://basedshibainu.com/",
-   "description": "Based Shiba is proudly calling BASE Network its home. It aims to add a splash of color to the blockchain scene and create memorable experiences for their community.",
-   "explorer": "https://basescan.org/token/0xfea9dcdc9e23a9068bf557ad5b186675c61d33ea",
-   "status": "active",
-   "id": "0xfEA9DcDc9E23a9068bF557AD5b186675C61d33eA",
-   "links": [
-      {
-         "name": "x",
-         "url": "https://x.com/BasedShibaInu"
-      }
-   ]
+    "name":  "Based Shiba Inu",
+    "symbol":  "BSHIB",
+    "decimals":  18,
+    "website":  "http://basedshibainu.com/",
+    "description":  "Based Shiba is proudly calling BASE Network its home. It aims to add a splash of color to the blockchain scene and create memorable experiences for their community.",
+    "explorer":  "https://basescan.org/token/0xfea9dcdc9e23a9068bf557ad5b186675c61d33ea",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0XFEA9DCDC9E23A9068BF557AD5B186675C61D33EA/logo.png",
+    "id":  "0xfEA9DcDc9E23a9068bF557AD5b186675C61d33eA",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/BasedShibaInu"
+                  }
+              ]
 }

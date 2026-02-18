@@ -1,14 +1,14 @@
 {
-    "name": "Rarible",
-    "symbol": "RARI",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "We think that the best way to align platform development with customers' interests is to empower the ones who actively interact with protocol: creators and collectors.",
-    "website": "https://app.rarible.com/rari",
-    "explorer": "https://etherscan.io/token/0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
-    "status": "active",
-    "id": "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
-    "tags": [
-        "governance"
-    ]
+    "name":  "Rarible",
+    "symbol":  "RARI",
+    "decimals":  18,
+    "description":  "We think that the best way to align platform development with customers\u0027 interests is to empower the ones who actively interact with protocol: creators and collectors.",
+    "website":  "https://app.rarible.com/rari",
+    "explorer":  "https://etherscan.io/token/0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFCA59CD816AB1EAD66534D82BC21E7515CE441CF/logo.png",
+    "id":  "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
+    "tags":  [
+                 "governance"
+             ]
 }

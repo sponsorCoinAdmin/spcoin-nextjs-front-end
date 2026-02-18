@@ -1,11 +1,11 @@
 {
-    "name": "DML Token",
-    "symbol": "DML",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Decentralized Machine. Learning Unleash untapped private data, idle processing power and crowdsourced algorithms.",
-    "website": "https://decentralizedml.com",
-    "explorer": "https://etherscan.io/token/0xbCdfE338D55c061C084D81fD793Ded00A27F226D",
-    "status": "active",
-    "id": "0xbCdfE338D55c061C084D81fD793Ded00A27F226D"
+    "name":  "DML Token",
+    "symbol":  "DML",
+    "decimals":  18,
+    "description":  "Decentralized Machine. Learning Unleash untapped private data, idle processing power and crowdsourced algorithms.",
+    "website":  "https://decentralizedml.com",
+    "explorer":  "https://etherscan.io/token/0xbCdfE338D55c061C084D81fD793Ded00A27F226D",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBCDFE338D55C061C084D81FD793DED00A27F226D/logo.png",
+    "id":  "0xbCdfE338D55c061C084D81fD793Ded00A27F226D"
 }

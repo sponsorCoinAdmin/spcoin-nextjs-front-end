@@ -1,11 +1,11 @@
 {
-    "name": "SWARM",
-    "symbol": "SWM",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "http://swarm.fund",
-    "explorer": "https://etherscan.io/token/0x3505F494c3f0fed0B594E01Fa41Dd3967645ca39",
-    "status": "active",
-    "id": "0x3505F494c3f0fed0B594E01Fa41Dd3967645ca39"
+    "name":  "SWARM",
+    "symbol":  "SWM",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "http://swarm.fund",
+    "explorer":  "https://etherscan.io/token/0x3505F494c3f0fed0B594E01Fa41Dd3967645ca39",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3505F494C3F0FED0B594E01FA41DD3967645CA39/logo.png",
+    "id":  "0x3505F494c3f0fed0B594E01Fa41Dd3967645ca39"
 }

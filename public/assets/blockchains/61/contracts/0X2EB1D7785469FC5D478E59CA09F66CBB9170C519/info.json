@@ -1,12 +1,14 @@
 {
-    "name": "C3D Network",
-    "type": "ETC20",
-    "symbol": "C3D",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x2EB1D7785469FC5d478E59Ca09F66CBb9170C519",
-    "status": "active",
-    "id": "0x2EB1D7785469FC5d478E59Ca09F66CBb9170C519",
-    "links": []
+    "name":  "C3D Network",
+    "symbol":  "C3D",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x2EB1D7785469FC5d478E59Ca09F66CBb9170C519",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X2EB1D7785469FC5D478E59CA09F66CBB9170C519/logo.png",
+    "id":  "0x2EB1D7785469FC5d478E59Ca09F66CBb9170C519",
+    "links":  [
+
+              ]
 }

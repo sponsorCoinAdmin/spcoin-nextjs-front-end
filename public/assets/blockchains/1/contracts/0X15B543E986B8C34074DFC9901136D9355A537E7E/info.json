@@ -1,11 +1,11 @@
 {
-    "name": "Student Coin",
-    "website": "https://www.studentcoin.org",
-    "description": "Student Coin is the first crypto platform that allows users to easily design, create, and manage personal, start-up, NFT, and DeFi tokens.",
-    "explorer": "https://etherscan.io/token/0x15b543e986b8c34074dfc9901136d9355a537e7e",
-    "type": "ERC20",
-    "symbol": "STC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x15B543e986b8c34074DFc9901136d9355a537e7E"
+    "name":  "Student Coin",
+    "website":  "https://www.studentcoin.org",
+    "description":  "Student Coin is the first crypto platform that allows users to easily design, create, and manage personal, start-up, NFT, and DeFi tokens.",
+    "explorer":  "https://etherscan.io/token/0x15b543e986b8c34074dfc9901136d9355a537e7e",
+    "symbol":  "STC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X15B543E986B8C34074DFC9901136D9355A537E7E/logo.png",
+    "id":  "0x15B543e986b8c34074DFc9901136d9355a537e7E"
 }

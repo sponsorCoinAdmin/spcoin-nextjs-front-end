@@ -1,17 +1,17 @@
 {
-    "name": "Lead Wallet",
-    "website": "https://leadwallet.io",
-    "description": "Lead Wallet is a simple decentralized multi-crypto wallet application that allow users to spend, store, swap, stake and exchange cryptocurrencies.",
-    "explorer": "https://etherscan.io/token/0x1dD80016e3d4ae146Ee2EBB484e8edD92dacC4ce",
-    "type": "ERC20",
-    "symbol": "LEAD",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x1dD80016e3d4ae146Ee2EBB484e8edD92dacC4ce",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/leadwallet"
-        }
-    ]
+    "name":  "Lead Wallet",
+    "website":  "https://leadwallet.io",
+    "description":  "Lead Wallet is a simple decentralized multi-crypto wallet application that allow users to spend, store, swap, stake and exchange cryptocurrencies.",
+    "explorer":  "https://etherscan.io/token/0x1dD80016e3d4ae146Ee2EBB484e8edD92dacC4ce",
+    "symbol":  "LEAD",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1DD80016E3D4AE146EE2EBB484E8EDD92DACC4CE/logo.png",
+    "id":  "0x1dD80016e3d4ae146Ee2EBB484e8edD92dacC4ce",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/leadwallet"
+                  }
+              ]
 }

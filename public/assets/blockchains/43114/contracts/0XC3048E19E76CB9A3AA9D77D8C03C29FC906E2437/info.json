@@ -1,28 +1,28 @@
 {
-    "name": "Compound",
-    "symbol": "COMP.e",
-    "type": "AVALANCHE",
-    "decimals": 18,
-    "description": "The Avalanche Bridge Wrapped Compound.",
-    "website": "https://compound.finance/",
-    "explorer": "https://snowtrace.io/token/0xc3048E19E76CB9a3Aa9d77D8C03c29Fc906e2437",
-    "status": "active",
-    "id": "0xc3048E19E76CB9a3Aa9d77D8C03c29Fc906e2437",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/compound/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/compound-governance-token/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/compoundfinance"
-        }
-    ],
-    "tags": [
-        "defi"
-    ]
+    "name":  "Compound",
+    "symbol":  "COMP.e",
+    "decimals":  18,
+    "description":  "The Avalanche Bridge Wrapped Compound.",
+    "website":  "https://compound.finance/",
+    "explorer":  "https://snowtrace.io/token/0xc3048E19E76CB9a3Aa9d77D8C03c29Fc906e2437",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0XC3048E19E76CB9A3AA9D77D8C03C29FC906E2437/logo.png",
+    "id":  "0xc3048E19E76CB9a3Aa9d77D8C03c29Fc906e2437",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/compound/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/compound-governance-token/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/compoundfinance"
+                  }
+              ],
+    "tags":  [
+                 "defi"
+             ]
 }

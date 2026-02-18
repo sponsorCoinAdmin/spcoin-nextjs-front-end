@@ -1,11 +1,11 @@
 {
-    "name": "Cardstack",
-    "symbol": "CARD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Cardstack (CARD) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://cardstack.com",
-    "explorer": "https://etherscan.io/token/0x954b890704693af242613edEf1B603825afcD708",
-    "status": "active",
-    "id": "0x954b890704693af242613edEf1B603825afcD708"
+    "name":  "Cardstack",
+    "symbol":  "CARD",
+    "decimals":  18,
+    "description":  "Cardstack (CARD) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://cardstack.com",
+    "explorer":  "https://etherscan.io/token/0x954b890704693af242613edEf1B603825afcD708",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X954B890704693AF242613EDEF1B603825AFCD708/logo.png",
+    "id":  "0x954b890704693af242613edEf1B603825afcD708"
 }

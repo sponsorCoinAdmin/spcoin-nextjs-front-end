@@ -1,11 +1,11 @@
 {
-    "name": "DeFi-X Token",
-    "website": "https://defix.finance/",
-    "description": "DeFi-X is a cross-chain compatible synthetic asset issuance and trading protocol designed to build a full-stack, open, decentralized financial ecosystem.",
-    "explorer": "https://etherscan.io/token/0x364A7381A5b378CeD7AB33d1CDf6ff1bf162Bfd6",
-    "type": "ERC20",
-    "symbol": "TGX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x364A7381A5b378CeD7AB33d1CDf6ff1bf162Bfd6"
+    "name":  "DeFi-X Token",
+    "website":  "https://defix.finance/",
+    "description":  "DeFi-X is a cross-chain compatible synthetic asset issuance and trading protocol designed to build a full-stack, open, decentralized financial ecosystem.",
+    "explorer":  "https://etherscan.io/token/0x364A7381A5b378CeD7AB33d1CDf6ff1bf162Bfd6",
+    "symbol":  "TGX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X364A7381A5B378CED7AB33D1CDF6FF1BF162BFD6/logo.png",
+    "id":  "0x364A7381A5b378CeD7AB33d1CDf6ff1bf162Bfd6"
 }

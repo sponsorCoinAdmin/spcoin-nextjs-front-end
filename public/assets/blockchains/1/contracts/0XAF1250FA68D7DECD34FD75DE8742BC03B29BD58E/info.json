@@ -1,11 +1,11 @@
 {
-    "name": "Invictus Hyperion",
-    "symbol": "IHF",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The Hyperion Fund is a closed-end blockchain-based venture capital fund.",
-    "website": "https://invictuscapital.com/en/hyperion",
-    "explorer": "https://etherscan.io/token/0xaF1250fa68D7DECD34fD75dE8742Bc03B29BD58e",
-    "status": "active",
-    "id": "0xaF1250fa68D7DECD34fD75dE8742Bc03B29BD58e"
+    "name":  "Invictus Hyperion",
+    "symbol":  "IHF",
+    "decimals":  18,
+    "description":  "The Hyperion Fund is a closed-end blockchain-based venture capital fund.",
+    "website":  "https://invictuscapital.com/en/hyperion",
+    "explorer":  "https://etherscan.io/token/0xaF1250fa68D7DECD34fD75dE8742Bc03B29BD58e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAF1250FA68D7DECD34FD75DE8742BC03B29BD58E/logo.png",
+    "id":  "0xaF1250fa68D7DECD34fD75dE8742Bc03B29BD58e"
 }

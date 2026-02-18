@@ -1,11 +1,11 @@
 {
-    "name": "Hexultra",
-    "website": "https://hexultra.com",
-    "description": "Hexultra - the ultimate deflationary token",
-    "explorer": "https://etherscan.io/token/0x11Bbad1c935b87CB83543B9288d1A2a73A90Bf1C",
-    "type": "ERC20",
-    "symbol": "HEXULTRA",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x11Bbad1c935b87CB83543B9288d1A2a73A90Bf1C"
+    "name":  "Hexultra",
+    "website":  "https://hexultra.com",
+    "description":  "Hexultra - the ultimate deflationary token",
+    "explorer":  "https://etherscan.io/token/0x11Bbad1c935b87CB83543B9288d1A2a73A90Bf1C",
+    "symbol":  "HEXULTRA",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X11BBAD1C935B87CB83543B9288D1A2A73A90BF1C/logo.png",
+    "id":  "0x11Bbad1c935b87CB83543B9288d1A2a73A90Bf1C"
 }

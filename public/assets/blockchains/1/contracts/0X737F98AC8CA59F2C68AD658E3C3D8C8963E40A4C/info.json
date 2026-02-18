@@ -1,11 +1,11 @@
 {
-    "name": "Amon",
-    "symbol": "AMN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Worldcore (WRC) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://amon.tech",
-    "explorer": "https://etherscan.io/token/0x737F98AC8cA59f2C68aD658E3C3d8C8963E40a4c",
-    "status": "active",
-    "id": "0x737F98AC8cA59f2C68aD658E3C3d8C8963E40a4c"
+    "name":  "Amon",
+    "symbol":  "AMN",
+    "decimals":  18,
+    "description":  "Worldcore (WRC) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://amon.tech",
+    "explorer":  "https://etherscan.io/token/0x737F98AC8cA59f2C68aD658E3C3d8C8963E40a4c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X737F98AC8CA59F2C68AD658E3C3D8C8963E40A4C/logo.png",
+    "id":  "0x737F98AC8cA59f2C68aD658E3C3d8C8963E40a4c"
 }

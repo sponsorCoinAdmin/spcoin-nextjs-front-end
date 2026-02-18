@@ -1,11 +1,11 @@
 {
-    "name": "Viktor Coin",
-    "symbol": "VIK",
-    "type": "POA20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/poa/core/contractss/0xADFE00d92e5A16e773891F59780e6e54f40B532e",
-    "status": "active",
-    "id": "0xADFE00d92e5A16e773891F59780e6e54f40B532e"
+    "name":  "Viktor Coin",
+    "symbol":  "VIK",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/poa/core/contractss/0xADFE00d92e5A16e773891F59780e6e54f40B532e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/77/contracts/0XADFE00D92E5A16E773891F59780E6E54F40B532E/logo.png",
+    "id":  "0xADFE00d92e5A16e773891F59780e6e54f40B532e"
 }

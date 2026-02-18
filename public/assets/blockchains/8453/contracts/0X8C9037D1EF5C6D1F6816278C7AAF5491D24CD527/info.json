@@ -1,21 +1,21 @@
 {
-    "name": "Moxie",
-     "website": "https://moxie.xyz/",
-     "description": "Create and own fan tokens",
-     "explorer": "https://basescan.org/token/0x8C9037D1Ef5c6D1f6816278C7AAF5491d24CD527",
-     "type": "BASE",
-     "symbol": "MOXIE",
-     "decimals": 18,
-     "status": "active",
-     "id": "0x8C9037D1Ef5c6D1f6816278C7AAF5491d24CD527",
-     "links": [
-         {
-             "name": "x",
-             "url": "https://x.com/moxie_xyz"
-         },
-         {
-             "name": "coinmarketcap",
-             "url": "https://coinmarketcap.com/currencies/moxie/"
-         }
-     ]
- }
+    "name":  "Moxie",
+    "website":  "https://moxie.xyz/",
+    "description":  "Create and own fan tokens",
+    "explorer":  "https://basescan.org/token/0x8C9037D1Ef5c6D1f6816278C7AAF5491d24CD527",
+    "symbol":  "MOXIE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X8C9037D1EF5C6D1F6816278C7AAF5491D24CD527/logo.png",
+    "id":  "0x8C9037D1Ef5c6D1f6816278C7AAF5491d24CD527",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/moxie_xyz"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/moxie/"
+                  }
+              ]
+}

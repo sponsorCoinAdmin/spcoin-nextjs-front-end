@@ -1,11 +1,11 @@
 {
-    "name": "ThriveToken",
-    "symbol": "THRT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://ico.thrivelabs.io",
-    "explorer": "https://etherscan.io/token/0x4f27053F32edA8Af84956437Bc00e5fFa7003287",
-    "status": "active",
-    "id": "0x4f27053F32edA8Af84956437Bc00e5fFa7003287"
+    "name":  "ThriveToken",
+    "symbol":  "THRT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://ico.thrivelabs.io",
+    "explorer":  "https://etherscan.io/token/0x4f27053F32edA8Af84956437Bc00e5fFa7003287",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4F27053F32EDA8AF84956437BC00E5FFA7003287/logo.png",
+    "id":  "0x4f27053F32edA8Af84956437Bc00e5fFa7003287"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Endor Protocol Token",
-    "symbol": "EDR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.endor.com",
-    "explorer": "https://etherscan.io/token/0xc528c28FEC0A90C083328BC45f587eE215760A0F",
-    "status": "active",
-    "id": "0xc528c28FEC0A90C083328BC45f587eE215760A0F"
+    "name":  "Endor Protocol Token",
+    "symbol":  "EDR",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.endor.com",
+    "explorer":  "https://etherscan.io/token/0xc528c28FEC0A90C083328BC45f587eE215760A0F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC528C28FEC0A90C083328BC45F587EE215760A0F/logo.png",
+    "id":  "0xc528c28FEC0A90C083328BC45f587eE215760A0F"
 }

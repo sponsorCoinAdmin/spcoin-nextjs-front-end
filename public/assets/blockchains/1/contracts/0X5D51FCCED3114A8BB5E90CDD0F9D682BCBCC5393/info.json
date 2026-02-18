@@ -1,11 +1,11 @@
 {
-    "name": "B2BX",
-    "website": "https://b2bx.exchange",
-    "description": "The first official provider of cryptocurrency liquidity.",
-    "explorer": "https://etherscan.io/token/0x5d51FCceD3114A8bb5E90cDD0f9d682bCbCC5393",
-    "type": "ERC20",
-    "symbol": "B2BX",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x5d51FCceD3114A8bb5E90cDD0f9d682bCbCC5393"
+    "name":  "B2BX",
+    "website":  "https://b2bx.exchange",
+    "description":  "The first official provider of cryptocurrency liquidity.",
+    "explorer":  "https://etherscan.io/token/0x5d51FCceD3114A8bb5E90cDD0f9d682bCbCC5393",
+    "symbol":  "B2BX",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5D51FCCED3114A8BB5E90CDD0F9D682BCBCC5393/logo.png",
+    "id":  "0x5d51FCceD3114A8bb5E90cDD0f9d682bCbCC5393"
 }

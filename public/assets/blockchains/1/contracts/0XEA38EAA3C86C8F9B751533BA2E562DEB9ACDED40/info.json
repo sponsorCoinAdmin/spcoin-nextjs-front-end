@@ -1,11 +1,11 @@
 {
-    "name": "Fuel Token",
-    "symbol": "FUEL",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Etherparty™ is a contract wizard that removes the complexity of creating, managing and executing smart contracts on any compatible blockchain.",
-    "website": "https://etherparty.io/",
-    "explorer": "https://etherscan.io/token/0xEA38eAa3C86c8F9B751533Ba2E562deb9acDED40",
-    "status": "active",
-    "id": "0xEA38eAa3C86c8F9B751533Ba2E562deb9acDED40"
+    "name":  "Fuel Token",
+    "symbol":  "FUEL",
+    "decimals":  18,
+    "description":  "Etherparty™ is a contract wizard that removes the complexity of creating, managing and executing smart contracts on any compatible blockchain.",
+    "website":  "https://etherparty.io/",
+    "explorer":  "https://etherscan.io/token/0xEA38eAa3C86c8F9B751533Ba2E562deb9acDED40",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEA38EAA3C86C8F9B751533BA2E562DEB9ACDED40/logo.png",
+    "id":  "0xEA38eAa3C86c8F9B751533Ba2E562deb9acDED40"
 }

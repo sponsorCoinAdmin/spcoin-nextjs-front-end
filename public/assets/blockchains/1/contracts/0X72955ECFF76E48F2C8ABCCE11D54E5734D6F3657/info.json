@@ -1,11 +1,11 @@
 {
-    "name": "TrustVerse",
-    "symbol": "TRV",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "TrustVerse aims to become the universe of trust. It describes itself as a blockchain-based AI-wealth management and digital asset planning protocol.",
-    "website": "https://trustverse.io",
-    "explorer": "https://etherscan.io/token/0x72955eCFf76E48F2C8AbCCe11d54e5734D6f3657",
-    "status": "active",
-    "id": "0x72955eCFf76E48F2C8AbCCe11d54e5734D6f3657"
+    "name":  "TrustVerse",
+    "symbol":  "TRV",
+    "decimals":  18,
+    "description":  "TrustVerse aims to become the universe of trust. It describes itself as a blockchain-based AI-wealth management and digital asset planning protocol.",
+    "website":  "https://trustverse.io",
+    "explorer":  "https://etherscan.io/token/0x72955eCFf76E48F2C8AbCCe11d54e5734D6f3657",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X72955ECFF76E48F2C8ABCCE11D54E5734D6F3657/logo.png",
+    "id":  "0x72955eCFf76E48F2C8AbCCe11d54e5734D6f3657"
 }

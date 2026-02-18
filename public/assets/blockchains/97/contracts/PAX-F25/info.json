@@ -1,12 +1,12 @@
 {
-    "name": "Paxos Standard",
-    "website": "https://paxos.com/standard",
-    "description": "Paxos Standard (PAX) is a stablecoin that allows users to exchange US dollars for Paxos Standard Tokens to 'transact at the speed of the internet'.",
-    "explorer": "https://explorer.binance.org/asset/PAX-F25",
-    "research": "https://research.binance.com/en/projects/paxos-standard",
-    "type": "BEP2",
-    "symbol": "PAX",
-    "decimals": 8,
-    "status": "active",
-    "id": "PAX-F25"
+    "name":  "Paxos Standard",
+    "website":  "https://paxos.com/standard",
+    "description":  "Paxos Standard (PAX) is a stablecoin that allows users to exchange US dollars for Paxos Standard Tokens to \u0027transact at the speed of the internet\u0027.",
+    "explorer":  "https://explorer.binance.org/asset/PAX-F25",
+    "research":  "https://research.binance.com/en/projects/paxos-standard",
+    "symbol":  "PAX",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/PAX-F25/logo.png",
+    "id":  "PAX-F25"
 }

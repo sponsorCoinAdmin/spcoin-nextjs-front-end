@@ -1,12 +1,14 @@
 {
-    "name": "Coinibal",
-    "type": "ETC20",
-    "symbol": "COIN",
-    "decimals": 16,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xa8d3847f8AE1e8ebfD5928D39A3B1aE5dA12A61f",
-    "status": "active",
-    "id": "0xa8d3847f8AE1e8ebfD5928D39A3B1aE5dA12A61f",
-    "links": []
+    "name":  "Coinibal",
+    "symbol":  "COIN",
+    "decimals":  16,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xa8d3847f8AE1e8ebfD5928D39A3B1aE5dA12A61f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XA8D3847F8AE1E8EBFD5928D39A3B1AE5DA12A61F/logo.png",
+    "id":  "0xa8d3847f8AE1e8ebfD5928D39A3B1aE5dA12A61f",
+    "links":  [
+
+              ]
 }

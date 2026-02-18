@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Support Biden",
     "symbol":  "BIDEN",
-    "address":  "0X000000000000000000000000000000000000000e",
+    "address":  "0X000000000000000000000000000000000000000E",
     "website":  "",
     "description":  "This is the description for site Biden1",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000000E/logo.png",
     "status":  "test"
 }

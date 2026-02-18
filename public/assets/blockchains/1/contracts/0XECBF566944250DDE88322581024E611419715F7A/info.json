@@ -1,21 +1,21 @@
 {
-    "name": "xBTC",
-    "website": "https://xbtc.fi",
-    "description": "xBTC gives users one token access to every single digital asset on earth, pegged against Bitcoin dominance.",
-    "explorer": "https://etherscan.io/token/0xECbF566944250ddE88322581024E611419715f7A",
-    "type": "ERC20",
-    "symbol": "xBTC",
-    "decimals": 9,
-    "status": "active",
-    "id": "0xECbF566944250ddE88322581024E611419715f7A",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/ipo/xBTC-uFragments"
-        },
-        {
-            "name": "whitepaper",
-            "url": "https://xbtc.fi/whitepaper.pdf"
-        }
-    ]
+    "name":  "xBTC",
+    "website":  "https://xbtc.fi",
+    "description":  "xBTC gives users one token access to every single digital asset on earth, pegged against Bitcoin dominance.",
+    "explorer":  "https://etherscan.io/token/0xECbF566944250ddE88322581024E611419715f7A",
+    "symbol":  "xBTC",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XECBF566944250DDE88322581024E611419715F7A/logo.png",
+    "id":  "0xECbF566944250ddE88322581024E611419715f7A",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/ipo/xBTC-uFragments"
+                  },
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://xbtc.fi/whitepaper.pdf"
+                  }
+              ]
 }

@@ -1,14 +1,14 @@
 {
-    "name": "Tardigrades.Finance",
-    "type": "ERC20",
-    "symbol": "TRDG",
-    "decimals": 9,
-    "website": "https://www.tardigrades.finance/",
-    "description": "Tardigrades Finance offers frictionless rewards 5% Tax with 2.5% Burn / and 2.5% back to Holders for each transaction.",
-    "explorer": "https://etherscan.io/token/0x92a42db88ed0f02c71d439e55962ca7cab0168b5",
-    "status": "active",
-    "id": "0x92a42Db88Ed0F02c71D439e55962Ca7CAB0168b5",
-    "tags": [
-        "deflationary"
-    ]
+    "name":  "Tardigrades.Finance",
+    "symbol":  "TRDG",
+    "decimals":  9,
+    "website":  "https://www.tardigrades.finance/",
+    "description":  "Tardigrades Finance offers frictionless rewards 5% Tax with 2.5% Burn / and 2.5% back to Holders for each transaction.",
+    "explorer":  "https://etherscan.io/token/0x92a42db88ed0f02c71d439e55962ca7cab0168b5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X92A42DB88ED0F02C71D439E55962CA7CAB0168B5/logo.png",
+    "id":  "0x92a42Db88Ed0F02c71D439e55962Ca7CAB0168b5",
+    "tags":  [
+                 "deflationary"
+             ]
 }

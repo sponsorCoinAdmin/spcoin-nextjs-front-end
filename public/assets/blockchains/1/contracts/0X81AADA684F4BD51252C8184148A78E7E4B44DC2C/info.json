@@ -1,11 +1,11 @@
 {
-    "name": "ARUKU COIN",
-    "symbol": "ARUK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x81AADA684F4Bd51252c8184148A78e7E4B44dc2c",
-    "status": "active",
-    "id": "0x81AADA684F4Bd51252c8184148A78e7E4B44dc2c"
+    "name":  "ARUKU COIN",
+    "symbol":  "ARUK",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x81AADA684F4Bd51252c8184148A78e7E4B44dc2c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X81AADA684F4BD51252C8184148A78E7E4B44DC2C/logo.png",
+    "id":  "0x81AADA684F4Bd51252c8184148A78e7E4B44dc2c"
 }

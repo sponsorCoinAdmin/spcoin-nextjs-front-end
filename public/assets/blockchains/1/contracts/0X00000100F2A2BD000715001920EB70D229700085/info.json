@@ -1,11 +1,11 @@
 {
-    "name": "TrueCAD",
-    "symbol": "TCAD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The most traded stablecoin that’s backed by the Canadian dollar.",
-    "website": "https://www.trusttoken.com/truecad/",
-    "explorer": "https://etherscan.io/token/0x00000100F2A2bd000715001920eB70D229700085",
-    "status": "active",
-    "id": "0x00000100F2A2bd000715001920eB70D229700085"
+    "name":  "TrueCAD",
+    "symbol":  "TCAD",
+    "decimals":  18,
+    "description":  "The most traded stablecoin that’s backed by the Canadian dollar.",
+    "website":  "https://www.trusttoken.com/truecad/",
+    "explorer":  "https://etherscan.io/token/0x00000100F2A2bd000715001920eB70D229700085",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X00000100F2A2BD000715001920EB70D229700085/logo.png",
+    "id":  "0x00000100F2A2bd000715001920eB70D229700085"
 }

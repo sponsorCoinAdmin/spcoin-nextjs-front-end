@@ -1,11 +1,11 @@
 {
-    "name": "Highlander",
-    "symbol": "ONE",
-    "type": "ETC20",
-    "decimals": 6,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xFC07d3E0e36330a151c09384C3aD45e745227688",
-    "status": "active",
-    "id": "0xFC07d3E0e36330a151c09384C3aD45e745227688"
+    "name":  "Highlander",
+    "symbol":  "ONE",
+    "decimals":  6,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xFC07d3E0e36330a151c09384C3aD45e745227688",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XFC07D3E0E36330A151C09384C3AD45E745227688/logo.png",
+    "id":  "0xFC07d3E0e36330a151c09384C3aD45e745227688"
 }

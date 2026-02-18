@@ -1,11 +1,11 @@
 {
-    "name": "EMO tokens",
-    "symbol": "EMO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xd037a81B22e7F814bC6f87D50e5bd67d8c329Fa2",
-    "status": "spam",
-    "id": "0xd037a81B22e7F814bC6f87D50e5bd67d8c329Fa2"
+    "name":  "EMO tokens",
+    "symbol":  "EMO",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xd037a81B22e7F814bC6f87D50e5bd67d8c329Fa2",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0XD037A81B22E7F814BC6F87D50E5BD67D8C329FA2/logo.png",
+    "id":  "0xd037a81B22e7F814bC6f87D50e5bd67d8c329Fa2"
 }

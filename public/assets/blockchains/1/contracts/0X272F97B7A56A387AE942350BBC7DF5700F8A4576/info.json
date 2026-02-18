@@ -1,11 +1,11 @@
 {
-    "name": "Aave BAL",
-    "symbol": "aBAL",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave BAL is an interest bearing token pegged 1:1 to the underlying BAL deposited in Aave. aBAL accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0x272F97b7a56a387aE942350bBC7Df5700f8a4576",
-    "status": "active",
-    "id": "0x272F97b7a56a387aE942350bBC7Df5700f8a4576"
+    "name":  "Aave BAL",
+    "symbol":  "aBAL",
+    "decimals":  18,
+    "description":  "Aave BAL is an interest bearing token pegged 1:1 to the underlying BAL deposited in Aave. aBAL accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0x272F97b7a56a387aE942350bBC7Df5700f8a4576",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X272F97B7A56A387AE942350BBC7DF5700F8A4576/logo.png",
+    "id":  "0x272F97b7a56a387aE942350bBC7Df5700f8a4576"
 }

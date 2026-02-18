@@ -1,21 +1,21 @@
 {
-    "name": "GEMS",
-    "symbol": "GEMS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Gems is a blockchain launchpad enabling project fundraising via private token sales.",
-    "website": "https://gems.vip/",
-    "explorer": "https://etherscan.io/token/0x3010ccb5419f1ef26d40a7cd3f0d707a0fa127dc",
-    "status": "active",
-    "id": "0x3010ccb5419F1EF26D40a7cd3F0d707a0fa127Dc",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/Gems_VIP_"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/gems-vip"
-        }
-    ]
+    "name":  "GEMS",
+    "symbol":  "GEMS",
+    "decimals":  18,
+    "description":  "Gems is a blockchain launchpad enabling project fundraising via private token sales.",
+    "website":  "https://gems.vip/",
+    "explorer":  "https://etherscan.io/token/0x3010ccb5419f1ef26d40a7cd3f0d707a0fa127dc",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3010CCB5419F1EF26D40A7CD3F0D707A0FA127DC/logo.png",
+    "id":  "0x3010ccb5419F1EF26D40a7cd3F0d707a0fa127Dc",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/Gems_VIP_"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/gems-vip"
+                  }
+              ]
 }

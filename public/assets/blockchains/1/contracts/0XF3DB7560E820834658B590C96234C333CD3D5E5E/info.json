@@ -1,11 +1,11 @@
 {
-    "name": "Poker Chips",
-    "symbol": "CHP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "CoinPoker is a poker room built on blockchain technology that aims to offer fantastic value for both poker players and cryptocurrency community members alike.",
-    "website": "https://coinpoker.com/",
-    "explorer": "https://etherscan.io/token/0xf3db7560E820834658B590C96234c333Cd3D5E5e",
-    "status": "active",
-    "id": "0xf3db7560E820834658B590C96234c333Cd3D5E5e"
+    "name":  "Poker Chips",
+    "symbol":  "CHP",
+    "decimals":  18,
+    "description":  "CoinPoker is a poker room built on blockchain technology that aims to offer fantastic value for both poker players and cryptocurrency community members alike.",
+    "website":  "https://coinpoker.com/",
+    "explorer":  "https://etherscan.io/token/0xf3db7560E820834658B590C96234c333Cd3D5E5e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF3DB7560E820834658B590C96234C333CD3D5E5E/logo.png",
+    "id":  "0xf3db7560E820834658B590C96234c333Cd3D5E5e"
 }

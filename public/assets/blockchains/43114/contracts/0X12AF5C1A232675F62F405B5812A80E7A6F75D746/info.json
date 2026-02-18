@@ -1,14 +1,14 @@
 {
-    "name": "ROSE (Portal)",
-    "symbol": "ROSE",
-    "type": "AVALANCHE",
-    "decimals": 18,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://oasisprotocol.org/",
-    "explorer": "https://snowtrace.io/token/0x12AF5C1a232675f62F405b5812A80e7a6F75D746",
-    "status": "active",
-    "id": "0x12AF5C1a232675f62F405b5812A80e7a6F75D746",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "ROSE (Portal)",
+    "symbol":  "ROSE",
+    "decimals":  18,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://oasisprotocol.org/",
+    "explorer":  "https://snowtrace.io/token/0x12AF5C1a232675f62F405b5812A80e7a6F75D746",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0X12AF5C1A232675F62F405B5812A80E7A6F75D746/logo.png",
+    "id":  "0x12AF5C1a232675f62F405b5812A80e7a6F75D746",
+    "tags":  [
+                 "wrapped"
+             ]
 }

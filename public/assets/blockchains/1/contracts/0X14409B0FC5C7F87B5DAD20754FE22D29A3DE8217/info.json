@@ -1,14 +1,14 @@
 {
-    "name": "PYRO Network",
-    "symbol": "PYRO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://pyro.network/",
-    "explorer": "https://etherscan.io/token/0x14409B0Fc5C7f87b5DAd20754fE22d29A3dE8217",
-    "status": "active",
-    "id": "0x14409B0Fc5C7f87b5DAd20754fE22d29A3dE8217",
-    "tags": [
-        "deflationary"
-    ]
+    "name":  "PYRO Network",
+    "symbol":  "PYRO",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://pyro.network/",
+    "explorer":  "https://etherscan.io/token/0x14409B0Fc5C7f87b5DAd20754fE22d29A3dE8217",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X14409B0FC5C7F87B5DAD20754FE22D29A3DE8217/logo.png",
+    "id":  "0x14409B0Fc5C7f87b5DAd20754fE22d29A3dE8217",
+    "tags":  [
+                 "deflationary"
+             ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Strike LINK",
-    "symbol": "sLINK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Strike Finance collateral cryptocurrency",
-    "explorer": "https://etherscan.io/token/0x3F3B3B269d9f7088B022290906acff8710914be1",
-    "status": "active",
-    "id": "0x3F3B3B269d9f7088B022290906acff8710914be1",
-    "website": "https://strike.org"
+    "name":  "Strike LINK",
+    "symbol":  "sLINK",
+    "decimals":  18,
+    "description":  "Strike Finance collateral cryptocurrency",
+    "explorer":  "https://etherscan.io/token/0x3F3B3B269d9f7088B022290906acff8710914be1",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3F3B3B269D9F7088B022290906ACFF8710914BE1/logo.png",
+    "id":  "0x3F3B3B269d9f7088B022290906acff8710914be1",
+    "website":  "https://strike.org"
 }

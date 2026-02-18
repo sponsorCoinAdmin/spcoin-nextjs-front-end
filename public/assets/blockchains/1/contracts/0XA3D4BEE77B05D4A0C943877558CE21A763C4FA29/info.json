@@ -1,21 +1,21 @@
 {
-    "name": "The Root Network",
-    "type": "ERC20",
-    "symbol": "ROOT",
-    "decimals": 6,
-    "website": "https://www.therootnetwork.com/",
-    "description": "More than just a blockchain, The Root Network enables seamless user experience and asset interoperability across the open metaverse. The Root Network is a modular development toolkit prioritizing scalable, secure and interconnected experiences.",
-    "explorer": "https://etherscan.io/token/0xa3d4BEe77B05d4a0C943877558Ce21A763C4fa29",
-    "status": "active",
-    "id": "0xa3d4BEe77B05d4a0C943877558Ce21A763C4fa29",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/TheRootNetwork"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/the-root-network/"
-        }
-    ]
+    "name":  "The Root Network",
+    "symbol":  "ROOT",
+    "decimals":  6,
+    "website":  "https://www.therootnetwork.com/",
+    "description":  "More than just a blockchain, The Root Network enables seamless user experience and asset interoperability across the open metaverse. The Root Network is a modular development toolkit prioritizing scalable, secure and interconnected experiences.",
+    "explorer":  "https://etherscan.io/token/0xa3d4BEe77B05d4a0C943877558Ce21A763C4fa29",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA3D4BEE77B05D4A0C943877558CE21A763C4FA29/logo.png",
+    "id":  "0xa3d4BEe77B05d4a0C943877558Ce21A763C4fa29",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/TheRootNetwork"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/the-root-network/"
+                  }
+              ]
 }

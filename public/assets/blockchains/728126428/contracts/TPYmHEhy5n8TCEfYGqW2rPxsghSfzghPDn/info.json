@@ -1,24 +1,24 @@
 {
-    "name": "Decentralized USD",
-    "symbol": "USDD",
-    "type": "TRC20",
-    "decimals": 18,
-    "description": "USDD is a fully decentralized algorithmic stablecoin",
-    "website": "https://usdd.io/",
-    "explorer": "https://tronscan.io/#/token20/TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
-    "status": "active",
-    "id": "TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/usddio"
-        },
-        {
-            "name": "whitepaper",
-            "url": "https://usdd.io/USDD-en.pdf"
-        }
-    ],
-    "tags": [
-        "stablecoin"
-    ]
+    "name":  "Decentralized USD",
+    "symbol":  "USDD",
+    "decimals":  18,
+    "description":  "USDD is a fully decentralized algorithmic stablecoin",
+    "website":  "https://usdd.io/",
+    "explorer":  "https://tronscan.io/#/token20/TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/728126428/contracts/TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn/logo.png",
+    "id":  "TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/usddio"
+                  },
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://usdd.io/USDD-en.pdf"
+                  }
+              ],
+    "tags":  [
+                 "stablecoin"
+             ]
 }

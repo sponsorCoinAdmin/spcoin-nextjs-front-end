@@ -1,11 +1,11 @@
 {
-    "name": "MEET.ONE",
-    "symbol": "MEETONE",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "MEET.ONE's goal is to become a unified portal for blockchain users.",
-    "website": "https://meet.one/",
-    "explorer": "https://explorer.binance.org/asset/MEETONE-031",
-    "status": "active",
-    "id": "MEETONE-031"
+    "name":  "MEET.ONE",
+    "symbol":  "MEETONE",
+    "decimals":  8,
+    "description":  "MEET.ONE\u0027s goal is to become a unified portal for blockchain users.",
+    "website":  "https://meet.one/",
+    "explorer":  "https://explorer.binance.org/asset/MEETONE-031",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/MEETONE-031/logo.png",
+    "id":  "MEETONE-031"
 }

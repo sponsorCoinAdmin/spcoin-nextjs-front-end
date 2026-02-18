@@ -1,11 +1,11 @@
 {
-    "name": "Sappchain",
-    "symbol": "SAPP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "SAPPCHAIN is a decentralized end-to-end encrypted anonymous messaging App with peer-to-peer transfer of money and cryptocurrency solution.",
-    "website": "https://sappchain.co/",
-    "explorer": "https://etherscan.io/token/0x4dF76A9DaB9bb8310e4Ad3dc4336a8e26ed24EBB",
-    "status": "active",
-    "id": "0x4dF76A9DaB9bb8310e4Ad3dc4336a8e26ed24EBB"
+    "name":  "Sappchain",
+    "symbol":  "SAPP",
+    "decimals":  18,
+    "description":  "SAPPCHAIN is a decentralized end-to-end encrypted anonymous messaging App with peer-to-peer transfer of money and cryptocurrency solution.",
+    "website":  "https://sappchain.co/",
+    "explorer":  "https://etherscan.io/token/0x4dF76A9DaB9bb8310e4Ad3dc4336a8e26ed24EBB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4DF76A9DAB9BB8310E4AD3DC4336A8E26ED24EBB/logo.png",
+    "id":  "0x4dF76A9DaB9bb8310e4Ad3dc4336a8e26ed24EBB"
 }

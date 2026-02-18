@@ -1,11 +1,11 @@
 {
-    "name": "UNC",
-    "website": "https://unicrypt.network",
-    "description": "UNC was the initial token of the UniCrypt platform. Please swap it to UNCX (the new token) on the website.",
-    "explorer": "https://etherscan.io/token/0xf29e46887FFAE92f1ff87DfE39713875Da541373",
-    "type": "ERC20",
-    "symbol": "UNC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xf29e46887FFAE92f1ff87DfE39713875Da541373"
+    "name":  "UNC",
+    "website":  "https://unicrypt.network",
+    "description":  "UNC was the initial token of the UniCrypt platform. Please swap it to UNCX (the new token) on the website.",
+    "explorer":  "https://etherscan.io/token/0xf29e46887FFAE92f1ff87DfE39713875Da541373",
+    "symbol":  "UNC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF29E46887FFAE92F1FF87DFE39713875DA541373/logo.png",
+    "id":  "0xf29e46887FFAE92f1ff87DfE39713875Da541373"
 }

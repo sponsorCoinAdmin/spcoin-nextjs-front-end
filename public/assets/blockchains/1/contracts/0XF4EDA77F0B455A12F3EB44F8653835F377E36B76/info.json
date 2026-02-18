@@ -1,11 +1,11 @@
 {
-    "name": "TIKTOK COIN",
-    "symbol": "TIKTOK",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "https://tiktok.selfdrop.eu/",
-    "explorer": "https://etherscan.io/token/0xF4edA77f0B455A12f3eb44F8653835f377e36b76",
-    "status": "spam",
-    "id": "0xF4edA77f0B455A12f3eb44F8653835f377e36b76"
+    "name":  "TIKTOK COIN",
+    "symbol":  "TIKTOK",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "https://tiktok.selfdrop.eu/",
+    "explorer":  "https://etherscan.io/token/0xF4edA77f0B455A12f3eb44F8653835f377e36b76",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0XF4EDA77F0B455A12F3EB44F8653835F377E36B76/logo.png",
+    "id":  "0xF4edA77f0B455A12f3eb44F8653835f377e36b76"
 }

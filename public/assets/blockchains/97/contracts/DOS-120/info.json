@@ -1,11 +1,11 @@
 {
-    "name": "DOS Network Token",
-    "symbol": "DOS",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "A Decentralized Oracle Service supporting multiple heterogeneous blockchains.",
-    "website": "https://dos.network/",
-    "explorer": "https://explorer.binance.org/asset/DOS-120",
-    "status": "active",
-    "id": "DOS-120"
+    "name":  "DOS Network Token",
+    "symbol":  "DOS",
+    "decimals":  8,
+    "description":  "A Decentralized Oracle Service supporting multiple heterogeneous blockchains.",
+    "website":  "https://dos.network/",
+    "explorer":  "https://explorer.binance.org/asset/DOS-120",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/DOS-120/logo.png",
+    "id":  "DOS-120"
 }

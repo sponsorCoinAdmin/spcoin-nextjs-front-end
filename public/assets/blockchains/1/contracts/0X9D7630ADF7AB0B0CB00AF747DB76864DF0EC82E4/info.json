@@ -1,17 +1,17 @@
 {
-    "id": "0x9d7630aDF7ab0b0CB00Af747Db76864df0EC82E4",
-    "name": "GATENet",
-    "website": "https://gatetoken.io/",
-    "description": "GATENet is building on-chain regulated securities settlement and registry solutions to reduce costs and increase efficiencies for issuers, investors and market participants.",
-    "explorer": "https://etherscan.io/token/0x9d7630aDF7ab0b0CB00Af747Db76864df0EC82E4",
-    "symbol": "GATE",
-    "type": "ERC20",
-    "decimals": 18,
-    "status": "active",
-    "links": [
-        {
-            "name": "telegram",
-            "url": "https://t.me/GSXGATECommunity"
-        }
-    ]
+    "id":  "0x9d7630aDF7ab0b0CB00Af747Db76864df0EC82E4",
+    "name":  "GATENet",
+    "website":  "https://gatetoken.io/",
+    "description":  "GATENet is building on-chain regulated securities settlement and registry solutions to reduce costs and increase efficiencies for issuers, investors and market participants.",
+    "explorer":  "https://etherscan.io/token/0x9d7630aDF7ab0b0CB00Af747Db76864df0EC82E4",
+    "symbol":  "GATE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9D7630ADF7AB0B0CB00AF747DB76864DF0EC82E4/logo.png",
+    "links":  [
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/GSXGATECommunity"
+                  }
+              ]
 }

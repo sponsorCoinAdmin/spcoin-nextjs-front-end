@@ -1,11 +1,11 @@
 {
-    "name": "CayTreX Token",
-    "symbol": "CTXT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Crypto Exchange. Caytrex offers one of the most liquid order book in the world, allowing users to easily exchange Bitcoin, Ethereum, and many other.",
-    "website": "https://www.caytrex.com/",
-    "explorer": "https://etherscan.io/token/0x5E4334fD53B95dF63993c805066d693bb8CE5dFc",
-    "status": "active",
-    "id": "0x5E4334fD53B95dF63993c805066d693bb8CE5dFc"
+    "name":  "CayTreX Token",
+    "symbol":  "CTXT",
+    "decimals":  18,
+    "description":  "Crypto Exchange. Caytrex offers one of the most liquid order book in the world, allowing users to easily exchange Bitcoin, Ethereum, and many other.",
+    "website":  "https://www.caytrex.com/",
+    "explorer":  "https://etherscan.io/token/0x5E4334fD53B95dF63993c805066d693bb8CE5dFc",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5E4334FD53B95DF63993C805066D693BB8CE5DFC/logo.png",
+    "id":  "0x5E4334fD53B95dF63993c805066d693bb8CE5dFc"
 }

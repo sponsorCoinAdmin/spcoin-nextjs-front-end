@@ -1,11 +1,11 @@
 {
-    "name": "Bridge Protocol Token (ERC20)",
-    "website": "https://bridgeprotocol.io/",
-    "description": "Bridge Protocol ERC-20 utility token (BRDG) on the Ethereum network",
-    "explorer": "https://etherscan.io/token/0xb736bA66aAd83ADb2322D1f199Bfa32B3962f13C",
-    "type": "ERC20",
-    "symbol": "BRDG",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xb736bA66aAd83ADb2322D1f199Bfa32B3962f13C"
+    "name":  "Bridge Protocol Token (ERC20)",
+    "website":  "https://bridgeprotocol.io/",
+    "description":  "Bridge Protocol ERC-20 utility token (BRDG) on the Ethereum network",
+    "explorer":  "https://etherscan.io/token/0xb736bA66aAd83ADb2322D1f199Bfa32B3962f13C",
+    "symbol":  "BRDG",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB736BA66AAD83ADB2322D1F199BFA32B3962F13C/logo.png",
+    "id":  "0xb736bA66aAd83ADb2322D1f199Bfa32B3962f13C"
 }

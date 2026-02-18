@@ -1,24 +1,24 @@
 {
-    "name": "dYdX",
-    "type": "ERC20",
-    "symbol": "DYDX",
-    "decimals": 18,
-    "website": "https://dydx.foundation",
-    "description": "Trade & stake to earn rewards. Vote on the future of your exchange. Take control of the most powerful decentralized derivatives protocol.",
-    "explorer": "https://etherscan.io/token/0x92D6C1e31e14520e676a687F0a93788B716BEff5",
-    "status": "active",
-    "id": "0x92D6C1e31e14520e676a687F0a93788B716BEff5",
-    "tags": [
-        "defi"
-    ],
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/dydxfoundation"
-        },
-        {
-            "name": "github",
-            "url": "https://github.com/dydxfoundation"
-        }
-    ]
+    "name":  "dYdX",
+    "symbol":  "DYDX",
+    "decimals":  18,
+    "website":  "https://dydx.foundation",
+    "description":  "Trade \u0026 stake to earn rewards. Vote on the future of your exchange. Take control of the most powerful decentralized derivatives protocol.",
+    "explorer":  "https://etherscan.io/token/0x92D6C1e31e14520e676a687F0a93788B716BEff5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X92D6C1E31E14520E676A687F0A93788B716BEFF5/logo.png",
+    "id":  "0x92D6C1e31e14520e676a687F0a93788B716BEff5",
+    "tags":  [
+                 "defi"
+             ],
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/dydxfoundation"
+                  },
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/dydxfoundation"
+                  }
+              ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Evedo Token",
-    "symbol": "EVED",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Evedo is a blockchain based platform, consisting of B2B & B2C Marketplaces. It unifies all businesses and participants involved in organizing events.",
-    "website": "https://www.evedo.co",
-    "explorer": "https://etherscan.io/token/0x5aaEFe84E0fB3DD1f0fCfF6fA7468124986B91bd",
-    "status": "active",
-    "id": "0x5aaEFe84E0fB3DD1f0fCfF6fA7468124986B91bd"
+    "name":  "Evedo Token",
+    "symbol":  "EVED",
+    "decimals":  18,
+    "description":  "Evedo is a blockchain based platform, consisting of B2B \u0026 B2C Marketplaces. It unifies all businesses and participants involved in organizing events.",
+    "website":  "https://www.evedo.co",
+    "explorer":  "https://etherscan.io/token/0x5aaEFe84E0fB3DD1f0fCfF6fA7468124986B91bd",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5AAEFE84E0FB3DD1F0FCFF6FA7468124986B91BD/logo.png",
+    "id":  "0x5aaEFe84E0fB3DD1f0fCfF6fA7468124986B91bd"
 }

@@ -1,17 +1,17 @@
 {
-    "name": "MANY",
-    "website": "https://many.global",
-    "description": "MANY is a community born and operated project combining YF and NFT.",
-    "explorer": "https://etherscan.io/token/0xAB7aaf9e485a3bc885985184ABE9FC6Aba727bD6",
-    "type": "ERC20",
-    "symbol": "MANY",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xAB7aaf9e485a3bc885985184ABE9FC6Aba727bD6",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/MANYToken"
-        }
-    ]
+    "name":  "MANY",
+    "website":  "https://many.global",
+    "description":  "MANY is a community born and operated project combining YF and NFT.",
+    "explorer":  "https://etherscan.io/token/0xAB7aaf9e485a3bc885985184ABE9FC6Aba727bD6",
+    "symbol":  "MANY",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAB7AAF9E485A3BC885985184ABE9FC6ABA727BD6/logo.png",
+    "id":  "0xAB7aaf9e485a3bc885985184ABE9FC6Aba727bD6",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/MANYToken"
+                  }
+              ]
 }

@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Wilma Flintstone",
     "symbol":  "WILMA",
-    "address":  "0X000000000000000000000000000000000000008f",
+    "address":  "0X000000000000000000000000000000000000008F",
     "website":  "",
     "description":  "This is the description for site Wilma Flintstone",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000008F/logo.png",
     "status":  "test"
 }

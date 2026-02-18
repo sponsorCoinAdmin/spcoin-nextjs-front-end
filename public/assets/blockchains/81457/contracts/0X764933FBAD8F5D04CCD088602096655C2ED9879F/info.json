@@ -1,21 +1,21 @@
 {
-    "name": "Any Inu",
-    "symbol": "AI",
-    "type": "BLAST",
-    "description": "$AI is a omnichain dog coin powered by Axelar's Interchain Token Service.",
-    "decimals": 18,
-    "website": "https://www.anyinu.xyz/",
-    "explorer": "https://blastscan.io/token/0x764933fbad8f5d04ccd088602096655c2ed9879f",
-    "status": "active",
-    "id": "0x764933fbAd8f5D04Ccd088602096655c2ED9879F",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/AnyInuCoin"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/any-inu/"
-        }
-    ]
+    "name":  "Any Inu",
+    "symbol":  "AI",
+    "description":  "$AI is a omnichain dog coin powered by Axelar\u0027s Interchain Token Service.",
+    "decimals":  18,
+    "website":  "https://www.anyinu.xyz/",
+    "explorer":  "https://blastscan.io/token/0x764933fbad8f5d04ccd088602096655c2ed9879f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/81457/contracts/0X764933FBAD8F5D04CCD088602096655C2ED9879F/logo.png",
+    "id":  "0x764933fbAd8f5D04Ccd088602096655c2ED9879F",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/AnyInuCoin"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/any-inu/"
+                  }
+              ]
 }

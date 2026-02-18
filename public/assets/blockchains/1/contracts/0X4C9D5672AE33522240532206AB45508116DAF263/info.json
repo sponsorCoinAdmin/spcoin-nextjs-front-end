@@ -1,11 +1,11 @@
 {
-    "name": "VGAMES",
-    "symbol": "VGS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x4C9d5672Ae33522240532206Ab45508116daF263",
-    "status": "spam",
-    "id": "0x4C9d5672Ae33522240532206Ab45508116daF263"
+    "name":  "VGAMES",
+    "symbol":  "VGS",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x4C9d5672Ae33522240532206Ab45508116daF263",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X4C9D5672AE33522240532206AB45508116DAF263/logo.png",
+    "id":  "0x4C9d5672Ae33522240532206Ab45508116daF263"
 }

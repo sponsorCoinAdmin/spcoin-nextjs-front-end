@@ -1,11 +1,11 @@
 {
-    "name": "MyWish",
-    "symbol": "WISH",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "Decentralized full cycle platform: Smart contracts creation, Audit, Deployment, Systematic calling on schedule, Execution.",
-    "website": "https://mywish.io",
-    "explorer": "https://explorer.binance.org/asset/WISH-2D5",
-    "status": "active",
-    "id": "WISH-2D5"
+    "name":  "MyWish",
+    "symbol":  "WISH",
+    "decimals":  8,
+    "description":  "Decentralized full cycle platform: Smart contracts creation, Audit, Deployment, Systematic calling on schedule, Execution.",
+    "website":  "https://mywish.io",
+    "explorer":  "https://explorer.binance.org/asset/WISH-2D5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/WISH-2D5/logo.png",
+    "id":  "WISH-2D5"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Qbean",
-    "type": "ERC20",
-    "symbol": "QBC",
-    "decimals": 18,
-    "website": "",
-    "description": "-",
-    "explorer": "https://etherscan.io/token/0x6961a3e9d86ded4c0c64678d538dc2359659b29e",
-    "status": "active",
-    "id": "0x6961A3e9D86deD4C0c64678d538dc2359659b29E"
+    "name":  "Qbean",
+    "symbol":  "QBC",
+    "decimals":  18,
+    "website":  "",
+    "description":  "-",
+    "explorer":  "https://etherscan.io/token/0x6961a3e9d86ded4c0c64678d538dc2359659b29e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6961A3E9D86DED4C0C64678D538DC2359659B29E/logo.png",
+    "id":  "0x6961A3e9D86deD4C0c64678d538dc2359659b29E"
 }

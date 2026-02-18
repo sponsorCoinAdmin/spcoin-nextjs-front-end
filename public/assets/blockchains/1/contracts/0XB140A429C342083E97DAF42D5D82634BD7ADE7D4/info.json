@@ -1,18 +1,18 @@
 {
-    "name": "WAXG",
-    "website": "https://wax.io",
-    "description": "WAX Governance Token",
-    "explorer": "https://etherscan.io/token/0xb140A429c342083E97Daf42d5D82634bd7Ade7d4",
-    "research": "https://wax.io/blog/tags/technical",
-    "type": "ERC20",
-    "symbol": "WAXG",
-    "decimals": 8,
-    "status": "active",
-    "id": "0xb140A429c342083E97Daf42d5D82634bd7Ade7d4",
-    "links": [
-        {
-            "name": "whitepaper",
-            "url": "https://github.com/worldwide-asset-exchange/whitepaper"
-        }
-    ]
+    "name":  "WAXG",
+    "website":  "https://wax.io",
+    "description":  "WAX Governance Token",
+    "explorer":  "https://etherscan.io/token/0xb140A429c342083E97Daf42d5D82634bd7Ade7d4",
+    "research":  "https://wax.io/blog/tags/technical",
+    "symbol":  "WAXG",
+    "decimals":  8,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB140A429C342083E97DAF42D5D82634BD7ADE7D4/logo.png",
+    "id":  "0xb140A429c342083E97Daf42d5D82634bd7Ade7d4",
+    "links":  [
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://github.com/worldwide-asset-exchange/whitepaper"
+                  }
+              ]
 }

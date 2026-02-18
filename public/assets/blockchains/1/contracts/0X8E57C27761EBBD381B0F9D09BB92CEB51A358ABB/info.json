@@ -1,11 +1,11 @@
 {
-    "name": "extraDNA",
-    "symbol": "xDNA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Adaptive Social Media System.",
-    "website": "https://xhumanity.org",
-    "explorer": "https://etherscan.io/token/0x8e57c27761EBBd381b0f9d09Bb92CeB51a358AbB",
-    "status": "active",
-    "id": "0x8e57c27761EBBd381b0f9d09Bb92CeB51a358AbB"
+    "name":  "extraDNA",
+    "symbol":  "xDNA",
+    "decimals":  18,
+    "description":  "Adaptive Social Media System.",
+    "website":  "https://xhumanity.org",
+    "explorer":  "https://etherscan.io/token/0x8e57c27761EBBd381b0f9d09Bb92CeB51a358AbB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8E57C27761EBBD381B0F9D09BB92CEB51A358ABB/logo.png",
+    "id":  "0x8e57c27761EBBd381b0f9d09Bb92CeB51a358AbB"
 }

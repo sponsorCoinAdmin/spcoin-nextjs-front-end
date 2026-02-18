@@ -1,11 +1,11 @@
 {
-    "name": "Dopex Governance Token",
-    "symbol": "DPX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "DPX - vanilla governance and protocol fee accrual token",
-    "website": "https://www.dopex.io/",
-    "explorer": "https://etherscan.io/token/0xEec2bE5c91ae7f8a338e1e5f3b5DE49d07AfdC81",
-    "status": "active",
-    "id": "0xEec2bE5c91ae7f8a338e1e5f3b5DE49d07AfdC81"
+    "name":  "Dopex Governance Token",
+    "symbol":  "DPX",
+    "decimals":  18,
+    "description":  "DPX - vanilla governance and protocol fee accrual token",
+    "website":  "https://www.dopex.io/",
+    "explorer":  "https://etherscan.io/token/0xEec2bE5c91ae7f8a338e1e5f3b5DE49d07AfdC81",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEEC2BE5C91AE7F8A338E1E5F3B5DE49D07AFDC81/logo.png",
+    "id":  "0xEec2bE5c91ae7f8a338e1e5f3b5DE49d07AfdC81"
 }

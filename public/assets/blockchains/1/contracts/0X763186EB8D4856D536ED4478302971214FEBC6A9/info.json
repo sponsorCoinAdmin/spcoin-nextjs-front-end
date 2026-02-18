@@ -1,11 +1,11 @@
 {
-    "name": "Better Betting",
-    "symbol": "BETR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The smart escrow token.",
-    "website": "https://www.betterbetting.org",
-    "explorer": "https://etherscan.io/token/0x763186eB8d4856D536eD4478302971214FEbc6A9",
-    "status": "active",
-    "id": "0x763186eB8d4856D536eD4478302971214FEbc6A9"
+    "name":  "Better Betting",
+    "symbol":  "BETR",
+    "decimals":  18,
+    "description":  "The smart escrow token.",
+    "website":  "https://www.betterbetting.org",
+    "explorer":  "https://etherscan.io/token/0x763186eB8d4856D536eD4478302971214FEbc6A9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X763186EB8D4856D536ED4478302971214FEBC6A9/logo.png",
+    "id":  "0x763186eB8d4856D536eD4478302971214FEbc6A9"
 }

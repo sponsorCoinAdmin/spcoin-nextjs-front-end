@@ -1,11 +1,11 @@
 {
-    "name": "Kcash",
-    "symbol": "KCASH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Kcash (KCASH) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://www.kcash.com",
-    "explorer": "https://etherscan.io/token/0x32d74896f05204D1b6Ae7B0a3CEBd7FC0Cd8F9C7",
-    "status": "active",
-    "id": "0x32d74896f05204D1b6Ae7B0a3CEBd7FC0Cd8F9C7"
+    "name":  "Kcash",
+    "symbol":  "KCASH",
+    "decimals":  18,
+    "description":  "Kcash (KCASH) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://www.kcash.com",
+    "explorer":  "https://etherscan.io/token/0x32d74896f05204D1b6Ae7B0a3CEBd7FC0Cd8F9C7",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X32D74896F05204D1B6AE7B0A3CEBD7FC0CD8F9C7/logo.png",
+    "id":  "0x32d74896f05204D1b6Ae7B0a3CEBd7FC0Cd8F9C7"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "DeCash",
-    "symbol": "DESH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Decash is the first and only cryptocurrency to capture the performance of multiple financial assets simultaneously by means of a mechanism known as HedgeTech.",
-    "website": "https://www.decash.co/",
-    "explorer": "https://etherscan.io/token/0x95bA34760ac3D7fBE98ee8b2AB33b4F1a6D18878",
-    "status": "active",
-    "id": "0x95bA34760ac3D7fBE98ee8b2AB33b4F1a6D18878"
+    "name":  "DeCash",
+    "symbol":  "DESH",
+    "decimals":  18,
+    "description":  "Decash is the first and only cryptocurrency to capture the performance of multiple financial assets simultaneously by means of a mechanism known as HedgeTech.",
+    "website":  "https://www.decash.co/",
+    "explorer":  "https://etherscan.io/token/0x95bA34760ac3D7fBE98ee8b2AB33b4F1a6D18878",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X95BA34760AC3D7FBE98EE8B2AB33B4F1A6D18878/logo.png",
+    "id":  "0x95bA34760ac3D7fBE98ee8b2AB33b4F1a6D18878"
 }

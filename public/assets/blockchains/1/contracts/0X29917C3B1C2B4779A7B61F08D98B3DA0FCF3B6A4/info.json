@@ -1,21 +1,21 @@
 {
-    "name": "ArgenPeso",
-    "website": "https://argenpeso.com",
-    "description": "ArgenPeso is the Argentine digital cryptocurrency that seeks to give a new value to the Argentine peso.",
-    "explorer": "https://etherscan.io/token/0x29917c3B1c2B4779a7B61f08d98B3Da0fCf3b6A4",
-    "type": "ERC20",
-    "symbol": "ARGP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x29917c3B1c2B4779a7B61f08d98B3Da0fCf3b6A4",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/argenpeso"
-        },
-        {
-            "name": "whitepaper",
-            "url": "https://argenpeso.com/whitepaper.pdf"
-        }
-    ]
+    "name":  "ArgenPeso",
+    "website":  "https://argenpeso.com",
+    "description":  "ArgenPeso is the Argentine digital cryptocurrency that seeks to give a new value to the Argentine peso.",
+    "explorer":  "https://etherscan.io/token/0x29917c3B1c2B4779a7B61f08d98B3Da0fCf3b6A4",
+    "symbol":  "ARGP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X29917C3B1C2B4779A7B61F08D98B3DA0FCF3B6A4/logo.png",
+    "id":  "0x29917c3B1c2B4779a7B61f08d98B3Da0fCf3b6A4",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/argenpeso"
+                  },
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://argenpeso.com/whitepaper.pdf"
+                  }
+              ]
 }

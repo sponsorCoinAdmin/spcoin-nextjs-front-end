@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Anonymous White",
     "symbol":  "A_WHITE",
     "address":  "0X0000000000000000000000000000000000000072",
     "website":  "",
     "description":  "This is the description for site AnonymousWhite",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000072/logo.png",
     "status":  "test"
 }
+

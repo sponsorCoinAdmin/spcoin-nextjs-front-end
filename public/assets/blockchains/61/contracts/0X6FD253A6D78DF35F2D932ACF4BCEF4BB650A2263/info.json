@@ -1,11 +1,11 @@
 {
-    "name": "BitUnits Africa",
-    "symbol": "AFRI",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x6FD253A6D78df35f2D932aCf4bCEF4bB650a2263",
-    "status": "active",
-    "id": "0x6FD253A6D78df35f2D932aCf4bCEF4bB650a2263"
+    "name":  "BitUnits Africa",
+    "symbol":  "AFRI",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x6FD253A6D78df35f2D932aCf4bCEF4bB650a2263",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X6FD253A6D78DF35F2D932ACF4BCEF4BB650A2263/logo.png",
+    "id":  "0x6FD253A6D78df35f2D932aCf4bCEF4bB650a2263"
 }

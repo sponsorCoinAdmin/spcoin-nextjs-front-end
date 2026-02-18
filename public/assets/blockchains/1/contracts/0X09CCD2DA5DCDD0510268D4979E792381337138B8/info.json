@@ -1,11 +1,11 @@
 {
-    "name": "Bodhi Token",
-    "symbol": "NBOT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The Bodhi project, decentralized prediction market.",
-    "website": "https://www.nakachain.org/",
-    "explorer": "https://etherscan.io/token/0x09Ccd2DA5dCDd0510268d4979e792381337138b8",
-    "status": "active",
-    "id": "0x09Ccd2DA5dCDd0510268d4979e792381337138b8"
+    "name":  "Bodhi Token",
+    "symbol":  "NBOT",
+    "decimals":  18,
+    "description":  "The Bodhi project, decentralized prediction market.",
+    "website":  "https://www.nakachain.org/",
+    "explorer":  "https://etherscan.io/token/0x09Ccd2DA5dCDd0510268d4979e792381337138b8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X09CCD2DA5DCDD0510268D4979E792381337138B8/logo.png",
+    "id":  "0x09Ccd2DA5dCDd0510268d4979e792381337138b8"
 }

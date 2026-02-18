@@ -1,11 +1,11 @@
 {
-    "name": "Curve",
-    "symbol": "CURV",
-    "type": "WAN20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://www.wanscan.org/token/0x3beb80170272F07Aca12987af86a59888255a807",
-    "status": "active",
-    "id": "0x3BEB80170272f07aCA12987AF86A59888255A807"
+    "name":  "Curve",
+    "symbol":  "CURV",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://www.wanscan.org/token/0x3beb80170272F07Aca12987af86a59888255a807",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/888/contracts/0X3BEB80170272F07ACA12987AF86A59888255A807/logo.png",
+    "id":  "0x3BEB80170272f07aCA12987AF86A59888255A807"
 }

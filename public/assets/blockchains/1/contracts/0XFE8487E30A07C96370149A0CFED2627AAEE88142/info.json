@@ -1,11 +1,11 @@
 {
-    "name": "BRKCOIN",
-    "symbol": "BRK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xfE8487E30A07c96370149a0cFEd2627AAEe88142",
-    "status": "active",
-    "id": "0xfE8487E30A07c96370149a0cFEd2627AAEe88142"
+    "name":  "BRKCOIN",
+    "symbol":  "BRK",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xfE8487E30A07c96370149a0cFEd2627AAEe88142",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFE8487E30A07C96370149A0CFED2627AAEE88142/logo.png",
+    "id":  "0xfE8487E30A07c96370149a0cFEd2627AAEe88142"
 }

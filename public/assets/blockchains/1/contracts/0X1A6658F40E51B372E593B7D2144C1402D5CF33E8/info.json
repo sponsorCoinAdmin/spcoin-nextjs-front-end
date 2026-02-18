@@ -1,11 +1,11 @@
 {
-    "name": "PUBLX",
-    "symbol": "PUBLX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x1a6658F40e51b372E593B7d2144c1402d5cf33E8",
-    "status": "active",
-    "id": "0x1a6658F40e51b372E593B7d2144c1402d5cf33E8"
+    "name":  "PUBLX",
+    "symbol":  "PUBLX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x1a6658F40e51b372E593B7d2144c1402d5cf33E8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1A6658F40E51B372E593B7D2144C1402D5CF33E8/logo.png",
+    "id":  "0x1a6658F40e51b372E593B7d2144c1402d5cf33E8"
 }

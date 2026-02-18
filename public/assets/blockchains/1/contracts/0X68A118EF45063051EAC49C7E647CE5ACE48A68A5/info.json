@@ -1,12 +1,12 @@
 {
-    "name": "Based Money",
-    "website": "https://based.money",
-    "description": "The BASED Protocol is a DeFi game of chicken designed to shake out weak hands and yield the highest gains for those who understand the rules.",
-    "explorer": "https://etherscan.io/token/0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5",
-    "dapp": "https://stake.based.money",
-    "type": "ERC20",
-    "symbol": "$BASED",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5"
+    "name":  "Based Money",
+    "website":  "https://based.money",
+    "description":  "The BASED Protocol is a DeFi game of chicken designed to shake out weak hands and yield the highest gains for those who understand the rules.",
+    "explorer":  "https://etherscan.io/token/0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5",
+    "dapp":  "https://stake.based.money",
+    "symbol":  "$BASED",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X68A118EF45063051EAC49C7E647CE5ACE48A68A5/logo.png",
+    "id":  "0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5"
 }

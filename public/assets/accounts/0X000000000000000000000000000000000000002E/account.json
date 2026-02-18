@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Support Liberal",
     "symbol":  "LIB_6",
-    "address":  "0X000000000000000000000000000000000000002e",
+    "address":  "0X000000000000000000000000000000000000002E",
     "website":  "",
     "description":  "This is the description for site Liberals6",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000002E/logo.png",
     "status":  "test"
 }

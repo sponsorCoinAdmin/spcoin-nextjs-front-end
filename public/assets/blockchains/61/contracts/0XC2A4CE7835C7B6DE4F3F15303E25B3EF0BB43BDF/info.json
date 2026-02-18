@@ -1,11 +1,11 @@
 {
-    "name": "Spike",
-    "symbol": "SPKG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xc2A4CE7835c7b6de4F3F15303E25b3eF0bB43bDF",
-    "status": "active",
-    "id": "0xc2A4CE7835c7b6de4F3F15303E25b3eF0bB43bDF"
+    "name":  "Spike",
+    "symbol":  "SPKG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xc2A4CE7835c7b6de4F3F15303E25b3eF0bB43bDF",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XC2A4CE7835C7B6DE4F3F15303E25B3EF0BB43BDF/logo.png",
+    "id":  "0xc2A4CE7835c7b6de4F3F15303E25b3eF0bB43bDF"
 }

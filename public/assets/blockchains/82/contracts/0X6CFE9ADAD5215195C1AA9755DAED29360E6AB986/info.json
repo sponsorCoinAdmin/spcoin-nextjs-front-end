@@ -1,11 +1,11 @@
 {
-    "name": "Factory Builders Token",
-    "symbol": "FTB",
-    "type": "METER",
-    "decimals": 18,
-    "explorer": "https://scan.meter.io/address/0x6CFe9AdaD5215195c1Aa9755DAed29360e6Ab986",
-    "status": "active",
-    "id": "0x6CFe9AdaD5215195c1Aa9755DAed29360e6Ab986",
-    "description": "-",
-    "website": ""
+    "name":  "Factory Builders Token",
+    "symbol":  "FTB",
+    "decimals":  18,
+    "explorer":  "https://scan.meter.io/address/0x6CFe9AdaD5215195c1Aa9755DAed29360e6Ab986",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/82/contracts/0X6CFE9ADAD5215195C1AA9755DAED29360E6AB986/logo.png",
+    "id":  "0x6CFe9AdaD5215195c1Aa9755DAed29360e6Ab986",
+    "description":  "-",
+    "website":  ""
 }

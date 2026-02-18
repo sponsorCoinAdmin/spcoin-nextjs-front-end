@@ -1,11 +1,11 @@
 {
-    "name": "AppCoins",
-    "symbol": "APPC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "AppCoins is an open and distributed protocol for app stores based on the Ethereum blockchain and smart contracts.",
-    "website": "https://appcoins.io/",
-    "explorer": "https://etherscan.io/token/0x1a7a8BD9106F2B8D977E08582DC7d24c723ab0DB",
-    "status": "active",
-    "id": "0x1a7a8BD9106F2B8D977E08582DC7d24c723ab0DB"
+    "name":  "AppCoins",
+    "symbol":  "APPC",
+    "decimals":  18,
+    "description":  "AppCoins is an open and distributed protocol for app stores based on the Ethereum blockchain and smart contracts.",
+    "website":  "https://appcoins.io/",
+    "explorer":  "https://etherscan.io/token/0x1a7a8BD9106F2B8D977E08582DC7d24c723ab0DB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1A7A8BD9106F2B8D977E08582DC7D24C723AB0DB/logo.png",
+    "id":  "0x1a7a8BD9106F2B8D977E08582DC7d24c723ab0DB"
 }

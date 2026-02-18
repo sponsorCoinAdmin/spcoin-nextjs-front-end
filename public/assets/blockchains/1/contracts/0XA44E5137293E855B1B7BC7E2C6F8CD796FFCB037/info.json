@@ -1,11 +1,11 @@
 {
-    "name": "SENTinel",
-    "symbol": "SENT",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "A modern VPN backed by blockchain anonymity and security.",
-    "website": "https://sentinel.co",
-    "explorer": "https://etherscan.io/token/0xa44E5137293E855B1b7bC7E2C6f8cD796fFCB037",
-    "status": "active",
-    "id": "0xa44E5137293E855B1b7bC7E2C6f8cD796fFCB037"
+    "name":  "SENTinel",
+    "symbol":  "SENT",
+    "decimals":  8,
+    "description":  "A modern VPN backed by blockchain anonymity and security.",
+    "website":  "https://sentinel.co",
+    "explorer":  "https://etherscan.io/token/0xa44E5137293E855B1b7bC7E2C6f8cD796fFCB037",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA44E5137293E855B1B7BC7E2C6F8CD796FFCB037/logo.png",
+    "id":  "0xa44E5137293E855B1b7bC7E2C6f8cD796fFCB037"
 }

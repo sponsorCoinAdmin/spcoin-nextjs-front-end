@@ -1,11 +1,11 @@
 {
-    "name": "Time New Bank",
-    "symbol": "TNB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "TNB is token represent to Miao'A International Timechain (M.I.T). That is dedicated to building a precision time-valuebased transmission network.",
-    "website": "https://tnb.fund/",
-    "explorer": "https://etherscan.io/token/0xF7920B0768Ecb20A123fAc32311d07D193381d6f",
-    "status": "active",
-    "id": "0xF7920B0768Ecb20A123fAc32311d07D193381d6f"
+    "name":  "Time New Bank",
+    "symbol":  "TNB",
+    "decimals":  18,
+    "description":  "TNB is token represent to Miao\u0027A International Timechain (M.I.T). That is dedicated to building a precision time-valuebased transmission network.",
+    "website":  "https://tnb.fund/",
+    "explorer":  "https://etherscan.io/token/0xF7920B0768Ecb20A123fAc32311d07D193381d6f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF7920B0768ECB20A123FAC32311D07D193381D6F/logo.png",
+    "id":  "0xF7920B0768Ecb20A123fAc32311d07D193381d6f"
 }

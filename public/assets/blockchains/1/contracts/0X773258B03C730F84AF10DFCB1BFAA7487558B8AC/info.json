@@ -1,11 +1,11 @@
 {
-    "name": "SEFI",
-    "website": "https://secretswap.io",
-    "description": "SEFI is the native governance token for SecretSwap and Secret DeFi more generally. Earn SEFI and shape the future of the front-running resistant, privacy-first open finance ecosystem.",
-    "explorer": "https://etherscan.io/token/0x773258b03c730f84af10dfcb1bfaa7487558b8ac",
-    "type": "ERC20",
-    "symbol": "SEFI",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x773258b03c730F84aF10dFcB1BfAa7487558B8Ac"
+    "name":  "SEFI",
+    "website":  "https://secretswap.io",
+    "description":  "SEFI is the native governance token for SecretSwap and Secret DeFi more generally. Earn SEFI and shape the future of the front-running resistant, privacy-first open finance ecosystem.",
+    "explorer":  "https://etherscan.io/token/0x773258b03c730f84af10dfcb1bfaa7487558b8ac",
+    "symbol":  "SEFI",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X773258B03C730F84AF10DFCB1BFAA7487558B8AC/logo.png",
+    "id":  "0x773258b03c730F84aF10dFcB1BfAa7487558B8Ac"
 }

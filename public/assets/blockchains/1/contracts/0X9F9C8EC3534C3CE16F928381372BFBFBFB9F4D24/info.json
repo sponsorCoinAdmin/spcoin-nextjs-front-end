@@ -1,11 +1,11 @@
 {
-    "name": "GraphLinq",
-    "symbol": "GLQ",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The automation of decentralized DeFi data monitorization and external executions over multi-chain applications.",
-    "website": "https://graphlinq.io/",
-    "explorer": "https://etherscan.io/token/0x9f9c8ec3534c3ce16f928381372bfbfbfb9f4d24",
-    "status": "active",
-    "id": "0x9F9c8ec3534c3cE16F928381372BfbFBFb9F4D24"
+    "name":  "GraphLinq",
+    "symbol":  "GLQ",
+    "decimals":  18,
+    "description":  "The automation of decentralized DeFi data monitorization and external executions over multi-chain applications.",
+    "website":  "https://graphlinq.io/",
+    "explorer":  "https://etherscan.io/token/0x9f9c8ec3534c3ce16f928381372bfbfbfb9f4d24",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9F9C8EC3534C3CE16F928381372BFBFBFB9F4D24/logo.png",
+    "id":  "0x9F9c8ec3534c3cE16F928381372BfbFBFb9F4D24"
 }

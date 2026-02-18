@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Linda Lance",
     "symbol":  "LINDA",
     "address":  "0X0000000000000000000000000000000000000081",
     "website":  "",
     "description":  "This is the description for site Lady3",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000081/logo.png",
     "status":  "test"
 }
+

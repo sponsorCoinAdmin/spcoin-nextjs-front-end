@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Barkie",
     "symbol":  "BARK",
     "address":  "0X0000000000000000000000000000000000000077",
     "website":  "",
     "description":  "This is the description for site Dog1",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000077/logo.png",
     "status":  "test"
 }
+

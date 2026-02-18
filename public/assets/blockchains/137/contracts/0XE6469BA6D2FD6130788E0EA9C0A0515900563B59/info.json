@@ -1,14 +1,14 @@
 {
-    "name": "UST (Wormhole)",
-    "type": "POLYGON",
-    "symbol": "UST",
-    "decimals": 6,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://wormholebridge.com",
-    "explorer": "https://polygonscan.com/token/0xE6469Ba6D2fD6130788E0eA9C0a0515900563b59",
-    "status": "active",
-    "id": "0xE6469Ba6D2fD6130788E0eA9C0a0515900563b59",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "UST (Wormhole)",
+    "symbol":  "UST",
+    "decimals":  6,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://wormholebridge.com",
+    "explorer":  "https://polygonscan.com/token/0xE6469Ba6D2fD6130788E0eA9C0a0515900563b59",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/137/contracts/0XE6469BA6D2FD6130788E0EA9C0A0515900563B59/logo.png",
+    "id":  "0xE6469Ba6D2fD6130788E0eA9C0a0515900563b59",
+    "tags":  [
+                 "wrapped"
+             ]
 }

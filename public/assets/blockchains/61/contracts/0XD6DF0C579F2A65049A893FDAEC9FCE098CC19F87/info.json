@@ -1,12 +1,14 @@
 {
-    "name": "UniversalCoin X",
-    "type": "ETC20",
-    "symbol": "UVCX",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xd6dF0C579f2A65049a893fDaEC9fCE098CC19F87",
-    "status": "active",
-    "id": "0xd6dF0C579f2A65049a893fDaEC9fCE098CC19F87",
-    "links": []
+    "name":  "UniversalCoin X",
+    "symbol":  "UVCX",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xd6dF0C579f2A65049a893fDaEC9fCE098CC19F87",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XD6DF0C579F2A65049A893FDAEC9FCE098CC19F87/logo.png",
+    "id":  "0xd6dF0C579f2A65049a893fDaEC9fCE098CC19F87",
+    "links":  [
+
+              ]
 }

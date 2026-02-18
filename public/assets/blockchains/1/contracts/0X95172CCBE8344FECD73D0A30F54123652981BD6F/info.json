@@ -1,11 +1,11 @@
 {
-    "name": "Meridian Network",
-    "symbol": "LOCK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Enabling DeFi through community governance.",
-    "website": "https://meridian-network.co",
-    "explorer": "https://etherscan.io/token/0x95172ccBe8344fecD73D0a30F54123652981BD6F",
-    "status": "active",
-    "id": "0x95172ccBe8344fecD73D0a30F54123652981BD6F"
+    "name":  "Meridian Network",
+    "symbol":  "LOCK",
+    "decimals":  18,
+    "description":  "Enabling DeFi through community governance.",
+    "website":  "https://meridian-network.co",
+    "explorer":  "https://etherscan.io/token/0x95172ccBe8344fecD73D0a30F54123652981BD6F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X95172CCBE8344FECD73D0A30F54123652981BD6F/logo.png",
+    "id":  "0x95172ccBe8344fecD73D0a30F54123652981BD6F"
 }

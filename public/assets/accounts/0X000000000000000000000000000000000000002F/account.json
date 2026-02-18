@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "PC Party",
     "symbol":  "PC_2",
-    "address":  "0X000000000000000000000000000000000000002f",
+    "address":  "0X000000000000000000000000000000000000002F",
     "website":  "",
     "description":  "This is the description for site PC_2",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000002F/logo.png",
     "status":  "test"
 }

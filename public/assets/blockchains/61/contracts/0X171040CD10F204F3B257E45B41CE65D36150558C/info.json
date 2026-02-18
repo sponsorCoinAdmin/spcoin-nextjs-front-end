@@ -1,11 +1,11 @@
 {
-    "name": "eBOMB",
-    "symbol": "POW",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x171040cd10f204F3b257e45b41ce65D36150558C",
-    "status": "active",
-    "id": "0x171040cd10f204F3b257e45b41ce65D36150558C"
+    "name":  "eBOMB",
+    "symbol":  "POW",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x171040cd10f204F3b257e45b41ce65D36150558C",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X171040CD10F204F3B257E45B41CE65D36150558C/logo.png",
+    "id":  "0x171040cd10f204F3b257e45b41ce65D36150558C"
 }

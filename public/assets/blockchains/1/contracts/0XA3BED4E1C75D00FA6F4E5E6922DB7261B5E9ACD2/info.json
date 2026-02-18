@@ -1,17 +1,17 @@
 {
-    "name": "Meta",
-    "website": "https://mstable.org",
-    "description": "mStable unites stablecoins, lending and swapping into one standard.",
-    "explorer": "https://etherscan.io/token/0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
-    "type": "ERC20",
-    "symbol": "MTA",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/mstable_"
-        }
-    ]
+    "name":  "Meta",
+    "website":  "https://mstable.org",
+    "description":  "mStable unites stablecoins, lending and swapping into one standard.",
+    "explorer":  "https://etherscan.io/token/0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
+    "symbol":  "MTA",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA3BED4E1C75D00FA6F4E5E6922DB7261B5E9ACD2/logo.png",
+    "id":  "0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/mstable_"
+                  }
+              ]
 }

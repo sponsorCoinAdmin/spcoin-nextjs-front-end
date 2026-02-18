@@ -1,21 +1,21 @@
 {
-    "name": "Sperax",
-    "symbol": "SPA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "A project that aims to provide decentralized financial services for all with its original BDLS consensus protocol and a dual stablecoin system.",
-    "website": "https://sperax.io/",
-    "explorer": "https://etherscan.io/token/0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008",
-    "status": "active",
-    "id": "0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/SperaxUSD"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/SperaxUSD"
-        }
-    ]
+    "name":  "Sperax",
+    "symbol":  "SPA",
+    "decimals":  18,
+    "description":  "A project that aims to provide decentralized financial services for all with its original BDLS consensus protocol and a dual stablecoin system.",
+    "website":  "https://sperax.io/",
+    "explorer":  "https://etherscan.io/token/0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB4A3B0FAF0AB53DF58001804DDA5BFC6A3D59008/logo.png",
+    "id":  "0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/SperaxUSD"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/SperaxUSD"
+                  }
+              ]
 }

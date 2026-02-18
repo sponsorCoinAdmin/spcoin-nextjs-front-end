@@ -1,11 +1,11 @@
 {
-    "name": "FLEx Token",
-    "website": "https://fuzzy.one",
-    "description": "FLEx token is the proof of work token used as payment for contributors to the fuzzy.one solutions library and discussion board.",
-    "explorer": "https://etherscan.io/token/0x6D45640F5D0B75280647f2F37CCD19c1167f833c",
-    "type": "ERC20",
-    "symbol": "FLEx",
-    "decimals": 4,
-    "status": "active",
-    "id": "0x6D45640F5D0B75280647f2F37CCD19c1167f833c"
+    "name":  "FLEx Token",
+    "website":  "https://fuzzy.one",
+    "description":  "FLEx token is the proof of work token used as payment for contributors to the fuzzy.one solutions library and discussion board.",
+    "explorer":  "https://etherscan.io/token/0x6D45640F5D0B75280647f2F37CCD19c1167f833c",
+    "symbol":  "FLEx",
+    "decimals":  4,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6D45640F5D0B75280647F2F37CCD19C1167F833C/logo.png",
+    "id":  "0x6D45640F5D0B75280647f2F37CCD19c1167f833c"
 }

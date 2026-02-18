@@ -1,11 +1,11 @@
 {
-    "name": "THANKS",
-    "symbol": "THANKS",
-    "type": "ERC20",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x443dC1c35cf812156C840Fe90639836C8a7371b0",
-    "status": "active",
-    "id": "0x443dC1c35cf812156C840Fe90639836C8a7371b0"
+    "name":  "THANKS",
+    "symbol":  "THANKS",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x443dC1c35cf812156C840Fe90639836C8a7371b0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X443DC1C35CF812156C840FE90639836C8A7371B0/logo.png",
+    "id":  "0x443dC1c35cf812156C840Fe90639836C8a7371b0"
 }

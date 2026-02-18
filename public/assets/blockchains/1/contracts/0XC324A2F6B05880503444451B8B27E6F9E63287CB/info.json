@@ -1,11 +1,11 @@
 {
-    "name": "Exchange Union Coin",
-    "symbol": "XUC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Exchange Union is a “decentralized network” that connects individual digital asset exchanges from around the world. The team is on a mission to solve one of crypto’s most prominent issues – illiquidity.",
-    "website": "https://www.exchangeunion.com/",
-    "explorer": "https://etherscan.io/token/0xc324a2f6b05880503444451B8b27e6f9e63287Cb",
-    "status": "active",
-    "id": "0xc324a2f6b05880503444451B8b27e6f9e63287Cb"
+    "name":  "Exchange Union Coin",
+    "symbol":  "XUC",
+    "decimals":  18,
+    "description":  "Exchange Union is a “decentralized network” that connects individual digital asset exchanges from around the world. The team is on a mission to solve one of crypto’s most prominent issues – illiquidity.",
+    "website":  "https://www.exchangeunion.com/",
+    "explorer":  "https://etherscan.io/token/0xc324a2f6b05880503444451B8b27e6f9e63287Cb",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC324A2F6B05880503444451B8B27E6F9E63287CB/logo.png",
+    "id":  "0xc324a2f6b05880503444451B8b27e6f9e63287Cb"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Bitcoinus Token",
-    "symbol": "BITS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Bitcoinus (BITS) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://www.bitcoinus.com",
-    "explorer": "https://etherscan.io/token/0xC38f1fb49acDf2f1213CAf3319F6Eb3ea2cB7527",
-    "status": "active",
-    "id": "0xC38f1fb49acDf2f1213CAf3319F6Eb3ea2cB7527"
+    "name":  "Bitcoinus Token",
+    "symbol":  "BITS",
+    "decimals":  18,
+    "description":  "Bitcoinus (BITS) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://www.bitcoinus.com",
+    "explorer":  "https://etherscan.io/token/0xC38f1fb49acDf2f1213CAf3319F6Eb3ea2cB7527",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC38F1FB49ACDF2F1213CAF3319F6EB3EA2CB7527/logo.png",
+    "id":  "0xC38f1fb49acDf2f1213CAf3319F6Eb3ea2cB7527"
 }

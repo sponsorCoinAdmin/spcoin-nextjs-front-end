@@ -1,11 +1,11 @@
 {
-    "name": "GA_chain",
-    "symbol": "GA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0xd77bcd9cf4212A41DEFBcd2E2fF0F50fEa2BE643",
-    "status": "spam",
-    "id": "0xd77bcd9cf4212A41DEFBcd2E2fF0F50fEa2BE643"
+    "name":  "GA_chain",
+    "symbol":  "GA",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0xd77bcd9cf4212A41DEFBcd2E2fF0F50fEa2BE643",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0XD77BCD9CF4212A41DEFBCD2E2FF0F50FEA2BE643/logo.png",
+    "id":  "0xd77bcd9cf4212A41DEFBcd2E2fF0F50fEa2BE643"
 }

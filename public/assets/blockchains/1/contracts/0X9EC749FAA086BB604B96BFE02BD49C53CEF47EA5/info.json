@@ -1,11 +1,11 @@
 {
-    "name": "e-Money NOK stablecoin",
-    "website": "https://e-money.com",
-    "description": "ERC20 version of the e-Money NOK stablecoin",
-    "explorer": "https://etherscan.io/token/0x9EC749faa086BB604B96bfE02Bd49c53CEF47Ea5",
-    "type": "ERC20",
-    "symbol": "ENOK",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x9EC749faa086BB604B96bfE02Bd49c53CEF47Ea5"
+    "name":  "e-Money NOK stablecoin",
+    "website":  "https://e-money.com",
+    "description":  "ERC20 version of the e-Money NOK stablecoin",
+    "explorer":  "https://etherscan.io/token/0x9EC749faa086BB604B96bfE02Bd49c53CEF47Ea5",
+    "symbol":  "ENOK",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X9EC749FAA086BB604B96BFE02BD49C53CEF47EA5/logo.png",
+    "id":  "0x9EC749faa086BB604B96bfE02Bd49c53CEF47Ea5"
 }

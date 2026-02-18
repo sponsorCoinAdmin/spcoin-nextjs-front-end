@@ -1,11 +1,11 @@
 {
-    "name": "TrueFeedBack",
-    "symbol": "TFB",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The participants of the platform can keep their anonymity while completing surveys and receive TFB tokens.",
-    "website": "https://www.truefeedbackchain.com",
-    "explorer": "https://etherscan.io/token/0x79cdFa04e3c4EB58C4f49DAE78b322E5b0D38788",
-    "status": "active",
-    "id": "0x79cdFa04e3c4EB58C4f49DAE78b322E5b0D38788"
+    "name":  "TrueFeedBack",
+    "symbol":  "TFB",
+    "decimals":  18,
+    "description":  "The participants of the platform can keep their anonymity while completing surveys and receive TFB tokens.",
+    "website":  "https://www.truefeedbackchain.com",
+    "explorer":  "https://etherscan.io/token/0x79cdFa04e3c4EB58C4f49DAE78b322E5b0D38788",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X79CDFA04E3C4EB58C4F49DAE78B322E5B0D38788/logo.png",
+    "id":  "0x79cdFa04e3c4EB58C4f49DAE78b322E5b0D38788"
 }

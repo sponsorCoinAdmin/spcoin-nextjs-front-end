@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Elizabeth",
     "symbol":  "LADY",
-    "address":  "0X000000000000000000000000000000000000007f",
+    "address":  "0X000000000000000000000000000000000000007F",
     "website":  "",
     "description":  "This is the description for site Lady1",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000007F/logo.png",
     "status":  "test"
 }

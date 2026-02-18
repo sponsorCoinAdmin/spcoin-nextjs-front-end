@@ -1,11 +1,11 @@
 {
-    "name": "Prince Draieo",
-    "symbol": "PDG1",
-    "type": "ETC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xe37B29Ce789CFa51b72c64c93e0d7E2D7BA46681",
-    "status": "active",
-    "id": "0xe37B29Ce789CFa51b72c64c93e0d7E2D7BA46681"
+    "name":  "Prince Draieo",
+    "symbol":  "PDG1",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xe37B29Ce789CFa51b72c64c93e0d7E2D7BA46681",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XE37B29CE789CFA51B72C64C93E0D7E2D7BA46681/logo.png",
+    "id":  "0xe37B29Ce789CFa51b72c64c93e0d7E2D7BA46681"
 }

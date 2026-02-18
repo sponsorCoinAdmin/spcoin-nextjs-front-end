@@ -1,11 +1,11 @@
 {
-    "name": "Contentos",
-    "symbol": "COS",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The decentralized global ecosystem for digital content, where content can be freely produced, distributed and transacted, and where the value and rights will be returned to creators and contributors.",
-    "website": "https://www.contentos.io/",
-    "explorer": "https://etherscan.io/token/0x589891a198195061Cb8ad1a75357A3b7DbaDD7Bc",
-    "status": "active",
-    "id": "0x589891a198195061Cb8ad1a75357A3b7DbaDD7Bc"
+    "name":  "Contentos",
+    "symbol":  "COS",
+    "decimals":  18,
+    "description":  "The decentralized global ecosystem for digital content, where content can be freely produced, distributed and transacted, and where the value and rights will be returned to creators and contributors.",
+    "website":  "https://www.contentos.io/",
+    "explorer":  "https://etherscan.io/token/0x589891a198195061Cb8ad1a75357A3b7DbaDD7Bc",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X589891A198195061CB8AD1A75357A3B7DBADD7BC/logo.png",
+    "id":  "0x589891a198195061Cb8ad1a75357A3b7DbaDD7Bc"
 }

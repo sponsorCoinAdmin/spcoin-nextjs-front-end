@@ -1,11 +1,11 @@
 {
-    "name": "BitMax token",
-    "symbol": "BTMX",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "BitMax Token (BTMX) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://bitmax.io/#/home",
-    "explorer": "https://etherscan.io/token/0xcca0c9c383076649604eE31b20248BC04FdF61cA",
-    "status": "active",
-    "id": "0xcca0c9c383076649604eE31b20248BC04FdF61cA"
+    "name":  "BitMax token",
+    "symbol":  "BTMX",
+    "decimals":  18,
+    "description":  "BitMax Token (BTMX) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://bitmax.io/#/home",
+    "explorer":  "https://etherscan.io/token/0xcca0c9c383076649604eE31b20248BC04FdF61cA",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XCCA0C9C383076649604EE31B20248BC04FDF61CA/logo.png",
+    "id":  "0xcca0c9c383076649604eE31b20248BC04FdF61cA"
 }

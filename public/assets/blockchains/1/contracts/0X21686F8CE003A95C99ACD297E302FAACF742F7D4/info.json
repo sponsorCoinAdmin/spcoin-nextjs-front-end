@@ -1,14 +1,14 @@
 {
-    "name": "Wrapped Conceal",
-    "symbol": "wCCX",
-    "type": "ERC20",
-    "decimals": 6,
-    "description": "Wrapped Conceal ($wCCX) provides an untraceable gateway to and from the Ethereum ecosystem to $CCX. Wrapped Conceal ($wCCX) represents $CCX on the Ethereum ecosystem.",
-    "website": "https://conceal.network/",
-    "explorer": "https://etherscan.io/token/0x21686F8ce003a95c99aCd297E302FAACf742F7d4",
-    "status": "active",
-    "id": "0x21686F8ce003a95c99aCd297E302FAACf742F7d4",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "Wrapped Conceal",
+    "symbol":  "wCCX",
+    "decimals":  6,
+    "description":  "Wrapped Conceal ($wCCX) provides an untraceable gateway to and from the Ethereum ecosystem to $CCX. Wrapped Conceal ($wCCX) represents $CCX on the Ethereum ecosystem.",
+    "website":  "https://conceal.network/",
+    "explorer":  "https://etherscan.io/token/0x21686F8ce003a95c99aCd297E302FAACf742F7d4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X21686F8CE003A95C99ACD297E302FAACF742F7D4/logo.png",
+    "id":  "0x21686F8ce003a95c99aCd297E302FAACf742F7d4",
+    "tags":  [
+                 "wrapped"
+             ]
 }

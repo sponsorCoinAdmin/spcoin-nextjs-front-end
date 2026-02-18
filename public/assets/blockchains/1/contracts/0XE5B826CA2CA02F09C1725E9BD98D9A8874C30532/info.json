@@ -1,11 +1,11 @@
 {
-    "name": "ZEON",
-    "website": "https://zeon.network",
-    "description": "ZEON Network bills itself as a decentralized platform for financial services.",
-    "explorer": "https://etherscan.io/token/0xE5B826Ca2Ca02F09c1725e9bd98d9a8874C30532",
-    "type": "ERC20",
-    "symbol": "ZEON",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xE5B826Ca2Ca02F09c1725e9bd98d9a8874C30532"
+    "name":  "ZEON",
+    "website":  "https://zeon.network",
+    "description":  "ZEON Network bills itself as a decentralized platform for financial services.",
+    "explorer":  "https://etherscan.io/token/0xE5B826Ca2Ca02F09c1725e9bd98d9a8874C30532",
+    "symbol":  "ZEON",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE5B826CA2CA02F09C1725E9BD98D9A8874C30532/logo.png",
+    "id":  "0xE5B826Ca2Ca02F09c1725e9bd98d9a8874C30532"
 }

@@ -1,28 +1,28 @@
 {
-    "name": "MAGA (bridged)",
-    "website": "https://magamemecoin.com/",
-    "description": "Maga is a deflationary meme coin launched on Ethereum. Cryptocurrency was created as a tribute to the trump the Maga.",
-    "explorer": "https://etherscan.io/token/0x6aA56e1D98b3805921C170EB4B3fe7D4Fda6D89b",
-    "type": "ERC20",
-    "symbol": "TRUMP",
-    "decimals": 9,
-    "status": "active",
-    "id": "0x6aA56e1D98b3805921C170EB4B3fe7D4Fda6D89b",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/MAGAMemecoin"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/MAGAMemecoin"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/maga/"
-        }
-    ],
-    "tags": [
-        "memes"
-    ]
+    "name":  "MAGA (bridged)",
+    "website":  "https://magamemecoin.com/",
+    "description":  "Maga is a deflationary meme coin launched on Ethereum. Cryptocurrency was created as a tribute to the trump the Maga.",
+    "explorer":  "https://etherscan.io/token/0x6aA56e1D98b3805921C170EB4B3fe7D4Fda6D89b",
+    "symbol":  "TRUMP",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6AA56E1D98B3805921C170EB4B3FE7D4FDA6D89B/logo.png",
+    "id":  "0x6aA56e1D98b3805921C170EB4B3fe7D4Fda6D89b",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/MAGAMemecoin"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/MAGAMemecoin"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/maga/"
+                  }
+              ],
+    "tags":  [
+                 "memes"
+             ]
 }

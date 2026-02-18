@@ -1,11 +1,11 @@
 {
-    "name": "ZeroCarbon",
-    "symbol": "ZCC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Our Zero Carbon Market delivers lower energy prices and rewards consumers with Energis tokens as a catalyst for change, reducing carbon emissions faster than renewable energy.",
-    "website": "https://www.zerocarbonproject.com/",
-    "explorer": "https://etherscan.io/token/0x6737fE98389Ffb356F64ebB726aA1a92390D94Fb",
-    "status": "active",
-    "id": "0x6737fE98389Ffb356F64ebB726aA1a92390D94Fb"
+    "name":  "ZeroCarbon",
+    "symbol":  "ZCC",
+    "decimals":  18,
+    "description":  "Our Zero Carbon Market delivers lower energy prices and rewards consumers with Energis tokens as a catalyst for change, reducing carbon emissions faster than renewable energy.",
+    "website":  "https://www.zerocarbonproject.com/",
+    "explorer":  "https://etherscan.io/token/0x6737fE98389Ffb356F64ebB726aA1a92390D94Fb",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6737FE98389FFB356F64EBB726AA1A92390D94FB/logo.png",
+    "id":  "0x6737fE98389Ffb356F64ebB726aA1a92390D94Fb"
 }

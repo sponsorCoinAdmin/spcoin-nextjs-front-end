@@ -1,11 +1,11 @@
 {
-    "name": "RICH Token",
-    "symbol": "RICH",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "https://richtoken.co.in/",
-    "explorer": "https://etherscan.io/token/0x025daf950C6e814dEe4c96e13c98D3196D22E60C",
-    "status": "spam",
-    "id": "0x025daf950C6e814dEe4c96e13c98D3196D22E60C"
+    "name":  "RICH Token",
+    "symbol":  "RICH",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "https://richtoken.co.in/",
+    "explorer":  "https://etherscan.io/token/0x025daf950C6e814dEe4c96e13c98D3196D22E60C",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X025DAF950C6E814DEE4C96E13C98D3196D22E60C/logo.png",
+    "id":  "0x025daf950C6e814dEe4c96e13c98D3196D22E60C"
 }

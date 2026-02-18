@@ -1,11 +1,11 @@
 {
-    "name": "LatiumX",
-    "symbol": "LATX",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "https://latium.org/",
-    "explorer": "https://etherscan.io/token/0x2f85E502a988AF76f7ee6D83b7db8d6c0A823bf9",
-    "status": "active",
-    "id": "0x2f85E502a988AF76f7ee6D83b7db8d6c0A823bf9"
+    "name":  "LatiumX",
+    "symbol":  "LATX",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "https://latium.org/",
+    "explorer":  "https://etherscan.io/token/0x2f85E502a988AF76f7ee6D83b7db8d6c0A823bf9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X2F85E502A988AF76F7EE6D83B7DB8D6C0A823BF9/logo.png",
+    "id":  "0x2f85E502a988AF76f7ee6D83b7db8d6c0A823bf9"
 }

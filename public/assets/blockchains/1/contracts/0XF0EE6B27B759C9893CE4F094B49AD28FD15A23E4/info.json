@@ -1,11 +1,11 @@
 {
-    "name": "Enigma",
-    "symbol": "ENG",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Enigma builds and supports groundbreaking privacy-focused technologies and networks.",
-    "website": "https://enigma.co",
-    "explorer": "https://etherscan.io/token/0xf0Ee6b27b759C9893Ce4f094b49ad28fd15A23e4",
-    "status": "active",
-    "id": "0xf0Ee6b27b759C9893Ce4f094b49ad28fd15A23e4"
+    "name":  "Enigma",
+    "symbol":  "ENG",
+    "decimals":  8,
+    "description":  "Enigma builds and supports groundbreaking privacy-focused technologies and networks.",
+    "website":  "https://enigma.co",
+    "explorer":  "https://etherscan.io/token/0xf0Ee6b27b759C9893Ce4f094b49ad28fd15A23e4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF0EE6B27B759C9893CE4F094B49AD28FD15A23E4/logo.png",
+    "id":  "0xf0Ee6b27b759C9893Ce4f094b49ad28fd15A23e4"
 }

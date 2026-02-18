@@ -1,11 +1,11 @@
 {
-    "name": "Blockburn",
-    "symbol": "BURN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://blockburn.io/",
-    "explorer": "https://etherscan.io/token/0x8515cD0f00aD81996d24b9A9C35121a3b759D6Cd",
-    "status": "active",
-    "id": "0x8515cD0f00aD81996d24b9A9C35121a3b759D6Cd"
+    "name":  "Blockburn",
+    "symbol":  "BURN",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://blockburn.io/",
+    "explorer":  "https://etherscan.io/token/0x8515cD0f00aD81996d24b9A9C35121a3b759D6Cd",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8515CD0F00AD81996D24B9A9C35121A3B759D6CD/logo.png",
+    "id":  "0x8515cD0f00aD81996d24b9A9C35121a3b759D6Cd"
 }

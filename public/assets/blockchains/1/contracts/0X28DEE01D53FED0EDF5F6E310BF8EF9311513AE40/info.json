@@ -1,11 +1,11 @@
 {
-    "name": "BlitzPick (XBP)",
-    "type": "ERC20",
-    "symbol": "XBP",
-    "decimals": 18,
-    "website": "https://www.blitzpick.com",
-    "description": "Immutable Repositories for Sports Bettors.",
-    "explorer": "https://etherscan.io/token/0x28dee01D53FED0Edf5f6E310BF8Ef9311513Ae40",
-    "status": "active",
-    "id": "0x28dee01D53FED0Edf5f6E310BF8Ef9311513Ae40"
+    "name":  "BlitzPick (XBP)",
+    "symbol":  "XBP",
+    "decimals":  18,
+    "website":  "https://www.blitzpick.com",
+    "description":  "Immutable Repositories for Sports Bettors.",
+    "explorer":  "https://etherscan.io/token/0x28dee01D53FED0Edf5f6E310BF8Ef9311513Ae40",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X28DEE01D53FED0EDF5F6E310BF8EF9311513AE40/logo.png",
+    "id":  "0x28dee01D53FED0Edf5f6E310BF8Ef9311513Ae40"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Biotech Token",
-    "symbol": "ATG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x98d0cDe5c3d79531613e18f0912127BF172bd7AA",
-    "status": "active",
-    "id": "0x98d0cDe5c3d79531613e18f0912127BF172bd7AA"
+    "name":  "Biotech Token",
+    "symbol":  "ATG",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x98d0cDe5c3d79531613e18f0912127BF172bd7AA",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X98D0CDE5C3D79531613E18F0912127BF172BD7AA/logo.png",
+    "id":  "0x98d0cDe5c3d79531613e18f0912127BF172bd7AA"
 }

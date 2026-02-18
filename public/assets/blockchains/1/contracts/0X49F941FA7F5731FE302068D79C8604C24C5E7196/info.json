@@ -1,11 +1,11 @@
 {
-    "name": "BRR",
-    "website": "https://brr.finance/",
-    "description": "ha ha money printer go brr",
-    "explorer": "https://etherscan.io/token/0x49f941FA7f5731fe302068d79c8604C24C5E7196",
-    "type": "ERC20",
-    "symbol": "BRR",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x49f941FA7f5731fe302068d79c8604C24C5E7196"
+    "name":  "BRR",
+    "website":  "https://brr.finance/",
+    "description":  "ha ha money printer go brr",
+    "explorer":  "https://etherscan.io/token/0x49f941FA7f5731fe302068d79c8604C24C5E7196",
+    "symbol":  "BRR",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X49F941FA7F5731FE302068D79C8604C24C5E7196/logo.png",
+    "id":  "0x49f941FA7f5731fe302068d79c8604C24C5E7196"
 }

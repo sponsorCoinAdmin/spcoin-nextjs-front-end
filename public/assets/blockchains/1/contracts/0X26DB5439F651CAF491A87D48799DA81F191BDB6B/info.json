@@ -1,11 +1,11 @@
 {
-    "name": "Casino Betting Coin",
-    "symbol": "CBC",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Casino Betting Coin is an ERC-20 cryptocurrency designed to supercharge iGaming via the blockchain.",
-    "website": "https://cbc.network",
-    "explorer": "https://etherscan.io/token/0x26DB5439F651CAF491A87d48799dA81F191bDB6b",
-    "status": "active",
-    "id": "0x26DB5439F651CAF491A87d48799dA81F191bDB6b"
+    "name":  "Casino Betting Coin",
+    "symbol":  "CBC",
+    "decimals":  8,
+    "description":  "Casino Betting Coin is an ERC-20 cryptocurrency designed to supercharge iGaming via the blockchain.",
+    "website":  "https://cbc.network",
+    "explorer":  "https://etherscan.io/token/0x26DB5439F651CAF491A87d48799dA81F191bDB6b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X26DB5439F651CAF491A87D48799DA81F191BDB6B/logo.png",
+    "id":  "0x26DB5439F651CAF491A87d48799dA81F191bDB6b"
 }

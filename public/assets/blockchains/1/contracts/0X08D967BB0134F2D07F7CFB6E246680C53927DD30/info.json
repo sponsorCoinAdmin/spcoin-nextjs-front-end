@@ -1,11 +1,11 @@
 {
-    "name": "MATH Token",
-    "symbol": "MATH",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "65+ Popular public chains supported",
-    "website": "https://mathwallet.org/",
-    "explorer": "https://etherscan.io/token/0x08d967bb0134F2d07f7cfb6E246680c53927DD30",
-    "status": "active",
-    "id": "0x08d967bb0134F2d07f7cfb6E246680c53927DD30"
+    "name":  "MATH Token",
+    "symbol":  "MATH",
+    "decimals":  18,
+    "description":  "65+ Popular public chains supported",
+    "website":  "https://mathwallet.org/",
+    "explorer":  "https://etherscan.io/token/0x08d967bb0134F2d07f7cfb6E246680c53927DD30",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X08D967BB0134F2D07F7CFB6E246680C53927DD30/logo.png",
+    "id":  "0x08d967bb0134F2d07f7cfb6E246680c53927DD30"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "DAY",
-    "symbol": "DAY",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The first generation of cryptocurrencies have been based on the concepts of mining & staking. ChronoLogic works on proof-of-time. In its first use-case ChronoLogic pegs time to a store of value token named DAY based on the Ethereum blockchain.",
-    "website": "https://chronologic.network/",
-    "explorer": "https://etherscan.io/token/0xE814aeE960a85208C3dB542C53E7D4a6C8D5f60F",
-    "status": "active",
-    "id": "0xE814aeE960a85208C3dB542C53E7D4a6C8D5f60F"
+    "name":  "DAY",
+    "symbol":  "DAY",
+    "decimals":  18,
+    "description":  "The first generation of cryptocurrencies have been based on the concepts of mining \u0026 staking. ChronoLogic works on proof-of-time. In its first use-case ChronoLogic pegs time to a store of value token named DAY based on the Ethereum blockchain.",
+    "website":  "https://chronologic.network/",
+    "explorer":  "https://etherscan.io/token/0xE814aeE960a85208C3dB542C53E7D4a6C8D5f60F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE814AEE960A85208C3DB542C53E7D4A6C8D5F60F/logo.png",
+    "id":  "0xE814aeE960a85208C3dB542C53E7D4a6C8D5f60F"
 }

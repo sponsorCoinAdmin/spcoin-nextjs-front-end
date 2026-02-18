@@ -1,11 +1,11 @@
 {
-    "name": "BLOCKMASON CREDIT PROTOCOL TOKEN",
-    "symbol": "BCPT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Democratizing the creation of credit through permanently recorded debts and obligations.",
-    "website": "https://blockmason.io/",
-    "explorer": "https://etherscan.io/token/0x1c4481750daa5Ff521A2a7490d9981eD46465Dbd",
-    "status": "active",
-    "id": "0x1c4481750daa5Ff521A2a7490d9981eD46465Dbd"
+    "name":  "BLOCKMASON CREDIT PROTOCOL TOKEN",
+    "symbol":  "BCPT",
+    "decimals":  18,
+    "description":  "Democratizing the creation of credit through permanently recorded debts and obligations.",
+    "website":  "https://blockmason.io/",
+    "explorer":  "https://etherscan.io/token/0x1c4481750daa5Ff521A2a7490d9981eD46465Dbd",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1C4481750DAA5FF521A2A7490D9981ED46465DBD/logo.png",
+    "id":  "0x1c4481750daa5Ff521A2a7490d9981eD46465Dbd"
 }

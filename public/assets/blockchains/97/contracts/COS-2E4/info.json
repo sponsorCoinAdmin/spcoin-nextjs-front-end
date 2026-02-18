@@ -1,11 +1,11 @@
 {
-    "name": "Contentos",
-    "symbol": "COS",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "The Decentralized Global Content Ecosystem",
-    "website": "https://www.contentos.io/",
-    "explorer": "https://explorer.binance.org/asset/COS-2E4",
-    "status": "active",
-    "id": "COS-2E4"
+    "name":  "Contentos",
+    "symbol":  "COS",
+    "decimals":  8,
+    "description":  "The Decentralized Global Content Ecosystem",
+    "website":  "https://www.contentos.io/",
+    "explorer":  "https://explorer.binance.org/asset/COS-2E4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/COS-2E4/logo.png",
+    "id":  "COS-2E4"
 }

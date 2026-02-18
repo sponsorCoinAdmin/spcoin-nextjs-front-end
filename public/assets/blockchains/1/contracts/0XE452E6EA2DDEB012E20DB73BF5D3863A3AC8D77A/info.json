@@ -1,14 +1,14 @@
 {
-    "name": "WCELO",
-    "website": "https://www.wrapped.com",
-    "description": "Wrapped Celo is a 1:1 equivalent of Celo on the Ethereum network",
-    "explorer": "https://etherscan.io/token/0xE452E6Ea2dDeB012e20dB73bf5d3863A3Ac8d77a",
-    "type": "ERC20",
-    "symbol": "WCELO",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xE452E6Ea2dDeB012e20dB73bf5d3863A3Ac8d77a",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "WCELO",
+    "website":  "https://www.wrapped.com",
+    "description":  "Wrapped Celo is a 1:1 equivalent of Celo on the Ethereum network",
+    "explorer":  "https://etherscan.io/token/0xE452E6Ea2dDeB012e20dB73bf5d3863A3Ac8d77a",
+    "symbol":  "WCELO",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE452E6EA2DDEB012E20DB73BF5D3863A3AC8D77A/logo.png",
+    "id":  "0xE452E6Ea2dDeB012e20dB73bf5d3863A3Ac8d77a",
+    "tags":  [
+                 "wrapped"
+             ]
 }

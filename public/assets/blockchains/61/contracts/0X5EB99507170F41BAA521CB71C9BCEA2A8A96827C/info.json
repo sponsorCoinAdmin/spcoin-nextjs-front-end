@@ -1,12 +1,14 @@
 {
-    "name": "Axiom",
-    "type": "ETC20",
-    "symbol": "XOM",
-    "decimals": 4,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x5eB99507170F41bAA521cb71C9bCEa2a8A96827C",
-    "status": "active",
-    "id": "0x5eB99507170F41bAA521cb71C9bCEa2a8A96827C",
-    "links": []
+    "name":  "Axiom",
+    "symbol":  "XOM",
+    "decimals":  4,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x5eB99507170F41bAA521cb71C9bCEa2a8A96827C",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X5EB99507170F41BAA521CB71C9BCEA2A8A96827C/logo.png",
+    "id":  "0x5eB99507170F41bAA521cb71C9bCEa2a8A96827C",
+    "links":  [
+
+              ]
 }

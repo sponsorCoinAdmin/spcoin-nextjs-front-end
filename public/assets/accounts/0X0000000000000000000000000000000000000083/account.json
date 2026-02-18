@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Chickie Babe",
     "symbol":  "CHICK",
     "address":  "0X0000000000000000000000000000000000000083",
     "website":  "",
     "description":  "This is the description for site Lady5",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000083/logo.png",
     "status":  "test"
 }
+

@@ -1,11 +1,11 @@
 {
-    "name": "DREP",
-    "symbol": "DREP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "DREP is committed to building connectors and toolboxes based on blockchain technology, and aims to provide solutions that combine ease of use, flexibility, and frictionless integration.",
-    "website": "https://www.drep.org",
-    "explorer": "https://etherscan.io/token/0x3Ab6Ed69Ef663bd986Ee59205CCaD8A20F98b4c2",
-    "status": "active",
-    "id": "0x3Ab6Ed69Ef663bd986Ee59205CCaD8A20F98b4c2"
+    "name":  "DREP",
+    "symbol":  "DREP",
+    "decimals":  18,
+    "description":  "DREP is committed to building connectors and toolboxes based on blockchain technology, and aims to provide solutions that combine ease of use, flexibility, and frictionless integration.",
+    "website":  "https://www.drep.org",
+    "explorer":  "https://etherscan.io/token/0x3Ab6Ed69Ef663bd986Ee59205CCaD8A20F98b4c2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3AB6ED69EF663BD986EE59205CCAD8A20F98B4C2/logo.png",
+    "id":  "0x3Ab6Ed69Ef663bd986Ee59205CCaD8A20F98b4c2"
 }

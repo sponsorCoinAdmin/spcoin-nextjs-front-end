@@ -1,11 +1,11 @@
 {
-    "name": "BitDegree Token",
-    "symbol": "BDG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.bitdegree.org",
-    "explorer": "https://etherscan.io/token/0x1961B3331969eD52770751fC718ef530838b6dEE",
-    "status": "active",
-    "id": "0x1961B3331969eD52770751fC718ef530838b6dEE"
+    "name":  "BitDegree Token",
+    "symbol":  "BDG",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.bitdegree.org",
+    "explorer":  "https://etherscan.io/token/0x1961B3331969eD52770751fC718ef530838b6dEE",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1961B3331969ED52770751FC718EF530838B6DEE/logo.png",
+    "id":  "0x1961B3331969eD52770751fC718ef530838b6dEE"
 }

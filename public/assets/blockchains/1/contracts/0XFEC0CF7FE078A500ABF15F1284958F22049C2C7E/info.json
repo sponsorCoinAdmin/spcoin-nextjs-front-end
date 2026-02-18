@@ -1,11 +1,11 @@
 {
-    "name": "Maecenas ART Token",
-    "symbol": "ART",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.maecenas.co/",
-    "explorer": "https://etherscan.io/token/0xfec0cF7fE078a500abf15F1284958F22049c2C7e",
-    "status": "active",
-    "id": "0xfec0cF7fE078a500abf15F1284958F22049c2C7e"
+    "name":  "Maecenas ART Token",
+    "symbol":  "ART",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.maecenas.co/",
+    "explorer":  "https://etherscan.io/token/0xfec0cF7fE078a500abf15F1284958F22049c2C7e",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XFEC0CF7FE078A500ABF15F1284958F22049C2C7E/logo.png",
+    "id":  "0xfec0cF7fE078a500abf15F1284958F22049c2C7e"
 }

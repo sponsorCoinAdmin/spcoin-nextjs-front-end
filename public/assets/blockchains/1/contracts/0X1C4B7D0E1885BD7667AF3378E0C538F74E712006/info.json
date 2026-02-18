@@ -1,11 +1,11 @@
 {
-    "name": "IOGToken",
-    "symbol": "IOG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "http://www.playgroundz.io/",
-    "explorer": "https://etherscan.io/token/0x1c4b7d0e1885bd7667Af3378E0c538F74E712006",
-    "status": "active",
-    "id": "0x1c4b7d0e1885bd7667Af3378E0c538F74E712006"
+    "name":  "IOGToken",
+    "symbol":  "IOG",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "http://www.playgroundz.io/",
+    "explorer":  "https://etherscan.io/token/0x1c4b7d0e1885bd7667Af3378E0c538F74E712006",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1C4B7D0E1885BD7667AF3378E0C538F74E712006/logo.png",
+    "id":  "0x1c4b7d0e1885bd7667Af3378E0c538F74E712006"
 }

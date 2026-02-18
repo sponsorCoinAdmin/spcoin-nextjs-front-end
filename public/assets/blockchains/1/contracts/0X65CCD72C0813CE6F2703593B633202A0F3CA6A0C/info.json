@@ -1,11 +1,11 @@
 {
-    "name": "Nestree",
-    "symbol": "EGG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Nestree Community Messenger.",
-    "website": "https://www.nestree.io/",
-    "explorer": "https://etherscan.io/token/0x65cCD72c0813CE6f2703593B633202a0F3Ca6a0c",
-    "status": "active",
-    "id": "0x65cCD72c0813CE6f2703593B633202a0F3Ca6a0c"
+    "name":  "Nestree",
+    "symbol":  "EGG",
+    "decimals":  18,
+    "description":  "Nestree Community Messenger.",
+    "website":  "https://www.nestree.io/",
+    "explorer":  "https://etherscan.io/token/0x65cCD72c0813CE6f2703593B633202a0F3Ca6a0c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X65CCD72C0813CE6F2703593B633202A0F3CA6A0C/logo.png",
+    "id":  "0x65cCD72c0813CE6f2703593B633202a0F3Ca6a0c"
 }

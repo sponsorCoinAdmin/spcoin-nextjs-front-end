@@ -1,11 +1,11 @@
 {
-    "name": "HNGC Token",
-    "symbol": "HNGC",
-    "type": "ERC20",
-    "decimals": 16,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x7c3f46575C569caD06490AaB2d179D1153F2cD23",
-    "status": "spam",
-    "id": "0x7c3f46575C569caD06490AaB2d179D1153F2cD23"
+    "name":  "HNGC Token",
+    "symbol":  "HNGC",
+    "decimals":  16,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x7c3f46575C569caD06490AaB2d179D1153F2cD23",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X7C3F46575C569CAD06490AAB2D179D1153F2CD23/logo.png",
+    "id":  "0x7c3f46575C569caD06490AaB2d179D1153F2cD23"
 }

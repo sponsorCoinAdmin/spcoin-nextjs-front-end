@@ -1,11 +1,11 @@
 {
-    "name": "DEXA COIN",
-    "symbol": "DEXA",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "A Social Messenger Platform that allows users to send Money & Cryptocurrency to each other.",
-    "website": "https://dexacoin.net",
-    "explorer": "https://etherscan.io/token/0x725440512cb7b78bF56B334E50e31707418231CB",
-    "status": "active",
-    "id": "0x725440512cb7b78bF56B334E50e31707418231CB"
+    "name":  "DEXA COIN",
+    "symbol":  "DEXA",
+    "decimals":  18,
+    "description":  "A Social Messenger Platform that allows users to send Money \u0026 Cryptocurrency to each other.",
+    "website":  "https://dexacoin.net",
+    "explorer":  "https://etherscan.io/token/0x725440512cb7b78bF56B334E50e31707418231CB",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X725440512CB7B78BF56B334E50E31707418231CB/logo.png",
+    "id":  "0x725440512cb7b78bF56B334E50e31707418231CB"
 }

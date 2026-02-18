@@ -1,21 +1,21 @@
 {
-    "name": "AceD",
-    "website": "https://acedcoin.com",
-    "description": "AceD’s mission is to provide online world class entertainment options while providing a secure and private platform. We aim to integrate cryptocurrency into practical decentralised blockchain applications that are fun, entertaining and competitive while protecting your privacy.",
-    "explorer": "https://etherscan.io/token/0x4B3a0c6d668B43F3f07904E124328659b90Bb4Ca",
-    "type": "ERC20",
-    "symbol": "AceD",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x4B3a0c6d668B43F3f07904E124328659b90Bb4Ca",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/AceDcoin"
-        },
-        {
-            "name": "discord",
-            "url": "https://discord.com/invite/VExsPg6"
-        }
-    ]
+    "name":  "AceD",
+    "website":  "https://acedcoin.com",
+    "description":  "AceD’s mission is to provide online world class entertainment options while providing a secure and private platform. We aim to integrate cryptocurrency into practical decentralised blockchain applications that are fun, entertaining and competitive while protecting your privacy.",
+    "explorer":  "https://etherscan.io/token/0x4B3a0c6d668B43F3f07904E124328659b90Bb4Ca",
+    "symbol":  "AceD",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4B3A0C6D668B43F3F07904E124328659B90BB4CA/logo.png",
+    "id":  "0x4B3a0c6d668B43F3f07904E124328659b90Bb4Ca",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/AceDcoin"
+                  },
+                  {
+                      "name":  "discord",
+                      "url":  "https://discord.com/invite/VExsPg6"
+                  }
+              ]
 }

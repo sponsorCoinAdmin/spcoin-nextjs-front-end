@@ -1,11 +1,11 @@
 {
-    "name": "iearn TUSD",
-    "symbol": "yTUSD",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Simple auto interest rate switching tokens for Compound, Fulcrum, Aave, and dYdX.",
-    "website": "https://docs.yearn.finance/",
-    "explorer": "https://etherscan.io/token/0x73a052500105205d34Daf004eAb301916DA8190f",
-    "status": "active",
-    "id": "0x73a052500105205d34Daf004eAb301916DA8190f"
+    "name":  "iearn TUSD",
+    "symbol":  "yTUSD",
+    "decimals":  18,
+    "description":  "Simple auto interest rate switching tokens for Compound, Fulcrum, Aave, and dYdX.",
+    "website":  "https://docs.yearn.finance/",
+    "explorer":  "https://etherscan.io/token/0x73a052500105205d34Daf004eAb301916DA8190f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X73A052500105205D34DAF004EAB301916DA8190F/logo.png",
+    "id":  "0x73a052500105205d34Daf004eAb301916DA8190f"
 }

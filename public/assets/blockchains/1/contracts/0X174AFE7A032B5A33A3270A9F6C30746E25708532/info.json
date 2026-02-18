@@ -1,11 +1,11 @@
 {
-    "name": "Humanscape",
-    "symbol": "HUM",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.humanscape.io/",
-    "explorer": "https://etherscan.io/token/0x174aFE7A032b5A33a3270a9f6C30746E25708532",
-    "status": "active",
-    "id": "0x174aFE7A032b5A33a3270a9f6C30746E25708532"
+    "name":  "Humanscape",
+    "symbol":  "HUM",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.humanscape.io/",
+    "explorer":  "https://etherscan.io/token/0x174aFE7A032b5A33a3270a9f6C30746E25708532",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X174AFE7A032B5A33A3270A9F6C30746E25708532/logo.png",
+    "id":  "0x174aFE7A032b5A33a3270a9f6C30746E25708532"
 }

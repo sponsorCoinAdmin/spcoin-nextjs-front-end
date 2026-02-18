@@ -1,11 +1,11 @@
 {
-    "name": "Flame Token",
-    "symbol": "XFL",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Flame Token is the native currency of Sharesome, the first social discovery network for adult content creators and brands.",
-    "website": "https://flametoken.io",
-    "explorer": "https://etherscan.io/token/0x469861BDfd02E7ebCE7CdEb281e8EEC53069cf5f",
-    "status": "active",
-    "id": "0x469861BDfd02E7ebCE7CdEb281e8EEC53069cf5f"
+    "name":  "Flame Token",
+    "symbol":  "XFL",
+    "decimals":  18,
+    "description":  "Flame Token is the native currency of Sharesome, the first social discovery network for adult content creators and brands.",
+    "website":  "https://flametoken.io",
+    "explorer":  "https://etherscan.io/token/0x469861BDfd02E7ebCE7CdEb281e8EEC53069cf5f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X469861BDFD02E7EBCE7CDEB281E8EEC53069CF5F/logo.png",
+    "id":  "0x469861BDfd02E7ebCE7CdEb281e8EEC53069cf5f"
 }

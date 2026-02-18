@@ -1,11 +1,11 @@
 {
-    "name": "ETH Player Key",
-    "symbol": "EPK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x56C438eE032224D93a5E9F182cBF4608cDfc928e",
-    "status": "spam",
-    "id": "0x56C438eE032224D93a5E9F182cBF4608cDfc928e"
+    "name":  "ETH Player Key",
+    "symbol":  "EPK",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x56C438eE032224D93a5E9F182cBF4608cDfc928e",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X56C438EE032224D93A5E9F182CBF4608CDFC928E/logo.png",
+    "id":  "0x56C438eE032224D93a5E9F182cBF4608cDfc928e"
 }

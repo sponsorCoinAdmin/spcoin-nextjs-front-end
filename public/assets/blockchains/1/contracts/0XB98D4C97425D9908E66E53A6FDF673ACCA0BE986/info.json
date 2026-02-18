@@ -1,11 +1,11 @@
 {
-    "name": "ArcBlock",
-    "symbol": "ABT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "ArcBlock is your new decentralized developer platform that simplifies the development of DApps, DLT and Blockchains.",
-    "website": "https://www.arcblock.io",
-    "explorer": "https://etherscan.io/token/0xB98d4C97425d9908E66E53A6fDf673ACcA0BE986",
-    "status": "active",
-    "id": "0xB98d4C97425d9908E66E53A6fDf673ACcA0BE986"
+    "name":  "ArcBlock",
+    "symbol":  "ABT",
+    "decimals":  18,
+    "description":  "ArcBlock is your new decentralized developer platform that simplifies the development of DApps, DLT and Blockchains.",
+    "website":  "https://www.arcblock.io",
+    "explorer":  "https://etherscan.io/token/0xB98d4C97425d9908E66E53A6fDf673ACcA0BE986",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB98D4C97425D9908E66E53A6FDF673ACCA0BE986/logo.png",
+    "id":  "0xB98d4C97425d9908E66E53A6fDf673ACcA0BE986"
 }

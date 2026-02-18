@@ -1,11 +1,11 @@
 {
-    "name": "Ink Protocol",
-    "symbol": "XNK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Decentralized reputation and payments for peer-to-peer marketplaces.",
-    "website": "https://paywithink.com",
-    "explorer": "https://etherscan.io/token/0xBC86727E770de68B1060C91f6BB6945c73e10388",
-    "status": "active",
-    "id": "0xBC86727E770de68B1060C91f6BB6945c73e10388"
+    "name":  "Ink Protocol",
+    "symbol":  "XNK",
+    "decimals":  18,
+    "description":  "Decentralized reputation and payments for peer-to-peer marketplaces.",
+    "website":  "https://paywithink.com",
+    "explorer":  "https://etherscan.io/token/0xBC86727E770de68B1060C91f6BB6945c73e10388",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XBC86727E770DE68B1060C91F6BB6945C73E10388/logo.png",
+    "id":  "0xBC86727E770de68B1060C91f6BB6945c73e10388"
 }

@@ -1,14 +1,14 @@
 {
-    "name": "Xaurum",
-    "symbol": "XAUR",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Xaurum is unit of value on the golden blockchain, it represents an increasing amount of gold and can be exchanged for it by melting.",
-    "website": "http://www.xaurum.org/",
-    "explorer": "https://etherscan.io/token/0x4DF812F6064def1e5e029f1ca858777CC98D2D81",
-    "status": "active",
-    "id": "0x4DF812F6064def1e5e029f1ca858777CC98D2D81",
-    "tags": [
-        "stablecoin"
-    ]
+    "name":  "Xaurum",
+    "symbol":  "XAUR",
+    "decimals":  8,
+    "description":  "Xaurum is unit of value on the golden blockchain, it represents an increasing amount of gold and can be exchanged for it by melting.",
+    "website":  "http://www.xaurum.org/",
+    "explorer":  "https://etherscan.io/token/0x4DF812F6064def1e5e029f1ca858777CC98D2D81",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4DF812F6064DEF1E5E029F1CA858777CC98D2D81/logo.png",
+    "id":  "0x4DF812F6064def1e5e029f1ca858777CC98D2D81",
+    "tags":  [
+                 "stablecoin"
+             ]
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Uptrennd",
-    "symbol": "1UP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.uptrennd.com",
-    "explorer": "https://etherscan.io/token/0x07597255910a51509CA469568B048F2597E72504",
-    "status": "active",
-    "id": "0x07597255910a51509CA469568B048F2597E72504"
+    "name":  "Uptrennd",
+    "symbol":  "1UP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.uptrennd.com",
+    "explorer":  "https://etherscan.io/token/0x07597255910a51509CA469568B048F2597E72504",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X07597255910A51509CA469568B048F2597E72504/logo.png",
+    "id":  "0x07597255910a51509CA469568B048F2597E72504"
 }

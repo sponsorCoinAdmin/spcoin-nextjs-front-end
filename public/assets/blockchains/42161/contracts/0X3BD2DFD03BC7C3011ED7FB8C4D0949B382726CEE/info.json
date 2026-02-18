@@ -1,11 +1,11 @@
 {
-    "name": "ROOBEE",
-    "website": "https://roobee.io/",
-    "description": "Roobee is a blockchain-based investment platform for non-professional and private investors. Roobee allows you to build an investment portfolio consisting of various assets, from cryptocurrencies to stocks and ETFs. The payment can be made in any convenient way, without limitations, and without high entry thresholds.",
-    "explorer": "https://arbiscan.io/token/0x3BD2dFd03BC7c3011ed7fb8c4d0949B382726cee",
-    "type": "ARBITRUM",
-    "symbol": "ROOBEE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x3BD2dFd03BC7c3011ed7fb8c4d0949B382726cee"
+    "name":  "ROOBEE",
+    "website":  "https://roobee.io/",
+    "description":  "Roobee is a blockchain-based investment platform for non-professional and private investors. Roobee allows you to build an investment portfolio consisting of various assets, from cryptocurrencies to stocks and ETFs. The payment can be made in any convenient way, without limitations, and without high entry thresholds.",
+    "explorer":  "https://arbiscan.io/token/0x3BD2dFd03BC7c3011ed7fb8c4d0949B382726cee",
+    "symbol":  "ROOBEE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/42161/contracts/0X3BD2DFD03BC7C3011ED7FB8C4D0949B382726CEE/logo.png",
+    "id":  "0x3BD2dFd03BC7c3011ed7fb8c4d0949B382726cee"
 }

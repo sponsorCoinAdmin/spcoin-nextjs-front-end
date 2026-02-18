@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Mogly Jungle Book",
     "symbol":  "MOGLY",
-    "address":  "0X000000000000000000000000000000000000007e",
+    "address":  "0X000000000000000000000000000000000000007E",
     "website":  "",
     "description":  "This is the description for site JungleBookMogly",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000007E/logo.png",
     "status":  "test"
 }

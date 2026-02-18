@@ -1,11 +1,11 @@
 {
-    "name": "Aave BUSD V1",
-    "symbol": "aBUSD V1",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave BUSD V1 is an interest bearing token pegged 1:1 to the underlying BUSD deposited in Aave V1. aBUSD V1 accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0x6Ee0f7BB50a54AB5253dA0667B0Dc2ee526C30a8",
-    "status": "active",
-    "id": "0x6Ee0f7BB50a54AB5253dA0667B0Dc2ee526C30a8"
+    "name":  "Aave BUSD V1",
+    "symbol":  "aBUSD V1",
+    "decimals":  18,
+    "description":  "Aave BUSD V1 is an interest bearing token pegged 1:1 to the underlying BUSD deposited in Aave V1. aBUSD V1 accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0x6Ee0f7BB50a54AB5253dA0667B0Dc2ee526C30a8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6EE0F7BB50A54AB5253DA0667B0DC2EE526C30A8/logo.png",
+    "id":  "0x6Ee0f7BB50a54AB5253dA0667B0Dc2ee526C30a8"
 }

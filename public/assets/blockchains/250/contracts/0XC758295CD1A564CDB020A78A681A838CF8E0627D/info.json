@@ -1,21 +1,21 @@
 {
-    "name": "FantomStarter",
-    "website": "https://fantomstarter.io/",
-    "description": "The FantomStarter launchpad provides logistics on more than one chain. It supports Fantom (FTM), Binance Smart Chain (BSC), Ethereum (ETH), and Polygon (Matic) and many others.",
-    "explorer": "https://ftmscan.com/token/0xC758295Cd1A564cdb020a78a681a838CF8e0627D",
-    "type": "FANTOM",
-    "symbol": "FS",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xC758295Cd1A564cdb020a78a681a838CF8e0627D",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/fantomstarter/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/fantomstarter"
-        }
-    ]
+    "name":  "FantomStarter",
+    "website":  "https://fantomstarter.io/",
+    "description":  "The FantomStarter launchpad provides logistics on more than one chain. It supports Fantom (FTM), Binance Smart Chain (BSC), Ethereum (ETH), and Polygon (Matic) and many others.",
+    "explorer":  "https://ftmscan.com/token/0xC758295Cd1A564cdb020a78a681a838CF8e0627D",
+    "symbol":  "FS",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/250/contracts/0XC758295CD1A564CDB020A78A681A838CF8E0627D/logo.png",
+    "id":  "0xC758295Cd1A564cdb020a78a681a838CF8e0627D",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/fantomstarter/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/fantomstarter"
+                  }
+              ]
 }

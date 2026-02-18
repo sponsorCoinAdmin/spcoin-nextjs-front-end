@@ -1,11 +1,11 @@
 {
-    "name": "Pomp",
-    "website": "https://pomp.finance",
-    "description": "Pomp - collaborative hedge fund",
-    "explorer": "https://etherscan.io/token/0x3f7D27c41fdCD1Afc660F64290d314e08ea576Ea",
-    "type": "ERC20",
-    "symbol": "POMP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x3f7D27c41fdCD1Afc660F64290d314e08ea576Ea"
+    "name":  "Pomp",
+    "website":  "https://pomp.finance",
+    "description":  "Pomp - collaborative hedge fund",
+    "explorer":  "https://etherscan.io/token/0x3f7D27c41fdCD1Afc660F64290d314e08ea576Ea",
+    "symbol":  "POMP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X3F7D27C41FDCD1AFC660F64290D314E08EA576EA/logo.png",
+    "id":  "0x3f7D27c41fdCD1Afc660F64290d314e08ea576Ea"
 }

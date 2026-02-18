@@ -1,11 +1,11 @@
 {
-    "name": "YMEN",
-    "website": "https://ymen.finance",
-    "description": "YMEN token is deflationary, and it's used to farm Mutant token that is the governance token that can be sold into YMEN/MUTANT pool.",
-    "explorer": "https://etherscan.io/token/0xd0c59798F986d333554688cD667033d469C2398e",
-    "type": "ERC20",
-    "symbol": "YMEN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xd0c59798F986d333554688cD667033d469C2398e"
+    "name":  "YMEN",
+    "website":  "https://ymen.finance",
+    "description":  "YMEN token is deflationary, and it\u0027s used to farm Mutant token that is the governance token that can be sold into YMEN/MUTANT pool.",
+    "explorer":  "https://etherscan.io/token/0xd0c59798F986d333554688cD667033d469C2398e",
+    "symbol":  "YMEN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD0C59798F986D333554688CD667033D469C2398E/logo.png",
+    "id":  "0xd0c59798F986d333554688cD667033d469C2398e"
 }

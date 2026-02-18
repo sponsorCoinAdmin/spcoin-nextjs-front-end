@@ -1,25 +1,25 @@
 {
-    "name": "ChainLink",
-    "symbol": "LINK",
-    "type": "OPTIMISM",
-    "decimals": 18,
-    "description": "A blockchain-based middleware, acting as a bridge between cryptocurrency smart contracts, data feeds, APIs and traditional bank account payments.",
-    "website": "https://chain.link/",
-    "explorer": "https://optimistic.etherscan.io/token/0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
-    "status": "active",
-    "id": "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/chainlink"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/coins/chainlink/"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/chainlink/"
-        }
-    ]
+    "name":  "ChainLink",
+    "symbol":  "LINK",
+    "decimals":  18,
+    "description":  "A blockchain-based middleware, acting as a bridge between cryptocurrency smart contracts, data feeds, APIs and traditional bank account payments.",
+    "website":  "https://chain.link/",
+    "explorer":  "https://optimistic.etherscan.io/token/0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/69/contracts/0X350A791BFC2C21F9ED5D10980DAD2E2638FFA7F6/logo.png",
+    "id":  "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/chainlink"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/coins/chainlink/"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/chainlink/"
+                  }
+              ]
 }

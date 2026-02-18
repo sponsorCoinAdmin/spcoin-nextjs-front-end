@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Red Cross",
     "symbol":  "RC",
-    "address":  "0X000000000000000000000000000000000000003f",
+    "address":  "0X000000000000000000000000000000000000003F",
     "website":  "",
     "description":  "This is the description for site RedCross",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000003F/logo.png",
     "status":  "test"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "HitchainCoin",
-    "symbol": "HIT",
-    "type": "ERC20",
-    "decimals": 6,
-    "description": "HitChain is a decentralized and collaborative community built to value developers’ works with a transparent credit system using blockchain technology. It is a community of the developers, by the developers, for the developers.",
-    "website": "http://hitchain.org/index.html",
-    "explorer": "https://etherscan.io/token/0x7995ab36bB307Afa6A683C24a25d90Dc1Ea83566",
-    "status": "active",
-    "id": "0x7995ab36bB307Afa6A683C24a25d90Dc1Ea83566"
+    "name":  "HitchainCoin",
+    "symbol":  "HIT",
+    "decimals":  6,
+    "description":  "HitChain is a decentralized and collaborative community built to value developers’ works with a transparent credit system using blockchain technology. It is a community of the developers, by the developers, for the developers.",
+    "website":  "http://hitchain.org/index.html",
+    "explorer":  "https://etherscan.io/token/0x7995ab36bB307Afa6A683C24a25d90Dc1Ea83566",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7995AB36BB307AFA6A683C24A25D90DC1EA83566/logo.png",
+    "id":  "0x7995ab36bB307Afa6A683C24a25d90Dc1Ea83566"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Bad Blockchain Address",
-    "website": "",
-    "description": "This Address is non existant on the blockchain. It is used for Error Testing",
-    "explorer": "https://etherscan.io/token/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
-    "type": "ERC20",
-    "symbol": "BAD",
-    "decimals": 18,
-    "status": "Bad Address",
-    "id": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1"
+    "name":  "Bad Blockchain Address",
+    "website":  "",
+    "description":  "This Address is non existant on the blockchain. It is used for Error Testing",
+    "explorer":  "https://etherscan.io/token/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+    "symbol":  "BAD",
+    "decimals":  18,
+    "status":  "Bad Address",
+    "logoURL":  "assets/blockchains/8453/contracts/0X7D1AFA7B718FB893DB30A3ABC0CFC608AACFEBB1/logo.png",
+    "id":  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1"
 }

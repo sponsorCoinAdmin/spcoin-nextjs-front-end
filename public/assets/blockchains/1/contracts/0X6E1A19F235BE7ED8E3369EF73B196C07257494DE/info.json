@@ -1,11 +1,11 @@
 {
-    "name": "WFIL",
-    "website": "https://www.wrapped.com",
-    "description": "Wrapped Filecoin is a 1:1 equivalent of Filecoin on the Ethereum network",
-    "explorer": "https://etherscan.io/token/0x6e1A19F235bE7ED8E3369eF73b196C07257494DE",
-    "type": "ERC20",
-    "symbol": "WFIL",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x6e1A19F235bE7ED8E3369eF73b196C07257494DE"
+    "name":  "WFIL",
+    "website":  "https://www.wrapped.com",
+    "description":  "Wrapped Filecoin is a 1:1 equivalent of Filecoin on the Ethereum network",
+    "explorer":  "https://etherscan.io/token/0x6e1A19F235bE7ED8E3369eF73b196C07257494DE",
+    "symbol":  "WFIL",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6E1A19F235BE7ED8E3369EF73B196C07257494DE/logo.png",
+    "id":  "0x6e1A19F235bE7ED8E3369eF73b196C07257494DE"
 }

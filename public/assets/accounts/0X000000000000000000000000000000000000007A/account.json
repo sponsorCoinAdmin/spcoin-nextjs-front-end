@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Fred Flintstone1",
     "symbol":  "FRED",
-    "address":  "0X000000000000000000000000000000000000007a",
+    "address":  "0X000000000000000000000000000000000000007A",
     "website":  "",
     "description":  "This is the description for site FredFlintstone1",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000007A/logo.png",
     "status":  "test"
 }

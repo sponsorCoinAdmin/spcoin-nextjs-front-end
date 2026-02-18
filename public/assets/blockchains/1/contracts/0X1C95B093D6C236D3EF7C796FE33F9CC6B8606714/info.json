@@ -1,14 +1,14 @@
 {
-    "name": "BOMB",
-    "symbol": "BOMB",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "Bomb started as a social experiment and has grown into a community run project fueled by passionate people interested in fighting inflation and breaking the norm on tokenomics.",
-    "website": "https://www.bombtoken.com",
-    "explorer": "https://etherscan.io/token/0x1C95b093d6C236d3EF7c796fE33f9CC6b8606714",
-    "status": "active",
-    "id": "0x1C95b093d6C236d3EF7c796fE33f9CC6b8606714",
-    "tags": [
-        "deflationary"
-    ]
+    "name":  "BOMB",
+    "symbol":  "BOMB",
+    "decimals":  0,
+    "description":  "Bomb started as a social experiment and has grown into a community run project fueled by passionate people interested in fighting inflation and breaking the norm on tokenomics.",
+    "website":  "https://www.bombtoken.com",
+    "explorer":  "https://etherscan.io/token/0x1C95b093d6C236d3EF7c796fE33f9CC6b8606714",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1C95B093D6C236D3EF7C796FE33F9CC6B8606714/logo.png",
+    "id":  "0x1C95b093d6C236d3EF7c796fE33f9CC6b8606714",
+    "tags":  [
+                 "deflationary"
+             ]
 }

@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Moe Howard",
     "symbol":  "MOE",
-    "address":  "0X000000000000000000000000000000000000008a",
+    "address":  "0X000000000000000000000000000000000000008A",
     "website":  "",
     "description":  "This is the description for site MoeHoward",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000008A/logo.png",
     "status":  "test"
 }

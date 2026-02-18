@@ -1,11 +1,11 @@
 {
-    "name": "BitUnits Millium",
-    "symbol": "MLIUM",
-    "type": "ETC20",
-    "decimals": 12,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x0DC554d2BBc8f4Cda0577CeD2CD86c54689Af3Db",
-    "status": "active",
-    "id": "0x0DC554d2BBc8f4Cda0577CeD2CD86c54689Af3Db"
+    "name":  "BitUnits Millium",
+    "symbol":  "MLIUM",
+    "decimals":  12,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x0DC554d2BBc8f4Cda0577CeD2CD86c54689Af3Db",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X0DC554D2BBC8F4CDA0577CED2CD86C54689AF3DB/logo.png",
+    "id":  "0x0DC554d2BBc8f4Cda0577CeD2CD86c54689Af3Db"
 }

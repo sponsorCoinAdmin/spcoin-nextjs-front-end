@@ -1,32 +1,32 @@
 {
-    "name": "Mine Network",
-    "type": "ERC20",
-    "symbol": "MNET",
-    "decimals": 18,
-    "website": "https://mine.network/",
-    "description": "MINE Network is an innovative cross-chain mining Metaverse solution that seamlessly connects the worlds of DeFi, GameFi and NFT's into one consolidated, easy-to-use open-source protocol.",
-    "explorer": "https://etherscan.io/token/0x829c97092c0cc92efe7397dd3ddb831cc5835bae",
-    "status": "active",
-    "id": "0x829C97092C0Cc92EfE7397dd3ddb831Cc5835Bae",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/mine_blockchain"
-        },
-        {
-            "name": "github",
-            "url": "https://github.com/Mine-Blockchain"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/mine_blockchain"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/mine-network/"
-        }
-    ],
-    "tags": [
-        "nft"
-    ]
+    "name":  "Mine Network",
+    "symbol":  "MNET",
+    "decimals":  18,
+    "website":  "https://mine.network/",
+    "description":  "MINE Network is an innovative cross-chain mining Metaverse solution that seamlessly connects the worlds of DeFi, GameFi and NFT\u0027s into one consolidated, easy-to-use open-source protocol.",
+    "explorer":  "https://etherscan.io/token/0x829c97092c0cc92efe7397dd3ddb831cc5835bae",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X829C97092C0CC92EFE7397DD3DDB831CC5835BAE/logo.png",
+    "id":  "0x829C97092C0Cc92EfE7397dd3ddb831Cc5835Bae",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/mine_blockchain"
+                  },
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/Mine-Blockchain"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/mine_blockchain"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/mine-network/"
+                  }
+              ],
+    "tags":  [
+                 "nft"
+             ]
 }

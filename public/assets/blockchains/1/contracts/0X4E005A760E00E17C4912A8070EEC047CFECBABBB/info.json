@@ -1,11 +1,11 @@
 {
-    "name": "NEXT.exchange",
-    "symbol": "NEXT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "A hybrid exchange registered as an N. V. (Public company) in the Netherlands and provides fiat pairs to all altcoins on its platform.",
-    "website": "https://next.exchange/",
-    "explorer": "https://etherscan.io/token/0x4e005a760e00e17c4912A8070EEc047CfecBabbb",
-    "status": "active",
-    "id": "0x4e005a760e00e17c4912A8070EEc047CfecBabbb"
+    "name":  "NEXT.exchange",
+    "symbol":  "NEXT",
+    "decimals":  18,
+    "description":  "A hybrid exchange registered as an N. V. (Public company) in the Netherlands and provides fiat pairs to all altcoins on its platform.",
+    "website":  "https://next.exchange/",
+    "explorer":  "https://etherscan.io/token/0x4e005a760e00e17c4912A8070EEc047CfecBabbb",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4E005A760E00E17C4912A8070EEC047CFECBABBB/logo.png",
+    "id":  "0x4e005a760e00e17c4912A8070EEc047CfecBabbb"
 }

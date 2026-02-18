@@ -1,11 +1,11 @@
 {
-    "name": "PROOF",
-    "website": "https://proofcoin.online",
-    "description": "Long-term venture and business investments with unique marketing system.",
-    "explorer": "https://etherscan.io/token/0x74F9595874b595c7A5af9cf78AC051C2E7387173",
-    "type": "ERC20",
-    "symbol": "PRF",
-    "decimals": 6,
-    "status": "active",
-    "id": "0x74F9595874b595c7A5af9cf78AC051C2E7387173"
+    "name":  "PROOF",
+    "website":  "https://proofcoin.online",
+    "description":  "Long-term venture and business investments with unique marketing system.",
+    "explorer":  "https://etherscan.io/token/0x74F9595874b595c7A5af9cf78AC051C2E7387173",
+    "symbol":  "PRF",
+    "decimals":  6,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X74F9595874B595C7A5AF9CF78AC051C2E7387173/logo.png",
+    "id":  "0x74F9595874b595c7A5af9cf78AC051C2E7387173"
 }

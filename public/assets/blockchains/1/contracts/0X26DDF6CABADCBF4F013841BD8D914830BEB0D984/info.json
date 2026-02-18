@@ -1,11 +1,11 @@
 {
-    "name": "KuaiToken",
-    "symbol": "KT",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "https://www.kuaitoken.com/",
-    "explorer": "https://etherscan.io/token/0x26DDF6CabADcBF4F013841BD8d914830BeB0d984",
-    "status": "active",
-    "id": "0x26DDF6CabADcBF4F013841BD8d914830BeB0d984"
+    "name":  "KuaiToken",
+    "symbol":  "KT",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "https://www.kuaitoken.com/",
+    "explorer":  "https://etherscan.io/token/0x26DDF6CabADcBF4F013841BD8d914830BeB0d984",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X26DDF6CABADCBF4F013841BD8D914830BEB0D984/logo.png",
+    "id":  "0x26DDF6CabADcBF4F013841BD8d914830BeB0d984"
 }

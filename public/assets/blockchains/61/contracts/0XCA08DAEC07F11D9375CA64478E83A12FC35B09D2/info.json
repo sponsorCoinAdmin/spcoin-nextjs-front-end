@@ -1,11 +1,11 @@
 {
-    "name": "MoneroToken",
-    "symbol": "XMRT",
-    "type": "ETC20",
-    "decimals": 8,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0xca08DaeC07f11d9375cA64478e83a12fC35B09d2",
-    "status": "active",
-    "id": "0xca08DaeC07f11d9375cA64478e83a12fC35B09d2"
+    "name":  "MoneroToken",
+    "symbol":  "XMRT",
+    "decimals":  8,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xca08DaeC07f11d9375cA64478e83a12fC35B09d2",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0XCA08DAEC07F11D9375CA64478E83A12FC35B09D2/logo.png",
+    "id":  "0xca08DaeC07f11d9375cA64478e83a12fC35B09d2"
 }

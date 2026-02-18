@@ -1,11 +1,11 @@
 {
-    "name": "CRYPTO10 Hedged",
-    "symbol": "C10",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "An open fund by Invictus Capital, holding the top ten cryptocurrencies by market cap, with data-backed risk hedging in cash.",
-    "website": "https://invictuscapital.com/crypto10hedged",
-    "explorer": "https://etherscan.io/token/0x000C100050E98C91f9114fa5Dd75CE6869Bf4F53",
-    "status": "active",
-    "id": "0x000C100050E98C91f9114fa5Dd75CE6869Bf4F53"
+    "name":  "CRYPTO10 Hedged",
+    "symbol":  "C10",
+    "decimals":  18,
+    "description":  "An open fund by Invictus Capital, holding the top ten cryptocurrencies by market cap, with data-backed risk hedging in cash.",
+    "website":  "https://invictuscapital.com/crypto10hedged",
+    "explorer":  "https://etherscan.io/token/0x000C100050E98C91f9114fa5Dd75CE6869Bf4F53",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X000C100050E98C91F9114FA5DD75CE6869BF4F53/logo.png",
+    "id":  "0x000C100050E98C91f9114fa5Dd75CE6869Bf4F53"
 }

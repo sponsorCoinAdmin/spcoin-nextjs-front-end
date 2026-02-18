@@ -1,11 +1,11 @@
 {
-    "name": "MicroMoney",
-    "symbol": "AMM",
-    "type": "ERC20",
-    "decimals": 6,
-    "description": "Micromoney is an Open Source Credit & Big Data Bureau.",
-    "website": "https://www.micromoney.io",
-    "explorer": "https://etherscan.io/token/0x8B1F49491477e0fB46a29fef53F1EA320D13c349",
-    "status": "active",
-    "id": "0x8B1F49491477e0fB46a29fef53F1EA320D13c349"
+    "name":  "MicroMoney",
+    "symbol":  "AMM",
+    "decimals":  6,
+    "description":  "Micromoney is an Open Source Credit \u0026 Big Data Bureau.",
+    "website":  "https://www.micromoney.io",
+    "explorer":  "https://etherscan.io/token/0x8B1F49491477e0fB46a29fef53F1EA320D13c349",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8B1F49491477E0FB46A29FEF53F1EA320D13C349/logo.png",
+    "id":  "0x8B1F49491477e0fB46a29fef53F1EA320D13c349"
 }

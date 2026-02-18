@@ -1,11 +1,11 @@
 {
-    "name": "JGNDeFi",
-    "website": "https://jgndefi.com/",
-    "description": "The World’s First Unstoppable DeFi Communication Network.",
-    "explorer": "https://etherscan.io/token/0x73374Ea518De7adDD4c2B624C0e8B113955ee041",
-    "type": "ERC20",
-    "symbol": "JGN",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x73374Ea518De7adDD4c2B624C0e8B113955ee041"
+    "name":  "JGNDeFi",
+    "website":  "https://jgndefi.com/",
+    "description":  "The World’s First Unstoppable DeFi Communication Network.",
+    "explorer":  "https://etherscan.io/token/0x73374Ea518De7adDD4c2B624C0e8B113955ee041",
+    "symbol":  "JGN",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X73374EA518DE7ADDD4C2B624C0E8B113955EE041/logo.png",
+    "id":  "0x73374Ea518De7adDD4c2B624C0e8B113955ee041"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "VIDTC Luxury goods",
-    "website": "https://about.v-id.org",
-    "description": "NFTs for watches, fashion & jewelry",
-    "explorer": "https://etherscan.io/token/0xE0bA1564A889f0d2Ba8eF4978027C1b072b56EbB",
-    "type": "ERC20",
-    "symbol": "VIDTC",
-    "decimals": 0,
-    "status": "active",
-    "id": "0xE0bA1564A889f0d2Ba8eF4978027C1b072b56EbB"
+    "name":  "VIDTC Luxury goods",
+    "website":  "https://about.v-id.org",
+    "description":  "NFTs for watches, fashion \u0026 jewelry",
+    "explorer":  "https://etherscan.io/token/0xE0bA1564A889f0d2Ba8eF4978027C1b072b56EbB",
+    "symbol":  "VIDTC",
+    "decimals":  0,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE0BA1564A889F0D2BA8EF4978027C1B072B56EBB/logo.png",
+    "id":  "0xE0bA1564A889f0d2Ba8eF4978027C1b072b56EbB"
 }

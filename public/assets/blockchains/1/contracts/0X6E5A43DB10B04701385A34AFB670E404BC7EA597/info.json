@@ -1,11 +1,11 @@
 {
-    "name": "RAKON",
-    "symbol": "RKN",
-    "type": "ERC20",
-    "decimals": 12,
-    "description": "-",
-    "website": "https://rakon.io/",
-    "explorer": "https://etherscan.io/token/0x6E5a43DB10b04701385A34afb670E404bC7Ea597",
-    "status": "active",
-    "id": "0x6E5a43DB10b04701385A34afb670E404bC7Ea597"
+    "name":  "RAKON",
+    "symbol":  "RKN",
+    "decimals":  12,
+    "description":  "-",
+    "website":  "https://rakon.io/",
+    "explorer":  "https://etherscan.io/token/0x6E5a43DB10b04701385A34afb670E404bC7Ea597",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X6E5A43DB10B04701385A34AFB670E404BC7EA597/logo.png",
+    "id":  "0x6E5a43DB10b04701385A34afb670E404bC7Ea597"
 }

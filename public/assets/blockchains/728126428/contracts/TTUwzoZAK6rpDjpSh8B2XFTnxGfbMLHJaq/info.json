@@ -1,11 +1,11 @@
 {
-    "name": "KING OF DEFI",
-    "type": "TRC20",
-    "symbol": "KODX",
-    "decimals": 6,
-    "website": "https://kingofdefi.org/",
-    "description": "New Gateway for staking, lending and borrowing.",
-    "explorer": "https://tronscan.io/#/token20/TTUwzoZAK6rpDjpSh8B2XFTnxGfbMLHJaq",
-    "status": "active",
-    "id": "TTUwzoZAK6rpDjpSh8B2XFTnxGfbMLHJaq"
+    "name":  "KING OF DEFI",
+    "symbol":  "KODX",
+    "decimals":  6,
+    "website":  "https://kingofdefi.org/",
+    "description":  "New Gateway for staking, lending and borrowing.",
+    "explorer":  "https://tronscan.io/#/token20/TTUwzoZAK6rpDjpSh8B2XFTnxGfbMLHJaq",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/728126428/contracts/TTUwzoZAK6rpDjpSh8B2XFTnxGfbMLHJaq/logo.png",
+    "id":  "TTUwzoZAK6rpDjpSh8B2XFTnxGfbMLHJaq"
 }

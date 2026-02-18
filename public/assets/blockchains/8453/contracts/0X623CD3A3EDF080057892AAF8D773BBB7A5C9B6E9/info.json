@@ -1,29 +1,28 @@
 {
-    "name": "Sekuya",
-    "type": "BASE",
-    "symbol": "SKYA",
-    "decimals": 18,
-    "description": "Born from a passionate community, Sekuya is a groundbreaking gaming and entertainment company headquartered in Singapore & Indonesia. With a mission to inspire dreams with passion, Sekuya blends cutting-edge Web3 technology, AI innovation, and world-class creative storytelling to deliver unique experiences in gaming, racing, and entertainment.",
-    "website": "https://sekuya.io/",
-    "explorer": "https://basescan.org/token/0x623cd3a3edf080057892aaf8d773bbb7a5c9b6e9",
-    "id": "0x623cD3a3EdF080057892aaF8D773Bbb7A5C9b6e9",
-    "status": "active",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/sekuyaofficial"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/sekuya-multiverse/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/sekuya-new"
-        }
-    ],
-    "tags": [
-        "gamefi"
-    ]
+    "name":  "Sekuya",
+    "symbol":  "SKYA",
+    "decimals":  18,
+    "description":  "Born from a passionate community, Sekuya is a groundbreaking gaming and entertainment company headquartered in Singapore \u0026 Indonesia. With a mission to inspire dreams with passion, Sekuya blends cutting-edge Web3 technology, AI innovation, and world-class creative storytelling to deliver unique experiences in gaming, racing, and entertainment.",
+    "website":  "https://sekuya.io/",
+    "explorer":  "https://basescan.org/token/0x623cd3a3edf080057892aaf8d773bbb7a5c9b6e9",
+    "id":  "0x623cD3a3EdF080057892aaF8D773Bbb7A5C9b6e9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/8453/contracts/0X623CD3A3EDF080057892AAF8D773BBB7A5C9B6E9/logo.png",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/sekuyaofficial"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/sekuya-multiverse/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/sekuya-new"
+                  }
+              ],
+    "tags":  [
+                 "gamefi"
+             ]
 }
-    

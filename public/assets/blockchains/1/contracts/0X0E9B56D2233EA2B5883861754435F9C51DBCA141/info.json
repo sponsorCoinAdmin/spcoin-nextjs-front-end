@@ -1,11 +1,11 @@
 {
-    "name": "rPepe",
-    "website": "https://rarepepe.net",
-    "description": "rPepe Token is a deflationary cypto-currency with a 2.5% burn implemented for each transaction.",
-    "explorer": "https://etherscan.io/token/0x0e9b56D2233ea2b5883861754435f9C51Dbca141",
-    "type": "ERC20",
-    "symbol": "rPepe",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x0e9b56D2233ea2b5883861754435f9C51Dbca141"
+    "name":  "rPepe",
+    "website":  "https://rarepepe.net",
+    "description":  "rPepe Token is a deflationary cypto-currency with a 2.5% burn implemented for each transaction.",
+    "explorer":  "https://etherscan.io/token/0x0e9b56D2233ea2b5883861754435f9C51Dbca141",
+    "symbol":  "rPepe",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0E9B56D2233EA2B5883861754435F9C51DBCA141/logo.png",
+    "id":  "0x0e9b56D2233ea2b5883861754435f9C51Dbca141"
 }

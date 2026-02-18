@@ -1,11 +1,11 @@
 {
-    "name": "Presearch",
-    "website": "https://presearch.io",
-    "description": "Presearch aims to build a next-generation search engine that is powered by its community.",
-    "explorer": "https://etherscan.io/token/0xEC213F83defB583af3A000B1c0ada660b1902A0F",
-    "type": "ERC20",
-    "symbol": "PRE",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xEC213F83defB583af3A000B1c0ada660b1902A0F"
+    "name":  "Presearch",
+    "website":  "https://presearch.io",
+    "description":  "Presearch aims to build a next-generation search engine that is powered by its community.",
+    "explorer":  "https://etherscan.io/token/0xEC213F83defB583af3A000B1c0ada660b1902A0F",
+    "symbol":  "PRE",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEC213F83DEFB583AF3A000B1C0ADA660B1902A0F/logo.png",
+    "id":  "0xEC213F83defB583af3A000B1c0ada660b1902A0F"
 }

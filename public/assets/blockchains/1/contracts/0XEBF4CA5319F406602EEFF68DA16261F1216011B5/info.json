@@ -1,11 +1,11 @@
 {
-    "name": "Yo Token",
-    "symbol": "YOT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Yobit Token (YO) is the native asset of Yobit Exchange.",
-    "website": "https://yobit.net/en/",
-    "explorer": "https://etherscan.io/token/0xeBF4CA5319F406602EEFf68da16261f1216011B5",
-    "status": "active",
-    "id": "0xeBF4CA5319F406602EEFf68da16261f1216011B5"
+    "name":  "Yo Token",
+    "symbol":  "YOT",
+    "decimals":  18,
+    "description":  "Yobit Token (YO) is the native asset of Yobit Exchange.",
+    "website":  "https://yobit.net/en/",
+    "explorer":  "https://etherscan.io/token/0xeBF4CA5319F406602EEFf68da16261f1216011B5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XEBF4CA5319F406602EEFF68DA16261F1216011B5/logo.png",
+    "id":  "0xeBF4CA5319F406602EEFf68da16261f1216011B5"
 }

@@ -1,14 +1,14 @@
 {
-    "name": "MATIC (Portal from Polygon)",
-    "type": "ERC20",
-    "symbol": "MATICpo",
-    "decimals": 18,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://polygon.technology/",
-    "explorer": "https://etherscan.io/token/0x7c9f4C87d911613Fe9ca58b579f737911AAD2D43",
-    "status": "active",
-    "id": "0x7c9f4C87d911613Fe9ca58b579f737911AAD2D43",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "MATIC (Portal from Polygon)",
+    "symbol":  "MATICpo",
+    "decimals":  18,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://polygon.technology/",
+    "explorer":  "https://etherscan.io/token/0x7c9f4C87d911613Fe9ca58b579f737911AAD2D43",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X7C9F4C87D911613FE9CA58B579F737911AAD2D43/logo.png",
+    "id":  "0x7c9f4C87d911613Fe9ca58b579f737911AAD2D43",
+    "tags":  [
+                 "wrapped"
+             ]
 }

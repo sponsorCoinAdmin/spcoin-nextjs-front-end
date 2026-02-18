@@ -1,11 +1,11 @@
 {
-    "name": "SeChain",
-    "symbol": "SNN",
-    "type": "ERC20",
-    "decimals": 3,
-    "description": "SeChain project is building the future of decentralized services where the service provider & the customers can get the work done in decentralized environment far from centralized companies.",
-    "website": "https://snn.cash/",
-    "explorer": "https://etherscan.io/token/0xF5717f5DF41eA67Ef67DFD3c1d02F9940bcF5d08",
-    "status": "active",
-    "id": "0xF5717f5DF41eA67Ef67DFD3c1d02F9940bcF5d08"
+    "name":  "SeChain",
+    "symbol":  "SNN",
+    "decimals":  3,
+    "description":  "SeChain project is building the future of decentralized services where the service provider \u0026 the customers can get the work done in decentralized environment far from centralized companies.",
+    "website":  "https://snn.cash/",
+    "explorer":  "https://etherscan.io/token/0xF5717f5DF41eA67Ef67DFD3c1d02F9940bcF5d08",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF5717F5DF41EA67EF67DFD3C1D02F9940BCF5D08/logo.png",
+    "id":  "0xF5717f5DF41eA67Ef67DFD3c1d02F9940bcF5d08"
 }

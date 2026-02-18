@@ -1,11 +1,11 @@
 {
-    "name": "GET",
-    "symbol": "GET",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "The GET Protocol offers a blockchain-based smart ticketing solution that can be used by everybody who needs to issue tickets(NFTs) in an honest and transparent way.",
-    "website": "https://get-protocol.io",
-    "explorer": "https://etherscan.io/token/0x8a854288a5976036A725879164Ca3e91d30c6A1B",
-    "status": "active",
-    "id": "0x8a854288a5976036A725879164Ca3e91d30c6A1B"
+    "name":  "GET",
+    "symbol":  "GET",
+    "decimals":  18,
+    "description":  "The GET Protocol offers a blockchain-based smart ticketing solution that can be used by everybody who needs to issue tickets(NFTs) in an honest and transparent way.",
+    "website":  "https://get-protocol.io",
+    "explorer":  "https://etherscan.io/token/0x8a854288a5976036A725879164Ca3e91d30c6A1B",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8A854288A5976036A725879164CA3E91D30C6A1B/logo.png",
+    "id":  "0x8a854288a5976036A725879164Ca3e91d30c6A1B"
 }

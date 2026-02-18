@@ -1,11 +1,11 @@
 {
-    "name": "HalalChain",
-    "symbol": "HLC",
-    "type": "ERC20",
-    "decimals": 9,
-    "description": "-",
-    "website": "http://www.hlc.com",
-    "explorer": "https://etherscan.io/token/0x58c69ed6cd6887c0225D1FcCEcC055127843c69b",
-    "status": "active",
-    "id": "0x58c69ed6cd6887c0225D1FcCEcC055127843c69b"
+    "name":  "HalalChain",
+    "symbol":  "HLC",
+    "decimals":  9,
+    "description":  "-",
+    "website":  "http://www.hlc.com",
+    "explorer":  "https://etherscan.io/token/0x58c69ed6cd6887c0225D1FcCEcC055127843c69b",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X58C69ED6CD6887C0225D1FCCECC055127843C69B/logo.png",
+    "id":  "0x58c69ed6cd6887c0225D1FcCEcC055127843c69b"
 }

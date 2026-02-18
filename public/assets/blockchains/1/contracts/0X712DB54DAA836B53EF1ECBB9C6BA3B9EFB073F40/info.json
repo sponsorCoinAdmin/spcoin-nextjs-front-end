@@ -1,11 +1,11 @@
 {
-    "name": "Aave ENJ V1",
-    "symbol": "aENJ V1",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Aave ENJ V1 is an interest bearing token pegged 1:1 to the underlying xxxx deposited in Aave V1. aENJ V1 accrue interest in real time in your wallet.",
-    "website": "https://aave.com",
-    "explorer": "https://etherscan.io/token/0x712DB54daA836B53Ef1EcBb9c6ba3b9Efb073F40",
-    "status": "active",
-    "id": "0x712DB54daA836B53Ef1EcBb9c6ba3b9Efb073F40"
+    "name":  "Aave ENJ V1",
+    "symbol":  "aENJ V1",
+    "decimals":  18,
+    "description":  "Aave ENJ V1 is an interest bearing token pegged 1:1 to the underlying xxxx deposited in Aave V1. aENJ V1 accrue interest in real time in your wallet.",
+    "website":  "https://aave.com",
+    "explorer":  "https://etherscan.io/token/0x712DB54daA836B53Ef1EcBb9c6ba3b9Efb073F40",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X712DB54DAA836B53EF1ECBB9C6BA3B9EFB073F40/logo.png",
+    "id":  "0x712DB54daA836B53Ef1EcBb9c6ba3b9Efb073F40"
 }

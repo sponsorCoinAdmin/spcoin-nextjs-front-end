@@ -1,11 +1,11 @@
 {
-    "name": "QChi Chain",
-    "website": "https://qchichain.com/",
-    "description": "QChi Chain (QHC) is a cross industry application platform that brings blockchain technology to a wide range of industries.",
-    "explorer": "https://etherscan.io/token/0x5df94780f00140FE72d239D0D261f7797E3Fbd1B",
-    "type": "ERC20",
-    "symbol": "QHC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x5df94780f00140FE72d239D0D261f7797E3Fbd1B"
+    "name":  "QChi Chain",
+    "website":  "https://qchichain.com/",
+    "description":  "QChi Chain (QHC) is a cross industry application platform that brings blockchain technology to a wide range of industries.",
+    "explorer":  "https://etherscan.io/token/0x5df94780f00140FE72d239D0D261f7797E3Fbd1B",
+    "symbol":  "QHC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5DF94780F00140FE72D239D0D261F7797E3FBD1B/logo.png",
+    "id":  "0x5df94780f00140FE72d239D0D261f7797E3Fbd1B"
 }

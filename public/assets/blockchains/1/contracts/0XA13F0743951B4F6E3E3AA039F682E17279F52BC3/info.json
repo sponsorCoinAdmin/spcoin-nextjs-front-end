@@ -1,11 +1,11 @@
 {
-    "name": "Sentinel Chain Token",
-    "symbol": "SENC",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Sentinel Chain (SENC) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://sentinel-chain.org",
-    "explorer": "https://etherscan.io/token/0xA13f0743951B4f6E3e3AA039f682E17279f52bc3",
-    "status": "active",
-    "id": "0xA13f0743951B4f6E3e3AA039f682E17279f52bc3"
+    "name":  "Sentinel Chain Token",
+    "symbol":  "SENC",
+    "decimals":  18,
+    "description":  "Sentinel Chain (SENC) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://sentinel-chain.org",
+    "explorer":  "https://etherscan.io/token/0xA13f0743951B4f6E3e3AA039f682E17279f52bc3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA13F0743951B4F6E3E3AA039F682E17279F52BC3/logo.png",
+    "id":  "0xA13f0743951B4f6E3e3AA039f682E17279f52bc3"
 }

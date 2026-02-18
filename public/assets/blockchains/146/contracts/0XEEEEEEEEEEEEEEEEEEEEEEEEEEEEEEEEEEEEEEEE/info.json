@@ -1,7 +1,8 @@
 {
-  "chainId": 146,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Sonic",
-  "symbol": "S",
-  "decimals": 18
+    "chainId":  146,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "Sonic",
+    "symbol":  "S",
+    "decimals":  18,
+    "logoURL":  "assets/blockchains/146/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png"
 }

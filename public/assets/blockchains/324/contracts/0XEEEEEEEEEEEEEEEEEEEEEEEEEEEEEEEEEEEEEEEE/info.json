@@ -1,33 +1,34 @@
 {
-  "chainId": 324,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "ZkSync Era",
-  "symbol": "ETH",
-  "decimals": 18,
-  "website": "https://ethereum.org/en/",
-  "description": "wETH is 'wrapped ETH'",
-  "explorer": "https://explorer.zksync.io/address/0x0000000000000000000000000000000000000000",
-  "status": "active",
-  "id": "0x0000000000000000000000000000000000000000",
-  "tags": [
-    "wrapped"
-  ],
-  "links": [
-    {
-      "name": "x",
-      "url": "https://x.com/ethdotorg"
-    },
-    {
-      "name": "github",
-      "url": "https://github.com/ethereum/ethereum-org-website"
-    },
-    {
-      "name": "discord",
-      "url": "https://discord.com/CetY6Y4"
-    },
-    {
-      "name": "coinmarketcap",
-      "url": "https://coinmarketcap.com/currencies/weth/"
-    }
-  ]
+    "chainId":  324,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "ZkSync Era",
+    "symbol":  "ETH",
+    "decimals":  18,
+    "website":  "https://ethereum.org/en/",
+    "description":  "wETH is \u0027wrapped ETH\u0027",
+    "explorer":  "https://explorer.zksync.io/address/0x0000000000000000000000000000000000000000",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/324/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png",
+    "id":  "0x0000000000000000000000000000000000000000",
+    "tags":  [
+                 "wrapped"
+             ],
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/ethdotorg"
+                  },
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/ethereum/ethereum-org-website"
+                  },
+                  {
+                      "name":  "discord",
+                      "url":  "https://discord.com/CetY6Y4"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/weth/"
+                  }
+              ]
 }

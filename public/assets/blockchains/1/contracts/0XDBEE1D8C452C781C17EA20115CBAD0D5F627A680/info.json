@@ -1,11 +1,11 @@
 {
-    "name": "Strike SXP",
-    "symbol": "sSXP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Strike Finance collateral cryptocurrency",
-    "explorer": "https://etherscan.io/token/0xdBee1d8C452c781C17Ea20115CbaD0d5f627a680",
-    "status": "active",
-    "id": "0xdBee1d8C452c781C17Ea20115CbaD0d5f627a680",
-    "website": "https://strike.org"
+    "name":  "Strike SXP",
+    "symbol":  "sSXP",
+    "decimals":  18,
+    "description":  "Strike Finance collateral cryptocurrency",
+    "explorer":  "https://etherscan.io/token/0xdBee1d8C452c781C17Ea20115CbaD0d5f627a680",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XDBEE1D8C452C781C17EA20115CBAD0D5F627A680/logo.png",
+    "id":  "0xdBee1d8C452c781C17Ea20115CbaD0d5f627a680",
+    "website":  "https://strike.org"
 }

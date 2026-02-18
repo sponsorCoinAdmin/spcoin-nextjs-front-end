@@ -1,11 +1,11 @@
 {
-    "name": "Starbase",
-    "symbol": "STAR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Starbase’s mission is to make it easy for everyone to start or support projects which aim to create new services and products.",
-    "website": "https://starbase.co/",
-    "explorer": "https://etherscan.io/token/0xF70a642bD387F94380fFb90451C2c81d4Eb82CBc",
-    "status": "active",
-    "id": "0xF70a642bD387F94380fFb90451C2c81d4Eb82CBc"
+    "name":  "Starbase",
+    "symbol":  "STAR",
+    "decimals":  18,
+    "description":  "Starbase’s mission is to make it easy for everyone to start or support projects which aim to create new services and products.",
+    "website":  "https://starbase.co/",
+    "explorer":  "https://etherscan.io/token/0xF70a642bD387F94380fFb90451C2c81d4Eb82CBc",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XF70A642BD387F94380FFB90451C2C81D4EB82CBC/logo.png",
+    "id":  "0xF70a642bD387F94380fFb90451C2c81d4Eb82CBc"
 }

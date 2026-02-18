@@ -1,11 +1,11 @@
 {
-    "name": "SIRIN",
-    "symbol": "SRN",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Blockchain Smartphone.",
-    "website": "https://www.sirinlabs.com",
-    "explorer": "https://etherscan.io/token/0x68d57c9a1C35f63E2c83eE8e49A64e9d70528D25",
-    "status": "active",
-    "id": "0x68d57c9a1C35f63E2c83eE8e49A64e9d70528D25"
+    "name":  "SIRIN",
+    "symbol":  "SRN",
+    "decimals":  18,
+    "description":  "Blockchain Smartphone.",
+    "website":  "https://www.sirinlabs.com",
+    "explorer":  "https://etherscan.io/token/0x68d57c9a1C35f63E2c83eE8e49A64e9d70528D25",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X68D57C9A1C35F63E2C83EE8E49A64E9D70528D25/logo.png",
+    "id":  "0x68d57c9a1C35f63E2c83eE8e49A64e9d70528D25"
 }

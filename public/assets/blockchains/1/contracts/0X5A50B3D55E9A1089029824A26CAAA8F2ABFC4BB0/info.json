@@ -1,25 +1,25 @@
 {
-    "name": "xunii.finance",
-    "website": "https://xunii.finance",
-    "description": "A Yield Farming Project.",
-    "explorer": "https://etherscan.io/token/0x5a50B3d55e9a1089029824a26caaA8f2abFC4bb0",
-    "type": "ERC20",
-    "symbol": "XUNII",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x5a50B3d55e9a1089029824a26caaA8f2abFC4bb0",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/xuniifinance/"
-        },
-        {
-            "name": "x",
-            "url": "https://x.com/xuniifinance"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/xuniifinance"
-        }
-    ]
+    "name":  "xunii.finance",
+    "website":  "https://xunii.finance",
+    "description":  "A Yield Farming Project.",
+    "explorer":  "https://etherscan.io/token/0x5a50B3d55e9a1089029824a26caaA8f2abFC4bb0",
+    "symbol":  "XUNII",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5A50B3D55E9A1089029824A26CAAA8F2ABFC4BB0/logo.png",
+    "id":  "0x5a50B3d55e9a1089029824a26caaA8f2abFC4bb0",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/xuniifinance/"
+                  },
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/xuniifinance"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/xuniifinance"
+                  }
+              ]
 }

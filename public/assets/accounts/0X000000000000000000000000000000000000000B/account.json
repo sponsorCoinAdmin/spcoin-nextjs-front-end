@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Wiskers Place",
     "symbol":  "MEOW",
-    "address":  "0X000000000000000000000000000000000000000b",
+    "address":  "0X000000000000000000000000000000000000000B",
     "website":  "",
     "description":  "This is the description for site AnimalShelter2",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000000B/logo.png",
     "status":  "test"
 }

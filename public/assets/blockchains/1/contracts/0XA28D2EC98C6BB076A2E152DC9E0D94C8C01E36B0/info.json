@@ -1,11 +1,11 @@
 {
-    "name": "Strike COMP",
-    "symbol": "sCOMP",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Strike Finance collateral cryptocurrency",
-    "explorer": "https://etherscan.io/token/0xA28d2EC98C6bb076A2e152dC9e0d94C8C01e36B0",
-    "status": "active",
-    "id": "0xA28d2EC98C6bb076A2e152dC9e0d94C8C01e36B0",
-    "website": "https://strike.org"
+    "name":  "Strike COMP",
+    "symbol":  "sCOMP",
+    "decimals":  18,
+    "description":  "Strike Finance collateral cryptocurrency",
+    "explorer":  "https://etherscan.io/token/0xA28d2EC98C6bb076A2e152dC9e0d94C8C01e36B0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XA28D2EC98C6BB076A2E152DC9E0D94C8C01E36B0/logo.png",
+    "id":  "0xA28d2EC98C6bb076A2e152dC9e0d94C8C01e36B0",
+    "website":  "https://strike.org"
 }

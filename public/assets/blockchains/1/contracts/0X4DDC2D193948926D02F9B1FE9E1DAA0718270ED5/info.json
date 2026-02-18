@@ -1,11 +1,11 @@
 {
-    "name": "Compound Ether",
-    "symbol": "cETH",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Compound is an algorithmic, autonomous interest rate protocol built for developers, to unlock a universe of open financial applications.",
-    "website": "https://compound.finance/",
-    "explorer": "https://etherscan.io/token/0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5",
-    "status": "active",
-    "id": "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5"
+    "name":  "Compound Ether",
+    "symbol":  "cETH",
+    "decimals":  8,
+    "description":  "Compound is an algorithmic, autonomous interest rate protocol built for developers, to unlock a universe of open financial applications.",
+    "website":  "https://compound.finance/",
+    "explorer":  "https://etherscan.io/token/0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X4DDC2D193948926D02F9B1FE9E1DAA0718270ED5/logo.png",
+    "id":  "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5"
 }

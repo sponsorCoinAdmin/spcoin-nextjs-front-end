@@ -1,11 +1,11 @@
 {
-    "name": "CoTrader",
-    "symbol": "COT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "CoTrader (COT) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://cotrader.com/",
-    "explorer": "https://etherscan.io/token/0x5c872500c00565505F3624AB435c222E558E9ff8",
-    "status": "active",
-    "id": "0x5c872500c00565505F3624AB435c222E558E9ff8"
+    "name":  "CoTrader",
+    "symbol":  "COT",
+    "decimals":  18,
+    "description":  "CoTrader (COT) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://cotrader.com/",
+    "explorer":  "https://etherscan.io/token/0x5c872500c00565505F3624AB435c222E558E9ff8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5C872500C00565505F3624AB435C222E558E9FF8/logo.png",
+    "id":  "0x5c872500c00565505F3624AB435c222E558E9ff8"
 }

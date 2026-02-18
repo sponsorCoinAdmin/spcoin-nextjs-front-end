@@ -1,14 +1,14 @@
 {
-    "name": "Binance Coin (Portal)",
-    "type": "ERC20",
-    "symbol": "BNB",
-    "decimals": 18,
-    "description": "Cross Chain Portal Bridged Token",
-    "website": "https://www.binance.com/",
-    "explorer": "https://etherscan.io/token/0x418D75f65a02b3D53B2418FB8E1fe493759c7605",
-    "status": "active",
-    "id": "0x418D75f65a02b3D53B2418FB8E1fe493759c7605",
-    "tags": [
-        "wrapped"
-    ]
+    "name":  "Binance Coin (Portal)",
+    "symbol":  "BNB",
+    "decimals":  18,
+    "description":  "Cross Chain Portal Bridged Token",
+    "website":  "https://www.binance.com/",
+    "explorer":  "https://etherscan.io/token/0x418D75f65a02b3D53B2418FB8E1fe493759c7605",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X418D75F65A02B3D53B2418FB8E1FE493759C7605/logo.png",
+    "id":  "0x418D75f65a02b3D53B2418FB8E1fe493759c7605",
+    "tags":  [
+                 "wrapped"
+             ]
 }

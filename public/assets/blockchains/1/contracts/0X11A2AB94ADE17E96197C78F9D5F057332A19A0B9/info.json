@@ -1,11 +1,11 @@
 {
-    "name": "Orbicular",
-    "website": "https://hypeforhotdogs.com/orbicular",
-    "description": "Orbicular is a cryptocurrency with a supply that cyclically increases and decreases through rebases.",
-    "explorer": "https://etherscan.io/token/0x11A2Ab94adE17e96197C78f9D5f057332a19a0b9",
-    "type": "ERC20",
-    "symbol": "ORBI",
-    "decimals": 9,
-    "status": "active",
-    "id": "0x11A2Ab94adE17e96197C78f9D5f057332a19a0b9"
+    "name":  "Orbicular",
+    "website":  "https://hypeforhotdogs.com/orbicular",
+    "description":  "Orbicular is a cryptocurrency with a supply that cyclically increases and decreases through rebases.",
+    "explorer":  "https://etherscan.io/token/0x11A2Ab94adE17e96197C78f9D5f057332a19a0b9",
+    "symbol":  "ORBI",
+    "decimals":  9,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X11A2AB94ADE17E96197C78F9D5F057332A19A0B9/logo.png",
+    "id":  "0x11A2Ab94adE17e96197C78f9D5f057332a19a0b9"
 }

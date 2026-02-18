@@ -1,11 +1,11 @@
 {
-    "name": "BitcashPay Token",
-    "website": "https://bitcashpay.net/",
-    "description": "Staking and Yield Farming, Decentralized Lending, DEX with FIAT Cash-in/Cash-out, Crypto Academy, Payment Solution, Remittance. The ALL-in-ONE DEFI PLATFORM",
-    "explorer": "https://etherscan.io/token/0xe047705117Eb07e712C3d684f5B18E74577e83aC",
-    "type": "ERC20",
-    "symbol": "BCP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xe047705117Eb07e712C3d684f5B18E74577e83aC"
+    "name":  "BitcashPay Token",
+    "website":  "https://bitcashpay.net/",
+    "description":  "Staking and Yield Farming, Decentralized Lending, DEX with FIAT Cash-in/Cash-out, Crypto Academy, Payment Solution, Remittance. The ALL-in-ONE DEFI PLATFORM",
+    "explorer":  "https://etherscan.io/token/0xe047705117Eb07e712C3d684f5B18E74577e83aC",
+    "symbol":  "BCP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XE047705117EB07E712C3D684F5B18E74577E83AC/logo.png",
+    "id":  "0xe047705117Eb07e712C3d684f5B18E74577e83aC"
 }

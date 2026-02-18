@@ -1,11 +1,11 @@
 {
-    "name": "Gold Storage",
-    "symbol": "GOLD",
-    "type": "ERC20",
-    "decimals": 3,
-    "description": "GOLD Ethereum-based ERC20 token is a convenient and instant way to store, buy, sell or transfer investment grade gold.",
-    "website": "https://gold.storage/",
-    "explorer": "https://etherscan.io/token/0x0d16450D347c12C086d6C94c76c5Aaac35eA07E0",
-    "status": "active",
-    "id": "0x0d16450D347c12C086d6C94c76c5Aaac35eA07E0"
+    "name":  "Gold Storage",
+    "symbol":  "GOLD",
+    "decimals":  3,
+    "description":  "GOLD Ethereum-based ERC20 token is a convenient and instant way to store, buy, sell or transfer investment grade gold.",
+    "website":  "https://gold.storage/",
+    "explorer":  "https://etherscan.io/token/0x0d16450D347c12C086d6C94c76c5Aaac35eA07E0",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0D16450D347C12C086D6C94C76C5AAAC35EA07E0/logo.png",
+    "id":  "0x0d16450D347c12C086d6C94c76c5Aaac35eA07E0"
 }

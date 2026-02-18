@@ -1,8 +1,10 @@
-﻿{
+{
     "name":  "Progressive Conservatives",
     "symbol":  "PC_3",
     "address":  "0X0000000000000000000000000000000000000003",
     "website":  "",
     "description":  "This is the description for site PC_3",
+    "logoURL":  "assets/accounts/0X0000000000000000000000000000000000000003/logo.png",
     "status":  "test"
 }
+

@@ -1,17 +1,17 @@
 {
-    "name": "SharedStake Governance Token",
-    "website": "https://www.sharedstake.org",
-    "symbol": "SGT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Easy to use Decentralized Open Source Protocol that allows users to stake any amount of Ether to Ethereum-2 while keeping their staked amount valuable and liquid.",
-    "explorer": "https://etherscan.io/token/0x84810bcF08744d5862B8181f12d17bfd57d3b078",
-    "status": "active",
-    "id": "0x84810bcF08744d5862B8181f12d17bfd57d3b078",
-    "links": [
-        {
-            "name": "github",
-            "url": "https://github.com/SharedStake"
-        }
-    ]
+    "name":  "SharedStake Governance Token",
+    "website":  "https://www.sharedstake.org",
+    "symbol":  "SGT",
+    "decimals":  18,
+    "description":  "Easy to use Decentralized Open Source Protocol that allows users to stake any amount of Ether to Ethereum-2 while keeping their staked amount valuable and liquid.",
+    "explorer":  "https://etherscan.io/token/0x84810bcF08744d5862B8181f12d17bfd57d3b078",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X84810BCF08744D5862B8181F12D17BFD57D3B078/logo.png",
+    "id":  "0x84810bcF08744d5862B8181f12d17bfd57d3b078",
+    "links":  [
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/SharedStake"
+                  }
+              ]
 }

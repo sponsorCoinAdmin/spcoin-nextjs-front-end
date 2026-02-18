@@ -1,21 +1,21 @@
 {
-    "name": "ChainSwap",
-    "website": "https://www.chain-swap.org/",
-    "description": "Transforming cryptocurrency transactions through innovative cross-chain swap and privacy solutions, built upon ground-breaking ChainLink CCIP (Cross Chain Interoperability Protocol) & CCTP (Cross Chain Transfer Protocol) technology",
-    "explorer": "https://etherscan.io/token/0xae41b275aaaf484b541a5881a2dded9515184cca",
-    "type": "ERC20",
-    "symbol": "CSWAP",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xae41b275aaAF484b541A5881a2dDED9515184CCA",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/chainswaperc"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/chainswap-3/"
-        }
-    ]
+    "name":  "ChainSwap",
+    "website":  "https://www.chain-swap.org/",
+    "description":  "Transforming cryptocurrency transactions through innovative cross-chain swap and privacy solutions, built upon ground-breaking ChainLink CCIP (Cross Chain Interoperability Protocol) \u0026 CCTP (Cross Chain Transfer Protocol) technology",
+    "explorer":  "https://etherscan.io/token/0xae41b275aaaf484b541a5881a2dded9515184cca",
+    "symbol":  "CSWAP",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XAE41B275AAAF484B541A5881A2DDED9515184CCA/logo.png",
+    "id":  "0xae41b275aaAF484b541A5881a2dDED9515184CCA",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/chainswaperc"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/chainswap-3/"
+                  }
+              ]
 }

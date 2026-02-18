@@ -1,11 +1,11 @@
 {
-    "name": "Blockport Token",
-    "symbol": "BPT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Social crypto exchange based on a hybrid-decentralized architecture.",
-    "website": "https://getbux.com/bux-crypto",
-    "explorer": "https://etherscan.io/token/0x327682779bAB2BF4d1337e8974ab9dE8275A7Ca8",
-    "status": "active",
-    "id": "0x327682779bAB2BF4d1337e8974ab9dE8275A7Ca8"
+    "name":  "Blockport Token",
+    "symbol":  "BPT",
+    "decimals":  18,
+    "description":  "Social crypto exchange based on a hybrid-decentralized architecture.",
+    "website":  "https://getbux.com/bux-crypto",
+    "explorer":  "https://etherscan.io/token/0x327682779bAB2BF4d1337e8974ab9dE8275A7Ca8",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X327682779BAB2BF4D1337E8974AB9DE8275A7CA8/logo.png",
+    "id":  "0x327682779bAB2BF4d1337e8974ab9dE8275A7Ca8"
 }

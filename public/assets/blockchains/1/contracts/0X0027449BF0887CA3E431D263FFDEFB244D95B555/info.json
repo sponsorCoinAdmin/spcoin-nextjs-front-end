@@ -1,11 +1,11 @@
 {
-    "name": "Not",
-    "symbol": "NOT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://exonomousid.com",
-    "explorer": "https://etherscan.io/token/0x0027449Bf0887ca3E431D263FFDeFb244D95b555",
-    "status": "spam",
-    "id": "0x0027449Bf0887ca3E431D263FFDeFb244D95b555"
+    "name":  "Not",
+    "symbol":  "NOT",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://exonomousid.com",
+    "explorer":  "https://etherscan.io/token/0x0027449Bf0887ca3E431D263FFDeFb244D95b555",
+    "status":  "spam",
+    "logoURL":  "assets/blockchains/1/contracts/0X0027449BF0887CA3E431D263FFDEFB244D95B555/logo.png",
+    "id":  "0x0027449Bf0887ca3E431D263FFDeFb244D95b555"
 }

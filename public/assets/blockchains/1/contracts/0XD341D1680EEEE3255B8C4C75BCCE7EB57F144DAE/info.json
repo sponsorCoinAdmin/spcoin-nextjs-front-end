@@ -1,11 +1,11 @@
 {
-    "name": "onG",
-    "symbol": "ONG",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "SoMee.Social (ONG) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://SoMee.social",
-    "explorer": "https://etherscan.io/token/0xd341d1680Eeee3255b8C4c75bCCE7EB57f144dAe",
-    "status": "active",
-    "id": "0xd341d1680Eeee3255b8C4c75bCCE7EB57f144dAe"
+    "name":  "onG",
+    "symbol":  "ONG",
+    "decimals":  18,
+    "description":  "SoMee.Social (ONG) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://SoMee.social",
+    "explorer":  "https://etherscan.io/token/0xd341d1680Eeee3255b8C4c75bCCE7EB57f144dAe",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD341D1680EEEE3255B8C4C75BCCE7EB57F144DAE/logo.png",
+    "id":  "0xd341d1680Eeee3255b8C4c75bCCE7EB57f144dAe"
 }

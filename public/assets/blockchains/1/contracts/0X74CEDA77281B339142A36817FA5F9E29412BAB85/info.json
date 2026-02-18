@@ -1,11 +1,11 @@
 {
-    "name": "EROSCOIN",
-    "symbol": "ERO",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Eroscoin (ERO) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://eroscoin.org",
-    "explorer": "https://etherscan.io/token/0x74CEDa77281b339142A36817Fa5F9E29412bAb85",
-    "status": "active",
-    "id": "0x74CEDa77281b339142A36817Fa5F9E29412bAb85"
+    "name":  "EROSCOIN",
+    "symbol":  "ERO",
+    "decimals":  8,
+    "description":  "Eroscoin (ERO) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://eroscoin.org",
+    "explorer":  "https://etherscan.io/token/0x74CEDa77281b339142A36817Fa5F9E29412bAb85",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X74CEDA77281B339142A36817FA5F9E29412BAB85/logo.png",
+    "id":  "0x74CEDa77281b339142A36817Fa5F9E29412bAb85"
 }

@@ -1,11 +1,11 @@
 {
-    "name": "Experty Token",
-    "symbol": "EXY",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://www.experty.io/en?utm_source=coingecko&utm_medium=listing&utm_campaign=coingecko",
-    "explorer": "https://etherscan.io/token/0x5c743a35E903F6c584514ec617ACEe0611Cf44f3",
-    "status": "active",
-    "id": "0x5c743a35E903F6c584514ec617ACEe0611Cf44f3"
+    "name":  "Experty Token",
+    "symbol":  "EXY",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://www.experty.io/en?utm_source=coingecko\u0026utm_medium=listing\u0026utm_campaign=coingecko",
+    "explorer":  "https://etherscan.io/token/0x5c743a35E903F6c584514ec617ACEe0611Cf44f3",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5C743A35E903F6C584514EC617ACEE0611CF44F3/logo.png",
+    "id":  "0x5c743a35E903F6c584514ec617ACEe0611Cf44f3"
 }

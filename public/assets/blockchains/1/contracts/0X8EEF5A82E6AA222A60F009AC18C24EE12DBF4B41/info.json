@@ -1,12 +1,12 @@
 {
-    "name": "Tixl",
-    "website": "https://tixl.org",
-    "description": "Interoperable Smart Contracts & dApps Network",
-    "explorer": "https://etherscan.io/token/0x8eEF5a82E6Aa222a60F009ac18c24EE12dBf4b41",
-    "research": "",
-    "type": "ERC20",
-    "symbol": "TXL",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x8eEF5a82E6Aa222a60F009ac18c24EE12dBf4b41"
+    "name":  "Tixl",
+    "website":  "https://tixl.org",
+    "description":  "Interoperable Smart Contracts \u0026 dApps Network",
+    "explorer":  "https://etherscan.io/token/0x8eEF5a82E6Aa222a60F009ac18c24EE12dBf4b41",
+    "research":  "",
+    "symbol":  "TXL",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X8EEF5A82E6AA222A60F009AC18C24EE12DBF4B41/logo.png",
+    "id":  "0x8eEF5a82E6Aa222a60F009ac18c24EE12dBf4b41"
 }

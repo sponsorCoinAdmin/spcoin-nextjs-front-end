@@ -1,48 +1,48 @@
 {
-    "name": "Pollen",
-    "type": "AVALANCHE",
-    "symbol": "PLN",
-    "decimals": 18,
-    "website": "https://pollen.id",
-    "description": "Pollen is a crypto asset management suite that brings together the core principles of DeFi with collective intelligence.",
-    "explorer": "https://snowtrace.io/token/0x7b2B702706D9b361dfE3f00bD138C0CFDA7FB2Cf",
-    "status": "active",
-    "id": "0x7b2B702706D9b361dfE3f00bD138C0CFDA7FB2Cf",
-    "links": [
-        {
-            "name": "x",
-            "url": "https://x.com/PollenDeFi"
-        },
-        {
-            "name": "github",
-            "url": "https://github.com/PollenDeFi"
-        },
-        {
-            "name": "telegram",
-            "url": "https://t.me/pollen_dao"
-        },
-        {
-            "name": "medium",
-            "url": "https://medium.com/pollen-defi"
-        },
-        {
-            "name": "whitepaper",
-            "url": "https://pollen.id/litepaper.pdf"
-        },
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/pollen/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/pollen"
-        },
-        {
-            "name": "discord",
-            "url": "https://discord.com/invite/KJzrVTU8RT"
-        }
-    ],
-    "tags": [
-        "defi"
-    ]
+    "name":  "Pollen",
+    "symbol":  "PLN",
+    "decimals":  18,
+    "website":  "https://pollen.id",
+    "description":  "Pollen is a crypto asset management suite that brings together the core principles of DeFi with collective intelligence.",
+    "explorer":  "https://snowtrace.io/token/0x7b2B702706D9b361dfE3f00bD138C0CFDA7FB2Cf",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0X7B2B702706D9B361DFE3F00BD138C0CFDA7FB2CF/logo.png",
+    "id":  "0x7b2B702706D9b361dfE3f00bD138C0CFDA7FB2Cf",
+    "links":  [
+                  {
+                      "name":  "x",
+                      "url":  "https://x.com/PollenDeFi"
+                  },
+                  {
+                      "name":  "github",
+                      "url":  "https://github.com/PollenDeFi"
+                  },
+                  {
+                      "name":  "telegram",
+                      "url":  "https://t.me/pollen_dao"
+                  },
+                  {
+                      "name":  "medium",
+                      "url":  "https://medium.com/pollen-defi"
+                  },
+                  {
+                      "name":  "whitepaper",
+                      "url":  "https://pollen.id/litepaper.pdf"
+                  },
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/pollen/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/pollen"
+                  },
+                  {
+                      "name":  "discord",
+                      "url":  "https://discord.com/invite/KJzrVTU8RT"
+                  }
+              ],
+    "tags":  [
+                 "defi"
+             ]
 }

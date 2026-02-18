@@ -1,11 +1,11 @@
 {
-    "name": "ZperToken",
-    "symbol": "ZPR",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Decentralized Ecosystem for P2P Finance.",
-    "website": "https://zper.io/#",
-    "explorer": "https://etherscan.io/token/0xb5b8F5616Fe42d5ceCA3e87F3FddbDd8F496d760",
-    "status": "active",
-    "id": "0xb5b8F5616Fe42d5ceCA3e87F3FddbDd8F496d760"
+    "name":  "ZperToken",
+    "symbol":  "ZPR",
+    "decimals":  18,
+    "description":  "Decentralized Ecosystem for P2P Finance.",
+    "website":  "https://zper.io/#",
+    "explorer":  "https://etherscan.io/token/0xb5b8F5616Fe42d5ceCA3e87F3FddbDd8F496d760",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB5B8F5616FE42D5CECA3E87F3FDDBDD8F496D760/logo.png",
+    "id":  "0xb5b8F5616Fe42d5ceCA3e87F3FddbDd8F496d760"
 }

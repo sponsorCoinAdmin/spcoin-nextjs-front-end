@@ -1,11 +1,11 @@
 {
-    "name": "ETC PYRAMID",
-    "symbol": "ETCP",
-    "type": "ETC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/etc/mainnet/contractss/0x0f54903F62Dc03DFBE1d99064B41a65D461F61b9",
-    "status": "active",
-    "id": "0x0f54903F62Dc03DFBE1d99064B41a65D461F61b9"
+    "name":  "ETC PYRAMID",
+    "symbol":  "ETCP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x0f54903F62Dc03DFBE1d99064B41a65D461F61b9",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/61/contracts/0X0F54903F62DC03DFBE1D99064B41A65D461F61B9/logo.png",
+    "id":  "0x0f54903F62Dc03DFBE1d99064B41a65D461F61b9"
 }

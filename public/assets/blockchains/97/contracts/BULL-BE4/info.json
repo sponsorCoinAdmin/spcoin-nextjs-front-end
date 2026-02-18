@@ -1,11 +1,11 @@
 {
-    "name": "3x Long Bitcoin Token",
-    "symbol": "BULL",
-    "type": "BEP2",
-    "decimals": 8,
-    "description": "seeks a return that corresponds to 3 times the daily return of Bitcoin.",
-    "website": "https://ftx.com/",
-    "explorer": "https://explorer.binance.org/asset/BULL-BE4",
-    "status": "active",
-    "id": "BULL-BE4"
+    "name":  "3x Long Bitcoin Token",
+    "symbol":  "BULL",
+    "decimals":  8,
+    "description":  "seeks a return that corresponds to 3 times the daily return of Bitcoin.",
+    "website":  "https://ftx.com/",
+    "explorer":  "https://explorer.binance.org/asset/BULL-BE4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/97/contracts/BULL-BE4/logo.png",
+    "id":  "BULL-BE4"
 }

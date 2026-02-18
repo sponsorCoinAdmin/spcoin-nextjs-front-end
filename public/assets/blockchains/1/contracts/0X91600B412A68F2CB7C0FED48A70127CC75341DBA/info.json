@@ -1,11 +1,11 @@
 {
-    "name": "WrapOMC",
-    "website": "https://ecocelium.io",
-    "description": "Wrapped version of Ormeus Cash (OMC)",
-    "explorer": "https://etherscan.io/token/0x91600b412A68F2CB7c0FeD48A70127CC75341DBa",
-    "type": "ERC20",
-    "symbol": "eOMC",
-    "decimals": 18,
-    "status": "active",
-    "id": "0x91600b412A68F2CB7c0FeD48A70127CC75341DBa"
+    "name":  "WrapOMC",
+    "website":  "https://ecocelium.io",
+    "description":  "Wrapped version of Ormeus Cash (OMC)",
+    "explorer":  "https://etherscan.io/token/0x91600b412A68F2CB7c0FeD48A70127CC75341DBa",
+    "symbol":  "eOMC",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X91600B412A68F2CB7C0FED48A70127CC75341DBA/logo.png",
+    "id":  "0x91600b412A68F2CB7c0FeD48A70127CC75341DBa"
 }

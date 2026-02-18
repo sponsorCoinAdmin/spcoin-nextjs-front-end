@@ -1,15 +1,15 @@
 {
-    "name": "NXM",
-    "website": "https://nexusmutual.io",
-    "description": "Nexus Mutual uses Ethereum so that people can pool risk together without the need for an insurance company.",
-    "explorer": "https://etherscan.io/token/0xd7c49CEE7E9188cCa6AD8FF264C1DA2e69D4Cf3B",
-    "research": "",
-    "type": "ERC20",
-    "symbol": "NXM",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xd7c49CEE7E9188cCa6AD8FF264C1DA2e69D4Cf3B",
-    "tags": [
-        "defi"
-    ]
+    "name":  "NXM",
+    "website":  "https://nexusmutual.io",
+    "description":  "Nexus Mutual uses Ethereum so that people can pool risk together without the need for an insurance company.",
+    "explorer":  "https://etherscan.io/token/0xd7c49CEE7E9188cCa6AD8FF264C1DA2e69D4Cf3B",
+    "research":  "",
+    "symbol":  "NXM",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XD7C49CEE7E9188CCA6AD8FF264C1DA2E69D4CF3B/logo.png",
+    "id":  "0xd7c49CEE7E9188cCa6AD8FF264C1DA2e69D4Cf3B",
+    "tags":  [
+                 "defi"
+             ]
 }

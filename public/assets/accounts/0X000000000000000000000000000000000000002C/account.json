@@ -1,8 +1,9 @@
-﻿{
+{
     "name":  "Help the Homeless",
     "symbol":  "HELP",
-    "address":  "0X000000000000000000000000000000000000002c",
+    "address":  "0X000000000000000000000000000000000000002C",
     "website":  "",
     "description":  "This is the description for site Homeless",
+    "logoURL":  "assets/accounts/0X000000000000000000000000000000000000002C/logo.png",
     "status":  "test"
 }

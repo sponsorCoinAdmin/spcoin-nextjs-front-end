@@ -1,11 +1,11 @@
 {
-    "name": "Vice",
-    "symbol": "VIT",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Adult Entertainment Platform.",
-    "website": "https://www.visionindustry.com",
-    "explorer": "https://etherscan.io/token/0x23b75Bc7AaF28e2d6628C3f424B3882F8f072a3c",
-    "status": "active",
-    "id": "0x23b75Bc7AaF28e2d6628C3f424B3882F8f072a3c"
+    "name":  "Vice",
+    "symbol":  "VIT",
+    "decimals":  18,
+    "description":  "Adult Entertainment Platform.",
+    "website":  "https://www.visionindustry.com",
+    "explorer":  "https://etherscan.io/token/0x23b75Bc7AaF28e2d6628C3f424B3882F8f072a3c",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X23B75BC7AAF28E2D6628C3F424B3882F8F072A3C/logo.png",
+    "id":  "0x23b75Bc7AaF28e2d6628C3f424B3882F8f072a3c"
 }

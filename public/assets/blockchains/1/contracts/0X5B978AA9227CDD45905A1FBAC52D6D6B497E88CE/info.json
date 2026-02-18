@@ -1,11 +1,11 @@
 {
-    "name": "MKIMG1-1/30M31",
-    "symbol": "M",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "-",
-    "website": "",
-    "explorer": "https://etherscan.io/token/0x5b978aA9227cDD45905a1fbaC52d6d6b497E88ce",
-    "status": "active",
-    "id": "0x5b978aA9227cDD45905a1fbaC52d6d6b497E88ce"
+    "name":  "MKIMG1-1/30M31",
+    "symbol":  "M",
+    "decimals":  0,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://etherscan.io/token/0x5b978aA9227cDD45905a1fbaC52d6d6b497E88ce",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X5B978AA9227CDD45905A1FBAC52D6D6B497E88CE/logo.png",
+    "id":  "0x5b978aA9227cDD45905a1fbaC52d6d6b497E88ce"
 }

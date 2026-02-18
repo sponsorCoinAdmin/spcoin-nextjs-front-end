@@ -1,11 +1,11 @@
 {
-    "name": "Gems Token",
-    "symbol": "GEM",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Gems (GEM) is a cryptocurrency and operates on the Ethereum platform.",
-    "website": "https://gems.org",
-    "explorer": "https://etherscan.io/token/0xc7BbA5b765581eFb2Cdd2679DB5Bea9eE79b201f",
-    "status": "active",
-    "id": "0xc7BbA5b765581eFb2Cdd2679DB5Bea9eE79b201f"
+    "name":  "Gems Token",
+    "symbol":  "GEM",
+    "decimals":  18,
+    "description":  "Gems (GEM) is a cryptocurrency and operates on the Ethereum platform.",
+    "website":  "https://gems.org",
+    "explorer":  "https://etherscan.io/token/0xc7BbA5b765581eFb2Cdd2679DB5Bea9eE79b201f",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC7BBA5B765581EFB2CDD2679DB5BEA9EE79B201F/logo.png",
+    "id":  "0xc7BbA5b765581eFb2Cdd2679DB5Bea9eE79b201f"
 }

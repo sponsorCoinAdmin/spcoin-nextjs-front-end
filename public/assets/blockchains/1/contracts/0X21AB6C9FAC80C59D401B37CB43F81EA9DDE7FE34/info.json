@@ -1,11 +1,11 @@
 {
-    "name": "Baer Chain",
-    "symbol": "BRC",
-    "type": "ERC20",
-    "decimals": 8,
-    "description": "Pioneer of Global Game Public Chain, dedicated to creating a game ecology based on blockchain technology.",
-    "website": "https://www.baerchain.com/",
-    "explorer": "https://etherscan.io/token/0x21aB6c9fAC80C59D401b37cB43F81ea9DDe7Fe34",
-    "status": "active",
-    "id": "0x21aB6c9fAC80C59D401b37cB43F81ea9DDe7Fe34"
+    "name":  "Baer Chain",
+    "symbol":  "BRC",
+    "decimals":  8,
+    "description":  "Pioneer of Global Game Public Chain, dedicated to creating a game ecology based on blockchain technology.",
+    "website":  "https://www.baerchain.com/",
+    "explorer":  "https://etherscan.io/token/0x21aB6c9fAC80C59D401b37cB43F81ea9DDe7Fe34",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X21AB6C9FAC80C59D401B37CB43F81EA9DDE7FE34/logo.png",
+    "id":  "0x21aB6c9fAC80C59D401b37cB43F81ea9DDe7Fe34"
 }

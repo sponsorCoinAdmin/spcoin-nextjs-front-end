@@ -1,11 +1,11 @@
 {
-    "name": "UTOPIA",
-    "symbol": "UTO",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "Research, Development, Testing, Manufacturing, Production, Marketing, & Distribution of Advanced, One-of-a-kind Technologies to Utopia Citizens.",
-    "website": "https://selfpreservationtechnology.com/",
-    "explorer": "https://etherscan.io/token/0x0F09c5922a47b0B9100c1D56Ada4BF7a9f3A72d4",
-    "status": "active",
-    "id": "0x0F09c5922a47b0B9100c1D56Ada4BF7a9f3A72d4"
+    "name":  "UTOPIA",
+    "symbol":  "UTO",
+    "decimals":  18,
+    "description":  "Research, Development, Testing, Manufacturing, Production, Marketing, \u0026 Distribution of Advanced, One-of-a-kind Technologies to Utopia Citizens.",
+    "website":  "https://selfpreservationtechnology.com/",
+    "explorer":  "https://etherscan.io/token/0x0F09c5922a47b0B9100c1D56Ada4BF7a9f3A72d4",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X0F09C5922A47B0B9100C1D56ADA4BF7A9F3A72D4/logo.png",
+    "id":  "0x0F09c5922a47b0B9100c1D56Ada4BF7a9f3A72d4"
 }

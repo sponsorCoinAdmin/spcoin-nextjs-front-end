@@ -1,12 +1,12 @@
 {
-    "name": "Pangolin",
-    "symbol": "PNG",
-    "type": "AVALANCHE",
-    "decimals": 18,
-    "description": "A community-driven decentralized exchange for Avalanche and Ethereum assets with fast settlement, low transaction fees, and a democratic distribution–powered by Avalanche",
-    "website": "https://pangolin.exchange/",
-    "explorer": "https://snowtrace.io/token/0x60781C2586D68229fde47564546784ab3fACA982",
-    "research": "https://research.binance.com/en/projects/avalanche",
-    "status": "active",
-    "id": "0x60781C2586D68229fde47564546784ab3fACA982"
+    "name":  "Pangolin",
+    "symbol":  "PNG",
+    "decimals":  18,
+    "description":  "A community-driven decentralized exchange for Avalanche and Ethereum assets with fast settlement, low transaction fees, and a democratic distribution–powered by Avalanche",
+    "website":  "https://pangolin.exchange/",
+    "explorer":  "https://snowtrace.io/token/0x60781C2586D68229fde47564546784ab3fACA982",
+    "research":  "https://research.binance.com/en/projects/avalanche",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/43114/contracts/0X60781C2586D68229FDE47564546784AB3FACA982/logo.png",
+    "id":  "0x60781C2586D68229fde47564546784ab3fACA982"
 }

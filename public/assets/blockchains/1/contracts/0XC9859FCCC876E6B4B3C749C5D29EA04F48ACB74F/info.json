@@ -1,11 +1,11 @@
 {
-    "name": "Ino Coin",
-    "symbol": "INO",
-    "type": "ERC20",
-    "decimals": 0,
-    "description": "Secure & Easy to invest in your future by helping digital startups.",
-    "website": "https://inocoin.eu",
-    "explorer": "https://etherscan.io/token/0xc9859fccC876e6b4B3C749C5D29EA04F48aCb74F",
-    "status": "active",
-    "id": "0xc9859fccC876e6b4B3C749C5D29EA04F48aCb74F"
+    "name":  "Ino Coin",
+    "symbol":  "INO",
+    "decimals":  0,
+    "description":  "Secure \u0026 Easy to invest in your future by helping digital startups.",
+    "website":  "https://inocoin.eu",
+    "explorer":  "https://etherscan.io/token/0xc9859fccC876e6b4B3C749C5D29EA04F48aCb74F",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XC9859FCCC876E6B4B3C749C5D29EA04F48ACB74F/logo.png",
+    "id":  "0xc9859fccC876e6b4B3C749C5D29EA04F48aCb74F"
 }

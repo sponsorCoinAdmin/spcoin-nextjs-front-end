@@ -1,11 +1,11 @@
 {
-    "name": "metalblock",
-    "symbol": "MTBK",
-    "type": "ERC20",
-    "decimals": 18,
-    "description": "-",
-    "website": "https://metalblock.io/",
-    "explorer": "https://etherscan.io/token/0x1dFEc1Cf1336c572c2D2E34fe8F6Aa2F409C8251",
-    "status": "active",
-    "id": "0x1dFEc1Cf1336c572c2D2E34fe8F6Aa2F409C8251"
+    "name":  "metalblock",
+    "symbol":  "MTBK",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "https://metalblock.io/",
+    "explorer":  "https://etherscan.io/token/0x1dFEc1Cf1336c572c2D2E34fe8F6Aa2F409C8251",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0X1DFEC1CF1336C572C2D2E34FE8F6AA2F409C8251/logo.png",
+    "id":  "0x1dFEc1Cf1336c572c2D2E34fe8F6Aa2F409C8251"
 }

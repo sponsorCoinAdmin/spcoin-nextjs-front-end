@@ -1,11 +1,11 @@
 {
-    "name": "User Pay",
-    "symbol": "UP",
-    "type": "POA20",
-    "decimals": 18,
-    "description": "-",
-    "website": "",
-    "explorer": "https://blockscout.com/poa/core/contractss/0xA17ed5dFc62D0a3E74D69a0503AE9FdA65d9f212",
-    "status": "active",
-    "id": "0xA17ed5dFc62D0a3E74D69a0503AE9FdA65d9f212"
+    "name":  "User Pay",
+    "symbol":  "UP",
+    "decimals":  18,
+    "description":  "-",
+    "website":  "",
+    "explorer":  "https://blockscout.com/poa/core/contractss/0xA17ed5dFc62D0a3E74D69a0503AE9FdA65d9f212",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/77/contracts/0XA17ED5DFC62D0A3E74D69A0503AE9FDA65D9F212/logo.png",
+    "id":  "0xA17ed5dFc62D0a3E74D69a0503AE9FdA65d9f212"
 }

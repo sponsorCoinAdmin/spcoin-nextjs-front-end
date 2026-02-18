@@ -1,11 +1,11 @@
 {
-    "name": "digitalbits",
-    "symbol": "XDB",
-    "type": "ERC20",
-    "decimals": 7,
-    "description": "DigitalBits is a protocol layer blockchain designed to support consumer digital assets, specifically brand currencies.",
-    "website": "https://www.digitalbits.io",
-    "explorer": "https://etherscan.io/token/0xB9EefC4b0d472A44be93970254Df4f4016569d27",
-    "status": "active",
-    "id": "0xB9EefC4b0d472A44be93970254Df4f4016569d27"
+    "name":  "digitalbits",
+    "symbol":  "XDB",
+    "decimals":  7,
+    "description":  "DigitalBits is a protocol layer blockchain designed to support consumer digital assets, specifically brand currencies.",
+    "website":  "https://www.digitalbits.io",
+    "explorer":  "https://etherscan.io/token/0xB9EefC4b0d472A44be93970254Df4f4016569d27",
+    "status":  "active",
+    "logoURL":  "assets/blockchains/1/contracts/0XB9EEFC4B0D472A44BE93970254DF4F4016569D27/logo.png",
+    "id":  "0xB9EefC4b0d472A44be93970254Df4f4016569d27"
 }

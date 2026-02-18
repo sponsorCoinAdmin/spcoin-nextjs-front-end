@@ -1,21 +1,21 @@
 {
-    "name": "ALPACA",
-    "website": "https://www.alpacafinance.org",
-    "description": "ALPACA is the token that powers Alpaca Finance, the 1st leveraged yield farming protocol on Binance Smart Chain.",
-    "explorer": "https://ftmscan.com/token/0xad996a45fd2373ed0b10efa4a8ecb9de445a4302",
-    "type": "FANTOM",
-    "symbol": "ALPACA",
-    "decimals": 18,
-    "status": "active",
-    "id": "0xaD996A45fd2373ed0B10Efa4A8eCB9de445A4302",
-    "links": [
-        {
-            "name": "coinmarketcap",
-            "url": "https://coinmarketcap.com/currencies/alpaca-finance/"
-        },
-        {
-            "name": "coingecko",
-            "url": "https://coingecko.com/en/coins/alpaca-finance/"
-        }
-    ]
+    "name":  "ALPACA",
+    "website":  "https://www.alpacafinance.org",
+    "description":  "ALPACA is the token that powers Alpaca Finance, the 1st leveraged yield farming protocol on Binance Smart Chain.",
+    "explorer":  "https://ftmscan.com/token/0xad996a45fd2373ed0b10efa4a8ecb9de445a4302",
+    "symbol":  "ALPACA",
+    "decimals":  18,
+    "status":  "active",
+    "logoURL":  "assets/blockchains/250/contracts/0XAD996A45FD2373ED0B10EFA4A8ECB9DE445A4302/logo.png",
+    "id":  "0xaD996A45fd2373ed0B10Efa4A8eCB9de445A4302",
+    "links":  [
+                  {
+                      "name":  "coinmarketcap",
+                      "url":  "https://coinmarketcap.com/currencies/alpaca-finance/"
+                  },
+                  {
+                      "name":  "coingecko",
+                      "url":  "https://coingecko.com/en/coins/alpaca-finance/"
+                  }
+              ]
 }
