@@ -5,8 +5,10 @@ import React from 'react';
 type Props = {
   currentId?: number;
   label?: string;
+  showNetworkIcon?: boolean;
   showChevron?: boolean;
   showHoverBg?: boolean;
+  titleDisplay?: boolean;
 
   // Parent button toggle
   onButtonClick: () => void;
@@ -23,8 +25,10 @@ type Props = {
 export default function ConnectMainButton({
   currentId,
   label,
+  showNetworkIcon = true,
   showChevron = true,
   showHoverBg = true,
+  titleDisplay = false,
   onButtonClick,
   onImageClick,
   onChevronClick,
@@ -56,6 +60,14 @@ export default function ConnectMainButton({
   // Only make the label interactive if we were given a handler
   const labelClickHandler = onConnectTextClick ?? onDisconnectTextClick;
   const labelIsAction = !!labelClickHandler;
+  const networkMenuTitle = titleDisplay ? 'Open Select Network' : undefined;
+  const labelTitle = titleDisplay
+    ? onConnectTextClick
+      ? 'Connect Wallet'
+      : onDisconnectTextClick
+      ? 'Disconnect Wallet'
+      : undefined
+    : undefined;
 
   return (
     <button
@@ -69,10 +81,11 @@ export default function ConnectMainButton({
       `}
     >
       {/* Network image — toggles dropdown only */}
-      {typeof currentId === 'number' && (
+      {showNetworkIcon && typeof currentId === 'number' && (
         <img
           src={`/assets/blockchains/${currentId}/info/network.png`}
           alt="Network"
+          title={networkMenuTitle}
           className="h-8 w-8 rounded cursor-pointer"
           role="button"
           tabIndex={0}
@@ -84,6 +97,7 @@ export default function ConnectMainButton({
       {/* Label — optionally acts as Connect/Disconnect */}
       {label && (
         <span
+          title={labelTitle}
           className={`opacity-85 font-bold ${labelIsAction ? 'cursor-pointer' : ''}`}
           {...(labelIsAction
             ? {
@@ -104,6 +118,7 @@ export default function ConnectMainButton({
       {/* Chevron — toggles dropdown only */}
       {showChevron && (
         <span
+          title={networkMenuTitle}
           className="text-xs opacity-75 font-bold cursor-pointer select-none"
           role="button"
           tabIndex={0}

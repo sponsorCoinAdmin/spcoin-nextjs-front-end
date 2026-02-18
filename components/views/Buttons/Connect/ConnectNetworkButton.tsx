@@ -28,10 +28,12 @@ import {
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
   showSymbol?: boolean;
+  showNetworkIcon?: boolean;
   showChevron?: boolean;
   showConnect?: boolean;
   showDisconnect?: boolean;
   showHoverBg?: boolean;
+  titleDisplay?: boolean;
   trimHorizontalPaddingPx?: number;
   allowWalletModal?: boolean;
 };
@@ -39,10 +41,12 @@ export type ConnectNetworkButtonProps = {
 export default function ConnectNetworkButton({
   showName = true,
   showSymbol = true,
+  showNetworkIcon = true,
   showChevron = true,
   showConnect = true,
   showDisconnect = false,
   showHoverBg = true,
+  titleDisplay = false,
   trimHorizontalPaddingPx,
   allowWalletModal = true,
 }: ConnectNetworkButtonProps) {
@@ -178,8 +182,10 @@ export default function ConnectNetworkButton({
                     ? 'Disconnect'
                     : label
                 }
+                showNetworkIcon={showNetworkIcon}
                 showChevron={showChevron}
                 showHoverBg={showHoverBg}
+                titleDisplay={titleDisplay}
                 onButtonClick={onButtonClick}
                 onImageClick={onImageClick}
                 onChevronClick={onChevronClick}
