@@ -3,6 +3,7 @@
 
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useAccount } from 'wagmi';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useActiveAccount as useUiActiveAccount } from '@/lib/context/ActiveAccountContext';
@@ -21,6 +22,7 @@ type AppBootstrapProps = {
 export function AppBootstrap(_props: AppBootstrapProps) {
   // 🔹 UI-level wallet (loaded from account.json or fallback)
   const uiActiveAccount = useUiActiveAccount();
+  const { address: wagmiAddress, isConnected } = useAccount();
 
   // 🔹 ExchangeContext-level connected account
   const [ctxActiveAccount, setCtxActiveAccount] = useCtxActiveAccount();
@@ -32,14 +34,26 @@ export function AppBootstrap(_props: AppBootstrapProps) {
   useEffect(() => {
     const uiAddr = uiActiveAccount?.address?.toLowerCase?.();
     const ctxAddr = ctxActiveAccount?.address?.toLowerCase?.();
+    const walletAddr = isConnected ? wagmiAddress?.toLowerCase?.() : undefined;
 
-    debugLog.log?.('🧮 account mirror check', { uiAddr, ctxAddr });
+    debugLog.log?.('🧮 account mirror check', { uiAddr, ctxAddr, walletAddr });
 
     // No UI connected wallet: intentionally leave ctxActiveAccount as-is
     if (!uiAddr) {
       debugLog.log?.(
         'ℹ️ No UI activeAccount — leaving context.activeAccount unchanged',
       );
+      return;
+    }
+
+    // Guard: never mirror stale UI account into context.
+    // If UI data lags behind wagmi account switch, skip this write.
+    if (walletAddr && uiAddr !== walletAddr) {
+      debugLog.log?.('⏭️ UI account is stale vs wagmi; skipping mirror write', {
+        uiAddr,
+        walletAddr,
+        ctxAddr,
+      });
       return;
     }
 
@@ -68,7 +82,7 @@ export function AppBootstrap(_props: AppBootstrapProps) {
       '✅ context.activeAccount already matches UI activeAccount — no-op',
       { uiAddr, ctxAddr },
     );
-  }, [uiActiveAccount, ctxActiveAccount, setCtxActiveAccount]);
+  }, [uiActiveAccount, ctxActiveAccount, setCtxActiveAccount, wagmiAddress, isConnected]);
 
   // No UI rendering; just side-effects
   return null;

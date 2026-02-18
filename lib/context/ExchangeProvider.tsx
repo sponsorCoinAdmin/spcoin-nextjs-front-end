@@ -9,7 +9,11 @@ import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/provider
 import { deriveNetworkFromApp } from '@/lib/utils/network';
 
 // ✅ SSOT account hydration
-import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
+import {
+  hydrateAccountFromAddress,
+  makeWalletFallback,
+} from '@/lib/context/helpers/accountHydration';
+import { STATUS } from '@/lib/structure';
 import type { Address } from 'viem';
 
 import type {
@@ -538,6 +542,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   } = useProviderSetters(setExchangeContext);
 
   const activeHydrateReqRef = useRef(0);
+  const activeAccountAddress = contextState?.accounts?.activeAccount?.address;
+  const activeAccountHydrated = isHydratedAccount(
+    contextState?.accounts?.activeAccount,
+  );
 
   useEffect(() => {
     if (!contextState) return;
@@ -558,6 +566,30 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     const sameAddr =
       !!currentAddr && lower(currentAddr) === lower(nextAddr as unknown as string);
+
+    // Immediately reflect wallet account switch in context so UI does not stay stale
+    // while metadata hydration is in-flight (or if hydration fails).
+    if (!sameAddr) {
+      setExchangeContext(
+        (prev) => {
+          const next = clone(prev);
+          const prevActive = next.accounts?.activeAccount;
+          const prevAddr = prevActive?.address;
+          if (prevAddr && lower(prevAddr) === lower(nextAddr as unknown as string)) {
+            return next;
+          }
+          (next as any).accounts = (next as any).accounts ?? {};
+          (next as any).accounts.activeAccount = makeWalletFallback(
+            nextAddr,
+            STATUS.INFO,
+            `Loading account metadata for ${nextAddr}`,
+            typeof prevActive?.balance === 'bigint' ? prevActive.balance : 0n,
+          );
+          return next;
+        },
+        'provider:activeAccountAddressSwitch',
+      );
+    }
 
     if (sameAddr && isHydratedAccount(current)) return;
 
@@ -585,7 +617,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         'provider:hydrateActiveAccount',
       );
     })();
-  }, [contextState, isConnected, address, setExchangeContext]);
+  }, [
+    isConnected,
+    address,
+    activeAccountAddress,
+    activeAccountHydrated,
+    setExchangeContext,
+  ]);
 
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 

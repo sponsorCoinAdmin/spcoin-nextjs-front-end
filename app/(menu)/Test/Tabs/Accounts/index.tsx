@@ -24,7 +24,7 @@ function safeStringify(value: unknown): string {
 }
 
 function renderJsonWithLinks(json: string) {
-  const urlRegex = /(https?:\/\/[^\s"']+)/g;
+  const urlRegex = /(https?:\/\/[^\s"']+|\/assets\/[^\s"']+|assets\/[^\s"']+)/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;

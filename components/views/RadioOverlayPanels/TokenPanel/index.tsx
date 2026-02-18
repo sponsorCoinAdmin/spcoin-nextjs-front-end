@@ -278,7 +278,18 @@ export default function TokenPanel(_props: Props) {
             <tr className="border-b border-black">
               <td className={`${zebraA} ${cell}`}>logoURL</td>
               <td className={`${zebraA} ${cell}`}>
-                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
+                {logoURL ? (
+                  <a
+                    href={logoURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all text-xs text-slate-200"
+                  >
+                    {logoURL}
+                  </a>
+                ) : (
+                  'N/A'
+                )}
               </td>
             </tr>
 

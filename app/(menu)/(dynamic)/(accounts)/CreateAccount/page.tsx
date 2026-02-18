@@ -166,11 +166,12 @@ export default function CreateAccountPage() {
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <label className="w-56 text-right" title={fieldTitles.publicKey}>
+            <label htmlFor="publicKey" className="w-56 text-right" title={fieldTitles.publicKey}>
               Account Public Key
             </label>
             <div className="flex-1">
               <input
+                id="publicKey"
                 type="text"
                 value={publicKey}
                 readOnly
@@ -248,9 +249,12 @@ export default function CreateAccountPage() {
         <div className="mt-6 ml-[15rem] flex w-[calc(100%-15rem)] items-center justify-start gap-3">
           <input
             ref={logoFileInputRef}
+            id="logoFileUpload"
             type="file"
             accept="image/*"
             className="hidden"
+            aria-label="Account logo file upload"
+            title="Select account logo file"
             onChange={handleLogoFileChange}
           />
           <button

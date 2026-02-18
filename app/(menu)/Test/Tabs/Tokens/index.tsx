@@ -19,7 +19,7 @@ function safeStringify(value: unknown): string {
 }
 
 function renderJsonWithLinks(json: string) {
-  const urlRegex = /(https?:\/\/[^\s"']+)/g;
+  const urlRegex = /(https?:\/\/[^\s"']+|\/assets\/[^\s"']+)/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -45,6 +45,24 @@ function renderJsonWithLinks(json: string) {
 
   if (lastIndex < json.length) parts.push(json.slice(lastIndex));
   return parts;
+}
+
+function renderLinkIfUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return 'N/A';
+  if (/^https?:\/\//i.test(trimmed) || /^\/assets\//i.test(trimmed)) {
+    return (
+      <a
+        href={trimmed}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-bold underline text-blue-700 hover:text-blue-800 break-all"
+      >
+        {trimmed}
+      </a>
+    );
+  }
+  return trimmed;
 }
 
 function isSponsorCoinToken(token: TokenContract): boolean {
@@ -86,12 +104,9 @@ function TokensPage({
   const tokenType = selectedFilter ?? internalTokenType;
   const setTokenType = onSelectedFilterChange ?? setInternalTokenType;
 
-  const activeTokenAddress = useMemo(() => {
-    const candidate =
-      exchangeContext?.tradeData?.previewTokenContract?.address ??
-      exchangeContext?.tradeData?.sellTokenContract?.address ??
-      exchangeContext?.tradeData?.buyTokenContract?.address;
-    return typeof candidate === 'string' ? candidate.toLowerCase() : '';
+  const activeAccountAddress = useMemo(() => {
+    const candidate = exchangeContext?.accounts?.activeAccount?.address;
+    return typeof candidate === 'string' ? candidate : '';
   }, [exchangeContext]);
 
   useEffect(() => {
@@ -162,16 +177,9 @@ function TokensPage({
     return () => {
       cancelled = true;
     };
-  }, [selectedNetwork, showTestNets]);
+  }, [selectedNetwork, showTestNets, activeAccountAddress]);
 
-  const visibleTokens =
-    tokenType === 'Active Account' && activeTokenAddress
-      ? tokens.filter(
-          (token) =>
-            typeof token.address === 'string' &&
-            token.address.toLowerCase() === activeTokenAddress,
-        )
-      : tokens;
+  const visibleTokens = tokens;
 
   const orderedVisibleTokens = useMemo(() => {
     const pinned: TokenContract[] = [];
@@ -208,7 +216,7 @@ function TokensPage({
       <div className="sticky top-0 z-20 bg-[#192134] w-full border-[#444] text-white flex flex-col items-center pb-1">
         <div className="flex items-center gap-3 text-[16px] mb-1 flex-wrap justify-center w-full">
           <span className="text-sm text-slate-300/80 whitespace-nowrap">
-            Active Account: {activeTokenAddress || 'N/A'}
+            Active Account: {activeAccountAddress || 'N/A'}
           </span>
           {showFilterControls &&
             tokenOptions.map((option) => (
@@ -266,7 +274,8 @@ function TokensPage({
                           <div>Symbol: {token.symbol || 'N/A'}</div>
                           <div>Address: {fullAddress(token.address)}</div>
                           <div>Decimals: {String((token as any)?.decimals ?? 'N/A')}</div>
-                          <div>Website: {tokenWebsite(token)}</div>
+                          <div>Website: {renderLinkIfUrl(tokenWebsite(token))}</div>
+                          <div>Logo URL: {renderLinkIfUrl(String((token as any)?.logoURL ?? ''))}</div>
                           <div>Status: {tokenStatus(token)}</div>
                         </div>
                       ) : (
