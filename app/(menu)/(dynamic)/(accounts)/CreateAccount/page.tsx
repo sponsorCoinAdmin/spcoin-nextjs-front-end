@@ -69,6 +69,7 @@ export default function CreateAccountPage() {
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAllBorders, setShowAllBorders] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [hasServerLogo, setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState('assets/miscellaneous/Anonymous.png');
@@ -406,17 +407,41 @@ export default function CreateAccountPage() {
     website: 'Accounts Website URL',
     description: 'Account Description',
   } as const;
+  const panelMarginClass = 'mx-0';
+  const leftPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
+  const rightPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
+  const titleGridBorderClass = showAllBorders ? 'border-2 border-green-500' : 'border-2 border-transparent';
 
   return (
     <main className="w-full p-6 text-white">
+      <div className="mb-3 flex justify-end">
+        <button
+          type="button"
+          className={`rounded border px-3 py-1 text-sm font-semibold text-black ${
+            showAllBorders
+              ? 'border-green-500 bg-green-500 hover:bg-green-400'
+              : 'border-red-500 bg-red-500 hover:bg-red-400'
+          }`}
+          onClick={() => setShowAllBorders((prev) => !prev)}
+        >
+          Toggle Borders
+        </button>
+      </div>
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
-      <form onSubmit={handleSubmit} className="grid min-h-[72vh] w-full items-center gap-6 grid-cols-1 lg:grid-cols-2">
-        <section className="mx-2 flex h-full w-full flex-col items-center justify-center space-y-4 border-2 border-yellow-400 p-4 lg:mx-4">
+      <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
+        <div className={`mb-4 grid grid-cols-1 gap-6 p-2 lg:grid-cols-2 ${titleGridBorderClass}`}>
+          <div className="text-center text-lg font-semibold text-[#E5B94F]">Users Account Meta Data</div>
+          <div className="text-center text-lg font-semibold text-[#E5B94F]">Users Avatar Logo</div>
+        </div>
+
+        <div className="grid w-full items-start gap-6 grid-cols-1 lg:grid-cols-2">
+        <section className={`${panelMarginClass} ${leftPanelBorderClass} flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
+          <div className="grid w-full max-w-[46rem] grid-cols-[14rem_28rem] items-center gap-x-4 gap-y-4">
           {!connected ? (
-            <div className="flex w-full items-center justify-center gap-4">
-              <div className="w-56 text-right" />
-              <div className="w-[28rem]">
+            <>
+              <div className="text-right" />
+              <div>
                 <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-[#E5B94F] [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-500 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
                   <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
                   <ConnectNetworkButtonProps
@@ -432,14 +457,13 @@ export default function CreateAccountPage() {
                   />
                 </div>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="flex w-full items-center justify-center gap-4">
-              <div className="w-56" />
-              <label htmlFor="publicKey" className="mb-0 w-56 text-right" title={fieldTitles.publicKey}>
+            <>
+              <label htmlFor="publicKey" className="mb-0 text-right" title={fieldTitles.publicKey}>
                 Account Public Key
               </label>
-              <div className="w-[28rem]">
+              <div>
                 <input
                   id="publicKey"
                   type="text"
@@ -453,8 +477,7 @@ export default function CreateAccountPage() {
                 />
                 {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
               </div>
-              <div className="w-56" />
-            </div>
+            </>
           )}
 
           {[ 
@@ -484,12 +507,11 @@ export default function CreateAccountPage() {
               labelTitle: fieldTitles.description,
             },
           ].map(({ label, name, labelTitle }) => (
-            <div key={name} className="flex w-full items-center justify-center gap-4">
-              <div className="w-56" />
-              <label htmlFor={name} className="mb-0 w-56 text-right" title={labelTitle}>
+            <React.Fragment key={name}>
+              <label htmlFor={name} className="mb-0 text-right" title={labelTitle}>
                 {label}
               </label>
-              <div className="w-[28rem]">
+              <div>
                 {(() => {
                   const key = name as keyof AccountFormData;
                   const href = toPreviewHref(key, String(formData[key] ?? ''));
@@ -536,17 +558,14 @@ export default function CreateAccountPage() {
                   );
                 })()}
               </div>
-              <div className="w-56" />
-            </div>
+            </React.Fragment>
           ))}
 
-          <div className="mt-4 flex w-full items-center justify-center gap-4">
-            <div className="w-56" />
-            <div className="w-56" />
+            <div className="text-right" />
             <button
               type="submit"
               aria-disabled={disableSubmit}
-              className={`h-[42px] w-[28rem] rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+              className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
                 !connected
                   ? hoverTarget === 'createAccount'
                     ? 'bg-red-500 text-black'
@@ -566,70 +585,68 @@ export default function CreateAccountPage() {
             >
               {isSaving ? 'Saving...' : submitLabel}
             </button>
-            <div className="w-56" />
           </div>
         </section>
 
-        <section className="mx-2 flex h-full w-full flex-col items-center justify-center border-2 border-red-500 p-4 lg:mx-4">
-          <h2 className="mb-4 text-center text-lg font-semibold text-[#E5B94F]">Logo</h2>
-          <div className="mb-4 flex w-full max-w-md min-h-[260px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
-            {logoPreviewSrc ? (
-              <img
-                src={logoPreviewSrc}
-                alt="Account logo preview"
-                className="max-h-[220px] max-w-full object-contain"
-              />
-            ) : (
-              <span className="text-sm text-slate-300">No logo found on server</span>
-            )}
+        <section className={`${panelMarginClass} ${rightPanelBorderClass} flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
+          <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
+            <div className="flex w-full max-w-md min-h-[340px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
+              {logoPreviewSrc ? (
+                <img
+                  src={logoPreviewSrc}
+                  alt="Account logo preview"
+                  className="max-h-[300px] max-w-full object-contain"
+                />
+              ) : (
+                <span className="text-sm text-slate-300">No logo found on server</span>
+              )}
+            </div>
+            <input
+              ref={logoFileInputRef}
+              id="logoFileUpload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-label="Account logo file upload"
+              title="Select account logo file"
+              onChange={handleLogoFileChange}
+            />
+            <input
+              id="logoPathInput"
+              type="text"
+              value={logoPathInputValue}
+              readOnly
+              className={`${optionalInputClasses} max-w-md text-center`}
+              placeholder="No logo path available"
+              title="Derived logo path"
+            />
+            <button
+              type="button"
+              aria-disabled={!connected || !accountFolder}
+              className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                !connected
+                  ? hoverTarget === 'uploadLogo'
+                    ? 'bg-red-500 text-black'
+                    : 'bg-[#E5B94F] text-black cursor-not-allowed'
+                  : hoverTarget === 'uploadLogo'
+                  ? hasServerLogo || !!logoFile
+                    ? 'bg-green-500 text-black'
+                    : 'bg-red-500 text-black'
+                  : 'bg-[#E5B94F] text-black'
+              }`}
+              title={!connected ? 'Wallet Connection Required' : uploadButtonLabel}
+              onClick={() => {
+                if (!connected || !accountFolder) return;
+                logoFileInputRef.current?.click();
+              }}
+              onMouseEnter={() => setHoverTarget('uploadLogo')}
+              onMouseLeave={() => setHoverTarget(null)}
+            >
+              {uploadButtonLabel}
+            </button>
           </div>
-          <input
-            ref={logoFileInputRef}
-            id="logoFileUpload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            aria-label="Account logo file upload"
-            title="Select account logo file"
-            onChange={handleLogoFileChange}
-          />
-          <label htmlFor="logoPathInput" className="mb-2 block w-full max-w-md text-center text-sm text-slate-200">
-            Logo Path
-          </label>
-          <input
-            id="logoPathInput"
-            type="text"
-            value={logoPathInputValue}
-            readOnly
-            className={`${optionalInputClasses} max-w-md text-center`}
-            placeholder="No logo path available"
-            title="Derived logo path"
-          />
-          <button
-            type="button"
-            aria-disabled={!connected || !accountFolder}
-            className={`mt-4 h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-              !connected
-                ? hoverTarget === 'uploadLogo'
-                  ? 'bg-red-500 text-black'
-                  : 'bg-[#E5B94F] text-black cursor-not-allowed'
-                : hoverTarget === 'uploadLogo'
-                ? hasServerLogo || !!logoFile
-                  ? 'bg-green-500 text-black'
-                  : 'bg-red-500 text-black'
-                : 'bg-[#E5B94F] text-black'
-            }`}
-            title={!connected ? 'Wallet Connection Required' : uploadButtonLabel}
-            onClick={() => {
-              if (!connected || !accountFolder) return;
-              logoFileInputRef.current?.click();
-            }}
-            onMouseEnter={() => setHoverTarget('uploadLogo')}
-            onMouseLeave={() => setHoverTarget(null)}
-          >
-            {uploadButtonLabel}
-          </button>
         </section>
+        </div>
       </form>
     </main>
   );
