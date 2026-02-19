@@ -424,7 +424,6 @@ export default function CreateAccountPage() {
   const panelMarginClass = 'mx-0';
   const leftPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
   const rightPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
-  const titleGridBorderClass = showAllBorders ? 'border-2 border-green-500' : 'border-2 border-transparent';
 
   return (
     <main className="w-full p-6 text-white">
@@ -444,13 +443,14 @@ export default function CreateAccountPage() {
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
       <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
-        <div className={`mb-4 grid grid-cols-1 gap-6 p-2 lg:grid-cols-2 ${titleGridBorderClass}`}>
-          <div className="text-center text-lg font-semibold text-[#E5B94F]">Users Account Meta Data</div>
-          <div className="text-center text-lg font-semibold text-[#E5B94F]">Users Avatar Logo</div>
-        </div>
-
         <div className="grid w-full items-start gap-6 grid-cols-1 lg:grid-cols-2">
         <section className={`${panelMarginClass} ${leftPanelBorderClass} flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
+          <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[14rem_28rem]">
+            <div />
+            <h2 className="w-[28rem] text-center text-lg font-semibold text-[#E5B94F]">
+              Users Account Meta Data
+            </h2>
+          </div>
           <div className="grid w-full max-w-[46rem] grid-cols-[14rem_28rem] items-center gap-x-4 gap-y-4">
           {!connected ? (
             <>
@@ -603,6 +603,9 @@ export default function CreateAccountPage() {
         </section>
 
         <section className={`${panelMarginClass} ${rightPanelBorderClass} flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
+          <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#E5B94F]">
+            Users Avatar Logo
+          </h2>
           <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
             <div className="flex w-full max-w-md min-h-[340px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
               {logoPreviewSrc ? (
