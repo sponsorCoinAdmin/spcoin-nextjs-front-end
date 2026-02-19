@@ -10,14 +10,10 @@ interface AccountFormData {
   email: string;
   website: string;
   description: string;
-  logoUrl: string;
 }
 
 type HoverTarget = 'createAccount' | 'uploadLogo' | null;
 type AccountMode = 'create' | 'edit' | 'update';
-const DEFAULT_SAVE_LOGO_URL = 'assets/miscellaneous/Anonymous.png';
-const DEFAULT_LOAD_LOGO_URL = './public/assets/miscellaneous/info1.png';
-
 function normalizeAddress(value: string): string {
   return `0x${String(value).replace(/^0[xX]/, '').toLowerCase()}`;
 }
@@ -34,7 +30,7 @@ function toPreviewHref(
     return emailOk ? `mailto:${value}` : null;
   }
 
-  if (field === 'website' || field === 'logoUrl') {
+  if (field === 'website') {
     if (value.startsWith('/assets/')) return value;
     if (value.startsWith('assets/')) return `/${value}`;
     try {
@@ -59,7 +55,6 @@ export default function CreateAccountPage() {
     email: '',
     website: '',
     description: '',
-    logoUrl: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
@@ -70,12 +65,13 @@ export default function CreateAccountPage() {
     email: '',
     website: '',
     description: '',
-    logoUrl: '',
   });
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [hasServerLogo, setHasServerLogo] = useState(false);
+  const [serverLogoURL, setServerLogoURL] = useState('assets/miscellaneous/Anonymous.png');
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -108,16 +104,22 @@ export default function CreateAccountPage() {
             email: '',
             website: '',
             description: '',
-            logoUrl: '',
           };
           setFormData(empty);
           setBaselineData(empty);
           setLogoFile(null);
+          setHasServerLogo(false);
+          setServerLogoURL('assets/miscellaneous/Anonymous.png');
           return;
         }
 
         const payload = await response.json();
         const data = (payload?.data ?? {}) as Record<string, unknown>;
+        const resolvedLogoURL = String(
+          payload?.logoURL ??
+            data?.logoURL ??
+            'assets/miscellaneous/Anonymous.png',
+        );
 
         const loaded: AccountFormData = {
           name: typeof data.name === 'string' ? data.name : '',
@@ -125,31 +127,19 @@ export default function CreateAccountPage() {
           email: typeof data.email === 'string' ? data.email : '',
           website: typeof data.website === 'string' ? data.website : '',
           description: typeof data.description === 'string' ? data.description : '',
-          logoUrl:
-            typeof data.logoUrl === 'string'
-              ? data.logoUrl
-              : typeof data.logoURL === 'string'
-                ? data.logoURL
-                : '',
         };
-
-        const loadedLogoTrimmed = loaded.logoUrl.trim();
-        const hadEmptyLogo = loadedLogoTrimmed.length === 0;
-        if (hadEmptyLogo) {
-          loaded.logoUrl = DEFAULT_LOAD_LOGO_URL;
-        }
 
         setAccountExists(true);
         setFormData(loaded);
-        setBaselineData(
-          hadEmptyLogo
-            ? { ...loaded, logoUrl: '' }
-            : loaded,
-        );
+        setBaselineData(loaded);
         setLogoFile(null);
+        setHasServerLogo(Boolean(payload?.hasLogo));
+        setServerLogoURL(resolvedLogoURL);
       } catch {
         if (!abortController.signal.aborted) {
           setAccountExists(false);
+          setHasServerLogo(false);
+          setServerLogoURL('assets/miscellaneous/Anonymous.png');
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -181,7 +171,6 @@ export default function CreateAccountPage() {
     email: data.email.trim(),
     website: data.website.trim(),
     description: data.description.trim(),
-    logoUrl: data.logoUrl.trim(),
   });
 
   const publicKeyTrimmed = publicKey.trim();
@@ -198,8 +187,7 @@ export default function CreateAccountPage() {
       current.symbol !== baseline.symbol ||
       current.email !== baseline.email ||
       current.website !== baseline.website ||
-      current.description !== baseline.description ||
-      current.logoUrl !== baseline.logoUrl
+      current.description !== baseline.description
     );
   }, [formData, baselineData]);
 
@@ -217,6 +205,28 @@ export default function CreateAccountPage() {
       : accountMode === 'update'
         ? 'Update spCoin Account'
         : 'Edit spCoin Account';
+  const derivedLogoPath = accountFolder
+    ? `assets/accounts/${accountFolder}/logo.png`
+    : '';
+  const previewObjectUrl = useMemo(() => {
+    if (!logoFile) return '';
+    return URL.createObjectURL(logoFile);
+  }, [logoFile]);
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    };
+  }, [previewObjectUrl]);
+  const logoPreviewSrc = previewObjectUrl || `/${serverLogoURL.replace(/^\/+/, '')}`;
+  const logoPathInputValue = previewObjectUrl ? derivedLogoPath : serverLogoURL;
+  const uploadButtonLabel = logoPathInputValue ? 'Upload New Image' : 'Select New Image to Upload';
+  const isLogoRequired = !hasServerLogo && !logoFile;
+  const disableSubmit =
+    !connected ||
+    isSaving ||
+    isLoadingAccount ||
+    accountMode === 'edit' ||
+    isLogoRequired;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,13 +319,6 @@ export default function CreateAccountPage() {
       }
 
       const normalizedForm = trimForm(formData);
-      const computedLogoPath = accountFolder
-        ? `assets/accounts/${accountFolder}/logo.png`
-        : normalizedForm.logoUrl;
-      const persistedLogoUrl = logoFile
-        ? computedLogoPath
-        : normalizedForm.logoUrl || DEFAULT_SAVE_LOGO_URL;
-
       const accountPayload = {
         address: publicKeyTrimmed,
         name: normalizedForm.name,
@@ -323,7 +326,6 @@ export default function CreateAccountPage() {
         email: normalizedForm.email,
         website: normalizedForm.website,
         description: normalizedForm.description,
-        logoURL: persistedLogoUrl,
       };
 
       const saveMethod = accountMode === 'create' ? 'POST' : 'PUT';
@@ -362,12 +364,13 @@ export default function CreateAccountPage() {
 
       const savedForm: AccountFormData = {
         ...normalizedForm,
-        logoUrl: persistedLogoUrl,
       };
       setAccountExists(true);
       setFormData(savedForm);
       setBaselineData(savedForm);
       setLogoFile(null);
+      setHasServerLogo(true);
+      setServerLogoURL(derivedLogoPath || 'assets/miscellaneous/Anonymous.png');
       alert(accountMode === 'create' ? 'Account created successfully' : 'Account updated successfully');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save account');
@@ -379,12 +382,6 @@ export default function CreateAccountPage() {
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setLogoFile(file ?? null);
-    if (file) {
-      const nextLogoPath = accountFolder
-        ? `assets/accounts/${accountFolder}/logo.png`
-        : file.name;
-      setFormData((prev) => ({ ...prev, logoUrl: nextLogoPath }));
-    }
   };
 
   const baseInputClasses =
@@ -400,7 +397,6 @@ export default function CreateAccountPage() {
     email: 'Account Email',
     website: 'Accounts Website',
     description: 'Account Description',
-    logoUrl: 'Logo URL',
   } as const;
   const fieldPlaceholders = {
     publicKey: 'Required Account on a connected Metamask Account.',
@@ -409,145 +405,184 @@ export default function CreateAccountPage() {
     email: 'Account Email, do not use a personal Email',
     website: 'Accounts Website URL',
     description: 'Account Description',
-    logoUrl: 'Logo URL, Select Avatar Logo png file for upload',
   } as const;
 
   return (
-    <main className="mx-auto max-w-3xl p-6 text-white">
+    <main className="w-full p-6 text-white">
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {!connected ? (
-          <div className="flex items-center gap-4">
-            <div className="w-56" />
-            <div className="flex-1">
-              <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-[#E5B94F] [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-500 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
-                <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
-                <ConnectNetworkButtonProps
-                  showName={false}
-                  showSymbol={true}
-                  showNetworkIcon={false}
-                  showChevron={false}
-                  showConnect={true}
-                  showDisconnect={false}
-                  showHoverBg={false}
-                  titleDisplay={true}
-                  trimHorizontalPaddingPx={0}
-                />
+      <form onSubmit={handleSubmit} className="grid min-h-[72vh] w-full items-center gap-6 grid-cols-1 lg:grid-cols-2">
+        <section className="mx-2 flex h-full w-full flex-col items-center justify-center space-y-4 border-2 border-yellow-400 p-4 lg:mx-4">
+          {!connected ? (
+            <div className="flex w-full items-center justify-center gap-4">
+              <div className="w-56 text-right" />
+              <div className="w-[28rem]">
+                <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-[#E5B94F] [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-500 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
+                  <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
+                  <ConnectNetworkButtonProps
+                    showName={false}
+                    showSymbol={true}
+                    showNetworkIcon={false}
+                    showChevron={false}
+                    showConnect={true}
+                    showDisconnect={false}
+                    showHoverBg={false}
+                    titleDisplay={true}
+                    trimHorizontalPaddingPx={0}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
-            <label htmlFor="publicKey" className="w-56 text-right" title={fieldTitles.publicKey}>
-              Account Public Key
-            </label>
-            <div className="flex-1">
-              <input
-                id="publicKey"
-                type="text"
-                value={publicKey}
-                readOnly
-                placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
-                title="Required for Code Account Operations"
-                className={requiredInputClasses}
-                onMouseEnter={() => setHoveredInput('publicKey')}
-                onMouseLeave={() => setHoveredInput(null)}
-              />
-              {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
+          ) : (
+            <div className="flex w-full items-center justify-center gap-4">
+              <div className="w-56" />
+              <label htmlFor="publicKey" className="mb-0 w-56 text-right" title={fieldTitles.publicKey}>
+                Account Public Key
+              </label>
+              <div className="w-[28rem]">
+                <input
+                  id="publicKey"
+                  type="text"
+                  value={publicKey}
+                  readOnly
+                  placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
+                  title="Required for Code Account Operations"
+                  className={requiredInputClasses}
+                  onMouseEnter={() => setHoveredInput('publicKey')}
+                  onMouseLeave={() => setHoveredInput(null)}
+                />
+                {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
+              </div>
+              <div className="w-56" />
             </div>
-          </div>
-        )}
+          )}
 
-        {[ 
-          {
-            label: 'Name',
-            name: 'name',
-            labelTitle: fieldTitles.name,
-          },
-          {
-            label: 'Symbol',
-            name: 'symbol',
-            labelTitle: fieldTitles.symbol,
-          },
-          {
-            label: 'Email Address',
-            name: 'email',
-            labelTitle: fieldTitles.email,
-          },
-          {
-            label: 'Website',
-            name: 'website',
-            labelTitle: fieldTitles.website,
-          },
-          {
-            label: 'Description',
-            name: 'description',
-            labelTitle: fieldTitles.description,
-          },
-          {
-            label: 'Logo URL',
-            name: 'logoUrl',
-            labelTitle: fieldTitles.logoUrl,
-          },
-        ].map(({ label, name, labelTitle }) => (
-          <div key={name} className="flex items-center gap-4">
-            <label htmlFor={name} className="w-56 text-right" title={labelTitle}>
-              {label}
-            </label>
-            <div className="flex-1">
-              {(() => {
-                const key = name as keyof AccountFormData;
-                const href = toPreviewHref(key, String(formData[key] ?? ''));
-                const isLinkField =
-                  key === 'email' || key === 'website' || key === 'logoUrl';
-                const linkLikeClass =
-                  isLinkField && href
-                    ? ' underline text-blue-300 cursor-pointer'
-                    : '';
-                return (
-                  <>
-              <input
-                id={name}
-                name={name}
-                type="text"
-                value={formData[name as keyof AccountFormData]}
-                onChange={handleChange}
-                readOnly={!connected}
-                placeholder={
-                  hoveredInput === name
-                    ? !connected
-                      ? disconnectedInputMessage
-                      : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
-                    : 'Optional'
-                }
-                title={
-                  !connected
-                    ? disconnectedInputMessage
-                    : href
-                      ? `${labelTitle} (click to open in Edit mode)`
-                      : labelTitle
-                }
-                className={`${optionalInputClasses}${linkLikeClass}`}
-                onClick={() => {
-                  if (!href || accountMode !== 'edit') return;
-                  if (href.startsWith('mailto:')) {
-                    window.location.href = href;
-                    return;
-                  }
-                  window.open(href, '_blank', 'noopener,noreferrer');
-                }}
-                onMouseEnter={() => setHoveredInput(name)}
-                onMouseLeave={() => setHoveredInput(null)}
-              />
-                  </>
-                );
-              })()}
+          {[ 
+            {
+              label: 'Name',
+              name: 'name',
+              labelTitle: fieldTitles.name,
+            },
+            {
+              label: 'Symbol',
+              name: 'symbol',
+              labelTitle: fieldTitles.symbol,
+            },
+            {
+              label: 'Email Address',
+              name: 'email',
+              labelTitle: fieldTitles.email,
+            },
+            {
+              label: 'Website',
+              name: 'website',
+              labelTitle: fieldTitles.website,
+            },
+            {
+              label: 'Description',
+              name: 'description',
+              labelTitle: fieldTitles.description,
+            },
+          ].map(({ label, name, labelTitle }) => (
+            <div key={name} className="flex w-full items-center justify-center gap-4">
+              <div className="w-56" />
+              <label htmlFor={name} className="mb-0 w-56 text-right" title={labelTitle}>
+                {label}
+              </label>
+              <div className="w-[28rem]">
+                {(() => {
+                  const key = name as keyof AccountFormData;
+                  const href = toPreviewHref(key, String(formData[key] ?? ''));
+                  const isLinkField =
+                    key === 'email' || key === 'website';
+                  const linkLikeClass =
+                    isLinkField && href
+                      ? ' underline text-blue-300 cursor-pointer'
+                      : '';
+                  return (
+                    <input
+                      id={name}
+                      name={name}
+                      type="text"
+                      value={formData[name as keyof AccountFormData]}
+                      onChange={handleChange}
+                      readOnly={!connected}
+                      placeholder={
+                        hoveredInput === name
+                          ? !connected
+                            ? disconnectedInputMessage
+                            : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
+                          : 'Optional'
+                      }
+                      title={
+                        !connected
+                          ? disconnectedInputMessage
+                          : href
+                            ? `${labelTitle} (click to open in Edit mode)`
+                            : labelTitle
+                      }
+                      className={`${optionalInputClasses}${linkLikeClass}`}
+                      onClick={() => {
+                        if (!href || accountMode !== 'edit') return;
+                        if (href.startsWith('mailto:')) {
+                          window.location.href = href;
+                          return;
+                        }
+                        window.open(href, '_blank', 'noopener,noreferrer');
+                      }}
+                      onMouseEnter={() => setHoveredInput(name)}
+                      onMouseLeave={() => setHoveredInput(null)}
+                    />
+                  );
+                })()}
+              </div>
+              <div className="w-56" />
             </div>
-          </div>
-        ))}
+          ))}
 
-        <div className="mt-6 ml-[15rem] flex w-[calc(100%-15rem)] items-center justify-start gap-3">
+          <div className="mt-4 flex w-full items-center justify-center gap-4">
+            <div className="w-56" />
+            <div className="w-56" />
+            <button
+              type="submit"
+              aria-disabled={disableSubmit}
+              className={`h-[42px] w-[28rem] rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                !connected
+                  ? hoverTarget === 'createAccount'
+                    ? 'bg-red-500 text-black'
+                    : 'bg-[#E5B94F] text-black cursor-not-allowed'
+                  : hoverTarget === 'createAccount'
+                  ? accountMode === 'edit'
+                    ? 'bg-red-500 text-black'
+                    : 'bg-green-500 text-black'
+                  : accountMode === 'edit'
+                    ? 'bg-[#E5B94F] text-black cursor-not-allowed'
+                    : 'bg-[#E5B94F] text-black'
+              }`}
+              title={!connected ? 'Wallet Connection Required' : submitLabel}
+              disabled={disableSubmit}
+              onMouseEnter={() => setHoverTarget('createAccount')}
+              onMouseLeave={() => setHoverTarget(null)}
+            >
+              {isSaving ? 'Saving...' : submitLabel}
+            </button>
+            <div className="w-56" />
+          </div>
+        </section>
+
+        <section className="mx-2 flex h-full w-full flex-col items-center justify-center border-2 border-red-500 p-4 lg:mx-4">
+          <h2 className="mb-4 text-center text-lg font-semibold text-[#E5B94F]">Logo</h2>
+          <div className="mb-4 flex w-full max-w-md min-h-[260px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
+            {logoPreviewSrc ? (
+              <img
+                src={logoPreviewSrc}
+                alt="Account logo preview"
+                className="max-h-[220px] max-w-full object-contain"
+              />
+            ) : (
+              <span className="text-sm text-slate-300">No logo found on server</span>
+            )}
+          </div>
           <input
             ref={logoFileInputRef}
             id="logoFileUpload"
@@ -558,54 +593,43 @@ export default function CreateAccountPage() {
             title="Select account logo file"
             onChange={handleLogoFileChange}
           />
+          <label htmlFor="logoPathInput" className="mb-2 block w-full max-w-md text-center text-sm text-slate-200">
+            Logo Path
+          </label>
+          <input
+            id="logoPathInput"
+            type="text"
+            value={logoPathInputValue}
+            readOnly
+            className={`${optionalInputClasses} max-w-md text-center`}
+            placeholder="No logo path available"
+            title="Derived logo path"
+          />
           <button
             type="button"
-            aria-disabled={!connected}
-            className={`flex-1 rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+            aria-disabled={!connected || !accountFolder}
+            className={`mt-4 h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
               !connected
                 ? hoverTarget === 'uploadLogo'
                   ? 'bg-red-500 text-black'
                   : 'bg-[#E5B94F] text-black cursor-not-allowed'
                 : hoverTarget === 'uploadLogo'
-                ? formData.logoUrl
+                ? hasServerLogo || !!logoFile
                   ? 'bg-green-500 text-black'
                   : 'bg-red-500 text-black'
                 : 'bg-[#E5B94F] text-black'
             }`}
-            title={!connected ? 'WWallet Connection Required' : fieldTitles.logoUrl}
+            title={!connected ? 'Wallet Connection Required' : uploadButtonLabel}
             onClick={() => {
-              if (!connected) return;
+              if (!connected || !accountFolder) return;
               logoFileInputRef.current?.click();
             }}
             onMouseEnter={() => setHoverTarget('uploadLogo')}
             onMouseLeave={() => setHoverTarget(null)}
           >
-            Select Logo PNG File
+            {uploadButtonLabel}
           </button>
-          <button
-            type="submit"
-            aria-disabled={!connected || accountMode === 'edit'}
-            className={`flex-1 rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-              !connected
-                ? hoverTarget === 'createAccount'
-                  ? 'bg-red-500 text-black'
-                  : 'bg-[#E5B94F] text-black cursor-not-allowed'
-                : hoverTarget === 'createAccount'
-                ? accountMode === 'edit'
-                  ? 'bg-red-500 text-black'
-                  : 'bg-green-500 text-black'
-                : accountMode === 'edit'
-                  ? 'bg-[#E5B94F] text-black cursor-not-allowed'
-                  : 'bg-[#E5B94F] text-black'
-            }`}
-            title={!connected ? 'Wallet Connection Required' : submitLabel}
-            disabled={!connected || isSaving || isLoadingAccount}
-            onMouseEnter={() => setHoverTarget('createAccount')}
-            onMouseLeave={() => setHoverTarget(null)}
-          >
-            {isSaving ? 'Saving...' : submitLabel}
-          </button>
-        </div>
+        </section>
       </form>
     </main>
   );

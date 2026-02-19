@@ -9,6 +9,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const ACCOUNTS_DIR = path.join(process.cwd(), 'public', 'assets', 'accounts');
+const DEFAULT_ACCOUNT_LOGO_URL = 'assets/miscellaneous/Anonymous.png';
 type RouteContext = { params: Promise<{ accountAddress: string }> };
 
 type Target = 'account' | 'logo';
@@ -67,15 +68,31 @@ export async function GET(
   const address = normalizeAddress(rawAddress);
   const folder = toFolderName(address);
   const filePath = path.join(ACCOUNTS_DIR, folder, 'account.json');
+  const logoFilePath = path.join(ACCOUNTS_DIR, folder, 'logo.png');
+  const constructedLogoURL = `assets/accounts/${folder}/logo.png`;
 
   try {
     const raw = await fs.readFile(filePath, 'utf8');
-    const data = JSON.parse(raw.replace(/^\uFEFF/, ''));
+    const data = JSON.parse(raw.replace(/^\uFEFF/, '')) as Record<string, unknown>;
+    let hasConstructedLogo = false;
+    try {
+      await fs.access(logoFilePath);
+      hasConstructedLogo = true;
+    } catch {
+      hasConstructedLogo = false;
+    }
+    const resolvedLogoURL = hasConstructedLogo ? constructedLogoURL : DEFAULT_ACCOUNT_LOGO_URL;
+    const responseData = {
+      ...data,
+      logoURL: resolvedLogoURL,
+    };
 
     return NextResponse.json(
       {
         address,
-        data,
+        data: responseData,
+        logoURL: resolvedLogoURL,
+        hasLogo: hasConstructedLogo,
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );
