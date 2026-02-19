@@ -218,9 +218,17 @@ export default function CreateAccountPage() {
       if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     };
   }, [previewObjectUrl]);
-  const logoPreviewSrc = previewObjectUrl || `/${serverLogoURL.replace(/^\/+/, '')}`;
-  const logoPathInputValue = previewObjectUrl ? derivedLogoPath : serverLogoURL;
-  const uploadButtonLabel = logoPathInputValue ? 'Upload New Image' : 'Select New Image to Upload';
+  const logoPreviewSrc = !connected
+    ? '/assets/miscellaneous/Anonymous.png'
+    : previewObjectUrl || `/${serverLogoURL.replace(/^\/+/, '')}`;
+  const logoPathInputValue = logoFile ? logoFile.name : '';
+  const isAnonymousLogo = serverLogoURL.replace(/^\/+/, '') === 'assets/miscellaneous/Anonymous.png';
+  const uploadButtonLabel = logoFile
+    ? 'Upload Selected Image'
+    : isAnonymousLogo
+      ? 'Browse to add an Account Image'
+      : 'Upload New Image';
+  const uploadButtonText = !connected ? 'Connection Required' : uploadButtonLabel;
   const isLogoRequired = !hasServerLogo && !logoFile;
   const disableSubmit =
     !connected ||
@@ -384,6 +392,12 @@ export default function CreateAccountPage() {
     const file = e.target.files?.[0];
     setLogoFile(file ?? null);
   };
+  const handleCancelLogoSelection = () => {
+    setLogoFile(null);
+    if (logoFileInputRef.current) {
+      logoFileInputRef.current.value = '';
+    }
+  };
 
   const baseInputClasses =
     'w-full rounded border border-white bg-[#1A1D2E] p-2 text-white focus:outline-none focus:ring-0';
@@ -440,9 +454,11 @@ export default function CreateAccountPage() {
           <div className="grid w-full max-w-[46rem] grid-cols-[14rem_28rem] items-center gap-x-4 gap-y-4">
           {!connected ? (
             <>
-              <div className="text-right" />
+              <label htmlFor="publicKey" className="mb-0 text-right" title={fieldTitles.publicKey}>
+                Account Public Key
+              </label>
               <div>
-                <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-[#E5B94F] [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-500 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
+                <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
                   <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
                   <ConnectNetworkButtonProps
                     showName={false}
@@ -567,9 +583,7 @@ export default function CreateAccountPage() {
               aria-disabled={disableSubmit}
               className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
                 !connected
-                  ? hoverTarget === 'createAccount'
-                    ? 'bg-red-500 text-black'
-                    : 'bg-[#E5B94F] text-black cursor-not-allowed'
+                  ? 'bg-red-500 text-black cursor-not-allowed'
                   : hoverTarget === 'createAccount'
                   ? accountMode === 'edit'
                     ? 'bg-red-500 text-black'
@@ -583,7 +597,7 @@ export default function CreateAccountPage() {
               onMouseEnter={() => setHoverTarget('createAccount')}
               onMouseLeave={() => setHoverTarget(null)}
             >
-              {isSaving ? 'Saving...' : submitLabel}
+              {!connected ? 'Connection Required' : isSaving ? 'Saving...' : submitLabel}
             </button>
           </div>
         </section>
@@ -617,17 +631,15 @@ export default function CreateAccountPage() {
               value={logoPathInputValue}
               readOnly
               className={`${optionalInputClasses} max-w-md text-center`}
-              placeholder="No logo path available"
-              title="Derived logo path"
+              placeholder="No image selected"
+              title="Selected image file name"
             />
             <button
               type="button"
               aria-disabled={!connected || !accountFolder}
               className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
                 !connected
-                  ? hoverTarget === 'uploadLogo'
-                    ? 'bg-red-500 text-black'
-                    : 'bg-[#E5B94F] text-black cursor-not-allowed'
+                  ? 'bg-red-500 text-black cursor-not-allowed'
                   : hoverTarget === 'uploadLogo'
                   ? hasServerLogo || !!logoFile
                     ? 'bg-green-500 text-black'
@@ -642,8 +654,17 @@ export default function CreateAccountPage() {
               onMouseEnter={() => setHoverTarget('uploadLogo')}
               onMouseLeave={() => setHoverTarget(null)}
             >
-              {uploadButtonLabel}
+              {uploadButtonText}
             </button>
+            {logoFile ? (
+              <button
+                type="button"
+                className="h-[42px] w-full max-w-md rounded bg-red-500 px-6 py-2 text-center font-bold text-black transition-colors hover:bg-red-400"
+                onClick={handleCancelLogoSelection}
+              >
+                Cancel Image Upload Selection
+              </button>
+            ) : null}
           </div>
         </section>
         </div>
