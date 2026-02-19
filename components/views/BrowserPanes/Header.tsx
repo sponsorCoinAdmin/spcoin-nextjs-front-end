@@ -20,6 +20,14 @@ const NON_NAV_HOVER = '__non_nav_hover__';
 // ✅ Header X spam guard (per-tab). Keep small + explicit.
 const HEADER_X_CLOSE_SPAM_DELAY_MS = 30;
 
+const normalizePath = (value: string) => {
+  const raw = String(value ?? '').trim();
+  const noHash = raw.split('#')[0] ?? raw;
+  const noQuery = noHash.split('?')[0] ?? noHash;
+  if (noQuery.length > 1 && noQuery.endsWith('/')) return noQuery.slice(0, -1);
+  return noQuery;
+};
+
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -79,7 +87,9 @@ export default function Header() {
 
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
-    const isActive = pathname === href && hoveredTab === null;
+    const isActive =
+      normalizePath(pathname ?? '') === normalizePath(href) &&
+      hoveredTab === null;
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
       ${isHovered || isActive

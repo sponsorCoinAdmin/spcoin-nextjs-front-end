@@ -4,7 +4,7 @@
 import React from 'react';
 import Image from 'next/image';
 import styles from '@/styles/Modal.module.css';
-import info_png from '@/public/assets/miscellaneous/info1.png';
+import info_png from '@/public/assets/miscellaneous/info.png';
 
 type Props = {
   name: string;

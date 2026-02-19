@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 
@@ -15,9 +14,41 @@ interface AccountFormData {
 }
 
 type HoverTarget = 'createAccount' | 'uploadLogo' | null;
+type AccountMode = 'create' | 'edit' | 'update';
+const DEFAULT_SAVE_LOGO_URL = 'assets/miscellaneous/Anonymous.png';
+const DEFAULT_LOAD_LOGO_URL = './public/assets/miscellaneous/info1.png';
+
+function normalizeAddress(value: string): string {
+  return `0x${String(value).replace(/^0[xX]/, '').toLowerCase()}`;
+}
+
+function toPreviewHref(
+  field: keyof AccountFormData,
+  rawValue: string,
+): string | null {
+  const value = String(rawValue ?? '').trim();
+  if (!value) return null;
+
+  if (field === 'email') {
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return emailOk ? `mailto:${value}` : null;
+  }
+
+  if (field === 'website' || field === 'logoUrl') {
+    if (value.startsWith('/assets/')) return value;
+    if (value.startsWith('assets/')) return `/${value}`;
+    try {
+      const url = new URL(value);
+      return /^https?:$/i.test(url.protocol) ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
 
 export default function CreateAccountPage() {
-  const router = useRouter();
   const ctx = useContext(ExchangeContextState);
   const connected = Boolean(ctx?.exchangeContext?.network?.connected);
 
@@ -33,6 +64,18 @@ export default function CreateAccountPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
   const [hoveredInput, setHoveredInput] = useState<string | null>(null);
+  const [baselineData, setBaselineData] = useState<AccountFormData>({
+    name: '',
+    symbol: '',
+    email: '',
+    website: '',
+    description: '',
+    logoUrl: '',
+  });
+  const [accountExists, setAccountExists] = useState<boolean>(false);
+  const [isLoadingAccount, setIsLoadingAccount] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -47,6 +90,7 @@ export default function CreateAccountPage() {
     const abortController = new AbortController();
 
     const loadConnectedAccount = async () => {
+      setIsLoadingAccount(true);
       try {
         const response = await fetch(
           `/api/spCoin/accounts/${encodeURIComponent(String(activeAddress))}`,
@@ -56,30 +100,61 @@ export default function CreateAccountPage() {
             signal: abortController.signal,
           },
         );
-        if (!response.ok) return;
+        if (!response.ok) {
+          setAccountExists(false);
+          const empty: AccountFormData = {
+            name: '',
+            symbol: '',
+            email: '',
+            website: '',
+            description: '',
+            logoUrl: '',
+          };
+          setFormData(empty);
+          setBaselineData(empty);
+          setLogoFile(null);
+          return;
+        }
 
         const payload = await response.json();
         const data = (payload?.data ?? {}) as Record<string, unknown>;
 
-        setFormData((prev) => ({
-          ...prev,
-          name: typeof data.name === 'string' ? data.name : prev.name,
-          symbol: typeof data.symbol === 'string' ? data.symbol : prev.symbol,
-          email: typeof data.email === 'string' ? data.email : prev.email,
-          website: typeof data.website === 'string' ? data.website : prev.website,
-          description:
-            typeof data.description === 'string'
-              ? data.description
-              : prev.description,
+        const loaded: AccountFormData = {
+          name: typeof data.name === 'string' ? data.name : '',
+          symbol: typeof data.symbol === 'string' ? data.symbol : '',
+          email: typeof data.email === 'string' ? data.email : '',
+          website: typeof data.website === 'string' ? data.website : '',
+          description: typeof data.description === 'string' ? data.description : '',
           logoUrl:
             typeof data.logoUrl === 'string'
               ? data.logoUrl
               : typeof data.logoURL === 'string'
-              ? data.logoURL
-              : prev.logoUrl,
-        }));
+                ? data.logoURL
+                : '',
+        };
+
+        const loadedLogoTrimmed = loaded.logoUrl.trim();
+        const hadEmptyLogo = loadedLogoTrimmed.length === 0;
+        if (hadEmptyLogo) {
+          loaded.logoUrl = DEFAULT_LOAD_LOGO_URL;
+        }
+
+        setAccountExists(true);
+        setFormData(loaded);
+        setBaselineData(
+          hadEmptyLogo
+            ? { ...loaded, logoUrl: '' }
+            : loaded,
+        );
+        setLogoFile(null);
       } catch {
-        // Ignore network/404/abort for account prefill.
+        if (!abortController.signal.aborted) {
+          setAccountExists(false);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoadingAccount(false);
+        }
       }
     };
 
@@ -100,17 +175,216 @@ export default function CreateAccountPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const trimForm = (data: AccountFormData): AccountFormData => ({
+    name: data.name.trim(),
+    symbol: data.symbol.trim(),
+    email: data.email.trim(),
+    website: data.website.trim(),
+    description: data.description.trim(),
+    logoUrl: data.logoUrl.trim(),
+  });
+
+  const publicKeyTrimmed = publicKey.trim();
+  const accountFolder = useMemo(() => {
+    if (!publicKeyTrimmed) return '';
+    return `0X${publicKeyTrimmed.replace(/^0[xX]/, '').toUpperCase()}`;
+  }, [publicKeyTrimmed]);
+
+  const hasDataChanges = useMemo(() => {
+    const current = trimForm(formData);
+    const baseline = trimForm(baselineData);
+    return (
+      current.name !== baseline.name ||
+      current.symbol !== baseline.symbol ||
+      current.email !== baseline.email ||
+      current.website !== baseline.website ||
+      current.description !== baseline.description ||
+      current.logoUrl !== baseline.logoUrl
+    );
+  }, [formData, baselineData]);
+
+  const hasUnsavedChanges = hasDataChanges || !!logoFile;
+
+  const accountMode: AccountMode = useMemo(() => {
+    if (!connected || !publicKeyTrimmed) return 'create';
+    if (!accountExists) return 'create';
+    return hasUnsavedChanges ? 'update' : 'edit';
+  }, [connected, publicKeyTrimmed, accountExists, hasUnsavedChanges]);
+
+  const submitLabel =
+    accountMode === 'create'
+      ? 'Create spCoin Account'
+      : accountMode === 'update'
+        ? 'Update spCoin Account'
+        : 'Edit spCoin Account';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!connected) return;
     if (!validate()) return;
-    alert('Account created successfully');
-    router.push('/');
+    if (!publicKeyTrimmed) return;
+    if (accountMode === 'edit') return;
+
+    setIsSaving(true);
+    try {
+      const eth = (window as any)?.ethereum;
+      if (!eth?.request) {
+        throw new Error('MetaMask provider not available');
+      }
+
+      const accounts = (await eth.request({
+        method: 'eth_requestAccounts',
+      })) as string[];
+      const signerAddress = String(accounts?.[0] ?? '').trim();
+      if (!signerAddress) {
+        throw new Error('No MetaMask account available for signing');
+      }
+      if (
+        normalizeAddress(signerAddress) !== normalizeAddress(publicKeyTrimmed)
+      ) {
+        throw new Error(
+          `Connected wallet mismatch. MetaMask=${signerAddress}, Active=${publicKeyTrimmed}`,
+        );
+      }
+
+      const nonceRes = await fetch('/api/spCoin/auth/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: signerAddress }),
+      });
+      if (!nonceRes.ok) {
+        throw new Error('Failed to request auth nonce');
+      }
+      const noncePayload = (await nonceRes.json()) as {
+        nonce?: string;
+        message?: string;
+      };
+      const nonce = String(noncePayload?.nonce ?? '');
+      const message = String(noncePayload?.message ?? '');
+      if (!nonce || !message) {
+        throw new Error('Invalid nonce payload from server');
+      }
+
+      let signature = '';
+      try {
+        signature = (await eth.request({
+          method: 'personal_sign',
+          params: [message, signerAddress],
+        })) as string;
+      } catch {
+        // Provider compatibility fallback (some providers expect [address, message]).
+        signature = (await eth.request({
+          method: 'personal_sign',
+          params: [signerAddress, message],
+        })) as string;
+      }
+      if (!signature) {
+        throw new Error('Signature request rejected');
+      }
+
+      const verifyRes = await fetch('/api/spCoin/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: signerAddress,
+          nonce,
+          signature,
+        }),
+      });
+      if (!verifyRes.ok) {
+        const failPayload = (await verifyRes.json().catch(() => ({}))) as {
+          error?: string;
+          details?: string;
+        };
+        throw new Error(
+          failPayload?.error ||
+            failPayload?.details ||
+            'Signature verification failed',
+        );
+      }
+      const verifyPayload = (await verifyRes.json()) as { token?: string };
+      const authToken = String(verifyPayload?.token ?? '');
+      if (!authToken) {
+        throw new Error('Missing auth token');
+      }
+
+      const normalizedForm = trimForm(formData);
+      const computedLogoPath = accountFolder
+        ? `assets/accounts/${accountFolder}/logo.png`
+        : normalizedForm.logoUrl;
+      const persistedLogoUrl = logoFile
+        ? computedLogoPath
+        : normalizedForm.logoUrl || DEFAULT_SAVE_LOGO_URL;
+
+      const accountPayload = {
+        address: publicKeyTrimmed,
+        name: normalizedForm.name,
+        symbol: normalizedForm.symbol,
+        email: normalizedForm.email,
+        website: normalizedForm.website,
+        description: normalizedForm.description,
+        logoURL: persistedLogoUrl,
+      };
+
+      const saveMethod = accountMode === 'create' ? 'POST' : 'PUT';
+      const accountRes = await fetch(
+        `/api/spCoin/accounts/${encodeURIComponent(publicKeyTrimmed)}`,
+        {
+          method: saveMethod,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(accountPayload),
+        },
+      );
+      if (!accountRes.ok) {
+        throw new Error('Failed to save account.json');
+      }
+
+      if (logoFile) {
+        const logoForm = new FormData();
+        logoForm.append('file', logoFile);
+        const logoRes = await fetch(
+          `/api/spCoin/accounts/${encodeURIComponent(publicKeyTrimmed)}?target=logo`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: logoForm,
+          },
+        );
+        if (!logoRes.ok) {
+          throw new Error('Failed to save logo.png');
+        }
+      }
+
+      const savedForm: AccountFormData = {
+        ...normalizedForm,
+        logoUrl: persistedLogoUrl,
+      };
+      setAccountExists(true);
+      setFormData(savedForm);
+      setBaselineData(savedForm);
+      setLogoFile(null);
+      alert(accountMode === 'create' ? 'Account created successfully' : 'Account updated successfully');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save account');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setFormData((prev) => ({ ...prev, logoUrl: file ? file.name : '' }));
+    setLogoFile(file ?? null);
+    if (file) {
+      const nextLogoPath = accountFolder
+        ? `assets/accounts/${accountFolder}/logo.png`
+        : file.name;
+      setFormData((prev) => ({ ...prev, logoUrl: nextLogoPath }));
+    }
   };
 
   const baseInputClasses =
@@ -119,7 +393,6 @@ export default function CreateAccountPage() {
   const optionalInputClasses = `${baseInputClasses} placeholder:text-green-400`;
   const disconnectedInputMessage =
     'Connection Required and input is prohibited until connection is established.';
-  const requiredReady = publicKey.trim().length > 0;
   const fieldTitles = {
     publicKey: 'Required Account on a connected Metamask Account.',
     name: 'Account Name, Do Not use a personal name',
@@ -186,7 +459,7 @@ export default function CreateAccountPage() {
           </div>
         )}
 
-        {[
+        {[ 
           {
             label: 'Name',
             name: 'name',
@@ -223,6 +496,17 @@ export default function CreateAccountPage() {
               {label}
             </label>
             <div className="flex-1">
+              {(() => {
+                const key = name as keyof AccountFormData;
+                const href = toPreviewHref(key, String(formData[key] ?? ''));
+                const isLinkField =
+                  key === 'email' || key === 'website' || key === 'logoUrl';
+                const linkLikeClass =
+                  isLinkField && href
+                    ? ' underline text-blue-300 cursor-pointer'
+                    : '';
+                return (
+                  <>
               <input
                 id={name}
                 name={name}
@@ -237,11 +521,28 @@ export default function CreateAccountPage() {
                       : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
                     : 'Optional'
                 }
-                title={!connected ? disconnectedInputMessage : labelTitle}
-                className={optionalInputClasses}
+                title={
+                  !connected
+                    ? disconnectedInputMessage
+                    : href
+                      ? `${labelTitle} (click to open in Edit mode)`
+                      : labelTitle
+                }
+                className={`${optionalInputClasses}${linkLikeClass}`}
+                onClick={() => {
+                  if (!href || accountMode !== 'edit') return;
+                  if (href.startsWith('mailto:')) {
+                    window.location.href = href;
+                    return;
+                  }
+                  window.open(href, '_blank', 'noopener,noreferrer');
+                }}
                 onMouseEnter={() => setHoveredInput(name)}
                 onMouseLeave={() => setHoveredInput(null)}
               />
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}
@@ -283,28 +584,28 @@ export default function CreateAccountPage() {
           </button>
           <button
             type="submit"
-            aria-disabled={!connected}
+            aria-disabled={!connected || accountMode === 'edit'}
             className={`flex-1 rounded px-6 py-2 text-center font-bold text-black transition-colors ${
               !connected
                 ? hoverTarget === 'createAccount'
                   ? 'bg-red-500 text-black'
                   : 'bg-[#E5B94F] text-black cursor-not-allowed'
                 : hoverTarget === 'createAccount'
-                ? requiredReady
-                  ? 'bg-green-500 text-black'
-                  : 'bg-red-500 text-black'
-                : 'bg-[#E5B94F] text-black'
+                ? accountMode === 'edit'
+                  ? 'bg-red-500 text-black'
+                  : 'bg-green-500 text-black'
+                : accountMode === 'edit'
+                  ? 'bg-[#E5B94F] text-black cursor-not-allowed'
+                  : 'bg-[#E5B94F] text-black'
             }`}
-            title={!connected ? 'Wallet Connection Required' : 'Create spCoin Account'}
+            title={!connected ? 'Wallet Connection Required' : submitLabel}
+            disabled={!connected || isSaving || isLoadingAccount}
             onMouseEnter={() => setHoverTarget('createAccount')}
             onMouseLeave={() => setHoverTarget(null)}
           >
-            Create spCoin Account
+            {isSaving ? 'Saving...' : submitLabel}
           </button>
         </div>
-        {formData.logoUrl ? (
-          <p className="ml-[15rem] mt-1 text-sm text-white/80">{formData.logoUrl}</p>
-        ) : null}
       </form>
     </main>
   );

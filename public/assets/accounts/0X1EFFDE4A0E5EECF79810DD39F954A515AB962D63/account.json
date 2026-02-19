@@ -1,10 +1,9 @@
 {
-    "name":  "Floppy",
-    "symbol":  "FLOPS",
-    "address":  "0X0000000000000000000000000000000000000079",
-    "website":  "",
-    "description":  "This is the description for site Dog3",
-    "logoURL":  "assets/accounts/0X1EFFDE4A0E5EECF79810DD39F954A515AB962D63/logo.png",
-    "status":  "test"
+  "address": "0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63",
+  "name": "Floppy",
+  "symbol": "FLOPS",
+  "email": "robin.e.melanson@gmail.com",
+  "website": "https://sponsorcoin.org/Exchange",
+  "description": "This is the description for site Dog3",
+  "logoURL": "assets/accounts/0X1EFFDE4A0E5EECF79810DD39F954A515AB962D63/logo.png"
 }
-

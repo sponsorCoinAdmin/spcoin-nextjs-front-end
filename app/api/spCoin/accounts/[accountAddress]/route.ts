@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { readBearerToken, validateSessionToken } from '@/lib/server/spCoinAuth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -70,6 +71,7 @@ export async function GET(
   try {
     const raw = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(raw.replace(/^\uFEFF/, ''));
+
     return NextResponse.json(
       {
         address,
@@ -99,6 +101,15 @@ export async function PUT(
     return NextResponse.json(
       { error: 'Invalid accountAddress. Expected 0x + 40 hex chars.' },
       { status: 400 },
+    );
+  }
+
+  const token = readBearerToken(request.headers.get('authorization'));
+  const auth = validateSessionToken(token, rawAddress);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { error: auth.error },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } },
     );
   }
 

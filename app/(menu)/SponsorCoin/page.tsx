@@ -82,7 +82,7 @@ export default function SponsorCoinPage() {
   );
 
   const handleOpenCreateAccount = useCallback(() => {
-    openCardPath('/createAccount');
+    openCardPath('/createAccount?type=Recipient');
   }, [openCardPath]);
 
   return (
