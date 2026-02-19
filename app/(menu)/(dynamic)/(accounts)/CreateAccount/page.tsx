@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
+import { getWalletLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 interface AccountFormData {
   name: string;
@@ -14,8 +15,17 @@ interface AccountFormData {
 
 type HoverTarget = 'createAccount' | 'uploadLogo' | null;
 type AccountMode = 'create' | 'edit' | 'update';
+const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
 function normalizeAddress(value: string): string {
   return `0x${String(value).replace(/^0[xX]/, '').toLowerCase()}`;
+}
+
+function ensureAbsoluteAssetURL(value: string): string {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return DEFAULT_ACCOUNT_LOGO_URL;
+  if (trimmed.startsWith('/')) return trimmed;
+  if (trimmed.startsWith('assets/')) return `/${trimmed}`;
+  return trimmed;
 }
 
 function toPreviewHref(
@@ -72,7 +82,7 @@ export default function CreateAccountPage() {
   const [showAllBorders, setShowAllBorders] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [hasServerLogo, setHasServerLogo] = useState(false);
-  const [serverLogoURL, setServerLogoURL] = useState('assets/miscellaneous/Anonymous.png');
+  const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -110,16 +120,14 @@ export default function CreateAccountPage() {
           setBaselineData(empty);
           setLogoFile(null);
           setHasServerLogo(false);
-          setServerLogoURL('assets/miscellaneous/Anonymous.png');
+          setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
           return;
         }
 
         const payload = await response.json();
         const data = (payload?.data ?? {}) as Record<string, unknown>;
-        const resolvedLogoURL = String(
-          payload?.logoURL ??
-            data?.logoURL ??
-            'assets/miscellaneous/Anonymous.png',
+        const resolvedLogoURL = ensureAbsoluteAssetURL(
+          String(payload?.logoURL ?? data?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
         );
 
         const loaded: AccountFormData = {
@@ -140,7 +148,7 @@ export default function CreateAccountPage() {
         if (!abortController.signal.aborted) {
           setAccountExists(false);
           setHasServerLogo(false);
-          setServerLogoURL('assets/miscellaneous/Anonymous.png');
+          setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -175,11 +183,6 @@ export default function CreateAccountPage() {
   });
 
   const publicKeyTrimmed = publicKey.trim();
-  const accountFolder = useMemo(() => {
-    if (!publicKeyTrimmed) return '';
-    return `0X${publicKeyTrimmed.replace(/^0[xX]/, '').toUpperCase()}`;
-  }, [publicKeyTrimmed]);
-
   const hasDataChanges = useMemo(() => {
     const current = trimForm(formData);
     const baseline = trimForm(baselineData);
@@ -206,9 +209,6 @@ export default function CreateAccountPage() {
       : accountMode === 'update'
         ? 'Update spCoin Account'
         : 'Edit spCoin Account';
-  const derivedLogoPath = accountFolder
-    ? `assets/accounts/${accountFolder}/logo.png`
-    : '';
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -219,16 +219,9 @@ export default function CreateAccountPage() {
     };
   }, [previewObjectUrl]);
   const logoPreviewSrc = !connected
-    ? '/assets/miscellaneous/Anonymous.png'
-    : previewObjectUrl || `/${serverLogoURL.replace(/^\/+/, '')}`;
-  const logoPathInputValue = logoFile ? logoFile.name : '';
-  const isAnonymousLogo = serverLogoURL.replace(/^\/+/, '') === 'assets/miscellaneous/Anonymous.png';
-  const uploadButtonLabel = logoFile
-    ? 'Upload Selected Image'
-    : isAnonymousLogo
-      ? 'Browse to add an Account Image'
-      : 'Upload New Image';
-  const uploadButtonText = !connected ? 'Connection Required' : uploadButtonLabel;
+    ? DEFAULT_ACCOUNT_LOGO_URL
+    : previewObjectUrl || serverLogoURL;
+  const uploadButtonLabel = 'Select Image for Preview';
   const isLogoRequired = !hasServerLogo && !logoFile;
   const disableSubmit =
     !connected ||
@@ -377,9 +370,15 @@ export default function CreateAccountPage() {
       setAccountExists(true);
       setFormData(savedForm);
       setBaselineData(savedForm);
+      const canonicalLogoURL = getWalletLogoURL(publicKeyTrimmed);
       setLogoFile(null);
-      setHasServerLogo(true);
-      setServerLogoURL(derivedLogoPath || 'assets/miscellaneous/Anonymous.png');
+      if (logoFile || hasServerLogo) {
+        setHasServerLogo(true);
+        setServerLogoURL(canonicalLogoURL);
+      } else {
+        setHasServerLogo(false);
+        setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
+      }
       alert(accountMode === 'create' ? 'Account created successfully' : 'Account updated successfully');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save account');
@@ -392,13 +391,6 @@ export default function CreateAccountPage() {
     const file = e.target.files?.[0];
     setLogoFile(file ?? null);
   };
-  const handleCancelLogoSelection = () => {
-    setLogoFile(null);
-    if (logoFileInputRef.current) {
-      logoFileInputRef.current.value = '';
-    }
-  };
-
   const baseInputClasses =
     'w-full rounded border border-white bg-[#1A1D2E] p-2 text-white focus:outline-none focus:ring-0';
   const requiredInputClasses = `${baseInputClasses} placeholder:text-red-500`;
@@ -628,46 +620,28 @@ export default function CreateAccountPage() {
               title="Select account logo file"
               onChange={handleLogoFileChange}
             />
-            <input
-              id="logoPathInput"
-              type="text"
-              value={logoPathInputValue}
-              readOnly
-              className={`${optionalInputClasses} max-w-md text-center`}
-              placeholder="No image selected"
-              title="Selected image file name"
-            />
             <button
               type="button"
-              aria-disabled={!connected || !accountFolder}
+              aria-disabled={!connected}
               className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
                 !connected
                   ? 'bg-red-500 text-black cursor-not-allowed'
                   : hoverTarget === 'uploadLogo'
-                  ? hasServerLogo || !!logoFile
-                    ? 'bg-green-500 text-black'
-                    : 'bg-red-500 text-black'
+                  ? 'bg-green-500 text-black'
                   : 'bg-[#E5B94F] text-black'
               }`}
               title={!connected ? 'Wallet Connection Required' : uploadButtonLabel}
               onClick={() => {
-                if (!connected || !accountFolder) return;
-                logoFileInputRef.current?.click();
+                if (!connected) return;
+                if (!logoFileInputRef.current) return;
+                logoFileInputRef.current.value = '';
+                logoFileInputRef.current.click();
               }}
               onMouseEnter={() => setHoverTarget('uploadLogo')}
               onMouseLeave={() => setHoverTarget(null)}
             >
-              {uploadButtonText}
+              {uploadButtonLabel}
             </button>
-            {logoFile ? (
-              <button
-                type="button"
-                className="h-[42px] w-full max-w-md rounded bg-red-500 px-6 py-2 text-center font-bold text-black transition-colors hover:bg-red-400"
-                onClick={handleCancelLogoSelection}
-              >
-                Cancel Image Upload Selection
-              </button>
-            ) : null}
           </div>
         </section>
         </div>
