@@ -36,6 +36,7 @@ export type ConnectNetworkButtonProps = {
   titleDisplay?: boolean;
   trimHorizontalPaddingPx?: number;
   allowWalletModal?: boolean;
+  connectLabel?: string;
 };
 
 export default function ConnectNetworkButton({
@@ -49,6 +50,7 @@ export default function ConnectNetworkButton({
   titleDisplay = false,
   trimHorizontalPaddingPx,
   allowWalletModal = true,
+  connectLabel = 'Connect',
 }: ConnectNetworkButtonProps) {
   // portal/open/position
   const { open, toggle, close, anchorRef, portalRef, pos } = useDropDownPortal();
@@ -177,7 +179,7 @@ export default function ConnectNetworkButton({
                 currentId={numericCurrentId}
                 label={
                   !isConnected && showConnect
-                    ? 'Connect'
+                    ? connectLabel
                     : isConnected && showDisconnect
                     ? 'Disconnect'
                     : label

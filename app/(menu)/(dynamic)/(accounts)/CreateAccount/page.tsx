@@ -421,8 +421,8 @@ export default function CreateAccountPage() {
     description: 'Account Description',
   } as const;
   const panelMarginClass = 'mx-0';
-  const leftPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
-  const rightPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
+  const accountPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
+  const avatarPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
 
   return (
     <main className="w-full p-6 text-white">
@@ -443,7 +443,8 @@ export default function CreateAccountPage() {
 
       <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
         <div className="grid w-full items-start gap-6 grid-cols-1 lg:grid-cols-2">
-        <section className={`${panelMarginClass} ${leftPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
+        {/* Visual right panel: Users Account Meta Data */}
+        <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
           <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[14rem_28rem]">
             <div />
             <h2 className="w-[28rem] text-center text-lg font-semibold text-[#E5B94F]">
@@ -457,19 +458,8 @@ export default function CreateAccountPage() {
                 Account Public Key
               </label>
               <div>
-                <div className="flex h-[42px] items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
-                  <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
-                  <ConnectNetworkButtonProps
-                    showName={false}
-                    showSymbol={true}
-                    showNetworkIcon={false}
-                    showChevron={false}
-                    showConnect={true}
-                    showDisconnect={false}
-                    showHoverBg={false}
-                    titleDisplay={true}
-                    trimHorizontalPaddingPx={0}
-                  />
+                <div className="flex h-[42px] items-center justify-center rounded border border-white bg-transparent">
+                  <span className="text-[110%] font-normal text-red-500">Wallet Connection Required</span>
                 </div>
               </div>
             </>
@@ -541,7 +531,11 @@ export default function CreateAccountPage() {
                       id={name}
                       name={name}
                       type="text"
-                      value={formData[name as keyof AccountFormData]}
+                      value={
+                        connected
+                          ? formData[name as keyof AccountFormData]
+                          : ''
+                      }
                       onChange={handleChange}
                       readOnly={!connected}
                       placeholder={
@@ -578,11 +572,10 @@ export default function CreateAccountPage() {
 
             <div className="text-right" />
             {!connected ? (
-              <div className="flex h-[42px] w-full items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
-                <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
+              <div className="flex h-[42px] w-full items-center rounded border border-white bg-transparent [&>div]:h-full [&>div]:w-full [&>div>div]:h-full [&>div>div]:w-full [&>div>div>button]:!h-full [&>div>div>button]:!w-full [&>div>div>button]:!justify-center [&>div>div>button]:!font-bold [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
                 <ConnectNetworkButtonProps
                   showName={false}
-                  showSymbol={true}
+                  showSymbol={false}
                   showNetworkIcon={false}
                   showChevron={false}
                   showConnect={true}
@@ -590,6 +583,7 @@ export default function CreateAccountPage() {
                   showHoverBg={false}
                   titleDisplay={true}
                   trimHorizontalPaddingPx={0}
+                  connectLabel="Connect Wallet"
                 />
               </div>
             ) : (
@@ -620,7 +614,8 @@ export default function CreateAccountPage() {
           </div>
         </section>
 
-        <section className={`${panelMarginClass} ${rightPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
+        {/* Visual left panel: Users Avatar Logo */}
+        <section className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
           <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#E5B94F]">
             Users Avatar Logo
           </h2>
@@ -647,19 +642,8 @@ export default function CreateAccountPage() {
               onChange={handleLogoFileChange}
             />
             {!connected ? (
-              <div className="flex h-[42px] w-full max-w-md items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
-                <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
-                <ConnectNetworkButtonProps
-                  showName={false}
-                  showSymbol={true}
-                  showNetworkIcon={false}
-                  showChevron={false}
-                  showConnect={true}
-                  showDisconnect={false}
-                  showHoverBg={false}
-                  titleDisplay={true}
-                  trimHorizontalPaddingPx={0}
-                />
+              <div className="flex h-[42px] w-full max-w-md items-center justify-center rounded border border-white bg-transparent">
+                <span className="text-[110%] font-normal text-red-500">Wallet Connection Required</span>
               </div>
             ) : (
               <button
