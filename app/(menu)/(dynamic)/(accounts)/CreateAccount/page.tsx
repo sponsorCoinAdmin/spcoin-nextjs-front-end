@@ -402,6 +402,8 @@ export default function CreateAccountPage() {
     'w-full rounded border border-white bg-[#1A1D2E] p-2 text-white focus:outline-none focus:ring-0';
   const requiredInputClasses = `${baseInputClasses} placeholder:text-red-500`;
   const optionalInputClasses = `${baseInputClasses} placeholder:text-green-400`;
+  const labelCellClasses =
+    'mb-0 text-right h-[42px] px-2 text-white flex items-center justify-end';
   const disconnectedInputMessage =
     'Connection Required and input is prohibited until connection is established.';
   const fieldTitles = {
@@ -442,19 +444,21 @@ export default function CreateAccountPage() {
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
       <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
-        <div className="grid w-full items-start gap-0 grid-cols-1 lg:grid-cols-2">
+        <div className="grid w-full items-start justify-center gap-0 grid-cols-1 lg:grid-cols-[700px_700px]">
         {/* Visual right panel: Users Account Meta Data */}
         <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-4 pr-0`}>
-          <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[14rem_28rem]">
-            <div />
-            <h2 className="w-[28rem] text-center text-lg font-semibold text-[#E5B94F]">
+          <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
+            <div className="invisible h-[42px] px-2 flex items-center justify-end whitespace-nowrap">
+              Account Public Key
+            </div>
+            <h2 className="w-full text-center text-lg font-semibold text-[#E5B94F]">
               Users Account Meta Data
             </h2>
           </div>
-          <div className="grid w-full max-w-[46rem] grid-cols-[14rem_28rem] items-center gap-x-4 gap-y-4">
+          <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">
           {!connected ? (
             <>
-              <label htmlFor="publicKey" className="mb-0 text-right" title={fieldTitles.publicKey}>
+              <label htmlFor="publicKey" className={labelCellClasses} title={fieldTitles.publicKey}>
                 Account Public Key
               </label>
               <div>
@@ -465,7 +469,7 @@ export default function CreateAccountPage() {
             </>
           ) : (
             <>
-              <label htmlFor="publicKey" className="mb-0 text-right" title={fieldTitles.publicKey}>
+              <label htmlFor="publicKey" className={labelCellClasses} title={fieldTitles.publicKey}>
                 Account Public Key
               </label>
               <div>
@@ -476,7 +480,7 @@ export default function CreateAccountPage() {
                   readOnly
                   placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
                   title="Required for Code Account Operations"
-                  className={requiredInputClasses}
+                  className={`${requiredInputClasses} bg-orange-200 text-black`}
                   onMouseEnter={() => setHoveredInput('publicKey')}
                   onMouseLeave={() => setHoveredInput(null)}
                 />
@@ -513,7 +517,7 @@ export default function CreateAccountPage() {
             },
           ].map(({ label, name, labelTitle }) => (
             <React.Fragment key={name}>
-              <label htmlFor={name} className="mb-0 text-right" title={labelTitle}>
+              <label htmlFor={name} className={labelCellClasses} title={labelTitle}>
                 {label}
               </label>
               <div>
