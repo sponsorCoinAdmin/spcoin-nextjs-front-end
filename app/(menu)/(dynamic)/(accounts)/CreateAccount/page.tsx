@@ -442,9 +442,9 @@ export default function CreateAccountPage() {
       <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
       <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
-        <div className="grid w-full items-start gap-6 grid-cols-1 lg:grid-cols-2">
+        <div className="grid w-full items-start gap-0 grid-cols-1 lg:grid-cols-2">
         {/* Visual right panel: Users Account Meta Data */}
-        <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
+        <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-4 pr-0`}>
           <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[14rem_28rem]">
             <div />
             <h2 className="w-[28rem] text-center text-lg font-semibold text-[#E5B94F]">
@@ -615,7 +615,7 @@ export default function CreateAccountPage() {
         </section>
 
         {/* Visual left panel: Users Avatar Logo */}
-        <section className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
+        <section className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-4 pl-0`}>
           <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#E5B94F]">
             Users Avatar Logo
           </h2>
