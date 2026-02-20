@@ -6,7 +6,6 @@ import type { spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -31,10 +30,9 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const { openOverlay } = usePanelTransitions();
   const { openPanel } = usePanelTree();
 
-  const logoFromAddr = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
   const logoSrc = useMemo(
-    () => recipientAccount?.logoURL?.trim() || logoFromAddr,
-    [recipientAccount?.logoURL, logoFromAddr],
+    () => recipientAccount?.logoURL?.trim() || defaultMissingImage,
+    [recipientAccount?.logoURL],
   );
 
   // Reset the "already errored" guard when recipient changes
@@ -61,7 +59,6 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
         `⚠️ Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL ?? 'no explicit logoURL'})`,
       );
 
-      if (recipientAccount.address) markLogoAsBroken(recipientAccount.address);
       hasErroredRef.current = true;
       event.currentTarget.src = defaultMissingImage;
     },

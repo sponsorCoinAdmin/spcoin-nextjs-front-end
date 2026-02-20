@@ -85,6 +85,7 @@ type TokensPageProps = {
   showTestNets?: boolean;
   showFilterControls?: boolean;
   textMode?: TokenTextMode;
+  refreshNonce?: number;
 };
 
 function TokensPage({
@@ -94,6 +95,7 @@ function TokensPage({
   showTestNets = false,
   showFilterControls = true,
   textMode = 'Standard',
+  refreshNonce = 0,
 }: TokensPageProps) {
   const { exchangeContext } = useExchangeContext();
   const [tokens, setTokens] = useState<TokenContract[]>([]);
@@ -177,7 +179,7 @@ function TokensPage({
     return () => {
       cancelled = true;
     };
-  }, [selectedNetwork, showTestNets, activeAccountAddress]);
+  }, [selectedNetwork, showTestNets, activeAccountAddress, refreshNonce]);
 
   const visibleTokens = tokens;
 
@@ -304,6 +306,7 @@ type TestTokensTabProps = {
   selectedNetwork?: TokenListNetworkValue;
   showTestNets?: boolean;
   textMode?: TokenTextMode;
+  refreshNonce?: number;
 };
 
 export default function TestTokensTab({
@@ -312,6 +315,7 @@ export default function TestTokensTab({
   selectedNetwork,
   showTestNets,
   textMode,
+  refreshNonce = 0,
 }: TestTokensTabProps) {
   return (
     <div className="space-y-4">
@@ -323,6 +327,7 @@ export default function TestTokensTab({
           showTestNets={showTestNets}
           showFilterControls={false}
           textMode={textMode}
+          refreshNonce={refreshNonce}
         />
       </div>
     </div>

@@ -203,12 +203,7 @@ export default function CreateAccountPage() {
     return hasUnsavedChanges ? 'update' : 'edit';
   }, [connected, publicKeyTrimmed, accountExists, hasUnsavedChanges]);
 
-  const submitLabel =
-    accountMode === 'create'
-      ? 'Create spCoin Account'
-      : accountMode === 'update'
-        ? 'Update spCoin Account'
-        : 'Edit spCoin Account';
+  const submitLabel = 'Update Account';
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -221,21 +216,24 @@ export default function CreateAccountPage() {
   const logoPreviewSrc = !connected
     ? DEFAULT_ACCOUNT_LOGO_URL
     : previewObjectUrl || serverLogoURL;
-  const uploadButtonLabel = 'Select Image for Preview';
-  const isLogoRequired = !hasServerLogo && !logoFile;
+  const previewButtonLabel = 'Select Preview Image';
+  const canCreateMissingAccount =
+    connected && !!publicKeyTrimmed && !accountExists;
   const disableSubmit =
     !connected ||
     isSaving ||
     isLoadingAccount ||
-    accountMode === 'edit' ||
-    isLogoRequired;
+    !publicKeyTrimmed;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!connected) return;
     if (!validate()) return;
     if (!publicKeyTrimmed) return;
-    if (accountMode === 'edit') return;
+    if (!hasUnsavedChanges && accountExists) {
+      alert('No account or image changes to update');
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -321,32 +319,36 @@ export default function CreateAccountPage() {
       }
 
       const normalizedForm = trimForm(formData);
-      const accountPayload = {
-        address: publicKeyTrimmed,
-        name: normalizedForm.name,
-        symbol: normalizedForm.symbol,
-        email: normalizedForm.email,
-        website: normalizedForm.website,
-        description: normalizedForm.description,
-      };
+      const shouldSaveAccount = hasDataChanges || !accountExists;
+      const shouldSaveLogo = Boolean(logoFile);
 
-      const saveMethod = accountMode === 'create' ? 'POST' : 'PUT';
-      const accountRes = await fetch(
-        `/api/spCoin/accounts/${encodeURIComponent(publicKeyTrimmed)}`,
-        {
-          method: saveMethod,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`,
+      if (shouldSaveAccount) {
+        const accountPayload = {
+          address: publicKeyTrimmed,
+          name: normalizedForm.name,
+          symbol: normalizedForm.symbol,
+          email: normalizedForm.email,
+          website: normalizedForm.website,
+          description: normalizedForm.description,
+        };
+        const saveMethod = accountExists ? 'PUT' : 'POST';
+        const accountRes = await fetch(
+          `/api/spCoin/accounts/${encodeURIComponent(publicKeyTrimmed)}`,
+          {
+            method: saveMethod,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify(accountPayload),
           },
-          body: JSON.stringify(accountPayload),
-        },
-      );
-      if (!accountRes.ok) {
-        throw new Error('Failed to save account.json');
+        );
+        if (!accountRes.ok) {
+          throw new Error('Failed to save account.json');
+        }
       }
 
-      if (logoFile) {
+      if (shouldSaveLogo && logoFile) {
         const logoForm = new FormData();
         logoForm.append('file', logoFile);
         const logoRes = await fetch(
@@ -364,22 +366,27 @@ export default function CreateAccountPage() {
         }
       }
 
-      const savedForm: AccountFormData = {
-        ...normalizedForm,
-      };
-      setAccountExists(true);
-      setFormData(savedForm);
-      setBaselineData(savedForm);
-      const canonicalLogoURL = getWalletLogoURL(publicKeyTrimmed);
-      setLogoFile(null);
-      if (logoFile || hasServerLogo) {
+      if (shouldSaveAccount) {
+        const savedForm: AccountFormData = { ...normalizedForm };
+        setAccountExists(true);
+        setFormData(savedForm);
+        setBaselineData(savedForm);
+      }
+
+      if (shouldSaveLogo) {
+        const canonicalLogoURL = getWalletLogoURL(publicKeyTrimmed);
+        setLogoFile(null);
         setHasServerLogo(true);
         setServerLogoURL(canonicalLogoURL);
-      } else {
-        setHasServerLogo(false);
-        setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
       }
-      alert(accountMode === 'create' ? 'Account created successfully' : 'Account updated successfully');
+
+      if (shouldSaveAccount && shouldSaveLogo) {
+        alert('Account metadata and image updated successfully');
+      } else if (shouldSaveAccount) {
+        alert('Account metadata updated successfully');
+      } else if (shouldSaveLogo) {
+        alert('Account image updated successfully');
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save account');
     } finally {
@@ -436,7 +443,7 @@ export default function CreateAccountPage() {
 
       <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
         <div className="grid w-full items-start gap-6 grid-cols-1 lg:grid-cols-2">
-        <section className={`${panelMarginClass} ${leftPanelBorderClass} flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
+        <section className={`${panelMarginClass} ${leftPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
           <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[14rem_28rem]">
             <div />
             <h2 className="w-[28rem] text-center text-lg font-semibold text-[#E5B94F]">
@@ -570,31 +577,50 @@ export default function CreateAccountPage() {
           ))}
 
             <div className="text-right" />
-            <button
-              type="submit"
-              aria-disabled={disableSubmit}
-              className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                !connected
-                  ? 'bg-red-500 text-black cursor-not-allowed'
-                  : hoverTarget === 'createAccount'
-                  ? accountMode === 'edit'
-                    ? 'bg-red-500 text-black'
-                    : 'bg-green-500 text-black'
-                  : accountMode === 'edit'
-                    ? 'bg-[#E5B94F] text-black cursor-not-allowed'
+            {!connected ? (
+              <div className="flex h-[42px] w-full items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
+                <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
+                <ConnectNetworkButtonProps
+                  showName={false}
+                  showSymbol={true}
+                  showNetworkIcon={false}
+                  showChevron={false}
+                  showConnect={true}
+                  showDisconnect={false}
+                  showHoverBg={false}
+                  titleDisplay={true}
+                  trimHorizontalPaddingPx={0}
+                />
+              </div>
+            ) : (
+              <button
+                type="submit"
+                aria-disabled={disableSubmit}
+                className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                  disableSubmit
+                    ? 'bg-red-500 text-black cursor-not-allowed'
+                    : hoverTarget === 'createAccount'
+                    ? hasUnsavedChanges || canCreateMissingAccount
+                      ? 'bg-green-500 text-black'
+                      : 'bg-red-500 text-black'
                     : 'bg-[#E5B94F] text-black'
-              }`}
-              title={!connected ? 'Wallet Connection Required' : submitLabel}
-              disabled={disableSubmit}
-              onMouseEnter={() => setHoverTarget('createAccount')}
-              onMouseLeave={() => setHoverTarget(null)}
-            >
-              {!connected ? 'Connection Required' : isSaving ? 'Saving...' : submitLabel}
-            </button>
+                }`}
+                title={
+                  !hasUnsavedChanges
+                    ? 'No changes detected (click to re-check)'
+                    : submitLabel
+                }
+                disabled={disableSubmit}
+                onMouseEnter={() => setHoverTarget('createAccount')}
+                onMouseLeave={() => setHoverTarget(null)}
+              >
+                {isSaving ? 'Saving...' : submitLabel}
+              </button>
+            )}
           </div>
         </section>
 
-        <section className={`${panelMarginClass} ${rightPanelBorderClass} flex h-full w-full flex-col items-start justify-start pl-[50px] pt-4 pb-4 pr-4`}>
+        <section className={`${panelMarginClass} ${rightPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-[50px] pt-4 pb-4 pl-4`}>
           <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#E5B94F]">
             Users Avatar Logo
           </h2>
@@ -620,28 +646,42 @@ export default function CreateAccountPage() {
               title="Select account logo file"
               onChange={handleLogoFileChange}
             />
-            <button
-              type="button"
-              aria-disabled={!connected}
-              className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                !connected
-                  ? 'bg-red-500 text-black cursor-not-allowed'
-                  : hoverTarget === 'uploadLogo'
-                  ? 'bg-green-500 text-black'
-                  : 'bg-[#E5B94F] text-black'
-              }`}
-              title={!connected ? 'Wallet Connection Required' : uploadButtonLabel}
-              onClick={() => {
-                if (!connected) return;
-                if (!logoFileInputRef.current) return;
-                logoFileInputRef.current.value = '';
-                logoFileInputRef.current.click();
-              }}
-              onMouseEnter={() => setHoverTarget('uploadLogo')}
-              onMouseLeave={() => setHoverTarget(null)}
-            >
-              {uploadButtonLabel}
-            </button>
+            {!connected ? (
+              <div className="flex h-[42px] w-full max-w-md items-center justify-between rounded border border-white bg-transparent pl-3 [&>div]:h-full [&>div>div]:h-full [&>div>div>button]:!h-full [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
+                <span className="text-[110%] font-normal text-white">Wallet Connection Required</span>
+                <ConnectNetworkButtonProps
+                  showName={false}
+                  showSymbol={true}
+                  showNetworkIcon={false}
+                  showChevron={false}
+                  showConnect={true}
+                  showDisconnect={false}
+                  showHoverBg={false}
+                  titleDisplay={true}
+                  trimHorizontalPaddingPx={0}
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                aria-disabled={!connected}
+                className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                  hoverTarget === 'uploadLogo'
+                    ? 'bg-green-500 text-black'
+                    : 'bg-[#E5B94F] text-black'
+                }`}
+                title={previewButtonLabel}
+                onClick={() => {
+                  if (!logoFileInputRef.current) return;
+                  logoFileInputRef.current.value = '';
+                  logoFileInputRef.current.click();
+                }}
+                onMouseEnter={() => setHoverTarget('uploadLogo')}
+                onMouseLeave={() => setHoverTarget(null)}
+              >
+                {previewButtonLabel}
+              </button>
+            )}
           </div>
         </section>
         </div>

@@ -5,7 +5,7 @@ import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
-import { getJson } from '@/lib/rest/http';
+import { getJson, get, headOk } from '@/lib/rest/http';
 import { getAccountByAddress, getAccountsBatch, getTokensBatch } from '@/lib/api';
 import { getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -75,6 +75,8 @@ type TokenInfoJson = {
 const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 const ACCOUNT_BATCH_PAGE_SIZE = 25;
 const TOKEN_BATCH_PAGE_SIZE = 25;
+const ANONYMOUS_ACCOUNT_IMAGE = '/assets/miscellaneous/Anonymous.png';
+const accountLogoExistenceCache = new Map<string, boolean>();
 
 /* ----------------------------- small utils ----------------------------- */
 
@@ -131,6 +133,38 @@ function chunk<T>(arr: readonly T[], size: number): T[][] {
   return out;
 }
 
+async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
+  if (typeof window === 'undefined') return true;
+  if (!url || !url.trim()) return false;
+
+  const cached = accountLogoExistenceCache.get(url);
+  if (typeof cached === 'boolean') return cached;
+
+  const headPass = await headOk(url, {
+    timeoutMs,
+    retries: 0,
+    init: { cache: 'no-store' },
+  });
+  if (headPass) {
+    accountLogoExistenceCache.set(url, true);
+    return true;
+  }
+
+  try {
+    const res = await get(url, {
+      timeoutMs,
+      retries: 0,
+      init: { cache: 'no-store' },
+    });
+    const ok = res.ok;
+    accountLogoExistenceCache.set(url, ok);
+    return ok;
+  } catch {
+    accountLogoExistenceCache.set(url, false);
+    return false;
+  }
+}
+
 /**
  * Normalize an env "base path" into a URL base usable by fetch().
  * Examples:
@@ -185,6 +219,22 @@ function getAccountLogoURL_SSOT(addr: Address): string {
   return getWalletLogoURL(addr);
 }
 
+export async function resolveAccountLogoURL(
+  addr: Address,
+  explicitLogoURL?: string,
+): Promise<string> {
+  const explicit =
+    typeof explicitLogoURL === 'string' ? explicitLogoURL.trim() : '';
+  if (explicit) {
+    const explicitOk = await resourceExists(explicit);
+    if (explicitOk) return explicit;
+  }
+
+  const candidate = getAccountLogoURL_SSOT(addr);
+  const ok = await resourceExists(candidate);
+  return ok ? candidate : ANONYMOUS_ACCOUNT_IMAGE;
+}
+
 /**
  * Token info url (SSOT)
  */
@@ -222,7 +272,7 @@ export function makeWalletFallback(
     website: '' as any,
     status,
     description: description as any,
-    logoURL: getAccountLogoURL_SSOT(addr) || defaultMissingImage,
+    logoURL: ANONYMOUS_ACCOUNT_IMAGE,
     balance: typeof balance === 'bigint' ? balance : 0n,
   };
 
@@ -304,14 +354,13 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
 
   const balance = typeof opts.balance === 'bigint' ? opts.balance : toBigIntSafe(json?.balance);
 
-  // Default: always derive logoURL (filesystem convention)
-  const derivedLogo = getAccountLogoURL_SSOT(addr) || defaultMissingImage;
-  const logoURL =
+  const explicitLogo =
     opts.allowJsonLogoURL &&
     typeof (json as any)?.logoURL === 'string' &&
     String((json as any).logoURL).trim().length
       ? String((json as any).logoURL)
-      : derivedLogo;
+      : undefined;
+  const logoURL = await resolveAccountLogoURL(addr, explicitLogo);
 
   const out: spCoinAccount = {
     address: addr,
@@ -362,9 +411,10 @@ async function hydrateAccountsFromSpecsBatch(specs: any[]): Promise<Map<string, 
             website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
             description: typeof (json as any)?.description === 'string' ? (json as any).description : ('' as any),
             status: coerceStatus((json as any)?.status),
-            logoURL: getAccountLogoURL_SSOT(addr) || defaultMissingImage,
+            logoURL: ANONYMOUS_ACCOUNT_IMAGE,
             balance: toBigIntSafe((json as any)?.balance),
           };
+          hydrated.logoURL = await resolveAccountLogoURL(addr);
 
           out.set(addr.toLowerCase(), hydrated);
         }
@@ -521,8 +571,11 @@ async function buildAccountFromJsonSpec(
       balance: typeof balanceOverride === 'bigint' ? balanceOverride : (hydrated as any).balance,
     };
 
-    // if they provided an explicit logoURL in spec, keep it (rare, but manage json sometimes needs it)
-    if (typeof spec.logoURL === 'string' && spec.logoURL.trim().length) out.logoURL = spec.logoURL.trim();
+    if (typeof spec.logoURL === 'string' && spec.logoURL.trim().length) {
+      out.logoURL = await resolveAccountLogoURL(addr, spec.logoURL);
+    } else {
+      out.logoURL = await resolveAccountLogoURL(addr);
+    }
 
     return out;
   }

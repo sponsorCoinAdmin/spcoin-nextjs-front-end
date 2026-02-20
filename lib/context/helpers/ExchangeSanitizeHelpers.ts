@@ -143,6 +143,25 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
   );
 }
 
+function normalizeAccountLogo<T extends { address?: unknown; logoURL?: unknown }>(
+  account: T | undefined | null,
+): T | undefined | null {
+  if (!account || typeof account !== 'object') return account;
+  const logo =
+    typeof account.logoURL === 'string' ? account.logoURL.trim() : '';
+  return {
+    ...account,
+    logoURL: logo || '/assets/miscellaneous/Anonymous.png',
+  };
+}
+
+function normalizeAccountLogoList<T extends { address?: unknown; logoURL?: unknown }>(
+  list: unknown,
+): T[] {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => normalizeAccountLogo(item as T) as T);
+}
+
 /**
  * Safely merges a raw (possibly partial or malformed) ExchangeContext object with defaults.
  * IMPORTANT:
@@ -230,42 +249,42 @@ export const sanitizeExchangeContext = (
   // ----- ACCOUNTS
   const sanitizedAccounts = {
     activeAccount: (raw as any).accounts?.activeAccount
-      ? {
+      ? normalizeAccountLogo({
           ...(raw as any).accounts.activeAccount,
           balance: (raw as any).accounts.activeAccount.balance ?? 0n,
-        }
+        })
       : defaultContext.accounts.activeAccount,
 
     sponsorAccount: (raw as any).accounts?.sponsorAccount
-      ? {
+      ? normalizeAccountLogo({
           ...(raw as any).accounts.sponsorAccount,
           balance: (raw as any).accounts.sponsorAccount.balance ?? 0n,
-        }
+        })
       : defaultContext.accounts.sponsorAccount,
 
     recipientAccount: (raw as any).accounts?.recipientAccount
-      ? {
+      ? normalizeAccountLogo({
           ...(raw as any).accounts.recipientAccount,
           balance: (raw as any).accounts.recipientAccount.balance ?? 0n,
-        }
+        })
       : defaultContext.accounts.recipientAccount,
 
     agentAccount: (raw as any).accounts?.agentAccount
-      ? {
+      ? normalizeAccountLogo({
           ...(raw as any).accounts.agentAccount,
           balance: (raw as any).accounts.agentAccount.balance ?? 0n,
-        }
+        })
       : defaultContext.accounts.agentAccount,
 
-    sponsorAccounts:
-      (raw as any).accounts?.sponsorAccounts ??
-      defaultContext.accounts.sponsorAccounts,
-    recipientAccounts:
-      (raw as any).accounts?.recipientAccounts ??
-      defaultContext.accounts.recipientAccounts,
-    agentAccounts:
-      (raw as any).accounts?.agentAccounts ??
-      defaultContext.accounts.agentAccounts,
+    sponsorAccounts: Array.isArray((raw as any).accounts?.sponsorAccounts)
+      ? normalizeAccountLogoList((raw as any).accounts.sponsorAccounts)
+      : defaultContext.accounts.sponsorAccounts,
+    recipientAccounts: Array.isArray((raw as any).accounts?.recipientAccounts)
+      ? normalizeAccountLogoList((raw as any).accounts.recipientAccounts)
+      : defaultContext.accounts.recipientAccounts,
+    agentAccounts: Array.isArray((raw as any).accounts?.agentAccounts)
+      ? normalizeAccountLogoList((raw as any).accounts.agentAccounts)
+      : defaultContext.accounts.agentAccounts,
   };
 
   // ----- TRADEDATA

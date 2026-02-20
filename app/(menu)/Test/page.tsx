@@ -37,6 +37,8 @@ const panelIconButtonBlue =
   `${panelIconButtonBase} bg-[#243056] text-[#5981F3] hover:bg-[#5981F3] hover:text-[#243056]`;
 const panelIconButtonGreen =
   `${panelIconButtonBase} bg-green-900 text-green-300 hover:bg-green-500 hover:text-green-950`;
+const refreshIconButton =
+  'h-10 w-10 min-w-10 shrink-0 rounded-full flex items-center justify-center text-xl leading-none text-[#5981F3] bg-[#243056] border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
 
 type TestTab = 'context' | 'fsm' | 'wallets' | 'tokens' | 'todo';
 type TestPageDisplay =
@@ -159,6 +161,8 @@ export default function TestPage() {
   const [tokenListNetwork, setTokenListNetwork] = useState<TokenListNetworkValue>(
     persistedTokenListNetwork ?? tokenListDefaultNetwork,
   );
+  const [walletRefreshNonce, setWalletRefreshNonce] = useState(0);
+  const [tokenRefreshNonce, setTokenRefreshNonce] = useState(0);
   const [showLeftPanel, setShowLeftPanel] = useState(
     persistedPanelLayout !== 'Right Only',
   );
@@ -293,6 +297,14 @@ export default function TestPage() {
       'TestPage:onToggleShowTestNets',
     );
   }, [setExchangeContext]);
+
+  const triggerWalletRefresh = useCallback(() => {
+    setWalletRefreshNonce((prev) => prev + 1);
+  }, []);
+
+  const triggerTokenRefresh = useCallback(() => {
+    setTokenRefreshNonce((prev) => prev + 1);
+  }, []);
 
   const cycleTokenTextModePersisted = useCallback(() => {
     const next: TokenTextMode =
@@ -627,7 +639,26 @@ export default function TestPage() {
         {showLeftPanel && (
         <div className={`min-w-0 overflow-hidden ${showRightPanel ? 'flex-1' : 'w-full'}`}>
           <div className="flex h-full min-h-0 flex-col">
-            <div className="sticky top-0 z-10 mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap bg-[#192134] pb-2">
+            <div
+              className="sticky top-0 z-10 mb-4 flex items-center gap-3 overflow-x-auto overflow-y-hidden whitespace-nowrap bg-[#192134] pb-2 scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              onWheel={(e) => {
+                const el = e.currentTarget;
+                if (el.scrollWidth <= el.clientWidth) return;
+
+                // Allow wheel/trackpad vertical motion to drive horizontal header scrolling.
+                const absX = Math.abs(e.deltaX);
+                const absY = Math.abs(e.deltaY);
+                if (absY > absX) {
+                  e.preventDefault();
+                  el.scrollLeft += e.deltaY;
+                  return;
+                }
+                if (absX > 0) {
+                  el.scrollLeft += e.deltaX;
+                }
+              }}
+            >
               <div className="w-10 shrink-0 flex items-center justify-center">
                 {showRightPanel && (
                   <button
@@ -661,65 +692,91 @@ export default function TestPage() {
               </select>
 
               {selectedTab === 'wallets' && (
-                <div className="inline-flex flex-1 items-center justify-center gap-3">
-                  {accountFilterOptions.map((option) => (
-                    <label key={option} className="inline-flex items-center cursor-pointer text-[#5981F3]">
-                      <input
-                        type="radio"
-                        name="testAccountFilter"
-                        value={option}
-                        checked={walletFilter === option}
-                        onChange={() => setWalletFilterPersisted(option)}
-                        className="mr-2"
-                      />
-                      <span className={walletFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
-                        {option}
-                      </span>
-                    </label>
-                  ))}
+                <div className="inline-flex flex-1 min-w-max items-center">
+                  <div className="inline-flex items-center gap-3 pr-3">
+                    {accountFilterOptions.map((option) => (
+                      <label key={option} className="inline-flex items-center cursor-pointer text-[#5981F3]">
+                        <input
+                          type="radio"
+                          name="testAccountFilter"
+                          value={option}
+                          checked={walletFilter === option}
+                          onChange={() => setWalletFilterPersisted(option)}
+                          className="mr-2"
+                        />
+                        <span className={walletFilter === option ? 'text-green-400' : 'text-[#5981F3]'}>
+                          {option}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="ml-auto inline-flex items-center justify-end pl-3">
+                    <button
+                      type="button"
+                      onClick={triggerWalletRefresh}
+                      className={refreshIconButton}
+                      title="Refresh Accounts List"
+                      aria-label="Refresh Accounts List"
+                    >
+                      {'\u21BB'}
+                    </button>
+                  </div>
                 </div>
               )}
 
               {selectedTab === 'tokens' && (
-                <div className="inline-flex flex-1 items-center justify-start gap-3">
-                  <button
-                    id="TEST_ROW_TOKEN_TEXT_MODE_TOGGLE"
-                    type="button"
-                    onClick={cycleTokenTextModePersisted}
-                    className={buttonClasses}
-                    title={`${tokenTextMode} Display. Click to cycle.`}
-                    aria-label="Toggle token text mode"
-                  >
-                    {tokenTextMode} Display
-                  </button>
-                  <label htmlFor="Token_List_Select" className="sr-only">
-                    Token List Network
-                  </label>
-                  <select
-                    id="Token_List_Select"
-                    className={buttonClasses}
-                    value={tokenListNetwork}
-                    onChange={(e) =>
-                      setTokenListNetworkPersisted(e.target.value as TokenListNetworkValue)
-                    }
-                    aria-label="Token List Network"
-                    title="Token List Network"
-                  >
-                    {effectiveTokenListNetworkOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="inline-flex items-center gap-2 text-[#5981F3] cursor-pointer select-none">
-                    <span>Show Test Nets</span>
-                    <input
-                      type="checkbox"
-                      checked={showTestNets}
-                      onChange={onToggleShowTestNets}
-                      className="h-4 w-4 accent-[#5981F3] cursor-pointer"
-                    />
-                  </label>
+                <div className="inline-flex flex-1 min-w-max items-center">
+                  <div className="inline-flex items-center gap-3 pr-3">
+                    <button
+                      id="TEST_ROW_TOKEN_TEXT_MODE_TOGGLE"
+                      type="button"
+                      onClick={cycleTokenTextModePersisted}
+                      className={buttonClasses}
+                      title={`${tokenTextMode} Display. Click to cycle.`}
+                      aria-label="Toggle token text mode"
+                    >
+                      {tokenTextMode} Display
+                    </button>
+                    <label htmlFor="Token_List_Select" className="sr-only">
+                      Token List Network
+                    </label>
+                    <select
+                      id="Token_List_Select"
+                      className={buttonClasses}
+                      value={tokenListNetwork}
+                      onChange={(e) =>
+                        setTokenListNetworkPersisted(e.target.value as TokenListNetworkValue)
+                      }
+                      aria-label="Token List Network"
+                      title="Token List Network"
+                    >
+                      {effectiveTokenListNetworkOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="inline-flex items-center gap-2 text-[#5981F3] cursor-pointer select-none">
+                      <span>Show Test Nets</span>
+                      <input
+                        type="checkbox"
+                        checked={showTestNets}
+                        onChange={onToggleShowTestNets}
+                        className="h-4 w-4 accent-[#5981F3] cursor-pointer"
+                      />
+                    </label>
+                  </div>
+                  <div className="ml-auto inline-flex items-center justify-end pl-3">
+                    <button
+                      type="button"
+                      onClick={triggerTokenRefresh}
+                      className={refreshIconButton}
+                      title="Refresh Token List"
+                      aria-label="Refresh Token List"
+                    >
+                      {'\u21BB'}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -748,11 +805,6 @@ export default function TestPage() {
                 </div>
               )}
 
-              {selectedTab === 'wallets' && (
-                <div className="mr-auto inline-flex items-center justify-start gap-2 min-w-0">
-                </div>
-              )}
-
             </div>
 
             <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -768,6 +820,7 @@ export default function TestPage() {
                 <TestWalletsTab
                   selectedFilter={walletFilter}
                   onSelectedFilterChange={setWalletFilterPersisted}
+                  refreshNonce={walletRefreshNonce}
                 />
               )}
               {selectedTab === 'tokens' && (
@@ -777,6 +830,7 @@ export default function TestPage() {
                   selectedNetwork={tokenListNetwork}
                   showTestNets={showTestNets}
                   textMode={tokenTextMode}
+                  refreshNonce={tokenRefreshNonce}
                 />
               )}
               {selectedTab === 'fsm' && <FSMTraceTab panelKey={fsmPanelKey} />}
@@ -829,4 +883,5 @@ export default function TestPage() {
     </div>
   );
 }
+
 

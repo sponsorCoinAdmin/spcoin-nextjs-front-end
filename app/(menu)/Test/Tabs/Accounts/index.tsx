@@ -61,6 +61,7 @@ type AccountsPageProps = {
   selectedFilter?: AccountFilter;
   onSelectedFilterChange?: (next: AccountFilter) => void;
   showFilterControls?: boolean;
+  refreshNonce?: number;
 };
 
 function AccountsPage({
@@ -69,6 +70,7 @@ function AccountsPage({
   selectedFilter,
   onSelectedFilterChange,
   showFilterControls = true,
+  refreshNonce = 0,
 }: AccountsPageProps) {
   const [accontCache, setAccontCache] = useState<Record<string, spCoinAccount[]>>({
     'Active Account': [],
@@ -207,9 +209,9 @@ function AccountsPage({
   };
 
   useEffect(() => {
-    fetchAcconts();
+    fetchAcconts(refreshNonce > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeOfAcconts]);
+  }, [typeOfAcconts, refreshNonce]);
 
   const findScrollParent = (node: HTMLElement | null): HTMLElement | null => {
     let cur: HTMLElement | null = node?.parentElement ?? null;
@@ -395,11 +397,13 @@ function AccountsPage({
 type TestWalletsTabProps = {
   selectedFilter?: AccountFilter;
   onSelectedFilterChange?: (next: AccountFilter) => void;
+  refreshNonce?: number;
 };
 
 export default function TestWalletsTab({
   selectedFilter,
   onSelectedFilterChange,
+  refreshNonce = 0,
 }: TestWalletsTabProps) {
   const { exchangeContext } = useExchangeContext();
   const activeAccount = exchangeContext?.accounts?.activeAccount as spCoinAccount | null | undefined;
@@ -414,6 +418,7 @@ export default function TestWalletsTab({
           selectedFilter={selectedFilter}
           onSelectedFilterChange={onSelectedFilterChange}
           showFilterControls={false}
+          refreshNonce={refreshNonce}
         />
       </div>
     </div>

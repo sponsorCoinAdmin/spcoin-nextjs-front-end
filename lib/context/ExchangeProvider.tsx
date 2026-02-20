@@ -12,6 +12,7 @@ import { deriveNetworkFromApp } from '@/lib/utils/network';
 import {
   hydrateAccountFromAddress,
   makeWalletFallback,
+  resolveAccountLogoURL,
 } from '@/lib/context/helpers/accountHydration';
 import { STATUS } from '@/lib/structure';
 import type { Address } from 'viem';
@@ -624,6 +625,90 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     activeAccountHydrated,
     setExchangeContext,
   ]);
+
+  useEffect(() => {
+    if (!contextState?.accounts) return;
+
+    let cancelled = false;
+    const accounts = contextState.accounts as any;
+    const allAccounts: any[] = [
+      accounts?.activeAccount,
+      accounts?.sponsorAccount,
+      accounts?.recipientAccount,
+      accounts?.agentAccount,
+      ...(Array.isArray(accounts?.sponsorAccounts) ? accounts.sponsorAccounts : []),
+      ...(Array.isArray(accounts?.recipientAccounts) ? accounts.recipientAccounts : []),
+      ...(Array.isArray(accounts?.agentAccounts) ? accounts.agentAccounts : []),
+    ];
+
+    const uniqueAddresses = Array.from(
+      new Set(
+        allAccounts
+          .map((a) => (typeof a?.address === 'string' ? a.address.trim() : ''))
+          .filter((a) => !!a),
+      ),
+    );
+
+    if (!uniqueAddresses.length) return;
+
+    (async () => {
+      const resolvedByAddress = new Map<string, string>();
+      for (const rawAddress of uniqueAddresses) {
+        const resolved = await resolveAccountLogoURL(rawAddress as Address);
+        resolvedByAddress.set(rawAddress.toLowerCase(), resolved);
+      }
+
+      if (cancelled) return;
+
+      setExchangeContext(
+        (prev) => {
+          const next = clone(prev) as any;
+          next.accounts = next.accounts ?? {};
+          let changed = false;
+
+          const patchOne = (account: any) => {
+            if (!account || typeof account !== 'object') return account;
+            const addr =
+              typeof account.address === 'string' ? account.address.trim() : '';
+            if (!addr) return account;
+            const resolved = resolvedByAddress.get(addr.toLowerCase());
+            if (!resolved) return account;
+            if (account.logoURL === resolved) return account;
+            changed = true;
+            return { ...account, logoURL: resolved };
+          };
+
+          next.accounts.activeAccount = patchOne(next.accounts.activeAccount);
+          next.accounts.sponsorAccount = patchOne(next.accounts.sponsorAccount);
+          next.accounts.recipientAccount = patchOne(next.accounts.recipientAccount);
+          next.accounts.agentAccount = patchOne(next.accounts.agentAccount);
+
+          if (Array.isArray(next.accounts.sponsorAccounts)) {
+            next.accounts.sponsorAccounts = next.accounts.sponsorAccounts.map((a: any) =>
+              patchOne(a),
+            );
+          }
+          if (Array.isArray(next.accounts.recipientAccounts)) {
+            next.accounts.recipientAccounts = next.accounts.recipientAccounts.map((a: any) =>
+              patchOne(a),
+            );
+          }
+          if (Array.isArray(next.accounts.agentAccounts)) {
+            next.accounts.agentAccounts = next.accounts.agentAccounts.map((a: any) =>
+              patchOne(a),
+            );
+          }
+
+          return changed ? next : prev;
+        },
+        'provider:normalizeAccountLogoURLs',
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [contextState?.accounts, setExchangeContext]);
 
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
