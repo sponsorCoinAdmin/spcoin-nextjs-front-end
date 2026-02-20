@@ -13,7 +13,7 @@ interface AccountFormData {
   description: string;
 }
 
-type HoverTarget = 'createAccount' | 'uploadLogo' | null;
+type HoverTarget = 'createAccount' | 'uploadLogo' | 'revertChanges' | null;
 type AccountMode = 'create' | 'edit' | 'update';
 const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
 function normalizeAddress(value: string): string {
@@ -203,7 +203,8 @@ export default function CreateAccountPage() {
     return hasUnsavedChanges ? 'update' : 'edit';
   }, [connected, publicKeyTrimmed, accountExists, hasUnsavedChanges]);
 
-  const submitLabel = 'Update Account';
+  const submitLabel =
+    accountExists && !hasUnsavedChanges ? 'Edit Account' : 'Update Account';
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -224,6 +225,14 @@ export default function CreateAccountPage() {
     isSaving ||
     isLoadingAccount ||
     !publicKeyTrimmed;
+  const disableRevert = !connected || isSaving || isLoadingAccount;
+
+  const handleRevertChanges = () => {
+    if (disableRevert || !hasUnsavedChanges) return;
+    setFormData(baselineData);
+    setLogoFile(null);
+    setErrors({});
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -448,7 +457,7 @@ export default function CreateAccountPage() {
         {/* Visual right panel: Users Account Meta Data */}
         <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-4 pr-0`}>
           <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
-            <div className="invisible h-[42px] px-2 flex items-center justify-end whitespace-nowrap">
+            <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
               Account Public Key
             </div>
             <h2 className="w-full text-center text-lg font-semibold text-[#E5B94F]">
@@ -480,7 +489,7 @@ export default function CreateAccountPage() {
                   readOnly
                   placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
                   title="Required for Code Account Operations"
-                  className={`${requiredInputClasses} bg-orange-200 text-black`}
+                  className={requiredInputClasses}
                   onMouseEnter={() => setHoveredInput('publicKey')}
                   onMouseLeave={() => setHoveredInput(null)}
                 />
@@ -591,29 +600,55 @@ export default function CreateAccountPage() {
                 />
               </div>
             ) : (
-              <button
-                type="submit"
-                aria-disabled={disableSubmit}
-                className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                  disableSubmit
-                    ? 'bg-red-500 text-black cursor-not-allowed'
-                    : hoverTarget === 'createAccount'
-                    ? hasUnsavedChanges || canCreateMissingAccount
-                      ? 'bg-green-500 text-black'
-                      : 'bg-red-500 text-black'
-                    : 'bg-[#E5B94F] text-black'
-                }`}
-                title={
-                  !hasUnsavedChanges
-                    ? 'No changes detected (click to re-check)'
-                    : submitLabel
-                }
-                disabled={disableSubmit}
-                onMouseEnter={() => setHoverTarget('createAccount')}
-                onMouseLeave={() => setHoverTarget(null)}
-              >
-                {isSaving ? 'Saving...' : submitLabel}
-              </button>
+              <div className="flex w-full gap-2">
+                <button
+                  type="submit"
+                  aria-disabled={disableSubmit}
+                  className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
+                    disableSubmit
+                      ? 'bg-red-500 text-black cursor-not-allowed'
+                      : hoverTarget === 'createAccount'
+                      ? hasUnsavedChanges || canCreateMissingAccount
+                        ? 'bg-green-500 text-black'
+                        : 'bg-red-500 text-black'
+                      : 'bg-[#E5B94F] text-black'
+                  }`}
+                  title={
+                    !hasUnsavedChanges
+                      ? 'No changes detected (click to re-check)'
+                      : submitLabel
+                  }
+                  disabled={disableSubmit}
+                  onMouseEnter={() => setHoverTarget('createAccount')}
+                  onMouseLeave={() => setHoverTarget(null)}
+                >
+                  {isSaving ? 'Saving...' : submitLabel}
+                </button>
+                <button
+                  type="button"
+                  aria-disabled={disableRevert}
+                  className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
+                    disableRevert
+                      ? 'bg-red-500 text-black cursor-not-allowed'
+                      : hoverTarget === 'revertChanges'
+                      ? hasUnsavedChanges
+                        ? 'bg-green-500 text-black'
+                        : 'bg-red-500 text-black'
+                      : 'bg-[#E5B94F] text-black'
+                  }`}
+                  title={
+                    disableRevert || !hasUnsavedChanges
+                      ? 'No changes to revert'
+                      : 'Revert all pending changes'
+                  }
+                  disabled={disableRevert}
+                  onClick={handleRevertChanges}
+                  onMouseEnter={() => setHoverTarget('revertChanges')}
+                  onMouseLeave={() => setHoverTarget(null)}
+                >
+                  Revert Changes
+                </button>
+              </div>
             )}
           </div>
         </section>
@@ -624,12 +659,12 @@ export default function CreateAccountPage() {
             Users Avatar Logo
           </h2>
           <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
-            <div className="flex w-full max-w-md min-h-[340px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
+            <div className="flex w-full max-w-md min-h-[220px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
               {logoPreviewSrc ? (
                 <img
                   src={logoPreviewSrc}
                   alt="Account logo preview"
-                  className="max-h-[300px] max-w-full object-contain"
+                  className="max-h-[180px] max-w-full object-contain"
                 />
               ) : (
                 <span className="text-sm text-slate-300">No logo found on server</span>
