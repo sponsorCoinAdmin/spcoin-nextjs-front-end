@@ -82,7 +82,7 @@ export default function CreateAccountPage() {
   const [showAllBorders, setShowAllBorders] = useState(false);
   const [showBorderToggleButton, setShowBorderToggleButton] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [ setHasServerLogo] = useState(false);
+  const [, setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
