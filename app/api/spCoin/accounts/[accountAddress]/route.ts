@@ -11,9 +11,14 @@ export const dynamic = 'force-dynamic';
 
 const ACCOUNTS_DIR = path.join(process.cwd(), 'public', 'assets', 'accounts');
 const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
+const MAX_LOGO_BYTES = 500 * 1024;
 type RouteContext = { params: Promise<{ accountAddress: string }> };
 
 type Target = 'account' | 'logo';
+
+class PayloadTooLargeError extends Error {
+  readonly status = 413;
+}
 
 function isAddress(value: string): boolean {
   return /^0[xX][0-9a-fA-F]{40}$/.test(value);
@@ -33,6 +38,14 @@ function parseTarget(url: URL): Target {
 }
 
 async function readLogoBuffer(request: Request): Promise<Buffer> {
+  const contentLengthHeader = request.headers.get('content-length');
+  const contentLength = Number(contentLengthHeader ?? 0);
+  if (Number.isFinite(contentLength) && contentLength > MAX_LOGO_BYTES) {
+    throw new PayloadTooLargeError(
+      `Logo exceeds ${Math.round(MAX_LOGO_BYTES / 1024)} KiB limit.`,
+    );
+  }
+
   const contentType = request.headers.get('content-type') ?? '';
 
   if (contentType.toLowerCase().includes('multipart/form-data')) {
@@ -41,14 +54,30 @@ async function readLogoBuffer(request: Request): Promise<Buffer> {
     if (!file) {
       throw new Error('Missing file part. Use form-data field "file" or "logo".');
     }
+    if (file.size > MAX_LOGO_BYTES) {
+      throw new PayloadTooLargeError(
+        `Logo exceeds ${Math.round(MAX_LOGO_BYTES / 1024)} KiB limit.`,
+      );
+    }
     const bytes = await file.arrayBuffer();
-    return Buffer.from(bytes);
+    const logo = Buffer.from(bytes);
+    if (logo.length > MAX_LOGO_BYTES) {
+      throw new PayloadTooLargeError(
+        `Logo exceeds ${Math.round(MAX_LOGO_BYTES / 1024)} KiB limit.`,
+      );
+    }
+    return logo;
   }
 
   const bytes = await request.arrayBuffer();
   const buffer = Buffer.from(bytes);
   if (!buffer.length) {
     throw new Error('Empty request body for logo target.');
+  }
+  if (buffer.length > MAX_LOGO_BYTES) {
+    throw new PayloadTooLargeError(
+      `Logo exceeds ${Math.round(MAX_LOGO_BYTES / 1024)} KiB limit.`,
+    );
   }
   return buffer;
 }
@@ -180,6 +209,15 @@ export async function PUT(
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          maxBytes: MAX_LOGO_BYTES,
+        },
+        { status: error.status, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
     return NextResponse.json(
       {
         error: 'Failed to write account asset',

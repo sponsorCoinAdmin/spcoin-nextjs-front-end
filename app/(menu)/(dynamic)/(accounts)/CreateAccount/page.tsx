@@ -4,6 +4,10 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { getWalletLogoURL } from '@/lib/context/helpers/assetHelpers';
+import {
+  ACCEPTED_IMAGE_INPUT_ACCEPT,
+  processImageUpload,
+} from '@/lib/utils/images/imageUploadProcessor';
 
 interface AccountFormData {
   name: string;
@@ -16,6 +20,10 @@ interface AccountFormData {
 type HoverTarget = 'createAccount' | 'uploadLogo' | 'revertChanges' | null;
 type AccountMode = 'create' | 'edit' | 'update';
 const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
+const LOGO_TARGET_WIDTH_PX = 400;
+const LOGO_TARGET_HEIGHT_PX = 400;
+const LOGO_MAX_OUTPUT_BYTES = 500 * 1024;
+const LOGO_MAX_INPUT_BYTES = 5 * 1024 * 1024;
 function normalizeAddress(value: string): string {
   return `0x${String(value).replace(/^0[xX]/, '').toLowerCase()}`;
 }
@@ -432,9 +440,31 @@ export default function CreateAccountPage() {
     }
   };
 
-  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setLogoFile(file ?? null);
+  const handleLogoFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const selected = e.target.files?.[0];
+    if (!selected) {
+      setLogoFile(null);
+      return;
+    }
+
+    try {
+      const processed = await processImageUpload(selected, {
+        targetWidth: LOGO_TARGET_WIDTH_PX,
+        targetHeight: LOGO_TARGET_HEIGHT_PX,
+        maxInputBytes: LOGO_MAX_INPUT_BYTES,
+        maxOutputBytes: LOGO_MAX_OUTPUT_BYTES,
+      });
+      setLogoFile(processed.file);
+    } catch (err) {
+      setLogoFile(null);
+      alert(
+        err instanceof Error
+          ? err.message
+          : 'Unable to process image upload',
+      );
+    }
   };
   const baseInputClasses =
     'w-full rounded border border-white bg-[#1A1D2E] p-2 text-white focus:outline-none focus:ring-0';
@@ -709,7 +739,7 @@ export default function CreateAccountPage() {
                   ref={logoFileInputRef}
                   id="logoFileUpload"
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPTED_IMAGE_INPUT_ACCEPT}
                   className="hidden"
                   aria-label="Account logo file upload"
                   title="Select account logo file"
