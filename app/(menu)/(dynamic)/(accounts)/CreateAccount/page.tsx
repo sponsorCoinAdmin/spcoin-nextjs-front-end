@@ -17,6 +17,9 @@ interface AccountFormData {
   description: string;
 }
 
+type AccountFormField = keyof AccountFormData;
+type AccountFormErrors = Partial<Record<AccountFormField | 'publicKey', string>>;
+
 type HoverTarget = 'createAccount' | 'uploadLogo' | 'revertChanges' | null;
 type AccountMode = 'create' | 'edit' | 'update';
 const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
@@ -24,6 +27,13 @@ const LOGO_TARGET_WIDTH_PX = 400;
 const LOGO_TARGET_HEIGHT_PX = 400;
 const LOGO_MAX_OUTPUT_BYTES = 500 * 1024;
 const LOGO_MAX_INPUT_BYTES = 5 * 1024 * 1024;
+const FIELD_MAX_LENGTHS: Partial<Record<AccountFormField, number>> = {
+  name: 50,
+  symbol: 10,
+  email: 256,
+  website: 256,
+  description: 1024,
+};
 function normalizeAddress(value: string): string {
   return `0x${String(value).replace(/^0[xX]/, '').toLowerCase()}`;
 }
@@ -62,6 +72,60 @@ function toPreviewHref(
   return null;
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidWebsite(value: string): boolean {
+  if (!value) return true;
+  if (value.startsWith('/assets/') || value.startsWith('assets/')) return true;
+  try {
+    const url = new URL(value);
+    return /^https?:$/i.test(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function getAbsoluteFieldError(
+  field: AccountFormField,
+  rawValue: string,
+): string | null {
+  const raw = String(rawValue ?? '');
+  if (field === 'name' && raw.length > 50) return 'Name too large';
+  if (field === 'symbol' && raw.length > 10) return 'Symbol too large';
+  return null;
+}
+
+function getFieldTooLargeMessage(field: AccountFormField): string | null {
+  if (field === 'name') return 'Name too large';
+  if (field === 'symbol') return 'Symbol too large';
+  if (field === 'email') return 'Email too large';
+  if (field === 'website') return 'Website too large';
+  if (field === 'description') return 'Description too large';
+  return null;
+}
+
+function isTooLargeErrorMessage(value: string | undefined): boolean {
+  return typeof value === 'string' && value.toLowerCase().includes('too large');
+}
+
+function shouldBlockAdditionalInput(
+  field: AccountFormField,
+  currentRawValue: string,
+  nextRawValue: string,
+): boolean {
+  const maxLen = FIELD_MAX_LENGTHS[field];
+  if (!maxLen) return false;
+  const currentLen = String(currentRawValue ?? '').length;
+  const nextLen = String(nextRawValue ?? '').length;
+
+  // If already over limit, only allow edits that strictly reduce total length.
+  if (currentLen > maxLen) return nextLen >= currentLen;
+  // Otherwise, block growth past the configured maximum.
+  return nextLen > maxLen;
+}
+
 export default function CreateAccountPage() {
   const ctx = useContext(ExchangeContextState);
   const connected = Boolean(ctx?.exchangeContext?.network?.connected);
@@ -74,7 +138,8 @@ export default function CreateAccountPage() {
     website: '',
     description: '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<AccountFormErrors>({});
+  const [activeField, setActiveField] = useState<AccountFormField | null>(null);
   const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
   const [hoveredInput, setHoveredInput] = useState<string | null>(null);
   const [baselineData, setBaselineData] = useState<AccountFormData>({
@@ -141,6 +206,7 @@ export default function CreateAccountPage() {
           };
           setFormData(empty);
           setBaselineData(empty);
+          setErrors({});
           setLogoFile(null);
           setHasServerLogo(false);
           setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
@@ -164,12 +230,14 @@ export default function CreateAccountPage() {
         setAccountExists(true);
         setFormData(loaded);
         setBaselineData(loaded);
+        setErrors({});
         setLogoFile(null);
         setHasServerLogo(Boolean(payload?.hasLogo));
         setServerLogoURL(resolvedLogoURL);
       } catch {
         if (!abortController.signal.aborted) {
           setAccountExists(false);
+          setErrors({});
           setHasServerLogo(false);
           setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
         }
@@ -184,17 +252,93 @@ export default function CreateAccountPage() {
     return () => abortController.abort();
   }, [connected, ctx?.exchangeContext?.accounts?.activeAccount?.address]);
 
-  const validate = () => {
-    const next: Record<string, string> = {};
+  const validateField = (
+    field: AccountFormField,
+    rawValue: string,
+  ): string | null => {
+    const raw = String(rawValue ?? '');
+    const value = raw.trim();
+    if (field === 'name' && raw.length > 50) return 'Name too large';
+    if (field === 'symbol' && raw.length > 10) return 'Symbol too large';
+    if (field === 'description' && raw.length > 1024) {
+      return 'Description too large';
+    }
+    if (field === 'email' && raw.length > 256) return 'Email too large';
+    if (field === 'website' && raw.length > 256) return 'Website too large';
+    if (field === 'email' && value && !isValidEmail(value)) {
+      return 'Invalid email address';
+    }
+    if (field === 'website' && value && !isValidWebsite(value)) {
+      return 'Invalid website URL';
+    }
+    return null;
+  };
+
+  const validatePreSend = (values: AccountFormData): AccountFormErrors => {
+    const next: AccountFormErrors = {};
     if (!publicKey.trim()) next.publicKey = 'Account Public Key is required';
-    setErrors(next);
-    return Object.keys(next).length === 0;
+
+    const fieldNames: AccountFormField[] = [
+      'name',
+      'symbol',
+      'email',
+      'website',
+      'description',
+    ];
+
+    for (const field of fieldNames) {
+      const error = validateField(field, values[field]);
+      if (error) next[field] = error;
+    }
+    return next;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!connected) return;
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const field = name as AccountFormField;
+    const nextValue = value;
+    const currentValue = String(formData[field] ?? '');
+    if (shouldBlockAdditionalInput(field, currentValue, nextValue)) {
+      const tooLargeError = getFieldTooLargeMessage(field);
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (tooLargeError) next[field] = tooLargeError;
+        return next;
+      });
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: nextValue }));
+    const absoluteError = getAbsoluteFieldError(field, nextValue);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (absoluteError) next[field] = absoluteError;
+      else delete next[field];
+      return next;
+    });
+  };
+
+  const handleFieldFocus = (field: AccountFormField) => {
+    setActiveField(field);
+    const absoluteError = getAbsoluteFieldError(field, formData[field]);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (absoluteError) next[field] = absoluteError;
+      else delete next[field];
+      return next;
+    });
+  };
+
+  const handleFieldBlur = (field: AccountFormField) => {
+    setActiveField((prev) => (prev === field ? null : prev));
+    const fieldError = validateField(field, formData[field]);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fieldError) next[field] = fieldError;
+      else delete next[field];
+      return next;
+    });
   };
 
   const trimForm = (data: AccountFormData): AccountFormData => ({
@@ -263,7 +407,10 @@ export default function CreateAccountPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!connected) return;
-    if (!validate()) return;
+    const normalizedForm = trimForm(formData);
+    const nextErrors = validatePreSend(normalizedForm);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
     if (!publicKeyTrimmed) return;
     if (!hasUnsavedChanges && accountExists) {
       alert('No account or image changes to update');
@@ -353,7 +500,6 @@ export default function CreateAccountPage() {
         throw new Error('Missing auth token');
       }
 
-      const normalizedForm = trimForm(formData);
       const shouldSaveAccount = hasDataChanges || !accountExists;
       const shouldSaveLogo = Boolean(logoFile);
 
@@ -420,6 +566,7 @@ export default function CreateAccountPage() {
         setAccountExists(true);
         setFormData(savedForm);
         setBaselineData(savedForm);
+        setErrors({});
       }
 
       if (shouldSaveLogo) {
@@ -496,6 +643,7 @@ export default function CreateAccountPage() {
   const panelMarginClass = 'mx-0';
   const accountPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
   const avatarPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
+  const inputErrorClasses = 'border-red-500 bg-red-900/40';
 
   return (
     <main className="w-full p-6 text-white">
@@ -550,18 +698,33 @@ export default function CreateAccountPage() {
                 Account Public Key
               </label>
               <div>
-                <input
-                  id="publicKey"
-                  type="text"
-                  value={publicKey}
-                  readOnly
-                  placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
-                  title="Required for Code Account Operations"
-                  className={requiredInputClasses}
-                  onMouseEnter={() => setHoveredInput('publicKey')}
-                  onMouseLeave={() => setHoveredInput(null)}
-                />
-                {errors.publicKey ? <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p> : null}
+                <div className="flex items-center gap-2">
+                  <input
+                    id="publicKey"
+                    type="text"
+                    value={publicKey}
+                    readOnly
+                    placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
+                    title={
+                      errors.publicKey
+                        ? `Required for Code Account Operations | Error: ${errors.publicKey}`
+                        : 'Required for Code Account Operations'
+                    }
+                    className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}`}
+                    onMouseEnter={() => setHoveredInput('publicKey')}
+                    onMouseLeave={() => setHoveredInput(null)}
+                  />
+                  <span
+                    className={`w-4 text-center font-bold ${errors.publicKey ? 'text-red-500' : 'text-transparent'}`}
+                    aria-hidden={!errors.publicKey}
+                    title={errors.publicKey ? `Error: ${errors.publicKey}` : undefined}
+                  >
+                    X
+                  </span>
+                </div>
+                {errors.publicKey ? (
+                  <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p>
+                ) : null}
               </div>
             </>
           )}
@@ -607,44 +770,71 @@ export default function CreateAccountPage() {
                     isLinkField && href
                       ? ' underline text-blue-300 cursor-pointer'
                       : '';
+                  const absoluteFieldError = getAbsoluteFieldError(
+                    key,
+                    String(formData[key] ?? ''),
+                  );
+                  const fieldError =
+                    activeField === key
+                      ? absoluteFieldError ??
+                        (isTooLargeErrorMessage(errors[key]) ? errors[key] : undefined)
+                      : errors[key];
+                  const inputTitle = !connected
+                    ? disconnectedInputMessage
+                    : href
+                      ? `${labelTitle} (click to open in Edit mode)`
+                      : labelTitle;
+                  const composedTitle = fieldError
+                    ? `${inputTitle} | Error: ${fieldError}`
+                    : inputTitle;
                   return (
-                    <input
-                      id={name}
-                      name={name}
-                      type="text"
-                      value={
-                        connected
-                          ? formData[name as keyof AccountFormData]
-                          : ''
-                      }
-                      onChange={handleChange}
-                      readOnly={!connected}
-                      placeholder={
-                        hoveredInput === name
-                          ? !connected
-                            ? disconnectedInputMessage
-                            : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
-                          : 'Optional'
-                      }
-                      title={
-                        !connected
-                          ? disconnectedInputMessage
-                          : href
-                            ? `${labelTitle} (click to open in Edit mode)`
-                            : labelTitle
-                      }
-                      className={`${optionalInputClasses}${linkLikeClass}`}
-                      onClick={() => {
-                        if (!href || accountMode !== 'edit') return;
-                        if (href.startsWith('mailto:')) {
-                          window.location.href = href;
-                          return;
-                        }
-                        window.open(href, '_blank', 'noopener,noreferrer');
-                      }}
-                      onMouseEnter={() => setHoveredInput(name)}
-                      onMouseLeave={() => setHoveredInput(null)}
-                    />
+                    <>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id={name}
+                          name={name}
+                          type="text"
+                          value={
+                            connected
+                              ? formData[name as keyof AccountFormData]
+                              : ''
+                          }
+                          onChange={handleChange}
+                          readOnly={!connected}
+                          placeholder={
+                            hoveredInput === name
+                              ? !connected
+                                ? disconnectedInputMessage
+                                : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
+                              : 'Optional'
+                          }
+                          title={composedTitle}
+                          className={`${optionalInputClasses}${linkLikeClass}${fieldError ? ` ${inputErrorClasses}` : ''}`}
+                          onClick={() => {
+                            if (!href || accountMode !== 'edit') return;
+                            if (href.startsWith('mailto:')) {
+                              window.location.href = href;
+                              return;
+                            }
+                            window.open(href, '_blank', 'noopener,noreferrer');
+                          }}
+                          onMouseEnter={() => setHoveredInput(name)}
+                          onMouseLeave={() => setHoveredInput(null)}
+                          onFocus={() => handleFieldFocus(key)}
+                          onBlur={() => handleFieldBlur(key)}
+                        />
+                        <span
+                          className={`w-4 text-center font-bold ${fieldError ? 'text-red-500' : 'text-transparent'}`}
+                          aria-hidden={!fieldError}
+                          title={fieldError ? `Error: ${fieldError}` : undefined}
+                        >
+                          X
+                        </span>
+                      </div>
+                      {fieldError ? (
+                        <p className="mt-1 text-sm text-red-500">{fieldError}</p>
+                      ) : null}
+                    </>
                   );
                 })()}
               </div>
