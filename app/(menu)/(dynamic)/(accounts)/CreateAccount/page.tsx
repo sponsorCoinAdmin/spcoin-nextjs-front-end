@@ -228,6 +228,9 @@ export default function CreateAccountPage() {
 
   const submitLabel =
     accountExists && !hasUnsavedChanges ? 'Edit Account' : 'Update Account';
+  const pageTitle = accountExists
+    ? 'Edit Sponsor Coin Account'
+    : 'Create Sponsor Coin Account';
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -497,7 +500,9 @@ export default function CreateAccountPage() {
   return (
     <main className="w-full p-6 text-white">
       <div className="relative mb-6 flex items-center justify-center">
-        <h1 className="text-center text-2xl font-bold text-[#5981F3]">Create Sponsor Coin Account</h1>
+        <h1 className="text-center text-2xl font-bold text-[#5981F3]">
+          {pageTitle}
+        </h1>
         {showBorderToggleButton ? (
           <div className="absolute right-0">
             <button
