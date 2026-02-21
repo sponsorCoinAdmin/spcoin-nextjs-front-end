@@ -5,7 +5,7 @@ export const TAB_REGISTRY = {
   EXCHANGE:       { id: 'exchange',        path: '/Exchange',                     label: 'Exchange',         closable: false, order: 0  },
   WHITE_PAPER:    { id: 'white-paper',     path: '/WhitePaper',                   label: 'White Paper',      closable: true,  order: 10 },
   SPCOIN_API:     { id: 'spcoin-api',      path: '/SpCoinAPI',                    label: 'Sponsor Coin API', closable: true,  order: 20 },
-  CREATE_ACCOUNT: { id: 'create-account',  path: '/createAccount?type=Recipient', label: 'Create Account',   closable: true,  order: 30 },
+  CREATE_ACCOUNT: { id: 'create-account',  path: '/createAccount', label: 'Create Account',   closable: true,  order: 30 },
   MANAGE_ACCTS:   { id: 'manage-accounts', path: '/ManageAccounts',               label: 'Manage Accounts',  closable: true,  order: 40 },
   CREATE_AGENT:   { id: 'create-agent',    path: '/CreateAgent',                  label: 'Create Agent',     closable: true,  order: 50 },
   RECIPIENT_SITE: { id: 'recipient-site',  path: '/RecipientSite',                label: 'Recipient Site',   closable: true,  order: 60 },

@@ -82,7 +82,7 @@ export default function SponsorCoinPage() {
   );
 
   const handleOpenCreateAccount = useCallback(() => {
-    openCardPath('/createAccount?type=Recipient');
+    openCardPath('/createAccount');
   }, [openCardPath]);
 
   return (
@@ -138,7 +138,7 @@ export default function SponsorCoinPage() {
                   className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
                   onClick={handleOpenCreateAccount}
                 >
-                  <h2 className={headerStyle}>Create a Sponsor Coin Account.</h2>
+                  <h2 className={headerStyle}>Create or Edit Sponsor Coin Accounts</h2>
                   <p className={paragraphStyle}>
                     Set up a SponsorCoin account which can be used as a Sponsor, Recipient, or Agent Account. You need a Metamask account to create a SponsorCoin account.
                   </p>
