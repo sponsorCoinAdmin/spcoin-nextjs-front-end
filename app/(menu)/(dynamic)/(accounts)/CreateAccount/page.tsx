@@ -79,9 +79,10 @@ export default function CreateAccountPage() {
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [showAllBorders, setShowAllBorders] = useState(true);
+  const [showAllBorders, setShowAllBorders] = useState(false);
+  const [showBorderToggleButton, setShowBorderToggleButton] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [hasServerLogo, setHasServerLogo] = useState(false);
+  const [ setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -89,6 +90,20 @@ export default function CreateAccountPage() {
     const activeAddress = ctx?.exchangeContext?.accounts?.activeAccount?.address;
     setPublicKey(activeAddress ? String(activeAddress) : '');
   }, [ctx?.exchangeContext?.accounts?.activeAccount?.address]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.altKey || event.key.toLowerCase() !== 't') return;
+      event.preventDefault();
+      setShowBorderToggleButton((prev) => {
+        const next = !prev;
+        if (next) setShowAllBorders(true);
+        return next;
+      });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   useEffect(() => {
     const activeAddress = ctx?.exchangeContext?.accounts?.activeAccount?.address;
@@ -353,7 +368,15 @@ export default function CreateAccountPage() {
           },
         );
         if (!accountRes.ok) {
-          throw new Error('Failed to save account.json');
+          const failPayload = (await accountRes.json().catch(() => ({}))) as {
+            error?: string;
+            details?: string;
+          };
+          throw new Error(
+            failPayload?.error ||
+              failPayload?.details ||
+              'Failed to save account.json',
+          );
         }
       }
 
@@ -371,7 +394,13 @@ export default function CreateAccountPage() {
           },
         );
         if (!logoRes.ok) {
-          throw new Error('Failed to save logo.png');
+          const failPayload = (await logoRes.json().catch(() => ({}))) as {
+            error?: string;
+            details?: string;
+          };
+          throw new Error(
+            failPayload?.error || failPayload?.details || 'Failed to save logo.png',
+          );
         }
       }
 
@@ -437,30 +466,34 @@ export default function CreateAccountPage() {
 
   return (
     <main className="w-full p-6 text-white">
-      <div className="mb-3 flex justify-end">
-        <button
-          type="button"
-          className={`rounded border px-3 py-1 text-sm font-semibold text-black ${
-            showAllBorders
-              ? 'border-green-500 bg-green-500 hover:bg-green-400'
-              : 'border-red-500 bg-red-500 hover:bg-red-400'
-          }`}
-          onClick={() => setShowAllBorders((prev) => !prev)}
-        >
-          Toggle Borders
-        </button>
+      <div className="relative mb-6 flex items-center justify-center">
+        <h1 className="text-center text-2xl font-bold text-[#5981F3]">Create Sponsor Coin Account</h1>
+        {showBorderToggleButton ? (
+          <div className="absolute right-0">
+            <button
+              type="button"
+              className={`rounded border px-3 py-1 text-sm font-semibold text-black ${
+                showAllBorders
+                  ? 'border-green-500 bg-green-500 hover:bg-green-400'
+                  : 'border-red-500 bg-red-500 hover:bg-red-400'
+              }`}
+              onClick={() => setShowAllBorders((prev) => !prev)}
+            >
+              Toggle Borders
+            </button>
+          </div>
+        ) : null}
       </div>
-      <h1 className="mb-6 text-center text-2xl font-bold text-[#E5B94F]">Create Sponsor Coin Account</h1>
 
-      <form onSubmit={handleSubmit} className="min-h-[72vh] w-full">
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="grid w-full items-start justify-center gap-0 grid-cols-1 lg:grid-cols-[700px_700px]">
         {/* Visual right panel: Users Account Meta Data */}
-        <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-4 pr-0`}>
+        <section className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-0 pr-0`}>
           <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
             <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
               Account Public Key
             </div>
-            <h2 className="w-full text-center text-lg font-semibold text-[#E5B94F]">
+            <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
               Users Account Meta Data
             </h2>
           </div>
@@ -654,57 +687,63 @@ export default function CreateAccountPage() {
         </section>
 
         {/* Visual left panel: Users Avatar Logo */}
-        <section className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-4 pl-0`}>
-          <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#E5B94F]">
-            Users Avatar Logo
+        <section className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}>
+          <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
+            Users Avatar
           </h2>
-          <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
-            <div className="flex w-full max-w-md min-h-[220px] items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
-              {logoPreviewSrc ? (
-                <img
-                  src={logoPreviewSrc}
-                  alt="Account logo preview"
-                  className="max-h-[180px] max-w-full object-contain"
+          <div className="flex h-full w-full flex-1 min-h-0 flex-col items-center gap-4">
+            <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
+              <div className="flex w-full max-w-md flex-col gap-4">
+                <div className="flex h-[332px] w-full items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
+                  {logoPreviewSrc ? (
+                    <img
+                      src={logoPreviewSrc}
+                      alt="Account logo preview"
+                      className="h-full w-full max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm text-slate-300">No logo found on server</span>
+                  )}
+                </div>
+                <input
+                  ref={logoFileInputRef}
+                  id="logoFileUpload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  aria-label="Account logo file upload"
+                  title="Select account logo file"
+                  onChange={handleLogoFileChange}
                 />
-              ) : (
-                <span className="text-sm text-slate-300">No logo found on server</span>
-              )}
-            </div>
-            <input
-              ref={logoFileInputRef}
-              id="logoFileUpload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              aria-label="Account logo file upload"
-              title="Select account logo file"
-              onChange={handleLogoFileChange}
-            />
-            {!connected ? (
-              <div className="flex h-[42px] w-full max-w-md items-center justify-center rounded border border-white bg-transparent">
-                <span className="text-[110%] font-normal text-red-500">Wallet Connection Required</span>
+                <div className="w-full">
+                  {!connected ? (
+                    <div className="flex h-[42px] w-full items-center justify-center rounded border border-white bg-transparent">
+                      <span className="text-[110%] font-normal text-red-500">Wallet Connection Required</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-disabled={!connected}
+                      className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                        hoverTarget === 'uploadLogo'
+                          ? 'bg-green-500 text-black'
+                          : 'bg-[#E5B94F] text-black'
+                      }`}
+                      title={previewButtonLabel}
+                      onClick={() => {
+                        if (!logoFileInputRef.current) return;
+                        logoFileInputRef.current.value = '';
+                        logoFileInputRef.current.click();
+                      }}
+                      onMouseEnter={() => setHoverTarget('uploadLogo')}
+                      onMouseLeave={() => setHoverTarget(null)}
+                    >
+                      {previewButtonLabel}
+                    </button>
+                  )}
+                </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                aria-disabled={!connected}
-                className={`h-[42px] w-full max-w-md rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                  hoverTarget === 'uploadLogo'
-                    ? 'bg-green-500 text-black'
-                    : 'bg-[#E5B94F] text-black'
-                }`}
-                title={previewButtonLabel}
-                onClick={() => {
-                  if (!logoFileInputRef.current) return;
-                  logoFileInputRef.current.value = '';
-                  logoFileInputRef.current.click();
-                }}
-                onMouseEnter={() => setHoverTarget('uploadLogo')}
-                onMouseLeave={() => setHoverTarget(null)}
-              >
-                {previewButtonLabel}
-              </button>
-            )}
+            </div>
           </div>
         </section>
         </div>
@@ -712,3 +751,4 @@ export default function CreateAccountPage() {
     </main>
   );
 }
+

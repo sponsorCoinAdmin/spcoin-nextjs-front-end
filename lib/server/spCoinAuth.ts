@@ -20,6 +20,54 @@ const SESSION_TTL_MS = 10 * 60 * 1000;
 
 const nonceStore = new Map<string, NonceRecord>();
 const sessionStore = new Map<string, SessionRecord>();
+const SESSION_TOKEN_VERSION = 'v1';
+
+function getSessionTokenSecret(): string {
+  return (
+    process.env.SPCOIN_AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    process.env.JWT_SECRET ||
+    'spcoin-local-dev-secret-change-me'
+  );
+}
+
+function signSessionTokenPayload(payload: string): string {
+  return crypto
+    .createHmac('sha256', getSessionTokenSecret())
+    .update(payload)
+    .digest('hex');
+}
+
+function buildSessionToken(address: string, expiresAt: number): string {
+  const normalized = normalizeAddress(address);
+  const addressHex = normalized.slice(2).toLowerCase();
+  const exp36 = Math.trunc(expiresAt).toString(36);
+  const payload = `${SESSION_TOKEN_VERSION}.${exp36}.${addressHex}`;
+  const sig = signSessionTokenPayload(payload);
+  return `${payload}.${sig}`;
+}
+
+function parseAndValidateStatelessSessionToken(token: string): SessionRecord | null {
+  const parts = String(token ?? '').trim().split('.');
+  if (parts.length !== 4) return null;
+  const [version, exp36, addressHex, sig] = parts;
+  if (version !== SESSION_TOKEN_VERSION) return null;
+  if (!/^[0-9a-f]{40}$/i.test(addressHex)) return null;
+  if (!/^[0-9a-f]{64}$/i.test(sig)) return null;
+  const payload = `${version}.${exp36}.${addressHex.toLowerCase()}`;
+  const expectedSig = signSessionTokenPayload(payload);
+  const sigBuf = Buffer.from(sig.toLowerCase(), 'hex');
+  const expectedBuf = Buffer.from(expectedSig, 'hex');
+  if (sigBuf.length !== expectedBuf.length) return null;
+  if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
+  const expiresAt = Number.parseInt(exp36, 36);
+  if (!Number.isFinite(expiresAt) || expiresAt <= 0) return null;
+  return {
+    address: `0x${addressHex.toLowerCase()}`,
+    token,
+    expiresAt,
+  };
+}
 
 function nowMs(): number {
   return Date.now();
@@ -47,6 +95,14 @@ function nonceKey(address: string, nonce: string): string {
   return `${address.toLowerCase()}::${nonce}`;
 }
 
+function parseNonceIssuedAtMs(nonce: string): number | null {
+  const [tsPart] = String(nonce ?? '').split('.', 2);
+  if (!tsPart) return null;
+  const ms = Number.parseInt(tsPart, 36);
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  return ms;
+}
+
 function buildAuthMessage(address: string, nonce: string): string {
   return [
     'SponsorCoin Account Write Authorization',
@@ -62,7 +118,8 @@ export function issueNonce(rawAddress: string) {
     throw new Error('Invalid address');
   }
   const address = normalizeAddress(rawAddress);
-  const nonce = crypto.randomBytes(16).toString('hex');
+  // Prefix nonce with issued-at ms (base36) so verify can enforce TTL even if in-memory state is lost.
+  const nonce = `${Date.now().toString(36)}.${crypto.randomBytes(16).toString('hex')}`;
   const message = buildAuthMessage(address, nonce);
   const expiresAt = nowMs() + NONCE_TTL_MS;
   nonceStore.set(nonceKey(address, nonce), { address, nonce, message, expiresAt });
@@ -85,17 +142,22 @@ export async function verifyNonceSignature(input: {
   }
 
   const record = nonceStore.get(nonceKey(address, nonce));
-  if (!record) {
-    return { ok: false as const, error: 'Nonce not found or expired' };
-  }
-  if (record.expiresAt <= nowMs()) {
-    nonceStore.delete(nonceKey(address, nonce));
-    return { ok: false as const, error: 'Nonce expired' };
+  const issuedAtMs = parseNonceIssuedAtMs(nonce);
+  if (record) {
+    if (record.expiresAt <= nowMs()) {
+      nonceStore.delete(nonceKey(address, nonce));
+      return { ok: false as const, error: 'Nonce expired' };
+    }
+  } else {
+    // Fallback: allow stateless verification if nonce store is unavailable (e.g. process swap/reload).
+    if (!issuedAtMs || issuedAtMs + NONCE_TTL_MS <= nowMs()) {
+      return { ok: false as const, error: 'Nonce not found or expired' };
+    }
   }
 
   const valid = await verifyMessage({
     address: address as `0x${string}`,
-    message: record.message,
+    message: record?.message ?? buildAuthMessage(address, nonce),
     signature: signature as `0x${string}`,
   });
   if (!valid) {
@@ -103,8 +165,8 @@ export async function verifyNonceSignature(input: {
   }
 
   nonceStore.delete(nonceKey(address, nonce));
-  const token = crypto.randomBytes(24).toString('hex');
   const expiresAt = nowMs() + SESSION_TTL_MS;
+  const token = buildSessionToken(address, expiresAt);
   sessionStore.set(token, { address, token, expiresAt });
   return { ok: true as const, token, address, expiresAt };
 }
@@ -120,7 +182,7 @@ export function validateSessionToken(token: string | null, rawAddress: string) {
   if (!token) return { ok: false as const, error: 'Missing bearer token' };
   if (!isAddress(rawAddress)) return { ok: false as const, error: 'Invalid address' };
   const address = normalizeAddress(rawAddress);
-  const record = sessionStore.get(token);
+  const record = sessionStore.get(token) ?? parseAndValidateStatelessSessionToken(token);
   if (!record) return { ok: false as const, error: 'Invalid or expired token' };
   if (record.expiresAt <= nowMs()) {
     sessionStore.delete(token);
