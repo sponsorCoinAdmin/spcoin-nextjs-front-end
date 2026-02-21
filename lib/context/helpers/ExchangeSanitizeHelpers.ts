@@ -1,6 +1,11 @@
 // File: @/lib/context/ExchangeSanitizeHelpers.ts
 
-import type { TradeData, ExchangeContext } from '@/lib/structure';
+import type {
+  TradeData,
+  ExchangeContext,
+  Accounts,
+  spCoinAccount,
+} from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 import type {
@@ -143,7 +148,7 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
   );
 }
 
-function normalizeAccountLogo<T extends { address?: unknown; logoURL?: unknown }>(
+function normalizeAccountLogo<T extends spCoinAccount>(
   account: T | undefined | null,
 ): T | undefined | null {
   if (!account || typeof account !== 'object') return account;
@@ -155,11 +160,11 @@ function normalizeAccountLogo<T extends { address?: unknown; logoURL?: unknown }
   };
 }
 
-function normalizeAccountLogoList<T extends { address?: unknown; logoURL?: unknown }>(
+function normalizeAccountLogoList(
   list: unknown,
-): T[] {
+): spCoinAccount[] {
   if (!Array.isArray(list)) return [];
-  return list.map((item) => normalizeAccountLogo(item as T) as T);
+  return list.map((item) => normalizeAccountLogo(item as spCoinAccount) as spCoinAccount);
 }
 
 /**
@@ -247,7 +252,7 @@ export const sanitizeExchangeContext = (
   }
 
   // ----- ACCOUNTS
-  const sanitizedAccounts = {
+  const sanitizedAccounts: Accounts = {
     activeAccount: (raw as any).accounts?.activeAccount
       ? normalizeAccountLogo({
           ...(raw as any).accounts.activeAccount,
