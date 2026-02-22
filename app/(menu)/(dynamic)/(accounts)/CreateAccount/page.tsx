@@ -387,7 +387,7 @@ export default function CreateAccountPage() {
 
   const submitLabel =
     accountExists && !hasUnsavedChanges ? 'Edit Account' : 'Update Account';
-  const isEditMode = submitLabel === 'Edit Account';
+  const isSubmitEditMode = submitLabel === 'Edit Account';
   const pageTitle = accountExists
     ? 'Edit Sponsor Coin Account'
     : 'Create Sponsor Coin Account';
@@ -405,17 +405,18 @@ export default function CreateAccountPage() {
     : previewObjectUrl || serverLogoURL;
   const previewButtonLabel = 'Select Preview Image';
   const isLoading = isLoadingAccount || isSaving;
+  // Requested activation state: when false (loading/saving), buttons may hover-red but actions are blocked.
+  const isEditMode = !isLoadingAccount && !isSaving;
   const isActive = connected && !isLoading;
   const canCreateMissingAccount =
     connected && !!publicKeyTrimmed && !accountExists;
   const disableSubmit =
     !connected ||
-    isLoading ||
     !publicKeyTrimmed;
-  const disableRevert = !connected || isLoading;
+  const disableRevert = !connected;
 
   const handleRevertChanges = () => {
-    if (disableRevert || !hasUnsavedChanges) return;
+    if (!isEditMode || disableRevert || !hasUnsavedChanges) return;
     setFormData(baselineData);
     setLogoFile(null);
     setErrors({});
@@ -423,6 +424,7 @@ export default function CreateAccountPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEditMode) return;
     if (!connected) return;
     const normalizedForm = trimForm(formData);
     const nextErrors = validatePreSend(normalizedForm);
@@ -663,11 +665,13 @@ export default function CreateAccountPage() {
   const accountPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
   const avatarPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
-  const showLoadingRedOnHover = isLoading && hoveredInput !== null;
-  const loadingInputClasses = showLoadingRedOnHover
-    ? 'bg-red-900/60 border-red-500 cursor-not-allowed'
-    : '';
+  const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const inputLocked = !isActive;
+  const lockedInputMessage = isLoading
+    ? loadingInputMessage
+    : disconnectedInputMessage;
+  const getLoadingClassesForField = (fieldName: string): string =>
+    isLoading && hoveredInput === fieldName ? loadingFieldClasses : '';
   const formFieldRows: Array<{
     label: string;
     name: AccountFormField;
@@ -774,7 +778,7 @@ export default function CreateAccountPage() {
                         ? `Required for Code Account Operations | Error: ${errors.publicKey}`
                         : 'Required for Code Account Operations'
                     }
-                    className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''} cursor-default select-none`}
+                    className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''} cursor-default select-none`}
                     style={{ cursor: 'default', caretColor: 'transparent' }}
                     onMouseDown={(e) => e.preventDefault()}
                     onFocus={(e) => e.currentTarget.blur()}
@@ -853,14 +857,12 @@ export default function CreateAccountPage() {
                             placeholder={
                               hoveredInput === name
                                 ? inputLocked
-                                  ? isLoading
-                                    ? loadingInputMessage
-                                    : disconnectedInputMessage
+                                  ? lockedInputMessage
                                   : fieldPlaceholders[key]
                                 : 'Optional'
                             }
                             title={composedTitle}
-                            className={`${optionalInputClasses} min-h-[42px] resize-none overflow-hidden whitespace-pre-wrap break-words ${fieldError ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''}`}
+                            className={`${optionalInputClasses} min-h-[42px] resize-none overflow-hidden whitespace-pre-wrap break-words ${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
                             onMouseEnter={() => setHoveredInput(name)}
                             onMouseLeave={() => setHoveredInput(null)}
                             onFocus={() => handleFieldFocus(key)}
@@ -881,14 +883,12 @@ export default function CreateAccountPage() {
                             placeholder={
                               hoveredInput === name
                                 ? inputLocked
-                                  ? isLoading
-                                    ? loadingInputMessage
-                                    : disconnectedInputMessage
+                                  ? lockedInputMessage
                                   : fieldPlaceholders[key]
                                 : 'Optional'
                             }
                             title={composedTitle}
-                            className={`${optionalInputClasses}${linkLikeClass}${fieldError ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''}`}
+                            className={`${optionalInputClasses}${linkLikeClass}${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
                             onClick={() => {
                               if (!href || accountMode !== 'edit' || inputLocked) return;
                               if (href.startsWith('mailto:')) {
@@ -940,10 +940,14 @@ export default function CreateAccountPage() {
             ) : (
               <div className="flex w-[calc(100%-1.5rem)] gap-2">
                 <button
-                  type={isEditMode ? 'button' : 'submit'}
+                  type={isSubmitEditMode || !isEditMode ? 'button' : 'submit'}
                   aria-disabled={disableSubmit}
                   className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                    isEditMode
+                    !isEditMode
+                      ? hoverTarget === 'createAccount'
+                        ? 'bg-red-500 text-black'
+                        : 'bg-[#E5B94F] text-black'
+                      : isSubmitEditMode
                       ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
                       : disableSubmit
                       ? 'bg-red-500 text-black cursor-not-allowed'
@@ -960,15 +964,15 @@ export default function CreateAccountPage() {
                   }
                   disabled={disableSubmit}
                   onMouseEnter={() => {
-                    if (isEditMode) return;
+                    if (isSubmitEditMode && isEditMode) return;
                     setHoverTarget('createAccount');
                   }}
                   onMouseLeave={() => {
-                    if (isEditMode) return;
+                    if (isSubmitEditMode && isEditMode) return;
                     setHoverTarget(null);
                   }}
                   onClick={() => {
-                    if (isEditMode) return;
+                    if (isSubmitEditMode || !isEditMode) return;
                   }}
                 >
                   {isSaving ? 'Saving...' : submitLabel}
@@ -977,7 +981,11 @@ export default function CreateAccountPage() {
                   type="button"
                   aria-disabled={disableRevert}
                   className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                    disableRevert
+                    !isEditMode
+                      ? hoverTarget === 'revertChanges'
+                        ? 'bg-red-500 text-black'
+                        : 'bg-[#E5B94F] text-black'
+                      : disableRevert
                       ? 'bg-red-500 text-black cursor-not-allowed'
                       : hoverTarget === 'revertChanges'
                       ? hasUnsavedChanges
@@ -1039,10 +1047,14 @@ export default function CreateAccountPage() {
                   ) : (
                     <button
                       type="button"
-                      aria-disabled={inputLocked}
-                      disabled={inputLocked}
+                      aria-disabled={!connected}
+                      disabled={!connected}
                       className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                        inputLocked
+                        !isEditMode
+                          ? hoverTarget === 'uploadLogo'
+                            ? 'bg-red-500 text-black'
+                            : 'bg-[#E5B94F] text-black'
+                          : inputLocked
                           ? 'bg-red-500 text-black cursor-not-allowed'
                           : hoverTarget === 'uploadLogo'
                           ? 'bg-green-500 text-black'
@@ -1050,7 +1062,7 @@ export default function CreateAccountPage() {
                       }`}
                       title={isLoading ? loadingInputMessage : previewButtonLabel}
                       onClick={() => {
-                        if (inputLocked) return;
+                        if (!isEditMode || inputLocked) return;
                         if (!logoFileInputRef.current) return;
                         logoFileInputRef.current.value = '';
                         logoFileInputRef.current.click();
