@@ -80,6 +80,7 @@ export default function CreateAccountFormPanel({
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
   const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const lockedInputMessage = isLoading ? loadingInputMessage : disconnectedInputMessage;
+  const noChangesToUpdate = submitLabel === 'Update Account' && !hasUnsavedChanges;
   const getLoadingClassesForField = (fieldName: string): string =>
     isLoading && hoveredInput === fieldName ? loadingFieldClasses : '';
 
@@ -329,12 +330,16 @@ export default function CreateAccountFormPanel({
               type={!isEditMode ? 'button' : 'submit'}
               aria-disabled={disableSubmit}
               className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                !isEditMode
+                noChangesToUpdate
+                  ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
+                  : !isEditMode
                   ? hoverTarget === 'createAccount'
                     ? 'bg-red-500 text-black'
                     : 'bg-[#E5B94F] text-black'
                   : disableSubmit
-                  ? 'bg-red-500 text-black cursor-not-allowed'
+                  ? noChangesToUpdate
+                    ? 'bg-red-500 text-black cursor-default'
+                    : 'bg-red-500 text-black cursor-not-allowed'
                   : hoverTarget === 'createAccount'
                   ? hasUnsavedChanges || canCreateMissingAccount
                     ? 'bg-green-500 text-black'
@@ -344,15 +349,18 @@ export default function CreateAccountFormPanel({
               title={
                 submitLabel === 'Update Account'
                   ? !hasUnsavedChanges
-                    ? 'No changes detected (click to re-check)'
+                    ? 'No changes to Update'
                     : submitLabel
                   : undefined
               }
               disabled={disableSubmit}
-              onMouseEnter={() => setHoverTarget('createAccount')}
-              onMouseLeave={() => setHoverTarget(null)}
-              onClick={() => {
-                if (!isEditMode) return;
+              onMouseEnter={() => {
+                if (noChangesToUpdate) return;
+                setHoverTarget('createAccount');
+              }}
+              onMouseLeave={() => {
+                if (noChangesToUpdate) return;
+                setHoverTarget(null);
               }}
             >
               {isSaving ? 'Saving...' : submitLabel}

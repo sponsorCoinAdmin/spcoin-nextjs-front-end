@@ -236,7 +236,6 @@ export function useCreateAccountForm({
     }
     if (!derived.publicKeyTrimmed) return;
     if (!derived.hasUnsavedChanges && accountExists) {
-      alert('No account or image changes to update');
       return;
     }
 
