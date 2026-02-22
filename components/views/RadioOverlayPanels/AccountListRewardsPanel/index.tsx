@@ -176,9 +176,9 @@ export default function AccountListRewardsPanel({
   });
 
   const { accountRole1, accountRole2 } = useMemo(() => {
-    if (cfgClaimSponsor) return { accountRole1: 'Recipient', accountRole2: 'Agent' };
+    if (cfgClaimSponsor) return { accountRole1: 'Agent', accountRole2: 'Recipient' };
     if (cfgClaimRecipient) return { accountRole1: 'Sponsor', accountRole2: 'Agent' };
-    if (cfgClaimAgent) return { accountRole1: 'Recipient', accountRole2: 'Sponsor' };
+    if (cfgClaimAgent) return { accountRole1: 'Sponsor', accountRole2: 'Recipient' };
 
     // UNSPONSOR (staked) or default view
     return { accountRole1: 'Accounts', accountRole2: 'Accounts' };

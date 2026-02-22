@@ -91,11 +91,11 @@ function getAccountsHeaderTitle(
   const n = (name ?? '').trim();
   const label = n.length ? n : 'Sponsor Coin';
 
-  if (opts.activeSponsor) return `${label}'s Sponsor Account`;
-  if (opts.activeRecipient) return `${label}'s Recipient Account`;
-  if (opts.activeAgent) return `${label}'s Agent Account`;
+  if (opts.activeSponsor) return `Sponsor ${label}`;
+  if (opts.activeRecipient) return `Recipient ${label}`;
+  if (opts.activeAgent) return `Agent ${label}`;
 
-  return `${label}'s Account`;
+  return `Account ${label}`;
 }
 
 /**
