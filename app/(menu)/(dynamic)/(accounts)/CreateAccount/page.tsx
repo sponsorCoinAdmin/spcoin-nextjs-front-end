@@ -26,7 +26,21 @@ const DEFAULT_ACCOUNT_LOGO_URL = '/assets/miscellaneous/Anonymous.png';
 const LOGO_TARGET_WIDTH_PX = 400;
 const LOGO_TARGET_HEIGHT_PX = 400;
 const LOGO_MAX_OUTPUT_BYTES = 500 * 1024;
-const LOGO_MAX_INPUT_BYTES = 5 * 1024 * 1024;
+const LOGO_MAX_INPUT_BYTES = 25 * 1024 * 1024;
+const EMPTY_FORM_DATA: AccountFormData = {
+  name: '',
+  symbol: '',
+  email: '',
+  website: '',
+  description: '',
+};
+const FORM_FIELDS: AccountFormField[] = [
+  'name',
+  'symbol',
+  'email',
+  'website',
+  'description',
+];
 const FIELD_MAX_LENGTHS: Partial<Record<AccountFormField, number>> = {
   name: 50,
   symbol: 10,
@@ -44,6 +58,14 @@ function ensureAbsoluteAssetURL(value: string): string {
   if (trimmed.startsWith('/')) return trimmed;
   if (trimmed.startsWith('assets/')) return `/${trimmed}`;
   return trimmed;
+}
+
+function withCacheBust(value: string): string {
+  const url = String(value ?? '').trim();
+  if (!url) return url;
+  const hasQuery = url.includes('?');
+  const sep = hasQuery ? '&' : '?';
+  return `${url}${sep}v=${Date.now()}`;
 }
 
 function toPreviewHref(
@@ -131,24 +153,12 @@ export default function CreateAccountPage() {
   const connected = Boolean(ctx?.exchangeContext?.network?.connected);
 
   const [publicKey, setPublicKey] = useState<string>('');
-  const [formData, setFormData] = useState<AccountFormData>({
-    name: '',
-    symbol: '',
-    email: '',
-    website: '',
-    description: '',
-  });
+  const [formData, setFormData] = useState<AccountFormData>({ ...EMPTY_FORM_DATA });
   const [errors, setErrors] = useState<AccountFormErrors>({});
   const [activeField, setActiveField] = useState<AccountFormField | null>(null);
   const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
   const [hoveredInput, setHoveredInput] = useState<string | null>(null);
-  const [baselineData, setBaselineData] = useState<AccountFormData>({
-    name: '',
-    symbol: '',
-    email: '',
-    website: '',
-    description: '',
-  });
+  const [baselineData, setBaselineData] = useState<AccountFormData>({ ...EMPTY_FORM_DATA });
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -158,11 +168,25 @@ export default function CreateAccountPage() {
   const [, setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const resizeDescriptionTextarea = (
+    el?: HTMLTextAreaElement | null,
+  ): void => {
+    const target = el ?? descriptionTextareaRef.current;
+    if (!target) return;
+    target.style.height = 'auto';
+    target.style.height = `${target.scrollHeight}px`;
+  };
 
   useEffect(() => {
     const activeAddress = ctx?.exchangeContext?.accounts?.activeAccount?.address;
     setPublicKey(activeAddress ? String(activeAddress) : '');
   }, [ctx?.exchangeContext?.accounts?.activeAccount?.address]);
+
+  useEffect(() => {
+    resizeDescriptionTextarea();
+  }, [formData.description]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -197,13 +221,7 @@ export default function CreateAccountPage() {
         );
         if (!response.ok) {
           setAccountExists(false);
-          const empty: AccountFormData = {
-            name: '',
-            symbol: '',
-            email: '',
-            website: '',
-            description: '',
-          };
+          const empty: AccountFormData = { ...EMPTY_FORM_DATA };
           setFormData(empty);
           setBaselineData(empty);
           setErrors({});
@@ -233,7 +251,7 @@ export default function CreateAccountPage() {
         setErrors({});
         setLogoFile(null);
         setHasServerLogo(Boolean(payload?.hasLogo));
-        setServerLogoURL(resolvedLogoURL);
+        setServerLogoURL(withCacheBust(resolvedLogoURL));
       } catch {
         if (!abortController.signal.aborted) {
           setAccountExists(false);
@@ -278,23 +296,17 @@ export default function CreateAccountPage() {
     const next: AccountFormErrors = {};
     if (!publicKey.trim()) next.publicKey = 'Account Public Key is required';
 
-    const fieldNames: AccountFormField[] = [
-      'name',
-      'symbol',
-      'email',
-      'website',
-      'description',
-    ];
-
-    for (const field of fieldNames) {
+    for (const field of FORM_FIELDS) {
       const error = validateField(field, values[field]);
       if (error) next[field] = error;
     }
     return next;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!connected) return;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    if (!isActive) return;
     const { name, value } = e.target;
     const field = name as AccountFormField;
     const nextValue = value;
@@ -310,6 +322,9 @@ export default function CreateAccountPage() {
     }
 
     setFormData((prev) => ({ ...prev, [field]: nextValue }));
+    if (field === 'description' && e.target instanceof HTMLTextAreaElement) {
+      resizeDescriptionTextarea(e.target);
+    }
     const absoluteError = getAbsoluteFieldError(field, nextValue);
     setErrors((prev) => {
       const next = { ...prev };
@@ -372,6 +387,7 @@ export default function CreateAccountPage() {
 
   const submitLabel =
     accountExists && !hasUnsavedChanges ? 'Edit Account' : 'Update Account';
+  const isEditMode = submitLabel === 'Edit Account';
   const pageTitle = accountExists
     ? 'Edit Sponsor Coin Account'
     : 'Create Sponsor Coin Account';
@@ -388,14 +404,15 @@ export default function CreateAccountPage() {
     ? DEFAULT_ACCOUNT_LOGO_URL
     : previewObjectUrl || serverLogoURL;
   const previewButtonLabel = 'Select Preview Image';
+  const isLoading = isLoadingAccount || isSaving;
+  const isActive = connected && !isLoading;
   const canCreateMissingAccount =
     connected && !!publicKeyTrimmed && !accountExists;
   const disableSubmit =
     !connected ||
-    isSaving ||
-    isLoadingAccount ||
+    isLoading ||
     !publicKeyTrimmed;
-  const disableRevert = !connected || isSaving || isLoadingAccount;
+  const disableRevert = !connected || isLoading;
 
   const handleRevertChanges = () => {
     if (disableRevert || !hasUnsavedChanges) return;
@@ -573,7 +590,7 @@ export default function CreateAccountPage() {
         const canonicalLogoURL = getWalletLogoURL(publicKeyTrimmed);
         setLogoFile(null);
         setHasServerLogo(true);
-        setServerLogoURL(canonicalLogoURL);
+        setServerLogoURL(withCacheBust(canonicalLogoURL));
       }
 
       if (shouldSaveAccount && shouldSaveLogo) {
@@ -621,9 +638,11 @@ export default function CreateAccountPage() {
   const requiredInputClasses = `${baseInputClasses} placeholder:text-red-500`;
   const optionalInputClasses = `${baseInputClasses} placeholder:text-green-400`;
   const labelCellClasses =
-    'mb-0 text-right h-[42px] px-2 text-white flex items-center justify-end';
+    'mb-0 text-right min-h-[42px] px-2 text-white flex items-center justify-end';
   const disconnectedInputMessage =
     'Connection Required and input is prohibited until connection is established.';
+  const loadingInputMessage =
+    'Loading or updating account data. Input is temporarily disabled.';
   const fieldTitles = {
     publicKey: 'Required Account on a connected Metamask Account.',
     name: 'Account Name, Do Not use a personal name',
@@ -644,6 +663,42 @@ export default function CreateAccountPage() {
   const accountPanelBorderClass = showAllBorders ? 'border-2 border-yellow-400' : 'border-2 border-transparent';
   const avatarPanelBorderClass = showAllBorders ? 'border-2 border-red-500' : 'border-2 border-transparent';
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
+  const showLoadingRedOnHover = isLoading && hoveredInput !== null;
+  const loadingInputClasses = showLoadingRedOnHover
+    ? 'bg-red-900/60 border-red-500 cursor-not-allowed'
+    : '';
+  const inputLocked = !isActive;
+  const formFieldRows: Array<{
+    label: string;
+    name: AccountFormField;
+    labelTitle: string;
+  }> = [
+    {
+      label: 'Name',
+      name: 'name',
+      labelTitle: fieldTitles.name,
+    },
+    {
+      label: 'Symbol',
+      name: 'symbol',
+      labelTitle: fieldTitles.symbol,
+    },
+    {
+      label: 'Email Address',
+      name: 'email',
+      labelTitle: fieldTitles.email,
+    },
+    {
+      label: 'Website',
+      name: 'website',
+      labelTitle: fieldTitles.website,
+    },
+    {
+      label: 'Description',
+      name: 'description',
+      labelTitle: fieldTitles.description,
+    },
+  ];
 
   return (
     <main className="w-full p-6 text-white">
@@ -704,13 +759,25 @@ export default function CreateAccountPage() {
                     type="text"
                     value={publicKey}
                     readOnly
-                    placeholder={hoveredInput === 'publicKey' ? fieldPlaceholders.publicKey : 'Required'}
+                    tabIndex={-1}
+                    placeholder={
+                      hoveredInput === 'publicKey'
+                        ? isLoading
+                          ? loadingInputMessage
+                          : fieldPlaceholders.publicKey
+                        : 'Required'
+                    }
                     title={
-                      errors.publicKey
+                      isLoading
+                        ? loadingInputMessage
+                        : errors.publicKey
                         ? `Required for Code Account Operations | Error: ${errors.publicKey}`
                         : 'Required for Code Account Operations'
                     }
-                    className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}`}
+                    className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''} cursor-default select-none`}
+                    style={{ cursor: 'default', caretColor: 'transparent' }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onFocus={(e) => e.currentTarget.blur()}
                     onMouseEnter={() => setHoveredInput('publicKey')}
                     onMouseLeave={() => setHoveredInput(null)}
                   />
@@ -729,40 +796,18 @@ export default function CreateAccountPage() {
             </>
           )}
 
-          {[ 
-            {
-              label: 'Name',
-              name: 'name',
-              labelTitle: fieldTitles.name,
-            },
-            {
-              label: 'Symbol',
-              name: 'symbol',
-              labelTitle: fieldTitles.symbol,
-            },
-            {
-              label: 'Email Address',
-              name: 'email',
-              labelTitle: fieldTitles.email,
-            },
-            {
-              label: 'Website',
-              name: 'website',
-              labelTitle: fieldTitles.website,
-            },
-            {
-              label: 'Description',
-              name: 'description',
-              labelTitle: fieldTitles.description,
-            },
-          ].map(({ label, name, labelTitle }) => (
+          {formFieldRows.map(({ label, name, labelTitle }) => (
             <React.Fragment key={name}>
-              <label htmlFor={name} className={labelCellClasses} title={labelTitle}>
+              <label
+                htmlFor={name}
+                className={`${labelCellClasses}${name === 'description' ? ' self-start h-auto items-start pt-2' : ''}`}
+                title={labelTitle}
+              >
                 {label}
               </label>
               <div>
                 {(() => {
-                  const key = name as keyof AccountFormData;
+                  const key = name;
                   const href = toPreviewHref(key, String(formData[key] ?? ''));
                   const isLinkField =
                     key === 'email' || key === 'website';
@@ -781,6 +826,8 @@ export default function CreateAccountPage() {
                       : errors[key];
                   const inputTitle = !connected
                     ? disconnectedInputMessage
+                    : isLoading
+                      ? loadingInputMessage
                     : href
                       ? `${labelTitle} (click to open in Edit mode)`
                       : labelTitle;
@@ -789,40 +836,73 @@ export default function CreateAccountPage() {
                     : inputTitle;
                   return (
                     <>
-                      <div className="flex items-center gap-2">
-                        <input
-                          id={name}
-                          name={name}
-                          type="text"
-                          value={
-                            connected
-                              ? formData[name as keyof AccountFormData]
-                              : ''
-                          }
-                          onChange={handleChange}
-                          readOnly={!connected}
-                          placeholder={
-                            hoveredInput === name
-                              ? !connected
-                                ? disconnectedInputMessage
-                                : fieldPlaceholders[name as keyof typeof fieldPlaceholders]
-                              : 'Optional'
-                          }
-                          title={composedTitle}
-                          className={`${optionalInputClasses}${linkLikeClass}${fieldError ? ` ${inputErrorClasses}` : ''}`}
-                          onClick={() => {
-                            if (!href || accountMode !== 'edit') return;
-                            if (href.startsWith('mailto:')) {
-                              window.location.href = href;
-                              return;
+                      <div className="flex items-start gap-2">
+                        {key === 'description' ? (
+                          <textarea
+                            id={name}
+                            name={name}
+                            ref={descriptionTextareaRef}
+                            value={
+                              connected
+                                ? formData[key]
+                                : ''
                             }
-                            window.open(href, '_blank', 'noopener,noreferrer');
-                          }}
-                          onMouseEnter={() => setHoveredInput(name)}
-                          onMouseLeave={() => setHoveredInput(null)}
-                          onFocus={() => handleFieldFocus(key)}
-                          onBlur={() => handleFieldBlur(key)}
-                        />
+                            onChange={handleChange}
+                            readOnly={inputLocked}
+                            rows={1}
+                            placeholder={
+                              hoveredInput === name
+                                ? inputLocked
+                                  ? isLoading
+                                    ? loadingInputMessage
+                                    : disconnectedInputMessage
+                                  : fieldPlaceholders[key]
+                                : 'Optional'
+                            }
+                            title={composedTitle}
+                            className={`${optionalInputClasses} min-h-[42px] resize-none overflow-hidden whitespace-pre-wrap break-words ${fieldError ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''}`}
+                            onMouseEnter={() => setHoveredInput(name)}
+                            onMouseLeave={() => setHoveredInput(null)}
+                            onFocus={() => handleFieldFocus(key)}
+                            onBlur={() => handleFieldBlur(key)}
+                          />
+                        ) : (
+                          <input
+                            id={name}
+                            name={name}
+                            type="text"
+                            value={
+                              connected
+                                ? formData[key]
+                                : ''
+                            }
+                            onChange={handleChange}
+                            readOnly={inputLocked}
+                            placeholder={
+                              hoveredInput === name
+                                ? inputLocked
+                                  ? isLoading
+                                    ? loadingInputMessage
+                                    : disconnectedInputMessage
+                                  : fieldPlaceholders[key]
+                                : 'Optional'
+                            }
+                            title={composedTitle}
+                            className={`${optionalInputClasses}${linkLikeClass}${fieldError ? ` ${inputErrorClasses}` : ''}${loadingInputClasses ? ` ${loadingInputClasses}` : ''}`}
+                            onClick={() => {
+                              if (!href || accountMode !== 'edit' || inputLocked) return;
+                              if (href.startsWith('mailto:')) {
+                                window.location.href = href;
+                                return;
+                              }
+                              window.open(href, '_blank', 'noopener,noreferrer');
+                            }}
+                            onMouseEnter={() => setHoveredInput(name)}
+                            onMouseLeave={() => setHoveredInput(null)}
+                            onFocus={() => handleFieldFocus(key)}
+                            onBlur={() => handleFieldBlur(key)}
+                          />
+                        )}
                         <span
                           className={`w-4 text-center font-bold ${fieldError ? 'text-red-500' : 'text-transparent'}`}
                           aria-hidden={!fieldError}
@@ -858,12 +938,14 @@ export default function CreateAccountPage() {
                 />
               </div>
             ) : (
-              <div className="flex w-full gap-2">
+              <div className="flex w-[calc(100%-1.5rem)] gap-2">
                 <button
-                  type="submit"
+                  type={isEditMode ? 'button' : 'submit'}
                   aria-disabled={disableSubmit}
                   className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                    disableSubmit
+                    isEditMode
+                      ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
+                      : disableSubmit
                       ? 'bg-red-500 text-black cursor-not-allowed'
                       : hoverTarget === 'createAccount'
                       ? hasUnsavedChanges || canCreateMissingAccount
@@ -877,8 +959,17 @@ export default function CreateAccountPage() {
                       : submitLabel
                   }
                   disabled={disableSubmit}
-                  onMouseEnter={() => setHoverTarget('createAccount')}
-                  onMouseLeave={() => setHoverTarget(null)}
+                  onMouseEnter={() => {
+                    if (isEditMode) return;
+                    setHoverTarget('createAccount');
+                  }}
+                  onMouseLeave={() => {
+                    if (isEditMode) return;
+                    setHoverTarget(null);
+                  }}
+                  onClick={() => {
+                    if (isEditMode) return;
+                  }}
                 >
                   {isSaving ? 'Saving...' : submitLabel}
                 </button>
@@ -948,14 +1039,18 @@ export default function CreateAccountPage() {
                   ) : (
                     <button
                       type="button"
-                      aria-disabled={!connected}
+                      aria-disabled={inputLocked}
+                      disabled={inputLocked}
                       className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
-                        hoverTarget === 'uploadLogo'
+                        inputLocked
+                          ? 'bg-red-500 text-black cursor-not-allowed'
+                          : hoverTarget === 'uploadLogo'
                           ? 'bg-green-500 text-black'
                           : 'bg-[#E5B94F] text-black'
                       }`}
-                      title={previewButtonLabel}
+                      title={isLoading ? loadingInputMessage : previewButtonLabel}
                       onClick={() => {
+                        if (inputLocked) return;
                         if (!logoFileInputRef.current) return;
                         logoFileInputRef.current.value = '';
                         logoFileInputRef.current.click();

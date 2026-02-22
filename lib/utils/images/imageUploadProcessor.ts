@@ -62,6 +62,8 @@ export type ProcessImageUploadOptions = {
   targetHeight?: number;
   maxInputBytes?: number;
   maxOutputBytes?: number;
+  maxDecodedPixels?: number;
+  maxDimensionPx?: number;
 };
 
 export type ProcessImageUploadResult = {
@@ -75,8 +77,10 @@ export type ProcessImageUploadResult = {
 
 const DEFAULT_TARGET_WIDTH = 400;
 const DEFAULT_TARGET_HEIGHT = 400;
-const DEFAULT_MAX_INPUT_BYTES = 5 * 1024 * 1024;
+const DEFAULT_MAX_INPUT_BYTES = 25 * 1024 * 1024;
 const DEFAULT_MAX_OUTPUT_BYTES = 500 * 1024;
+const DEFAULT_MAX_DECODED_PIXELS = 40 * 1000 * 1000;
+const DEFAULT_MAX_DIMENSION_PX = 8000;
 
 function getExtension(name: string): string {
   const lower = String(name || '').toLowerCase();
@@ -180,6 +184,9 @@ export async function processImageUpload(
   const targetHeight = options?.targetHeight ?? DEFAULT_TARGET_HEIGHT;
   const maxInputBytes = options?.maxInputBytes ?? DEFAULT_MAX_INPUT_BYTES;
   const maxOutputBytes = options?.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+  const maxDecodedPixels =
+    options?.maxDecodedPixels ?? DEFAULT_MAX_DECODED_PIXELS;
+  const maxDimensionPx = options?.maxDimensionPx ?? DEFAULT_MAX_DIMENSION_PX;
 
   if (!(file instanceof File)) {
     throw new Error('Missing image file');
@@ -195,6 +202,22 @@ export async function processImageUpload(
 
   const decoded = await decodeImage(file);
   try {
+    const { width: decodedWidth, height: decodedHeight } =
+      getDecodedDimensions(decoded);
+    if (!decodedWidth || !decodedHeight) {
+      throw new Error('Invalid source image dimensions');
+    }
+    if (decodedWidth > maxDimensionPx || decodedHeight > maxDimensionPx) {
+      throw new Error(
+        `Image dimensions exceed limit (${maxDimensionPx}px max per side)`,
+      );
+    }
+    if (decodedWidth * decodedHeight > maxDecodedPixels) {
+      throw new Error(
+        `Image pixel count exceeds limit (${Math.round(maxDecodedPixels / 1000000)} MP max)`,
+      );
+    }
+
     const canvas = drawContainTransparent(decoded, targetWidth, targetHeight);
     const blob = await canvasToPngBlob(canvas);
 
