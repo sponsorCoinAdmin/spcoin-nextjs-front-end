@@ -161,6 +161,7 @@ export default function CreateAccountPage() {
   const [hoverTarget, setHoverTarget] = useState<HoverTarget>(null);
   const [hoveredInput, setHoveredInput] = useState<string | null>(null);
   const [baselineData, setBaselineData] = useState<AccountFormData>({ ...EMPTY_FORM_DATA });
+  const [savedAccountName, setSavedAccountName] = useState('');
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -226,6 +227,7 @@ export default function CreateAccountPage() {
           const empty: AccountFormData = { ...EMPTY_FORM_DATA };
           setFormData(empty);
           setBaselineData(empty);
+          setSavedAccountName('');
           setErrors({});
           setLogoFile(null);
           setHasServerLogo(false);
@@ -250,6 +252,7 @@ export default function CreateAccountPage() {
         setAccountExists(true);
         setFormData(loaded);
         setBaselineData(loaded);
+        setSavedAccountName(loaded.name.trim());
         setErrors({});
         setLogoFile(null);
         setHasServerLogo(Boolean(payload?.hasLogo));
@@ -257,6 +260,7 @@ export default function CreateAccountPage() {
       } catch {
         if (!abortController.signal.aborted) {
           setAccountExists(false);
+          setSavedAccountName('');
           setErrors({});
           setHasServerLogo(false);
           setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
@@ -389,10 +393,11 @@ export default function CreateAccountPage() {
 
   const submitLabel = accountExists ? 'Update Account' : 'Create Account';
   const isRevertNoop = !hasUnsavedChanges;
+  const accountNameForTitle = savedAccountName;
   const pageTitle =
     accountMode === 'create'
       ? 'Create Sponsor Coin Account'
-      : 'Update Sponsor Coin Account';
+      : `${accountNameForTitle}'s Account`;
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -602,6 +607,7 @@ export default function CreateAccountPage() {
         setAccountExists(true);
         setFormData(savedForm);
         setBaselineData(savedForm);
+        setSavedAccountName(savedForm.name.trim());
         setErrors({});
       }
 
@@ -1044,12 +1050,12 @@ export default function CreateAccountPage() {
           <div className="flex h-full w-full flex-1 min-h-0 flex-col items-center gap-4">
             <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
               <div className="flex w-full max-w-md flex-col gap-4">
-                <div className="flex h-[332px] w-full items-center justify-center rounded border border-slate-600 bg-[#0D1324] p-4">
+                <div className="mx-auto flex h-[332px] w-[332px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
                   {logoPreviewSrc ? (
                     <img
                       src={logoPreviewSrc}
                       alt="Account logo preview"
-                      className="h-full w-full max-h-full max-w-full object-contain"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     <span className="text-sm text-slate-300">No logo found on server</span>
