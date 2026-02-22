@@ -8,6 +8,21 @@ This folder contains token APIs:
 - `GET /api/spCoin/tokens/{chainId}/{tokenAddress}`
 - `PUT|POST /api/spCoin/tokens/{chainId}/{tokenAddress}`
 
+## Auth Configuration (Required for Writes)
+
+Write routes require bearer token validation.
+
+Set one of:
+
+- `SPCOIN_AUTH_SECRET` (preferred)
+- `NEXTAUTH_SECRET`
+- `JWT_SECRET`
+
+For multi-server deployments, configure shared nonce/rate-limit state:
+
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
 ## 1) List Seed Token Addresses
 
 Endpoint:
@@ -119,6 +134,7 @@ Example:
 
 ```bash
 curl -X PUT "http://localhost:3000/api/spCoin/tokens/8453/0x4200000000000000000000000000000000000006?target=info" \
+  -H "Authorization: Bearer <SESSION_TOKEN>" \
   -H "Content-Type: application/json" \
   -d "{\"name\":\"Wrapped Ether\",\"symbol\":\"WETH\",\"decimals\":18}"
 ```
@@ -139,11 +155,13 @@ Example:
 
 ```bash
 curl -X PUT "http://localhost:3000/api/spCoin/tokens/8453/0x4200000000000000000000000000000000000006?target=logo" \
+  -H "Authorization: Bearer <SESSION_TOKEN>" \
   -F "file=@./logo.png"
 ```
 
 ## Errors
 
 - `400` invalid chainId/address or invalid request body.
+- `401` missing/invalid bearer token for write endpoints.
 - `404` token not found for read endpoints.
 - `500` filesystem/read-write failure.

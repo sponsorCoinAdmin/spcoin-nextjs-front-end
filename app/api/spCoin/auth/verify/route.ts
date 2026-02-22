@@ -1,17 +1,43 @@
 // File: app/api/spCoin/auth/verify/route.ts
 import { NextResponse } from 'next/server';
-import { verifyNonceSignature } from '@/lib/server/spCoinAuth';
+import {
+  consumeAuthRateLimit,
+  isAuthConfigured,
+  verifyNonceSignature,
+} from '@/lib/server/spCoinAuth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    if (!isAuthConfigured()) {
+      return NextResponse.json(
+        { error: 'Server auth is not configured' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
     const body = (await request.json()) as {
       address?: string;
       nonce?: string;
       signature?: string;
     };
+    const address = String(body?.address ?? '').trim().toLowerCase();
+    const forwardedFor = request.headers.get('x-forwarded-for') ?? '';
+    const clientIp = forwardedFor.split(',')[0]?.trim() || 'unknown';
+    const limiter = await consumeAuthRateLimit('verify', `${clientIp}:${address}`);
+    if (!limiter.ok) {
+      return NextResponse.json(
+        { error: 'Too many verify requests. Please try again shortly.' },
+        {
+          status: 429,
+          headers: {
+            'Cache-Control': 'no-store',
+            'Retry-After': String(limiter.retryAfterSeconds ?? 1),
+          },
+        },
+      );
+    }
 
     const result = await verifyNonceSignature({
       address: String(body?.address ?? ''),

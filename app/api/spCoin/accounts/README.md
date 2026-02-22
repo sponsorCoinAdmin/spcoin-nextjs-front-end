@@ -8,6 +8,21 @@ This folder contains two account APIs:
 - `GET /api/spCoin/accounts/{accountAddress}`
 - `PUT|POST /api/spCoin/accounts/{accountAddress}`
 
+## Auth Configuration (Required for Writes)
+
+Write routes require wallet-signature auth and bearer token validation.
+
+Set one of:
+
+- `SPCOIN_AUTH_SECRET` (preferred)
+- `NEXTAUTH_SECRET`
+- `JWT_SECRET`
+
+For multi-server deployments, configure shared nonce/rate-limit state:
+
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
 ## 1) List Accounts
 
 Endpoint:
@@ -88,6 +103,7 @@ Example:
 
 ```bash
 curl -X PUT "http://localhost:3000/api/spCoin/accounts/0x000000000000000000000000000000000000007e?target=account" \
+  -H "Authorization: Bearer <SESSION_TOKEN>" \
   -H "Content-Type: application/json" \
   -d "{\"address\":\"0x000000000000000000000000000000000000007e\",\"name\":\"Agent X\",\"symbol\":\"AGX\"}"
 ```
@@ -119,6 +135,7 @@ Raw binary example:
 
 ```bash
 curl -X PUT "http://localhost:3000/api/spCoin/accounts/0x000000000000000000000000000000000000007e?target=logo" \
+  -H "Authorization: Bearer <SESSION_TOKEN>" \
   -H "Content-Type: image/png" \
   --data-binary "@./logo.png"
 ```
@@ -127,6 +144,7 @@ Multipart example:
 
 ```bash
 curl -X PUT "http://localhost:3000/api/spCoin/accounts/0x000000000000000000000000000000000000007e?target=logo" \
+  -H "Authorization: Bearer <SESSION_TOKEN>" \
   -F "file=@./logo.png"
 ```
 
@@ -145,6 +163,8 @@ Example response:
 ## Errors
 
 - `400` invalid address or invalid request body.
+- `401` missing/invalid bearer token for write endpoints.
+- `429` auth rate limit exceeded (nonce/verify endpoints).
 - `500` filesystem/read-write failure.
 
 ## 5) Read Single Account

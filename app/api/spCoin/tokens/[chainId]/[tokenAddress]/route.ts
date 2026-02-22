@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { readBearerToken, validateSessionTokenAnyAddress } from '@/lib/server/spCoinAuth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -145,6 +146,14 @@ export async function PUT(
     return NextResponse.json(
       { error: 'Invalid tokenAddress. Expected 0x + 40 hex chars.' },
       { status: 400 },
+    );
+  }
+  const bearerToken = readBearerToken(request.headers.get('authorization'));
+  const auth = validateSessionTokenAnyAddress(bearerToken);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { error: auth.error },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
