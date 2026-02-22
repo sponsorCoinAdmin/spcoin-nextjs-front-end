@@ -3,24 +3,33 @@
 
 import * as React from 'react';
 import SpCoinConfig from '@/components/Wrappers/SpCoinConfig';
-import { config } from '@/lib/wagmi/wagmiConfig';
-import { PageStateProvider } from '@/lib/context/PageStateContext';
+import WalletActionOverlay from '@/components/views/WalletActionOverlay';
 import { ActiveAccountProvider } from '@/lib/context/ActiveAccountContext';
 import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
+import { PageStateProvider } from '@/lib/context/PageStateContext';
+import { WalletActionOverlayProvider } from '@/lib/context/WalletActionOverlayContext';
 import { AppNetworkController } from '@/lib/network/initialize/appNetworkController';
+import { config } from '@/lib/wagmi/wagmiConfig';
 
-export default function SpCoinProviders({ children }: { children: React.ReactNode }) {
+export default function SpCoinProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <SpCoinConfig config={config}>
       <PageStateProvider>
         <ActiveAccountProvider>
-          <ExchangeProvider>
-            {/* Network policy brain (Cases A–E) lives here */}
-            <AppNetworkController />
-            {children}
-          </ExchangeProvider>
+          <WalletActionOverlayProvider>
+            <ExchangeProvider>
+              <AppNetworkController />
+              {children}
+              <WalletActionOverlay />
+            </ExchangeProvider>
+          </WalletActionOverlayProvider>
         </ActiveAccountProvider>
       </PageStateProvider>
     </SpCoinConfig>
   );
 }
+

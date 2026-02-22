@@ -4,6 +4,7 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { getWalletLogoURL } from '@/lib/context/helpers/assetHelpers';
+import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import {
   ACCEPTED_IMAGE_INPUT_ACCEPT,
   processImageUpload,
@@ -150,6 +151,7 @@ function shouldBlockAdditionalInput(
 
 export default function CreateAccountPage() {
   const ctx = useContext(ExchangeContextState);
+  const { runWithWalletAction } = useWalletActionOverlay();
   const connected = Boolean(ctx?.exchangeContext?.network?.connected);
 
   const [publicKey, setPublicKey] = useState<string>('');
@@ -385,12 +387,12 @@ export default function CreateAccountPage() {
     return hasUnsavedChanges ? 'update' : 'edit';
   }, [connected, publicKeyTrimmed, accountExists, hasUnsavedChanges]);
 
-  const submitLabel =
-    accountExists && !hasUnsavedChanges ? 'Edit Account' : 'Update Account';
-  const isSubmitEditMode = submitLabel === 'Edit Account';
-  const pageTitle = accountExists
-    ? 'Edit Sponsor Coin Account'
-    : 'Create Sponsor Coin Account';
+  const submitLabel = accountExists ? 'Update Account' : 'Create Account';
+  const isRevertNoop = !hasUnsavedChanges;
+  const pageTitle =
+    accountMode === 'create'
+      ? 'Create Sponsor Coin Account'
+      : 'Update Sponsor Coin Account';
   const previewObjectUrl = useMemo(() => {
     if (!logoFile) return '';
     return URL.createObjectURL(logoFile);
@@ -443,9 +445,14 @@ export default function CreateAccountPage() {
         throw new Error('MetaMask provider not available');
       }
 
-      const accounts = (await eth.request({
-        method: 'eth_requestAccounts',
-      })) as string[];
+      const accounts = (await runWithWalletAction(
+        () =>
+          eth.request({
+            method: 'eth_requestAccounts',
+          }),
+        'MetaMask action in progress',
+        'Approve the wallet account request in MetaMask to continue.',
+      )) as string[];
       const signerAddress = String(accounts?.[0] ?? '').trim();
       if (!signerAddress) {
         throw new Error('No MetaMask account available for signing');
@@ -478,16 +485,26 @@ export default function CreateAccountPage() {
 
       let signature = '';
       try {
-        signature = (await eth.request({
-          method: 'personal_sign',
-          params: [message, signerAddress],
-        })) as string;
+        signature = (await runWithWalletAction(
+          () =>
+            eth.request({
+              method: 'personal_sign',
+              params: [message, signerAddress],
+            }),
+          'MetaMask action in progress',
+          'Sign the authentication message in MetaMask to continue.',
+        )) as string;
       } catch {
         // Provider compatibility fallback (some providers expect [address, message]).
-        signature = (await eth.request({
-          method: 'personal_sign',
-          params: [signerAddress, message],
-        })) as string;
+        signature = (await runWithWalletAction(
+          () =>
+            eth.request({
+              method: 'personal_sign',
+              params: [signerAddress, message],
+            }),
+          'MetaMask action in progress',
+          'Sign the authentication message in MetaMask to continue.',
+        )) as string;
       }
       if (!signature) {
         throw new Error('Signature request rejected');
@@ -940,15 +957,13 @@ export default function CreateAccountPage() {
             ) : (
               <div className="flex w-[calc(100%-1.5rem)] gap-2">
                 <button
-                  type={isSubmitEditMode || !isEditMode ? 'button' : 'submit'}
+                  type={!isEditMode ? 'button' : 'submit'}
                   aria-disabled={disableSubmit}
                   className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
                     !isEditMode
                       ? hoverTarget === 'createAccount'
                         ? 'bg-red-500 text-black'
                         : 'bg-[#E5B94F] text-black'
-                      : isSubmitEditMode
-                      ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
                       : disableSubmit
                       ? 'bg-red-500 text-black cursor-not-allowed'
                       : hoverTarget === 'createAccount'
@@ -958,21 +973,21 @@ export default function CreateAccountPage() {
                       : 'bg-[#E5B94F] text-black'
                   }`}
                   title={
-                    !hasUnsavedChanges
-                      ? 'No changes detected (click to re-check)'
-                      : submitLabel
+                    submitLabel === 'Update Account'
+                      ? !hasUnsavedChanges
+                        ? 'No changes detected (click to re-check)'
+                        : submitLabel
+                      : undefined
                   }
                   disabled={disableSubmit}
                   onMouseEnter={() => {
-                    if (isSubmitEditMode && isEditMode) return;
                     setHoverTarget('createAccount');
                   }}
                   onMouseLeave={() => {
-                    if (isSubmitEditMode && isEditMode) return;
                     setHoverTarget(null);
                   }}
                   onClick={() => {
-                    if (isSubmitEditMode || !isEditMode) return;
+                    if (!isEditMode) return;
                   }}
                 >
                   {isSaving ? 'Saving...' : submitLabel}
@@ -981,7 +996,9 @@ export default function CreateAccountPage() {
                   type="button"
                   aria-disabled={disableRevert}
                   className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                    !isEditMode
+                    isRevertNoop
+                      ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
+                      : !isEditMode
                       ? hoverTarget === 'revertChanges'
                         ? 'bg-red-500 text-black'
                         : 'bg-[#E5B94F] text-black'
@@ -999,9 +1016,18 @@ export default function CreateAccountPage() {
                       : 'Revert all pending changes'
                   }
                   disabled={disableRevert}
-                  onClick={handleRevertChanges}
-                  onMouseEnter={() => setHoverTarget('revertChanges')}
-                  onMouseLeave={() => setHoverTarget(null)}
+                  onClick={() => {
+                    if (isRevertNoop) return;
+                    handleRevertChanges();
+                  }}
+                  onMouseEnter={() => {
+                    if (isRevertNoop) return;
+                    setHoverTarget('revertChanges');
+                  }}
+                  onMouseLeave={() => {
+                    if (isRevertNoop) return;
+                    setHoverTarget(null);
+                  }}
                 >
                   Revert Changes
                 </button>
