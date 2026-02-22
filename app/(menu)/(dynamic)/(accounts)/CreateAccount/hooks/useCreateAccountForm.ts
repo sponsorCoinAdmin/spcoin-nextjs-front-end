@@ -270,7 +270,21 @@ export function useCreateAccountForm({
         body: JSON.stringify({ address: signerAddress }),
       });
       if (!nonceRes.ok) {
-        throw new Error('Failed to request auth nonce');
+        let serverError = '';
+        try {
+          const payload = (await nonceRes.json()) as { error?: string; details?: string };
+          serverError = String(payload?.error ?? payload?.details ?? '').trim();
+        } catch {
+          serverError = '';
+        }
+        const statusHint =
+          nonceRes.status === 429
+            ? 'Too many auth attempts. Please wait and try again.'
+            : nonceRes.status === 503
+            ? 'Server auth is not configured.'
+            : '';
+        const message = serverError || statusHint || `Nonce request failed (HTTP ${nonceRes.status})`;
+        throw new Error(message);
       }
       const noncePayload = (await nonceRes.json()) as {
         nonce?: string;
