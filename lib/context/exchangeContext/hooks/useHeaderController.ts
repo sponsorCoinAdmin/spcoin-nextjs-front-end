@@ -186,6 +186,11 @@ function titleFor(
   return DEFAULT_TITLES[display] ?? 'Main Panel Header';
 }
 
+function getErrorPanelHeaderTitle(errCode?: number): string {
+  if (errCode === 59144) return 'Code: 59144: Network Sync Error';
+  return DEFAULT_TITLES[SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL] ?? 'Error Message Panel';
+}
+
 type AnyCloseEvent = {
   preventDefault?: () => void;
   stopPropagation?: () => void;
@@ -234,6 +239,7 @@ export function useHeaderController() {
 
   const accounts = exchangeContext?.accounts;
   const activeAccount = accounts?.activeAccount;
+  const errorMessage = exchangeContext?.errorMessage;
 
   // Read each visibility exactly once
   const tokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_PANEL);
@@ -357,6 +363,10 @@ export function useHeaderController() {
     const override = headerTitleOverrides.get(currentDisplay);
     if (override) return override;
 
+    if (currentDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL) {
+      return getErrorPanelHeaderTitle(errorMessage?.errCode);
+    }
+
     return titleFor(
       currentDisplay,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ? rewardsState : undefined,
@@ -368,7 +378,7 @@ export function useHeaderController() {
         : undefined,
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL ? undefined : headerAccountName,
     );
-  }, [currentDisplay, rewardsState, accountsState, accountListState, tokenState, headerAccountName]);
+  }, [currentDisplay, rewardsState, accountsState, accountListState, tokenState, headerAccountName, errorMessage?.errCode]);
 
   const leftElement = useMemo(() => {
     const factory = headerLeftOverrides.get(currentDisplay);
