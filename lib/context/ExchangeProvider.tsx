@@ -710,6 +710,71 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     };
   }, [contextState?.accounts, setExchangeContext]);
 
+  // Fallback wallet listener: ensure account switches in MetaMask are reflected
+  // even when wagmi propagation is delayed/missed.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const eth = (window as any).ethereum;
+    if (!eth || typeof eth.on !== 'function') return;
+
+    let cancelled = false;
+
+    const onAccountsChanged = (accounts: string[] | undefined) => {
+      const nextAddress = String(accounts?.[0] ?? '').trim();
+      if (!nextAddress) return;
+
+      setExchangeContext(
+        (prev) => {
+          const current = (prev.accounts?.activeAccount?.address as string | undefined) ?? '';
+          if (current && current.toLowerCase() === nextAddress.toLowerCase()) return prev;
+
+          const next = clone(prev);
+          (next as any).accounts = (next as any).accounts ?? {};
+          (next as any).accounts.activeAccount = makeWalletFallback(
+            nextAddress as Address,
+            STATUS.INFO,
+            `Loading account metadata for ${nextAddress}`,
+            0n,
+          );
+          return next;
+        },
+        'provider:onAccountsChanged:optimistic',
+      );
+
+      (async () => {
+        const hydrated = await hydrateAccountFromAddress(nextAddress as Address, {
+          balance: 0n,
+        });
+        if (cancelled) return;
+
+        setExchangeContext(
+          (prev) => {
+            const current = (prev.accounts?.activeAccount?.address as string | undefined) ?? '';
+            if (!current || current.toLowerCase() !== nextAddress.toLowerCase()) return prev;
+
+            const next = clone(prev);
+            (next as any).accounts = (next as any).accounts ?? {};
+            (next as any).accounts.activeAccount = hydrated;
+            return next;
+          },
+          'provider:onAccountsChanged:hydrate',
+        );
+      })();
+    };
+
+    eth.on('accountsChanged', onAccountsChanged);
+    return () => {
+      cancelled = true;
+      try {
+        if (typeof eth.removeListener === 'function') {
+          eth.removeListener('accountsChanged', onAccountsChanged);
+        }
+      } catch {
+        // no-op cleanup guard for non-standard providers
+      }
+    };
+  }, [setExchangeContext]);
+
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
