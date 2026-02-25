@@ -80,6 +80,7 @@ import { useConnected } from './useConnected';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useWagmiReady } from '@/lib/network/initialize/hooks/useWagmiReady';
+import { getBlockChainName } from '@/lib/utils/network';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -97,7 +98,7 @@ export function useNetworkController() {
   const wagmiReady = useWagmiReady();
 
   // Authoritative app context + setter from the provider
-  const { exchangeContext, setAppChainId } = useExchangeContext();
+  const { exchangeContext, setAppChainId, setExchangeContext } = useExchangeContext();
   const [appConnected, setAppConnected] = useConnected();
 
   const appChainId = exchangeContext.network?.appChainId ?? 0;
@@ -106,11 +107,111 @@ export function useNetworkController() {
   //   hydratedFromLocalStorage === false  → this boot started with *no* stored context.
   const hydratedFromLocalStorage = !!exchangeContext.settings
     ?.hydratedFromLocalStorage;
-
   const { switchChainAsync } = useSwitchChain();
 
   // One-shot guard: we only ever "adopt wallet on first connect" once per page load.
   const adoptedOnFirstConnectRef = useRef(false);
+  const prevWalletChainIdRef = useRef<number | undefined>(undefined);
+  const prevAppChainIdRef = useRef<number | undefined>(undefined);
+  const prevAppChainIdForAlertRef = useRef<number | undefined>(undefined);
+  const prevWalletConnectedRef = useRef<boolean>(false);
+  const skipNextLocalAlertRef = useRef(false);
+  const localSwitchInFlightRef = useRef(false);
+
+  const chainLabel = (id?: number) =>
+    typeof id === 'number' && id > 0
+      ? getBlockChainName(id) || `Chain ${id}`
+      : 'Unknown';
+
+  const syncNetworkChainId = (nextChainId: number, connected: boolean) => {
+    setExchangeContext(
+      (prev) => {
+        if (
+          prev.network.chainId === nextChainId &&
+          prev.network.connected === connected
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          network: {
+            ...prev.network,
+            chainId: nextChainId,
+            connected,
+          },
+        };
+      },
+      'useNetworkController:syncNetworkChainId',
+    );
+  };
+
+  const alertBeforeMetaMaskSwitch = (fromId: number, toId: number) => {
+    alert(`Changing Metamask From ${chainLabel(fromId)} to ${chainLabel(toId)}`);
+  };
+
+  // Fallback listener for injected wallets (MetaMask):
+  // when wallet network changes outside wagmi UI controls, mirror it into appChainId.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const eth = (window as any).ethereum;
+    if (!eth || typeof eth.on !== 'function') return;
+
+    const onChainChanged = (hexChainId: string) => {
+      const nextId = Number.parseInt(String(hexChainId), 16);
+      if (!Number.isFinite(nextId) || nextId <= 0) return;
+      const prevId = prevWalletChainIdRef.current;
+
+      debugLog.log?.('[wallet:chainChanged]', {
+        hexChainId,
+        nextId,
+        prevId,
+        appChainId,
+        walletConnected,
+      });
+
+      // Wallet changed because local app requested a switch -> don't emit metamask alert.
+      if (!localSwitchInFlightRef.current && typeof prevId === 'number' && prevId !== nextId) {
+        alert(
+          `Metamask network changed from ${chainLabel(prevId)} to ${chainLabel(nextId)}`
+        );
+      }
+
+      localSwitchInFlightRef.current = false;
+      skipNextLocalAlertRef.current = true;
+      setAppChainId(nextId);
+      if (!appConnected) setAppConnected(true);
+      prevWalletChainIdRef.current = nextId;
+    };
+
+    eth.on('chainChanged', onChainChanged);
+    return () => {
+      try {
+        if (typeof eth.removeListener === 'function') {
+          eth.removeListener('chainChanged', onChainChanged);
+        }
+      } catch {
+        // no-op cleanup guard for non-standard providers
+      }
+    };
+  }, [appChainId, appConnected, setAppChainId, setAppConnected, walletConnected]);
+
+  useEffect(() => {
+    const prevId = prevAppChainIdForAlertRef.current;
+    const nextId = appChainId;
+
+    if (typeof nextId !== 'number' || nextId <= 0) return;
+    if (typeof prevId === 'number' && prevId === nextId) return;
+
+    if (skipNextLocalAlertRef.current) {
+      skipNextLocalAlertRef.current = false;
+      prevAppChainIdForAlertRef.current = nextId;
+      return;
+    }
+
+    alert(`local network changed from ${chainLabel(prevId)} to ${chainLabel(nextId)}`);
+    prevAppChainIdForAlertRef.current = nextId;
+  }, [appChainId]);
 
   useEffect(() => {
     const walletChainIsValid =
@@ -144,8 +245,13 @@ export function useNetworkController() {
         msg: 'Wallet disconnected → mark appConnected=false (keep appChainId)',
       });
       if (appConnected) setAppConnected(false);
+      // Rule: when disconnected, chainId should be 0.
+      syncNetworkChainId(0, false);
+      prevWalletConnectedRef.current = false;
       return;
     }
+
+    const justConnected = !prevWalletConnectedRef.current && walletConnected;
 
     // Wallet is connected from this point onwards.
     if (!appConnected) {
@@ -154,12 +260,37 @@ export function useNetworkController() {
       });
       setAppConnected(true);
     }
-
     // If wagmi still hasn't surfaced a valid chain id, there's nothing we can
     // reconcile yet. Wait for a real number.
     if (!walletChainIsValid) {
       logState('wallet-chain-invalid', {
         msg: 'Wallet connected but walletChainId is 0/undefined → wait',
+      });
+      return;
+    }
+
+    // We only mark "connected seen" once wagmi exposes a valid wallet chain.
+    prevWalletConnectedRef.current = true;
+
+    // Rule: chainId reflects wallet-active network while connected.
+    syncNetworkChainId(walletChainId, true);
+
+    if (justConnected && appChainId > 0 && walletChainId !== appChainId) {
+      logState('switch-wallet-on-connect', {
+        msg: 'Just connected and wallet chain mismatched appChainId -> switch wallet to appChainId',
+      });
+      localSwitchInFlightRef.current = true;
+      alertBeforeMetaMaskSwitch(walletChainId, appChainId);
+      switchChainAsync({ chainId: appChainId }).catch((err) => {
+        localSwitchInFlightRef.current = false;
+        const code = err?.code ?? err?.cause?.code;
+        if (code === 4902) {
+          alert(
+            `MetaMask network ${chainLabel(appChainId)} is not installed. Please add it to MetaMask.`,
+          );
+          return;
+        }
+        debugLog.error?.('[switch-wallet-on-connect] switchChainAsync failed', err);
       });
       return;
     }
@@ -191,17 +322,46 @@ export function useNetworkController() {
       return;
     }
 
-    // 4) App has a network and wallet disagrees → app is authoritative (Case D).
+    // 4) App has a network and wallet disagrees:
+    //    - if app changed and wallet didn't -> app-driven change, switch wallet
+    //    - otherwise -> wallet-driven change, adopt wallet in app
     if (walletChainId !== appChainId) {
-      logState('switch-wallet', {
-        msg: 'Wallet chain mismatch → switch wallet to appChainId (Case D)',
-      });
-      switchChainAsync({ chainId: appChainId }).catch((err) => {
-        debugLog.error?.(
-          '[switch-wallet] switchChainAsync failed; leaving wallet as-is',
-          err,
-        );
-      });
+      const prevWallet = prevWalletChainIdRef.current;
+      const prevApp = prevAppChainIdRef.current;
+      const walletChanged = typeof prevWallet === 'number' && prevWallet !== walletChainId;
+      const appChanged = typeof prevApp === 'number' && prevApp !== appChainId;
+
+      if (appChanged && !walletChanged) {
+        logState('switch-wallet-on-app-change', {
+          msg: 'App chain changed while wallet stayed same -> switch wallet',
+          prevWallet,
+          prevApp,
+        });
+        localSwitchInFlightRef.current = true;
+        alertBeforeMetaMaskSwitch(walletChainId, appChainId);
+        switchChainAsync({ chainId: appChainId }).catch((err) => {
+          localSwitchInFlightRef.current = false;
+          const code = err?.code ?? err?.cause?.code;
+          if (code === 4902) {
+            alert(
+              `MetaMask network ${chainLabel(appChainId)} is not installed. Please add it to MetaMask.`,
+            );
+            return;
+          }
+          debugLog.error?.(
+            '[switch-wallet-on-app-change] switchChainAsync failed',
+            err,
+          );
+        });
+      } else {
+        logState('adopt-wallet-on-mismatch', {
+          msg: 'Wallet chain changed or both changed -> adopt walletChainId in app',
+          prevWallet,
+          prevApp,
+        });
+        skipNextLocalAlertRef.current = true;
+        setAppChainId(walletChainId);
+      }
       return;
     }
 
@@ -209,6 +369,10 @@ export function useNetworkController() {
     logState('noop', {
       msg: 'Wallet and app chain already aligned → no action',
     });
+
+    prevWalletChainIdRef.current = walletChainId;
+    prevAppChainIdRef.current = appChainId;
+    prevWalletConnectedRef.current = walletConnected;
   }, [
     wagmiReady,
     walletConnected,
@@ -218,9 +382,20 @@ export function useNetworkController() {
     appConnected,
     hydratedFromLocalStorage,
     setAppChainId,
+    setExchangeContext,
     setAppConnected,
     switchChainAsync,
   ]);
+
+  useEffect(() => {
+    if (typeof walletChainId === 'number' && walletChainId > 0) {
+      prevWalletChainIdRef.current = walletChainId;
+    }
+    if (typeof appChainId === 'number' && appChainId > 0) {
+      prevAppChainIdRef.current = appChainId;
+      prevAppChainIdForAlertRef.current = appChainId;
+    }
+  }, [walletChainId, appChainId]);
 
   const walletChainIsValid =
     typeof walletChainId === 'number' && walletChainId > 0;

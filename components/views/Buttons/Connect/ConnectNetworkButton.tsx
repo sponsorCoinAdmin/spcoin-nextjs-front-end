@@ -72,7 +72,7 @@ export default function ConnectNetworkButton({
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   // wallet actions (with cancel/pending guards)
-  const { connectMetaMask, switchTo } = useWalletActions({
+  const { connectMetaMask } = useWalletActions({
     allowWalletModal,
     connectors,
     connectAsync,
@@ -208,8 +208,8 @@ export default function ConnectNetworkButton({
                   onSelectNetwork={(id) => {
                     // 🔹 First update app-level network (SSoT)
                     setAppChainId(id);
-                    // 🔹 Then sync wallet if connected
-                    switchTo(id, isConnected);
+                    // Wallet sync is centralized in useNetworkController.
+                    close();
                   }}
                   onConnect={() => connectMetaMask(show)}
                   onDisconnect={() => {
