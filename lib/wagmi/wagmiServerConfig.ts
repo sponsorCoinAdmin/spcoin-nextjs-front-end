@@ -7,7 +7,16 @@ export const wagmiServerConfig = createConfig({
     [mainnet.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_MAINNET_URL || ''),
     [polygon.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_URL || ''),
     [sepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_URL || ''),
-    [base.id]: http(process.env.NEXT_PUBLIC_INFURA_BASE_URL || ''),
-    [hardhat.id]: http(process.env.NEXT_SERVER_HARDHAT_RPC_URL || process.env.HARDHAT || process.env.NEXT_PUBLIC_HARDHAT_URL || process.env.HARDHAT_URL || 'http://127.0.0.1:8545'),
+    [base.id]: http(
+      process.env.NEXT_SERVER_BASE_RPC_URL ||
+        process.env.NEXT_PUBLIC_BASE_RPC_URL ||
+        '',
+    ),
+    [hardhat.id]: http(
+      process.env.NEXT_SERVER_HARDHAT_RPC_URL ||
+        process.env.HARDHAT ||
+        process.env.NEXT_SERVER_HARDHAT_RPC_URL ||
+        'http://127.0.0.1:8545',
+    ),
   },
 })

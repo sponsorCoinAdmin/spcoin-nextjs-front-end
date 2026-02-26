@@ -193,10 +193,10 @@ const updateBalance = async (
  * Builds a public-facing asset URL based on the environment config.
  */
 const getPublicFileUrl = (fileName: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_SPCOIN_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_ORIGIN_URL ;
   if (!baseUrl) {
     const msg =
-      'NEXT_PUBLIC_SPCOIN_BASE_URL is not defined in environment variables.';
+      'NEXT_PUBLIC_APP_ORIGIN_URL  is not defined in environment variables.';
     debugLog.error?.('[getPublicFileUrl] missing base URL env var', { fileName });
     throw new Error(msg);
   }
