@@ -7,7 +7,6 @@ import Link from 'next/link';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import type { spCoinAccount } from '@/lib/structure';
-import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel/ConfigSponsorshipPanel';
@@ -213,7 +212,9 @@ const AddSponsorShipPanel: React.FC = () => {
   }, []);
 
   const fallbackBase = useMemo(() => {
-    const url = getPublicFileUrl('assets/accounts/site-info.html');
+    const filePath = '/assets/accounts/site-info.html';
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = origin ? `${origin}${filePath}` : filePath;
     debugLog.log?.('fallbackBase:', url);
     return url;
   }, []);
