@@ -167,7 +167,7 @@ function getFallbackListWithSource(
           return { sourceId: SOURCES.tokenLists.base, sourceKind: 'bundled-fallback', list: baseTokenList as any[] };
         case CHAIN_ID.POLYGON:
           return { sourceId: SOURCES.tokenLists.polygon, sourceKind: 'bundled-fallback', list: polygonTokenList as any[] };
-        case CHAIN_ID.HARDHAT:
+        case CHAIN_ID.HARDHAT_BASE:
           return { sourceId: SOURCES.tokenLists.hardhat, sourceKind: 'bundled-fallback', list: hardhatTokenList as any[] };
         case CHAIN_ID.SEPOLIA:
           return { sourceId: SOURCES.tokenLists.sepolia, sourceKind: 'bundled-fallback', list: sepoliaTokenList as any[] };

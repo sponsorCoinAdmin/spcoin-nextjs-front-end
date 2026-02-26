@@ -121,7 +121,7 @@ const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
     CHAIN_ID.BASE,
     CHAIN_ID.ETHEREUM,
     CHAIN_ID.POLYGON,
-    CHAIN_ID.HARDHAT,
+    CHAIN_ID.HARDHAT_BASE,
     CHAIN_ID.SEPOLIA,
   ].includes(chainId);
 

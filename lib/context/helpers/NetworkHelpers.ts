@@ -52,7 +52,7 @@ const BLOCK_EXPLORER_URL: Record<CHAIN_ID, string> = {
   [CHAIN_ID.GOERLI]:   'https://goerli.etherscan.io/',
   [CHAIN_ID.POLYGON]:  'https://polygonscan.com/',
   [CHAIN_ID.BASE]:     'https://basescan.org/',
-  [CHAIN_ID.HARDHAT]:  'http://localhost:8545/',
+  [CHAIN_ID.HARDHAT_BASE]:  'http://localhost:8545/',
   [CHAIN_ID.MUMBAI]:   'https://mumbai.polygonscan.com/',
   [CHAIN_ID.SEPOLIA]:  'https://sepolia.etherscan.io/',
 };

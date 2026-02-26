@@ -17,7 +17,7 @@ export function getNativeTokenInfo(chainId: number): {
       return { symbol: 'ETH', name: 'Base ETH', decimals: 18, totalSupply: 0n };
     case CHAIN_ID.SEPOLIA:
       return { symbol: 'SEP', name: 'Sepolia ETH', decimals: 18, totalSupply: 0n };
-    case CHAIN_ID.HARDHAT:
+    case CHAIN_ID.HARDHAT_BASE:
       return { symbol: 'ETH', name: 'Hardhat ETH', decimals: 18, totalSupply: 0n };
     default:
       return { symbol: 'ETH', name: 'Unknown Native Token', decimals: 18, totalSupply: 0n };

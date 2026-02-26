@@ -10,7 +10,7 @@ const CHAIN_ALIASES: Record<string, number> = {
   eth: CHAIN_ID.ETHEREUM,
   polygon: CHAIN_ID.POLYGON,
   matic: CHAIN_ID.POLYGON,
-  hardhat: CHAIN_ID.HARDHAT,
+  hardhat: CHAIN_ID.HARDHAT_BASE,
   sepolia: CHAIN_ID.SEPOLIA,
   base: CHAIN_ID.BASE,
   goerli: CHAIN_ID.GOERLI,
@@ -21,7 +21,7 @@ export const TESTNET_CHAIN_IDS = new Set<number>([
   CHAIN_ID.GOERLI,
   CHAIN_ID.SEPOLIA,
   CHAIN_ID.MUMBAI,
-  CHAIN_ID.HARDHAT,
+  CHAIN_ID.HARDHAT_BASE,
   1337, // local hardhat alias used by some tools
 ]);
 

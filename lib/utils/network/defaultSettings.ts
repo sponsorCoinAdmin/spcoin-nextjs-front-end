@@ -16,7 +16,7 @@ export const getDefaultNetworkSettings = (chain: unknown) => {
       return defaultEthereumSettings;
     case CHAIN_ID.POLYGON:
       return defaultPolygonSettings;
-    case CHAIN_ID.HARDHAT:
+    case CHAIN_ID.HARDHAT_BASE:
       return defaultHardHatSettings;
     case CHAIN_ID.SEPOLIA:
       return defaultSepoliaSettings;

@@ -14,7 +14,7 @@ export const wagmiServerConfig = createConfig({
     ),
     [hardhat.id]: http(
       process.env.NEXT_SERVER_HARDHAT_RPC_URL ||
-        process.env.HARDHAT ||
+        process.env.HARDHAT_BASE ||
         process.env.NEXT_SERVER_HARDHAT_RPC_URL ||
         'http://127.0.0.1:8545',
     ),

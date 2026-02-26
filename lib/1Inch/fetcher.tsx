@@ -68,7 +68,7 @@ function usePriceAPI() {
     rawSellTokenAddress.toLowerCase() !== rawBuyTokenAddress.toLowerCase() &&
     sellAmount > 0n &&
     !!userAddress &&
-    chainId !== CHAIN_ID.HARDHAT;
+    chainId !== CHAIN_ID.HARDHAT_BASE;
 
   const quoteParams: OneInchQuoteParams | null = shouldFetch
     ? {

@@ -94,7 +94,7 @@ function usePriceAPI() {
     if (!isAddress(buyToken ?? '')) return false;
     if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) return false;
     if (!effectiveAmount || effectiveAmount === 0n) return false;
-    if (chainId === CHAIN_ID.HARDHAT) return false;
+    if (chainId === CHAIN_ID.HARDHAT_BASE) return false;
     return true;
   };
 
