@@ -1,0 +1,22 @@
+{
+    "chainId":  1,
+    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name":  "HardHat",
+    "symbol":  "HH",
+    "decimals":  18,
+    "website":  "https://hardhat.org/",
+    "description":  "EthereHardHat Ethereum ERC20 Test DevelopmentSite",
+    "explorer":  "https://hardhat.org/docs/getting-started",
+    "status":  "active on localhost only",
+    "logoURL":  "assets/blockchains/31337/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png",
+    "links":  [
+                  {
+                      "name":  "hardhat home page",
+                      "url":  "https://hardhat.org/"
+                  },
+                  {
+                      "name":  "HardHat Documentation",
+                      "url":  "https://hardhat.org/docs/getting-started"
+                  }
+              ]
+}

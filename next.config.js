@@ -57,12 +57,36 @@ const nextConfig = {
   },
 
   async rewrites() {
-    return [
-      {
-        source: `/createAccount`,
-        destination: `/CreateAccount`,
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: `/createAccount`,
+          destination: `/CreateAccount`,
+        },
+        {
+          source: `/assets/blockchains/31337/info/network.png`,
+          destination: `/assets/blockchains/8453/info/network_HH.png`,
+        },
+        {
+          source: `/assets/blockchains/31337/info/logo.png`,
+          destination: `/assets/blockchains/8453/info/logo_HH.png`,
+        },
+        {
+          source: `/assets/blockchains/31337/info/info.png`,
+          destination: `/assets/blockchains/8453/info/info_HH.png`,
+        },
+        {
+          source: `/assets/blockchains/31337/info/info.json`,
+          destination: `/assets/blockchains/8453/info/info_HH.json`,
+        },
+        {
+          source: `/assets/blockchains/31337/:path*`,
+          destination: `/assets/blockchains/8453/:path*`,
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
   },
 };
 
