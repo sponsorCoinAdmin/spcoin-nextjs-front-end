@@ -258,7 +258,7 @@ function getTokenLogoURL_SSOT(chainId: number, addr: Address): string | undefine
 /* ----------------------------- SSOT fallbacks ----------------------------- */
 
 /** Consistent fallback shape for "not registered / missing account.json". */
-export function makeWalletFallback(
+export function makeAccountFallback(
   addr: Address,
   status: STATUS,
   description: string,
@@ -266,7 +266,7 @@ export function makeWalletFallback(
 ): spCoinAccount {
   const out: spCoinAccount = {
     address: addr,
-    type: 'ERC20_WALLET' as any,
+    type: 'ERC20_ACCOUNT' as any,
     name: '',
     symbol: '',
     website: '' as any,
@@ -276,7 +276,7 @@ export function makeWalletFallback(
     balance: typeof balance === 'bigint' ? balance : 0n,
   };
 
-  debugLog.warn?.('[makeWalletFallback]', {
+  debugLog.warn?.('[makeAccountFallback]', {
     addr,
     status,
     description,
@@ -310,7 +310,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
 
   if (!addr || !isAddress(addr)) {
     debugLog.warn?.('[hydrateAccountFromAddress] invalid address', { addr });
-    return makeWalletFallback(
+    return makeAccountFallback(
       (addr || ('0x0000000000000000000000000000000000000000' as Address)) as Address,
       opts.fallbackStatus ?? STATUS.MESSAGE_ERROR,
       'Invalid wallet address',
@@ -320,7 +320,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
 
   if (!isProbablyClient()) {
     debugLog.warn?.('[hydrateAccountFromAddress] SSR guard hit (no fetch)', { addr });
-    return makeWalletFallback(addr, opts.fallbackStatus ?? STATUS.INFO, 'Wallet metadata available on client only', opts.balance);
+    return makeAccountFallback(addr, opts.fallbackStatus ?? STATUS.INFO, 'Wallet metadata available on client only', opts.balance);
   }
 
   const url = `/api/spCoin/accounts/${addr}`;
@@ -349,7 +349,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
       err: String(err?.message ?? err),
     });
 
-    return makeWalletFallback(addr, opts.fallbackStatus ?? STATUS.MESSAGE_ERROR, `Account ${addr} not registered on this site`, opts.balance);
+    return makeAccountFallback(addr, opts.fallbackStatus ?? STATUS.MESSAGE_ERROR, `Account ${addr} not registered on this site`, opts.balance);
   }
 
   const balance = typeof opts.balance === 'bigint' ? opts.balance : toBigIntSafe(json?.balance);
@@ -364,7 +364,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
 
   const out: spCoinAccount = {
     address: addr,
-    type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_WALLET' as any),
+    type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_ACCOUNT' as any),
     name: typeof json?.name === 'string' ? json.name : '',
     symbol: typeof json?.symbol === 'string' ? json.symbol : '',
     website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
@@ -405,7 +405,7 @@ async function hydrateAccountsFromSpecsBatch(specs: any[]): Promise<Map<string, 
 
           const hydrated: spCoinAccount = {
             address: addr,
-            type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_WALLET' as any),
+            type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_ACCOUNT' as any),
             name: typeof json?.name === 'string' ? json.name : '',
             symbol: typeof json?.symbol === 'string' ? json.symbol : '',
             website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
@@ -541,7 +541,7 @@ async function buildAccountFromJsonSpec(
     typeof spec === 'object' && spec ? (typeof spec.balance === 'bigint' ? spec.balance : toBigIntSafe(spec.balance)) : undefined;
 
   if (!addr) {
-    return makeWalletFallback(
+    return makeAccountFallback(
       '0x0000000000000000000000000000000000000000' as Address,
       STATUS.MESSAGE_ERROR,
       'Invalid wallet address',

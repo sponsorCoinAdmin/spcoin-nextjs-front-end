@@ -10,7 +10,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 // ✅ SSOT account hydration (account.json + logo derivation)
 import {
   hydrateAccountFromAddress,
-  makeWalletFallback,
+  makeAccountFallback,
 } from '@/lib/context/helpers/accountHydration';
 
 const LOG_TIME = false;
@@ -173,7 +173,7 @@ export async function initExchangeContext(
       );
     } catch (err) {
       debugLog.error?.('⛔ Wallet hydration threw unexpectedly; falling back.', err);
-      sanitized.accounts.activeAccount = makeWalletFallback(
+      sanitized.accounts.activeAccount = makeAccountFallback(
         address as any,
         STATUS.MESSAGE_ERROR,
         `Account ${address} metadata could not be loaded`,
