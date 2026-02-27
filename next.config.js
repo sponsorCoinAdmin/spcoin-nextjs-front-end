@@ -45,7 +45,7 @@ const nextConfig = {
     return [
       {
         source: `/createRecipient`,
-        destination: `/createAccount?type=Recipient`,
+        destination: `/EditAccount?type=Recipient`,
         permanent: false,
       },
       {
@@ -60,8 +60,8 @@ const nextConfig = {
     return {
       beforeFiles: [
         {
-          source: `/createAccount`,
-          destination: `/CreateAccount`,
+          source: `/editAccount`,
+          destination: `/EditAccount`,
         },
         {
           source: `/assets/blockchains/31337/info/network.png`,

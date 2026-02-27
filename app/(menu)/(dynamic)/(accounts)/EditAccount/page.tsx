@@ -1,3 +1,1 @@
-'use client';
-
-export { default } from '../CreateAccount/page';
+export { default } from './EditAccountPageClient';

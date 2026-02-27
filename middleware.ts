@@ -4,9 +4,9 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.toLowerCase() === '/createaccount') {
+  if (pathname.toLowerCase() === '/editaccount' && pathname !== '/EditAccount') {
     const url = request.nextUrl.clone();
-    url.pathname = '/CreateAccount';
+    url.pathname = '/EditAccount';
     return NextResponse.rewrite(url);
   }
 
