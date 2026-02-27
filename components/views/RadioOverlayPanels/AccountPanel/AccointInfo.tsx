@@ -198,7 +198,7 @@ export default function DisplayInfo() {
             <div className={`${zebraA} col-span-2 p-0`}>
               <button
                 type="button"
-                onClick={() => router.push('/createAccount')}
+                onClick={() => router.push('/EditAccount')}
                 className={[
                   'flex items-center justify-center',
                   'text-[#5981F3]',
