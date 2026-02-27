@@ -3,7 +3,7 @@
 
 import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import DisplayInfo from './AccointInfo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -42,7 +42,7 @@ export default function AccountPanel(_props: Props) {
     return 'NONE';
   }, [vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  const selectedAccount = useMemo(() => {
+  const selectedAccount = useMemo<spCoinAccount | undefined>(() => {
     if (!accounts) return undefined;
     if (activeMember === 'ACTIVE_ACCOUNT') return accounts.activeAccount;
     if (activeMember === 'SPONSOR_ACCOUNT') return accounts.sponsorAccount;
@@ -66,7 +66,7 @@ export default function AccountPanel(_props: Props) {
       activeMember,
       hasAccounts: !!accounts,
       activeAddr: accounts?.activeAccount?.address,
-      selectedAddr: selectedAccount?.address,
+      selectedAddr: (selectedAccount as spCoinAccount | undefined)?.address,
     });
   }
 
