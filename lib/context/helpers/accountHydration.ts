@@ -112,6 +112,13 @@ function coerceStatus(raw: unknown): STATUS {
   return STATUS.INFO;
 }
 
+function hasMeaningfulText(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return trimmed.toUpperCase() !== 'N/A';
+}
+
 function summarizeOut(out: spCoinAccount) {
   return {
     address: out.address,
@@ -563,10 +570,10 @@ async function buildAccountFromJsonSpec(
     const out: spCoinAccount = {
       ...hydrated,
       // allow common overrides if provided (eg in manage JSON)
-      name: typeof spec.name === 'string' ? spec.name : hydrated.name,
-      symbol: typeof spec.symbol === 'string' ? spec.symbol : hydrated.symbol,
-      website: typeof spec.website === 'string' ? spec.website : (hydrated as any).website,
-      description: typeof spec.description === 'string' ? spec.description : (hydrated as any).description,
+      name: hasMeaningfulText(spec.name) ? spec.name : hydrated.name,
+      symbol: hasMeaningfulText(spec.symbol) ? spec.symbol : hydrated.symbol,
+      website: hasMeaningfulText(spec.website) ? spec.website : (hydrated as any).website,
+      description: hasMeaningfulText(spec.description) ? spec.description : (hydrated as any).description,
       status: spec.status ? coerceStatus(spec.status) : (hydrated as any).status,
       balance: typeof balanceOverride === 'bigint' ? balanceOverride : (hydrated as any).balance,
     };

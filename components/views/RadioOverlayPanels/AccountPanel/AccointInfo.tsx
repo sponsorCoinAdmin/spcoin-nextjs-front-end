@@ -4,7 +4,6 @@
 import React, { useContext, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { spCoinAccount } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
@@ -43,36 +42,51 @@ function formatShortAddress(addr: string) {
   return ` ${start} ... ${end} `;
 }
 
-type Props = {
-  account?: spCoinAccount;
-};
+function normalizeAddressKey(value: unknown) {
+  return (value ?? '').toString().trim().toLowerCase();
+}
 
-export default function DisplayInfo({ account }: Props) {
+export default function DisplayInfo() {
   const router = useRouter();
-  // ✅ Hooks must run on every render (even when account is undefined)
   const ctx = useContext(ExchangeContextState);
+  const accounts = ctx?.exchangeContext?.accounts;
 
   // ✅ ACCOUNT_PANEL child visibility (to label the “Deposit Account” row correctly)
+  const vActiveAccount = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT);
   const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
   const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
   const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
 
   const depositLabel = useMemo(() => {
+    if (vActiveAccount) return 'Active Account:';
     if (vActiveSponsor) return 'Sponsor Account:';
     if (vActiveRecipient) return 'Recipient Account:';
     if (vActiveAgent) return 'Agent Account:';
     return 'Account:';
-  }, [vActiveSponsor, vActiveRecipient, vActiveAgent]);
+  }, [vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  const address = addressToText(account?.address);
-  const name = fallback(account?.name);
-  const symbol = fallback(account?.symbol);
-  const description = fallback(account?.description);
-  const website = (account?.website ?? '').toString().trim();
+  const accountToRender = useMemo(() => {
+    if (!accounts) return undefined;
+    if (vActiveAccount) return accounts.activeAccount;
+    if (vActiveSponsor) return accounts.sponsorAccount;
+    if (vActiveRecipient) return accounts.recipientAccount;
+    if (vActiveAgent) return accounts.agentAccount;
+    return accounts.activeAccount;
+  }, [accounts, vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
+
+  const canEditAccount =
+    normalizeAddressKey(accountToRender?.address) !== '' &&
+    normalizeAddressKey(accountToRender?.address) === normalizeAddressKey(accounts?.activeAccount?.address);
+
+  const address = addressToText(accountToRender?.address);
+  const name = fallback(accountToRender?.name);
+  const symbol = fallback(accountToRender?.symbol);
+  const description = fallback(accountToRender?.description);
+  const website = (accountToRender?.website ?? '').toString().trim();
   const email = (
-    (account as any)?.email ??
-    (account as any)?.emailAddress ??
-    (account as any)?.contactEmail ??
+    (accountToRender as any)?.email ??
+    (accountToRender as any)?.emailAddress ??
+    (accountToRender as any)?.contactEmail ??
     ''
   )
     .toString()
@@ -80,15 +94,16 @@ export default function DisplayInfo({ account }: Props) {
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
-  const valueWrap = 'whitespace-normal break-words mr-[5px]';
+  const valueWrap = 'box-border w-full whitespace-normal break-all pr-[5px]';
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+  const tableGrid = 'grid grid-cols-[max-content_minmax(0,1fr)]';
 
   // After hooks have run, you can short-circuit rendering if no account
-  if (!account) return null;
+  if (!accountToRender) return null;
 
   // ✅ This is the connected/active account address shown in the pill
-  const depositAddrRaw = ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '';
+  const depositAddrRaw = accountToRender?.address ?? '';
   const depositAddr = formatShortAddress(String(depositAddrRaw ?? '').trim());
 
   return (
@@ -105,113 +120,101 @@ export default function DisplayInfo({ account }: Props) {
 
       <div
         id="MANAGE ACCOUNT"
-        className="scrollbar-hide mb-4 mt-0 overflow-x-hidden overflow-y-auto rounded-xl border border-black"
+        className="scrollbar-hide mb-4 mt-0 w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-black"
       >
-        <table id="MANAGE ACCOUNT TABLE" className="w-full table-fixed border-collapse">
-          <thead>
-            {/* ✅ Match AccountListRewardsPanel header background color */}
-            <tr className={`${msTableTw.theadRow} border-b border-black`}>
-              <th scope="col" className={th}>
-                Field Name
-              </th>
-              <th scope="col" className={th}>
-                value
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>Name</td>
-              <td className={`${zebraA} ${cell}`}>
-                <div className={valueWrap}>{name}</div>
-              </td>
-            </tr>
+        <div id="MANAGE ACCOUNT TABLE" className={`${tableGrid} w-full min-w-0`}>
+          <div className="contents">
+            <div className={`${msTableTw.theadRow} ${th} whitespace-nowrap border-b border-black`}>Field Name</div>
+            <div className={`${msTableTw.theadRow} ${th} border-b border-black`}>value</div>
+          </div>
 
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>Symbol</td>
-              <td className={`${zebraB} ${cell}`}>
-                <div className={valueWrap}>{symbol}</div>
-              </td>
-            </tr>
+          <div className="contents">
+            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Name</div>
+            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
+              <div className={valueWrap}>{name}</div>
+            </div>
+          </div>
 
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>address:</td>
-              <td className={`${zebraA} ${cell}`}>
-                <div className={valueWrap}>
-                  <span className="font-mono break-all">{fallback(address)}</span>
-                </div>
-              </td>
-            </tr>
+          <div className="contents">
+            <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>Symbol</div>
+            <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}>
+              <div className={valueWrap}>{symbol}</div>
+            </div>
+          </div>
 
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>webSite</td>
-              <td className={`${zebraB} ${cell}`}>
-                <div className={valueWrap}>
-                  {website ? (
-                    <a
-                      href={website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all"
-                    >
-                      {website}
-                    </a>
-                  ) : (
-                    'N/A'
-                  )}
-                </div>
-              </td>
-            </tr>
+          <div className="contents">
+            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>address:</div>
+            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
+              <div className={valueWrap}>
+                <span className="block w-full font-mono break-all">{fallback(address)}</span>
+              </div>
+            </div>
+          </div>
 
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>email:</td>
-              <td className={`${zebraA} ${cell}`}>
-                <div className={valueWrap}>
-                  {email ? (
-                    <a
-                      href={email.startsWith('mailto:') ? email : `mailto:${email}`}
-                      className="break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
-                    >
-                      {email.replace(/^mailto:/i, '')}
-                    </a>
-                  ) : (
-                    'N/A'
-                  )}
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td className={`${zebraB} ${cell}`}>
-                description:
-              </td>
-              <td className={`${zebraB} ${cell}`}>
-                <div className={valueWrap}>{description}</div>
-              </td>
-            </tr>
-
-            <tr>
-              <td colSpan={2} className={`${zebraA} p-0`}>
-                  <button
-                    type="button"
-                    onClick={() => router.push('/createAccount')}
-                    className={[
-                      'flex items-center justify-center',
-                      'text-[#5981F3]',
-                      'bg-[#243056]',
-                      'w-full h-[55px]',
-                      'text-[20px] font-bold',
-                      'rounded-[12px]',
-                      'transition-[color,background-color] duration-300',
-                      'hover:cursor-pointer hover:text-green-500',
-                    ].join(' ')}
+          <div className="contents">
+            <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>webSite</div>
+            <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}>
+              <div className={valueWrap}>
+                {website ? (
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
                   >
-                    Edit Account
-                  </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                    {website}
+                  </a>
+                ) : (
+                  'N/A'
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="contents">
+            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>email:</div>
+            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
+              <div className={valueWrap}>
+                {email ? (
+                  <a
+                    href={email.startsWith('mailto:') ? email : `mailto:${email}`}
+                    className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
+                  >
+                    {email.replace(/^mailto:/i, '')}
+                  </a>
+                ) : (
+                  'N/A'
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className={`${zebraB} ${cell} col-span-2 min-w-0`}>
+            <div className="mb-2 text-center whitespace-nowrap">Description:</div>
+            <div className={valueWrap}>{description}</div>
+          </div>
+
+          {canEditAccount ? (
+            <div className={`${zebraA} col-span-2 p-0`}>
+              <button
+                type="button"
+                onClick={() => router.push('/createAccount')}
+                className={[
+                  'flex items-center justify-center',
+                  'text-[#5981F3]',
+                  'bg-[#243056]',
+                  'w-full h-[55px]',
+                  'text-[20px] font-bold',
+                  'rounded-[12px]',
+                  'transition-[color,background-color] duration-300',
+                  'hover:cursor-pointer hover:text-green-500',
+                ].join(' ')}
+              >
+                Edit Account
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

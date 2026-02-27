@@ -70,6 +70,7 @@ const ACCOUNT_LIST_REWARDS_CHILDREN: readonly SP[] = [
  * ✅ ACCOUNT_PANEL children (order matters)
  */
 const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
+  SP.ACTIVE_ACCOUNT,
   SP.SPONSOR_ACCOUNT,
   SP.RECIPIENT_ACCOUNT,
   SP.AGENT_ACCOUNT,
@@ -230,6 +231,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
 
   // ✅ ACCOUNT_PANEL state children (active nodes)
+  def({ id: SP.ACTIVE_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.SPONSOR_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),

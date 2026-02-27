@@ -54,10 +54,7 @@ export function useCreateAccountDerivedState({
 
   const submitLabel = accountExists ? 'Update Account' : 'Create Account';
   const isRevertNoop = !hasUnsavedChanges;
-  const pageTitle =
-    accountMode === 'create'
-      ? 'Create Sponsor Coin Account'
-      : `${savedAccountName}'s Account`;
+  const pageTitle = savedAccountName ? 'Edit Account' : 'Edit Account';
 
   const isLoading = isLoadingAccount || isSaving;
   const isEditMode = !isLoadingAccount && !isSaving;

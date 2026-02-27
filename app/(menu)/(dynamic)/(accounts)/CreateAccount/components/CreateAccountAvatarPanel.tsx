@@ -6,6 +6,7 @@ import { useState } from 'react';
 type Props = {
   panelMarginClass: string;
   avatarPanelBorderClass: string;
+  avatarHeading: string;
   logoPreviewSrc: string;
   connected: boolean;
   isEditMode: boolean;
@@ -21,6 +22,7 @@ type Props = {
 export default function CreateAccountAvatarPanel({
   panelMarginClass,
   avatarPanelBorderClass,
+  avatarHeading,
   logoPreviewSrc,
   connected,
   isEditMode,
@@ -38,7 +40,7 @@ export default function CreateAccountAvatarPanel({
       className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}
     >
       <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
-        Users Avatar
+        {avatarHeading}
       </h2>
       <div className="flex h-full w-full flex-1 min-h-0 flex-col items-center gap-4">
         <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">

@@ -44,6 +44,7 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
   [SP.ACCOUNT_LIST_SELECT_PANEL, false],
 
   // ✅ Ensure ACCOUNT_PANEL children exist even for older persisted trees
+  [SP.ACTIVE_ACCOUNT, false],
   [SP.SPONSOR_ACCOUNT, false],
   [SP.RECIPIENT_ACCOUNT, false],
   [SP.AGENT_ACCOUNT, false],
@@ -124,6 +125,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // ✅ ACCOUNT_PANEL should show role children in the tree
       node(SP.ACCOUNT_PANEL, false, [
+        node(SP.ACTIVE_ACCOUNT, false),
         node(SP.SPONSOR_ACCOUNT, false),
         node(SP.RECIPIENT_ACCOUNT, false),
         node(SP.AGENT_ACCOUNT, false),

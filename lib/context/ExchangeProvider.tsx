@@ -583,7 +583,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           (next as any).accounts.activeAccount = makeAccountFallback(
             nextAddr,
             STATUS.INFO,
-            `Loading account metadata for ${nextAddr}`,
+            '',
             typeof prevActive?.balance === 'bigint' ? prevActive.balance : 0n,
           );
           return next;
@@ -733,7 +733,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           (next as any).accounts.activeAccount = makeAccountFallback(
             nextAddress as Address,
             STATUS.INFO,
-            `Loading account metadata for ${nextAddress}`,
+            '',
             0n,
           );
           return next;

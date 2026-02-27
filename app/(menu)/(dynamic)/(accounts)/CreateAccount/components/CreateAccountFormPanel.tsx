@@ -105,7 +105,7 @@ export default function CreateAccountFormPanel({
           Account Public Key
         </div>
         <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
-          Users Account Meta Data
+          Account Meta Data
         </h2>
       </div>
       <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">

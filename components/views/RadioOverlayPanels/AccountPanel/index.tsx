@@ -13,13 +13,19 @@ const debugLog = createDebugLogger('AccountPanelEmpty', DEBUG_ENABLED, false);
 
 type Props = { onClose?: () => void };
 
-type ActiveAccountMember = 'SPONSOR_ACCOUNT' | 'RECIPIENT_ACCOUNT' | 'AGENT_ACCOUNT' | 'NONE';
+type ActiveAccountMember =
+  | 'ACTIVE_ACCOUNT'
+  | 'SPONSOR_ACCOUNT'
+  | 'RECIPIENT_ACCOUNT'
+  | 'AGENT_ACCOUNT'
+  | 'NONE';
 
 export default function AccountPanel(_props: Props) {
   // Parent panel visibility
   const vAccountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
   // Read child visibility directly
+  const vActiveAccount = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT);
   const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
   const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
   const vActiveAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
@@ -29,24 +35,23 @@ export default function AccountPanel(_props: Props) {
 
   // Derive activeMember from the actual visible child flags
   const activeMember: ActiveAccountMember = useMemo(() => {
+    if (vActiveAccount) return 'ACTIVE_ACCOUNT';
     if (vActiveSponsor) return 'SPONSOR_ACCOUNT';
     if (vActiveRecipient) return 'RECIPIENT_ACCOUNT';
     if (vActiveAgent) return 'AGENT_ACCOUNT';
     return 'NONE';
-  }, [vActiveSponsor, vActiveRecipient, vActiveAgent]);
+  }, [vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  // Active wallet based on active child
-  const activeWallet = useMemo(() => {
+  const selectedAccount = useMemo(() => {
     if (!accounts) return undefined;
-
+    if (activeMember === 'ACTIVE_ACCOUNT') return accounts.activeAccount;
     if (activeMember === 'SPONSOR_ACCOUNT') return accounts.sponsorAccount;
     if (activeMember === 'RECIPIENT_ACCOUNT') return accounts.recipientAccount;
     if (activeMember === 'AGENT_ACCOUNT') return accounts.agentAccount;
-
-    return undefined;
+    return accounts.activeAccount;
   }, [accounts, activeMember]);
 
-  const isActiveAccount = !!activeWallet;
+  const isActiveAccount = !!selectedAccount;
 
   // ✅ early return AFTER hooks
   if (!vAccountPanel) return null;
@@ -54,19 +59,22 @@ export default function AccountPanel(_props: Props) {
   if (!isActiveAccount) {
     debugLog.log?.('[empty]', {
       vAccountPanel,
+      vActiveAccount,
       vActiveSponsor,
       vActiveRecipient,
       vActiveAgent,
       activeMember,
       hasAccounts: !!accounts,
-      sponsorAddr: accounts?.sponsorAccount?.address,
-      recipientAddr: accounts?.recipientAccount?.address,
-      agentAddr: accounts?.agentAccount?.address,
+      activeAddr: accounts?.activeAccount?.address,
+      selectedAddr: selectedAccount?.address,
     });
   }
 
   return (
     <div id="ACCOUNT_PANEL">
+      {activeMember === 'ACTIVE_ACCOUNT' && (
+        <div id="ACTIVE_ACCOUNT" className="hidden" aria-hidden="true" />
+      )}
       {activeMember === 'SPONSOR_ACCOUNT' && (
         <div id="SPONSOR_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
@@ -77,7 +85,7 @@ export default function AccountPanel(_props: Props) {
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
       {isActiveAccount ? (
-        <DisplayInfo account={activeWallet as any} />
+        <DisplayInfo />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No active account selected.</p>

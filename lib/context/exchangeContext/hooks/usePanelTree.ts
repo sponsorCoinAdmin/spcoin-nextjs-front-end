@@ -161,6 +161,7 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
 
 // ACCOUNT_PANEL children: exactly 0 or 1 visible
 const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
   SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
   SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
   SP_COIN_DISPLAY.AGENT_ACCOUNT,
@@ -237,6 +238,7 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.BUY_CONTRACT,
       SP_COIN_DISPLAY.SELL_CONTRACT,
       SP_COIN_DISPLAY.PREVIEW_CONTRACT,
+      SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
       SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
       SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
       SP_COIN_DISPLAY.AGENT_ACCOUNT,
@@ -834,6 +836,17 @@ export function usePanelTree() {
               `openPanel:${navInvoker}:accountPanelMode:closeOther`,
             );
           }
+        }
+      }
+
+      if (Number(panel) === Number(SP_COIN_DISPLAY.ACCOUNT_PANEL)) {
+        const hasActiveAccountMode = ACCOUNT_PANEL_MODES.some((mode) => panelStore.isVisible(mode));
+        if (!hasActiveAccountMode) {
+          showDisplay(
+            SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
+            `${navInvoker}:accountPanelDefaultMode`,
+            SP_COIN_DISPLAY.ACCOUNT_PANEL,
+          );
         }
       }
 

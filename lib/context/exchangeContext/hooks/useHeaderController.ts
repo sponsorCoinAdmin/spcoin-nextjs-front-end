@@ -82,6 +82,7 @@ function getRewardsHeaderTitle(
  */
 function getAccountsHeaderTitle(
   opts: {
+    activeDefault?: boolean;
     activeSponsor: boolean;
     activeRecipient: boolean;
     activeAgent: boolean;
@@ -91,6 +92,7 @@ function getAccountsHeaderTitle(
   const n = (name ?? '').trim();
   const label = n.length ? n : 'Sponsor Coin';
 
+  if (opts.activeDefault) return `Account ${label}`;
   if (opts.activeSponsor) return `Sponsor ${label}`;
   if (opts.activeRecipient) return `Recipient ${label}`;
   if (opts.activeAgent) return `Agent ${label}`;
@@ -129,6 +131,7 @@ function titleFor(
     unSponsor: boolean;
   },
   accountsState?: {
+    activeDefault?: boolean;
     activeSponsor: boolean;
     activeRecipient: boolean;
     activeAgent: boolean;
@@ -273,14 +276,15 @@ export function useHeaderController() {
   const activeSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
   const activeRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
   const activeAgent = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
+  const activeDefault = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT);
 
   const activeSponsorList = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
   const activeRecipientList = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST);
   const activeAgentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST);
 
   const accountsState = useMemo(
-    () => ({ activeSponsor, activeRecipient, activeAgent }),
-    [activeSponsor, activeRecipient, activeAgent],
+    () => ({ activeDefault, activeSponsor, activeRecipient, activeAgent }),
+    [activeDefault, activeSponsor, activeRecipient, activeAgent],
   );
 
   const accountListState = useMemo(
@@ -337,18 +341,19 @@ export function useHeaderController() {
   ]);
 
   /**
-   * When ACCOUNT_PANEL is active, the header uses role accounts.
-   * Otherwise it uses accounts.activeAccount.
+   * When ACCOUNT_PANEL is active, ACTIVE_ACCOUNT uses accounts.activeAccount.
+   * Role-specific child modes still map to their corresponding role accounts.
    */
   const headerAccount = useMemo(() => {
     if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL) {
+      if (activeDefault) return activeAccount;
       if (activeSponsor) return accounts?.sponsorAccount;
       if (activeRecipient) return (accounts as any)?.recipientAccount;
       if (activeAgent) return (accounts as any)?.agentAccount;
-      return undefined;
+      return activeAccount;
     }
     return activeAccount;
-  }, [currentDisplay, activeSponsor, activeRecipient, activeAgent, accounts, activeAccount]);
+  }, [currentDisplay, activeDefault, activeSponsor, activeRecipient, activeAgent, accounts, activeAccount]);
 
   const headerAccountLogoURL = (headerAccount as any)?.logoURL;
   const headerAccountAddress = (headerAccount as any)?.address;
@@ -466,6 +471,8 @@ export function useHeaderController() {
                 if (modeToOpen != null) {
                   openPanel(modeToOpen, 'Header:ActiveLogoClick:preselectAccountMode');
                 }
+              } else {
+                openPanel(SP_COIN_DISPLAY.ACTIVE_ACCOUNT, 'Header:ActiveLogoClick:preselectActiveAccount');
               }
 
               openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
@@ -493,6 +500,7 @@ export function useHeaderController() {
     headerAccountLogoURL,
     headerAccountAddress,
     openPanel,
+    activeDefault,
     claimSponsor,
     claimRecipient,
     claimAgent,
