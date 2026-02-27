@@ -410,9 +410,12 @@ export function useHeaderController() {
     }
 
     const showActiveLogo =
+      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL ||
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL ||
       currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL ||
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
     if (!showActiveLogo) return null;
     if (!headerAccountLogoURL) return null;
