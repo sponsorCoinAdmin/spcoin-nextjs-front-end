@@ -147,6 +147,6 @@
   { "chainId": 149, "name": "Chain Name", "symbol": "Symbol Name" },
   { "chainId": 150, "name": "Chain Name", "symbol": "Symbol Name" },
   { "chainId": 8453, "name": "BASE", "symbol": "BASE" },
-  { "chainId": 31337, "name": "HardHat", "symbol": "HH" },
+  { "chainId": 31337, "name": "HardHat", "symbol": "HH_BASE" },
   { "chainId": 11155111, "name": "Sepolia", "symbol": "Sepolia" }
 ]

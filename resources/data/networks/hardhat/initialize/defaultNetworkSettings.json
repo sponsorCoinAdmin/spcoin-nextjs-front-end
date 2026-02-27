@@ -2,7 +2,7 @@
   "networkHeader": {
     "chainId": 31337,
     "name": "HardHat",
-    "symbol": "HH",
+    "symbol": "HH_BASE",
     "logoURL": "/public/assets/blockchains/31337.png",
     "url": "http://localhost:3000/Exchange"
   }
