@@ -305,16 +305,16 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
             <div className="text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80">
               Token Meta
             </div>
-            {isTokenFeed ? (
+            {isTokenFeed || isAccountFeed ? (
               <button
                 id="TOKEN_LIST_TEXT_MODE_TOGGLE"
                 type="button"
                 onClick={cycleTokenTextMode}
-                className="rounded border border-sky-300/70 bg-sky-950/30 px-3 py-1 text-xs font-semibold tracking-wide text-sky-100 hover:bg-sky-900/40"
+                className="rounded bg-sky-950/30 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300/80 hover:bg-sky-900/40"
                 title={`Text Mode: ${tokenTextMode}. Click to cycle.`}
                 aria-label="Toggle token text mode"
               >
-                Text: {tokenTextMode}
+                {tokenTextMode} View
               </button>
             ) : null}
             <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
