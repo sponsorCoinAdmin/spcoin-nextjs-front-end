@@ -52,9 +52,9 @@
         │                 │                                         ├── <RenderAssetPreview>
         │                 │                                         ├── <ErrorAssetPreview>
         │                 │                                         └── <DataListSelect>
-        │                 │                                               └── onSelect(wallet, state)
+        │                 │                                               └── onSelect(account, state)
         │                 │                                                     └── if state === CLOSE_SELECT_PANEL:
-        │                 │                                                           ├── callbackAccount(wallet)
+        │                 │                                                           ├── callbackAccount(account)
         │                 │                                                           ├── hasErroredRef = false
         │                 │                                                           └── setSpCoinDisplay(SHOW_RECIPIENT_CONTAINER)
         ├── <ConnectTradeButton>

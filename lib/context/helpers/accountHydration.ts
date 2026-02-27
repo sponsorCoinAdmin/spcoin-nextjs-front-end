@@ -7,7 +7,7 @@ import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { getJson, get, headOk } from '@/lib/rest/http';
 import { getAccountByAddress, getAccountsBatch, getTokensBatch } from '@/lib/api';
-import { getWalletLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { getAccountLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
@@ -58,7 +58,7 @@ type HydrateOpts = {
   balance?: bigint;
   /**
    * If true, uses json.logoURL when present (not recommended).
-   * Default false: always derive via getWalletLogoURL().
+   * Default false: always derive via getAccountLogoURL().
    */
   allowJsonLogoURL?: boolean;
   /** Optional override for fallback status when metadata missing. */
@@ -216,7 +216,7 @@ function getAccountLogoURL_SSOT(addr: Address): string {
     const key = toAccountFolderKey(addr);
     return `${base}${key}/logo.png`;
   }
-  return getWalletLogoURL(addr);
+  return getAccountLogoURL(addr);
 }
 
 export async function resolveAccountLogoURL(

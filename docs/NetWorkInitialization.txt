@@ -1,24 +1,24 @@
 What happens on Allpication Load/Refresh/Connect.
 
-Case A: Wallet Disconnected / Local Storage Empty
+Case A: Account Disconnected / Local Storage Empty
 	appChainId = 1 (default Ethereum)
 	chainId = undefined
 
-Case B: Wallet Connected /Local Storage Empty
-	appChainId = wallet.chainId
-	chainId = wallet.chainId	
+Case B: Account Connected /Local Storage Empty
+	appChainId = account.chainId
+	chainId = account.chainId	
 
-Case C: Wallet Disconnected / Local Storage Available
+Case C: Account Disconnected / Local Storage Available
 	appChainId = stored appChainId
 	chainId = stored chainId
 
-Case D: Wallet Connected / Local Storage Available
+Case D: Account Connected / Local Storage Available
 	appChainId = stored appChainId
 	chainId = stored chainId
-	switch wallet to app chainId
+	switch account to app chainId
 
-Case E: Connecting to wallet.
-	switch wallet to app chainId
+Case E: Connecting to account.
+	switch account to app chainId
 
 ┌──────┬────────────┬───────────────┬────────────────────────────────────────────────────────┐
 │ Case │ Connected  │ Local Storage │ Result / Action                                        │
@@ -27,23 +27,23 @@ Case E: Connecting to wallet.
 │  A   │ NO         │ NO            │ appChainId = 1 (default Ethereum)                      │
 │      │            │               │ chainId = undefined                                    │
 ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
-│  B   │ YES        │ NO            │ appChainId = wallet.chainId                            │
-│      │            │               │ chainId = wallet.chainId                               │
+│  B   │ YES        │ NO            │ appChainId = account.chainId                            │
+│      │            │               │ chainId = account.chainId                               │
 ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
 │  C   │ NO         │ YES           │ appChainId = stored appChainId                         │
 │      │            │               │ chainId = stored chainId                               │
 ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
 │  D   │ YES        │ YES           │ appChainId = stored appChainId                         │
 │      │            │               │ chainId = stored chainId                               │
-│      │            │               │ ACTION: switch wallet to appChainId                    │
+│      │            │               │ ACTION: switch account to appChainId                    │
 ├──────┼────────────┼───────────────┼────────────────────────────────────────────────────────┤
-│  E   │ Connecting │ YES           │ ACTION on connect: switch wallet to current appChainId │
+│  E   │ Connecting │ YES           │ ACTION on connect: switch account to current appChainId │
 ├──────┴────────────┴───────────────┴────────────────────────────────────────────────────────┤
 │                             Summary Network Resolution                                     │
 ├────────────────────────────────────────────────────────────────────────────────────────────┤
-│ LS empty + no wallet     → default network to 1, Ethereum.                                 │
-│ LS empty + wallet        → app follows wallet.                                             │
-│ LS available + no wallet → app restores last known network.                                │
-│ LS available + wallet    → app restores last known network and forces wallet to match.     │
-│ On connect               → wallet is always driven to appChainId.                          │
+│ LS empty + no account     → default network to 1, Ethereum.                                 │
+│ LS empty + account        → app follows account.                                             │
+│ LS available + no account → app restores last known network.                                │
+│ LS available + account    → app restores last known network and forces account to match.     │
+│ On connect               → account is always driven to appChainId.                          │
 └────────────────────────────────────────────────────────────────────────────────────────────┘

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getWalletLogoURL } from '@/lib/context/helpers/assetHelpers';
+import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
 import type { AccountFormData, AccountFormErrors, AccountFormField } from '../types';
 import {
   DEFAULT_ACCOUNT_LOGO_URL,
@@ -252,7 +252,7 @@ export function useCreateAccountForm({
             method: 'eth_requestAccounts',
           }),
         'MetaMask action in progress',
-        'Approve the wallet account request in MetaMask to continue.',
+        'Approve the account request in MetaMask to continue.',
       )) as string[];
       const signerAddress = String(accounts?.[0] ?? '').trim();
       if (!signerAddress) {
@@ -260,7 +260,7 @@ export function useCreateAccountForm({
       }
       if (normalizeAddress(signerAddress) !== normalizeAddress(derived.publicKeyTrimmed)) {
         throw new Error(
-          `Connected wallet mismatch. MetaMask=${signerAddress}, Active=${derived.publicKeyTrimmed}`,
+          `Connected account mismatch. MetaMask=${signerAddress}, Active=${derived.publicKeyTrimmed}`,
         );
       }
 
@@ -413,7 +413,7 @@ export function useCreateAccountForm({
       }
 
       if (shouldSaveLogo) {
-        const canonicalLogoURL = getWalletLogoURL(derived.publicKeyTrimmed);
+        const canonicalLogoURL = getAccountLogoURL(derived.publicKeyTrimmed);
         setLogoFile(null);
         setHasServerLogo(true);
         setServerLogoURL(withCacheBust(canonicalLogoURL));

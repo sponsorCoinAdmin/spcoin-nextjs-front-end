@@ -158,7 +158,7 @@ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
  * Wallet / account-specific logo helper.
  * Uses the accounts logo path and falls back to the generic missing image.
  */
-export function getWalletLogoURL(address?: string): string {
+export function getAccountLogoURL(address?: string): string {
   const root = getWalletRoot(address);
   if (!root) return defaultMissingImage;
   return `${root}/logo.png`;
@@ -204,7 +204,7 @@ export function getAssetLogoURL(
     case FEED_TYPE.RECIPIENT_ACCOUNTS:
     case FEED_TYPE.AGENT_ACCOUNTS:
       // Recipient/agent feeds are account-style logos under /assets/accounts/<0X...>/logo.png
-      return getWalletLogoURL(normalized);
+      return getAccountLogoURL(normalized);
 
     default:
       // For unknown feeds, fall back to a token-style path to preserve prior behaviour.
@@ -255,7 +255,7 @@ export function getAssetInfoURL(
  */
 export function getAccountLogo(account?: spCoinAccount): string {
   if (!account) return defaultMissingImage;
-  return getWalletLogoURL(account.address);
+  return getAccountLogoURL(account.address);
 }
 
 /**

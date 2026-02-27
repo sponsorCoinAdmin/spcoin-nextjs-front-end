@@ -19,7 +19,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import {
   defaultMissingImage,
   getLogoURL,
-  getWalletLogoURL,
+  getAccountLogoURL,
 } from '@/lib/context/helpers/assetHelpers';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -104,10 +104,10 @@ export default function RenderAssetPreview() {
           }
         }
       } else {
-        // Recipient / agent / other wallet-like: use wallet helper
+        // Recipient / agent / other account-like: use account helper
         const url =
           validatedAsset.logoURL ||
-          getWalletLogoURL(address) ||
+          getAccountLogoURL(address) ||
           defaultMissingImage;
 
         if (!cancelled) {

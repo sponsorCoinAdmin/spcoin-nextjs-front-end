@@ -10,7 +10,7 @@ This folder contains two account APIs:
 
 ## Auth Configuration (Required for Writes)
 
-Write routes require wallet-signature auth and bearer token validation.
+Write routes require account-signature auth and bearer token validation.
 
 Set one of:
 

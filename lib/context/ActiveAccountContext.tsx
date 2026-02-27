@@ -62,20 +62,20 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
           signal: ac.signal,
         });
 
-        const wallet: spCoinAccount = { ...metadata.data, address };
+        const account: spCoinAccount = { ...metadata.data, address };
 
         if (!ac.signal.aborted) {
-          setActiveAccount(wallet);
+          setActiveAccount(account);
           debugLog.log?.(
             '[ActiveAccount] loaded account.json →',
-            stringifyBigInt(wallet),
+            stringifyBigInt(account),
           );
-          debugLog.log?.('[ActiveAccount] website =', wallet.website);
+          debugLog.log?.('[ActiveAccount] website =', account.website);
         }
       } catch {
         const fallback: spCoinAccount = {
           address,
-          type: 'ERC20_WALLET',
+          type: 'ERC20_ACCOUNT',
           description: `Account ${address} not registered on this site`,
           name: '',
           symbol: '',
@@ -89,7 +89,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
         if (!ac.signal.aborted) {
           setActiveAccount(fallback);
           debugLog.log?.(
-            '[ActiveAccount] fallback wallet →',
+            '[ActiveAccount] fallback account →',
             stringifyBigInt(fallback),
           );
           debugLog.log?.('[ActiveAccount] website(fallback) = ""');

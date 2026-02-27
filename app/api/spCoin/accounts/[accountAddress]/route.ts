@@ -4,7 +4,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { readBearerToken, validateSessionToken } from '@/lib/server/spCoinAuth';
-import { getWalletLogoURL } from '@/lib/context/helpers/assetHelpers';
+import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,7 +111,7 @@ export async function GET(
       hasConstructedLogo = false;
     }
     const resolvedLogoURL = hasConstructedLogo
-      ? getWalletLogoURL(address)
+      ? getAccountLogoURL(address)
       : DEFAULT_ACCOUNT_LOGO_URL;
     const responseData = {
       ...data,

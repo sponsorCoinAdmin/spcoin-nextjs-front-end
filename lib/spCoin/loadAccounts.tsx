@@ -7,7 +7,7 @@ import type { spCoinAccount, AccountAddress } from '../structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import {
   normalizeAddressForAssets,
-  getWalletLogoURL,
+  getAccountLogoURL,
 } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
@@ -67,7 +67,7 @@ export async function loadAccounts(
 
           // Centralized logo URL builder (address stays in its original case)
           if (!account.logoURL) {
-            account.logoURL = getWalletLogoURL(account.address);
+            account.logoURL = getAccountLogoURL(account.address);
           }
 
           accounts.push(account);
@@ -121,7 +121,7 @@ export async function loadAccounts(
               const addrForLogo =
                 account.address ??
                 (`0x${accountFolder.slice(2)}` as spCoinAccount['address']);
-              account.logoURL = getWalletLogoURL(addrForLogo);
+              account.logoURL = getAccountLogoURL(addrForLogo);
             }
 
             accounts.push(account);

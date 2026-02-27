@@ -331,7 +331,12 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
           ) : (
             accounts.map((account, i) => (
               <div key={account.address} className={zebraForIndex(i)}>
-                <AccountListItem account={account} onPick={handlePickAddress} role={role} />
+                <AccountListItem
+                  account={account}
+                  onPick={handlePickAddress}
+                  role={role}
+                  textMode={tokenTextMode}
+                />
               </div>
             ))
           )

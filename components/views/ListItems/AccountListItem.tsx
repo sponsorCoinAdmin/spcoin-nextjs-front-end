@@ -22,6 +22,7 @@ type AccountListItemProps = {
   account: spCoinAccount;
   role: string; // may be passed by parent; unused locally
   onPick: (address: string) => void; // wired to avatar click
+  textMode?: 'Summary' | 'Standard' | 'Expanded';
 };
 
 function normalizeAddr(addr?: string) {
@@ -30,7 +31,12 @@ function normalizeAddr(addr?: string) {
   return addr.toLowerCase().replace(/^0x/i, '0x');
 }
 
-function AccountListItem({ account, onPick, role: _role }: AccountListItemProps) {
+function AccountListItem({
+  account,
+  onPick,
+  role: _role,
+  textMode = 'Standard',
+}: AccountListItemProps) {
   const logo = getAccountLogo(account);
 
   const addrRaw = account?.address ?? '';
@@ -44,13 +50,42 @@ function AccountListItem({ account, onPick, role: _role }: AccountListItemProps)
     addressNormalized: addrNorm,
     logoComputed: logo,
     logoURLField: (account as any)?.logoURL ?? null,
+    textMode,
   });
+
+  const shortAddress =
+    addrNorm.length > 12 ? `${addrNorm.slice(0, 6)}...${addrNorm.slice(-4)}` : addrNorm;
+
+  const text = (() => {
+    const name = account.name || 'N/A';
+    const symbol = account.symbol || 'N/A';
+
+    if (textMode === 'Summary') {
+      return {
+        title: symbol !== 'N/A' ? symbol : name,
+        subtitle: undefined as string | undefined,
+      };
+    }
+
+    if (textMode === 'Expanded') {
+      const expandedSubtitle = [symbol, shortAddress].filter(Boolean).join(' • ');
+      return {
+        title: name,
+        subtitle: expandedSubtitle || symbol,
+      };
+    }
+
+    return {
+      title: name,
+      subtitle: symbol,
+    };
+  })();
 
   return (
     <BaseListRow
       avatarSrc={logo}
-      title={account.name || 'N/A'}
-      subtitle={account.symbol || 'N/A'}
+      title={text.title}
+      subtitle={text.subtitle}
       onAvatarClick={() => {
         debugLog.log?.('pick', { addressRaw: addrRaw, addressNormalized: addrNorm });
         onPick(account.address);

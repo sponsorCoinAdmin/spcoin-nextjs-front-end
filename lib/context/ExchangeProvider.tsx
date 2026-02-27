@@ -11,7 +11,7 @@ import { deriveNetworkFromApp } from '@/lib/utils/network';
 // ✅ SSOT account hydration
 import {
   hydrateAccountFromAddress,
-  makeWalletFallback,
+  makeAccountFallback,
   resolveAccountLogoURL,
 } from '@/lib/context/helpers/accountHydration';
 import { STATUS } from '@/lib/structure';
@@ -580,7 +580,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
             return next;
           }
           (next as any).accounts = (next as any).accounts ?? {};
-          (next as any).accounts.activeAccount = makeWalletFallback(
+          (next as any).accounts.activeAccount = makeAccountFallback(
             nextAddr,
             STATUS.INFO,
             `Loading account metadata for ${nextAddr}`,
@@ -730,7 +730,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
           const next = clone(prev);
           (next as any).accounts = (next as any).accounts ?? {};
-          (next as any).accounts.activeAccount = makeWalletFallback(
+          (next as any).accounts.activeAccount = makeAccountFallback(
             nextAddress as Address,
             STATUS.INFO,
             `Loading account metadata for ${nextAddress}`,
