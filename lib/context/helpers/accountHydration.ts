@@ -5,12 +5,15 @@ import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
-import { getJson, get, headOk } from '@/lib/rest/http';
-import { getTokensBatch } from '@/lib/api';
+import { get, headOk } from '@/lib/rest/http';
 import {
   loadAccountRecord,
   loadAccountRecordsBatch,
 } from '@/lib/context/accounts/accountStore';
+import {
+  loadTokenRecord,
+  loadTokenRecordsBatch,
+} from '@/lib/context/tokens/tokenStore';
 import { getAccountLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -67,13 +70,6 @@ type HydrateOpts = {
   allowJsonLogoURL?: boolean;
   /** Optional override for fallback status when metadata missing. */
   fallbackStatus?: STATUS;
-};
-
-type TokenInfoJson = {
-  name?: string;
-  symbol?: string;
-  decimals?: number;
-  id?: string;
 };
 
 const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -478,31 +474,23 @@ async function hydrateTokenFromAddress(chainId: number, address: Address) {
     } as any;
   }
 
-  const logoURL = getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage;
-  const infoURL = getTokenInfoURL_SSOT(chainId, addr);
-
-  if (!infoURL) {
-    return { address: addr, chainId, name: '', symbol: '', decimals: undefined, logoURL } as any;
-  }
-
   try {
-    const json = await getJson<TokenInfoJson>(infoURL, {
-      timeoutMs: 6000,
-      retries: 1,
-      accept: 'application/json',
-      init: { cache: 'no-store' },
-      forceParse: true,
-    });
+    const record = await loadTokenRecord(chainId, addr);
 
     return {
       address: addr,
       chainId,
-      name: typeof json?.name === 'string' ? json.name : '',
-      symbol: typeof json?.symbol === 'string' ? json.symbol : '',
-      decimals: typeof json?.decimals === 'number' ? json.decimals : undefined,
-      logoURL,
+      name: typeof record?.name === 'string' ? record.name : '',
+      symbol: typeof record?.symbol === 'string' ? record.symbol : '',
+      decimals:
+        typeof record?.decimals === 'number' ? record.decimals : undefined,
+      logoURL:
+        typeof record?.logoURL === 'string' && record.logoURL.trim().length
+          ? record.logoURL
+          : getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage,
     } as any;
   } catch {
+    const logoURL = getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage;
     // info.json missing -> still show logo (if present), else missing image
     return { address: addr, chainId, name: '', symbol: '', decimals: undefined, logoURL } as any;
   }
@@ -750,15 +738,14 @@ async function hydrateTokensFromAddressesBatch(
   await Promise.all(
     pages.map(async (page, pageIndex) => {
       try {
-        const response = await getTokensBatch<any>(
-          { chainId, addresses: page },
-          { timeoutMs: 20000 },
+        const records = await loadTokenRecordsBatch(
+          page.map((address) => ({ chainId, address })),
         );
 
-        for (const item of response.items ?? []) {
+        for (const item of records) {
           const rawAddr = item?.address;
           if (typeof rawAddr !== 'string' || !isAddress(rawAddr)) continue;
-          out.set(normalizeAddressLower(rawAddr).toLowerCase(), item?.data ?? null);
+          out.set(normalizeAddressLower(rawAddr).toLowerCase(), item ?? null);
         }
       } catch (err: any) {
         debugLog.warn?.('[hydrateTokensFromAddressesBatch] batch failed; fallback to per-token', {

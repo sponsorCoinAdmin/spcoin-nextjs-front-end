@@ -6,6 +6,7 @@ import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import type { TokenContract } from '@/lib/structure';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+import { loadTokenRecord } from '@/lib/context/tokens/tokenStore';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
 import {
   defaultMissingImage,
@@ -146,6 +147,23 @@ export async function resolveTokenContract(
     chainId,
     resolvedAddress,
   });
+
+  try {
+    const stored = await loadTokenRecord(chainId, resolvedAddress);
+    return {
+      chainId,
+      address: resolvedAddress,
+      symbol: stored.symbol,
+      name: stored.name,
+      decimals: stored.decimals,
+      totalSupply: stored.totalSupply,
+      amount: 0n,
+      balance: 0n,
+      logoURL: stored.logoURL || defaultMissingImage,
+    } as TokenContract;
+  } catch {
+    // fall through to on-chain metadata when no persisted token asset exists
+  }
 
   const [metadata, logoURL] = await Promise.all([
     fetchTokenMetadata(resolvedAddress, publicClient)

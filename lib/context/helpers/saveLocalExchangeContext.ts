@@ -1,6 +1,7 @@
 'use client';
 
 import { stripPersistedAccounts } from '@/lib/accounts/accountPersistence';
+import { stripPersistedTradeTokens } from '@/lib/tokens/tokenPersistence';
 import type { ExchangeContext } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -89,7 +90,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext): void {
 
     const toPersist = {
       network: src.network ?? {},
-      tradeData: src.tradeData ?? {}, // ⬅️ full tradeData persists here
+      tradeData: stripPersistedTradeTokens(src.tradeData ?? {}),
       accounts: stripPersistedAccounts(src.accounts),
       settings: safeSettings,
     };

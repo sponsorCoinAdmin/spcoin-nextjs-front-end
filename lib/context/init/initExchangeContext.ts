@@ -6,6 +6,12 @@ import {
   normalizeAccountAddressKey,
 } from '@/lib/accounts/accountAddress';
 import { rehydrateAccountRefs } from '@/lib/accounts/accountProjection';
+import {
+  getTokenAddress,
+  getTokenChainId,
+  normalizeTokenCompositeKey,
+} from '@/lib/tokens/tokenKey';
+import { rehydrateTradeTokenRefs } from '@/lib/tokens/tokenProjection';
 import type { ExchangeContext, spCoinAccount } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
@@ -17,6 +23,7 @@ import {
   hydrateAccountFromAddress,
   makeAccountFallback,
 } from '@/lib/context/helpers/accountHydration';
+import { loadTokenRecord } from '@/lib/context/tokens/tokenStore';
 
 const LOG_TIME = false;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
@@ -236,6 +243,48 @@ export async function initExchangeContext(
         hydratedByAddress.get(normalizeAccountAddressKey(walletAddress)) ??
         sanitized.accounts.activeAccount;
     }
+  }
+
+  const tokenRefs = [
+    sanitized.tradeData.sellTokenContract,
+    sanitized.tradeData.buyTokenContract,
+    sanitized.tradeData.previewTokenContract,
+  ];
+  const tokenKeysToHydrate = new Map<string, { chainId: number; address: `0x${string}` }>();
+
+  for (const token of tokenRefs) {
+    const chainId = getTokenChainId(token);
+    const tokenAddress = getTokenAddress(token);
+    const key = normalizeTokenCompositeKey(chainId, tokenAddress);
+    if (!chainId || !tokenAddress || !key) continue;
+    tokenKeysToHydrate.set(key, { chainId, address: tokenAddress });
+  }
+
+  if (tokenKeysToHydrate.size > 0) {
+    const hydratedByKey = new Map<string, any>();
+
+    await Promise.all(
+      Array.from(tokenKeysToHydrate.entries()).map(async ([key, ref]) => {
+        try {
+          const hydrated = await loadTokenRecord(ref.chainId, ref.address);
+          hydratedByKey.set(key, hydrated);
+        } catch (err) {
+          debugLog.error?.(
+            '[initExchangeContext] token hydration failed unexpectedly; dropping ref',
+            {
+              chainId: ref.chainId,
+              address: ref.address,
+              err: String((err as any)?.message ?? err),
+            },
+          );
+        }
+      }),
+    );
+
+    sanitized.tradeData = rehydrateTradeTokenRefs(
+      sanitized.tradeData,
+      hydratedByKey,
+    );
   }
 
   return sanitized;

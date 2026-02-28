@@ -59,6 +59,10 @@ import {
   ACCOUNT_REGISTRY_UPDATED_EVENT,
 } from '@/lib/accounts/accountEvents';
 import { normalizeExchangeAccountsWithRegistry } from '@/lib/accounts/accountProjection';
+import { TOKEN_REGISTRY_UPDATED_EVENT } from '@/lib/tokens/tokenEvents';
+import { normalizeExchangeTokensWithRegistry } from '@/lib/tokens/tokenProjection';
+import { getTokenRegistryRecord, tokenRegistry } from '@/lib/context/tokens/tokenRegistry';
+import { normalizeTokenCompositeKey } from '@/lib/tokens/tokenKey';
 
 // ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
 import { CHILDREN, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
@@ -362,6 +366,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   >();
   const hasInitializedRef = useRef(false);
   const [accountAssetsRefreshTick, setAccountAssetsRefreshTick] = useState(0);
+  const [tokenAssetsRefreshTick, setTokenAssetsRefreshTick] = useState(0);
   const activeAssetsRefreshHandledRef = useRef(0);
   const roleAssetsRefreshHandledRef = useRef(0);
 
@@ -390,6 +395,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const nextBase = clone(nextRaw);
       nextBase.settings = (nextBase as any).settings ?? {};
       normalizeExchangeAccountsWithRegistry(nextBase);
+      normalizeExchangeTokensWithRegistry(nextBase);
 
       // ✅ enforce single source of truth: settings.displayStack only
       enforceSettingsDisplayStackOnly(nextBase as any);
@@ -439,19 +445,30 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const onAccountAssetsUpdated = () => {
+      const onAccountAssetsUpdated = () => {
       setAccountAssetsRefreshTick((prev) => prev + 1);
+    };
+    const onTokenAssetsUpdated = () => {
+      setTokenAssetsRefreshTick((prev) => prev + 1);
     };
 
     window.addEventListener(
       ACCOUNT_REGISTRY_UPDATED_EVENT,
       onAccountAssetsUpdated as EventListener,
     );
+    window.addEventListener(
+      TOKEN_REGISTRY_UPDATED_EVENT,
+      onTokenAssetsUpdated as EventListener,
+    );
 
     return () => {
       window.removeEventListener(
         ACCOUNT_REGISTRY_UPDATED_EVENT,
         onAccountAssetsUpdated as EventListener,
+      );
+      window.removeEventListener(
+        TOKEN_REGISTRY_UPDATED_EVENT,
+        onTokenAssetsUpdated as EventListener,
       );
     };
   }, []);
@@ -538,6 +555,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
       normalizeExchangeAccountsWithRegistry(base as ExchangeContextTypeOnly);
+      normalizeExchangeTokensWithRegistry(base as ExchangeContextTypeOnly);
 
       // ✅ guarantee no root displayStack before persisting / storing
       enforceSettingsDisplayStackOnly(base as any);
@@ -825,6 +843,72 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [contextState?.accounts, setExchangeContext]);
+
+  useEffect(() => {
+    if (!contextState?.tradeData) return;
+    if (tokenAssetsRefreshTick <= 0) return;
+
+    setExchangeContext(
+      (prev) => {
+        const next = clone(prev);
+        let changed = false;
+
+        const patchOne = (
+          token: TokenContract | undefined,
+        ): TokenContract | undefined => {
+          if (!token?.address || !token?.chainId) return token;
+
+          const registryRecord = getTokenRegistryRecord(
+            tokenRegistry,
+            token.chainId,
+            token.address,
+          );
+          if (!registryRecord) return token;
+
+          const merged: TokenContract = {
+            ...registryRecord,
+            balance:
+              typeof token.balance === 'bigint'
+                ? token.balance
+                : (registryRecord.balance ?? 0n),
+            amount:
+              typeof token.amount === 'bigint'
+                ? token.amount
+                : registryRecord.amount,
+          };
+
+          if (
+            normalizeTokenCompositeKey(token.chainId, token.address) !==
+            normalizeTokenCompositeKey(merged.chainId, merged.address)
+          ) {
+            return token;
+          }
+
+          if (stringifyBigInt(token) === stringifyBigInt(merged)) return token;
+          changed = true;
+          return merged;
+        };
+
+        next.tradeData.sellTokenContract = patchOne(next.tradeData.sellTokenContract);
+        next.tradeData.buyTokenContract = patchOne(next.tradeData.buyTokenContract);
+        next.tradeData.previewTokenContract = patchOne(
+          next.tradeData.previewTokenContract,
+        );
+
+        return changed ? next : prev;
+      },
+      'provider:refreshTokenContractsFromRegistry',
+    );
+  }, [
+    contextState?.tradeData?.sellTokenContract?.chainId,
+    contextState?.tradeData?.sellTokenContract?.address,
+    contextState?.tradeData?.buyTokenContract?.chainId,
+    contextState?.tradeData?.buyTokenContract?.address,
+    contextState?.tradeData?.previewTokenContract?.chainId,
+    contextState?.tradeData?.previewTokenContract?.address,
+    tokenAssetsRefreshTick,
+    setExchangeContext,
+  ]);
 
   // Fallback wallet listener: ensure account switches in MetaMask are reflected
   // even when wagmi propagation is delayed/missed.

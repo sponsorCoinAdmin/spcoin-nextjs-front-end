@@ -1,6 +1,7 @@
 // File: @/lib/context/ExchangeSanitizeHelpers.ts
 
 import { toPersistedAccountRef } from '@/lib/accounts/accountAddress';
+import { toSanitizedTokenRef } from '@/lib/tokens/tokenPersistence';
 import type {
   TradeData,
   ExchangeContext,
@@ -277,25 +278,13 @@ export const sanitizeExchangeContext = (
       (raw as any).tradeData?.tradeDirection ??
       defaultContext.tradeData.tradeDirection,
     sellTokenContract: (raw as any).tradeData?.sellTokenContract
-      ? {
-          ...defaultContext.tradeData.sellTokenContract,
-          ...(raw as any).tradeData.sellTokenContract,
-          balance: (raw as any).tradeData.sellTokenContract.balance ?? 0n,
-        }
+      ? toSanitizedTokenRef((raw as any).tradeData.sellTokenContract)
       : defaultContext.tradeData.sellTokenContract,
     buyTokenContract: (raw as any).tradeData?.buyTokenContract
-      ? {
-          ...defaultContext.tradeData.buyTokenContract,
-          ...(raw as any).tradeData.buyTokenContract,
-          balance: (raw as any).tradeData.buyTokenContract.balance ?? 0n,
-        }
+      ? toSanitizedTokenRef((raw as any).tradeData.buyTokenContract)
       : defaultContext.tradeData.buyTokenContract,
     previewTokenContract: (raw as any).tradeData?.previewTokenContract
-      ? {
-          ...defaultContext.tradeData.previewTokenContract,
-          ...(raw as any).tradeData.previewTokenContract,
-          balance: (raw as any).tradeData.previewTokenContract.balance ?? 0n,
-        }
+      ? toSanitizedTokenRef((raw as any).tradeData.previewTokenContract)
       : defaultContext.tradeData.previewTokenContract,
     previewTokenSource:
       (raw as any).tradeData?.previewTokenSource ?? defaultContext.tradeData.previewTokenSource,
