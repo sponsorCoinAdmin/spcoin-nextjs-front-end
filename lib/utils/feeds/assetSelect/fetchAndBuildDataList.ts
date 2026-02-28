@@ -2,6 +2,7 @@
 'use client';
 
 import { FEED_TYPE, type FeedData } from '@/lib/structure';
+import { loadTokenSeedAddresses } from '@/lib/context/tokens/tokenStore';
 
 // ✅ Now from accountHydration (SSOT) — builders deleted.
 import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from '@/lib/context/helpers/accountHydration';
@@ -19,7 +20,6 @@ import sepoliaTokenListRaw from '@/resources/data/networks/sepolia/tokenList.jso
 import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.json';
 
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
-import { getJson } from '@/lib/rest/http';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
@@ -138,16 +138,6 @@ function previewList(list: any[], max = 5) {
   });
 }
 
-function getDataListURL(feedType: FEED_TYPE, chainId?: number): string | undefined {
-  if (feedType === FEED_TYPE.TOKEN_LIST) {
-    const parsedChainId = Number(chainId);
-    if (Number.isFinite(parsedChainId) && parsedChainId > 0) {
-      return `/api/spCoin/tokens?chainId=${parsedChainId}`;
-    }
-  }
-  return undefined;
-}
-
 function getFallbackListWithSource(
   feedType: FEED_TYPE,
   chainId?: number,
@@ -186,9 +176,7 @@ async function getDataListObjWithSource(
   chainId?: number,
   seq?: number,
 ): Promise<{ sourceId: string; sourceKind: 'bundled-fallback' | 'remote-url'; list: any[] }> {
-  const url = getDataListURL(feedType, chainId);
-
-  if (!url) {
+  if (feedType !== FEED_TYPE.TOKEN_LIST) {
     const fb = getFallbackListWithSource(feedType, chainId);
     debugLog.log?.('[source:selected]', {
       seq,
@@ -204,6 +192,14 @@ async function getDataListObjWithSource(
     return fb;
   }
 
+  const parsedChainId = Number(chainId);
+  if (!Number.isFinite(parsedChainId) || parsedChainId <= 0) {
+    const fb = getFallbackListWithSource(feedType, chainId);
+    return fb;
+  }
+
+  const url = `/api/spCoin/tokens?chainId=${parsedChainId}`;
+
   debugLog.log?.('[source:selected]', {
     seq,
     feedType,
@@ -215,15 +211,7 @@ async function getDataListObjWithSource(
   });
 
   try {
-    const json = await getJson<any>(url, {
-      timeoutMs: 8000,
-      retries: 1,
-      backoffMs: 400,
-      accept: 'application/json',
-      forceParse: true,
-    });
-
-    const normalized = normalizeList(json);
+    const normalized = await loadTokenSeedAddresses(parsedChainId);
 
     if (normalized.length) {
       debugLog.log?.('[source:remote][ok]', {
@@ -246,7 +234,7 @@ async function getDataListObjWithSource(
       feedTypeLabel: FEED_TYPE[feedType],
       chainId,
       url,
-      remoteSummary: summarize(json),
+      remoteSummary: { kind: 'array', length: 0 },
       fallbackSource: fb.sourceId,
       fallbackLen: fb.list.length,
       preview: previewList(fb.list, 5),

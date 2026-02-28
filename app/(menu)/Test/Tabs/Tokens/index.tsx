@@ -4,11 +4,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { TokenContract } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { loadTokenPageRecords } from '@/lib/context/tokens/tokenStore';
 import {
   ALL_NETWORKS_VALUE,
 } from '@/lib/utils/network';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { getTokensPage, type TokenApiItem } from '@/lib/api';
 
 function safeStringify(value: unknown): string {
   return JSON.stringify(
@@ -121,12 +121,12 @@ function TokensPage({
       try {
         const target = selectedNetwork ?? ALL_NETWORKS_VALUE;
         const PAGE_SIZE = 200;
-        const allItems: Array<TokenApiItem<any>> = [];
+        const allItems: TokenContract[] = [];
         let page = 1;
         let hasNextPage = true;
 
         while (hasNextPage) {
-          const payload = await getTokensPage<any>(page, PAGE_SIZE, {
+          const payload = await loadTokenPageRecords(page, PAGE_SIZE, {
             allNetworks: target === ALL_NETWORKS_VALUE,
             chainId: target === ALL_NETWORKS_VALUE ? undefined : Number(target),
           });
@@ -137,15 +137,15 @@ function TokensPage({
         }
 
         const allTokens: TokenContract[] = allItems.map((item) => {
-          const data = (item?.data ?? {}) as any;
+          const data = item as any;
           const address =
             typeof data.address === 'string'
               ? data.address
-              : item.address;
+              : '';
           return {
             ...data,
             address,
-            chainId: Number(data.chainId ?? item.chainId),
+            chainId: Number(data.chainId),
             logoURL:
               typeof data.logoURL === 'string' && data.logoURL.trim()
                 ? data.logoURL

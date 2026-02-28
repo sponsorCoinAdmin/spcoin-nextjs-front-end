@@ -1,4 +1,10 @@
-import { getTokenByAddress, getTokensBatch } from '@/lib/api';
+import {
+  getTokenByAddress,
+  getTokensBatch,
+  getTokensPage,
+  getTokensSeedList,
+  getTokensSeedListAllNetworks,
+} from '@/lib/api';
 import { emitTokenRegistryUpdated, TOKEN_REGISTRY_UPDATED_EVENT } from '@/lib/tokens/tokenEvents';
 import { getTokenLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import {
@@ -13,6 +19,10 @@ export { TOKEN_REGISTRY_UPDATED_EVENT };
 type LoadOptions = {
   forceRefresh?: boolean;
   signal?: AbortSignal;
+};
+
+type LoadPageOptions = LoadOptions & {
+  allNetworks?: boolean;
 };
 
 function normalizeAddress(value: string): string {
@@ -168,6 +178,95 @@ export async function loadTokenRecordsBatch(
       );
     })
     .filter((record): record is TokenRegistryRecord => Boolean(record));
+}
+
+export async function loadTokenSeedAddresses(
+  chainId: number,
+  options: LoadOptions = {},
+): Promise<string[]> {
+  const safeChainId = Number(chainId ?? 0);
+  if (!Number.isFinite(safeChainId) || safeChainId <= 0) {
+    throw new Error('Invalid chainId');
+  }
+
+  const addresses = await getTokensSeedList(safeChainId, {
+    timeoutMs: 8000,
+    signal: options.signal,
+  });
+
+  return Array.from(
+    new Set(
+      (Array.isArray(addresses) ? addresses : [])
+        .map((address) => String(address ?? '').trim())
+        .filter((address) => isAddress(address))
+        .map((address) => normalizeAddress(address)),
+    ),
+  );
+}
+
+export async function loadTokenSeedRowsAllNetworks(
+  options: LoadOptions = {},
+): Promise<Array<{ chainId: number; address: string }>> {
+  const payload = await getTokensSeedListAllNetworks({
+    timeoutMs: 8000,
+    signal: options.signal,
+  });
+
+  const rows = Array.isArray(payload?.items) ? payload.items : [];
+  return Array.from(
+    new Map(
+      rows
+        .map((row) => {
+          const chainId = Number(row?.chainId ?? 0);
+          const address = String(row?.address ?? '').trim();
+          if (!Number.isFinite(chainId) || chainId <= 0 || !isAddress(address)) {
+            return null;
+          }
+          const normalized = normalizeAddress(address);
+          return [`${chainId}:${normalized}`, { chainId, address: normalized }] as const;
+        })
+        .filter(Boolean) as Array<readonly [string, { chainId: number; address: string }]>,
+    ).values(),
+  );
+}
+
+export async function loadTokenPageRecords(
+  page: number,
+  pageSize: number,
+  options: LoadPageOptions & { chainId?: number } = {},
+): Promise<{
+  items: TokenRegistryRecord[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+}> {
+  const payload = await getTokensPage<Record<string, unknown>>(page, pageSize, {
+    timeoutMs: 20000,
+    signal: options.signal,
+    allNetworks: options.allNetworks,
+    chainId: options.chainId,
+  });
+
+  const items: TokenRegistryRecord[] = [];
+  for (const item of payload.items ?? []) {
+    const chainId = Number(item?.chainId ?? 0);
+    const address = String(item?.address ?? '').trim();
+    if (!Number.isFinite(chainId) || chainId <= 0 || !isAddress(address)) continue;
+    const normalized = normalizeAddress(address);
+    const record = toRegistryRecord(chainId, normalized, item?.data ?? {});
+    items.push(upsertTokenRegistryRecord(tokenRegistry, record));
+  }
+
+  return {
+    items,
+    page: Number(payload?.page ?? page),
+    pageSize: Number(payload?.pageSize ?? pageSize),
+    totalItems: Number(payload?.totalItems ?? items.length),
+    totalPages: Number(payload?.totalPages ?? 1),
+    hasNextPage: Boolean(payload?.hasNextPage),
+  };
 }
 
 export async function saveTokenRecord(
