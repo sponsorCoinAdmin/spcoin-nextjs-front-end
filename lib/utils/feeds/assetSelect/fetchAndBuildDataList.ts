@@ -3,9 +3,10 @@
 
 import { FEED_TYPE, type FeedData } from '@/lib/structure';
 import { loadTokenSeedAddresses } from '@/lib/context/tokens/tokenStore';
+import { buildTokenFromJson } from '@/lib/tokens/tokenHydration';
 
 // ✅ Now from accountHydration (SSOT) — builders deleted.
-import { feedDataFromJson, buildTokenFromJson, buildWalletFromJsonFirst } from '@/lib/context/helpers/accountHydration';
+import { feedDataFromJson, buildWalletFromJsonFirst } from '@/lib/context/helpers/accountHydration';
 
 // ✅ Bundled account feeds
 import recipientsAccountsJson from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
