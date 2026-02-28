@@ -79,7 +79,7 @@ export async function loadTokenRecord(
 }
 
 export async function loadTokenRecordsBatch(
-  requests: readonly Array<{ chainId: number; address: string }>,
+  requests: ReadonlyArray<{ chainId: number; address: string }>,
   options: LoadOptions = {},
 ): Promise<TokenRegistryRecord[]> {
   const normalizedRequests = Array.from(
