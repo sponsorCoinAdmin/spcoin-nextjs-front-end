@@ -61,8 +61,7 @@ import {
 import { normalizeExchangeAccountsWithRegistry } from '@/lib/accounts/accountProjection';
 import { TOKEN_REGISTRY_UPDATED_EVENT } from '@/lib/tokens/tokenEvents';
 import { normalizeExchangeTokensWithRegistry } from '@/lib/tokens/tokenProjection';
-import { getTokenRegistryRecord, tokenRegistry } from '@/lib/context/tokens/tokenRegistry';
-import { normalizeTokenCompositeKey } from '@/lib/tokens/tokenKey';
+import { patchTradeTokensFromRegistry } from '@/lib/tokens/tokenContextSync';
 
 // ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
 import { CHILDREN, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
@@ -851,51 +850,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setExchangeContext(
       (prev) => {
         const next = clone(prev);
-        let changed = false;
-
-        const patchOne = (
-          token: TokenContract | undefined,
-        ): TokenContract | undefined => {
-          if (!token?.address || !token?.chainId) return token;
-
-          const registryRecord = getTokenRegistryRecord(
-            tokenRegistry,
-            token.chainId,
-            token.address,
-          );
-          if (!registryRecord) return token;
-
-          const merged: TokenContract = {
-            ...registryRecord,
-            balance:
-              typeof token.balance === 'bigint'
-                ? token.balance
-                : (registryRecord.balance ?? 0n),
-            amount:
-              typeof token.amount === 'bigint'
-                ? token.amount
-                : registryRecord.amount,
-          };
-
-          if (
-            normalizeTokenCompositeKey(token.chainId, token.address) !==
-            normalizeTokenCompositeKey(merged.chainId, merged.address)
-          ) {
-            return token;
-          }
-
-          if (stringifyBigInt(token) === stringifyBigInt(merged)) return token;
-          changed = true;
-          return merged;
-        };
-
-        next.tradeData.sellTokenContract = patchOne(next.tradeData.sellTokenContract);
-        next.tradeData.buyTokenContract = patchOne(next.tradeData.buyTokenContract);
-        next.tradeData.previewTokenContract = patchOne(
-          next.tradeData.previewTokenContract,
-        );
-
-        return changed ? next : prev;
+        return patchTradeTokensFromRegistry(next) ? next : prev;
       },
       'provider:refreshTokenContractsFromRegistry',
     );

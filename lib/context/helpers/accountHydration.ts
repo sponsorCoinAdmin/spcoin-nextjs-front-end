@@ -6,15 +6,14 @@ import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { get, headOk } from '@/lib/rest/http';
-import {
-  loadAccountRecord,
-  loadAccountRecordsBatch,
-} from '@/lib/context/accounts/accountStore';
-import {
-  loadTokenRecord,
-  loadTokenRecordsBatch,
-} from '@/lib/context/tokens/tokenStore';
+import { loadAccountRecord, loadAccountRecordsBatch } from '@/lib/context/accounts/accountStore';
 import { getAccountLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import {
+  buildTokenFromJson,
+  getTokenLogoURL_SSOT,
+  hydrateTokenFromAddress,
+  hydrateTokensFromAddressesBatch,
+} from '@/lib/tokens/tokenHydration';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false as const;
@@ -33,22 +32,6 @@ const debugLog = createDebugLogger('accountHydration', DEBUG_ENABLED, LOG_TIME);
  * - If user mistakenly sets "public/assets/accounts/", we normalize it to "/assets/accounts/".
  */
 const ENV_ACCOUNT_PATH_RAW = process.env.NEXT_PUBLIC_ACCOUNT_PATH;
-
-/**
- * Token discovery override.
- *
- * IMPORTANT:
- * - This MUST be a URL path rooted at the web root (e.g. "/assets/blockchains/"),
- *   NOT "public/assets/..." (because "public" is not part of the URL).
- *
- * Example:
- *   NEXT_PUBLIC_TOKEN_PATH=/assets/blockchains/
- *
- * Expected asset layout:
- *   public/assets/blockchains/<chainId>/contracts/<0XADDRESS>/info.json
- *   public/assets/blockchains/<chainId>/contracts/<0XADDRESS>/logo.png
- */
-const ENV_TOKEN_PATH_RAW = process.env.NEXT_PUBLIC_TOKEN_PATH;
 
 // legacy key constant (keeps dot-access out of the file)
 const LEGACY_WALLETS_KEY = 'wallets' as const;
@@ -72,9 +55,7 @@ type HydrateOpts = {
   fallbackStatus?: STATUS;
 };
 
-const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 const ACCOUNT_BATCH_PAGE_SIZE = 25;
-const TOKEN_BATCH_PAGE_SIZE = 25;
 const ANONYMOUS_ACCOUNT_IMAGE = '/assets/miscellaneous/Anonymous.png';
 const accountLogoExistenceCache = new Map<string, boolean>();
 
@@ -206,15 +187,6 @@ function toAccountFolderKey(addr: Address): string {
 }
 
 /**
- * Token contract folder naming convention:
- * Your repo uses uppercase "0X..." directories.
- */
-function toTokenFolderKey(addr: Address): string {
-  const a = String(addr).trim();
-  return a.toUpperCase().replace(/^0X/, '0X');
-}
-
-/**
  * Account logo url (SSOT)
  */
 function getAccountLogoURL_SSOT(addr: Address): string {
@@ -240,26 +212,6 @@ export async function resolveAccountLogoURL(
   const candidate = getAccountLogoURL_SSOT(addr);
   const ok = await resourceExists(candidate);
   return ok ? candidate : ANONYMOUS_ACCOUNT_IMAGE;
-}
-
-/**
- * Token info url (SSOT)
- */
-function getTokenInfoURL_SSOT(chainId: number, addr: Address): string | undefined {
-  const base = normalizeEnvBasePath(ENV_TOKEN_PATH_RAW);
-  if (!base) return undefined;
-  const key = toTokenFolderKey(addr);
-  return `${base}${chainId}/contracts/${key}/info.json`;
-}
-
-/**
- * Token logo url (SSOT)
- */
-function getTokenLogoURL_SSOT(chainId: number, addr: Address): string | undefined {
-  const base = normalizeEnvBasePath(ENV_TOKEN_PATH_RAW);
-  if (!base) return undefined;
-  const key = toTokenFolderKey(addr);
-  return `${base}${chainId}/contracts/${key}/logo.png`;
 }
 
 /* ----------------------------- SSOT fallbacks ----------------------------- */
@@ -456,46 +408,6 @@ async function hydrateAccountsFromSpecsBatch(specs: any[]): Promise<Map<string, 
   return out;
 }
 
-/* ----------------------------- token SSOT hydration ----------------------------- */
-
-async function hydrateTokenFromAddress(chainId: number, address: Address) {
-  const addr = (address ?? '').trim() as Address;
-
-  // Special-case: native ETH placeholder (no contracts/<addr> folder unless you create it)
-  if (addr.toLowerCase() === NATIVE_ETH_PLACEHOLDER.toLowerCase()) {
-    return {
-      address: addr,
-      chainId,
-      name: 'Ethereum',
-      symbol: 'ETH',
-      decimals: 18,
-      // If you have a local ETH icon, swap this:
-      logoURL: defaultMissingImage,
-    } as any;
-  }
-
-  try {
-    const record = await loadTokenRecord(chainId, addr);
-
-    return {
-      address: addr,
-      chainId,
-      name: typeof record?.name === 'string' ? record.name : '',
-      symbol: typeof record?.symbol === 'string' ? record.symbol : '',
-      decimals:
-        typeof record?.decimals === 'number' ? record.decimals : undefined,
-      logoURL:
-        typeof record?.logoURL === 'string' && record.logoURL.trim().length
-          ? record.logoURL
-          : getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage,
-    } as any;
-  } catch {
-    const logoURL = getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage;
-    // info.json missing -> still show logo (if present), else missing image
-    return { address: addr, chainId, name: '', symbol: '', decimals: undefined, logoURL } as any;
-  }
-}
-
 /* ----------------------------- (ex-builders) feed building ----------------------------- */
 
 function normalizeList(raw: any): any[] {
@@ -583,67 +495,6 @@ async function buildAccountFromJsonSpec(
 }
 
 /**
- * Replacement for builders.buildTokenFromJson.
- *
- * ✅ Supports:
- * - Option A: string address entries in tokenList.json
- * - Legacy: object entries
- *
- * ✅ Invalid entries become visible "error rows" (do not drop).
- */
-export function buildTokenFromJson(tokenJson: any, chainId: number) {
-  const rawAddr =
-    typeof tokenJson === 'string'
-      ? tokenJson
-      : tokenJson && typeof tokenJson === 'object'
-        ? (tokenJson.address ?? tokenJson.id ?? tokenJson.addr)
-        : '';
-
-  const addr = typeof rawAddr === 'string' ? rawAddr.trim() : String(rawAddr ?? '').trim();
-
-  // Invalid entry => show error row (do NOT drop)
-  if (!addr || !isAddress(addr)) {
-    const fallbackName =
-      tokenJson && typeof tokenJson === 'object' && typeof tokenJson.name === 'string'
-        ? tokenJson.name
-        : 'Invalid token address';
-
-    const fallbackSymbol =
-      tokenJson && typeof tokenJson === 'object' && typeof tokenJson.symbol === 'string'
-        ? tokenJson.symbol
-        : 'INVALID';
-
-    return {
-      address: addr || '(empty)',
-      chainId,
-      name: fallbackName,
-      symbol: fallbackSymbol,
-      decimals: undefined,
-      logoURL: defaultMissingImage,
-      __invalid: true,
-    } as any;
-  }
-
-  const out: any = {
-    ...(tokenJson && typeof tokenJson === 'object' ? tokenJson : {}),
-    address: addr,
-    chainId,
-  };
-
-  const explicitLogo =
-    typeof out.logoURL === 'string' && out.logoURL.trim().length
-      ? out.logoURL.trim()
-      : typeof out.logoURI === 'string' && out.logoURI.trim().length
-        ? out.logoURI.trim()
-        : undefined;
-
-  out.logoURL = explicitLogo ?? getTokenLogoURL_SSOT(chainId, addr as Address) ?? defaultMissingImage;
-  if (out.infoURL == null) out.infoURL = getTokenInfoURL_SSOT(chainId, addr as Address);
-
-  return out;
-}
-
-/**
  * Replacement for builders.buildWalletFromJsonFirst.
  */
 export async function buildWalletFromJsonFirst(raw: any): Promise<spCoinAccount | null> {
@@ -723,48 +574,3 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
   }
 }
 
-async function hydrateTokensFromAddressesBatch(
-  chainId: number,
-  addresses: Address[],
-): Promise<Map<string, any>> {
-  const uniqueAddresses = Array.from(
-    new Set(addresses.map((a) => normalizeAddressLower(a))),
-  );
-  if (!uniqueAddresses.length) return new Map<string, any>();
-
-  const pages = chunk(uniqueAddresses, TOKEN_BATCH_PAGE_SIZE);
-  const out = new Map<string, any>();
-
-  await Promise.all(
-    pages.map(async (page, pageIndex) => {
-      try {
-        const records = await loadTokenRecordsBatch(
-          page.map((address) => ({ chainId, address })),
-        );
-
-        for (const item of records) {
-          const rawAddr = item?.address;
-          if (typeof rawAddr !== 'string' || !isAddress(rawAddr)) continue;
-          out.set(normalizeAddressLower(rawAddr).toLowerCase(), item ?? null);
-        }
-      } catch (err: any) {
-        debugLog.warn?.('[hydrateTokensFromAddressesBatch] batch failed; fallback to per-token', {
-          chainId,
-          pageIndex,
-          pageSize: page.length,
-          message: String(err?.message ?? err),
-        });
-      }
-    }),
-  );
-
-  debugLog.log?.('[hydrateTokensFromAddressesBatch] complete', {
-    chainId,
-    requested: uniqueAddresses.length,
-    hydrated: out.size,
-    chunks: pages.length,
-    chunkSize: TOKEN_BATCH_PAGE_SIZE,
-  });
-
-  return out;
-}
