@@ -1,12 +1,18 @@
 // File: @/components/views/ManageSponsorships/AccountInfo.tsx
 'use client';
 
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import {
+  accountRegistry,
+  getAccountRegistryRecord,
+  type AccountRegistryRecord,
+} from '@/lib/context/accounts/accountRegistry';
+import { ACCOUNT_REGISTRY_UPDATED_EVENT } from '@/lib/accounts/accountEvents';
 
 // ✅ Use the same table theme module used by AccountListRewardsPanel
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
@@ -50,6 +56,7 @@ export default function DisplayInfo() {
   const router = useRouter();
   const ctx = useContext(ExchangeContextState);
   const accounts = ctx?.exchangeContext?.accounts;
+  const [registryRefreshTick, setRegistryRefreshTick] = useState(0);
 
   // ✅ ACCOUNT_PANEL child visibility (to label the “Deposit Account” row correctly)
   const vActiveAccount = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT);
@@ -65,7 +72,7 @@ export default function DisplayInfo() {
     return 'Account:';
   }, [vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  const accountToRender = useMemo(() => {
+  const slotAccount = useMemo(() => {
     if (!accounts) return undefined;
     if (vActiveAccount) return accounts.activeAccount;
     if (vActiveSponsor) return accounts.sponsorAccount;
@@ -73,6 +80,44 @@ export default function DisplayInfo() {
     if (vActiveAgent) return accounts.agentAccount;
     return accounts.activeAccount;
   }, [accounts, vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onRegistryUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ address?: string }>).detail;
+      const changedKey = normalizeAddressKey(detail?.address);
+      const currentKey = normalizeAddressKey(slotAccount?.address);
+
+      if (changedKey && currentKey && changedKey !== currentKey) return;
+      setRegistryRefreshTick((prev) => prev + 1);
+    };
+
+    window.addEventListener(
+      ACCOUNT_REGISTRY_UPDATED_EVENT,
+      onRegistryUpdated as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        ACCOUNT_REGISTRY_UPDATED_EVENT,
+        onRegistryUpdated as EventListener,
+      );
+    };
+  }, [slotAccount?.address]);
+
+  const accountToRender = useMemo(() => {
+    const slotAddress =
+      typeof slotAccount?.address === 'string' ? slotAccount.address.trim() : '';
+    if (!slotAddress) return slotAccount;
+
+    return (
+      getAccountRegistryRecord<AccountRegistryRecord>(
+        accountRegistry,
+        slotAddress,
+      ) ?? slotAccount
+    );
+  }, [slotAccount, registryRefreshTick]);
 
   const canEditAccount =
     normalizeAddressKey(accountToRender?.address) !== '' &&

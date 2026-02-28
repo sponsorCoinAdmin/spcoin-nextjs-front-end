@@ -1,7 +1,12 @@
 // File: @/lib/context/init/initExchangeContext.ts
 import { sanitizeExchangeContext } from '../helpers/ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from '../helpers/loadLocalExchangeContext';
-import type { ExchangeContext } from '@/lib/structure';
+import {
+  getAccountAddress,
+  normalizeAccountAddressKey,
+} from '@/lib/accounts/accountAddress';
+import { rehydrateAccountRefs } from '@/lib/accounts/accountProjection';
+import type { ExchangeContext, spCoinAccount } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 import { isAddress } from 'viem';
@@ -160,24 +165,76 @@ export async function initExchangeContext(
     logPanelSnapshot('post-sanitize', getPanelsArray(sanitized));
   }
 
-  // 3) ✅ Enrich activeAccount metadata using SSOT
-  //
-  // IMPORTANT:
-  // - Do NOT gate on isConnected; activeAccount can persist even when wallet disconnected.
-  // - Only hydrate when we have a valid address.
-  if (address && isAddress(address)) {
-    try {
-      sanitized.accounts.activeAccount = await hydrateAccountFromAddress(
-        address as any,
-        { fallbackStatus: STATUS.MESSAGE_ERROR },
-      );
-    } catch (err) {
-      debugLog.error?.('⛔ Wallet hydration threw unexpectedly; falling back.', err);
-      sanitized.accounts.activeAccount = makeAccountFallback(
-        address as any,
-        STATUS.MESSAGE_ERROR,
-        `Account ${address} metadata could not be loaded`,
-      );
+  // 3) Rehydrate persisted account address refs through the account registry/store.
+  const addressesToHydrate = new Set<`0x${string}`>();
+  const walletAddress =
+    address && isAddress(address) ? (address as `0x${string}`) : undefined;
+
+  if (walletAddress) {
+    addressesToHydrate.add(walletAddress);
+  } else {
+    const persistedActiveAddress = getAccountAddress(sanitized.accounts.activeAccount);
+    if (persistedActiveAddress) {
+      addressesToHydrate.add(persistedActiveAddress);
+    }
+  }
+
+  const roleAndListAccounts = [
+    sanitized.accounts.sponsorAccount,
+    sanitized.accounts.recipientAccount,
+    sanitized.accounts.agentAccount,
+    ...(Array.isArray(sanitized.accounts.sponsorAccounts)
+      ? sanitized.accounts.sponsorAccounts
+      : []),
+    ...(Array.isArray(sanitized.accounts.recipientAccounts)
+      ? sanitized.accounts.recipientAccounts
+      : []),
+    ...(Array.isArray(sanitized.accounts.agentAccounts)
+      ? sanitized.accounts.agentAccounts
+      : []),
+  ];
+
+  for (const account of roleAndListAccounts) {
+    const accountAddress = getAccountAddress(account);
+    if (accountAddress) addressesToHydrate.add(accountAddress);
+  }
+
+  if (addressesToHydrate.size > 0) {
+    const hydratedByAddress = new Map<string, spCoinAccount>();
+
+    await Promise.all(
+      Array.from(addressesToHydrate).map(async (accountAddress) => {
+        try {
+          const hydrated = await hydrateAccountFromAddress(accountAddress as any, {
+            fallbackStatus: STATUS.MESSAGE_ERROR,
+          });
+          hydratedByAddress.set(normalizeAccountAddressKey(accountAddress), hydrated);
+        } catch (err) {
+          debugLog.error?.(
+            '[initExchangeContext] account hydration failed unexpectedly; using fallback',
+            { accountAddress, err: String((err as any)?.message ?? err) },
+          );
+          hydratedByAddress.set(
+            normalizeAccountAddressKey(accountAddress),
+            makeAccountFallback(
+              accountAddress as any,
+              STATUS.MESSAGE_ERROR,
+              `Account ${accountAddress} metadata could not be loaded`,
+            ),
+          );
+        }
+      }),
+    );
+
+    sanitized.accounts = rehydrateAccountRefs(
+      sanitized.accounts,
+      hydratedByAddress,
+    );
+
+    if (walletAddress) {
+      sanitized.accounts.activeAccount =
+        hydratedByAddress.get(normalizeAccountAddressKey(walletAddress)) ??
+        sanitized.accounts.activeAccount;
     }
   }
 

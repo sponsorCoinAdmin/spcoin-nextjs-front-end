@@ -1,6 +1,6 @@
 // File: @/lib/rest/recipientMeta.ts
 import type { Address } from 'viem';
-import { getAccountByAddress } from '@/lib/api';
+import { loadAccountRecord } from '@/lib/context/accounts/accountStore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
 
@@ -21,8 +21,7 @@ export async function fetchRecipientMeta(
 ): Promise<RecipientMeta | undefined> {
   try {
     debugLog.log?.('[recipientMeta] GET', `/api/spCoin/accounts/${address}`);
-    const response = await getAccountByAddress<Partial<RecipientMeta>>(address);
-    const meta = response?.data;
+    const meta = await loadAccountRecord(address);
 
     return {
       address,

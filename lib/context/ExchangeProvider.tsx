@@ -55,6 +55,10 @@ import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStor
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
+import {
+  ACCOUNT_REGISTRY_UPDATED_EVENT,
+} from '@/lib/accounts/accountEvents';
+import { normalizeExchangeAccountsWithRegistry } from '@/lib/accounts/accountProjection';
 
 // ✅ CHILDREN lets us derive a displayStack on cold boot (when LS is empty)
 import { CHILDREN, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
@@ -357,6 +361,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     ErrorMessage | undefined
   >();
   const hasInitializedRef = useRef(false);
+  const [accountAssetsRefreshTick, setAccountAssetsRefreshTick] = useState(0);
+  const activeAssetsRefreshHandledRef = useRef(0);
+  const roleAssetsRefreshHandledRef = useRef(0);
 
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
@@ -382,6 +389,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const nextBase = clone(nextRaw);
       nextBase.settings = (nextBase as any).settings ?? {};
+      normalizeExchangeAccountsWithRegistry(nextBase);
 
       // ✅ enforce single source of truth: settings.displayStack only
       enforceSettingsDisplayStackOnly(nextBase as any);
@@ -427,6 +435,26 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       return nextBase;
     });
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onAccountAssetsUpdated = () => {
+      setAccountAssetsRefreshTick((prev) => prev + 1);
+    };
+
+    window.addEventListener(
+      ACCOUNT_REGISTRY_UPDATED_EVENT,
+      onAccountAssetsUpdated as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        ACCOUNT_REGISTRY_UPDATED_EVENT,
+        onAccountAssetsUpdated as EventListener,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     if (!wagmiReady) {
@@ -509,6 +537,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const net = ensureNetwork((base as any).network);
       (base as any).network = net;
       (base as any).settings = nextSettings;
+      normalizeExchangeAccountsWithRegistry(base as ExchangeContextTypeOnly);
 
       // ✅ guarantee no root displayStack before persisting / storing
       enforceSettingsDisplayStackOnly(base as any);
@@ -567,6 +596,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     const sameAddr =
       !!currentAddr && lower(currentAddr) === lower(nextAddr as unknown as string);
+    const shouldForceActiveRefresh =
+      accountAssetsRefreshTick > activeAssetsRefreshHandledRef.current;
 
     // Immediately reflect wallet account switch in context so UI does not stay stale
     // while metadata hydration is in-flight (or if hydration fails).
@@ -592,7 +623,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       );
     }
 
-    if (sameAddr && isHydratedAccount(current)) return;
+    if (sameAddr && isHydratedAccount(current) && !shouldForceActiveRefresh) return;
+
+    if (shouldForceActiveRefresh) {
+      activeAssetsRefreshHandledRef.current = accountAssetsRefreshTick;
+    }
 
     const reqId = ++activeHydrateReqRef.current;
 
@@ -623,6 +658,87 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     address,
     activeAccountAddress,
     activeAccountHydrated,
+    accountAssetsRefreshTick,
+    setExchangeContext,
+  ]);
+
+  useEffect(() => {
+    if (!contextState?.accounts) return;
+
+    const shouldForceRoleRefresh =
+      accountAssetsRefreshTick > roleAssetsRefreshHandledRef.current;
+
+    const slots = [
+      ['sponsorAccount', contextState.accounts.sponsorAccount],
+      ['recipientAccount', contextState.accounts.recipientAccount],
+      ['agentAccount', contextState.accounts.agentAccount],
+    ] as const;
+
+    const targets = slots.filter(([, account]) => {
+      const addr =
+        typeof account?.address === 'string' ? account.address.trim() : '';
+      if (!addr) return false;
+      return shouldForceRoleRefresh || !isHydratedAccount(account);
+    });
+
+    if (!targets.length) {
+      if (shouldForceRoleRefresh) {
+        roleAssetsRefreshHandledRef.current = accountAssetsRefreshTick;
+      }
+      return;
+    }
+
+    if (shouldForceRoleRefresh) {
+      roleAssetsRefreshHandledRef.current = accountAssetsRefreshTick;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const hydratedBySlot = new Map<string, spCoinAccount>();
+
+      await Promise.all(
+        targets.map(async ([slot, account]) => {
+          if (!account?.address) return;
+          const hydrated = await hydrateAccountFromAddress(account.address as Address, {
+            balance: typeof account.balance === 'bigint' ? account.balance : 0n,
+          });
+          hydratedBySlot.set(slot, hydrated);
+        }),
+      );
+
+      if (cancelled || !hydratedBySlot.size) return;
+
+      setExchangeContext(
+        (prev) => {
+          const next = clone(prev);
+          let changed = false;
+
+          for (const [slot, hydrated] of hydratedBySlot) {
+            const current = (next.accounts as any)?.[slot] as spCoinAccount | undefined;
+            if (!current?.address) continue;
+            if (lower(current.address as string) !== lower(hydrated.address as string)) {
+              continue;
+            }
+            if (stringifyBigInt(current) === stringifyBigInt(hydrated)) continue;
+            (next.accounts as any)[slot] = hydrated;
+            changed = true;
+          }
+
+          return changed ? next : prev;
+        },
+        'provider:hydrateRoleAccounts',
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    contextState?.accounts?.sponsorAccount?.address,
+    contextState?.accounts?.recipientAccount?.address,
+    contextState?.accounts?.agentAccount?.address,
+    accountAssetsRefreshTick,
     setExchangeContext,
   ]);
 

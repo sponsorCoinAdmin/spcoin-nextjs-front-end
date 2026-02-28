@@ -9,10 +9,11 @@ import React, {
   type ReactNode,
 } from 'react';
 import { useAccount } from 'wagmi';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+
 import type { spCoinAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { getAccountByAddress } from '@/lib/api';
+import { loadAccountRecord } from '@/lib/context/accounts/accountStore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -29,45 +30,33 @@ const ActiveAccountContext = createContext<spCoinAccount | undefined>(
   undefined,
 );
 
-// 🔹 UI-level hook (RecipientSite, etc.)
-// Note: this is separate from the ExchangeContext nested hook
 export const useActiveAccount = (): spCoinAccount | undefined =>
   useContext(ActiveAccountContext);
 
 export function ActiveAccountProvider({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
-
-  // ✅ Local state again — no dependency on ExchangeContext
   const [activeAccount, setActiveAccount] = useState<
     spCoinAccount | undefined
   >(undefined);
 
   useEffect(() => {
-    // 🔁 On disconnect / no address:
-    //    ➜ DO NOT clear activeAccount anymore
-    //    ➜ Just log and keep the last known value
     if (!isConnected || !address) {
       debugLog.log?.(
-        '[ActiveAccount] disconnect or missing address — preserving previous activeAccount',
+        '[ActiveAccount] disconnect or missing address - preserving previous activeAccount',
       );
       return;
     }
 
-    const ac = new AbortController();
+    let cancelled = false;
 
     (async () => {
       try {
-        const metadata = await getAccountByAddress<spCoinAccount>(address, {
-          timeoutMs: 8000,
-          signal: ac.signal,
-        });
+        const account = (await loadAccountRecord(address)) as spCoinAccount;
 
-        const account: spCoinAccount = { ...metadata.data, address };
-
-        if (!ac.signal.aborted) {
+        if (!cancelled) {
           setActiveAccount(account);
           debugLog.log?.(
-            '[ActiveAccount] loaded account.json →',
+            '[ActiveAccount] loaded account.json ->',
             stringifyBigInt(account),
           );
           debugLog.log?.('[ActiveAccount] website =', account.website);
@@ -82,14 +71,13 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
           website: '',
           status: STATUS.MISSING,
           balance: 0n,
-          // This is a static error icon, not address-based, so it stays literal
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };
 
-        if (!ac.signal.aborted) {
+        if (!cancelled) {
           setActiveAccount(fallback);
           debugLog.log?.(
-            '[ActiveAccount] fallback account →',
+            '[ActiveAccount] fallback account ->',
             stringifyBigInt(fallback),
           );
           debugLog.log?.('[ActiveAccount] website(fallback) = ""');
@@ -97,7 +85,9 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    return () => ac.abort();
+    return () => {
+      cancelled = true;
+    };
   }, [address, isConnected]);
 
   return (

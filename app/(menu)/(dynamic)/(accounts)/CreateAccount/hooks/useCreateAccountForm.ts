@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
+import {
+  loadAccountRecord,
+  saveAccountLogo,
+  saveAccountRecord,
+} from '@/lib/context/accounts/accountStore';
 import type { AccountFormData, AccountFormErrors, AccountFormField } from '../types';
 import {
   DEFAULT_ACCOUNT_LOGO_URL,
@@ -80,31 +85,11 @@ export function useCreateAccountForm({
     const loadConnectedAccount = async () => {
       setIsLoadingAccount(true);
       try {
-        const response = await fetch(
-          `/api/spCoin/accounts/${encodeURIComponent(String(activeAddress))}`,
-          {
-            method: 'GET',
-            cache: 'no-store',
-            signal: abortController.signal,
-          },
-        );
-        if (!response.ok) {
-          setAccountExists(false);
-          const empty: AccountFormData = { ...EMPTY_FORM_DATA };
-          setFormData(empty);
-          setBaselineData(empty);
-          setSavedAccountName('');
-          setErrors({});
-          setLogoFile(null);
-          setHasServerLogo(false);
-          setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
-          return;
-        }
-
-        const payload = await response.json();
-        const data = (payload?.data ?? {}) as Record<string, unknown>;
+        const record = await loadAccountRecord(String(activeAddress));
+        if (abortController.signal.aborted) return;
+        const data = record as Record<string, unknown>;
         const resolvedLogoURL = ensureAbsoluteAssetURL(
-          String(payload?.logoURL ?? data?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
+          String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
         );
 
         const loaded: AccountFormData = {
@@ -121,7 +106,10 @@ export function useCreateAccountForm({
         setSavedAccountName(loaded.name.trim());
         setErrors({});
         setLogoFile(null);
-        setHasServerLogo(Boolean(payload?.hasLogo));
+        setHasServerLogo(
+          resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
+            !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
+        );
         setServerLogoURL(withCacheBust(resolvedLogoURL));
       } catch {
         if (!abortController.signal.aborted) {
@@ -359,48 +347,18 @@ export function useCreateAccountForm({
           description: normalizedForm.description,
         };
         const saveMethod = accountExists ? 'PUT' : 'POST';
-        const accountRes = await fetch(
-          `/api/spCoin/accounts/${encodeURIComponent(derived.publicKeyTrimmed)}`,
-          {
-            method: saveMethod,
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify(accountPayload),
-          },
+        await saveAccountRecord(
+          derived.publicKeyTrimmed,
+          accountPayload,
+          authToken,
+          saveMethod,
         );
-        if (!accountRes.ok) {
-          const failPayload = (await accountRes.json().catch(() => ({}))) as {
-            error?: string;
-            details?: string;
-          };
-          throw new Error(
-            failPayload?.error || failPayload?.details || 'Failed to save account.json',
-          );
-        }
       }
 
       if (shouldSaveLogo && logoFile) {
         const logoForm = new FormData();
         logoForm.append('file', logoFile);
-        const logoRes = await fetch(
-          `/api/spCoin/accounts/${encodeURIComponent(derived.publicKeyTrimmed)}?target=logo`,
-          {
-            method: 'PUT',
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: logoForm,
-          },
-        );
-        if (!logoRes.ok) {
-          const failPayload = (await logoRes.json().catch(() => ({}))) as {
-            error?: string;
-            details?: string;
-          };
-          throw new Error(failPayload?.error || failPayload?.details || 'Failed to save logo.png');
-        }
+        await saveAccountLogo(derived.publicKeyTrimmed, logoForm, authToken);
       }
 
       if (shouldSaveAccount) {

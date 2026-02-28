@@ -4,6 +4,7 @@
 
 import type { ExchangeContext } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { stripPersistedAccountData } from '@/lib/accounts/accountPersistence';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 
@@ -299,8 +300,10 @@ export function persistWithOptDiff(
 
   try {
     // ✅ normalize + remove root displayStack (WITHOUT mutating state)
-    const coerced = compactPanelTreeSettings(
-      enforceSettingsDisplayStackOnly(next),
+    const coerced = stripPersistedAccountData(
+      compactPanelTreeSettings(
+        enforceSettingsDisplayStackOnly(next),
+      ),
     );
 
     if (DEBUG_ENABLED_PERSIST) {

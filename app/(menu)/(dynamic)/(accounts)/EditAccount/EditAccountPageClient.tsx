@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { useAccount } from 'wagmi';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import CloseButton from '@/components/views/Buttons/CloseButton';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
@@ -11,10 +11,10 @@ import { ACCEPTED_IMAGE_INPUT_ACCEPT, DEFAULT_ACCOUNT_LOGO_URL } from '../Create
 
 export default function EditAccountPageClient() {
   const router = useRouter();
-  const ctx = useContext(ExchangeContextState);
+  const { address, isConnected } = useAccount();
   const { runWithWalletAction } = useWalletActionOverlay();
-  const connected = Boolean(ctx?.exchangeContext?.network?.connected);
-  const activeAddress = ctx?.exchangeContext?.accounts?.activeAccount?.address;
+  const connected = Boolean(isConnected);
+  const activeAddress = address;
 
   const {
     publicKey,

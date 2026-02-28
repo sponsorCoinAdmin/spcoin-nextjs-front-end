@@ -6,7 +6,11 @@ import { isAddress } from 'viem';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { getJson, get, headOk } from '@/lib/rest/http';
-import { getAccountByAddress, getAccountsBatch, getTokensBatch } from '@/lib/api';
+import { getTokensBatch } from '@/lib/api';
+import {
+  loadAccountRecord,
+  loadAccountRecordsBatch,
+} from '@/lib/context/accounts/accountStore';
 import { getAccountLogoURL, defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -335,10 +339,7 @@ export async function hydrateAccountFromAddress(address: Address, opts: HydrateO
 
   let json: WalletJson | undefined;
   try {
-    const response = await getAccountByAddress<WalletJson>(addr, {
-      timeoutMs: 6000,
-    });
-    json = response?.data;
+    json = (await loadAccountRecord(addr)) as WalletJson;
 
     debugLog.log?.('[hydrateAccountFromAddress] account API fetched OK', {
       addr,
@@ -401,27 +402,30 @@ async function hydrateAccountsFromSpecsBatch(specs: any[]): Promise<Map<string, 
   await Promise.all(
     pages.map(async (page, pageIndex) => {
       try {
-        const response = await getAccountsBatch<WalletJson>(page, {
-          timeoutMs: 20000,
-        });
+        const records = await loadAccountRecordsBatch(page);
 
-        for (const item of response.items ?? []) {
-          if (!item?.address || !isAddress(item.address)) continue;
-          const addr = normalizeAddressLower(item.address);
-          const json = item.data;
+        for (const record of records) {
+          if (!record?.address || !isAddress(record.address)) continue;
+          const addr = normalizeAddressLower(record.address);
 
           const hydrated: spCoinAccount = {
             address: addr,
-            type: typeof (json as any)?.type === 'string' ? (json as any).type : ('ERC20_ACCOUNT' as any),
-            name: typeof json?.name === 'string' ? json.name : '',
-            symbol: typeof json?.symbol === 'string' ? json.symbol : '',
-            website: typeof (json as any)?.website === 'string' ? (json as any).website : ('' as any),
-            description: typeof (json as any)?.description === 'string' ? (json as any).description : ('' as any),
-            status: coerceStatus((json as any)?.status),
-            logoURL: ANONYMOUS_ACCOUNT_IMAGE,
-            balance: toBigIntSafe((json as any)?.balance),
+            type: typeof (record as any)?.type === 'string' ? (record as any).type : ('ERC20_ACCOUNT' as any),
+            name: typeof record?.name === 'string' ? record.name : '',
+            symbol: typeof record?.symbol === 'string' ? record.symbol : '',
+            website: typeof (record as any)?.website === 'string' ? (record as any).website : ('' as any),
+            description: typeof (record as any)?.description === 'string' ? (record as any).description : ('' as any),
+            status: coerceStatus((record as any)?.status),
+            logoURL:
+              typeof (record as any)?.logoURL === 'string' && String((record as any).logoURL).trim()
+                ? String((record as any).logoURL)
+                : ANONYMOUS_ACCOUNT_IMAGE,
+            balance: toBigIntSafe((record as any)?.balance),
           };
-          hydrated.logoURL = await resolveAccountLogoURL(addr);
+
+          if (!hydrated.logoURL || hydrated.logoURL === ANONYMOUS_ACCOUNT_IMAGE) {
+            hydrated.logoURL = await resolveAccountLogoURL(addr);
+          }
 
           out.set(addr.toLowerCase(), hydrated);
         }

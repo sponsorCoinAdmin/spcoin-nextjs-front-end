@@ -4,7 +4,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { getAccountsBatch, getAccountsPage } from '@/lib/api';
+import { getAccountsPage } from '@/lib/api';
+import { loadAccountRecordsBatch } from '@/lib/context/accounts/accountStore';
 import agentJsonList from '@/resources/data/mockFeeds/accounts/agents/accounts.json';
 import recipientJsonList from '@/resources/data/mockFeeds/accounts/recipients/accounts.json';
 import sponsorJsonList from '@/resources/data/mockFeeds/accounts/sponsors/accounts.json';
@@ -188,8 +189,7 @@ function AccountsPage({
 
     let cancelled = false;
     try {
-      const payload = await getAccountsBatch<spCoinAccount>(accountList);
-      const downloadedAcconts = mapApiItemsToAccounts(payload.items ?? []);
+      const downloadedAcconts = (await loadAccountRecordsBatch(accountList)) as spCoinAccount[];
       if (cancelled) return;
 
       setAcconts(downloadedAcconts);

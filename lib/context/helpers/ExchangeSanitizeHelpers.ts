@@ -1,5 +1,6 @@
 // File: @/lib/context/ExchangeSanitizeHelpers.ts
 
+import { toPersistedAccountRef } from '@/lib/accounts/accountAddress';
 import type {
   TradeData,
   ExchangeContext,
@@ -148,23 +149,13 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
   );
 }
 
-function normalizeAccountLogo<T extends spCoinAccount>(
-  account: T | undefined | null,
-): T | undefined | null {
-  if (!account || typeof account !== 'object') return account;
-  const logo =
-    typeof account.logoURL === 'string' ? account.logoURL.trim() : '';
-  return {
-    ...account,
-    logoURL: logo || '/assets/miscellaneous/Anonymous.png',
-  };
-}
-
 function normalizeAccountLogoList(
   list: unknown,
 ): spCoinAccount[] {
   if (!Array.isArray(list)) return [];
-  return list.map((item) => normalizeAccountLogo(item as spCoinAccount) as spCoinAccount);
+  return list
+    .map((item) => toPersistedAccountRef(item))
+    .filter((item): item is spCoinAccount => Boolean(item));
 }
 
 /**
@@ -254,31 +245,19 @@ export const sanitizeExchangeContext = (
   // ----- ACCOUNTS
   const sanitizedAccounts: Accounts = {
     activeAccount: (raw as any).accounts?.activeAccount
-      ? normalizeAccountLogo({
-          ...(raw as any).accounts.activeAccount,
-          balance: (raw as any).accounts.activeAccount.balance ?? 0n,
-        })
+      ? toPersistedAccountRef((raw as any).accounts.activeAccount)
       : defaultContext.accounts.activeAccount,
 
     sponsorAccount: (raw as any).accounts?.sponsorAccount
-      ? normalizeAccountLogo({
-          ...(raw as any).accounts.sponsorAccount,
-          balance: (raw as any).accounts.sponsorAccount.balance ?? 0n,
-        })
+      ? toPersistedAccountRef((raw as any).accounts.sponsorAccount)
       : defaultContext.accounts.sponsorAccount,
 
     recipientAccount: (raw as any).accounts?.recipientAccount
-      ? normalizeAccountLogo({
-          ...(raw as any).accounts.recipientAccount,
-          balance: (raw as any).accounts.recipientAccount.balance ?? 0n,
-        })
+      ? toPersistedAccountRef((raw as any).accounts.recipientAccount)
       : defaultContext.accounts.recipientAccount,
 
     agentAccount: (raw as any).accounts?.agentAccount
-      ? normalizeAccountLogo({
-          ...(raw as any).accounts.agentAccount,
-          balance: (raw as any).accounts.agentAccount.balance ?? 0n,
-        })
+      ? toPersistedAccountRef((raw as any).accounts.agentAccount)
       : defaultContext.accounts.agentAccount,
 
     sponsorAccounts: Array.isArray((raw as any).accounts?.sponsorAccounts)
