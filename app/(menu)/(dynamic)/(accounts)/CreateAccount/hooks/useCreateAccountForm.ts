@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
+import type { AccountRegistryRecord } from '@/lib/context/accounts/accountRegistry';
 import {
   loadAccountRecord,
   saveAccountLogo,
@@ -85,19 +86,21 @@ export function useCreateAccountForm({
     const loadConnectedAccount = async () => {
       setIsLoadingAccount(true);
       try {
-        const record = await loadAccountRecord(String(activeAddress));
+        const record = (await loadAccountRecord(
+          String(activeAddress),
+        )) as AccountRegistryRecord;
         if (abortController.signal.aborted) return;
-        const data = record as Record<string, unknown>;
         const resolvedLogoURL = ensureAbsoluteAssetURL(
           String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
         );
 
         const loaded: AccountFormData = {
-          name: typeof data.name === 'string' ? data.name : '',
-          symbol: typeof data.symbol === 'string' ? data.symbol : '',
-          email: typeof data.email === 'string' ? data.email : '',
-          website: typeof data.website === 'string' ? data.website : '',
-          description: typeof data.description === 'string' ? data.description : '',
+          name: typeof record.name === 'string' ? record.name : '',
+          symbol: typeof record.symbol === 'string' ? record.symbol : '',
+          email: typeof record.email === 'string' ? record.email : '',
+          website: typeof record.website === 'string' ? record.website : '',
+          description:
+            typeof record.description === 'string' ? record.description : '',
         };
 
         setAccountExists(true);
