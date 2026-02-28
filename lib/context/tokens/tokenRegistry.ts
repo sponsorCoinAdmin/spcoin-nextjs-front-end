@@ -118,7 +118,7 @@ export function getTokenRegistryRecord<T extends TokenRegistryRecord>(
 export function syncTokenRegistryPins(
   registry: TokenRegistry,
   pinKey: string,
-  refs: readonly Array<{ chainId?: number; address?: string }>,
+  refs: ReadonlyArray<{ chainId?: number; address?: string }>,
 ) {
   const normalizedKeys = new Set(
     refs
