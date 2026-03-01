@@ -2,6 +2,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
+import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
 
 import baseTokenListRaw from '@/resources/data/networks/base/tokenList.json';
 import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.json';
@@ -113,17 +114,18 @@ function flattenRequests(chainIds: number[]): TokenRequestRow[] {
 }
 
 async function loadTokenData(chainId: number, normalizedAddress: string): Promise<TokenResponseRow | null> {
+  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
   const folder = toFolderName(normalizedAddress);
   const infoPath = path.join(
     TOKENS_DIR,
-    String(chainId),
+    String(assetChainId),
     'contracts',
     folder,
     'info.json',
   );
   const logoPath = path.join(
     TOKENS_DIR,
-    String(chainId),
+    String(assetChainId),
     'contracts',
     folder,
     'logo.png',

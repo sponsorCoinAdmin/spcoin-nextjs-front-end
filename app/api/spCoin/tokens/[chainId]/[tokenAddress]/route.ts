@@ -4,6 +4,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { readBearerToken, validateSessionTokenAnyAddress } from '@/lib/server/spCoinAuth';
+import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -101,10 +102,11 @@ export async function GET(
   }
 
   const address = normalizeAddress(tokenAddressRaw);
+  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
   const folder = toFolderName(address);
   const infoPath = path.join(
     TOKENS_DIR,
-    String(chainId),
+    String(assetChainId),
     'contracts',
     folder,
     'info.json',
@@ -123,7 +125,7 @@ export async function GET(
         error: 'Token not found',
         chainId,
         address,
-        file: `/assets/blockchains/${chainId}/contracts/${folder}/info.json`,
+        file: `/assets/blockchains/${assetChainId}/contracts/${folder}/info.json`,
       },
       { status: 404, headers: { 'Cache-Control': 'no-store' } },
     );
@@ -158,10 +160,11 @@ export async function PUT(
   }
 
   const address = normalizeAddress(tokenAddressRaw);
+  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
   const folder = toFolderName(address);
   const dirPath = path.join(
     TOKENS_DIR,
-    String(chainId),
+    String(assetChainId),
     'contracts',
     folder,
   );
@@ -190,7 +193,7 @@ export async function PUT(
           chainId,
           address,
           target: 'info',
-          file: `/assets/blockchains/${chainId}/contracts/${folder}/info.json`,
+          file: `/assets/blockchains/${assetChainId}/contracts/${folder}/info.json`,
         },
         { status: 200, headers: { 'Cache-Control': 'no-store' } },
       );
@@ -207,7 +210,7 @@ export async function PUT(
         address,
         target: 'logo',
         bytes: logo.length,
-        file: `/assets/blockchains/${chainId}/contracts/${folder}/logo.png`,
+        file: `/assets/blockchains/${assetChainId}/contracts/${folder}/logo.png`,
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );

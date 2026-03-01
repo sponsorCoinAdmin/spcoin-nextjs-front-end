@@ -2,6 +2,12 @@
 const path = require(`path`);
 
 /** @type {import('next').NextConfig} */
+const {
+  HH_FORK_CHAIN_ID,
+  HH_FORK_TOKEN_ASSET_CHAIN_ID,
+  resolveHHForkTokenAssetChainId,
+} = require('./lib/config/hhForkTokenAssetChain');
+
 const nextConfig = {
   // Keep your chosen runtime behavior
   reactStrictMode: false,
@@ -64,24 +70,26 @@ const nextConfig = {
           destination: `/EditAccount`,
         },
         {
-          source: `/assets/blockchains/31337/info/network.png`,
-          destination: `/assets/blockchains/8453/HH/network.png`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/network.png`,
+          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/network.png`,
         },
         {
-          source: `/assets/blockchains/31337/info/logo.png`,
-          destination: `/assets/blockchains/8453/HH/logo.png`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/logo.png`,
+          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/logo.png`,
         },
         {
-          source: `/assets/blockchains/31337/info/info.json`,
-          destination: `/assets/blockchains/8453/HH/info.json`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/info.json`,
+          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/info.json`,
         },
         {
-          source: `/assets/blockchains/31337/info/info.png`,
-          destination: `/assets/blockchains/8453/info/info.png`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/info.png`,
+          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/info.png`,
         },
         {
-          source: `/assets/blockchains/31337/:path*`,
-          destination: `/assets/blockchains/8453/:path*`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/:path*`,
+          destination: `/assets/blockchains/${resolveHHForkTokenAssetChainId(
+            HH_FORK_CHAIN_ID,
+          )}/:path*`,
         },
       ],
       afterFiles: [],
