@@ -87,17 +87,11 @@ export default function EditAccountPageClient() {
 
   return (
     <main className="relative w-full p-6 text-white">
-      <CloseButton
-        id="createAccountBackButton"
-        closeCallback={() => router.back()}
-        title="Go Back"
-        ariaLabel="Go Back"
-      />
-
-      <div className="relative mb-6 flex items-center justify-center">
+      <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div />
         <h1 className="text-center text-2xl font-bold text-[#5981F3]">{pageTitle}</h1>
-        {showBorderToggleButton ? (
-          <div className="absolute right-0">
+        <div className="flex items-center justify-self-end gap-2">
+          {showBorderToggleButton ? (
             <button
               type="button"
               className={`rounded border px-3 py-1 text-sm font-semibold text-black ${
@@ -109,8 +103,15 @@ export default function EditAccountPageClient() {
             >
               Toggle Borders
             </button>
-          </div>
-        ) : null}
+          ) : null}
+          <CloseButton
+            id="createAccountBackButton"
+            closeCallback={() => router.back()}
+            title="Go Back"
+            ariaLabel="Go Back"
+            className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+          />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="w-full">
