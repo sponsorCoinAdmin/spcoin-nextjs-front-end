@@ -17,8 +17,8 @@ const _isValidHexString = (rawInput: string): boolean => {
   return (
     trimmed === '' ||
     trimmed === '0' ||
-    trimmed === '0x' ||
-    /^0x[0-9a-fA-F]*$/.test(trimmed)
+    /^0x$/i.test(trimmed) ||
+    /^0x[0-9a-fA-F]*$/i.test(trimmed)
   );
 };
 
