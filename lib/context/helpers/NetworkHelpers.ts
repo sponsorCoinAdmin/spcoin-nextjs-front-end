@@ -38,7 +38,10 @@ const getMeta = (chainId: number) => chainIdMap[Number(chainId)];
  * ────────────────────────────────────────────────────────────────────────── */
 
 export const getBlockChainLogoURL = (chainId: number): string =>
-  `/assets/blockchains/${chainId}/info/network.png`;
+  `/assets/blockchains/${chainId}/logo.png`;
+
+export const getBlockChainInfoURL = (chainId: number): string =>
+  `/assets/blockchains/${chainId}/info.json`;
 
 export const getBlockChainName = (chainId: number): string | undefined =>
   getMeta(chainId)?.name;
@@ -164,6 +167,7 @@ export function deriveNetworkFromApp(
 const NetworkHelpers = {
   getBlockChainName,
   getBlockChainLogoURL,
+  getBlockChainInfoURL,
   getBlockChainSymbol,
   getBlockExplorerURL,
   resolveNetworkElement,

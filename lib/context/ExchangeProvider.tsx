@@ -953,7 +953,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
             name: derived?.name ?? '',
             symbol: derived?.symbol ?? '',
             url: derived?.url ?? '',
-            logoURL: `/assets/blockchains/${appId}/info/network.png`,
+            logoURL: `/assets/blockchains/${appId}/logo.png`,
           };
           return next;
         },
@@ -979,7 +979,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const appId = contextState?.network?.appChainId ?? 0;
     if (!appId) return;
-    const expected = `/assets/blockchains/${appId}/info/network.png`;
+    const expected = `/assets/blockchains/${appId}/logo.png`;
 
     if (contextState?.network?.logoURL !== expected) {
       setExchangeContext(

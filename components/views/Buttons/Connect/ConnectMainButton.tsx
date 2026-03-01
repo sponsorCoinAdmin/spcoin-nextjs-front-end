@@ -83,7 +83,7 @@ export default function ConnectMainButton({
       {/* Network image — toggles dropdown only */}
       {showNetworkIcon && typeof currentId === 'number' && (
         <img
-          src={`/assets/blockchains/${currentId}/info/network.png`}
+          src={`/assets/blockchains/${currentId}/logo.png`}
           alt="Network"
           title={networkMenuTitle}
           className="h-8 w-8 rounded cursor-pointer"

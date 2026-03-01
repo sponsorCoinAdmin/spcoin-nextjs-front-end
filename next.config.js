@@ -70,20 +70,12 @@ const nextConfig = {
           destination: `/EditAccount`,
         },
         {
-          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/network.png`,
-          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/network.png`,
-        },
-        {
-          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/logo.png`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/logo.png`,
           destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/logo.png`,
         },
         {
-          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/info.json`,
+          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info.json`,
           destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/info.json`,
-        },
-        {
-          source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/info/info.png`,
-          destination: `/assets/blockchains/${HH_FORK_TOKEN_ASSET_CHAIN_ID}/HH/info.png`,
         },
         {
           source: `/assets/blockchains/${HH_FORK_CHAIN_ID}/:path*`,
