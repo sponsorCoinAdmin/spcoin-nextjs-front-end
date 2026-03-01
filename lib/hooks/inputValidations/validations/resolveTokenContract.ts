@@ -58,15 +58,15 @@ export async function resolveTokenContract(
     return undefined;
   }
 
-  // Keep native sentinel verbatim; otherwise use the provided address AS-IS (no case normalization)
+  // Keep native sentinel verbatim; otherwise use canonical lowercase for EVM reads/lookups.
   const resolvedAddress =
     tokenAddress === NATIVE_TOKEN_ADDRESS
       ? tokenAddress
-      : (tokenAddress as `0x${string}`);
+      : (`0x${tokenAddress.slice(2).toLowerCase()}` as `0x${string}`);
 
   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
 
-  debugLog.log?.('ℹ️ Address normalization (no case changes)', {
+  debugLog.log?.('ℹ️ Address normalization (canonical lowercase)', {
     resolvedAddress,
     isNative,
   });
