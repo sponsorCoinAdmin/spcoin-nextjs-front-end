@@ -15,7 +15,7 @@ import { rehydrateTradeTokenRefs } from '@/lib/tokens/tokenProjection';
 import type { ExchangeContext, spCoinAccount } from '@/lib/structure';
 import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // ✅ SSOT account hydration (account.json + logo derivation)

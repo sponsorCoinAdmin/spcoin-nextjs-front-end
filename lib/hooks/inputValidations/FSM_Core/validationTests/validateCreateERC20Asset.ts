@@ -1,6 +1,7 @@
 // File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateCreateERC20Asset.ts
 
-import { isAddress, type Address } from 'viem';
+import { type Address } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

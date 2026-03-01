@@ -3,7 +3,8 @@
 
 import { useEffect } from 'react';
 import useSWR from 'swr';
-import { isAddress, type Address } from 'viem';
+import { type Address } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 
 import type { PriceRequestParams } from '@/lib/structure';
 import { TRADE_DIRECTION, STATUS } from '@/lib/structure';

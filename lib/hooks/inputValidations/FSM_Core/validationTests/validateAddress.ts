@@ -1,6 +1,6 @@
 // File: @/lib/hooks/inputValidations/tests/validateAddress.ts
 
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isEmptyInput } from '../../validations/isEmptyInput';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
@@ -49,10 +49,8 @@ export function validateAddress({
   }
 
   // Normalize for validation only so 0x/0X and hex casing are treated equivalently.
-  const normalizedForValidation = has0x ? `0x${raw.slice(2).toLowerCase()}` : raw;
-
   // 4) Final strict check via viem
-  if (!isAddress(normalizedForValidation)) {
+  if (!isAddress(raw)) {
     return { nextState: InputState.INVALID_ADDRESS_INPUT };
   }
 

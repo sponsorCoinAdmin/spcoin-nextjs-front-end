@@ -2,7 +2,7 @@
 'use client';
 
 import type { Address } from 'viem';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import type { spCoinAccount } from '@/lib/structure';
 import { FEED_TYPE, type FeedData, STATUS } from '@/lib/structure';
 import { get, headOk } from '@/lib/rest/http';

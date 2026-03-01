@@ -1,6 +1,6 @@
 // File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateERC20Asset.ts
 
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

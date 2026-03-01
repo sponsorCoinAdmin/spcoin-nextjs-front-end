@@ -2,7 +2,7 @@
 'use client';
 
 import type { Address } from 'viem';
-import { isAddress } from 'viem';
+import { isAddress, toNormalizedAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -71,7 +71,8 @@ export async function validateExistsOnChain(
     containerType,
   }: ValidateFSMInput & { appChainId?: number; containerType: SP_COIN_DISPLAY }
 ): Promise<ValidateFSMOutput> {
-  const addr = (debouncedHexInput ?? '').trim() as Address;
+  const rawAddr = (debouncedHexInput ?? '').trim();
+  const addr = toNormalizedAddress(rawAddr);
   const traceId = Math.random().toString(36).slice(2, 8);
 
   const clientSummary = summarizeClient(publicClient);
@@ -80,14 +81,15 @@ export async function validateExistsOnChain(
 
   // Case-insensitive native token detection
   const NATIVE_LC = NATIVE_TOKEN_ADDRESS.toLowerCase();
-  const isNativeCaseInsensitive = addr.toLowerCase() === NATIVE_LC;
+  const isNativeCaseInsensitive = rawAddr.toLowerCase() === NATIVE_LC;
 
   log.log?.(
     `[${traceId}] [ENTRY] validateExistsOnChain`,
     {
-      address: addr,
+      address: rawAddr,
+      normalizedAddress: addr,
       isAddress: isAddress(addr || '0x'),
-      isNativeStrict: addr === NATIVE_TOKEN_ADDRESS,
+      isNativeStrict: rawAddr === NATIVE_TOKEN_ADDRESS,
       isNativeCaseInsensitive,
       feedType,
       appChainId,

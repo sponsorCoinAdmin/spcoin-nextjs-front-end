@@ -1,5 +1,5 @@
 import type { Address } from 'viem';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 import {

@@ -1,4 +1,4 @@
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 
 import type { spCoinAccount } from '@/lib/structure';
 

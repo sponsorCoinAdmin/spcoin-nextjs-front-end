@@ -1,7 +1,7 @@
 // File: @/lib/hooks/inputValidations/validations/resolveTokenContract.ts
 
 import type { Address, PublicClient } from 'viem';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import type { TokenContract } from '@/lib/structure';

@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useReadContracts } from 'wagmi';
 import type { Address } from 'viem';
-import { isAddress, erc20Abi } from 'viem';
+import { erc20Abi } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import type { TokenContract } from '@/lib/structure';
 import { useAppChainId } from '@/lib/context/hooks';
 

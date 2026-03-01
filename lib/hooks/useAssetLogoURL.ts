@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { FEED_TYPE } from '@/lib/structure';
 import {
   defaultMissingImage,

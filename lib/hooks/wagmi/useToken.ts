@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Address} from 'viem';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 import { usePublicClient, useAccount } from 'wagmi';
 import type { TokenContract } from '@/lib/structure/types';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';

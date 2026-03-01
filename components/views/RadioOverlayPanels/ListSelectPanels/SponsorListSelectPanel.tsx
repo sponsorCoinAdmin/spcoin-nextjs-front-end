@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';
-import { isAddress } from 'viem';
+import { isAddress } from '@/lib/utils/address';
 
 import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 
