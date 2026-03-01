@@ -9,6 +9,7 @@ import AccountListItem from './ListItems/AccountListItem';
 import { useAssetSelectContext } from '@/lib/context';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { isSpCoin } from '@/lib/spCoin/coreUtils';
 
 // ✅ SSOT: use the shared FeedData type (do NOT redefine it locally)
 
@@ -51,25 +52,6 @@ function roleFromFeedType(feedType: FEED_TYPE): string {
   return 'recipient';
 }
 
-function normalizeTokenLabel(value: unknown): string {
-  return String(value ?? '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-}
-
-function isSpCoinLikeToken(token: TokenFeedItem): boolean {
-  const name = normalizeTokenLabel(token?.name);
-  const symbol = normalizeTokenLabel(token?.symbol);
-  return (
-    name === 'spcoin' ||
-    name === 'sponsorcoin' ||
-    name === 'socoin' ||
-    symbol === 'spcoin' ||
-    symbol === 'sponsorcoin' ||
-    symbol === 'socoin'
-  );
-}
-
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   const isAccountFeed = isAccountFeedType(feedType);
   const isTokenFeed = feedType === FEED_TYPE.TOKEN_LIST;
@@ -90,7 +72,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     const pinned: TokenFeedItem[] = [];
     const rest: TokenFeedItem[] = [];
     for (const token of tokens) {
-      if (isSpCoinLikeToken(token)) {
+      if (isSpCoin(token as any)) {
         pinned.push(token);
       } else {
         rest.push(token);

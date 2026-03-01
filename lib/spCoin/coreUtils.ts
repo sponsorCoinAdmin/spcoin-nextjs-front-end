@@ -4,6 +4,7 @@ import { parseUnits, formatUnits, getAddress } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import type { TokenContract } from '@/lib/structure';
+import { normalizeAddress } from '@/lib/utils/address';
 
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
@@ -117,22 +118,22 @@ const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
   if (!tokenContract?.address) return false;
 
   const chainId = Number(tokenContract.chainId ?? CHAIN_ID.ETHEREUM);
-  const supported = [
-    CHAIN_ID.BASE,
-    CHAIN_ID.ETHEREUM,
-    CHAIN_ID.POLYGON,
-    CHAIN_ID.HARDHAT_BASE,
-    CHAIN_ID.SEPOLIA,
-  ].includes(chainId);
-
-  if (!supported) return false;
 
   try {
-    // checksum-compare
-    return (
-      getAddress(tokenContract.address) ===
-      getAddress('0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562')
-    );
+    const normalized = getAddress(normalizeAddress(tokenContract.address));
+    switch (chainId) {
+      case CHAIN_ID.BASE:
+      case CHAIN_ID.HARDHAT_BASE:
+        return normalized === getAddress('0xC66E2444Fb35Ff3974A69e3AFC51579E6cEE9CBA');
+      case CHAIN_ID.ETHEREUM:
+        return false;
+      case CHAIN_ID.POLYGON:
+        return normalized === getAddress('0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562');
+      case CHAIN_ID.SEPOLIA:
+        return false;
+      default:
+        return false;
+    }
   } catch {
     return false;
   }
