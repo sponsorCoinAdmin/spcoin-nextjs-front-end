@@ -44,8 +44,13 @@ export async function resolveTokenContract(
     accountAddress: _accountAddress,
   });
 
+  const normalizedForValidation =
+    tokenAddress === NATIVE_TOKEN_ADDRESS || !/^0x/i.test(tokenAddress)
+      ? tokenAddress
+      : `0x${tokenAddress.slice(2).toLowerCase()}`;
+
   // Allow native sentinel; otherwise require a valid EVM address
-  if (tokenAddress !== NATIVE_TOKEN_ADDRESS && !isAddress(tokenAddress)) {
+  if (tokenAddress !== NATIVE_TOKEN_ADDRESS && !isAddress(normalizedForValidation)) {
     debugLog.warn?.(
       '⛔ Invalid address (not native sentinel and not isAddress)',
       { tokenAddress },

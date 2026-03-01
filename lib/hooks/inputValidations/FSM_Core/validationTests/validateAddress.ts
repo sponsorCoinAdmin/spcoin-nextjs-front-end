@@ -48,8 +48,11 @@ export function validateAddress({
     return { nextState: InputState.INVALID_ADDRESS_INPUT };
   }
 
+  // Normalize for validation only so 0x/0X and hex casing are treated equivalently.
+  const normalizedForValidation = has0x ? `0x${raw.slice(2).toLowerCase()}` : raw;
+
   // 4) Final strict check via viem
-  if (!isAddress(raw)) {
+  if (!isAddress(normalizedForValidation)) {
     return { nextState: InputState.INVALID_ADDRESS_INPUT };
   }
 

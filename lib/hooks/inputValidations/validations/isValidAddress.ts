@@ -6,7 +6,8 @@ import { getValidationDebugLogger } from '../helpers/debugLogInstance';
 const log = getValidationDebugLogger('isValidAddress');
 
 export function isValidAddress(input: string): boolean {
-  const validAddress = isAddress(input);
+  const normalizedInput = /^0x/i.test(input) ? `0x${input.slice(2).toLowerCase()}` : input;
+  const validAddress = isAddress(normalizedInput);
   if (validAddress) {
     log.log(`✅ Valid address: ${input}`);
   } else {
