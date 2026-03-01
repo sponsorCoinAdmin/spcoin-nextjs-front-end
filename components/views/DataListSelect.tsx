@@ -3,7 +3,7 @@
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import type { FeedData, spCoinAccount } from '@/lib/structure';
-import { FEED_TYPE, InputState } from '@/lib/structure';
+import { FEED_TYPE, InputState, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
 import { useAssetSelectContext } from '@/lib/context';
@@ -69,16 +69,22 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   }, [feedData]);
 
   const orderedTokens = useMemo<TokenFeedItem[]>(() => {
-    const pinned: TokenFeedItem[] = [];
+    const native: TokenFeedItem[] = [];
+    const spCoin: TokenFeedItem[] = [];
     const rest: TokenFeedItem[] = [];
     for (const token of tokens) {
-      if (isSpCoin(token as any)) {
-        pinned.push(token);
+      if (
+        typeof token?.address === 'string' &&
+        token.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()
+      ) {
+        native.push(token);
+      } else if (isSpCoin(token as any)) {
+        spCoin.push(token);
       } else {
         rest.push(token);
       }
     }
-    return [...pinned, ...rest];
+    return [...native, ...spCoin, ...rest];
   }, [tokens]);
 
   // ✅ Zebra row backgrounds (Tailwind arbitrary values)
