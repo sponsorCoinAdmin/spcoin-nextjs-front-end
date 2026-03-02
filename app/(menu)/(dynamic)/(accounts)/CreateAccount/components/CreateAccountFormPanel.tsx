@@ -80,7 +80,7 @@ export default function CreateAccountFormPanel({
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
   const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const lockedInputMessage = isLoading ? loadingInputMessage : disconnectedInputMessage;
-  const noChangesToUpdate = submitLabel === 'Update Account' && !hasUnsavedChanges;
+  const noChangesToUpdate = submitLabel !== 'Create Account' && !hasUnsavedChanges;
   const getLoadingClassesForField = (fieldName: string): string =>
     isLoading && hoveredInput === fieldName ? loadingFieldClasses : '';
 
@@ -347,11 +347,13 @@ export default function CreateAccountFormPanel({
                   : 'bg-[#E5B94F] text-black'
               }`}
               title={
-                submitLabel === 'Update Account'
-                  ? !hasUnsavedChanges
-                    ? 'No changes to Update'
-                    : submitLabel
-                  : undefined
+                submitLabel === 'Create Account'
+                  ? undefined
+                  : !hasUnsavedChanges
+                  ? submitLabel === 'Edit Account'
+                    ? 'No changes to Edit'
+                    : 'No changes to Update'
+                  : submitLabel
               }
               disabled={disableSubmit}
               onMouseEnter={() => {

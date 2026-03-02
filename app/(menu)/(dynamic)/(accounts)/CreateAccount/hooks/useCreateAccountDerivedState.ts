@@ -52,7 +52,11 @@ export function useCreateAccountDerivedState({
     return hasUnsavedChanges ? 'update' : 'edit';
   }, [connected, publicKeyTrimmed, accountExists, hasUnsavedChanges]);
 
-  const submitLabel = accountExists ? 'Update Account' : 'Create Account';
+  const submitLabel = !accountExists
+    ? 'Create Account'
+    : hasUnsavedChanges
+      ? 'Update Account'
+      : 'Edit Account';
   const isRevertNoop = !hasUnsavedChanges;
   const pageTitle = savedAccountName ? 'Edit Account' : 'Edit Account';
 
