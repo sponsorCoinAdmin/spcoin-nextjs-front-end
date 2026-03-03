@@ -31,6 +31,7 @@ const normalizePath = (value: string) => {
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const exchangeLinkRef = useRef<HTMLAnchorElement | null>(null);
 
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
@@ -52,6 +53,17 @@ export default function Header() {
       closeTimersRef.current.clear();
       closingTabsRef.current.clear();
     };
+  }, []);
+
+  useEffect(() => {
+    const onFocusLink = (event: Event) => {
+      const customEvent = event as CustomEvent<{ href?: string }>;
+      if (customEvent.detail?.href !== '/Exchange') return;
+      exchangeLinkRef.current?.focus();
+    };
+
+    window.addEventListener('header:focus-link', onFocusLink as EventListener);
+    return () => window.removeEventListener('header:focus-link', onFocusLink as EventListener);
   }, []);
 
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
@@ -126,6 +138,8 @@ export default function Header() {
 
           {EXCHANGE_LINK && (
             <Link
+              ref={exchangeLinkRef}
+              id="headerExchangeLink"
               href="/Exchange"
               className={linkClass('/Exchange')}
               onMouseEnter={onMouseEnter('/Exchange')}

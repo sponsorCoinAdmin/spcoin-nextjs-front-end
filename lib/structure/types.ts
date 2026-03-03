@@ -113,6 +113,13 @@ export type Settings = {
   /** Show/hide testnets in network selector dropdown. */
   showTestNets?: boolean;
 
+  /** SponsorCoin access package manager settings persisted across reloads. */
+  spCoinAccessManager?: {
+    useLocalPackage: boolean;
+    selectedVersion: string;
+    selectedPackage?: string;
+  };
+
   /** Test page UI selection persisted across reloads (mutually exclusive flags). */
   testPage?: {
     TEST_PAGE_EXCHANGE_CONTEXT: boolean;

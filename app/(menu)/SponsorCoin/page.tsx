@@ -1,7 +1,7 @@
 // File: app/(menu)/SponsorCoin/page.tsx
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -21,6 +21,7 @@ function useTogglePortal<T extends HTMLElement>() {
         setVisible(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -33,7 +34,6 @@ function useTogglePortal<T extends HTMLElement>() {
   return { visible, setVisible, portalRef, backgroundRef, toggleOnBackgroundClick };
 }
 
-/** Tell the header to open/persist a tab for a given route */
 function openHeaderTab(href: string) {
   try {
     const key = 'header_open_tabs';
@@ -42,10 +42,9 @@ function openHeaderTab(href: string) {
     const next = Array.isArray(arr) ? Array.from(new Set([...arr, href])) : [href];
     sessionStorage.setItem(key, JSON.stringify(next));
   } catch {
-    // sessionStorage might be unavailable (e.g., private mode, SSR hiccup)
     void 0;
   }
-  // Notify Header immediately (works even before navigation completes)
+
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href } }));
   }
@@ -61,21 +60,25 @@ export default function SponsorCoinPage() {
   } = useTogglePortal<HTMLDivElement>();
 
   const cardBaseStyle =
-    'group flex h-full flex-col p-4 rounded-xl bg-[#0E111B] transition-colors duration-200';
+    'group flex h-full flex-col rounded-xl bg-[#0E111B] p-4 transition-colors duration-200';
   const cardHoverStyle = 'hover:bg-[#5981F3]/35';
   const headerStyle =
-    'text-xl font-semibold mb-2 text-center text-[#5981F3] group-hover:text-[#000000] transition-colors';
+    'mb-2 text-center text-xl font-semibold text-[#5981F3] transition-colors group-hover:text-[#000000]';
   const paragraphStyle =
-    'text-sm text-white group-hover:text-[#FFFFFF] transition-colors text-left';
+    'text-left text-sm text-white transition-colors group-hover:text-[#FFFFFF]';
 
-  // Helper to attach to Link onClick for dynamic tabs
   const onOpenTab = useCallback((href: string) => {
     openHeaderTab(href);
   }, []);
 
   const openCardPath = useCallback(
-    (href: string) => {
-      onOpenTab(href);
+    (href: string, options?: { addTab?: boolean; focusExistingHeaderLink?: boolean }) => {
+      if (options?.focusExistingHeaderLink && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('header:focus-link', { detail: { href } }));
+      }
+      if (options?.addTab !== false) {
+        onOpenTab(href);
+      }
       router.push(href);
     },
     [onOpenTab, router],
@@ -88,7 +91,7 @@ export default function SponsorCoinPage() {
   return (
     <main
       ref={backgroundRef}
-      className="min-h-screen p-6 bg-cover bg-center relative"
+      className="relative min-h-screen bg-cover bg-center p-6"
       style={{
         backgroundImage: showSpCoinPortal
           ? 'none'
@@ -101,74 +104,93 @@ export default function SponsorCoinPage() {
         <div
           ref={portalRef}
           id="sponsorCoinPortal"
-          className="relative backdrop-blur-sm bg-[#0E111B]/80 rounded-2xl p-6 max-w-5xl mx-auto"
+          className="relative mx-auto max-w-5xl rounded-2xl bg-[#0E111B]/80 p-6 backdrop-blur-sm"
         >
-          {/* Logo top-left */}
-          <div className="absolute top-0 left-0 p-[17px]">
+          <div className="absolute left-0 top-0 p-[17px]">
             <Image src={spCoin_png} width={40} height={40} alt="SponsorCoin Logo" />
           </div>
 
-          <div className="flex justify-center mt-0">
-            <div className="flex items-center gap-4 mb-6">
+          <div className="mt-0 flex justify-center">
+            <div className="mb-6 flex items-center gap-4">
               <h1 className="text-3xl font-bold text-[#EBCA6A]">SponsorCoin Portal</h1>
             </div>
           </div>
 
-          <section className="bg-[#1A1D2E] p-4 rounded-2xl shadow-md">
-            <p className="text-lg mb-4 text-white text-center">
+          <section className="rounded-2xl bg-[#1A1D2E] p-4 shadow-md">
+            <p className="mb-4 text-center text-lg text-white">
               Welcome to the SponsorCoin configuration page. Here you can trade tokens, support your causes,
               create sponsorship relationships, earn rewards, and much more.
             </p>
 
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Exchange is primary nav, not a dynamic tab */}
-                <div
-                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
-                  onClick={() => openCardPath('/Exchange')}
-                >
-                  <h2 className={headerStyle}>SponsorCoin Exchange</h2>
-                  <p className={paragraphStyle}>
-                    Trade on SponsorCoin Exchange and be eligible for future SponsorCoin drops.
-                  </p>
-                </div>
-
-                {/* Dynamic tab: Create account */}
-                <div
-                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
-                  onClick={handleOpenCreateAccount}
-                >
-                  <h2 className={headerStyle}>Create or Edit Sponsor Coin Accounts</h2>
-                  <p className={paragraphStyle}>
-                    Set up a SponsorCoin account which can be used as a Sponsor, Recipient, or Agent Account. You need a Metamask account to create a SponsorCoin account.
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:grid-rows-3">
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-1 md:row-start-1`}
+                onClick={() =>
+                  openCardPath('/Exchange', {
+                    addTab: false,
+                    focusExistingHeaderLink: true,
+                  })
+                }
+              >
+                <h2 className={headerStyle}>SponsorCoin Exchange</h2>
+                <p className={paragraphStyle}>
+                  Trade on SponsorCoin Exchange and be eligible for future SponsorCoin drops.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Dynamic tab: SpCoin API */}
-                <div
-                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
-                  onClick={() => openCardPath('/SpCoinAPI')}
-                >
-                  <h2 className={headerStyle}>SpCoin API for Developers</h2>
-                  <p className={paragraphStyle}>
-                    Connect to the BlockCoin token using SponsorCoin’s APIs for advanced development. The
-                    SponsorCoin Exchange was built using these APIs.
-                  </p>
-                </div>
-
-                {/* Dynamic tab: White Paper */}
-                <div
-                  className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer`}
-                  onClick={() => openCardPath('/WhitePaper')}
-                >
-                  <h2 className={headerStyle}>SponsorCoin White Paper</h2>
-                  <p className={paragraphStyle}>
-                    Read the SponsorCoin white paper and learn more about the project.
-                  </p>
-                </div>
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-2 md:row-start-1`}
+                onClick={handleOpenCreateAccount}
+              >
+                <h2 className={headerStyle}>Create or Edit Sponsor Coin Accounts</h2>
+                <p className={paragraphStyle}>
+                  Set up a SponsorCoin account which can be used as a Sponsor, Recipient, or Agent Account. You need a
+                  Metamask account to create a SponsorCoin account.
+                </p>
               </div>
+
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-1 md:row-start-2`}
+                onClick={() => openCardPath('/SpCoinAPI')}
+              >
+                <h2 className={headerStyle}>SpCoin API for Developers</h2>
+                <p className={paragraphStyle}>
+                  Connect to the BlockCoin token using SponsorCoin's APIs for advanced development. The SponsorCoin
+                  Exchange was built using these APIs.
+                </p>
+              </div>
+
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-1 md:row-start-3`}
+                onClick={() => openCardPath('/SpCoinAccessManager')}
+              >
+                <h2 className={headerStyle}>SpCoin Access Manager</h2>
+                <p className={paragraphStyle}>
+                  Manage the local SponsorCoin npm source workspace, package versions, and upload or download flows.
+                </p>
+              </div>
+
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-2 md:row-start-2`}
+                onClick={() => openCardPath('/WhitePaper')}
+              >
+                <h2 className={headerStyle}>SponsorCoin White Paper</h2>
+                <p className={paragraphStyle}>
+                  Read the SponsorCoin white paper and learn more about the project.
+                </p>
+              </div>
+
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-2 md:row-start-3`}
+                onClick={() => openCardPath('/SpCoinContractManager')}
+              >
+                <h2 className={headerStyle}>SpCoin Contract Manager</h2>
+                <p className={paragraphStyle}>
+                  Configure private spCoin contract deployment values and prepare deployment actions separately from npm
+                  package management.
+                </p>
+              </div>
+
             </div>
           </section>
         </div>
