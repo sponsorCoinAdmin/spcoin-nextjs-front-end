@@ -33,6 +33,13 @@ export default function SpCoinAccessManagerPage() {
   const [selectedPackage, setSelectedPackage] = useState(
     managerSettings.selectedPackage || '@sponsorcoin/spcoin-access-modules',
   );
+  const [deploymentStatus, setDeploymentStatus] = useState(
+    'Enter your private spCoin deployment values, then use Deploy once the server-side contract automation is connected.',
+  );
+  const [deploymentName, setDeploymentName] = useState('spCoin');
+  const [deploymentVersion, setDeploymentVersion] = useState('latest');
+  const [privateKeyValue, setPrivateKeyValue] = useState('');
+  const [publicKeyValue, setPublicKeyValue] = useState('');
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [uploadBlocked, setUploadBlocked] = useState(true);
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
@@ -50,6 +57,24 @@ export default function SpCoinAccessManagerPage() {
   }, [versionInput]);
 
   const sanitizeVersionInput = (value: string) => value.replace(/[^0-9.]/g, '');
+
+  const handleDeploy = () => {
+    const normalizedName = deploymentName.trim() || 'spCoin';
+    const normalizedVersion = deploymentVersion.trim() || 'latest';
+    const missingFields: string[] = [];
+
+    if (!privateKeyValue.trim()) missingFields.push('private key');
+    if (!publicKeyValue.trim()) missingFields.push('public key');
+
+    if (missingFields.length > 0) {
+      setDeploymentStatus(`Deployment blocked: missing ${missingFields.join(' and ')}.`);
+      return;
+    }
+
+    setDeploymentStatus(
+      `Deployment scaffold prepared for ${normalizedName} (${normalizedVersion}). Server-side deployment automation is not connected yet.`,
+    );
+  };
 
   const adjustVersion = (direction: 1 | -1) => {
     const sanitized = sanitizeVersionInput(versionInput).replace(/^\.+|\.+$/g, '');
@@ -276,25 +301,6 @@ export default function SpCoinAccessManagerPage() {
                   <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Repository</h3>
                 </div>
 
-                <div>
-                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">NPM Package Source</span>
-                  <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <button
-                      type="button"
-                      onClick={handleSourceToggle}
-                      className="rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-[#8FA8FF] hover:text-[#8FA8FF]"
-                    >
-                      Select Source
-                    </button>
-                    <div
-                      className="flex items-center rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-slate-200"
-                      aria-label="Selected package source"
-                    >
-                      {currentSourceLabel}
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Package</span>
@@ -393,6 +399,24 @@ export default function SpCoinAccessManagerPage() {
                       : 'Download From npm Manager'}
                   </button>
                 </div>
+                <div>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">NPM Package Source</span>
+                  <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={handleSourceToggle}
+                      className="rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-[#8FA8FF] hover:text-[#8FA8FF]"
+                    >
+                      Select Source
+                    </button>
+                    <div
+                      className="flex items-center rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-slate-200"
+                      aria-label="Selected package source"
+                    >
+                      {currentSourceLabel}
+                    </div>
+                  </div>
+                </div>
                 <div className="border-t border-slate-700 pt-5">
                   <div className="text-center">
                     <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Query Results</h3>
@@ -418,12 +442,88 @@ export default function SpCoinAccessManagerPage() {
 
             <div className="scrollbar-hide min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4 md:flex-1">
               <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3">
-                <h2 className="text-xl font-semibold text-[#8FA8FF]">Right Panel: Workspace</h2>
+                <h2 className="text-xl font-semibold text-[#8FA8FF]">Right Panel: Deployment</h2>
                 <span className="rounded-full bg-[#0B1020] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
-                  npm Source
+                  spCoin
                 </span>
               </div>
 
+              <div className={`${cardClass} scrollbar-hide flex max-h-[calc(70vh-8rem)] flex-col gap-5 overflow-y-auto pr-2`}>
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-[#8FA8FF]">spCoin Deployment</h3>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Deployment Name</span>
+                    <input
+                      type="text"
+                      value={deploymentName}
+                      onChange={(event) => setDeploymentName(event.target.value)}
+                      placeholder="spCoin"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                    <input
+                      type="text"
+                      value={deploymentVersion}
+                      onChange={(event) => setDeploymentVersion(event.target.value)}
+                      placeholder="latest"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Private Key Value</span>
+                    <input
+                      type="password"
+                      value={privateKeyValue}
+                      onChange={(event) => setPrivateKeyValue(event.target.value)}
+                      placeholder="Enter private key"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Public Key Value</span>
+                    <input
+                      type="text"
+                      value={publicKeyValue}
+                      onChange={(event) => setPublicKeyValue(event.target.value)}
+                      placeholder="Enter public key"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </label>
+                </div>
+
+                <div className="flex justify-start">
+                  <button
+                    type="button"
+                    onClick={handleDeploy}
+                    className="rounded-xl bg-green-500 px-6 py-3 font-semibold text-black transition-colors hover:bg-green-400"
+                  >
+                    Deploy
+                  </button>
+                </div>
+
+                <div className="border-t border-slate-700 pt-5">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Contract Query Results</h3>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
+                  <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
+                    <p className="leading-6">{deploymentStatus}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

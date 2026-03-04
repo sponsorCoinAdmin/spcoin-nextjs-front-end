@@ -180,17 +180,6 @@ export default function SponsorCoinPage() {
                 </p>
               </div>
 
-              <div
-                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-2 md:row-start-3`}
-                onClick={() => openCardPath('/SpCoinContractManager')}
-              >
-                <h2 className={headerStyle}>SpCoin Contract Manager</h2>
-                <p className={paragraphStyle}>
-                  Configure private spCoin contract deployment values and prepare deployment actions separately from npm
-                  package management.
-                </p>
-              </div>
-
             </div>
           </section>
         </div>
