@@ -20,6 +20,7 @@ type ManagerResponse = {
 export default function SpCoinAccessManagerPage() {
   const router = useRouter();
   const [settings, setSettings] = useSettings();
+  const [chromeHeight, setChromeHeight] = useState(72);
   const managerSettings = settings.spCoinAccessManager ?? {
     useLocalPackage: true,
     selectedVersion: 'latest',
@@ -36,10 +37,8 @@ export default function SpCoinAccessManagerPage() {
   const [deploymentStatus, setDeploymentStatus] = useState(
     'Enter your private spCoin deployment values, then use Deploy once the server-side contract automation is connected.',
   );
-  const [deploymentName, setDeploymentName] = useState('spCoin');
-  const [deploymentVersion, setDeploymentVersion] = useState('latest');
-  const [privateKeyValue, setPrivateKeyValue] = useState('');
-  const [publicKeyValue, setPublicKeyValue] = useState('');
+  const [deploymentName, setDeploymentName] = useState('sPCoin');
+  const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [uploadBlocked, setUploadBlocked] = useState(true);
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
@@ -59,21 +58,28 @@ export default function SpCoinAccessManagerPage() {
   const sanitizeVersionInput = (value: string) => value.replace(/[^0-9.]/g, '');
 
   const handleDeploy = () => {
-    const normalizedName = deploymentName.trim() || 'spCoin';
+    const normalizedName = deploymentName.trim() || 'sPCoin';
     const normalizedVersion = deploymentVersion.trim() || 'latest';
-    const missingFields: string[] = [];
-
-    if (!privateKeyValue.trim()) missingFields.push('private key');
-    if (!publicKeyValue.trim()) missingFields.push('public key');
-
-    if (missingFields.length > 0) {
-      setDeploymentStatus(`Deployment blocked: missing ${missingFields.join(' and ')}.`);
-      return;
-    }
 
     setDeploymentStatus(
       `Deployment scaffold prepared for ${normalizedName} (${normalizedVersion}). Server-side deployment automation is not connected yet.`,
     );
+  };
+
+  const adjustDeploymentVersion = (direction: 1 | -1) => {
+    const sanitized = sanitizeVersionInput(deploymentVersion).replace(/^\.+|\.+$/g, '');
+    const segments = sanitized
+      .split('.')
+      .filter(Boolean)
+      .map((segment) => Number.parseInt(segment, 10))
+      .filter((segment) => Number.isFinite(segment) && segment >= 0);
+
+    const nextSegments = segments.length > 0 ? [...segments] : [0, 0, 0];
+    const lastIndex = nextSegments.length - 1;
+    const nextValue = Math.max(0, (nextSegments[lastIndex] ?? 0) + direction);
+    nextSegments[lastIndex] = nextValue;
+
+    setDeploymentVersion(nextSegments.join('.'));
   };
 
   const adjustVersion = (direction: 1 | -1) => {
@@ -119,6 +125,21 @@ export default function SpCoinAccessManagerPage() {
       selectedPackage,
     });
   };
+
+  useEffect(() => {
+    const measure = () => {
+      const header = document.querySelector('header');
+      const footer = document.querySelector('footer');
+      const headerHeight = header instanceof HTMLElement ? header.offsetHeight : 72;
+      const footerHeight = footer instanceof HTMLElement ? footer.offsetHeight : 0;
+      const next = Math.max(72, headerHeight + footerHeight);
+      setChromeHeight(next);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -270,10 +291,13 @@ export default function SpCoinAccessManagerPage() {
   };
 
   return (
-    <main className="relative w-full bg-[#0B1020] p-6 text-white">
+    <main
+      className="relative box-border flex w-full flex-col overflow-hidden bg-[#0B1020] px-6 pt-6 text-white"
+      style={{ height: `calc(100dvh - ${chromeHeight}px)` }}
+    >
       <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
         <div />
-        <h1 className="text-center text-2xl font-bold text-[#5981F3]">SpCoin NPM Access Manager</h1>
+        <h1 className="text-center text-2xl font-bold text-[#5981F3]">SpCoin Access Controller</h1>
         <div className="flex items-center justify-self-end gap-2">
           <CloseButton
             id="spCoinAccessManagerBackButton"
@@ -285,20 +309,17 @@ export default function SpCoinAccessManagerPage() {
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-6">
-        <section>
-          <div className="flex h-full min-h-[calc(70vh-1rem)] flex-col gap-6 md:flex-row">
-            <div className="scrollbar-hide min-w-0 flex-1 overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4 md:px-[100px]">
-              <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3">
-                <h2 className="text-xl font-semibold text-[#8FA8FF]">Left Panel: Access Manager</h2>
-                <span className="rounded-full bg-[#0B1020] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
-                  NPM Package Control
-                </span>
+      <div className="flex min-h-0 flex-1 w-full flex-col gap-6">
+        <section className="min-h-0 flex-1 overflow-hidden bg-[#EBCA6A]">
+          <div className="flex h-full min-h-0 flex-1 overflow-hidden flex-col gap-6 md:flex-row">
+            <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
+              <div className="mb-4 flex items-center justify-center border-b border-slate-700 pb-3">
+                <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SpCoin Access NPM Controller</h2>
               </div>
 
-              <div className={`${cardClass} scrollbar-hide flex max-h-[calc(70vh-8rem)] flex-col gap-5 overflow-y-auto pr-2`}>
+              <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Repository</h3>
+                  <h3 className="text-xl font-semibold text-[#8FA8FF]">Node Package Manager</h3>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
@@ -400,14 +421,13 @@ export default function SpCoinAccessManagerPage() {
                   </button>
                 </div>
                 <div>
-                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">NPM Package Source</span>
                   <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <button
                       type="button"
                       onClick={handleSourceToggle}
-                      className="rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-[#8FA8FF] hover:text-[#8FA8FF]"
+                      className="rounded-xl px-4 py-3 font-semibold text-black transition-colors bg-[#EBCA6A] hover:bg-[#F4D883]"
                     >
-                      Select Source
+                      Select Node Source
                     </button>
                     <div
                       className="flex items-center rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-slate-200"
@@ -440,80 +460,110 @@ export default function SpCoinAccessManagerPage() {
               </div>
             </div>
 
-            <div className="scrollbar-hide min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4 md:flex-1">
-              <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3">
-                <h2 className="text-xl font-semibold text-[#8FA8FF]">Right Panel: Deployment</h2>
-                <span className="rounded-full bg-[#0B1020] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
-                  spCoin
-                </span>
+            <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
+              <div className="mb-4 flex items-center justify-center border-b border-slate-700 pb-3">
+                <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SpCoin Contract Deployment Controller</h2>
               </div>
 
-              <div className={`${cardClass} scrollbar-hide flex max-h-[calc(70vh-8rem)] flex-col gap-5 overflow-y-auto pr-2`}>
+              <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">spCoin Deployment</h3>
+                  <h3 className="text-xl font-semibold text-[#8FA8FF]">Deployment Manager</h3>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Deployment Name</span>
-                    <input
-                      type="text"
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Deployment Contract</span>
+                    <select
                       value={deploymentName}
                       onChange={(event) => setDeploymentName(event.target.value)}
-                      placeholder="spCoin"
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                    />
+                    >
+                      <option value="sPCoin">sPCoin</option>
+                    </select>
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Contract Version</span>
+                    <div className="flex h-[50px] items-stretch">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={deploymentVersion}
+                        onChange={(event) => setDeploymentVersion(sanitizeVersionInput(event.target.value))}
+                        placeholder="0.0.1"
+                        className="w-full rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      />
+                      <div className="flex w-[44px] flex-col">
+                        <button
+                          type="button"
+                          onClick={() => adjustDeploymentVersion(1)}
+                          className="h-1/2 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          title="Increment Contract Version"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => adjustDeploymentVersion(-1)}
+                          className="h-1/2 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          title="Decrement Contract Version"
+                        >
+                          -
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={handleDeploy}
+                      className="rounded-xl px-4 py-3 font-semibold text-black transition-colors bg-[#EBCA6A] hover:bg-[#F4D883]"
+                    >
+                      Deploy
+                    </button>
+                  </div>
+
+                  <label className="block flex-1">
                     <input
                       type="text"
-                      value={deploymentVersion}
-                      onChange={(event) => setDeploymentVersion(event.target.value)}
-                      placeholder="latest"
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      value=""
+                      readOnly
+                      placeholder="Deployment Contract Private Key Required."
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
                     />
                   </label>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Private Key Value</span>
-                    <input
-                      type="password"
-                      value={privateKeyValue}
-                      onChange={(event) => setPrivateKeyValue(event.target.value)}
-                      placeholder="Enter private key"
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Public Key Value</span>
+                <div className="flex flex-col gap-4">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentName}.${deploymentVersion} Public Key`}</span>
                     <input
                       type="text"
-                      value={publicKeyValue}
-                      onChange={(event) => setPublicKeyValue(event.target.value)}
-                      placeholder="Enter public key"
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      value=""
+                      readOnly
+                      placeholder="Public Key, Returned from Deployment"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
                     />
                   </label>
-                </div>
 
-                <div className="flex justify-start">
-                  <button
-                    type="button"
-                    onClick={handleDeploy}
-                    className="rounded-xl bg-green-500 px-6 py-3 font-semibold text-black transition-colors hover:bg-green-400"
-                  >
-                    Deploy
-                  </button>
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentName}.${deploymentVersion} Private Key`}</span>
+                    <input
+                      type="text"
+                      value=""
+                      readOnly
+                      placeholder="Private Key, Returned from Deployment"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+                    />
+                  </label>
                 </div>
 
                 <div className="border-t border-slate-700 pt-5">
                   <div className="text-center">
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Contract Query Results</h3>
+                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Contract Deplloyment Results</h3>
                   </div>
                 </div>
 
