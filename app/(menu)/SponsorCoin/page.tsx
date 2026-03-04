@@ -162,9 +162,9 @@ export default function SponsorCoinPage() {
 
               <div
                 className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-1 md:row-start-3`}
-                onClick={() => openCardPath('/SpCoinAccessManager')}
+                onClick={() => openCardPath('/SpCoinAccessController')}
               >
-                <h2 className={headerStyle}>SpCoin Access Manager</h2>
+                <h2 className={headerStyle}>SpCoin Access Controller</h2>
                 <p className={paragraphStyle}>
                   Manage the local SponsorCoin npm source workspace, package versions, and upload or download flows.
                 </p>

@@ -31,7 +31,7 @@ type SpCoinAccessStorage = {
 
 const SPCOIN_ACCESS_STORAGE_KEY = 'spCoinAccess';
 
-export default function SpCoinAccessManagerPage() {
+export default function SpCoinAccessControllerPage() {
   const router = useRouter();
   const [network] = useNetwork();
   const [settings, setSettings] = useSettings();
