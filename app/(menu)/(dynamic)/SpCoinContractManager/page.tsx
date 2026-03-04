@@ -52,9 +52,9 @@ export default function SpCoinContractManagerPage() {
       </div>
 
       <div className="flex w-full flex-col gap-6">
-        <section className="rounded-2xl bg-[#192134] p-2">
-          <div className="flex flex-col md:flex-row">
-            <div className="min-w-0 flex-1 p-2">
+        <section>
+          <div className="flex h-full min-h-[calc(70vh-1rem)] flex-col gap-6 md:flex-row">
+            <div className="scrollbar-hide min-w-0 flex-1 overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4 md:px-[100px]">
               <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-[#8FA8FF]">Left Panel: Deployment</h2>
                 <span className="rounded-full bg-[#0B1020] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
@@ -62,12 +62,9 @@ export default function SpCoinContractManagerPage() {
                 </span>
               </div>
 
-              <div className={`${cardClass} flex flex-col gap-5`}>
-                <div>
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">Private spCoin Deployment</h3>
-                  <p className="mt-1 text-sm text-slate-300">
-                    Configure deployment metadata for your private token build. This page is dedicated to contract deployment.
-                  </p>
+              <div className={`${cardClass} scrollbar-hide flex max-h-[calc(70vh-8rem)] flex-col gap-5 overflow-y-auto pr-2`}>
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-[#8FA8FF]">spCoin Deployment</h3>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -127,10 +124,21 @@ export default function SpCoinContractManagerPage() {
                     Deploy
                   </button>
                 </div>
+                <div className="border-t border-slate-700 pt-5">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Contract Query Results</h3>
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
+                  <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
+                    <p className="leading-6">{status}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="min-w-0 border-t border-slate-700 p-2 md:flex-1 md:border-l md:border-t-0">
+            <div className="scrollbar-hide min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4 md:flex-1">
               <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3">
                 <h2 className="text-xl font-semibold text-[#8FA8FF]">Right Panel: Status</h2>
                 <span className="rounded-full bg-[#0B1020] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
@@ -138,33 +146,6 @@ export default function SpCoinContractManagerPage() {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-6">
-                <div className={`${cardClass} flex flex-col gap-4`}>
-                  <div>
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Deployment Status</h3>
-                    <p className="mt-1 text-sm text-slate-300">
-                      The deployment action is currently front-end only until the backend deploy route is connected.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
-                    <p className="font-semibold text-white">Status</p>
-                    <p className="mt-2 leading-6">{status}</p>
-                  </div>
-                </div>
-
-                <div className={`${cardClass} flex flex-col gap-4`}>
-                  <div>
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">What This Page Handles</h3>
-                    <p className="mt-1 text-sm text-slate-300">
-                      This page is dedicated to contract deployment. npm package management is handled separately by the
-                      SpCoin Access Manager page.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
-                    Use this page for deployment name, version, key entry, and future contract deployment automation.
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>

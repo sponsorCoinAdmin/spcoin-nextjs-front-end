@@ -40,6 +40,9 @@ export default function SpCoinAccessManagerPage() {
 
   const cardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
+  const currentSourceLabel = managerSettings.useLocalPackage
+    ? 'Local /spCoinAccess/spCoinNpmSource'
+    : 'node_modules';
 
   const selectedVersion = useMemo(() => {
     const trimmed = versionInput.trim();
@@ -268,39 +271,28 @@ export default function SpCoinAccessManagerPage() {
                 </span>
               </div>
 
-              <div className={`${cardClass} flex flex-col gap-5`}>
-                <div>
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">Select Application NPM Package Source</h3>
+              <div className={`${cardClass} scrollbar-hide flex max-h-[calc(70vh-8rem)] flex-col gap-5 overflow-y-auto pr-2`}>
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Repository</h3>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSourceToggle}
-                  className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
-                    managerSettings.useLocalPackage
-                      ? 'border-green-500 bg-green-500/15'
-                      : 'border-[#31416F] bg-[#0B1020]'
-                  }`}
-                >
-                  <span>
-                    <span className="block text-sm font-semibold text-white">
-                      {managerSettings.useLocalPackage
-                        ? 'Local /spCoinAccess/spCoinNpmSource Enabled'
-                        : 'Use node_modules Package'}
-                    </span>
-                    <span className="block text-xs text-slate-300">
-                      Toggle between the editable local workspace and the installed npm package.
-                    </span>
-                  </span>
-                  <span className="rounded-full bg-[#1A1D2E] px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#EBCA6A]">
-                    {managerSettings.useLocalPackage ? 'Local' : 'Node'}
-                  </span>
-                </button>
-              </div>
-
-              <div className={`${cardClass} flex flex-col gap-5`}>
                 <div>
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Repository</h3>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">NPM Package Source</span>
+                  <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={handleSourceToggle}
+                      className="rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-[#8FA8FF] hover:text-[#8FA8FF]"
+                    >
+                      Select Source
+                    </button>
+                    <div
+                      className="flex items-center rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-slate-200"
+                      aria-label="Selected package source"
+                    >
+                      {currentSourceLabel}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
@@ -401,6 +393,26 @@ export default function SpCoinAccessManagerPage() {
                       : 'Download From npm Manager'}
                   </button>
                 </div>
+                <div className="border-t border-slate-700 pt-5">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Query Results</h3>
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Workspace Paths</span>
+                  <div className="rounded-xl border border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-200">
+                    <p className="font-semibold text-white">Expected local directories</p>
+                    <p className="mt-2 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource</p>
+                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/packages</p>
+                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/backups</p>
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
+                  <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
+                    <p className="leading-6">{status}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -412,23 +424,6 @@ export default function SpCoinAccessManagerPage() {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-6">
-                <div className={`${cardClass} flex flex-col gap-4`}>
-                  <div>
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Workspace Paths</h3>
-                  </div>
-                  <div className="rounded-xl border border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-200">
-                    <p className="font-semibold text-white">Expected local directories</p>
-                    <p className="mt-2 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource</p>
-                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/packages</p>
-                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/backups</p>
-                  </div>
-                  <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
-                    <p className="font-semibold text-white">Status</p>
-                    <p className="mt-2 leading-6">{status}</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
