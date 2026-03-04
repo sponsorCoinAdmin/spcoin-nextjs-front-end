@@ -1,7 +1,6 @@
 {
   "packages": {
     "@sponsorcoin/spcoin-access-modules": {
-      "baselineHash": "a93d43754100a49585e1c0f3915c2471135f5ce89cc0a85418709dcac9a47fd5",
       "downloadedVersion": "1.0.31",
       "activeArchive": "sponsorcoin-spcoin-access-modules-1.0.31.tgz"
     }

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CloseButton from '@/components/views/Buttons/CloseButton';
+import { useNetwork } from '@/lib/context/hooks/ExchangeContext/nested/useNetwork';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 
 type ManagerResponse = {
@@ -17,9 +18,24 @@ type ManagerResponse = {
   uploadBlocked?: boolean;
 };
 
+type SpCoinAccessStorage = {
+  useLocalPackage: boolean;
+  selectedPackage: string;
+  selectedVersion: string;
+  sourceRoot: string;
+  localInstallSourceRoot: string;
+  deploymentName: string;
+  deploymentVersion: string;
+  deploymentAccountPrivateKey: string;
+};
+
+const SPCOIN_ACCESS_STORAGE_KEY = 'spCoinAccess';
+
 export default function SpCoinAccessManagerPage() {
   const router = useRouter();
+  const [network] = useNetwork();
   const [settings, setSettings] = useSettings();
+  const hasHydratedStorageRef = useRef(false);
   const [chromeHeight, setChromeHeight] = useState(72);
   const managerSettings = settings.spCoinAccessManager ?? {
     useLocalPackage: true,
@@ -28,7 +44,7 @@ export default function SpCoinAccessManagerPage() {
   };
   const [versionInput, setVersionInput] = useState(managerSettings.selectedVersion || 'latest');
   const [status, setStatus] = useState<string>(
-    'Select a SponsorCoin package, version, and source mode before running download or upload.',
+    'Select a SponsorCoin package and version before running download or upload.',
   );
   const [availablePackages, setAvailablePackages] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState(
@@ -39,16 +55,58 @@ export default function SpCoinAccessManagerPage() {
   );
   const [deploymentName, setDeploymentName] = useState('sPCoin');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
+  const [deploymentAccountPrivateKey, setDeploymentAccountPrivateKey] = useState('');
+  const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess/spCoinNpmSource');
+  const [localInstallSourceRootError, setLocalInstallSourceRootError] = useState('');
+  const [sourceRoot, setSourceRoot] = useState(
+    managerSettings.useLocalPackage ? '/spCoinAccess/spCoinNpmSource' : '/node_modules/@spCoinNpmSource',
+  );
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [uploadBlocked, setUploadBlocked] = useState(true);
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
+  const [deploymentFlashError, setDeploymentFlashError] = useState(false);
+  const [deploymentStatusIsError, setDeploymentStatusIsError] = useState(false);
   const [activeAction, setActiveAction] = useState<'download' | 'upload' | null>(null);
 
   const cardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
+  const normalizeProjectRelativePath = (value: string, fallback: string) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return fallback;
+    const withoutLeadingOrTrailing = trimmed.replace(/^\/+|\/+$/g, '');
+    if (!withoutLeadingOrTrailing) return fallback;
+    return `/${withoutLeadingOrTrailing}`;
+  };
+  const validateLocalInstallSourceRoot = (value: string) => {
+    const normalized = normalizeProjectRelativePath(value, '');
+    const isValid = normalized.startsWith('/spCoinAccess');
+    setLocalInstallSourceRootError(isValid ? '' : 'Path Not found');
+    return isValid;
+  };
+  const defaultSourceRoot = managerSettings.useLocalPackage
+    ? '/spCoinAccess/spCoinNpmSource'
+    : '/node_modules/@spCoinNpmSource';
+  const normalizedSourceRoot = normalizeProjectRelativePath(sourceRoot, defaultSourceRoot);
   const currentSourceLabel = managerSettings.useLocalPackage
-    ? 'Local /spCoinAccess/spCoinNpmSource'
-    : 'node_modules';
+    ? normalizedSourceRoot.endsWith('/spCoinNpmSource')
+      ? normalizedSourceRoot
+      : `${normalizedSourceRoot}/spCoinNpmSource`
+    : normalizedSourceRoot.endsWith('/@spCoinNpmSource')
+    ? normalizedSourceRoot
+    : `${normalizedSourceRoot}/@spCoinNpmSource`;
+  const workspacePaths = managerSettings.useLocalPackage
+    ? [currentSourceLabel, `${currentSourceLabel}/packages`, `${currentSourceLabel}/backups`]
+    : [currentSourceLabel, `${currentSourceLabel}/package.json`, `${currentSourceLabel}/dist`];
+  const currentChainId = Number((network as any)?.appChainId ?? (network as any)?.chainId ?? 0);
+  const blockChainName = String((network as any)?.name || '').trim() || 'SponsorCoin HH BASE';
+  const blockchainName = currentChainId > 0 ? `${blockChainName}(${currentChainId})` : blockChainName;
+  const deploymentVersionValue = deploymentVersion.trim();
+  const deploymentVersionPrefix = `${deploymentName}${deploymentVersionValue ? `.${deploymentVersionValue}` : ''}`;
+  const deploymentVersionStatusMatch = deploymentStatus.match(/^(sPCoin(?:\.[^ ]+)?)( set for deployment\.)$/);
+  const deploymentErrorStatusMatch = deploymentStatus.match(/^(\*ERROR:)(.*)$/);
+  const deploymentErrorBlockchainMatch = deploymentStatus.match(
+    /^(\*ERROR:)(.*?deployment to blockchain )(.*)$/,
+  );
 
   const selectedVersion = useMemo(() => {
     const trimmed = versionInput.trim();
@@ -60,7 +118,17 @@ export default function SpCoinAccessManagerPage() {
   const handleDeploy = () => {
     const normalizedName = deploymentName.trim() || 'sPCoin';
     const normalizedVersion = deploymentVersion.trim() || 'latest';
+    const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
+    const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
+    if (!isValidPrivateKey) {
+      setDeploymentStatus(`*ERROR: Valid account private key is required for deployment to blockchain ${blockchainName}`);
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+      return;
+    }
+
+    setDeploymentStatusIsError(false);
     setDeploymentStatus(
       `Deployment scaffold prepared for ${normalizedName} (${normalizedVersion}). Server-side deployment automation is not connected yet.`,
     );
@@ -142,6 +210,47 @@ export default function SpCoinAccessManagerPage() {
   }, []);
 
   useEffect(() => {
+    validateLocalInstallSourceRoot(localInstallSourceRoot);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const raw = window.localStorage.getItem(SPCOIN_ACCESS_STORAGE_KEY);
+      if (!raw) {
+        hasHydratedStorageRef.current = true;
+        return;
+      }
+
+      const persisted = JSON.parse(raw) as Partial<SpCoinAccessStorage>;
+      const nextUseLocalPackage = persisted.useLocalPackage ?? managerSettings.useLocalPackage;
+      const nextSelectedPackage = persisted.selectedPackage || managerSettings.selectedPackage || selectedPackage;
+      const nextSelectedVersion = persisted.selectedVersion || managerSettings.selectedVersion || selectedVersion;
+
+      persistManagerSettings({
+        useLocalPackage: nextUseLocalPackage,
+        selectedPackage: nextSelectedPackage,
+        selectedVersion: nextSelectedVersion,
+      });
+      setSelectedPackage(nextSelectedPackage);
+      setVersionInput(nextSelectedVersion);
+      setSourceRoot(
+        persisted.sourceRoot ||
+          (nextUseLocalPackage ? '/spCoinAccess/spCoinNpmSource' : '/node_modules/@spCoinNpmSource'),
+      );
+      setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess/spCoinNpmSource');
+      setDeploymentName(persisted.deploymentName || 'sPCoin');
+      setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
+      setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
+    } catch {
+      // Ignore invalid persisted state.
+    } finally {
+      hasHydratedStorageRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
     let active = true;
 
     const loadPackages = async () => {
@@ -213,15 +322,74 @@ export default function SpCoinAccessManagerPage() {
     return () => window.clearTimeout(timeoutId);
   }, [flashTarget]);
 
+  useEffect(() => {
+    if (!deploymentFlashError) return;
+    const timeoutId = window.setTimeout(() => setDeploymentFlashError(false), 450);
+    return () => window.clearTimeout(timeoutId);
+  }, [deploymentFlashError]);
+
+  useEffect(() => {
+    setDeploymentStatusIsError(false);
+    setDeploymentStatus(`${deploymentVersionPrefix} set for deployment.`);
+  }, [deploymentVersionPrefix]);
+
+  useEffect(() => {
+    if (!hasHydratedStorageRef.current || typeof window === 'undefined') return;
+
+    const persisted: SpCoinAccessStorage = {
+      useLocalPackage: managerSettings.useLocalPackage,
+      selectedPackage,
+      selectedVersion,
+      sourceRoot,
+      localInstallSourceRoot,
+      deploymentName,
+      deploymentVersion,
+      deploymentAccountPrivateKey,
+    };
+
+    window.localStorage.setItem(SPCOIN_ACCESS_STORAGE_KEY, JSON.stringify(persisted));
+  }, [
+    deploymentAccountPrivateKey,
+    deploymentName,
+    deploymentVersion,
+    localInstallSourceRoot,
+    managerSettings.useLocalPackage,
+    selectedPackage,
+    selectedVersion,
+    sourceRoot,
+  ]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (validateLocalInstallSourceRoot(localInstallSourceRoot)) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [localInstallSourceRoot]);
+
   const handleSourceToggle = () => {
+    const nextUseLocalPackage = !managerSettings.useLocalPackage;
+    const nextSourcePath = nextUseLocalPackage
+      ? '/spCoinAccess/spCoinNpmSource'
+      : '/node_modules/@spCoinNpmSource';
+    setSourceRoot(nextSourcePath);
     persistManagerSettings({
-      useLocalPackage: !managerSettings.useLocalPackage,
+      useLocalPackage: nextUseLocalPackage,
       selectedVersion,
       selectedPackage,
     });
-    setStatus(
-      `Active package source set to ${!managerSettings.useLocalPackage ? 'Local /spCoinAccess/spCoinNpmSource' : 'node_modules'}.`,
-    );
+    setStatus(`Active package source set to ${nextSourcePath}.`);
+  };
+
+  const handleCloseAttempt = () => {
+    if (!validateLocalInstallSourceRoot(localInstallSourceRoot)) {
+      window.alert('Path Not found');
+      return;
+    }
+    router.back();
   };
 
   const handleVersionPersist = () => {
@@ -301,7 +469,7 @@ export default function SpCoinAccessManagerPage() {
         <div className="flex items-center justify-self-end gap-2">
           <CloseButton
             id="spCoinAccessManagerBackButton"
-            closeCallback={() => router.back()}
+            closeCallback={handleCloseAttempt}
             title="Go Back"
             ariaLabel="Go Back"
             className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
@@ -310,7 +478,7 @@ export default function SpCoinAccessManagerPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 w-full flex-col gap-6">
-        <section className="min-h-0 flex-1 overflow-hidden bg-[#EBCA6A]">
+        <section className="min-h-0 flex-1 overflow-hidden">
           <div className="flex h-full min-h-0 flex-1 overflow-hidden flex-col gap-6 md:flex-row">
             <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
               <div className="mb-4 flex items-center justify-center border-b border-slate-700 pb-3">
@@ -344,7 +512,7 @@ export default function SpCoinAccessManagerPage() {
 
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">npm Version</span>
-                    <div className="flex h-[50px] items-stretch">
+                    <div className="flex items-stretch">
                       <input
                         type="text"
                         inputMode="decimal"
@@ -358,7 +526,7 @@ export default function SpCoinAccessManagerPage() {
                         <button
                           type="button"
                           onClick={() => adjustVersion(1)}
-                          className="h-1/2 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                           title="Increment Version"
                         >
                           +
@@ -366,13 +534,42 @@ export default function SpCoinAccessManagerPage() {
                         <button
                           type="button"
                           onClick={() => adjustVersion(-1)}
-                          className="h-1/2 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                           title="Decrement Version"
                         >
                           -
                         </button>
                       </div>
                     </div>
+                  </label>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Install Path</span>
+                    <input
+                      type="text"
+                      value={localInstallSourceRoot}
+                      onChange={(event) => {
+                        setLocalInstallSourceRoot(event.target.value);
+                        if (localInstallSourceRootError) {
+                          validateLocalInstallSourceRoot(event.target.value);
+                        }
+                      }}
+                      onBlur={(event) => {
+                        const normalized = normalizeProjectRelativePath(event.target.value, '/spCoinAccess/spCoinNpmSource');
+                        setLocalInstallSourceRoot(normalized);
+                        if (!validateLocalInstallSourceRoot(normalized)) {
+                          window.alert('Path Not found');
+                        }
+                      }}
+                      className={`w-full rounded-xl border px-4 py-3 text-white outline-none transition-colors ${
+                        localInstallSourceRootError
+                          ? 'border-red-500 bg-red-500/10'
+                          : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
+                      }`}
+                      title="Enter local source install path"
+                    />
                   </label>
                 </div>
 
@@ -436,6 +633,26 @@ export default function SpCoinAccessManagerPage() {
                       {currentSourceLabel}
                     </div>
                   </div>
+                  <label className="mt-3 grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Source Root</span>
+                    <input
+                      type="text"
+                      value={sourceRoot}
+                      onChange={(event) => setSourceRoot(event.target.value)}
+                      onBlur={(event) =>
+                        setSourceRoot(
+                          normalizeProjectRelativePath(
+                            event.target.value,
+                            managerSettings.useLocalPackage
+                              ? '/spCoinAccess/spCoinNpmSource'
+                              : '/node_modules/@spCoinNpmSource',
+                          ),
+                        )
+                      }
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      title="Enter source root relative to the app location"
+                    />
+                  </label>
                 </div>
                 <div className="border-t border-slate-700 pt-5">
                   <div className="text-center">
@@ -445,10 +662,15 @@ export default function SpCoinAccessManagerPage() {
                 <div>
                   <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Workspace Paths</span>
                   <div className="rounded-xl border border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-200">
-                    <p className="font-semibold text-white">Expected local directories</p>
-                    <p className="mt-2 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource</p>
-                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/packages</p>
-                    <p className="mt-1 font-mono text-xs text-[#EBCA6A]">/spCoinAccess/spCoinNpmSource/backups</p>
+                    <p className="font-semibold text-white">Expected source paths</p>
+                    {workspacePaths.map((pathValue, index) => (
+                      <p
+                        key={pathValue}
+                        className={`${index === 0 ? 'mt-2' : 'mt-1'} font-mono text-xs text-[#EBCA6A]`}
+                      >
+                        {pathValue}
+                      </p>
+                    ))}
                   </div>
                 </div>
                 <div>
@@ -484,20 +706,20 @@ export default function SpCoinAccessManagerPage() {
 
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Contract Version</span>
-                    <div className="flex h-[50px] items-stretch">
+                    <div className="flex items-stretch">
                       <input
                         type="text"
                         inputMode="decimal"
                         value={deploymentVersion}
                         onChange={(event) => setDeploymentVersion(sanitizeVersionInput(event.target.value))}
-                        placeholder="0.0.1"
+                        placeholder="Add optional Version"
                         className="w-full rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                       />
                       <div className="flex w-[44px] flex-col">
                         <button
                           type="button"
                           onClick={() => adjustDeploymentVersion(1)}
-                          className="h-1/2 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                           title="Increment Contract Version"
                         >
                           +
@@ -505,7 +727,7 @@ export default function SpCoinAccessManagerPage() {
                         <button
                           type="button"
                           onClick={() => adjustDeploymentVersion(-1)}
-                          className="h-1/2 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-[#16203B]"
+                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                           title="Decrement Contract Version"
                         >
                           -
@@ -520,7 +742,9 @@ export default function SpCoinAccessManagerPage() {
                     <button
                       type="button"
                       onClick={handleDeploy}
-                      className="rounded-xl px-4 py-3 font-semibold text-black transition-colors bg-[#EBCA6A] hover:bg-[#F4D883]"
+                      className={`rounded-xl px-4 py-3 font-semibold text-black transition-colors ${
+                        deploymentFlashError ? 'bg-red-500 hover:bg-red-400' : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+                      }`}
                     >
                       Deploy
                     </button>
@@ -529,17 +753,17 @@ export default function SpCoinAccessManagerPage() {
                   <label className="block flex-1">
                     <input
                       type="text"
-                      value=""
-                      readOnly
-                      placeholder="Deployment Contract Private Key Required."
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+                      value={deploymentAccountPrivateKey}
+                      onChange={(event) => setDeploymentAccountPrivateKey(event.target.value.trim())}
+                      placeholder="Private Key for Account Deployment Required"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
                   </label>
                 </div>
 
                 <div className="flex flex-col gap-4">
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentName}.${deploymentVersion} Public Key`}</span>
+                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Public Key`}</span>
                     <input
                       type="text"
                       value=""
@@ -550,7 +774,7 @@ export default function SpCoinAccessManagerPage() {
                   </label>
 
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentName}.${deploymentVersion} Private Key`}</span>
+                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Private Key`}</span>
                     <input
                       type="text"
                       value=""
@@ -570,7 +794,27 @@ export default function SpCoinAccessManagerPage() {
                 <div>
                   <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
                   <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
-                    <p className="leading-6">{deploymentStatus}</p>
+                    <p className={`leading-6 ${deploymentStatusIsError ? 'text-white' : ''}`}>
+                      {!deploymentStatusIsError && deploymentVersionStatusMatch ? (
+                        <>
+                          <span className="font-semibold text-green-400">{deploymentVersionStatusMatch[1]}</span>
+                          <span>{deploymentVersionStatusMatch[2]}</span>
+                        </>
+                      ) : deploymentStatusIsError && deploymentErrorBlockchainMatch ? (
+                        <>
+                          <span className="font-semibold text-red-400">{deploymentErrorBlockchainMatch[1]}</span>
+                          <span>{deploymentErrorBlockchainMatch[2]}</span>
+                          <span className="font-semibold text-green-400">{deploymentErrorBlockchainMatch[3]}</span>
+                        </>
+                      ) : deploymentStatusIsError && deploymentErrorStatusMatch ? (
+                        <>
+                          <span className="font-semibold text-red-400">{deploymentErrorStatusMatch[1]}</span>
+                          <span>{deploymentErrorStatusMatch[2]}</span>
+                        </>
+                      ) : (
+                        deploymentStatus
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>

@@ -7,7 +7,6 @@ const year = day * 365.242199; // Actual time in year considering leap year
 const month = year/12;
 const millennium = year * 1000;
 
-
 const bigIntToDateTimeString = ( _value ) => { 
     let milliSecs = bigIntToDecMilliSecs(_value);
   
