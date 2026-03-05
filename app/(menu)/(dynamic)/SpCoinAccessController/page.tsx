@@ -30,14 +30,15 @@ type SpCoinAccessStorage = {
   deploymentName: string;
   deploymentVersion: string;
   deploymentAccountPrivateKey: string;
-  deploymentPublicKey?: string;
-  deploymentPrivateKey?: string;
+  deploymentMode: 'mocked' | 'blockcain';
+  localSourceDeploymentPath: string;
 };
 
 const SPCOIN_ACCESS_STORAGE_KEY = 'spCoinAccess';
-const VERSION_FORMAT_ERROR =
-  '*Errofr Bad Format, format is Number, decimal, number decuimal... or "#*.#*..."';
+const VERSION_FORMAT_ERROR = '*Error: Bad Format, format is Number and decimals only.';
 const VERSION_FORMAT_REGEX = /^\d+(?:\.\d+)*$/;
+const DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH = '/spCoinAccess/contracts/spCoin';
+const DEPLOYMENT_TOKEN_NAME_MAX_LENGTH = 11;
 
 export default function SpCoinAccessControllerPage() {
   const router = useRouter();
@@ -63,8 +64,9 @@ export default function SpCoinAccessControllerPage() {
   const [deploymentName, setDeploymentName] = useState('sPCoin');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
   const [deploymentAccountPrivateKey, setDeploymentAccountPrivateKey] = useState('');
+  const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
+  const [localSourceDeploymentPath, setLocalSourceDeploymentPath] = useState(DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
   const [deploymentPublicKey, setDeploymentPublicKey] = useState('');
-  const [deploymentPrivateKey, setDeploymentPrivateKey] = useState('');
   const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess/spCoinNpmSource');
   const [localInstallSourceRootError, setLocalInstallSourceRootError] = useState('');
   const [sourceRoot, setSourceRoot] = useState(
@@ -92,22 +94,31 @@ export default function SpCoinAccessControllerPage() {
     setLocalInstallSourceRootError(isValid ? '' : 'Path Not found');
     return isValid;
   };
-  const defaultSourceRoot = managerSettings.useLocalPackage
-    ? '/spCoinAccess/spCoinNpmSource'
-    : '/node_modules/@spCoinNpmSource';
-  const normalizedSourceRoot = normalizeProjectRelativePath(sourceRoot, defaultSourceRoot);
-  const currentSourceLabel = managerSettings.useLocalPackage
-    ? normalizedSourceRoot.endsWith('/spCoinNpmSource')
-      ? normalizedSourceRoot
-      : `${normalizedSourceRoot}/spCoinNpmSource`
-    : normalizedSourceRoot.endsWith('/@spCoinNpmSource')
-    ? normalizedSourceRoot
-    : `${normalizedSourceRoot}/@spCoinNpmSource`;
-  const workspacePaths = managerSettings.useLocalPackage
-    ? [currentSourceLabel, `${currentSourceLabel}/packages`, `${currentSourceLabel}/backups`]
-    : [currentSourceLabel, `${currentSourceLabel}/package.json`, `${currentSourceLabel}/dist`];
+  const renderErrorWordInRed = (message: string) => {
+    const parts = String(message || '').split(/(Error:?)/g);
+    return (
+      <>
+        {parts.map((part, index) =>
+          /^Error:?$/.test(part) ? (
+            <span key={`error-part-${index}`} className="text-red-400">
+              {part}
+            </span>
+          ) : (
+            <span key={`error-part-${index}`}>{part}</span>
+          ),
+        )}
+      </>
+    );
+  };
+  const buildDeploymentTokenName = (name: string, version: string) => {
+    const normalizedName = String(name || '').trim() || 'sPCoin';
+    const normalizedVersion = String(version || '').trim();
+    return normalizedVersion ? `${normalizedName}.${normalizedVersion}` : normalizedName;
+  };
   const deploymentVersionValue = deploymentVersion.trim();
   const deploymentVersionPrefix = `${deploymentName}${deploymentVersionValue ? `.${deploymentVersionValue}` : ''}`;
+  const deploymentPathDisplayValue =
+    deploymentMode === 'mocked' ? 'Mocked Deployment' : localSourceDeploymentPath;
   const deploymentVersionStatusMatch = deploymentStatus.match(/^(sPCoin(?:\.[^ ]+)?)( set for deployment\.)$/);
   const deploymentScaffoldStatusMatch = deploymentStatus.match(
     /^(Status \d+: )?(Deployment scaffold prepared for ")([^"]+)("\. Server-side deployment automation is not connected yet\.)$/,
@@ -128,12 +139,23 @@ export default function SpCoinAccessControllerPage() {
     return isVersionFormatValid(trimmed) ? trimmed : managerSettings.selectedVersion || '0.0.1';
   }, [managerSettings.selectedVersion, versionInput]);
 
-  const sanitizeVersionInput = (value: string) => value.replace(/[^0-9.]/g, '');
+  const sanitizeVersionInput = (value: string) =>
+    value
+      .replace(/[^0-9.]/g, '')
+      .replace(/\.{2,}/g, '.');
 
   const handleDeploy = async () => {
     const normalizedName = deploymentName.trim() || 'sPCoin';
     const normalizedVersion = deploymentVersion.trim();
-    const deploymentContractName = normalizedVersion ? `${normalizedName}.${normalizedVersion}` : normalizedName;
+    const deploymentContractName = buildDeploymentTokenName(normalizedName, normalizedVersion);
+    if (deploymentContractName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
+      setDeploymentStatus(
+        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
+      );
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+      return;
+    }
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
@@ -185,7 +207,6 @@ export default function SpCoinAccessControllerPage() {
         return;
       }
       setDeploymentPublicKey(String(data.deploymentPublicKey || ''));
-      setDeploymentPrivateKey(String(data.deploymentPrivateKey || ''));
       setDeploymentStatus(
         `Status ${response.status}: ${
           data.message ||
@@ -213,7 +234,44 @@ export default function SpCoinAccessControllerPage() {
     const nextValue = Math.max(0, (nextSegments[lastIndex] ?? 0) + direction);
     nextSegments[lastIndex] = nextValue;
 
-    setDeploymentVersion(nextSegments.join('.'));
+    const nextVersion = nextSegments.join('.');
+    const nextTokenName = buildDeploymentTokenName(deploymentName, nextVersion);
+    if (nextTokenName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
+      setDeploymentStatus(
+        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
+      );
+      setDeploymentStatusIsError(true);
+      return;
+    }
+    setDeploymentStatusIsError(false);
+    setDeploymentVersion(nextVersion);
+  };
+
+  const handleDeploymentVersionInputChange = (nextValue: string) => {
+    const trimmed = String(nextValue || '').trim();
+    if (!trimmed) {
+      setDeploymentStatusIsError(false);
+      setDeploymentVersion('');
+      return;
+    }
+
+    if (!VERSION_FORMAT_REGEX.test(trimmed)) {
+      setDeploymentStatus(VERSION_FORMAT_ERROR);
+      setDeploymentStatusIsError(true);
+      return;
+    }
+
+    const nextTokenName = buildDeploymentTokenName(deploymentName, trimmed);
+    if (nextTokenName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
+      setDeploymentStatus(
+        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
+      );
+      setDeploymentStatusIsError(true);
+      return;
+    }
+
+    setDeploymentStatusIsError(false);
+    setDeploymentVersion(trimmed);
   };
 
   const adjustVersion = (direction: 1 | -1) => {
@@ -311,8 +369,8 @@ export default function SpCoinAccessControllerPage() {
       setDeploymentName(persisted.deploymentName || 'sPCoin');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
-      setDeploymentPublicKey(persisted.deploymentPublicKey || '');
-      setDeploymentPrivateKey(persisted.deploymentPrivateKey || '');
+      setDeploymentMode(persisted.deploymentMode || 'mocked');
+      setLocalSourceDeploymentPath(persisted.localSourceDeploymentPath || DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
     } catch {
       // Ignore invalid persisted state.
     } finally {
@@ -396,7 +454,6 @@ export default function SpCoinAccessControllerPage() {
     setDeploymentStatusIsError(false);
     setDeploymentStatus(`${deploymentVersionPrefix} set for deployment.`);
     setDeploymentPublicKey('');
-    setDeploymentPrivateKey('');
   }, [deploymentVersionPrefix]);
 
   useEffect(() => {
@@ -411,16 +468,16 @@ export default function SpCoinAccessControllerPage() {
       deploymentName,
       deploymentVersion,
       deploymentAccountPrivateKey,
-      deploymentPublicKey,
-      deploymentPrivateKey,
+      deploymentMode,
+      localSourceDeploymentPath,
     };
 
     window.localStorage.setItem(SPCOIN_ACCESS_STORAGE_KEY, JSON.stringify(persisted));
   }, [
     deploymentAccountPrivateKey,
+    deploymentMode,
     deploymentName,
-    deploymentPrivateKey,
-    deploymentPublicKey,
+    localSourceDeploymentPath,
     deploymentVersion,
     localInstallSourceRoot,
     managerSettings.useLocalPackage,
@@ -440,8 +497,8 @@ export default function SpCoinAccessControllerPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [localInstallSourceRoot]);
 
-  const handleSourceToggle = () => {
-    const nextUseLocalPackage = !managerSettings.useLocalPackage;
+  const handlePackageSourceModeChange = (mode: 'local' | 'node_modules') => {
+    const nextUseLocalPackage = mode === 'local';
     const nextSourcePath = nextUseLocalPackage
       ? '/spCoinAccess/spCoinNpmSource'
       : '/node_modules/@spCoinNpmSource';
@@ -478,8 +535,9 @@ export default function SpCoinAccessControllerPage() {
   };
 
   const handleVersionInputChange = (nextValue: string) => {
-    setVersionInput(nextValue);
-    const trimmed = nextValue.trim();
+    const sanitized = sanitizeVersionInput(nextValue);
+    setVersionInput(sanitized);
+    const trimmed = sanitized.trim();
     if (!isVersionFormatValid(trimmed)) {
       setStatus(VERSION_FORMAT_ERROR);
       return;
@@ -553,7 +611,6 @@ export default function SpCoinAccessControllerPage() {
   const handleDeploymentPrivateKeyChange = (nextValue: string) => {
     setDeploymentAccountPrivateKey(nextValue.trim());
     setDeploymentPublicKey('');
-    setDeploymentPrivateKey('');
     if (!deploymentStatusIsError && !deploymentFlashError) return;
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
@@ -613,7 +670,33 @@ export default function SpCoinAccessControllerPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                      <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
+                        <label className="flex items-center gap-2 text-[#8FA8FF]">
+                          <input
+                            type="radio"
+                            name="package-source-mode"
+                            value="local"
+                            checked={managerSettings.useLocalPackage}
+                            onChange={() => handlePackageSourceModeChange('local')}
+                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                          />
+                          <span>Local</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-[#8FA8FF]">
+                          <input
+                            type="radio"
+                            name="package-source-mode"
+                            value="node_modules"
+                            checked={!managerSettings.useLocalPackage}
+                            onChange={() => handlePackageSourceModeChange('node_modules')}
+                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                          />
+                          <span>node_modules</span>
+                        </label>
+                      </div>
+                    </div>
                     <div className="flex items-stretch">
                       <input
                         type="text"
@@ -720,21 +803,6 @@ export default function SpCoinAccessControllerPage() {
                   </button>
                 </div>
                 <div>
-                  <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <button
-                      type="button"
-                      onClick={handleSourceToggle}
-                      className="rounded-xl px-4 py-3 font-semibold text-black transition-colors bg-[#EBCA6A] hover:bg-[#F4D883]"
-                    >
-                      Select Node Source
-                    </button>
-                    <div
-                      className="flex items-center rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-sm font-semibold text-slate-200"
-                      aria-label="Selected package source"
-                    >
-                      {currentSourceLabel}
-                    </div>
-                  </div>
                   <label className="mt-3 grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Source Root</span>
                     <input
@@ -756,25 +824,6 @@ export default function SpCoinAccessControllerPage() {
                     />
                   </label>
                 </div>
-                <div className="border-t border-slate-700 pt-5">
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">NPM Query Results</h3>
-                  </div>
-                </div>
-                <div>
-                  <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Workspace Paths</span>
-                  <div className="rounded-xl border border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-200">
-                    <p className="font-semibold text-white">Expected source paths</p>
-                    {workspacePaths.map((pathValue, index) => (
-                      <p
-                        key={pathValue}
-                        className={`${index === 0 ? 'mt-2' : 'mt-1'} font-mono text-xs text-[#EBCA6A]`}
-                      >
-                        {pathValue}
-                      </p>
-                    ))}
-                  </div>
-                </div>
                 <div>
                   <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
                   <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
@@ -784,7 +833,7 @@ export default function SpCoinAccessControllerPage() {
                         <span className="font-semibold text-green-400">{status.replace('Version set to ', '')}</span>
                       </p>
                     ) : (
-                      <p className="leading-6">{status}</p>
+                      <p className="leading-6 text-white">{renderErrorWordInRed(status)}</p>
                     )}
                   </div>
                 </div>
@@ -797,8 +846,10 @@ export default function SpCoinAccessControllerPage() {
               </div>
 
               <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-[#8FA8FF]">Deployment Manager</h3>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                  <div />
+                  <h3 className="justify-self-center text-xl font-semibold text-[#8FA8FF]">Contract Deployment</h3>
+                  <div />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -814,13 +865,39 @@ export default function SpCoinAccessControllerPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                      <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
+                        <label className="flex items-center gap-2 text-[#8FA8FF]">
+                          <input
+                            type="radio"
+                            name="deployment-mode"
+                            value="mocked"
+                            checked={deploymentMode === 'mocked'}
+                            onChange={() => setDeploymentMode('mocked')}
+                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                          />
+                          <span>Mocked</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-[#8FA8FF]">
+                          <input
+                            type="radio"
+                            name="deployment-mode"
+                            value="blockcain"
+                            checked={deploymentMode === 'blockcain'}
+                            onChange={() => setDeploymentMode('blockcain')}
+                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                          />
+                          <span>Blockcain</span>
+                        </label>
+                      </div>
+                    </div>
                     <div className="flex items-stretch">
                       <input
                         type="text"
                         inputMode="decimal"
                         value={deploymentVersion}
-                        onChange={(event) => setDeploymentVersion(sanitizeVersionInput(event.target.value))}
+                        onChange={(event) => handleDeploymentVersionInputChange(event.target.value)}
                         placeholder="Add optional Version"
                         className="w-full rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                       />
@@ -843,6 +920,24 @@ export default function SpCoinAccessControllerPage() {
                         </button>
                       </div>
                     </div>
+                  </label>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
+                    <input
+                      type="text"
+                      value={deploymentPathDisplayValue}
+                      onChange={(event) => setLocalSourceDeploymentPath(event.target.value)}
+                      readOnly={deploymentMode === 'mocked'}
+                      className={`w-full rounded-xl border px-4 py-3 text-white outline-none transition-colors ${
+                        deploymentMode === 'mocked'
+                          ? 'border-[#31416F] bg-[#0B1020]/70'
+                          : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
+                      }`}
+                      title="Enter local source deployment path"
+                    />
                   </label>
                 </div>
 
@@ -882,22 +977,6 @@ export default function SpCoinAccessControllerPage() {
                     />
                   </label>
 
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Private Key`}</span>
-                    <input
-                      type="text"
-                      value={deploymentPrivateKey}
-                      readOnly
-                      placeholder="Private Key, Returned from Deployment"
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
-                    />
-                  </label>
-                </div>
-
-                <div className="border-t border-slate-700 pt-5">
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-[#8FA8FF]">Contract Deplloyment Results</h3>
-                  </div>
                 </div>
 
                 <div>
