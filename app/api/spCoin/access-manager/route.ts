@@ -3,6 +3,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
+import { Wallet } from 'ethers';
 
 const execAsync = promisify(exec);
 const LEGACY_WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinNpmSource');
@@ -15,18 +16,24 @@ const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 type AccessManagerRequest = {
-  action?: 'upload' | 'download';
+  action?: 'upload' | 'download' | 'deploy';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
+  deploymentName?: string;
+  deploymentVersion?: string;
+  deploymentAccountPrivateKey?: string;
 };
 
 type AccessManagerResponse = {
   ok: boolean;
-  action?: 'upload' | 'download';
+  action?: 'upload' | 'download' | 'deploy';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
+  deploymentTokenName?: string;
+  deploymentPublicKey?: string;
+  deploymentPrivateKey?: string;
   message: string;
   packages?: string[];
   workspaceRoot?: string;
@@ -330,6 +337,39 @@ async function handleUpload(packageName: string, requestedVersion: string) {
   };
 }
 
+async function handleDeploy(
+  deploymentName: string,
+  deploymentVersion: string,
+  deploymentAccountPrivateKey: string,
+) {
+  const normalizedName = String(deploymentName || '').trim() || 'sPCoin';
+  const normalizedVersion = String(deploymentVersion || '').trim();
+  const deploymentTokenName = normalizedVersion ? `${normalizedName}.${normalizedVersion}` : normalizedName;
+  const rawPrivateKey = String(deploymentAccountPrivateKey || '').trim();
+  const normalizedPrivateKey = rawPrivateKey.startsWith('0x') ? rawPrivateKey : `0x${rawPrivateKey}`;
+
+  if (!/^0x[0-9a-fA-F]{64}$/.test(normalizedPrivateKey)) {
+    throw new Error('Invalid deployment private key format.');
+  }
+
+  // Validate deployment signer key (used by deployer account).
+  const deployerWallet = new Wallet(normalizedPrivateKey);
+  if (!deployerWallet.address) {
+    throw new Error('Unable to resolve deployer account.');
+  }
+
+  // Scaffold token key material as a distinct keypair from the deployer account.
+  const tokenWallet = Wallet.createRandom();
+  // Use address-form public identifier for GUI compatibility.
+  const deploymentPublicKey = tokenWallet.address;
+
+  return {
+    deploymentTokenName,
+    deploymentPublicKey,
+    deploymentPrivateKey: tokenWallet.privateKey,
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const packageName = String(searchParams.get('packageName') || '').trim();
@@ -374,10 +414,40 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as AccessManagerRequest;
-  const action = body.action === 'upload' ? 'upload' : 'download';
+  const action = body.action === 'upload' ? 'upload' : body.action === 'deploy' ? 'deploy' : 'download';
   const mode = body.mode === 'node_modules' ? 'node_modules' : 'local';
   const requestedVersion = String(body.version || 'latest').trim() || 'latest';
   const packageName = String(body.packageName || '').trim();
+
+  if (action === 'deploy') {
+    const deploymentName = String(body.deploymentName || '').trim();
+    const deploymentVersion = String(body.deploymentVersion || '').trim();
+    const deploymentAccountPrivateKey = String(body.deploymentAccountPrivateKey || '').trim();
+
+    try {
+      const result = await handleDeploy(deploymentName, deploymentVersion, deploymentAccountPrivateKey);
+      return NextResponse.json({
+        ok: true,
+        action,
+        mode,
+        deploymentTokenName: result.deploymentTokenName,
+        deploymentPublicKey: result.deploymentPublicKey,
+        deploymentPrivateKey: result.deploymentPrivateKey,
+        message: `Deployment scaffold prepared for "${result.deploymentTokenName}". Server-side deployment automation is not connected yet.`,
+      } satisfies AccessManagerResponse);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown deployment manager failure.';
+      return NextResponse.json(
+        {
+          ok: false,
+          action,
+          mode,
+          message,
+        } satisfies AccessManagerResponse,
+        { status: 500 },
+      );
+    }
+  }
 
   if (!packageName) {
     return NextResponse.json(

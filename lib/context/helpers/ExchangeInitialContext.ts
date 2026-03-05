@@ -66,7 +66,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       showTestNets: false,
       spCoinAccessManager: {
         useLocalPackage: true,
-        selectedVersion: 'latest',
+        selectedVersion: '0.0.1',
         selectedPackage: '@sponsorcoin/spcoin-access-modules',
       },
       testPage: {

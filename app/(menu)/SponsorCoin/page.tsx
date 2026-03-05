@@ -166,7 +166,7 @@ export default function SponsorCoinPage() {
               >
                 <h2 className={headerStyle}>SpCoin Access Controller</h2>
                 <p className={paragraphStyle}>
-                  Manage the local SponsorCoin npm source workspace, package versions, and upload or download flows.
+                  Manage the local SponsorCoin NPM source workspace, package versions, and upload or download flows.
                 </p>
               </div>
 
