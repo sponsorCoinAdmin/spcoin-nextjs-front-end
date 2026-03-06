@@ -1,9 +1,11 @@
+// File: app/(menu)/(dynamic)/SpCoinAccessController/page.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CloseButton from '@/components/views/Buttons/CloseButton';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 type ManagerResponse = {
   ok: boolean;
@@ -20,6 +22,9 @@ type ManagerResponse = {
   deploymentTokenName?: string;
   deploymentPublicKey?: string;
   deploymentPrivateKey?: string;
+  deploymentTxHash?: string;
+  deploymentChainId?: number;
+  deploymentNetworkName?: string;
   localPath?: string;
   localPathExists?: boolean;
 };
@@ -31,8 +36,11 @@ type SpCoinAccessStorage = {
   sourceRoot: string;
   localInstallSourceRoot: string;
   deploymentName: string;
+  deploymentSymbol?: string;
+  deploymentDecimals?: string;
   deploymentVersion: string;
   deploymentAccountPrivateKey: string;
+  deploymentPublicKey: string;
   deploymentMode: 'mocked' | 'blockcain';
   localSourceDeploymentPath: string;
 };
@@ -41,11 +49,11 @@ const SPCOIN_ACCESS_STORAGE_KEY = 'spCoinAccess';
 const VERSION_FORMAT_ERROR = '*Error: Bad Format, format is Number and decimals only.';
 const VERSION_FORMAT_REGEX = /^\d+(?:\.\d+)*$/;
 const DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH = '/spCoinAccess/contracts/spCoin';
-const DEPLOYMENT_TOKEN_NAME_MAX_LENGTH = 11;
 
 export default function SpCoinAccessControllerPage() {
   const router = useRouter();
   const [settings, setSettings] = useSettings();
+  const { exchangeContext } = useExchangeContext();
   const hasHydratedStorageRef = useRef(false);
   const [chromeHeight, setChromeHeight] = useState(72);
   const managerSettings = settings.spCoinAccessManager ?? {
@@ -64,7 +72,9 @@ export default function SpCoinAccessControllerPage() {
   const [deploymentStatus, setDeploymentStatus] = useState(
     'Enter your private spCoin deployment values, then use Deploy once the server-side contract automation is connected.',
   );
-  const [deploymentName, setDeploymentName] = useState('sPCoin');
+  const [deploymentName, setDeploymentName] = useState('Sponsor Coin');
+  const [deploymentSymbol, setDeploymentSymbol] = useState('SPCOIN');
+  const [deploymentDecimals, setDeploymentDecimals] = useState('18');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
   const [deploymentAccountPrivateKey, setDeploymentAccountPrivateKey] = useState('');
   const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
@@ -127,17 +137,59 @@ export default function SpCoinAccessControllerPage() {
     );
   };
   const buildDeploymentTokenName = (name: string, version: string) => {
-    const normalizedName = String(name || '').trim() || 'sPCoin';
+    const normalizedName = String(name || '').trim() || 'Sponsor Coin';
     const normalizedVersion = String(version || '').trim();
-    return normalizedVersion ? `${normalizedName}.${normalizedVersion}` : normalizedName;
+    return normalizedVersion ? `${normalizedName} V ${normalizedVersion}` : normalizedName;
   };
-  const deploymentVersionValue = deploymentVersion.trim();
-  const deploymentVersionPrefix = `${deploymentName}${deploymentVersionValue ? `.${deploymentVersionValue}` : ''}`;
+  const clampDeploymentDecimals = (value: number) => Math.min(255, Math.max(0, value));
+  const getDeploymentKeyValidationMessage = (rawKey: string) => {
+    const normalizedPrivateKey = String(rawKey || '').trim();
+    if (!normalizedPrivateKey) {
+      return '*Error: Account Private Key is required for Deployment.';
+    }
+    if (!/^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey)) {
+      return '*Error: Invalid Account Private Key';
+    }
+    return '';
+  };
+  const deploymentTokenName = buildDeploymentTokenName(deploymentName, deploymentVersion);
+  const deploymentVersionPrefix = deploymentTokenName;
+  const deploymentChainName = String((exchangeContext as any)?.network?.name || 'Unknown');
+  const deploymentChainId = String((exchangeContext as any)?.network?.chainId ?? 'Unknown');
+  const deploymentKeyRequiredMessage = 'Account Private Key for Deployment Required';
+  const deploymentGuidanceMessage = useMemo(() => {
+    if (deploymentMode === 'mocked') {
+      return [
+        'Status: READY',
+        `Mocked Deployment: "${deploymentTokenName}" is ready for deployment.`,
+        'Contract Public Key: (pending)',
+        `Contract Name: ${deploymentTokenName}`,
+        `Network: ${deploymentChainName} (${deploymentChainId})`,
+        '',
+        'Set toggle radio button to Blockchain for real deployment execution',
+      ].join('\n');
+    }
+    return [
+      'Status: READY',
+      `Blockchain Deployment: "${deploymentTokenName}" is ready for deployment.`,
+      'Contract Public Key: (pending)',
+      `Contract Name: ${deploymentTokenName}`,
+      `Network: ${deploymentChainName} (${deploymentChainId})`,
+      '',
+      'Press Deploy to execute blockchain deployment',
+    ].join('\n');
+  }, [deploymentChainId, deploymentChainName, deploymentMode, deploymentTokenName]);
   const deploymentPathDisplayValue =
-    deploymentMode === 'mocked' ? 'Mocked Deployment' : localSourceDeploymentPath;
-  const deploymentVersionStatusMatch = deploymentStatus.match(/^(sPCoin(?:\.[^ ]+)?)( set for deployment\.)$/);
+    deploymentMode === 'mocked' ? 'Mocking Deployment' : localSourceDeploymentPath;
+  const deploymentVersionStatusMatch = deploymentStatus.match(/^(.+?)( set for deployment\.)$/);
   const deploymentScaffoldStatusMatch = deploymentStatus.match(
-    /^(Status \d+: )?(Deployment scaffold prepared for ")([^"]+)("\. Server-side deployment automation is not connected yet\.)$/,
+    /^Status: (\d+)\r?\nMocked Deployment: ([\s\S]*?)\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
+  );
+  const deploymentMockingStatusMatch = deploymentStatus.match(
+    /^Status: (.+)\r?\nMocked Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
+  );
+  const deploymentReadyStatusMatch = deploymentStatus.match(
+    /^Status: (.+)\r?\nBlockchain Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nPress Deploy to execute blockchain deployment$/,
   );
   const deploymentErrorStatusMatch = deploymentStatus.match(/^(\*Error:)(.*)$/);
   const deploymentEmptyKeyStatusMatch = deploymentStatus.match(
@@ -159,27 +211,38 @@ export default function SpCoinAccessControllerPage() {
     value
       .replace(/[^0-9.]/g, '')
       .replace(/\.{2,}/g, '.');
-
-  const handleDeploy = async () => {
-    const normalizedName = deploymentName.trim() || 'sPCoin';
-    const normalizedVersion = deploymentVersion.trim();
-    const deploymentContractName = buildDeploymentTokenName(normalizedName, normalizedVersion);
-    if (deploymentContractName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
-      setDeploymentStatus(
-        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
-      );
-      setDeploymentStatusIsError(true);
-      setDeploymentFlashError(true);
+  const adjustDeploymentDecimals = (direction: 1 | -1) => {
+    const current = Number.parseInt(String(deploymentDecimals || '18'), 10);
+    const safeCurrent = Number.isFinite(current) ? current : 18;
+    const next = clampDeploymentDecimals(safeCurrent + direction);
+    setDeploymentDecimals(String(next));
+  };
+  const handleDeploymentDecimalsInputChange = (nextValue: string) => {
+    const digitsOnly = String(nextValue || '').replace(/[^0-9]/g, '').slice(0, 3);
+    if (!digitsOnly) {
+      setDeploymentDecimals('0');
       return;
     }
+    const parsed = Number.parseInt(digitsOnly, 10);
+    setDeploymentDecimals(String(clampDeploymentDecimals(Number.isFinite(parsed) ? parsed : 0)));
+  };
+
+  const handleDeploy = async () => {
+    const normalizedName = deploymentName.trim() || 'Sponsor Coin';
+    const normalizedVersion = deploymentVersion.trim();
+    const normalizedSymbol = deploymentSymbol.trim() || 'SPCOIN';
+    const normalizedDecimals = clampDeploymentDecimals(
+      Number.parseInt(String(deploymentDecimals || '18'), 10) || 18,
+    );
+    const deploymentContractName = buildDeploymentTokenName(normalizedName, normalizedVersion);
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
     if (!isValidPrivateKey) {
       setDeploymentStatus(
         normalizedPrivateKey
-          ? `*Error: Invalid Account Private Key for deploymnet token "${deploymentContractName}"`
-          : `*Error: Empty Account Private Key for deploymnet token "${deploymentContractName}"`,
+          ? '*Error: Invalid Account Private Key'
+          : '*Error: Account Private Key is required for Deployment.',
       );
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
@@ -196,8 +259,12 @@ export default function SpCoinAccessControllerPage() {
         body: JSON.stringify({
           action: 'deploy',
           deploymentName: normalizedName,
+          deploymentSymbol: normalizedSymbol,
+          deploymentDecimals: normalizedDecimals,
           deploymentVersion: normalizedVersion,
           deploymentAccountPrivateKey: normalizedPrivateKey,
+          deploymentMode,
+          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
         }),
       });
       const data = (await response.json()) as ManagerResponse;
@@ -205,16 +272,6 @@ export default function SpCoinAccessControllerPage() {
         status: response.status,
         response: data,
       });
-      window.alert(
-        JSON.stringify(
-          {
-            status: response.status,
-            response: data,
-          },
-          null,
-          2,
-        ),
-      );
       if (!response.ok || !data.ok) {
         const message = data.message || 'Deployment request failed.';
         setDeploymentStatus(`*Error: Status ${response.status}: ${message}`);
@@ -222,12 +279,21 @@ export default function SpCoinAccessControllerPage() {
         setDeploymentFlashError(true);
         return;
       }
-      setDeploymentPublicKey(String(data.deploymentPublicKey || ''));
+      const contractPublicKey = String(data.deploymentPublicKey || '');
+      const statusMessage =
+        data.message ||
+        `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`;
+      setDeploymentPublicKey(contractPublicKey);
       setDeploymentStatus(
-        `Status ${response.status}: ${
-          data.message ||
-          `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`
-        }`,
+        [
+          `Status: ${response.status}`,
+          `Mocked Deployment: ${statusMessage}`,
+          `Contract Public Key: ${contractPublicKey || '(not returned)'}`,
+          `Contract Name: ${deploymentContractName}`,
+          `Network: ${deploymentChainName}`,
+          '',
+          'Set toggle radio button to Blockchain for real deployment execution',
+        ].join('\n'),
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment request failure';
@@ -251,14 +317,6 @@ export default function SpCoinAccessControllerPage() {
     nextSegments[lastIndex] = nextValue;
 
     const nextVersion = nextSegments.join('.');
-    const nextTokenName = buildDeploymentTokenName(deploymentName, nextVersion);
-    if (nextTokenName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
-      setDeploymentStatus(
-        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
-      );
-      setDeploymentStatusIsError(true);
-      return;
-    }
     setDeploymentStatusIsError(false);
     setDeploymentVersion(nextVersion);
   };
@@ -273,15 +331,6 @@ export default function SpCoinAccessControllerPage() {
 
     if (!VERSION_FORMAT_REGEX.test(trimmed)) {
       setDeploymentStatus(VERSION_FORMAT_ERROR);
-      setDeploymentStatusIsError(true);
-      return;
-    }
-
-    const nextTokenName = buildDeploymentTokenName(deploymentName, trimmed);
-    if (nextTokenName.length > DEPLOYMENT_TOKEN_NAME_MAX_LENGTH) {
-      setDeploymentStatus(
-        `*Error: Deployment token name cannot exceed ${DEPLOYMENT_TOKEN_NAME_MAX_LENGTH} characters.`,
-      );
       setDeploymentStatusIsError(true);
       return;
     }
@@ -398,9 +447,12 @@ export default function SpCoinAccessControllerPage() {
           (nextUseLocalPackage ? '/spCoinAccess' : '/node_modules/@sponsorcoin/spcoin-access-modules'),
       );
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
-      setDeploymentName(persisted.deploymentName || 'sPCoin');
+      setDeploymentName(persisted.deploymentName || 'Sponsor Coin');
+      setDeploymentSymbol(persisted.deploymentSymbol || 'SPCOIN');
+      setDeploymentDecimals(persisted.deploymentDecimals || '18');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
+      setDeploymentPublicKey(persisted.deploymentPublicKey || '');
       setDeploymentMode(persisted.deploymentMode || 'mocked');
       setLocalSourceDeploymentPath(persisted.localSourceDeploymentPath || DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
     } catch {
@@ -483,10 +535,17 @@ export default function SpCoinAccessControllerPage() {
   }, [flashTarget]);
 
   useEffect(() => {
+    const keyValidationMessage = getDeploymentKeyValidationMessage(deploymentAccountPrivateKey);
+    if (keyValidationMessage) {
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+      setDeploymentStatus(keyValidationMessage);
+      return;
+    }
     setDeploymentStatusIsError(false);
-    setDeploymentStatus(`${deploymentVersionPrefix} set for deployment.`);
-    setDeploymentPublicKey('');
-  }, [deploymentVersionPrefix]);
+    setDeploymentFlashError(false);
+    setDeploymentStatus(deploymentGuidanceMessage);
+  }, [deploymentGuidanceMessage]);
 
   useEffect(() => {
     persistNpmSource(sourceRoot);
@@ -502,8 +561,11 @@ export default function SpCoinAccessControllerPage() {
       sourceRoot,
       localInstallSourceRoot,
       deploymentName,
+      deploymentSymbol,
+      deploymentDecimals,
       deploymentVersion,
       deploymentAccountPrivateKey,
+      deploymentPublicKey,
       deploymentMode,
       localSourceDeploymentPath,
     };
@@ -513,6 +575,9 @@ export default function SpCoinAccessControllerPage() {
     deploymentAccountPrivateKey,
     deploymentMode,
     deploymentName,
+    deploymentSymbol,
+    deploymentDecimals,
+    deploymentPublicKey,
     localSourceDeploymentPath,
     deploymentVersion,
     localInstallSourceRoot,
@@ -666,12 +731,23 @@ export default function SpCoinAccessControllerPage() {
   };
 
   const handleDeploymentPrivateKeyChange = (nextValue: string) => {
-    setDeploymentAccountPrivateKey(nextValue.trim());
+    setDeploymentAccountPrivateKey(nextValue);
     setDeploymentPublicKey('');
-    if (!deploymentStatusIsError && !deploymentFlashError) return;
+  };
+  const handleDeploymentPrivateKeyBlur = () => {
+    const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
+    setDeploymentAccountPrivateKey(normalizedPrivateKey);
+    const keyValidationMessage = getDeploymentKeyValidationMessage(normalizedPrivateKey);
+    if (keyValidationMessage) {
+      setDeploymentStatus(keyValidationMessage);
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+      return;
+    }
+
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
-    setDeploymentStatus(`${deploymentVersionPrefix} set for deployment.`);
+    setDeploymentStatus(deploymentGuidanceMessage);
   };
 
   return (
@@ -916,20 +992,19 @@ export default function SpCoinAccessControllerPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Deployment Contract</span>
-                    <select
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Name</span>
+                    <input
+                      type="text"
                       value={deploymentName}
                       onChange={(event) => setDeploymentName(event.target.value)}
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                    >
-                      <option value="sPCoin">sPCoin</option>
-                    </select>
+                    />
                   </label>
 
                   <label className="block">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
-                      <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
+                    <div className="mb-2 flex items-center justify-between gap-4">
+                      <span className="block text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+                      <div className="flex items-center justify-end gap-4 text-sm">
                         <label className="flex items-center gap-2 text-[#8FA8FF]">
                           <input
                             type="radio"
@@ -954,14 +1029,61 @@ export default function SpCoinAccessControllerPage() {
                         </label>
                       </div>
                     </div>
+                    <input
+                      type="text"
+                      value={deploymentSymbol}
+                      onChange={(event) => setDeploymentSymbol(event.target.value)}
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-[auto_auto_minmax(260px,2fr)] md:items-end">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Decimals</span>
+                    <div className="flex items-stretch">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={3}
+                        value={deploymentDecimals}
+                        onChange={(event) => handleDeploymentDecimalsInputChange(event.target.value)}
+                        className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      />
+                      <div className="flex w-[44px] flex-col">
+                        <button
+                          type="button"
+                          onClick={() => adjustDeploymentDecimals(1)}
+                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                          title="Increment Decimals"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => adjustDeploymentDecimals(-1)}
+                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                          title="Decrement Decimals"
+                        >
+                          -
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
+                    </div>
                     <div className="flex items-stretch">
                       <input
                         type="text"
                         inputMode="decimal"
+                        maxLength={8}
                         value={deploymentVersion}
                         onChange={(event) => handleDeploymentVersionInputChange(event.target.value)}
                         placeholder="Add optional Version"
-                        className="w-full rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                       />
                       <div className="flex w-[44px] flex-col">
                         <button
@@ -983,11 +1105,9 @@ export default function SpCoinAccessControllerPage() {
                       </div>
                     </div>
                   </label>
-                </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
                     <input
                       type="text"
                       value={deploymentPathDisplayValue}
@@ -1021,7 +1141,8 @@ export default function SpCoinAccessControllerPage() {
                       type="text"
                       value={deploymentAccountPrivateKey}
                       onChange={(event) => handleDeploymentPrivateKeyChange(event.target.value)}
-                      placeholder="Private Key for Account Deployment Required"
+                      onBlur={handleDeploymentPrivateKeyBlur}
+                      placeholder={deploymentKeyRequiredMessage}
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
                   </label>
@@ -1052,10 +1173,52 @@ export default function SpCoinAccessControllerPage() {
                         </>
                       ) : !deploymentStatusIsError && deploymentScaffoldStatusMatch ? (
                         <>
-                          {deploymentScaffoldStatusMatch[1] ? <span>{deploymentScaffoldStatusMatch[1]}</span> : null}
-                          <span>{deploymentScaffoldStatusMatch[2]}</span>
-                          <span className="font-semibold text-green-400">{deploymentScaffoldStatusMatch[3]}</span>
-                          <span>{deploymentScaffoldStatusMatch[4]}</span>
+                          <span>{`Status: ${deploymentScaffoldStatusMatch[1]}`}</span>
+                          <br />
+                          <span>{`Mocked Deployment: ${deploymentScaffoldStatusMatch[2]}`}</span>
+                          <br />
+                          <span>{`Contract Public Key: ${deploymentScaffoldStatusMatch[3]}`}</span>
+                          <br />
+                          <span>{`Contract Name: ${deploymentScaffoldStatusMatch[4]}`}</span>
+                          <br />
+                          <span>{`Network: ${deploymentScaffoldStatusMatch[5]}`}</span>
+                          <br />
+                          <br />
+                          <span>Set toggle radio button to Blockchain for real deployment execution</span>
+                        </>
+                      ) : !deploymentStatusIsError && deploymentMockingStatusMatch ? (
+                        <>
+                          <span>{`Status: ${deploymentMockingStatusMatch[1]}`}</span>
+                          <br />
+                          <span>Mocked Deployment: "</span>
+                          <span className="font-semibold text-green-400">{deploymentMockingStatusMatch[2]}</span>
+                          <span>" is ready for deployment.</span>
+                          <br />
+                          <span>{`Contract Public Key: ${deploymentMockingStatusMatch[3]}`}</span>
+                          <br />
+                          <span>{`Contract Name: ${deploymentMockingStatusMatch[4]}`}</span>
+                          <br />
+                          <span>{`Network: ${deploymentMockingStatusMatch[5]}`}</span>
+                          <br />
+                          <br />
+                          <span>Set toggle radio button to Blockchain for real deployment execution</span>
+                        </>
+                      ) : !deploymentStatusIsError && deploymentReadyStatusMatch ? (
+                        <>
+                          <span>{`Status: ${deploymentReadyStatusMatch[1]}`}</span>
+                          <br />
+                          <span>Blockchain Deployment: "</span>
+                          <span className="font-semibold text-green-400">{deploymentReadyStatusMatch[2]}</span>
+                          <span>" is ready for deployment.</span>
+                          <br />
+                          <span>{`Contract Public Key: ${deploymentReadyStatusMatch[3]}`}</span>
+                          <br />
+                          <span>{`Contract Name: ${deploymentReadyStatusMatch[4]}`}</span>
+                          <br />
+                          <span>{`Network: ${deploymentReadyStatusMatch[5]}`}</span>
+                          <br />
+                          <br />
+                          <span>Press Deploy to execute blockchain deployment</span>
                         </>
                       ) : deploymentStatusIsError && deploymentEmptyKeyStatusMatch ? (
                         <>
