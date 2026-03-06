@@ -990,7 +990,7 @@ export default function SpCoinAccessControllerPage() {
                   <div />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Name</span>
                     <input
