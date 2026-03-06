@@ -14,7 +14,7 @@ type ManagerResponse = {
   packageName?: string;
   installSourceRoot?: string;
   workspaceRoot?: string;
-  action?: 'upload' | 'download' | 'deploy';
+  action?: 'upload' | 'download' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
   downloadBlocked?: boolean;
@@ -80,6 +80,7 @@ export default function SpCoinAccessControllerPage() {
   const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
   const [localSourceDeploymentPath, setLocalSourceDeploymentPath] = useState(DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
   const [deploymentPublicKey, setDeploymentPublicKey] = useState('');
+  const [deploymentLogoPath, setDeploymentLogoPath] = useState('/public/assets/miscellaneous/spCoin.png');
   const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess');
   const [localInstallSourceRootError, setLocalInstallSourceRootError] = useState('');
   const [sourceRoot, setSourceRoot] = useState(
@@ -136,10 +137,21 @@ export default function SpCoinAccessControllerPage() {
       </>
     );
   };
-  const buildDeploymentTokenName = (name: string, version: string) => {
-    const normalizedName = String(name || '').trim() || 'Sponsor Coin';
+  const getDeploymentVersionTag = (version: string) => {
     const normalizedVersion = String(version || '').trim();
-    return normalizedVersion ? `${normalizedName} V ${normalizedVersion}` : normalizedName;
+    return normalizedVersion ? `V${normalizedVersion}` : '';
+  };
+  const buildDeploymentNameFromVersion = (version: string) => {
+    const tag = getDeploymentVersionTag(version);
+    return `Sponsor Coin ${tag}`.trim();
+  };
+  const buildDeploymentSymbolFromVersion = (version: string) => {
+    const tag = getDeploymentVersionTag(version);
+    return tag ? `SPCOIN_${tag}` : 'SPCOIN';
+  };
+  const buildDeploymentTokenName = (name: string) => {
+    const normalizedName = String(name || '').trim() || 'Sponsor Coin';
+    return normalizedName;
   };
   const clampDeploymentDecimals = (value: number) => Math.min(255, Math.max(0, value));
   const getDeploymentKeyValidationMessage = (rawKey: string) => {
@@ -152,7 +164,7 @@ export default function SpCoinAccessControllerPage() {
     }
     return '';
   };
-  const deploymentTokenName = buildDeploymentTokenName(deploymentName, deploymentVersion);
+  const deploymentTokenName = buildDeploymentTokenName(deploymentName);
   const deploymentVersionPrefix = deploymentTokenName;
   const deploymentChainName = String((exchangeContext as any)?.network?.name || 'Unknown');
   const deploymentChainId = String((exchangeContext as any)?.network?.chainId ?? 'Unknown');
@@ -228,13 +240,13 @@ export default function SpCoinAccessControllerPage() {
   };
 
   const handleDeploy = async () => {
-    const normalizedName = deploymentName.trim() || 'Sponsor Coin';
+    const normalizedName = deploymentName.trim() || buildDeploymentNameFromVersion(deploymentVersion);
     const normalizedVersion = deploymentVersion.trim();
-    const normalizedSymbol = deploymentSymbol.trim() || 'SPCOIN';
+    const normalizedSymbol = deploymentSymbol.trim() || buildDeploymentSymbolFromVersion(deploymentVersion);
     const normalizedDecimals = clampDeploymentDecimals(
       Number.parseInt(String(deploymentDecimals || '18'), 10) || 18,
     );
-    const deploymentContractName = buildDeploymentTokenName(normalizedName, normalizedVersion);
+    const deploymentContractName = buildDeploymentTokenName(normalizedName);
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
@@ -297,6 +309,40 @@ export default function SpCoinAccessControllerPage() {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment request failure';
+      setDeploymentStatus(`*Error: ${message}`);
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+    }
+  };
+  const handleUpdateServer = async () => {
+    setDeploymentStatus('Token updating on server.');
+    setDeploymentStatusIsError(false);
+    setDeploymentFlashError(false);
+    try {
+      const response = await fetch('/api/spCoin/access-manager', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateServer',
+          deploymentName: deploymentName.trim() || 'Sponsor Coin',
+          deploymentVersion: deploymentVersion.trim(),
+          deploymentSymbol: deploymentSymbol.trim() || 'SPCOIN',
+          deploymentDecimals: deploymentDecimals,
+          deploymentLogoPath: deploymentLogoPath,
+          deploymentPublicKey: deploymentPublicKey,
+          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+        }),
+      });
+      const data = (await response.json()) as ManagerResponse;
+      if (!response.ok || !data.ok) {
+        setDeploymentStatus(`*Error: ${data.message || 'Failed to update token metadata on server.'}`);
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        return;
+      }
+      setDeploymentStatus(String(data.message || 'Server update completed.'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown server update failure';
       setDeploymentStatus(`*Error: ${message}`);
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
@@ -419,6 +465,11 @@ export default function SpCoinAccessControllerPage() {
   }, []);
 
   useEffect(() => {
+    setDeploymentName(buildDeploymentNameFromVersion(deploymentVersion));
+    setDeploymentSymbol(buildDeploymentSymbolFromVersion(deploymentVersion));
+  }, [deploymentVersion]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     try {
@@ -447,8 +498,6 @@ export default function SpCoinAccessControllerPage() {
           (nextUseLocalPackage ? '/spCoinAccess' : '/node_modules/@sponsorcoin/spcoin-access-modules'),
       );
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
-      setDeploymentName(persisted.deploymentName || 'Sponsor Coin');
-      setDeploymentSymbol(persisted.deploymentSymbol || 'SPCOIN');
       setDeploymentDecimals(persisted.deploymentDecimals || '18');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
@@ -782,88 +831,52 @@ export default function SpCoinAccessControllerPage() {
                   <h3 className="text-xl font-semibold text-[#8FA8FF]">Node Package Manager</h3>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">NPM Package</span>
-                    <select
-                      value={selectedPackage}
-                      onChange={(event) => handlePackagePersist(event.target.value)}
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                    >
-                      {availablePackages.length > 0 ? (
-                        availablePackages.map((packageName) => (
-                          <option key={packageName} value={packageName}>
-                            {packageName}
-                          </option>
-                        ))
-                      ) : (
-                        <option value={selectedPackage}>{selectedPackage}</option>
-                      )}
-                    </select>
-                  </label>
-
-                  <label className="block">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
-                      <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
-                        <label className="flex items-center gap-2 text-[#8FA8FF]">
-                          <input
-                            type="radio"
-                            name="package-source-mode"
-                            value="local"
-                            checked={managerSettings.useLocalPackage}
-                            onChange={() => void handlePackageSourceModeChange('local')}
-                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                          />
-                          <span>Local</span>
-                        </label>
-                        <label className="flex items-center gap-2 text-[#8FA8FF]">
-                          <input
-                            type="radio"
-                            name="package-source-mode"
-                            value="node_modules"
-                            checked={!managerSettings.useLocalPackage}
-                            onChange={() => void handlePackageSourceModeChange('node_modules')}
-                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                          />
-                          <span>node_modules</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div className="flex items-stretch">
+                <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">NPM Package</span>
+                  <select
+                    value={selectedPackage}
+                    onChange={(event) => handlePackagePersist(event.target.value)}
+                    className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  >
+                    {availablePackages.length > 0 ? (
+                      availablePackages.map((packageName) => (
+                        <option key={packageName} value={packageName}>
+                          {packageName}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={selectedPackage}>{selectedPackage}</option>
+                    )}
+                  </select>
+                  <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
                       <input
-                        type="text"
-                        inputMode="decimal"
-                        value={versionInput}
-                        onChange={(event) => handleVersionInputChange(event.target.value)}
-                        onBlur={handleVersionPersist}
-                        placeholder="0.0.1"
-                        className="w-full rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        type="radio"
+                        name="package-source-mode"
+                        value="local"
+                        checked={managerSettings.useLocalPackage}
+                        onChange={() => void handlePackageSourceModeChange('local')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                       />
-                      <div className="flex w-[44px] flex-col">
-                        <button
-                          type="button"
-                          onClick={() => adjustVersion(1)}
-                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Increment Version"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustVersion(-1)}
-                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Decrement Version"
-                        >
-                          -
-                        </button>
-                      </div>
-                    </div>
-                  </label>
+                      <span>Local</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                      <input
+                        type="radio"
+                        name="package-source-mode"
+                        value="node_modules"
+                        checked={!managerSettings.useLocalPackage}
+                        onChange={() => void handlePackageSourceModeChange('node_modules')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span>node_modules</span>
+                    </label>
+                  </div>
+
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <div className="grid gap-2">
+                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Install Path</span>
                     <input
                       type="text"
@@ -888,7 +901,39 @@ export default function SpCoinAccessControllerPage() {
                       }`}
                       title="Enter local source install path"
                     />
-                  </label>
+                    <label className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
+                      <div className="flex items-stretch">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={versionInput}
+                          onChange={(event) => handleVersionInputChange(event.target.value)}
+                          onBlur={handleVersionPersist}
+                          placeholder="0.0.1"
+                          className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        />
+                        <div className="flex w-[44px] flex-col">
+                          <button
+                            type="button"
+                            onClick={() => adjustVersion(1)}
+                            className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Increment Version"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adjustVersion(-1)}
+                            className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Decrement Version"
+                          >
+                            -
+                          </button>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
@@ -996,7 +1041,7 @@ export default function SpCoinAccessControllerPage() {
                     <input
                       type="text"
                       value={deploymentName}
-                      onChange={(event) => setDeploymentName(event.target.value)}
+                      readOnly
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
                   </label>
@@ -1033,7 +1078,7 @@ export default function SpCoinAccessControllerPage() {
                     <input
                       type="text"
                       value={deploymentSymbol}
-                      onChange={(event) => setDeploymentSymbol(event.target.value)}
+                      readOnly
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
                   </label>
@@ -1160,6 +1205,23 @@ export default function SpCoinAccessControllerPage() {
                       className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
                     />
                   </label>
+
+                  <div className="grid items-center gap-3 md:grid-cols-[auto_auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={() => void handleUpdateServer()}
+                      className="rounded-xl bg-[#EBCA6A] px-4 py-3 font-semibold text-black transition-colors hover:bg-[#F4D883]"
+                    >
+                      Update Server
+                    </button>
+                    <span className="text-sm font-semibold text-[#8FA8FF]">spCoin Logo</span>
+                    <input
+                      type="text"
+                      value={deploymentLogoPath}
+                      onChange={(event) => setDeploymentLogoPath(event.target.value)}
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                  </div>
 
                 </div>
 

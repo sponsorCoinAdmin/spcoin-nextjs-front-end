@@ -19,11 +19,15 @@ const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 type AccessManagerRequest = {
-  action?: 'upload' | 'download' | 'deploy';
+  action?: 'upload' | 'download' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
   deploymentName?: string;
+  deploymentSymbol?: string;
+  deploymentDecimals?: number | string;
+  deploymentLogoPath?: string;
+  deploymentPublicKey?: string;
   deploymentVersion?: string;
   deploymentAccountPrivateKey?: string;
   deploymentMode?: 'mocked' | 'blockcain';
@@ -32,7 +36,7 @@ type AccessManagerRequest = {
 
 type AccessManagerResponse = {
   ok: boolean;
-  action?: 'upload' | 'download' | 'deploy';
+  action?: 'upload' | 'download' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
@@ -731,6 +735,81 @@ async function handleDeploy(
   };
 }
 
+function normalizePublicAssetPath(input: string) {
+  const raw = String(input || '').trim().replace(/\\/g, '/');
+  if (!raw) return 'assets/miscellaneous/spCoin.png';
+  const withoutLeadingSlash = raw.replace(/^\/+/, '');
+  const withoutPublicPrefix = withoutLeadingSlash.replace(/^public\//i, '');
+  if (withoutPublicPrefix.includes('..')) {
+    throw new Error('Invalid logo path.');
+  }
+  return withoutPublicPrefix || 'assets/miscellaneous/spCoin.png';
+}
+
+async function handleUpdateServer(params: {
+  deploymentName: string;
+  deploymentSymbol: string;
+  deploymentVersion: string;
+  deploymentDecimals: number | string;
+  deploymentLogoPath: string;
+  deploymentPublicKey: string;
+  deploymentChainId?: number | string;
+}) {
+  const chainIdRaw = Number(params.deploymentChainId);
+  const chainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
+  const address = String(params.deploymentPublicKey || '').trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    throw new Error('Invalid deployment public key. Deploy token first.');
+  }
+
+  const version = String(params.deploymentVersion || '').trim() || 'N/A';
+  const versionTag = version === 'N/A' ? '' : `V${version}`;
+  const normalizedName = `Sponsor Coin ${versionTag}`.trim();
+  const normalizedSymbol = versionTag ? `SPCOIN_${versionTag}` : 'SPCOIN';
+  const decimalsRaw = Number(params.deploymentDecimals);
+  const decimals =
+    Number.isFinite(decimalsRaw) && decimalsRaw >= 0 ? Math.min(255, Math.floor(decimalsRaw)) : 18;
+
+  const contractDir = path.join(
+    process.cwd(),
+    'public',
+    'assets',
+    'blockchains',
+    String(chainId),
+    'contracts',
+    address,
+  );
+  await fs.mkdir(contractDir, { recursive: true });
+
+  const sourceLogoRelative = normalizePublicAssetPath(params.deploymentLogoPath);
+  const sourceLogoPath = path.join(process.cwd(), 'public', ...sourceLogoRelative.split('/'));
+  const logoPathRelative = `public/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+  const logoPathAbsolute = path.join(contractDir, 'logo.png');
+  await fs.copyFile(sourceLogoPath, logoPathAbsolute);
+
+  const date = new Date().toISOString();
+  const metadata = {
+    name: normalizedName,
+    website: 'N/A',
+    description: `Sponsor Coin Token, Version ${version} created on ${date}`,
+    explorer: 'N/A',
+    symbol: normalizedSymbol,
+    decimals,
+    status: 'active',
+    logoURL: logoPathRelative,
+    address,
+  };
+  const metadataPathRelative = `public/assets/blockchains/${chainId}/contracts/${address}/info.json`;
+  const metadataPathAbsolute = path.join(contractDir, 'info.json');
+  await fs.writeFile(metadataPathAbsolute, JSON.stringify(metadata, null, 2), 'utf8');
+
+  return {
+    metadataPathRelative,
+    logoPathRelative,
+    metadata,
+  };
+}
+
 function normalizeProjectRelativePath(input: string) {
   const trimmed = String(input || '').trim();
   if (!trimmed) return '';
@@ -816,10 +895,55 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as AccessManagerRequest;
-  const action = body.action === 'upload' ? 'upload' : body.action === 'deploy' ? 'deploy' : 'download';
+  const action =
+    body.action === 'upload'
+      ? 'upload'
+      : body.action === 'deploy'
+      ? 'deploy'
+      : body.action === 'updateServer'
+      ? 'updateServer'
+      : 'download';
   const mode = body.mode === 'node_modules' ? 'node_modules' : 'local';
   const requestedVersion = String(body.version || 'latest').trim() || 'latest';
   const packageName = String(body.packageName || '').trim();
+
+  if (action === 'updateServer') {
+    try {
+      const result = await handleUpdateServer({
+        deploymentName: String(body.deploymentName || '').trim(),
+        deploymentSymbol: String(body.deploymentSymbol || '').trim(),
+        deploymentVersion: String(body.deploymentVersion || '').trim(),
+        deploymentDecimals: body.deploymentDecimals ?? '18',
+        deploymentLogoPath: String(body.deploymentLogoPath || '/public/assets/miscellaneous/spCoin.png'),
+        deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+        deploymentChainId: body.deploymentChainId,
+      });
+      return NextResponse.json({
+        ok: true,
+        action,
+        mode,
+        message: [
+          `SponsorCoin Meta Data and Image uploader to server at:`,
+          result.metadataPathRelative,
+          result.logoPathRelative,
+          '',
+          'MetaData:',
+          JSON.stringify(result.metadata, null, 2),
+        ].join('\n'),
+      } satisfies AccessManagerResponse);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown server update failure.';
+      return NextResponse.json(
+        {
+          ok: false,
+          action,
+          mode,
+          message: `*Error: ${message}`,
+        } satisfies AccessManagerResponse,
+        { status: 500 },
+      );
+    }
+  }
 
   if (action === 'deploy') {
     const deploymentName = String(body.deploymentName || '').trim();
