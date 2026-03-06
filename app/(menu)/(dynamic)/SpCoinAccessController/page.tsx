@@ -1004,7 +1004,7 @@ export default function SpCoinAccessControllerPage() {
                   <label className="block">
                     <div className="mb-2 flex items-center justify-between gap-4">
                       <span className="block text-sm font-semibold text-[#8FA8FF]">Symbol</span>
-                      <div className="flex items-center justify-end gap-4 text-sm">
+                <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
                         <label className="flex items-center gap-2 text-[#8FA8FF]">
                           <input
                             type="radio"
