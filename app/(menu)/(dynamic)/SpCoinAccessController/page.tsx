@@ -990,9 +990,9 @@ export default function SpCoinAccessControllerPage() {
                   <div />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Name</span>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
                     <input
                       type="text"
                       value={deploymentName}
@@ -1001,111 +1001,110 @@ export default function SpCoinAccessControllerPage() {
                     />
                   </label>
 
-                  <label className="block">
-                    <div className="mb-2 flex items-center justify-between gap-4">
-                      <span className="block text-sm font-semibold text-[#8FA8FF]">Symbol</span>
-                <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
-                        <label className="flex items-center gap-2 text-[#8FA8FF]">
-                          <input
-                            type="radio"
-                            name="deployment-mode"
-                            value="mocked"
-                            checked={deploymentMode === 'mocked'}
-                            onChange={() => setDeploymentMode('mocked')}
-                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                          />
-                          <span>Mocked</span>
-                        </label>
-                        <label className="flex items-center gap-2 text-[#8FA8FF]">
-                          <input
-                            type="radio"
-                            name="deployment-mode"
-                            value="blockcain"
-                            checked={deploymentMode === 'blockcain'}
-                            onChange={() => setDeploymentMode('blockcain')}
-                            className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                          />
-                          <span>Blockcain</span>
-                        </label>
-                      </div>
-                    </div>
+                  <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                      <input
+                        type="radio"
+                        name="deployment-mode"
+                        value="mocked"
+                        checked={deploymentMode === 'mocked'}
+                        onChange={() => setDeploymentMode('mocked')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span>Mocked</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                      <input
+                        type="radio"
+                        name="deployment-mode"
+                        value="blockcain"
+                        checked={deploymentMode === 'blockcain'}
+                        onChange={() => setDeploymentMode('blockcain')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span>Blockcain</span>
+                    </label>
+                  </div>
+
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
                     <input
                       type="text"
                       value={deploymentSymbol}
                       onChange={(event) => setDeploymentSymbol(event.target.value)}
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF] md:w-[30ch] md:min-w-[30ch]"
                     />
                   </label>
+
+                  <div className="grid gap-4 md:grid-cols-[auto_auto]">
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Decimals</span>
+                      <div className="flex items-stretch">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={3}
+                          value={deploymentDecimals}
+                          onChange={(event) => handleDeploymentDecimalsInputChange(event.target.value)}
+                          className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        />
+                        <div className="flex w-[44px] flex-col">
+                          <button
+                            type="button"
+                            onClick={() => adjustDeploymentDecimals(1)}
+                            className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Increment Decimals"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adjustDeploymentDecimals(-1)}
+                            className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Decrement Decimals"
+                          >
+                            -
+                          </button>
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
+                      <div className="flex items-stretch">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          maxLength={8}
+                          value={deploymentVersion}
+                          onChange={(event) => handleDeploymentVersionInputChange(event.target.value)}
+                          placeholder="Add optional Version"
+                          className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        />
+                        <div className="flex w-[44px] flex-col">
+                          <button
+                            type="button"
+                            onClick={() => adjustDeploymentVersion(1)}
+                            className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Increment Contract Version"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adjustDeploymentVersion(-1)}
+                            className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                            title="Decrement Contract Version"
+                          >
+                            -
+                          </button>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[auto_auto_minmax(260px,2fr)] md:items-end">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Decimals</span>
-                    <div className="flex items-stretch">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={3}
-                        value={deploymentDecimals}
-                        onChange={(event) => handleDeploymentDecimalsInputChange(event.target.value)}
-                        className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                      />
-                      <div className="flex w-[44px] flex-col">
-                        <button
-                          type="button"
-                          onClick={() => adjustDeploymentDecimals(1)}
-                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Increment Decimals"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustDeploymentDecimals(-1)}
-                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Decrement Decimals"
-                        >
-                          -
-                        </button>
-                      </div>
-                    </div>
-                  </label>
-
-                  <label className="block">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="block text-sm font-semibold text-[#8FA8FF]">Version</span>
-                    </div>
-                    <div className="flex items-stretch">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        maxLength={8}
-                        value={deploymentVersion}
-                        onChange={(event) => handleDeploymentVersionInputChange(event.target.value)}
-                        placeholder="Add optional Version"
-                        className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                      />
-                      <div className="flex w-[44px] flex-col">
-                        <button
-                          type="button"
-                          onClick={() => adjustDeploymentVersion(1)}
-                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Increment Contract Version"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustDeploymentVersion(-1)}
-                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Decrement Contract Version"
-                        >
-                          -
-                        </button>
-                      </div>
-                    </div>
-                  </label>
-
+                <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
                   <label className="block">
                     <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
                     <input
