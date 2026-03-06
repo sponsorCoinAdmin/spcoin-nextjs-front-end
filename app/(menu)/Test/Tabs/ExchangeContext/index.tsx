@@ -108,11 +108,30 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
           ? realTestPage.TEST_PAGE_TOKEN_LISTS
           : false,
     };
-    return {
-      ...realSettings,
-      testPage: normalizedTestPage,
-      spCoinPanelTree: treeWithNames,
+    const ordered: Record<string, unknown> = {};
+    const push = (key: string, value: unknown) => {
+      if (typeof value !== 'undefined') ordered[key] = value;
     };
+
+    // Keep settings display order stable and intentional.
+    push('apiTradingProvider', realSettings.apiTradingProvider);
+    push('NPM_Source', realSettings.NPM_Source);
+    push('showTestNets', realSettings.showTestNets);
+    push('spCoinPanelSchemaVersion', realSettings.spCoinPanelSchemaVersion);
+    push('spCoinPanelTree', treeWithNames);
+    push('displayStack', realSettings.displayStack);
+    push('spCoinAccessManager', realSettings.spCoinAccessManager);
+    push('testPage', normalizedTestPage);
+    push('visiblePanelTreeMembers', realSettings.visiblePanelTreeMembers);
+
+    const included = new Set(Object.keys(ordered));
+    for (const [key, value] of Object.entries(realSettings)) {
+      if (!included.has(key)) {
+        ordered[key] = value;
+      }
+    }
+
+    return ordered;
   }, [exchangeContext, treeWithNames]);
 
   return (

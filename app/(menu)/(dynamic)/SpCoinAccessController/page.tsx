@@ -10,6 +10,7 @@ type ManagerResponse = {
   message?: string;
   packages?: string[];
   packageName?: string;
+  installSourceRoot?: string;
   workspaceRoot?: string;
   action?: 'upload' | 'download' | 'deploy';
   mode?: 'local' | 'node_modules';
@@ -19,6 +20,8 @@ type ManagerResponse = {
   deploymentTokenName?: string;
   deploymentPublicKey?: string;
   deploymentPrivateKey?: string;
+  localPath?: string;
+  localPathExists?: boolean;
 };
 
 type SpCoinAccessStorage = {
@@ -67,10 +70,11 @@ export default function SpCoinAccessControllerPage() {
   const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
   const [localSourceDeploymentPath, setLocalSourceDeploymentPath] = useState(DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
   const [deploymentPublicKey, setDeploymentPublicKey] = useState('');
-  const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess/spCoinNpmSource');
+  const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess');
   const [localInstallSourceRootError, setLocalInstallSourceRootError] = useState('');
   const [sourceRoot, setSourceRoot] = useState(
-    managerSettings.useLocalPackage ? '/spCoinAccess/spCoinNpmSource' : '/node_modules/@spCoinNpmSource',
+    settings.NPM_Source ||
+      (managerSettings.useLocalPackage ? '/spCoinAccess' : '/node_modules/@sponsorcoin/spcoin-access-modules'),
   );
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [uploadBlocked, setUploadBlocked] = useState(true);
@@ -93,6 +97,18 @@ export default function SpCoinAccessControllerPage() {
     const isValid = normalized.startsWith('/spCoinAccess');
     setLocalInstallSourceRootError(isValid ? '' : 'Path Not found');
     return isValid;
+  };
+  const checkLocalDirectoryExists = async (localPath: string) => {
+    try {
+      const params = new URLSearchParams({ localPath });
+      const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+        method: 'GET',
+      });
+      const data = (await response.json()) as ManagerResponse;
+      return response.ok && data.ok && data.localPathExists === true;
+    } catch {
+      return false;
+    }
   };
   const renderErrorWordInRed = (message: string) => {
     const parts = String(message || '').split(/(Error:?)/g);
@@ -308,6 +324,21 @@ export default function SpCoinAccessControllerPage() {
     }));
   };
 
+  const persistNpmSource = (nextSource: string) => {
+    const fallback = managerSettings.useLocalPackage
+      ? '/spCoinAccess'
+      : '/node_modules/@sponsorcoin/spcoin-access-modules';
+    const normalized = normalizeProjectRelativePath(nextSource, fallback);
+    setSettings((prev) =>
+      prev.NPM_Source === normalized
+        ? prev
+        : {
+            ...prev,
+            NPM_Source: normalized,
+          },
+    );
+  };
+
   const applyResolvedVersion = (nextVersion: string) => {
     const normalized = String(nextVersion || '').trim();
     if (!normalized) return;
@@ -363,9 +394,10 @@ export default function SpCoinAccessControllerPage() {
       setVersionInput(nextSelectedVersion);
       setSourceRoot(
         persisted.sourceRoot ||
-          (nextUseLocalPackage ? '/spCoinAccess/spCoinNpmSource' : '/node_modules/@spCoinNpmSource'),
+          settings.NPM_Source ||
+          (nextUseLocalPackage ? '/spCoinAccess' : '/node_modules/@sponsorcoin/spcoin-access-modules'),
       );
-      setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess/spCoinNpmSource');
+      setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
       setDeploymentName(persisted.deploymentName || 'sPCoin');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
@@ -457,6 +489,10 @@ export default function SpCoinAccessControllerPage() {
   }, [deploymentVersionPrefix]);
 
   useEffect(() => {
+    persistNpmSource(sourceRoot);
+  }, [persistNpmSource, sourceRoot, managerSettings.useLocalPackage]);
+
+  useEffect(() => {
     if (!hasHydratedStorageRef.current || typeof window === 'undefined') return;
 
     const persisted: SpCoinAccessStorage = {
@@ -497,11 +533,31 @@ export default function SpCoinAccessControllerPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [localInstallSourceRoot]);
 
-  const handlePackageSourceModeChange = (mode: 'local' | 'node_modules') => {
+  const handlePackageSourceModeChange = async (mode: 'local' | 'node_modules') => {
+    if (mode === 'local') {
+      const normalizedLocalPath = normalizeProjectRelativePath(
+        localInstallSourceRoot,
+        '/spCoinAccess',
+      );
+      const isPathShapeValid = validateLocalInstallSourceRoot(normalizedLocalPath);
+      if (!isPathShapeValid) {
+        setStatus('*Error: Local source path is invalid. Expected path under /spCoinAccess.');
+        return;
+      }
+
+      const exists = await checkLocalDirectoryExists(normalizedLocalPath);
+      if (!exists) {
+        setLocalInstallSourceRootError('Path Not found');
+        setStatus(`*Error: Local source directory does not exist: ${normalizedLocalPath}`);
+        return;
+      }
+      setLocalInstallSourceRootError('');
+    }
+
     const nextUseLocalPackage = mode === 'local';
     const nextSourcePath = nextUseLocalPackage
-      ? '/spCoinAccess/spCoinNpmSource'
-      : '/node_modules/@spCoinNpmSource';
+      ? '/spCoinAccess'
+      : '/node_modules/@sponsorcoin/spcoin-access-modules';
     setSourceRoot(nextSourcePath);
     persistManagerSettings({
       useLocalPackage: nextUseLocalPackage,
@@ -564,11 +620,6 @@ export default function SpCoinAccessControllerPage() {
   };
 
   const runManagerAction = async (action: 'download' | 'upload') => {
-    if (action === 'download' && downloadBlocked) {
-      triggerBlockedFlash('download');
-      return;
-    }
-
     if (action === 'upload' && uploadBlocked) {
       triggerBlockedFlash('upload');
       return;
@@ -598,6 +649,12 @@ export default function SpCoinAccessControllerPage() {
       }
       if (typeof data.uploadBlocked === 'boolean') {
         setUploadBlocked(data.uploadBlocked);
+      }
+      if (response.ok && data.ok && action === 'download') {
+        const defaultInstallSourceRoot = `/spCoinAccess/packages/${selectedPackage}`;
+        setSourceRoot(
+          normalizeProjectRelativePath(data.installSourceRoot || defaultInstallSourceRoot, defaultInstallSourceRoot),
+        );
       }
       setStatus(data.message ?? 'No response message returned.');
     } catch (error) {
@@ -679,7 +736,7 @@ export default function SpCoinAccessControllerPage() {
                             name="package-source-mode"
                             value="local"
                             checked={managerSettings.useLocalPackage}
-                            onChange={() => handlePackageSourceModeChange('local')}
+                            onChange={() => void handlePackageSourceModeChange('local')}
                             className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                           />
                           <span>Local</span>
@@ -690,7 +747,7 @@ export default function SpCoinAccessControllerPage() {
                             name="package-source-mode"
                             value="node_modules"
                             checked={!managerSettings.useLocalPackage}
-                            onChange={() => handlePackageSourceModeChange('node_modules')}
+                            onChange={() => void handlePackageSourceModeChange('node_modules')}
                             className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                           />
                           <span>node_modules</span>
@@ -742,7 +799,7 @@ export default function SpCoinAccessControllerPage() {
                         }
                       }}
                       onBlur={(event) => {
-                        const normalized = normalizeProjectRelativePath(event.target.value, '/spCoinAccess/spCoinNpmSource');
+                        const normalized = normalizeProjectRelativePath(event.target.value, '/spCoinAccess');
                         setLocalInstallSourceRoot(normalized);
                         if (!validateLocalInstallSourceRoot(normalized)) {
                           window.alert('Path Not found');
@@ -784,7 +841,7 @@ export default function SpCoinAccessControllerPage() {
                     disabled={Boolean(activeAction) || !selectedPackage}
                     title={
                       downloadBlocked
-                        ? 'Active Version Already DownLoaded'
+                        ? 'Revert local package from backup archive'
                         : 'Download selected package from NPM'
                     }
                     className={`rounded-xl px-4 py-3 font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
@@ -798,7 +855,7 @@ export default function SpCoinAccessControllerPage() {
                     {activeAction === 'download'
                       ? 'Working...'
                       : downloadBlocked
-                      ? 'DownLoad Disabled'
+                      ? `Revert Version ${selectedVersion}`
                       : 'Download From NPM Manager'}
                   </button>
                 </div>
@@ -814,8 +871,8 @@ export default function SpCoinAccessControllerPage() {
                           normalizeProjectRelativePath(
                             event.target.value,
                             managerSettings.useLocalPackage
-                              ? '/spCoinAccess/spCoinNpmSource'
-                              : '/node_modules/@spCoinNpmSource',
+                              ? '/spCoinAccess'
+                              : '/node_modules/@sponsorcoin/spcoin-access-modules',
                           ),
                         )
                       }
@@ -831,6 +888,11 @@ export default function SpCoinAccessControllerPage() {
                       <p className="leading-6">
                         Version set to{' '}
                         <span className="font-semibold text-green-400">{status.replace('Version set to ', '')}</span>
+                      </p>
+                    ) : status.startsWith('Success:') ? (
+                      <p className="leading-6 text-white">
+                        <span className="text-green-400">Success:</span>
+                        <span>{status.replace(/^Success:\s*/, ' ')}</span>
                       </p>
                     ) : (
                       <p className="leading-6 text-white">{renderErrorWordInRed(status)}</p>

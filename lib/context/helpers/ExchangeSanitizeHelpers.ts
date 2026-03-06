@@ -186,6 +186,16 @@ export const sanitizeExchangeContext = (
     ...prevSettings,
   };
 
+  if (
+    typeof sanitizedSettings.NPM_Source !== 'string' ||
+    sanitizedSettings.NPM_Source.trim().length === 0
+  ) {
+    sanitizedSettings.NPM_Source =
+      sanitizedSettings?.spCoinAccessManager?.useLocalPackage === false
+        ? '/node_modules/@sponsorcoin/spcoin-access-modules'
+        : '/spCoinAccess';
+  }
+
   // ✅ enforce single source of truth for displayStack (settings only)
   sanitizeDisplayStack(raw as any, sanitizedSettings);
   sanitizeTestPageSettings(prevSettings, sanitizedSettings);

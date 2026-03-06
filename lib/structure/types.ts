@@ -120,6 +120,9 @@ export type Settings = {
     selectedPackage?: string;
   };
 
+  /** Source root displayed by SpCoin Access Controller (Node Package Manager card). */
+  NPM_Source?: string;
+
   /** Test page UI selection persisted across reloads (mutually exclusive flags). */
   testPage?: {
     TEST_PAGE_EXCHANGE_CONTEXT: boolean;

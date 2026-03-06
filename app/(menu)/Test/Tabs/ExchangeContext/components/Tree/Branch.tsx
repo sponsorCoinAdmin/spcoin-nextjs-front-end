@@ -402,6 +402,77 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     );
   }
 
+  const isNpmSourceLeaf =
+    label === 'NPM_Source' &&
+    path === 'rest.settings.NPM_Source' &&
+    typeof guiValue === 'string';
+
+  if (isNpmSourceLeaf) {
+    const onToggleNpmSource = async () => {
+      const localPath = '/spCoinAccess';
+      const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
+      const isLocal = String(guiValue || '').trim() !== nodeModulesPath;
+      const nextPath = isLocal ? nodeModulesPath : localPath;
+
+      if (nextPath === localPath) {
+        try {
+          const params = new URLSearchParams({ localPath });
+          const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+            method: 'GET',
+          });
+          const data = (await response.json()) as { ok?: boolean; localPathExists?: boolean };
+          if (!response.ok || !data.ok || data.localPathExists !== true) {
+            window.alert(`Path Not found: ${localPath}`);
+            return;
+          }
+        } catch {
+          window.alert(`Path Not found: ${localPath}`);
+          return;
+        }
+      }
+
+      setExchangeContext(
+        (prev) => {
+          const currentManager = (prev as any)?.settings?.spCoinAccessManager ?? {};
+          return {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              NPM_Source: nextPath,
+              spCoinAccessManager: {
+                useLocalPackage: nextPath === localPath,
+                selectedVersion: String(currentManager.selectedVersion ?? '0.0.1'),
+                selectedPackage: String(
+                  currentManager.selectedPackage ?? '@sponsorcoin/spcoin-access-modules',
+                ),
+              },
+            },
+          };
+        },
+        'Branch:toggleNpmSource',
+      );
+    };
+
+    const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
+    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
+    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
+    const sourceLabel = isLocalSource ? 'NPM_Source(LOCAL)' : 'NPM_Source(NODE)';
+    return (
+      <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
+        <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+        <button
+          type="button"
+          onClick={() => void onToggleNpmSource()}
+          className="rounded px-1 text-left transition-colors hover:text-[#5981F3]"
+          title='Toggle NPM source between "Local" and "node_modules"'
+        >
+          {`${sourceLabel}: `}
+          <span className="text-[#5981F3]">{quoteIfString(guiValue)}</span>
+        </button>
+      </div>
+    );
+  }
+
   const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
 

@@ -69,6 +69,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
         selectedVersion: '0.0.1',
         selectedPackage: '@sponsorcoin/spcoin-access-modules',
       },
+      NPM_Source: '/spCoinAccess',
       testPage: {
         TEST_PAGE_EXCHANGE_CONTEXT: true,
         TEST_PAGE_FSM_TRACE: false,

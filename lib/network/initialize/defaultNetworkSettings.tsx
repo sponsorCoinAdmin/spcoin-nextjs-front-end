@@ -118,6 +118,7 @@ const getInitialContext = (
         TEST_PAGE_TO_DOS: false,
         TEST_PAGE_TOKEN_LISTS: false,
       },
+      NPM_Source: '/spCoinAccess',
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,

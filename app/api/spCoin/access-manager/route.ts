@@ -6,8 +6,7 @@ import { NextResponse } from 'next/server';
 import { Wallet } from 'ethers';
 
 const execAsync = promisify(exec);
-const LEGACY_WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinNpmSource');
-const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess', 'spCoinNpmSource');
+const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
 const PACKAGES_ROOT = path.join(WORKSPACE_ROOT, 'packages');
 const BACKUPS_ROOT = path.join(WORKSPACE_ROOT, 'backups');
 const SPONSORCOIN_SCOPE_DIR = path.join(process.cwd(), 'node_modules', '@sponsorcoin');
@@ -31,12 +30,15 @@ type AccessManagerResponse = {
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
+  installSourceRoot?: string;
   deploymentTokenName?: string;
   deploymentPublicKey?: string;
   deploymentPrivateKey?: string;
   message: string;
   packages?: string[];
   workspaceRoot?: string;
+  localPath?: string;
+  localPathExists?: boolean;
   downloadBlocked?: boolean;
   uploadBlocked?: boolean;
 };
@@ -71,20 +73,7 @@ async function runCommand(command: string, args: string[], cwd: string) {
 }
 
 async function ensureWorkspace() {
-  await fs.mkdir(path.dirname(WORKSPACE_ROOT), { recursive: true });
-  const workspaceExists = await fs
-    .access(WORKSPACE_ROOT)
-    .then(() => true)
-    .catch(() => false);
-  const legacyExists = await fs
-    .access(LEGACY_WORKSPACE_ROOT)
-    .then(() => true)
-    .catch(() => false);
-
-  if (!workspaceExists && legacyExists) {
-    await fs.rename(LEGACY_WORKSPACE_ROOT, WORKSPACE_ROOT);
-  }
-
+  await fs.mkdir(WORKSPACE_ROOT, { recursive: true });
   await fs.mkdir(PACKAGES_ROOT, { recursive: true });
   await fs.mkdir(BACKUPS_ROOT, { recursive: true });
 }
@@ -123,7 +112,6 @@ function getArchivePath(packageName: string, version: string) {
 }
 
 async function loadManagerState(): Promise<ManagerState> {
-  await ensureWorkspace();
   try {
     const raw = await fs.readFile(MANAGER_STATE_PATH, 'utf8');
     const parsed = JSON.parse(raw) as Partial<ManagerState>;
@@ -139,7 +127,6 @@ async function loadManagerState(): Promise<ManagerState> {
 }
 
 async function saveManagerState(state: ManagerState) {
-  await ensureWorkspace();
   await fs.writeFile(MANAGER_STATE_PATH, JSON.stringify(state, null, 2), 'utf8');
 }
 
@@ -183,7 +170,6 @@ async function writeLocalPackageVersion(packageName: string, nextVersion: string
 
 async function getPackageButtonState(packageName: string, requestedVersion: string) {
   assertSponsorcoinPackage(packageName);
-  await ensureWorkspace();
 
   const resolvedVersion = await resolveRequestedVersion(packageName, requestedVersion);
   const archiveExists = await fs
@@ -211,33 +197,7 @@ async function getPackageButtonState(packageName: string, requestedVersion: stri
   };
 }
 
-async function handleDownload(packageName: string, requestedVersion: string) {
-  assertSponsorcoinPackage(packageName);
-  await ensureWorkspace();
-
-  const resolvedVersion = await resolveRequestedVersion(packageName, requestedVersion);
-  const archivePath = getArchivePath(packageName, resolvedVersion);
-  const archiveExists = await fs
-    .access(archivePath)
-    .then(() => true)
-    .catch(() => false);
-
-  if (archiveExists) {
-    throw new Error(`Active download already exists for ${packageName}@${resolvedVersion}.`);
-  }
-
-  const spec = `${packageName}@${resolvedVersion}`;
-  const packResult = await runCommand(NPM_CMD, ['pack', spec], BACKUPS_ROOT);
-  const tarballName =
-    packResult.stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find((line) => line.endsWith('.tgz')) ?? '';
-
-  if (!tarballName.endsWith('.tgz')) {
-    throw new Error(`npm pack did not return a tarball name. Output: ${packResult.stdout || '(empty)'}`);
-  }
-
+async function extractArchiveToWorkspace(packageName: string, tarballName: string) {
   const extractRoot = path.join(
     BACKUPS_ROOT,
     `.extract-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -256,28 +216,84 @@ async function handleDownload(packageName: string, requestedVersion: string) {
     await fs.rm(workspaceDir, { recursive: true, force: true });
     await fs.rename(extractedPackageDir, workspaceDir);
 
-    const managerState = await loadManagerState();
-    managerState.packages[packageName] = {
-      downloadedVersion:
-        String(extractedPackageJson.version || resolvedVersion).trim() || resolvedVersion,
-      activeArchive: tarballName,
-    };
-    await saveManagerState(managerState);
-
     return {
-      tarballName,
       workspaceDir,
       resolvedVersion:
-        String(extractedPackageJson.version || resolvedVersion).trim() || resolvedVersion,
+        String(extractedPackageJson.version || '').trim() || '0.0.1',
     };
   } finally {
     await fs.rm(extractRoot, { recursive: true, force: true });
   }
 }
 
-async function handleUpload(packageName: string, requestedVersion: string) {
+async function handleDownload(packageName: string, requestedVersion: string) {
   assertSponsorcoinPackage(packageName);
   await ensureWorkspace();
+
+  const resolvedVersion = await resolveRequestedVersion(packageName, requestedVersion);
+  const archivePath = getArchivePath(packageName, resolvedVersion);
+  const archiveExists = await fs
+    .access(archivePath)
+    .then(() => true)
+    .catch(() => false);
+
+  const tarballName = getArchiveFileName(packageName, resolvedVersion);
+
+  if (archiveExists) {
+    const restored = await extractArchiveToWorkspace(packageName, tarballName);
+    const managerState = await loadManagerState();
+    managerState.packages[packageName] = {
+      downloadedVersion: restored.resolvedVersion,
+      activeArchive: tarballName,
+    };
+    await saveManagerState(managerState);
+
+    return {
+      tarballName,
+      workspaceDir: restored.workspaceDir,
+      resolvedVersion: restored.resolvedVersion,
+      reverted: true,
+    };
+  }
+
+  const spec = `${packageName}@${resolvedVersion}`;
+  const packResult = await runCommand(NPM_CMD, ['pack', spec], BACKUPS_ROOT);
+  const packedTarballName =
+    packResult.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.endsWith('.tgz')) ?? '';
+
+  if (!packedTarballName.endsWith('.tgz')) {
+    throw new Error(`npm pack did not return a tarball name. Output: ${packResult.stdout || '(empty)'}`);
+  }
+  const archiveNameToUse =
+    packedTarballName === tarballName ? packedTarballName : tarballName;
+  if (packedTarballName !== archiveNameToUse) {
+    await fs.rename(
+      path.join(BACKUPS_ROOT, packedTarballName),
+      path.join(BACKUPS_ROOT, archiveNameToUse),
+    );
+  }
+
+  const restored = await extractArchiveToWorkspace(packageName, archiveNameToUse);
+  const managerState = await loadManagerState();
+  managerState.packages[packageName] = {
+    downloadedVersion: restored.resolvedVersion,
+    activeArchive: archiveNameToUse,
+  };
+  await saveManagerState(managerState);
+
+  return {
+    tarballName: archiveNameToUse,
+    workspaceDir: restored.workspaceDir,
+    resolvedVersion: restored.resolvedVersion,
+    reverted: false,
+  };
+}
+
+async function handleUpload(packageName: string, requestedVersion: string) {
+  assertSponsorcoinPackage(packageName);
 
   const workspaceDir = getPackageWorkspaceDir(packageName);
   const packageJsonPath = path.join(workspaceDir, 'package.json');
@@ -370,11 +386,52 @@ async function handleDeploy(
   };
 }
 
+function normalizeProjectRelativePath(input: string) {
+  const trimmed = String(input || '').trim();
+  if (!trimmed) return '';
+  const withoutSlashes = trimmed.replace(/^\/+|\/+$/g, '');
+  return withoutSlashes ? `/${withoutSlashes}` : '';
+}
+
+async function checkLocalDirectoryExists(localPathRaw: string) {
+  const normalized = normalizeProjectRelativePath(localPathRaw);
+  if (!normalized) {
+    return { normalized, exists: false };
+  }
+
+  const relative = normalized.slice(1);
+  if (relative.includes('..')) {
+    return { normalized, exists: false };
+  }
+
+  const absoluteTarget = path.join(process.cwd(), ...relative.split('/'));
+  const exists = await fs
+    .access(absoluteTarget)
+    .then(() => true)
+    .catch(() => false);
+  return { normalized, exists };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const localPathRaw = String(searchParams.get('localPath') || '').trim();
   const packageName = String(searchParams.get('packageName') || '').trim();
   const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
   const packages = await listSponsorcoinPackages();
+
+  if (localPathRaw) {
+    const result = await checkLocalDirectoryExists(localPathRaw);
+    return NextResponse.json({
+      ok: true,
+      message: result.exists
+        ? `Local directory exists: ${result.normalized}`
+        : `Local directory not found: ${result.normalized}`,
+      packages,
+      workspaceRoot: WORKSPACE_ROOT,
+      localPath: result.normalized,
+      localPathExists: result.exists,
+    } satisfies AccessManagerResponse);
+  }
 
   let stateFields: Partial<AccessManagerResponse> = {};
   if (packageName) {
@@ -470,10 +527,11 @@ export async function POST(request: Request) {
         action,
         mode,
         packageName,
+        installSourceRoot: `/spCoinAccess/packages/${packageName}`,
         version: result.resolvedVersion,
         downloadBlocked: true,
         uploadBlocked: true,
-        message: `Downloaded ${packageName}@${result.resolvedVersion} to ${result.workspaceDir}. Tarball saved in backups as ${result.tarballName}.`,
+        message: `Success: ${packageName}.${result.resolvedVersion} reverted to NPM version.`,
       } satisfies AccessManagerResponse);
     }
 
