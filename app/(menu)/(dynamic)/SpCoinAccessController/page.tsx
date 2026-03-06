@@ -990,7 +990,7 @@ export default function SpCoinAccessControllerPage() {
                   <div />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
                     <input
@@ -1025,19 +1025,21 @@ export default function SpCoinAccessControllerPage() {
                       <span>Blockcain</span>
                     </label>
                   </div>
+                </div>
 
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
                     <input
                       type="text"
                       value={deploymentSymbol}
                       onChange={(event) => setDeploymentSymbol(event.target.value)}
-                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF] md:w-[30ch] md:min-w-[30ch]"
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
                   </label>
 
-                  <div className="grid gap-4 md:grid-cols-[auto_auto]">
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <div className="flex items-start justify-end gap-4">
+                    <label className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-[#8FA8FF]">Decimals</span>
                       <div className="flex items-stretch">
                         <input
@@ -1069,7 +1071,7 @@ export default function SpCoinAccessControllerPage() {
                       </div>
                     </label>
 
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <label className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
                       <div className="flex items-stretch">
                         <input
@@ -1105,8 +1107,8 @@ export default function SpCoinAccessControllerPage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
                     <input
                       type="text"
                       value={deploymentPathDisplayValue}
