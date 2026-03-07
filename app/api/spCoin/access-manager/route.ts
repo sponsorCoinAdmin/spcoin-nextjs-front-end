@@ -5,6 +5,7 @@ import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
 import { ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
+const { resolveHHForkTokenAssetChainId } = require('../../../../lib/config/hhForkTokenAssetChain');
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -46,6 +47,7 @@ type AccessManagerResponse = {
   deploymentPrivateKey?: string;
   deploymentTxHash?: string;
   deploymentChainId?: number;
+  deploymentAssetChainId?: number;
   deploymentNetworkName?: string;
   message: string;
   packages?: string[];
@@ -715,12 +717,16 @@ async function handleDeploy(
   }
 
   if (deploymentMode === 'blockcain') {
-    return await deploySpCoinToChain({
+    const deployed = await deploySpCoinToChain({
       deploymentPrivateKey: normalizedPrivateKey,
       deploymentName: normalizedName,
       deploymentVersion: normalizedVersion,
       deploymentChainId,
     });
+    return {
+      ...deployed,
+      deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(deployed.deploymentChainId)),
+    };
   }
 
   // Scaffold token key material as a distinct keypair from the deployer account.
@@ -732,6 +738,11 @@ async function handleDeploy(
     deploymentTokenName,
     deploymentPublicKey,
     deploymentPrivateKey: tokenWallet.privateKey,
+    deploymentAssetChainId: Number(
+      resolveHHForkTokenAssetChainId(
+        Number.isFinite(Number(deploymentChainId)) ? Number(deploymentChainId) : 31337,
+      ),
+    ),
   };
 }
 
@@ -756,11 +767,13 @@ async function handleUpdateServer(params: {
   deploymentChainId?: number | string;
 }) {
   const chainIdRaw = Number(params.deploymentChainId);
-  const chainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
+  const requestedChainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
+  const chainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
   const address = String(params.deploymentPublicKey || '').trim();
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
     throw new Error('Invalid deployment public key. Deploy token first.');
   }
+  const addressFolder = address.toUpperCase();
 
   const version = String(params.deploymentVersion || '').trim() || 'N/A';
   const versionTag = version === 'N/A' ? '' : `V${version}`;
@@ -777,13 +790,13 @@ async function handleUpdateServer(params: {
     'blockchains',
     String(chainId),
     'contracts',
-    address,
+    addressFolder,
   );
   await fs.mkdir(contractDir, { recursive: true });
 
   const sourceLogoRelative = normalizePublicAssetPath(params.deploymentLogoPath);
   const sourceLogoPath = path.join(process.cwd(), 'public', ...sourceLogoRelative.split('/'));
-  const logoPathRelative = `public/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+  const logoPathRelative = `public/assets/blockchains/${chainId}/contracts/${addressFolder}/logo.png`;
   const logoPathAbsolute = path.join(contractDir, 'logo.png');
   await fs.copyFile(sourceLogoPath, logoPathAbsolute);
 
@@ -799,7 +812,7 @@ async function handleUpdateServer(params: {
     logoURL: logoPathRelative,
     address,
   };
-  const metadataPathRelative = `public/assets/blockchains/${chainId}/contracts/${address}/info.json`;
+  const metadataPathRelative = `public/assets/blockchains/${chainId}/contracts/${addressFolder}/info.json`;
   const metadataPathAbsolute = path.join(contractDir, 'info.json');
   await fs.writeFile(metadataPathAbsolute, JSON.stringify(metadata, null, 2), 'utf8');
 
@@ -969,6 +982,7 @@ export async function POST(request: Request) {
         deploymentPrivateKey: result.deploymentPrivateKey,
         deploymentTxHash: (result as any).deploymentTxHash,
         deploymentChainId: (result as any).deploymentChainId,
+        deploymentAssetChainId: (result as any).deploymentAssetChainId,
         deploymentNetworkName: (result as any).deploymentNetworkName,
         message:
           deploymentMode === 'blockcain'
