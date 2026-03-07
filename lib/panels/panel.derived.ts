@@ -4,7 +4,8 @@ import { PANELS } from './panelConfig';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 /** Enum label fallback helper */
-const enumName = (id: SP) => (SP as any)[id] ?? String(id);
+const enumLookup = SP as unknown as Record<number, string>;
+const enumName = (id: SP) => enumLookup[id] ?? String(id);
 
 /** Map of id → label (UI-friendly) */
 export const LABELS: Record<SP, string> = PANELS.reduce((acc, p) => {

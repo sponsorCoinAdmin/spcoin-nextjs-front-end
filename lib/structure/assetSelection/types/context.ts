@@ -1,7 +1,7 @@
 // lib/structure/assetSelection/types/context.ts
 
 
-export type AssetSelectContextType = {
+export interface AssetSelectContextType {
   /** Optional: useful when multiple selection instances are mounted */
   instanceId?: string;
 
@@ -22,7 +22,7 @@ export type AssetSelectContextType = {
 
   /** Local logging helper */
   dumpFSMContext?: (header?: string) => void;
-};
+}
 
 /** Optional helper type if you want a read-only view */
 export type ReadonlyAssetSelectContext = Readonly<AssetSelectContextType>;

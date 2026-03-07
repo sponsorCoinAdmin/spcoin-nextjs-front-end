@@ -1,21 +1,21 @@
 // File: @/lib/rest/http.ts
 /* Minimal GET-only REST helpers with timeout, retries, and type-safe JSON parsing. */
 
-export type GetOptions = {
+export interface GetOptions {
   timeoutMs?: number;     // default 6000
   retries?: number;       // default 1 (total attempts = retries + 1)
   init?: RequestInit;     // extra options (headers, credentials, etc.)
   backoffMs?: number;     // base backoff in ms between retries (default 300)
-};
+}
 
-export type JsonOptions = GetOptions & {
+export interface JsonOptions extends GetOptions {
   accept?: string;        // default 'application/json'
   forceParse?: boolean;   // parse JSON even if content-type is wrong (default false)
-};
+}
 
-export type WriteJsonOptions = JsonOptions & {
+export interface WriteJsonOptions extends JsonOptions {
   contentType?: string;   // default 'application/json'
-};
+}
 
 /** Rich HTTP error that includes status and a small body preview. */
 export class HttpError extends Error {
@@ -53,6 +53,11 @@ function isTransientError(err: unknown): boolean {
 
 function sleep(ms: number) {
   return new Promise(res => setTimeout(res, ms));
+}
+
+function toError(err: unknown, fallbackMessage: string): Error {
+  if (err instanceof Error) return err;
+  return new Error(fallbackMessage);
 }
 
 /** Heuristic: use cache:'force-cache' for same-origin static paths; 'no-store' for absolute URLs/APIs. */
@@ -118,7 +123,7 @@ export async function get(url: string, opts: GetOptions = {}): Promise<Response>
       throw err;
     }
   }
-  throw lastErr ?? new Error(`GET ${url} failed`);
+  throw toError(lastErr, `GET ${url} failed`);
 }
 
 /** Convenience: GET + parse JSON, with optional permissive parsing when servers mislabel content-type. */
@@ -244,7 +249,7 @@ async function sendJson<T>(
       throw err;
     }
   }
-  throw lastErr ?? new Error(`${method} ${url} failed`);
+  throw toError(lastErr, `${method} ${url} failed`);
 }
 
 export async function postJson<T>(url: string, body: unknown, opts: WriteJsonOptions = {}): Promise<T> {

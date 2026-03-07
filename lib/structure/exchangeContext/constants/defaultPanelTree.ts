@@ -18,7 +18,7 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
   panel,
   name: panelName(panel),
   visible,
-  ...(children && children.length ? { children } : {}),
+  ...(children?.length ? { children } : {}),
 });
 
 /* ──────────────── Single Source of Truth (SSoT) ───────────────── */
@@ -28,7 +28,7 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
  */
 export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
-export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
+export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MAIN_TRADING_PANEL, true],
   [SP.TRADE_CONTAINER_HEADER, true],
   [SP.TRADING_STATION_PANEL, true],
@@ -146,11 +146,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
 /* ────────────────────────── utilities ─────────────────────────── */
 
-export type FlatPanel = {
+export interface FlatPanel {
   panel: SP;
   name: string;
   visible: boolean;
-};
+}
 
 /** Single-pass flatten (iterative; no nested closures) */
 export function flattenPanelTree(nodes: PanelNode[]): FlatPanel[] {

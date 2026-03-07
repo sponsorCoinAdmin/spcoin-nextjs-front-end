@@ -1,6 +1,4 @@
-usePanelTree// File: @/lib/structure/exchangeContext/types/PanelNode.ts
-
-import { usePanelTree } from '@/lib/context/hooks';
+// File: @/lib/structure/exchangeContext/types/PanelNode.ts
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**

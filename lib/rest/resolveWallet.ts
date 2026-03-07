@@ -8,12 +8,12 @@
 import { withProtocol } from '@/lib/rest/http';
 import type { RecipientMeta } from '@/lib/rest/recipientMeta';
 
-export type ResolveWalletParams = {
+export interface ResolveWalletParams {
   queryUrl?: string | null;
   recipientMeta?: Pick<RecipientMeta, 'website' | 'address'>;
   connectedWebsite?: string | null;
   fallbackBaseUrl: string;
-};
+}
 
 export function resolveWallet(params: ResolveWalletParams): string {
   const { queryUrl, recipientMeta, connectedWebsite, fallbackBaseUrl } = params;

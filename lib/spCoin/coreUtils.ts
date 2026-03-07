@@ -13,14 +13,14 @@ export const parseValidFormattedAmount = (
   value: string | bigint,
   decimals: number | undefined,
 ): string => {
-  decimals = decimals || 0;
+  decimals = decimals ?? 0;
 
   let price: string;
 
   if (typeof value === 'string') {
     price = value.startsWith('.') ? '0' + value : value;
   } else {
-    price = formatUnits(value || 0n, decimals);
+    price = formatUnits(value ?? 0n, decimals);
   }
 
   // Accepts "", "0", "0.", ".1", "2.000", etc.
@@ -77,8 +77,8 @@ const getValidBigIntToFormattedValue = (
   value: bigint | undefined,
   decimals: number | undefined,
 ): string => {
-  decimals = decimals || 0;
-  const stringValue = formatUnits(value || 0n, decimals);
+  decimals = decimals ?? 0;
+  const stringValue = formatUnits(value ?? 0n, decimals);
   return parseValidFormattedAmount(stringValue, decimals);
 };
 
@@ -143,10 +143,10 @@ const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
  * Convenience helpers for TradeData-like objects.
  * These are intentionally light-weight and only depend on TokenContract shape.
  */
-type TradeDataLike = {
+interface TradeDataLike {
   sellTokenContract?: TokenContract;
   buyTokenContract?: TokenContract;
-};
+}
 
 const isSellSpCoin = (tradeData: TradeDataLike | undefined): boolean =>
   isSpCoin(tradeData?.sellTokenContract);
@@ -172,7 +172,7 @@ const decimalAdjustTokenAmount = (
   prevTokenContract: TokenContract | undefined,
 ): bigint => {
   const decimalShift: number =
-    (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
+    (newTokenContract?.decimals ?? 0) - (prevTokenContract?.decimals ?? 0);
   return bigIntDecimalShift(amount, decimalShift);
 };
 

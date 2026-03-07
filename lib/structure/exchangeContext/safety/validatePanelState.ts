@@ -5,7 +5,8 @@ import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode'
 import { PANEL_DEFS, MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { NON_PERSISTED_PANELS } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
-const nameOf = (id: number) => (SP as any)[id] ?? String(id);
+const spLookup = SP as unknown as Record<number, string>;
+const nameOf = (id: number) => spLookup[id] ?? String(id);
 const LEGACY_BUY_LIST_NAME = 'BUY_LIST_SELECT_PANEL';
 const mapLegacyPanelId = (id: number, name?: string): number => {
   const label = (name ?? nameOf(id)) as string;
@@ -23,7 +24,7 @@ export function validateAndRepairPanels(input: PanelNode[]) {
   const map = new Map<number, PanelNode>();
 
   // 1) Filter to known + persistable; de-dupe by id
-  for (const n of input || []) {
+  for (const n of input) {
     const rawId = Number(n?.panel);
     const id = mapLegacyPanelId(rawId, n?.name);
     if (!Number.isFinite(id)) continue;
@@ -52,7 +53,7 @@ export function validateAndRepairPanels(input: PanelNode[]) {
 
   if (visibleOverlays.length > 1) {
     const preferred =
-      map.get(SP.TRADING_STATION_PANEL) && map.get(SP.TRADING_STATION_PANEL)!.visible
+      map.get(SP.TRADING_STATION_PANEL)?.visible
         ? SP.TRADING_STATION_PANEL
         : visibleOverlays[0].panel;
 

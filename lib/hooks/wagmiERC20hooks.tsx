@@ -48,8 +48,10 @@ export function useErc20TokenContract(tokenAddress?: Address): TokenContract | u
   const totalSupply =
     typeof totalSupplyRaw === 'bigint'
       ? totalSupplyRaw
-      : totalSupplyRaw != null
-        ? BigInt(totalSupplyRaw as any)
+      : typeof totalSupplyRaw === 'number' ||
+          typeof totalSupplyRaw === 'string' ||
+          typeof totalSupplyRaw === 'boolean'
+        ? BigInt(totalSupplyRaw)
         : undefined;
 
   const balanceVal =

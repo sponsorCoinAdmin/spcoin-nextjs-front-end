@@ -33,7 +33,7 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
       }
     };
 
-    fetchToken();
+    void fetchToken();
   }, [tokenAddress, chainId, publicClient, userAddress]);
 
   return token;

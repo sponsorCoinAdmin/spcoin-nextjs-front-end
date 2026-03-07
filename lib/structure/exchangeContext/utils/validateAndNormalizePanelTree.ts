@@ -3,12 +3,15 @@ import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
-export type PanelEntry = { panel: SP; visible: boolean };
-export type NormalizeResult = {
+export interface PanelEntry {
+  panel: SP;
+  visible: boolean;
+}
+export interface NormalizeResult {
   normalized: PanelEntry[]; // flat list
   repaired: boolean;        // true if we had to change anything
   notes: string[];          // human-readable reasons for repairs
-};
+}
 
 // --- helpers ---
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -18,16 +21,23 @@ function mapLegacyPanelId(id: number): number {
   return SP[id as SP] === LEGACY_BUY_LIST_NAME ? SP.TOKEN_LIST_SELECT_PANEL : id;
 }
 
-function flatten(nodes: any[] | undefined): PanelEntry[] {
+interface UnknownPanelNode {
+  panel?: unknown;
+  visible?: unknown;
+  children?: unknown;
+}
+
+function flatten(nodes: unknown[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
   const out: PanelEntry[] = [];
-  const walk = (ns: any[]) => {
+  const walk = (ns: unknown[]) => {
     for (const n of ns) {
       if (n && typeof n === 'object') {
-        const p = (n as any).panel;
-        const v = !!(n as any).visible;
+        const node = n as UnknownPanelNode;
+        const p = node.panel;
+        const v = !!node.visible;
         if (isNumber(p)) out.push({ panel: mapLegacyPanelId(p) as SP, visible: v });
-        if (Array.isArray((n as any).children)) walk((n as any).children);
+        if (Array.isArray(node.children)) walk(node.children);
       }
     }
   };
@@ -72,8 +82,12 @@ export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
   // Accept nested array of nodes or already-flat arrays
   let flat: PanelEntry[] = [];
   try {
-    const maybeArr = Array.isArray(input) ? input : (typeof input === 'object' && input !== null ? (input as any) : []);
-    flat = flatten(maybeArr as any[]);
+    const maybeArr: unknown[] = Array.isArray(input)
+      ? input
+      : typeof input === 'object' && input !== null
+        ? [input]
+        : [];
+    flat = flatten(maybeArr);
   } catch {
     // fall back to defaults below
     notes.push('parse-error: could not flatten, seeding defaults');
@@ -83,11 +97,11 @@ export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
   const knownPanels = new Set<number>(allEnumPanels());
 
   // Drop invalid panels, coerce boolean
-  const filtered = (flat || [])
+  const filtered = flat
     .map((e) => ({ panel: mapLegacyPanelId(e.panel), visible: !!e.visible }))
     .filter((e) => knownPanels.has(e.panel))
     .map((e) => ({ panel: e.panel, visible: !!e.visible }));
-  if (filtered.length !== (flat || []).length) {
+  if (filtered.length !== flat.length) {
     repaired = true;
     notes.push('dropped-unknown-panels');
   }
@@ -133,6 +147,6 @@ export function validateAndNormalizePanelTree(input: unknown): NormalizeResult {
 
 // Helper to produce a normalized default when storage is empty/corrupt
 export function normalizedDefault(): NormalizeResult {
-  const flatDefault = flatten(defaultSpCoinPanelTree as any);
+  const flatDefault = flatten(defaultSpCoinPanelTree as unknown[]);
   return validateAndNormalizePanelTree(flatDefault);
 }

@@ -21,9 +21,9 @@ const useWagmiERC20TokenBalanceOfRec = (
 ) => {
   return useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'balanceOf',
-    args: [activeAccountAddr || BURN_ADDRESS],
+    args: [activeAccountAddr ?? BURN_ADDRESS],
     config,
   });
 };
@@ -31,7 +31,7 @@ const useWagmiERC20TokenBalanceOfRec = (
 const useWagmiERC20TokenDecimalRec = (contractAddress: Address | undefined) => {
   return useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'decimals',
     config,
   });
@@ -40,7 +40,7 @@ const useWagmiERC20TokenDecimalRec = (contractAddress: Address | undefined) => {
 const useWagmiERC20TokenNameRec = (contractAddress: Address | undefined) => {
   return useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'name',
     config,
   });
@@ -49,7 +49,7 @@ const useWagmiERC20TokenNameRec = (contractAddress: Address | undefined) => {
 const useWagmiERC20TokenSymbolRec = (contractAddress: Address | undefined) => {
   return useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'symbol',
     config,
   });
@@ -58,7 +58,7 @@ const useWagmiERC20TokenSymbolRec = (contractAddress: Address | undefined) => {
 const useWagmiERC20TokenTotalSupplyRec = (contractAddress: Address | undefined) => {
   return useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'totalSupply',
     config,
   });
@@ -124,7 +124,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS: Address | undefined): Tok
   return {
     chainId: appChainId ?? 0,
     address: TOKEN_CONTRACT_ADDRESS,
-    name: name || '1. CONTRACT NOT FOUND AT ADDRESS',
+    name: name ?? '1. CONTRACT NOT FOUND AT ADDRESS',
     symbol,
     decimals,
     amount: 0n,
@@ -145,7 +145,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS: Address | undefined): T
   return {
     chainId: appChainId ?? 0,
     address: ACTIVE_NETWORK_ADDRESS,
-    name: name || 'NETWORK NOT FOUND AT ADDRESS',
+    name: name ?? 'NETWORK NOT FOUND AT ADDRESS',
     balance: 0n,
     symbol,
     decimals,

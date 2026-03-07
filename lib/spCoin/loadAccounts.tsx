@@ -25,7 +25,7 @@ const debugLog = createDebugLogger('loadAccounts', DEBUG_ENABLED, LOG_TIME);
  * @returns Promise<spCoinAccount[]>
  */
 export async function loadAccounts(
-  jsonAccountFileList?: Array<AccountAddress | string>,
+  jsonAccountFileList?: (AccountAddress | string)[],
 ): Promise<spCoinAccount[]> {
   debugLog.log?.('🔄 Starting loadAccounts on the server…', {
     hasList: !!jsonAccountFileList,
@@ -41,10 +41,9 @@ export async function loadAccounts(
   if (jsonAccountFileList && jsonAccountFileList.length > 0) {
     debugLog.log?.('🔎 Loading accounts from provided list…');
     for (const file of jsonAccountFileList) {
-      const rawAddress =
-        typeof file === 'string' ? file : (file as AccountAddress)?.address;
+      const rawAddress = typeof file === 'string' ? file : file.address;
       // Use canonical filesystem folder name (0X... uppercase)
-      const folderName = normalizeAddressForAssets(rawAddress as any);
+      const folderName = normalizeAddressForAssets(rawAddress);
       if (!folderName) {
         console.error('❌ ERROR: Invalid account address in list', {
           address: rawAddress,
@@ -63,12 +62,11 @@ export async function loadAccounts(
       if (fs.existsSync(accountFilePath)) {
         try {
           const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-          const account: spCoinAccount = JSON.parse(accountData.replace(/^\uFEFF/, ''));
+          const parsed: unknown = JSON.parse(accountData.replace(/^\uFEFF/, ''));
+          const account = parsed as spCoinAccount;
 
           // Centralized logo URL builder (address stays in its original case)
-          if (!account.logoURL) {
-            account.logoURL = getAccountLogoURL(account.address);
-          }
+          account.logoURL ??= getAccountLogoURL(account.address);
 
           accounts.push(account);
         } catch (error) {
@@ -114,7 +112,8 @@ export async function loadAccounts(
         if (fs.existsSync(accountFilePath)) {
           try {
             const accountData = fs.readFileSync(accountFilePath, 'utf-8');
-            const account: spCoinAccount = JSON.parse(accountData.replace(/^\uFEFF/, ''));
+            const parsed: unknown = JSON.parse(accountData.replace(/^\uFEFF/, ''));
+            const account = parsed as spCoinAccount;
 
             if (!account.logoURL) {
               // Prefer the address from JSON if present; fall back to folder name
@@ -139,7 +138,7 @@ export async function loadAccounts(
           );
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ ERROR: Scanning account directory', {
         accountsDir,
         error,

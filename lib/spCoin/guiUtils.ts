@@ -32,7 +32,7 @@ const exchangeContextDump = (exchangeContext: ExchangeContext) => {
  * General-purpose object logger with optional alert.
  */
 const logAlert = (
-  obj: any,
+  obj: unknown,
   name = '',
   showAlert = false,
   showConsole = true,
@@ -94,9 +94,10 @@ const fetchTokenDetails = async (
         { tokenAddr },
       );
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
     debugLog.error?.('SELL_ERROR: fetchTokenDetails', {
-      message: e?.message ?? String(e),
+      message,
       tokenAddr,
       chainId,
     });
@@ -133,11 +134,12 @@ const getTokenDetails = async (
 /**
  * Show a user-facing alert about the current swap state.
  */
-const dumpSwapState = (swapType: any) => {
+const dumpSwapState = (swapType: unknown) => {
+  const swapTypeText = String(swapType);
   if (typeof window !== 'undefined') {
-    alert(`Swap Type: ${swapType}`);
+    alert(`Swap Type: ${swapTypeText}`);
   }
-  debugLog.log?.('[dumpSwapState]', { swapType });
+  debugLog.log?.('[dumpSwapState]', { swapType: swapTypeText });
 };
 
 /**
@@ -149,7 +151,7 @@ const updateBalance = async (
   setBalance: (balance: string) => void,
 ) => {
   let success = false;
-  let balance: string = 'N/A';
+  let balance = 'N/A';
   let errMsg = 'N/A';
 
   if (activeAccountAddr) {
@@ -171,12 +173,13 @@ const updateBalance = async (
         decimals,
         balance,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       errMsg = 'Error fetching balance';
       debugLog.error?.('[updateBalance] Error fetching balance', {
         activeAccountAddr,
         tokenAddress: tokenContract.address,
-        message: error?.message ?? String(error),
+        message,
       });
     }
   } else {

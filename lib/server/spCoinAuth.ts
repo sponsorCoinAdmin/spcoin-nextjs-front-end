@@ -2,11 +2,11 @@
 import crypto from 'crypto';
 import { verifyMessage } from 'viem';
 
-type SessionRecord = {
+interface SessionRecord {
   address: string;
   token: string;
   expiresAt: number;
-};
+}
 
 const NONCE_TTL_MS = 5 * 60 * 1000;
 const SESSION_TTL_MS = 10 * 60 * 1000;
@@ -21,9 +21,9 @@ const verifyRateStore = new Map<string, { count: number; windowStartedAt: number
 
 function getSessionTokenSecret(): string | null {
   const secret =
-    process.env.SPCOIN_AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    process.env.JWT_SECRET ||
+    process.env.SPCOIN_AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    process.env.JWT_SECRET ??
     '';
   const normalized = secret.trim();
   return normalized.length > 0 ? normalized : null;
@@ -36,7 +36,7 @@ function getUpstashConfig(): { url: string; token: string } | null {
   return { url, token };
 }
 
-async function runRedisPipeline(commands: Array<Array<string>>): Promise<Array<unknown>> {
+async function runRedisPipeline(commands: string[][]): Promise<unknown[]> {
   const cfg = getUpstashConfig();
   if (!cfg) {
     throw new Error('Upstash Redis not configured');
@@ -53,7 +53,7 @@ async function runRedisPipeline(commands: Array<Array<string>>): Promise<Array<u
   if (!response.ok) {
     throw new Error(`Redis pipeline failed (${response.status})`);
   }
-  const payload = (await response.json()) as Array<{ result?: unknown; error?: string }>;
+  const payload = (await response.json()) as { result?: unknown; error?: string }[];
   return payload.map((item) => {
     if (item?.error) throw new Error(`Redis command failed: ${item.error}`);
     return item?.result;
@@ -198,7 +198,7 @@ async function markNonceUsed(address: string, nonce: string, ttlMs: number): Pro
     const [setResult] = await runRedisPipeline([
       ['SET', `spcoin:auth:nonce:used:${key}`, '1', 'NX', 'PX', String(safeTtlMs)],
     ]);
-    return String(setResult ?? '').toUpperCase() === 'OK';
+    return typeof setResult === 'string' && setResult.toUpperCase() === 'OK';
   }
 
   pruneExpiredMemoryState();
@@ -296,7 +296,7 @@ export async function verifyNonceSignature(input: {
 
 export function readBearerToken(authHeader: string | null): string | null {
   if (!authHeader) return null;
-  const m = authHeader.match(/^Bearer\s+(.+)$/i);
+  const m = /^Bearer\s+(.+)$/i.exec(authHeader);
   return m ? m[1].trim() : null;
 }
 
