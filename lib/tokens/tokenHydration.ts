@@ -65,7 +65,6 @@ export function getTokenLogoURL_SSOT(
 
 interface TokenJsonInput {
   address?: unknown;
-  id?: unknown;
   addr?: unknown;
   name?: unknown;
   symbol?: unknown;
@@ -130,7 +129,7 @@ export function buildTokenFromJson(tokenJson: unknown, chainId: number): TokenJs
   const rawAddr =
     typeof tokenJson === 'string'
       ? tokenJson
-      : tokenObj.address ?? tokenObj.id ?? tokenObj.addr ?? '';
+      : tokenObj.address ?? tokenObj.addr ?? '';
 
   const addr =
     typeof rawAddr === 'string'
