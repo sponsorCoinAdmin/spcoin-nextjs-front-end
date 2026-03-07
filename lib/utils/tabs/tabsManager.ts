@@ -27,7 +27,7 @@ function readHrefsFromStorage(): string[] {
 
     // Make the set explicitly Set<string> so TS doesn't narrow to the literal union
     const knownPathsArr: string[] = ALL_TAB_META.map((t) => t.path as string);
-    const knownPaths: Set<string> = new Set(knownPathsArr);
+    const knownPaths = new Set<string>(knownPathsArr);
 
     const cleaned = (parsed as unknown[]).filter(
       (p): p is string => typeof p === 'string' && knownPaths.has(p as string)

@@ -21,12 +21,12 @@ export const resolveAppChainId = (
   return undefined;
 };
 
-type EffectiveChainIdInput = {
+interface EffectiveChainIdInput {
   appChainId?: unknown;
   walletChainId?: unknown;
   contextChainId?: unknown;
   fallbackChainId?: unknown;
-};
+}
 
 export const getEffectiveChainId = ({
   appChainId,

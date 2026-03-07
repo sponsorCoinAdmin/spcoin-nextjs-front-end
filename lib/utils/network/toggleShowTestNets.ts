@@ -8,6 +8,6 @@ export const toggleShowTestNetsUpdater = (
   ...prev,
   settings: {
     ...prev.settings,
-    showTestNets: !Boolean(prev.settings?.showTestNets),
+    showTestNets: !(prev.settings?.showTestNets ?? false),
   },
 });

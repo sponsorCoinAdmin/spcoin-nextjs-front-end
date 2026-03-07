@@ -18,37 +18,37 @@ const useWagmiERC20TokenBalanceOfRec = (
 ) => {
   return useReadContract({
     abi: erc20Abi,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'balanceOf',
-    args: [activeAccountAddr || BURN_ADDRESS],
+    args: [activeAccountAddr ?? BURN_ADDRESS],
   });
 };
 
 const useWagmiERC20TokenDecimalRec = (contractAddress: Address | undefined) =>
   useReadContract({
     abi: erc20Abi,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'decimals',
   });
 
 const useWagmiERC20TokenNameRec = (contractAddress: Address | undefined) =>
   useReadContract({
     abi: erc20Abi,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'name',
   });
 
 const useWagmiERC20TokenSymbolRec = (contractAddress: Address | undefined) =>
   useReadContract({
     abi: erc20Abi,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'symbol',
   });
 
 const useWagmiERC20TokenTotalSupplyRec = (contractAddress: Address | undefined) =>
   useReadContract({
     abi: erc20Abi,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'totalSupply',
   });
 

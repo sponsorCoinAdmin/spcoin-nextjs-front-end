@@ -20,28 +20,30 @@ let BASE_URL = '';
 let MAINNET_URL = '';
 let POLYGON_URL = '';
 let SEPOLIA_URL = '';
-const NEXT_PUBLIC_BASE_RPC_URL = process.env.NEXT_PUBLIC_BASE_RPC_URL || '';
+const NEXT_PUBLIC_BASE_RPC_URL = process.env.NEXT_PUBLIC_BASE_RPC_URL ?? '';
 const NEXT_PUBLIC_HARDHAT_URL =
-  process.env.NEXT_PUBLIC_HARDHAT_RPC_URL || process.env.NEXT_PUBLIC_HARDHAT_URL || '';
+  process.env.NEXT_PUBLIC_HARDHAT_RPC_URL ??
+  process.env.NEXT_PUBLIC_HARDHAT_URL ??
+  '';
 
 switch (BLOCKCHAIN_PROVIDER) {
   case 'ALCHEMY':
-    MAINNET_URL = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET_URL || '';
-    POLYGON_URL = process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_URL || '';
-    SEPOLIA_URL = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_URL || '';
+    MAINNET_URL = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET_URL ?? '';
+    POLYGON_URL = process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_URL ?? '';
+    SEPOLIA_URL = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_URL ?? '';
     break;
   case 'INFURA':
-    BASE_URL = NEXT_PUBLIC_BASE_RPC_URL || '';
-    MAINNET_URL = process.env.NEXT_PUBLIC_INFURA_MAINNET_URL || '';
-    POLYGON_URL = process.env.NEXT_PUBLIC_INFURA_POLYGON_URL || '';
-    SEPOLIA_URL = process.env.NEXT_PUBLIC_INFURA_SEPOLIA_URL || '';
+    BASE_URL = NEXT_PUBLIC_BASE_RPC_URL ?? '';
+    MAINNET_URL = process.env.NEXT_PUBLIC_INFURA_MAINNET_URL ?? '';
+    POLYGON_URL = process.env.NEXT_PUBLIC_INFURA_POLYGON_URL ?? '';
+    SEPOLIA_URL = process.env.NEXT_PUBLIC_INFURA_SEPOLIA_URL ?? '';
     break;
   default:
     debugLog.warn('⚠️ BLOCKCHAIN_PROVIDER not set or unrecognized — no URLs configured.');
 }
 
 if (!BASE_URL) {
-  BASE_URL = NEXT_PUBLIC_BASE_RPC_URL || '';
+  BASE_URL = NEXT_PUBLIC_BASE_RPC_URL ?? '';
 }
 
 debugLog.log('BLOCKCHAIN_PROVIDER =', BLOCKCHAIN_PROVIDER);
@@ -65,7 +67,8 @@ export const config = createConfig(
       [sepolia.id]: http(SEPOLIA_URL),
       [hardhat.id]: http(NEXT_PUBLIC_HARDHAT_URL ),
     },
-    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '',
+    walletConnectProjectId:
+      process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ?? '',
     appName: 'SponsorCoin Exchange',
     appDescription: 'SponsorCoin Exchange',
     appUrl: 'https://family.co',

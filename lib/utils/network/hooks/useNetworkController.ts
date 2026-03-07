@@ -96,6 +96,35 @@ const debugLog = createDebugLogger(
   LOG_TIME,
 );
 
+interface Eip1193ProviderLike {
+  on?: (event: 'chainChanged', listener: (chainId: string) => void) => void;
+  removeListener?: (
+    event: 'chainChanged',
+    listener: (chainId: string) => void,
+  ) => void;
+}
+
+interface EthereumWindow extends Window {
+  ethereum?: Eip1193ProviderLike;
+}
+
+const getErrorCode = (err: unknown): number | string | undefined => {
+  if (!err || typeof err !== 'object') return undefined;
+  const candidate = err as {
+    code?: unknown;
+    cause?: { code?: unknown };
+  };
+  const directCode = candidate.code;
+  if (typeof directCode === 'number' || typeof directCode === 'string') {
+    return directCode;
+  }
+  const causeCode = candidate.cause?.code;
+  if (typeof causeCode === 'number' || typeof causeCode === 'string') {
+    return causeCode;
+  }
+  return undefined;
+};
+
 export function useNetworkController() {
   const { isConnected: walletConnected, status } = useAccount();
   const walletChainId = useWalletChainId();
@@ -135,7 +164,7 @@ export function useNetworkController() {
 
   const chainLabel = (id?: number) =>
     typeof id === 'number' && id > 0
-      ? getWagmiChainName(id) || getBlockChainName(id) || `Chain ${id}`
+      ? getWagmiChainName(id) ?? getBlockChainName(id) ?? `Chain ${id}`
       : 'Unknown';
   const SUPPORTED_CHAIN_IDS = new Set<number>(
     Object.values(CHAIN_ID).filter((v): v is number => typeof v === 'number'),
@@ -168,8 +197,8 @@ export function useNetworkController() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const eth = (window as any).ethereum;
-    if (!eth || typeof eth.on !== 'function') return;
+    const eth = (window as EthereumWindow).ethereum;
+    if (typeof eth?.on !== 'function') return;
 
     const onChainChanged = (hexChainId: string) => {
       const nextId = Number.parseInt(String(hexChainId), 16);
@@ -295,8 +324,8 @@ export function useNetworkController() {
       logState('switch-wallet-on-connect', {
         msg: 'Just connected and wallet chain mismatched appChainId -> switch wallet to appChainId',
       });
-      switchChainAsync({ chainId: appChainId }).catch((err) => {
-        const code = err?.code ?? err?.cause?.code;
+      switchChainAsync({ chainId: appChainId }).catch((err: unknown) => {
+        const code = getErrorCode(err);
         if (code === 4902) {
           alert(
             `MetaMask network ${chainLabel(appChainId)} is not installed. Please add it to MetaMask.`,
@@ -350,8 +379,8 @@ export function useNetworkController() {
           prevWallet,
           prevApp,
         });
-        switchChainAsync({ chainId: appChainId }).catch((err) => {
-          const code = err?.code ?? err?.cause?.code;
+        switchChainAsync({ chainId: appChainId }).catch((err: unknown) => {
+          const code = getErrorCode(err);
           if (code === 4902) {
             alert(
               `MetaMask network ${chainLabel(appChainId)} is not installed. Please add it to MetaMask.`,

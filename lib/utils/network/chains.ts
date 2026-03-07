@@ -34,8 +34,8 @@ export const normalizeChainId = (
 ): number => {
   if (typeof chain === 'number' && Number.isFinite(chain)) return chain;
 
-  if (typeof chain === 'object' && chain && 'id' in (chain as any)) {
-    const id = Number((chain as any).id);
+  if (typeof chain === 'object' && chain && 'id' in chain) {
+    const id = Number((chain as { id?: unknown }).id);
     if (Number.isFinite(id)) return id;
   }
 

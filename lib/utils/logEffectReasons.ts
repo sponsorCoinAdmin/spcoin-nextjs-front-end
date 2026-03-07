@@ -23,7 +23,7 @@ export function useEffectReasons<T extends Record<string, unknown>>(
       return;
     }
 
-    const changed: Array<[keyof T, unknown, unknown]> = [];
+    const changed: [keyof T, unknown, unknown][] = [];
     for (const k of keys) {
       const a = prev.current[k];
       const b = depsObj[k];

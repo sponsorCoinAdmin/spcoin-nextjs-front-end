@@ -31,6 +31,12 @@ function isNativeSentinel(addr: string): boolean {
   return addr.toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
 }
 
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return String(err);
+}
+
 async function fetchNativeTokenMetaSafe(
   chainId: number,
 ): Promise<{ name: string; symbol: string; decimals: number }> {
@@ -42,8 +48,8 @@ async function fetchNativeTokenMetaSafe(
       symbol: typeof data?.symbol === 'string' ? data.symbol : fallback.symbol,
       decimals: Number.isFinite(data?.decimals) ? Number(data.decimals) : fallback.decimals,
     };
-  } catch (err: any) {
-    debug.error('native meta get failed:', err?.message ?? err);
+  } catch (err: unknown) {
+    debug.error('native meta get failed:', getErrorMessage(err));
     return fallback;
   }
 }
@@ -106,8 +112,8 @@ export async function resolveContract(
       balance: 0n,
       chainId,
     };
-  } catch (err: any) {
-    debug.error('ERC-20 resolve failed:', err?.message ?? err);
+  } catch (err: unknown) {
+    debug.error('ERC-20 resolve failed:', getErrorMessage(err));
     return undefined;
   }
 }

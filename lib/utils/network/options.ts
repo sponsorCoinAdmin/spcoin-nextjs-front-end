@@ -5,27 +5,46 @@ import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';
 import { DEFAULT_CHAIN_ID, isTestnetChainId } from './chains';
 import { toChainIdString } from './appChainId';
 
-export type NetworkOption = {
+export interface NetworkOption {
   id: number;
   name: string;
   symbol: string;
   logo?: string;
-};
+}
 
 export const ALL_NETWORKS_VALUE = 'ALL_NETWORKS' as const;
 
-const toNetworkOption = (entry: any): NetworkOption => {
-  const id = Number(entry?.chainId);
+interface NetworkEntry {
+  chainId?: unknown;
+  name?: unknown;
+  symbol?: unknown;
+  logoURL?: unknown;
+  img?: unknown;
+}
+
+const toNetworkOption = (entry: NetworkEntry): NetworkOption => {
+  const id = Number(entry.chainId);
+  const name = typeof entry.name === 'string' ? entry.name : '';
+  const symbol = typeof entry.symbol === 'string' ? entry.symbol : '';
+  const logo =
+    typeof entry.logoURL === 'string'
+      ? entry.logoURL
+      : typeof entry.img === 'string'
+        ? entry.img
+        : getBlockChainLogoURL(id);
+
   return {
     id,
-    name: String(entry?.name ?? ''),
-    symbol: String(entry?.symbol ?? ''),
-    logo: entry?.logoURL ?? entry?.img ?? getBlockChainLogoURL(id),
+    name,
+    symbol,
+    logo,
   };
 };
 
 export const getConfiguredNetworkOptions = (): NetworkOption[] =>
-  (configuredNetworks as any[]).map(toNetworkOption).filter((n) => Number.isFinite(n.id));
+  (configuredNetworks as NetworkEntry[])
+    .map(toNetworkOption)
+    .filter((n) => Number.isFinite(n.id));
 
 export const splitNetworkOptionsByTestnet = (options: NetworkOption[]) => ({
   mainnetOptions: options.filter((o) => !isTestnetChainId(o.id)),

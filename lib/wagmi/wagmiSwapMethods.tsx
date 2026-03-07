@@ -13,7 +13,7 @@ import { useAppChainId } from '../context/hooks'
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'decimals',
     config: config, 
   })
@@ -23,7 +23,7 @@ const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
 const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
   const wagmiNameRec = useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'name',
     config: config, 
   })
@@ -33,7 +33,7 @@ const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
 const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
   const wagmiSymbolRec = useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'symbol',
     config: config, 
   })
@@ -43,7 +43,7 @@ const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
 const useWagmiERC20TokenTotalSupplyRec = (contractAddress:Address | undefined) => {
   const wagmiTotalSupplyRec = useReadContract({
     abi: erc20ABI,
-    address: contractAddress || BURN_ADDRESS,
+    address: contractAddress ?? BURN_ADDRESS,
     functionName: 'totalSupply',
     config: config, 
   })
@@ -89,7 +89,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): Toke
     {
       chainId: chainId,
       address:TOKEN_CONTRACT_ADDRESS,
-      name:name || "3. CONTRACT NOT FOUND AT ADDRESS",
+      name:name ?? "3. CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,
@@ -115,7 +115,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):Tok
     {
       chainId: chainId,
       address:ACTIVE_NETWORK_ADDRESS,
-      name:name || "NETWORK NOT FOUND AT ADDRESS",
+      name:name ?? "NETWORK NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
       totalSupply:undefined,

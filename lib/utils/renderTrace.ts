@@ -40,7 +40,7 @@ export function useRenderTrace(name: string, props?: AnyProps) {
       return;
     }
 
-    const changed: Array<[string, unknown, unknown]> = [];
+    const changed: [string, unknown, unknown][] = [];
 
     if (prev.current) {
       for (const k of Object.keys(props)) {
