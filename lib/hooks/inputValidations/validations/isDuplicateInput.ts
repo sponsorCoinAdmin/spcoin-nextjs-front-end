@@ -15,8 +15,9 @@ export function isDuplicateInput(
   sellAddress?: string,
   buyAddress?: string
 ): boolean {
+  const displayMap = SP_COIN_DISPLAY as unknown as Record<number, string>;
   const containerName =
-    (SP_COIN_DISPLAY as any)?.[containerType] ?? String(containerType);
+    displayMap[containerType] ?? String(containerType);
 
   log.log(
     `🔍 ENTRY → isDuplicateInput | container=${containerName} | input=${input} | sell=${sellAddress ?? '—'} | buy=${buyAddress ?? '—'}`

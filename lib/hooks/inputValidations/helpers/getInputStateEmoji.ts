@@ -31,8 +31,6 @@ export function getInputStateEmoji(state: InputState): string {
       return '💰'; // money bag
     case InputState.VALIDATE_ERC20_ASSET_ERROR:
       return '❌'; // red cross
-    case InputState.VALIDATE_ERC20_ASSET_ERROR:
-      return '❌'; // red cross
     case InputState.RETURN_VALIDATED_ASSET:
       return '🔄'; // update
     case InputState.CLOSE_SELECT_PANEL:

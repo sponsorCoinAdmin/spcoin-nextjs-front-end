@@ -166,6 +166,20 @@ export interface TokenContract {
   amount?: bigint;
   chainId?: number;
   logoURL?: string;
+  infoURL?: string;
+  website?: string;
+  description?: string;
+  explorer?: string;
+  links?: TokenExternalLink[];
+  coin_type?: number;
+  research?: string;
+  rpc_url?: string;
+  tags?: string[];
+}
+
+export interface TokenExternalLink {
+  name: string;
+  url: string;
 }
 
 export interface TradeData {

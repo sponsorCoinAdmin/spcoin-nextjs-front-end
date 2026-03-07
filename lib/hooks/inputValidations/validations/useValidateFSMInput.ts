@@ -19,7 +19,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 
 const debugLog = createDebugLogger('useValidateFSMInput', DEBUG_ENABLED, LOG_TIME);
 
 export const useValidateFSMInput = (selectAddress: string | undefined) => {
-  const debouncedHexInput = useDebounce(selectAddress || '', 250);
+  const debouncedHexInput = useDebounce(selectAddress ?? '', 250);
 
   const {
     inputState,

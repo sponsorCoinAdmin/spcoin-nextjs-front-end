@@ -4,7 +4,7 @@ import type { TokenContract, spCoinAccount } from '@/lib/structure';
 
 export type AgentAccount = spCoinAccount;
 export type SponsorAccount = spCoinAccount;
-export type ValidAddressAccount = spCoinAccount | SponsorAccount | AgentAccount;
+export type ValidAddressAccount = spCoinAccount;
 export type ValidatedAsset = TokenContract | ValidAddressAccount;
 
 export interface TokenMetadata {

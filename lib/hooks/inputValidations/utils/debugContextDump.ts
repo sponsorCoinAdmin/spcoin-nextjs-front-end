@@ -13,7 +13,7 @@ const debugLog = createDebugLogger('debugContextDump', DEBUG_ENABLED, LOG_TIME);
  * Logs the current FSM context.
  */
 export function dumpFSMContext(
-  header: string = '',
+  header = '',
   inputState: InputState,
   validatedAsset: TokenContract | undefined,
   instanceId: string
@@ -29,10 +29,10 @@ export function dumpFSMContext(
  * Logs the current Input Feed context.
  */
 export function dumpInputFeedContext(
-  header: string = '',
+  header = '',
   validHexInput: string,
   debouncedHexInput: string,
-  failedHexInput: string = '',
+  failedHexInput = '',
   failedHexCount: number,
   isValid: boolean,
   instanceId: string

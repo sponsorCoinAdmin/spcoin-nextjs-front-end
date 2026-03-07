@@ -164,7 +164,7 @@ export async function resolveTokenContract(
       totalSupply: stored.totalSupply,
       amount: 0n,
       balance: 0n,
-      logoURL: stored.logoURL || defaultMissingImage,
+      logoURL: stored.logoURL ?? defaultMissingImage,
     } as TokenContract;
   } catch {
     // fall through to on-chain metadata when no persisted token asset exists
@@ -214,7 +214,7 @@ export async function resolveTokenContract(
     totalSupply: metadata.totalSupply,
     amount: 0n,
     balance: 0n, // ⬅️ UI will show live value from the TanStack cache
-    logoURL: logoURL || defaultMissingImage,
+    logoURL: logoURL ?? defaultMissingImage,
   };
 
   debugLog.log?.('✅ Returning ERC-20 token (no balance)', {

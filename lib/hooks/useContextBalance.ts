@@ -6,7 +6,7 @@ import type { Address } from 'viem';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 
-type Params = {
+interface Params {
   /** The live balance (bigint) you already computed elsewhere */
   balance?: bigint;
 
@@ -21,7 +21,7 @@ type Params = {
 
   /** Gate writes */
   enabled?: boolean;
-};
+}
 
 function sameAddr(a?: string, b?: string) {
   return a && b ? a.toLowerCase() === b.toLowerCase() : false;

@@ -6,11 +6,12 @@ import {
   loadTokenRecord,
   loadTokenRecordsBatch,
 } from '@/lib/context/tokens/tokenStore';
-import type { TokenContract } from '@/lib/structure';
+import type { TokenContract, TokenExternalLink } from '@/lib/structure';
 
 const ENV_TOKEN_PATH_RAW = process.env.NEXT_PUBLIC_TOKEN_PATH;
 const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 const TOKEN_BATCH_PAGE_SIZE = 25;
+const NA_VALUE = 'N/A';
 
 function normalizeEnvBasePath(raw?: string): string | undefined {
   const s = (raw ?? '').trim();
@@ -72,7 +73,69 @@ interface TokenJsonInput {
   logoURL?: unknown;
   logoURI?: unknown;
   infoURL?: unknown;
+  website?: unknown;
+  description?: unknown;
+  explorer?: unknown;
+  links?: unknown;
+  coin_type?: unknown;
+  research?: unknown;
+  rpc_url?: unknown;
+  tags?: unknown;
+  chainId?: unknown;
+  __invalid?: unknown;
   [key: string]: unknown;
+}
+
+function asTrimmedString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : undefined;
+}
+
+function asNAString(value: unknown): string {
+  return asTrimmedString(value) ?? NA_VALUE;
+}
+
+function asNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out = value.filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
+  return out.length > 0 ? out : undefined;
+}
+
+function asExternalLinks(value: unknown): TokenExternalLink[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const links: TokenExternalLink[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') continue;
+    const item = entry as { name?: unknown; url?: unknown };
+    const name = asTrimmedString(item.name);
+    const url = asTrimmedString(item.url);
+    if (name && url) links.push({ name, url });
+  }
+  return links.length > 0 ? links : undefined;
+}
+
+function applyTokenMetadata(out: TokenJsonInput): void {
+  out.name = asNAString(out.name);
+  out.symbol = asNAString(out.symbol);
+  out.website = asNAString(out.website);
+  out.description = asNAString(out.description);
+  out.explorer = asNAString(out.explorer);
+  out.research = asNAString(out.research);
+  out.rpc_url = asNAString(out.rpc_url);
+  out.decimals = asNumber(out.decimals) ?? 0;
+  out.coin_type = asNumber(out.coin_type) ?? 0;
+  out.tags = asStringArray(out.tags) ?? [];
+  out.links = asExternalLinks(out.links) ?? [];
 }
 
 export async function hydrateTokenFromAddress(
@@ -99,14 +162,22 @@ export async function hydrateTokenFromAddress(
     return {
       address: addr,
       chainId,
-      name: typeof record?.name === 'string' ? record.name : '',
-      symbol: typeof record?.symbol === 'string' ? record.symbol : '',
+      name: asNAString(record?.name),
+      symbol: asNAString(record?.symbol),
       decimals:
-        typeof record?.decimals === 'number' ? record.decimals : undefined,
+        typeof record?.decimals === 'number' ? record.decimals : 0,
       logoURL:
         typeof record?.logoURL === 'string' && record.logoURL.trim().length
           ? record.logoURL
           : getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage,
+      website: asNAString((record as { website?: unknown }).website),
+      description: asNAString((record as { description?: unknown }).description),
+      explorer: asNAString((record as { explorer?: unknown }).explorer),
+      research: asNAString((record as { research?: unknown }).research),
+      rpc_url: asNAString((record as { rpc_url?: unknown }).rpc_url),
+      coin_type: asNumber((record as { coin_type?: unknown }).coin_type) ?? 0,
+      links: asExternalLinks((record as { links?: unknown }).links) ?? [],
+      tags: asStringArray((record as { tags?: unknown }).tags) ?? [],
       balance: 0n,
     };
   } catch {
@@ -114,22 +185,34 @@ export async function hydrateTokenFromAddress(
     return {
       address: addr,
       chainId,
-      name: '',
-      symbol: '',
-      decimals: undefined,
+      name: NA_VALUE,
+      symbol: NA_VALUE,
+      decimals: 0,
       logoURL,
+      website: NA_VALUE,
+      description: NA_VALUE,
+      explorer: NA_VALUE,
+      research: NA_VALUE,
+      rpc_url: NA_VALUE,
+      coin_type: 0,
+      links: [],
+      tags: [],
       balance: 0n,
     };
   }
 }
 
-export function buildTokenFromJson(tokenJson: unknown, chainId: number): TokenJsonInput {
+export function buildTokenFromJson(
+  tokenJson: unknown,
+  chainId: number,
+  contextAddress?: Address,
+): TokenJsonInput {
   const tokenObj: TokenJsonInput =
     tokenJson && typeof tokenJson === 'object' ? (tokenJson as TokenJsonInput) : {};
   const rawAddr =
     typeof tokenJson === 'string'
       ? tokenJson
-      : tokenObj.address ?? tokenObj.addr ?? '';
+      : tokenObj.address ?? tokenObj.addr ?? contextAddress ?? '';
 
   const addr =
     typeof rawAddr === 'string'
@@ -178,6 +261,7 @@ export function buildTokenFromJson(tokenJson: unknown, chainId: number): TokenJs
   out.logoURL =
     explicitLogo ?? getTokenLogoURL_SSOT(chainId, addr as Address) ?? defaultMissingImage;
   out.infoURL ??= getTokenInfoURL_SSOT(chainId, addr as Address);
+  applyTokenMetadata(out);
 
   return out;
 }

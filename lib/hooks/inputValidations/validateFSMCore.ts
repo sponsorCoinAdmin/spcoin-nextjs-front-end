@@ -112,7 +112,8 @@ export async function validateFSMCore(
     case InputState.RESOLVE_ERC20_ASSET: {
       // Extra visibility for the RESOLVE step so we can compare localhost vs EC2
       debugLog.log?.('[FSM_CORE] RESOLVE_ERC20_ASSET dispatch', {
-        instanceId: (input as any)?.instanceId ?? '—',
+        instanceId:
+          (input as { instanceId?: string }).instanceId ?? '—',
         containerType: input.containerType,
         feedType: input.feedType,
         manualEntry: input.manualEntry,
@@ -174,7 +175,8 @@ export async function validateFSMCore(
   }
 
   debugLog.log?.('Core transition', {
-    instanceId: (input as any)?.instanceId ?? '—',
+    instanceId:
+      (input as { instanceId?: string }).instanceId ?? '—',
     from: InputState[input.inputState],
     to: InputState[out.nextState],
     debouncedHexInput: input.debouncedHexInput ?? '',

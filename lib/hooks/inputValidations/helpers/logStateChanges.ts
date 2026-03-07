@@ -18,7 +18,7 @@ export function logStateChanges<T extends Record<string, any>>(
   prev: T | null,
   current: T,
   keys: (keyof T)[],
-  label: string = 'Changes'
+  label = 'Changes'
 ): void {
   if (!prev) return;
 
