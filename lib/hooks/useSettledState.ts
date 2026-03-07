@@ -13,7 +13,7 @@ export function useSettledState<T>(
 ): boolean {
   const settled = Object.is(value, desired);
   useEffect(() => {
-    if (!settled) (setValue as any)(desired);
+    if (!settled) setValue(desired);
   }, [settled, desired, setValue]);
   return settled;
 }
@@ -26,7 +26,7 @@ export function useEnsureBoolWhen(
 ): boolean {
   const settled = value === desired;
   useEffect(() => {
-    if (enabled && !settled) (setValue as any)(desired);
+    if (enabled && !settled) setValue(desired);
   }, [enabled, settled, desired, setValue]);
   return settled;
 }

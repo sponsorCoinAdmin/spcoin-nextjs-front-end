@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 // 🔑 LocalStorage key (keep in sync with loader)
 import { COLLAPSE_KEYS_MAP } from '@/lib/context/exchangeContext/localStorageKeys';
 
+type CollapsedMap = Record<string, string[]>;
+
 export function useJsonInspector(namespace: string) {
   const [collapsedKeys, setCollapsedKeys] = useState<string[]>([]);
 
@@ -14,9 +16,13 @@ export function useJsonInspector(namespace: string) {
     try {
       const raw = localStorage.getItem(COLLAPSE_KEYS_MAP);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed[namespace])) {
-          setCollapsedKeys(parsed[namespace]);
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          const map = parsed as CollapsedMap;
+          const keys = map[namespace];
+          if (Array.isArray(keys)) {
+            setCollapsedKeys(keys);
+          }
         }
       }
     } catch (err) {
@@ -29,7 +35,9 @@ export function useJsonInspector(namespace: string) {
     if (typeof window === 'undefined') return;
     try {
       const raw = localStorage.getItem(COLLAPSE_KEYS_MAP);
-      const parsed = raw ? JSON.parse(raw) : {};
+      const parsed: CollapsedMap = raw
+        ? (JSON.parse(raw) as CollapsedMap)
+        : {};
       parsed[namespace] = collapsedKeys;
       localStorage.setItem(COLLAPSE_KEYS_MAP, JSON.stringify(parsed));
     } catch (err) {

@@ -7,9 +7,9 @@ import type {
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
   SP_COIN_DISPLAY, // provider enum
+  FEED_TYPE,
 } from '@/lib/structure';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { FEED_TYPE } from '@/lib/structure';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
@@ -44,24 +44,24 @@ export interface AccountAddress {
 /**
  * Uniform error shape for UI & API errors.
  */
-export type ErrorMessage = {
+export interface ErrorMessage {
   errCode: number;
   msg: string;
   source: string;
   status: STATUS;
-};
+}
 
-export type ContractRecs = {
+export interface ContractRecs {
   nameRec: UseReadContractReturnType;
   symbolRec: UseReadContractReturnType;
   decimalRec: UseReadContractReturnType;
   totalSupplyRec: UseReadContractReturnType;
-};
+}
 
 /**
  * All known accounts tracked by the app.
  */
-export type Accounts = {
+export interface Accounts {
   activeAccount?: spCoinAccount;
   sponsorAccount?: spCoinAccount;
   recipientAccount?: spCoinAccount;
@@ -69,7 +69,7 @@ export type Accounts = {
   sponsorAccounts?: spCoinAccount[];
   recipientAccounts?: spCoinAccount[];
   agentAccounts?: spCoinAccount[];
-};
+}
 
 /**
  * ✅ Settings for view/panel management and API provider choice.
@@ -80,12 +80,12 @@ export type Accounts = {
  *   - id is authoritative
  *   - name is derived (non-authoritative)
  */
-export type DISPLAY_STACK_NODE = {
+export interface DISPLAY_STACK_NODE {
   id: SP_COIN_DISPLAY; // authoritative
   name: string; // derived / non-authoritative
-};
+}
 
-export type Settings = {
+export interface Settings {
   /** Which backend to use for trading operations */
   apiTradingProvider: API_TRADING_PROVIDER;
 
@@ -96,10 +96,10 @@ export type Settings = {
    * Persisted visible members list (compact storage shape).
    * Presence in this list means visible=true.
    */
-  visiblePanelTreeMembers?: Array<{
+  visiblePanelTreeMembers?: {
     panel: SP_COIN_DISPLAY;
     name: string;
-  }>;
+  }[];
 
   /** Persisted stack of navigated panels (authoritative id, derived name) */
   displayStack: DISPLAY_STACK_NODE[];
@@ -135,12 +135,12 @@ export type Settings = {
     tokenListNetwork?: string;
     panelLayout?: string;
   };
-};
+}
 
 /** (Legacy alias – kept only if you still import it elsewhere) */
 export type DisplaySettings = Settings;
 
-export type NetworkElement = {
+export interface NetworkElement {
   connected: boolean;
   appChainId: number;
   chainId: number;
@@ -148,15 +148,15 @@ export type NetworkElement = {
   name: string;
   symbol: string;
   url: string;
-};
+}
 
-export type Slippage = {
+export interface Slippage {
   bps: number;
   percentage: number;
   percentageString: string;
-};
+}
 
-export type TokenContract = {
+export interface TokenContract {
   address: Address;
   name?: string;
   symbol?: string;
@@ -166,9 +166,9 @@ export type TokenContract = {
   amount?: bigint;
   chainId?: number;
   logoURL?: string;
-};
+}
 
-export type TradeData = {
+export interface TradeData {
   buyTokenContract?: TokenContract;
   sellTokenContract?: TokenContract;
   previewTokenContract?: TokenContract;
@@ -176,16 +176,16 @@ export type TradeData = {
   rateRatio: number;
   slippage: Slippage;
   tradeDirection: TRADE_DIRECTION;
-};
+}
 
-export type ExchangeContext = {
+export interface ExchangeContext {
   accounts: Accounts;
   network: NetworkElement;
   settings: Settings;
   tradeData: TradeData;
   errorMessage: ErrorMessage | undefined;
   apiErrorMessage: ErrorMessage | undefined;
-};
+}
 
 export interface PriceRequestParams {
   chainId: number;
@@ -215,11 +215,11 @@ export type AccountFeedType =
 export type TokenFeedType = FEED_TYPE.TOKEN_LIST;
 
 // ✅ Optional debug metadata we can attach without breaking UI
-export type FeedDebugMeta = {
+export interface FeedDebugMeta {
   sourceId?: string;        // e.g. "@/resources/data/mockFeeds/accounts/sponsors/accounts.json"
   sourceKind?: string;      // e.g. "bundled-resource" | "manage-json" | "remote-url"
   resolvedUrl?: string;     // if remote later
-};
+}
 
 export type FeedData =
   | ({ feedType: TokenFeedType; tokens: TokenContract[] } & { __debug?: FeedDebugMeta })

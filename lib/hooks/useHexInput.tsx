@@ -22,7 +22,7 @@ const _isValidHexString = (rawInput: string): boolean => {
   );
 };
 
-export function useHexInput(initialValue: string = '', debounceDelay: number = 250) {
+export function useHexInput(initialValue = '', debounceDelay = 250) {
   const [validHexInput, setValidHexInput] = useState(initialValue);
   const [failedHexInput, setFailedHexInput] = useState<string | undefined>(undefined);
   const [failedHexCount, setFailedHexCount] = useState(0);

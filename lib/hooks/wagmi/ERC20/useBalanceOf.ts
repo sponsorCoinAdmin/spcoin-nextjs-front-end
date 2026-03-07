@@ -6,7 +6,7 @@ import { useBalance } from 'wagmi';
 import type { Address } from 'viem';
 import { useExchangeContext } from '@/lib/context/hooks';
 
-type UseBalanceOfParams = {
+interface UseBalanceOfParams {
   /** Whose balance to read; defaults to connected account */
   user?: Address;
   /** ERC-20 token address; omit for native */
@@ -15,7 +15,7 @@ type UseBalanceOfParams = {
   enabled?: boolean;
   /** If true, mirror into accounts.activeAccount.balance when user === connected */
   mirrorActiveAccount?: boolean;
-};
+}
 
 export function useBalanceOf({
   user,

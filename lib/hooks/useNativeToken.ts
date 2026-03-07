@@ -42,10 +42,11 @@ export function useNativeToken(): MappedTokenContract | undefined {
           symbol: data.symbol,
           totalSupply: 0n,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
         debugLog.error?.('[useNativeToken] failed to load native token', {
           chainId,
-          error: err?.message ?? String(err),
+          error: message,
         });
       }
     })();

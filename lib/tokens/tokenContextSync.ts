@@ -7,8 +7,7 @@ import { normalizeTokenCompositeKey } from '@/lib/tokens/tokenKey';
 export function patchTradeTokensFromRegistry(
   ctx: ExchangeContextTypeOnly,
 ): boolean {
-  const tradeData = (ctx as any).tradeData ?? {};
-  (ctx as any).tradeData = tradeData;
+  const tradeData = ctx.tradeData;
   let changed = false;
 
   const patchOne = (
@@ -47,9 +46,12 @@ export function patchTradeTokensFromRegistry(
     return merged;
   };
 
-  tradeData.sellTokenContract = patchOne(tradeData.sellTokenContract);
-  tradeData.buyTokenContract = patchOne(tradeData.buyTokenContract);
-  tradeData.previewTokenContract = patchOne(tradeData.previewTokenContract);
+  ctx.tradeData = {
+    ...tradeData,
+    sellTokenContract: patchOne(tradeData.sellTokenContract),
+    buyTokenContract: patchOne(tradeData.buyTokenContract),
+    previewTokenContract: patchOne(tradeData.previewTokenContract),
+  };
 
   return changed;
 }

@@ -36,12 +36,19 @@ const erc20Abi = [
   },
 ] as const;
 
-type BalanceFnData = { balance: bigint; decimals: number };
-type BalanceData = { balance: bigint; decimals: number; formatted?: string };
+interface BalanceFnData {
+  balance: bigint;
+  decimals: number;
+}
+interface BalanceData {
+  balance: bigint;
+  decimals: number;
+  formatted?: string;
+}
 type BalanceError = Error;
 type BalanceQueryKey = readonly [string];
 
-export type UseGetBalanceParams = {
+export interface UseGetBalanceParams {
   /** token address; falsy => treat as native token */
   tokenAddress?: Address | null;
   /** override chainId; defaults to appChainId → publicClient.chain.id */
@@ -57,7 +64,7 @@ export type UseGetBalanceParams = {
   staleTimeMs?: number;
   /** additional enable flag (combined with internal guards) */
   enabled?: boolean;
-};
+}
 
 export function useGetBalance({
   tokenAddress,
@@ -92,9 +99,7 @@ export function useGetBalance({
 
   // 🛰️ Chain-aware public client
   const publicClient = usePublicClient(
-    appEffectiveChainId
-      ? ({ chainId: appEffectiveChainId } as any)
-      : ({} as any),
+    appEffectiveChainId ? { chainId: appEffectiveChainId } : undefined,
   );
 
   // Chosen owner: explicit userAddress → activeAccount → null
@@ -236,8 +241,9 @@ export function useGetBalance({
         });
 
         return { balance: bal as bigint, decimals: Number(d) };
-      } catch (e: any) {
-        const msg = e?.shortMessage || e?.message || String(e);
+      } catch (e: unknown) {
+        const err = e as { shortMessage?: string; message?: string };
+        const msg = err.shortMessage ?? err.message ?? String(e);
         console.error('[useGetBalance] ⚠️ balance query failed', msg, e);
         debug.warn?.(`⚠️ balance query failed: ${msg}`);
         throw e;
@@ -282,7 +288,7 @@ export function useGetBalance({
     formatted: query.data?.formatted,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
-    error: (query.error as BalanceError) ?? null,
+    error: query.error ?? null,
     refetch: query.refetch,
     key: isEnabled ? keyString : undefined,
   };
