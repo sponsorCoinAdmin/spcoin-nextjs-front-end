@@ -1,6 +1,4 @@
-// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateCreateERC20Asset.ts
-
-import { type Address } from 'viem';
+import { type Abi, type Address, type PublicClient } from 'viem';
 import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
@@ -19,7 +17,6 @@ const debugLog = createDebugLogger(
   LOG_TIME,
 );
 
-// Minimal ERC-20 ABI (read-only)
 const ERC20_ABI = [
   {
     type: 'function',
@@ -42,53 +39,79 @@ const ERC20_ABI = [
     inputs: [],
     outputs: [{ type: 'string' }],
   },
-] as const;
+] as const satisfies Abi;
 
-/**
- * Resolve a token contract into an assetPatch suitable for RETURN_VALIDATED_ASSET.
- * Assumes on-chain existence was already handled by VALIDATE_EXISTS_ON_CHAIN.
- */
+interface ClientDebugSnapshot {
+  chain?: {
+    id?: number;
+    rpcUrls?: {
+      default?: {
+        http?: string[];
+        webSocket?: string[];
+      };
+    };
+  };
+  transport?: {
+    type?: string;
+    url?: string;
+    value?: {
+      url?: string;
+    };
+  };
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'unknown error';
+}
+
+function getShortErrorMessage(error: unknown): string | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('shortMessage' in error)) return undefined;
+  const shortMessage = (error as { shortMessage?: unknown }).shortMessage;
+  return typeof shortMessage === 'string' ? shortMessage : undefined;
+}
+
 export async function validateCreateERC20Asset(
   params: ValidateFSMInput,
 ): Promise<ValidateFSMOutput> {
-  const { debouncedHexInput, publicClient, chainId } = params;
-  const addr = (debouncedHexInput ?? '').trim() as Address;
+  const debouncedHexInput = params.debouncedHexInput;
+  const chainId = params.chainId;
+  const publicClientUnknown: unknown = params.publicClient;
+  const addrInput = (debouncedHexInput ?? '').trim();
 
-  const clientChainId = (publicClient as any)?.chain?.id;
-  debugLog.log?.('🔎 validateCreateERC20Asset entry', {
-    addr,
+  const debugClient = publicClientUnknown as ClientDebugSnapshot;
+  const clientChainId = debugClient.chain?.id;
+
+  debugLog.log?.('validateCreateERC20Asset entry', {
+    addr: addrInput,
     chainIdParam: chainId,
     clientChainId,
-    hasPublicClient: !!publicClient,
+    hasPublicClient: !!publicClientUnknown,
   });
 
-  // 1) Native token short-circuit (normally handled earlier, but keep as safety)
-  if (addr === NATIVE_TOKEN_ADDRESS) {
-    debugLog.log?.('🌐 native token → RETURN_VALIDATED_ASSET', {
-      addr,
-      chainId,
-    });
+  if (addrInput === NATIVE_TOKEN_ADDRESS) {
     return {
       nextState: InputState.RETURN_VALIDATED_ASSET,
       assetPatch: {
         address: NATIVE_TOKEN_ADDRESS as Address,
         chainId,
-        // name/symbol/decimals typically filled from chain config elsewhere
-      } as any,
+      } as ValidateFSMOutput['assetPatch'],
     };
   }
 
-  // 2) Basic guards
-  if (!addr || !isAddress(addr)) {
-    const msg = `Invalid token address "${addr}"`;
+  if (!addrInput || !isAddress(addrInput)) {
+    const msg = `Invalid token address "${addrInput}"`;
     debugLog.warn?.(msg);
     return {
       nextState: InputState.VALIDATE_ERC20_ASSET_ERROR,
       errorMessage: msg,
     };
   }
+  const addr = addrInput as Address;
 
-  if (!publicClient) {
+  if (!publicClientUnknown) {
     const msg = `Public client missing for token resolve (chainId=${chainId})`;
     debugLog.warn?.(msg);
     return {
@@ -96,56 +119,44 @@ export async function validateCreateERC20Asset(
       errorMessage: msg,
     };
   }
+  const client = publicClientUnknown as PublicClient;
 
-  // 🔍 2b) Log transport / RPC URL so we can debug EC2 vs local issues
   try {
-    const anyClient = publicClient as any;
-    const transport = anyClient.transport;
-
-    // viem http transport usually exposes .url; fall back to chain.rpcUrls if needed
+    const transport = debugClient.transport;
     const rpcUrl =
       transport?.url ??
       transport?.value?.url ??
-      anyClient?.chain?.rpcUrls?.default?.http?.[0] ??
-      anyClient?.chain?.rpcUrls?.default?.webSocket?.[0];
+      debugClient.chain?.rpcUrls?.default?.http?.[0] ??
+      debugClient.chain?.rpcUrls?.default?.webSocket?.[0];
 
-    const transportSnapshot = {
+    debugLog.log?.('publicClient transport snapshot', {
       addr,
       chainIdParam: chainId,
       clientChainId,
       transportType: transport?.type,
       rpcUrl,
-      // Deep debugging fields
       rawTransport: transport,
-      chainRpcUrls: anyClient?.chain?.rpcUrls,
-    };
-
-    debugLog.log?.('🌐 publicClient transport snapshot', transportSnapshot);
-  } catch (e: any) {
-    const msg = e?.message || String(e ?? 'unknown error');
-    debugLog.warn?.('⚠️ failed to introspect publicClient transport', { msg });
+      chainRpcUrls: debugClient.chain?.rpcUrls,
+    });
+  } catch (error: unknown) {
+    debugLog.warn?.('failed to introspect publicClient transport', {
+      msg: getErrorMessage(error),
+    });
   }
 
-  // 3) Try to get ERC-20 metadata (graceful fallbacks)
   const readNumber = async (fn: 'decimals'): Promise<number | undefined> => {
     try {
-      const out = await publicClient.readContract({
+      const out = await client.readContract({
         address: addr,
-        abi: ERC20_ABI as any,
+        abi: ERC20_ABI,
         functionName: fn,
       });
       const n = typeof out === 'number' ? out : Number(out);
-      debugLog.log?.(`✅ read ${fn} ok`, {
-        addr,
-        chainIdParam: chainId,
-        clientChainId,
-        value: n,
-      });
+      debugLog.log?.(`read ${fn} ok`, { addr, chainIdParam: chainId, clientChainId, value: n });
       return n;
-    } catch (e: any) {
-      const msg =
-        e?.shortMessage || e?.message || String(e ?? 'unknown error');
-      debugLog.warn?.(`⚠️ read ${fn} failed`, {
+    } catch (error: unknown) {
+      const msg = getShortErrorMessage(error) ?? getErrorMessage(error);
+      debugLog.warn?.(`read ${fn} failed`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -155,27 +166,19 @@ export async function validateCreateERC20Asset(
     }
   };
 
-  const readString = async (
-    fn: 'symbol' | 'name',
-  ): Promise<string | undefined> => {
+  const readString = async (fn: 'symbol' | 'name'): Promise<string | undefined> => {
     try {
-      const out = await publicClient.readContract({
+      const out = await client.readContract({
         address: addr,
-        abi: ERC20_ABI as any,
+        abi: ERC20_ABI,
         functionName: fn,
       });
       const s = typeof out === 'string' ? out : String(out);
-      debugLog.log?.(`✅ read ${fn} ok`, {
-        addr,
-        chainIdParam: chainId,
-        clientChainId,
-        value: s,
-      });
+      debugLog.log?.(`read ${fn} ok`, { addr, chainIdParam: chainId, clientChainId, value: s });
       return s;
-    } catch (e: any) {
-      const msg =
-        e?.shortMessage || e?.message || String(e ?? 'unknown error');
-      debugLog.warn?.(`⚠️ read ${fn} failed`, {
+    } catch (error: unknown) {
+      const msg = getShortErrorMessage(error) ?? getErrorMessage(error);
+      debugLog.warn?.(`read ${fn} failed`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -191,36 +194,21 @@ export async function validateCreateERC20Asset(
     readString('name'),
   ]);
 
-  // 4) Build the patch; proceed even if metadata is partial
-  const patch: any = { address: addr, chainId };
-
-  if (typeof decimals === 'number' && !Number.isNaN(decimals)) {
-    patch.decimals = decimals;
-  }
+  const patch: Record<string, unknown> = { address: addr, chainId };
+  if (typeof decimals === 'number' && !Number.isNaN(decimals)) patch.decimals = decimals;
   if (symbol) patch.symbol = symbol;
   if (name) patch.name = name;
 
-  // 4b) Attach local logo path so dropdowns can render the token icon.
-  //     Use centralized helper so address casing and directories are consistent.
   if (typeof chainId === 'number') {
     patch.logoURL = getTokenLogoURL({ chainId, address: addr });
-    debugLog.log?.('🖼️ token logoURL attached', {
-      addr,
-      chainIdParam: chainId,
-      logoURL: patch.logoURL,
-    });
   }
 
   if (!symbol && !name && decimals === undefined) {
-    debugLog.warn?.(
-      `❗ metadata not available for ${addr}; proceeding with bare patch`,
-    );
-  } else {
-    debugLog.log?.('✅ token resolved → RETURN_VALIDATED_ASSET', patch);
+    debugLog.warn?.(`metadata not available for ${addr}; proceeding with bare patch`);
   }
 
   return {
     nextState: InputState.RETURN_VALIDATED_ASSET,
-    assetPatch: patch,
+    assetPatch: patch as ValidateFSMOutput['assetPatch'],
   };
 }
