@@ -534,14 +534,20 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
             const key = normalizeAddressLower(a as Address).toLowerCase();
             const prefetched = prefetchedByAddress.get(key);
             if (prefetched && typeof prefetched === 'object') {
+              const prefetchedToken = prefetched as Record<string, unknown>;
+              const prefetchedLogoURL =
+                typeof prefetchedToken.logoURL === 'string' &&
+                prefetchedToken.logoURL.trim().length
+                  ? prefetchedToken.logoURL
+                  : undefined;
               return {
-                ...prefetched,
+                ...prefetchedToken,
                 address: normalizeAddressLower(a as Address),
                 chainId,
                 logoURL:
-                  typeof prefetched.logoURL === 'string' && prefetched.logoURL.trim().length
-                    ? prefetched.logoURL
-                    : getTokenLogoURL_SSOT(chainId, a as Address) ?? defaultMissingImage,
+                  prefetchedLogoURL ??
+                  getTokenLogoURL_SSOT(chainId, a as Address) ??
+                  defaultMissingImage,
               };
             }
             return hydrateTokenFromAddress(chainId, a as Address);

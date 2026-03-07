@@ -289,7 +289,7 @@ function getManageJsonForFeed(
 }
 
 function enforceAccountsOnly(built: unknown): FeedData {
-  const data = (asRecord(built) ?? {}) as FeedDataWithMeta & {
+  const data = ((asRecord(built) ?? {}) as unknown) as FeedDataWithMeta & {
     spCoinAccounts?: unknown;
     wallets?: unknown;
   };

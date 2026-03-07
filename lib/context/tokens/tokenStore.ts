@@ -102,7 +102,10 @@ export async function loadTokenRecordsBatch(
           const normalized = normalizeAddress(address);
           return [`${chainId}:${normalized}`, { chainId, address: normalized }] as const;
         })
-        .filter(Boolean) as readonly [string, { chainId: number; address: string }][],
+        .filter(Boolean) as readonly (readonly [
+          string,
+          { chainId: number; address: string },
+        ])[],
     ).values(),
   );
 
@@ -223,7 +226,10 @@ export async function loadTokenSeedRowsAllNetworks(
           const normalized = normalizeAddress(address);
           return [`${chainId}:${normalized}`, { chainId, address: normalized }] as const;
         })
-        .filter(Boolean) as readonly [string, { chainId: number; address: string }][],
+        .filter(Boolean) as readonly (readonly [
+          string,
+          { chainId: number; address: string },
+        ])[],
     ).values(),
   );
 }
