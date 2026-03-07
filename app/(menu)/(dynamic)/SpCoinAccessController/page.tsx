@@ -166,8 +166,20 @@ export default function SpCoinAccessControllerPage() {
   };
   const deploymentTokenName = buildDeploymentTokenName(deploymentName);
   const deploymentVersionPrefix = deploymentTokenName;
-  const deploymentChainName = String((exchangeContext as any)?.network?.name || 'Unknown');
-  const deploymentChainId = String((exchangeContext as any)?.network?.chainId ?? 'Unknown');
+  const rawDeploymentChainId = Number((exchangeContext as any)?.network?.chainId);
+  const mappedDeploymentChainId =
+    Number.isFinite(rawDeploymentChainId) && rawDeploymentChainId > 0
+      ? rawDeploymentChainId === 31337
+        ? 8453
+        : rawDeploymentChainId
+      : NaN;
+  const deploymentChainName =
+    rawDeploymentChainId === 31337
+      ? 'HardHat BASE'
+      : String((exchangeContext as any)?.network?.name || 'Unknown');
+  const deploymentChainId = Number.isFinite(mappedDeploymentChainId)
+    ? String(mappedDeploymentChainId)
+    : 'Unknown';
   const deploymentKeyRequiredMessage = 'Account Private Key for Deployment Required';
   const deploymentGuidanceMessage = useMemo(() => {
     if (deploymentMode === 'mocked') {
@@ -832,8 +844,12 @@ export default function SpCoinAccessControllerPage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">NPM Package</span>
+                  <label htmlFor="npm-package-select" className="text-sm font-semibold text-[#8FA8FF]">
+                    NPM Package
+                  </label>
                   <select
+                    id="npm-package-select"
+                    aria-label="NPM Package"
                     value={selectedPackage}
                     onChange={(event) => handlePackagePersist(event.target.value)}
                     className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
@@ -1151,6 +1167,27 @@ export default function SpCoinAccessControllerPage() {
                   </div>
                 </div>
 
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Active Network Name</span>
+                    <input
+                      type="text"
+                      value={deploymentChainName}
+                      readOnly
+                      className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+                    />
+                  </label>
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_auto] justify-self-end">
+                    <span className="text-right text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
+                    <input
+                      type="text"
+                      value={deploymentChainId}
+                      readOnly
+                      className="w-[6ch] min-w-[6ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-3 text-right text-slate-300 outline-none"
+                    />
+                  </label>
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
@@ -1214,8 +1251,12 @@ export default function SpCoinAccessControllerPage() {
                     >
                       Update Server
                     </button>
-                    <span className="text-sm font-semibold text-[#8FA8FF]">spCoin Logo</span>
+                    <label htmlFor="spcoin-logo-path" className="text-sm font-semibold text-[#8FA8FF]">
+                      spCoin Logo
+                    </label>
                     <input
+                      id="spcoin-logo-path"
+                      aria-label="spCoin Logo"
                       type="text"
                       value={deploymentLogoPath}
                       onChange={(event) => setDeploymentLogoPath(event.target.value)}

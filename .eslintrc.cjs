@@ -8,7 +8,6 @@ module.exports = {
     '@typescript-eslint',
     'unused-imports',
     'import',
-    'react-hooks',
     // NOTE: Do not add 'next' here. Next.js ESLint rules come via `extends: ['next/core-web-vitals']`.
   ],
   extends: [
@@ -27,8 +26,6 @@ module.exports = {
     'plugin:import/recommended',
     'plugin:import/typescript',
 
-    // Hooks
-    'plugin:react-hooks/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
