@@ -1,21 +1,19 @@
 {
-    "name":  "Guild of Guardians",
-    "symbol":  "GOG",
-    "decimals":  18,
-    "description":  "Guild of Guardians is a mobile RPG where players can turn their gaming passion into assets.",
-    "website":  "https://www.guildofguardians.com/",
-    "explorer":  "https://etherscan.io/token/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X9AB7BB7FDC60F4357ECFEF43986818A2A3569C62/logo.png",
-    "id":  "0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62",
-    "links":  [
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/guild-of-guardians/"
-                  },
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/GuildOfGuardian"
-                  }
-              ]
+  "address": "0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62",
+  "name": "Guild of Guardians",
+  "symbol": "GOG",
+  "decimals": 18,
+  "website": "https://www.guildofguardians.com/",
+  "description": "Guild of Guardians is a mobile RPG where players can turn their gaming passion into assets.",
+  "explorer": "https://etherscan.io/token/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62",
+  "links": [
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/guild-of-guardians/"
+    },
+    {
+      "name": "x",
+      "url": "https://x.com/GuildOfGuardian"
+    }
+  ]
 }

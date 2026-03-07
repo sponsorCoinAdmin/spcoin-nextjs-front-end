@@ -1,11 +1,9 @@
 {
-    "name":  "EQUAL",
-    "symbol":  "EQL",
-    "decimals":  8,
-    "description":  "A multi-chain web3 wallet that aims to reduce the complexities involved with interacting with the blockchain.",
-    "website":  "https://equal.tech/",
-    "explorer":  "https://explorer.binance.org/asset/EQL-586",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/EQL-586/logo.png",
-    "id":  "EQL-586"
+  "address": "EQL-586",
+  "name": "EQUAL",
+  "symbol": "EQL",
+  "decimals": 8,
+  "website": "https://equal.tech/",
+  "description": "A multi-chain web3 wallet that aims to reduce the complexities involved with interacting with the blockchain.",
+  "explorer": "https://explorer.binance.org/asset/EQL-586"
 }

@@ -1,11 +1,9 @@
 {
-    "name":  "SONM Token",
-    "symbol":  "SNM",
-    "decimals":  18,
-    "description":  "Decentralized Fog Computing Platform.",
-    "website":  "https://sonm.io",
-    "explorer":  "https://etherscan.io/token/0x983F6d60db79ea8cA4eB9968C6aFf8cfA04B3c63",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X983F6D60DB79EA8CA4EB9968C6AFF8CFA04B3C63/logo.png",
-    "id":  "0x983F6d60db79ea8cA4eB9968C6aFf8cfA04B3c63"
+  "address": "0x983F6d60db79ea8cA4eB9968C6aFf8cfA04B3c63",
+  "name": "SONM Token",
+  "symbol": "SNM",
+  "decimals": 18,
+  "website": "https://sonm.io",
+  "description": "Decentralized Fog Computing Platform.",
+  "explorer": "https://etherscan.io/token/0x983F6d60db79ea8cA4eB9968C6aFf8cfA04B3c63"
 }

@@ -1,13 +1,10 @@
 {
-    "chainId":  17777,
-    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    "name":  "EOS",
-    "symbol":  "EOS",
-    "decimals":  18,
-    "website":  "",
-    "description":  "-",
-    "explorer":  "https://bloks.io/account/volentixgsys",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/17777/contracts/0XEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/logo.png",
-    "id":  "volentixgsys"
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "EOS",
+  "symbol": "EOS",
+  "decimals": 18,
+  "website": "",
+  "description": "-",
+  "explorer": "https://bloks.io/account/volentixgsys",
+  "chainId": 17777
 }

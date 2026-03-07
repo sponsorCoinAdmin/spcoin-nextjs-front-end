@@ -1,11 +1,9 @@
 {
-    "name":  "NoleWater",
-    "symbol":  "AMSK",
-    "decimals":  0,
-    "description":  "-",
-    "website":  "https://nolelegends.com/",
-    "explorer":  "https://tronscan.io/#/token/1001699",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1001699/logo.png",
-    "id":  "1001699"
+  "address": "1001699",
+  "name": "NoleWater",
+  "symbol": "AMSK",
+  "decimals": 0,
+  "website": "https://nolelegends.com/",
+  "description": "-",
+  "explorer": "https://tronscan.io/#/token/1001699"
 }

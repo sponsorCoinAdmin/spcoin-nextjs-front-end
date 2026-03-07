@@ -1,13 +1,10 @@
 {
-    "name":  "Ronin",
-    "website":  "https://skymavis.com",
-    "description":  "Ronin unlocks explosive growth for Blockchain gaming and collectible projects.",
-    "explorer":  "https://explorer.roninchain.com",
-    "research":  "",
-    "symbol":  "RON",
-    "decimals":  18,
-    "status":  "active",
-    "links":  [
-
-              ]
+  "name": "Ronin",
+  "symbol": "RON",
+  "decimals": 18,
+  "website": "https://skymavis.com",
+  "description": "Ronin unlocks explosive growth for Blockchain gaming and collectible projects.",
+  "explorer": "https://explorer.roninchain.com",
+  "links": [],
+  "research": ""
 }

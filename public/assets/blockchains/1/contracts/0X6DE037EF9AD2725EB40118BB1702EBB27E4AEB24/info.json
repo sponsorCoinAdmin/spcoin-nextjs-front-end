@@ -1,11 +1,9 @@
 {
-    "name":  "Render Token",
-    "symbol":  "RNDR",
-    "decimals":  18,
-    "description":  "Distributed GPU rendering on the blockchain.",
-    "website":  "https://rendertoken.com/",
-    "explorer":  "https://etherscan.io/token/0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X6DE037EF9AD2725EB40118BB1702EBB27E4AEB24/logo.png",
-    "id":  "0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24"
+  "address": "0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24",
+  "name": "Render Token",
+  "symbol": "RNDR",
+  "decimals": 18,
+  "website": "https://rendertoken.com/",
+  "description": "Distributed GPU rendering on the blockchain.",
+  "explorer": "https://etherscan.io/token/0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24"
 }

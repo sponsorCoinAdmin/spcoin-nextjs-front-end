@@ -1,11 +1,9 @@
 {
-    "name":  "DarkMatter",
-    "symbol":  "DMX",
-    "decimals":  6,
-    "description":  "Dark Matter is the token utilized by Moon Marketing to spread block-chain technology across the broad gaming community.",
-    "website":  "https://www.moonmarketing.info/",
-    "explorer":  "https://tronscan.io/#/token/1002575",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1002575/logo.png",
-    "id":  "1002575"
+  "address": "1002575",
+  "name": "DarkMatter",
+  "symbol": "DMX",
+  "decimals": 6,
+  "website": "https://www.moonmarketing.info/",
+  "description": "Dark Matter is the token utilized by Moon Marketing to spread block-chain technology across the broad gaming community.",
+  "explorer": "https://tronscan.io/#/token/1002575"
 }

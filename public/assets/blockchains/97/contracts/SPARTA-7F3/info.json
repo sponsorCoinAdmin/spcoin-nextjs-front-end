@@ -1,11 +1,9 @@
 {
-    "name":  "SPARTAN PROTOCOL TOKEN",
-    "symbol":  "SPARTA-7F3",
-    "decimals":  8,
-    "website":  "",
-    "description":  "-",
-    "explorer":  "https://explorer.binance.org/asset/SPARTA-7F3",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/SPARTA-7F3/logo.png",
-    "id":  "SPARTA-7F3"
+  "address": "SPARTA-7F3",
+  "name": "SPARTAN PROTOCOL TOKEN",
+  "symbol": "SPARTA-7F3",
+  "decimals": 8,
+  "website": "",
+  "description": "-",
+  "explorer": "https://explorer.binance.org/asset/SPARTA-7F3"
 }

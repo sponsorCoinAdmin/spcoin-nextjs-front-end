@@ -1,21 +1,19 @@
 {
-    "name":  "TON Bridged USDT",
-    "website":  "https://bridge.ton.org/",
-    "description":  "Tether USD transferred from Ethereum via bridge.ton.org.",
-    "explorer":  "https://tonscan.org/ru/jetton/EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
-    "symbol":  "jUSDT",
-    "decimals":  6,
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA/logo.png",
-    "id":  "EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/tether_to"
-                  },
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/ru/currencies/ton-bridged-usdt/"
-                  }
-              ]
+  "address": "EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
+  "name": "TON Bridged USDT",
+  "symbol": "jUSDT",
+  "decimals": 6,
+  "website": "https://bridge.ton.org/",
+  "description": "Tether USD transferred from Ethereum via bridge.ton.org.",
+  "explorer": "https://tonscan.org/ru/jetton/EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/tether_to"
+    },
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/ru/currencies/ton-bridged-usdt/"
+    }
+  ]
 }

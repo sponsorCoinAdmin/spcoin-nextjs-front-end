@@ -1,30 +1,29 @@
 {
-    "name":  "POL (ex-MATIC)",
-    "website":  "https://polygon.technology/",
-    "short_description":  "Polygon (Matic) strives to solve the scalability and usability issues, while not compromising on decentralization and leveraging the existing developer community and ecosystem",
-    "description":  "Polygon (Matic) strives to solve the scalability and usability issues, while not compromising on decentralization and leveraging the existing developer community and ecosystem",
-    "explorer":  "https://polygonscan.com/",
-    "research":  "https://docs.matic.network/",
-    "symbol":  "POL",
-    "rpc_url":  "https://polygon-rpc.com",
-    "decimals":  18,
-    "status":  "active",
-    "links":  [
-                  {
-                      "name":  "github",
-                      "url":  "https://github.com/maticnetwork/"
-                  },
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/0xPolygon"
-                  },
-                  {
-                      "name":  "reddit",
-                      "url":  "https://reddit.com/r/maticnetwork/"
-                  },
-                  {
-                      "name":  "whitepaper",
-                      "url":  "https://github.com/maticnetwork/whitepaper"
-                  }
-              ]
+  "name": "POL (ex-MATIC)",
+  "symbol": "POL",
+  "decimals": 18,
+  "website": "https://polygon.technology/",
+  "description": "Polygon (Matic) strives to solve the scalability and usability issues, while not compromising on decentralization and leveraging the existing developer community and ecosystem",
+  "explorer": "https://polygonscan.com/",
+  "links": [
+    {
+      "name": "github",
+      "url": "https://github.com/maticnetwork/"
+    },
+    {
+      "name": "x",
+      "url": "https://x.com/0xPolygon"
+    },
+    {
+      "name": "reddit",
+      "url": "https://reddit.com/r/maticnetwork/"
+    },
+    {
+      "name": "whitepaper",
+      "url": "https://github.com/maticnetwork/whitepaper"
+    }
+  ],
+  "short_description": "Polygon (Matic) strives to solve the scalability and usability issues, while not compromising on decentralization and leveraging the existing developer community and ecosystem",
+  "research": "https://docs.matic.network/",
+  "rpc_url": "https://polygon-rpc.com"
 }

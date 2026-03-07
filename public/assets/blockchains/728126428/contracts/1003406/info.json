@@ -1,11 +1,10 @@
 {
-    "name":  "PeerCash",
-    "symbol":  "PEER",
-    "decimals":  6,
-    "description":  "-",
-    "website":  "",
-    "explorer":  "https://tronscan.io/#/token/1003406",
-    "status":  "spam",
-    "logoURL":  "assets/blockchains/728126428/contracts/1003406/logo.png",
-    "id":  "1003406"
+  "address": "1003406",
+  "name": "PeerCash",
+  "symbol": "PEER",
+  "decimals": 6,
+  "website": "",
+  "description": "-",
+  "explorer": "https://tronscan.io/#/token/1003406",
+  "status": "spam"
 }

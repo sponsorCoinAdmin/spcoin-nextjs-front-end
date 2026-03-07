@@ -1,11 +1,9 @@
 {
-    "name":  "Kioshu",
-    "symbol":  "KIO",
-    "decimals":  0,
-    "description":  "A Multi-Utility Gaming Token Utilized Across Multiple Platforms.",
-    "website":  "https://kioshu.io/",
-    "explorer":  "https://tronscan.io/#/token/1002023",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1002023/logo.png",
-    "id":  "1002023"
+  "address": "1002023",
+  "name": "Kioshu",
+  "symbol": "KIO",
+  "decimals": 0,
+  "website": "https://kioshu.io/",
+  "description": "A Multi-Utility Gaming Token Utilized Across Multiple Platforms.",
+  "explorer": "https://tronscan.io/#/token/1002023"
 }

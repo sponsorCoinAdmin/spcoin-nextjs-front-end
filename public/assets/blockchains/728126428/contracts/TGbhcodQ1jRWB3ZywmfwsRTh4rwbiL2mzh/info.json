@@ -1,11 +1,9 @@
 {
-    "name":  "LoveHeartsToken",
-    "symbol":  "LVH",
-    "decimals":  6,
-    "description":  "LoveHearts claims to be an online currency that connects people.",
-    "website":  "https://t.me/LoveHeartsForever",
-    "explorer":  "https://tronscan.io/#/token20/TGbhcodQ1jRWB3ZywmfwsRTh4rwbiL2mzh",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TGbhcodQ1jRWB3ZywmfwsRTh4rwbiL2mzh/logo.png",
-    "id":  "TGbhcodQ1jRWB3ZywmfwsRTh4rwbiL2mzh"
+  "address": "TGbhcodQ1jRWB3ZywmfwsRTh4rwbiL2mzh",
+  "name": "LoveHeartsToken",
+  "symbol": "LVH",
+  "decimals": 6,
+  "website": "https://t.me/LoveHeartsForever",
+  "description": "LoveHearts claims to be an online currency that connects people.",
+  "explorer": "https://tronscan.io/#/token20/TGbhcodQ1jRWB3ZywmfwsRTh4rwbiL2mzh"
 }

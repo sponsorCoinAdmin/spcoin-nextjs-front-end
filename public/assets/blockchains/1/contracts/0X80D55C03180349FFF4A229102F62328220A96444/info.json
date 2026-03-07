@@ -1,21 +1,19 @@
 {
-    "name":  "Opulous",
-    "symbol":  "OPUL",
-    "website":  "https://opulous.org/",
-    "decimals":  18,
-    "description":  "Opulous Token believe in a future where musicians keep control of the music they create and forge even deeper connections with their fans.",
-    "explorer":  "https://etherscan.io/token/0x80d55c03180349fff4a229102f62328220a96444",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X80D55C03180349FFF4A229102F62328220A96444/logo.png",
-    "id":  "0x80D55c03180349Fff4a229102F62328220A96444",
-    "links":  [
-                  {
-                      "name":  "telegram",
-                      "url":  "https://t.me/opulousapp"
-                  },
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/opulousapp"
-                  }
-              ]
+  "address": "0x80D55c03180349Fff4a229102F62328220A96444",
+  "name": "Opulous",
+  "symbol": "OPUL",
+  "decimals": 18,
+  "website": "https://opulous.org/",
+  "description": "Opulous Token believe in a future where musicians keep control of the music they create and forge even deeper connections with their fans.",
+  "explorer": "https://etherscan.io/token/0x80d55c03180349fff4a229102f62328220a96444",
+  "links": [
+    {
+      "name": "telegram",
+      "url": "https://t.me/opulousapp"
+    },
+    {
+      "name": "x",
+      "url": "https://x.com/opulousapp"
+    }
+  ]
 }

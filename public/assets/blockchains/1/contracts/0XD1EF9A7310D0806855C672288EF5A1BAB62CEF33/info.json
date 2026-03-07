@@ -1,11 +1,9 @@
 {
-    "name":  "BELIEVER",
-    "symbol":  "BLVR",
-    "decimals":  18,
-    "description":  "-",
-    "website":  "https://www.believercards.com/",
-    "explorer":  "https://etherscan.io/token/0xD1ef9a7310D0806855C672288EF5a1BAB62ceF33",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0XD1EF9A7310D0806855C672288EF5A1BAB62CEF33/logo.png",
-    "id":  "0xD1ef9a7310D0806855C672288EF5a1BAB62ceF33"
+  "address": "0xD1ef9a7310D0806855C672288EF5a1BAB62ceF33",
+  "name": "BELIEVER",
+  "symbol": "BLVR",
+  "decimals": 18,
+  "website": "https://www.believercards.com/",
+  "description": "-",
+  "explorer": "https://etherscan.io/token/0xD1ef9a7310D0806855C672288EF5a1BAB62ceF33"
 }

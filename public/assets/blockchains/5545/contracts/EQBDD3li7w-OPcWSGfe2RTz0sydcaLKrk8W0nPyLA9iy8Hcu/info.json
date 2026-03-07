@@ -1,15 +1,12 @@
 {
-    "address":  "EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu",
-    "name":  "Orbit Bridge Ton MOOI",
-    "symbol":  "oMOOI",
-    "decimals":  18,
-    "description":  "Orbit Bridge Token on TON blockchain!",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu/logo.png",
-    "explorer":  "https://tonscan.org/address/EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu",
-    "id":  "EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu",
-    "website":  "https://bridge.orbitchain.io/",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu",
+  "name": "Orbit Bridge Ton MOOI",
+  "symbol": "oMOOI",
+  "decimals": 18,
+  "website": "https://bridge.orbitchain.io/",
+  "description": "Orbit Bridge Token on TON blockchain!",
+  "explorer": "https://tonscan.org/address/EQBDD3li7w-OPcWSGfe2RTz0sydcaLKrk8W0nPyLA9iy8Hcu",
+  "tags": [
+    "wrapped"
+  ]
 }

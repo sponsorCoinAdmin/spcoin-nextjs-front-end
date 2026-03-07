@@ -1,11 +1,9 @@
 {
-    "name":  "TRONEuropeRewardCoin",
-    "symbol":  "TERC",
-    "decimals":  0,
-    "description":  "It is a coin for internal use from Tron Europe which is only rewarded through voting.",
-    "website":  "https://tron-europe.org/",
-    "explorer":  "https://tronscan.io/#/token/1000226",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1000226/logo.png",
-    "id":  "1000226"
+  "address": "1000226",
+  "name": "TRONEuropeRewardCoin",
+  "symbol": "TERC",
+  "decimals": 0,
+  "website": "https://tron-europe.org/",
+  "description": "It is a coin for internal use from Tron Europe which is only rewarded through voting.",
+  "explorer": "https://tronscan.io/#/token/1000226"
 }

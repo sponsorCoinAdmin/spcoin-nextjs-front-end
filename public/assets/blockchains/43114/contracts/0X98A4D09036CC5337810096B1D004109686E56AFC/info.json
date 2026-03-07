@@ -1,14 +1,12 @@
 {
-    "name":  "PancakeSwap Token (Portal)",
-    "symbol":  "CAKE",
-    "decimals":  18,
-    "description":  "Cross Chain Portal Bridged Token",
-    "website":  "https://pancakeswap.finance/",
-    "explorer":  "https://snowtrace.io/token/0x98a4d09036Cc5337810096b1D004109686E56Afc",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/43114/contracts/0X98A4D09036CC5337810096B1D004109686E56AFC/logo.png",
-    "id":  "0x98a4d09036Cc5337810096b1D004109686E56Afc",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "0x98a4d09036Cc5337810096b1D004109686E56Afc",
+  "name": "PancakeSwap Token (Portal)",
+  "symbol": "CAKE",
+  "decimals": 18,
+  "website": "https://pancakeswap.finance/",
+  "description": "Cross Chain Portal Bridged Token",
+  "explorer": "https://snowtrace.io/token/0x98a4d09036Cc5337810096b1D004109686E56Afc",
+  "tags": [
+    "wrapped"
+  ]
 }

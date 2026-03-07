@@ -1,11 +1,9 @@
 {
-    "name":  "BitUnits HyperBytes",
-    "symbol":  "BHB",
-    "decimals":  8,
-    "description":  "-",
-    "website":  "",
-    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0xD1eBe08dAe15E604B043789cb140be646E0bd27b",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/61/contracts/0XD1EBE08DAE15E604B043789CB140BE646E0BD27B/logo.png",
-    "id":  "0xD1eBe08dAe15E604B043789cb140be646E0bd27b"
+  "address": "0xD1eBe08dAe15E604B043789cb140be646E0bd27b",
+  "name": "BitUnits HyperBytes",
+  "symbol": "BHB",
+  "decimals": 8,
+  "website": "",
+  "description": "-",
+  "explorer": "https://blockscout.com/etc/mainnet/contractss/0xD1eBe08dAe15E604B043789cb140be646E0bd27b"
 }

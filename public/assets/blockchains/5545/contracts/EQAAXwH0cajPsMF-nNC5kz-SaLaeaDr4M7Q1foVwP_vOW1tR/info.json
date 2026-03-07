@@ -1,15 +1,12 @@
 {
-    "address":  "EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR",
-    "name":  "Orbit Bridge Ton Dai",
-    "symbol":  "oDAI",
-    "decimals":  18,
-    "description":  "Orbit Bridge Token on TON blockchain!",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR/logo.png",
-    "explorer":  "https://tonscan.org/address/EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR",
-    "id":  "EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR",
-    "website":  "https://bridge.orbitchain.io/",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR",
+  "name": "Orbit Bridge Ton Dai",
+  "symbol": "oDAI",
+  "decimals": 18,
+  "website": "https://bridge.orbitchain.io/",
+  "description": "Orbit Bridge Token on TON blockchain!",
+  "explorer": "https://tonscan.org/address/EQAAXwH0cajPsMF-nNC5kz-SaLaeaDr4M7Q1foVwP_vOW1tR",
+  "tags": [
+    "wrapped"
+  ]
 }

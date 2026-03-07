@@ -1,21 +1,18 @@
 {
-    "address":  "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
-    "name":  "Huebel Bolt",
-    "symbol":  "BOLT",
-    "decimals":  9,
-    "description":  "Official token of the Huebel Company",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw/logo.png",
-    "explorer":  "https://tonscan.org/address/EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
-    "id":  "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
-    "website":  "https://huebel.art/",
-    "links":  [
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/huebel-bolt/"
-                  }
-              ],
-    "tags":  [
-                 "memes"
-             ]
+  "address": "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
+  "name": "Huebel Bolt",
+  "symbol": "BOLT",
+  "decimals": 9,
+  "website": "https://huebel.art/",
+  "description": "Official token of the Huebel Company",
+  "explorer": "https://tonscan.org/address/EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
+  "links": [
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/huebel-bolt/"
+    }
+  ],
+  "tags": [
+    "memes"
+  ]
 }

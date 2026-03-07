@@ -1,11 +1,9 @@
 {
-    "name":  "Strike Finance",
-    "symbol":  "STRK",
-    "decimals":  18,
-    "description":  "Strike Finance Governance Token",
-    "explorer":  "https://etherscan.io/token/0x74232704659ef37c08995e386A2E26cc27a8d7B1",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X74232704659EF37C08995E386A2E26CC27A8D7B1/logo.png",
-    "id":  "0x74232704659ef37c08995e386A2E26cc27a8d7B1",
-    "website":  "https://strike.org"
+  "address": "0x74232704659ef37c08995e386A2E26cc27a8d7B1",
+  "name": "Strike Finance",
+  "symbol": "STRK",
+  "decimals": 18,
+  "website": "https://strike.org",
+  "description": "Strike Finance Governance Token",
+  "explorer": "https://etherscan.io/token/0x74232704659ef37c08995e386A2E26cc27a8d7B1"
 }

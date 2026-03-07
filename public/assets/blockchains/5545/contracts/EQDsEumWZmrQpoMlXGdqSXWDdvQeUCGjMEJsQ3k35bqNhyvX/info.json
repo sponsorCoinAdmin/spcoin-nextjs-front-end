@@ -1,15 +1,12 @@
 {
-    "address":  "EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX",
-    "name":  "Orbit Bridge Ton WEMIX$",
-    "symbol":  "oWEMIX$",
-    "decimals":  18,
-    "description":  "Orbit Bridge Token on TON blockchain!",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX/logo.png",
-    "explorer":  "https://tonscan.org/address/EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX",
-    "id":  "EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX",
-    "website":  "https://bridge.orbitchain.io/",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX",
+  "name": "Orbit Bridge Ton WEMIX$",
+  "symbol": "oWEMIX$",
+  "decimals": 18,
+  "website": "https://bridge.orbitchain.io/",
+  "description": "Orbit Bridge Token on TON blockchain!",
+  "explorer": "https://tonscan.org/address/EQDsEumWZmrQpoMlXGdqSXWDdvQeUCGjMEJsQ3k35bqNhyvX",
+  "tags": [
+    "wrapped"
+  ]
 }

@@ -1,11 +1,9 @@
 {
-    "name":  "BOOSTO",
-    "symbol":  "BST2",
-    "decimals":  8,
-    "description":  "Combine the talents of App developers and social media content creators, to build up a Decentralized DApp Ecosystem.",
-    "website":  "https://boosto.io/",
-    "explorer":  "https://explorer.binance.org/asset/BST2-2F2",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/BST2-2F2/logo.png",
-    "id":  "BST2-2F2"
+  "address": "BST2-2F2",
+  "name": "BOOSTO",
+  "symbol": "BST2",
+  "decimals": 8,
+  "website": "https://boosto.io/",
+  "description": "Combine the talents of App developers and social media content creators, to build up a Decentralized DApp Ecosystem.",
+  "explorer": "https://explorer.binance.org/asset/BST2-2F2"
 }

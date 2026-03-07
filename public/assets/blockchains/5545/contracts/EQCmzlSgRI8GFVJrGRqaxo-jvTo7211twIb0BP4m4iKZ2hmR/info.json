@@ -1,15 +1,12 @@
 {
-    "address":  "EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR",
-    "name":  "Orbit Bridge Ton Azit",
-    "symbol":  "oAZIT",
-    "decimals":  18,
-    "description":  "Orbit Bridge Token on TON blockchain!",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR/logo.png",
-    "explorer":  "https://tonscan.org/address/EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR",
-    "id":  "EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR",
-    "website":  "https://bridge.orbitchain.io/",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR",
+  "name": "Orbit Bridge Ton Azit",
+  "symbol": "oAZIT",
+  "decimals": 18,
+  "website": "https://bridge.orbitchain.io/",
+  "description": "Orbit Bridge Token on TON blockchain!",
+  "explorer": "https://tonscan.org/address/EQCmzlSgRI8GFVJrGRqaxo-jvTo7211twIb0BP4m4iKZ2hmR",
+  "tags": [
+    "wrapped"
+  ]
 }

@@ -1,21 +1,19 @@
 {
-    "name":  "Tron Bull",
-    "symbol":  "TBULL",
-    "decimals":  18,
-    "description":  "TBULL is the first memecoin inspired by the official mascot of Tron DAO, Tron Bull",
-    "website":  "https://tbullcoin.com/",
-    "explorer":  "https://tronscan.org/#/token20/TPeoxx1VhUMnAUyjwWfximDYFDQaxNQQ45",
-    "id":  "TPeoxx1VhUMnAUyjwWfximDYFDQaxNQQ45",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TPeoxx1VhUMnAUyjwWfximDYFDQaxNQQ45/logo.png",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/TBullOnTRX"
-                  },
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/tron-bull-tbull/"
-                  }
-              ]
+  "address": "TPeoxx1VhUMnAUyjwWfximDYFDQaxNQQ45",
+  "name": "Tron Bull",
+  "symbol": "TBULL",
+  "decimals": 18,
+  "website": "https://tbullcoin.com/",
+  "description": "TBULL is the first memecoin inspired by the official mascot of Tron DAO, Tron Bull",
+  "explorer": "https://tronscan.org/#/token20/TPeoxx1VhUMnAUyjwWfximDYFDQaxNQQ45",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/TBullOnTRX"
+    },
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/tron-bull-tbull/"
+    }
+  ]
 }

@@ -1,15 +1,12 @@
 {
-    "address":  "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
-    "name":  "Ambra",
-    "symbol":  "AMBR",
-    "decimals":  9,
-    "description":  "The Whales Club Token",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV/logo.png",
-    "explorer":  "https://tonscan.org/address/EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
-    "id":  "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
-    "website":  "https://tonwhales.com/",
-    "tags":  [
-                 "nft"
-             ]
+  "address": "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
+  "name": "Ambra",
+  "symbol": "AMBR",
+  "decimals": 9,
+  "website": "https://tonwhales.com/",
+  "description": "The Whales Club Token",
+  "explorer": "https://tonscan.org/address/EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
+  "tags": [
+    "nft"
+  ]
 }

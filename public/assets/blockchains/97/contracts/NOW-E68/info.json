@@ -1,11 +1,9 @@
 {
-    "name":  "NOW Token",
-    "symbol":  "NOW",
-    "decimals":  8,
-    "description":  "NOW Token is a utility token of ChangeNOW exchange platform.",
-    "website":  "https://changenow.io/",
-    "explorer":  "https://explorer.binance.org/asset/NOW-E68",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/NOW-E68/logo.png",
-    "id":  "NOW-E68"
+  "address": "NOW-E68",
+  "name": "NOW Token",
+  "symbol": "NOW",
+  "decimals": 8,
+  "website": "https://changenow.io/",
+  "description": "NOW Token is a utility token of ChangeNOW exchange platform.",
+  "explorer": "https://explorer.binance.org/asset/NOW-E68"
 }

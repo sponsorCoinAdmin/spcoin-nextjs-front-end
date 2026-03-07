@@ -1,11 +1,9 @@
 {
-    "name":  "eBTC",
-    "symbol":  "EBTC",
-    "decimals":  8,
-    "description":  "eBitcoin is a tokenized version of Bitcoin on the Ethereum blockchain.",
-    "website":  "https://ebitcoin.org/",
-    "explorer":  "https://etherscan.io/token/0xeB7C20027172E5d143fB030d50f91Cece2D1485D",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0XEB7C20027172E5D143FB030D50F91CECE2D1485D/logo.png",
-    "id":  "0xeB7C20027172E5d143fB030d50f91Cece2D1485D"
+  "address": "0xeB7C20027172E5d143fB030d50f91Cece2D1485D",
+  "name": "eBTC",
+  "symbol": "EBTC",
+  "decimals": 8,
+  "website": "https://ebitcoin.org/",
+  "description": "eBitcoin is a tokenized version of Bitcoin on the Ethereum blockchain.",
+  "explorer": "https://etherscan.io/token/0xeB7C20027172E5d143fB030d50f91Cece2D1485D"
 }

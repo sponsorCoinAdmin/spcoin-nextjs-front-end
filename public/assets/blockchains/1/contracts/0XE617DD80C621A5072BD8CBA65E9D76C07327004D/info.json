@@ -1,14 +1,12 @@
 {
-    "name":  "Raydium (Portal)",
-    "symbol":  "RAY",
-    "decimals":  6,
-    "description":  "Cross Chain Portal Bridged Token",
-    "website":  "https://raydium.io/",
-    "explorer":  "https://etherscan.io/token/0xE617dd80c621a5072bD8cBa65E9d76c07327004d",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0XE617DD80C621A5072BD8CBA65E9D76C07327004D/logo.png",
-    "id":  "0xE617dd80c621a5072bD8cBa65E9d76c07327004d",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "0xE617dd80c621a5072bD8cBa65E9d76c07327004d",
+  "name": "Raydium (Portal)",
+  "symbol": "RAY",
+  "decimals": 6,
+  "website": "https://raydium.io/",
+  "description": "Cross Chain Portal Bridged Token",
+  "explorer": "https://etherscan.io/token/0xE617dd80c621a5072bD8cBa65E9d76c07327004d",
+  "tags": [
+    "wrapped"
+  ]
 }

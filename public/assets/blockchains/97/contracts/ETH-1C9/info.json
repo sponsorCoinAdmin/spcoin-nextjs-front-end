@@ -1,11 +1,9 @@
 {
-    "name":  "ETH BEP2",
-    "symbol":  "ETH",
-    "decimals":  8,
-    "description":  "Binance-Peg Ethereum (ETH BEP2) is a token issued by Binance on Binance Chain; its price is pegged to Ethereum (ETH) at a ratio of 1:1.",
-    "website":  "https://binance.org",
-    "explorer":  "https://explorer.binance.org/asset/ETH-1C9",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/ETH-1C9/logo.png",
-    "id":  "ETH-1C9"
+  "address": "ETH-1C9",
+  "name": "ETH BEP2",
+  "symbol": "ETH",
+  "decimals": 8,
+  "website": "https://binance.org",
+  "description": "Binance-Peg Ethereum (ETH BEP2) is a token issued by Binance on Binance Chain; its price is pegged to Ethereum (ETH) at a ratio of 1:1.",
+  "explorer": "https://explorer.binance.org/asset/ETH-1C9"
 }

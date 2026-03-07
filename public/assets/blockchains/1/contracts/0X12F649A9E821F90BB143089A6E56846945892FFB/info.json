@@ -1,11 +1,9 @@
 {
-    "name":  "uDOO",
-    "symbol":  "uDOO",
-    "decimals":  18,
-    "description":  "-",
-    "website":  "http://www.hyprr.com/",
-    "explorer":  "https://etherscan.io/token/0x12f649A9E821F90BB143089a6e56846945892ffB",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X12F649A9E821F90BB143089A6E56846945892FFB/logo.png",
-    "id":  "0x12f649A9E821F90BB143089a6e56846945892ffB"
+  "address": "0x12f649A9E821F90BB143089a6e56846945892ffB",
+  "name": "uDOO",
+  "symbol": "uDOO",
+  "decimals": 18,
+  "website": "http://www.hyprr.com/",
+  "description": "-",
+  "explorer": "https://etherscan.io/token/0x12f649A9E821F90BB143089a6e56846945892ffB"
 }

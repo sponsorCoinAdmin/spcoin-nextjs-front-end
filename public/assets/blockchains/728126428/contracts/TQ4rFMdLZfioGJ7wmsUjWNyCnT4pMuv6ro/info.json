@@ -1,21 +1,19 @@
 {
-    "name":  "Hiver",
-    "symbol":  "HIT",
-    "decimals":  18,
-    "description":  "This is the token for gaming with offline shops.",
-    "website":  "https://hiverhit.co/",
-    "explorer":  "https://tronscan.org/#/token20/TQ4rFMdLZfioGJ7wmsUjWNyCnT4pMuv6ro",
-    "id":  "TQ4rFMdLZfioGJ7wmsUjWNyCnT4pMuv6ro",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TQ4rFMdLZfioGJ7wmsUjWNyCnT4pMuv6ro/logo.png",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/hiver_network"
-                  },
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/hiver/"
-                  }
-              ]
+  "address": "TQ4rFMdLZfioGJ7wmsUjWNyCnT4pMuv6ro",
+  "name": "Hiver",
+  "symbol": "HIT",
+  "decimals": 18,
+  "website": "https://hiverhit.co/",
+  "description": "This is the token for gaming with offline shops.",
+  "explorer": "https://tronscan.org/#/token20/TQ4rFMdLZfioGJ7wmsUjWNyCnT4pMuv6ro",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/hiver_network"
+    },
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/hiver/"
+    }
+  ]
 }

@@ -1,11 +1,9 @@
 {
-    "name":  "SparkPoint",
-    "symbol":  "SRK",
-    "decimals":  18,
-    "description":  "SparkPoint Ecosystem is a decentralized payment gateway with integrated crypto exchanges, blockchain based e-learning, gaming, and online store.",
-    "website":  "https://www.sparkpoint.io/",
-    "explorer":  "https://etherscan.io/token/0x0488401c3F535193Fa8Df029d9fFe615A06E74E6",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X0488401C3F535193FA8DF029D9FFE615A06E74E6/logo.png",
-    "id":  "0x0488401c3F535193Fa8Df029d9fFe615A06E74E6"
+  "address": "0x0488401c3F535193Fa8Df029d9fFe615A06E74E6",
+  "name": "SparkPoint",
+  "symbol": "SRK",
+  "decimals": 18,
+  "website": "https://www.sparkpoint.io/",
+  "description": "SparkPoint Ecosystem is a decentralized payment gateway with integrated crypto exchanges, blockchain based e-learning, gaming, and online store.",
+  "explorer": "https://etherscan.io/token/0x0488401c3F535193Fa8Df029d9fFe615A06E74E6"
 }

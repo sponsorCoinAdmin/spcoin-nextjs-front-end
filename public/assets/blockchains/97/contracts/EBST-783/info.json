@@ -1,11 +1,9 @@
 {
-    "name":  "eBoost",
-    "symbol":  "EBST",
-    "decimals":  8,
-    "description":  "Cryptocurrency that can be integrated into mobile games for in-game purchases, used for gamers to trade in-game items, and sponsor eSports tournaments.",
-    "website":  "http://www.eboost.fun/",
-    "explorer":  "https://explorer.binance.org/asset/EBST-783",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/EBST-783/logo.png",
-    "id":  "EBST-783"
+  "address": "EBST-783",
+  "name": "eBoost",
+  "symbol": "EBST",
+  "decimals": 8,
+  "website": "http://www.eboost.fun/",
+  "description": "Cryptocurrency that can be integrated into mobile games for in-game purchases, used for gamers to trade in-game items, and sponsor eSports tournaments.",
+  "explorer": "https://explorer.binance.org/asset/EBST-783"
 }

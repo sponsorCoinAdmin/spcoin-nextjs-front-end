@@ -1,11 +1,9 @@
 {
-    "name":  "FalconSwap Token",
-    "website":  "https://falconswap.com",
-    "description":  "The Powerhouse for DeFi",
-    "explorer":  "https://etherscan.io/token/0xfffffffFf15AbF397dA76f1dcc1A1604F45126DB",
-    "symbol":  "FSW",
-    "decimals":  18,
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0XFFFFFFFFF15ABF397DA76F1DCC1A1604F45126DB/logo.png",
-    "id":  "0xfffffffFf15AbF397dA76f1dcc1A1604F45126DB"
+  "address": "0xfffffffFf15AbF397dA76f1dcc1A1604F45126DB",
+  "name": "FalconSwap Token",
+  "symbol": "FSW",
+  "decimals": 18,
+  "website": "https://falconswap.com",
+  "description": "The Powerhouse for DeFi",
+  "explorer": "https://etherscan.io/token/0xfffffffFf15AbF397dA76f1dcc1A1604F45126DB"
 }

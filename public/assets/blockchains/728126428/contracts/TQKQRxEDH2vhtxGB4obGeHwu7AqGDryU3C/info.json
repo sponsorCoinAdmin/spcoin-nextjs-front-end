@@ -1,21 +1,19 @@
 {
-    "name":  "Sugar Boy",
-    "symbol":  "SUGAR",
-    "decimals":  18,
-    "description":  "The first boy on Tron with one mission; to share his $SUGAR.",
-    "website":  "https://www.sugarboy.vip/",
-    "explorer":  "https://tronscan.org/#/token20/TQKQRxEDH2vhtxGB4obGeHwu7AqGDryU3C",
-    "id":  "TQKQRxEDH2vhtxGB4obGeHwu7AqGDryU3C",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TQKQRxEDH2vhtxGB4obGeHwu7AqGDryU3C/logo.png",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/sugarboycoin"
-                  },
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/sugar-boy/"
-                  }
-              ]
+  "address": "TQKQRxEDH2vhtxGB4obGeHwu7AqGDryU3C",
+  "name": "Sugar Boy",
+  "symbol": "SUGAR",
+  "decimals": 18,
+  "website": "https://www.sugarboy.vip/",
+  "description": "The first boy on Tron with one mission; to share his $SUGAR.",
+  "explorer": "https://tronscan.org/#/token20/TQKQRxEDH2vhtxGB4obGeHwu7AqGDryU3C",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/sugarboycoin"
+    },
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/sugar-boy/"
+    }
+  ]
 }

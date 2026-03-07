@@ -1,11 +1,9 @@
 {
-    "name":  "OwnData",
-    "symbol":  "OWN",
-    "decimals":  8,
-    "description":  "Monetize your owndata with Blockchain.",
-    "website":  "https://owndata.network",
-    "explorer":  "https://etherscan.io/token/0x170b275CEd089FffAEBFe927F445a350ED9160DC",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X170B275CED089FFFAEBFE927F445A350ED9160DC/logo.png",
-    "id":  "0x170b275CEd089FffAEBFe927F445a350ED9160DC"
+  "address": "0x170b275CEd089FffAEBFe927F445a350ED9160DC",
+  "name": "OwnData",
+  "symbol": "OWN",
+  "decimals": 8,
+  "website": "https://owndata.network",
+  "description": "Monetize your owndata with Blockchain.",
+  "explorer": "https://etherscan.io/token/0x170b275CEd089FffAEBFe927F445a350ED9160DC"
 }

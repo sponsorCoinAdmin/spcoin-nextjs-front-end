@@ -1,11 +1,9 @@
 {
-    "name":  "WiiggoCoin",
-    "symbol":  "WIIG",
-    "decimals":  8,
-    "description":  "-",
-    "website":  "",
-    "explorer":  "https://blockscout.com/etc/mainnet/contractss/0x876A68D9efbc3CadaA886e9868D93737035F717C",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/61/contracts/0X876A68D9EFBC3CADAA886E9868D93737035F717C/logo.png",
-    "id":  "0x876A68D9efbc3CadaA886e9868D93737035F717C"
+  "address": "0x876A68D9efbc3CadaA886e9868D93737035F717C",
+  "name": "WiiggoCoin",
+  "symbol": "WIIG",
+  "decimals": 8,
+  "website": "",
+  "description": "-",
+  "explorer": "https://blockscout.com/etc/mainnet/contractss/0x876A68D9efbc3CadaA886e9868D93737035F717C"
 }

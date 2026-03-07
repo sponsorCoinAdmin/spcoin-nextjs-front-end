@@ -1,15 +1,13 @@
 {
-    "name":  "JUST",
-    "website":  "https://just.network",
-    "description":  "JUST aims to build a fair, decentralized financial system that provides stablecoin lending and governance mechanisms for users around the world.",
-    "explorer":  "https://tronscan.io/#/token20/TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9",
-    "research":  "https://research.binance.com/en/projects/just",
-    "symbol":  "JST",
-    "decimals":  18,
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9/logo.png",
-    "id":  "TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9",
-    "tags":  [
-                 "defi"
-             ]
+  "address": "TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9",
+  "name": "JUST",
+  "symbol": "JST",
+  "decimals": 18,
+  "website": "https://just.network",
+  "description": "JUST aims to build a fair, decentralized financial system that provides stablecoin lending and governance mechanisms for users around the world.",
+  "explorer": "https://tronscan.io/#/token20/TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9",
+  "research": "https://research.binance.com/en/projects/just",
+  "tags": [
+    "defi"
+  ]
 }

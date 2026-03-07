@@ -1,11 +1,9 @@
 {
-    "name":  "Gifto",
-    "symbol":  "GTO",
-    "decimals":  8,
-    "description":  "GIFTO a decentralized virtual gifting protocol running on Ethereum. The project facilitates the creation and exchange of virtual gifts by allowing users to send and receive the GIFTO ERC-20 token on any Social Media Platform.",
-    "website":  "https://gifto.io/",
-    "explorer":  "https://explorer.binance.org/asset/GTO-908",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/GTO-908/logo.png",
-    "id":  "GTO-908"
+  "address": "GTO-908",
+  "name": "Gifto",
+  "symbol": "GTO",
+  "decimals": 8,
+  "website": "https://gifto.io/",
+  "description": "GIFTO a decentralized virtual gifting protocol running on Ethereum. The project facilitates the creation and exchange of virtual gifts by allowing users to send and receive the GIFTO ERC-20 token on any Social Media Platform.",
+  "explorer": "https://explorer.binance.org/asset/GTO-908"
 }

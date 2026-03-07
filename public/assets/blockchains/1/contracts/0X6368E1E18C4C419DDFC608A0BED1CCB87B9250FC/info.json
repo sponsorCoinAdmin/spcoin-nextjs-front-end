@@ -1,11 +1,9 @@
 {
-    "name":  "Tap",
-    "symbol":  "XTP",
-    "decimals":  18,
-    "description":  "-",
-    "website":  "https://www.tap.global",
-    "explorer":  "https://etherscan.io/token/0x6368e1E18c4C419DDFC608A0BEd1ccb87b9250fc",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X6368E1E18C4C419DDFC608A0BED1CCB87B9250FC/logo.png",
-    "id":  "0x6368e1E18c4C419DDFC608A0BEd1ccb87b9250fc"
+  "address": "0x6368e1E18c4C419DDFC608A0BEd1ccb87b9250fc",
+  "name": "Tap",
+  "symbol": "XTP",
+  "decimals": 18,
+  "website": "https://www.tap.global",
+  "description": "-",
+  "explorer": "https://etherscan.io/token/0x6368e1E18c4C419DDFC608A0BEd1ccb87b9250fc"
 }

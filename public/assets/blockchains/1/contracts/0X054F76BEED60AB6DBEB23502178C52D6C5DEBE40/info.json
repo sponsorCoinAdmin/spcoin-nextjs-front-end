@@ -1,17 +1,15 @@
 {
-    "name":  "FIN",
-    "website":  "https://definer.org/",
-    "description":  "Earn interest and access instant loans through DeFiner’s noncustodial platform. Truly peer-to-peer. Secure. No middlemen.",
-    "explorer":  "https://etherscan.io/token/0x054f76beED60AB6dBEb23502178C52d6C5dEbE40",
-    "symbol":  "FIN",
-    "decimals":  18,
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X054F76BEED60AB6DBEB23502178C52D6C5DEBE40/logo.png",
-    "id":  "0x054f76beED60AB6dBEb23502178C52d6C5dEbE40",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/DeFinerorg"
-                  }
-              ]
+  "address": "0x054f76beED60AB6dBEb23502178C52d6C5dEbE40",
+  "name": "FIN",
+  "symbol": "FIN",
+  "decimals": 18,
+  "website": "https://definer.org/",
+  "description": "Earn interest and access instant loans through DeFiner’s noncustodial platform. Truly peer-to-peer. Secure. No middlemen.",
+  "explorer": "https://etherscan.io/token/0x054f76beED60AB6dBEb23502178C52d6C5dEbE40",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/DeFinerorg"
+    }
+  ]
 }

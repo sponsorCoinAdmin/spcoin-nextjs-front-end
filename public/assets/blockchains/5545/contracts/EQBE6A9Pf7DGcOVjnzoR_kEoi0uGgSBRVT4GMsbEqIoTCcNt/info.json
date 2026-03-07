@@ -1,21 +1,19 @@
 {
-    "name":  "GRAND",
-    "symbol":  "GRAND",
-    "decimals":  9,
-    "description":  "$GRAND is a utility token for the GRAND mini app’s ecosystem.",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQBE6A9Pf7DGcOVjnzoR_kEoi0uGgSBRVT4GMsbEqIoTCcNt/logo.png",
-    "explorer":  "https://tonscan.org/jetton/EQBE6A9Pf7DGcOVjnzoR_kEoi0uGgSBRVT4GMsbEqIoTCcNt",
-    "id":  "EQBE6A9Pf7DGcOVjnzoR_kEoi0uGgSBRVT4GMsbEqIoTCcNt",
-    "website":  "https://grandcombat.io/",
-    "links":  [
-                  {
-                      "name":  "telegram",
-                      "url":  "https://t.me/grandcombat"
-                  },
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/grand_combat"
-                  }
-              ]
+  "address": "EQBE6A9Pf7DGcOVjnzoR_kEoi0uGgSBRVT4GMsbEqIoTCcNt",
+  "name": "GRAND",
+  "symbol": "GRAND",
+  "decimals": 9,
+  "website": "https://grandcombat.io/",
+  "description": "$GRAND is a utility token for the GRAND mini app’s ecosystem.",
+  "explorer": "https://tonscan.org/jetton/EQBE6A9Pf7DGcOVjnzoR_kEoi0uGgSBRVT4GMsbEqIoTCcNt",
+  "links": [
+    {
+      "name": "telegram",
+      "url": "https://t.me/grandcombat"
+    },
+    {
+      "name": "x",
+      "url": "https://x.com/grand_combat"
+    }
+  ]
 }

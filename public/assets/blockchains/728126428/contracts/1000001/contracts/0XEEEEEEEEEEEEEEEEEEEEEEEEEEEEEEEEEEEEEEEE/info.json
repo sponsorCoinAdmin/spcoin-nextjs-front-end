@@ -1,8 +1,7 @@
 {
-    "chainId":  1000001,
-    "address":  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    "name":  "Ethereum",
-    "symbol":  "???",
-    "decimals":  18,
-    "logoURL":  "assets/blockchains/728126428/contracts/1000001/logo.png"
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "Ethereum",
+  "symbol": "???",
+  "decimals": 18,
+  "chainId": 1000001
 }

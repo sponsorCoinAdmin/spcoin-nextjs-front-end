@@ -1,11 +1,9 @@
 {
-    "name":  "KAOSCANDY",
-    "symbol":  "KAOS",
-    "decimals":  0,
-    "description":  "KAOSCANDY is an official Partner Token and integral game coin used within the game Eggies World. KAOSCANDY token will seek partnerships with other Blockchain games to expand the tokens use.",
-    "website":  "http://www.kaoscandy.com/",
-    "explorer":  "https://tronscan.io/#/token/1001107",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1001107/logo.png",
-    "id":  "1001107"
+  "address": "1001107",
+  "name": "KAOSCANDY",
+  "symbol": "KAOS",
+  "decimals": 0,
+  "website": "http://www.kaoscandy.com/",
+  "description": "KAOSCANDY is an official Partner Token and integral game coin used within the game Eggies World. KAOSCANDY token will seek partnerships with other Blockchain games to expand the tokens use.",
+  "explorer": "https://tronscan.io/#/token/1001107"
 }

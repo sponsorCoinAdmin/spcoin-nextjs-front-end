@@ -1,21 +1,19 @@
 {
-    "name":  "Measurable Data",
-    "symbol":  "MDT",
-    "decimals":  18,
-    "description":  "Measurable Data Token (MDT) aims to provide a blockchain-based data economy, where data providers and data buyers can exchange data securely and anonymously.",
-    "website":  "https://mdt.io/",
-    "explorer":  "https://tronscan.org/#/token20/TVoKC3ZhU7rcisPRFgunNwHVmSqfmiTB9m",
-    "id":  "TVoKC3ZhU7rcisPRFgunNwHVmSqfmiTB9m",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/TVoKC3ZhU7rcisPRFgunNwHVmSqfmiTB9m/logo.png",
-    "links":  [
-                  {
-                      "name":  "x",
-                      "url":  "https://x.com/MeasurableData"
-                  },
-                  {
-                      "name":  "coinmarketcap",
-                      "url":  "https://coinmarketcap.com/currencies/measurable-data-token/"
-                  }
-              ]
+  "address": "TVoKC3ZhU7rcisPRFgunNwHVmSqfmiTB9m",
+  "name": "Measurable Data",
+  "symbol": "MDT",
+  "decimals": 18,
+  "website": "https://mdt.io/",
+  "description": "Measurable Data Token (MDT) aims to provide a blockchain-based data economy, where data providers and data buyers can exchange data securely and anonymously.",
+  "explorer": "https://tronscan.org/#/token20/TVoKC3ZhU7rcisPRFgunNwHVmSqfmiTB9m",
+  "links": [
+    {
+      "name": "x",
+      "url": "https://x.com/MeasurableData"
+    },
+    {
+      "name": "coinmarketcap",
+      "url": "https://coinmarketcap.com/currencies/measurable-data-token/"
+    }
+  ]
 }

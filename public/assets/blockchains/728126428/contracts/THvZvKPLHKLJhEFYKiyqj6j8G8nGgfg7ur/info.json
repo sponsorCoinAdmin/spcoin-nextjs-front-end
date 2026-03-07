@@ -1,11 +1,10 @@
 {
-    "name":  "TRONdice",
-    "symbol":  "DICE",
-    "decimals":  6,
-    "description":  "-",
-    "website":  "",
-    "explorer":  "https://tronscan.io/#/token20/THvZvKPLHKLJhEFYKiyqj6j8G8nGgfg7ur",
-    "status":  "spam",
-    "logoURL":  "assets/blockchains/728126428/contracts/THvZvKPLHKLJhEFYKiyqj6j8G8nGgfg7ur/logo.png",
-    "id":  "THvZvKPLHKLJhEFYKiyqj6j8G8nGgfg7ur"
+  "address": "THvZvKPLHKLJhEFYKiyqj6j8G8nGgfg7ur",
+  "name": "TRONdice",
+  "symbol": "DICE",
+  "decimals": 6,
+  "website": "",
+  "description": "-",
+  "explorer": "https://tronscan.io/#/token20/THvZvKPLHKLJhEFYKiyqj6j8G8nGgfg7ur",
+  "status": "spam"
 }

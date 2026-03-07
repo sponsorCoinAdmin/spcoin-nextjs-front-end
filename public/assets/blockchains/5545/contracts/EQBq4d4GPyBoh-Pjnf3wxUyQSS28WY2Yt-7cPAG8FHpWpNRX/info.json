@@ -1,15 +1,12 @@
 {
-    "address":  "EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX",
-    "name":  "Orbit Bridge Ton Matic Token",
-    "symbol":  "oMATIC",
-    "decimals":  18,
-    "description":  "Orbit Bridge Token on TON blockchain!",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/5545/contracts/EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX/logo.png",
-    "explorer":  "https://tonscan.org/address/EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX",
-    "id":  "EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX",
-    "website":  "https://bridge.orbitchain.io/",
-    "tags":  [
-                 "wrapped"
-             ]
+  "address": "EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX",
+  "name": "Orbit Bridge Ton Matic Token",
+  "symbol": "oMATIC",
+  "decimals": 18,
+  "website": "https://bridge.orbitchain.io/",
+  "description": "Orbit Bridge Token on TON blockchain!",
+  "explorer": "https://tonscan.org/address/EQBq4d4GPyBoh-Pjnf3wxUyQSS28WY2Yt-7cPAG8FHpWpNRX",
+  "tags": [
+    "wrapped"
+  ]
 }

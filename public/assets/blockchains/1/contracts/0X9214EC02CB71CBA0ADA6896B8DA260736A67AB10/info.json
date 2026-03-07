@@ -1,11 +1,9 @@
 {
-    "name":  "Real Estate Asset Ledger",
-    "symbol":  "REAL",
-    "decimals":  18,
-    "description":  "Token Real Estate Asset Ledger.",
-    "website":  "https://www.real.markets",
-    "explorer":  "https://etherscan.io/token/0x9214eC02CB71CbA0ADA6896b8dA260736a67ab10",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X9214EC02CB71CBA0ADA6896B8DA260736A67AB10/logo.png",
-    "id":  "0x9214eC02CB71CbA0ADA6896b8dA260736a67ab10"
+  "address": "0x9214eC02CB71CbA0ADA6896b8dA260736a67ab10",
+  "name": "Real Estate Asset Ledger",
+  "symbol": "REAL",
+  "decimals": 18,
+  "website": "https://www.real.markets",
+  "description": "Token Real Estate Asset Ledger.",
+  "explorer": "https://etherscan.io/token/0x9214eC02CB71CbA0ADA6896b8dA260736a67ab10"
 }

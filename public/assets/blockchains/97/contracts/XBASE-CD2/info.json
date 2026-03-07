@@ -1,11 +1,9 @@
 {
-    "name":  "Eterbase Coin",
-    "symbol":  "XBASE",
-    "decimals":  8,
-    "description":  "ETERBASE describes itself as a cryptocurrency exchange platform with a focus on crypto to SEPA integration (via individual IBAN accounts), multi-asset support, and regulatory compliance.",
-    "website":  "https://www.eterbase.com/",
-    "explorer":  "https://explorer.binance.org/asset/XBASE-CD2",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/XBASE-CD2/logo.png",
-    "id":  "XBASE-CD2"
+  "address": "XBASE-CD2",
+  "name": "Eterbase Coin",
+  "symbol": "XBASE",
+  "decimals": 8,
+  "website": "https://www.eterbase.com/",
+  "description": "ETERBASE describes itself as a cryptocurrency exchange platform with a focus on crypto to SEPA integration (via individual IBAN accounts), multi-asset support, and regulatory compliance.",
+  "explorer": "https://explorer.binance.org/asset/XBASE-CD2"
 }

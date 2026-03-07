@@ -1,11 +1,9 @@
 {
-    "name":  "Fusion",
-    "symbol":  "FSN",
-    "decimals":  8,
-    "description":  "The FSN token is an essential component of all the tools available in the Fusion ecosystem.",
-    "website":  "https://www.fusion.org/",
-    "explorer":  "https://explorer.binance.org/asset/FSN-E14",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/FSN-E14/logo.png",
-    "id":  "FSN-E14"
+  "address": "FSN-E14",
+  "name": "Fusion",
+  "symbol": "FSN",
+  "decimals": 8,
+  "website": "https://www.fusion.org/",
+  "description": "The FSN token is an essential component of all the tools available in the Fusion ecosystem.",
+  "explorer": "https://explorer.binance.org/asset/FSN-E14"
 }

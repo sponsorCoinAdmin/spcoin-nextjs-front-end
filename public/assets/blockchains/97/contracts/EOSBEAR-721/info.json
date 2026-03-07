@@ -1,11 +1,9 @@
 {
-    "name":  "3X Short EOS Token",
-    "symbol":  "EOSBEAR",
-    "decimals":  8,
-    "description":  "-",
-    "website":  "",
-    "explorer":  "https://explorer.binance.org/asset/EOSBEAR-721",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/EOSBEAR-721/logo.png",
-    "id":  "EOSBEAR-721"
+  "address": "EOSBEAR-721",
+  "name": "3X Short EOS Token",
+  "symbol": "EOSBEAR",
+  "decimals": 8,
+  "website": "",
+  "description": "-",
+  "explorer": "https://explorer.binance.org/asset/EOSBEAR-721"
 }

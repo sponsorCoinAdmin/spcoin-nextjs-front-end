@@ -1,11 +1,9 @@
 {
-    "name":  "TRONFamily",
-    "symbol":  "FAT",
-    "decimals":  6,
-    "description":  "-",
-    "website":  "https://TRON-Family.de",
-    "explorer":  "https://tronscan.io/#/token/1002939",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/728126428/contracts/1002939/logo.png",
-    "id":  "1002939"
+  "address": "1002939",
+  "name": "TRONFamily",
+  "symbol": "FAT",
+  "decimals": 6,
+  "website": "https://TRON-Family.de",
+  "description": "-",
+  "explorer": "https://tronscan.io/#/token/1002939"
 }

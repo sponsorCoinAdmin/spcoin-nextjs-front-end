@@ -1,11 +1,9 @@
 {
-    "name":  "volentixgsys",
-    "symbol":  "VTX",
-    "decimals":  8,
-    "website":  "",
-    "description":  "-",
-    "explorer":  "https://bloks.io/account/volentixgsys",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/17777/contracts/volentixgsys/logo.png",
-    "id":  "volentixgsys"
+  "address": "volentixgsys",
+  "name": "volentixgsys",
+  "symbol": "VTX",
+  "decimals": 8,
+  "website": "",
+  "description": "-",
+  "explorer": "https://bloks.io/account/volentixgsys"
 }

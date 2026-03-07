@@ -1,14 +1,12 @@
 {
-    "name":  "CryptoFranc",
-    "symbol":  "XCHF",
-    "decimals":  18,
-    "description":  "The CryptoFranc (XCHF) is a stable coin bound to the Swiss Franc and classifies as a payment token in accordance with the FINMA ICO guidelines.",
-    "website":  "https://www.swisscryptotokens.ch",
-    "explorer":  "https://etherscan.io/token/0xB4272071eCAdd69d933AdcD19cA99fe80664fc08",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0XB4272071ECADD69D933ADCD19CA99FE80664FC08/logo.png",
-    "id":  "0xB4272071eCAdd69d933AdcD19cA99fe80664fc08",
-    "tags":  [
-                 "stablecoin"
-             ]
+  "address": "0xB4272071eCAdd69d933AdcD19cA99fe80664fc08",
+  "name": "CryptoFranc",
+  "symbol": "XCHF",
+  "decimals": 18,
+  "website": "https://www.swisscryptotokens.ch",
+  "description": "The CryptoFranc (XCHF) is a stable coin bound to the Swiss Franc and classifies as a payment token in accordance with the FINMA ICO guidelines.",
+  "explorer": "https://etherscan.io/token/0xB4272071eCAdd69d933AdcD19cA99fe80664fc08",
+  "tags": [
+    "stablecoin"
+  ]
 }

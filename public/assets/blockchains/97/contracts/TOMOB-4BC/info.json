@@ -1,11 +1,9 @@
 {
-    "name":  "TomoChain",
-    "symbol":  "TOMOB",
-    "decimals":  8,
-    "description":  "TomoChain is a scalable blockchain-powered via Proof-of-Stake Voting consensus which is used commercially by companies globally.",
-    "website":  "https://tomochain.com/",
-    "explorer":  "https://explorer.binance.org/asset/TOMOB-4BC",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/97/contracts/TOMOB-4BC/logo.png",
-    "id":  "TOMOB-4BC"
+  "address": "TOMOB-4BC",
+  "name": "TomoChain",
+  "symbol": "TOMOB",
+  "decimals": 8,
+  "website": "https://tomochain.com/",
+  "description": "TomoChain is a scalable blockchain-powered via Proof-of-Stake Voting consensus which is used commercially by companies globally.",
+  "explorer": "https://explorer.binance.org/asset/TOMOB-4BC"
 }

@@ -1,11 +1,9 @@
 {
-    "name":  "Delphy Token",
-    "symbol":  "DPY",
-    "decimals":  18,
-    "description":  "Delphy is a distributed, social mobile prediction market platform built on Ethereum..",
-    "website":  "https://www.delphy.org",
-    "explorer":  "https://etherscan.io/token/0x6C2adC2073994fb2CCC5032cC2906Fa221e9B391",
-    "status":  "active",
-    "logoURL":  "assets/blockchains/1/contracts/0X6C2ADC2073994FB2CCC5032CC2906FA221E9B391/logo.png",
-    "id":  "0x6C2adC2073994fb2CCC5032cC2906Fa221e9B391"
+  "address": "0x6C2adC2073994fb2CCC5032cC2906Fa221e9B391",
+  "name": "Delphy Token",
+  "symbol": "DPY",
+  "decimals": 18,
+  "website": "https://www.delphy.org",
+  "description": "Delphy is a distributed, social mobile prediction market platform built on Ethereum..",
+  "explorer": "https://etherscan.io/token/0x6C2adC2073994fb2CCC5032cC2906Fa221e9B391"
 }
