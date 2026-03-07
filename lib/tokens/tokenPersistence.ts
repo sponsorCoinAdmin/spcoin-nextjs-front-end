@@ -5,7 +5,11 @@ import { toPersistedTokenRef } from '@/lib/tokens/tokenKey';
 export function stripPersistedTradeTokens(tradeData: unknown): TradeData | unknown {
   if (!tradeData || typeof tradeData !== 'object') return tradeData;
 
-  const src = tradeData as any;
+  const src = tradeData as {
+    sellTokenContract?: unknown;
+    buyTokenContract?: unknown;
+    previewTokenContract?: unknown;
+  };
   return {
     ...src,
     sellTokenContract: toPersistedTokenRef(src.sellTokenContract),
@@ -16,8 +20,8 @@ export function stripPersistedTradeTokens(tradeData: unknown): TradeData | unkno
 
 export function stripPersistedTokenData(ctx: ExchangeContext): ExchangeContext {
   return {
-    ...(ctx as any),
-    tradeData: stripPersistedTradeTokens((ctx as any)?.tradeData) as TradeData,
+    ...ctx,
+    tradeData: stripPersistedTradeTokens(ctx.tradeData) as TradeData,
   } as ExchangeContext;
 }
 

@@ -6,6 +6,7 @@ import {
   loadTokenRecord,
   loadTokenRecordsBatch,
 } from '@/lib/context/tokens/tokenStore';
+import type { TokenContract } from '@/lib/structure';
 
 const ENV_TOKEN_PATH_RAW = process.env.NEXT_PUBLIC_TOKEN_PATH;
 const NATIVE_ETH_PLACEHOLDER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -62,10 +63,23 @@ export function getTokenLogoURL_SSOT(
   return `${base}${chainId}/contracts/${key}/logo.png`;
 }
 
+interface TokenJsonInput {
+  address?: unknown;
+  id?: unknown;
+  addr?: unknown;
+  name?: unknown;
+  symbol?: unknown;
+  decimals?: unknown;
+  logoURL?: unknown;
+  logoURI?: unknown;
+  infoURL?: unknown;
+  [key: string]: unknown;
+}
+
 export async function hydrateTokenFromAddress(
   chainId: number,
   address: Address,
-) {
+): Promise<TokenContract> {
   const addr = (address ?? '').trim() as Address;
 
   if (addr.toLowerCase() === NATIVE_ETH_PLACEHOLDER.toLowerCase()) {
@@ -76,7 +90,8 @@ export async function hydrateTokenFromAddress(
       symbol: 'ETH',
       decimals: 18,
       logoURL: defaultMissingImage,
-    } as any;
+      balance: 0n,
+    };
   }
 
   try {
@@ -93,7 +108,8 @@ export async function hydrateTokenFromAddress(
         typeof record?.logoURL === 'string' && record.logoURL.trim().length
           ? record.logoURL
           : getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage,
-    } as any;
+      balance: 0n,
+    };
   } catch {
     const logoURL = getTokenLogoURL_SSOT(chainId, addr) ?? defaultMissingImage;
     return {
@@ -103,36 +119,37 @@ export async function hydrateTokenFromAddress(
       symbol: '',
       decimals: undefined,
       logoURL,
-    } as any;
+      balance: 0n,
+    };
   }
 }
 
-export function buildTokenFromJson(tokenJson: any, chainId: number) {
+export function buildTokenFromJson(tokenJson: unknown, chainId: number): TokenJsonInput {
+  const tokenObj: TokenJsonInput =
+    tokenJson && typeof tokenJson === 'object' ? (tokenJson as TokenJsonInput) : {};
   const rawAddr =
     typeof tokenJson === 'string'
       ? tokenJson
-      : tokenJson && typeof tokenJson === 'object'
-        ? (tokenJson.address ?? tokenJson.id ?? tokenJson.addr)
-        : '';
+      : tokenObj.address ?? tokenObj.id ?? tokenObj.addr ?? '';
 
   const addr =
     typeof rawAddr === 'string'
       ? rawAddr.trim()
-      : String(rawAddr ?? '').trim();
+      : typeof rawAddr === 'number' ||
+          typeof rawAddr === 'bigint' ||
+          typeof rawAddr === 'boolean'
+        ? String(rawAddr).trim()
+        : '';
 
   if (!addr || !isAddress(addr)) {
     const fallbackName =
-      tokenJson &&
-      typeof tokenJson === 'object' &&
-      typeof tokenJson.name === 'string'
-        ? tokenJson.name
+      typeof tokenObj.name === 'string'
+        ? tokenObj.name
         : 'Invalid token address';
 
     const fallbackSymbol =
-      tokenJson &&
-      typeof tokenJson === 'object' &&
-      typeof tokenJson.symbol === 'string'
-        ? tokenJson.symbol
+      typeof tokenObj.symbol === 'string'
+        ? tokenObj.symbol
         : 'INVALID';
 
     return {
@@ -143,11 +160,11 @@ export function buildTokenFromJson(tokenJson: any, chainId: number) {
       decimals: undefined,
       logoURL: defaultMissingImage,
       __invalid: true,
-    } as any;
+    };
   }
 
-  const out: any = {
-    ...(tokenJson && typeof tokenJson === 'object' ? tokenJson : {}),
+  const out: TokenJsonInput = {
+    ...tokenObj,
     address: addr,
     chainId,
   };
@@ -160,12 +177,8 @@ export function buildTokenFromJson(tokenJson: any, chainId: number) {
         : undefined;
 
   out.logoURL =
-    explicitLogo ??
-    getTokenLogoURL_SSOT(chainId, addr as Address) ??
-    defaultMissingImage;
-  if (out.infoURL == null) {
-    out.infoURL = getTokenInfoURL_SSOT(chainId, addr as Address);
-  }
+    explicitLogo ?? getTokenLogoURL_SSOT(chainId, addr as Address) ?? defaultMissingImage;
+  out.infoURL ??= getTokenInfoURL_SSOT(chainId, addr as Address);
 
   return out;
 }
@@ -173,14 +186,14 @@ export function buildTokenFromJson(tokenJson: any, chainId: number) {
 export async function hydrateTokensFromAddressesBatch(
   chainId: number,
   addresses: Address[],
-): Promise<Map<string, any>> {
+): Promise<Map<string, unknown>> {
   const uniqueAddresses = Array.from(
     new Set(addresses.map((a) => normalizeAddressLower(a))),
   );
-  if (!uniqueAddresses.length) return new Map<string, any>();
+  if (!uniqueAddresses.length) return new Map<string, unknown>();
 
   const pages = chunk(uniqueAddresses, TOKEN_BATCH_PAGE_SIZE);
-  const out = new Map<string, any>();
+  const out = new Map<string, unknown>();
 
   await Promise.all(
     pages.map(async (page) => {

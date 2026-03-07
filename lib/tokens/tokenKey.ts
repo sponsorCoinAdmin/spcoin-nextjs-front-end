@@ -1,19 +1,31 @@
 import type { TokenContract } from '@/lib/structure';
 
 export function normalizeTokenAddressKey(value: unknown): string {
-  return (value ?? '').toString().trim().toLowerCase();
+  if (typeof value === 'string') return value.trim().toLowerCase();
+  if (
+    typeof value === 'number' ||
+    typeof value === 'bigint' ||
+    typeof value === 'boolean'
+  ) {
+    return String(value).trim().toLowerCase();
+  }
+  return '';
 }
 
 export function getTokenChainId(token: unknown): number | undefined {
   const chainId =
-    token && typeof token === 'object' ? Number((token as any).chainId ?? 0) : 0;
+    token && typeof token === 'object'
+      ? Number((token as { chainId?: unknown }).chainId ?? 0)
+      : 0;
   return Number.isFinite(chainId) && chainId > 0 ? chainId : undefined;
 }
 
 export function getTokenAddress(token: unknown): `0x${string}` | undefined {
   const address =
-    token && typeof token === 'object' && typeof (token as any).address === 'string'
-      ? String((token as any).address).trim()
+    token &&
+    typeof token === 'object' &&
+    typeof (token as { address?: unknown }).address === 'string'
+      ? String((token as { address: string }).address).trim()
       : '';
   return address ? (address as `0x${string}`) : undefined;
 }

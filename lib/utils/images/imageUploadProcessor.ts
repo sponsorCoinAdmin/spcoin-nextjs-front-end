@@ -57,23 +57,23 @@ export const ACCEPTED_IMAGE_INPUT_ACCEPT = [
   '.svg',
 ].join(',');
 
-export type ProcessImageUploadOptions = {
+export interface ProcessImageUploadOptions {
   targetWidth?: number;
   targetHeight?: number;
   maxInputBytes?: number;
   maxOutputBytes?: number;
   maxDecodedPixels?: number;
   maxDimensionPx?: number;
-};
+}
 
-export type ProcessImageUploadResult = {
+export interface ProcessImageUploadResult {
   file: File;
   blob: Blob;
   width: number;
   height: number;
   sizeBytes: number;
   mimeType: 'image/png';
-};
+}
 
 const DEFAULT_TARGET_WIDTH = 400;
 const DEFAULT_TARGET_HEIGHT = 400;

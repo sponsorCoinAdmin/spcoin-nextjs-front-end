@@ -15,10 +15,16 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('useFeedData', DEBUG_ENABLED, LOG_TIME);
 
-type CacheEntry = {
+interface CacheEntry {
   data: FeedData;
   expiresAt: number;
-};
+}
+
+type FeedDataWithMeta = FeedData &
+  Partial<{
+    __sourceId: string;
+    __sourceKind: string;
+  }>;
 
 const DEFAULT_FEED_CACHE_TTL_MS = 60_000;
 
@@ -116,7 +122,8 @@ export function useFeedData(feedType: FEED_TYPE) {
         }
 
         const data = await request;
-        const anyData: any = data;
+        const feedDataWithMeta = data as FeedDataWithMeta;
+        const feedDataRecord = feedDataWithMeta as Record<string, unknown>;
 
         if (cancelled) {
           debugLog.warn?.('[cancelled-after-fetch]', { seq });
@@ -138,24 +145,29 @@ export function useFeedData(feedType: FEED_TYPE) {
           chainId: chain,
 
           // debug meta (if provided)
-          sourceId: anyData?.__sourceId ?? '(missing __sourceId)',
-          sourceKind: anyData?.__sourceKind ?? '(missing __sourceKind)',
+          sourceId: feedDataWithMeta.__sourceId ?? '(missing __sourceId)',
+          sourceKind: feedDataWithMeta.__sourceKind ?? '(missing __sourceKind)',
 
           // ✅ SSOT: spCoinAccounts only
-          spCoinAccountsLen: Array.isArray(anyData?.spCoinAccounts) ? anyData.spCoinAccounts.length : 0,
+          spCoinAccountsLen: Array.isArray(feedDataRecord.spCoinAccounts)
+            ? feedDataRecord.spCoinAccounts.length
+            : 0,
 
-          tokensLen: Array.isArray(anyData?.tokens) ? anyData.tokens.length : 0,
+          tokensLen: Array.isArray(feedDataRecord.tokens)
+            ? feedDataRecord.tokens.length
+            : 0,
           ttlMs,
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (cancelled) return;
         setFeedData(null);
-        setError(e?.message ?? 'Failed to get feed');
+        const message = e instanceof Error ? e.message : 'Failed to get feed';
+        setError(message);
         debugLog.error?.('[error]', {
           seq,
           feedTypeLabel: FEED_TYPE[feedType],
           chainId: chain,
-          message: e?.message ?? String(e),
+          message: e instanceof Error ? e.message : String(e),
         });
       } finally {
         inFlightFeedRequests.delete(key);

@@ -19,8 +19,7 @@ export function normalizeExchangeTokensWithRegistry(
   registry: TokenRegistry = tokenRegistry,
 ): ExchangeContextTypeOnly {
   const next = ctx;
-  const tradeData = (next as any).tradeData ?? {};
-  (next as any).tradeData = tradeData;
+  const tradeData = next.tradeData;
 
   const syncSingle = (
     field: 'sellTokenContract' | 'buyTokenContract' | 'previewTokenContract',
@@ -51,6 +50,7 @@ export function normalizeExchangeTokensWithRegistry(
   syncSingle('buyTokenContract', 'trade:buy');
   syncSingle('previewTokenContract', 'trade:preview');
 
+  next.tradeData = { ...tradeData };
   return next;
 }
 

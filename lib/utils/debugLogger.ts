@@ -22,9 +22,11 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
  * BigInt-safe JSON.stringify helper
  */
 function serializeWithBigInt(obj: any): string {
-  return JSON.stringify(obj, (_, value) =>
-    typeof value === 'bigint' ? value.toString() : value
-  );
+  return JSON.stringify(obj, (_key, value) => {
+    if (typeof value === 'bigint') return value.toString();
+    const passthrough: unknown = value;
+    return passthrough;
+  });
 }
 
 /**
@@ -38,7 +40,7 @@ function serializeWithBigInt(obj: any): string {
 export function createDebugLogger(
   moduleName: string,
   enabled: boolean,
-  tsFlag: boolean = true,
+  tsFlag = true,
   logLevel: LogLevel = 'debug'
 ): DebugLogger {
   const prefix = `[🛠️ ${moduleName}]`;

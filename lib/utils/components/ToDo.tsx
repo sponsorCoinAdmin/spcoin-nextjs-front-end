@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-type ToDoProps = {
+interface ToDoProps {
   /** controls visibility externally; if omitted, component manages its own visibility */
   show?: boolean;
   /** called when the user dismisses the overlay (via clicking the text) */
@@ -18,7 +18,7 @@ type ToDoProps = {
   zIndex?: number;
   /** whether the backdrop should block clicks (until dismissed) */
   blockClicks?: boolean;
-};
+}
 
 export default function ToDo({
   show,
