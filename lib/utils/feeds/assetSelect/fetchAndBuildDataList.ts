@@ -147,7 +147,7 @@ function previewList(list: unknown[], max = 5) {
     if (!obj) return entry;
 
     return {
-      address: obj.address ?? obj.addr ?? obj[LEGACY_WALLETS_KEY] ?? obj.id,
+      address: obj.address ?? obj.addr ?? obj[LEGACY_WALLETS_KEY],
       file: obj.file,
       url: obj.url,
       name: obj.name,

@@ -20,7 +20,7 @@ const DEBUG_ENABLED =
   process.env[ENV_DEBUG_ASSET_SELECTION as 'NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL'] === 'true';
 const debugLog = createDebugLogger('AssetSelectDisplayProvider', DEBUG_ENABLED, LOG_TIME);
 
-export type AssetSelectDisplayContextType = {
+export interface AssetSelectDisplayContextType {
   /** Optional: useful when multiple selection instances are mounted */
   instanceId?: string;
 
@@ -34,15 +34,15 @@ export type AssetSelectDisplayContextType = {
   showErrorPreview: () => void;
   showAssetPreview: () => void;
   resetPreview: () => void;
-};
+}
 
 const Ctx = createContext<AssetSelectDisplayContextType | null>(null);
 
-type Props = {
+interface Props {
   children: ReactNode;
   instanceId?: string;
   initial?: AssetSelectDisplay;
-};
+}
 
 /**
  * Instance-scoped nested-visibility controller for AssetSelect panels.

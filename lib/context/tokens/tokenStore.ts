@@ -13,20 +13,21 @@ import {
   type TokenRegistryRecord,
   upsertTokenRegistryRecord,
 } from '@/lib/context/tokens/tokenRegistry';
+import type { Address } from 'viem';
 
 export { TOKEN_REGISTRY_UPDATED_EVENT };
 
-type LoadOptions = {
+interface LoadOptions {
   forceRefresh?: boolean;
   signal?: AbortSignal;
-};
+}
 
-type LoadPageOptions = LoadOptions & {
+interface LoadPageOptions extends LoadOptions {
   allNetworks?: boolean;
-};
+}
 
-function normalizeAddress(value: string): string {
-  return `0x${value.slice(2).toLowerCase()}`;
+function normalizeAddress(value: string): Address {
+  return `0x${value.slice(2).toLowerCase()}` as Address;
 }
 
 function isAddress(value: string): boolean {
@@ -44,13 +45,10 @@ function toRegistryRecord(
     ...(existing ?? {}),
     ...data,
     chainId,
-    address: normalized as any,
+    address: normalized,
   } as TokenRegistryRecord;
 
-  if (!next.logoURL) {
-    next.logoURL =
-      getTokenLogoURL({ chainId, address: normalized as any }) ?? defaultMissingImage;
-  }
+  next.logoURL ??= getTokenLogoURL({ chainId, address: normalized }) ?? defaultMissingImage;
 
   return next;
 }
@@ -89,7 +87,7 @@ export async function loadTokenRecord(
 }
 
 export async function loadTokenRecordsBatch(
-  requests: ReadonlyArray<{ chainId: number; address: string }>,
+  requests: readonly { chainId: number; address: string }[],
   options: LoadOptions = {},
 ): Promise<TokenRegistryRecord[]> {
   const normalizedRequests = Array.from(
@@ -104,14 +102,14 @@ export async function loadTokenRecordsBatch(
           const normalized = normalizeAddress(address);
           return [`${chainId}:${normalized}`, { chainId, address: normalized }] as const;
         })
-        .filter(Boolean) as Array<readonly [string, { chainId: number; address: string }]>,
+        .filter(Boolean) as readonly [string, { chainId: number; address: string }][],
     ).values(),
   );
 
   if (!normalizedRequests.length) return [];
 
   const cachedRecords = new Map<string, TokenRegistryRecord>();
-  const missing: Array<{ chainId: number; address: string }> = [];
+  const missing: { chainId: number; address: string }[] = [];
 
   for (const request of normalizedRequests) {
     const key = `${request.chainId}:${request.address}`;
@@ -206,7 +204,7 @@ export async function loadTokenSeedAddresses(
 
 export async function loadTokenSeedRowsAllNetworks(
   options: LoadOptions = {},
-): Promise<Array<{ chainId: number; address: string }>> {
+): Promise<{ chainId: number; address: string }[]> {
   const payload = await getTokensSeedListAllNetworks({
     timeoutMs: 8000,
     signal: options.signal,
@@ -225,7 +223,7 @@ export async function loadTokenSeedRowsAllNetworks(
           const normalized = normalizeAddress(address);
           return [`${chainId}:${normalized}`, { chainId, address: normalized }] as const;
         })
-        .filter(Boolean) as Array<readonly [string, { chainId: number; address: string }]>,
+        .filter(Boolean) as readonly [string, { chainId: number; address: string }][],
     ).values(),
   );
 }
@@ -304,7 +302,7 @@ export async function saveTokenRecord(
       details?: string;
     };
     throw new Error(
-      failPayload?.error || failPayload?.details || 'Failed to save token info.json',
+      failPayload?.error ?? failPayload?.details ?? 'Failed to save token info.json',
     );
   }
 
@@ -346,7 +344,7 @@ export async function saveTokenLogo(
       details?: string;
     };
     throw new Error(
-      failPayload?.error || failPayload?.details || 'Failed to save token logo.png',
+      failPayload?.error ?? failPayload?.details ?? 'Failed to save token logo.png',
     );
   }
 

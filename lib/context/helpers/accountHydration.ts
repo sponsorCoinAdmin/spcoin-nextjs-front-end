@@ -431,7 +431,7 @@ function pickAddressFromSpec(spec: any): Address | undefined {
   if (!spec) return undefined;
   if (typeof spec === 'string' && isAddress(spec)) return spec as Address;
   if (typeof spec === 'object') {
-    const a = (spec.address ?? spec.addr ?? spec.id) as unknown;
+    const a = (spec.address ?? spec.addr) as unknown;
     if (typeof a === 'string' && isAddress(a)) return a as Address;
   }
   return undefined;

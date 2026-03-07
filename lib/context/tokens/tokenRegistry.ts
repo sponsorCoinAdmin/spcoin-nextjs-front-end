@@ -2,28 +2,33 @@ import type { TokenContract } from '@/lib/structure';
 
 export const DEFAULT_TOKEN_REGISTRY_MAX_RECORDS = 128;
 
-export type TokenRegistryRecord = TokenContract & {
+export interface TokenRegistryRecord extends TokenContract {
   infoURL?: string;
-};
+}
 
-type TokenRegistryEntry = {
+interface TokenRegistryEntry {
   record: TokenRegistryRecord;
   lastTouchedAt: number;
   lastUpdatedAt: number;
   pinKeys: Set<string>;
-};
+}
 
-export type TokenRegistry = {
+export interface TokenRegistry {
   maxRecords: number;
   entries: Map<string, TokenRegistryEntry>;
-};
+}
 
 export function normalizeTokenRegistryKey(
   chainId: unknown,
   address: unknown,
 ): string {
   const chain = Number(chainId ?? 0);
-  const addr = (address ?? '').toString().trim().toLowerCase();
+  const addr =
+    typeof address === 'string' ||
+    typeof address === 'number' ||
+    typeof address === 'bigint'
+      ? String(address).trim().toLowerCase()
+      : '';
   if (!Number.isFinite(chain) || chain <= 0 || !addr) return '';
   return `${chain}:${addr}`;
 }
@@ -118,7 +123,7 @@ export function getTokenRegistryRecord<T extends TokenRegistryRecord>(
 export function syncTokenRegistryPins(
   registry: TokenRegistry,
   pinKey: string,
-  refs: ReadonlyArray<{ chainId?: number; address?: string }>,
+  refs: readonly { chainId?: number; address?: string }[],
 ) {
   const normalizedKeys = new Set(
     refs

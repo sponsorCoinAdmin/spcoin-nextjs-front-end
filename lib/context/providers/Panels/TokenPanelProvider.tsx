@@ -63,23 +63,23 @@ export const TokenPanelProvider = ({ containerType, children }: Props) => {
   // main commit entry used by AssetSelectProvider → DataListSelect
   const setSelectedAssetCallback = useCallback(
     (asset: TokenContract) => {
-      if (!asset || !(asset as any).address) return;
+      if (!asset?.address) return;
 
       const normalized: TokenContract = {
         address: asset.address as Address,
         symbol: asset.symbol ?? '',
         name: asset.name ?? '',
         decimals: typeof asset.decimals === 'number' ? asset.decimals : 18,
-        logoURL: (asset as any).logoURL ?? undefined,
-        balance: (asset as any).balance ?? 0n,
+        logoURL: asset.logoURL ?? undefined,
+        balance: asset.balance ?? 0n,
       };
 
       setLocalTokenContract(normalized);
 
       if (isSellContainer) {
-        setSellTokenContract(normalized as any);
+        setSellTokenContract(normalized);
       } else if (isBuyContainer) {
-        setBuyTokenContract(normalized as any);
+        setBuyTokenContract(normalized);
       } else {
         debugLog.warn?.('Unexpected containerType for token commit', SP_COIN_DISPLAY[containerType]);
       }

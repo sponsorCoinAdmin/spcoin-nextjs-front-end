@@ -5,7 +5,7 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
 
 /** Factory: create a validation logger with a custom label (defaults to 'debugLogInstance'). */
-export function getValidationDebugLogger(label: string = 'debugLogInstance') {
+export function getValidationDebugLogger(label = 'debugLogInstance') {
   return createDebugLogger(label, DEBUG_ENABLED, LOG_TIME);
 }
 

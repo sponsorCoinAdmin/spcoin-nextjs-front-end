@@ -7,24 +7,26 @@ import type { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import type { InputState } from '@/lib/structure/assetSelection';
 
 /** Args passed when a trace session starts. */
-export type TraceStartArgs = {
+export interface TraceStartArgs {
   containerType: SP_COIN_DISPLAY;
   debouncedHexInput: string;
   feedType: FEED_TYPE;
-};
+}
 
 /** Minimal contract for a trace sink implementation. */
-export type TraceSink = {
+export interface TraceSink {
   onStart(args: TraceStartArgs): void;
   onTransition(prev: InputState, next: InputState): void;
   onFinish(finalState: InputState): void;
-};
+}
+
+const noop = () => undefined;
 
 /** No-op sink used when tracing is disabled. */
 const NOOP_TRACE_SINK: TraceSink = {
-  onStart: () => {},
-  onTransition: () => {},
-  onFinish: () => {},
+  onStart: noop,
+  onTransition: noop,
+  onFinish: noop,
 };
 
 /**

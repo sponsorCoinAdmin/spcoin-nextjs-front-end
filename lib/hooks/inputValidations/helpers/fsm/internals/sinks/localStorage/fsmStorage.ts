@@ -13,7 +13,7 @@ export function getPrevLines(): string {
     if (next) return next;
 
     // One-way fallback from old key name.
-    const legacy = localStorage.getItem(LEGACY_TRACE_LINES_KEY) || '';
+    const legacy = localStorage.getItem(LEGACY_TRACE_LINES_KEY) ?? '';
     if (legacy) {
       localStorage.setItem(LOCAL_TRACE_LINES_KEY, legacy);
       localStorage.removeItem(LEGACY_TRACE_LINES_KEY);

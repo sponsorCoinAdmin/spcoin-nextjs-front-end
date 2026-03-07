@@ -4,40 +4,40 @@ import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // ---- Panel-specific bags ----
-export type TokenSelectBag = {
+export interface TokenSelectBag {
   type: SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
   /** Opposite side’s committed address */
   peerAddress?: string | Address;
-};
+}
 
-export type RecipientSelectBag = {
+export interface RecipientSelectBag {
   type: SP_COIN_DISPLAY.RECIPIENT_LIST | SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
   defaultRecipient?: string;
-};
+}
 
-export type AgentSelectBag = {
+export interface AgentSelectBag {
   type: SP_COIN_DISPLAY.AGENT_LIST | SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
   defaultAgentId?: string;
-};
+}
 
-export type SponsorSelectBag = {
+export interface SponsorSelectBag {
   type: SP_COIN_DISPLAY.SPONSOR_LIST;
   defaultSponsorId?: string;
-};
+}
 
-export type ErrorMessageBag = {
+export interface ErrorMessageBag {
   type: SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
   message: string;
   detail?: string;
-};
+}
 
 // Panels that don’t need extra payload
-export type SimplePanelBag = {
+export interface SimplePanelBag {
   type:
     | SP_COIN_DISPLAY.TRADING_STATION_PANEL
     | SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
     | SP_COIN_DISPLAY.UNDEFINED;
-};
+}
 
 // ---- Master discriminated union ----
 export type AssetSelectBag =
@@ -52,3 +52,5 @@ export type AssetSelectBag =
 export const isTokenSelectBag = (b?: AssetSelectBag): b is TokenSelectBag =>
   !!b &&
   b.type === SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL;
+
+
