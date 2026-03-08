@@ -958,7 +958,7 @@ export default function SpCoinAccessControllerPage() {
                     onClick={() => void runManagerAction('upload')}
                     disabled={Boolean(activeAction) || !selectedPackage}
                     title={uploadBlocked ? 'Current Version Exists on NPM' : 'Upload selected package to NPM'}
-                    className={`rounded-xl px-4 py-3 font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                       flashTarget === 'upload'
                         ? 'bg-red-500 hover:bg-red-400'
                         : uploadBlocked
@@ -981,7 +981,7 @@ export default function SpCoinAccessControllerPage() {
                         ? 'Revert local package from backup archive'
                         : 'Download selected package from NPM'
                     }
-                    className={`rounded-xl px-4 py-3 font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                       flashTarget === 'download'
                         ? 'bg-red-500 hover:bg-red-400'
                         : downloadBlocked
@@ -1211,7 +1211,7 @@ export default function SpCoinAccessControllerPage() {
                     <button
                       type="button"
                       onClick={() => void handleDeploy()}
-                      className={`rounded-xl px-4 py-3 font-semibold text-black transition-colors ${
+                      className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
                         deploymentFlashError ? 'bg-red-500 hover:bg-red-400' : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
                       }`}
                     >
@@ -1247,7 +1247,7 @@ export default function SpCoinAccessControllerPage() {
                     <button
                       type="button"
                       onClick={() => void handleUpdateServer()}
-                      className="rounded-xl bg-[#EBCA6A] px-4 py-3 font-semibold text-black transition-colors hover:bg-[#F4D883]"
+                      className="rounded-xl bg-[#EBCA6A] px-4 py-[0.45rem] font-semibold text-black transition-colors hover:bg-[#F4D883]"
                     >
                       Update Server
                     </button>

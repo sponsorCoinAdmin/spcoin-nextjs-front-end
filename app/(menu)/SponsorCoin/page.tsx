@@ -180,6 +180,16 @@ export default function SponsorCoinPage() {
                 </p>
               </div>
 
+              <div
+                className={`${cardBaseStyle} ${cardHoverStyle} cursor-pointer md:col-start-2 md:row-start-3`}
+                onClick={() => openCardPath('/SponsorCoinLab')}
+              >
+                <h2 className={headerStyle}>SponsorCoin Lab</h2>
+                <p className={paragraphStyle}>
+                  Interactive test page for SponsorCoin access modules, including method calls and tree-dump output.
+                </p>
+              </div>
+
             </div>
           </section>
         </div>

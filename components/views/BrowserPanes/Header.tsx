@@ -103,7 +103,7 @@ export default function Header() {
       normalizePath(pathname ?? '') === normalizePath(href) &&
       hoveredTab === null;
     return `
-      px-4 py-2 rounded font-medium transition cursor-pointer
+      px-4 py-2 rounded font-medium text-base whitespace-nowrap transition cursor-pointer
       ${isHovered || isActive
         ? 'bg-[#222a3a] text-[#5981F3]'
         : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'
