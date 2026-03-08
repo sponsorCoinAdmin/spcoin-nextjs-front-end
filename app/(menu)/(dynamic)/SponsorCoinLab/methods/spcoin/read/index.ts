@@ -1,0 +1,248 @@
+// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/index.ts
+import { Contract } from 'ethers';
+import { SPCOIN_READ_METHOD_DEFS } from './defs';
+export { SPCOIN_READ_METHOD_DEFS };
+
+export type SpCoinReadMethod =
+  | 'getSerializedSPCoinHeader'
+  | 'getSPCoinHeaderRecord'
+  | 'getAccountList'
+  | 'getAccountListSize'
+  | 'getAccountRecipientList'
+  | 'getAccountRecipientListSize'
+  | 'getSerializedAccountRecord'
+  | 'getAccountRecord'
+  | 'getAccountRecords'
+  | 'getSerializedAccountRewards'
+  | 'getAccountStakingRewards'
+  | 'getRewardAccounts'
+  | 'getRewardTypeRecord'
+  | 'getAccountRewardTransactionList'
+  | 'getAccountRewardTransactionRecord'
+  | 'getAccountRateRecordList'
+  | 'getRateTransactionList'
+  | 'getRecipientRateList'
+  | 'getRecipientRateRecord'
+  | 'getRecipientRateRecordList'
+  | 'getRecipientRateAgentList'
+  | 'getRecipientRecord'
+  | 'getRecipientRecordList'
+  | 'getAgentRateList'
+  | 'getAgentRateRecord'
+  | 'getAgentRateRecordList'
+  | 'getAgentTotalRecipient'
+  | 'getSerializedRateTransactionList'
+  | 'getAgentRateTransactionList'
+  | 'getRecipientRateTransactionList'
+  | 'getAgentRecord'
+  | 'getAgentRecordList'
+  | 'testStakingRewards'
+  | 'getStakingRewards'
+  | 'getTimeMultiplier'
+  | 'getAccountTimeInSecondeSinceUpdate'
+  | 'getMillenniumTimeIntervalDivisor';
+
+export function getSpCoinReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
+  const all = (Object.keys(SPCOIN_READ_METHOD_DEFS) as SpCoinReadMethod[]).sort((a, b) => a.localeCompare(b));
+  if (!hideUnexecutables) return all;
+  return all.filter((name) => SPCOIN_READ_METHOD_DEFS[name].executable !== false);
+}
+
+type RunArgs = {
+  selectedMethod: SpCoinReadMethod;
+  spReadParams: string[];
+  coerceParamValue: (raw: string, def: any) => any;
+  stringifyResult: (result: unknown) => string;
+  requireContractAddress: () => string;
+  ensureReadRunner: () => Promise<any>;
+  abi: readonly string[];
+  appendLog: (line: string) => void;
+  setStatus: (value: string) => void;
+};
+
+export async function runSpCoinReadMethod(args: RunArgs): Promise<void> {
+  const {
+    selectedMethod,
+    spReadParams,
+    coerceParamValue,
+    stringifyResult,
+    requireContractAddress,
+    ensureReadRunner,
+    abi,
+    appendLog,
+    setStatus,
+  } = args;
+
+  const activeDef = SPCOIN_READ_METHOD_DEFS[selectedMethod];
+  const target = requireContractAddress();
+  const runner = await ensureReadRunner();
+  const contract = new Contract(target, abi, runner);
+  const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
+  let result: unknown;
+
+  switch (selectedMethod) {
+    case 'getSPCoinHeaderRecord': {
+      const getBody = Boolean(methodArgs[0]);
+      const header = await (contract as any).getSerializedSPCoinHeader();
+      if (!getBody) {
+        result = { header };
+        break;
+      }
+      const accountList = (await (contract as any).getAccountList()) as string[];
+      const body = await Promise.all(
+        accountList.map(async (accountKey) => ({
+          accountKey,
+          serializedAccountRecord: await (contract as any).getSerializedAccountRecord(accountKey),
+        })),
+      );
+      result = { header, body };
+      break;
+    }
+    case 'getAccountListSize': {
+      const accountList = (await (contract as any).getAccountList()) as string[];
+      result = accountList.length;
+      break;
+    }
+    case 'getAccountRecipientListSize': {
+      const recipientList = (await (contract as any).getAccountRecipientList(methodArgs[0])) as string[];
+      result = recipientList.length;
+      break;
+    }
+    case 'getAccountRecord': {
+      const accountKey = String(methodArgs[0]);
+      const serializedAccountRecord = await (contract as any).getSerializedAccountRecord(accountKey);
+      const serializedAccountRewards = await (contract as any).getSerializedAccountRewards(accountKey);
+      const recipientAccountList = await (contract as any).getAccountRecipientList(accountKey);
+      result = { accountKey, serializedAccountRecord, serializedAccountRewards, recipientAccountList };
+      break;
+    }
+    case 'getAccountRecords': {
+      const accountList = (await (contract as any).getAccountList()) as string[];
+      result = await Promise.all(
+        accountList.map(async (accountKey) => ({
+          accountKey,
+          serializedAccountRecord: await (contract as any).getSerializedAccountRecord(accountKey),
+        })),
+      );
+      break;
+    }
+    case 'getAccountStakingRewards': {
+      result = await (contract as any).getSerializedAccountRewards(methodArgs[0]);
+      break;
+    }
+    case 'getRewardTypeRecord': {
+      const rewardAccounts = await (contract as any).getRewardAccounts(methodArgs[0], methodArgs[1]);
+      result = { reward: methodArgs[2], rewardAccounts };
+      break;
+    }
+    case 'getAccountRewardTransactionList':
+    case 'getAccountRewardTransactionRecord':
+    case 'getAccountRateRecordList':
+    case 'getRateTransactionList': {
+      result = methodArgs[0];
+      break;
+    }
+    case 'getRecipientRateRecord': {
+      const serializedRecipientRateList = await (contract as any).getSerializedRecipientRateList(methodArgs[0], methodArgs[1], methodArgs[2]);
+      const agentAccountList = await (contract as any).getRecipientRateAgentList(methodArgs[0], methodArgs[1], methodArgs[2]);
+      const transactions = await (contract as any).getRecipientRateTransactionList(methodArgs[0], methodArgs[1], methodArgs[2]);
+      result = { serializedRecipientRateList, agentAccountList, transactions };
+      break;
+    }
+    case 'getRecipientRateRecordList': {
+      const rates = (await (contract as any).getRecipientRateList(methodArgs[0], methodArgs[1])) as Array<string | bigint>;
+      result = await Promise.all(
+        rates.map(async (rate) => ({
+          recipientRateKey: String(rate),
+          serializedRecipientRateList: await (contract as any).getSerializedRecipientRateList(methodArgs[0], methodArgs[1], String(rate)),
+        })),
+      );
+      break;
+    }
+    case 'getRecipientRecord': {
+      const serializedRecipientRecordList = await (contract as any).getSerializedRecipientRecordList(methodArgs[0], methodArgs[1]);
+      const recipientRateList = await (contract as any).getRecipientRateList(methodArgs[0], methodArgs[1]);
+      result = { serializedRecipientRecordList, recipientRateList };
+      break;
+    }
+    case 'getRecipientRecordList': {
+      const sponsorKey = String(methodArgs[0]);
+      const recipientAccountList = methodArgs[1] as string[];
+      result = await Promise.all(
+        recipientAccountList.map(async (recipientKey) => ({
+          recipientKey,
+          serializedRecipientRecordList: await (contract as any).getSerializedRecipientRecordList(sponsorKey, recipientKey),
+        })),
+      );
+      break;
+    }
+    case 'getAgentRateRecord': {
+      const serializedAgentRateRecord = await (contract as any).serializeAgentRateRecordStr(
+        methodArgs[0],
+        methodArgs[1],
+        methodArgs[2],
+        methodArgs[3],
+        methodArgs[4],
+      );
+      const transactions = await (contract as any).getSerializedRateTransactionList(
+        methodArgs[0],
+        methodArgs[1],
+        methodArgs[2],
+        methodArgs[3],
+        methodArgs[4],
+      );
+      result = { serializedAgentRateRecord, transactions };
+      break;
+    }
+    case 'getAgentRateRecordList': {
+      const agentRateKeys = (await (contract as any).getAgentRateList(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3])) as Array<
+        string | bigint
+      >;
+      result = await Promise.all(
+        agentRateKeys.map(async (agentRateKey) => ({
+          agentRateKey: String(agentRateKey),
+          serializedAgentRateRecord: await (contract as any).serializeAgentRateRecordStr(
+            methodArgs[0],
+            methodArgs[1],
+            methodArgs[2],
+            methodArgs[3],
+            String(agentRateKey),
+          ),
+        })),
+      );
+      break;
+    }
+    case 'getAgentRateTransactionList': {
+      result = await (contract as any).getSerializedRateTransactionList(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]);
+      break;
+    }
+    case 'getAgentRecord': {
+      const stakedSPCoins = await (contract as any).getAgentTotalRecipient(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]);
+      const agentRateList = await (contract as any).getAgentRateList(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]);
+      result = { agentKey: methodArgs[3], stakedSPCoins, agentRateList };
+      break;
+    }
+    case 'getAgentRecordList': {
+      const sponsorKey = String(methodArgs[0]);
+      const recipientKey = String(methodArgs[1]);
+      const recipientRateKey = String(methodArgs[2]);
+      const agentAccountList = methodArgs[3] as string[];
+      result = await Promise.all(
+        agentAccountList.map(async (agentKey) => ({
+          agentKey,
+          stakedSPCoins: await (contract as any).getAgentTotalRecipient(sponsorKey, recipientKey, recipientRateKey, agentKey),
+          agentRateList: await (contract as any).getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey),
+        })),
+      );
+      break;
+    }
+    default:
+      result = await (contract as any)[selectedMethod](...methodArgs);
+      break;
+  }
+
+  const out = stringifyResult(result);
+  appendLog(`${activeDef.title}(${methodArgs.join(', ')}) -> ${out}`);
+  setStatus(`${activeDef.title} read complete.`);
+}
+

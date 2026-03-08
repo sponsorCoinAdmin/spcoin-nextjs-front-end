@@ -6,6 +6,31 @@ import { BrowserProvider, Contract, HDNodeWallet, JsonRpcProvider, Wallet } from
 import type { Signer } from 'ethers';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import type { ParamDef } from './methods/shared/types';
+import {
+  ERC20_READ_OPTIONS,
+  getErc20ReadLabels,
+  runErc20ReadMethod,
+  type Erc20ReadMethod,
+} from './methods/erc20/read';
+import {
+  ERC20_WRITE_OPTIONS,
+  getErc20WriteLabels,
+  runErc20WriteMethod,
+  type Erc20WriteMethod,
+} from './methods/erc20/write';
+import {
+  SPCOIN_READ_METHOD_DEFS,
+  getSpCoinReadOptions,
+  runSpCoinReadMethod,
+  type SpCoinReadMethod,
+} from './methods/spcoin/read';
+import {
+  SPCOIN_WRITE_METHOD_DEFS,
+  getSpCoinWriteOptions,
+  runSpCoinWriteMethod,
+  type SpCoinWriteMethod,
+} from './methods/spcoin/write';
 import {
   CALENDAR_WEEK_DAYS,
   formatDateInput,
@@ -19,69 +44,7 @@ import SpCoinReadController from './components/SpCoinReadController';
 import SpCoinWriteController from './components/SpCoinWriteController';
 
 type ConnectionMode = 'metamask' | 'hardhat';
-type Erc20WriteMethod = 'transfer' | 'approve' | 'transferFrom';
 type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_write';
-type Erc20ReadMethod = 'name' | 'symbol' | 'decimals' | 'totalSupply' | 'balanceOf' | 'allowance';
-type SpCoinReadMethod =
-  | 'getSerializedSPCoinHeader'
-  | 'getSPCoinHeaderRecord'
-  | 'getAccountList'
-  | 'getAccountListSize'
-  | 'getAccountRecipientList'
-  | 'getAccountRecipientListSize'
-  | 'getSerializedAccountRecord'
-  | 'getAccountRecord'
-  | 'getAccountRecords'
-  | 'getSerializedAccountRewards'
-  | 'getAccountStakingRewards'
-  | 'getRewardAccounts'
-  | 'getRewardTypeRecord'
-  | 'getAccountRewardTransactionList'
-  | 'getAccountRewardTransactionRecord'
-  | 'getAccountRateRecordList'
-  | 'getRateTransactionList'
-  | 'getRecipientRateList'
-  | 'getRecipientRateRecord'
-  | 'getRecipientRateRecordList'
-  | 'getRecipientRateAgentList'
-  | 'getRecipientRecord'
-  | 'getRecipientRecordList'
-  | 'getAgentRateList'
-  | 'getAgentRateRecord'
-  | 'getAgentRateRecordList'
-  | 'getAgentTotalRecipient'
-  | 'getSerializedRateTransactionList'
-  | 'getAgentRateTransactionList'
-  | 'getRecipientRateTransactionList'
-  | 'getAgentRecord'
-  | 'getAgentRecordList'
-  | 'testStakingRewards'
-  | 'getStakingRewards'
-  | 'getTimeMultiplier'
-  | 'getAccountTimeInSecondeSinceUpdate'
-  | 'getMillenniumTimeIntervalDivisor';
-type SpCoinWriteMethod =
-  | 'addRecipient'
-  | 'addRecipients'
-  | 'addAgent'
-  | 'addAgents'
-  | 'addAccountRecord'
-  | 'addAccountRecords'
-  | 'addSponsorship'
-  | 'addAgentSponsorship'
-  | 'addBackDatedSponsorship'
-  | 'addBackDatedAgentSponsorship'
-  | 'unSponsorRecipient'
-  | 'deleteAccountRecord'
-  | 'deleteAccountRecords'
-  | 'deleteAgentRecord'
-  | 'updateAccountStakingRewards'
-  | 'depositSponsorStakingRewards'
-  | 'depositRecipientStakingRewards'
-  | 'depositAgentStakingRewards'
-  | 'depositStakingRewards';
-type ParamType = 'address' | 'uint' | 'string' | 'bool' | 'address_array' | 'string_array' | 'date';
-type ParamDef = { label: string; placeholder: string; type: ParamType };
 
 type HardhatAccountOption = {
   address: string;
@@ -93,10 +56,6 @@ const HARDHAT_KEYS_STORAGE_KEY = 'spcoin_lab_hardhat_keys_v1';
 const HARDHAT_CHAIN_ID_DEC = 31337;
 const HARDHAT_CHAIN_ID_HEX = '0x7a69';
 const HARDHAT_NETWORK_NAME = 'SponsorCoin HH BASE';
-const BURN_ADDRESS = '0x0000000000000000000000000000000000000000';
-const SPONSOR_ACCOUNT_TYPE = '0';
-const RECIPIENT_ACCOUNT_TYPE = '1';
-const AGENT_ACCOUNT_TYPE = '2';
 
 const SPCOIN_LAB_ABI = [
   'function getSerializedSPCoinHeader() view returns (string)',
@@ -154,13 +113,6 @@ function parseListParam(raw: string): string[] {
     .split(/[\n,]/)
     .map((part) => part.trim())
     .filter(Boolean);
-}
-
-function splitDecimalAmount(raw: string): { whole: string; fractional: string } {
-  const [wholeRaw = '0', fractionalRaw = '0'] = String(raw || '').trim().split('.');
-  const whole = wholeRaw.length > 0 ? wholeRaw : '0';
-  const fractional = fractionalRaw.length > 0 ? fractionalRaw : '0';
-  return { whole, fractional };
 }
 
 export default function SponsorCoinLabPage() {
@@ -654,127 +606,23 @@ export default function SponsorCoinLabPage() {
     }
   }, [appendLog, ensureReadRunner, requireContractAddress]);
 
-  const activeWriteLabels = useMemo(() => {
-    switch (selectedWriteMethod) {
-      case 'approve':
-        return {
-          title: 'approve',
-          addressALabel: 'Spender Address',
-          addressAPlaceholder: 'approve(spender)',
-          addressBLabel: '',
-          addressBPlaceholder: '',
-          requiresAddressB: false,
-        };
-      case 'transferFrom':
-        return {
-          title: 'transferFrom',
-          addressALabel: 'From Address',
-          addressAPlaceholder: 'transferFrom(from)',
-          addressBLabel: 'To Address',
-          addressBPlaceholder: 'transferFrom(to)',
-          requiresAddressB: true,
-        };
-      case 'transfer':
-      default:
-        return {
-          title: 'transfer',
-          addressALabel: 'To Address',
-          addressAPlaceholder: 'transfer(to)',
-          addressBLabel: '',
-          addressBPlaceholder: '',
-          requiresAddressB: false,
-        };
-    }
-  }, [selectedWriteMethod]);
+  const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
 
-  const activeReadLabels = useMemo(() => {
-    switch (selectedReadMethod) {
-      case 'balanceOf':
-        return {
-          title: 'balanceOf',
-          addressALabel: 'Owner Address',
-          addressAPlaceholder: 'balanceOf(owner)',
-          addressBLabel: '',
-          addressBPlaceholder: '',
-          requiresAddressA: true,
-          requiresAddressB: false,
-        };
-      case 'allowance':
-        return {
-          title: 'allowance',
-          addressALabel: 'Owner Address',
-          addressAPlaceholder: 'allowance(owner)',
-          addressBLabel: 'Spender Address',
-          addressBPlaceholder: 'allowance(spender)',
-          requiresAddressA: true,
-          requiresAddressB: true,
-        };
-      case 'name':
-      case 'symbol':
-      case 'decimals':
-      case 'totalSupply':
-      default:
-        return {
-          title: selectedReadMethod,
-          addressALabel: '',
-          addressAPlaceholder: '',
-          addressBLabel: '',
-          addressBPlaceholder: '',
-          requiresAddressA: false,
-          requiresAddressB: false,
-        };
-    }
-  }, [selectedReadMethod]);
+  const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
 
   const runSelectedWriteMethod = useCallback(async () => {
     try {
-      const addressA = writeAddressA.trim();
-      const addressB = writeAddressB.trim();
-      const amount = writeAmountRaw.trim();
-      if (!addressA) throw new Error(`${activeWriteLabels.addressALabel} is required.`);
-      if (activeWriteLabels.requiresAddressB && !addressB) {
-        throw new Error(`${activeWriteLabels.addressBLabel} is required.`);
-      }
-      if (!amount) throw new Error('Amount is required.');
-
-      if (selectedWriteMethod === 'approve') {
-        setStatus(`Submitting approve(${addressA}, ${amount})...`);
-        const tx = await executeWriteConnected(
-          'approve',
-          (contract) => contract.approve(addressA, amount),
-          selectedHardhatAccount?.address,
-        );
-        appendLog(`approve tx sent: ${String(tx?.hash || '(no hash)')}`);
-        const receipt = await tx.wait();
-        appendLog(`approve mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-        setStatus('approve complete.');
-        return;
-      }
-
-      if (selectedWriteMethod === 'transferFrom') {
-        setStatus(`Submitting transferFrom(${addressA}, ${addressB}, ${amount})...`);
-        const tx = await executeWriteConnected(
-          'transferFrom',
-          (contract) => contract.transferFrom(addressA, addressB, amount),
-          selectedHardhatAccount?.address,
-        );
-        appendLog(`transferFrom tx sent: ${String(tx?.hash || '(no hash)')}`);
-        const receipt = await tx.wait();
-        appendLog(`transferFrom mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-        setStatus('transferFrom complete.');
-        return;
-      }
-
-      setStatus(`Submitting transfer(${addressA}, ${amount})...`);
-      const tx = await executeWriteConnected(
-        'transfer',
-        (contract) => contract.transfer(addressA, amount),
-        selectedHardhatAccount?.address,
-      );
-      appendLog(`transfer tx sent: ${String(tx?.hash || '(no hash)')}`);
-      const receipt = await tx.wait();
-      appendLog(`transfer mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-      setStatus('transfer complete.');
+      await runErc20WriteMethod({
+        selectedWriteMethod,
+        activeWriteLabels,
+        writeAddressA,
+        writeAddressB,
+        writeAmountRaw,
+        selectedHardhatAddress: selectedHardhatAccount?.address,
+        executeWriteConnected,
+        appendLog,
+        setStatus,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
       setStatus(`${activeWriteLabels.title} failed: ${message}`);
@@ -796,52 +644,17 @@ export default function SponsorCoinLabPage() {
 
   const runSelectedReadMethod = useCallback(async () => {
     try {
-      const target = requireContractAddress();
-      const runner = await ensureReadRunner();
-      const contract = new Contract(target, SPCOIN_LAB_ABI, runner);
-      const addressA = readAddressA.trim();
-      const addressB = readAddressB.trim();
-
-      if (activeReadLabels.requiresAddressA && !addressA) {
-        throw new Error(`${activeReadLabels.addressALabel} is required.`);
-      }
-      if (activeReadLabels.requiresAddressB && !addressB) {
-        throw new Error(`${activeReadLabels.addressBLabel} is required.`);
-      }
-
-      if (selectedReadMethod === 'name') {
-        const result = (await contract.name()) as string;
-        appendLog(`name() -> ${result}`);
-        setStatus('name read complete.');
-        return;
-      }
-      if (selectedReadMethod === 'symbol') {
-        const result = (await contract.symbol()) as string;
-        appendLog(`symbol() -> ${result}`);
-        setStatus('symbol read complete.');
-        return;
-      }
-      if (selectedReadMethod === 'decimals') {
-        const result = await contract.decimals();
-        appendLog(`decimals() -> ${String(result)}`);
-        setStatus('decimals read complete.');
-        return;
-      }
-      if (selectedReadMethod === 'totalSupply') {
-        const result = await contract.totalSupply();
-        appendLog(`totalSupply() -> ${String(result)}`);
-        setStatus('totalSupply read complete.');
-        return;
-      }
-      if (selectedReadMethod === 'balanceOf') {
-        const result = await contract.balanceOf(addressA);
-        appendLog(`balanceOf(${addressA}) -> ${String(result)}`);
-        setStatus('balanceOf read complete.');
-        return;
-      }
-      const result = await contract.allowance(addressA, addressB);
-      appendLog(`allowance(${addressA}, ${addressB}) -> ${String(result)}`);
-      setStatus('allowance read complete.');
+      await runErc20ReadMethod({
+        selectedReadMethod,
+        activeReadLabels,
+        readAddressA,
+        readAddressB,
+        requireContractAddress,
+        ensureReadRunner,
+        abi: SPCOIN_LAB_ABI,
+        appendLog,
+        setStatus,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
       setStatus(`${activeReadLabels.title} failed: ${message}`);
@@ -860,394 +673,8 @@ export default function SponsorCoinLabPage() {
     requireContractAddress,
     selectedReadMethod,
   ]);
-  const spCoinReadMethodDefs = useMemo<
-    Record<SpCoinReadMethod, { title: string; params: ParamDef[]; executable?: boolean }>
-  >(
-    () => ({
-      getSerializedSPCoinHeader: { title: 'getSerializedSPCoinHeader', params: [] },
-      getSPCoinHeaderRecord: {
-        title: 'getSPCoinHeaderRecord',
-        params: [{ label: 'Get Body', placeholder: 'bool getBody (true/false)', type: 'bool' }],
-      },
-      getAccountList: { title: 'getAccountList', params: [] },
-      getAccountListSize: { title: 'getAccountListSize', params: [] },
-      getAccountRecipientList: {
-        title: 'getAccountRecipientList',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getAccountRecipientListSize: {
-        title: 'getAccountRecipientListSize',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getSerializedAccountRecord: {
-        title: 'getSerializedAccountRecord',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getAccountRecord: {
-        title: 'getAccountRecord',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getAccountRecords: { title: 'getAccountRecords', params: [] },
-      getSerializedAccountRewards: {
-        title: 'getSerializedAccountRewards',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getAccountStakingRewards: {
-        title: 'getAccountStakingRewards',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      getRewardAccounts: {
-        title: 'getRewardAccounts',
-        params: [
-          { label: 'Account Key', placeholder: 'address _accountKey', type: 'address' },
-          { label: 'Reward Type', placeholder: 'uint256 _rewardType', type: 'uint' },
-        ],
-      },
-      getRewardTypeRecord: {
-        title: 'getRewardTypeRecord',
-        params: [
-          { label: 'Account Key', placeholder: 'address _accountKey', type: 'address' },
-          { label: 'Reward Type', placeholder: 'uint256 _rewardType', type: 'uint' },
-          { label: 'Reward', placeholder: 'uint256 _reward', type: 'uint' },
-        ],
-      },
-      getAccountRewardTransactionList: {
-        title: 'getAccountRewardTransactionList',
-        params: [
-          {
-            label: 'Reward Account List',
-            placeholder: 'string[] _rewardAccountList (comma/newline separated)',
-            type: 'string_array',
-          },
-        ],
-      },
-      getAccountRewardTransactionRecord: {
-        title: 'getAccountRewardTransactionRecord',
-        params: [{ label: 'Reward Record String', placeholder: 'string _rewardRecordStr', type: 'string' }],
-      },
-      getAccountRateRecordList: {
-        title: 'getAccountRateRecordList',
-        params: [{ label: 'Rate Reward List', placeholder: 'string[] rateRewardList (comma/newline separated)', type: 'string_array' }],
-      },
-      getRateTransactionList: {
-        title: 'getRateTransactionList',
-        params: [{ label: 'Reward Rate Row List', placeholder: 'string[] rewardRateRowList (comma/newline separated)', type: 'string_array' }],
-      },
-      getRecipientRateList: {
-        title: 'getRecipientRateList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-        ],
-      },
-      getRecipientRateRecord: {
-        title: 'getRecipientRateRecord',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-        ],
-      },
-      getRecipientRateRecordList: {
-        title: 'getRecipientRateRecordList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-        ],
-      },
-      getRecipientRateAgentList: {
-        title: 'getRecipientRateAgentList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-        ],
-      },
-      getRecipientRecord: {
-        title: 'getRecipientRecord',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-        ],
-      },
-      getRecipientRecordList: {
-        title: 'getRecipientRecordList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Account List', placeholder: 'address[] _recipientAccountList (comma/newline separated)', type: 'address_array' },
-        ],
-      },
-      getAgentRateList: {
-        title: 'getAgentRateList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-        ],
-      },
-      getAgentRateRecord: {
-        title: 'getAgentRateRecord',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-        ],
-      },
-      getAgentRateRecordList: {
-        title: 'getAgentRateRecordList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-        ],
-      },
-      getAgentTotalRecipient: {
-        title: 'getAgentTotalRecipient',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-        ],
-      },
-      getSerializedRateTransactionList: {
-        title: 'getSerializedRateTransactionList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-        ],
-      },
-      getAgentRateTransactionList: {
-        title: 'getAgentRateTransactionList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-        ],
-      },
-      getRecipientRateTransactionList: {
-        title: 'getRecipientRateTransactionList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-        ],
-      },
-      getAgentRecord: {
-        title: 'getAgentRecord',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-        ],
-      },
-      getAgentRecordList: {
-        title: 'getAgentRecordList',
-        params: [
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Account List', placeholder: 'address[] _agentAccountList (comma/newline separated)', type: 'address_array' },
-        ],
-      },
-      testStakingRewards: {
-        title: 'testStakingRewards',
-        params: [
-          { label: 'Last Update Time', placeholder: 'uint256 lastUpdateTime', type: 'uint' },
-          { label: 'Test Update Time', placeholder: 'uint256 testUpdateTime', type: 'uint' },
-          { label: 'Interest Rate', placeholder: 'uint256 interestRate', type: 'uint' },
-          { label: 'Quantity', placeholder: 'uint256 quantity', type: 'uint' },
-        ],
-      },
-      getStakingRewards: {
-        title: 'getStakingRewards',
-        params: [
-          { label: 'Last Update Time', placeholder: 'uint256 lastUpdateTime', type: 'uint' },
-          { label: 'Interest Rate', placeholder: 'uint256 interestRate', type: 'uint' },
-          { label: 'Quantity', placeholder: 'uint256 quantity', type: 'uint' },
-        ],
-      },
-      getTimeMultiplier: {
-        title: 'getTimeMultiplier',
-        params: [{ label: 'Time Rate Multiplier', placeholder: 'uint256 _timeRateMultiplier', type: 'uint' }],
-      },
-      getAccountTimeInSecondeSinceUpdate: {
-        title: 'getAccountTimeInSecondeSinceUpdate',
-        params: [{ label: 'Token Last Update', placeholder: 'uint256 _tokenLastUpdate', type: 'uint' }],
-      },
-      getMillenniumTimeIntervalDivisor: {
-        title: 'getMillenniumTimeIntervalDivisor',
-        params: [{ label: 'Time In Seconds', placeholder: 'uint256 _timeInSeconds', type: 'uint' }],
-      },
-    }),
-    [],
-  );
-  const spCoinWriteMethodDefs = useMemo<
-    Record<SpCoinWriteMethod, { title: string; params: ParamDef[]; executable?: boolean }>
-  >(
-    () => ({
-      addRecipient: {
-        title: 'addRecipient',
-        params: [{ label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' }],
-      },
-      addRecipients: {
-        title: 'addRecipients',
-        params: [
-          { label: 'Account Key', placeholder: 'address _accountKey', type: 'address' },
-          {
-            label: 'Recipient Account List',
-            placeholder: 'address[] _recipientAccountList (comma/newline separated)',
-            type: 'address_array',
-          },
-        ],
-      },
-      addAgent: {
-        title: 'addAgent',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-        ],
-      },
-      addAgents: {
-        title: 'addAgents',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Account List', placeholder: 'address[] _agentAccountList (comma/newline separated)', type: 'address_array' },
-        ],
-      },
-      addAccountRecord: {
-        title: 'addAccountRecord',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      addAccountRecords: {
-        title: 'addAccountRecords',
-        params: [{ label: 'Account List Keys', placeholder: 'address[] _accountListKeys (comma/newline separated)', type: 'address_array' }],
-      },
-      addSponsorship: {
-        title: 'addSponsorship',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-          { label: 'Whole Amount', placeholder: 'string _strWholeAmount', type: 'string' },
-          { label: 'Decimal Amount', placeholder: 'string _strDecimalAmount', type: 'string' },
-        ],
-      },
-      addAgentSponsorship: {
-        title: 'addAgentSponsorship',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _accountAgentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-          { label: 'Transaction Quantity', placeholder: 'number _transactionQty (e.g., 12.34)', type: 'string' },
-        ],
-      },
-      addBackDatedSponsorship: {
-        title: 'addBackDatedSponsorship',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-          { label: 'Whole Amount', placeholder: 'string _strWholeAmount', type: 'string' },
-          { label: 'Decimal Amount', placeholder: 'string _strDecimalAmount', type: 'string' },
-          { label: 'Transaction Back Date', placeholder: 'Select date', type: 'date' },
-        ],
-      },
-      addBackDatedAgentSponsorship: {
-        title: 'addBackDatedAgentSponsorship',
-        params: [
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _accountAgentKey', type: 'address' },
-          { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' },
-          { label: 'Transaction Quantity', placeholder: 'number _transactionQty (e.g., 12.34)', type: 'string' },
-          { label: 'Transaction Back Date', placeholder: 'Select date', type: 'date' },
-        ],
-      },
-      unSponsorRecipient: {
-        title: 'unSponsorRecipient',
-        params: [{ label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' }],
-      },
-      deleteAccountRecord: {
-        title: 'deleteAccountRecord',
-        params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
-      },
-      deleteAccountRecords: {
-        title: 'deleteAccountRecords',
-        params: [{ label: 'Account List Keys', placeholder: 'address[] _accountListKeys (comma/newline separated)', type: 'address_array' }],
-      },
-      deleteAgentRecord: {
-        title: 'deleteAgentRecord',
-        executable: false,
-        params: [
-          { label: 'Account Key', placeholder: 'address _accountKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Account Agent Key', placeholder: 'address _accountAgentKey', type: 'address' },
-        ],
-      },
-      updateAccountStakingRewards: {
-        title: 'updateAccountStakingRewards',
-        params: [{ label: 'Source Key', placeholder: 'address _sourceKey', type: 'address' }],
-      },
-      depositSponsorStakingRewards: {
-        title: 'depositSponsorStakingRewards',
-        params: [
-          { label: 'Sponsor Account', placeholder: 'address _sponsorAccount', type: 'address' },
-          { label: 'Recipient Account', placeholder: 'address _recipientAccount', type: 'address' },
-          { label: 'Recipient Rate', placeholder: 'uint256 _recipientRate', type: 'uint' },
-          { label: 'Amount', placeholder: 'uint256 _amount', type: 'uint' },
-        ],
-      },
-      depositRecipientStakingRewards: {
-        title: 'depositRecipientStakingRewards',
-        params: [
-          { label: 'Sponsor Account', placeholder: 'address _sponsorAccount', type: 'address' },
-          { label: 'Recipient Account', placeholder: 'address _recipientAccount', type: 'address' },
-          { label: 'Recipient Rate', placeholder: 'uint256 _recipientRate', type: 'uint' },
-          { label: 'Amount', placeholder: 'uint256 _amount', type: 'uint' },
-        ],
-      },
-      depositAgentStakingRewards: {
-        title: 'depositAgentStakingRewards',
-        params: [
-          { label: 'Sponsor Account', placeholder: 'address _sponsorAccount', type: 'address' },
-          { label: 'Recipient Account', placeholder: 'address _recipientAccount', type: 'address' },
-          { label: 'Recipient Rate', placeholder: 'uint256 _recipientRate', type: 'uint' },
-          { label: 'Agent Account', placeholder: 'address _agentAccount', type: 'address' },
-          { label: 'Agent Rate', placeholder: 'uint256 _agentRate', type: 'uint' },
-          { label: 'Amount', placeholder: 'uint256 _amount', type: 'uint' },
-        ],
-      },
-      depositStakingRewards: {
-        title: 'depositStakingRewards',
-        params: [
-          { label: 'Account Type', placeholder: 'uint256 _accountType', type: 'uint' },
-          { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
-          { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
-          { label: 'Recipient Rate', placeholder: 'uint256 _recipientRate', type: 'uint' },
-          { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' },
-          { label: 'Agent Rate', placeholder: 'uint256 _agentRate', type: 'uint' },
-          { label: 'Amount', placeholder: 'uint256 _amount', type: 'uint' },
-        ],
-      },
-    }),
-    [],
-  );
+  const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
+  const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
   const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
   const activeSpCoinWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
@@ -1270,27 +697,14 @@ export default function SponsorCoinLabPage() {
       ].sort((a, b) => a.label.localeCompare(b.label)),
     [],
   );
-  const erc20ReadOptions = useMemo(
-    () =>
-      (['name', 'symbol', 'decimals', 'totalSupply', 'balanceOf', 'allowance'] as Erc20ReadMethod[]).sort((a, b) =>
-        a.localeCompare(b),
-      ),
-    [],
-  );
-  const erc20WriteOptions = useMemo(
-    () => (['transfer', 'approve', 'transferFrom'] as Erc20WriteMethod[]).sort((a, b) => a.localeCompare(b)),
-    [],
-  );
+  const erc20ReadOptions = ERC20_READ_OPTIONS;
+  const erc20WriteOptions = ERC20_WRITE_OPTIONS;
   const spCoinReadOptions = useMemo(() => {
-    const all = (Object.keys(spCoinReadMethodDefs) as SpCoinReadMethod[]).sort((a, b) => a.localeCompare(b));
-    if (!hideUnexecutables) return all;
-    return all.filter((name) => spCoinReadMethodDefs[name].executable !== false);
-  }, [hideUnexecutables, spCoinReadMethodDefs]);
+    return getSpCoinReadOptions(hideUnexecutables);
+  }, [hideUnexecutables]);
   const spCoinWriteOptions = useMemo(() => {
-    const all = (Object.keys(spCoinWriteMethodDefs) as SpCoinWriteMethod[]).sort((a, b) => a.localeCompare(b));
-    if (!hideUnexecutables) return all;
-    return all.filter((name) => spCoinWriteMethodDefs[name].executable !== false);
-  }, [hideUnexecutables, spCoinWriteMethodDefs]);
+    return getSpCoinWriteOptions(hideUnexecutables);
+  }, [hideUnexecutables]);
   useEffect(() => {
     if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinReadOptions.length > 0) {
       setSelectedSpCoinReadMethod(spCoinReadOptions[0]);
@@ -1335,162 +749,17 @@ export default function SponsorCoinLabPage() {
   }, []);
   const runSelectedSpCoinReadMethod = useCallback(async () => {
     try {
-      const target = requireContractAddress();
-      const runner = await ensureReadRunner();
-      const contract = new Contract(target, SPCOIN_LAB_ABI, runner);
-      const args = activeSpCoinReadDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-      let result: unknown;
-
-      switch (selectedSpCoinReadMethod) {
-        case 'getSPCoinHeaderRecord': {
-          const getBody = Boolean(args[0]);
-          const header = await (contract as any).getSerializedSPCoinHeader();
-          if (!getBody) {
-            result = { header };
-            break;
-          }
-          const accountList = (await (contract as any).getAccountList()) as string[];
-          const body = await Promise.all(
-            accountList.map(async (accountKey) => ({
-              accountKey,
-              serializedAccountRecord: await (contract as any).getSerializedAccountRecord(accountKey),
-            })),
-          );
-          result = { header, body };
-          break;
-        }
-        case 'getAccountListSize': {
-          const accountList = (await (contract as any).getAccountList()) as string[];
-          result = accountList.length;
-          break;
-        }
-        case 'getAccountRecipientListSize': {
-          const recipientList = (await (contract as any).getAccountRecipientList(args[0])) as string[];
-          result = recipientList.length;
-          break;
-        }
-        case 'getAccountRecord': {
-          const accountKey = String(args[0]);
-          const serializedAccountRecord = await (contract as any).getSerializedAccountRecord(accountKey);
-          const serializedAccountRewards = await (contract as any).getSerializedAccountRewards(accountKey);
-          const recipientAccountList = await (contract as any).getAccountRecipientList(accountKey);
-          result = { accountKey, serializedAccountRecord, serializedAccountRewards, recipientAccountList };
-          break;
-        }
-        case 'getAccountRecords': {
-          const accountList = (await (contract as any).getAccountList()) as string[];
-          result = await Promise.all(
-            accountList.map(async (accountKey) => ({
-              accountKey,
-              serializedAccountRecord: await (contract as any).getSerializedAccountRecord(accountKey),
-            })),
-          );
-          break;
-        }
-        case 'getAccountStakingRewards': {
-          result = await (contract as any).getSerializedAccountRewards(args[0]);
-          break;
-        }
-        case 'getRewardTypeRecord': {
-          const rewardAccounts = await (contract as any).getRewardAccounts(args[0], args[1]);
-          result = { reward: args[2], rewardAccounts };
-          break;
-        }
-        case 'getAccountRewardTransactionList':
-        case 'getAccountRewardTransactionRecord':
-        case 'getAccountRateRecordList':
-        case 'getRateTransactionList': {
-          result = args[0];
-          break;
-        }
-        case 'getRecipientRateRecord': {
-          const serializedRecipientRateList = await (contract as any).getSerializedRecipientRateList(args[0], args[1], args[2]);
-          const agentAccountList = await (contract as any).getRecipientRateAgentList(args[0], args[1], args[2]);
-          const transactions = await (contract as any).getRecipientRateTransactionList(args[0], args[1], args[2]);
-          result = { serializedRecipientRateList, agentAccountList, transactions };
-          break;
-        }
-        case 'getRecipientRateRecordList': {
-          const rates = (await (contract as any).getRecipientRateList(args[0], args[1])) as Array<string | bigint>;
-          result = await Promise.all(
-            rates.map(async (rate) => ({
-              recipientRateKey: String(rate),
-              serializedRecipientRateList: await (contract as any).getSerializedRecipientRateList(args[0], args[1], String(rate)),
-            })),
-          );
-          break;
-        }
-        case 'getRecipientRecord': {
-          const serializedRecipientRecordList = await (contract as any).getSerializedRecipientRecordList(args[0], args[1]);
-          const recipientRateList = await (contract as any).getRecipientRateList(args[0], args[1]);
-          result = { serializedRecipientRecordList, recipientRateList };
-          break;
-        }
-        case 'getRecipientRecordList': {
-          const sponsorKey = String(args[0]);
-          const recipientAccountList = args[1] as string[];
-          result = await Promise.all(
-            recipientAccountList.map(async (recipientKey) => ({
-              recipientKey,
-              serializedRecipientRecordList: await (contract as any).getSerializedRecipientRecordList(sponsorKey, recipientKey),
-            })),
-          );
-          break;
-        }
-        case 'getAgentRateRecord': {
-          const serializedAgentRateRecord = await (contract as any).serializeAgentRateRecordStr(args[0], args[1], args[2], args[3], args[4]);
-          const transactions = await (contract as any).getSerializedRateTransactionList(args[0], args[1], args[2], args[3], args[4]);
-          result = { serializedAgentRateRecord, transactions };
-          break;
-        }
-        case 'getAgentRateRecordList': {
-          const agentRateKeys = (await (contract as any).getAgentRateList(args[0], args[1], args[2], args[3])) as Array<string | bigint>;
-          result = await Promise.all(
-            agentRateKeys.map(async (agentRateKey) => ({
-              agentRateKey: String(agentRateKey),
-              serializedAgentRateRecord: await (contract as any).serializeAgentRateRecordStr(
-                args[0],
-                args[1],
-                args[2],
-                args[3],
-                String(agentRateKey),
-              ),
-            })),
-          );
-          break;
-        }
-        case 'getAgentRateTransactionList': {
-          result = await (contract as any).getSerializedRateTransactionList(args[0], args[1], args[2], args[3], args[4]);
-          break;
-        }
-        case 'getAgentRecord': {
-          const stakedSPCoins = await (contract as any).getAgentTotalRecipient(args[0], args[1], args[2], args[3]);
-          const agentRateList = await (contract as any).getAgentRateList(args[0], args[1], args[2], args[3]);
-          result = { agentKey: args[3], stakedSPCoins, agentRateList };
-          break;
-        }
-        case 'getAgentRecordList': {
-          const sponsorKey = String(args[0]);
-          const recipientKey = String(args[1]);
-          const recipientRateKey = String(args[2]);
-          const agentAccountList = args[3] as string[];
-          result = await Promise.all(
-            agentAccountList.map(async (agentKey) => ({
-              agentKey,
-              stakedSPCoins: await (contract as any).getAgentTotalRecipient(sponsorKey, recipientKey, recipientRateKey, agentKey),
-              agentRateList: await (contract as any).getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey),
-            })),
-          );
-          break;
-        }
-        default:
-          result = await (contract as any)[selectedSpCoinReadMethod](...args);
-          break;
-      }
-
-      const out = stringifyResult(result);
-      appendLog(`${activeSpCoinReadDef.title}(${args.join(', ')}) -> ${out}`);
-      setStatus(`${activeSpCoinReadDef.title} read complete.`);
+      await runSpCoinReadMethod({
+        selectedMethod: selectedSpCoinReadMethod,
+        spReadParams,
+        coerceParamValue,
+        stringifyResult,
+        requireContractAddress,
+        ensureReadRunner,
+        abi: SPCOIN_LAB_ABI,
+        appendLog,
+        setStatus,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin read error.';
       setStatus(`${activeSpCoinReadDef.title} failed: ${message}`);
@@ -1509,116 +778,15 @@ export default function SponsorCoinLabPage() {
   ]);
   const runSelectedSpCoinWriteMethod = useCallback(async () => {
     try {
-      const args = activeSpCoinWriteDef.params.map((def, idx) => coerceParamValue(spWriteParams[idx], def));
-      const submitWrite = async (
-        label: string,
-        writeCall: (contract: Contract) => Promise<any>,
-      ) => {
-        setStatus(`Submitting ${label}...`);
-        const tx = await executeWriteConnected(label, writeCall, selectedHardhatAccount?.address);
-        appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
-        const receipt = await tx.wait();
-        appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-      };
-
-      switch (selectedSpCoinWriteMethod) {
-        case 'addRecipients': {
-          const recipientList = args[1] as string[];
-          for (const recipientKey of recipientList) {
-            await submitWrite(`addRecipient(${recipientKey})`, (contract) => (contract as any).addRecipient(recipientKey));
-          }
-          break;
-        }
-        case 'addAgents': {
-          const agentList = args[2] as string[];
-          for (const agentKey of agentList) {
-            await submitWrite(`addAgent(${String(args[0])}, ${String(args[1])}, ${agentKey})`, (contract) =>
-              (contract as any).addAgent(args[0], args[1], agentKey),
-            );
-          }
-          break;
-        }
-        case 'addAccountRecords': {
-          const accountList = args[0] as string[];
-          for (const accountKey of accountList) {
-            await submitWrite(`addAccountRecord(${accountKey})`, (contract) => (contract as any).addAccountRecord(accountKey));
-          }
-          break;
-        }
-        case 'addAgentSponsorship': {
-          const amount = splitDecimalAmount(String(args[4]));
-          await submitWrite(activeSpCoinWriteDef.title, (contract) =>
-            (contract as any).addSponsorship(args[0], args[1], args[2], args[3], amount.whole, amount.fractional),
-          );
-          break;
-        }
-        case 'addBackDatedAgentSponsorship': {
-          const amount = splitDecimalAmount(String(args[4]));
-          await submitWrite(activeSpCoinWriteDef.title, (contract) =>
-            (contract as any).addBackDatedSponsorship(args[0], args[1], args[2], args[3], amount.whole, amount.fractional, args[5]),
-          );
-          break;
-        }
-        case 'deleteAccountRecords': {
-          const accountList = args[0] as string[];
-          for (const accountKey of accountList) {
-            await submitWrite(`deleteAccountRecord(${accountKey})`, (contract) => (contract as any).deleteAccountRecord(accountKey));
-          }
-          break;
-        }
-        case 'deleteAgentRecord': {
-          throw new Error('deleteAgentRecord is not exposed as a callable public contract method in current ABI.');
-        }
-        case 'depositSponsorStakingRewards': {
-          await submitWrite(activeSpCoinWriteDef.title, (contract) =>
-            (contract as any).depositStakingRewards(
-              SPONSOR_ACCOUNT_TYPE,
-              args[0],
-              args[1],
-              args[2],
-              args[0],
-              '0',
-              args[3],
-            ),
-          );
-          break;
-        }
-        case 'depositRecipientStakingRewards': {
-          await submitWrite(activeSpCoinWriteDef.title, (contract) =>
-            (contract as any).depositStakingRewards(
-              RECIPIENT_ACCOUNT_TYPE,
-              args[0],
-              args[1],
-              args[2],
-              BURN_ADDRESS,
-              '0',
-              args[3],
-            ),
-          );
-          break;
-        }
-        case 'depositAgentStakingRewards': {
-          await submitWrite(activeSpCoinWriteDef.title, (contract) =>
-            (contract as any).depositStakingRewards(
-              AGENT_ACCOUNT_TYPE,
-              args[0],
-              args[1],
-              args[2],
-              args[3],
-              args[4],
-              args[5],
-            ),
-          );
-          break;
-        }
-        default:
-          await submitWrite(`${activeSpCoinWriteDef.title}(${args.join(', ')})`, (contract) =>
-            (contract as any)[selectedSpCoinWriteMethod](...args),
-          );
-          break;
-      }
-
-      setStatus(`${activeSpCoinWriteDef.title} complete.`);
+      await runSpCoinWriteMethod({
+        selectedMethod: selectedSpCoinWriteMethod,
+        spWriteParams,
+        coerceParamValue,
+        executeWriteConnected,
+        selectedHardhatAddress: selectedHardhatAccount?.address,
+        appendLog,
+        setStatus,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
       setStatus(`${activeSpCoinWriteDef.title} failed: ${message}`);
