@@ -1,4 +1,4 @@
-// File: @/components/views/Buttons/Connect/ConnectDropDown.tsx
+// File: components/views/Buttons/Connect/ConnectDropDown.tsx
 'use client';
 
 import React from 'react';

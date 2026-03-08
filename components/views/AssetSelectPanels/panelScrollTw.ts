@@ -1,4 +1,4 @@
-// File: @/components/views/AssetSelectPanels/panelScrollTw.ts
+// File: components/views/AssetSelectPanels/panelScrollTw.ts
 
 /**
  * SSOT: panel scroll body behavior.

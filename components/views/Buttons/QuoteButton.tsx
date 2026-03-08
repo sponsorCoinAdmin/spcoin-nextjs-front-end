@@ -1,4 +1,4 @@
-// File: @/app/api/wagmi/getWagmiBalanceOfRec/route.ts
+// File: components/views/Buttons/QuoteButton.tsx
 
 import { getURLParams } from '@/lib/getURLParams';
 import { getQueryVariable } from '@/lib/spCoin/coreUtils';

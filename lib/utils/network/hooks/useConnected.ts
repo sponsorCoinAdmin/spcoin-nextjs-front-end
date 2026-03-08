@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/hooks/useConnected.ts
+// File: lib/utils/network/hooks/useConnected.ts
 'use client';
 
 import { useCallback } from 'react';

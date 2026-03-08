@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/TokenPanel/index.tsx
+// File: components/views/RadioOverlayPanels/TokenPanel/index.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef } from 'react';

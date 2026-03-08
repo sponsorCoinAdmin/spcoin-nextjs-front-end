@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/TokenPanel/TokenContract.tsx
+// File: components/views/FeeDisclosure.tsx
 'use client';
 
 import React from 'react';

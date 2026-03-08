@@ -1,4 +1,4 @@
-// File: @/resources/data/networks/ethereum/initialize/defaultNetworkSettings.ts
+// File: resources/data/networks/ethereum/initialize/defaultNetworkSettings.tsx
 
 import type { TokenContract } from '@/lib/structure';
 import { CHAIN_ID } from '@/lib/structure';

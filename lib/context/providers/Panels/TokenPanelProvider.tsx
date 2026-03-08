@@ -1,4 +1,4 @@
-// File: @/lib/context/TradePanelProviders/TokenPanelProvider.tsx
+// File: lib/context/providers/Panels/TokenPanelProvider.tsx
 'use client';
 
 import type { ReactNode } from 'react';

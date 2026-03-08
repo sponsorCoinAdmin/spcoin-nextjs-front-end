@@ -1,4 +1,4 @@
-// File: @/lib/server/spCoinAuth.ts
+// File: lib/server/spCoinAuth.ts
 import crypto from 'crypto';
 import { verifyMessage } from 'viem';
 

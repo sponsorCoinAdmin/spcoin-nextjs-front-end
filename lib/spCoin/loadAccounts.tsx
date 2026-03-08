@@ -1,4 +1,4 @@
-// File: @/lib/server/loadAccounts.ts
+// File: lib/spCoin/loadAccounts.tsx
 'use server';
 
 import * as fs from 'fs';

@@ -1,4 +1,4 @@
-// File: @/components/views/ErrorMessagePanel.tsx
+// File: components/views/ErrorMessagePanel.tsx
 'use client';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';

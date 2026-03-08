@@ -1,4 +1,4 @@
-// File: @/lib/structure/exchangeContext/registry/panelRegistry.ts
+// File: lib/structure/exchangeContext/registry/panelRegistry.ts
 //
 // Canonical registry for ALL SponsorCoin panels.
 // Structural metadata only (NO UI logic):

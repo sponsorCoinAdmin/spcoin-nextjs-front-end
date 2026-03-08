@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/panelTreeDebug.ts
+// File: lib/context/exchangeContext/panelTree/panelTreeDebug.ts
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

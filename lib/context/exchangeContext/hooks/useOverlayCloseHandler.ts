@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/hooks/useOverlayCloseHandler.ts
+// File: lib/context/exchangeContext/hooks/useOverlayCloseHandler.ts
 'use client';
 
 import { useCallback } from 'react';

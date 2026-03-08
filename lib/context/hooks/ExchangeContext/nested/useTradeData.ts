@@ -1,4 +1,4 @@
-// File: @/lib/context/hooks/ExchangeContext/nested/useTradeData.ts
+// File: lib/context/hooks/ExchangeContext/nested/useTradeData.ts
 'use client';
 
 import { useCallback } from 'react';

@@ -1,4 +1,4 @@
-// File: @/lib/utils/feeds/assetSelect/fetchAndBuildDataList.ts
+// File: lib/utils/feeds/assetSelect/fetchAndBuildDataList.ts
 'use client';
 
 import { FEED_TYPE, type FeedData } from '@/lib/structure';

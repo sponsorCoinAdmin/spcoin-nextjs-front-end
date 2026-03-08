@@ -1,4 +1,4 @@
-// File: @/components/views/IsLoadingPrice.tsx
+// File: components/views/IsLoadingPrice.tsx
 
 import React from 'react';
 import styles from '@/styles/Exchange.module.css';

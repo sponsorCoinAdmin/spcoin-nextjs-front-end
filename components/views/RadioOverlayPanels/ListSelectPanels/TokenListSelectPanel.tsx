@@ -1,4 +1,4 @@
-// File: @/components/views/TokenListSelectPanel.tsx
+// File: components/views/RadioOverlayPanels/ListSelectPanels/TokenListSelectPanel.tsx
 'use client';
 
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';

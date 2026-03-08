@@ -1,4 +1,4 @@
-// File: @/components/shared/utils/sharedPreviews/BasePreviewWrapper.tsx
+// File: components/views/sharedPreviews/BasePreviewWrapper.tsx
 'use client';
 
 import React from 'react';

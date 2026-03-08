@@ -1,4 +1,4 @@
-// File: @/lib/utils/publicERC20/resolveContract.ts
+// File: lib/utils/publicERC20/resolveContract.ts
 import { type Address, type PublicClient } from 'viem';
 import { isAddress } from '@/lib/utils/address';
 import type { TokenContract } from '@/lib/structure/types';

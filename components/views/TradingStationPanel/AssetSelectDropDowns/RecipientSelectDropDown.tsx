@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/lib/AssetSelectDropDowns/RecipientSelectDropDown.tsx
+// File: components/views/TradingStationPanel/AssetSelectDropDowns/RecipientSelectDropDown.tsx
 'use client';
 
 import React, { useCallback, useRef, useMemo, useEffect } from 'react';

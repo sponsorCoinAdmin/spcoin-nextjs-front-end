@@ -1,4 +1,4 @@
-// File: @/lib/structure/exchangeContext/enums/spCoinDisplay.ts
+// File: lib/structure/exchangeContext/enums/spCoinDisplay.ts
 
 /**
  * IMPORTANT:

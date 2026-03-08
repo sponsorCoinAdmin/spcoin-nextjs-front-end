@@ -1,4 +1,4 @@
-// File: @/lib/context/ExchangeSanitizeHelpers.ts
+// File: lib/context/helpers/ExchangeSanitizeHelpers.ts
 
 import { toPersistedAccountRef } from '@/lib/accounts/accountAddress';
 import { toSanitizedTokenRef } from '@/lib/tokens/tokenPersistence';

@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/TestAccounts/index.tsx
+// File: app/(menu)/Test/Tabs/Accounts/index.tsx
 
 'use client';
 

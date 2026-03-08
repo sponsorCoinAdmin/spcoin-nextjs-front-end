@@ -1,4 +1,4 @@
-// File: @components/views/AddressSelect.tsx
+// File: components/views/AssetSelectPanels/AddressSelect.tsx
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';

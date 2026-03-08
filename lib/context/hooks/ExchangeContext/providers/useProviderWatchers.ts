@@ -1,4 +1,4 @@
-// File: @/lib/context/hooks/ExchangeContext/hooks/useProviderWatchers.ts
+// File: lib/context/hooks/ExchangeContext/providers/useProviderWatchers.ts
 
 import { useEffect, useRef } from 'react';
 import type { Address } from 'viem';

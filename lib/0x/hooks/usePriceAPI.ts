@@ -1,4 +1,4 @@
-// File: @/lib/0x/hooks/usePriceAPI.ts
+// File: lib/0x/hooks/usePriceAPI.ts
 'use client';
 
 import { useEffect } from 'react';

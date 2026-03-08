@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/validateERC20Asset.ts
+// File: lib/hooks/inputValidations/FSM_Core/validationTests/validateERC20Asset.ts
 
 import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';

@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/helpers/guards.ts
+// File: lib/hooks/inputValidations/helpers/fsm/internals/guards.ts
 'use client';
 
 import type { MutableRefObject } from 'react';

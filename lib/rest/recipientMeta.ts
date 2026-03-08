@@ -1,4 +1,4 @@
-// File: @/lib/rest/recipientMeta.ts
+// File: lib/rest/recipientMeta.ts
 import type { Address } from 'viem';
 import { loadAccountRecord } from '@/lib/context/accounts/accountStore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

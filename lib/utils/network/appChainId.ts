@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/appChainId.ts
+// File: lib/utils/network/appChainId.ts
 
 import { DEFAULT_CHAIN_ID, normalizeChainId } from './chains';
 

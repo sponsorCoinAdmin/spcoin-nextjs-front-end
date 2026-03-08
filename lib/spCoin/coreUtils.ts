@@ -1,4 +1,4 @@
-// File: @/lib/spCoin/coreUtils.ts
+// File: lib/spCoin/coreUtils.ts
 
 import { parseUnits, formatUnits, getAddress } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';

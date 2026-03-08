@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/overlayReturnRegistry.ts
+// File: lib/context/exchangeContext/overlayReturnRegistry.ts
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';

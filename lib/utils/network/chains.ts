@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/chains.ts
+// File: lib/utils/network/chains.ts
 
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 

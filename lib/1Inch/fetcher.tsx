@@ -1,4 +1,4 @@
-// File: @/lib/1Inch/fetcher.tsx
+// File: lib/1Inch/fetcher.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';

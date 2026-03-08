@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/AccountPanel/index.tsx
+// File: components/views/RadioOverlayPanels/AccountPanel/index.tsx
 'use client';
 
 import React, { useContext, useMemo } from 'react';

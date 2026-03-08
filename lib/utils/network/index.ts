@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/index.ts
+// File: lib/utils/network/index.ts
 
 export { toggleShowTestNetsUpdater } from './toggleShowTestNets';
 export {

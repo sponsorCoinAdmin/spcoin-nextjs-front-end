@@ -1,4 +1,4 @@
-// File: @/components/views/AssetSelectPanels/PanelScrollSlot.tsx
+// File: components/views/AssetSelectPanels/PanelScrollSlot.tsx
 'use client';
 
 import React from 'react';

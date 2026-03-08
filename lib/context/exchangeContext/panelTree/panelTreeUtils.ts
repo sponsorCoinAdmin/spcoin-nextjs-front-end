@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/panelTreeUtils.ts
+// File: lib/context/exchangeContext/panelTree/panelTreeUtils.ts
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';

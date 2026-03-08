@@ -1,4 +1,4 @@
-// File: @/lib/context/hooks/ExchangeContext/nested/useAccounts.ts
+// File: lib/context/hooks/ExchangeContext/nested/useAccounts.ts
 'use client';
 
 import { useCallback } from 'react';

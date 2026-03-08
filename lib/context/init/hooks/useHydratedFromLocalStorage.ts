@@ -1,4 +1,4 @@
-// File: @/lib/context/init/hooks/ExchangeContext/useHydratedFromLocalStorage.ts
+// File: lib/context/init/hooks/useHydratedFromLocalStorage.ts
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks';

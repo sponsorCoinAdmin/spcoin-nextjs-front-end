@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/hooks/useNetworkController.ts
+// File: lib/utils/network/hooks/useNetworkController.ts
 'use client';
 
 /**

@@ -1,4 +1,4 @@
-// File: @/components/Headers/TradeContainerHeader.tsx
+// File: lib/context/header/TradeHeaderProvider.tsx
 'use client';
 
 import React, {

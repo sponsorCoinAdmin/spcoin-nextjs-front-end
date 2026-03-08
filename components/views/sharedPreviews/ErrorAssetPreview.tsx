@@ -1,4 +1,4 @@
-// File: @/components/shared/utils/sharedPreviews/ErrorAssetPreview.tsx
+// File: components/views/sharedPreviews/ErrorAssetPreview.tsx
 'use client';
 
 import { useMemo, useEffect } from 'react';

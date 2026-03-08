@@ -1,4 +1,4 @@
-// File: @/components/views/RecipientListSelectPanel.tsx
+// File: components/views/RadioOverlayPanels/ListSelectPanels/RecipientListSelectPanel.tsx
 'use client';
 
 import React from 'react';

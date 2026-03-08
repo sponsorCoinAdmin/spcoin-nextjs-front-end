@@ -1,4 +1,4 @@
-// File: @/lib/context/init/initExchangeContext.ts
+// File: lib/context/init/initExchangeContext.ts
 import { sanitizeExchangeContext } from '../helpers/ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from '../helpers/loadLocalExchangeContext';
 import {

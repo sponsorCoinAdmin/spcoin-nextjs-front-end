@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/hooks/useActiveRadioPanel.ts
+// File: lib/context/exchangeContext/hooks/useActiveRadioPanel.ts
 'use client';
 
 import { useSyncExternalStore } from 'react';

@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/hooks/useAppChainId.ts
+// File: lib/utils/network/hooks/useAppChainId.ts
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks';

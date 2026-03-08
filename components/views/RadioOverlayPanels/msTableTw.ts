@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/msTableTw.ts
+// File: components/views/RadioOverlayPanels/msTableTw.ts
 
 export const msTableTw = {
   // ✅ Scroll MUST live on the element that also gets a constrained height (flex-1/min-h-0)

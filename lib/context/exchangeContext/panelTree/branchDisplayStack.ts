@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/branchDisplayStack.ts
+// File: lib/context/exchangeContext/panelTree/branchDisplayStack.ts
 
 import type { SP_COIN_DISPLAY } from '@/lib/structure';
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';

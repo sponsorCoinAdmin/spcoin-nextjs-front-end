@@ -1,4 +1,4 @@
-// File: @/lib/api/oneInchClient.ts
+// File: lib/api/oneInchClient.ts
 import { getJson } from '@/lib/rest/http';
 
 export type OneInchQuoteParams = {

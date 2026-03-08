@@ -1,4 +1,4 @@
-// File: @/components/views/sharedPreviews/RenderAssetPreview.tsx
+// File: components/views/sharedPreviews/RenderAssetPreview.tsx
 
 'use client';
 

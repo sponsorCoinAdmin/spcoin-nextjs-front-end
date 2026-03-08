@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/SponsorListSelectPanel.tsx
+// File: components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel.tsx
 'use client';
 
 import React, { useCallback, useEffect, useContext, useMemo } from 'react';

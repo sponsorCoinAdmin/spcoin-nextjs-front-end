@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/options.ts
+// File: lib/utils/network/options.ts
 
 import configuredNetworks from '@/lib/network/initialize/networks.json';
 import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';

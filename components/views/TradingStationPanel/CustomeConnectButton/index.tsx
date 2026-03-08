@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/ConnectTradeButton/index.tsx
+// File: components/views/TradingStationPanel/CustomeConnectButton/index.tsx
 'use client';
 
 import React from 'react';

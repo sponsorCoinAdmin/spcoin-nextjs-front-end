@@ -1,4 +1,4 @@
-// File: @/lib/network/initialize/appNetworkController.tsx
+// File: lib/network/initialize/appNetworkController.tsx
 'use client';
 
 import { useNetworkController } from '@/lib/utils/network/hooks';

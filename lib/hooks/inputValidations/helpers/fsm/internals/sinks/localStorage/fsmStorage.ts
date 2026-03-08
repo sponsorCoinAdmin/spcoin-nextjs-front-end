@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/helpers/fsmStorage.ts
+// File: lib/hooks/inputValidations/helpers/fsm/internals/sinks/localStorage/fsmStorage.ts
 'use client';
 
 import { SEP_LINE } from './formatFSM';

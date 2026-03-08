@@ -1,4 +1,4 @@
-// File: @/lib/api/nativeTokenClient.ts
+// File: lib/api/nativeTokenClient.ts
 import { getJson } from '@/lib/rest/http';
 
 export type NativeTokenMeta = {

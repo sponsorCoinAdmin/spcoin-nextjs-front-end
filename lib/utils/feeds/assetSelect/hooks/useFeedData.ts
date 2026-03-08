@@ -1,4 +1,4 @@
-// File: @/lib/utils/feeds/assetSelect/hooks/useFeedData.ts
+// File: lib/utils/feeds/assetSelect/hooks/useFeedData.ts
 'use client';
 
 import { useEffect, useRef, useState } from 'react';

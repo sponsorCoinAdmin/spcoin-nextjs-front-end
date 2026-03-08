@@ -1,4 +1,4 @@
-// File: @/lib/erc20/useERC20Decimals.ts
+// File: lib/hooks/wagmi/ERC20/useDecimals.ts
 'use client';
 
 import { useReadContract } from 'wagmi';

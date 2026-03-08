@@ -1,4 +1,4 @@
-// File: @/resources/data/networks/hardhat/initialize/defaultNetworkSettings.tsx
+// File: resources/data/networks/hardhat/initialize/defaultNetworkSettings.tsx
 
 import type { TokenContract } from '@/lib/structure';
 import { CHAIN_ID } from '@/lib/structure';

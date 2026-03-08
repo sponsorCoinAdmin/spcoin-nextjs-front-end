@@ -1,4 +1,4 @@
-// File: @/lib/utils/feeds/deriveFeedTypeFromDisplay.ts
+// File: lib/utils/feeds/deriveFeedTypeFromDisplay.ts
 // File: @/lib/utils/feeds/deriveFeedTypeFromDisplay'
 import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 

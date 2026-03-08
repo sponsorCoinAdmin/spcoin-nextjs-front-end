@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/toggleShowTestNets.ts
+// File: lib/utils/network/toggleShowTestNets.ts
 
 import type { ExchangeContext } from '@/lib/structure';
 

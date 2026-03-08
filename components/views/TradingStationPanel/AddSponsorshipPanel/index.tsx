@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/AddSponsorshipPanel/index.tsx
+// File: components/views/TradingStationPanel/AddSponsorshipPanel/index.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';

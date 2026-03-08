@@ -1,4 +1,4 @@
-// File: @/lib/api/spCoinTokensClient.ts
+// File: lib/api/spCoinTokensClient.ts
 import { getJson, postJson, HttpError } from '@/lib/rest/http';
 
 const BASE_PATHS = ['/api/spCoin/tokens', '/api/spcoin/tokens'] as const;

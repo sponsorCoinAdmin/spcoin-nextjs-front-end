@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/panelTreeCallbacks.ts
+// File: lib/context/exchangeContext/panelTree/panelTreeCallbacks.ts
 'use client';
 
 import type React from 'react';

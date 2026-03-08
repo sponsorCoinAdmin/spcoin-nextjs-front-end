@@ -1,4 +1,4 @@
-// File: @/lib/network/hooks/useWagmiReady.ts
+// File: lib/network/initialize/hooks/useWagmiReady.ts
 'use client';
 
 import { useAccount } from 'wagmi';

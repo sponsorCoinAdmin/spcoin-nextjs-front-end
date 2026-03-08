@@ -1,4 +1,4 @@
-// File: @lib/components/views/TradingStationPanel/lib/AssetSelectDropDowns/TokenSelectDropDown.tsx
+// File: components/views/TradingStationPanel/AssetSelectDropDowns/TokenSelectDropDown.tsx
 
 'use client';
 

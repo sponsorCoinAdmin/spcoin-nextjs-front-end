@@ -1,4 +1,4 @@
-// File: @/components/panes/header.tsx
+// File: components/views/BrowserPanes/Header.tsx
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';

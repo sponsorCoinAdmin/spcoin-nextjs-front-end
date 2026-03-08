@@ -1,4 +1,4 @@
-// File: @/app/(menu)/_providers/AppBootstrap.tsx
+// File: lib/context/init/AppBootstrap.tsx
 'use client';
 
 import type { ReactNode } from 'react';

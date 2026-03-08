@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/helpers/fsmFormat.ts
+// File: lib/hooks/inputValidations/helpers/fsm/internals/sinks/localStorage/formatFSM.ts
 'use client';
 
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';

@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/FSM_Core/validationTests/updateValidated.ts
+// File: lib/hooks/inputValidations/FSM_Core/validationTests/updateValidated.ts
 import { InputState } from '@/lib/structure/assetSelection';
 import type {
   ValidateFSMInput,

@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/localStorageKeys.ts
+// File: lib/context/exchangeContext/localStorageKeys.ts
 
 // Core ExchangeContext persistence
 export const EXCHANGE_CONTEXT_LS_KEY = 'exCtxLSKey';

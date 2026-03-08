@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/hooks/index.ts
+// File: lib/utils/network/hooks/index.ts
 
 export * from './useAppChainId';
 export * from './useConnected';

@@ -1,4 +1,4 @@
-// File: @/lib/context/hooks/ExchangeContext/nested/accounts/useAgentAccounts.ts
+// File: lib/context/hooks/ExchangeContext/nested/accounts/useAgentsAccounts.ts
 'use client';
 
 import type { spCoinAccount } from '@/lib/structure';

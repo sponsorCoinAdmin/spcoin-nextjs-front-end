@@ -1,4 +1,4 @@
-// File: @/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
+// File: components/views/RadioOverlayPanels/ManageSponsorshipsPanel.tsx
 'use client';
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';

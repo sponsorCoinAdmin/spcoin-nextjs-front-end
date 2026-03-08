@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/tests/validateAddress.ts
+// File: lib/hooks/inputValidations/FSM_Core/validationTests/validateAddress.ts
 
 import { isAddress } from '@/lib/utils/address';
 import { InputState } from '@/lib/structure/assetSelection';

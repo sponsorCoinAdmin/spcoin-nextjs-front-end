@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/SellSelectPanel/ManageSponsorsButton/index.tsx
+// File: components/views/TradingStationPanel/SellSelectPanel/ManageSponsorsButton/index.tsx
 'use client';
 
 import React, { useCallback, useEffect, useRef } from 'react';

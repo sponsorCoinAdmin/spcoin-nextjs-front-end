@@ -1,4 +1,4 @@
-// File: @/components/views/TradingStationPanel/lib/twSettingConfig.ts
+// File: components/views/TradingStationPanel/lib/twSettingConfig.ts
 
 export const TSP_TW = {
   container: 'flex flex-col',

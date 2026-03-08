@@ -1,4 +1,4 @@
-// File: @/lib/utils/network/defaultSettings.ts
+// File: lib/utils/network/defaultSettings.ts
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
 import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';

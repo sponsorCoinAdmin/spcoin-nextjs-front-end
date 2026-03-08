@@ -1,4 +1,4 @@
-// File: @/lib/context/helpers/accountHydration.ts
+// File: lib/context/helpers/accountHydration.ts
 'use client';
 
 import type { Address } from 'viem';

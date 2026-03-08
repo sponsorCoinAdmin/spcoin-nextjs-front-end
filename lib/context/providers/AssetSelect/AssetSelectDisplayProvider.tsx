@@ -1,4 +1,4 @@
-// File: @/lib/context/AssetSelect/AssetSelectDisplayProvider.tsx
+// File: lib/context/providers/AssetSelect/AssetSelectDisplayProvider.tsx
 'use client';
 
 import React, {

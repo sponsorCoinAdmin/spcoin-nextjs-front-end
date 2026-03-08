@@ -1,4 +1,4 @@
-// File: @/lib/hooks/inputValidations/helpers/fsmConstants.ts
+// File: lib/hooks/inputValidations/helpers/fsmConstants.ts
 
 // Debugging options for FSM
 export const LOG_TIME = false;

@@ -1,4 +1,4 @@
-// File: @/lib/structure/exchangeContext/constants/spCoinDisplay.ts
+// File: lib/structure/exchangeContext/constants/spCoinDisplay.ts
 
 import { SP_COIN_DISPLAY as SP } from '../enums/spCoinDisplay';
 

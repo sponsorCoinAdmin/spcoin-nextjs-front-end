@@ -1,4 +1,4 @@
-// File: @/lib/structure/exchangeContext/constants/defaultPanelTree.ts
+// File: lib/structure/exchangeContext/constants/defaultPanelTree.ts
 
 import type {
   SpCoinPanelTree,

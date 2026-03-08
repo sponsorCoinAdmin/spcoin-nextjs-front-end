@@ -1,4 +1,4 @@
-// File: @/components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
+// File: components/views/AssetSelectPanels/AssetListSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef } from 'react';

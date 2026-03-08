@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/panelTreeManageScope.ts
+// File: lib/context/exchangeContext/panelTree/panelTreeManageScope.ts
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import type { PanelEntry } from './panelTreePersistence';

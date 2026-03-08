@@ -1,4 +1,4 @@
-// File: @/lib/api/zeroXClient.ts
+// File: lib/api/zeroXClient.ts
 import { stringify } from 'qs';
 import { getJson } from '@/lib/rest/http';
 import type { PriceRequestParams } from '@/lib/structure';

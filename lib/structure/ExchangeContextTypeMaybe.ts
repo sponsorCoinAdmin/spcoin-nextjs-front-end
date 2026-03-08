@@ -1,4 +1,4 @@
-// File: @/lib/structure/ExchangeContextTypeMaybe.ts
+// File: lib/structure/ExchangeContextTypeMaybe.ts
 
 /**
  * ExchangeContextTypeMaybe

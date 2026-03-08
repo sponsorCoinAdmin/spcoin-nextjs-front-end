@@ -1,4 +1,4 @@
-// File: @/lib/api/spCoinAccountsClient.ts
+// File: lib/api/spCoinAccountsClient.ts
 import { getJson, postJson, HttpError } from '@/lib/rest/http';
 
 const BASE_PATHS = ['/api/spCoin/accounts', '/api/spcoin/accounts'] as const;

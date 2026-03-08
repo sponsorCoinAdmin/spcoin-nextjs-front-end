@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/panelTree/panelNavStackDebug.ts
+// File: lib/context/exchangeContext/panelTree/panelNavStackDebug.ts
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';

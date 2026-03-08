@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanelHost.tsx
+// File: components/views/RadioOverlayPanelHost.tsx
 'use client';
 
 import React from 'react';

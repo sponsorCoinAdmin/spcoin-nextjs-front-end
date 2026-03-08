@@ -1,4 +1,4 @@
-// File: @/components/views/RadioOverlayPanels/StakingSpCoinsPanel.tsx
+// File: components/views/RadioOverlayPanels/StakingSpCoinsPanel.tsx
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';

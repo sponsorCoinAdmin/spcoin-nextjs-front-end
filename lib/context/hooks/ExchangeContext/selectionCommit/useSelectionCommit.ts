@@ -1,4 +1,4 @@
-// File: @/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
+// File: lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
 'use client';
 
 import { useCallback } from 'react';

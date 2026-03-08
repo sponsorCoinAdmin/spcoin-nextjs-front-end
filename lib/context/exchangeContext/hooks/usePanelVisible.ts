@@ -1,4 +1,4 @@
-// File: @/lib/context/exchangeContext/hooks/usePanelVisible.ts
+// File: lib/context/exchangeContext/hooks/usePanelVisible.ts
 'use client';
 
 import { useSyncExternalStore } from 'react';
