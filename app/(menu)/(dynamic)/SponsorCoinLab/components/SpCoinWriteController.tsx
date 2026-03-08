@@ -15,6 +15,7 @@ type Props = {
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
   updateSpWriteParamAtIndex: (idx: number, value: string) => void;
+  onOpenBackdatePicker: (idx: number) => void;
   inputStyle: string;
   buttonStyle: string;
   runSelectedSpCoinWriteMethod: () => void;
@@ -64,6 +65,7 @@ export default function SpCoinWriteController(props: Props) {
     activeSpCoinWriteDef,
     spWriteParams,
     updateSpWriteParamAtIndex,
+    onOpenBackdatePicker,
     inputStyle,
     buttonStyle,
     runSelectedSpCoinWriteMethod,
@@ -141,32 +143,8 @@ export default function SpCoinWriteController(props: Props) {
                   backdateMinutes,
                   backdateSeconds,
                 )}
-                onClick={() => {
-                  if (!spWriteParams[idx]) {
-                    const now = new Date();
-                    updateSpWriteParamAtIndex(idx, formatDateInput(now));
-                    setBackdateHours(String(now.getHours()));
-                    setBackdateMinutes(String(now.getMinutes()));
-                    setBackdateSeconds(String(now.getSeconds()));
-                  }
-                  setBackdateYears('0');
-                  setBackdateMonths('0');
-                  setBackdateDays('0');
-                  setBackdatePopupParamIdx(idx);
-                }}
-                onFocus={() => {
-                  if (!spWriteParams[idx]) {
-                    const now = new Date();
-                    updateSpWriteParamAtIndex(idx, formatDateInput(now));
-                    setBackdateHours(String(now.getHours()));
-                    setBackdateMinutes(String(now.getMinutes()));
-                    setBackdateSeconds(String(now.getSeconds()));
-                  }
-                  setBackdateYears('0');
-                  setBackdateMonths('0');
-                  setBackdateDays('0');
-                  setBackdatePopupParamIdx(idx);
-                }}
+                onClick={() => onOpenBackdatePicker(idx)}
+                onFocus={() => onOpenBackdatePicker(idx)}
               />
             </div>
           ) : (

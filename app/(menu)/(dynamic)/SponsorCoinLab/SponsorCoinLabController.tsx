@@ -6,6 +6,13 @@ import { BrowserProvider, Contract, HDNodeWallet, JsonRpcProvider, Wallet } from
 import type { Signer } from 'ethers';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import {
+  CALENDAR_WEEK_DAYS,
+  formatDateInput,
+  formatDateTimeDisplay,
+  parseDateInput,
+  useBackdateCalendar,
+} from './hooks/useBackdateCalendar';
 import Erc20ReadController from './components/Erc20ReadController';
 import Erc20WriteController from './components/Erc20WriteController';
 import SpCoinReadController from './components/SpCoinReadController';
@@ -156,87 +163,6 @@ function splitDecimalAmount(raw: string): { whole: string; fractional: string } 
   return { whole, fractional };
 }
 
-function formatDateInput(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function pad2(value: number | string): string {
-  return String(value).padStart(2, '0');
-}
-
-function formatDateTimeDisplay(datePart: string, hours: string, minutes: string, seconds: string): string {
-  return `${datePart} ${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
-}
-
-function getBackdatedDate(base: Date, years: number, months: number, days: number): Date {
-  const result = new Date(base);
-  result.setFullYear(result.getFullYear() - years);
-  result.setMonth(result.getMonth() - months);
-  result.setDate(result.getDate() - days);
-  return result;
-}
-
-function parseDateInput(value: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
-  if (!match) return null;
-  const year = Number(match[1]);
-  const month = Number(match[2]) - 1;
-  const day = Number(match[3]);
-  const date = new Date(year, month, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
-  return date;
-}
-
-const CALENDAR_WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const CALENDAR_MONTH_LABELS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-function calculateBackdateParts(fromDate: Date, toDate: Date): { years: number; months: number; days: number } {
-  let fromYear = fromDate.getFullYear();
-  let fromMonth = fromDate.getMonth() + 1;
-  let fromDay = fromDate.getDate();
-
-  const toYear = toDate.getFullYear();
-  const toMonth = toDate.getMonth() + 1;
-  const toDay = toDate.getDate();
-
-  if (fromDay < toDay) {
-    fromMonth -= 1;
-    if (fromMonth <= 0) {
-      fromMonth += 12;
-      fromYear -= 1;
-    }
-    fromDay += new Date(fromYear, fromMonth, 0).getDate();
-  }
-
-  const days = fromDay - toDay;
-
-  if (fromMonth < toMonth) {
-    fromMonth += 12;
-    fromYear -= 1;
-  }
-
-  const months = fromMonth - toMonth;
-  const years = fromYear - toYear;
-
-  return { years, months, days };
-}
-
 export default function SponsorCoinLabPage() {
   const { exchangeContext } = useExchangeContext();
   const [mode, setMode] = useState<ConnectionMode>('metamask');
@@ -270,21 +196,6 @@ export default function SponsorCoinLabPage() {
   const [hideUnexecutables, setHideUnexecutables] = useState(false);
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
-  const [backdatePopupParamIdx, setBackdatePopupParamIdx] = useState<number | null>(null);
-  const [backdateYears, setBackdateYears] = useState('0');
-  const [backdateMonths, setBackdateMonths] = useState('0');
-  const [backdateDays, setBackdateDays] = useState('0');
-  const [backdateHours, setBackdateHours] = useState(() => String(new Date().getHours()));
-  const [backdateMinutes, setBackdateMinutes] = useState(() => String(new Date().getMinutes()));
-  const [backdateSeconds, setBackdateSeconds] = useState(() => String(new Date().getSeconds()));
-  const [hoverCalendarWarning, setHoverCalendarWarning] = useState('');
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-  const [calendarViewYear, setCalendarViewYear] = useState(today.getFullYear());
-  const [calendarViewMonth, setCalendarViewMonth] = useState(today.getMonth());
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
@@ -1339,13 +1250,6 @@ export default function SponsorCoinLabPage() {
   );
   const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
   const activeSpCoinWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
-  useEffect(() => {
-    if (backdatePopupParamIdx === null) return;
-    const def = activeSpCoinWriteDef.params[backdatePopupParamIdx];
-    if (!def || def.type !== 'date') {
-      setBackdatePopupParamIdx(null);
-    }
-  }, [activeSpCoinWriteDef.params, backdatePopupParamIdx]);
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -1353,96 +1257,11 @@ export default function SponsorCoinLabPage() {
       return next;
     });
   }, []);
-  const applyBackdateBy = useCallback(
-    (yearsRaw: string, monthsRaw: string, daysRaw: string, targetIdx: number | null = backdatePopupParamIdx) => {
-      if (targetIdx === null) return;
-      const years = Number(yearsRaw || '0');
-      const months = Number(monthsRaw || '0');
-      const days = Number(daysRaw || '0');
-      const base = new Date();
-      base.setHours(0, 0, 0, 0);
-      const backdated = getBackdatedDate(base, years, months, days);
-      updateSpWriteParamAtIndex(targetIdx, formatDateInput(backdated));
-    },
-    [backdatePopupParamIdx, updateSpWriteParamAtIndex],
-  );
-  const selectedBackdateDate = useMemo(() => {
-    if (backdatePopupParamIdx === null) return null;
-    return parseDateInput(spWriteParams[backdatePopupParamIdx] || '');
-  }, [backdatePopupParamIdx, spWriteParams]);
-  const isViewingCurrentMonth = useMemo(
-    () => calendarViewYear === today.getFullYear() && calendarViewMonth === today.getMonth(),
-    [calendarViewMonth, calendarViewYear, today],
-  );
-  const isViewingFutureMonth = useMemo(() => {
-    if (calendarViewYear > today.getFullYear()) return true;
-    if (calendarViewYear === today.getFullYear() && calendarViewMonth > today.getMonth()) return true;
-    return false;
-  }, [calendarViewMonth, calendarViewYear, today]);
-  useEffect(() => {
-    if (backdatePopupParamIdx === null) return;
-    const base = selectedBackdateDate || today;
-    setCalendarViewYear(base.getFullYear());
-    setCalendarViewMonth(base.getMonth());
-  }, [backdatePopupParamIdx, selectedBackdateDate, today]);
-  useEffect(() => {
-    if (!selectedBackdateDate) return;
-    if (selectedBackdateDate.getTime() > today.getTime()) return;
-    const diff = calculateBackdateParts(today, selectedBackdateDate);
-    setBackdateYears(String(diff.years));
-    setBackdateMonths(String(diff.months));
-    setBackdateDays(String(diff.days));
-  }, [selectedBackdateDate, today]);
-  const minSelectableYear = useMemo(() => today.getFullYear() - 11, [today]);
-  const maxBackdateYears = useMemo(() => Math.max(0, today.getFullYear() - 2015), [today]);
-  const calendarYearOptions = useMemo(() => {
-    const years: number[] = [];
-    for (let y = today.getFullYear(); y >= minSelectableYear; y--) years.push(y);
-    return years;
-  }, [minSelectableYear, today]);
-  const calendarMonthOptions = useMemo(() => {
-    const maxMonthIndex = calendarViewYear === today.getFullYear() ? today.getMonth() : 11;
-    return CALENDAR_MONTH_LABELS.map((label, monthIndex) => ({ label, monthIndex })).filter(
-      (entry) => entry.monthIndex <= maxMonthIndex,
-    );
-  }, [calendarViewYear, today]);
-  useEffect(() => {
-    if (!calendarYearOptions.includes(calendarViewYear)) {
-      setCalendarViewYear(today.getFullYear());
-    }
-  }, [calendarViewYear, calendarYearOptions, today]);
-  useEffect(() => {
-    const allowed = new Set(calendarMonthOptions.map((entry) => entry.monthIndex));
-    if (!allowed.has(calendarViewMonth)) {
-      const fallback = calendarMonthOptions[calendarMonthOptions.length - 1];
-      if (fallback) setCalendarViewMonth(fallback.monthIndex);
-    }
-  }, [calendarMonthOptions, calendarViewMonth]);
-  const calendarDayCells = useMemo(() => {
-    const firstDayIndex = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
-    const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
-    const cells: Array<{ day: number | null; key: string }> = [];
-    for (let i = 0; i < firstDayIndex; i++) {
-      cells.push({ day: null, key: `pad-${i}` });
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      cells.push({ day, key: `day-${day}` });
-    }
-    while (cells.length % 7 !== 0) {
-      cells.push({ day: null, key: `tail-${cells.length}` });
-    }
-    return cells;
-  }, [calendarViewMonth, calendarViewYear]);
-  const shiftCalendarMonth = useCallback(
-    (delta: number) => {
-      const next = new Date(calendarViewYear, calendarViewMonth + delta, 1);
-      const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-      if (next.getTime() > currentMonthStart.getTime()) return;
-      setCalendarViewYear(next.getFullYear());
-      setCalendarViewMonth(next.getMonth());
-    },
-    [calendarViewMonth, calendarViewYear, today],
-  );
+  const backdateCalendar = useBackdateCalendar({
+    activeWriteParams: activeSpCoinWriteDef.params,
+    spWriteParams,
+    updateSpWriteParamAtIndex,
+  });
   const connectionModeOptions = useMemo(
     () =>
       [
@@ -1491,7 +1310,12 @@ export default function SponsorCoinLabPage() {
       }
       const date = parseDateInput(value);
       if (!date) throw new Error(`${def.label} must be a valid date.`);
-      date.setHours(Number(backdateHours || '0'), Number(backdateMinutes || '0'), Number(backdateSeconds || '0'), 0);
+      date.setHours(
+        Number(backdateCalendar.backdateHours || '0'),
+        Number(backdateCalendar.backdateMinutes || '0'),
+        Number(backdateCalendar.backdateSeconds || '0'),
+        0,
+      );
       const ms = date.getTime();
       if (!Number.isFinite(ms)) throw new Error(`${def.label} must be a valid date.`);
       return String(Math.trunc(ms / 1000));
@@ -1504,7 +1328,7 @@ export default function SponsorCoinLabPage() {
     }
     if (def.type === 'address_array' || def.type === 'string_array') return parseListParam(value);
     return value;
-  }, [backdateHours, backdateMinutes, backdateSeconds]);
+  }, [backdateCalendar.backdateHours, backdateCalendar.backdateMinutes, backdateCalendar.backdateSeconds]);
   const stringifyResult = useCallback((result: unknown) => {
     if (typeof result === 'string') return result;
     return JSON.stringify(result, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
@@ -2112,42 +1936,43 @@ export default function SponsorCoinLabPage() {
                 activeSpCoinWriteDef={activeSpCoinWriteDef as { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean }}
                 spWriteParams={spWriteParams}
                 updateSpWriteParamAtIndex={updateSpWriteParamAtIndex}
+                onOpenBackdatePicker={backdateCalendar.openBackdatePickerAt}
                 inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
                 runSelectedSpCoinWriteMethod={runSelectedSpCoinWriteMethod}
                 formatDateTimeDisplay={formatDateTimeDisplay}
                 formatDateInput={formatDateInput}
-                backdateHours={backdateHours}
-                setBackdateHours={setBackdateHours}
-                backdateMinutes={backdateMinutes}
-                setBackdateMinutes={setBackdateMinutes}
-                backdateSeconds={backdateSeconds}
-                setBackdateSeconds={setBackdateSeconds}
-                setBackdateYears={setBackdateYears}
-                setBackdateMonths={setBackdateMonths}
-                setBackdateDays={setBackdateDays}
-                backdatePopupParamIdx={backdatePopupParamIdx}
-                setBackdatePopupParamIdx={setBackdatePopupParamIdx}
-                shiftCalendarMonth={shiftCalendarMonth}
-                calendarMonthOptions={calendarMonthOptions}
-                calendarViewMonth={calendarViewMonth}
-                setCalendarViewMonth={setCalendarViewMonth}
-                calendarYearOptions={calendarYearOptions}
-                calendarViewYear={calendarViewYear}
-                setCalendarViewYear={setCalendarViewYear}
-                isViewingCurrentMonth={isViewingCurrentMonth}
-                setHoverCalendarWarning={setHoverCalendarWarning}
+                backdateHours={backdateCalendar.backdateHours}
+                setBackdateHours={backdateCalendar.setBackdateHours}
+                backdateMinutes={backdateCalendar.backdateMinutes}
+                setBackdateMinutes={backdateCalendar.setBackdateMinutes}
+                backdateSeconds={backdateCalendar.backdateSeconds}
+                setBackdateSeconds={backdateCalendar.setBackdateSeconds}
+                setBackdateYears={backdateCalendar.setBackdateYears}
+                setBackdateMonths={backdateCalendar.setBackdateMonths}
+                setBackdateDays={backdateCalendar.setBackdateDays}
+                backdatePopupParamIdx={backdateCalendar.backdatePopupParamIdx}
+                setBackdatePopupParamIdx={backdateCalendar.setBackdatePopupParamIdx}
+                shiftCalendarMonth={backdateCalendar.shiftCalendarMonth}
+                calendarMonthOptions={backdateCalendar.calendarMonthOptions}
+                calendarViewMonth={backdateCalendar.calendarViewMonth}
+                setCalendarViewMonth={backdateCalendar.setCalendarViewMonth}
+                calendarYearOptions={backdateCalendar.calendarYearOptions}
+                calendarViewYear={backdateCalendar.calendarViewYear}
+                setCalendarViewYear={backdateCalendar.setCalendarViewYear}
+                isViewingCurrentMonth={backdateCalendar.isViewingCurrentMonth}
+                setHoverCalendarWarning={backdateCalendar.setHoverCalendarWarning}
                 CALENDAR_WEEK_DAYS={CALENDAR_WEEK_DAYS}
-                calendarDayCells={calendarDayCells}
-                isViewingFutureMonth={isViewingFutureMonth}
-                today={today}
-                selectedBackdateDate={selectedBackdateDate}
-                hoverCalendarWarning={hoverCalendarWarning}
-                maxBackdateYears={maxBackdateYears}
-                backdateYears={backdateYears}
-                backdateMonths={backdateMonths}
-                backdateDays={backdateDays}
-                applyBackdateBy={applyBackdateBy}
+                calendarDayCells={backdateCalendar.calendarDayCells}
+                isViewingFutureMonth={backdateCalendar.isViewingFutureMonth}
+                today={backdateCalendar.today}
+                selectedBackdateDate={backdateCalendar.selectedBackdateDate}
+                hoverCalendarWarning={backdateCalendar.hoverCalendarWarning}
+                maxBackdateYears={backdateCalendar.maxBackdateYears}
+                backdateYears={backdateCalendar.backdateYears}
+                backdateMonths={backdateCalendar.backdateMonths}
+                backdateDays={backdateCalendar.backdateDays}
+                applyBackdateBy={backdateCalendar.applyBackdateBy}
               />
             )}
           </article>
