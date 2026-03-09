@@ -20,7 +20,8 @@ type DeploymentControllerPanelProps = {
   deploymentLogoPath: string;
   deploymentStatus: string;
   deploymentStatusIsError: boolean;
-  deploymentContractDirExists: boolean;
+  deployDisableReason: string;
+  deployButtonLabel: string;
   onSetDeploymentMode: (mode: 'mocked' | 'blockcain') => void;
   onDeploymentDecimalsChange: (value: string) => void;
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
@@ -30,7 +31,6 @@ type DeploymentControllerPanelProps = {
   onDeploy: () => Promise<void>;
   onDeploymentPrivateKeyChange: (value: string) => void;
   onDeploymentPrivateKeyBlur: () => void;
-  onUpdateServer: () => Promise<void>;
   onDeploymentLogoPathChange: (value: string) => void;
 };
 
@@ -53,7 +53,8 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentLogoPath,
     deploymentStatus,
     deploymentStatusIsError,
-    deploymentContractDirExists,
+    deployDisableReason,
+    deployButtonLabel,
     onSetDeploymentMode,
     onDeploymentDecimalsChange,
     onAdjustDeploymentDecimals,
@@ -63,13 +64,9 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onDeploy,
     onDeploymentPrivateKeyChange,
     onDeploymentPrivateKeyBlur,
-    onUpdateServer,
     onDeploymentLogoPathChange,
   } = props;
-  const isUpdateServerDisabled =
-    deploymentMode !== 'blockcain' ||
-    String(deploymentPublicKey || '').trim().length === 0 ||
-    deploymentContractDirExists;
+  const isDeployDisabled = deployDisableReason !== 'ENABLED';
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
@@ -237,69 +234,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               title="Enter local source deployment path"
             />
           </label>
-        </div>
-
-        <div className="flex gap-4">
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={() => void onDeploy()}
-              className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
-                deploymentFlashError ? 'bg-red-500 hover:bg-red-400' : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
-              }`}
-            >
-              Deploy
-            </button>
-          </div>
-
-          <label className="block flex-1">
-            <input
-              type="text"
-              value={deploymentAccountPrivateKey}
-              onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
-              onBlur={onDeploymentPrivateKeyBlur}
-              placeholder={deploymentKeyRequiredMessage}
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-            />
-          </label>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Public Key`}</span>
-            <input
-              type="text"
-              value={deploymentPublicKey}
-              readOnly
-              placeholder="Public Key, Returned from Deployment"
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
-            />
-          </label>
-
-          <div className="grid items-center gap-3 md:grid-cols-[auto_auto_minmax(0,1fr)]">
-            <div
-              className={isUpdateServerDisabled ? 'group inline-flex' : 'inline-flex'}
-              title={
-                deploymentContractDirExists
-                  ? 'Update Server disabled: contract directory already exists'
-                  : isUpdateServerDisabled
-                  ? 'Deploy in Blockchain mode first to enable Update Server'
-                  : 'Update Server'
-              }
-            >
-              <button
-                type="button"
-                disabled={isUpdateServerDisabled}
-                onClick={() => void onUpdateServer()}
-                className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
-                  isUpdateServerDisabled
-                    ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
-                    : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
-                }`}
-              >
-                Update Server
-              </button>
-            </div>
+          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
             <label htmlFor="spcoin-logo-path" className="text-sm font-semibold text-[#8FA8FF]">
               spCoin Logo
             </label>
@@ -312,6 +247,57 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
             />
           </div>
+        </div>
+
+        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">Signer Key</span>
+          <label className="block">
+            <input
+              type="text"
+              value={deploymentAccountPrivateKey}
+              onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
+              onBlur={onDeploymentPrivateKeyBlur}
+              placeholder={deploymentKeyRequiredMessage}
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <label className="grid items-center gap-3 md:grid-cols-[auto_auto_minmax(0,1fr)]">
+            <div
+              className={isDeployDisabled ? 'group inline-flex' : 'inline-flex'}
+              title={
+                isDeployDisabled
+                  ? `Deploy disabled: ${deployDisableReason}`
+                  : 'Deploy'
+              }
+            >
+              <button
+                type="button"
+                disabled={isDeployDisabled}
+                onClick={() => void onDeploy()}
+                className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
+                  isDeployDisabled
+                    ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
+                    : deploymentFlashError
+                    ? 'bg-red-500 hover:bg-red-400'
+                    : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+                }`}
+              >
+                {deployButtonLabel}
+              </button>
+            </div>
+            <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Public Key`}</span>
+            <input
+              type="text"
+              value={deploymentPublicKey}
+              readOnly
+              placeholder="Public Key, Returned from Deployment"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+            />
+          </label>
+
         </div>
 
         <div>

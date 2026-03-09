@@ -83,11 +83,12 @@ export default function SpCoinAccessControllerPage() {
               deploymentAccountPrivateKey={controller.deploymentAccountPrivateKey}
               deploymentKeyRequiredMessage={controller.deploymentKeyRequiredMessage}
               deploymentVersionPrefix={controller.deploymentVersionPrefix}
-              deploymentPublicKey={controller.deploymentPublicKey}
+              deploymentPublicKey={controller.deploymentPublicKeyDisplay}
               deploymentLogoPath={controller.deploymentLogoPath}
               deploymentStatus={controller.deploymentStatus}
               deploymentStatusIsError={controller.deploymentStatusIsError}
-              deploymentContractDirExists={controller.deploymentContractDirExists}
+              deployDisableReason={controller.deployDisableReason}
+              deployButtonLabel={controller.deployButtonLabel}
               onSetDeploymentMode={controller.setDeploymentMode}
               onDeploymentDecimalsChange={controller.handleDeploymentDecimalsInputChange}
               onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
@@ -97,7 +98,6 @@ export default function SpCoinAccessControllerPage() {
               onDeploy={controller.handleDeploy}
               onDeploymentPrivateKeyChange={controller.handleDeploymentPrivateKeyChange}
               onDeploymentPrivateKeyBlur={controller.handleDeploymentPrivateKeyBlur}
-              onUpdateServer={controller.handleUpdateServer}
               onDeploymentLogoPathChange={controller.setDeploymentLogoPath}
             />
           </div>

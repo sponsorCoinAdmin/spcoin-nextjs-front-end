@@ -13,6 +13,13 @@ const PACKAGES_ROOT = path.join(WORKSPACE_ROOT, 'packages');
 const BACKUPS_ROOT = path.join(WORKSPACE_ROOT, 'backups');
 const CONTRACTS_ROOT = path.join(WORKSPACE_ROOT, 'contracts', 'spCoin');
 const NETWORKS_REPOSITORY_PATH = path.join(WORKSPACE_ROOT, 'contracts', 'networks.json');
+const SPCOIN_DEPLOYMENT_MAP_PATH = path.join(
+  process.cwd(),
+  'resources',
+  'data',
+  'networks',
+  'spCoinDeployment.json',
+);
 const SPONSORCOIN_SCOPE_DIR = path.join(process.cwd(), 'node_modules', '@sponsorcoin');
 const MANAGER_STATE_PATH = path.join(BACKUPS_ROOT, 'manager-state.json');
 const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -49,6 +56,7 @@ type AccessManagerResponse = {
   deploymentChainId?: number;
   deploymentAssetChainId?: number;
   deploymentNetworkName?: string;
+  mapAdded?: boolean;
   message: string;
   packages?: string[];
   workspaceRoot?: string;
@@ -77,6 +85,13 @@ type NetworkRepositoryFile = {
   version?: number;
   updatedAt?: string;
   networks: NetworkRepositoryEntry[];
+};
+
+type SpCoinDeploymentMapFile = {
+  meta?: {
+    networkIdToName?: Record<string, string>;
+  };
+  chainId?: Record<string, Record<string, Record<string, Record<string, unknown>>>>;
 };
 
 type ManagerState = {
@@ -882,6 +897,66 @@ async function handleUpdateServer(params: {
   };
 }
 
+function mapNetworkNameByChainId(chainId: number): string {
+  switch (Number(chainId)) {
+    case 1:
+      return 'ethereum';
+    case 137:
+      return 'polygon';
+    case 8453:
+      return 'base';
+    case 31337:
+      return 'hardhat';
+    case 11155111:
+      return 'sepolia';
+    default:
+      return `chain-${String(chainId)}`;
+  }
+}
+
+async function upsertSpCoinDeploymentMap(params: {
+  chainId: number;
+  version: string;
+  publicKey: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  signerKey?: string;
+}) {
+  const raw = await fs
+    .readFile(SPCOIN_DEPLOYMENT_MAP_PATH, 'utf8')
+    .catch(() => '{"meta":{"networkIdToName":{}},"chainId":{}}');
+  const parsed = JSON.parse(raw || '{}') as SpCoinDeploymentMapFile;
+  const out: SpCoinDeploymentMapFile = {
+    meta: {
+      networkIdToName: { ...(parsed.meta?.networkIdToName ?? {}) },
+    },
+    chainId: { ...(parsed.chainId ?? {}) },
+  };
+  const chainIdKey = String(params.chainId);
+  const versionKey = String(params.version || '').trim() || '0';
+  const publicKeyUpper = String(params.publicKey || '').trim().toUpperCase();
+
+  out.meta!.networkIdToName![chainIdKey] = mapNetworkNameByChainId(params.chainId);
+  out.chainId![chainIdKey] = out.chainId![chainIdKey] ?? {};
+  out.chainId![chainIdKey][versionKey] = out.chainId![chainIdKey][versionKey] ?? {};
+
+  const exists = Object.prototype.hasOwnProperty.call(
+    out.chainId![chainIdKey][versionKey],
+    publicKeyUpper,
+  );
+  if (!exists) {
+    out.chainId![chainIdKey][versionKey][publicKeyUpper] = {
+      name: params.name,
+      symbol: params.symbol,
+      decimals: params.decimals,
+      ...(params.signerKey ? { signerKey: params.signerKey } : {}),
+    };
+    await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(out, null, 2), 'utf8');
+  }
+  return { added: !exists, chainIdKey, versionKey, publicKeyUpper };
+}
+
 async function validateTokenStatus(
   tokenPublicKey: string,
   deploymentChainIdRaw: number | string | undefined,
@@ -1120,6 +1195,12 @@ export async function POST(request: Request) {
     const deploymentName = String(body.deploymentName || '').trim();
     const deploymentVersion = String(body.deploymentVersion || '').trim();
     const deploymentAccountPrivateKey = String(body.deploymentAccountPrivateKey || '').trim();
+    const deploymentSymbol = String(body.deploymentSymbol || '').trim() || 'SPCOIN';
+    const deploymentDecimalsRaw = Number(body.deploymentDecimals);
+    const deploymentDecimals =
+      Number.isFinite(deploymentDecimalsRaw) && deploymentDecimalsRaw >= 0
+        ? Math.min(255, Math.floor(deploymentDecimalsRaw))
+        : 18;
     const deploymentMode = body.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked';
     const deploymentChainId = body.deploymentChainId;
 
@@ -1131,6 +1212,17 @@ export async function POST(request: Request) {
         deploymentMode,
         deploymentChainId,
       );
+      const mapUpsert =
+        deploymentMode === 'blockcain'
+          ? await upsertSpCoinDeploymentMap({
+              chainId: Number((result as any).deploymentAssetChainId || (result as any).deploymentChainId || 0),
+              version: String(deploymentVersion || '').trim() || '0',
+              publicKey: String(result.deploymentPublicKey || '').trim(),
+              name: String(deploymentName || '').trim() || 'Sponsor Coin',
+              symbol: deploymentSymbol,
+              decimals: deploymentDecimals,
+            })
+          : { added: false, chainIdKey: 'n/a', versionKey: 'n/a', publicKeyUpper: 'n/a' };
       return NextResponse.json({
         ok: true,
         action,
@@ -1142,10 +1234,16 @@ export async function POST(request: Request) {
         deploymentChainId: (result as any).deploymentChainId,
         deploymentAssetChainId: (result as any).deploymentAssetChainId,
         deploymentNetworkName: (result as any).deploymentNetworkName,
+        mapAdded: mapUpsert.added,
         message:
-          deploymentMode === 'blockcain'
+          (deploymentMode === 'blockcain'
             ? `Contract "${result.deploymentTokenName}" deployed on ${String((result as any).deploymentNetworkName || 'chain')} (${String((result as any).deploymentChainId || 'unknown')}). Tx: ${String((result as any).deploymentTxHash || '(unknown)')}`
-            : `Deployment scaffold prepared for "${result.deploymentTokenName}". Server-side deployment automation is not connected yet.`,
+            : `Deployment scaffold prepared for "${result.deploymentTokenName}". Server-side deployment automation is not connected yet.`) +
+          `\nDeployment map: ${
+            deploymentMode === 'blockcain'
+              ? `${mapUpsert.added ? 'added' : 'exists'} (${mapUpsert.chainIdKey}/${mapUpsert.versionKey}/${mapUpsert.publicKeyUpper})`
+              : 'skipped (mocked mode)'
+          }`,
       } satisfies AccessManagerResponse);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment manager failure.';

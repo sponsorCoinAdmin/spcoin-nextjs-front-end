@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { useExchangeContext } from '@/lib/context/hooks';
+import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
 import {
   buildDeploymentNameFromVersion,
   buildDeploymentSymbolFromVersion,
@@ -17,6 +18,18 @@ import {
   VERSION_FORMAT_ERROR,
   VERSION_FORMAT_REGEX,
 } from '../helpers';
+
+type SpCoinDeploymentFile = {
+  meta?: {
+    networkIdToName?: Record<string, string>;
+  };
+  chainId?: Record<string, Record<string, Record<string, unknown>>>;
+};
+
+const normalizeNetworkName = (value: string): string =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
 type ManagerResponse = {
   ok: boolean;
@@ -95,6 +108,7 @@ export function useSpCoinAccessController() {
   const [deploymentTokenStatus, setDeploymentTokenStatus] = useState<
     'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED'
   >('NOT_FOUND');
+  const [deployUiState, setDeployUiState] = useState<'idle' | 'in_progress' | 'deployed'>('idle');
   const refreshDeploymentTokenStatus = async () => {
     const key = String(deploymentPublicKey || '').trim();
     const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
@@ -151,18 +165,51 @@ export function useSpCoinAccessController() {
     rawDeploymentChainId === 31337 ? 'HardHat BASE' : String((exchangeContext as any)?.network?.name || 'Unknown');
   const deploymentChainId = Number.isFinite(mappedDeploymentChainId) ? String(mappedDeploymentChainId) : 'Unknown';
   const deploymentKeyRequiredMessage = 'Account Private Key for Deployment Required';
-  const updateServerDisableReason = useMemo(() => {
-    if (deploymentMode !== 'blockcain') return 'NOT_BLOCKCAIN_MODE';
-    if (!/^0[xX][a-fA-F0-9]{40}$/.test(String(deploymentPublicKey || '').trim())) return 'NO_KEY';
-    if (deploymentTokenStatus === 'SERVER_INSTALLED') return 'SERVER_INSTALLED';
+  const existsInSpCoinDeploymentMap = useMemo(() => {
+    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
+    const chainIdKey = String(deploymentChainId || '').trim();
+    const publicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
+    if (!/^[0][xX][a-fA-F0-9]{40}$/.test(publicKeyUpper)) return false;
+    const chainNode = parsed?.chainId?.[chainIdKey];
+    if (!chainNode || typeof chainNode !== 'object') return false;
+    const networkIdToName = parsed?.meta?.networkIdToName ?? {};
+    const expectedNetwork = normalizeNetworkName(networkIdToName[chainIdKey] ?? '');
+    const currentNetwork = normalizeNetworkName(deploymentChainName);
+    const networkMatches =
+      !expectedNetwork ||
+      currentNetwork === expectedNetwork ||
+      (chainIdKey === '8453' && currentNetwork === 'hardhatbase');
+    if (!networkMatches) return false;
+    for (const versionNode of Object.values(chainNode)) {
+      if (!versionNode || typeof versionNode !== 'object') continue;
+      if (Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper)) {
+        return true;
+      }
+    }
+    return false;
+  }, [deploymentChainId, deploymentChainName, deploymentPublicKey]);
+  const deployDisableReason = useMemo(() => {
+    if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
+    if (deployUiState === 'deployed') return 'DEPLOYED';
+    if (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap) return 'DEPLOYED_IN_MAP';
     return 'ENABLED';
-  }, [deploymentMode, deploymentPublicKey, deploymentTokenStatus]);
+  }, [deployUiState, deploymentMode, existsInSpCoinDeploymentMap]);
+  const deployButtonLabel =
+    deployUiState === 'in_progress'
+      ? 'Deployment In Progress'
+      : deployUiState === 'deployed' || (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap)
+      ? 'Deployed'
+      : 'Deploy';
+  const isDeployedState =
+    deployUiState === 'deployed' || (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap);
+  const deploymentPublicKeyDisplay = isDeployedState ? deploymentPublicKey : '';
   const deploymentGuidanceMessage = useMemo(() => {
     const publicKey = String(deploymentPublicKey || '').trim() || '(pending)';
-    const updateServerLine =
-      updateServerDisableReason === 'ENABLED'
-        ? 'Update Server: ENABLED'
-        : `Update Server: DISABLED (${updateServerDisableReason})`;
+    const deployLine =
+      deployDisableReason === 'ENABLED'
+        ? 'Deploy: ENABLED'
+        : `Deploy: DISABLED (${deployDisableReason})`;
+    const updateServerLine = 'Update Server: AUTO (runs after successful deploy)';
     if (deploymentMode === 'mocked') {
       return [
         'Status: READY',
@@ -171,6 +218,8 @@ export function useSpCoinAccessController() {
         `Contract Name: ${deploymentTokenName}`,
         `Network: ${deploymentChainName} (${deploymentChainId})`,
         `Token Status: ${deploymentTokenStatus}`,
+        `Deployment Map Match: ${existsInSpCoinDeploymentMap ? 'YES' : 'NO'}`,
+        deployLine,
         updateServerLine,
         '',
         'Set toggle radio button to Blockchain for real deployment execution',
@@ -183,6 +232,8 @@ export function useSpCoinAccessController() {
       `Contract Name: ${deploymentTokenName}`,
       `Network: ${deploymentChainName} (${deploymentChainId})`,
       `Token Status: ${deploymentTokenStatus}`,
+      `Deployment Map Match: ${existsInSpCoinDeploymentMap ? 'YES' : 'NO'}`,
+      deployLine,
       updateServerLine,
       '',
       'Press Deploy to execute blockchain deployment',
@@ -192,9 +243,11 @@ export function useSpCoinAccessController() {
     deploymentChainName,
     deploymentMode,
     deploymentPublicKey,
+    deploymentPublicKeyDisplay,
     deploymentTokenStatus,
     deploymentTokenName,
-    updateServerDisableReason,
+    deployDisableReason,
+    existsInSpCoinDeploymentMap,
   ]);
   const deploymentPathDisplayValue =
     deploymentMode === 'mocked' ? 'Mocking Deployment' : localSourceDeploymentPath;
@@ -217,6 +270,7 @@ export function useSpCoinAccessController() {
   };
 
   const handleDeploy = async () => {
+    if (deployDisableReason !== 'ENABLED') return;
     const normalizedName = deploymentName.trim() || buildDeploymentNameFromVersion(deploymentVersion);
     const normalizedVersion = deploymentVersion.trim();
     const normalizedSymbol = deploymentSymbol.trim() || buildDeploymentSymbolFromVersion(deploymentVersion);
@@ -229,9 +283,11 @@ export function useSpCoinAccessController() {
       setDeploymentStatus(normalizedPrivateKey ? '*Error: Invalid Account Private Key' : '*Error: Account Private Key is required for Deployment.');
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
+      setDeployUiState('idle');
       return;
     }
 
+    setDeployUiState('in_progress');
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
     setDeploymentStatus('Deployment in progress');
@@ -255,6 +311,7 @@ export function useSpCoinAccessController() {
         setDeploymentStatus(`*Error: Status ${response.status}: ${data.message || 'Deployment request failed.'}`);
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
+        setDeployUiState('idle');
         return;
       }
       const contractPublicKey = String(data.deploymentPublicKey || '');
@@ -262,59 +319,65 @@ export function useSpCoinAccessController() {
         data.message ||
         `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`;
       setDeploymentPublicKey(contractPublicKey);
+      if (deploymentMode === 'mocked') {
+        setDeploymentStatus(
+          [
+            `Status: ${response.status}`,
+            `Deployment: ${statusMessage}`,
+            `Contract Public Key: ${contractPublicKey || '(not returned)'}`,
+            `Contract Name: ${deploymentContractName}`,
+            `Network: ${deploymentChainName}`,
+            '',
+            'Mocked mode: server update skipped.',
+          ].join('\n'),
+        );
+        setDeployUiState('idle');
+        return;
+      }
+      setDeploymentStatus('Deployment complete. Updating server assets...');
+      const updateResponse = await fetch('/api/spCoin/access-manager', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateServer',
+          deploymentName: normalizedName,
+          deploymentVersion: normalizedVersion,
+          deploymentSymbol: normalizedSymbol,
+          deploymentDecimals: normalizedDecimals,
+          deploymentLogoPath,
+          deploymentPublicKey: contractPublicKey,
+          deploymentMode,
+          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+        }),
+      });
+      const updateData = (await updateResponse.json()) as ManagerResponse;
+      if (!updateResponse.ok || !updateData.ok) {
+        setDeploymentStatus(`*Error: Deploy succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`);
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        setDeployUiState('idle');
+        return;
+      }
       setDeploymentStatus(
         [
           `Status: ${response.status}`,
-          `Mocked Deployment: ${statusMessage}`,
+          `Deployment: ${statusMessage}`,
+          '',
+          String(updateData.message || 'Server update completed.'),
+          '',
           `Contract Public Key: ${contractPublicKey || '(not returned)'}`,
           `Contract Name: ${deploymentContractName}`,
           `Network: ${deploymentChainName}`,
-          '',
-          'Set toggle radio button to Blockchain for real deployment execution',
         ].join('\n'),
       );
+      await refreshDeploymentTokenStatus();
+      setDeployUiState('deployed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment request failure';
       setDeploymentStatus(`*Error: ${message}`);
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
-    }
-  };
-
-  const handleUpdateServer = async () => {
-    setDeploymentStatus('Token updating on server.');
-    setDeploymentStatusIsError(false);
-    setDeploymentFlashError(false);
-    try {
-      const response = await fetch('/api/spCoin/access-manager', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updateServer',
-          deploymentName: deploymentName.trim() || 'Sponsor Coin',
-          deploymentVersion: deploymentVersion.trim(),
-          deploymentSymbol: deploymentSymbol.trim() || 'SPCOIN',
-          deploymentDecimals,
-          deploymentLogoPath,
-          deploymentPublicKey,
-          deploymentMode,
-          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
-        }),
-      });
-      const data = (await response.json()) as ManagerResponse;
-      if (!response.ok || !data.ok) {
-        setDeploymentStatus(`*Error: ${data.message || 'Failed to update token metadata on server.'}`);
-        setDeploymentStatusIsError(true);
-        setDeploymentFlashError(true);
-        return;
-      }
-      setDeploymentStatus(String(data.message || 'Server update completed.'));
-      await refreshDeploymentTokenStatus();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown server update failure';
-      setDeploymentStatus(`*Error: ${message}`);
-      setDeploymentStatusIsError(true);
-      setDeploymentFlashError(true);
+      setDeployUiState('idle');
     }
   };
 
@@ -399,6 +462,9 @@ export function useSpCoinAccessController() {
     setDeploymentName(buildDeploymentNameFromVersion(deploymentVersion));
     setDeploymentSymbol(buildDeploymentSymbolFromVersion(deploymentVersion));
   }, [deploymentVersion]);
+  useEffect(() => {
+    setDeployUiState('idle');
+  }, [deploymentMode, deploymentVersion]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -668,6 +734,7 @@ export function useSpCoinAccessController() {
   const handleDeploymentPrivateKeyChange = (nextValue: string) => {
     setDeploymentAccountPrivateKey(nextValue);
     setDeploymentPublicKey('');
+    setDeployUiState('idle');
   };
   const handleDeploymentPrivateKeyBlur = () => {
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
@@ -713,11 +780,14 @@ export function useSpCoinAccessController() {
     deploymentKeyRequiredMessage,
     deploymentVersionPrefix,
     deploymentPublicKey,
+    deploymentPublicKeyDisplay,
     deploymentLogoPath,
     deploymentStatus,
     deploymentStatusIsError,
     deploymentContractDirExists,
     deploymentTokenStatus,
+    deployDisableReason,
+    deployButtonLabel,
     handleCloseAttempt,
     handlePackagePersist,
     handlePackageSourceModeChange,
@@ -737,7 +807,6 @@ export function useSpCoinAccessController() {
     handleDeploy,
     handleDeploymentPrivateKeyChange,
     handleDeploymentPrivateKeyBlur,
-    handleUpdateServer,
     setDeploymentLogoPath,
   };
 }
