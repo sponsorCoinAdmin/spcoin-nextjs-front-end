@@ -20,6 +20,7 @@ type DeploymentControllerPanelProps = {
   deploymentLogoPath: string;
   deploymentStatus: string;
   deploymentStatusIsError: boolean;
+  deploymentContractDirExists: boolean;
   onSetDeploymentMode: (mode: 'mocked' | 'blockcain') => void;
   onDeploymentDecimalsChange: (value: string) => void;
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
@@ -52,6 +53,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentLogoPath,
     deploymentStatus,
     deploymentStatusIsError,
+    deploymentContractDirExists,
     onSetDeploymentMode,
     onDeploymentDecimalsChange,
     onAdjustDeploymentDecimals,
@@ -64,6 +66,10 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onUpdateServer,
     onDeploymentLogoPathChange,
   } = props;
+  const isUpdateServerDisabled =
+    deploymentMode !== 'blockcain' ||
+    String(deploymentPublicKey || '').trim().length === 0 ||
+    deploymentContractDirExists;
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
@@ -271,13 +277,29 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
           </label>
 
           <div className="grid items-center gap-3 md:grid-cols-[auto_auto_minmax(0,1fr)]">
-            <button
-              type="button"
-              onClick={() => void onUpdateServer()}
-              className="rounded-xl bg-[#EBCA6A] px-4 py-[0.45rem] font-semibold text-black transition-colors hover:bg-[#F4D883]"
+            <div
+              className={isUpdateServerDisabled ? 'group inline-flex' : 'inline-flex'}
+              title={
+                deploymentContractDirExists
+                  ? 'Update Server disabled: contract directory already exists'
+                  : isUpdateServerDisabled
+                  ? 'Deploy in Blockchain mode first to enable Update Server'
+                  : 'Update Server'
+              }
             >
-              Update Server
-            </button>
+              <button
+                type="button"
+                disabled={isUpdateServerDisabled}
+                onClick={() => void onUpdateServer()}
+                className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
+                  isUpdateServerDisabled
+                    ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
+                    : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+                }`}
+              >
+                Update Server
+              </button>
+            </div>
             <label htmlFor="spcoin-logo-path" className="text-sm font-semibold text-[#8FA8FF]">
               spCoin Logo
             </label>

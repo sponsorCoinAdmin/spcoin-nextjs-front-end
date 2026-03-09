@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserProvider, Contract, HDNodeWallet, JsonRpcProvider, Wallet } from 'ethers';
+import { BrowserProvider, HDNodeWallet, JsonRpcProvider, Wallet } from 'ethers';
+import type { Contract } from 'ethers';
 import type { Signer } from 'ethers';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
@@ -38,6 +39,7 @@ import {
   parseDateInput,
   useBackdateCalendar,
 } from './hooks/useBackdateCalendar';
+import { createSpCoinContract, createSpCoinLibraryAccess } from './methods/shared';
 import Erc20ReadController from './components/Erc20ReadController';
 import Erc20WriteController from './components/Erc20WriteController';
 import SpCoinReadController from './components/SpCoinReadController';
@@ -53,49 +55,10 @@ type HardhatAccountOption = {
 
 const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
 const HARDHAT_KEYS_STORAGE_KEY = 'spcoin_lab_hardhat_keys_v1';
+const spCoinLabKey = 'spCoinLabKey';
 const HARDHAT_CHAIN_ID_DEC = 31337;
 const HARDHAT_CHAIN_ID_HEX = '0x7a69';
 const HARDHAT_NETWORK_NAME = 'SponsorCoin HH BASE';
-
-const SPCOIN_LAB_ABI = [
-  'function getSerializedSPCoinHeader() view returns (string)',
-  'function getAccountList() view returns (address[])',
-  'function getSerializedAccountRecord(address _accountKey) view returns (string)',
-  'function getSerializedAccountRewards(address _accountKey) view returns (string)',
-  'function getRewardAccounts(address _accountKey, uint256 _rewardType) view returns (string)',
-  'function getRecipientRateList(address _sponsorKey, address _recipientKey) view returns (uint256[])',
-  'function getRecipientRateAgentList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (address[])',
-  'function getAgentRateList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey) view returns (uint256[])',
-  'function getAgentTotalRecipient(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey) view returns (uint256)',
-  'function getSerializedRateTransactionList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (string)',
-  'function getRecipientRateTransactionList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (string)',
-  'function getSerializedRecipientRateList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (string)',
-  'function getSerializedRecipientRecordList(address _sponsorKey, address _recipientKey) view returns (string)',
-  'function serializeAgentRateRecordStr(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (string)',
-  'function testStakingRewards(uint256 lastUpdateTime, uint256 testUpdateTime, uint256 interestRate, uint256 quantity) view returns (uint256)',
-  'function getStakingRewards(uint256 lastUpdateTime, uint256 interestRate, uint256 quantity) view returns (uint256)',
-  'function getTimeMultiplier(uint256 _timeRateMultiplier) view returns (uint256)',
-  'function getAccountTimeInSecondeSinceUpdate(uint256 _tokenLastUpdate) view returns (uint256)',
-  'function getMillenniumTimeIntervalDivisor(uint256 _timeInSeconds) view returns (uint256)',
-  'function addAccountRecord(address _accountKey)',
-  'function addRecipient(address _recipientKey)',
-  'function addAgent(address _recipientKey, uint256 _recipientRateKey, address _agentKey)',
-  'function addSponsorship(address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey, string _strWholeAmount, string _strDecimalAmount)',
-  'function addBackDatedSponsorship(address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey, string _strWholeAmount, string _strDecimalAmount, uint256 _transactionTimeStamp)',
-  'function unSponsorRecipient(address _recipientKey)',
-  'function deleteAccountRecord(address _accountKey)',
-  'function updateAccountStakingRewards(address _sourceKey)',
-  'function depositStakingRewards(uint256 _accountType, address _sponsorKey, address _recipientKey, uint256 _recipientRate, address _agentKey, uint256 _agentRate, uint256 _amount) returns (uint256)',
-  'function transfer(address _to, uint256 _value) returns (bool)',
-  'function approve(address _spender, uint256 _value) returns (bool)',
-  'function transferFrom(address _from, address _to, uint256 _value) returns (bool)',
-  'function name() view returns (string)',
-  'function symbol() view returns (string)',
-  'function decimals() view returns (uint8)',
-  'function totalSupply() view returns (uint256)',
-  'function balanceOf(address _owner) view returns (uint256)',
-  'function allowance(address _owner, address _spender) view returns (uint256)',
-];
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
@@ -148,6 +111,7 @@ export default function SponsorCoinLabPage() {
   const [hideUnexecutables, setHideUnexecutables] = useState(false);
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
+  const [spCoinLabHydrated, setSpCoinLabHydrated] = useState(false);
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
@@ -459,7 +423,7 @@ export default function SponsorCoinLabPage() {
       const desired = normalizeAddress(account.address);
 
       const tryWithSigner = async (signer: Signer) => {
-        const contract = new Contract(target, SPCOIN_LAB_ABI, signer);
+        const contract = createSpCoinContract(target, signer);
         return writeCall(contract, signer);
       };
 
@@ -487,7 +451,7 @@ export default function SponsorCoinLabPage() {
     async (writeCall: (contract: Contract, signer: Signer) => Promise<any>) => {
       const target = requireContractAddress();
       const runWithSigner = async (signer: Signer) => {
-        const contract = new Contract(target, SPCOIN_LAB_ABI, signer);
+        const contract = createSpCoinContract(target, signer);
         return writeCall(contract, signer);
       };
       try {
@@ -555,10 +519,10 @@ export default function SponsorCoinLabPage() {
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
-      const contract = new Contract(target, SPCOIN_LAB_ABI, runner);
+      const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading SponsorCoin header...');
-      const result = (await contract.getSerializedSPCoinHeader()) as string;
-      appendLog(`getSerializedSPCoinHeader -> ${result}`);
+      const result = (await (access.contract as any).getSerializedSPCoinHeader()) as string;
+      appendLog(`spCoinReadMethods/getSerializedSPCoinHeader -> ${result}`);
       setStatus('Header read complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown header read error.';
@@ -571,10 +535,10 @@ export default function SponsorCoinLabPage() {
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
-      const contract = new Contract(target, SPCOIN_LAB_ABI, runner);
+      const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading account list...');
-      const list = (await contract.getAccountList()) as string[];
-      appendLog(`getAccountList -> ${JSON.stringify(list)}`);
+      const list = (await (access.read as any).getAccountList()) as string[];
+      appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
@@ -587,17 +551,17 @@ export default function SponsorCoinLabPage() {
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
-      const contract = new Contract(target, SPCOIN_LAB_ABI, runner);
+      const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Building tree dump...');
-      const list = (await contract.getAccountList()) as string[];
+      const list = (await (access.read as any).getAccountList()) as string[];
       if (list.length === 0) {
         appendLog('Tree dump skipped: no accounts available.');
         setStatus('Tree dump skipped (no accounts).');
         return;
       }
       const first = list[0];
-      const tree = (await contract.getSerializedAccountRecord(first)) as string;
-      appendLog(`getSerializedAccountRecord(${first}) -> ${tree}`);
+      const tree = await (access.read as any).getAccountRecord(first);
+      appendLog(`spCoinReadMethods/getAccountRecord(${first}) -> ${JSON.stringify(tree)}`);
       setStatus('Tree dump complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
@@ -651,7 +615,6 @@ export default function SponsorCoinLabPage() {
         readAddressB,
         requireContractAddress,
         ensureReadRunner,
-        abi: SPCOIN_LAB_ABI,
         appendLog,
         setStatus,
       });
@@ -689,6 +652,133 @@ export default function SponsorCoinLabPage() {
     spWriteParams,
     updateSpWriteParamAtIndex,
   });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(spCoinLabKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as Record<string, any>;
+        if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
+        if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
+        if (typeof saved.mnemonic === 'string') setMnemonic(saved.mnemonic);
+        if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
+        if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
+        if (Array.isArray(saved.hardhatAccounts)) setHardhatAccounts(saved.hardhatAccounts);
+        if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
+        if (typeof saved.writeAddressA === 'string') setWriteAddressA(saved.writeAddressA);
+        if (typeof saved.writeAddressB === 'string') setWriteAddressB(saved.writeAddressB);
+        if (typeof saved.writeAmountRaw === 'string') setWriteAmountRaw(saved.writeAmountRaw);
+        if (typeof saved.methodPanelMode === 'string') setMethodPanelMode(saved.methodPanelMode as MethodPanelMode);
+        if (typeof saved.selectedReadMethod === 'string') setSelectedReadMethod(saved.selectedReadMethod as Erc20ReadMethod);
+        if (typeof saved.readAddressA === 'string') setReadAddressA(saved.readAddressA);
+        if (typeof saved.readAddressB === 'string') setReadAddressB(saved.readAddressB);
+        if (typeof saved.selectedSpCoinReadMethod === 'string') {
+          setSelectedSpCoinReadMethod(saved.selectedSpCoinReadMethod as SpCoinReadMethod);
+        }
+        if (typeof saved.selectedSpCoinWriteMethod === 'string') {
+          setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
+        }
+        if (typeof saved.hideUnexecutables === 'boolean') setHideUnexecutables(saved.hideUnexecutables);
+        if (Array.isArray(saved.spReadParams)) setSpReadParams(saved.spReadParams.map((v) => String(v ?? '')));
+        if (Array.isArray(saved.spWriteParams)) setSpWriteParams(saved.spWriteParams.map((v) => String(v ?? '')));
+        if (typeof saved.status === 'string') setStatus(saved.status);
+        if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
+        if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
+          backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
+        }
+        if (typeof saved.backdateYears === 'string') backdateCalendar.setBackdateYears(saved.backdateYears);
+        if (typeof saved.backdateMonths === 'string') backdateCalendar.setBackdateMonths(saved.backdateMonths);
+        if (typeof saved.backdateDays === 'string') backdateCalendar.setBackdateDays(saved.backdateDays);
+        if (typeof saved.backdateHours === 'string') backdateCalendar.setBackdateHours(saved.backdateHours);
+        if (typeof saved.backdateMinutes === 'string') backdateCalendar.setBackdateMinutes(saved.backdateMinutes);
+        if (typeof saved.backdateSeconds === 'string') backdateCalendar.setBackdateSeconds(saved.backdateSeconds);
+        if (typeof saved.hoverCalendarWarning === 'string') backdateCalendar.setHoverCalendarWarning(saved.hoverCalendarWarning);
+        if (typeof saved.calendarViewYear === 'number') backdateCalendar.setCalendarViewYear(saved.calendarViewYear);
+        if (typeof saved.calendarViewMonth === 'number') backdateCalendar.setCalendarViewMonth(saved.calendarViewMonth);
+      }
+    } catch {
+      // Ignore malformed SponsorCoinLab localStorage payload.
+    } finally {
+      setSpCoinLabHydrated(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!spCoinLabHydrated) return;
+    const payload = {
+      mode,
+      rpcUrl,
+      mnemonic,
+      contractAddress,
+      hardhatAccounts,
+      selectedHardhatIndex,
+      connectedAddress,
+      connectedChainId,
+      connectedNetworkName,
+      status,
+      logs,
+      selectedWriteMethod,
+      writeAddressA,
+      writeAddressB,
+      writeAmountRaw,
+      methodPanelMode,
+      selectedReadMethod,
+      readAddressA,
+      readAddressB,
+      selectedSpCoinReadMethod,
+      selectedSpCoinWriteMethod,
+      hideUnexecutables,
+      spReadParams,
+      spWriteParams,
+      backdatePopupParamIdx: backdateCalendar.backdatePopupParamIdx,
+      backdateYears: backdateCalendar.backdateYears,
+      backdateMonths: backdateCalendar.backdateMonths,
+      backdateDays: backdateCalendar.backdateDays,
+      backdateHours: backdateCalendar.backdateHours,
+      backdateMinutes: backdateCalendar.backdateMinutes,
+      backdateSeconds: backdateCalendar.backdateSeconds,
+      hoverCalendarWarning: backdateCalendar.hoverCalendarWarning,
+      calendarViewYear: backdateCalendar.calendarViewYear,
+      calendarViewMonth: backdateCalendar.calendarViewMonth,
+    };
+    window.localStorage.setItem(spCoinLabKey, JSON.stringify(payload));
+  }, [
+    spCoinLabHydrated,
+    mode,
+    rpcUrl,
+    mnemonic,
+    contractAddress,
+    hardhatAccounts,
+    selectedHardhatIndex,
+    connectedAddress,
+    connectedChainId,
+    connectedNetworkName,
+    status,
+    logs,
+    selectedWriteMethod,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+    methodPanelMode,
+    selectedReadMethod,
+    readAddressA,
+    readAddressB,
+    selectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
+    hideUnexecutables,
+    spReadParams,
+    spWriteParams,
+    backdateCalendar.backdatePopupParamIdx,
+    backdateCalendar.backdateYears,
+    backdateCalendar.backdateMonths,
+    backdateCalendar.backdateDays,
+    backdateCalendar.backdateHours,
+    backdateCalendar.backdateMinutes,
+    backdateCalendar.backdateSeconds,
+    backdateCalendar.hoverCalendarWarning,
+    backdateCalendar.calendarViewYear,
+    backdateCalendar.calendarViewMonth,
+  ]);
   const connectionModeOptions = useMemo(
     () =>
       [
@@ -756,7 +846,6 @@ export default function SponsorCoinLabPage() {
         stringifyResult,
         requireContractAddress,
         ensureReadRunner,
-        abi: SPCOIN_LAB_ABI,
         appendLog,
         setStatus,
       });

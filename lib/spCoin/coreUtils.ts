@@ -116,19 +116,24 @@ const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
  */
 const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
   if (!tokenContract?.address) return false;
-
   const chainId = Number(tokenContract.chainId ?? CHAIN_ID.ETHEREUM);
-
   try {
     const normalized = getAddress(normalizeAddress(tokenContract.address));
+    const baseSpCoinAddresses = new Set([
+      getAddress('0XC66E2444FB35FF3974A69E3AFC51579E6CEE9CBA'),
+      getAddress('0X7877438CD6B88BB63D6D257DC16DFF258EF269D1'),
+    ]);
+    const polygonSpCoinAddresses = new Set([
+      getAddress('0XC2816250C07AE56C1583E5F2B0E67F7D7F42D562'),
+    ]);
     switch (chainId) {
       case CHAIN_ID.BASE:
       case CHAIN_ID.HARDHAT_BASE:
-        return normalized === getAddress('0xC66E2444Fb35Ff3974A69e3AFC51579E6cEE9CBA');
+        return baseSpCoinAddresses.has(normalized);
       case CHAIN_ID.ETHEREUM:
         return false;
       case CHAIN_ID.POLYGON:
-        return normalized === getAddress('0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562');
+        return polygonSpCoinAddresses.has(normalized);
       case CHAIN_ID.SEPOLIA:
         return false;
       default:

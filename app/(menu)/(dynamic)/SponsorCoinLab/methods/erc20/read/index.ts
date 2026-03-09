@@ -1,5 +1,6 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/erc20/read/index.ts
 import { Contract } from 'ethers';
+import { createSpCoinContract } from '../../shared';
 import { method as allowance } from './methods/allowance';
 import { method as balanceOf } from './methods/balanceOf';
 import { method as decimals } from './methods/decimals';
@@ -41,7 +42,6 @@ type RunArgs = {
   readAddressB: string;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
-  abi: readonly string[];
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
 };
@@ -54,14 +54,13 @@ export async function runErc20ReadMethod(args: RunArgs): Promise<void> {
     readAddressB,
     requireContractAddress,
     ensureReadRunner,
-    abi,
     appendLog,
     setStatus,
   } = args;
 
   const target = requireContractAddress();
   const runner = await ensureReadRunner();
-  const contract = new Contract(target, abi, runner);
+  const contract = createSpCoinContract(target, runner) as Contract;
   const addressA = readAddressA.trim();
   const addressB = readAddressB.trim();
 

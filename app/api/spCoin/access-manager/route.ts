@@ -54,6 +54,9 @@ type AccessManagerResponse = {
   workspaceRoot?: string;
   localPath?: string;
   localPathExists?: boolean;
+  contractDirExists?: boolean;
+  resolvedChainId?: number;
+  tokenStatus?: 'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED';
   downloadBlocked?: boolean;
   uploadBlocked?: boolean;
 };
@@ -764,13 +767,14 @@ async function handleUpdateServer(params: {
   deploymentDecimals: number | string;
   deploymentLogoPath: string;
   deploymentPublicKey: string;
+  deploymentMode?: 'mocked' | 'blockcain';
   deploymentChainId?: number | string;
 }) {
   const chainIdRaw = Number(params.deploymentChainId);
   const requestedChainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
   const chainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
   const address = String(params.deploymentPublicKey || '').trim();
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) {
     throw new Error('Invalid deployment public key. Deploy token first.');
   }
   const addressFolder = address.toUpperCase();
@@ -792,6 +796,11 @@ async function handleUpdateServer(params: {
     'contracts',
     addressFolder,
   );
+  const contractDirAlreadyExists = await fs
+    .access(contractDir)
+    .then(() => true)
+    .catch(() => false);
+  const tokenStatusBefore = await validateTokenStatus(address, requestedChainId);
   await fs.mkdir(contractDir, { recursive: true });
 
   const sourceLogoRelative = normalizePublicAssetPath(params.deploymentLogoPath);
@@ -816,10 +825,122 @@ async function handleUpdateServer(params: {
   const metadataPathAbsolute = path.join(contractDir, 'info.json');
   await fs.writeFile(metadataPathAbsolute, JSON.stringify(metadata, null, 2), 'utf8');
 
+  // If the token folder already exists, treat it as already-registered and skip list updates.
+  if (params.deploymentMode === 'blockcain' && !contractDirAlreadyExists) {
+    const networkNameByChainId: Record<number, string> = {
+      1: 'ethereum',
+      137: 'polygon',
+      8453: 'base',
+      31337: 'hardhat',
+      11155111: 'sepolia',
+    };
+    const networkName = networkNameByChainId[requestedChainId];
+    if (networkName) {
+      const tokenListPath = path.join(
+        process.cwd(),
+        'resources',
+        'data',
+        'networks',
+        networkName,
+        'tokenList.json',
+      );
+      const tokenListExists = await fs
+        .access(tokenListPath)
+        .then(() => true)
+        .catch(() => false);
+      if (tokenListExists) {
+        const rawTokenList = await fs.readFile(tokenListPath, 'utf8');
+        const parsed = JSON.parse(rawTokenList);
+        if (Array.isArray(parsed)) {
+          const upperAddress = address.toUpperCase();
+          const filtered = parsed.filter(
+            (entry) => String(entry || '').toUpperCase() !== upperAddress,
+          );
+          const insertIndex = filtered.length > 0 ? 1 : 0;
+          filtered.splice(insertIndex, 0, upperAddress);
+          await fs.writeFile(tokenListPath, JSON.stringify(filtered, null, 2), 'utf8');
+        }
+      }
+    }
+  }
+
+  const tokenStatusAfter = await validateTokenStatus(address, requestedChainId);
+
   return {
     metadataPathRelative,
     logoPathRelative,
     metadata,
+    debug: {
+      requestedChainId,
+      resolvedChainId: chainId,
+      deploymentMode: params.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked',
+      contractDir,
+      contractDirAlreadyExists,
+      tokenStatusBefore: tokenStatusBefore.tokenStatus,
+      tokenStatusAfter: tokenStatusAfter.tokenStatus,
+    },
+  };
+}
+
+async function validateTokenStatus(
+  tokenPublicKey: string,
+  deploymentChainIdRaw: number | string | undefined,
+): Promise<{
+  tokenStatus: 'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED';
+  contractDirExists: boolean;
+  resolvedChainId: number;
+}> {
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(tokenPublicKey)) {
+    throw new Error('Invalid deployment public key.');
+  }
+  const requestedChainIdParsed = Number(deploymentChainIdRaw);
+  const requestedChainId =
+    Number.isFinite(requestedChainIdParsed) && requestedChainIdParsed > 0
+      ? requestedChainIdParsed
+      : 31337;
+  const resolvedChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const address = String(tokenPublicKey || '').trim();
+  const addressFolder = address.toUpperCase();
+  const contractDir = path.join(
+    process.cwd(),
+    'public',
+    'assets',
+    'blockchains',
+    String(resolvedChainId),
+    'contracts',
+    addressFolder,
+  );
+  const contractDirExists = await fs
+    .access(contractDir)
+    .then(() => true)
+    .catch(() => false);
+  if (contractDirExists) {
+    return {
+      tokenStatus: 'SERVER_INSTALLED',
+      contractDirExists: true,
+      resolvedChainId,
+    };
+  }
+
+  try {
+    const network = await resolveDeployNetwork(requestedChainId);
+    const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
+    const code = await provider.getCode(address);
+    if (code && code !== '0x') {
+      return {
+        tokenStatus: 'DEPLOYED',
+        contractDirExists: false,
+        resolvedChainId,
+      };
+    }
+  } catch {
+    // If chain RPC is unavailable, we still return deterministic local status.
+  }
+
+  return {
+    tokenStatus: 'NOT_FOUND',
+    contractDirExists: false,
+    resolvedChainId,
   };
 }
 
@@ -852,6 +973,8 @@ async function checkLocalDirectoryExists(localPathRaw: string) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const localPathRaw = String(searchParams.get('localPath') || '').trim();
+  const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
+  const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
   const packageName = String(searchParams.get('packageName') || '').trim();
   const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
   const packages = await listSponsorcoinPackages();
@@ -867,6 +990,31 @@ export async function GET(request: Request) {
       workspaceRoot: WORKSPACE_ROOT,
       localPath: result.normalized,
       localPathExists: result.exists,
+    } satisfies AccessManagerResponse);
+  }
+
+  if (deploymentPublicKey || deploymentChainIdRaw) {
+    if (!/^0[xX][a-fA-F0-9]{40}$/.test(deploymentPublicKey)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: 'Invalid deployment public key.',
+          packages,
+          workspaceRoot: WORKSPACE_ROOT,
+          contractDirExists: false,
+        } satisfies AccessManagerResponse,
+        { status: 400 },
+      );
+    }
+    const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
+    return NextResponse.json({
+      ok: true,
+      message: `Token status: ${status.tokenStatus}`,
+      packages,
+      workspaceRoot: WORKSPACE_ROOT,
+      contractDirExists: status.contractDirExists,
+      resolvedChainId: status.resolvedChainId,
+      tokenStatus: status.tokenStatus,
     } satisfies AccessManagerResponse);
   }
 
@@ -929,6 +1077,7 @@ export async function POST(request: Request) {
         deploymentDecimals: body.deploymentDecimals ?? '18',
         deploymentLogoPath: String(body.deploymentLogoPath || '/public/assets/miscellaneous/spCoin.png'),
         deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+        deploymentMode: body.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked',
         deploymentChainId: body.deploymentChainId,
       });
       return NextResponse.json({
@@ -939,6 +1088,15 @@ export async function POST(request: Request) {
           `SponsorCoin Meta Data and Image uploader to server at:`,
           result.metadataPathRelative,
           result.logoPathRelative,
+          '',
+          'Debug:',
+          `requestedChainId: ${String((result as any).debug?.requestedChainId ?? 'unknown')}`,
+          `resolvedChainId: ${String((result as any).debug?.resolvedChainId ?? 'unknown')}`,
+          `deploymentMode: ${String((result as any).debug?.deploymentMode ?? 'unknown')}`,
+          `contractDirAlreadyExists: ${String((result as any).debug?.contractDirAlreadyExists ?? false)}`,
+          `tokenStatusBefore: ${String((result as any).debug?.tokenStatusBefore ?? 'unknown')}`,
+          `tokenStatusAfter: ${String((result as any).debug?.tokenStatusAfter ?? 'unknown')}`,
+          `contractDir: ${String((result as any).debug?.contractDir ?? '')}`,
           '',
           'MetaData:',
           JSON.stringify(result.metadata, null, 2),

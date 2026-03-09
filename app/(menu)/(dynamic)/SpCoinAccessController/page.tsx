@@ -87,6 +87,7 @@ export default function SpCoinAccessControllerPage() {
               deploymentLogoPath={controller.deploymentLogoPath}
               deploymentStatus={controller.deploymentStatus}
               deploymentStatusIsError={controller.deploymentStatusIsError}
+              deploymentContractDirExists={controller.deploymentContractDirExists}
               onSetDeploymentMode={controller.setDeploymentMode}
               onDeploymentDecimalsChange={controller.handleDeploymentDecimalsInputChange}
               onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
