@@ -44,6 +44,11 @@
           "symbol": "SPCOIN_V0.10",
           "decimals": 18,
           "signerKey": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
+        },
+        "0X06F3BE9B2B99DD7D0181C1213D0B8029D6AE029A": {
+          "name": "Sponsor Coin V0.10",
+          "symbol": "SPCOIN_V0.10",
+          "decimals": 18
         }
       }
     }
