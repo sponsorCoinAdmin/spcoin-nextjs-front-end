@@ -9,6 +9,9 @@ type DeploymentControllerPanelProps = {
   deploymentSymbol: string;
   deploymentDecimals: string;
   deploymentVersion: string;
+  hardhatDeploymentAccountNumber: number;
+  canIncrementHardhatDeploymentAccountNumber: boolean;
+  canDecrementHardhatDeploymentAccountNumber: boolean;
   deploymentChainName: string;
   deploymentChainId: string;
   deploymentPathDisplayValue: string;
@@ -27,6 +30,8 @@ type DeploymentControllerPanelProps = {
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
   onDeploymentVersionChange: (value: string) => void;
   onAdjustDeploymentVersion: (direction: 1 | -1) => void;
+  onHardhatDeploymentAccountNumberChange: (value: string) => void;
+  onAdjustHardhatDeploymentAccountNumber: (direction: 1 | -1) => void;
   onLocalSourceDeploymentPathChange: (value: string) => void;
   onDeploy: () => Promise<void>;
   onDeploymentPrivateKeyChange: (value: string) => void;
@@ -42,6 +47,9 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentSymbol,
     deploymentDecimals,
     deploymentVersion,
+    hardhatDeploymentAccountNumber,
+    canIncrementHardhatDeploymentAccountNumber,
+    canDecrementHardhatDeploymentAccountNumber,
     deploymentChainName,
     deploymentChainId,
     deploymentPathDisplayValue,
@@ -60,6 +68,8 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onAdjustDeploymentDecimals,
     onDeploymentVersionChange,
     onAdjustDeploymentVersion,
+    onHardhatDeploymentAccountNumberChange,
+    onAdjustHardhatDeploymentAccountNumber,
     onLocalSourceDeploymentPathChange,
     onDeploy,
     onDeploymentPrivateKeyChange,
@@ -239,6 +249,59 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               className="w-[6ch] min-w-[6ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-right text-slate-300 outline-none"
             />
           </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+          <div className="flex items-center gap-3 md:justify-self-start">
+            <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">Hardhat Deployment Account Number</span>
+            <div className="flex items-stretch">
+              <select
+                value={hardhatDeploymentAccountNumber}
+                onChange={(event) => onHardhatDeploymentAccountNumberChange(event.target.value)}
+                className="w-[5ch] min-w-[5ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                aria-label="Hardhat Deployment Account Number"
+                title="Hardhat Deployment Account Number"
+              >
+                {Array.from({ length: 20 }, (_, idx) => (
+                  <option key={`hardhat-deploy-account-${idx}`} value={idx}>
+                    {idx}
+                  </option>
+                ))}
+              </select>
+              <div className="flex w-[38px] flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canIncrementHardhatDeploymentAccountNumber) onAdjustHardhatDeploymentAccountNumber(1);
+                  }}
+                  className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                    canIncrementHardhatDeploymentAccountNumber
+                      ? 'cursor-pointer hover:bg-green-500'
+                      : 'cursor-not-allowed hover:bg-red-500'
+                  }`}
+                  title="Increment Hardhat Deployment Account Number"
+                  aria-disabled={!canIncrementHardhatDeploymentAccountNumber}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canDecrementHardhatDeploymentAccountNumber) onAdjustHardhatDeploymentAccountNumber(-1);
+                  }}
+                  className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                    canDecrementHardhatDeploymentAccountNumber
+                      ? 'cursor-pointer hover:bg-green-500'
+                      : 'cursor-not-allowed hover:bg-red-500'
+                  }`}
+                  title="Decrement Hardhat Deployment Account Number"
+                  aria-disabled={!canDecrementHardhatDeploymentAccountNumber}
+                >
+                  -
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">

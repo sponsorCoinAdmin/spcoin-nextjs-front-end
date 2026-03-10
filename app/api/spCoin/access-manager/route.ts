@@ -91,7 +91,7 @@ type SpCoinDeploymentMapFile = {
   meta?: {
     networkIdToName?: Record<string, string>;
   };
-  chainId?: Record<string, Record<string, Record<string, Record<string, unknown>>>>;
+  chainId?: Record<string, Record<string, unknown>>;
 };
 
 type ManagerState = {
@@ -936,32 +936,42 @@ async function upsertSpCoinDeploymentMap(params: {
   const chainIdKey = String(params.chainId);
   const versionKey = String(params.version || '').trim() || '0';
   const publicKeyUpper = String(params.publicKey || '').trim().toUpperCase();
+  const normalizedPrivateKey =
+    String(params.signerKey || '').trim().toLowerCase() || undefined;
 
   out.meta!.networkIdToName![chainIdKey] = mapNetworkNameByChainId(params.chainId);
   out.chainId![chainIdKey] = out.chainId![chainIdKey] ?? {};
-  out.chainId![chainIdKey][versionKey] = out.chainId![chainIdKey][versionKey] ?? {};
 
-  const exists = Object.prototype.hasOwnProperty.call(
-    out.chainId![chainIdKey][versionKey],
-    publicKeyUpper,
-  );
-  const prevEntry = exists
-    ? (out.chainId![chainIdKey][versionKey][publicKeyUpper] as Record<string, unknown>)
-    : undefined;
-  const nextEntry = {
-    name: params.name,
-    symbol: params.symbol,
-    decimals: params.decimals,
-    ...(params.signerKey ? { signerKey: params.signerKey } : {}),
-  } as Record<string, unknown>;
+  if (normalizedPrivateKey && /^0x[a-f0-9]{64}$/.test(normalizedPrivateKey)) {
+    const signerNode =
+      (out.chainId![chainIdKey][normalizedPrivateKey] as Record<string, unknown> | undefined) ??
+      {};
+    out.chainId![chainIdKey][normalizedPrivateKey] = signerNode;
+    const versionNode =
+      (signerNode[versionKey] as Record<string, unknown> | undefined) ?? {};
+    signerNode[versionKey] = versionNode;
+    const exists = Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
+    if (!exists) {
+      versionNode[publicKeyUpper] = {
+        name: params.name,
+        symbol: params.symbol,
+        decimals: params.decimals,
+      };
+      await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(out, null, 2), 'utf8');
+    }
+    return { added: !exists, chainIdKey, versionKey, publicKeyUpper };
+  }
 
-  const shouldWrite =
-    !exists ||
-    (params.signerKey &&
-      (!prevEntry || String(prevEntry.signerKey || '').trim() !== String(params.signerKey).trim()));
-
-  if (shouldWrite) {
-    out.chainId![chainIdKey][versionKey][publicKeyUpper] = nextEntry;
+  out.chainId![chainIdKey][versionKey] =
+    (out.chainId![chainIdKey][versionKey] as Record<string, unknown> | undefined) ?? {};
+  const versionNode = out.chainId![chainIdKey][versionKey] as Record<string, unknown>;
+  const exists = Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
+  if (!exists) {
+    versionNode[publicKeyUpper] = {
+      name: params.name,
+      symbol: params.symbol,
+      decimals: params.decimals,
+    };
     await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(out, null, 2), 'utf8');
   }
   return { added: !exists, chainIdKey, versionKey, publicKeyUpper };
@@ -1228,19 +1238,19 @@ export async function POST(request: Request) {
         deploymentMode,
         deploymentChainId,
       );
+      const upsertChainId = Number((result as any).deploymentChainId || 0);
+      const upsertMappedChainId = Number(resolveHHForkTokenAssetChainId(upsertChainId));
+      const isMappedHardhatChain = upsertChainId > 0 && upsertMappedChainId !== upsertChainId;
       const mapUpsert =
         deploymentMode === 'blockcain'
           ? await upsertSpCoinDeploymentMap({
-              chainId: Number((result as any).deploymentChainId || 0),
+              chainId: upsertChainId,
               version: String(deploymentVersion || '').trim() || '0',
               publicKey: String(result.deploymentPublicKey || '').trim(),
               name: String(deploymentName || '').trim() || 'Sponsor Coin',
               symbol: deploymentSymbol,
               decimals: deploymentDecimals,
-              signerKey:
-                Number((result as any).deploymentAssetChainId || 0) !== Number((result as any).deploymentChainId || 0)
-                  ? normalizedDeploymentSignerKey || undefined
-                  : undefined,
+              signerKey: isMappedHardhatChain ? normalizedDeploymentSignerKey || undefined : undefined,
             })
           : { added: false, chainIdKey: 'n/a', versionKey: 'n/a', publicKeyUpper: 'n/a' };
       return NextResponse.json({

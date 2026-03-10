@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { BrowserProvider, HDNodeWallet, JsonRpcProvider, Wallet } from 'ethers';
+import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
 import type { Contract } from 'ethers';
 import type { Signer } from 'ethers';
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -56,14 +56,18 @@ type HardhatAccountOption = {
   privateKey: string;
 };
 
+type SponsorCoinVersionChoice = {
+  id: string;
+  version: string;
+  address: string;
+  privateKey?: string;
+  signerKey?: string;
+  name?: string;
+  symbol?: string;
+};
+
 type SpCoinDeploymentFile = {
-  chainId?: Record<
-    string,
-    Record<
-      string,
-      Record<string, { name?: string; symbol?: string; decimals?: number; signerKey?: string }>
-    >
-  >;
+  chainId?: Record<string, Record<string, unknown>>;
 };
 
 const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
@@ -199,36 +203,56 @@ export default function SponsorCoinLabPage() {
   const sponsorCoinVersionChoices = useMemo(() => {
     const chainIdNum = Number(effectiveConnectedChainId);
     if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) {
-      return [] as Array<{
-        version: string;
-        address: string;
-        signerKey?: string;
-        name?: string;
-        symbol?: string;
-      }>;
+      return [] as SponsorCoinVersionChoice[];
     }
 
-    const byVersion = spCoinDeploymentMap.chainId?.[String(chainIdNum)] ?? {};
-    const rows: Array<{
-      version: string;
-      address: string;
-      signerKey?: string;
-      name?: string;
-      symbol?: string;
-    }> = [];
+    const chainNode = spCoinDeploymentMap.chainId?.[String(chainIdNum)] ?? {};
+    const rows: SponsorCoinVersionChoice[] = [];
 
-    for (const [version, byAddress] of Object.entries(byVersion)) {
-      const firstAddress = Object.keys(byAddress ?? {}).find((addr) => /^0[xX][0-9a-fA-F]{40}$/.test(addr));
-      if (!firstAddress) continue;
+    const pushVersionNode = (
+      version: string,
+      byAddress: unknown,
+      wrapperPrivateKey?: string,
+    ) => {
+      if (!byAddress || typeof byAddress !== 'object') return;
+      const firstAddress = Object.keys(byAddress as Record<string, unknown>).find((addr) =>
+        /^0[xX][0-9a-fA-F]{40}$/.test(addr),
+      );
+      if (!firstAddress) return;
       const firstEntry = (byAddress as any)?.[firstAddress] ?? {};
-      const signerKey = String((byAddress as any)?.[firstAddress]?.signerKey || '').trim() || undefined;
+      const firstEntryPrivateKey = String((firstEntry as any)?.privateKey || '').trim();
+      const firstEntrySignerKey = String((firstEntry as any)?.signerKey || '').trim();
+      const privateKey =
+        firstEntryPrivateKey ||
+        wrapperPrivateKey ||
+        (/^0x[0-9a-fA-F]{64}$/.test(firstEntrySignerKey) ? firstEntrySignerKey : '') ||
+        undefined;
       rows.push({
+        id: [String(chainIdNum), String(version || '').trim(), firstEntrySignerKey || wrapperPrivateKey || '', firstAddress]
+          .map((part) => String(part || '').trim().toLowerCase())
+          .join('::'),
         version,
         address: `0x${firstAddress.slice(2).toLowerCase()}`,
-        signerKey,
+        privateKey,
+        signerKey: firstEntrySignerKey || undefined,
         name: String(firstEntry?.name || '').trim() || undefined,
         symbol: String(firstEntry?.symbol || '').trim() || undefined,
       });
+    };
+
+    for (const [nodeKey, nodeValue] of Object.entries(chainNode)) {
+      const trimmedKey = String(nodeKey || '').trim();
+      if (!nodeValue || typeof nodeValue !== 'object') continue;
+
+      if (/^0x[a-fA-F0-9]{64}$/.test(trimmedKey)) {
+        const wrapperPrivateKey = trimmedKey;
+        for (const [version, byAddress] of Object.entries(nodeValue as Record<string, unknown>)) {
+          pushVersionNode(version, byAddress, wrapperPrivateKey);
+        }
+        continue;
+      }
+
+      pushVersionNode(trimmedKey, nodeValue);
     }
 
     return rows;
@@ -236,7 +260,7 @@ export default function SponsorCoinLabPage() {
 
   const selectedSponsorCoinVersionEntry = useMemo(
     () =>
-      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
+      sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion) ??
       sponsorCoinVersionChoices[0],
     [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
   );
@@ -244,20 +268,18 @@ export default function SponsorCoinLabPage() {
   const displayedVersionHardhatAccountIndex = useMemo(() => {
     if (mode !== 'hardhat') return -1;
     if (hardhatAccounts.length === 0) return -1;
-    const selectedEntry =
-      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
-      sponsorCoinVersionChoices[0];
+    const selectedEntry = selectedSponsorCoinVersionEntry ?? sponsorCoinVersionChoices[0];
     if (!selectedEntry) return 0;
-    const signerKey = String(selectedEntry.signerKey || '').trim().toLowerCase();
-    if (!signerKey) return 0;
+    const signerPrivateKey = String(selectedEntry.privateKey || '').trim().toLowerCase();
+    if (!signerPrivateKey) return 0;
     const idx = hardhatAccounts.findIndex(
-      (entry) => String(entry.privateKey || '').trim().toLowerCase() === signerKey,
+      (entry) => String(entry.privateKey || '').trim().toLowerCase() === signerPrivateKey,
     );
     return idx >= 0 ? idx : 0;
-  }, [hardhatAccounts, mode, selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
+  }, [hardhatAccounts, mode, selectedSponsorCoinVersionEntry, sponsorCoinVersionChoices]);
 
   const selectedVersionSignerKey = useMemo(() => {
-    return String(selectedSponsorCoinVersionEntry?.signerKey || '').trim();
+    return String(selectedSponsorCoinVersionEntry?.privateKey || '').trim();
   }, [selectedSponsorCoinVersionEntry]);
   const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
   const selectedVersionSymbolWidthCh = Math.max(4, selectedVersionSymbol.length + 1);
@@ -266,11 +288,11 @@ export default function SponsorCoinLabPage() {
     if (sponsorCoinVersionChoices.length === 0) return;
 
     const existing =
-      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
+      sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion) ??
       sponsorCoinVersionChoices[0];
 
-    if (existing.version !== selectedSponsorCoinVersion) {
-      setSelectedSponsorCoinVersion(existing.version);
+    if (existing.id !== selectedSponsorCoinVersion) {
+      setSelectedSponsorCoinVersion(existing.id);
     }
     if (normalizeAddress(contractAddress) !== normalizeAddress(existing.address)) {
       setContractAddress(existing.address);
@@ -279,7 +301,7 @@ export default function SponsorCoinLabPage() {
 
   useEffect(() => {
     if (!selectedSponsorCoinVersion) return;
-    const picked = sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion);
+    const picked = sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion);
     if (!picked) return;
     if (normalizeAddress(contractAddress) !== normalizeAddress(picked.address)) {
       setContractAddress(picked.address);
@@ -308,7 +330,7 @@ export default function SponsorCoinLabPage() {
     (direction: 1 | -1) => {
       if (sponsorCoinVersionChoices.length === 0) return;
       const currentIdx = sponsorCoinVersionChoices.findIndex(
-        (entry) => entry.version === selectedSponsorCoinVersion,
+        (entry) => entry.id === selectedSponsorCoinVersion,
       );
       const baseIdx = currentIdx >= 0 ? currentIdx : 0;
       const nextIdx = Math.max(
@@ -317,7 +339,7 @@ export default function SponsorCoinLabPage() {
       );
       const next = sponsorCoinVersionChoices[nextIdx];
       if (!next) return;
-      setSelectedSponsorCoinVersion(next.version);
+      setSelectedSponsorCoinVersion(next.id);
     },
     [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
   );
@@ -325,7 +347,7 @@ export default function SponsorCoinLabPage() {
   const selectedSponsorCoinVersionIndex = useMemo(() => {
     if (sponsorCoinVersionChoices.length === 0) return -1;
     const idx = sponsorCoinVersionChoices.findIndex(
-      (entry) => entry.version === selectedSponsorCoinVersion,
+      (entry) => entry.id === selectedSponsorCoinVersion,
     );
     return idx >= 0 ? idx : 0;
   }, [selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
@@ -501,40 +523,6 @@ export default function SponsorCoinLabPage() {
     }
     return target;
   }, [contractAddress]);
-
-  const loadHardhatAccounts = useCallback(async () => {
-    try {
-      setStatus('Loading Hardhat accounts...');
-      const provider = new JsonRpcProvider(rpcUrl.trim());
-      const rpcAccounts = (await provider.send('eth_accounts', [])) as string[];
-
-      const derivedByAddress = new Map<string, string>();
-      for (let i = 0; i < 20; i++) {
-        const path = `m/44'/60'/0'/0/${i}`;
-        const wallet = HDNodeWallet.fromPhrase(mnemonic.trim(), undefined, path);
-        derivedByAddress.set(normalizeAddress(wallet.address), wallet.privateKey);
-      }
-
-      const finalAccounts = rpcAccounts.map((addr, index) => {
-        const byAddress = derivedByAddress.get(normalizeAddress(addr));
-        if (byAddress) {
-          return { address: addr, privateKey: byAddress };
-        }
-        const fallbackPath = `m/44'/60'/0'/0/${index}`;
-        const fallbackWallet = HDNodeWallet.fromPhrase(mnemonic.trim(), undefined, fallbackPath);
-        return { address: addr, privateKey: fallbackWallet.privateKey };
-      });
-
-      setHardhatAccounts(finalAccounts);
-      reconcileHardhatSelection(finalAccounts);
-      setStatus(`Loaded ${finalAccounts.length} Hardhat accounts.`);
-      appendLog(`Loaded ${finalAccounts.length} Hardhat accounts from ${rpcUrl}.`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Hardhat account load error.';
-      setStatus(`Hardhat load failed: ${message}`);
-      appendLog(`Hardhat load failed: ${message}`);
-    }
-  }, [appendLog, mnemonic, reconcileHardhatSelection, rpcUrl]);
 
   const connectSigner = useCallback(async (): Promise<Signer> => {
     if (mode === 'metamask') {
@@ -1236,9 +1224,69 @@ export default function SponsorCoinLabPage() {
                     </label>
                   </>
                 )}
+              </div>
+            )}
+            {mode !== 'hardhat' && (
+              <div className="mt-4">
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
+                  <input
+                    className={inputStyle}
+                    readOnly
+                    disabled
+                    value={effectiveConnectedAddress || ''}
+                    placeholder="Selected account address"
+                  />
+                </label>
+              </div>
+            )}
+
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              {status !== 'Ready' && (
+                <div className="text-sm text-slate-300">
+                  <div className="mb-2">Status: {status}</div>
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className={cardStyle}>
+            <h2 className="text-lg font-semibold text-[#5981F3]">Active Hardhat Account</h2>
+            {mode === 'hardhat' ? (
+              <div className="mt-4 grid grid-cols-1 gap-3">
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">HardHat Public Account</span>
+                  <input
+                    className={inputStyle}
+                    readOnly
+                    value={selectedHardhatAccount?.address || ''}
+                    placeholder="Selected account address"
+                  />
+                </label>
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">HardHat Private Key</span>
+                  <input
+                    className={inputStyle}
+                    readOnly
+                    value={selectedVersionSignerKey}
+                    placeholder="Signer key for selected deployed version"
+                  />
+                </label>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-300">
+                Switch Network Connection Mode to Hardhat Local to configure HardHat account connection.
+              </p>
+            )}
+          </article>
+
+          <article className={cardStyle}>
+            <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h2>
+            {mode === 'hardhat' ? (
+              <div className="mt-4 grid grid-cols-1 gap-3">
                 <div className="flex w-full flex-wrap items-center gap-2">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">Deployed SponsorCoin Versions</span>
+                    <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
                     <div className="flex min-w-0 flex-1 items-stretch">
                       <select
                         className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
@@ -1251,7 +1299,7 @@ export default function SponsorCoinLabPage() {
                           <option value="">(no deployment map entries)</option>
                         )}
                         {sponsorCoinVersionChoices.map((entry) => (
-                          <option key={`spcoin-version-row-${entry.version}`} value={entry.version}>
+                          <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
                             {entry.version}
                           </option>
                         ))}
@@ -1290,13 +1338,7 @@ export default function SponsorCoinLabPage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className={`${buttonStyle} text-[#8FA8FF] focus:text-black`}
-                    onClick={loadHardhatAccounts}
-                  >
-                    Hardhat Account
-                  </button>
+                  <span className="px-1 text-sm font-semibold text-[#8FA8FF]">Deployed on HH Account</span>
                   <label htmlFor="hardhat-account-index" className="sr-only">
                     Hardhat account index
                   </label>
@@ -1316,7 +1358,7 @@ export default function SponsorCoinLabPage() {
                   />
                 </div>
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
                   <input
                     className={inputStyle}
                     readOnly
@@ -1335,56 +1377,20 @@ export default function SponsorCoinLabPage() {
                   </div>
                 </div>
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
+                  <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
                   <input
                     className={inputStyle}
+                    value={contractAddress}
                     readOnly
-                    value={selectedHardhatAccount?.address || ''}
-                    placeholder="Selected account address"
-                  />
-                </label>
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Signer Key</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    value={selectedVersionSignerKey}
-                    placeholder="Signer key for selected deployed version"
+                    placeholder="SponsorCoin contract address"
                   />
                 </label>
               </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-300">
+                Switch Network Connection Mode to Hardhat Local to view active Sponsor Coin contract data.
+              </p>
             )}
-            {mode !== 'hardhat' && (
-              <div className="mt-4">
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    disabled
-                    value={effectiveConnectedAddress || ''}
-                    placeholder="Selected account address"
-                  />
-                </label>
-              </div>
-            )}
-
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
-                <input
-                  className={inputStyle}
-                  value={contractAddress}
-                  readOnly
-                  placeholder="SponsorCoin contract address"
-                />
-              </label>
-              {status !== 'Ready' && (
-                <div className="text-sm text-slate-300">
-                  <div className="mb-2">Status: {status}</div>
-                </div>
-              )}
-            </div>
           </article>
 
           <article className={cardStyle}>

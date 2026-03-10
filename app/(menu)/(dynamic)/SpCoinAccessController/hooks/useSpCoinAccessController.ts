@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/hooks/useSpCoinAccessController.ts
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { HDNodeWallet } from 'ethers';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { useExchangeContext } from '@/lib/context/hooks';
 import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
@@ -23,27 +24,82 @@ type SpCoinDeploymentFile = {
   meta?: {
     networkIdToName?: Record<string, string>;
   };
-  chainId?: Record<string, Record<string, Record<string, unknown>>>;
+  chainId?: Record<string, Record<string, unknown>>;
 };
 
-const resolveDeploymentPublicKeyFromMap = (
+type DeploymentMapEntry = {
+  version: string;
+  publicKey: string;
+  privateKey?: string;
+  name?: string;
+  symbol?: string;
+  decimals?: number;
+};
+
+const HARDHAT_CHAIN_ID = 31337;
+const HARDHAT_DEPLOYMENT_ACCOUNT_COUNT = 20;
+const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
+
+const getHardhatPrivateKeyByIndex = (index: number): string => {
+  if (!Number.isInteger(index) || index < 0) return '';
+  try {
+    return HDNodeWallet.fromPhrase(HARDHAT_DEFAULT_MNEMONIC, undefined, `m/44'/60'/0'/0/${index}`).privateKey;
+  } catch {
+    return '';
+  }
+};
+
+const getDeploymentEntriesForChainVersion = (
   deploymentMap: SpCoinDeploymentFile,
   chainIdRaw: string,
   versionRaw: string,
-  currentPublicKeyRaw: string,
-) => {
+): DeploymentMapEntry[] => {
   const chainIdKey = String(chainIdRaw || '').trim();
   const versionKey = String(versionRaw || '').trim() || '0';
-  if (!chainIdKey || chainIdKey === 'Unknown') return '';
   const chainNode = deploymentMap?.chainId?.[chainIdKey];
-  if (!chainNode || typeof chainNode !== 'object') return '';
-  const versionNode = chainNode[versionKey];
-  if (!versionNode || typeof versionNode !== 'object') return '';
-  const availablePublicKeys = Object.keys(versionNode).filter((key) => /^0[xX][a-fA-F0-9]{40}$/.test(String(key || '').trim()));
-  if (availablePublicKeys.length === 0) return '';
-  const normalizedCurrent = String(currentPublicKeyRaw || '').trim().toUpperCase();
-  const matchingCurrent = availablePublicKeys.find((key) => key.toUpperCase() === normalizedCurrent);
-  return matchingCurrent || availablePublicKeys[0];
+  if (!chainNode || typeof chainNode !== 'object') return [];
+
+  const rows: DeploymentMapEntry[] = [];
+  const pushVersionNode = (version: string, byAddress: unknown, wrapperPrivateKey?: string) => {
+    if (!byAddress || typeof byAddress !== 'object') return;
+    for (const [addressKey, addressValue] of Object.entries(byAddress as Record<string, unknown>)) {
+      const normalizedAddress = String(addressKey || '').trim();
+      if (!/^0[xX][a-fA-F0-9]{40}$/.test(normalizedAddress)) continue;
+      const row = (addressValue || {}) as Record<string, unknown>;
+      const rowSignerKey = String(row.signerKey || '').trim();
+      const rowPrivateKey = String(row.privateKey || '').trim();
+      const privateKey =
+        rowPrivateKey ||
+        wrapperPrivateKey ||
+        (/^0x[a-fA-F0-9]{64}$/.test(rowSignerKey) ? rowSignerKey : '') ||
+        undefined;
+      const decimalsParsed = Number(row.decimals);
+      rows.push({
+        version,
+        publicKey: normalizedAddress,
+        privateKey,
+        name: String(row.name || '').trim() || undefined,
+        symbol: String(row.symbol || '').trim() || undefined,
+        decimals: Number.isFinite(decimalsParsed) ? decimalsParsed : undefined,
+      });
+    }
+  };
+
+  for (const [nodeKey, nodeValue] of Object.entries(chainNode)) {
+    const trimmedKey = String(nodeKey || '').trim();
+    if (!nodeValue || typeof nodeValue !== 'object') continue;
+    if (/^0x[a-fA-F0-9]{64}$/.test(trimmedKey)) {
+      for (const [nestedVersion, byAddress] of Object.entries(nodeValue as Record<string, unknown>)) {
+        if (nestedVersion !== versionKey) continue;
+        pushVersionNode(nestedVersion, byAddress, trimmedKey);
+      }
+      continue;
+    }
+    if (trimmedKey !== versionKey) continue;
+    pushVersionNode(trimmedKey, nodeValue);
+  }
+
+  return rows;
 };
 
 type ManagerResponse = {
@@ -70,6 +126,7 @@ type SpCoinAccessStorage = {
   deploymentSymbol?: string;
   deploymentDecimals?: string;
   deploymentVersion: string;
+  hardhatDeploymentAccountNumber?: number;
   deploymentAccountPrivateKey: string;
   deploymentPublicKey: string;
   deploymentMode: 'mocked' | 'blockcain';
@@ -102,6 +159,7 @@ export function useSpCoinAccessController() {
   const [deploymentSymbol, setDeploymentSymbol] = useState('SPCOIN');
   const [deploymentDecimals, setDeploymentDecimals] = useState('18');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
+  const [hardhatDeploymentAccountNumber, setHardhatDeploymentAccountNumber] = useState(0);
   const [deploymentAccountPrivateKey, setDeploymentAccountPrivateKey] = useState('');
   const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
   const [localSourceDeploymentPath, setLocalSourceDeploymentPath] = useState(DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
@@ -170,28 +228,58 @@ export function useSpCoinAccessController() {
   const deploymentTokenName = buildDeploymentTokenName(deploymentName);
   const deploymentVersionPrefix = deploymentTokenName;
   const rawDeploymentChainId = Number((exchangeContext as any)?.network?.chainId);
-  const mappedDeploymentChainId =
-    Number.isFinite(rawDeploymentChainId) && rawDeploymentChainId > 0
-      ? rawDeploymentChainId === 31337
-        ? 8453
-        : rawDeploymentChainId
-      : NaN;
   const deploymentChainName =
     rawDeploymentChainId === 31337 ? 'HardHat BASE' : String((exchangeContext as any)?.network?.name || 'Unknown');
-  const deploymentChainId = Number.isFinite(mappedDeploymentChainId) ? String(mappedDeploymentChainId) : 'Unknown';
+  const deploymentChainId =
+    Number.isFinite(rawDeploymentChainId) && rawDeploymentChainId > 0
+      ? String(rawDeploymentChainId)
+      : 'Unknown';
   const deploymentKeyRequiredMessage = 'Account Private Key for Deployment Required';
+  const hardhatDeploymentAccountOptions = useMemo(
+    () =>
+      Array.from({ length: HARDHAT_DEPLOYMENT_ACCOUNT_COUNT }, (_, accountNumber) => ({
+        accountNumber,
+        privateKey: getHardhatPrivateKeyByIndex(accountNumber),
+      })),
+    [],
+  );
+  const canIncrementHardhatDeploymentAccountNumber =
+    hardhatDeploymentAccountNumber < HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1;
+  const canDecrementHardhatDeploymentAccountNumber = hardhatDeploymentAccountNumber > 0;
+  const deploymentMapEntries = useMemo(() => {
+    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
+    return getDeploymentEntriesForChainVersion(parsed, deploymentChainId, deploymentVersion);
+  }, [deploymentChainId, deploymentVersion]);
+  const selectedHardhatDeploymentAccount = useMemo(
+    () =>
+      hardhatDeploymentAccountOptions.find(
+        (entry) => entry.accountNumber === hardhatDeploymentAccountNumber,
+      ) ?? hardhatDeploymentAccountOptions[0],
+    [hardhatDeploymentAccountNumber, hardhatDeploymentAccountOptions],
+  );
   const existsInSpCoinDeploymentMap = useMemo(() => {
     const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
     const chainIdKey = String(deploymentChainId || '').trim();
     const versionKey = String(deploymentVersion || '').trim() || '0';
     const publicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
+    const signerKeyRaw = String(deploymentAccountPrivateKey || '').trim();
+    const signerKeyLower = signerKeyRaw.toLowerCase();
     if (!/^[0][xX][a-fA-F0-9]{40}$/.test(publicKeyUpper)) return false;
+    if (!/^0x[a-fA-F0-9]{64}$/.test(signerKeyLower)) return false;
     const chainNode = parsed?.chainId?.[chainIdKey];
     if (!chainNode || typeof chainNode !== 'object') return false;
-    const versionNode = chainNode[versionKey];
+    const signerNodeEntry = Object.entries(chainNode).find(
+      ([nodeKey]) => String(nodeKey || '').trim().toLowerCase() === signerKeyLower,
+    );
+    if (!signerNodeEntry) return false;
+    const signerNode = signerNodeEntry[1];
+    if (!signerNode || typeof signerNode !== 'object') return false;
+    const versionNode = (signerNode as Record<string, unknown>)[versionKey];
     if (!versionNode || typeof versionNode !== 'object') return false;
-    return Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
-  }, [deploymentChainId, deploymentPublicKey, deploymentVersion]);
+    return Object.keys(versionNode as Record<string, unknown>).some(
+      (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === publicKeyUpper,
+    );
+  }, [deploymentAccountPrivateKey, deploymentChainId, deploymentPublicKey, deploymentVersion]);
   const deployDisableReason = useMemo(() => {
     if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
     if (deployUiState === 'deployed') return 'DEPLOYED';
@@ -306,6 +394,7 @@ export function useSpCoinAccessController() {
           deploymentDecimals: normalizedDecimals,
           deploymentVersion: normalizedVersion,
           deploymentAccountPrivateKey: normalizedPrivateKey,
+          hardhatDeploymentAccountNumber,
           deploymentMode,
           deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
         }),
@@ -350,6 +439,7 @@ export function useSpCoinAccessController() {
           deploymentDecimals: normalizedDecimals,
           deploymentLogoPath,
           deploymentPublicKey: contractPublicKey,
+          hardhatDeploymentAccountNumber,
           deploymentMode,
           deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
         }),
@@ -463,24 +553,62 @@ export function useSpCoinAccessController() {
     validateLocalInstallSourceRoot(localInstallSourceRoot);
   }, []);
   useEffect(() => {
-    setDeploymentName(buildDeploymentNameFromVersion(deploymentVersion));
-    setDeploymentSymbol(buildDeploymentSymbolFromVersion(deploymentVersion));
-  }, [deploymentVersion]);
-  useEffect(() => {
-    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
-    setDeploymentPublicKey((previous) => {
-      const resolvedPublicKey = resolveDeploymentPublicKeyFromMap(
-        parsed,
-        deploymentChainId,
-        deploymentVersion,
-        previous,
+    const fallbackName = buildDeploymentNameFromVersion(deploymentVersion);
+    const fallbackSymbol = buildDeploymentSymbolFromVersion(deploymentVersion);
+    const fallbackDecimals = '18';
+    const isHardhatChain = Number(deploymentChainId) === HARDHAT_CHAIN_ID;
+    const activeEntry = (() => {
+      if (deploymentMapEntries.length === 0) return undefined;
+      const selectedPrivateKeyLower = String(selectedHardhatDeploymentAccount?.privateKey || '').trim().toLowerCase();
+      if (isHardhatChain && selectedPrivateKeyLower) {
+        const byPrivateKey = deploymentMapEntries.find(
+          (entry) => String(entry.privateKey || '').trim().toLowerCase() === selectedPrivateKeyLower,
+        );
+        if (byPrivateKey) return byPrivateKey;
+        return undefined;
+      }
+      const currentPublicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
+      const byPublicKey = deploymentMapEntries.find(
+        (entry) => String(entry.publicKey || '').trim().toUpperCase() === currentPublicKeyUpper,
       );
-      return previous === resolvedPublicKey ? previous : resolvedPublicKey;
-    });
-  }, [deploymentChainId, deploymentVersion]);
+      if (byPublicKey) return byPublicKey;
+      return deploymentMapEntries[0];
+    })();
+
+    const nextName = String(activeEntry?.name || '').trim() || fallbackName;
+    const nextSymbol = String(activeEntry?.symbol || '').trim() || fallbackSymbol;
+    const nextDecimals =
+      Number.isFinite(activeEntry?.decimals) && Number(activeEntry?.decimals) >= 0
+        ? String(activeEntry?.decimals)
+        : fallbackDecimals;
+    const nextPublicKey = String(activeEntry?.publicKey || '').trim();
+    const nextPrivateKey = String(activeEntry?.privateKey || '').trim();
+    const fallbackHardhatKey = String(selectedHardhatDeploymentAccount?.privateKey || '').trim();
+    const resolvedPrivateKey = isHardhatChain ? nextPrivateKey || fallbackHardhatKey : nextPrivateKey;
+
+    if (deploymentName !== nextName) setDeploymentName(nextName);
+    if (deploymentSymbol !== nextSymbol) setDeploymentSymbol(nextSymbol);
+    if (deploymentDecimals !== nextDecimals) setDeploymentDecimals(nextDecimals);
+    if (nextPublicKey && deploymentPublicKey !== nextPublicKey) setDeploymentPublicKey(nextPublicKey);
+    if (resolvedPrivateKey && deploymentAccountPrivateKey !== resolvedPrivateKey) {
+      setDeploymentAccountPrivateKey(resolvedPrivateKey);
+    }
+  }, [
+    deploymentAccountPrivateKey,
+    deploymentChainId,
+    deploymentDecimals,
+    deploymentMapEntries,
+    deploymentName,
+    deploymentPublicKey,
+    deploymentSymbol,
+    deploymentVersion,
+    hardhatDeploymentAccountNumber,
+    hardhatDeploymentAccountOptions,
+    selectedHardhatDeploymentAccount,
+  ]);
   useEffect(() => {
     setDeployUiState('idle');
-  }, [deploymentMode, deploymentVersion]);
+  }, [deploymentMode, deploymentVersion, hardhatDeploymentAccountNumber]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -506,6 +634,13 @@ export function useSpCoinAccessController() {
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
       setDeploymentDecimals(persisted.deploymentDecimals || '18');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
+      setHardhatDeploymentAccountNumber(
+        Number.isInteger(persisted.hardhatDeploymentAccountNumber) &&
+          Number(persisted.hardhatDeploymentAccountNumber) >= 0 &&
+          Number(persisted.hardhatDeploymentAccountNumber) < HARDHAT_DEPLOYMENT_ACCOUNT_COUNT
+          ? Number(persisted.hardhatDeploymentAccountNumber)
+          : 0,
+      );
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
       setDeploymentPublicKey(persisted.deploymentPublicKey || '');
       setDeploymentMode(persisted.deploymentMode || 'mocked');
@@ -634,6 +769,7 @@ export function useSpCoinAccessController() {
       deploymentSymbol,
       deploymentDecimals,
       deploymentVersion,
+      hardhatDeploymentAccountNumber,
       deploymentAccountPrivateKey,
       deploymentPublicKey,
       deploymentMode,
@@ -649,6 +785,7 @@ export function useSpCoinAccessController() {
     deploymentPublicKey,
     localSourceDeploymentPath,
     deploymentVersion,
+    hardhatDeploymentAccountNumber,
     localInstallSourceRoot,
     managerSettings.useLocalPackage,
     selectedPackage,
@@ -766,6 +903,21 @@ export function useSpCoinAccessController() {
     setDeploymentFlashError(false);
     setDeploymentStatus(deploymentGuidanceMessage);
   };
+  const adjustHardhatDeploymentAccountNumber = (direction: 1 | -1) => {
+    setHardhatDeploymentAccountNumber((previous) =>
+      Math.max(0, Math.min(HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1, previous + direction)),
+    );
+  };
+  const handleHardhatDeploymentAccountNumberChange = (nextValue: string) => {
+    const parsed = Number.parseInt(String(nextValue || '').replace(/[^0-9]/g, ''), 10);
+    if (!Number.isFinite(parsed)) {
+      setHardhatDeploymentAccountNumber(0);
+      return;
+    }
+    setHardhatDeploymentAccountNumber(
+      Math.max(0, Math.min(HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1, parsed)),
+    );
+  };
 
   return {
     chromeHeight,
@@ -788,6 +940,9 @@ export function useSpCoinAccessController() {
     deploymentSymbol,
     deploymentDecimals,
     deploymentVersion,
+    hardhatDeploymentAccountNumber,
+    canIncrementHardhatDeploymentAccountNumber,
+    canDecrementHardhatDeploymentAccountNumber,
     deploymentChainName,
     deploymentChainId,
     deploymentPathDisplayValue,
@@ -819,6 +974,8 @@ export function useSpCoinAccessController() {
     adjustDeploymentDecimals,
     handleDeploymentVersionInputChange,
     adjustDeploymentVersion,
+    handleHardhatDeploymentAccountNumberChange,
+    adjustHardhatDeploymentAccountNumber,
     setLocalSourceDeploymentPath,
     handleDeploy,
     handleDeploymentPrivateKeyChange,

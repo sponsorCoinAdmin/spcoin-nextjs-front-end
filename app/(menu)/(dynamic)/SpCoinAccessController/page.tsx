@@ -76,6 +76,9 @@ export default function SpCoinAccessControllerPage() {
               deploymentSymbol={controller.deploymentSymbol}
               deploymentDecimals={controller.deploymentDecimals}
               deploymentVersion={controller.deploymentVersion}
+              hardhatDeploymentAccountNumber={controller.hardhatDeploymentAccountNumber}
+              canIncrementHardhatDeploymentAccountNumber={controller.canIncrementHardhatDeploymentAccountNumber}
+              canDecrementHardhatDeploymentAccountNumber={controller.canDecrementHardhatDeploymentAccountNumber}
               deploymentChainName={controller.deploymentChainName}
               deploymentChainId={controller.deploymentChainId}
               deploymentPathDisplayValue={controller.deploymentPathDisplayValue}
@@ -94,6 +97,8 @@ export default function SpCoinAccessControllerPage() {
               onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
               onDeploymentVersionChange={controller.handleDeploymentVersionInputChange}
               onAdjustDeploymentVersion={controller.adjustDeploymentVersion}
+              onHardhatDeploymentAccountNumberChange={controller.handleHardhatDeploymentAccountNumberChange}
+              onAdjustHardhatDeploymentAccountNumber={controller.adjustHardhatDeploymentAccountNumber}
               onLocalSourceDeploymentPathChange={controller.setLocalSourceDeploymentPath}
               onDeploy={controller.handleDeploy}
               onDeploymentPrivateKeyChange={controller.handleDeploymentPrivateKeyChange}
