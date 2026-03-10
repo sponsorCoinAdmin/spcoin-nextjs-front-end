@@ -945,13 +945,23 @@ async function upsertSpCoinDeploymentMap(params: {
     out.chainId![chainIdKey][versionKey],
     publicKeyUpper,
   );
-  if (!exists) {
-    out.chainId![chainIdKey][versionKey][publicKeyUpper] = {
-      name: params.name,
-      symbol: params.symbol,
-      decimals: params.decimals,
-      ...(params.signerKey ? { signerKey: params.signerKey } : {}),
-    };
+  const prevEntry = exists
+    ? (out.chainId![chainIdKey][versionKey][publicKeyUpper] as Record<string, unknown>)
+    : undefined;
+  const nextEntry = {
+    name: params.name,
+    symbol: params.symbol,
+    decimals: params.decimals,
+    ...(params.signerKey ? { signerKey: params.signerKey } : {}),
+  } as Record<string, unknown>;
+
+  const shouldWrite =
+    !exists ||
+    (params.signerKey &&
+      (!prevEntry || String(prevEntry.signerKey || '').trim() !== String(params.signerKey).trim()));
+
+  if (shouldWrite) {
+    out.chainId![chainIdKey][versionKey][publicKeyUpper] = nextEntry;
     await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(out, null, 2), 'utf8');
   }
   return { added: !exists, chainIdKey, versionKey, publicKeyUpper };
@@ -1203,6 +1213,12 @@ export async function POST(request: Request) {
         : 18;
     const deploymentMode = body.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked';
     const deploymentChainId = body.deploymentChainId;
+    const normalizedDeploymentSignerKey = (() => {
+      const raw = String(deploymentAccountPrivateKey || '').trim();
+      if (!raw) return '';
+      const normalized = raw.startsWith('0x') ? raw : `0x${raw}`;
+      return /^0x[0-9a-fA-F]{64}$/.test(normalized) ? normalized : '';
+    })();
 
     try {
       const result = await handleDeploy(
@@ -1215,12 +1231,16 @@ export async function POST(request: Request) {
       const mapUpsert =
         deploymentMode === 'blockcain'
           ? await upsertSpCoinDeploymentMap({
-              chainId: Number((result as any).deploymentAssetChainId || (result as any).deploymentChainId || 0),
+              chainId: Number((result as any).deploymentChainId || 0),
               version: String(deploymentVersion || '').trim() || '0',
               publicKey: String(result.deploymentPublicKey || '').trim(),
               name: String(deploymentName || '').trim() || 'Sponsor Coin',
               symbol: deploymentSymbol,
               decimals: deploymentDecimals,
+              signerKey:
+                Number((result as any).deploymentAssetChainId || 0) !== Number((result as any).deploymentChainId || 0)
+                  ? normalizedDeploymentSignerKey || undefined
+                  : undefined,
             })
           : { added: false, chainIdKey: 'n/a', versionKey: 'n/a', publicKeyUpper: 'n/a' };
       return NextResponse.json({

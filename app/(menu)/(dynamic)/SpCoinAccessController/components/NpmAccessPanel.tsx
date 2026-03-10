@@ -81,7 +81,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
             aria-label="NPM Package"
             value={selectedPackage}
             onChange={(event) => onPackagePersist(event.target.value)}
-            className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+            className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
           >
             {availablePackages.length > 0 ? (
               availablePackages.map((packageName) => (
@@ -138,7 +138,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
                   window.alert('Path Not found');
                 }
               }}
-              className={`w-full rounded-xl border px-4 py-3 text-white outline-none transition-colors ${
+              className={`w-full rounded-xl border px-4 py-2 text-white outline-none transition-colors ${
                 localInstallSourceRootError
                   ? 'border-red-500 bg-red-500/10'
                   : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
@@ -155,7 +155,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
                   onChange={(event) => onVersionInputChange(event.target.value)}
                   onBlur={onVersionPersist}
                   placeholder="0.0.1"
-                  className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                 />
                 <div className="flex w-[44px] flex-col">
                   <button
@@ -224,7 +224,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               value={sourceRoot}
               onChange={(event) => onSourceRootChange(event.target.value)}
               onBlur={(event) => onSourceRootBlurNormalize(event.target.value)}
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
               title="Enter source root relative to the app location"
             />
           </label>

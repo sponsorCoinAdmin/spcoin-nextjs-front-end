@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { BrowserProvider, HDNodeWallet, JsonRpcProvider, Wallet } from 'ethers';
 import type { Contract } from 'ethers';
 import type { Signer } from 'ethers';
@@ -44,6 +45,8 @@ import Erc20ReadController from './components/Erc20ReadController';
 import Erc20WriteController from './components/Erc20WriteController';
 import SpCoinReadController from './components/SpCoinReadController';
 import SpCoinWriteController from './components/SpCoinWriteController';
+import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 type ConnectionMode = 'metamask' | 'hardhat';
 type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_write';
@@ -51,6 +54,16 @@ type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_w
 type HardhatAccountOption = {
   address: string;
   privateKey: string;
+};
+
+type SpCoinDeploymentFile = {
+  chainId?: Record<
+    string,
+    Record<
+      string,
+      Record<string, { name?: string; symbol?: string; decimals?: number; signerKey?: string }>
+    >
+  >;
 };
 
 const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
@@ -86,6 +99,7 @@ export default function SponsorCoinLabPage() {
   );
   const [mnemonic, setMnemonic] = useState(HARDHAT_DEFAULT_MNEMONIC);
   const [contractAddress, setContractAddress] = useState('');
+  const [selectedSponsorCoinVersion, setSelectedSponsorCoinVersion] = useState('');
   const [persistKeys] = useState(true);
   const [hardhatAccounts, setHardhatAccounts] = useState<HardhatAccountOption[]>([]);
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
@@ -93,6 +107,7 @@ export default function SponsorCoinLabPage() {
   const [connectedAddress, setConnectedAddress] = useState('');
   const [connectedChainId, setConnectedChainId] = useState('');
   const [connectedNetworkName, setConnectedNetworkName] = useState('');
+  const [showHardhatConnectionInputs, setShowHardhatConnectionInputs] = useState(false);
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin Lab] Ready']);
 
@@ -173,6 +188,152 @@ export default function SponsorCoinLabPage() {
   }, [connectedNetworkName, contextNetworkName, effectiveConnectedChainId, mode]);
   const shouldPromptHardhatBaseConnect =
     mode === 'metamask' && String(effectiveConnectedChainId || '') !== String(HARDHAT_CHAIN_ID_DEC);
+  const chainIdDisplayValue = effectiveConnectedChainId || '(unknown)';
+  const chainIdDisplayWidthCh = Math.max(4, String(chainIdDisplayValue).length + 3);
+
+  const spCoinDeploymentMap = useMemo(
+    () => (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {},
+    [],
+  );
+
+  const sponsorCoinVersionChoices = useMemo(() => {
+    const chainIdNum = Number(effectiveConnectedChainId);
+    if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) {
+      return [] as Array<{
+        version: string;
+        address: string;
+        signerKey?: string;
+        name?: string;
+        symbol?: string;
+      }>;
+    }
+
+    const byVersion = spCoinDeploymentMap.chainId?.[String(chainIdNum)] ?? {};
+    const rows: Array<{
+      version: string;
+      address: string;
+      signerKey?: string;
+      name?: string;
+      symbol?: string;
+    }> = [];
+
+    for (const [version, byAddress] of Object.entries(byVersion)) {
+      const firstAddress = Object.keys(byAddress ?? {}).find((addr) => /^0[xX][0-9a-fA-F]{40}$/.test(addr));
+      if (!firstAddress) continue;
+      const firstEntry = (byAddress as any)?.[firstAddress] ?? {};
+      const signerKey = String((byAddress as any)?.[firstAddress]?.signerKey || '').trim() || undefined;
+      rows.push({
+        version,
+        address: `0x${firstAddress.slice(2).toLowerCase()}`,
+        signerKey,
+        name: String(firstEntry?.name || '').trim() || undefined,
+        symbol: String(firstEntry?.symbol || '').trim() || undefined,
+      });
+    }
+
+    return rows;
+  }, [effectiveConnectedChainId, spCoinDeploymentMap]);
+
+  const selectedSponsorCoinVersionEntry = useMemo(
+    () =>
+      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
+      sponsorCoinVersionChoices[0],
+    [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
+  );
+
+  const displayedVersionHardhatAccountIndex = useMemo(() => {
+    if (mode !== 'hardhat') return -1;
+    if (hardhatAccounts.length === 0) return -1;
+    const selectedEntry =
+      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
+      sponsorCoinVersionChoices[0];
+    if (!selectedEntry) return 0;
+    const signerKey = String(selectedEntry.signerKey || '').trim().toLowerCase();
+    if (!signerKey) return 0;
+    const idx = hardhatAccounts.findIndex(
+      (entry) => String(entry.privateKey || '').trim().toLowerCase() === signerKey,
+    );
+    return idx >= 0 ? idx : 0;
+  }, [hardhatAccounts, mode, selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
+
+  const selectedVersionSignerKey = useMemo(() => {
+    return String(selectedSponsorCoinVersionEntry?.signerKey || '').trim();
+  }, [selectedSponsorCoinVersionEntry]);
+  const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
+  const selectedVersionSymbolWidthCh = Math.max(4, selectedVersionSymbol.length + 1);
+
+  useEffect(() => {
+    if (sponsorCoinVersionChoices.length === 0) return;
+
+    const existing =
+      sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion) ??
+      sponsorCoinVersionChoices[0];
+
+    if (existing.version !== selectedSponsorCoinVersion) {
+      setSelectedSponsorCoinVersion(existing.version);
+    }
+    if (normalizeAddress(contractAddress) !== normalizeAddress(existing.address)) {
+      setContractAddress(existing.address);
+    }
+  }, [contractAddress, selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
+
+  useEffect(() => {
+    if (!selectedSponsorCoinVersion) return;
+    const picked = sponsorCoinVersionChoices.find((entry) => entry.version === selectedSponsorCoinVersion);
+    if (!picked) return;
+    if (normalizeAddress(contractAddress) !== normalizeAddress(picked.address)) {
+      setContractAddress(picked.address);
+    }
+  }, [contractAddress, selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
+
+  useEffect(() => {
+    if (mode !== 'hardhat') return;
+    if (displayedVersionHardhatAccountIndex < 0) return;
+    if (selectedHardhatIndex !== displayedVersionHardhatAccountIndex) {
+      setSelectedHardhatIndex(displayedVersionHardhatAccountIndex);
+    }
+    const account = hardhatAccounts[displayedVersionHardhatAccountIndex];
+    if (account && normalizeAddress(connectedAddress) !== normalizeAddress(account.address)) {
+      setConnectedAddress(account.address);
+    }
+  }, [
+    connectedAddress,
+    displayedVersionHardhatAccountIndex,
+    hardhatAccounts,
+    mode,
+    selectedHardhatIndex,
+  ]);
+
+  const adjustSponsorCoinVersion = useCallback(
+    (direction: 1 | -1) => {
+      if (sponsorCoinVersionChoices.length === 0) return;
+      const currentIdx = sponsorCoinVersionChoices.findIndex(
+        (entry) => entry.version === selectedSponsorCoinVersion,
+      );
+      const baseIdx = currentIdx >= 0 ? currentIdx : 0;
+      const nextIdx = Math.max(
+        0,
+        Math.min(sponsorCoinVersionChoices.length - 1, baseIdx + direction),
+      );
+      const next = sponsorCoinVersionChoices[nextIdx];
+      if (!next) return;
+      setSelectedSponsorCoinVersion(next.version);
+    },
+    [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
+  );
+
+  const selectedSponsorCoinVersionIndex = useMemo(() => {
+    if (sponsorCoinVersionChoices.length === 0) return -1;
+    const idx = sponsorCoinVersionChoices.findIndex(
+      (entry) => entry.version === selectedSponsorCoinVersion,
+    );
+    return idx >= 0 ? idx : 0;
+  }, [selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
+
+  const canIncrementSponsorCoinVersion =
+    selectedSponsorCoinVersionIndex >= 0 &&
+    selectedSponsorCoinVersionIndex < sponsorCoinVersionChoices.length - 1;
+  const canDecrementSponsorCoinVersion = selectedSponsorCoinVersionIndex > 0;
 
   const syncMetaMaskState = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -189,8 +350,13 @@ export default function SponsorCoinLabPage() {
     setConnectedChainId(String(network.chainId));
     setConnectedNetworkName(knownName || fallbackName || '(unknown)');
 
-    if (accounts.length > 0) {
-      setConnectedAddress(accounts[0]);
+    const selectedAddressRaw = String((ethereum as any)?.selectedAddress || '').trim();
+    const selectedAddress =
+      /^0[xX][0-9a-fA-F]{40}$/.test(selectedAddressRaw) ? selectedAddressRaw : '';
+    const nextAccount = accounts.length > 0 ? accounts[0] : selectedAddress || contextAddress;
+
+    if (nextAccount) {
+      setConnectedAddress(nextAccount);
       try {
         const signer = await provider.getSigner();
         setActiveSigner(signer);
@@ -202,7 +368,14 @@ export default function SponsorCoinLabPage() {
 
     setConnectedAddress('');
     setActiveSigner(null);
-  }, []);
+  }, [contextAddress]);
+
+  useEffect(() => {
+    if (mode !== 'metamask') return;
+    // Clear any stale hardhat signer/account immediately when switching modes.
+    setConnectedAddress('');
+    setActiveSigner(null);
+  }, [mode]);
 
   const syncHardhatState = useCallback(async () => {
     if (mode !== 'hardhat') return;
@@ -219,6 +392,40 @@ export default function SponsorCoinLabPage() {
       appendLog(`Hardhat state sync failed: ${message}`);
     }
   }, [appendLog, mode, rpcUrl]);
+
+  const reconcileHardhatSelection = useCallback(
+    (
+      accounts: HardhatAccountOption[],
+      publicAccountHint?: string,
+      preferredIndex?: number,
+    ) => {
+      if (!Array.isArray(accounts) || accounts.length === 0) return;
+      const hint = normalizeAddress(publicAccountHint || connectedAddress || '');
+      const matchIdx = hint
+        ? accounts.findIndex((entry) => normalizeAddress(entry.address) === hint)
+        : -1;
+      const preferred =
+        Number.isInteger(preferredIndex) &&
+        Number(preferredIndex) >= 0 &&
+        Number(preferredIndex) < accounts.length
+          ? Number(preferredIndex)
+          : Number.isInteger(selectedHardhatIndex) &&
+            selectedHardhatIndex >= 0 &&
+            selectedHardhatIndex < accounts.length
+          ? selectedHardhatIndex
+          : -1;
+      const nextIdx = preferred >= 0 ? preferred : matchIdx >= 0 ? matchIdx : 0;
+      const nextAccount = accounts[nextIdx];
+      if (!nextAccount) return;
+      if (selectedHardhatIndex !== nextIdx) {
+        setSelectedHardhatIndex(nextIdx);
+      }
+      if (normalizeAddress(connectedAddress) !== normalizeAddress(nextAccount.address)) {
+        setConnectedAddress(nextAccount.address);
+      }
+    },
+    [connectedAddress, selectedHardhatIndex],
+  );
 
   useEffect(() => {
     if (mode !== 'metamask') return;
@@ -249,7 +456,26 @@ export default function SponsorCoinLabPage() {
       ethereum.on('accountsChanged', onAccountsChanged);
     }
 
+    const onWindowFocus = () => {
+      void syncMetaMaskState();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncMetaMaskState();
+      }
+    };
+    window.addEventListener('focus', onWindowFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    // Safety net for wallets/extensions that occasionally miss accountsChanged events.
+    const pollId = window.setInterval(() => {
+      void syncMetaMaskState();
+    }, 1500);
+
     return () => {
+      window.clearInterval(pollId);
+      window.removeEventListener('focus', onWindowFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (typeof ethereum.removeListener === 'function') {
         ethereum.removeListener('chainChanged', onChainChanged);
         ethereum.removeListener('accountsChanged', onAccountsChanged);
@@ -261,6 +487,12 @@ export default function SponsorCoinLabPage() {
     if (mode !== 'hardhat') return;
     void syncHardhatState();
   }, [mode, selectedHardhatIndex, syncHardhatState]);
+
+  useEffect(() => {
+    if (mode !== 'hardhat') return;
+    if (hardhatAccounts.length === 0) return;
+    reconcileHardhatSelection(hardhatAccounts, connectedAddress, selectedHardhatIndex);
+  }, [hardhatAccounts, mode, reconcileHardhatSelection]);
 
   const requireContractAddress = useCallback(() => {
     const target = contractAddress.trim();
@@ -294,7 +526,7 @@ export default function SponsorCoinLabPage() {
       });
 
       setHardhatAccounts(finalAccounts);
-      setSelectedHardhatIndex(0);
+      reconcileHardhatSelection(finalAccounts);
       setStatus(`Loaded ${finalAccounts.length} Hardhat accounts.`);
       appendLog(`Loaded ${finalAccounts.length} Hardhat accounts from ${rpcUrl}.`);
     } catch (error) {
@@ -302,7 +534,7 @@ export default function SponsorCoinLabPage() {
       setStatus(`Hardhat load failed: ${message}`);
       appendLog(`Hardhat load failed: ${message}`);
     }
-  }, [appendLog, mnemonic, rpcUrl]);
+  }, [appendLog, mnemonic, reconcileHardhatSelection, rpcUrl]);
 
   const connectSigner = useCallback(async (): Promise<Signer> => {
     if (mode === 'metamask') {
@@ -912,27 +1144,42 @@ export default function SponsorCoinLabPage() {
         <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin Lab</h2>
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <article className={cardStyle}>
-            <div className="mt-1 grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <article className={`${cardStyle} relative`}>
+            <button
+              type="button"
+              onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
+              className="absolute right-[5px] top-[5px] inline-flex items-center justify-center bg-transparent p-0"
+              aria-label="Toggle Hardhat connection settings"
+              title="Toggle Hardhat connection settings"
+            >
+              <Image
+                src={cog_png}
+                alt="Toggle Hardhat connection settings"
+                className="h-5 w-5 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
+              />
+            </button>
+            <div className="mt-1 grid items-start gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <h2 className="text-lg font-semibold text-[#5981F3]">Network Connection Mode</h2>
-              <div className="justify-self-start md:justify-self-end">
-                <label htmlFor="network-connection-mode" className="sr-only">
-                  Network connection mode
-                </label>
-                <select
-                  id="network-connection-mode"
-                  className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  value={mode}
-                  onChange={(e) => setMode(e.target.value as ConnectionMode)}
-                  aria-label="Network connection mode"
-                  title="Network connection mode"
-                >
-                  {connectionModeOptions.map((entry) => (
-                    <option key={`mode-${entry.value}`} value={entry.value}>
-                      {entry.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="justify-self-start md:justify-self-end md:self-start">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="network-connection-mode" className="sr-only">
+                    Network connection mode
+                  </label>
+                  <select
+                    id="network-connection-mode"
+                    className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value as ConnectionMode)}
+                    aria-label="Network connection mode"
+                    title="Network connection mode"
+                  >
+                    {connectionModeOptions.map((entry) => (
+                      <option key={`mode-${entry.value}`} value={entry.value}>
+                        {entry.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
@@ -953,62 +1200,139 @@ export default function SponsorCoinLabPage() {
                 aria-label="Connected network"
                 title="Connected network"
               />
-              <label className="grid items-center gap-3 md:grid-cols-[auto_auto] md:justify-self-end">
-                <span className="text-right text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
+              <label className="flex items-center justify-self-end gap-2">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
                 <input
                   type="text"
-                  value={effectiveConnectedChainId || '(unknown)'}
+                  value={chainIdDisplayValue}
                   readOnly
-                  className={`${inputStyle} w-[9ch] min-w-[9ch] text-right`}
+                  className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                  style={{ width: `${chainIdDisplayWidthCh}ch` }}
                 />
               </label>
             </div>
 
             {mode === 'hardhat' && (
               <div className="mt-4 grid grid-cols-1 gap-3">
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Hardhat RPC URL</span>
-                  <input
-                    className={inputStyle}
-                    value={rpcUrl}
-                    onChange={(e) => setRpcUrl(e.target.value)}
-                    placeholder="Hardhat RPC URL"
-                  />
-                </label>
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Hard Hat Seed Phrase</span>
-                  <input
-                    className={inputStyle}
-                    value={mnemonic}
-                    onChange={(e) => setMnemonic(e.target.value)}
-                    placeholder="Hardhat mnemonic"
-                  />
-                </label>
-                <div className="flex w-full items-center gap-2">
+                {showHardhatConnectionInputs && (
+                  <>
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Hardhat RPC URL</span>
+                      <input
+                        className={inputStyle}
+                        value={rpcUrl}
+                        onChange={(e) => setRpcUrl(e.target.value)}
+                        placeholder="Hardhat RPC URL"
+                      />
+                    </label>
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Hard Hat Seed Phrase</span>
+                      <input
+                        className={inputStyle}
+                        value={mnemonic}
+                        onChange={(e) => setMnemonic(e.target.value)}
+                        placeholder="Hardhat mnemonic"
+                      />
+                    </label>
+                  </>
+                )}
+                <div className="flex w-full flex-wrap items-center gap-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">Deployed SponsorCoin Versions</span>
+                    <div className="flex min-w-0 flex-1 items-stretch">
+                      <select
+                        className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                        value={selectedSponsorCoinVersion}
+                        onChange={(e) => setSelectedSponsorCoinVersion(e.target.value)}
+                        aria-label="SponsorCoin Version (Hardhat row)"
+                        title="SponsorCoin Version"
+                      >
+                        {sponsorCoinVersionChoices.length === 0 && (
+                          <option value="">(no deployment map entries)</option>
+                        )}
+                        {sponsorCoinVersionChoices.map((entry) => (
+                          <option key={`spcoin-version-row-${entry.version}`} value={entry.version}>
+                            {entry.version}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex w-[38px] flex-col">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (canIncrementSponsorCoinVersion) adjustSponsorCoinVersion(1);
+                          }}
+                          className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                            canIncrementSponsorCoinVersion
+                              ? 'cursor-pointer hover:bg-green-500'
+                              : 'cursor-not-allowed hover:bg-red-500'
+                          }`}
+                          title="Increment SponsorCoin Version"
+                          aria-disabled={!canIncrementSponsorCoinVersion}
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (canDecrementSponsorCoinVersion) adjustSponsorCoinVersion(-1);
+                          }}
+                          className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                            canDecrementSponsorCoinVersion
+                              ? 'cursor-pointer hover:bg-green-500'
+                              : 'cursor-not-allowed hover:bg-red-500'
+                          }`}
+                          title="Decrement SponsorCoin Version"
+                          aria-disabled={!canDecrementSponsorCoinVersion}
+                        >
+                          -
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     className={`${buttonStyle} text-[#8FA8FF] focus:text-black`}
                     onClick={loadHardhatAccounts}
                   >
-                    Refresh Harhat Accounts
+                    Hardhat Account
                   </button>
                   <label htmlFor="hardhat-account-index" className="sr-only">
                     Hardhat account index
                   </label>
-                  <select
+                  <input
                     id="hardhat-account-index"
-                    className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-sm text-white"
-                    value={String(selectedHardhatIndex)}
-                    onChange={(e) => setSelectedHardhatIndex(Number.parseInt(e.target.value, 10) || 0)}
+                    className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-center text-sm text-white"
+                    value={
+                      !selectedVersionSignerKey
+                        ? '?'
+                        : displayedVersionHardhatAccountIndex >= 0
+                        ? String(displayedVersionHardhatAccountIndex)
+                        : ''
+                    }
+                    readOnly
                     aria-label="Hardhat account index"
                     title="Hardhat account index"
-                  >
-                    {Array.from({ length: 20 }).map((_, idx) => (
-                      <option key={`hardhat-idx-${idx}`} value={String(idx)}>
-                        {idx}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                </div>
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
+                  <input
+                    className={inputStyle}
+                    readOnly
+                    value={String(selectedSponsorCoinVersionEntry?.name || '')}
+                    placeholder="Selected deployed SponsorCoin name"
+                  />
+                  <div className="flex items-center justify-self-end gap-2">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+                    <input
+                      className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                      style={{ width: `${selectedVersionSymbolWidthCh}ch` }}
+                      readOnly
+                      value={selectedVersionSymbol}
+                      placeholder="symbol"
+                    />
+                  </div>
                 </div>
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
@@ -1020,12 +1344,12 @@ export default function SponsorCoinLabPage() {
                   />
                 </label>
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Signer Key</span>
                   <input
                     className={inputStyle}
                     readOnly
-                    value={selectedHardhatAccount?.privateKey || ''}
-                    placeholder="Select Hardhat account to view private key"
+                    value={selectedVersionSignerKey}
+                    placeholder="Signer key for selected deployed version"
                   />
                 </label>
               </div>
@@ -1037,6 +1361,7 @@ export default function SponsorCoinLabPage() {
                   <input
                     className={inputStyle}
                     readOnly
+                    disabled
                     value={effectiveConnectedAddress || ''}
                     placeholder="Selected account address"
                   />
@@ -1050,7 +1375,7 @@ export default function SponsorCoinLabPage() {
                 <input
                   className={inputStyle}
                   value={contractAddress}
-                  onChange={(e) => setContractAddress(e.target.value)}
+                  readOnly
                   placeholder="SponsorCoin contract address"
                 />
               </label>

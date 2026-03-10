@@ -88,7 +88,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentName}
               readOnly
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
             />
           </label>
 
@@ -125,7 +125,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentSymbol}
               readOnly
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
             />
           </label>
 
@@ -139,7 +139,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   maxLength={3}
                   value={deploymentDecimals}
                   onChange={(event) => onDeploymentDecimalsChange(event.target.value)}
-                  className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                 />
                 <div className="flex w-[44px] flex-col">
                   <button
@@ -172,7 +172,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   value={deploymentVersion}
                   onChange={(event) => onDeploymentVersionChange(event.target.value)}
                   placeholder="Add optional Version"
-                  className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                 />
                 <div className="flex w-[44px] flex-col">
                   <button
@@ -227,7 +227,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentChainName}
               readOnly
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none"
             />
           </label>
           <label className="grid items-center gap-3 md:grid-cols-[auto_auto] justify-self-end">
@@ -236,7 +236,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentChainId}
               readOnly
-              className="w-[6ch] min-w-[6ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-3 text-right text-slate-300 outline-none"
+              className="w-[6ch] min-w-[6ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-right text-slate-300 outline-none"
             />
           </label>
         </div>
@@ -249,7 +249,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               value={deploymentPathDisplayValue}
               onChange={(event) => onLocalSourceDeploymentPathChange(event.target.value)}
               readOnly={deploymentMode === 'mocked'}
-              className={`w-full rounded-xl border px-4 py-3 text-white outline-none transition-colors ${
+              className={`w-full rounded-xl border px-4 py-2 text-white outline-none transition-colors ${
                 deploymentMode === 'mocked'
                   ? 'border-[#31416F] bg-[#0B1020]/70'
                   : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
@@ -267,7 +267,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentLogoPath}
               onChange={(event) => onDeploymentLogoPathChange(event.target.value)}
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
             />
           </div>
         </div>
@@ -281,7 +281,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
               onBlur={onDeploymentPrivateKeyBlur}
               placeholder={deploymentKeyRequiredMessage}
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
             />
           </label>
         </div>
@@ -294,7 +294,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               value={deploymentPublicKey}
               readOnly
               placeholder="Public Key, Returned from Deployment"
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-3 text-slate-300 outline-none"
+              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none"
             />
           </label>
 
