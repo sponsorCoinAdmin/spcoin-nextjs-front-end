@@ -72,7 +72,12 @@ const getPriceApiCall = (
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
-  const [chainId] = useAppChainId();
+  const appChain = useAppChainId();
+  const appChainId = Number(appChain.appChainId ?? appChain[0] ?? 0);
+  const walletActiveChainId = Number(exchangeContext.network?.chainId ?? 0);
+  const connected = !!exchangeContext.network?.connected;
+  const effectiveChainId =
+    connected && walletActiveChainId > 0 ? walletActiveChainId : appChainId;
   const [, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -90,12 +95,12 @@ function usePriceAPI() {
   );
 
   const shouldFetch = (sellToken?: Address, buyToken?: Address, effectiveAmount?: bigint): boolean => {
-    if (!chainId) return false;
+    if (!effectiveChainId) return false;
     if (!isAddress(sellToken ?? '')) return false;
     if (!isAddress(buyToken ?? '')) return false;
     if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) return false;
     if (!effectiveAmount || effectiveAmount === 0n) return false;
-    if (chainId === CHAIN_ID.HARDHAT_BASE) return false;
+    if (effectiveChainId === CHAIN_ID.HARDHAT_BASE) return false;
     return true;
   };
 
@@ -126,7 +131,7 @@ function usePriceAPI() {
   )
     ? getPriceApiCall(
         tradeData.tradeDirection,
-        chainId,
+        effectiveChainId,
         debouncedSellToken,
         debouncedBuyToken,
         debouncedSellAmount,

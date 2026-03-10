@@ -42,8 +42,9 @@ export function useAppChainId(): UseAppChainIdResult {
 
   const resolveMapped = (id?: number) =>
     toMappedChainId(typeof id === 'number' ? id : appChainId);
+  // Default should reflect current app chain as-is; only reverse-map explicit inputs.
   const resolveOriginal = (id?: number) =>
-    toOriginalChainId(typeof id === 'number' ? id : mappedAppChainId);
+    typeof id === 'number' ? toOriginalChainId(id) : appChainId;
 
   const tuple = [appChainId, wrappedSetAppChainId] as unknown as UseAppChainIdResult;
   tuple.appChainId = appChainId;
