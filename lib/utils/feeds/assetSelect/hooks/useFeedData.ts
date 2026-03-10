@@ -61,7 +61,8 @@ function ttlForFeedType(feedType: FEED_TYPE): number {
 }
 
 export function useFeedData(feedType: FEED_TYPE) {
-  const [chainId] = useAppChainId();
+  const appChain = useAppChainId();
+  const chainId = appChain.appChainId;
   const [feedData, setFeedData] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>();

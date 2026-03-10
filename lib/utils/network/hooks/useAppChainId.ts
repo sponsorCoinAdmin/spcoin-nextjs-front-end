@@ -3,6 +3,11 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import {
+  isMappedChainId,
+  toMappedChainId,
+  toOriginalChainId,
+} from '@/lib/utils/network/chainIdMap';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -10,21 +15,42 @@ const DEBUG_ENABLED =
 
 const debugLog = createDebugLogger('useAppChainId', DEBUG_ENABLED, LOG_TIME);
 
+export type UseAppChainIdResult = [number, (nextId: number) => void] & {
+  appChainId: number;
+  mappedAppChainId: number;
+  isMapped: boolean;
+  toMappedChainId: (id?: number) => number;
+  toOriginalChainId: (id?: number) => number;
+};
+
 /**
- * App-first chain id (no wallet mirroring):
- * - Reads from exchangeContext.network.appChainId
- * - Setter delegates to `setAppChainId` from ExchangeContext
+ * App-first chain id + mapped chain id:
+ * - tuple remains backward compatible: [appChainId, setAppChainId]
+ * - adds mapped helpers/properties for token asset chain routing
  */
-export function useAppChainId(): [number, (nextId: number) => void] {
+export function useAppChainId(): UseAppChainIdResult {
   const { exchangeContext, setAppChainId } = useExchangeContext();
 
   const appChainId = exchangeContext?.network?.appChainId ?? 0;
+  const mappedAppChainId = toMappedChainId(appChainId);
+  const isMapped = isMappedChainId(appChainId);
 
-  /** Thin wrapper around ExchangeProvider setter with extra debug logging */
   const wrappedSetAppChainId = (nextId: number) => {
-    debugLog.log(`🛠️ setAppChainId → ${nextId}`);
-    setAppChainId(nextId); // ExchangeProvider logs again when state changes
+    debugLog.log(`setAppChainId -> ${nextId}`);
+    setAppChainId(nextId);
   };
 
-  return [appChainId, wrappedSetAppChainId];
+  const resolveMapped = (id?: number) =>
+    toMappedChainId(typeof id === 'number' ? id : appChainId);
+  const resolveOriginal = (id?: number) =>
+    toOriginalChainId(typeof id === 'number' ? id : mappedAppChainId);
+
+  const tuple = [appChainId, wrappedSetAppChainId] as unknown as UseAppChainIdResult;
+  tuple.appChainId = appChainId;
+  tuple.mappedAppChainId = mappedAppChainId;
+  tuple.isMapped = isMapped;
+  tuple.toMappedChainId = resolveMapped;
+  tuple.toOriginalChainId = resolveOriginal;
+
+  return tuple;
 }

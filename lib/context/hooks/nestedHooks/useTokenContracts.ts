@@ -6,7 +6,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 import { tokenContractsEqual } from '@/components/shared/utils/isDuplicateAddress';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-// Import the provider state directly to avoid barrel ↔ barrel cycles
+// Import the provider state directly to avoid barrel ? barrel cycles
 import { ExchangeContextState } from '../../ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -18,7 +18,7 @@ const tLog = createDebugLogger('useTokenContracts', DEBUG_ENABLED, LOG_TIME);
 // Local, cycle-free access to the exchange context
 function useExchangeContextDirect() {
   const ctx = useContext(ExchangeContextState);
-  if (!ctx) throw new Error('❌ useTokenContracts must be used within an ExchangeProvider');
+  if (!ctx) throw new Error('useTokenContracts must be used within an ExchangeProvider');
   return ctx;
 }
 

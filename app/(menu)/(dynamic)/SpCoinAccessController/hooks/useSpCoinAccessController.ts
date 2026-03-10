@@ -26,10 +26,25 @@ type SpCoinDeploymentFile = {
   chainId?: Record<string, Record<string, Record<string, unknown>>>;
 };
 
-const normalizeNetworkName = (value: string): string =>
-  String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+const resolveDeploymentPublicKeyFromMap = (
+  deploymentMap: SpCoinDeploymentFile,
+  chainIdRaw: string,
+  versionRaw: string,
+  currentPublicKeyRaw: string,
+) => {
+  const chainIdKey = String(chainIdRaw || '').trim();
+  const versionKey = String(versionRaw || '').trim() || '0';
+  if (!chainIdKey || chainIdKey === 'Unknown') return '';
+  const chainNode = deploymentMap?.chainId?.[chainIdKey];
+  if (!chainNode || typeof chainNode !== 'object') return '';
+  const versionNode = chainNode[versionKey];
+  if (!versionNode || typeof versionNode !== 'object') return '';
+  const availablePublicKeys = Object.keys(versionNode).filter((key) => /^0[xX][a-fA-F0-9]{40}$/.test(String(key || '').trim()));
+  if (availablePublicKeys.length === 0) return '';
+  const normalizedCurrent = String(currentPublicKeyRaw || '').trim().toUpperCase();
+  const matchingCurrent = availablePublicKeys.find((key) => key.toUpperCase() === normalizedCurrent);
+  return matchingCurrent || availablePublicKeys[0];
+};
 
 type ManagerResponse = {
   ok: boolean;
@@ -168,26 +183,15 @@ export function useSpCoinAccessController() {
   const existsInSpCoinDeploymentMap = useMemo(() => {
     const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
     const chainIdKey = String(deploymentChainId || '').trim();
+    const versionKey = String(deploymentVersion || '').trim() || '0';
     const publicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
     if (!/^[0][xX][a-fA-F0-9]{40}$/.test(publicKeyUpper)) return false;
     const chainNode = parsed?.chainId?.[chainIdKey];
     if (!chainNode || typeof chainNode !== 'object') return false;
-    const networkIdToName = parsed?.meta?.networkIdToName ?? {};
-    const expectedNetwork = normalizeNetworkName(networkIdToName[chainIdKey] ?? '');
-    const currentNetwork = normalizeNetworkName(deploymentChainName);
-    const networkMatches =
-      !expectedNetwork ||
-      currentNetwork === expectedNetwork ||
-      (chainIdKey === '8453' && currentNetwork === 'hardhatbase');
-    if (!networkMatches) return false;
-    for (const versionNode of Object.values(chainNode)) {
-      if (!versionNode || typeof versionNode !== 'object') continue;
-      if (Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper)) {
-        return true;
-      }
-    }
-    return false;
-  }, [deploymentChainId, deploymentChainName, deploymentPublicKey]);
+    const versionNode = chainNode[versionKey];
+    if (!versionNode || typeof versionNode !== 'object') return false;
+    return Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
+  }, [deploymentChainId, deploymentPublicKey, deploymentVersion]);
   const deployDisableReason = useMemo(() => {
     if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
     if (deployUiState === 'deployed') return 'DEPLOYED';
@@ -462,6 +466,18 @@ export function useSpCoinAccessController() {
     setDeploymentName(buildDeploymentNameFromVersion(deploymentVersion));
     setDeploymentSymbol(buildDeploymentSymbolFromVersion(deploymentVersion));
   }, [deploymentVersion]);
+  useEffect(() => {
+    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
+    setDeploymentPublicKey((previous) => {
+      const resolvedPublicKey = resolveDeploymentPublicKeyFromMap(
+        parsed,
+        deploymentChainId,
+        deploymentVersion,
+        previous,
+      );
+      return previous === resolvedPublicKey ? previous : resolvedPublicKey;
+    });
+  }, [deploymentChainId, deploymentVersion]);
   useEffect(() => {
     setDeployUiState('idle');
   }, [deploymentMode, deploymentVersion]);

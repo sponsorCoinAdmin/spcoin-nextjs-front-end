@@ -14,6 +14,7 @@ import {
   getTokenLogoURL,
 } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { resolveTokenAssetChainId } from '@/lib/utils/network/tokenAssetChainMap';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -65,6 +66,7 @@ export async function resolveTokenContract(
       : (`0x${tokenAddress.slice(2).toLowerCase()}` as `0x${string}`);
 
   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
+  const metadataChainId = resolveTokenAssetChainId(Number(chainId));
 
   debugLog.log?.('ℹ️ Address normalization (canonical lowercase)', {
     resolvedAddress,
@@ -74,21 +76,23 @@ export async function resolveTokenContract(
   // For visibility, show the exact file path we expect for TOKEN_LIST
   if (feedType === FEED_TYPE.TOKEN_LIST && !isNative) {
     const expectedPath = getTokenLogoURL({
-      chainId,
+      chainId: metadataChainId,
       address: resolvedAddress,
     });
     debugLog.log?.('📁 Expected token logo path (TOKEN_LIST)', {
       chainId,
+      metadataChainId,
       address: resolvedAddress,
       expectedPath,
     });
   }
 
   // Prepare async tasks (run in parallel) — logo only
-  const logoP = getLogoURL(chainId, resolvedAddress, feedType)
+  const logoP = getLogoURL(metadataChainId, resolvedAddress, feedType)
     .then((url) => {
       debugLog.log?.('🖼️ Logo resolved', {
         chainId,
+        metadataChainId,
         address: resolvedAddress,
         url,
       });
@@ -99,6 +103,7 @@ export async function resolveTokenContract(
         '⚠️ Logo resolution failed, using defaultMissingImage',
         {
           chainId,
+          metadataChainId,
           address: resolvedAddress,
           error: e instanceof Error ? e.message : String(e),
         },
@@ -154,7 +159,7 @@ export async function resolveTokenContract(
   });
 
   try {
-    const stored = await loadTokenRecord(chainId, resolvedAddress);
+    const stored = await loadTokenRecord(metadataChainId, resolvedAddress);
     return {
       chainId,
       address: resolvedAddress,
@@ -165,6 +170,8 @@ export async function resolveTokenContract(
       amount: 0n,
       balance: 0n,
       logoURL: stored.logoURL ?? defaultMissingImage,
+      website: typeof (stored as any).website === 'string' ? (stored as any).website : 'N/A',
+      description: typeof (stored as any).description === 'string' ? (stored as any).description : 'N/A',
     } as TokenContract;
   } catch {
     // fall through to on-chain metadata when no persisted token asset exists
@@ -215,6 +222,8 @@ export async function resolveTokenContract(
     amount: 0n,
     balance: 0n, // ⬅️ UI will show live value from the TanStack cache
     logoURL: logoURL ?? defaultMissingImage,
+    website: 'N/A',
+    description: 'N/A',
   };
 
   debugLog.log?.('✅ Returning ERC-20 token (no balance)', {
@@ -235,3 +244,4 @@ export async function resolveTokenContract(
 
   return ret;
 }
+

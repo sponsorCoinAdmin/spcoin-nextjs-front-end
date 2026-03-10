@@ -21,6 +21,10 @@ const nextConfig = {
   // Temporary: unblock production builds while lint backlog is being cleaned up.
   eslint: { ignoreDuringBuilds: true },
   // typescript: { ignoreBuildErrors: true },
+  env: {
+    NEXT_PUBLIC_HH_FORK_CHAIN_ID: String(HH_FORK_CHAIN_ID),
+    NEXT_PUBLIC_HH_FORK_TOKEN_ASSET_CHAIN_ID: String(HH_FORK_TOKEN_ASSET_CHAIN_ID),
+  },
 
   webpack: (config, { dev }) => {
     config.resolve = config.resolve || {};

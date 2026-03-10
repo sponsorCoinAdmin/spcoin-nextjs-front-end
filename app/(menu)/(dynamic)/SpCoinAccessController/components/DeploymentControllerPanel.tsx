@@ -197,7 +197,30 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+          <div
+            className={isDeployDisabled ? 'group inline-flex md:justify-self-start' : 'inline-flex md:justify-self-start'}
+            title={
+              isDeployDisabled
+                ? `Deploy disabled: ${deployDisableReason}`
+                : 'Deploy'
+            }
+          >
+            <button
+              type="button"
+              disabled={isDeployDisabled}
+              onClick={() => void onDeploy()}
+              className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
+                isDeployDisabled
+                  ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
+                  : deploymentFlashError
+                  ? 'bg-red-500 hover:bg-red-400'
+                  : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+              }`}
+            >
+              {deployButtonLabel}
+            </button>
+          </div>
           <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
             <span className="text-sm font-semibold text-[#8FA8FF]">Active Network Name</span>
             <input
@@ -264,30 +287,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
         </div>
 
         <div className="flex flex-col gap-4">
-          <label className="grid items-center gap-3 md:grid-cols-[auto_auto_minmax(0,1fr)]">
-            <div
-              className={isDeployDisabled ? 'group inline-flex' : 'inline-flex'}
-              title={
-                isDeployDisabled
-                  ? `Deploy disabled: ${deployDisableReason}`
-                  : 'Deploy'
-              }
-            >
-              <button
-                type="button"
-                disabled={isDeployDisabled}
-                onClick={() => void onDeploy()}
-                className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
-                  isDeployDisabled
-                    ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
-                    : deploymentFlashError
-                    ? 'bg-red-500 hover:bg-red-400'
-                    : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
-                }`}
-              >
-                {deployButtonLabel}
-              </button>
-            </div>
+          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
             <span className="text-sm font-semibold text-[#8FA8FF]">{`${deploymentVersionPrefix} Public Key`}</span>
             <input
               type="text"

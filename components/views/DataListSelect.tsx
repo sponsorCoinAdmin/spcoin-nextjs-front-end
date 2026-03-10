@@ -214,6 +214,14 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   const handlePickAddress = useCallback(
     (address: string) => {
+      const selectedToken =
+        isTokenFeed
+          ? tokens.find((t) => String(t?.address || '').toLowerCase() === address.toLowerCase())
+          : undefined;
+      if (isTokenFeed && selectedToken) {
+        setTradingTokenCallback(selectedToken as any);
+        return;
+      }
       debugLog.log?.('[pick]', {
         addressPreview: address?.slice(0, 12),
         manualEntry,
@@ -243,7 +251,9 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       setInputState,
       handleHexInputChange,
       isAccountFeed,
+      isTokenFeed,
       accounts,
+      tokens,
       setTradingTokenCallback,
       setManualEntry,
       manualEntry,

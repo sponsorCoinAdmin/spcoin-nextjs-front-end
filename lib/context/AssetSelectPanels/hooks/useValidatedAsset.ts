@@ -14,7 +14,6 @@ const debugLog = createDebugLogger('useValidatedAsset', DEBUG_ENABLED, LOG_TIME)
 function sameAsset(a?: TokenContract | spCoinAccount, b?: TokenContract | spCoinAccount) {
   if (!a && !b) return true;
   if (!a || !b) return false;
-  // spCoinAccount has `address`; TokenContract has `address` (Address type)
   return (a as any).address === (b as any).address && (a as any).symbol === (b as any).symbol;
 }
 
@@ -24,8 +23,8 @@ export function useValidatedAsset<T extends TokenContract | spCoinAccount>() {
   const setValidatedAsset = useCallback((next?: T) => {
     if (sameAsset(validatedAsset, next)) return;
     debugLog.log?.(
-      `✅ setValidatedAsset: ${validatedAsset ? (validatedAsset as any).symbol : '—'} → ${
-        next ? (next as any).symbol : '—'
+      `setValidatedAsset ${validatedAsset ? (validatedAsset as any).symbol : '-'} -> ${
+        next ? (next as any).symbol : '-'
       }`,
     );
     setValidatedAssetRaw(next);
@@ -33,7 +32,6 @@ export function useValidatedAsset<T extends TokenContract | spCoinAccount>() {
 
   const resetValidatedAsset = useCallback(() => setValidatedAssetRaw(undefined), []);
 
-  // Narrow TokenContract only (legacy API)
   const validatedAssetNarrow = validatedAsset as unknown as TokenContract | undefined;
   const setValidatedAssetNarrow = useCallback(
     (t?: TokenContract) => setValidatedAsset(t as unknown as T),

@@ -150,7 +150,7 @@ async function loadTokenData(chainId: number, normalizedAddress: string): Promis
         address: normalizedAddress,
         chainId,
         logoURL: hasLogo
-          ? `/assets/blockchains/${chainId}/contracts/${folder}/logo.png`
+          ? `/assets/blockchains/${assetChainId}/contracts/${folder}/logo.png`
           : (info?.logoURL ?? undefined),
       },
     };

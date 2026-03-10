@@ -15,6 +15,7 @@ import {
   hydrateTokensFromAddressesBatch,
 } from '@/lib/tokens/tokenHydration';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { resolveTokenAssetChainId } from '@/lib/utils/network/tokenAssetChainMap';
 
 const LOG_TIME = false as const;
 const DEBUG_ENABLED =
@@ -516,14 +517,21 @@ export async function buildWalletFromJsonFirst(raw: any): Promise<spCoinAccount 
 export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw: any): Promise<FeedData> {
   switch (feedType) {
     case FEED_TYPE.TOKEN_LIST: {
+      // Hardhat local deployments mirror Base contracts; hydrate token metadata from Base SSOT.
+      const tokenMetadataChainId = resolveTokenAssetChainId(Number(chainId));
       const list = normalizeList(raw);
 
       // normalize first (includes invalid rows)
-      const prelim = list.map((t) => buildTokenFromJson(t, chainId)).filter(Boolean) as any[];
+      const prelim = list
+        .map((t) => buildTokenFromJson(t, tokenMetadataChainId))
+        .filter(Boolean) as any[];
       const validAddresses = prelim
         .map((t) => t?.address)
         .filter((a): a is Address => typeof a === 'string' && isAddress(a));
-      const prefetchedByAddress = await hydrateTokensFromAddressesBatch(chainId, validAddresses);
+      const prefetchedByAddress = await hydrateTokensFromAddressesBatch(
+        tokenMetadataChainId,
+        validAddresses,
+      );
 
       // hydrate valid tokens from SSOT info.json; invalid rows remain as-is
       const tokens = await Promise.all(
@@ -543,14 +551,14 @@ export async function feedDataFromJson(feedType: FEED_TYPE, chainId: number, raw
               return {
                 ...prefetchedToken,
                 address: normalizeAddressLower(a as Address),
-                chainId,
+                chainId: tokenMetadataChainId,
                 logoURL:
                   prefetchedLogoURL ??
-                  getTokenLogoURL_SSOT(chainId, a as Address) ??
+                  getTokenLogoURL_SSOT(tokenMetadataChainId, a as Address) ??
                   defaultMissingImage,
               };
             }
-            return hydrateTokenFromAddress(chainId, a as Address);
+            return hydrateTokenFromAddress(tokenMetadataChainId, a as Address);
           }
           return t;
         }),
