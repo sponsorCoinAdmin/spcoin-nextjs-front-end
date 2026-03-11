@@ -1762,7 +1762,23 @@ export default function SponsorCoinLabPage() {
           </article>
 
           <article className={`${cardStyle} xl:col-start-1 xl:row-start-1`}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex h-[29px] w-[29px] items-center justify-center overflow-hidden rounded-xl bg-[#0E111B]">
+                {selectedSponsorCoinLogoURL ? (
+                  <Image
+                    src={selectedSponsorCoinLogoURL}
+                    alt={String(selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
+                    width={29}
+                    height={29}
+                    className="h-full w-full object-contain"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="text-[10px] text-slate-400">No logo</span>
+                )}
+              </div>
+              <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h2>
+            </div>
             {mode === 'hardhat' ? (
               <div className="mt-4 grid grid-cols-1 gap-3">
                 <div className="flex w-full flex-wrap items-center gap-2">
@@ -1837,29 +1853,6 @@ export default function SponsorCoinLabPage() {
                     aria-label="Hardhat account index"
                     title="Hardhat account index"
                   />
-                </div>
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Token Image:</span>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-[#334155] bg-[#0E111B]">
-                      {selectedSponsorCoinLogoURL ? (
-                        <Image
-                          src={selectedSponsorCoinLogoURL}
-                          alt={String(selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
-                          width={56}
-                          height={56}
-                          className="h-full w-full object-contain"
-                          unoptimized
-                        />
-                      ) : (
-                        <span className="text-xs text-slate-400">No logo</span>
-                      )}
-                    </div>
-                    <span className="text-xs text-slate-400">
-                      Loaded from `public/assets/blockchains/31337/contracts/.../logo.png`
-                    </span>
-                  </div>
-                  <div />
                 </div>
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
