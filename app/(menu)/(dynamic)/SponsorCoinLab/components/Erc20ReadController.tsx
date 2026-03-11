@@ -12,6 +12,8 @@ type ActiveReadLabels = {
 };
 
 type Props = {
+  invalidFieldIds: string[];
+  clearInvalidField: (fieldId: string) => void;
   selectedReadMethod: string;
   erc20ReadOptions: string[];
   setSelectedReadMethod: (value: string) => void;
@@ -27,6 +29,8 @@ type Props = {
 
 export default function Erc20ReadController(props: Props) {
   const {
+    invalidFieldIds,
+    clearInvalidField,
     selectedReadMethod,
     erc20ReadOptions,
     setSelectedReadMethod,
@@ -39,6 +43,8 @@ export default function Erc20ReadController(props: Props) {
     buttonStyle,
     runSelectedReadMethod,
   } = props;
+  const invalidClass = (fieldId: string) =>
+    invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
@@ -60,9 +66,13 @@ export default function Erc20ReadController(props: Props) {
         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <span className="text-sm font-semibold text-[#8FA8FF]">{activeReadLabels.addressALabel}</span>
           <input
-            className={inputStyle}
+            data-field-id="erc20-read-address-a"
+            className={`${inputStyle}${invalidClass('erc20-read-address-a')}`}
             value={readAddressA}
-            onChange={(e) => setReadAddressA(e.target.value)}
+            onChange={(e) => {
+              clearInvalidField('erc20-read-address-a');
+              setReadAddressA(e.target.value);
+            }}
             placeholder={activeReadLabels.addressAPlaceholder}
           />
         </label>
@@ -71,9 +81,13 @@ export default function Erc20ReadController(props: Props) {
         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <span className="text-sm font-semibold text-[#8FA8FF]">{activeReadLabels.addressBLabel}</span>
           <input
-            className={inputStyle}
+            data-field-id="erc20-read-address-b"
+            className={`${inputStyle}${invalidClass('erc20-read-address-b')}`}
             value={readAddressB}
-            onChange={(e) => setReadAddressB(e.target.value)}
+            onChange={(e) => {
+              clearInvalidField('erc20-read-address-b');
+              setReadAddressB(e.target.value);
+            }}
             placeholder={activeReadLabels.addressBPlaceholder}
           />
         </label>

@@ -1,5 +1,6 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/Erc20WriteController.tsx
 import React from 'react';
+import Image from 'next/image';
 
 type ActiveWriteLabels = {
   title: string;
@@ -11,6 +12,17 @@ type ActiveWriteLabels = {
 };
 
 type Props = {
+  invalidFieldIds: string[];
+  clearInvalidField: (fieldId: string) => void;
+  mode: 'metamask' | 'hardhat';
+  hardhatAccounts: Array<{ address: string; privateKey: string }>;
+  hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
+  selectedWriteSenderAddress: string;
+  setSelectedWriteSenderAddress: (value: string) => void;
+  writeSenderDisplayValue: string;
+  writeSenderPrivateKeyDisplay: string;
+  showWriteSenderPrivateKey: boolean;
+  toggleShowWriteSenderPrivateKey: () => void;
   selectedWriteMethod: string;
   erc20WriteOptions: string[];
   setSelectedWriteMethod: (value: string) => void;
@@ -28,6 +40,17 @@ type Props = {
 
 export default function Erc20WriteController(props: Props) {
   const {
+    invalidFieldIds,
+    clearInvalidField,
+    mode,
+    hardhatAccounts,
+    hardhatAccountMetadata,
+    selectedWriteSenderAddress,
+    setSelectedWriteSenderAddress,
+    writeSenderDisplayValue,
+    writeSenderPrivateKeyDisplay,
+    showWriteSenderPrivateKey,
+    toggleShowWriteSenderPrivateKey,
     selectedWriteMethod,
     erc20WriteOptions,
     setSelectedWriteMethod,
@@ -42,7 +65,9 @@ export default function Erc20WriteController(props: Props) {
     buttonStyle,
     runSelectedWriteMethod,
   } = props;
-
+  const invalidClass = (fieldId: string) =>
+    invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const senderMetadata = hardhatAccountMetadata[String(selectedWriteSenderAddress || '').trim().toLowerCase()];
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -59,32 +84,159 @@ export default function Erc20WriteController(props: Props) {
           ))}
         </select>
       </label>
+      <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
+        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <button
+            type="button"
+            onClick={toggleShowWriteSenderPrivateKey}
+            className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
+            title="Toggle msg.sender Private Key"
+          >
+            msg.sender
+          </button>
+          {mode === 'hardhat' ? (
+            <select
+              data-field-id="erc20-write-sender"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
+              value={selectedWriteSenderAddress}
+              onChange={(e) => {
+                clearInvalidField('erc20-write-sender');
+                setSelectedWriteSenderAddress(e.target.value);
+              }}
+            >
+              <option value="">Select account</option>
+              {hardhatAccounts.map((account, idx) => (
+                <option key={`write-sender-${idx}-${account.address}`} value={account.address}>
+                  {account.address}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={inputStyle}
+              readOnly
+              value={writeSenderDisplayValue}
+              placeholder="Connected signer address"
+            />
+          )}
+        </label>
+        {mode === 'hardhat' && showWriteSenderPrivateKey && (
+          <>
+            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                  {senderMetadata?.logoURL ? (
+                    <Image
+                      src={senderMetadata.logoURL}
+                      alt={senderMetadata?.name || 'Selected account'}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-contain"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-[10px] text-slate-400">No logo</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-white">
+                    {senderMetadata?.name || 'Unnamed account'}
+                  </div>
+                  <div className="truncate text-xs text-slate-400">
+                    {senderMetadata?.symbol || 'No symbol'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+              <input
+                className={inputStyle}
+                readOnly
+                value={writeSenderPrivateKeyDisplay}
+                placeholder="Selected signer private key"
+              />
+            </label>
+          </>
+        )}
+      </div>
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">{activeWriteLabels.addressALabel}</span>
-        <input
-          className={inputStyle}
-          value={writeAddressA}
-          onChange={(e) => setWriteAddressA(e.target.value)}
-          placeholder={activeWriteLabels.addressAPlaceholder}
-        />
+        {mode === 'hardhat' ? (
+          <select
+            data-field-id="erc20-write-address-a"
+            className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
+            value={writeAddressA}
+            onChange={(e) => {
+              clearInvalidField('erc20-write-address-a');
+              setWriteAddressA(e.target.value);
+            }}
+          >
+            <option value="">Select account</option>
+            {hardhatAccounts.map((account, idx) => (
+              <option key={`erc20-address-a-${idx}-${account.address}`} value={account.address}>
+                {account.address}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            data-field-id="erc20-write-address-a"
+            className={`${inputStyle}${invalidClass('erc20-write-address-a')}`}
+            value={writeAddressA}
+            onChange={(e) => {
+              clearInvalidField('erc20-write-address-a');
+              setWriteAddressA(e.target.value);
+            }}
+            placeholder={activeWriteLabels.addressAPlaceholder}
+          />
+        )}
       </label>
       {activeWriteLabels.requiresAddressB && (
         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <span className="text-sm font-semibold text-[#8FA8FF]">{activeWriteLabels.addressBLabel}</span>
-          <input
-            className={inputStyle}
-            value={writeAddressB}
-            onChange={(e) => setWriteAddressB(e.target.value)}
-            placeholder={activeWriteLabels.addressBPlaceholder}
-          />
+          {mode === 'hardhat' ? (
+            <select
+              data-field-id="erc20-write-address-b"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
+              value={writeAddressB}
+              onChange={(e) => {
+                clearInvalidField('erc20-write-address-b');
+                setWriteAddressB(e.target.value);
+              }}
+            >
+              <option value="">Select account</option>
+              {hardhatAccounts.map((account, idx) => (
+                <option key={`erc20-address-b-${idx}-${account.address}`} value={account.address}>
+                  {account.address}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              data-field-id="erc20-write-address-b"
+              className={`${inputStyle}${invalidClass('erc20-write-address-b')}`}
+              value={writeAddressB}
+              onChange={(e) => {
+                clearInvalidField('erc20-write-address-b');
+                setWriteAddressB(e.target.value);
+              }}
+              placeholder={activeWriteLabels.addressBPlaceholder}
+            />
+          )}
         </label>
       )}
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">Amount (raw uint256)</span>
         <input
-          className={inputStyle}
+          data-field-id="erc20-write-amount"
+          className={`${inputStyle}${invalidClass('erc20-write-amount')}`}
           value={writeAmountRaw}
-          onChange={(e) => setWriteAmountRaw(e.target.value)}
+          onChange={(e) => {
+            clearInvalidField('erc20-write-amount');
+            setWriteAmountRaw(e.target.value);
+          }}
           placeholder={`${activeWriteLabels.title}(amount raw uint256)`}
         />
       </label>

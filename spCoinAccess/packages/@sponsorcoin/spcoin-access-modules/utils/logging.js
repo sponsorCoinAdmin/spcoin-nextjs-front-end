@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/utils/logging.js
 // ************************* LOG SECTION ******************************/
 const { stringifyBigInt } = require("../../../spcoin-common/spcoin-lib");
 let LOG = true;

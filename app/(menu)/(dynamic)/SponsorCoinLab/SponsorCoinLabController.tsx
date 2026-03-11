@@ -7,6 +7,12 @@ import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
 import type { Contract } from 'ethers';
 import type { Signer } from 'ethers';
 import { useExchangeContext } from '@/lib/context/hooks';
+import {
+  defaultMissingImage,
+  getAccountLogoURL,
+  getTokenLogoURL,
+  normalizeAddressForAssets,
+} from '@/lib/context/helpers/assetHelpers';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import type { ParamDef } from './methods/shared/types';
 import {
@@ -56,6 +62,12 @@ type HardhatAccountOption = {
   privateKey: string;
 };
 
+type HardhatAccountMetadata = {
+  name?: string;
+  symbol?: string;
+  logoURL: string;
+};
+
 type SponsorCoinVersionChoice = {
   id: string;
   version: string;
@@ -95,6 +107,64 @@ function parseListParam(raw: string): string[] {
     .filter(Boolean);
 }
 
+function isIntegerString(value: string) {
+  return /^-?\d+$/.test(String(value || '').trim());
+}
+
+function isAddressLike(value: string) {
+  return /^0[xX][0-9a-fA-F]{40}$/.test(String(value || '').trim());
+}
+
+function isHashLike(value: string) {
+  return /^0[xX][0-9a-fA-F]{64,}$/.test(String(value || '').trim());
+}
+
+function formatDecimalString(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!isIntegerString(trimmed)) return trimmed;
+  const negative = trimmed.startsWith('-');
+  const digits = negative ? trimmed.slice(1) : trimmed;
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return negative ? `-${grouped}` : grouped;
+}
+
+function formatOutputValue(value: unknown): unknown {
+  if (typeof value === 'bigint') return formatDecimalString(value.toString());
+  if (Array.isArray(value)) return value.map((entry) => formatOutputValue(entry));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, formatOutputValue(entry)]),
+    );
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
+    if (isIntegerString(trimmed)) return formatDecimalString(trimmed);
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return formatDecimalString(String(Math.trunc(value)));
+  return value;
+}
+
+function formatOutputDisplayValue(value: unknown) {
+  const normalized = formatOutputValue(value);
+  if (typeof normalized === 'string') return normalized;
+  return JSON.stringify(normalized, null, 2);
+}
+
+function buildMethodCallEntry(
+  method: string,
+  params?: Array<{ label: string; value: unknown }>,
+) {
+  return {
+    method,
+    parameters: (params || []).map((entry) => ({
+      label: entry.label,
+      value: entry.value,
+    })),
+  };
+}
+
 export default function SponsorCoinLabPage() {
   const { exchangeContext } = useExchangeContext();
   const [mode, setMode] = useState<ConnectionMode>('metamask');
@@ -107,6 +177,11 @@ export default function SponsorCoinLabPage() {
   const [persistKeys] = useState(true);
   const [hardhatAccounts, setHardhatAccounts] = useState<HardhatAccountOption[]>([]);
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
+  const [selectedWriteSenderAddress, setSelectedWriteSenderAddress] = useState('');
+  const [showWriteSenderPrivateKey, setShowWriteSenderPrivateKey] = useState(false);
+  const [hardhatAccountMetadata, setHardhatAccountMetadata] = useState<
+    Record<string, HardhatAccountMetadata>
+  >({});
   const [activeSigner, setActiveSigner] = useState<Signer | null>(null);
   const [connectedAddress, setConnectedAddress] = useState('');
   const [connectedChainId, setConnectedChainId] = useState('');
@@ -114,6 +189,13 @@ export default function SponsorCoinLabPage() {
   const [showHardhatConnectionInputs, setShowHardhatConnectionInputs] = useState(false);
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin Lab] Ready']);
+  const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
+  const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
+  const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
+  const [recipientRateKeyHelpText, setRecipientRateKeyHelpText] = useState('');
+  const [agentRateKeyHelpText, setAgentRateKeyHelpText] = useState('');
+  const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
+  const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -135,6 +217,23 @@ export default function SponsorCoinLabPage() {
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
+  }, []);
+  const clearInvalidField = useCallback((fieldId: string) => {
+    if (!fieldId) return;
+    setInvalidFieldIds((prev) => prev.filter((entry) => entry !== fieldId));
+  }, []);
+  const showValidationPopup = useCallback((fieldIds: string[], labels: string[]) => {
+    setInvalidFieldIds(fieldIds);
+    setValidationPopupFields(labels);
+    if (typeof window !== 'undefined' && fieldIds[0]) {
+      window.setTimeout(() => {
+        const target = document.querySelector(`[data-field-id="${fieldIds[0]}"]`) as
+          | HTMLInputElement
+          | HTMLSelectElement
+          | null;
+        target?.focus();
+      }, 0);
+    }
   }, []);
 
   useEffect(() => {
@@ -158,6 +257,53 @@ export default function SponsorCoinLabPage() {
     if (hardhatAccounts.length === 0) return;
     window.localStorage.setItem(HARDHAT_KEYS_STORAGE_KEY, JSON.stringify(hardhatAccounts));
   }, [hardhatAccounts, persistKeys]);
+  useEffect(() => {
+    let cancelled = false;
+    const loadHardhatAccountMetadata = async () => {
+      const addresses = Array.from(
+        new Set(
+          hardhatAccounts
+            .map((account) => String(account.address || '').trim())
+            .filter((address) => /^0[xX][a-fA-F0-9]{40}$/.test(address)),
+        ),
+      );
+      if (addresses.length === 0) {
+        setHardhatAccountMetadata({});
+        return;
+      }
+      const rows = await Promise.all(
+        addresses.map(async (address) => {
+          const normalizedKey = normalizeAddress(address);
+          const folder = normalizeAddressForAssets(address);
+          const logoURL = folder ? getAccountLogoURL(address) : defaultMissingImage;
+          if (!folder) return [normalizedKey, { logoURL }] as const;
+          try {
+            const response = await fetch(`/assets/accounts/${folder}/account.json`, {
+              cache: 'no-store',
+            });
+            if (!response.ok) return [normalizedKey, { logoURL }] as const;
+            const data = (await response.json()) as Record<string, unknown>;
+            return [
+              normalizedKey,
+              {
+                name: String(data?.name || '').trim() || undefined,
+                symbol: String(data?.symbol || '').trim() || undefined,
+                logoURL,
+              },
+            ] as const;
+          } catch {
+            return [normalizedKey, { logoURL }] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setHardhatAccountMetadata(Object.fromEntries(rows));
+    };
+    void loadHardhatAccountMetadata();
+    return () => {
+      cancelled = true;
+    };
+  }, [hardhatAccounts]);
 
   const selectedHardhatAccount = useMemo(
     () => hardhatAccounts[selectedHardhatIndex],
@@ -282,7 +428,29 @@ export default function SponsorCoinLabPage() {
     return String(selectedSponsorCoinVersionEntry?.privateKey || '').trim();
   }, [selectedSponsorCoinVersionEntry]);
   const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
+  const selectedSponsorCoinLogoURL = useMemo(() => {
+    const address = String(selectedSponsorCoinVersionEntry?.address || '').trim();
+    if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) return '';
+    return getTokenLogoURL({ chainId: HARDHAT_CHAIN_ID_DEC, address });
+  }, [selectedSponsorCoinVersionEntry]);
   const selectedVersionSymbolWidthCh = Math.max(4, selectedVersionSymbol.length + 1);
+  const selectedWriteSenderAccount = useMemo(() => {
+    const key = normalizeAddress(selectedWriteSenderAddress);
+    if (!key) return undefined;
+    return hardhatAccounts.find((entry) => normalizeAddress(entry.address) === key);
+  }, [hardhatAccounts, selectedWriteSenderAddress]);
+  const writeSenderDisplayValue =
+    mode === 'hardhat'
+      ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || ''
+      : effectiveConnectedAddress || '';
+  const writeSenderPrivateKeyDisplay =
+    mode === 'hardhat' ? String(selectedWriteSenderAccount?.privateKey || '').trim() : '';
+
+  useEffect(() => {
+    setShowWriteSenderPrivateKey(false);
+    setInvalidFieldIds([]);
+    setValidationPopupFields([]);
+  }, [methodPanelMode, selectedWriteMethod, selectedSpCoinWriteMethod, selectedReadMethod, selectedSpCoinReadMethod]);
 
   useEffect(() => {
     if (sponsorCoinVersionChoices.length === 0) return;
@@ -324,6 +492,33 @@ export default function SponsorCoinLabPage() {
     hardhatAccounts,
     mode,
     selectedHardhatIndex,
+  ]);
+
+  useEffect(() => {
+    if (mode !== 'hardhat') {
+      if (selectedWriteSenderAddress !== effectiveConnectedAddress) {
+        setSelectedWriteSenderAddress(effectiveConnectedAddress);
+      }
+      return;
+    }
+    if (hardhatAccounts.length === 0) {
+      if (selectedWriteSenderAddress) setSelectedWriteSenderAddress('');
+      return;
+    }
+    const existing = hardhatAccounts.find(
+      (entry) => normalizeAddress(entry.address) === normalizeAddress(selectedWriteSenderAddress),
+    );
+    if (existing) return;
+    const fallback = selectedHardhatAccount?.address || hardhatAccounts[0]?.address || '';
+    if (fallback && normalizeAddress(fallback) !== normalizeAddress(selectedWriteSenderAddress)) {
+      setSelectedWriteSenderAddress(fallback);
+    }
+  }, [
+    effectiveConnectedAddress,
+    hardhatAccounts,
+    mode,
+    selectedHardhatAccount?.address,
+    selectedWriteSenderAddress,
   ]);
 
   const adjustSponsorCoinVersion = useCallback(
@@ -736,38 +931,45 @@ export default function SponsorCoinLabPage() {
   }, [appendLog, rpcUrl, shouldPromptHardhatBaseConnect, syncMetaMaskState]);
 
   const runHeaderRead = useCallback(async () => {
+    const call = buildMethodCallEntry('getSerializedSPCoinHeader');
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading SponsorCoin header...');
       const result = (await (access.contract as any).getSerializedSPCoinHeader()) as string;
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getSerializedSPCoinHeader -> ${result}`);
       setStatus('Header read complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown header read error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`Header read failed: ${message}`);
       appendLog(`Header read failed: ${message}`);
     }
   }, [appendLog, ensureReadRunner, requireContractAddress]);
 
   const runAccountListRead = useCallback(async () => {
+    const call = buildMethodCallEntry('getAccountList');
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading account list...');
       const list = (await (access.read as any).getAccountList()) as string[];
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result: list }));
       appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`Account list read failed: ${message}`);
       appendLog(`Account list read failed: ${message}`);
     }
   }, [appendLog, ensureReadRunner, requireContractAddress]);
 
   const runTreeDump = useCallback(async () => {
+    const listCall = buildMethodCallEntry('getAccountList');
     try {
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
@@ -775,16 +977,24 @@ export default function SponsorCoinLabPage() {
       setStatus('Building tree dump...');
       const list = (await (access.read as any).getAccountList()) as string[];
       if (list.length === 0) {
+        setFormattedOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
         appendLog('Tree dump skipped: no accounts available.');
         setStatus('Tree dump skipped (no accounts).');
         return;
       }
       const first = list[0];
       const tree = await (access.read as any).getAccountRecord(first);
+      setFormattedOutputDisplay(
+        formatOutputDisplayValue({
+          call: buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: first }]),
+          result: tree,
+        }),
+      );
       appendLog(`spCoinReadMethods/getAccountRecord(${first}) -> ${JSON.stringify(tree)}`);
       setStatus('Tree dump complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message }));
       setStatus(`Tree dump failed: ${message}`);
       appendLog(`Tree dump failed: ${message}`);
     }
@@ -795,20 +1005,68 @@ export default function SponsorCoinLabPage() {
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
 
   const runSelectedWriteMethod = useCallback(async () => {
+    const missingFieldIds: string[] = [];
+    const missingLabels: string[] = [];
+    if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
+      missingFieldIds.push('erc20-write-sender');
+      missingLabels.push('msg.sender');
+    }
+    if (!String(writeAddressA || '').trim()) {
+      missingFieldIds.push('erc20-write-address-a');
+      missingLabels.push(activeWriteLabels.addressALabel);
+    }
+    if (activeWriteLabels.requiresAddressB && !String(writeAddressB || '').trim()) {
+      missingFieldIds.push('erc20-write-address-b');
+      missingLabels.push(activeWriteLabels.addressBLabel);
+    }
+    if (!String(writeAmountRaw || '').trim()) {
+      missingFieldIds.push('erc20-write-amount');
+      missingLabels.push('Amount');
+    }
+    if (missingFieldIds.length > 0) {
+      showValidationPopup(missingFieldIds, missingLabels);
+      return;
+    }
+    const call = buildMethodCallEntry(selectedWriteMethod, [
+      ...(mode === 'hardhat' || effectiveConnectedAddress
+        ? [
+            {
+              label: 'msg.sender',
+              value:
+                mode === 'hardhat'
+                  ? selectedWriteSenderAccount?.address ||
+                    selectedWriteSenderAddress ||
+                    selectedHardhatAccount?.address ||
+                    ''
+                  : effectiveConnectedAddress,
+            },
+          ]
+        : []),
+      { label: activeWriteLabels.addressALabel, value: writeAddressA },
+      ...(activeWriteLabels.requiresAddressB
+        ? [{ label: activeWriteLabels.addressBLabel, value: writeAddressB }]
+        : []),
+      { label: 'Amount', value: writeAmountRaw },
+    ]);
     try {
-      await runErc20WriteMethod({
+      const result = await runErc20WriteMethod({
         selectedWriteMethod,
         activeWriteLabels,
         writeAddressA,
         writeAddressB,
         writeAmountRaw,
-        selectedHardhatAddress: selectedHardhatAccount?.address,
+        selectedHardhatAddress:
+          mode === 'hardhat'
+            ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
+            : effectiveConnectedAddress,
         executeWriteConnected,
         appendLog,
         setStatus,
       });
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`${activeWriteLabels.title} failed: ${message}`);
       appendLog(`${activeWriteLabels.title} failed: ${message}`);
     }
@@ -819,16 +1077,43 @@ export default function SponsorCoinLabPage() {
     activeWriteLabels.title,
     appendLog,
     executeWriteConnected,
+    effectiveConnectedAddress,
+    mode,
     selectedHardhatAccount?.address,
+    selectedWriteSenderAccount?.address,
+    selectedWriteSenderAddress,
     selectedWriteMethod,
+    showValidationPopup,
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
   ]);
 
   const runSelectedReadMethod = useCallback(async () => {
+    const missingFieldIds: string[] = [];
+    const missingLabels: string[] = [];
+    if (activeReadLabels.requiresAddressA && !String(readAddressA || '').trim()) {
+      missingFieldIds.push('erc20-read-address-a');
+      missingLabels.push(activeReadLabels.addressALabel);
+    }
+    if (activeReadLabels.requiresAddressB && !String(readAddressB || '').trim()) {
+      missingFieldIds.push('erc20-read-address-b');
+      missingLabels.push(activeReadLabels.addressBLabel);
+    }
+    if (missingFieldIds.length > 0) {
+      showValidationPopup(missingFieldIds, missingLabels);
+      return;
+    }
+    const call = buildMethodCallEntry(selectedReadMethod, [
+      ...(activeReadLabels.requiresAddressA
+        ? [{ label: activeReadLabels.addressALabel, value: readAddressA }]
+        : []),
+      ...(activeReadLabels.requiresAddressB
+        ? [{ label: activeReadLabels.addressBLabel, value: readAddressB }]
+        : []),
+    ]);
     try {
-      await runErc20ReadMethod({
+      const result = await runErc20ReadMethod({
         selectedReadMethod,
         activeReadLabels,
         readAddressA,
@@ -838,8 +1123,10 @@ export default function SponsorCoinLabPage() {
         appendLog,
         setStatus,
       });
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`${activeReadLabels.title} failed: ${message}`);
       appendLog(`${activeReadLabels.title} failed: ${message}`);
     }
@@ -855,6 +1142,7 @@ export default function SponsorCoinLabPage() {
     readAddressB,
     requireContractAddress,
     selectedReadMethod,
+    showValidationPopup,
   ]);
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
@@ -873,6 +1161,122 @@ export default function SponsorCoinLabPage() {
     updateSpWriteParamAtIndex,
   });
   useEffect(() => {
+    let cancelled = false;
+
+    const loadRateKeyOptions = async () => {
+      if (methodPanelMode !== 'spcoin_write') {
+        if (!cancelled) {
+          setRecipientRateKeyOptions([]);
+          setAgentRateKeyOptions([]);
+          setRecipientRateKeyHelpText('');
+          setAgentRateKeyHelpText('');
+        }
+        return;
+      }
+
+      const findValue = (labels: string[]) => {
+        const idx = activeSpCoinWriteDef.params.findIndex((param) => labels.includes(param.label));
+        return idx >= 0 ? String(spWriteParams[idx] || '').trim() : '';
+      };
+      const hasRecipientRateField = activeSpCoinWriteDef.params.some((param) =>
+        ['Recipient Rate Key', 'Recipient Rate'].includes(param.label),
+      );
+      const hasAgentRateField = activeSpCoinWriteDef.params.some((param) =>
+        ['Agent Rate Key', 'Agent Rate'].includes(param.label),
+      );
+      const sponsorKey =
+        findValue(['Sponsor Key', 'Sponsor Account']) || String(selectedWriteSenderAddress || '').trim();
+      const recipientKey = findValue(['Recipient Key', 'Recipient Account']);
+      const recipientRateKey = findValue(['Recipient Rate Key', 'Recipient Rate']);
+      const agentKey = findValue(['Agent Key', 'Agent Account']);
+
+      const isAddress = (value: string) => /^0[xX][0-9a-fA-F]{40}$/.test(value);
+      if (!hasRecipientRateField || !isAddress(sponsorKey) || !isAddress(recipientKey)) {
+        if (!cancelled) {
+          setRecipientRateKeyOptions([]);
+          setRecipientRateKeyHelpText(
+            hasRecipientRateField
+              ? 'Select msg.sender/Sponsor and Recipient first to load Recipient Rate Keys.'
+              : '',
+          );
+        }
+      } else {
+        try {
+          const target = requireContractAddress();
+          const runner = await ensureReadRunner();
+          const access = createSpCoinLibraryAccess(target, runner);
+          const rates = (await (access.contract as any).getRecipientRateList(sponsorKey, recipientKey)) as Array<
+            string | bigint
+          >;
+          if (!cancelled) {
+            setRecipientRateKeyOptions(rates.map((value) => String(value)));
+            setRecipientRateKeyHelpText(
+              rates.length > 0 ? 'Select a Recipient Rate Key from the contract list.' : 'No Recipient Rate Keys found for this sponsor/recipient pair.',
+            );
+          }
+        } catch {
+          if (!cancelled) {
+            setRecipientRateKeyOptions([]);
+            setRecipientRateKeyHelpText('Unable to load Recipient Rate Keys from the active contract.');
+          }
+        }
+      }
+
+      if (
+        !hasAgentRateField ||
+        !isAddress(sponsorKey) ||
+        !isAddress(recipientKey) ||
+        !recipientRateKey ||
+        !isAddress(agentKey)
+      ) {
+        if (!cancelled) {
+          setAgentRateKeyOptions([]);
+          setAgentRateKeyHelpText(
+            hasAgentRateField
+              ? 'Select Sponsor, Recipient, Recipient Rate, and Agent first to load Agent Rate Keys.'
+              : '',
+          );
+        }
+        return;
+      }
+
+      try {
+        const target = requireContractAddress();
+        const runner = await ensureReadRunner();
+        const access = createSpCoinLibraryAccess(target, runner);
+        const rates = (await (access.contract as any).getAgentRateList(
+          sponsorKey,
+          recipientKey,
+          recipientRateKey,
+          agentKey,
+        )) as Array<string | bigint>;
+        if (!cancelled) {
+          setAgentRateKeyOptions(rates.map((value) => String(value)));
+          setAgentRateKeyHelpText(
+            rates.length > 0 ? 'Select an Agent Rate Key from the contract list.' : 'No Agent Rate Keys found for this sponsor/recipient/agent combination.',
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setAgentRateKeyOptions([]);
+          setAgentRateKeyHelpText('Unable to load Agent Rate Keys from the active contract.');
+        }
+      }
+    };
+
+    void loadRateKeyOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeSpCoinWriteDef.params,
+    ensureReadRunner,
+    methodPanelMode,
+    requireContractAddress,
+    selectedWriteSenderAddress,
+    spWriteParams,
+  ]);
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(spCoinLabKey);
@@ -884,6 +1288,9 @@ export default function SponsorCoinLabPage() {
         if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
         if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
         if (Array.isArray(saved.hardhatAccounts)) setHardhatAccounts(saved.hardhatAccounts);
+        if (typeof saved.selectedWriteSenderAddress === 'string') {
+          setSelectedWriteSenderAddress(saved.selectedWriteSenderAddress);
+        }
         if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
         if (typeof saved.writeAddressA === 'string') setWriteAddressA(saved.writeAddressA);
         if (typeof saved.writeAddressB === 'string') setWriteAddressB(saved.writeAddressB);
@@ -903,6 +1310,9 @@ export default function SponsorCoinLabPage() {
         if (Array.isArray(saved.spWriteParams)) setSpWriteParams(saved.spWriteParams.map((v) => String(v ?? '')));
         if (typeof saved.status === 'string') setStatus(saved.status);
         if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
+        if (typeof saved.formattedOutputDisplay === 'string') {
+          setFormattedOutputDisplay(saved.formattedOutputDisplay);
+        }
         if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
           backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
         }
@@ -935,8 +1345,10 @@ export default function SponsorCoinLabPage() {
       connectedAddress,
       connectedChainId,
       connectedNetworkName,
+      selectedWriteSenderAddress,
       status,
       logs,
+      formattedOutputDisplay,
       selectedWriteMethod,
       writeAddressA,
       writeAddressB,
@@ -973,8 +1385,10 @@ export default function SponsorCoinLabPage() {
     connectedAddress,
     connectedChainId,
     connectedNetworkName,
+    selectedWriteSenderAddress,
     status,
     logs,
+    formattedOutputDisplay,
     selectedWriteMethod,
     writeAddressA,
     writeAddressB,
@@ -1058,8 +1472,29 @@ export default function SponsorCoinLabPage() {
     return JSON.stringify(result, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
   }, []);
   const runSelectedSpCoinReadMethod = useCallback(async () => {
+    const missingEntries = activeSpCoinReadDef.params
+      .map((param, idx) => ({
+        id: `spcoin-read-param-${idx}`,
+        label: param.label,
+        value: String(spReadParams[idx] || '').trim(),
+      }))
+      .filter((entry) => !entry.value);
+    if (missingEntries.length > 0) {
+      showValidationPopup(
+        missingEntries.map((entry) => entry.id),
+        missingEntries.map((entry) => entry.label),
+      );
+      return;
+    }
+    const call = buildMethodCallEntry(
+      selectedSpCoinReadMethod,
+      activeSpCoinReadDef.params.map((param, idx) => ({
+        label: param.label,
+        value: spReadParams[idx] || '',
+      })),
+    );
     try {
-      await runSpCoinReadMethod({
+      const result = await runSpCoinReadMethod({
         selectedMethod: selectedSpCoinReadMethod,
         spReadParams,
         coerceParamValue,
@@ -1069,8 +1504,10 @@ export default function SponsorCoinLabPage() {
         appendLog,
         setStatus,
       });
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin read error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`${activeSpCoinReadDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinReadDef.title} failed: ${message}`);
     }
@@ -1082,22 +1519,64 @@ export default function SponsorCoinLabPage() {
     ensureReadRunner,
     requireContractAddress,
     selectedSpCoinReadMethod,
+    showValidationPopup,
     spReadParams,
     stringifyResult,
   ]);
   const runSelectedSpCoinWriteMethod = useCallback(async () => {
+    const missingEntries: Array<{ id: string; label: string }> = [];
+    if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
+      missingEntries.push({ id: 'spcoin-write-sender', label: 'msg.sender' });
+    }
+    activeSpCoinWriteDef.params.forEach((param, idx) => {
+      if (param.type === 'date') return;
+      if (String(spWriteParams[idx] || '').trim()) return;
+      missingEntries.push({ id: `spcoin-write-param-${idx}`, label: param.label });
+    });
+    if (missingEntries.length > 0) {
+      showValidationPopup(
+        missingEntries.map((entry) => entry.id),
+        missingEntries.map((entry) => entry.label),
+      );
+      return;
+    }
+    const call = buildMethodCallEntry(selectedSpCoinWriteMethod, [
+      ...(mode === 'hardhat' || effectiveConnectedAddress
+        ? [
+            {
+              label: 'msg.sender',
+              value:
+                mode === 'hardhat'
+                  ? selectedWriteSenderAccount?.address ||
+                    selectedWriteSenderAddress ||
+                    selectedHardhatAccount?.address ||
+                    ''
+                  : effectiveConnectedAddress,
+            },
+          ]
+        : []),
+      ...activeSpCoinWriteDef.params.map((param, idx) => ({
+        label: param.label,
+        value: spWriteParams[idx] || '',
+      })),
+    ]);
     try {
-      await runSpCoinWriteMethod({
+      const result = await runSpCoinWriteMethod({
         selectedMethod: selectedSpCoinWriteMethod,
         spWriteParams,
         coerceParamValue,
         executeWriteConnected,
-        selectedHardhatAddress: selectedHardhatAccount?.address,
+        selectedHardhatAddress:
+          mode === 'hardhat'
+            ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
+            : effectiveConnectedAddress,
         appendLog,
         setStatus,
       });
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
+      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`${activeSpCoinWriteDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinWriteDef.title} failed: ${message}`);
     }
@@ -1107,8 +1586,13 @@ export default function SponsorCoinLabPage() {
     appendLog,
     coerceParamValue,
     executeWriteConnected,
+    effectiveConnectedAddress,
+    mode,
     selectedHardhatAccount?.address,
+    selectedWriteSenderAccount?.address,
+    selectedWriteSenderAddress,
     selectedSpCoinWriteMethod,
+    showValidationPopup,
     spWriteParams,
   ]);
   const methodPanelTitle = useMemo(() => {
@@ -1132,7 +1616,7 @@ export default function SponsorCoinLabPage() {
         <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin Lab</h2>
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <article className={`${cardStyle} relative`}>
+          <article className={`${cardStyle} relative xl:col-start-1 xl:row-start-2`}>
             <button
               type="button"
               onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
@@ -1248,39 +1732,36 @@ export default function SponsorCoinLabPage() {
                 </div>
               )}
             </div>
+            <div className="mt-6 border-t border-[#2B3A67] pt-5">
+              <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
+              {mode === 'hardhat' ? (
+                <div className="mt-4 grid grid-cols-1 gap-3">
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Public Account Key</span>
+                    <input
+                      className={inputStyle}
+                      readOnly
+                      value={selectedHardhatAccount?.address || ''}
+                      placeholder="Selected account address"
+                    />
+                  </label>
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Private Account Key</span>
+                    <input
+                      className={inputStyle}
+                      readOnly
+                      value={selectedVersionSignerKey}
+                      placeholder="Signer key for selected deployed version"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <></>
+              )}
+            </div>
           </article>
 
-          <article className={cardStyle}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Active Hardhat Account</h2>
-            {mode === 'hardhat' ? (
-              <div className="mt-4 grid grid-cols-1 gap-3">
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">HardHat Public Account</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    value={selectedHardhatAccount?.address || ''}
-                    placeholder="Selected account address"
-                  />
-                </label>
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">HardHat Private Key</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    value={selectedVersionSignerKey}
-                    placeholder="Signer key for selected deployed version"
-                  />
-                </label>
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-300">
-                Switch Network Connection Mode to Hardhat Local to configure HardHat account connection.
-              </p>
-            )}
-          </article>
-
-          <article className={cardStyle}>
+          <article className={`${cardStyle} xl:col-start-1 xl:row-start-1`}>
             <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h2>
             {mode === 'hardhat' ? (
               <div className="mt-4 grid grid-cols-1 gap-3">
@@ -1358,6 +1839,29 @@ export default function SponsorCoinLabPage() {
                   />
                 </div>
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Token Image:</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-[#334155] bg-[#0E111B]">
+                      {selectedSponsorCoinLogoURL ? (
+                        <Image
+                          src={selectedSponsorCoinLogoURL}
+                          alt={String(selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-400">No logo</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-400">
+                      Loaded from `public/assets/blockchains/31337/contracts/.../logo.png`
+                    </span>
+                  </div>
+                  <div />
+                </div>
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
                   <input
                     className={inputStyle}
@@ -1411,8 +1915,9 @@ export default function SponsorCoinLabPage() {
             </div>
           </article>
 
-          <article className={cardStyle}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <article className={`${cardStyle} xl:col-start-1 xl:row-start-3`}>
+            <h2 className="text-lg font-semibold text-[#5981F3]">Sponsor Coin Method Tests</h2>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
               <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200">
                 <label className="inline-flex items-center gap-1">
@@ -1464,6 +1969,8 @@ export default function SponsorCoinLabPage() {
 
             {methodPanelMode === 'ecr20_read' && (
               <Erc20ReadController
+                invalidFieldIds={invalidFieldIds}
+                clearInvalidField={clearInvalidField}
                 selectedReadMethod={selectedReadMethod}
                 erc20ReadOptions={erc20ReadOptions}
                 setSelectedReadMethod={(value) => setSelectedReadMethod(value as Erc20ReadMethod)}
@@ -1480,6 +1987,17 @@ export default function SponsorCoinLabPage() {
 
             {methodPanelMode === 'erc20_write' && (
               <Erc20WriteController
+                invalidFieldIds={invalidFieldIds}
+                clearInvalidField={clearInvalidField}
+                mode={mode}
+                hardhatAccounts={hardhatAccounts}
+                hardhatAccountMetadata={hardhatAccountMetadata}
+                selectedWriteSenderAddress={selectedWriteSenderAccount?.address || selectedWriteSenderAddress}
+                setSelectedWriteSenderAddress={setSelectedWriteSenderAddress}
+                writeSenderDisplayValue={writeSenderDisplayValue}
+                writeSenderPrivateKeyDisplay={writeSenderPrivateKeyDisplay}
+                showWriteSenderPrivateKey={showWriteSenderPrivateKey}
+                toggleShowWriteSenderPrivateKey={() => setShowWriteSenderPrivateKey((prev) => !prev)}
                 selectedWriteMethod={selectedWriteMethod}
                 erc20WriteOptions={erc20WriteOptions}
                 setSelectedWriteMethod={(value) => setSelectedWriteMethod(value as Erc20WriteMethod)}
@@ -1498,6 +2016,8 @@ export default function SponsorCoinLabPage() {
 
             {methodPanelMode === 'spcoin_rread' && (
               <SpCoinReadController
+                invalidFieldIds={invalidFieldIds}
+                clearInvalidField={clearInvalidField}
                 hideUnexecutables={hideUnexecutables}
                 setHideUnexecutables={setHideUnexecutables}
                 selectedSpCoinReadMethod={selectedSpCoinReadMethod}
@@ -1515,8 +2035,21 @@ export default function SponsorCoinLabPage() {
 
             {methodPanelMode === 'spcoin_write' && (
               <SpCoinWriteController
-                hideUnexecutables={hideUnexecutables}
-                setHideUnexecutables={setHideUnexecutables}
+                invalidFieldIds={invalidFieldIds}
+                clearInvalidField={clearInvalidField}
+                mode={mode}
+                hardhatAccounts={hardhatAccounts}
+                hardhatAccountMetadata={hardhatAccountMetadata}
+                selectedWriteSenderAddress={selectedWriteSenderAccount?.address || selectedWriteSenderAddress}
+                setSelectedWriteSenderAddress={setSelectedWriteSenderAddress}
+                writeSenderDisplayValue={writeSenderDisplayValue}
+                writeSenderPrivateKeyDisplay={writeSenderPrivateKeyDisplay}
+                showWriteSenderPrivateKey={showWriteSenderPrivateKey}
+                toggleShowWriteSenderPrivateKey={() => setShowWriteSenderPrivateKey((prev) => !prev)}
+                recipientRateKeyOptions={recipientRateKeyOptions}
+                agentRateKeyOptions={agentRateKeyOptions}
+                recipientRateKeyHelpText={recipientRateKeyHelpText}
+                agentRateKeyHelpText={agentRateKeyHelpText}
                 selectedSpCoinWriteMethod={selectedSpCoinWriteMethod}
                 setSelectedSpCoinWriteMethod={(value) => setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod)}
                 spCoinWriteOptions={spCoinWriteOptions}
@@ -1566,13 +2099,51 @@ export default function SponsorCoinLabPage() {
           </article>
 
           <article className={cardStyle}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Execution Log</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-[#5981F3]">Execution Log</h2>
+              <button
+                type="button"
+                className={buttonStyle}
+                onClick={() => setLogs([])}
+              >
+                Clear Log
+              </button>
+            </div>
             <pre className="mt-4 h-72 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200">
               {logs.join('\n')}
             </pre>
           </article>
+
+          <article className={cardStyle}>
+            <h2 className="text-lg font-semibold text-[#5981F3]">Formatted Output Display</h2>
+            <pre className="mt-4 h-72 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200">
+              {formattedOutputDisplay}
+            </pre>
+          </article>
         </section>
       </section>
+      {validationPopupFields.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-red-500 bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+            <h3 className="text-lg font-semibold text-red-400">Missing Required Fields</h3>
+            <p className="mt-2 text-sm text-slate-200">Fill in the following fields before executing the method:</p>
+            <ul className="mt-3 list-disc pl-5 text-sm text-slate-100">
+              {validationPopupFields.map((label) => (
+                <li key={`missing-${label}`}>{label}</li>
+              ))}
+            </ul>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                className={buttonStyle}
+                onClick={() => setValidationPopupFields([])}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js
 const { bigIntToDateTimeString,
   bigIntToDecString,
   bigIntToHexString,

@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/index.js
 const { SpCoinLogger } = require("./utils/logging");
 const { SpCoinERC20Module } = require("./modules/spCoinERC20Module");
 const { SpCoinDeleteModule } = require("./modules/spCoinDeleteModule");

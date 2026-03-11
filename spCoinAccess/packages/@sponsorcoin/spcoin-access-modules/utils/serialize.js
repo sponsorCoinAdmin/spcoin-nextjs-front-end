@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/utils/serialize.js
 // const {  spCoinContractDeployed } = require("../contracts/spCoin");
 // const { BigNumber, ethers, utils } = require("ethers");
 const { SpCoinLogger } = require("./logging");

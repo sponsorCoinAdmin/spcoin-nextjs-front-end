@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js
 const { SpCoinLogger } = require("../utils/logging");
 
 let spCoinLogger;

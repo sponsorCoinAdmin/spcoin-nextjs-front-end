@@ -59,7 +59,7 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-export async function runSpCoinReadMethod(args: RunArgs): Promise<void> {
+export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const {
     selectedMethod,
     spReadParams,
@@ -248,5 +248,6 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<void> {
   const out = stringifyResult(result);
   appendLog(`${activeDef.title}(${methodArgs.join(', ')}) -> ${out}`);
   setStatus(`${activeDef.title} read complete.`);
+  return result;
 }
 

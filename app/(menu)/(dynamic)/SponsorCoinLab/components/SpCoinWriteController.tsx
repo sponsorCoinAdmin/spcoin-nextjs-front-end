@@ -1,13 +1,27 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/SpCoinWriteController.tsx
 import React from 'react';
+import Image from 'next/image';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 
 type ParamDefLike = { label: string; placeholder: string; type: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
 
 type Props = {
-  hideUnexecutables: boolean;
-  setHideUnexecutables: (value: boolean) => void;
+  invalidFieldIds: string[];
+  clearInvalidField: (fieldId: string) => void;
+  mode: 'metamask' | 'hardhat';
+  hardhatAccounts: Array<{ address: string; privateKey: string }>;
+  hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
+  selectedWriteSenderAddress: string;
+  setSelectedWriteSenderAddress: (value: string) => void;
+  writeSenderDisplayValue: string;
+  writeSenderPrivateKeyDisplay: string;
+  showWriteSenderPrivateKey: boolean;
+  toggleShowWriteSenderPrivateKey: () => void;
+  recipientRateKeyOptions: string[];
+  agentRateKeyOptions: string[];
+  recipientRateKeyHelpText: string;
+  agentRateKeyHelpText: string;
   selectedSpCoinWriteMethod: string;
   setSelectedSpCoinWriteMethod: (value: string) => void;
   spCoinWriteOptions: string[];
@@ -56,8 +70,21 @@ type Props = {
 
 export default function SpCoinWriteController(props: Props) {
   const {
-    hideUnexecutables,
-    setHideUnexecutables,
+    invalidFieldIds,
+    clearInvalidField,
+    mode,
+    hardhatAccounts,
+    hardhatAccountMetadata,
+    selectedWriteSenderAddress,
+    setSelectedWriteSenderAddress,
+    writeSenderDisplayValue,
+    writeSenderPrivateKeyDisplay,
+    showWriteSenderPrivateKey,
+    toggleShowWriteSenderPrivateKey,
+    recipientRateKeyOptions,
+    agentRateKeyOptions,
+    recipientRateKeyHelpText,
+    agentRateKeyHelpText,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
     spCoinWriteOptions,
@@ -103,13 +130,36 @@ export default function SpCoinWriteController(props: Props) {
     backdateDays,
     applyBackdateBy,
   } = props;
-
+  const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
+  const invalidClass = (fieldId: string) =>
+    invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const getPrivateKeyForAddress = (address: string) =>
+    hardhatAccounts.find((account) => account.address.toLowerCase() === String(address || '').trim().toLowerCase())
+      ?.privateKey || '';
+  const getMetadataForAddress = (address: string) =>
+    hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
+  React.useEffect(() => {
+    setOpenAddressFields({});
+  }, [selectedSpCoinWriteMethod]);
+  React.useEffect(() => {
+    const addressFieldIndexes = activeSpCoinWriteDef.params
+      .map((param, idx) => ({ param, idx }))
+      .filter(({ param }) => mode === 'hardhat' && param.type === 'address');
+    if (addressFieldIndexes.length === 0) return;
+    setOpenAddressFields((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const { idx } of addressFieldIndexes) {
+        if (invalidFieldIds.includes(`spcoin-write-param-${idx}`) && !next[idx]) {
+          next[idx] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [activeSpCoinWriteDef.params, invalidFieldIds, mode]);
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
-      <label className="inline-flex items-center gap-2 text-sm font-semibold text-[#8FA8FF]">
-        <input type="checkbox" checked={hideUnexecutables} onChange={(e) => setHideUnexecutables(e.target.checked)} />
-        <span>Hide unexecutables</span>
-      </label>
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">SpCoin Write Method</span>
         <select
@@ -128,10 +178,161 @@ export default function SpCoinWriteController(props: Props) {
           ))}
         </select>
       </label>
+      <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
+        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <button
+            type="button"
+            onClick={toggleShowWriteSenderPrivateKey}
+            className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
+            title="Toggle msg.sender Private Key"
+          >
+            msg.sender
+          </button>
+          {mode === 'hardhat' ? (
+            <select
+              data-field-id="spcoin-write-sender"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
+              value={selectedWriteSenderAddress}
+              onChange={(e) => {
+                clearInvalidField('spcoin-write-sender');
+                setSelectedWriteSenderAddress(e.target.value);
+              }}
+            >
+              <option value="">Select account</option>
+              {hardhatAccounts.map((account, idx) => (
+                <option key={`write-sender-${idx}-${account.address}`} value={account.address}>
+                  {account.address}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={inputStyle}
+              readOnly
+              value={writeSenderDisplayValue}
+              placeholder="Connected signer address"
+            />
+          )}
+        </label>
+        {mode === 'hardhat' && showWriteSenderPrivateKey && (
+          <>
+            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                  {getMetadataForAddress(selectedWriteSenderAddress || '')?.logoURL ? (
+                    <Image
+                      src={getMetadataForAddress(selectedWriteSenderAddress || '')!.logoURL}
+                      alt={getMetadataForAddress(selectedWriteSenderAddress || '')?.name || 'Selected account'}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-contain"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-[10px] text-slate-400">No logo</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-white">
+                    {getMetadataForAddress(selectedWriteSenderAddress || '')?.name || 'Unnamed account'}
+                  </div>
+                  <div className="truncate text-xs text-slate-400">
+                    {getMetadataForAddress(selectedWriteSenderAddress || '')?.symbol || 'No symbol'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+              <input
+                className={inputStyle}
+                readOnly
+                value={writeSenderPrivateKeyDisplay}
+                placeholder="Selected signer private key"
+              />
+            </label>
+          </>
+        )}
+      </div>
       {activeSpCoinWriteDef.params.map((param, idx) => (
-        <label key={`sp-write-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
-          {param.type === 'date' ? (
+        <div key={`sp-write-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          {mode === 'hardhat' && param.type === 'address' ? (
+            <div
+              className={`grid grid-cols-1 gap-3${
+                openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
+              }`}
+            >
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <button
+                  type="button"
+                  onClick={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                  className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
+                  title={`Toggle ${param.label}`}
+                >
+                  {param.label}
+                </button>
+                <select
+                  data-field-id={`spcoin-write-param-${idx}`}
+                  className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
+                  value={spWriteParams[idx] || ''}
+                  onChange={(e) => {
+                    clearInvalidField(`spcoin-write-param-${idx}`);
+                    updateSpWriteParamAtIndex(idx, e.target.value);
+                  }}
+                >
+                  <option value="">Select account</option>
+                  {hardhatAccounts.map((account, accountIdx) => (
+                    <option key={`sp-write-address-${idx}-${accountIdx}-${account.address}`} value={account.address}>
+                      {account.address}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {openAddressFields[idx] && (
+                <>
+                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+                    <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                        {getMetadataForAddress(spWriteParams[idx] || '')?.logoURL ? (
+                          <Image
+                            src={getMetadataForAddress(spWriteParams[idx] || '')!.logoURL}
+                            alt={getMetadataForAddress(spWriteParams[idx] || '')?.name || param.label}
+                            width={40}
+                            height={40}
+                            className="h-full w-full object-contain"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-[10px] text-slate-400">No logo</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-white">
+                          {getMetadataForAddress(spWriteParams[idx] || '')?.name || 'Unnamed account'}
+                        </div>
+                        <div className="truncate text-xs text-slate-400">
+                          {getMetadataForAddress(spWriteParams[idx] || '')?.symbol || 'No symbol'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                    <input
+                      className={inputStyle}
+                      readOnly
+                      value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
+                      placeholder="Selected account private key"
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+          ) : param.type === 'date' ? (
+            <>
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -147,16 +348,72 @@ export default function SpCoinWriteController(props: Props) {
                 onFocus={() => onOpenBackdatePicker(idx)}
               />
             </div>
+            </>
+          ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) ? (
+            <>
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="grid gap-2">
+              <input
+                type="text"
+                data-field-id={`spcoin-write-param-${idx}`}
+                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                list={`sp-write-recipient-rate-options-${selectedSpCoinWriteMethod}-${idx}`}
+                value={spWriteParams[idx] || ''}
+                onChange={(e) => {
+                  clearInvalidField(`spcoin-write-param-${idx}`);
+                  updateSpWriteParamAtIndex(idx, e.target.value);
+                }}
+                placeholder={`Select, type, or paste ${param.label}`}
+              />
+              <datalist id={`sp-write-recipient-rate-options-${selectedSpCoinWriteMethod}-${idx}`}>
+                {recipientRateKeyOptions.map((value) => (
+                  <option key={`recipient-rate-${idx}-${value}`} value={value} />
+                ))}
+              </datalist>
+              {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
+              </div>
+            </>
+          ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) ? (
+            <>
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="grid gap-2">
+              <input
+                type="text"
+                data-field-id={`spcoin-write-param-${idx}`}
+                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                list={`sp-write-agent-rate-options-${selectedSpCoinWriteMethod}-${idx}`}
+                value={spWriteParams[idx] || ''}
+                onChange={(e) => {
+                  clearInvalidField(`spcoin-write-param-${idx}`);
+                  updateSpWriteParamAtIndex(idx, e.target.value);
+                }}
+                placeholder={`Select, type, or paste ${param.label}`}
+              />
+              <datalist id={`sp-write-agent-rate-options-${selectedSpCoinWriteMethod}-${idx}`}>
+                {agentRateKeyOptions.map((value) => (
+                  <option key={`agent-rate-${idx}-${value}`} value={value} />
+                ))}
+              </datalist>
+              {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
+              </div>
+            </>
           ) : (
-            <input
-              type="text"
-              className={inputStyle}
-              value={spWriteParams[idx] || ''}
-              onChange={(e) => updateSpWriteParamAtIndex(idx, e.target.value)}
-              placeholder={param.placeholder}
-            />
+            <>
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <input
+                type="text"
+                data-field-id={`spcoin-write-param-${idx}`}
+                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                value={spWriteParams[idx] || ''}
+                onChange={(e) => {
+                  clearInvalidField(`spcoin-write-param-${idx}`);
+                  updateSpWriteParamAtIndex(idx, e.target.value);
+                }}
+                placeholder={param.placeholder}
+              />
+            </>
           )}
-        </label>
+        </div>
       ))}
       <BackdateCalendarPopup
         backdatePopupParamIdx={backdatePopupParamIdx}

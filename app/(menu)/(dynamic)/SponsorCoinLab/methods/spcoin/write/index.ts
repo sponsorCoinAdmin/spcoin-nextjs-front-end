@@ -45,7 +45,15 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-export async function runSpCoinWriteMethod(args: RunArgs): Promise<void> {
+export async function runSpCoinWriteMethod(args: RunArgs): Promise<
+  Array<{
+    label: string;
+    txHash: string;
+    receiptHash: string;
+    blockNumber: string;
+    status: string;
+  }>
+> {
   const {
     selectedMethod,
     spWriteParams,
@@ -57,6 +65,13 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<void> {
   } = args;
   const activeDef = SPCOIN_WRITE_METHOD_DEFS[selectedMethod];
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spWriteParams[idx], def));
+  const receipts: Array<{
+    label: string;
+    txHash: string;
+    receiptHash: string;
+    blockNumber: string;
+    status: string;
+  }> = [];
   const submitWrite = async (
     label: string,
     writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
@@ -70,6 +85,13 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<void> {
     appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
     const receipt = await tx.wait();
     appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
+    receipts.push({
+      label,
+      txHash: String(tx?.hash || ''),
+      receiptHash: String(receipt?.hash || tx?.hash || ''),
+      blockNumber: String(receipt?.blockNumber ?? ''),
+      status: String(receipt?.status ?? ''),
+    });
   };
 
   switch (selectedMethod) {
@@ -220,5 +242,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<void> {
   }
 
   setStatus(`${activeDef.title} complete.`);
+  return receipts;
 }
 

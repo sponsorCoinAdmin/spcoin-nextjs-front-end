@@ -5,6 +5,8 @@ type ParamDefLike = { label: string; placeholder: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
 
 type Props = {
+  invalidFieldIds: string[];
+  clearInvalidField: (fieldId: string) => void;
   hideUnexecutables: boolean;
   setHideUnexecutables: (value: boolean) => void;
   selectedSpCoinReadMethod: string;
@@ -21,6 +23,8 @@ type Props = {
 
 export default function SpCoinReadController(props: Props) {
   const {
+    invalidFieldIds,
+    clearInvalidField,
     hideUnexecutables,
     setHideUnexecutables,
     selectedSpCoinReadMethod,
@@ -34,6 +38,8 @@ export default function SpCoinReadController(props: Props) {
     buttonStyle,
     runSelectedSpCoinReadMethod,
   } = props;
+  const invalidClass = (fieldId: string) =>
+    invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
@@ -63,10 +69,12 @@ export default function SpCoinReadController(props: Props) {
         <label key={`sp-read-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
           <input
-            className={inputStyle}
+            data-field-id={`spcoin-read-param-${idx}`}
+            className={`${inputStyle}${invalidClass(`spcoin-read-param-${idx}`)}`}
             value={spReadParams[idx] || ''}
             onChange={(e) =>
               setSpReadParams((prev) => {
+                clearInvalidField(`spcoin-read-param-${idx}`);
                 const next = [...prev];
                 next[idx] = e.target.value;
                 return next;

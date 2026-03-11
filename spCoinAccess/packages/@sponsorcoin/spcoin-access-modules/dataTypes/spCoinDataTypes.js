@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/dataTypes/spCoinDataTypes.js
 class SponsorCoinHeader {
   // Initialize values to maintain output display order
   constructor() {

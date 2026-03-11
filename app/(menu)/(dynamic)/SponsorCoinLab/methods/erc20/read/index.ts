@@ -46,7 +46,7 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-export async function runErc20ReadMethod(args: RunArgs): Promise<void> {
+export async function runErc20ReadMethod(args: RunArgs): Promise<unknown> {
   const {
     selectedReadMethod,
     activeReadLabels,
@@ -81,4 +81,5 @@ export async function runErc20ReadMethod(args: RunArgs): Promise<void> {
     appendLog(`${selectedReadMethod}() -> ${String(result)}`);
   }
   setStatus(`${selectedReadMethod} read complete.`);
+  return result;
 }

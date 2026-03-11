@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js
 const { SpCoinLogger } = require("../utils/logging");
 
 let spCoinLogger;
@@ -17,8 +18,9 @@ class SpCoinAddModule {
 
   spCoinLogger.logDetail("JS => Inserting " + _recipientKey + " Recipient To Blockchain Network");
     spCoinLogger.logDetail("JS => Inserting Recipient " + _recipientKey);
-    await this.spCoinContractDeployed.addRecipient(_recipientKey);
+    const tx = await this.spCoinContractDeployed.addRecipient(_recipientKey);
     spCoinLogger.logExitFunction();
+    return tx;
   };
 
   addRecipients = async (_accountKey, _recipientAccountList) => {
@@ -33,11 +35,11 @@ class SpCoinAddModule {
     let recipientCount = 0;
     for (recipientCount; recipientCount < _recipientAccountList.length; recipientCount++) {
       let _recipientKey = _recipientAccountList[recipientCount];
-      await addRecipient(_recipientKey);
+      await this.addRecipient(_recipientKey);
     }
     spCoinLogger.logDetail("JS => Inserted = " + recipientCount + " Recipient Records");
-    return --recipientCount;
     spCoinLogger.logExitFunction();
+    return recipientCount;
   };
 
   addAgent = async (_recipientKey, _recipientRateKey, _accountAgentKey) => {
@@ -62,14 +64,14 @@ class SpCoinAddModule {
     let agentSize = _agentAccountList.length;
     spCoinLogger.logDetail("JS => agentSize.length = " + agentSize);
     let agentCount = 0;
-    for (let agentCount = 0; agentCount < agentSize; agentCount++) {
+    for (agentCount = 0; agentCount < agentSize; agentCount++) {
       let agentKey = _agentAccountList[agentCount];
       spCoinLogger.logDetail("JS =>  " + agentCount + ". " + "Inserting Agent[" + agentCount + "]: " + agentKey);
-      await addAgent(_recipientKey, _recipientRateKey, agentKey);
+      await this.addAgent(_recipientKey, _recipientRateKey, agentKey);
     }
     spCoinLogger.logDetail("JS => " + "Inserted = " + agentSize + " Agent Records");
-    return agentCount;
     spCoinLogger.logExitFunction();
+    return agentCount;
   };
 
   addAccountRecord = async (_accountKey) => {
@@ -84,7 +86,7 @@ class SpCoinAddModule {
     let maxCount = _accountListKeys.length;
     spCoinLogger.logDetail("JS => Inserting " + maxCount + " Records to Blockchain Network");
 
-    for (idx = 0; idx < maxCount; idx++) {
+    for (let idx = 0; idx < maxCount; idx++) {
       let account = _accountListKeys[idx];
       spCoinLogger.logDetail("JS => Inserting " + idx + ", " + account);
       await this.spCoinContractDeployed.addAccountRecord(account);

@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js
 const { SpCoinLogger } = require("../utils/logging");
 const {
   RewardAccountStruct,

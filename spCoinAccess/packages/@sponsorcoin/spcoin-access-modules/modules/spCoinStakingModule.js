@@ -1,3 +1,4 @@
+// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js
 const { 
   bigIntToDecString,
   second,

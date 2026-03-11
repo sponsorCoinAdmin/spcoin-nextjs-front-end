@@ -43,7 +43,12 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-export async function runErc20WriteMethod(args: RunArgs): Promise<void> {
+export async function runErc20WriteMethod(args: RunArgs): Promise<{
+  txHash: string;
+  receiptHash: string;
+  blockNumber: string;
+  status: string;
+}> {
   const {
     selectedWriteMethod,
     activeWriteLabels,
@@ -78,4 +83,10 @@ export async function runErc20WriteMethod(args: RunArgs): Promise<void> {
   const receipt = await tx.wait();
   appendLog(`${selectedWriteMethod} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
   setStatus(`${selectedWriteMethod} complete.`);
+  return {
+    txHash: String(tx?.hash || ''),
+    receiptHash: String(receipt?.hash || tx?.hash || ''),
+    blockNumber: String(receipt?.blockNumber ?? ''),
+    status: String(receipt?.status ?? ''),
+  };
 }

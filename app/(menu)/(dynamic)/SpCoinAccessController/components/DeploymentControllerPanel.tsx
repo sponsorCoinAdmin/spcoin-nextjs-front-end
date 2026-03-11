@@ -232,7 +232,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
             </button>
           </div>
           <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Active Network Name</span>
+            <span className="text-sm font-semibold text-[#8FA8FF]">Network Name</span>
             <input
               type="text"
               value={deploymentChainName}
@@ -246,7 +246,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               type="text"
               value={deploymentChainId}
               readOnly
-              className="w-[6ch] min-w-[6ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-right text-slate-300 outline-none"
+              className="w-[8ch] min-w-[8ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-slate-300 outline-none"
             />
           </label>
         </div>
@@ -258,7 +258,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               <select
                 value={hardhatDeploymentAccountNumber}
                 onChange={(event) => onHardhatDeploymentAccountNumberChange(event.target.value)}
-                className="w-[5ch] min-w-[5ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                className="w-[6ch] min-w-[6ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-right text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
                 aria-label="Hardhat Deployment Account Number"
                 title="Hardhat Deployment Account Number"
               >
