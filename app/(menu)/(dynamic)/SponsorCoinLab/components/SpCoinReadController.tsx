@@ -10,7 +10,7 @@ type Props = {
   clearInvalidField: (fieldId: string) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
-  hardhatAccounts: Array<{ address: string; privateKey: string }>;
+  hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedSpCoinReadMethod: string;
   setSelectedSpCoinReadMethod: (value: string) => void;

@@ -17,7 +17,7 @@ type Props = {
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   mode: 'metamask' | 'hardhat';
-  hardhatAccounts: Array<{ address: string; privateKey: string }>;
+  hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedWriteSenderAddress: string;
   setSelectedWriteSenderAddress: (value: string) => void;

@@ -60,7 +60,7 @@ type LabCardId = 'network' | 'contract' | 'readTree' | 'methods' | 'log' | 'outp
 
 type HardhatAccountOption = {
   address: string;
-  privateKey: string;
+  privateKey?: string;
 };
 
 type HardhatAccountMetadata = {
@@ -83,12 +83,12 @@ type SpCoinDeploymentFile = {
   chainId?: Record<string, Record<string, unknown>>;
 };
 
-const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
-const HARDHAT_KEYS_STORAGE_KEY = 'spcoin_lab_hardhat_keys_v1';
 const spCoinLabKey = 'spCoinLabKey';
 const HARDHAT_CHAIN_ID_DEC = 31337;
 const HARDHAT_CHAIN_ID_HEX = '0x7a69';
 const HARDHAT_NETWORK_NAME = 'SponsorCoin HH BASE';
+const MISSING_LOCAL_ACCOUNT_NAME = 'Account Not Found on Local';
+const MISSING_LOCAL_ACCOUNT_SYMBOL = 'MISSING';
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
@@ -96,6 +96,38 @@ const buttonStyle =
   'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.45rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
 const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+
+type TestAccountFileEntry =
+  | string
+  | {
+      address?: unknown;
+      privateKey?: unknown;
+    };
+
+function buildHardhatAccountMetadata(
+  account: Record<string, unknown> | null | undefined,
+  fallbackLogoURL: string,
+): HardhatAccountMetadata {
+  const next: HardhatAccountMetadata = {
+    logoURL: fallbackLogoURL,
+  };
+
+  const name = String(account?.name || '').trim();
+  const symbol = String(account?.symbol || '').trim();
+  const logoURL = String(account?.logoURL || '').trim();
+
+  if (name) next.name = name;
+  if (symbol) next.symbol = symbol;
+  if (logoURL) next.logoURL = logoURL;
+
+  if (!account) {
+    next.name = MISSING_LOCAL_ACCOUNT_NAME;
+    next.symbol = MISSING_LOCAL_ACCOUNT_SYMBOL;
+    next.logoURL = fallbackLogoURL;
+  }
+
+  return next;
+}
 
 type LabCardHeaderProps = {
   title: React.ReactNode;
@@ -224,10 +256,8 @@ export default function SponsorCoinLabPage() {
   const [rpcUrl, setRpcUrl] = useState(
     'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',
   );
-  const [mnemonic, setMnemonic] = useState(HARDHAT_DEFAULT_MNEMONIC);
   const [contractAddress, setContractAddress] = useState('');
   const [selectedSponsorCoinVersion, setSelectedSponsorCoinVersion] = useState('');
-  const [persistKeys] = useState(true);
   const [hardhatAccounts, setHardhatAccounts] = useState<HardhatAccountOption[]>([]);
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
   const [selectedWriteSenderAddress, setSelectedWriteSenderAddress] = useState('');
@@ -315,73 +345,90 @@ export default function SponsorCoinLabPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem(HARDHAT_KEYS_STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as HardhatAccountOption[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setHardhatAccounts(parsed);
-        setSelectedHardhatIndex(0);
-      }
-    } catch {
-      // Ignore bad local cache.
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!persistKeys) return;
-    if (typeof window === 'undefined') return;
-    if (hardhatAccounts.length === 0) return;
-    window.localStorage.setItem(HARDHAT_KEYS_STORAGE_KEY, JSON.stringify(hardhatAccounts));
-  }, [hardhatAccounts, persistKeys]);
-  useEffect(() => {
     let cancelled = false;
-    const loadHardhatAccountMetadata = async () => {
-      const addresses = Array.from(
-        new Set(
-          hardhatAccounts
-            .map((account) => String(account.address || '').trim())
-            .filter((address) => /^0[xX][a-fA-F0-9]{40}$/.test(address)),
-        ),
-      );
-      if (addresses.length === 0) {
+
+    const loadHardhatAccountsFromNetworkFile = async () => {
+      const chainIdText = String(HARDHAT_CHAIN_ID_DEC);
+      try {
+        const response = await fetch(`/assets/spCoinLab/networks/${chainIdText}/testAccounts.json`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error(`Unable to load testAccounts.json for chain ${chainIdText}.`);
+        }
+
+        const rawEntries = (await response.json()) as TestAccountFileEntry[];
+        if (!Array.isArray(rawEntries)) {
+          throw new Error('testAccounts.json must be an array.');
+        }
+
+        const normalizedEntries = rawEntries
+          .map((entry) => {
+            if (typeof entry === 'string') {
+              const address = String(entry || '').trim();
+              return address ? { address } : null;
+            }
+
+            const address = String(entry?.address || '').trim();
+            const privateKey = String(entry?.privateKey || '').trim();
+            if (!address) return null;
+            return {
+              address,
+              ...(privateKey ? { privateKey } : {}),
+            } satisfies HardhatAccountOption;
+          })
+          .filter((entry): entry is HardhatAccountOption => !!entry);
+
+        const metadataRows = await Promise.all(
+          normalizedEntries.map(async (entry) => {
+            const normalizedKey = normalizeAddress(entry.address);
+            const folder = normalizeAddressForAssets(entry.address);
+            const accountLogoURL = folder ? getAccountLogoURL(entry.address) : defaultMissingImage;
+
+            if (!folder) {
+              return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+            }
+
+            try {
+              const accountResponse = await fetch(`/assets/accounts/${folder}/account.json`, {
+                cache: 'no-store',
+              });
+              if (!accountResponse.ok) {
+                return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+              }
+
+              const accountData = (await accountResponse.json()) as Record<string, unknown>;
+              return [
+                normalizedKey,
+                buildHardhatAccountMetadata(accountData, accountLogoURL),
+              ] as const;
+            } catch {
+              return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+            }
+          }),
+        );
+
+        if (cancelled) return;
+        setHardhatAccounts(normalizedEntries);
+        setHardhatAccountMetadata(Object.fromEntries(metadataRows));
+        setSelectedHardhatIndex((prev) =>
+          normalizedEntries.length === 0 ? 0 : Math.min(Math.max(prev, 0), normalizedEntries.length - 1),
+        );
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Unknown Hardhat account load error.';
+        setHardhatAccounts([]);
         setHardhatAccountMetadata({});
-        return;
+        setSelectedHardhatIndex(0);
+        appendLog(`Hardhat test account load failed: ${message}`);
       }
-      const rows = await Promise.all(
-        addresses.map(async (address) => {
-          const normalizedKey = normalizeAddress(address);
-          const folder = normalizeAddressForAssets(address);
-          const logoURL = folder ? getAccountLogoURL(address) : defaultMissingImage;
-          if (!folder) return [normalizedKey, { logoURL }] as const;
-          try {
-            const response = await fetch(`/assets/accounts/${folder}/account.json`, {
-              cache: 'no-store',
-            });
-            if (!response.ok) return [normalizedKey, { logoURL }] as const;
-            const data = (await response.json()) as Record<string, unknown>;
-            return [
-              normalizedKey,
-              {
-                name: String(data?.name || '').trim() || undefined,
-                symbol: String(data?.symbol || '').trim() || undefined,
-                logoURL,
-              },
-            ] as const;
-          } catch {
-            return [normalizedKey, { logoURL }] as const;
-          }
-        }),
-      );
-      if (cancelled) return;
-      setHardhatAccountMetadata(Object.fromEntries(rows));
     };
-    void loadHardhatAccountMetadata();
+
+    void loadHardhatAccountsFromNetworkFile();
     return () => {
       cancelled = true;
     };
-  }, [hardhatAccounts]);
+  }, [appendLog]);
 
   const selectedHardhatAccount = useMemo(
     () => hardhatAccounts[selectedHardhatIndex],
@@ -1385,10 +1432,8 @@ export default function SponsorCoinLabPage() {
         const saved = JSON.parse(raw) as Record<string, any>;
         if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
         if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
-        if (typeof saved.mnemonic === 'string') setMnemonic(saved.mnemonic);
         if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
         if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
-        if (Array.isArray(saved.hardhatAccounts)) setHardhatAccounts(saved.hardhatAccounts);
         if (typeof saved.selectedWriteSenderAddress === 'string') {
           setSelectedWriteSenderAddress(saved.selectedWriteSenderAddress);
         }
@@ -1438,9 +1483,7 @@ export default function SponsorCoinLabPage() {
     const payload = {
       mode,
       rpcUrl,
-      mnemonic,
       contractAddress,
-      hardhatAccounts,
       selectedHardhatIndex,
       connectedAddress,
       connectedChainId,
@@ -1477,9 +1520,7 @@ export default function SponsorCoinLabPage() {
     spCoinLabHydrated,
     mode,
     rpcUrl,
-    mnemonic,
     contractAddress,
-    hardhatAccounts,
     selectedHardhatIndex,
     connectedAddress,
     connectedChainId,
@@ -1814,15 +1855,6 @@ export default function SponsorCoinLabPage() {
                         value={rpcUrl}
                         onChange={(e) => setRpcUrl(e.target.value)}
                         placeholder="Hardhat RPC URL"
-                      />
-                    </label>
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <span className="text-sm font-semibold text-[#8FA8FF]">Hard Hat Seed Phrase</span>
-                      <input
-                        className={inputStyle}
-                        value={mnemonic}
-                        onChange={(e) => setMnemonic(e.target.value)}
-                        placeholder="Hardhat mnemonic"
                       />
                     </label>
                   </>
