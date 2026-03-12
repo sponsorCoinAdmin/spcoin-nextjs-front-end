@@ -179,6 +179,7 @@ export default function SponsorCoinLabPage() {
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
   const [selectedWriteSenderAddress, setSelectedWriteSenderAddress] = useState('');
   const [showWriteSenderPrivateKey, setShowWriteSenderPrivateKey] = useState(false);
+  const [showSignerAccountDetails, setShowSignerAccountDetails] = useState(false);
   const [hardhatAccountMetadata, setHardhatAccountMetadata] = useState<
     Record<string, HardhatAccountMetadata>
   >({});
@@ -427,6 +428,10 @@ export default function SponsorCoinLabPage() {
   const selectedVersionSignerKey = useMemo(() => {
     return String(selectedSponsorCoinVersionEntry?.privateKey || '').trim();
   }, [selectedSponsorCoinVersionEntry]);
+  const selectedSignerAccountMetadata = useMemo(() => {
+    const address = String(selectedHardhatAccount?.address || '').trim().toLowerCase();
+    return hardhatAccountMetadata[address];
+  }, [hardhatAccountMetadata, selectedHardhatAccount?.address]);
   const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
   const selectedSponsorCoinLogoURL = useMemo(() => {
     const address = String(selectedSponsorCoinVersionEntry?.address || '').trim();
@@ -1736,24 +1741,68 @@ export default function SponsorCoinLabPage() {
               <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
               {mode === 'hardhat' ? (
                 <div className="mt-4 grid grid-cols-1 gap-3">
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Public Account Key</span>
-                    <input
-                      className={inputStyle}
-                      readOnly
-                      value={selectedHardhatAccount?.address || ''}
-                      placeholder="Selected account address"
-                    />
-                  </label>
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Private Account Key</span>
-                    <input
-                      className={inputStyle}
-                      readOnly
-                      value={selectedVersionSignerKey}
-                      placeholder="Signer key for selected deployed version"
-                    />
-                  </label>
+                  <div
+                    className={`grid grid-cols-1 gap-3${
+                      showSignerAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
+                    }`}
+                  >
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <button
+                        type="button"
+                        onClick={() => setShowSignerAccountDetails((prev) => !prev)}
+                        className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
+                        title="Toggle signer account details"
+                      >
+                        Public Account Key
+                      </button>
+                      <input
+                        className={inputStyle}
+                        readOnly
+                        value={selectedHardhatAccount?.address || ''}
+                        placeholder="Selected account address"
+                      />
+                    </label>
+                    {showSignerAccountDetails && (
+                      <>
+                        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                          <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+                          <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                              {selectedSignerAccountMetadata?.logoURL ? (
+                                <Image
+                                  src={selectedSignerAccountMetadata.logoURL}
+                                  alt={selectedSignerAccountMetadata?.name || 'Selected signer account'}
+                                  width={40}
+                                  height={40}
+                                  className="h-full w-full object-contain"
+                                  unoptimized
+                                />
+                              ) : (
+                                <span className="text-[10px] text-slate-400">No logo</span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="truncate font-medium text-white">
+                                {selectedSignerAccountMetadata?.name || 'Unnamed account'}
+                              </div>
+                              <div className="truncate text-xs text-slate-400">
+                                {selectedSignerAccountMetadata?.symbol || 'No symbol'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                          <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                          <input
+                            className={inputStyle}
+                            readOnly
+                            value={selectedVersionSignerKey}
+                            placeholder="Signer key for selected deployed version"
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <></>

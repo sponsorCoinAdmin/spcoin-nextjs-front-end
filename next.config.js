@@ -40,6 +40,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       ethers: require.resolve(`ethers`),
+      '../../../spcoin-common/spcoin-lib$': require.resolve('@sponsorcoin/spcoin-lib/utils'),
       '@react-native-async-storage/async-storage': false,
     };
 

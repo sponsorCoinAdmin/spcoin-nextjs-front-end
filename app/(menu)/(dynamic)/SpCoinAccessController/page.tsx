@@ -3,7 +3,6 @@
 
 import React from 'react';
 import CloseButton from '@/components/views/Buttons/CloseButton';
-import { normalizeProjectRelativePath } from './helpers';
 import NpmAccessPanel from './components/NpmAccessPanel';
 import DeploymentControllerPanel from './components/DeploymentControllerPanel';
 import { useSpCoinAccessController } from './hooks/useSpCoinAccessController';
@@ -37,36 +36,25 @@ export default function SpCoinAccessControllerPage() {
               cardClass={controller.cardClass}
               selectedPackage={controller.selectedPackage}
               availablePackages={controller.availablePackages}
-              useLocalPackage={controller.managerSettings.useLocalPackage}
               localInstallSourceRoot={controller.localInstallSourceRoot}
               localInstallSourceRootError={controller.localInstallSourceRootError}
+              npmOtp={controller.npmOtp}
               versionInput={controller.versionInput}
               activeAction={controller.activeAction}
               uploadBlocked={controller.uploadBlocked}
+              localPackageVersion={controller.localPackageVersion}
               downloadBlocked={controller.downloadBlocked}
               flashTarget={controller.flashTarget}
               selectedVersion={controller.selectedVersion}
-              sourceRoot={controller.sourceRoot}
               status={controller.status}
               onPackagePersist={controller.handlePackagePersist}
-              onPackageSourceModeChange={controller.handlePackageSourceModeChange}
               onLocalInstallSourceRootChange={controller.setLocalInstallSourceRoot}
               onValidateLocalInstallSourceRoot={controller.validateLocalInstallSourceRoot}
+              onNpmOtpChange={controller.setNpmOtp}
               onVersionInputChange={controller.handleVersionInputChange}
               onVersionPersist={controller.handleVersionPersist}
               onAdjustVersion={controller.adjustVersion}
               onRunManagerAction={controller.runManagerAction}
-              onSourceRootChange={controller.setSourceRoot}
-              onSourceRootBlurNormalize={(value) =>
-                controller.setSourceRoot(
-                  normalizeProjectRelativePath(
-                    value,
-                    controller.managerSettings.useLocalPackage
-                      ? '/spCoinAccess'
-                      : '/node_modules/@sponsorcoin/spcoin-access-modules',
-                  ),
-                )
-              }
             />
 
             <DeploymentControllerPanel

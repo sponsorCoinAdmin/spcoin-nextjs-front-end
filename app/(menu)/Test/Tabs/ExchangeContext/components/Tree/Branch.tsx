@@ -8,6 +8,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { MAIN_RADIO_OVERLAY_PANELS, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import nodeModulesSpCoinAccessPackage from '@sponsorcoin/spcoin-access-modules/package.json';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
@@ -147,6 +148,8 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    */
   const { openPanel, closePanel } = usePanelTree();
   const { setExchangeContext } = useExchangeContext();
+  const [localSpCoinAccessVersion, setLocalSpCoinAccessVersion] = React.useState('');
+  const [localSpCoinAccessPathExists, setLocalSpCoinAccessPathExists] = React.useState<boolean | null>(null);
 
   const isArray = Array.isArray(value);
 
@@ -407,6 +410,48 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     path === 'rest.settings.NPM_Source' &&
     typeof guiValue === 'string';
 
+  useEffect(() => {
+    if (!isNpmSourceLeaf) return;
+    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
+    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
+    if (!isLocalSource) {
+      setLocalSpCoinAccessPathExists(null);
+      setLocalSpCoinAccessVersion('');
+      return;
+    }
+
+    let active = true;
+    const loadLocalSpCoinAccessVersion = async () => {
+      try {
+        const params = new URLSearchParams({ localPath: '/spCoinAccess' });
+        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+          method: 'GET',
+        });
+        const data = (await response.json()) as {
+          ok?: boolean;
+          localPathExists?: boolean;
+          localPackageExists?: boolean;
+          localPackageVersion?: string;
+        };
+        if (!active) return;
+        const exists = Boolean(
+          response.ok && data.ok && data.localPathExists === true && data.localPackageExists === true,
+        );
+        setLocalSpCoinAccessPathExists(exists);
+        setLocalSpCoinAccessVersion(exists ? String(data.localPackageVersion || '').trim() : '');
+      } catch {
+        if (!active) return;
+        setLocalSpCoinAccessPathExists(false);
+        setLocalSpCoinAccessVersion('');
+      }
+    };
+
+    void loadLocalSpCoinAccessVersion();
+    return () => {
+      active = false;
+    };
+  }, [guiValue, isNpmSourceLeaf]);
+
   if (isNpmSourceLeaf) {
     const onToggleNpmSource = async () => {
       const localPath = '/spCoinAccess';
@@ -455,8 +500,23 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
 
     const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
     const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
+    const localPackagePath = '/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules';
     const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
-    const sourceLabel = isLocalSource ? 'NPM_Source(LOCAL)' : 'NPM_Source(NODE)';
+    const sourceLabel = isLocalSource ? 'spCoinAccess(LOCAL)' : 'spCoinAccess(NODE)';
+    const installedNodeModulesVersion = String(nodeModulesSpCoinAccessPackage?.version || '').trim();
+    const displayValue =
+      !isLocalSource
+        ? installedNodeModulesVersion
+          ? `/node_modules (${installedNodeModulesVersion})`
+          : '/node_modules'
+        : localSpCoinAccessPathExists === false
+        ? '*ERROR: No Source! Reverting to "node_modules"'
+        : localSpCoinAccessVersion
+        ? `/spCoinAccess (${localSpCoinAccessVersion})`
+        : '/spCoinAccess';
+    const hoverTitle = isLocalSource ? localPackagePath : nodeModulesPath;
+    const valueClass =
+      isLocalSource && localSpCoinAccessPathExists === false ? 'text-red-400' : 'text-[#5981F3]';
     return (
       <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
         <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
@@ -464,10 +524,10 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           type="button"
           onClick={() => void onToggleNpmSource()}
           className="rounded px-1 text-left transition-colors hover:text-[#5981F3]"
-          title='Toggle NPM source between "Local" and "node_modules"'
+          title={hoverTitle}
         >
           {`${sourceLabel}: `}
-          <span className="text-[#5981F3]">{quoteIfString(guiValue)}</span>
+          <span className={valueClass}>{quoteIfString(displayValue)}</span>
         </button>
       </div>
     );

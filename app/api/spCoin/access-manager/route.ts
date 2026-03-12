@@ -31,6 +31,7 @@ type AccessManagerRequest = {
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
+  otp?: string;
   deploymentName?: string;
   deploymentSymbol?: string;
   deploymentDecimals?: number | string;
@@ -47,6 +48,8 @@ type AccessManagerResponse = {
   action?: 'upload' | 'download' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
+  localVersion?: string;
+  localPackageVersion?: string;
   packageName?: string;
   installSourceRoot?: string;
   deploymentTokenName?: string;
@@ -62,6 +65,7 @@ type AccessManagerResponse = {
   workspaceRoot?: string;
   localPath?: string;
   localPathExists?: boolean;
+  localPackageExists?: boolean;
   contractDirExists?: boolean;
   resolvedChainId?: number;
   tokenStatus?: 'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED';
@@ -429,6 +433,7 @@ async function getPackageButtonState(packageName: string, requestedVersion: stri
 
   return {
     resolvedVersion,
+    localVersion,
     downloadBlocked: archiveExists,
     uploadBlocked,
   };
@@ -529,7 +534,7 @@ async function handleDownload(packageName: string, requestedVersion: string) {
   };
 }
 
-async function handleUpload(packageName: string, requestedVersion: string) {
+async function handleUpload(packageName: string, requestedVersion: string, otp?: string) {
   assertSponsorcoinPackage(packageName);
 
   const workspaceDir = getPackageWorkspaceDir(packageName);
@@ -560,8 +565,14 @@ async function handleUpload(packageName: string, requestedVersion: string) {
     throw new Error(`Upload disabled: change the package version before publishing ${packageName}.`);
   }
 
+  const normalizedOtp = String(otp || '').trim();
+  if (normalizedOtp && !/^\d{6}$/.test(normalizedOtp)) {
+    throw new Error('Invalid npm one-time password. Enter the current 6-digit authenticator code.');
+  }
+
   await writeLocalPackageVersion(packageName, targetVersion);
-  const publishResult = await runCommand(NPM_CMD, ['publish'], workspaceDir);
+  const publishArgs = normalizedOtp ? ['publish', `--otp=${normalizedOtp}`] : ['publish'];
+  const publishResult = await runCommand(NPM_CMD, publishArgs, workspaceDir);
 
   const activeArchive = String(packageState.activeArchive || '').trim();
   if (activeArchive) {
@@ -1065,6 +1076,38 @@ async function checkLocalDirectoryExists(localPathRaw: string) {
   return { normalized, exists };
 }
 
+async function checkLocalSpCoinAccessPackage(localPathRaw: string) {
+  const normalized = normalizeProjectRelativePath(localPathRaw);
+  if (!normalized) {
+    return { normalized, exists: false, version: '' };
+  }
+
+  const relative = normalized.slice(1);
+  if (relative.includes('..')) {
+    return { normalized, exists: false, version: '' };
+  }
+
+  const packageJsonPath = path.join(
+    process.cwd(),
+    ...relative.split('/'),
+    'packages',
+    '@sponsorcoin',
+    'spcoin-access-modules',
+    'package.json',
+  );
+
+  try {
+    const parsed = JSON.parse(await fs.readFile(packageJsonPath, 'utf8')) as { version?: string };
+    return {
+      normalized,
+      exists: true,
+      version: String(parsed.version || '').trim(),
+    };
+  } catch {
+    return { normalized, exists: false, version: '' };
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const localPathRaw = String(searchParams.get('localPath') || '').trim();
@@ -1076,6 +1119,9 @@ export async function GET(request: Request) {
 
   if (localPathRaw) {
     const result = await checkLocalDirectoryExists(localPathRaw);
+    const localPackage = result.exists
+      ? await checkLocalSpCoinAccessPackage(result.normalized)
+      : { normalized: result.normalized, exists: false, version: '' };
     return NextResponse.json({
       ok: true,
       message: result.exists
@@ -1085,6 +1131,8 @@ export async function GET(request: Request) {
       workspaceRoot: WORKSPACE_ROOT,
       localPath: result.normalized,
       localPathExists: result.exists,
+      localPackageVersion: localPackage.version,
+      localPackageExists: localPackage.exists,
     } satisfies AccessManagerResponse);
   }
 
@@ -1120,6 +1168,7 @@ export async function GET(request: Request) {
       stateFields = {
         packageName,
         version: state.resolvedVersion,
+        localVersion: state.localVersion,
         downloadBlocked: state.downloadBlocked,
         uploadBlocked: state.uploadBlocked,
       };
@@ -1162,6 +1211,7 @@ export async function POST(request: Request) {
   const mode = body.mode === 'node_modules' ? 'node_modules' : 'local';
   const requestedVersion = String(body.version || 'latest').trim() || 'latest';
   const packageName = String(body.packageName || '').trim();
+  const otp = String(body.otp || '').trim();
 
   if (action === 'updateServer') {
     try {
@@ -1312,19 +1362,21 @@ export async function POST(request: Request) {
         packageName,
         installSourceRoot: `/spCoinAccess/packages/${packageName}`,
         version: result.resolvedVersion,
+        localVersion: result.resolvedVersion,
         downloadBlocked: true,
         uploadBlocked: true,
         message: `Success: ${packageName}.${result.resolvedVersion} reverted to NPM version.`,
       } satisfies AccessManagerResponse);
     }
 
-    const result = await handleUpload(packageName, requestedVersion);
+    const result = await handleUpload(packageName, requestedVersion, otp);
     return NextResponse.json({
       ok: true,
       action,
       mode,
       packageName,
       version: result.resolvedVersion || requestedVersion,
+      localVersion: result.resolvedVersion || requestedVersion,
       downloadBlocked: false,
       uploadBlocked: true,
       message: `Published ${packageName}${result.resolvedVersion ? `@${result.resolvedVersion}` : ''} from ${result.workspaceDir}. ${result.publishOutput}`,

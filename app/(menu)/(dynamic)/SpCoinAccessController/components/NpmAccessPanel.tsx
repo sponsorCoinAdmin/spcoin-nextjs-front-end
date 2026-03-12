@@ -10,27 +10,25 @@ type NpmAccessPanelProps = {
   cardClass: string;
   selectedPackage: string;
   availablePackages: string[];
-  useLocalPackage: boolean;
   localInstallSourceRoot: string;
   localInstallSourceRootError: string;
+  npmOtp: string;
   versionInput: string;
   activeAction: ActiveAction;
   uploadBlocked: boolean;
+  localPackageVersion: string;
   downloadBlocked: boolean;
   flashTarget: FlashTarget;
   selectedVersion: string;
-  sourceRoot: string;
   status: string;
   onPackagePersist: (nextPackage: string) => void;
-  onPackageSourceModeChange: (mode: 'local' | 'node_modules') => Promise<void>;
   onLocalInstallSourceRootChange: (value: string) => void;
   onValidateLocalInstallSourceRoot: (value: string) => boolean;
+  onNpmOtpChange: (value: string) => void;
   onVersionInputChange: (value: string) => void;
   onVersionPersist: () => void;
   onAdjustVersion: (direction: 1 | -1) => void;
   onRunManagerAction: (action: 'download' | 'upload') => Promise<void>;
-  onSourceRootChange: (value: string) => void;
-  onSourceRootBlurNormalize: (value: string) => void;
 };
 
 export default function NpmAccessPanel(props: NpmAccessPanelProps) {
@@ -38,28 +36,40 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
     cardClass,
     selectedPackage,
     availablePackages,
-    useLocalPackage,
     localInstallSourceRoot,
     localInstallSourceRootError,
+    npmOtp,
     versionInput,
     activeAction,
     uploadBlocked,
+    localPackageVersion,
     downloadBlocked,
     flashTarget,
     selectedVersion,
-    sourceRoot,
     status,
     onPackagePersist,
-    onPackageSourceModeChange,
     onLocalInstallSourceRootChange,
     onValidateLocalInstallSourceRoot,
+    onNpmOtpChange,
     onVersionInputChange,
     onVersionPersist,
     onAdjustVersion,
     onRunManagerAction,
-    onSourceRootChange,
-    onSourceRootBlurNormalize,
   } = props;
+  const hasValidAuthenticatorCode = npmOtp.trim().length === 6;
+  const isActiveSelectedVersion =
+    String(selectedVersion || '').trim().length > 0 &&
+    String(localPackageVersion || '').trim().length > 0 &&
+    String(selectedVersion || '').trim() === String(localPackageVersion || '').trim();
+  const [isDownloadHovered, setIsDownloadHovered] = React.useState(false);
+  const [isUploadHovered, setIsUploadHovered] = React.useState(false);
+  const showDownloadActiveVersion = isDownloadHovered && isActiveSelectedVersion;
+  const showUploadActiveVersion = isUploadHovered && isActiveSelectedVersion;
+  const showUploadVersionExists =
+    isUploadHovered && downloadBlocked && !uploadBlocked && !isActiveSelectedVersion;
+  const isUploadReady = !uploadBlocked && !isActiveSelectedVersion;
+  const showUploadAuthenticatorCodeRequired =
+    isUploadHovered && isUploadReady && !showUploadVersionExists && !hasValidAuthenticatorCode;
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
@@ -72,7 +82,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
           <h3 className="text-xl font-semibold text-[#8FA8FF]">Node Package Manager</h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <label htmlFor="npm-package-select" className="text-sm font-semibold text-[#8FA8FF]">
             NPM Package
           </label>
@@ -93,30 +103,6 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               <option value={selectedPackage}>{selectedPackage}</option>
             )}
           </select>
-          <div className="mr-[10px] flex items-center justify-end gap-4 text-sm">
-            <label className="flex items-center gap-2 text-[#8FA8FF]">
-              <input
-                type="radio"
-                name="package-source-mode"
-                value="local"
-                checked={useLocalPackage}
-                onChange={() => void onPackageSourceModeChange('local')}
-                className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-              />
-              <span>Local</span>
-            </label>
-            <label className="flex items-center gap-2 text-[#8FA8FF]">
-              <input
-                type="radio"
-                name="package-source-mode"
-                value="node_modules"
-                checked={!useLocalPackage}
-                onChange={() => void onPackageSourceModeChange('node_modules')}
-                className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-              />
-              <span>node_modules</span>
-            </label>
-          </div>
         </div>
 
         <div className="grid gap-2">
@@ -178,56 +164,88 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               </div>
             </label>
           </div>
+          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+            <span className="text-sm font-semibold text-[#8FA8FF]">Authenticator</span>
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={npmOtp}
+              onChange={(event) => onNpmOtpChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="6-digit code from your npm authenticator app"
+              className={`w-full rounded-xl border border-[#31416F] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF] ${
+                showUploadAuthenticatorCodeRequired ? 'bg-red-500/25' : 'bg-[#0B1020]'
+              }`}
+              aria-label="Enter the current 6-digit code from your npm authenticator app"
+            />
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <button
             type="button"
             onClick={() => void onRunManagerAction('upload')}
+            onMouseEnter={() => setIsUploadHovered(true)}
+            onMouseLeave={() => setIsUploadHovered(false)}
             disabled={Boolean(activeAction) || !selectedPackage}
             title={uploadBlocked ? 'Current Version Exists on NPM' : 'Upload selected package to NPM'}
             className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               flashTarget === 'upload'
                 ? 'bg-red-500 hover:bg-red-400'
+                : showUploadVersionExists
+                ? 'bg-[#EBCA6A] hover:bg-red-500'
+                : isActiveSelectedVersion
+                ? 'bg-[#E5B94F] hover:bg-red-500'
                 : uploadBlocked
-                ? 'bg-[#E5B94F] hover:bg-[#E5B94F]'
-                : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+                ? 'bg-[#E5B94F] hover:bg-red-500'
+                : hasValidAuthenticatorCode
+                ? 'bg-[#EBCA6A] hover:bg-green-500'
+                : 'bg-[#EBCA6A] hover:bg-red-500'
             }`}
           >
-            {activeAction === 'upload' ? 'Working...' : uploadBlocked ? 'Upload Disabled' : 'Upload To NPM Manager'}
+            {showUploadVersionExists
+              ? `Version ${selectedVersion} Exists on NPM`
+              : showUploadActiveVersion
+              ? 'UpLoad Active Version Disabled'
+              : showUploadAuthenticatorCodeRequired
+              ? 'Authenticator Code Required'
+              : activeAction === 'upload'
+              ? 'Working...'
+              : isActiveSelectedVersion
+              ? 'Upload Disabled'
+              : downloadBlocked
+              ? 'Upload Disabled'
+              : uploadBlocked
+              ? 'Upload Disabled'
+              : 'Upload To NPM Manager'}
           </button>
           <button
             type="button"
             onClick={() => void onRunManagerAction('download')}
+            onMouseEnter={() => setIsDownloadHovered(true)}
+            onMouseLeave={() => setIsDownloadHovered(false)}
             disabled={Boolean(activeAction) || !selectedPackage}
             title={downloadBlocked ? 'Revert local package from backup archive' : 'Download selected package from NPM'}
             className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               flashTarget === 'download'
                 ? 'bg-red-500 hover:bg-red-400'
+                : isActiveSelectedVersion
+                ? 'bg-[#5981F3] hover:bg-red-500'
                 : downloadBlocked
-                ? 'bg-[#E5B94F] hover:bg-[#E5B94F]'
-                : 'bg-[#5981F3] hover:bg-[#7C9CFF]'
+                ? 'bg-[#E5B94F] hover:bg-red-500'
+                : 'bg-[#5981F3] hover:bg-green-500'
             }`}
           >
-            {activeAction === 'download'
+            {showDownloadActiveVersion
+              ? 'DownLoad Active Version Disabled'
+              : activeAction === 'download'
               ? 'Working...'
+              : isActiveSelectedVersion
+              ? 'DownLoad Disabled'
               : downloadBlocked
               ? `Revert Version ${selectedVersion}`
               : 'Download From NPM Manager'}
           </button>
-        </div>
-        <div>
-          <label className="mt-3 grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Source Root</span>
-            <input
-              type="text"
-              value={sourceRoot}
-              onChange={(event) => onSourceRootChange(event.target.value)}
-              onBlur={(event) => onSourceRootBlurNormalize(event.target.value)}
-              className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-              title="Enter source root relative to the app location"
-            />
-          </label>
         </div>
         <div>
           <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>

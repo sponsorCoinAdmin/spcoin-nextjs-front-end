@@ -1,5 +1,11 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/shared/spCoinAccessIncludes.ts
 import type { Contract, Signer } from 'ethers';
+import { SpCoinAddModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js';
+import { SpCoinDeleteModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js';
+import { SpCoinERC20Module } from '@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js';
+import { SpCoinReadModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js';
+import { SpCoinRewardsModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js';
+import { SpCoinStakingModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js';
 
 type ModuleCtor<T = any> = new (spCoinContractDeployed: Contract) => T;
 
@@ -23,22 +29,14 @@ export type SpCoinModuleAccess = {
   signer?: Signer;
 };
 
-// Centralized CJS includes for local spcoin-access-modules package.
 export function getSpCoinAccessIncludes(): SpCoinAccessIncludes {
-  const addModule = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js');
-  const deleteModule = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js');
-  const erc20Module = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js');
-  const readModule = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js');
-  const rewardsModule = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js');
-  const stakingModule = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js');
-
   return {
-    SpCoinAddModule: addModule.SpCoinAddModule,
-    SpCoinDeleteModule: deleteModule.SpCoinDeleteModule,
-    SpCoinERC20Module: erc20Module.SpCoinERC20Module,
-    SpCoinReadModule: readModule.SpCoinReadModule,
-    SpCoinRewardsModule: rewardsModule.SpCoinRewardsModule,
-    SpCoinStakingModule: stakingModule.SpCoinStakingModule,
+    SpCoinAddModule,
+    SpCoinDeleteModule,
+    SpCoinERC20Module,
+    SpCoinReadModule,
+    SpCoinRewardsModule,
+    SpCoinStakingModule,
   };
 }
 
