@@ -5,7 +5,7 @@ import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
 import { ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
-const { resolveHHForkTokenAssetChainId } = require('../../../../lib/config/hhForkTokenAssetChain');
+import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
