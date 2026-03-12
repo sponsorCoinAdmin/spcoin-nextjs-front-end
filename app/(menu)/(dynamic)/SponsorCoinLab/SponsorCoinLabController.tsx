@@ -2140,7 +2140,6 @@ export default function SponsorCoinLabPage() {
                 invalidFieldIds={invalidFieldIds}
                 clearInvalidField={clearInvalidField}
                 selectedReadMethod={selectedReadMethod}
-                mode={mode}
                 hardhatAccounts={hardhatAccounts}
                 hardhatAccountMetadata={hardhatAccountMetadata}
                 erc20ReadOptions={erc20ReadOptions}
@@ -2150,7 +2149,6 @@ export default function SponsorCoinLabPage() {
                 setReadAddressA={setReadAddressA}
                 readAddressB={readAddressB}
                 setReadAddressB={setReadAddressB}
-                inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
@@ -2193,7 +2191,6 @@ export default function SponsorCoinLabPage() {
               <SpCoinReadController
                 invalidFieldIds={invalidFieldIds}
                 clearInvalidField={clearInvalidField}
-                mode={mode}
                 hardhatAccounts={hardhatAccounts}
                 hardhatAccountMetadata={hardhatAccountMetadata}
                 selectedSpCoinReadMethod={selectedSpCoinReadMethod}

@@ -142,6 +142,15 @@ export default function SpCoinWriteController(props: Props) {
       ?.privateKey || '';
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
+  const formatAccountOptionLabel = (address: string) => {
+    const metadata = getMetadataForAddress(address);
+    const name = String(metadata?.name || '').trim();
+    const symbol = String(metadata?.symbol || '').trim();
+    if (name && symbol) return `${name} (${symbol}) - ${address}`;
+    if (name) return `${name} - ${address}`;
+    if (symbol) return `${symbol} - ${address}`;
+    return address;
+  };
   React.useEffect(() => {
     setOpenAddressFields({});
   }, [selectedSpCoinWriteMethod]);
@@ -208,7 +217,7 @@ export default function SpCoinWriteController(props: Props) {
               <option value="">Select account</option>
               {hardhatAccounts.map((account, idx) => (
                 <option key={`write-sender-${idx}-${account.address}`} value={account.address}>
-                  {account.address}
+                  {formatAccountOptionLabel(account.address)}
                 </option>
               ))}
             </select>
@@ -221,7 +230,7 @@ export default function SpCoinWriteController(props: Props) {
             />
           )}
         </label>
-        {mode === 'hardhat' && showWriteSenderPrivateKey && (
+        {showWriteSenderPrivateKey && (
           <>
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
@@ -250,21 +259,23 @@ export default function SpCoinWriteController(props: Props) {
                 </div>
               </div>
             </div>
-            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-              <input
-                className={inputStyle}
-                readOnly
-                value={writeSenderPrivateKeyDisplay}
-                placeholder="Selected signer private key"
-              />
-            </label>
+            {mode === 'hardhat' ? (
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                <input
+                  className={inputStyle}
+                  readOnly
+                  value={writeSenderPrivateKeyDisplay}
+                  placeholder="Selected signer private key"
+                />
+              </label>
+            ) : null}
           </>
         )}
       </div>
       {activeSpCoinWriteDef.params.map((param, idx) => (
         <div key={`sp-write-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          {mode === 'hardhat' && param.type === 'address' ? (
+          {param.type === 'address' ? (
             <div
               className={`grid grid-cols-1 gap-3${
                 openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
@@ -291,7 +302,7 @@ export default function SpCoinWriteController(props: Props) {
                   <option value="">Select account</option>
                   {hardhatAccounts.map((account, accountIdx) => (
                     <option key={`sp-write-address-${idx}-${accountIdx}-${account.address}`} value={account.address}>
-                      {account.address}
+                      {formatAccountOptionLabel(account.address)}
                     </option>
                   ))}
                 </select>
@@ -325,15 +336,17 @@ export default function SpCoinWriteController(props: Props) {
                       </div>
                     </div>
                   </div>
-                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                    <input
-                      className={inputStyle}
-                      readOnly
-                      value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
-                      placeholder="Selected account private key"
-                    />
-                  </label>
+                  {mode === 'hardhat' ? (
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                      <input
+                        className={inputStyle}
+                        readOnly
+                        value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
+                        placeholder="Selected account private key"
+                      />
+                    </label>
+                  ) : null}
                 </>
               )}
             </div>

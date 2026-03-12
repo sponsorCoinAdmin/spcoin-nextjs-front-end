@@ -10,7 +10,6 @@ type Props = {
   clearInvalidField: (fieldId: string) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
-  mode: 'metamask' | 'hardhat';
   hardhatAccounts: Array<{ address: string; privateKey: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedSpCoinReadMethod: string;
@@ -31,7 +30,6 @@ export default function SpCoinReadController(props: Props) {
     clearInvalidField,
     writeTraceEnabled,
     toggleWriteTrace,
-    mode,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedSpCoinReadMethod,
@@ -50,6 +48,15 @@ export default function SpCoinReadController(props: Props) {
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
+  const formatAccountOptionLabel = (address: string) => {
+    const metadata = getMetadataForAddress(address);
+    const name = String(metadata?.name || '').trim();
+    const symbol = String(metadata?.symbol || '').trim();
+    if (name && symbol) return `${name} (${symbol}) - ${address}`;
+    if (name) return `${name} - ${address}`;
+    if (symbol) return `${symbol} - ${address}`;
+    return address;
+  };
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
@@ -76,7 +83,7 @@ export default function SpCoinReadController(props: Props) {
       </div>
       {activeSpCoinReadDef.params.map((param, idx) => (
         <div key={`sp-read-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          {mode === 'hardhat' && param.type === 'address' ? (
+          {param.type === 'address' ? (
             <div className={`grid grid-cols-1 gap-3${openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
               <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <button
@@ -103,7 +110,7 @@ export default function SpCoinReadController(props: Props) {
                   <option value="">Select account</option>
                   {hardhatAccounts.map((account, accountIdx) => (
                     <option key={`sp-read-address-${idx}-${accountIdx}-${account.address}`} value={account.address}>
-                      {account.address}
+                      {formatAccountOptionLabel(account.address)}
                     </option>
                   ))}
                 </select>
