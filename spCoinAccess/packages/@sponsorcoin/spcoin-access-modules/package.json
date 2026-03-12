@@ -1,0 +1,47 @@
+{
+  "name": "@sponsorcoin/spcoin-access-modules",
+  "version": "1.0.32",
+  "description": "Package to interface with Sponsor Coin (SPCOIN)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json",
+    "./spCoinMethods.js": "./dist/spCoinMethods.js",
+    "./modules/*.js": "./dist/modules/*.js",
+    "./utils/*.js": "./dist/utils/*.js",
+    "./dataTypes/*.js": "./dist/dataTypes/*.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "@sponsorcoin/spcoin-lib": "^1.0.3",
+    "ethers": "^6.15.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sponsorCoinAdmin/spcoin-access-modules.git"
+  },
+  "keywords": [
+    "\"Sponsor",
+    "Coin\"",
+    "spcoin"
+  ],
+  "author": "Sponsor Coin Admin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sponsorCoinAdmin/spcoin-access-modules/issues"
+  },
+  "homepage": "https://github.com/sponsorCoinAdmin/spcoin-access-modules#readme"
+}
