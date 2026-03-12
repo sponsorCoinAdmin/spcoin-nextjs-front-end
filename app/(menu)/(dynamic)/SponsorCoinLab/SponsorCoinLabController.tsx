@@ -2014,7 +2014,7 @@ export default function SponsorCoinLabPage() {
             )}
 
             <div className="mt-6 border-t border-[#2B3A67] pt-5">
-              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
+              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account 3</h2>
               {mode === 'hardhat' ? (
                 <div className="mt-4 grid grid-cols-1 gap-3">
                   <div
