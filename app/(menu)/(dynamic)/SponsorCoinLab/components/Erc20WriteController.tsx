@@ -14,6 +14,8 @@ type ActiveWriteLabels = {
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  writeTraceEnabled: boolean;
+  toggleWriteTrace: () => void;
   mode: 'metamask' | 'hardhat';
   hardhatAccounts: Array<{ address: string; privateKey: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
@@ -42,6 +44,8 @@ export default function Erc20WriteController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    writeTraceEnabled,
+    toggleWriteTrace,
     mode,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -70,7 +74,7 @@ export default function Erc20WriteController(props: Props) {
   const senderMetadata = hardhatAccountMetadata[String(selectedWriteSenderAddress || '').trim().toLowerCase()];
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
-      <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">ERC-20 Write Method</span>
         <select
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
@@ -83,7 +87,10 @@ export default function Erc20WriteController(props: Props) {
             </option>
           ))}
         </select>
-      </label>
+        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
+        </button>
+      </div>
       <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <button

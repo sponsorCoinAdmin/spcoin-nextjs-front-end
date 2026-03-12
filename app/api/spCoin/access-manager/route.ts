@@ -27,7 +27,7 @@ const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 type AccessManagerRequest = {
-  action?: 'upload' | 'download' | 'deploy' | 'updateServer';
+  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
@@ -45,7 +45,7 @@ type AccessManagerRequest = {
 
 type AccessManagerResponse = {
   ok: boolean;
-  action?: 'upload' | 'download' | 'deploy' | 'updateServer';
+  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer';
   mode?: 'local' | 'node_modules';
   version?: string;
   localVersion?: string;
@@ -598,6 +598,23 @@ async function handleUpload(packageName: string, requestedVersion: string, otp?:
     workspaceDir,
     publishOutput: publishResult.stdout || publishResult.stderr || 'npm publish completed.',
     resolvedVersion: targetVersion,
+  };
+}
+
+async function handleInstall(packageName: string, requestedVersion: string) {
+  assertSponsorcoinPackage(packageName);
+
+  const resolvedVersion = await resolveRequestedVersion(packageName, requestedVersion);
+  const installSpec = `${packageName}@${resolvedVersion}`;
+  const installResult = await runCommand(
+    NPM_CMD,
+    ['install', installSpec, '--no-save', '--no-package-lock'],
+    process.cwd(),
+  );
+
+  return {
+    resolvedVersion,
+    installOutput: installResult.stdout || installResult.stderr || `Installed ${installSpec}.`,
   };
 }
 
@@ -1203,6 +1220,8 @@ export async function POST(request: Request) {
   const action =
     body.action === 'upload'
       ? 'upload'
+      : body.action === 'install'
+      ? 'install'
       : body.action === 'deploy'
       ? 'deploy'
       : body.action === 'updateServer'
@@ -1366,6 +1385,18 @@ export async function POST(request: Request) {
         downloadBlocked: true,
         uploadBlocked: true,
         message: `Success: ${packageName}.${result.resolvedVersion} reverted to NPM version.`,
+      } satisfies AccessManagerResponse);
+    }
+
+    if (action === 'install') {
+      const result = await handleInstall(packageName, requestedVersion);
+      return NextResponse.json({
+        ok: true,
+        action,
+        mode: 'node_modules',
+        packageName,
+        version: result.resolvedVersion,
+        message: `Installed ${packageName}@${result.resolvedVersion} into node_modules. ${result.installOutput}`,
       } satisfies AccessManagerResponse);
     }
 

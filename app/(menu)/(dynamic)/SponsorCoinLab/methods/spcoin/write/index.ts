@@ -2,7 +2,7 @@
 import type { Contract } from 'ethers';
 import { SPCOIN_WRITE_METHOD_DEFS } from './defs';
 export { SPCOIN_WRITE_METHOD_DEFS };
-import { createSpCoinModuleAccess } from '../../shared';
+import { createSpCoinModuleAccess, type SpCoinAccessSource } from '../../shared';
 
 export type SpCoinWriteMethod =
   | 'addRecipient'
@@ -41,7 +41,9 @@ type RunArgs = {
     accountKey?: string,
   ) => Promise<any>;
   selectedHardhatAddress?: string;
+  spCoinAccessSource?: SpCoinAccessSource;
   appendLog: (line: string) => void;
+  appendWriteTrace?: (line: string) => void;
   setStatus: (value: string) => void;
 };
 
@@ -60,7 +62,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     coerceParamValue,
     executeWriteConnected,
     selectedHardhatAddress,
+    spCoinAccessSource = 'node_modules',
     appendLog,
+    appendWriteTrace,
     setStatus,
   } = args;
   const activeDef = SPCOIN_WRITE_METHOD_DEFS[selectedMethod];
@@ -77,13 +81,22 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
   ) => {
     setStatus(`Submitting ${label}...`);
+    appendWriteTrace?.(`submitWrite(${label}) start`);
     const tx = await executeWriteConnected(
       label,
-      (contract: Contract, signer: any) => writeCall(createSpCoinModuleAccess(contract, signer), signer),
+      (contract: Contract, signer: any) => {
+        const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource);
+        return writeCall(access, signer);
+      },
       selectedHardhatAddress,
     );
+    appendWriteTrace?.(`submitWrite(${label}) tx returned=${tx ? 'yes' : 'no'} hash=${String(tx?.hash || '')}`);
     appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
+    if (!tx || typeof tx.wait !== 'function') {
+      throw new Error(`${label} did not return a transaction response.`);
+    }
     const receipt = await tx.wait();
+    appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
     appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
     receipts.push({
       label,

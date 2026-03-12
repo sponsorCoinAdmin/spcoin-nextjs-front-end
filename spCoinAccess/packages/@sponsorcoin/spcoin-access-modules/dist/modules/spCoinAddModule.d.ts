@@ -14,3 +14,4 @@ declare class SpCoinAddModule {
     addBackDatedSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _transactionQty: any, _transactionBackDate: any) => Promise<void>;
     addBackDatedAgentSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _accountAgentKey: any, _agentRateKey: any, _transactionQty: any, _transactionBackDate: any) => Promise<void>;
 }
+export { SpCoinAddModule };

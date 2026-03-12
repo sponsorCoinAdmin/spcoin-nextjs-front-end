@@ -4,7 +4,7 @@ import { NpmStatusBlock } from './StatusBlocks';
 import { normalizeProjectRelativePath } from '../helpers';
 
 type FlashTarget = 'download' | 'upload' | null;
-type ActiveAction = 'download' | 'upload' | null;
+type ActiveAction = 'download' | 'upload' | 'install' | null;
 
 type NpmAccessPanelProps = {
   cardClass: string;
@@ -21,6 +21,8 @@ type NpmAccessPanelProps = {
   flashTarget: FlashTarget;
   selectedVersion: string;
   status: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   onPackagePersist: (nextPackage: string) => void;
   onLocalInstallSourceRootChange: (value: string) => void;
   onValidateLocalInstallSourceRoot: (value: string) => boolean;
@@ -28,7 +30,7 @@ type NpmAccessPanelProps = {
   onVersionInputChange: (value: string) => void;
   onVersionPersist: () => void;
   onAdjustVersion: (direction: 1 | -1) => void;
-  onRunManagerAction: (action: 'download' | 'upload') => Promise<void>;
+  onRunManagerAction: (action: 'download' | 'upload' | 'install') => Promise<void>;
 };
 
 export default function NpmAccessPanel(props: NpmAccessPanelProps) {
@@ -47,6 +49,8 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
     flashTarget,
     selectedVersion,
     status,
+    isExpanded,
+    onToggleExpand,
     onPackagePersist,
     onLocalInstallSourceRootChange,
     onValidateLocalInstallSourceRoot,
@@ -73,8 +77,24 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
-      <div className="mb-4 flex items-center justify-center border-b border-slate-700 pb-3">
-        <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">NPM Access Controller</h2>
+      <div
+        className="relative mb-4 border-b border-slate-700 pb-3"
+        onDoubleClick={onToggleExpand}
+        title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
+      >
+        <div className="flex min-h-10 items-center justify-center pr-12">
+          <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">NPM Access Controller</h2>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          onDoubleClick={(event) => event.stopPropagation()}
+          className="absolute -right-[9px] -top-[10px] flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+          title={isExpanded ? 'Return to shared view' : 'Expand this card'}
+          aria-label={isExpanded ? 'Return to shared view' : 'Expand this card'}
+        >
+          {isExpanded ? '×' : '+'}
+        </button>
       </div>
 
       <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
@@ -181,7 +201,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-3">
           <button
             type="button"
             onClick={() => void onRunManagerAction('upload')}
@@ -245,6 +265,15 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               : downloadBlocked
               ? `Revert Version ${selectedVersion}`
               : 'Download From NPM Manager'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void onRunManagerAction('install')}
+            disabled={Boolean(activeAction) || !selectedPackage}
+            title="Install selected package version into node_modules"
+            className="rounded-xl bg-[#5981F3] px-4 py-[0.45rem] font-semibold text-black transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {activeAction === 'install' ? 'Working...' : 'Install To node_modules'}
           </button>
         </div>
         <div>

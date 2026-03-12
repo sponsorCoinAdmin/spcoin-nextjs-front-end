@@ -24,7 +24,7 @@
     "cleanup:fix": "npm run lint:fix"
   },
   "dependencies": {
-    "@sponsorcoin/spcoin-access-modules": "^1.0.31",
+    "@sponsorcoin/spcoin-access-modules": "^1.0.33",
     "@sponsorcoin/spcoin-access-modules-cjs": "^1.0.6",
     "@sponsorcoin/spcoin-lib": "^1.0.3",
     "@sponsorcoin/spcoin-lib-es6": "^1.0.0",

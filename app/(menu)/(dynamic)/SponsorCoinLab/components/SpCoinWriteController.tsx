@@ -32,6 +32,8 @@ type Props = {
   onOpenBackdatePicker: (idx: number) => void;
   inputStyle: string;
   buttonStyle: string;
+  writeTraceEnabled: boolean;
+  toggleWriteTrace: () => void;
   runSelectedSpCoinWriteMethod: () => void;
   formatDateTimeDisplay: (datePart: string, hours: string, minutes: string, seconds: string) => string;
   formatDateInput: (date: Date) => string;
@@ -95,6 +97,8 @@ export default function SpCoinWriteController(props: Props) {
     onOpenBackdatePicker,
     inputStyle,
     buttonStyle,
+    writeTraceEnabled,
+    toggleWriteTrace,
     runSelectedSpCoinWriteMethod,
     formatDateTimeDisplay,
     formatDateInput,
@@ -160,7 +164,7 @@ export default function SpCoinWriteController(props: Props) {
   }, [activeSpCoinWriteDef.params, invalidFieldIds, mode]);
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
-      <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">SpCoin Write Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
@@ -177,7 +181,10 @@ export default function SpCoinWriteController(props: Props) {
             </option>
           ))}
         </select>
-      </label>
+        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
+        </button>
+      </div>
       <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
           <button

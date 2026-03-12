@@ -56,6 +56,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 type ConnectionMode = 'metamask' | 'hardhat';
 type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_write';
+type LabCardId = 'network' | 'contract' | 'readTree' | 'methods' | 'log' | 'output';
 
 type HardhatAccountOption = {
   address: string;
@@ -95,6 +96,56 @@ const buttonStyle =
   'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.45rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
 const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+
+type LabCardHeaderProps = {
+  title: React.ReactNode;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  titleClassName?: string;
+  leftSlot?: React.ReactNode;
+  headerButtons?: React.ReactNode;
+  secondaryRow?: React.ReactNode;
+};
+
+function LabCardHeader({
+  title,
+  isExpanded,
+  onToggleExpand,
+  titleClassName = 'text-lg font-semibold text-[#5981F3]',
+  leftSlot,
+  headerButtons,
+  secondaryRow,
+}: LabCardHeaderProps) {
+  return (
+    <div
+      onDoubleClick={onToggleExpand}
+      title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
+    >
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 border-b border-[#2B3A67] pb-[0.32rem]">
+        <div className="flex min-h-10 items-center">{leftSlot}</div>
+        <div className="min-w-0 justify-self-center text-center">
+          <div className={`${titleClassName} text-center`}>{title}</div>
+        </div>
+        <div
+          className="flex shrink-0 items-center justify-self-end gap-2"
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          {headerButtons}
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="relative -right-[9px] -top-[10px] flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+            title={isExpanded ? 'Return to shared view' : 'Expand this card'}
+            aria-label={isExpanded ? 'Return to shared view' : 'Expand this card'}
+          >
+            {isExpanded ? 'x' : '+'}
+          </button>
+        </div>
+      </div>
+      {secondaryRow ? <div className="mt-3">{secondaryRow}</div> : null}
+    </div>
+  );
+}
 
 function normalizeAddress(value: string) {
   return String(value || '').trim().toLowerCase();
@@ -167,6 +218,8 @@ function buildMethodCallEntry(
 
 export default function SponsorCoinLabPage() {
   const { exchangeContext } = useExchangeContext();
+  const useLocalSpCoinAccessPackage =
+    exchangeContext?.settings?.spCoinAccessManager?.useLocalPackage !== false;
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [rpcUrl, setRpcUrl] = useState(
     'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',
@@ -191,6 +244,7 @@ export default function SponsorCoinLabPage() {
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin Lab] Ready']);
   const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
+  const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
   const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
   const [recipientRateKeyHelpText, setRecipientRateKeyHelpText] = useState('');
@@ -210,7 +264,6 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinReadMethod>('getSerializedSPCoinHeader');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
-  const [hideUnexecutables, setHideUnexecutables] = useState(false);
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spCoinLabHydrated, setSpCoinLabHydrated] = useState(false);
@@ -219,6 +272,30 @@ export default function SponsorCoinLabPage() {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
   }, []);
+  const copyTextToClipboard = useCallback(
+    async (label: string, value: string) => {
+      try {
+        if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+          throw new Error('Clipboard API unavailable.');
+        }
+        await navigator.clipboard.writeText(value);
+        setStatus(`${label} copied to clipboard.`);
+        appendLog(`${label} copied to clipboard.`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown clipboard error.';
+        setStatus(`${label} copy failed: ${message}`);
+        appendLog(`${label} copy failed: ${message}`);
+      }
+    },
+    [appendLog],
+  );
+  const appendWriteTrace = useCallback(
+    (line: string) => {
+      if (!writeTraceEnabled) return;
+      appendLog(`[TRACE] ${line}`);
+    },
+    [appendLog, writeTraceEnabled],
+  );
   const clearInvalidField = useCallback((fieldId: string) => {
     if (!fieldId) return;
     setInvalidFieldIds((prev) => prev.filter((entry) => entry !== fieldId));
@@ -321,7 +398,10 @@ export default function SponsorCoinLabPage() {
   const contextNetworkName = useMemo(() => {
     return String((exchangeContext as any)?.network?.name || '').trim();
   }, [exchangeContext]);
-  const effectiveConnectedAddress = connectedAddress || contextAddress;
+  const effectiveConnectedAddress = useMemo(() => {
+    if (mode === 'hardhat') return connectedAddress;
+    return connectedAddress || contextAddress;
+  }, [connectedAddress, contextAddress, mode]);
   const effectiveConnectedChainId = useMemo(() => {
     if (mode === 'hardhat') return connectedChainId || '31337';
     return connectedChainId || contextChainId;
@@ -558,6 +638,7 @@ export default function SponsorCoinLabPage() {
   const canDecrementSponsorCoinVersion = selectedSponsorCoinVersionIndex > 0;
 
   const syncMetaMaskState = useCallback(async () => {
+    if (mode !== 'metamask') return;
     if (typeof window === 'undefined') return;
     const ethereum = (window as any).ethereum;
     if (!ethereum) return;
@@ -590,7 +671,7 @@ export default function SponsorCoinLabPage() {
 
     setConnectedAddress('');
     setActiveSigner(null);
-  }, [contextAddress]);
+  }, [appendWriteTrace, contextAddress, mode]);
 
   useEffect(() => {
     if (mode !== 'metamask') return;
@@ -598,6 +679,11 @@ export default function SponsorCoinLabPage() {
     setConnectedAddress('');
     setActiveSigner(null);
   }, [mode]);
+
+  useEffect(() => {
+    setActiveSigner(null);
+    setConnectedAddress('');
+  }, [useLocalSpCoinAccessPackage]);
 
   const syncHardhatState = useCallback(async () => {
     if (mode !== 'hardhat') return;
@@ -725,6 +811,7 @@ export default function SponsorCoinLabPage() {
   }, [contractAddress]);
 
   const connectSigner = useCallback(async (): Promise<Signer> => {
+    appendWriteTrace(`connectSigner invoked; mode=${mode}`);
     if (mode === 'metamask') {
       if (!window.ethereum) {
         throw new Error('MetaMask provider not found.');
@@ -761,6 +848,7 @@ export default function SponsorCoinLabPage() {
       setConnectedNetworkName(knownName || fallbackName || '(unknown)');
       setStatus(`Connected via MetaMask: ${address}`);
       appendLog(`Connected MetaMask signer ${address} on chain ${String(network.chainId)}.`);
+      appendWriteTrace(`connectSigner returning MetaMask signer ${address}`);
       return signer;
     }
 
@@ -779,17 +867,20 @@ export default function SponsorCoinLabPage() {
     setConnectedNetworkName(HARDHAT_NETWORK_NAME);
     setStatus(`Connected via Hardhat signer: ${address}`);
     appendLog(`Connected Hardhat signer ${address} on chain ${String(network.chainId)}.`);
+    appendWriteTrace(`connectSigner returning Hardhat signer ${address}`);
     return wallet;
-  }, [appendLog, mode, rpcUrl, selectedHardhatAccount]);
+  }, [appendLog, appendWriteTrace, mode, rpcUrl, selectedHardhatAccount]);
 
   const ensureReadRunner = useCallback(async () => {
     if (mode === 'hardhat') {
+      appendWriteTrace('ensureReadRunner using Hardhat JsonRpcProvider');
       const provider = new JsonRpcProvider(rpcUrl.trim());
       const network = await provider.getNetwork();
       setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
       setConnectedNetworkName(HARDHAT_NETWORK_NAME);
       return provider;
     }
+    appendWriteTrace('ensureReadRunner using MetaMask BrowserProvider');
     if (!window.ethereum) {
       throw new Error('MetaMask provider not found.');
     }
@@ -801,7 +892,7 @@ export default function SponsorCoinLabPage() {
     setConnectedChainId(String(network.chainId));
     setConnectedNetworkName(knownName || fallbackName || '(unknown)');
     return provider;
-  }, [mode, rpcUrl]);
+  }, [appendWriteTrace, mode, rpcUrl]);
 
   const isConnectionRetryableError = useCallback((error: unknown): boolean => {
     const message = String((error as any)?.message || '').toLowerCase();
@@ -840,37 +931,34 @@ export default function SponsorCoinLabPage() {
 
       const provider = new JsonRpcProvider(rpcUrl.trim());
       const network = await provider.getNetwork();
-      const desired = normalizeAddress(account.address);
+      appendWriteTrace(`executeHHConnected start; desired=${account.address}`);
 
       const tryWithSigner = async (signer: Signer) => {
+        const signerAddress = await signer.getAddress();
+        appendWriteTrace(`executeHHConnected using signer=${signerAddress}`);
         const contract = createSpCoinContract(target, signer);
         return writeCall(contract, signer);
       };
 
-      try {
-        if (!activeSigner) throw new Error('Missing signer.');
-        const activeAddress = normalizeAddress(await activeSigner.getAddress());
-        if (activeAddress !== desired) throw new Error('Signer account mismatch.');
-        return await tryWithSigner(activeSigner);
-      } catch (error) {
-        if (!isConnectionRetryableError(error)) throw error;
-        appendLog(`HH reconnect for ${account.address}; retrying write.`);
-        const signer = new Wallet(account.privateKey, provider);
-        const signerAddress = await signer.getAddress();
-        setActiveSigner(signer);
-        setConnectedAddress(signerAddress);
-        setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
-        setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-        return await tryWithSigner(signer);
-      }
+      appendWriteTrace('executeHHConnected creating fresh hardhat wallet signer');
+      const signer = new Wallet(account.privateKey, provider);
+      const signerAddress = await signer.getAddress();
+      setActiveSigner(signer);
+      setConnectedAddress(signerAddress);
+      setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
+      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
+      return await tryWithSigner(signer);
     },
-    [activeSigner, appendLog, isConnectionRetryableError, requireContractAddress, resolveHardhatAccount, rpcUrl],
+    [appendWriteTrace, requireContractAddress, resolveHardhatAccount, rpcUrl],
   );
 
   const executeMetaMaskConnected = useCallback(
     async (writeCall: (contract: Contract, signer: Signer) => Promise<any>) => {
+      appendWriteTrace('executeMetaMaskConnected invoked');
       const target = requireContractAddress();
       const runWithSigner = async (signer: Signer) => {
+        const signerAddress = await signer.getAddress();
+        appendWriteTrace(`executeMetaMaskConnected using signer=${signerAddress}`);
         const contract = createSpCoinContract(target, signer);
         return writeCall(contract, signer);
       };
@@ -880,11 +968,12 @@ export default function SponsorCoinLabPage() {
       } catch (error) {
         if (!isConnectionRetryableError(error)) throw error;
         appendLog('MetaMask reconnect requested; retrying write.');
+        appendWriteTrace(`executeMetaMaskConnected reconnect branch; reason=${String((error as any)?.message || error)}`);
         const signer = await connectSigner();
         return await runWithSigner(signer);
       }
     },
-    [activeSigner, appendLog, connectSigner, isConnectionRetryableError, requireContractAddress],
+    [activeSigner, appendLog, appendWriteTrace, connectSigner, isConnectionRetryableError, requireContractAddress],
   );
 
   const executeWriteConnected = useCallback(
@@ -893,14 +982,16 @@ export default function SponsorCoinLabPage() {
       writeCall: (contract: Contract, signer: Signer) => Promise<any>,
       accountKey?: string,
     ) => {
+      appendWriteTrace(`executeWriteConnected label=${label}; mode=${mode}; accountKey=${String(accountKey || '')}`);
       if (mode === 'hardhat') return executeHHConnected(accountKey, writeCall);
       appendLog(`${label}: using MetaMask signer flow.`);
       return executeMetaMaskConnected(writeCall);
     },
-    [appendLog, executeHHConnected, executeMetaMaskConnected, mode],
+    [appendLog, appendWriteTrace, executeHHConnected, executeMetaMaskConnected, mode],
   );
 
   const connectHardhatBaseFromNetworkLabel = useCallback(async () => {
+    appendWriteTrace(`connectHardhatBaseFromNetworkLabel invoked; shouldPrompt=${shouldPromptHardhatBaseConnect}`);
     if (!shouldPromptHardhatBaseConnect) return;
     if (!window.ethereum) {
       setStatus('MetaMask provider not found.');
@@ -933,11 +1024,12 @@ export default function SponsorCoinLabPage() {
       setStatus(`Switch failed: ${message}`);
       appendLog(`Switch to ${HARDHAT_NETWORK_NAME} failed: ${message}`);
     }
-  }, [appendLog, rpcUrl, shouldPromptHardhatBaseConnect, syncMetaMaskState]);
+  }, [appendLog, appendWriteTrace, rpcUrl, shouldPromptHardhatBaseConnect, syncMetaMaskState]);
 
   const runHeaderRead = useCallback(async () => {
     const call = buildMethodCallEntry('getSerializedSPCoinHeader');
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
@@ -957,6 +1049,7 @@ export default function SponsorCoinLabPage() {
   const runAccountListRead = useCallback(async () => {
     const call = buildMethodCallEntry('getAccountList');
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
@@ -976,6 +1069,7 @@ export default function SponsorCoinLabPage() {
   const runTreeDump = useCallback(async () => {
     const listCall = buildMethodCallEntry('getAccountList');
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
@@ -1054,6 +1148,7 @@ export default function SponsorCoinLabPage() {
       { label: 'Amount', value: writeAmountRaw },
     ]);
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const result = await runErc20WriteMethod({
         selectedWriteMethod,
         activeWriteLabels,
@@ -1118,6 +1213,7 @@ export default function SponsorCoinLabPage() {
         : []),
     ]);
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const result = await runErc20ReadMethod({
         selectedReadMethod,
         activeReadLabels,
@@ -1310,7 +1406,6 @@ export default function SponsorCoinLabPage() {
         if (typeof saved.selectedSpCoinWriteMethod === 'string') {
           setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
         }
-        if (typeof saved.hideUnexecutables === 'boolean') setHideUnexecutables(saved.hideUnexecutables);
         if (Array.isArray(saved.spReadParams)) setSpReadParams(saved.spReadParams.map((v) => String(v ?? '')));
         if (Array.isArray(saved.spWriteParams)) setSpWriteParams(saved.spWriteParams.map((v) => String(v ?? '')));
         if (typeof saved.status === 'string') setStatus(saved.status);
@@ -1364,7 +1459,6 @@ export default function SponsorCoinLabPage() {
       readAddressB,
       selectedSpCoinReadMethod,
       selectedSpCoinWriteMethod,
-      hideUnexecutables,
       spReadParams,
       spWriteParams,
       backdatePopupParamIdx: backdateCalendar.backdatePopupParamIdx,
@@ -1404,7 +1498,6 @@ export default function SponsorCoinLabPage() {
     readAddressB,
     selectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
-    hideUnexecutables,
     spReadParams,
     spWriteParams,
     backdateCalendar.backdatePopupParamIdx,
@@ -1418,22 +1511,14 @@ export default function SponsorCoinLabPage() {
     backdateCalendar.calendarViewYear,
     backdateCalendar.calendarViewMonth,
   ]);
-  const connectionModeOptions = useMemo(
-    () =>
-      [
-        { value: 'metamask' as ConnectionMode, label: 'MetaMask' },
-        { value: 'hardhat' as ConnectionMode, label: 'Hardhat Local' },
-      ].sort((a, b) => a.label.localeCompare(b.label)),
-    [],
-  );
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
   const spCoinReadOptions = useMemo(() => {
-    return getSpCoinReadOptions(hideUnexecutables);
-  }, [hideUnexecutables]);
+    return getSpCoinReadOptions(false);
+  }, []);
   const spCoinWriteOptions = useMemo(() => {
-    return getSpCoinWriteOptions(hideUnexecutables);
-  }, [hideUnexecutables]);
+    return getSpCoinWriteOptions(false);
+  }, []);
   useEffect(() => {
     if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinReadOptions.length > 0) {
       setSelectedSpCoinReadMethod(spCoinReadOptions[0]);
@@ -1499,6 +1584,7 @@ export default function SponsorCoinLabPage() {
       })),
     );
     try {
+      setFormattedOutputDisplay('(no output yet)');
       const result = await runSpCoinReadMethod({
         selectedMethod: selectedSpCoinReadMethod,
         spReadParams,
@@ -1566,6 +1652,10 @@ export default function SponsorCoinLabPage() {
       })),
     ]);
     try {
+      setFormattedOutputDisplay('(no output yet)');
+      appendWriteTrace(
+        `runSelectedSpCoinWriteMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedSpCoinWriteMethod}`,
+      );
       const result = await runSpCoinWriteMethod({
         selectedMethod: selectedSpCoinWriteMethod,
         spWriteParams,
@@ -1576,6 +1666,8 @@ export default function SponsorCoinLabPage() {
             ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
             : effectiveConnectedAddress,
         appendLog,
+        appendWriteTrace,
+        spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
         setStatus,
       });
       setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
@@ -1593,6 +1685,7 @@ export default function SponsorCoinLabPage() {
     executeWriteConnected,
     effectiveConnectedAddress,
     mode,
+    useLocalSpCoinAccessPackage,
     selectedHardhatAccount?.address,
     selectedWriteSenderAccount?.address,
     selectedWriteSenderAddress,
@@ -1614,51 +1707,59 @@ export default function SponsorCoinLabPage() {
         return 'Method Tests';
     }
   }, [methodPanelMode]);
+  const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
+  const toggleExpandedCard = useCallback((cardId: LabCardId) => {
+    setExpandedCard((current) => (current === cardId ? null : cardId));
+  }, []);
+  const showCard = useCallback(
+    (cardId: LabCardId) => expandedCard === null || expandedCard === cardId,
+    [expandedCard],
+  );
+  const getCardClassName = useCallback(
+    (cardId: LabCardId, placement = '') =>
+      `${cardStyle} flex flex-col ${expandedCard === cardId ? 'min-h-[calc(100dvh-10rem)]' : ''} ${placement}`.trim(),
+    [expandedCard],
+  );
 
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin Lab</h2>
 
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <article className={`${cardStyle} relative xl:col-start-1 xl:row-start-2`}>
-            <button
-              type="button"
-              onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
-              className="absolute right-[5px] top-[5px] inline-flex items-center justify-center bg-transparent p-0"
-              aria-label="Toggle Hardhat connection settings"
-              title="Toggle Hardhat connection settings"
-            >
-              <Image
-                src={cog_png}
-                alt="Toggle Hardhat connection settings"
-                className="h-5 w-5 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
-              />
-            </button>
-            <div className="mt-1 grid items-start gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <h2 className="text-lg font-semibold text-[#5981F3]">Network Connection Mode</h2>
-              <div className="justify-self-start md:justify-self-end md:self-start">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="network-connection-mode" className="sr-only">
-                    Network connection mode
+        <section className={`grid grid-cols-1 gap-6 ${expandedCard ? '' : 'xl:grid-cols-2'}`}>
+          {showCard('network') && (
+          <article className={getCardClassName('network', expandedCard ? '' : 'xl:col-start-1 xl:row-start-2')}>
+            <LabCardHeader
+              title="Network Connection Mode"
+              isExpanded={expandedCard === 'network'}
+              onToggleExpand={() => toggleExpandedCard('network')}
+              secondaryRow={
+                <div className="flex flex-wrap items-center gap-4 md:justify-end">
+                  <label className="flex items-center gap-2 text-[#8FA8FF]">
+                    <input
+                      type="radio"
+                      name="sponsorcoin-lab-network-mode"
+                      value="hardhat"
+                      checked={mode === 'hardhat'}
+                      onChange={() => setMode('hardhat')}
+                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    />
+                    <span>Hardhat Local</span>
                   </label>
-                  <select
-                    id="network-connection-mode"
-                    className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value as ConnectionMode)}
-                    aria-label="Network connection mode"
-                    title="Network connection mode"
-                  >
-                    {connectionModeOptions.map((entry) => (
-                      <option key={`mode-${entry.value}`} value={entry.value}>
-                        {entry.label}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="flex items-center gap-2 text-[#8FA8FF]">
+                    <input
+                      type="radio"
+                      name="sponsorcoin-lab-network-mode"
+                      value="metamask"
+                      checked={mode === 'metamask'}
+                      onChange={() => setMode('metamask')}
+                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    />
+                    <span>MetaMask</span>
+                  </label>
                 </div>
-              </div>
-            </div>
+              }
+            />
             <div className="mt-3 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
               <span
                 className={`text-sm font-semibold ${
@@ -1686,6 +1787,19 @@ export default function SponsorCoinLabPage() {
                   className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
                   style={{ width: `${chainIdDisplayWidthCh}ch` }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
+                  className="-mt-[10px] inline-flex items-center justify-center bg-transparent p-0"
+                  aria-label="Toggle Hardhat connection settings"
+                  title="Toggle Hardhat connection settings"
+                >
+                  <Image
+                    src={cog_png}
+                    alt="Toggle Hardhat connection settings"
+                    className="h-6 w-6 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
+                  />
+                </button>
               </label>
             </div>
 
@@ -1730,15 +1844,8 @@ export default function SponsorCoinLabPage() {
               </div>
             )}
 
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              {status !== 'Ready' && (
-                <div className="text-sm text-slate-300">
-                  <div className="mb-2">Status: {status}</div>
-                </div>
-              )}
-            </div>
             <div className="mt-6 border-t border-[#2B3A67] pt-5">
-              <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
+              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
               {mode === 'hardhat' ? (
                 <div className="mt-4 grid grid-cols-1 gap-3">
                   <div
@@ -1809,138 +1916,149 @@ export default function SponsorCoinLabPage() {
               )}
             </div>
           </article>
+          )}
 
-          <article className={`${cardStyle} xl:col-start-1 xl:row-start-1`}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-[29px] w-[29px] items-center justify-center overflow-hidden rounded-xl bg-[#0E111B]">
-                {selectedSponsorCoinLogoURL ? (
-                  <Image
-                    src={selectedSponsorCoinLogoURL}
-                    alt={String(selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
-                    width={29}
-                    height={29}
-                    className="h-full w-full object-contain"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="text-[10px] text-slate-400">No logo</span>
-                )}
-              </div>
-              <h2 className="text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h2>
-            </div>
-            {mode === 'hardhat' ? (
-              <div className="mt-4 grid grid-cols-1 gap-3">
-                <div className="flex w-full flex-wrap items-center gap-2">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
-                    <div className="flex min-w-0 flex-1 items-stretch">
-                      <select
-                        className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                        value={selectedSponsorCoinVersion}
-                        onChange={(e) => setSelectedSponsorCoinVersion(e.target.value)}
-                        aria-label="SponsorCoin Version (Hardhat row)"
-                        title="SponsorCoin Version"
+          {showCard('contract') && (
+          <article className={getCardClassName('contract', expandedCard ? '' : 'xl:col-start-1 xl:row-start-1')}>
+            <LabCardHeader
+              title="Active Sponsor Coin Contract"
+              isExpanded={expandedCard === 'contract'}
+              onToggleExpand={() => toggleExpandedCard('contract')}
+              leftSlot={
+                <div className="relative -left-[9px] -top-[10px] flex h-[33px] w-[33px] items-center justify-center overflow-hidden rounded-xl bg-[#0E111B]">
+                  {selectedSponsorCoinLogoURL ? (
+                    <Image
+                      src={selectedSponsorCoinLogoURL}
+                      alt={String(selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
+                      width={33}
+                      height={33}
+                      className="h-full w-full object-contain"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-[10px] text-slate-400">No logo</span>
+                  )}
+                </div>
+              }
+            />
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              <div className="flex w-full flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
+                  <div className="flex min-w-0 flex-1 items-stretch">
+                    <select
+                      className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      value={selectedSponsorCoinVersion}
+                      onChange={(e) => setSelectedSponsorCoinVersion(e.target.value)}
+                      aria-label="SponsorCoin Version (Hardhat row)"
+                      title="SponsorCoin Version"
+                    >
+                      {sponsorCoinVersionChoices.length === 0 && (
+                        <option value="">(no deployment map entries)</option>
+                      )}
+                      {sponsorCoinVersionChoices.map((entry) => (
+                        <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
+                          {entry.version}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex w-[38px] flex-col">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (canIncrementSponsorCoinVersion) adjustSponsorCoinVersion(1);
+                        }}
+                        className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                          canIncrementSponsorCoinVersion
+                            ? 'cursor-pointer hover:bg-green-500'
+                            : 'cursor-not-allowed hover:bg-red-500'
+                        }`}
+                        title="Increment SponsorCoin Version"
+                        aria-disabled={!canIncrementSponsorCoinVersion}
                       >
-                        {sponsorCoinVersionChoices.length === 0 && (
-                          <option value="">(no deployment map entries)</option>
-                        )}
-                        {sponsorCoinVersionChoices.map((entry) => (
-                          <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
-                            {entry.version}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="flex w-[38px] flex-col">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (canIncrementSponsorCoinVersion) adjustSponsorCoinVersion(1);
-                          }}
-                          className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
-                            canIncrementSponsorCoinVersion
-                              ? 'cursor-pointer hover:bg-green-500'
-                              : 'cursor-not-allowed hover:bg-red-500'
-                          }`}
-                          title="Increment SponsorCoin Version"
-                          aria-disabled={!canIncrementSponsorCoinVersion}
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (canDecrementSponsorCoinVersion) adjustSponsorCoinVersion(-1);
-                          }}
-                          className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
-                            canDecrementSponsorCoinVersion
-                              ? 'cursor-pointer hover:bg-green-500'
-                              : 'cursor-not-allowed hover:bg-red-500'
-                          }`}
-                          title="Decrement SponsorCoin Version"
-                          aria-disabled={!canDecrementSponsorCoinVersion}
-                        >
-                          -
-                        </button>
-                      </div>
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (canDecrementSponsorCoinVersion) adjustSponsorCoinVersion(-1);
+                        }}
+                        className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                          canDecrementSponsorCoinVersion
+                            ? 'cursor-pointer hover:bg-green-500'
+                            : 'cursor-not-allowed hover:bg-red-500'
+                        }`}
+                        title="Decrement SponsorCoin Version"
+                        aria-disabled={!canDecrementSponsorCoinVersion}
+                      >
+                        -
+                      </button>
                     </div>
                   </div>
-                  <span className="px-1 text-sm font-semibold text-[#8FA8FF]">Deployed on HH Account</span>
-                  <label htmlFor="hardhat-account-index" className="sr-only">
-                    Hardhat account index
-                  </label>
-                  <input
-                    id="hardhat-account-index"
-                    className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-center text-sm text-white"
-                    value={
-                      !selectedVersionSignerKey
-                        ? '?'
-                        : displayedVersionHardhatAccountIndex >= 0
-                        ? String(displayedVersionHardhatAccountIndex)
-                        : ''
-                    }
-                    readOnly
-                    aria-label="Hardhat account index"
-                    title="Hardhat account index"
-                  />
                 </div>
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    value={String(selectedSponsorCoinVersionEntry?.name || '')}
-                    placeholder="Selected deployed SponsorCoin name"
-                  />
-                  <div className="flex items-center justify-self-end gap-2">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
-                    <input
-                      className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                      style={{ width: `${selectedVersionSymbolWidthCh}ch` }}
-                      readOnly
-                      value={selectedVersionSymbol}
-                      placeholder="symbol"
-                    />
-                  </div>
-                </div>
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
-                  <input
-                    className={inputStyle}
-                    value={contractAddress}
-                    readOnly
-                    placeholder="SponsorCoin contract address"
-                  />
+                <span className="px-1 text-sm font-semibold text-[#8FA8FF]">Deployed on HH Account</span>
+                <label htmlFor="hardhat-account-index" className="sr-only">
+                  Hardhat account index
                 </label>
+                <input
+                  id="hardhat-account-index"
+                  className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-center text-sm text-white"
+                  value={
+                    !selectedVersionSignerKey
+                      ? '?'
+                      : displayedVersionHardhatAccountIndex >= 0
+                      ? String(displayedVersionHardhatAccountIndex)
+                      : ''
+                  }
+                  readOnly
+                  aria-label="Hardhat account index"
+                  title="Hardhat account index"
+                />
               </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-300">
-                Switch Network Connection Mode to Hardhat Local to view active Sponsor Coin contract data.
-              </p>
-            )}
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
+                <input
+                  className={inputStyle}
+                  readOnly
+                  value={String(selectedSponsorCoinVersionEntry?.name || '')}
+                  placeholder="Selected deployed SponsorCoin name"
+                />
+                <div className="flex items-center justify-self-end gap-2">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+                  <input
+                    className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                    style={{ width: `${selectedVersionSymbolWidthCh}ch` }}
+                    readOnly
+                    value={selectedVersionSymbol}
+                    placeholder="symbol"
+                  />
+                </div>
+              </div>
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
+                <input
+                  className={inputStyle}
+                  value={contractAddress}
+                  readOnly
+                  placeholder="SponsorCoin contract address"
+                />
+              </label>
+              {mode !== 'hardhat' && (
+                <p className="text-sm text-slate-300">
+                  Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat Local.
+                </p>
+              )}
+            </div>
           </article>
+          )}
 
-          <article className={cardStyle}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Read / Tree Dump Tests</h2>
+          {showCard('readTree') && (
+          <article className={getCardClassName('readTree')}>
+            <LabCardHeader
+              title="Read / Tree Dump Tests"
+              isExpanded={expandedCard === 'readTree'}
+              onToggleExpand={() => toggleExpandedCard('readTree')}
+            />
             <p className="mt-2 text-sm text-slate-200">
               Read methods are no-fee calls. Tree dump uses the first account from `getAccountList`.
             </p>
@@ -1956,64 +2074,75 @@ export default function SponsorCoinLabPage() {
               </button>
             </div>
           </article>
+          )}
 
-          <article className={`${cardStyle} xl:col-start-1 xl:row-start-3`}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Sponsor Coin Method Tests</h2>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200">
-                <label className="inline-flex items-center gap-1">
-                  <input
-                    type="radio"
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    name="method-panel-mode"
-                    value="ecr20_read"
-                    checked={methodPanelMode === 'ecr20_read'}
-                    onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
-                  />
-                  <span>ECR20 Read</span>
-                </label>
-                <label className="inline-flex items-center gap-1">
-                  <input
-                    type="radio"
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    name="method-panel-mode"
-                    value="erc20_write"
-                    checked={methodPanelMode === 'erc20_write'}
-                    onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
-                  />
-                  <span>ERC20 Write</span>
-                </label>
-                <label className="inline-flex items-center gap-1">
-                  <input
-                    type="radio"
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    name="method-panel-mode"
-                    value="spcoin_rread"
-                    checked={methodPanelMode === 'spcoin_rread'}
-                    onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
-                  />
-                  <span>Spcoin Read</span>
-                </label>
-                <label className="inline-flex items-center gap-1">
-                  <input
-                    type="radio"
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    name="method-panel-mode"
-                    value="spcoin_write"
-                    checked={methodPanelMode === 'spcoin_write'}
-                    onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
-                  />
-                  <span>SpCoin Write</span>
-                </label>
-              </div>
-            </div>
+          {showCard('methods') && (
+          <article className={getCardClassName('methods', expandedCard ? '' : 'xl:col-start-1 xl:row-start-3')}>
+            <LabCardHeader
+              title="Sponsor Coin Method Tests"
+              isExpanded={expandedCard === 'methods'}
+              onToggleExpand={() => toggleExpandedCard('methods')}
+              secondaryRow={
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
+                  <div className="flex w-full flex-wrap items-center justify-center gap-3 text-xs text-slate-200">
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="method-panel-mode"
+                        value="ecr20_read"
+                        checked={methodPanelMode === 'ecr20_read'}
+                        onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
+                      />
+                      <span>ECR20 Read</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="method-panel-mode"
+                        value="erc20_write"
+                        checked={methodPanelMode === 'erc20_write'}
+                        onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
+                      />
+                      <span>ERC20 Write</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="method-panel-mode"
+                        value="spcoin_rread"
+                        checked={methodPanelMode === 'spcoin_rread'}
+                        onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
+                      />
+                      <span>Spcoin Read</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="method-panel-mode"
+                        value="spcoin_write"
+                        checked={methodPanelMode === 'spcoin_write'}
+                        onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
+                      />
+                      <span>SpCoin Write</span>
+                    </label>
+                  </div>
+                </div>
+              }
+            />
 
             {methodPanelMode === 'ecr20_read' && (
               <Erc20ReadController
                 invalidFieldIds={invalidFieldIds}
                 clearInvalidField={clearInvalidField}
                 selectedReadMethod={selectedReadMethod}
+                mode={mode}
+                hardhatAccounts={hardhatAccounts}
+                hardhatAccountMetadata={hardhatAccountMetadata}
                 erc20ReadOptions={erc20ReadOptions}
                 setSelectedReadMethod={(value) => setSelectedReadMethod(value as Erc20ReadMethod)}
                 activeReadLabels={activeReadLabels}
@@ -2023,6 +2152,8 @@ export default function SponsorCoinLabPage() {
                 setReadAddressB={setReadAddressB}
                 inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
+                writeTraceEnabled={writeTraceEnabled}
+                toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedReadMethod={runSelectedReadMethod}
               />
             )}
@@ -2052,6 +2183,8 @@ export default function SponsorCoinLabPage() {
                 setWriteAmountRaw={setWriteAmountRaw}
                 inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
+                writeTraceEnabled={writeTraceEnabled}
+                toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedWriteMethod={runSelectedWriteMethod}
               />
             )}
@@ -2060,17 +2193,20 @@ export default function SponsorCoinLabPage() {
               <SpCoinReadController
                 invalidFieldIds={invalidFieldIds}
                 clearInvalidField={clearInvalidField}
-                hideUnexecutables={hideUnexecutables}
-                setHideUnexecutables={setHideUnexecutables}
+                mode={mode}
+                hardhatAccounts={hardhatAccounts}
+                hardhatAccountMetadata={hardhatAccountMetadata}
                 selectedSpCoinReadMethod={selectedSpCoinReadMethod}
                 setSelectedSpCoinReadMethod={(value) => setSelectedSpCoinReadMethod(value as SpCoinReadMethod)}
                 spCoinReadOptions={spCoinReadOptions}
-                spCoinReadMethodDefs={spCoinReadMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string }[]; executable?: boolean }>}
-                activeSpCoinReadDef={activeSpCoinReadDef as { title: string; params: { label: string; placeholder: string }[]; executable?: boolean }}
+                spCoinReadMethodDefs={spCoinReadMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }>}
+                activeSpCoinReadDef={activeSpCoinReadDef as { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }}
                 spReadParams={spReadParams}
                 setSpReadParams={setSpReadParams}
                 inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
+                writeTraceEnabled={writeTraceEnabled}
+                toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedSpCoinReadMethod={runSelectedSpCoinReadMethod}
               />
             )}
@@ -2102,6 +2238,8 @@ export default function SponsorCoinLabPage() {
                 onOpenBackdatePicker={backdateCalendar.openBackdatePickerAt}
                 inputStyle={inputStyle}
                 buttonStyle={buttonStyle}
+                writeTraceEnabled={writeTraceEnabled}
+                toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedSpCoinWriteMethod={runSelectedSpCoinWriteMethod}
                 formatDateTimeDisplay={formatDateTimeDisplay}
                 formatDateInput={formatDateInput}
@@ -2138,30 +2276,78 @@ export default function SponsorCoinLabPage() {
                 applyBackdateBy={backdateCalendar.applyBackdateBy}
               />
             )}
+            {status !== 'Ready' && (
+              <div className="mt-4">
+                <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
+                <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
+                  {status}
+                </div>
+              </div>
+            )}
           </article>
+          )}
 
-          <article className={cardStyle}>
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[#5981F3]">Execution Log</h2>
-              <button
-                type="button"
-                className={buttonStyle}
-                onClick={() => setLogs([])}
-              >
-                Clear Log
-              </button>
-            </div>
-            <pre className="mt-4 h-72 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200">
+          {showCard('log') && (
+          <article className={getCardClassName('log')}>
+            <LabCardHeader
+              title="Execution Log"
+              isExpanded={expandedCard === 'log'}
+              onToggleExpand={() => toggleExpandedCard('log')}
+              secondaryRow={
+                <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
+                  <button
+                    type="button"
+                    className={buttonStyle}
+                    onClick={() => void copyTextToClipboard('Execution Log', logs.join('\n'))}
+                  >
+                    Copy to Clipboard
+                  </button>
+                  <button
+                    type="button"
+                    className={buttonStyle}
+                    onClick={() => setLogs([])}
+                  >
+                    Clear Log
+                  </button>
+                </div>
+              }
+            />
+            <pre className={`mt-4 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${expandedCard === 'log' ? 'flex-1 min-h-[calc(100dvh-18rem)]' : 'h-72'}`}>
               {logs.join('\n')}
             </pre>
           </article>
+          )}
 
-          <article className={cardStyle}>
-            <h2 className="text-lg font-semibold text-[#5981F3]">Formatted Output Display</h2>
-            <pre className="mt-4 h-72 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200">
+          {showCard('output') && (
+          <article className={getCardClassName('output')}>
+            <LabCardHeader
+              title="Formatted Output Display"
+              isExpanded={expandedCard === 'output'}
+              onToggleExpand={() => toggleExpandedCard('output')}
+              secondaryRow={
+                <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
+                  <button
+                    type="button"
+                    className={buttonStyle}
+                    onClick={() => void copyTextToClipboard('Formatted Output Display', formattedOutputDisplay)}
+                  >
+                    Copy to Clipboard
+                  </button>
+                  <button
+                    type="button"
+                    className={buttonStyle}
+                    onClick={() => setFormattedOutputDisplay('(no output yet)')}
+                  >
+                    Clear
+                  </button>
+                </div>
+              }
+            />
+            <pre className={`mt-4 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${expandedCard === 'output' ? 'flex-1 min-h-[calc(100dvh-18rem)]' : 'h-72'}`}>
               {formattedOutputDisplay}
             </pre>
           </article>
+          )}
         </section>
       </section>
       {validationPopupFields.length > 0 && (

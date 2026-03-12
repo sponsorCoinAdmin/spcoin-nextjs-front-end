@@ -177,7 +177,7 @@ export function useSpCoinAccessController() {
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
   const [deploymentFlashError, setDeploymentFlashError] = useState(false);
   const [deploymentStatusIsError, setDeploymentStatusIsError] = useState(false);
-  const [activeAction, setActiveAction] = useState<'download' | 'upload' | null>(null);
+  const [activeAction, setActiveAction] = useState<'download' | 'upload' | 'install' | null>(null);
   const [deploymentContractDirExists, setDeploymentContractDirExists] = useState(false);
   const [deploymentTokenStatus, setDeploymentTokenStatus] = useState<
     'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED'
@@ -805,7 +805,7 @@ export function useSpCoinAccessController() {
     persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion, selectedPackage: nextPackage });
   };
 
-  const runManagerAction = async (action: 'download' | 'upload') => {
+  const runManagerAction = async (action: 'download' | 'upload' | 'install') => {
     if (action === 'upload' && uploadBlocked) return setFlashTarget('upload');
     const normalizedOtp = sanitizeNpmOtpInput(npmOtp);
     if (action === 'upload' && normalizedOtp && normalizedOtp.length !== 6) {
@@ -813,7 +813,9 @@ export function useSpCoinAccessController() {
       return;
     }
     setActiveAction(action);
-    setStatus(`${action === 'upload' ? 'Upload' : 'Download'} request queued for ${selectedPackage}...`);
+    setStatus(
+      `${action === 'upload' ? 'Upload' : action === 'install' ? 'Install' : 'Download'} request queued for ${selectedPackage}...`,
+    );
     try {
       const response = await fetch('/api/spCoin/access-manager', {
         method: 'POST',

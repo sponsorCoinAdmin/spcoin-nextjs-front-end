@@ -7,3 +7,4 @@ declare class SpCoinDeleteModule {
     unSponsorRecipient: (_sponsorKey: any, _recipientKey: any) => Promise<void>;
     deleteAgentRecord: (_accountKey: any, _recipientKey: any, _accountAgentKey: any) => Promise<void>;
 }
+export { SpCoinDeleteModule };

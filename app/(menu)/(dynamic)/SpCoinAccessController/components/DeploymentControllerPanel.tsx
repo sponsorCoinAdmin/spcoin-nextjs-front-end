@@ -25,6 +25,8 @@ type DeploymentControllerPanelProps = {
   deploymentStatusIsError: boolean;
   deployDisableReason: string;
   deployButtonLabel: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   onSetDeploymentMode: (mode: 'mocked' | 'blockcain') => void;
   onDeploymentDecimalsChange: (value: string) => void;
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
@@ -63,6 +65,8 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentStatusIsError,
     deployDisableReason,
     deployButtonLabel,
+    isExpanded,
+    onToggleExpand,
     onSetDeploymentMode,
     onDeploymentDecimalsChange,
     onAdjustDeploymentDecimals,
@@ -80,8 +84,24 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
-      <div className="mb-4 flex items-center justify-center border-b border-slate-700 pb-3">
-        <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">Contract Deployment Controller</h2>
+      <div
+        className="relative mb-4 border-b border-slate-700 pb-3"
+        onDoubleClick={onToggleExpand}
+        title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
+      >
+        <div className="flex min-h-10 items-center justify-center pr-12">
+          <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">Contract Deployment Controller</h2>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          onDoubleClick={(event) => event.stopPropagation()}
+          className="absolute -right-[9px] -top-[10px] flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+          title={isExpanded ? 'Return to shared view' : 'Expand this card'}
+          aria-label={isExpanded ? 'Return to shared view' : 'Expand this card'}
+        >
+          {isExpanded ? '×' : '+'}
+        </button>
       </div>
 
       <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
