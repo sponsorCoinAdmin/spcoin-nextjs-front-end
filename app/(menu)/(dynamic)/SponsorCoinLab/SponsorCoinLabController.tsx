@@ -696,6 +696,13 @@ export default function SponsorCoinLabPage() {
     const address = String(selectedHardhatAccount?.address || '').trim().toLowerCase();
     return hardhatAccountMetadata[address];
   }, [hardhatAccountMetadata, selectedHardhatAccount?.address]);
+  const displayedSignerAccountAddress = useMemo(() => {
+    return mode === 'hardhat' ? selectedHardhatAccount?.address || '' : effectiveConnectedAddress || '';
+  }, [effectiveConnectedAddress, mode, selectedHardhatAccount?.address]);
+  const displayedSignerAccountMetadata = useMemo(() => {
+    const key = normalizeAddress(displayedSignerAccountAddress);
+    return hardhatAccountMetadata[key] ?? selectedSignerAccountMetadata;
+  }, [displayedSignerAccountAddress, hardhatAccountMetadata, selectedSignerAccountMetadata]);
   const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
   const selectedSponsorCoinLogoURL = useMemo(() => {
     const address = String(selectedSponsorCoinVersionEntry?.address || '').trim();
@@ -2014,62 +2021,62 @@ export default function SponsorCoinLabPage() {
             )}
 
             <div className="mt-6 border-t border-[#2B3A67] pt-5">
-              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account 3</h2>
-              {mode === 'hardhat' ? (
-                <div className="mt-4 grid grid-cols-1 gap-3">
-                  <div
-                    className={`grid grid-cols-1 gap-3${
-                      showSignerAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-                    }`}
-                  >
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <button
-                        type="button"
-                        onClick={() => setShowSignerAccountDetails((prev) => !prev)}
-                        className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                        title="Toggle signer account details"
-                      >
-                        Public Account Key
-                      </button>
-                      <input
-                        className={inputStyle}
-                        readOnly
-                        value={selectedHardhatAccount?.address || ''}
-                        placeholder="Selected account address"
-                      />
-                    </label>
-                    <div className="border-t border-[#2B3A67] pt-3">
-                      <h3 className="text-center text-lg font-semibold text-[#5981F3]">Test Wallet Account Management</h3>
-                    </div>
-                    {showSignerAccountDetails && (
-                      <>
-                        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                          <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                          <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                              {selectedSignerAccountMetadata?.logoURL ? (
-                                <Image
-                                  src={selectedSignerAccountMetadata.logoURL}
-                                  alt={selectedSignerAccountMetadata?.name || 'Selected signer account'}
-                                  width={40}
-                                  height={40}
-                                  className="h-full w-full object-contain"
-                                  unoptimized
-                                />
-                              ) : (
-                                <span className="text-[10px] text-slate-400">No logo</span>
-                              )}
+              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
+              <div className="mt-4 grid grid-cols-1 gap-3">
+                <div
+                  className={`grid grid-cols-1 gap-3${
+                    showSignerAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
+                  }`}
+                >
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={() => setShowSignerAccountDetails((prev) => !prev)}
+                      className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
+                      title="Toggle signer account details"
+                    >
+                      Public Account Key
+                    </button>
+                    <input
+                      className={inputStyle}
+                      readOnly
+                      value={displayedSignerAccountAddress}
+                      placeholder="Selected account address"
+                    />
+                  </label>
+                  <div className="border-t border-[#2B3A67] pt-3">
+                    <h3 className="text-center text-lg font-semibold text-[#5981F3]">Test Wallet Account Management</h3>
+                  </div>
+                  {showSignerAccountDetails && (
+                    <>
+                      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                        <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+                        <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                            {displayedSignerAccountMetadata?.logoURL ? (
+                              <Image
+                                src={displayedSignerAccountMetadata.logoURL}
+                                alt={displayedSignerAccountMetadata?.name || 'Selected signer account'}
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-contain"
+                                unoptimized
+                              />
+                            ) : (
+                              <span className="text-[10px] text-slate-400">No logo</span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-white">
+                              {displayedSignerAccountMetadata?.name || 'Unnamed account'}
                             </div>
-                            <div className="min-w-0">
-                              <div className="truncate font-medium text-white">
-                                {selectedSignerAccountMetadata?.name || 'Unnamed account'}
-                              </div>
-                              <div className="truncate text-xs text-slate-400">
-                                {selectedSignerAccountMetadata?.symbol || 'No symbol'}
-                              </div>
+                            <div className="truncate text-xs text-slate-400">
+                              {displayedSignerAccountMetadata?.symbol || 'No symbol'}
                             </div>
                           </div>
                         </div>
+                      </div>
+                      {mode === 'hardhat' ? (
                         <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                           <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
                           <input
@@ -2079,65 +2086,63 @@ export default function SponsorCoinLabPage() {
                             placeholder="Signer key for selected deployed version"
                           />
                         </label>
-                      </>
-                    )}
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                        <button
-                          type="button"
-                          onClick={() => void addSignerAccount()}
-                          className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(addAccountValidation.tone)}`}
-                          title={addAccountValidation.message}
-                        >
-                          Add Account
-                        </button>
-                        <input
-                          className={inputStyle}
-                          value={addAccountInput}
-                          onChange={(e) => setAddAccountInput(e.target.value)}
-                          placeholder="Enter an account address to add"
-                        />
-                      </div>
-                      {addAccountValidation.message ? (
-                        <div className={`text-xs ${addAccountValidation.tone === 'valid' ? 'text-green-300' : addAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
-                          {addAccountValidation.message}
-                        </div>
                       ) : null}
-                      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                        <button
-                          type="button"
-                          onClick={() => void deleteSignerAccount()}
-                          className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(deleteAccountValidation.tone)}`}
-                          title={deleteAccountValidation.message}
-                        >
-                          Delete Account
-                        </button>
-                        <input
-                          className={inputStyle}
-                          value={deleteAccountInput}
-                          onChange={(e) => setDeleteAccountInput(e.target.value)}
-                          placeholder="Enter an account address to delete"
-                        />
-                      </div>
-                      {deleteAccountValidation.message ? (
-                        <div className={`text-xs ${deleteAccountValidation.tone === 'valid' ? 'text-green-300' : deleteAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
-                          {deleteAccountValidation.message}
-                        </div>
-                      ) : null}
-                      {signerAccountStatus ? (
-                        <div>
-                          <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
-                          <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
-                            {signerAccountStatus}
-                          </div>
-                        </div>
-                      ) : null}
+                    </>
+                  )}
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <button
+                        type="button"
+                        onClick={() => void addSignerAccount()}
+                        className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(addAccountValidation.tone)}`}
+                        title={addAccountValidation.message}
+                      >
+                        Add Account
+                      </button>
+                      <input
+                        className={inputStyle}
+                        value={addAccountInput}
+                        onChange={(e) => setAddAccountInput(e.target.value)}
+                        placeholder="Enter an account address to add"
+                      />
                     </div>
+                    {addAccountValidation.message ? (
+                      <div className={`text-xs ${addAccountValidation.tone === 'valid' ? 'text-green-300' : addAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                        {addAccountValidation.message}
+                      </div>
+                    ) : null}
+                    <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <button
+                        type="button"
+                        onClick={() => void deleteSignerAccount()}
+                        className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(deleteAccountValidation.tone)}`}
+                        title={deleteAccountValidation.message}
+                      >
+                        Delete Account
+                      </button>
+                      <input
+                        className={inputStyle}
+                        value={deleteAccountInput}
+                        onChange={(e) => setDeleteAccountInput(e.target.value)}
+                        placeholder="Enter an account address to delete"
+                      />
+                    </div>
+                    {deleteAccountValidation.message ? (
+                      <div className={`text-xs ${deleteAccountValidation.tone === 'valid' ? 'text-green-300' : deleteAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                        {deleteAccountValidation.message}
+                      </div>
+                    ) : null}
+                    {signerAccountStatus ? (
+                      <div>
+                        <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
+                        <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
+                          {signerAccountStatus}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-              ) : (
-                <></>
-              )}
+              </div>
             </div>
           </article>
           )}
