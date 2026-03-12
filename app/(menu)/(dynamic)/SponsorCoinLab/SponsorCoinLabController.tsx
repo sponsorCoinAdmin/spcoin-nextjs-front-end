@@ -266,6 +266,10 @@ export default function SponsorCoinLabPage() {
   const [hardhatAccountMetadata, setHardhatAccountMetadata] = useState<
     Record<string, HardhatAccountMetadata>
   >({});
+  const [addAccountInput, setAddAccountInput] = useState('');
+  const [deleteAccountInput, setDeleteAccountInput] = useState('');
+  const [addAccountExistsOnLocal, setAddAccountExistsOnLocal] = useState<boolean | null>(null);
+  const [signerAccountStatus, setSignerAccountStatus] = useState('');
   const [activeSigner, setActiveSigner] = useState<Signer | null>(null);
   const [connectedAddress, setConnectedAddress] = useState('');
   const [connectedChainId, setConnectedChainId] = useState('');
@@ -344,91 +348,224 @@ export default function SponsorCoinLabPage() {
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadHardhatAccountsFromNetworkFile = async () => {
+  const loadHardhatAccountsFromNetworkFile = useCallback(async () => {
+    try {
       const chainIdText = String(HARDHAT_CHAIN_ID_DEC);
+      const response = await fetch(`/assets/spCoinLab/networks/${chainIdText}/testAccounts.json`, {
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        throw new Error(`Unable to load testAccounts.json for chain ${chainIdText}.`);
+      }
+
+      const rawEntries = (await response.json()) as TestAccountFileEntry[];
+      if (!Array.isArray(rawEntries)) {
+        throw new Error('testAccounts.json must be an array.');
+      }
+
+      const normalizedEntries = rawEntries
+        .map((entry) => {
+          if (typeof entry === 'string') {
+            const address = String(entry || '').trim();
+            return address ? { address } : null;
+          }
+
+          const address = String(entry?.address || '').trim();
+          const privateKey = String(entry?.privateKey || '').trim();
+          if (!address) return null;
+          return {
+            address,
+            ...(privateKey ? { privateKey } : {}),
+          } satisfies HardhatAccountOption;
+        })
+        .filter((entry): entry is HardhatAccountOption => !!entry);
+
+      const metadataRows = await Promise.all(
+        normalizedEntries.map(async (entry) => {
+          const normalizedKey = normalizeAddress(entry.address);
+          const folder = normalizeAddressForAssets(entry.address);
+          const accountLogoURL = folder ? getAccountLogoURL(entry.address) : defaultMissingImage;
+
+          if (!folder) {
+            return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+          }
+
+          try {
+            const accountResponse = await fetch(`/assets/accounts/${folder}/account.json`, {
+              cache: 'no-store',
+            });
+            if (!accountResponse.ok) {
+              return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+            }
+
+            const accountData = (await accountResponse.json()) as Record<string, unknown>;
+            return [
+              normalizedKey,
+              buildHardhatAccountMetadata(accountData, accountLogoURL),
+            ] as const;
+          } catch {
+            return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
+          }
+        }),
+      );
+
+      setHardhatAccounts(normalizedEntries);
+      setHardhatAccountMetadata(Object.fromEntries(metadataRows));
+      setSelectedHardhatIndex((prev) =>
+        normalizedEntries.length === 0 ? 0 : Math.min(Math.max(prev, 0), normalizedEntries.length - 1),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown Hardhat account load error.';
+      setHardhatAccounts([]);
+      setHardhatAccountMetadata({});
+      setSelectedHardhatIndex(0);
+      appendLog(`Hardhat test account load failed: ${message}`);
+    }
+  }, [appendLog]);
+
+  useEffect(() => {
+    void loadHardhatAccountsFromNetworkFile();
+    return undefined;
+  }, [loadHardhatAccountsFromNetworkFile]);
+  useEffect(() => {
+    const address = String(addAccountInput || '').trim();
+    if (!address) {
+      setAddAccountExistsOnLocal(null);
+      return;
+    }
+    if (!isAddressLike(address)) {
+      setAddAccountExistsOnLocal(null);
+      return;
+    }
+
+    let cancelled = false;
+    const run = async () => {
       try {
-        const response = await fetch(`/assets/spCoinLab/networks/${chainIdText}/testAccounts.json`, {
+        const response = await fetch(`/api/spCoin/accounts/${address}`, {
           cache: 'no-store',
         });
-        if (!response.ok) {
-          throw new Error(`Unable to load testAccounts.json for chain ${chainIdText}.`);
-        }
-
-        const rawEntries = (await response.json()) as TestAccountFileEntry[];
-        if (!Array.isArray(rawEntries)) {
-          throw new Error('testAccounts.json must be an array.');
-        }
-
-        const normalizedEntries = rawEntries
-          .map((entry) => {
-            if (typeof entry === 'string') {
-              const address = String(entry || '').trim();
-              return address ? { address } : null;
-            }
-
-            const address = String(entry?.address || '').trim();
-            const privateKey = String(entry?.privateKey || '').trim();
-            if (!address) return null;
-            return {
-              address,
-              ...(privateKey ? { privateKey } : {}),
-            } satisfies HardhatAccountOption;
-          })
-          .filter((entry): entry is HardhatAccountOption => !!entry);
-
-        const metadataRows = await Promise.all(
-          normalizedEntries.map(async (entry) => {
-            const normalizedKey = normalizeAddress(entry.address);
-            const folder = normalizeAddressForAssets(entry.address);
-            const accountLogoURL = folder ? getAccountLogoURL(entry.address) : defaultMissingImage;
-
-            if (!folder) {
-              return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
-            }
-
-            try {
-              const accountResponse = await fetch(`/assets/accounts/${folder}/account.json`, {
-                cache: 'no-store',
-              });
-              if (!accountResponse.ok) {
-                return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
-              }
-
-              const accountData = (await accountResponse.json()) as Record<string, unknown>;
-              return [
-                normalizedKey,
-                buildHardhatAccountMetadata(accountData, accountLogoURL),
-              ] as const;
-            } catch {
-              return [normalizedKey, buildHardhatAccountMetadata(null, defaultMissingImage)] as const;
-            }
-          }),
-        );
-
         if (cancelled) return;
-        setHardhatAccounts(normalizedEntries);
-        setHardhatAccountMetadata(Object.fromEntries(metadataRows));
-        setSelectedHardhatIndex((prev) =>
-          normalizedEntries.length === 0 ? 0 : Math.min(Math.max(prev, 0), normalizedEntries.length - 1),
-        );
-      } catch (error) {
+        setAddAccountExistsOnLocal(response.ok);
+      } catch {
         if (cancelled) return;
-        const message = error instanceof Error ? error.message : 'Unknown Hardhat account load error.';
-        setHardhatAccounts([]);
-        setHardhatAccountMetadata({});
-        setSelectedHardhatIndex(0);
-        appendLog(`Hardhat test account load failed: ${message}`);
+        setAddAccountExistsOnLocal(false);
       }
     };
-
-    void loadHardhatAccountsFromNetworkFile();
+    void run();
     return () => {
       cancelled = true;
     };
-  }, [appendLog]);
+  }, [addAccountInput]);
+  const addAccountNormalizedInput = useMemo(
+    () => normalizeAddress(String(addAccountInput || '')),
+    [addAccountInput],
+  );
+  const deleteAccountNormalizedInput = useMemo(
+    () => normalizeAddress(String(deleteAccountInput || '')),
+    [deleteAccountInput],
+  );
+  const addAccountAlreadyListed = useMemo(
+    () =>
+      !!addAccountNormalizedInput &&
+      hardhatAccounts.some((entry) => normalizeAddress(entry.address) === addAccountNormalizedInput),
+    [addAccountNormalizedInput, hardhatAccounts],
+  );
+  const deleteAccountExistsInList = useMemo(
+    () =>
+      !!deleteAccountNormalizedInput &&
+      hardhatAccounts.some((entry) => normalizeAddress(entry.address) === deleteAccountNormalizedInput),
+    [deleteAccountNormalizedInput, hardhatAccounts],
+  );
+  const addAccountValidation = useMemo(() => {
+    const address = String(addAccountInput || '').trim();
+    if (!address) {
+      return { tone: 'neutral' as const, message: '' };
+    }
+    if (!isAddressLike(address)) {
+      return { tone: 'invalid' as const, message: 'Invalid account address.' };
+    }
+    if (addAccountExistsOnLocal === null) {
+      return { tone: 'neutral' as const, message: 'Checking local account record...' };
+    }
+    if (!addAccountExistsOnLocal) {
+      return { tone: 'invalid' as const, message: 'Account not found' };
+    }
+    if (addAccountAlreadyListed) {
+      return { tone: 'invalid' as const, message: 'Duplicate Account' };
+    }
+    return { tone: 'valid' as const, message: 'Selectable' };
+  }, [addAccountAlreadyListed, addAccountExistsOnLocal, addAccountInput]);
+  const deleteAccountValidation = useMemo(() => {
+    const address = String(deleteAccountInput || '').trim();
+    if (!address) {
+      return { tone: 'neutral' as const, message: '' };
+    }
+    if (!isAddressLike(address)) {
+      return { tone: 'invalid' as const, message: 'Invalid account address.' };
+    }
+    if (!deleteAccountExistsInList) {
+      return { tone: 'invalid' as const, message: 'Account not found in testAccounts.json' };
+    }
+    return { tone: 'valid' as const, message: 'Selectable' };
+  }, [deleteAccountExistsInList, deleteAccountInput]);
+  const accountActionLabelClassName = useCallback((tone: 'neutral' | 'invalid' | 'valid') => {
+    if (tone === 'valid') return 'text-green-400 hover:text-green-300';
+    if (tone === 'invalid') return 'text-red-400 hover:text-red-300';
+    return 'text-[#8FA8FF] hover:text-white';
+  }, []);
+  const addSignerAccount = useCallback(async () => {
+    if (addAccountValidation.tone !== 'valid') {
+      setSignerAccountStatus(addAccountValidation.message);
+      return;
+    }
+    const address = String(addAccountInput || '').trim();
+
+    try {
+      const response = await fetch(`/api/spCoin/lab/networks/${HARDHAT_CHAIN_ID_DEC}/testAccounts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!response.ok) {
+        setSignerAccountStatus(String(payload.error || payload.details || 'Failed to add account.'));
+        return;
+      }
+
+      setSignerAccountStatus(String(payload.status || 'Account added.'));
+      setAddAccountInput('');
+      setAddAccountExistsOnLocal(null);
+      await loadHardhatAccountsFromNetworkFile();
+    } catch (error) {
+      setSignerAccountStatus(error instanceof Error ? error.message : 'Failed to add account.');
+    }
+  }, [addAccountInput, addAccountValidation, loadHardhatAccountsFromNetworkFile]);
+  const deleteSignerAccount = useCallback(async () => {
+    if (deleteAccountValidation.tone !== 'valid') {
+      setSignerAccountStatus(deleteAccountValidation.message);
+      return;
+    }
+    const address = String(deleteAccountInput || '').trim();
+
+    try {
+      const response = await fetch(`/api/spCoin/lab/networks/${HARDHAT_CHAIN_ID_DEC}/testAccounts`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!response.ok) {
+        setSignerAccountStatus(String(payload.error || payload.details || 'Failed to delete account.'));
+        return;
+      }
+
+      setSignerAccountStatus(String(payload.status || 'Account deleted.'));
+      setDeleteAccountInput('');
+      await loadHardhatAccountsFromNetworkFile();
+    } catch (error) {
+      setSignerAccountStatus(error instanceof Error ? error.message : 'Failed to delete account.');
+    }
+  }, [deleteAccountInput, deleteAccountValidation, loadHardhatAccountsFromNetworkFile]);
 
   const selectedHardhatAccount = useMemo(
     () => hardhatAccounts[selectedHardhatIndex],
@@ -1771,7 +1908,7 @@ export default function SponsorCoinLabPage() {
           {showCard('network') && (
           <article className={getCardClassName('network', expandedCard ? '' : 'xl:col-start-1 xl:row-start-2')}>
             <LabCardHeader
-              title="Network Connection Mode"
+              title="Network Connection Management"
               isExpanded={expandedCard === 'network'}
               onToggleExpand={() => toggleExpandedCard('network')}
               secondaryRow={
@@ -1901,6 +2038,9 @@ export default function SponsorCoinLabPage() {
                         placeholder="Selected account address"
                       />
                     </label>
+                    <div className="border-t border-[#2B3A67] pt-3">
+                      <h3 className="text-center text-lg font-semibold text-[#5981F3]">Test Wallet Account Management</h3>
+                    </div>
                     {showSignerAccountDetails && (
                       <>
                         <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -1941,6 +2081,58 @@ export default function SponsorCoinLabPage() {
                         </label>
                       </>
                     )}
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                        <button
+                          type="button"
+                          onClick={() => void addSignerAccount()}
+                          className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(addAccountValidation.tone)}`}
+                          title={addAccountValidation.message}
+                        >
+                          Add Account
+                        </button>
+                        <input
+                          className={inputStyle}
+                          value={addAccountInput}
+                          onChange={(e) => setAddAccountInput(e.target.value)}
+                          placeholder="Enter an account address to add"
+                        />
+                      </div>
+                      {addAccountValidation.message ? (
+                        <div className={`text-xs ${addAccountValidation.tone === 'valid' ? 'text-green-300' : addAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                          {addAccountValidation.message}
+                        </div>
+                      ) : null}
+                      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                        <button
+                          type="button"
+                          onClick={() => void deleteSignerAccount()}
+                          className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(deleteAccountValidation.tone)}`}
+                          title={deleteAccountValidation.message}
+                        >
+                          Delete Account
+                        </button>
+                        <input
+                          className={inputStyle}
+                          value={deleteAccountInput}
+                          onChange={(e) => setDeleteAccountInput(e.target.value)}
+                          placeholder="Enter an account address to delete"
+                        />
+                      </div>
+                      {deleteAccountValidation.message ? (
+                        <div className={`text-xs ${deleteAccountValidation.tone === 'valid' ? 'text-green-300' : deleteAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                          {deleteAccountValidation.message}
+                        </div>
+                      ) : null}
+                      {signerAccountStatus ? (
+                        <div>
+                          <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
+                          <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
+                            {signerAccountStatus}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               ) : (
