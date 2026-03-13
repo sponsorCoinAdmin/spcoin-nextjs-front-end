@@ -70,6 +70,7 @@ type LabScriptStep = {
   panel: ScriptStepPanelMode;
   method: string;
   params: LabScriptParam[];
+  breakpoint?: boolean;
   network?: string;
   mode?: ConnectionMode;
   'msg.sender'?: string;
@@ -2257,6 +2258,41 @@ export default function SponsorCoinLabPage() {
     },
     [loadScriptStep, selectedScript, selectedScriptStepNumber],
   );
+  const moveSelectedScriptStep = useCallback(
+    (direction: -1 | 1) => {
+      if (!selectedScriptId || !selectedScript || selectedScriptStepNumber === null) return;
+      const currentIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+      if (currentIndex < 0) return;
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= selectedScript.steps.length) return;
+
+      setScripts((prev) =>
+        prev.map((script) => {
+          if (script.id !== selectedScriptId) return script;
+          const nextSteps = [...script.steps];
+          [nextSteps[currentIndex], nextSteps[targetIndex]] = [nextSteps[targetIndex], nextSteps[currentIndex]];
+          return {
+            ...script,
+            steps: nextSteps.map((step, idx) => ({
+              ...step,
+              step: idx + 1,
+            })),
+          };
+        }),
+      );
+      setExpandedScriptStepIds((prev) => {
+        const reorderedSteps = [...selectedScript.steps];
+        [reorderedSteps[currentIndex], reorderedSteps[targetIndex]] = [reorderedSteps[targetIndex], reorderedSteps[currentIndex]];
+        const nextExpanded: Record<string, boolean> = {};
+        reorderedSteps.forEach((step, idx) => {
+          nextExpanded[String(idx + 1)] = Boolean(prev[String(step.step)]);
+        });
+        return nextExpanded;
+      });
+      setSelectedScriptStepNumber(targetIndex + 1);
+    },
+    [selectedScriptId, selectedScript, selectedScriptStepNumber],
+  );
   const deleteSelectedScriptStep = useCallback(() => {
     if (!selectedScriptId || selectedScriptStepNumber === null) return;
     setScripts((prev) =>
@@ -2298,32 +2334,67 @@ export default function SponsorCoinLabPage() {
     deleteSelectedScriptStep();
     setIsDeleteStepPopupOpen(false);
   }, [deleteSelectedScriptStep]);
+  const toggleScriptStepBreakpoint = useCallback(
+    (stepNumber: number) => {
+      if (!selectedScriptId) return;
+      setScripts((prev) =>
+        prev.map((script) =>
+          script.id === selectedScriptId
+            ? {
+                ...script,
+                steps: script.steps.map((step) =>
+                  step.step === stepNumber
+                    ? {
+                        ...step,
+                        breakpoint: !step.breakpoint,
+                      }
+                    : step,
+                ),
+              }
+            : script,
+        ),
+      );
+    },
+    [selectedScriptId],
+  );
   const renderScriptStepRow = useCallback(
     (step: LabScriptStep) => {
       const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
       const isSelected = selectedScriptStep?.step === step.step;
       return (
         <div key={`step-${step.step}`} className="m-0 flex flex-col p-0 font-mono leading-tight">
-          <div className="inline-flex w-full items-center gap-2 px-0 py-0 text-left text-sm">
+          <div className="grid w-full grid-cols-[calc(0.95em+3px)_minmax(0,1fr)] items-center gap-x-[2px] px-0 py-0 text-left text-sm">
             <button
               type="button"
-              onClick={() => toggleScriptStepExpanded(step.step)}
-              className={`shrink-0 ${isExpanded ? 'text-green-400' : 'text-red-400'}`}
-              title={isExpanded ? `Collapse ${step.method}` : `Expand ${step.method}`}
+              onClick={() => toggleScriptStepBreakpoint(step.step)}
+              className={`col-start-1 ml-[3px] inline-flex h-[1em] w-[0.95em] shrink-0 items-center justify-center self-center border-0 bg-transparent p-0 leading-none ${
+                step.breakpoint ? 'opacity-100' : 'opacity-0'
+              }`}
+              title={step.breakpoint ? `Remove breakpoint from ${step.method}` : `Add breakpoint to ${step.method}`}
             >
-              {isExpanded ? '[+]' : '[-]'}
+              <span className="relative -top-[0.02em] text-[1em] leading-none text-[#F87171]">●</span>
             </button>
-            <button
-              type="button"
-              onClick={() => loadScriptStep(step)}
-              className={`min-w-0 text-left ${isSelected ? 'text-green-400 underline underline-offset-2' : 'text-slate-200'}`}
-              title={`Load ${step.method}`}
-            >
-              {step.method}
-            </button>
+            <div className="col-start-2 inline-flex min-w-0 items-center">
+              <button
+                type="button"
+                onClick={() => toggleScriptStepExpanded(step.step)}
+                className={`shrink-0 ${isExpanded ? 'text-green-400' : 'text-red-400'}`}
+                title={isExpanded ? `Collapse ${step.method}` : `Expand ${step.method}`}
+              >
+                {isExpanded ? '[+]' : '[-]'}
+              </button>
+              <button
+                type="button"
+                onClick={() => loadScriptStep(step)}
+                className={`min-w-0 text-left ${isSelected ? 'text-green-400 underline underline-offset-2' : 'text-slate-200'}`}
+                title={`Load ${step.method}`}
+              >
+                {step.method}
+              </button>
+            </div>
           </div>
           {isExpanded ? (
-            <div className="mt-1 space-y-1 pl-6 text-xs text-slate-200">
+            <div className="mt-1 space-y-1 pl-[28px] text-xs text-slate-200">
               {getStepSender(step) ? <div>{`msg.sender: ${getStepSender(step)};`}</div> : null}
               {getStepParamEntries(step).length > 0 ? (
                 getStepParamEntries(step).map((param, idx) => (
@@ -2345,6 +2416,7 @@ export default function SponsorCoinLabPage() {
       getStepSender,
       loadScriptStep,
       selectedScriptStep?.step,
+      toggleScriptStepBreakpoint,
       toggleScriptStepExpanded,
     ],
   );
@@ -2991,7 +3063,7 @@ export default function SponsorCoinLabPage() {
                     Delete Script
                   </button>
                 </div>
-                <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-1.5 text-sm text-slate-200">
+                <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] pr-3 pb-3 pt-1.5 pl-0 text-sm text-slate-200">
                   <div className="absolute right-3 top-1.5 z-10 flex items-center gap-[0.05rem]">
                     <button
                       type="button"
@@ -3057,6 +3129,38 @@ export default function SponsorCoinLabPage() {
                     </button>
                     <button
                       type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      title="move step up"
+                      onClick={() => moveSelectedScriptStep(-1)}
+                      disabled={!selectedScript || selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) <= 0}
+                    >
+                      <Image
+                        src="/assets/miscellaneous/up.png"
+                        alt="move step up"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      title="move step down"
+                      onClick={() => moveSelectedScriptStep(1)}
+                      disabled={!selectedScript || (selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
+                    >
+                      <Image
+                        src="/assets/miscellaneous/down.png"
+                        alt="move step down"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
                       title="delete step"
                       onClick={requestDeleteSelectedScriptStep}
@@ -3065,7 +3169,7 @@ export default function SponsorCoinLabPage() {
                       <span className="block text-[21px] leading-none">✖</span>
                     </button>
                   </div>
-                  <div className={`min-h-0 flex-1 overflow-auto pr-[170px] ${hiddenScrollbarClass}`}>
+                  <div className={`relative min-h-0 flex-1 overflow-auto pr-[170px] ${hiddenScrollbarClass}`}>
                     {!selectedScript ? (
                       <div className="text-slate-400">(no script selected)</div>
                     ) : selectedScript.steps.length === 0 ? (
