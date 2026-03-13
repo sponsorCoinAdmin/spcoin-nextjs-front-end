@@ -183,6 +183,11 @@ function normalizeAddress(value: string) {
   return String(value || '').trim().toLowerCase();
 }
 
+function normalizeAddressValue(value: string) {
+  const trimmed = String(value || '').trim();
+  return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+}
+
 function parseListParam(raw: string): string[] {
   return String(raw || '')
     .split(/[\n,]/)
@@ -276,7 +281,7 @@ export default function SponsorCoinLabPage() {
   const [connectedNetworkName, setConnectedNetworkName] = useState('');
   const [showHardhatConnectionInputs, setShowHardhatConnectionInputs] = useState(false);
   const [status, setStatus] = useState('Ready');
-  const [logs, setLogs] = useState<string[]>(['[SponsorCoin Lab] Ready']);
+  const [logs, setLogs] = useState<string[]>(['[SponsorCoin SandBox] Ready']);
   const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
@@ -1579,24 +1584,28 @@ export default function SponsorCoinLabPage() {
         if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
         if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
         if (typeof saved.selectedWriteSenderAddress === 'string') {
-          setSelectedWriteSenderAddress(saved.selectedWriteSenderAddress);
+          setSelectedWriteSenderAddress(normalizeAddressValue(saved.selectedWriteSenderAddress));
         }
         if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
-        if (typeof saved.writeAddressA === 'string') setWriteAddressA(saved.writeAddressA);
-        if (typeof saved.writeAddressB === 'string') setWriteAddressB(saved.writeAddressB);
+        if (typeof saved.writeAddressA === 'string') setWriteAddressA(normalizeAddressValue(saved.writeAddressA));
+        if (typeof saved.writeAddressB === 'string') setWriteAddressB(normalizeAddressValue(saved.writeAddressB));
         if (typeof saved.writeAmountRaw === 'string') setWriteAmountRaw(saved.writeAmountRaw);
         if (typeof saved.methodPanelMode === 'string') setMethodPanelMode(saved.methodPanelMode as MethodPanelMode);
         if (typeof saved.selectedReadMethod === 'string') setSelectedReadMethod(saved.selectedReadMethod as Erc20ReadMethod);
-        if (typeof saved.readAddressA === 'string') setReadAddressA(saved.readAddressA);
-        if (typeof saved.readAddressB === 'string') setReadAddressB(saved.readAddressB);
+        if (typeof saved.readAddressA === 'string') setReadAddressA(normalizeAddressValue(saved.readAddressA));
+        if (typeof saved.readAddressB === 'string') setReadAddressB(normalizeAddressValue(saved.readAddressB));
         if (typeof saved.selectedSpCoinReadMethod === 'string') {
           setSelectedSpCoinReadMethod(saved.selectedSpCoinReadMethod as SpCoinReadMethod);
         }
         if (typeof saved.selectedSpCoinWriteMethod === 'string') {
           setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
         }
-        if (Array.isArray(saved.spReadParams)) setSpReadParams(saved.spReadParams.map((v) => String(v ?? '')));
-        if (Array.isArray(saved.spWriteParams)) setSpWriteParams(saved.spWriteParams.map((v) => String(v ?? '')));
+        if (Array.isArray(saved.spReadParams)) {
+          setSpReadParams(saved.spReadParams.map((v) => normalizeAddressValue(String(v ?? ''))));
+        }
+        if (Array.isArray(saved.spWriteParams)) {
+          setSpWriteParams(saved.spWriteParams.map((v) => normalizeAddressValue(String(v ?? ''))));
+        }
         if (typeof saved.status === 'string') setStatus(saved.status);
         if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
         if (typeof saved.formattedOutputDisplay === 'string') {
@@ -1738,6 +1747,13 @@ export default function SponsorCoinLabPage() {
       if (value === 'true' || value === '1') return true;
       if (value === 'false' || value === '0') return false;
       throw new Error(`${def.label} must be true/false or 1/0.`);
+    }
+    if (def.type === 'address') {
+      const normalized = normalizeAddressValue(value);
+      if (!/^0x[0-9a-f]{40}$/.test(normalized)) {
+        throw new Error(`${def.label} must be a valid address.`);
+      }
+      return normalized;
     }
     if (def.type === 'address_array' || def.type === 'string_array') return parseListParam(value);
     return value;
@@ -1909,7 +1925,7 @@ export default function SponsorCoinLabPage() {
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin Lab</h2>
+        <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin SandBox</h2>
 
         <section className={`grid grid-cols-1 gap-6 ${expandedCard ? '' : 'xl:grid-cols-2'}`}>
           {showCard('network') && (

@@ -52,17 +52,18 @@ export default function Erc20ReadController(props: Props) {
   } = props;
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const normalizeAccountValue = (value: string) => {
+    const trimmed = String(value || '').trim();
+    return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+  };
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<string, boolean>>({});
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
-  const formatAccountOptionLabel = (address: string) => {
+  const formatAccountOptionLabel = (address: string, index: number) => {
     const metadata = getMetadataForAddress(address);
-    const name = String(metadata?.name || '').trim();
-    const symbol = String(metadata?.symbol || '').trim();
-    if (name && symbol) return `${name} (${symbol}) - ${address}`;
-    if (name) return `${name} - ${address}`;
-    if (symbol) return `${symbol} - ${address}`;
-    return address;
+    const name = String(metadata?.name || '').trim() || 'Unnamed account';
+    const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
+    return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
 
   return (
@@ -95,22 +96,29 @@ export default function Erc20ReadController(props: Props) {
             >
               {activeReadLabels.addressALabel}
             </button>
-            <select
-              data-field-id="erc20-read-address-a"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
-              value={readAddressA}
-              onChange={(e) => {
-                clearInvalidField('erc20-read-address-a');
-                setReadAddressA(e.target.value);
-              }}
-            >
-              <option value="">Select account</option>
-              {hardhatAccounts.map((account, idx) => (
-                <option key={`erc20-read-address-a-${idx}-${account.address}`} value={account.address}>
-                  {formatAccountOptionLabel(account.address)}
-                </option>
-              ))}
-            </select>
+            <>
+              <input
+                type="text"
+                list="erc20-read-address-a-options"
+                data-field-id="erc20-read-address-a"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
+                value={readAddressA}
+                onChange={(e) => {
+                  clearInvalidField('erc20-read-address-a');
+                  setReadAddressA(normalizeAccountValue(e.target.value));
+                }}
+                placeholder="Select account"
+              />
+              <datalist id="erc20-read-address-a-options">
+                {hardhatAccounts.map((account, idx) => (
+                  <option
+                    key={`erc20-read-address-a-${idx}-${account.address}`}
+                    value={normalizeAccountValue(account.address)}
+                    label={formatAccountOptionLabel(account.address, idx)}
+                  />
+                ))}
+              </datalist>
+            </>
           </label>
           {openAddressFields.addressA && (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -143,22 +151,29 @@ export default function Erc20ReadController(props: Props) {
             >
               {activeReadLabels.addressBLabel}
             </button>
-            <select
-              data-field-id="erc20-read-address-b"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
-              value={readAddressB}
-              onChange={(e) => {
-                clearInvalidField('erc20-read-address-b');
-                setReadAddressB(e.target.value);
-              }}
-            >
-              <option value="">Select account</option>
-              {hardhatAccounts.map((account, idx) => (
-                <option key={`erc20-read-address-b-${idx}-${account.address}`} value={account.address}>
-                  {formatAccountOptionLabel(account.address)}
-                </option>
-              ))}
-            </select>
+            <>
+              <input
+                type="text"
+                list="erc20-read-address-b-options"
+                data-field-id="erc20-read-address-b"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
+                value={readAddressB}
+                onChange={(e) => {
+                  clearInvalidField('erc20-read-address-b');
+                  setReadAddressB(normalizeAccountValue(e.target.value));
+                }}
+                placeholder="Select account"
+              />
+              <datalist id="erc20-read-address-b-options">
+                {hardhatAccounts.map((account, idx) => (
+                  <option
+                    key={`erc20-read-address-b-${idx}-${account.address}`}
+                    value={normalizeAccountValue(account.address)}
+                    label={formatAccountOptionLabel(account.address, idx)}
+                  />
+                ))}
+              </datalist>
+            </>
           </label>
           {openAddressFields.addressB && (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">

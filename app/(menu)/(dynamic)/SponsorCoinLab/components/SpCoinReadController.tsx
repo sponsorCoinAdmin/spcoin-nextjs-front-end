@@ -45,17 +45,18 @@ export default function SpCoinReadController(props: Props) {
   } = props;
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const normalizeAccountValue = (value: string) => {
+    const trimmed = String(value || '').trim();
+    return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+  };
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
-  const formatAccountOptionLabel = (address: string) => {
+  const formatAccountOptionLabel = (address: string, index: number) => {
     const metadata = getMetadataForAddress(address);
-    const name = String(metadata?.name || '').trim();
-    const symbol = String(metadata?.symbol || '').trim();
-    if (name && symbol) return `${name} (${symbol}) - ${address}`;
-    if (name) return `${name} - ${address}`;
-    if (symbol) return `${symbol} - ${address}`;
-    return address;
+    const name = String(metadata?.name || '').trim() || 'Unnamed account';
+    const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
+    return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
 
   return (
@@ -94,26 +95,33 @@ export default function SpCoinReadController(props: Props) {
                 >
                   {param.label}
                 </button>
-                <select
-                  data-field-id={`spcoin-read-param-${idx}`}
-                  className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
-                  value={spReadParams[idx] || ''}
-                  onChange={(e) =>
-                    setSpReadParams((prev) => {
-                      clearInvalidField(`spcoin-read-param-${idx}`);
-                      const next = [...prev];
-                      next[idx] = e.target.value;
-                      return next;
-                    })
-                  }
-                >
-                  <option value="">Select account</option>
-                  {hardhatAccounts.map((account, accountIdx) => (
-                    <option key={`sp-read-address-${idx}-${accountIdx}-${account.address}`} value={account.address}>
-                      {formatAccountOptionLabel(account.address)}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    type="text"
+                    list={`spcoin-read-address-options-${idx}`}
+                    data-field-id={`spcoin-read-param-${idx}`}
+                    className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
+                    value={spReadParams[idx] || ''}
+                    onChange={(e) =>
+                      setSpReadParams((prev) => {
+                        clearInvalidField(`spcoin-read-param-${idx}`);
+                        const next = [...prev];
+                        next[idx] = normalizeAccountValue(e.target.value);
+                        return next;
+                      })
+                    }
+                    placeholder="Select account"
+                  />
+                  <datalist id={`spcoin-read-address-options-${idx}`}>
+                    {hardhatAccounts.map((account, accountIdx) => (
+                      <option
+                        key={`sp-read-address-${idx}-${accountIdx}-${account.address}`}
+                        value={normalizeAccountValue(account.address)}
+                        label={formatAccountOptionLabel(account.address, accountIdx)}
+                      />
+                    ))}
+                  </datalist>
+                </>
               </label>
               {openAddressFields[idx] && (
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">

@@ -137,19 +137,20 @@ export default function SpCoinWriteController(props: Props) {
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const normalizeAccountValue = (value: string) => {
+    const trimmed = String(value || '').trim();
+    return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+  };
   const getPrivateKeyForAddress = (address: string) =>
     hardhatAccounts.find((account) => account.address.toLowerCase() === String(address || '').trim().toLowerCase())
       ?.privateKey || '';
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
-  const formatAccountOptionLabel = (address: string) => {
+  const formatAccountOptionLabel = (address: string, index: number) => {
     const metadata = getMetadataForAddress(address);
-    const name = String(metadata?.name || '').trim();
-    const symbol = String(metadata?.symbol || '').trim();
-    if (name && symbol) return `${name} (${symbol}) - ${address}`;
-    if (name) return `${name} - ${address}`;
-    if (symbol) return `${symbol} - ${address}`;
-    return address;
+    const name = String(metadata?.name || '').trim() || 'Unnamed account';
+    const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
+    return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
   React.useEffect(() => {
     setOpenAddressFields({});
@@ -205,22 +206,29 @@ export default function SpCoinWriteController(props: Props) {
             msg.sender
           </button>
           {mode === 'hardhat' ? (
-            <select
-              data-field-id="spcoin-write-sender"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
-              value={selectedWriteSenderAddress}
-              onChange={(e) => {
-                clearInvalidField('spcoin-write-sender');
-                setSelectedWriteSenderAddress(e.target.value);
-              }}
-            >
-              <option value="">Select account</option>
-              {hardhatAccounts.map((account, idx) => (
-                <option key={`write-sender-${idx}-${account.address}`} value={account.address}>
-                  {formatAccountOptionLabel(account.address)}
-                </option>
-              ))}
-            </select>
+            <>
+              <input
+                type="text"
+                list="spcoin-write-sender-options"
+                data-field-id="spcoin-write-sender"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
+                value={selectedWriteSenderAddress}
+                onChange={(e) => {
+                  clearInvalidField('spcoin-write-sender');
+                  setSelectedWriteSenderAddress(normalizeAccountValue(e.target.value));
+                }}
+                placeholder="Select account"
+              />
+              <datalist id="spcoin-write-sender-options">
+                {hardhatAccounts.map((account, idx) => (
+                  <option
+                    key={`write-sender-${idx}-${account.address}`}
+                    value={normalizeAccountValue(account.address)}
+                    label={formatAccountOptionLabel(account.address, idx)}
+                  />
+                ))}
+              </datalist>
+            </>
           ) : (
             <input
               className={inputStyle}
@@ -290,22 +298,29 @@ export default function SpCoinWriteController(props: Props) {
                 >
                   {param.label}
                 </button>
-                <select
-                  data-field-id={`spcoin-write-param-${idx}`}
-                  className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
-                  value={spWriteParams[idx] || ''}
-                  onChange={(e) => {
-                    clearInvalidField(`spcoin-write-param-${idx}`);
-                    updateSpWriteParamAtIndex(idx, e.target.value);
-                  }}
-                >
-                  <option value="">Select account</option>
-                  {hardhatAccounts.map((account, accountIdx) => (
-                    <option key={`sp-write-address-${idx}-${accountIdx}-${account.address}`} value={account.address}>
-                      {formatAccountOptionLabel(account.address)}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <input
+                    type="text"
+                    list={`spcoin-write-address-options-${idx}`}
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    value={spWriteParams[idx] || ''}
+                    onChange={(e) => {
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, normalizeAccountValue(e.target.value));
+                    }}
+                    placeholder="Select account"
+                  />
+                  <datalist id={`spcoin-write-address-options-${idx}`}>
+                    {hardhatAccounts.map((account, accountIdx) => (
+                      <option
+                        key={`sp-write-address-${idx}-${accountIdx}-${account.address}`}
+                        value={normalizeAccountValue(account.address)}
+                        label={formatAccountOptionLabel(account.address, accountIdx)}
+                      />
+                    ))}
+                  </datalist>
+                </>
               </label>
               {openAddressFields[idx] && (
                 <>
