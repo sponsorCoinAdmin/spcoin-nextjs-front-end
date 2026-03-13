@@ -35,6 +35,7 @@ type Props = {
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   runSelectedSpCoinWriteMethod: () => void;
+  addCurrentMethodToScript: () => void;
   formatDateTimeDisplay: (datePart: string, hours: string, minutes: string, seconds: string) => string;
   formatDateInput: (date: Date) => string;
   backdateHours: string;
@@ -100,6 +101,7 @@ export default function SpCoinWriteController(props: Props) {
     writeTraceEnabled,
     toggleWriteTrace,
     runSelectedSpCoinWriteMethod,
+    addCurrentMethodToScript,
     formatDateTimeDisplay,
     formatDateInput,
     backdateHours,
@@ -137,6 +139,8 @@ export default function SpCoinWriteController(props: Props) {
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const actionButtonClassName =
+    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -282,7 +286,7 @@ export default function SpCoinWriteController(props: Props) {
         )}
       </div>
       {activeSpCoinWriteDef.params.map((param, idx) => (
-        <div key={`sp-write-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+        <div key={`sp-write-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <div
               className={`grid grid-cols-1 gap-3${
@@ -489,9 +493,22 @@ export default function SpCoinWriteController(props: Props) {
         backdateDays={backdateDays}
         applyBackdateBy={applyBackdateBy}
       />
-      <button type="button" className={buttonStyle} onClick={runSelectedSpCoinWriteMethod}>
-        Execute {activeSpCoinWriteDef.title}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-[50%] shrink-0`}
+          onClick={runSelectedSpCoinWriteMethod}
+        >
+          Execute {activeSpCoinWriteDef.title}
+        </button>
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-0 flex-1`}
+          onClick={addCurrentMethodToScript}
+        >
+          Add To Script
+        </button>
+      </div>
     </div>
   );
 }

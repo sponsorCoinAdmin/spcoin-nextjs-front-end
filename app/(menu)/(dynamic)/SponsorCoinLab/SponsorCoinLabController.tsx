@@ -1,7 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController.tsx
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
 import type { Contract } from 'ethers';
@@ -56,7 +56,32 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 type ConnectionMode = 'metamask' | 'hardhat';
 type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_write';
-type LabCardId = 'network' | 'contract' | 'readTree' | 'methods' | 'log' | 'output';
+type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
+type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type ScriptStepPanelMode = MethodPanelMode;
+type LabScriptParam = {
+  key: string;
+  value: string;
+};
+
+type LabScriptStep = {
+  step: number;
+  name: string;
+  panel: ScriptStepPanelMode;
+  method: string;
+  params: LabScriptParam[];
+  network?: string;
+  mode?: ConnectionMode;
+  'msg.sender'?: string;
+};
+
+type LabScript = {
+  id: string;
+  name: string;
+  testKey: string;
+  network: string;
+  steps: LabScriptStep[];
+};
 
 type HardhatAccountOption = {
   address: string;
@@ -84,9 +109,11 @@ type SpCoinDeploymentFile = {
 };
 
 const spCoinLabKey = 'spCoinLabKey';
+const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
 const HARDHAT_CHAIN_ID_DEC = 31337;
 const HARDHAT_CHAIN_ID_HEX = '0x7a69';
 const HARDHAT_NETWORK_NAME = 'SponsorCoin HH BASE';
+const HARDHAT_SCRIPT_NETWORK_LABEL = 'Hardhat Ec2-BASE';
 const MISSING_LOCAL_ACCOUNT_NAME = 'Account Not Found on Local';
 const MISSING_LOCAL_ACCOUNT_SYMBOL = 'MISSING';
 
@@ -96,6 +123,8 @@ const buttonStyle =
   'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.45rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
 const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+const hiddenScrollbarClass =
+  '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden';
 
 type TestAccountFileEntry =
   | string
@@ -234,6 +263,10 @@ function formatOutputValue(value: unknown): unknown {
   return value;
 }
 
+function buildDefaultScriptName(index: number) {
+  return `Script ${index}`;
+}
+
 function formatOutputDisplayValue(value: unknown) {
   const normalized = formatOutputValue(value);
   if (typeof normalized === 'string') return normalized;
@@ -283,6 +316,10 @@ export default function SponsorCoinLabPage() {
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin SandBox] Ready']);
   const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
+  const [treeOutputDisplay, setTreeOutputDisplay] = useState('(no tree yet)');
+  const [outputPanelMode, setOutputPanelMode] = useState<OutputPanelMode>('formatted');
+  const [scripts, setScripts] = useState<LabScript[]>([]);
+  const [selectedScriptId, setSelectedScriptId] = useState('');
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
   const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
@@ -1265,21 +1302,22 @@ export default function SponsorCoinLabPage() {
   const runTreeDump = useCallback(async () => {
     const listCall = buildMethodCallEntry('getAccountList');
     try {
-      setFormattedOutputDisplay('(no output yet)');
+      setTreeOutputDisplay('(no tree yet)');
+      setOutputPanelMode('tree');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Building tree dump...');
       const list = (await (access.read as any).getAccountList()) as string[];
       if (list.length === 0) {
-        setFormattedOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
+        setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
         appendLog('Tree dump skipped: no accounts available.');
         setStatus('Tree dump skipped (no accounts).');
         return;
       }
       const first = list[0];
       const tree = await (access.read as any).getAccountRecord(first);
-      setFormattedOutputDisplay(
+      setTreeOutputDisplay(
         formatOutputDisplayValue({
           call: buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: first }]),
           result: tree,
@@ -1289,7 +1327,7 @@ export default function SponsorCoinLabPage() {
       setStatus('Tree dump complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message }));
+      setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message }));
       setStatus(`Tree dump failed: ${message}`);
       appendLog(`Tree dump failed: ${message}`);
     }
@@ -1576,6 +1614,17 @@ export default function SponsorCoinLabPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      const rawScripts = window.localStorage.getItem(spCoinLabScriptsKey);
+      if (rawScripts) {
+        const savedScripts = JSON.parse(rawScripts) as { scripts?: LabScript[]; selectedScriptId?: string };
+        const nextScripts = Array.isArray(savedScripts?.scripts) ? savedScripts.scripts : [];
+        setScripts(nextScripts);
+        if (typeof savedScripts?.selectedScriptId === 'string') {
+          setSelectedScriptId(savedScripts.selectedScriptId);
+        } else if (nextScripts[0]?.id) {
+          setSelectedScriptId(nextScripts[0].id);
+        }
+      }
       const raw = window.localStorage.getItem(spCoinLabKey);
       if (raw) {
         const saved = JSON.parse(raw) as Record<string, any>;
@@ -1611,6 +1660,9 @@ export default function SponsorCoinLabPage() {
         if (typeof saved.formattedOutputDisplay === 'string') {
           setFormattedOutputDisplay(saved.formattedOutputDisplay);
         }
+        if (typeof saved.treeOutputDisplay === 'string') {
+          setTreeOutputDisplay(saved.treeOutputDisplay);
+        }
         if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
           backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
         }
@@ -1633,6 +1685,22 @@ export default function SponsorCoinLabPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!spCoinLabHydrated) return;
+    window.localStorage.setItem(
+      spCoinLabScriptsKey,
+      JSON.stringify({
+        scripts,
+        selectedScriptId,
+      }),
+    );
+  }, [scripts, selectedScriptId, spCoinLabHydrated]);
+  useEffect(() => {
+    const nextSelectedScript = scripts.find((script) => script.id === selectedScriptId);
+    if (!nextSelectedScript) return;
+    setFormattedOutputDisplay(JSON.stringify(nextSelectedScript, null, 2));
+  }, [scripts, selectedScriptId]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!spCoinLabHydrated) return;
     const payload = {
       mode,
       rpcUrl,
@@ -1645,6 +1713,7 @@ export default function SponsorCoinLabPage() {
       status,
       logs,
       formattedOutputDisplay,
+      treeOutputDisplay,
       selectedWriteMethod,
       writeAddressA,
       writeAddressB,
@@ -1682,6 +1751,7 @@ export default function SponsorCoinLabPage() {
     status,
     logs,
     formattedOutputDisplay,
+    treeOutputDisplay,
     selectedWriteMethod,
     writeAddressA,
     writeAddressB,
@@ -1921,6 +1991,593 @@ export default function SponsorCoinLabPage() {
       `${cardStyle} flex flex-col ${expandedCard === cardId ? 'min-h-[calc(100dvh-10rem)]' : ''} ${placement}`.trim(),
     [expandedCard],
   );
+  const methodsCardRef = useRef<HTMLElement | null>(null);
+  const [sharedMethodsRowHeight, setSharedMethodsRowHeight] = useState<number | null>(null);
+  const [isDesktopSharedLayout, setIsDesktopSharedLayout] = useState(false);
+  const selectedScript = useMemo(
+    () => scripts.find((script) => script.id === selectedScriptId) || null,
+    [scripts, selectedScriptId],
+  );
+  const [selectedScriptStepNumber, setSelectedScriptStepNumber] = useState<number | null>(null);
+  const [expandedScriptStepIds, setExpandedScriptStepIds] = useState<Record<string, boolean>>({});
+  const [isDeleteStepPopupOpen, setIsDeleteStepPopupOpen] = useState(false);
+  const selectedScriptStep = useMemo(
+    () => selectedScript?.steps.find((step) => step.step === selectedScriptStepNumber) || null,
+    [selectedScript, selectedScriptStepNumber],
+  );
+
+  useEffect(() => {
+    const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
+
+    updateViewportMode();
+    window.addEventListener('resize', updateViewportMode);
+    return () => window.removeEventListener('resize', updateViewportMode);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktopSharedLayout || expandedCard !== null) {
+      setSharedMethodsRowHeight(null);
+      return;
+    }
+
+    const node = methodsCardRef.current;
+    if (!node) return;
+
+    const updateHeight = () => setSharedMethodsRowHeight(Math.ceil(node.getBoundingClientRect().height));
+
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(() => updateHeight());
+    resizeObserver.observe(node);
+
+    return () => resizeObserver.disconnect();
+  }, [expandedCard, isDesktopSharedLayout]);
+
+  const getStepNetwork = useCallback(
+    (step: LabScriptStep): string =>
+      String(step.network || '').trim() ||
+      ((step.mode || '') === 'hardhat' ? HARDHAT_SCRIPT_NETWORK_LABEL : activeNetworkName || 'MetaMask'),
+    [activeNetworkName],
+  );
+  const getScriptNetwork = useCallback(
+    (script: LabScript): string =>
+      String(script.network || '').trim() ||
+      (Array.isArray(script.steps) && script.steps[0] ? getStepNetwork(script.steps[0]) : activeNetworkName || 'MetaMask'),
+    [activeNetworkName, getStepNetwork],
+  );
+  const getStepMode = useCallback(
+    (step: LabScriptStep, scriptNetwork?: string): ConnectionMode =>
+      String(scriptNetwork || '').trim() === HARDHAT_SCRIPT_NETWORK_LABEL ||
+      getStepNetwork(step) === HARDHAT_SCRIPT_NETWORK_LABEL ||
+      step.mode === 'hardhat'
+        ? 'hardhat'
+        : 'metamask',
+    [getStepNetwork],
+  );
+  const getStepSender = useCallback((step: LabScriptStep): string => {
+    const directSender = String(step['msg.sender'] || '').trim();
+    if (directSender) return directSender;
+
+    if (
+      Array.isArray(step.params) &&
+      step.params.every(
+        (param) =>
+          param &&
+          typeof param === 'object' &&
+          'key' in param &&
+          'value' in param &&
+          typeof (param as { key?: unknown }).key === 'string',
+      )
+    ) {
+      const match = (step.params as LabScriptParam[]).find((param) => param.key === 'msg.sender');
+      return String(match?.value || '').trim();
+    }
+
+    const legacyValues = Array.isArray(step.params) ? (step.params as unknown[]).map((value) => String(value || '')) : [];
+    if (step.panel === 'erc20_write' && legacyValues.length >= 4) return legacyValues[0] || '';
+    return '';
+  }, []);
+  const getStepParamEntries = useCallback(
+    (step: LabScriptStep): LabScriptParam[] => {
+      if (
+        Array.isArray(step.params) &&
+        step.params.every(
+          (param) =>
+            param &&
+            typeof param === 'object' &&
+            'key' in param &&
+            'value' in param &&
+            typeof (param as { key?: unknown }).key === 'string',
+        )
+      ) {
+        return (step.params as LabScriptParam[])
+          .map((param) => ({
+            key: String(param.key || ''),
+            value: String(param.value || ''),
+          }))
+          .filter((param) => param.key !== 'msg.sender' && param.value.trim().length > 0);
+      }
+
+      const legacyValues = Array.isArray(step.params) ? (step.params as unknown[]).map((value) => String(value || '')) : [];
+
+      if (step.panel === 'ecr20_read') {
+        const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
+        const keys = [labels.addressALabel, labels.addressBLabel].filter(Boolean);
+        return legacyValues
+          .map((value, idx) => ({ key: keys[idx] || `param${idx + 1}`, value }))
+          .filter((param) => param.value.trim().length > 0);
+      }
+
+      if (step.panel === 'erc20_write') {
+        const labels = getErc20WriteLabels(step.method as Erc20WriteMethod);
+        const hasLegacySender = legacyValues.length >= 4;
+        const entries: LabScriptParam[] = [];
+        entries.push({ key: labels.addressALabel, value: legacyValues[hasLegacySender ? 1 : 0] || '' });
+        if (labels.requiresAddressB) {
+          entries.push({ key: labels.addressBLabel, value: legacyValues[hasLegacySender ? 2 : 1] || '' });
+        }
+        entries.push({ key: 'Amount', value: legacyValues[hasLegacySender ? 3 : labels.requiresAddressB ? 2 : 1] || '' });
+        return entries.filter((param) => param.value.trim().length > 0);
+      }
+
+      if (step.panel === 'spcoin_rread') {
+        const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+        return legacyValues
+          .map((value, idx) => ({ key: def?.params[idx]?.label || `param${idx + 1}`, value }))
+          .filter((param) => param.value.trim().length > 0);
+      }
+
+      const writeDef = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+      return [
+        ...legacyValues.map((value, idx) => ({ key: writeDef?.params[idx]?.label || `param${idx + 1}`, value })),
+      ].filter((param) => param.value.trim().length > 0);
+    },
+    [spCoinReadMethodDefs, spCoinWriteMethodDefs],
+  );
+  const normalizeScriptStep = useCallback(
+    (step: LabScriptStep, index: number): LabScriptStep => ({
+      step: index + 1,
+      name: step.name,
+      panel: step.panel,
+      method: step.method,
+      'msg.sender': getStepSender(step) || undefined,
+      params: getStepParamEntries(step),
+    }),
+    [getStepParamEntries, getStepSender],
+  );
+  const normalizeScript = useCallback(
+    (script: LabScript): LabScript => {
+      const normalizedSteps = Array.isArray(script.steps)
+        ? script.steps.map((step, idx) => normalizeScriptStep(step, idx))
+        : [];
+      return {
+        ...script,
+        network: getScriptNetwork(script),
+        steps: normalizedSteps,
+      };
+    },
+    [getScriptNetwork, normalizeScriptStep],
+  );
+  useEffect(() => {
+    setScripts((prev) => {
+      let changed = false;
+      const next = prev.map((script) => {
+        const normalizedScript = normalizeScript(script);
+        if (JSON.stringify(normalizedScript) !== JSON.stringify(script)) {
+          changed = true;
+          return normalizedScript;
+        }
+        return script;
+      });
+      return changed ? next : prev;
+    });
+  }, [normalizeScript]);
+  const loadScriptStep = useCallback((step: LabScriptStep) => {
+    const paramEntries = getStepParamEntries(step);
+    const stepSender = getStepSender(step);
+    const findParamValue = (keys: string[]) => {
+      const match = paramEntries.find((param) => keys.includes(param.key));
+      return String(match?.value || '');
+    };
+    setSelectedScriptStepNumber(step.step);
+    setMode(getStepMode(step, selectedScript?.network));
+    setMethodPanelMode(step.panel);
+
+    if (step.panel === 'ecr20_read') {
+      setSelectedReadMethod(step.method as Erc20ReadMethod);
+      const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
+      setReadAddressA(findParamValue([labels.addressALabel]));
+      setReadAddressB(findParamValue([labels.addressBLabel]));
+      return;
+    }
+
+    if (step.panel === 'erc20_write') {
+      const labels = getErc20WriteLabels(step.method as Erc20WriteMethod);
+      setSelectedWriteMethod(step.method as Erc20WriteMethod);
+      setSelectedWriteSenderAddress(stepSender);
+      setWriteAddressA(findParamValue([labels.addressALabel]));
+      setWriteAddressB(findParamValue([labels.addressBLabel]));
+      setWriteAmountRaw(findParamValue(['Amount']));
+      return;
+    }
+
+    if (step.panel === 'spcoin_rread') {
+      setSelectedSpCoinReadMethod(step.method as SpCoinReadMethod);
+      const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+      setSpReadParams(
+        Array.from({ length: 7 }, (_, idx) => findParamValue([def?.params[idx]?.label || `param${idx + 1}`])),
+      );
+      return;
+    }
+
+    setSelectedSpCoinWriteMethod(step.method as SpCoinWriteMethod);
+    setSelectedWriteSenderAddress(stepSender);
+    const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+    setSpWriteParams(
+      Array.from({ length: 7 }, (_, idx) => findParamValue([def?.params[idx]?.label || `param${idx + 1}`])),
+    );
+  }, [getStepMode, getStepParamEntries, getStepSender, selectedScript?.network, spCoinReadMethodDefs, spCoinWriteMethodDefs]);
+  const toggleScriptStepExpanded = useCallback((stepNumber: number) => {
+    const key = String(stepNumber);
+    setExpandedScriptStepIds((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const runActiveMethod = useCallback(async () => {
+    switch (methodPanelMode) {
+      case 'ecr20_read':
+        await runSelectedReadMethod();
+        return;
+      case 'erc20_write':
+        await runSelectedWriteMethod();
+        return;
+      case 'spcoin_rread':
+        await runSelectedSpCoinReadMethod();
+        return;
+      case 'spcoin_write':
+        await runSelectedSpCoinWriteMethod();
+        return;
+      default:
+        return;
+    }
+  }, [
+    methodPanelMode,
+    runSelectedReadMethod,
+    runSelectedSpCoinReadMethod,
+    runSelectedSpCoinWriteMethod,
+    runSelectedWriteMethod,
+  ]);
+  const goToAdjacentScriptStep = useCallback(
+    (direction: -1 | 1) => {
+      if (!selectedScript || selectedScript.steps.length === 0) return;
+      const currentIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+      const startIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = startIndex + direction;
+      const nextStep = selectedScript.steps[nextIndex];
+      if (!nextStep) return;
+      loadScriptStep(nextStep);
+    },
+    [loadScriptStep, selectedScript, selectedScriptStepNumber],
+  );
+  const deleteSelectedScriptStep = useCallback(() => {
+    if (!selectedScriptId || selectedScriptStepNumber === null) return;
+    setScripts((prev) =>
+      prev.map((script) => {
+        if (script.id !== selectedScriptId) return script;
+        const remainingSteps = script.steps
+          .filter((step) => step.step !== selectedScriptStepNumber)
+          .map((step, idx) => ({
+            ...step,
+            step: idx + 1,
+          }));
+        return {
+          ...script,
+          steps: remainingSteps,
+        };
+      }),
+    );
+    setExpandedScriptStepIds((prev) => {
+      const currentSteps = Array.isArray(selectedScript?.steps) ? selectedScript.steps : [];
+      const remainingSteps = currentSteps.filter((step) => step.step !== selectedScriptStepNumber);
+      const nextExpanded: Record<string, boolean> = {};
+      remainingSteps.forEach((step, idx) => {
+        nextExpanded[String(idx + 1)] = Boolean(prev[String(step.step)]);
+      });
+      return nextExpanded;
+    });
+    setSelectedScriptStepNumber((prev) => {
+      if (!prev) return null;
+      const remainingCount = Math.max((selectedScript?.steps.length || 0) - 1, 0);
+      if (remainingCount === 0) return null;
+      return Math.min(prev, remainingCount);
+    });
+  }, [selectedScript?.steps, selectedScriptId, selectedScriptStepNumber]);
+  const requestDeleteSelectedScriptStep = useCallback(() => {
+    if (selectedScriptStepNumber === null) return;
+    setIsDeleteStepPopupOpen(true);
+  }, [selectedScriptStepNumber]);
+  const confirmDeleteSelectedScriptStep = useCallback(() => {
+    deleteSelectedScriptStep();
+    setIsDeleteStepPopupOpen(false);
+  }, [deleteSelectedScriptStep]);
+  const renderScriptStepRow = useCallback(
+    (step: LabScriptStep) => {
+      const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
+      const isSelected = selectedScriptStep?.step === step.step;
+      return (
+        <div key={`step-${step.step}`} className="m-0 flex flex-col p-0 font-mono leading-tight">
+          <div className="inline-flex w-full items-center gap-2 px-0 py-0 text-left text-sm">
+            <button
+              type="button"
+              onClick={() => toggleScriptStepExpanded(step.step)}
+              className={`shrink-0 ${isExpanded ? 'text-green-400' : 'text-red-400'}`}
+              title={isExpanded ? `Collapse ${step.method}` : `Expand ${step.method}`}
+            >
+              {isExpanded ? '[+]' : '[-]'}
+            </button>
+            <button
+              type="button"
+              onClick={() => loadScriptStep(step)}
+              className={`min-w-0 text-left ${isSelected ? 'text-green-400 underline underline-offset-2' : 'text-slate-200'}`}
+              title={`Load ${step.method}`}
+            >
+              {step.method}
+            </button>
+          </div>
+          {isExpanded ? (
+            <div className="mt-1 space-y-1 pl-6 text-xs text-slate-200">
+              {getStepSender(step) ? <div>{`msg.sender: ${getStepSender(step)};`}</div> : null}
+              {getStepParamEntries(step).length > 0 ? (
+                getStepParamEntries(step).map((param, idx) => (
+                  <div key={`step-${step.step}-param-${idx}`}>
+                    {`${param.key}: ${param.value};`}
+                  </div>
+                ))
+              ) : (
+                <div>(no params)</div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      );
+    },
+    [
+      expandedScriptStepIds,
+      getStepParamEntries,
+      getStepSender,
+      loadScriptStep,
+      selectedScriptStep?.step,
+      toggleScriptStepExpanded,
+    ],
+  );
+  const highlightedFormattedOutputLines = useMemo(() => {
+    if (outputPanelMode !== 'formatted' || selectedScriptStepNumber === null) return null;
+    const lines = String(formattedOutputDisplay || '').split('\n');
+    const targetLineIndex = lines.findIndex((line) => line.includes(`"step": ${selectedScriptStepNumber}`));
+    if (targetLineIndex < 0) return null;
+
+    let startIndex = targetLineIndex;
+    if (targetLineIndex > 0 && lines[targetLineIndex - 1].trim().startsWith('{')) {
+      startIndex = targetLineIndex - 1;
+    }
+
+    let depth = 0;
+    let endIndex = targetLineIndex;
+    for (let idx = startIndex; idx < lines.length; idx += 1) {
+      const line = lines[idx];
+      depth += (line.match(/\{/g) || []).length;
+      depth -= (line.match(/\}/g) || []).length;
+      endIndex = idx;
+      if (idx > startIndex && depth <= 0) break;
+    }
+
+    return lines.map((line, idx) => ({
+      line,
+      active: idx >= startIndex && idx <= endIndex,
+    }));
+  }, [formattedOutputDisplay, outputPanelMode, selectedScriptStepNumber]);
+  useEffect(() => {
+    if (!selectedScript) {
+      setSelectedScriptStepNumber(null);
+      return;
+    }
+    if (selectedScript.steps.some((step) => step.step === selectedScriptStepNumber)) return;
+    setSelectedScriptStepNumber(selectedScript.steps[0]?.step ?? null);
+  }, [selectedScript, selectedScriptStepNumber]);
+  const createNewScript = useCallback(() => {
+    const nextIndex = scripts.length + 1;
+    const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nextScript: LabScript = {
+      id: nextId,
+      name: buildDefaultScriptName(nextIndex),
+      testKey: `test-${nextIndex}`,
+      network: mode === 'hardhat' ? HARDHAT_SCRIPT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
+      steps: [],
+    };
+    setScripts((prev) => [...prev, nextScript]);
+    setSelectedScriptId(nextId);
+    setFormattedOutputDisplay(JSON.stringify(nextScript, null, 2));
+    setOutputPanelMode('formatted');
+    setStatus(`Created ${nextScript.name}.`);
+  }, [scripts.length]);
+  const deleteSelectedScript = useCallback(() => {
+    if (!selectedScriptId) return;
+    setScripts((prev) => {
+      const remaining = prev.filter((script) => script.id !== selectedScriptId);
+      const nextSelectedId = remaining[0]?.id || '';
+      setSelectedScriptId(nextSelectedId);
+      setFormattedOutputDisplay(
+        nextSelectedId
+          ? JSON.stringify(remaining.find((script) => script.id === nextSelectedId) || { scripts: [] }, null, 2)
+          : JSON.stringify({ scripts: [] }, null, 2),
+      );
+      return remaining;
+    });
+    setOutputPanelMode('formatted');
+    setStatus('Deleted selected script.');
+  }, [selectedScriptId]);
+  const addCurrentMethodToScript = useCallback(() => {
+    if (!selectedScriptId) {
+      setStatus('Select or create a script first.');
+      setOutputPanelMode('raw_status');
+      return;
+    }
+
+    let method = '';
+    let params: LabScriptParam[] = [];
+    let name = '';
+
+    switch (methodPanelMode) {
+      case 'ecr20_read':
+        method = selectedReadMethod;
+        params = [
+          activeReadLabels.requiresAddressA
+            ? { key: activeReadLabels.addressALabel, value: String(readAddressA || '').trim() }
+            : null,
+          activeReadLabels.requiresAddressB
+            ? { key: activeReadLabels.addressBLabel, value: String(readAddressB || '').trim() }
+            : null,
+        ].filter((value): value is LabScriptParam => value !== null && value.value.length > 0);
+        name = activeReadLabels.title;
+        break;
+      case 'erc20_write':
+        method = selectedWriteMethod;
+        params = [
+          { key: activeWriteLabels.addressALabel, value: String(writeAddressA || '').trim() },
+          ...(activeWriteLabels.requiresAddressB
+            ? [{ key: activeWriteLabels.addressBLabel, value: String(writeAddressB || '').trim() }]
+            : []),
+          { key: 'Amount', value: String(writeAmountRaw || '').trim() },
+        ].filter((param) => param.value.length > 0);
+        name = activeWriteLabels.title;
+        break;
+      case 'spcoin_rread':
+        method = selectedSpCoinReadMethod;
+        params = spReadParams
+          .slice(0, activeSpCoinReadDef.params.length)
+          .map((value, idx) => ({
+            key: activeSpCoinReadDef.params[idx]?.label || `param${idx + 1}`,
+            value: String(value || '').trim(),
+          }))
+          .filter((param) => param.value.length > 0);
+        name = activeSpCoinReadDef.title;
+        break;
+      case 'spcoin_write':
+        method = selectedSpCoinWriteMethod;
+        params = [
+          ...spWriteParams
+            .slice(0, activeSpCoinWriteDef.params.length)
+            .map((value, idx) => ({
+              key: activeSpCoinWriteDef.params[idx]?.label || `param${idx + 1}`,
+              value: String(value || '').trim(),
+            })),
+        ].filter((param) => param.value.length > 0);
+        name = activeSpCoinWriteDef.title;
+        break;
+      default:
+        break;
+    }
+
+    if (!method) {
+      setStatus('No active method is available to add.');
+      setOutputPanelMode('raw_status');
+      return;
+    }
+
+    const nextStep: LabScriptStep = {
+      step: 0,
+      name,
+      panel: methodPanelMode,
+      method,
+      'msg.sender':
+        methodPanelMode === 'erc20_write' || methodPanelMode === 'spcoin_write'
+          ? String(selectedWriteSenderAddress || '').trim() || undefined
+          : undefined,
+      params,
+    };
+
+    setScripts((prev) =>
+      prev.map((script) =>
+        script.id === selectedScriptId
+          ? (() => {
+              const currentSteps = Array.isArray(script.steps) ? script.steps : [];
+              const activeIndex =
+                selectedScriptStepNumber === null
+                  ? currentSteps.length - 1
+                  : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
+              const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
+              const insertedSteps = [
+                ...currentSteps.slice(0, insertIndex),
+                nextStep,
+                ...currentSteps.slice(insertIndex),
+              ].map((step, idx) => ({
+                ...step,
+                step: idx + 1,
+              }));
+              return {
+                ...script,
+                network: String(script.network || '').trim()
+                  ? script.network
+                  : mode === 'hardhat'
+                  ? HARDHAT_SCRIPT_NETWORK_LABEL
+                  : activeNetworkName || 'MetaMask',
+                steps: insertedSteps,
+              };
+            })()
+          : script,
+      ),
+    );
+    const insertedStepNumber =
+      selectedScriptStepNumber !== null && Array.isArray(selectedScript?.steps)
+        ? (() => {
+            const activeIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+            return (activeIndex >= 0 ? activeIndex : selectedScript.steps.length - 1) + 2;
+          })()
+        : (selectedScript?.steps.length || 0) + 1;
+    setSelectedScriptStepNumber(insertedStepNumber);
+    setExpandedScriptStepIds((prev) => {
+      const currentSteps = Array.isArray(selectedScript?.steps) ? selectedScript.steps : [];
+      const activeIndex =
+        selectedScriptStepNumber === null
+          ? currentSteps.length - 1
+          : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
+      const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
+      const nextExpanded: Record<string, boolean> = {};
+      currentSteps.forEach((step, idx) => {
+        const nextStepNumber = idx < insertIndex ? idx + 1 : idx + 2;
+        nextExpanded[String(nextStepNumber)] = Boolean(prev[String(step.step)]);
+      });
+      nextExpanded[String(insertIndex + 1)] = false;
+      return nextExpanded;
+    });
+    setOutputPanelMode('formatted');
+    setStatus(`Added ${name} to the selected script.`);
+  }, [
+    selectedScriptId,
+    methodPanelMode,
+    selectedReadMethod,
+    readAddressA,
+    readAddressB,
+    activeReadLabels.title,
+    activeReadLabels.requiresAddressA,
+    activeReadLabels.requiresAddressB,
+    selectedWriteMethod,
+    selectedWriteSenderAddress,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+    activeWriteLabels.title,
+    activeWriteLabels.requiresAddressB,
+    selectedSpCoinReadMethod,
+    spReadParams,
+    activeSpCoinReadDef.title,
+    activeSpCoinReadDef.params.length,
+    selectedSpCoinWriteMethod,
+    spWriteParams,
+    activeSpCoinWriteDef.title,
+    activeSpCoinWriteDef.params.length,
+    activeNetworkName,
+    mode,
+    selectedScript?.steps.length,
+  ]);
 
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
@@ -1929,116 +2586,15 @@ export default function SponsorCoinLabPage() {
 
         <section className={`grid grid-cols-1 gap-6 ${expandedCard ? '' : 'xl:grid-cols-2'}`}>
           {showCard('network') && (
-          <article className={getCardClassName('network', expandedCard ? '' : 'xl:col-start-1 xl:row-start-2')}>
+          <article className={getCardClassName('network', expandedCard ? '' : 'xl:col-start-2 xl:row-start-1')}>
             <LabCardHeader
-              title="Network Connection Management"
+              title="Active Sponsor Coin Signer Account"
               isExpanded={expandedCard === 'network'}
               onToggleExpand={() => toggleExpandedCard('network')}
-              secondaryRow={
-                <div className="flex flex-wrap items-center gap-4 md:justify-end">
-                  <label className="flex items-center gap-2 text-[#8FA8FF]">
-                    <input
-                      type="radio"
-                      name="sponsorcoin-lab-network-mode"
-                      value="hardhat"
-                      checked={mode === 'hardhat'}
-                      onChange={() => setMode('hardhat')}
-                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    />
-                    <span>Hardhat Local</span>
-                  </label>
-                  <label className="flex items-center gap-2 text-[#8FA8FF]">
-                    <input
-                      type="radio"
-                      name="sponsorcoin-lab-network-mode"
-                      value="metamask"
-                      checked={mode === 'metamask'}
-                      onChange={() => setMode('metamask')}
-                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    />
-                    <span>MetaMask</span>
-                  </label>
-                </div>
-              }
             />
-            <div className="mt-3 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
-              <span
-                className={`text-sm font-semibold ${
-                  shouldPromptHardhatBaseConnect ? 'cursor-pointer text-[#F59E0B] hover:text-[#FACC15]' : 'text-[#8FA8FF]'
-                }`}
-                title={shouldPromptHardhatBaseConnect ? 'connect "Hardhat Base"' : undefined}
-                onClick={shouldPromptHardhatBaseConnect ? () => void connectHardhatBaseFromNetworkLabel() : undefined}
-              >
-                Connected Network
-              </span>
-              <input
-                type="text"
-                value={activeNetworkName}
-                readOnly
-                className={inputStyle}
-                aria-label="Connected network"
-                title="Connected network"
-              />
-              <label className="flex items-center justify-self-end gap-2">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
-                <input
-                  type="text"
-                  value={chainIdDisplayValue}
-                  readOnly
-                  className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  style={{ width: `${chainIdDisplayWidthCh}ch` }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
-                  className="-mt-[10px] inline-flex items-center justify-center bg-transparent p-0"
-                  aria-label="Toggle Hardhat connection settings"
-                  title="Toggle Hardhat connection settings"
-                >
-                  <Image
-                    src={cog_png}
-                    alt="Toggle Hardhat connection settings"
-                    className="h-6 w-6 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
-                  />
-                </button>
-              </label>
-            </div>
 
-            {mode === 'hardhat' && (
-              <div className="mt-4 grid grid-cols-1 gap-3">
-                {showHardhatConnectionInputs && (
-                  <>
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <span className="text-sm font-semibold text-[#8FA8FF]">Hardhat RPC URL</span>
-                      <input
-                        className={inputStyle}
-                        value={rpcUrl}
-                        onChange={(e) => setRpcUrl(e.target.value)}
-                        placeholder="Hardhat RPC URL"
-                      />
-                    </label>
-                  </>
-                )}
-              </div>
-            )}
-            {mode !== 'hardhat' && (
-              <div className="mt-4">
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
-                  <input
-                    className={inputStyle}
-                    readOnly
-                    disabled
-                    value={effectiveConnectedAddress || ''}
-                    placeholder="Selected account address"
-                  />
-                </label>
-              </div>
-            )}
-
-            <div className="mt-6 border-t border-[#2B3A67] pt-5">
-              <h2 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h2>
-              <div className="mt-4 grid grid-cols-1 gap-3">
+            <div className="mt-4">
+              <div className="grid grid-cols-1 gap-3">
                 <div
                   className={`grid grid-cols-1 gap-3${
                     showSignerAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
@@ -2060,9 +2616,6 @@ export default function SponsorCoinLabPage() {
                       placeholder="Selected account address"
                     />
                   </label>
-                  <div className="border-t border-[#2B3A67] pt-3">
-                    <h3 className="text-center text-lg font-semibold text-[#5981F3]">Test Wallet Account Management</h3>
-                  </div>
                   {showSignerAccountDetails && (
                     <>
                       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -2105,58 +2658,61 @@ export default function SponsorCoinLabPage() {
                       ) : null}
                     </>
                   )}
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <button
-                        type="button"
-                        onClick={() => void addSignerAccount()}
-                        className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(addAccountValidation.tone)}`}
-                        title={addAccountValidation.message}
-                      >
-                        Add Account
-                      </button>
-                      <input
-                        className={inputStyle}
-                        value={addAccountInput}
-                        onChange={(e) => setAddAccountInput(e.target.value)}
-                        placeholder="Enter an account address to add"
-                      />
-                    </div>
-                    {addAccountValidation.message ? (
-                      <div className={`text-xs ${addAccountValidation.tone === 'valid' ? 'text-green-300' : addAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
-                        {addAccountValidation.message}
-                      </div>
-                    ) : null}
-                    <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <button
-                        type="button"
-                        onClick={() => void deleteSignerAccount()}
-                        className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(deleteAccountValidation.tone)}`}
-                        title={deleteAccountValidation.message}
-                      >
-                        Delete Account
-                      </button>
-                      <input
-                        className={inputStyle}
-                        value={deleteAccountInput}
-                        onChange={(e) => setDeleteAccountInput(e.target.value)}
-                        placeholder="Enter an account address to delete"
-                      />
-                    </div>
-                    {deleteAccountValidation.message ? (
-                      <div className={`text-xs ${deleteAccountValidation.tone === 'valid' ? 'text-green-300' : deleteAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
-                        {deleteAccountValidation.message}
-                      </div>
-                    ) : null}
-                    {signerAccountStatus ? (
-                      <div>
-                        <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
-                        <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
-                          {signerAccountStatus}
-                        </div>
-                      </div>
-                    ) : null}
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="border-t border-[#2B3A67] pt-3">
+                    <h3 className="text-center text-lg font-semibold text-[#5981F3]">Test Wallet Account Management</h3>
                   </div>
+                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={() => void addSignerAccount()}
+                      className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(addAccountValidation.tone)}`}
+                      title={addAccountValidation.message}
+                    >
+                      Add Account
+                    </button>
+                    <input
+                      className={inputStyle}
+                      value={addAccountInput}
+                      onChange={(e) => setAddAccountInput(e.target.value)}
+                      placeholder="Enter an account address to add"
+                    />
+                  </div>
+                  {addAccountValidation.message ? (
+                    <div className={`text-xs ${addAccountValidation.tone === 'valid' ? 'text-green-300' : addAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                      {addAccountValidation.message}
+                    </div>
+                  ) : null}
+                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <button
+                      type="button"
+                      onClick={() => void deleteSignerAccount()}
+                      className={`w-fit text-left text-sm font-semibold transition-colors ${accountActionLabelClassName(deleteAccountValidation.tone)}`}
+                      title={deleteAccountValidation.message}
+                    >
+                      Delete Account
+                    </button>
+                    <input
+                      className={inputStyle}
+                      value={deleteAccountInput}
+                      onChange={(e) => setDeleteAccountInput(e.target.value)}
+                      placeholder="Enter an account address to delete"
+                    />
+                  </div>
+                  {deleteAccountValidation.message ? (
+                    <div className={`text-xs ${deleteAccountValidation.tone === 'valid' ? 'text-green-300' : deleteAccountValidation.tone === 'invalid' ? 'text-red-300' : 'text-slate-400'}`}>
+                      {deleteAccountValidation.message}
+                    </div>
+                  ) : null}
+                  {signerAccountStatus ? (
+                    <div>
+                      <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
+                      <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
+                        {signerAccountStatus}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -2288,49 +2844,246 @@ export default function SponsorCoinLabPage() {
                   placeholder="SponsorCoin contract address"
                 />
               </label>
+              <div className="border-t border-[#2B3A67] pt-5">
+                <div className="flex flex-wrap items-center gap-4">
+                  <h2 className="text-lg font-semibold text-[#5981F3]">Network Controller</h2>
+                  <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                      <input
+                        type="radio"
+                        name="sponsorcoin-lab-network-mode"
+                        value="hardhat"
+                        checked={mode === 'hardhat'}
+                        onChange={() => setMode('hardhat')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span>Hardhat Ec2-BASE</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                      <input
+                        type="radio"
+                        name="sponsorcoin-lab-network-mode"
+                        value="metamask"
+                        checked={mode === 'metamask'}
+                        onChange={() => setMode('metamask')}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span>MetaMask</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+                  <span
+                    className={`text-sm font-semibold ${
+                      shouldPromptHardhatBaseConnect ? 'cursor-pointer text-[#F59E0B] hover:text-[#FACC15]' : 'text-[#8FA8FF]'
+                    }`}
+                    title={shouldPromptHardhatBaseConnect ? 'connect "Hardhat Base"' : undefined}
+                    onClick={shouldPromptHardhatBaseConnect ? () => void connectHardhatBaseFromNetworkLabel() : undefined}
+                  >
+                    Connected Network
+                  </span>
+                  <input
+                    type="text"
+                    value={activeNetworkName}
+                    readOnly
+                    className={inputStyle}
+                    aria-label="Connected network"
+                    title="Connected network"
+                  />
+                  <label className="flex items-center justify-self-end gap-2">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
+                    <input
+                      type="text"
+                      value={chainIdDisplayValue}
+                      readOnly
+                      className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                      style={{ width: `${chainIdDisplayWidthCh}ch` }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowHardhatConnectionInputs((prev) => !prev)}
+                      className="-mt-[10px] inline-flex items-center justify-center bg-transparent p-0"
+                      aria-label="Toggle Hardhat connection settings"
+                      title="Toggle Hardhat connection settings"
+                    >
+                      <Image
+                        src={cog_png}
+                        alt="Toggle Hardhat connection settings"
+                        className="h-6 w-6 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
+                      />
+                    </button>
+                  </label>
+                </div>
+                {mode === 'hardhat' && showHardhatConnectionInputs ? (
+                  <div className="mt-4 grid grid-cols-1 gap-3">
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Hardhat RPC URL</span>
+                      <input
+                        className={inputStyle}
+                        value={rpcUrl}
+                        onChange={(e) => setRpcUrl(e.target.value)}
+                        placeholder="Hardhat RPC URL"
+                      />
+                    </label>
+                  </div>
+                ) : null}
+                {mode !== 'hardhat' ? (
+                  <div className="mt-4">
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
+                      <input
+                        className={inputStyle}
+                        readOnly
+                        disabled
+                        value={effectiveConnectedAddress || ''}
+                        placeholder="Selected account address"
+                      />
+                    </label>
+                  </div>
+                ) : null}
+              </div>
               {mode !== 'hardhat' && (
                 <p className="text-sm text-slate-300">
-                  Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat Local.
+                  Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat Ec2-BASE.
                 </p>
               )}
             </div>
           </article>
           )}
 
-          {showCard('readTree') && (
-          <article className={getCardClassName('readTree')}>
-            <LabCardHeader
-              title="Read / Tree Dump Tests"
-              isExpanded={expandedCard === 'readTree'}
-              onToggleExpand={() => toggleExpandedCard('readTree')}
-            />
-            <p className="mt-2 text-sm text-slate-200">
-              Read methods are no-fee calls. Tree dump uses the first account from `getAccountList`.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" className={buttonStyle} onClick={runHeaderRead}>
-                Run Header Read
-              </button>
-              <button type="button" className={buttonStyle} onClick={runAccountListRead}>
-                Run Account List Read
-              </button>
-              <button type="button" className={buttonStyle} onClick={runTreeDump}>
-                Dump First Account Tree
-              </button>
-            </div>
-          </article>
-          )}
-
           {showCard('methods') && (
-          <article className={getCardClassName('methods', expandedCard ? '' : 'xl:col-start-1 xl:row-start-3')}>
+          <article
+            ref={methodsCardRef}
+            className={`${getCardClassName('methods', expandedCard ? '' : 'xl:col-start-1 xl:row-start-2')} self-start`}
+          >
             <LabCardHeader
-              title="Sponsor Coin Method Tests"
+              title="Script Test Editor"
               isExpanded={expandedCard === 'methods'}
               onToggleExpand={() => toggleExpandedCard('methods')}
-              secondaryRow={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
-                  <div className="flex w-full flex-wrap items-center justify-center gap-3 text-xs text-slate-200">
+            />
+            <div className="mt-4 grid grid-cols-1 gap-4">
+              <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
+                <h3 className="text-center text-lg font-semibold text-[#5981F3]">Script Builder/Debugger</h3>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button type="button" className={buttonStyle} onClick={createNewScript}>
+                    New Script
+                  </button>
+                  <select
+                    className="min-w-[16ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                    value={selectedScriptId}
+                    onChange={(e) => setSelectedScriptId(e.target.value)}
+                    aria-label="Script selector"
+                    title="Script selector"
+                  >
+                    {scripts.length === 0 ? <option value="">(no scripts)</option> : null}
+                    {scripts.map((script) => (
+                      <option key={script.id} value={script.id}>
+                        {script.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={buttonStyle}
+                    onClick={deleteSelectedScript}
+                    disabled={!selectedScriptId}
+                  >
+                    Delete Script
+                  </button>
+                </div>
+                <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-1.5 text-sm text-slate-200">
+                  <div className="absolute right-3 top-1.5 z-10 flex items-center gap-[0.05rem]">
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
+                      title="Run Script"
+                      onClick={() => void runActiveMethod()}
+                    >
+                      <Image
+                        src="/assets/miscellaneous/run.png"
+                        alt="Run Script"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      title="next step"
+                      onClick={() => goToAdjacentScriptStep(1)}
+                      disabled={!selectedScript || (selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
+                    >
+                      <Image
+                        src="/assets/miscellaneous/next.png"
+                        alt="next step"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      title="previous step"
+                      onClick={() => goToAdjacentScriptStep(-1)}
+                      disabled={!selectedScript || selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) <= 0}
+                    >
+                      <Image
+                        src="/assets/miscellaneous/back.png"
+                        alt="previous step"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-slate-200 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
+                      title="run remaining"
+                      disabled
+                    >
+                      <Image
+                        src="/assets/miscellaneous/continue.png"
+                        alt="run remaining"
+                        width={21}
+                        height={21}
+                        className="block h-[21px] w-[21px]"
+                        unoptimized
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      title="delete step"
+                      onClick={requestDeleteSelectedScriptStep}
+                      disabled={selectedScriptStepNumber === null}
+                    >
+                      <span className="block text-[21px] leading-none">✖</span>
+                    </button>
+                  </div>
+                  <div className={`min-h-0 flex-1 overflow-auto pr-[170px] ${hiddenScrollbarClass}`}>
+                    {!selectedScript ? (
+                      <div className="text-slate-400">(no script selected)</div>
+                    ) : selectedScript.steps.length === 0 ? (
+                      <div className="text-slate-400">(script has no steps yet)</div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-1">
+                        {selectedScript.steps.map((step) => renderScriptStepRow(step))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
+                <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Test Method</h3>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
+                  <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
                     <label className="inline-flex items-center gap-1">
                       <input
                         type="radio"
@@ -2377,8 +3130,6 @@ export default function SponsorCoinLabPage() {
                     </label>
                   </div>
                 </div>
-              }
-            />
 
             {methodPanelMode === 'ecr20_read' && (
               <Erc20ReadController
@@ -2398,6 +3149,7 @@ export default function SponsorCoinLabPage() {
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedReadMethod={runSelectedReadMethod}
+                addCurrentMethodToScript={addCurrentMethodToScript}
               />
             )}
 
@@ -2429,6 +3181,7 @@ export default function SponsorCoinLabPage() {
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedWriteMethod={runSelectedWriteMethod}
+                addCurrentMethodToScript={addCurrentMethodToScript}
               />
             )}
 
@@ -2450,6 +3203,7 @@ export default function SponsorCoinLabPage() {
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedSpCoinReadMethod={runSelectedSpCoinReadMethod}
+                addCurrentMethodToScript={addCurrentMethodToScript}
               />
             )}
 
@@ -2483,6 +3237,7 @@ export default function SponsorCoinLabPage() {
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
                 runSelectedSpCoinWriteMethod={runSelectedSpCoinWriteMethod}
+                addCurrentMethodToScript={addCurrentMethodToScript}
                 formatDateTimeDisplay={formatDateTimeDisplay}
                 formatDateInput={formatDateInput}
                 backdateHours={backdateCalendar.backdateHours}
@@ -2518,76 +3273,156 @@ export default function SponsorCoinLabPage() {
                 applyBackdateBy={backdateCalendar.applyBackdateBy}
               />
             )}
-            {status !== 'Ready' && (
-              <div className="mt-4">
-                <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status:</span>
-                <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1220] px-3 py-2 text-sm text-slate-300">
-                  {status}
-                </div>
-              </div>
-            )}
-          </article>
-          )}
-
-          {showCard('log') && (
-          <article className={getCardClassName('log')}>
-            <LabCardHeader
-              title="Execution Log"
-              isExpanded={expandedCard === 'log'}
-              onToggleExpand={() => toggleExpandedCard('log')}
-              secondaryRow={
-                <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
-                  <button
-                    type="button"
-                    className={buttonStyle}
-                    onClick={() => void copyTextToClipboard('Execution Log', logs.join('\n'))}
-                  >
-                    Copy to Clipboard
-                  </button>
-                  <button
-                    type="button"
-                    className={buttonStyle}
-                    onClick={() => setLogs([])}
-                  >
-                    Clear Log
-                  </button>
-                </div>
-              }
-            />
-            <pre className={`mt-4 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${expandedCard === 'log' ? 'flex-1 min-h-[calc(100dvh-18rem)]' : 'h-72'}`}>
-              {logs.join('\n')}
-            </pre>
+              </section>
+            </div>
           </article>
           )}
 
           {showCard('output') && (
-          <article className={getCardClassName('output')}>
+          <article
+            className={`${getCardClassName('output', expandedCard ? '' : 'xl:col-start-2 xl:row-start-2')} min-h-0 self-start overflow-hidden`}
+            style={!expandedCard && isDesktopSharedLayout && sharedMethodsRowHeight ? { height: `${sharedMethodsRowHeight}px` } : undefined}
+          >
             <LabCardHeader
-              title="Formatted Output Display"
+              title="Test Output Results"
               isExpanded={expandedCard === 'output'}
               onToggleExpand={() => toggleExpandedCard('output')}
               secondaryRow={
-                <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200">
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="output-panel-mode"
+                        value="execution"
+                        checked={outputPanelMode === 'execution'}
+                        onChange={(e) => setOutputPanelMode(e.target.value as OutputPanelMode)}
+                      />
+                      <span>Execution</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="output-panel-mode"
+                        value="formatted"
+                        checked={outputPanelMode === 'formatted'}
+                        onChange={(e) => setOutputPanelMode(e.target.value as OutputPanelMode)}
+                      />
+                      <span>Formatted</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="output-panel-mode"
+                        value="tree"
+                        checked={outputPanelMode === 'tree'}
+                        onChange={(e) => setOutputPanelMode(e.target.value as OutputPanelMode)}
+                      />
+                      <span>Tree</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="radio"
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        name="output-panel-mode"
+                        value="raw_status"
+                        checked={outputPanelMode === 'raw_status'}
+                        onChange={(e) => setOutputPanelMode(e.target.value as OutputPanelMode)}
+                      />
+                      <span>Raw Status</span>
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
                   <button
                     type="button"
                     className={buttonStyle}
-                    onClick={() => void copyTextToClipboard('Formatted Output Display', formattedOutputDisplay)}
+                    onClick={() =>
+                      void copyTextToClipboard(
+                        outputPanelMode === 'execution'
+                          ? 'Execution Log'
+                          : outputPanelMode === 'tree'
+                          ? 'Tree'
+                          : outputPanelMode === 'raw_status'
+                          ? 'Raw Status'
+                          : 'Formatted Output Display',
+                        outputPanelMode === 'execution'
+                          ? logs.join('\n')
+                          : outputPanelMode === 'tree'
+                          ? treeOutputDisplay
+                          : outputPanelMode === 'raw_status'
+                          ? status
+                          : formattedOutputDisplay,
+                      )
+                    }
                   >
                     Copy to Clipboard
                   </button>
                   <button
                     type="button"
                     className={buttonStyle}
-                    onClick={() => setFormattedOutputDisplay('(no output yet)')}
+                    onClick={() => {
+                      if (outputPanelMode === 'execution') {
+                        setLogs([]);
+                        return;
+                      }
+                      if (outputPanelMode === 'tree') {
+                        setTreeOutputDisplay('(no tree yet)');
+                        return;
+                      }
+                      if (outputPanelMode === 'formatted') {
+                        setFormattedOutputDisplay('(no output yet)');
+                      }
+                    }}
                   >
-                    Clear
+                    {outputPanelMode === 'execution'
+                      ? 'Clear Log'
+                      : outputPanelMode === 'formatted' || outputPanelMode === 'tree'
+                      ? 'Clear'
+                      : 'Copy Only'}
                   </button>
+                </div>
                 </div>
               }
             />
-            <pre className={`mt-4 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${expandedCard === 'output' ? 'flex-1 min-h-[calc(100dvh-18rem)]' : 'h-72'}`}>
-              {formattedOutputDisplay}
-            </pre>
+            <div className="mt-4 min-h-0 flex flex-1 flex-col overflow-hidden">
+              {outputPanelMode === 'tree' ? (
+                <>
+                  <p className="text-sm text-slate-200">
+                    Read methods are no-fee calls. Tree dump uses the first account from `getAccountList`.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button type="button" className={buttonStyle} onClick={runHeaderRead}>
+                      Run Header Read
+                    </button>
+                    <button type="button" className={buttonStyle} onClick={runAccountListRead}>
+                      Run Account List Read
+                    </button>
+                    <button type="button" className={buttonStyle} onClick={runTreeDump}>
+                      Dump First Account Tree
+                    </button>
+                  </div>
+                </>
+              ) : null}
+              <pre className={`mt-4 min-h-0 flex-1 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${hiddenScrollbarClass}`}>
+                {outputPanelMode === 'formatted' && highlightedFormattedOutputLines
+                  ? highlightedFormattedOutputLines.map(({ line, active }, idx) => (
+                      <span key={`formatted-line-${idx}`} className={active ? 'text-green-400' : undefined}>
+                        {line}
+                        {'\n'}
+                      </span>
+                    ))
+                  : outputPanelMode === 'execution'
+                  ? logs.join('\n')
+                  : outputPanelMode === 'tree'
+                  ? treeOutputDisplay
+                  : outputPanelMode === 'raw_status'
+                  ? status
+                  : formattedOutputDisplay}
+              </pre>
+            </div>
           </article>
           )}
         </section>
@@ -2614,6 +3449,32 @@ export default function SponsorCoinLabPage() {
           </div>
         </div>
       )}
+      {isDeleteStepPopupOpen && selectedScriptStep ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-red-500 bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+            <h3 className="text-lg font-semibold text-red-400">Delete Method</h3>
+            <p className="mt-2 text-sm text-slate-200">
+              Deleting method <span className="font-semibold text-slate-100">{selectedScriptStep.name}</span>
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                className={buttonStyle}
+                onClick={() => setIsDeleteStepPopupOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-red-500 bg-red-950 px-3 py-[0.45rem] text-sm text-red-200 transition-colors hover:bg-red-600 hover:text-white"
+                onClick={confirmDeleteSelectedScriptStep}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

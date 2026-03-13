@@ -38,6 +38,7 @@ type Props = {
   inputStyle: string;
   buttonStyle: string;
   runSelectedWriteMethod: () => void;
+  addCurrentMethodToScript: () => void;
 };
 
 export default function Erc20WriteController(props: Props) {
@@ -68,9 +69,12 @@ export default function Erc20WriteController(props: Props) {
     inputStyle,
     buttonStyle,
     runSelectedWriteMethod,
+    addCurrentMethodToScript,
   } = props;
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const actionButtonClassName =
+    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -334,9 +338,22 @@ export default function Erc20WriteController(props: Props) {
           placeholder={`${activeWriteLabels.title}(amount raw uint256)`}
         />
       </label>
-      <button type="button" className={buttonStyle} onClick={runSelectedWriteMethod}>
-        Execute {activeWriteLabels.title}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-[50%] shrink-0`}
+          onClick={runSelectedWriteMethod}
+        >
+          Execute {activeWriteLabels.title}
+        </button>
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-0 flex-1`}
+          onClick={addCurrentMethodToScript}
+        >
+          Add To Script
+        </button>
+      </div>
     </div>
   );
 }

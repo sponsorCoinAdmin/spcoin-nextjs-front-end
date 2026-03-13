@@ -22,6 +22,7 @@ type Props = {
   inputStyle: string;
   buttonStyle: string;
   runSelectedSpCoinReadMethod: () => void;
+  addCurrentMethodToScript: () => void;
 };
 
 export default function SpCoinReadController(props: Props) {
@@ -42,9 +43,12 @@ export default function SpCoinReadController(props: Props) {
     inputStyle,
     buttonStyle,
     runSelectedSpCoinReadMethod,
+    addCurrentMethodToScript,
   } = props;
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+  const actionButtonClassName =
+    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -83,7 +87,7 @@ export default function SpCoinReadController(props: Props) {
         </button>
       </div>
       {activeSpCoinReadDef.params.map((param, idx) => (
-        <div key={`sp-read-param-${param.label}-${idx}`} className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+        <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <div className={`grid grid-cols-1 gap-3${openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
               <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -163,9 +167,22 @@ export default function SpCoinReadController(props: Props) {
           )}
         </div>
       ))}
-      <button type="button" className={buttonStyle} onClick={runSelectedSpCoinReadMethod}>
-        Execute {activeSpCoinReadDef.title}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-[50%] shrink-0`}
+          onClick={runSelectedSpCoinReadMethod}
+        >
+          Execute {activeSpCoinReadDef.title}
+        </button>
+        <button
+          type="button"
+          className={`${actionButtonClassName} min-w-0 flex-1`}
+          onClick={addCurrentMethodToScript}
+        >
+          Add To Script
+        </button>
+      </div>
     </div>
   );
 }
