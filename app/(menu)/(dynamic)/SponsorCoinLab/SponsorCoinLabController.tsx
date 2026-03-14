@@ -1365,28 +1365,55 @@ export default function SponsorCoinLabPage() {
   const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
 
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
-
-  const runSelectedWriteMethod = useCallback(async () => {
-    const missingFieldIds: string[] = [];
-    const missingLabels: string[] = [];
+  const erc20WriteMissingEntries = useMemo(() => {
+    const missingEntries: Array<{ id: string; label: string }> = [];
     if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
-      missingFieldIds.push('erc20-write-sender');
-      missingLabels.push('msg.sender');
+      missingEntries.push({ id: 'erc20-write-sender', label: 'msg.sender' });
     }
     if (!String(writeAddressA || '').trim()) {
-      missingFieldIds.push('erc20-write-address-a');
-      missingLabels.push(activeWriteLabels.addressALabel);
+      missingEntries.push({ id: 'erc20-write-address-a', label: activeWriteLabels.addressALabel });
     }
     if (activeWriteLabels.requiresAddressB && !String(writeAddressB || '').trim()) {
-      missingFieldIds.push('erc20-write-address-b');
-      missingLabels.push(activeWriteLabels.addressBLabel);
+      missingEntries.push({ id: 'erc20-write-address-b', label: activeWriteLabels.addressBLabel });
     }
     if (!String(writeAmountRaw || '').trim()) {
-      missingFieldIds.push('erc20-write-amount');
-      missingLabels.push('Amount');
+      missingEntries.push({ id: 'erc20-write-amount', label: 'Amount' });
     }
-    if (missingFieldIds.length > 0) {
-      showValidationPopup(missingFieldIds, missingLabels);
+    return missingEntries;
+  }, [
+    activeWriteLabels.addressALabel,
+    activeWriteLabels.addressBLabel,
+    activeWriteLabels.requiresAddressB,
+    mode,
+    selectedWriteSenderAddress,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+  ]);
+  const erc20ReadMissingEntries = useMemo(() => {
+    const missingEntries: Array<{ id: string; label: string }> = [];
+    if (activeReadLabels.requiresAddressA && !String(readAddressA || '').trim()) {
+      missingEntries.push({ id: 'erc20-read-address-a', label: activeReadLabels.addressALabel });
+    }
+    if (activeReadLabels.requiresAddressB && !String(readAddressB || '').trim()) {
+      missingEntries.push({ id: 'erc20-read-address-b', label: activeReadLabels.addressBLabel });
+    }
+    return missingEntries;
+  }, [
+    activeReadLabels.addressALabel,
+    activeReadLabels.addressBLabel,
+    activeReadLabels.requiresAddressA,
+    activeReadLabels.requiresAddressB,
+    readAddressA,
+    readAddressB,
+  ]);
+
+  const runSelectedWriteMethod = useCallback(async () => {
+    if (erc20WriteMissingEntries.length > 0) {
+      showValidationPopup(
+        erc20WriteMissingEntries.map((entry) => entry.id),
+        erc20WriteMissingEntries.map((entry) => entry.label),
+      );
       return;
     }
     const call = buildMethodCallEntry(selectedWriteMethod, [
@@ -1434,11 +1461,9 @@ export default function SponsorCoinLabPage() {
       appendLog(`${activeWriteLabels.title} failed: ${message}`);
     }
   }, [
-    activeWriteLabels.addressALabel,
-    activeWriteLabels.addressBLabel,
-    activeWriteLabels.requiresAddressB,
     activeWriteLabels.title,
     appendLog,
+    erc20WriteMissingEntries,
     executeWriteConnected,
     effectiveConnectedAddress,
     mode,
@@ -1453,18 +1478,11 @@ export default function SponsorCoinLabPage() {
   ]);
 
   const runSelectedReadMethod = useCallback(async () => {
-    const missingFieldIds: string[] = [];
-    const missingLabels: string[] = [];
-    if (activeReadLabels.requiresAddressA && !String(readAddressA || '').trim()) {
-      missingFieldIds.push('erc20-read-address-a');
-      missingLabels.push(activeReadLabels.addressALabel);
-    }
-    if (activeReadLabels.requiresAddressB && !String(readAddressB || '').trim()) {
-      missingFieldIds.push('erc20-read-address-b');
-      missingLabels.push(activeReadLabels.addressBLabel);
-    }
-    if (missingFieldIds.length > 0) {
-      showValidationPopup(missingFieldIds, missingLabels);
+    if (erc20ReadMissingEntries.length > 0) {
+      showValidationPopup(
+        erc20ReadMissingEntries.map((entry) => entry.id),
+        erc20ReadMissingEntries.map((entry) => entry.label),
+      );
       return;
     }
     const call = buildMethodCallEntry(selectedReadMethod, [
@@ -1497,10 +1515,9 @@ export default function SponsorCoinLabPage() {
   }, [
     activeReadLabels.addressALabel,
     activeReadLabels.addressBLabel,
-    activeReadLabels.requiresAddressA,
-    activeReadLabels.requiresAddressB,
     activeReadLabels.title,
     appendLog,
+    erc20ReadMissingEntries,
     ensureReadRunner,
     readAddressA,
     readAddressB,
@@ -1512,6 +1529,34 @@ export default function SponsorCoinLabPage() {
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
   const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
   const activeSpCoinWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
+  const spCoinReadMissingEntries = useMemo(
+    () =>
+      activeSpCoinReadDef.params
+        .map((param, idx) => ({
+          id: `spcoin-read-param-${idx}`,
+          label: param.label,
+          value: String(spReadParams[idx] || '').trim(),
+        }))
+        .filter((entry) => !entry.value)
+        .map(({ id, label }) => ({ id, label })),
+    [activeSpCoinReadDef.params, spReadParams],
+  );
+  const spCoinWriteMissingEntries = useMemo(() => {
+    const missingEntries: Array<{ id: string; label: string }> = [];
+    if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
+      missingEntries.push({ id: 'spcoin-write-sender', label: 'msg.sender' });
+    }
+    activeSpCoinWriteDef.params.forEach((param, idx) => {
+      if (param.type === 'date') return;
+      if (String(spWriteParams[idx] || '').trim()) return;
+      missingEntries.push({ id: `spcoin-write-param-${idx}`, label: param.label });
+    });
+    return missingEntries;
+  }, [activeSpCoinWriteDef.params, mode, selectedWriteSenderAddress, spWriteParams]);
+  const canRunErc20WriteMethod = erc20WriteMissingEntries.length === 0;
+  const canRunErc20ReadMethod = erc20ReadMissingEntries.length === 0;
+  const canRunSpCoinReadMethod = spCoinReadMissingEntries.length === 0;
+  const canRunSpCoinWriteMethod = spCoinWriteMissingEntries.length === 0;
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -1862,17 +1907,10 @@ export default function SponsorCoinLabPage() {
     return JSON.stringify(result, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
   }, []);
   const runSelectedSpCoinReadMethod = useCallback(async () => {
-    const missingEntries = activeSpCoinReadDef.params
-      .map((param, idx) => ({
-        id: `spcoin-read-param-${idx}`,
-        label: param.label,
-        value: String(spReadParams[idx] || '').trim(),
-      }))
-      .filter((entry) => !entry.value);
-    if (missingEntries.length > 0) {
+    if (spCoinReadMissingEntries.length > 0) {
       showValidationPopup(
-        missingEntries.map((entry) => entry.id),
-        missingEntries.map((entry) => entry.label),
+        spCoinReadMissingEntries.map((entry) => entry.id),
+        spCoinReadMissingEntries.map((entry) => entry.label),
       );
       return;
     }
@@ -1903,7 +1941,6 @@ export default function SponsorCoinLabPage() {
       appendLog(`${activeSpCoinReadDef.title} failed: ${message}`);
     }
   }, [
-    activeSpCoinReadDef.params,
     activeSpCoinReadDef.title,
     appendLog,
     coerceParamValue,
@@ -1911,23 +1948,15 @@ export default function SponsorCoinLabPage() {
     requireContractAddress,
     selectedSpCoinReadMethod,
     showValidationPopup,
+    spCoinReadMissingEntries,
     spReadParams,
     stringifyResult,
   ]);
   const runSelectedSpCoinWriteMethod = useCallback(async () => {
-    const missingEntries: Array<{ id: string; label: string }> = [];
-    if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
-      missingEntries.push({ id: 'spcoin-write-sender', label: 'msg.sender' });
-    }
-    activeSpCoinWriteDef.params.forEach((param, idx) => {
-      if (param.type === 'date') return;
-      if (String(spWriteParams[idx] || '').trim()) return;
-      missingEntries.push({ id: `spcoin-write-param-${idx}`, label: param.label });
-    });
-    if (missingEntries.length > 0) {
+    if (spCoinWriteMissingEntries.length > 0) {
       showValidationPopup(
-        missingEntries.map((entry) => entry.id),
-        missingEntries.map((entry) => entry.label),
+        spCoinWriteMissingEntries.map((entry) => entry.id),
+        spCoinWriteMissingEntries.map((entry) => entry.label),
       );
       return;
     }
@@ -1978,13 +2007,13 @@ export default function SponsorCoinLabPage() {
       appendLog(`${activeSpCoinWriteDef.title} failed: ${message}`);
     }
   }, [
-    activeSpCoinWriteDef.params,
     activeSpCoinWriteDef.title,
     appendLog,
     coerceParamValue,
     executeWriteConnected,
     effectiveConnectedAddress,
     mode,
+    spCoinWriteMissingEntries,
     useLocalSpCoinAccessPackage,
     selectedHardhatAccount?.address,
     selectedWriteSenderAccount?.address,
@@ -2453,7 +2482,7 @@ export default function SponsorCoinLabPage() {
             </div>
           </div>
           {isExpanded ? (
-            <div className="mt-1 space-y-1 pl-[28px] text-xs text-slate-200">
+            <div className="mt-1 space-y-1 whitespace-nowrap pl-[28px] text-xs text-slate-200">
               {getStepSender(step) ? <div>{`msg.sender: ${getStepSender(step)};`}</div> : null}
               {getStepParamEntries(step).length > 0 ? (
                 getStepParamEntries(step).map((param, idx) => (
@@ -2563,6 +2592,22 @@ export default function SponsorCoinLabPage() {
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
       setOutputPanelMode('raw_status');
+      return;
+    }
+
+    const activeMissingEntries =
+      methodPanelMode === 'ecr20_read'
+        ? erc20ReadMissingEntries
+        : methodPanelMode === 'erc20_write'
+        ? erc20WriteMissingEntries
+        : methodPanelMode === 'spcoin_rread'
+        ? spCoinReadMissingEntries
+        : spCoinWriteMissingEntries;
+    if (activeMissingEntries.length > 0) {
+      showValidationPopup(
+        activeMissingEntries.map((entry) => entry.id),
+        activeMissingEntries.map((entry) => entry.label),
+      );
       return;
     }
 
@@ -2696,32 +2741,38 @@ export default function SponsorCoinLabPage() {
     setOutputPanelMode('formatted');
     setStatus(`Added ${name} to the selected script.`);
   }, [
-    selectedScriptId,
-    methodPanelMode,
-    selectedReadMethod,
-    readAddressA,
-    readAddressB,
-    activeReadLabels.title,
+    activeNetworkName,
     activeReadLabels.requiresAddressA,
     activeReadLabels.requiresAddressB,
+    activeReadLabels.title,
+    activeSpCoinReadDef.params.length,
+    activeSpCoinReadDef.title,
+    activeSpCoinWriteDef.params.length,
+    activeSpCoinWriteDef.title,
+    activeWriteLabels.requiresAddressB,
+    activeWriteLabels.title,
+    erc20ReadMissingEntries,
+    erc20WriteMissingEntries,
+    methodPanelMode,
+    mode,
+    readAddressA,
+    readAddressB,
+    selectedReadMethod,
+    selectedScript?.steps.length,
+    selectedScriptId,
+    selectedScriptStepNumber,
+    selectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
     selectedWriteMethod,
     selectedWriteSenderAddress,
+    showValidationPopup,
+    spCoinReadMissingEntries,
+    spCoinWriteMissingEntries,
+    spReadParams,
+    spWriteParams,
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
-    activeWriteLabels.title,
-    activeWriteLabels.requiresAddressB,
-    selectedSpCoinReadMethod,
-    spReadParams,
-    activeSpCoinReadDef.title,
-    activeSpCoinReadDef.params.length,
-    selectedSpCoinWriteMethod,
-    spWriteParams,
-    activeSpCoinWriteDef.title,
-    activeSpCoinWriteDef.params.length,
-    activeNetworkName,
-    mode,
-    selectedScript?.steps.length,
   ]);
 
   return (
@@ -3208,8 +3259,8 @@ export default function SponsorCoinLabPage() {
                       : 'Delete Script'}
                   </button>
                 </div>
-                <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] pr-3 pb-3 pt-1.5 pl-0 text-sm text-slate-200">
-                  <div className="absolute right-3 top-1.5 z-10 flex items-center gap-[0.05rem]">
+                <div className="mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-1.5 text-sm text-slate-200">
+                  <div className="flex items-center justify-end gap-[0.05rem]">
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
@@ -3319,7 +3370,7 @@ export default function SponsorCoinLabPage() {
                       <span className="block text-[21px] leading-none">✖</span>
                     </button>
                   </div>
-                  <div className={`relative min-h-0 flex-1 overflow-auto pr-[170px] ${hiddenScrollbarClass}`}>
+                  <div className={`min-h-0 flex-1 overflow-auto pt-1 ${hiddenScrollbarClass}`}>
                     {!selectedScript ? (
                       <div className="text-slate-400">(no script selected)</div>
                     ) : selectedScript.steps.length === 0 ? (
@@ -3402,6 +3453,9 @@ export default function SponsorCoinLabPage() {
                 buttonStyle={buttonStyle}
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
+                canRunSelectedReadMethod={canRunErc20ReadMethod}
+                canAddCurrentMethodToScript={canRunErc20ReadMethod}
+                missingFieldIds={erc20ReadMissingEntries.map((entry) => entry.id)}
                 runSelectedReadMethod={runSelectedReadMethod}
                 addCurrentMethodToScript={addCurrentMethodToScript}
               />
@@ -3434,6 +3488,9 @@ export default function SponsorCoinLabPage() {
                 buttonStyle={buttonStyle}
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
+                canRunSelectedWriteMethod={canRunErc20WriteMethod}
+                canAddCurrentMethodToScript={canRunErc20WriteMethod}
+                missingFieldIds={erc20WriteMissingEntries.map((entry) => entry.id)}
                 runSelectedWriteMethod={runSelectedWriteMethod}
                 addCurrentMethodToScript={addCurrentMethodToScript}
               />
@@ -3456,6 +3513,9 @@ export default function SponsorCoinLabPage() {
                 buttonStyle={buttonStyle}
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
+                canRunSelectedSpCoinReadMethod={canRunSpCoinReadMethod}
+                canAddCurrentMethodToScript={canRunSpCoinReadMethod}
+                missingFieldIds={spCoinReadMissingEntries.map((entry) => entry.id)}
                 runSelectedSpCoinReadMethod={runSelectedSpCoinReadMethod}
                 addCurrentMethodToScript={addCurrentMethodToScript}
               />
@@ -3490,6 +3550,9 @@ export default function SponsorCoinLabPage() {
                 buttonStyle={buttonStyle}
                 writeTraceEnabled={writeTraceEnabled}
                 toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
+                canRunSelectedSpCoinWriteMethod={canRunSpCoinWriteMethod}
+                canAddCurrentMethodToScript={canRunSpCoinWriteMethod}
+                missingFieldIds={spCoinWriteMissingEntries.map((entry) => entry.id)}
                 runSelectedSpCoinWriteMethod={runSelectedSpCoinWriteMethod}
                 addCurrentMethodToScript={addCurrentMethodToScript}
                 formatDateTimeDisplay={formatDateTimeDisplay}

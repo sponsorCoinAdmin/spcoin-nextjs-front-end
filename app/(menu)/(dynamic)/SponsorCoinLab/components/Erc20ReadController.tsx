@@ -28,6 +28,9 @@ type Props = {
   readAddressB: string;
   setReadAddressB: (value: string) => void;
   buttonStyle: string;
+  canRunSelectedReadMethod: boolean;
+  canAddCurrentMethodToScript: boolean;
+  missingFieldIds: string[];
   runSelectedReadMethod: () => void;
   addCurrentMethodToScript: () => void;
 };
@@ -49,13 +52,26 @@ export default function Erc20ReadController(props: Props) {
     readAddressB,
     setReadAddressB,
     buttonStyle,
+    canRunSelectedReadMethod,
+    canAddCurrentMethodToScript,
+    missingFieldIds,
     runSelectedReadMethod,
     addCurrentMethodToScript,
   } = props;
+  const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
+  const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
-    invalidFieldIds.includes(fieldId) ? ' border-red-500 bg-red-950/40 focus:border-red-400' : '';
+    invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
+      ? ' border-red-500 bg-red-950/40 focus:border-red-400'
+      : '';
   const actionButtonClassName =
     'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+  const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
+    isEnabled
+      ? actionButtonClassName
+      : `h-[42px] rounded px-4 py-2 text-center font-bold transition-colors ${
+          hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
+        } cursor-not-allowed`;
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -202,17 +218,37 @@ export default function Erc20ReadController(props: Props) {
       <div className="flex gap-2">
         <button
           type="button"
-          className={`${actionButtonClassName} min-w-[50%] shrink-0`}
-          onClick={runSelectedReadMethod}
+          className={`${getActionButtonClassName(canRunSelectedReadMethod, 'execute')} min-w-[50%] shrink-0`}
+          onClick={() => {
+            if (!canRunSelectedReadMethod) return;
+            runSelectedReadMethod();
+          }}
+          onMouseEnter={() => {
+            if (!canRunSelectedReadMethod) setHoveredBlockedAction('execute');
+          }}
+          onMouseLeave={() => setHoveredBlockedAction(null)}
+          aria-disabled={!canRunSelectedReadMethod}
         >
-          Execute {activeReadLabels.title}
+          {!canRunSelectedReadMethod && hoveredBlockedAction === 'execute'
+            ? 'Missing Required Parameters'
+            : `Execute ${activeReadLabels.title}`}
         </button>
         <button
           type="button"
-          className={`${actionButtonClassName} min-w-0 flex-1`}
-          onClick={addCurrentMethodToScript}
+          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+          onClick={() => {
+            if (!canAddCurrentMethodToScript) return;
+            addCurrentMethodToScript();
+          }}
+          onMouseEnter={() => {
+            if (!canAddCurrentMethodToScript) setHoveredBlockedAction('add');
+          }}
+          onMouseLeave={() => setHoveredBlockedAction(null)}
+          aria-disabled={!canAddCurrentMethodToScript}
         >
-          Add To Script
+          {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+            ? 'Missing Required Parameters'
+            : 'Add To Script'}
         </button>
       </div>
     </div>
