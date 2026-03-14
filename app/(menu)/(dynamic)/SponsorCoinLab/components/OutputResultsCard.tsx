@@ -158,52 +158,50 @@ export default function OutputResultsCard({
             </div>
           </>
         ) : null}
-        {controls.outputPanelMode === 'formatted' ? (
-          <div className="mt-4 flex justify-end gap-2">
-            {([
-              ['script', 'Script'],
-              ['output', 'Output'],
-            ] as const).map(([value, label]) => {
-              const isActive = controls.formattedPanelView === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  className={`rounded-lg border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition ${
-                    isActive
-                      ? 'border-green-500 bg-green-500/15 text-green-300'
-                      : 'border-[#334155] bg-[#111827] text-slate-300 hover:border-[#8FA8FF] hover:text-[#8FA8FF]'
-                  }`}
-                  onClick={() => controls.setFormattedPanelView(value)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-        <pre
-          className={`mt-4 min-h-0 flex-1 overflow-auto rounded-lg border border-[#334155] bg-[#0B1220] p-3 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}
-        >
-          {controls.outputPanelMode === 'formatted' &&
-          controls.formattedPanelView === 'script' &&
-          content.highlightedFormattedOutputLines
-            ? content.highlightedFormattedOutputLines.map(({ line, active }, idx) => (
-                <span key={`formatted-line-${idx}`} className={active ? 'text-green-400' : undefined}>
-                  {line}
-                  {'\n'}
-                </span>
-              ))
-            : controls.outputPanelMode === 'execution'
-              ? content.logs.join('\n')
-              : controls.outputPanelMode === 'tree'
-                ? content.treeOutputDisplay
-              : controls.outputPanelMode === 'raw_status'
-                ? content.status
-                : controls.formattedPanelView === 'script'
-                  ? content.scriptDisplay
-                  : content.formattedOutputDisplay}
-        </pre>
+        <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220]">
+          {controls.outputPanelMode === 'formatted' ? (
+            <div className="absolute right-3 top-3 z-10 flex items-center gap-3 rounded-md bg-[#0B1220]/90 px-2 py-1 text-xs text-slate-200">
+              {([
+                ['script', 'Script'],
+                ['output', 'Output'],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="inline-flex items-center gap-1">
+                  <input
+                    type="radio"
+                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    name="formatted-panel-view"
+                    value={value}
+                    checked={controls.formattedPanelView === value}
+                    onChange={(e) => controls.setFormattedPanelView(e.target.value as FormattedPanelView)}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          ) : null}
+          <pre
+            className={`h-full min-h-0 overflow-auto p-3 text-xs text-slate-200 ${controls.outputPanelMode === 'formatted' ? 'pr-36' : ''} ${content.hiddenScrollbarClass}`}
+          >
+            {controls.outputPanelMode === 'formatted' &&
+            controls.formattedPanelView === 'script' &&
+            content.highlightedFormattedOutputLines
+              ? content.highlightedFormattedOutputLines.map(({ line, active }, idx) => (
+                  <span key={`formatted-line-${idx}`} className={active ? 'text-green-400' : undefined}>
+                    {line}
+                    {'\n'}
+                  </span>
+                ))
+              : controls.outputPanelMode === 'execution'
+                ? content.logs.join('\n')
+                : controls.outputPanelMode === 'tree'
+                  ? content.treeOutputDisplay
+                  : controls.outputPanelMode === 'raw_status'
+                    ? content.status
+                    : controls.formattedPanelView === 'script'
+                      ? content.scriptDisplay
+                      : content.formattedOutputDisplay}
+          </pre>
+        </div>
       </div>
     </article>
   );

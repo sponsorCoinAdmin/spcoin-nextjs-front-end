@@ -50,6 +50,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type FormattedPanelView = 'script' | 'output';
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
@@ -146,6 +147,7 @@ export default function SponsorCoinLabPage() {
   const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
   const [treeOutputDisplay, setTreeOutputDisplay] = useState('(no tree yet)');
   const [outputPanelMode, setOutputPanelMode] = useState<OutputPanelMode>('formatted');
+  const [formattedPanelView, setFormattedPanelView] = useState<FormattedPanelView>('script');
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
@@ -474,6 +476,8 @@ export default function SponsorCoinLabPage() {
     setLogs,
     formattedOutputDisplay,
     setFormattedOutputDisplay,
+    formattedPanelView,
+    setFormattedPanelView,
     treeOutputDisplay,
     setTreeOutputDisplay,
     selectedWriteMethod,
@@ -503,10 +507,9 @@ export default function SponsorCoinLabPage() {
     normalizeAddressValue,
     backdateCalendar,
   });
-  useEffect(() => {
+  const selectedScriptDisplay = useMemo(() => {
     const nextSelectedScript = scripts.find((script) => script.id === selectedScriptId);
-    if (!nextSelectedScript) return;
-    setFormattedOutputDisplay(JSON.stringify(nextSelectedScript, null, 2));
+    return nextSelectedScript ? JSON.stringify(nextSelectedScript, null, 2) : '(no script selected)';
   }, [scripts, selectedScriptId]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
@@ -636,8 +639,14 @@ export default function SponsorCoinLabPage() {
     ],
   );
   const highlightedFormattedOutputLines = useMemo(() => {
-    if (outputPanelMode !== 'formatted' || selectedScriptStepNumber === null) return null;
-    const lines = String(formattedOutputDisplay || '').split('\n');
+    if (
+      outputPanelMode !== 'formatted' ||
+      formattedPanelView !== 'script' ||
+      selectedScriptStepNumber === null
+    ) {
+      return null;
+    }
+    const lines = String(selectedScriptDisplay || '').split('\n');
     const targetLineIndex = lines.findIndex((line) => line.includes(`"step": ${selectedScriptStepNumber}`));
     if (targetLineIndex < 0) return null;
 
@@ -660,7 +669,7 @@ export default function SponsorCoinLabPage() {
       line,
       active: idx >= startIndex && idx <= endIndex,
     }));
-  }, [formattedOutputDisplay, outputPanelMode, selectedScriptStepNumber]);
+  }, [formattedPanelView, outputPanelMode, selectedScriptDisplay, selectedScriptStepNumber]);
 
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
@@ -938,12 +947,15 @@ export default function SponsorCoinLabPage() {
               setLogs,
               setTreeOutputDisplay,
               setFormattedOutputDisplay,
+              formattedPanelView,
+              setFormattedPanelView,
             }}
             content={{
               logs,
               treeOutputDisplay,
               status,
               formattedOutputDisplay,
+              scriptDisplay: selectedScriptDisplay,
               highlightedFormattedOutputLines,
               hiddenScrollbarClass,
             }}
