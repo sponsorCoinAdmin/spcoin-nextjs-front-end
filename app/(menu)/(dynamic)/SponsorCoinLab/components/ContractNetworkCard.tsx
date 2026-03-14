@@ -1,0 +1,272 @@
+import React, { type Dispatch, type SetStateAction } from 'react';
+import Image from 'next/image';
+import type { ConnectionMode } from '../scriptBuilder/types';
+import LabCardHeader from './LabCardHeader';
+
+type Props = {
+  className: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  inputStyle: string;
+  logo: {
+    selectedSponsorCoinLogoURL: string;
+    selectedSponsorCoinVersionEntry?: { name?: string };
+  };
+  version: {
+    selectedSponsorCoinVersion: string;
+    setSelectedSponsorCoinVersion: (value: string) => void;
+    sponsorCoinVersionChoices: Array<{ id: string; version: string }>;
+    canIncrementSponsorCoinVersion: boolean;
+    canDecrementSponsorCoinVersion: boolean;
+    adjustSponsorCoinVersion: (direction: 1 | -1) => void;
+    selectedVersionSignerKey: string;
+    displayedVersionHardhatAccountIndex: number;
+    selectedVersionSymbolWidthCh: number;
+    selectedVersionSymbol: string;
+  };
+  contract: {
+    contractAddress: string;
+    selectedSponsorCoinVersionEntry?: { name?: string };
+  };
+  network: {
+    mode: ConnectionMode;
+    setMode: (value: ConnectionMode) => void;
+    shouldPromptHardhatBaseConnect: boolean;
+    connectHardhatBaseFromNetworkLabel: () => Promise<void>;
+    activeNetworkName: string;
+    chainIdDisplayValue: string;
+    chainIdDisplayWidthCh: number;
+    showHardhatConnectionInputs: boolean;
+    setShowHardhatConnectionInputs: Dispatch<SetStateAction<boolean>>;
+    cogSrc: any;
+    rpcUrl: string;
+    setRpcUrl: (value: string) => void;
+    effectiveConnectedAddress: string;
+  };
+};
+
+export default function ContractNetworkCard({
+  className,
+  isExpanded,
+  onToggleExpand,
+  inputStyle,
+  logo,
+  version,
+  contract,
+  network,
+}: Props) {
+  return (
+    <article className={className}>
+      <LabCardHeader
+        title="Active Sponsor Coin Contract"
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        leftSlot={
+          <div className="relative -left-[9px] -top-[10px] flex h-[33px] w-[33px] items-center justify-center overflow-hidden rounded-xl bg-[#0E111B]">
+            {logo.selectedSponsorCoinLogoURL ? (
+              <Image
+                src={logo.selectedSponsorCoinLogoURL}
+                alt={String(logo.selectedSponsorCoinVersionEntry?.name || 'Sponsor Coin')}
+                width={33}
+                height={33}
+                className="h-full w-full object-contain"
+                unoptimized
+              />
+            ) : (
+              <span className="text-[10px] text-slate-400">No logo</span>
+            )}
+          </div>
+        }
+      />
+      <div className="mt-4 grid grid-cols-1 gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
+            <div className="flex min-w-0 flex-1 items-stretch">
+              <select
+                className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                value={version.selectedSponsorCoinVersion}
+                onChange={(e) => version.setSelectedSponsorCoinVersion(e.target.value)}
+                aria-label="SponsorCoin Version (Hardhat row)"
+                title="SponsorCoin Version"
+              >
+                {version.sponsorCoinVersionChoices.length === 0 ? <option value="">(no deployment map entries)</option> : null}
+                {version.sponsorCoinVersionChoices.map((entry) => (
+                  <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
+                    {entry.version}
+                  </option>
+                ))}
+              </select>
+              <div className="flex w-[38px] flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (version.canIncrementSponsorCoinVersion) version.adjustSponsorCoinVersion(1);
+                  }}
+                  className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                    version.canIncrementSponsorCoinVersion ? 'cursor-pointer hover:bg-green-500' : 'cursor-not-allowed hover:bg-red-500'
+                  }`}
+                  title="Increment SponsorCoin Version"
+                  aria-disabled={!version.canIncrementSponsorCoinVersion}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (version.canDecrementSponsorCoinVersion) version.adjustSponsorCoinVersion(-1);
+                  }}
+                  className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
+                    version.canDecrementSponsorCoinVersion ? 'cursor-pointer hover:bg-green-500' : 'cursor-not-allowed hover:bg-red-500'
+                  }`}
+                  title="Decrement SponsorCoin Version"
+                  aria-disabled={!version.canDecrementSponsorCoinVersion}
+                >
+                  -
+                </button>
+              </div>
+            </div>
+          </div>
+          <span className="px-1 text-sm font-semibold text-[#8FA8FF]">Deployed on HH Account</span>
+          <label htmlFor="hardhat-account-index" className="sr-only">
+            Hardhat account index
+          </label>
+          <input
+            id="hardhat-account-index"
+            className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-center text-sm text-white"
+            value={!version.selectedVersionSignerKey ? '?' : version.displayedVersionHardhatAccountIndex >= 0 ? String(version.displayedVersionHardhatAccountIndex) : ''}
+            readOnly
+            aria-label="Hardhat account index"
+            title="Hardhat account index"
+          />
+        </div>
+        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
+          <input
+            className={inputStyle}
+            readOnly
+            value={String(contract.selectedSponsorCoinVersionEntry?.name || '')}
+            placeholder="Selected deployed SponsorCoin name"
+          />
+          <div className="flex items-center justify-self-end gap-2">
+            <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+            <input
+              className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+              style={{ width: `${version.selectedVersionSymbolWidthCh}ch` }}
+              readOnly
+              value={version.selectedVersionSymbol}
+              placeholder="symbol"
+            />
+          </div>
+        </div>
+        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
+          <input className={inputStyle} value={contract.contractAddress} readOnly placeholder="SponsorCoin contract address" />
+        </label>
+        <div className="border-t border-[#2B3A67] pt-5">
+          <div className="flex flex-wrap items-center gap-4">
+            <h2 className="text-lg font-semibold text-[#5981F3]">Network Controller</h2>
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
+              <label className="flex items-center gap-2 text-[#8FA8FF]">
+                <input
+                  type="radio"
+                  name="sponsorcoin-lab-network-mode"
+                  value="hardhat"
+                  checked={network.mode === 'hardhat'}
+                  onChange={() => network.setMode('hardhat')}
+                  className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                />
+                <span>Hardhat Ec2-BASE</span>
+              </label>
+              <label className="flex items-center gap-2 text-[#8FA8FF]">
+                <input
+                  type="radio"
+                  name="sponsorcoin-lab-network-mode"
+                  value="metamask"
+                  checked={network.mode === 'metamask'}
+                  onChange={() => network.setMode('metamask')}
+                  className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                />
+                <span>MetaMask</span>
+              </label>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+            <span
+              className={`text-sm font-semibold ${
+                network.shouldPromptHardhatBaseConnect ? 'cursor-pointer text-[#F59E0B] hover:text-[#FACC15]' : 'text-[#8FA8FF]'
+              }`}
+              title={network.shouldPromptHardhatBaseConnect ? 'connect "Hardhat Base"' : undefined}
+              onClick={network.shouldPromptHardhatBaseConnect ? () => void network.connectHardhatBaseFromNetworkLabel() : undefined}
+            >
+              Connected Network
+            </span>
+            <input
+              type="text"
+              value={network.activeNetworkName}
+              readOnly
+              className={inputStyle}
+              aria-label="Connected network"
+              title="Connected network"
+            />
+            <label className="flex items-center justify-self-end gap-2">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
+              <input
+                type="text"
+                value={network.chainIdDisplayValue}
+                readOnly
+                className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                style={{ width: `${network.chainIdDisplayWidthCh}ch` }}
+              />
+              <button
+                type="button"
+                onClick={() => network.setShowHardhatConnectionInputs((prev) => !prev)}
+                className="-mt-[10px] inline-flex items-center justify-center bg-transparent p-0"
+                aria-label="Toggle Hardhat connection settings"
+                title="Toggle Hardhat connection settings"
+              >
+                <Image
+                  src={network.cogSrc}
+                  alt="Toggle Hardhat connection settings"
+                  className="h-6 w-6 cursor-pointer object-contain transition duration-300 hover:rotate-[360deg]"
+                />
+              </button>
+            </label>
+          </div>
+          {network.mode === 'hardhat' && network.showHardhatConnectionInputs ? (
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Hardhat RPC URL</span>
+                <input
+                  className={inputStyle}
+                  value={network.rpcUrl}
+                  onChange={(e) => network.setRpcUrl(e.target.value)}
+                  placeholder="Hardhat RPC URL"
+                />
+              </label>
+            </div>
+          ) : null}
+          {network.mode !== 'hardhat' ? (
+            <div className="mt-4">
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Public Signer Account</span>
+                <input
+                  className={inputStyle}
+                  readOnly
+                  disabled
+                  value={network.effectiveConnectedAddress || ''}
+                  placeholder="Selected account address"
+                />
+              </label>
+            </div>
+          ) : null}
+        </div>
+        {network.mode !== 'hardhat' ? (
+          <p className="text-sm text-slate-300">
+            Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat Ec2-BASE.
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
