@@ -79,7 +79,7 @@ type LabScriptStep = {
 type LabScript = {
   id: string;
   name: string;
-  testKey: string;
+  'Date Created': string;
   network: string;
   steps: LabScriptStep[];
 };
@@ -122,6 +122,8 @@ const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
 const buttonStyle =
   'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.45rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
+const actionButtonStyle =
+  'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60';
 const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
 const hiddenScrollbarClass =
@@ -216,6 +218,26 @@ function normalizeAddress(value: string) {
 function normalizeAddressValue(value: string) {
   const trimmed = String(value || '').trim();
   return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+}
+
+function formatScriptCreatedDate(value: number | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  const month = date.toLocaleString('en-US', { month: 'short' });
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${month}-${day}-${year}, ${hours}:${minutes}:${seconds}`;
+}
+
+function inferScriptCreatedDate(script: Pick<LabScript, 'id'> & Partial<Record<'Date Created', unknown>>) {
+  const existing = String(script['Date Created'] || '').trim();
+  if (existing) return existing;
+
+  const timestampMatch = /^script-(\d+)-/.exec(String(script.id || '').trim());
+  const parsedTimestamp = timestampMatch ? Number(timestampMatch[1]) : Number.NaN;
+  return Number.isFinite(parsedTimestamp) ? formatScriptCreatedDate(parsedTimestamp) : formatScriptCreatedDate(new Date());
 }
 
 function parseListParam(raw: string): string[] {
@@ -321,6 +343,12 @@ export default function SponsorCoinLabPage() {
   const [outputPanelMode, setOutputPanelMode] = useState<OutputPanelMode>('formatted');
   const [scripts, setScripts] = useState<LabScript[]>([]);
   const [selectedScriptId, setSelectedScriptId] = useState('');
+  const [scriptNameInput, setScriptNameInput] = useState('');
+  const [isScriptOptionsOpen, setIsScriptOptionsOpen] = useState(false);
+  const [isNewScriptHovered, setIsNewScriptHovered] = useState(false);
+  const [isDeleteScriptHovered, setIsDeleteScriptHovered] = useState(false);
+  const [newScriptHoverTone, setNewScriptHoverTone] = useState<'neutral' | 'invalid' | 'valid'>('neutral');
+  const [deleteScriptHoverTone, setDeleteScriptHoverTone] = useState<'invalid' | 'valid'>('invalid');
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
   const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
@@ -1999,6 +2027,35 @@ export default function SponsorCoinLabPage() {
     () => scripts.find((script) => script.id === selectedScriptId) || null,
     [scripts, selectedScriptId],
   );
+  const scriptNameMatch = useMemo(() => {
+    const name = String(scriptNameInput || '').trim();
+    if (!name) return null;
+    return scripts.find((script) => script.name.trim() === name) || null;
+  }, [scriptNameInput, scripts]);
+  const scriptNameValidation = useMemo(() => {
+    const name = String(scriptNameInput || '').trim();
+    if (!name) {
+      return { tone: 'neutral' as const, message: 'Enter a script name.' };
+    }
+    if (scriptNameMatch) {
+      return { tone: 'invalid' as const, message: 'Script Name Exists' };
+    }
+    return { tone: 'valid' as const, message: 'Valid script name' };
+  }, [scriptNameInput, scriptNameMatch]);
+  const deleteScriptValidation = useMemo(() => {
+    if (!scriptNameMatch) {
+      return { tone: 'invalid' as const, message: 'Script Not Found' };
+    }
+    return { tone: 'valid' as const, message: `Delete ${scriptNameMatch.name}` };
+  }, [scriptNameMatch]);
+  const visibleScriptOptions = useMemo(() => scripts, [scripts]);
+  useEffect(() => {
+    if (selectedScript) {
+      setScriptNameInput(selectedScript.name);
+      return;
+    }
+    setScriptNameInput(buildDefaultScriptName(scripts.length + 1));
+  }, [scripts.length, selectedScript]);
   const [selectedScriptStepNumber, setSelectedScriptStepNumber] = useState<number | null>(null);
   const [expandedScriptStepIds, setExpandedScriptStepIds] = useState<Record<string, boolean>>({});
   const [isDeleteStepPopupOpen, setIsDeleteStepPopupOpen] = useState(false);
@@ -2152,7 +2209,9 @@ export default function SponsorCoinLabPage() {
         ? script.steps.map((step, idx) => normalizeScriptStep(step, idx))
         : [];
       return {
-        ...script,
+        id: String(script.id || '').trim(),
+        name: String(script.name || '').trim(),
+        'Date Created': inferScriptCreatedDate(script),
         network: getScriptNetwork(script),
         steps: normalizedSteps,
       };
@@ -2363,16 +2422,16 @@ export default function SponsorCoinLabPage() {
       const isSelected = selectedScriptStep?.step === step.step;
       return (
         <div key={`step-${step.step}`} className="m-0 flex flex-col p-0 font-mono leading-tight">
-          <div className="grid w-full grid-cols-[calc(0.95em+3px)_minmax(0,1fr)] items-center gap-x-[2px] px-0 py-0 text-left text-sm">
+          <div className="grid w-full grid-cols-[calc(1.05em+3px)_minmax(0,1fr)] items-center gap-x-[2px] px-0 py-0 text-left text-sm">
             <button
               type="button"
               onClick={() => toggleScriptStepBreakpoint(step.step)}
-              className={`col-start-1 ml-[3px] inline-flex h-[1em] w-[0.95em] shrink-0 items-center justify-center self-center border-0 bg-transparent p-0 leading-none ${
+              className={`col-start-1 ml-[3px] inline-flex h-[1em] w-[1.05em] shrink-0 items-center justify-center self-center border-0 bg-transparent p-0 leading-none ${
                 step.breakpoint ? 'opacity-100' : 'opacity-0'
               }`}
               title={step.breakpoint ? `Remove breakpoint from ${step.method}` : `Add breakpoint to ${step.method}`}
             >
-              <span className="relative -top-[0.02em] text-[1em] leading-none text-[#F87171]">●</span>
+              <span className="block h-[0.62em] w-[0.62em] rounded-full bg-[#F87171]" />
             </button>
             <div className="col-start-2 inline-flex min-w-0 items-center">
               <button
@@ -2455,12 +2514,17 @@ export default function SponsorCoinLabPage() {
     setSelectedScriptStepNumber(selectedScript.steps[0]?.step ?? null);
   }, [selectedScript, selectedScriptStepNumber]);
   const createNewScript = useCallback(() => {
+    if (scriptNameValidation.tone !== 'valid') {
+      setStatus(scriptNameValidation.message);
+      return;
+    }
     const nextIndex = scripts.length + 1;
     const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nextName = String(scriptNameInput || '').trim() || buildDefaultScriptName(nextIndex);
     const nextScript: LabScript = {
       id: nextId,
-      name: buildDefaultScriptName(nextIndex),
-      testKey: `test-${nextIndex}`,
+      name: nextName,
+      'Date Created': formatScriptCreatedDate(new Date()),
       network: mode === 'hardhat' ? HARDHAT_SCRIPT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
       steps: [],
     };
@@ -2469,12 +2533,14 @@ export default function SponsorCoinLabPage() {
     setFormattedOutputDisplay(JSON.stringify(nextScript, null, 2));
     setOutputPanelMode('formatted');
     setStatus(`Created ${nextScript.name}.`);
-  }, [scripts.length]);
-  const deleteSelectedScript = useCallback(() => {
-    if (!selectedScriptId) return;
+  }, [activeNetworkName, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, scripts.length]);
+  const deleteSelectedScript = useCallback((targetScriptId: string) => {
+    if (!targetScriptId) return;
     setScripts((prev) => {
-      const remaining = prev.filter((script) => script.id !== selectedScriptId);
-      const nextSelectedId = remaining[0]?.id || '';
+      const remaining = prev.filter((script) => script.id !== targetScriptId);
+      const canKeepSelected =
+        selectedScriptId && selectedScriptId !== targetScriptId && remaining.some((script) => script.id === selectedScriptId);
+      const nextSelectedId = canKeepSelected ? selectedScriptId : remaining[0]?.id || '';
       setSelectedScriptId(nextSelectedId);
       setFormattedOutputDisplay(
         nextSelectedId
@@ -2486,6 +2552,13 @@ export default function SponsorCoinLabPage() {
     setOutputPanelMode('formatted');
     setStatus('Deleted selected script.');
   }, [selectedScriptId]);
+  const handleDeleteScriptClick = useCallback(() => {
+    if (deleteScriptValidation.tone !== 'valid') {
+      setStatus(deleteScriptValidation.message);
+      return;
+    }
+    deleteSelectedScript(scriptNameMatch?.id || '');
+  }, [deleteScriptValidation.message, deleteScriptValidation.tone, deleteSelectedScript, scriptNameMatch?.id]);
   const addCurrentMethodToScript = useCallback(() => {
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
@@ -3036,31 +3109,103 @@ export default function SponsorCoinLabPage() {
             <div className="mt-4 grid grid-cols-1 gap-4">
               <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
                 <h3 className="text-center text-lg font-semibold text-[#5981F3]">Script Builder/Debugger</h3>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button type="button" className={buttonStyle} onClick={createNewScript}>
-                    New Script
-                  </button>
-                  <select
-                    className="min-w-[16ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                    value={selectedScriptId}
-                    onChange={(e) => setSelectedScriptId(e.target.value)}
-                    aria-label="Script selector"
-                    title="Script selector"
-                  >
-                    {scripts.length === 0 ? <option value="">(no scripts)</option> : null}
-                    {scripts.map((script) => (
-                      <option key={script.id} value={script.id}>
-                        {script.name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="mt-4 grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
                   <button
                     type="button"
-                    className={buttonStyle}
-                    onClick={deleteSelectedScript}
-                    disabled={!selectedScriptId}
+                    className={`w-[140px] ${actionButtonStyle} ${
+                      (isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'valid'
+                        ? 'hover:bg-green-400'
+                        : (isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'invalid'
+                        ? 'hover:bg-red-600 hover:text-white'
+                        : ''
+                    }`}
+                    onClick={createNewScript}
+                    onMouseEnter={() => {
+                      setNewScriptHoverTone(scriptNameValidation.tone);
+                      setIsNewScriptHovered(true);
+                    }}
+                    onMouseLeave={() => setIsNewScriptHovered(false)}
+                    aria-disabled={scriptNameValidation.tone !== 'valid'}
+                    title={scriptNameValidation.message}
                   >
-                    Delete Script
+                    {(isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'invalid' &&
+                    isNewScriptHovered
+                      ? 'Name Exists'
+                      : 'New Script'}
+                  </button>
+                  <div className="relative min-w-0">
+                    <input
+                      className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+                      value={scriptNameInput}
+                      onFocus={() => setIsScriptOptionsOpen(true)}
+                      onBlur={() => {
+                        window.setTimeout(() => setIsScriptOptionsOpen(false), 100);
+                      }}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        setScriptNameInput(nextValue);
+                        const matchingScript = scripts.find((script) => script.name === nextValue);
+                        if (matchingScript) {
+                          setSelectedScriptId(matchingScript.id);
+                        }
+                      }}
+                      aria-label="Script selector"
+                      title="Script selector"
+                      placeholder={scripts.length === 0 ? 'Script 1' : 'Select or name a script'}
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsScriptOptionsOpen((prev) => !prev);
+                      }}
+                      className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center rounded-r-lg text-[#8FA8FF] transition-colors hover:text-white"
+                      title="Show scripts"
+                      aria-label="Show scripts"
+                    >
+                      v
+                    </button>
+                    {isScriptOptionsOpen && visibleScriptOptions.length > 0 ? (
+                      <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-56 overflow-y-auto rounded-lg border border-[#334155] bg-[#0E111B] shadow-lg">
+                        {visibleScriptOptions.map((script) => (
+                          <button
+                            key={script.id}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setSelectedScriptId(script.id);
+                              setScriptNameInput(script.name);
+                              setIsScriptOptionsOpen(false);
+                            }}
+                            className="block w-full px-3 py-2 text-left text-sm text-white transition-colors hover:bg-[#1E293B]"
+                            title={script.name}
+                          >
+                            {script.name}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    className={`w-[140px] ${actionButtonStyle} ${
+                      (isDeleteScriptHovered ? deleteScriptHoverTone : deleteScriptValidation.tone) === 'invalid'
+                        ? 'hover:bg-red-600 hover:text-white'
+                        : ''
+                    }`}
+                    onClick={handleDeleteScriptClick}
+                    onMouseEnter={() => {
+                      setDeleteScriptHoverTone(deleteScriptValidation.tone);
+                      setIsDeleteScriptHovered(true);
+                    }}
+                    onMouseLeave={() => setIsDeleteScriptHovered(false)}
+                    aria-disabled={deleteScriptValidation.tone !== 'valid'}
+                    title={deleteScriptValidation.message}
+                  >
+                    {(isDeleteScriptHovered ? deleteScriptHoverTone : deleteScriptValidation.tone) === 'invalid' &&
+                    isDeleteScriptHovered
+                      ? 'Not Found'
+                      : 'Delete Script'}
                   </button>
                 </div>
                 <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] pr-3 pb-3 pt-1.5 pl-0 text-sm text-slate-200">
@@ -3077,19 +3222,20 @@ export default function SponsorCoinLabPage() {
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(71%) sepia(39%) saturate(640%) hue-rotate(73deg) brightness(93%) contrast(90%)' }}
                         unoptimized
                       />
                     </button>
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                      title="next step"
+                      title="Run to Next Step"
                       onClick={() => goToAdjacentScriptStep(1)}
                       disabled={!selectedScript || (selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
                     >
                       <Image
                         src="/assets/miscellaneous/next.png"
-                        alt="next step"
+                        alt="Run to Next Step"
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
@@ -3099,70 +3245,74 @@ export default function SponsorCoinLabPage() {
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                      title="previous step"
+                      title="Move to Previous Step"
                       onClick={() => goToAdjacentScriptStep(-1)}
                       disabled={!selectedScript || selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) <= 0}
                     >
                       <Image
                         src="/assets/miscellaneous/back.png"
-                        alt="previous step"
+                        alt="Move to Previous Step"
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(44%) saturate(633%) hue-rotate(357deg) brightness(95%) contrast(88%)' }}
                         unoptimized
                       />
                     </button>
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-slate-200 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
-                      title="run remaining"
+                      title="Run Remaining Scrept"
                       disabled
                     >
                       <Image
                         src="/assets/miscellaneous/continue.png"
-                        alt="run remaining"
+                        alt="Run Remaining Scrept"
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(71%) sepia(39%) saturate(640%) hue-rotate(73deg) brightness(93%) contrast(90%)' }}
                         unoptimized
                       />
                     </button>
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                      title="move step up"
+                      title="Move Step Up"
                       onClick={() => moveSelectedScriptStep(-1)}
                       disabled={!selectedScript || selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) <= 0}
                     >
                       <Image
                         src="/assets/miscellaneous/up.png"
-                        alt="move step up"
+                        alt="Move Step Up"
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(57%) sepia(58%) saturate(2412%) hue-rotate(200deg) brightness(98%) contrast(96%)' }}
                         unoptimized
                       />
                     </button>
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                      title="move step down"
+                      title="Move Step Down"
                       onClick={() => moveSelectedScriptStep(1)}
                       disabled={!selectedScript || (selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber) >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
                     >
                       <Image
                         src="/assets/miscellaneous/down.png"
-                        alt="move step down"
+                        alt="Move Step Down"
                         width={21}
                         height={21}
                         className="block h-[21px] w-[21px]"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(57%) sepia(58%) saturate(2412%) hue-rotate(200deg) brightness(98%) contrast(96%)' }}
                         unoptimized
                       />
                     </button>
                     <button
                       type="button"
                       className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
-                      title="delete step"
+                      title="Delete Step"
                       onClick={requestDeleteSelectedScriptStep}
                       disabled={selectedScriptStepNumber === null}
                     >
