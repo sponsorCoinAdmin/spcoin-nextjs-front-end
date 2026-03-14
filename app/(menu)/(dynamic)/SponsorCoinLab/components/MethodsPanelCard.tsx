@@ -7,14 +7,12 @@ import Erc20WriteController from './Erc20WriteController';
 import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 
-type MethodsPanelTitle = 'ECR20 Read' | 'ERC20 Write' | 'Spcoin Read' | 'SpCoin Write' | 'Method Tests';
-
 type Props = {
   articleClassName: string;
   methodsCardRef: MutableRefObject<HTMLElement | null>;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  methodPanelTitle: MethodsPanelTitle;
+  methodPanelTitle: string;
   methodPanelMode: MethodPanelMode;
   setMethodPanelMode: (value: MethodPanelMode) => void;
   scriptBuilderProps: ComponentProps<typeof ScriptBuilderCard>;
@@ -45,9 +43,8 @@ export default function MethodsPanelCard({
         <ScriptBuilderCard {...scriptBuilderProps} />
 
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-          <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Test Method</h3>
+          <h3 className="text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h3>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h2>
             <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
               {[
                 ['ecr20_read', 'ECR20 Read'],

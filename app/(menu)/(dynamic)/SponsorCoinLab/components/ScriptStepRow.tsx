@@ -4,9 +4,11 @@ type Props = {
   step: LabScriptStep;
   isExpanded: boolean;
   isSelected: boolean;
+  isEditingStep: boolean;
   getStepSender: (step: LabScriptStep) => string;
   getStepParamEntries: (step: LabScriptStep) => LabScriptParam[];
-  loadScriptStep: (step: LabScriptStep) => void;
+  selectScriptStep: (step: LabScriptStep) => void;
+  editScriptStep: (step: LabScriptStep) => void;
   toggleScriptStepExpanded: (stepNumber: number) => void;
   toggleScriptStepBreakpoint: (stepNumber: number) => void;
 };
@@ -15,14 +17,23 @@ export default function ScriptStepRow({
   step,
   isExpanded,
   isSelected,
+  isEditingStep,
   getStepSender,
   getStepParamEntries,
-  loadScriptStep,
+  selectScriptStep,
+  editScriptStep,
   toggleScriptStepExpanded,
   toggleScriptStepBreakpoint,
 }: Props) {
   const sender = getStepSender(step);
   const params = getStepParamEntries(step);
+  const methodClassName = step.hasMissingRequiredParams
+    ? isEditingStep
+      ? 'text-green-400 underline underline-offset-2'
+      : 'text-[#E5B94F]'
+    : isSelected
+      ? 'text-green-400 underline underline-offset-2'
+      : 'text-slate-200';
 
   return (
     <div className="m-0 flex flex-col p-0 font-mono leading-tight">
@@ -48,9 +59,10 @@ export default function ScriptStepRow({
           </button>
           <button
             type="button"
-            onClick={() => loadScriptStep(step)}
-            className={`min-w-0 text-left ${isSelected ? 'text-green-400 underline underline-offset-2' : 'text-slate-200'}`}
-            title={`Load ${step.method}`}
+            onClick={() => selectScriptStep(step)}
+            onDoubleClick={() => editScriptStep(step)}
+            className={`min-w-0 text-left ${methodClassName}`}
+            title={`Select ${step.method}`}
           >
             {step.method}
           </button>

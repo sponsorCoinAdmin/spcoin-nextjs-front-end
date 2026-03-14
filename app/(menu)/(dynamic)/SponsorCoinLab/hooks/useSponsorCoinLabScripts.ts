@@ -64,6 +64,7 @@ type Params = {
   spWriteParams: string[];
   activeSpCoinWriteDef: MethodDef;
   spCoinWriteMethodDefs: Record<string, MethodDef>;
+  editingScriptStepNumber: number | null;
   erc20ReadMissingEntries: Entry[];
   erc20WriteMissingEntries: Entry[];
   spCoinReadMissingEntries: Entry[];
@@ -110,6 +111,7 @@ export function useSponsorCoinLabScripts({
   spWriteParams,
   activeSpCoinWriteDef,
   spCoinWriteMethodDefs,
+  editingScriptStepNumber,
   erc20ReadMissingEntries,
   erc20WriteMissingEntries,
   spCoinReadMissingEntries,
@@ -289,6 +291,7 @@ export function useSponsorCoinLabScripts({
       method: step.method,
       'msg.sender': getStepSender(step) || undefined,
       params: getStepParamEntries(step),
+      hasMissingRequiredParams: Boolean(step.hasMissingRequiredParams),
     }),
     [getStepParamEntries, getStepSender],
   );
@@ -325,10 +328,7 @@ export function useSponsorCoinLabScripts({
   useEffect(() => {
     if (!selectedScript) {
       setSelectedScriptStepNumber(null);
-      return;
     }
-    if (selectedScript.steps.some((step) => step.step === selectedScriptStepNumber)) return;
-    setSelectedScriptStepNumber(selectedScript.steps[0]?.step ?? null);
   }, [selectedScript, selectedScriptStepNumber]);
 
   const loadScriptStep = useCallback(
@@ -569,11 +569,15 @@ export function useSponsorCoinLabScripts({
       methodPanelMode === 'ecr20_read'
         ? erc20ReadMissingEntries
         : methodPanelMode === 'erc20_write'
-        ? erc20WriteMissingEntries
+          ? erc20WriteMissingEntries
         : methodPanelMode === 'spcoin_rread'
-        ? spCoinReadMissingEntries
-        : spCoinWriteMissingEntries;
-    if (activeMissingEntries.length > 0) {
+          ? spCoinReadMissingEntries
+          : spCoinWriteMissingEntries;
+    const isUpdatingExistingStep =
+      editingScriptStepNumber !== null &&
+      Array.isArray(selectedScript?.steps) &&
+      selectedScript.steps.some((step) => step.step === editingScriptStepNumber);
+    if (activeMissingEntries.length > 0 && isUpdatingExistingStep) {
       showValidationPopup(
         activeMissingEntries.map((entry) => entry.id),
         activeMissingEntries.map((entry) => entry.label),
@@ -640,6 +644,8 @@ export function useSponsorCoinLabScripts({
       name,
       panel: methodPanelMode,
       method,
+      breakpoint: activeMissingEntries.length > 0 ? true : undefined,
+      hasMissingRequiredParams: activeMissingEntries.length > 0,
       'msg.sender':
         methodPanelMode === 'erc20_write' || methodPanelMode === 'spcoin_write'
           ? String(selectedWriteSenderAddress || '').trim() || undefined
@@ -652,54 +658,76 @@ export function useSponsorCoinLabScripts({
         script.id === selectedScriptId
           ? (() => {
               const currentSteps = Array.isArray(script.steps) ? script.steps : [];
-              const activeIndex =
-                selectedScriptStepNumber === null
-                  ? currentSteps.length - 1
-                  : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
-              const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
-              const insertedSteps = [...currentSteps.slice(0, insertIndex), nextStep, ...currentSteps.slice(insertIndex)].map(
-                (step, idx) => ({ ...step, step: idx + 1 }),
-              );
+              const nextSteps = isUpdatingExistingStep
+                ? currentSteps.map((step) =>
+                    step.step === editingScriptStepNumber
+                      ? {
+                          ...nextStep,
+                          step: step.step,
+                          breakpoint: activeMissingEntries.length > 0 ? true : step.breakpoint,
+                        }
+                      : step,
+                  )
+                : (() => {
+                    const activeIndex =
+                      selectedScriptStepNumber === null
+                        ? currentSteps.length - 1
+                        : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
+                    const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
+                    return [...currentSteps.slice(0, insertIndex), nextStep, ...currentSteps.slice(insertIndex)].map(
+                      (step, idx) => ({ ...step, step: idx + 1 }),
+                    );
+                  })();
               return {
                 ...script,
                 network: String(script.network || '').trim()
                   ? script.network
                   : mode === 'hardhat'
-                  ? 'Hardhat Ec2-BASE'
-                  : activeNetworkName || 'MetaMask',
-                steps: insertedSteps,
+                    ? 'Hardhat Ec2-BASE'
+                    : activeNetworkName || 'MetaMask',
+                steps: nextSteps,
               };
             })()
           : script,
       ),
     );
 
-    const insertedStepNumber =
-      selectedScriptStepNumber !== null && Array.isArray(selectedScript?.steps)
-        ? (() => {
-            const activeIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
-            return (activeIndex >= 0 ? activeIndex : selectedScript.steps.length - 1) + 2;
-          })()
-        : (selectedScript?.steps.length || 0) + 1;
+    if (isUpdatingExistingStep && editingScriptStepNumber !== null) {
+      setSelectedScriptStepNumber(editingScriptStepNumber);
+    } else {
+      const insertedStepNumber =
+        selectedScriptStepNumber !== null && Array.isArray(selectedScript?.steps)
+          ? (() => {
+              const activeIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+              return (activeIndex >= 0 ? activeIndex : selectedScript.steps.length - 1) + 2;
+            })()
+          : (selectedScript?.steps.length || 0) + 1;
 
-    setSelectedScriptStepNumber(insertedStepNumber);
-    setExpandedScriptStepIds((prev) => {
-      const currentSteps = Array.isArray(selectedScript?.steps) ? selectedScript.steps : [];
-      const activeIndex =
-        selectedScriptStepNumber === null
-          ? currentSteps.length - 1
-          : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
-      const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
-      const nextExpanded: Record<string, boolean> = {};
-      currentSteps.forEach((step, idx) => {
-        const nextStepNumber = idx < insertIndex ? idx + 1 : idx + 2;
-        nextExpanded[String(nextStepNumber)] = Boolean(prev[String(step.step)]);
+      setSelectedScriptStepNumber(insertedStepNumber);
+      setExpandedScriptStepIds((prev) => {
+        const currentSteps = Array.isArray(selectedScript?.steps) ? selectedScript.steps : [];
+        const activeIndex =
+          selectedScriptStepNumber === null
+            ? currentSteps.length - 1
+            : currentSteps.findIndex((step) => step.step === selectedScriptStepNumber);
+        const insertIndex = activeIndex >= 0 ? activeIndex + 1 : currentSteps.length;
+        const nextExpanded: Record<string, boolean> = {};
+        currentSteps.forEach((step, idx) => {
+          const nextStepNumber = idx < insertIndex ? idx + 1 : idx + 2;
+          nextExpanded[String(nextStepNumber)] = Boolean(prev[String(step.step)]);
+        });
+        nextExpanded[String(insertIndex + 1)] = false;
+        return nextExpanded;
       });
-      nextExpanded[String(insertIndex + 1)] = false;
-      return nextExpanded;
-    });
+    }
     setOutputPanelMode('formatted');
-    setStatus(`Added ${name} to the selected script.`);
+    setStatus(
+      isUpdatingExistingStep && editingScriptStepNumber !== null
+        ? `Updated script step ${editingScriptStepNumber}.`
+        : activeMissingEntries.length > 0
+          ? `Added ${name} with missing required parameters.`
+          : `Added ${name} to the selected script.`,
+    );
   }, [
     activeNetworkName,
     activeReadLabels.addressALabel,
@@ -715,6 +743,7 @@ export function useSponsorCoinLabScripts({
     activeWriteLabels.addressBLabel,
     activeWriteLabels.requiresAddressB,
     activeWriteLabels.title,
+    editingScriptStepNumber,
     erc20ReadMissingEntries,
     erc20WriteMissingEntries,
     methodPanelMode,

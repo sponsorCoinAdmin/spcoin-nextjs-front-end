@@ -14,6 +14,7 @@ export type LabScriptStep = {
   method: string;
   params: LabScriptParam[];
   breakpoint?: boolean;
+  hasMissingRequiredParams?: boolean;
   network?: string;
   mode?: ConnectionMode;
   'msg.sender'?: string;

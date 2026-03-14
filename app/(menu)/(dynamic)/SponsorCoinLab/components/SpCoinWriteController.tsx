@@ -2,6 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
+import AccountDropdownInput from './AccountDropdownInput';
 
 type ParamDefLike = { label: string; placeholder: string; type: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
@@ -36,6 +37,7 @@ type Props = {
   toggleWriteTrace: () => void;
   canRunSelectedSpCoinWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  addToScriptButtonLabel: string;
   missingFieldIds: string[];
   runSelectedSpCoinWriteMethod: () => void;
   addCurrentMethodToScript: () => void;
@@ -105,6 +107,7 @@ export default function SpCoinWriteController(props: Props) {
     toggleWriteTrace,
     canRunSelectedSpCoinWriteMethod,
     canAddCurrentMethodToScript,
+    addToScriptButtonLabel,
     missingFieldIds,
     runSelectedSpCoinWriteMethod,
     addCurrentMethodToScript,
@@ -150,11 +153,11 @@ export default function SpCoinWriteController(props: Props) {
       ? ' border-red-500 bg-red-950/40 focus:border-red-400'
       : '';
   const actionButtonClassName =
-    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+    'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
     isEnabled
       ? actionButtonClassName
-      : `h-[42px] rounded px-4 py-2 text-center font-bold transition-colors ${
+      : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
         } cursor-not-allowed`;
   const normalizeAccountValue = (value: string) => {
@@ -172,6 +175,14 @@ export default function SpCoinWriteController(props: Props) {
     const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
     return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
+  const accountOptions = React.useMemo(
+    () =>
+      hardhatAccounts.map((account, idx) => ({
+        value: normalizeAccountValue(account.address),
+        label: formatAccountOptionLabel(account.address, idx),
+      })),
+    [hardhatAccounts],
+  );
   React.useEffect(() => {
     setOpenAddressFields({});
   }, [selectedSpCoinWriteMethod]);
@@ -195,7 +206,7 @@ export default function SpCoinWriteController(props: Props) {
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">SpCoin Write Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedSpCoinWriteMethod}
@@ -211,7 +222,7 @@ export default function SpCoinWriteController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
@@ -226,29 +237,17 @@ export default function SpCoinWriteController(props: Props) {
             msg.sender
           </button>
           {mode === 'hardhat' ? (
-            <>
-              <input
-                type="text"
-                list="spcoin-write-sender-options"
-                data-field-id="spcoin-write-sender"
-                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
-                value={selectedWriteSenderAddress}
-                onChange={(e) => {
-                  clearInvalidField('spcoin-write-sender');
-                  setSelectedWriteSenderAddress(normalizeAccountValue(e.target.value));
-                }}
-                placeholder="Select account"
-              />
-              <datalist id="spcoin-write-sender-options">
-                {hardhatAccounts.map((account, idx) => (
-                  <option
-                    key={`write-sender-${idx}-${account.address}`}
-                    value={normalizeAccountValue(account.address)}
-                    label={formatAccountOptionLabel(account.address, idx)}
-                  />
-                ))}
-              </datalist>
-            </>
+            <AccountDropdownInput
+              dataFieldId="spcoin-write-sender"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
+              value={selectedWriteSenderAddress}
+              onChange={(value) => {
+                clearInvalidField('spcoin-write-sender');
+                setSelectedWriteSenderAddress(normalizeAccountValue(value));
+              }}
+              placeholder="Select account"
+              options={accountOptions}
+            />
           ) : (
             <input
               className={inputStyle}
@@ -318,29 +317,17 @@ export default function SpCoinWriteController(props: Props) {
                 >
                   {param.label}
                 </button>
-                <>
-                  <input
-                    type="text"
-                    list={`spcoin-write-address-options-${idx}`}
-                    data-field-id={`spcoin-write-param-${idx}`}
-                    className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
-                    value={spWriteParams[idx] || ''}
-                    onChange={(e) => {
-                      clearInvalidField(`spcoin-write-param-${idx}`);
-                      updateSpWriteParamAtIndex(idx, normalizeAccountValue(e.target.value));
-                    }}
-                    placeholder="Select account"
-                  />
-                  <datalist id={`spcoin-write-address-options-${idx}`}>
-                    {hardhatAccounts.map((account, accountIdx) => (
-                      <option
-                        key={`sp-write-address-${idx}-${accountIdx}-${account.address}`}
-                        value={normalizeAccountValue(account.address)}
-                        label={formatAccountOptionLabel(account.address, accountIdx)}
-                      />
-                    ))}
-                  </datalist>
-                </>
+                <AccountDropdownInput
+                  dataFieldId={`spcoin-write-param-${idx}`}
+                  className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
+                  value={spWriteParams[idx] || ''}
+                  onChange={(value) => {
+                    clearInvalidField(`spcoin-write-param-${idx}`);
+                    updateSpWriteParamAtIndex(idx, normalizeAccountValue(value));
+                  }}
+                  placeholder="Select account"
+                  options={accountOptions}
+                />
               </label>
               {openAddressFields[idx] && (
                 <>
@@ -542,7 +529,7 @@ export default function SpCoinWriteController(props: Props) {
         >
           {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'
-            : 'Add To Script'}
+            : addToScriptButtonLabel}
         </button>
       </div>
     </div>

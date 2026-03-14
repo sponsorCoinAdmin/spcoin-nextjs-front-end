@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/SpCoinReadController.tsx
 import React from 'react';
 import Image from 'next/image';
+import AccountDropdownInput from './AccountDropdownInput';
 
 type ParamDefLike = { label: string; placeholder: string; type?: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
@@ -20,9 +21,9 @@ type Props = {
   spReadParams: string[];
   setSpReadParams: React.Dispatch<React.SetStateAction<string[]>>;
   inputStyle: string;
-  buttonStyle: string;
   canRunSelectedSpCoinReadMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  addToScriptButtonLabel: string;
   missingFieldIds: string[];
   runSelectedSpCoinReadMethod: () => void;
   addCurrentMethodToScript: () => void;
@@ -44,9 +45,9 @@ export default function SpCoinReadController(props: Props) {
     spReadParams,
     setSpReadParams,
     inputStyle,
-    buttonStyle,
     canRunSelectedSpCoinReadMethod,
     canAddCurrentMethodToScript,
+    addToScriptButtonLabel,
     missingFieldIds,
     runSelectedSpCoinReadMethod,
     addCurrentMethodToScript,
@@ -58,11 +59,11 @@ export default function SpCoinReadController(props: Props) {
       ? ' border-red-500 bg-red-950/40 focus:border-red-400'
       : '';
   const actionButtonClassName =
-    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+    'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
     isEnabled
       ? actionButtonClassName
-      : `h-[42px] rounded px-4 py-2 text-center font-bold transition-colors ${
+      : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
         } cursor-not-allowed`;
   const normalizeAccountValue = (value: string) => {
@@ -78,11 +79,19 @@ export default function SpCoinReadController(props: Props) {
     const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
     return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
+  const accountOptions = React.useMemo(
+    () =>
+      hardhatAccounts.map((account, idx) => ({
+        value: normalizeAccountValue(account.address),
+        label: formatAccountOptionLabel(account.address, idx),
+      })),
+    [hardhatAccounts],
+  );
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">SpCoin Read Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedSpCoinReadMethod}
@@ -98,7 +107,7 @@ export default function SpCoinReadController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
@@ -115,33 +124,21 @@ export default function SpCoinReadController(props: Props) {
                 >
                   {param.label}
                 </button>
-                <>
-                  <input
-                    type="text"
-                    list={`spcoin-read-address-options-${idx}`}
-                    data-field-id={`spcoin-read-param-${idx}`}
-                    className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
-                    value={spReadParams[idx] || ''}
-                    onChange={(e) =>
-                      setSpReadParams((prev) => {
-                        clearInvalidField(`spcoin-read-param-${idx}`);
-                        const next = [...prev];
-                        next[idx] = normalizeAccountValue(e.target.value);
-                        return next;
-                      })
-                    }
-                    placeholder="Select account"
-                  />
-                  <datalist id={`spcoin-read-address-options-${idx}`}>
-                    {hardhatAccounts.map((account, accountIdx) => (
-                      <option
-                        key={`sp-read-address-${idx}-${accountIdx}-${account.address}`}
-                        value={normalizeAccountValue(account.address)}
-                        label={formatAccountOptionLabel(account.address, accountIdx)}
-                      />
-                    ))}
-                  </datalist>
-                </>
+                <AccountDropdownInput
+                  dataFieldId={`spcoin-read-param-${idx}`}
+                  className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  value={spReadParams[idx] || ''}
+                  onChange={(value) =>
+                    setSpReadParams((prev) => {
+                      clearInvalidField(`spcoin-read-param-${idx}`);
+                      const next = [...prev];
+                      next[idx] = normalizeAccountValue(value);
+                      return next;
+                    })
+                  }
+                  placeholder="Select account"
+                  options={accountOptions}
+                />
               </label>
               {openAddressFields[idx] && (
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -216,7 +213,7 @@ export default function SpCoinReadController(props: Props) {
         >
           {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'
-            : 'Add To Script'}
+            : addToScriptButtonLabel}
         </button>
       </div>
     </div>

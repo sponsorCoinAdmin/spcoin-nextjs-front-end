@@ -62,8 +62,8 @@ export default function OutputResultsCard({
               {[
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
-                ['tree', 'Tree'],
                 ['raw_status', 'Raw Status'],
+                ['tree', 'Tree'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input

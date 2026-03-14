@@ -51,13 +51,14 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type FormattedPanelView = 'script' | 'output';
+type MethodSelectionSource = 'dropdown' | 'script';
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
 const buttonStyle =
-  'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.45rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
+  'rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-[0.28rem] text-sm text-white transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-60';
 const actionButtonStyle =
-  'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60';
+  'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60';
 const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
 const hiddenScrollbarClass =
@@ -148,6 +149,7 @@ export default function SponsorCoinLabPage() {
   const [treeOutputDisplay, setTreeOutputDisplay] = useState('(no tree yet)');
   const [outputPanelMode, setOutputPanelMode] = useState<OutputPanelMode>('formatted');
   const [formattedPanelView, setFormattedPanelView] = useState<FormattedPanelView>('script');
+  const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
@@ -166,6 +168,8 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinWriteMethod>('addRecipient');
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
+  const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
+  const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
@@ -322,6 +326,7 @@ export default function SponsorCoinLabPage() {
     runSelectedReadMethod,
     runSelectedSpCoinReadMethod,
     runSelectedSpCoinWriteMethod,
+    runScriptStep,
   } = useSponsorCoinLabMethods({
     mode,
     methodPanelMode,
@@ -391,6 +396,7 @@ export default function SponsorCoinLabPage() {
     scriptNameValidation,
     deleteScriptValidation,
     selectedScriptStepNumber,
+    setSelectedScriptStepNumber,
     expandedScriptStepIds,
     isDeleteStepPopupOpen,
     setIsDeleteStepPopupOpen,
@@ -399,7 +405,6 @@ export default function SponsorCoinLabPage() {
     getStepParamEntries,
     loadScriptStep,
     toggleScriptStepExpanded,
-    goToAdjacentScriptStep,
     moveSelectedScriptStep,
     requestDeleteSelectedScriptStep,
     confirmDeleteSelectedScriptStep,
@@ -429,6 +434,7 @@ export default function SponsorCoinLabPage() {
     spWriteParams,
     activeSpCoinWriteDef,
     spCoinWriteMethodDefs,
+    editingScriptStepNumber,
     erc20ReadMissingEntries,
     erc20WriteMissingEntries,
     spCoinReadMissingEntries,
@@ -529,20 +535,43 @@ export default function SponsorCoinLabPage() {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
     }
   }, [selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
-  const methodPanelTitle = useMemo(() => {
+  const methodPanelTitle = useMemo(
+    () =>
+      methodSelectionSource === 'script' && editingScriptStepNumber !== null
+        ? `Edit Test Method ${editingScriptStepNumber}`
+        : 'New Test Method',
+    [editingScriptStepNumber, methodSelectionSource],
+  );
+  const activeMissingEntryCount = useMemo(() => {
     switch (methodPanelMode) {
       case 'ecr20_read':
-        return 'ECR20 Read';
+        return erc20ReadMissingEntries.length;
       case 'erc20_write':
-        return 'ERC20 Write';
+        return erc20WriteMissingEntries.length;
       case 'spcoin_rread':
-        return 'Spcoin Read';
+        return spCoinReadMissingEntries.length;
       case 'spcoin_write':
-        return 'SpCoin Write';
+        return spCoinWriteMissingEntries.length;
       default:
-        return 'Method Tests';
+        return 0;
     }
-  }, [methodPanelMode]);
+  }, [
+    erc20ReadMissingEntries.length,
+    erc20WriteMissingEntries.length,
+    methodPanelMode,
+    spCoinReadMissingEntries.length,
+    spCoinWriteMissingEntries.length,
+  ]);
+  const isEditingScriptMethod = methodSelectionSource === 'script' && editingScriptStepNumber !== null;
+  const addToScriptButtonLabel = useMemo(
+    () =>
+      !isEditingScriptMethod && activeMissingEntryCount > 0
+        ? 'Missing Required Parameters'
+        : isEditingScriptMethod
+        ? `Update Script Step ${editingScriptStepNumber}`
+        : 'Add To Script',
+    [activeMissingEntryCount, editingScriptStepNumber, isEditingScriptMethod],
+  );
   const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
   const toggleExpandedCard = useCallback((cardId: LabCardId) => {
     setExpandedCard((current) => (current === cardId ? null : cardId));
@@ -557,9 +586,69 @@ export default function SponsorCoinLabPage() {
     [expandedCard],
   );
   const methodsCardRef = useRef<HTMLElement | null>(null);
+  const scriptDebugStopRef = useRef(false);
   const [sharedMethodsRowHeight, setSharedMethodsRowHeight] = useState<number | null>(null);
   const [isDesktopSharedLayout, setIsDesktopSharedLayout] = useState(false);
 
+  const editScriptStepFromBuilder = useCallback(
+    (step: LabScriptStep) => {
+      setMethodSelectionSource('script');
+      setEditingScriptStepNumber(step.step);
+      loadScriptStep(step);
+    },
+    [loadScriptStep],
+  );
+  const focusScriptStep = useCallback(
+    (step: LabScriptStep) => {
+      setSelectedScriptStepNumber(step.step);
+    },
+    [setSelectedScriptStepNumber],
+  );
+  const selectDropdownMethodPanelMode = useCallback(
+    (value: MethodPanelMode) => {
+      setMethodSelectionSource('dropdown');
+      setEditingScriptStepNumber(null);
+      setSelectedScriptStepNumber(null);
+      setMethodPanelMode(value);
+    },
+    [setMethodPanelMode, setSelectedScriptStepNumber],
+  );
+  const selectDropdownReadMethod = useCallback(
+    (value: Erc20ReadMethod) => {
+      setMethodSelectionSource('dropdown');
+      setEditingScriptStepNumber(null);
+      setSelectedScriptStepNumber(null);
+      setSelectedReadMethod(value);
+    },
+    [setSelectedReadMethod, setSelectedScriptStepNumber],
+  );
+  const selectDropdownWriteMethod = useCallback(
+    (value: Erc20WriteMethod) => {
+      setMethodSelectionSource('dropdown');
+      setEditingScriptStepNumber(null);
+      setSelectedScriptStepNumber(null);
+      setSelectedWriteMethod(value);
+    },
+    [setSelectedWriteMethod, setSelectedScriptStepNumber],
+  );
+  const selectDropdownSpCoinReadMethod = useCallback(
+    (value: SpCoinReadMethod) => {
+      setMethodSelectionSource('dropdown');
+      setEditingScriptStepNumber(null);
+      setSelectedScriptStepNumber(null);
+      setSelectedSpCoinReadMethod(value);
+    },
+    [setSelectedSpCoinReadMethod, setSelectedScriptStepNumber],
+  );
+  const selectDropdownSpCoinWriteMethod = useCallback(
+    (value: SpCoinWriteMethod) => {
+      setMethodSelectionSource('dropdown');
+      setEditingScriptStepNumber(null);
+      setSelectedScriptStepNumber(null);
+      setSelectedSpCoinWriteMethod(value);
+    },
+    [setSelectedSpCoinWriteMethod, setSelectedScriptStepNumber],
+  );
   useEffect(() => {
     const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
 
@@ -586,54 +675,178 @@ export default function SponsorCoinLabPage() {
 
     return () => resizeObserver.disconnect();
   }, [expandedCard, isDesktopSharedLayout]);
-  const runActiveMethod = useCallback(async () => {
-    switch (methodPanelMode) {
-      case 'ecr20_read':
-        await runSelectedReadMethod();
-        return;
-      case 'erc20_write':
-        await runSelectedWriteMethod();
-        return;
-      case 'spcoin_rread':
-        await runSelectedSpCoinReadMethod();
-        return;
-      case 'spcoin_write':
-        await runSelectedSpCoinWriteMethod();
-        return;
-      default:
-        return;
+  const restartScriptAtStart = useCallback(async () => {
+    scriptDebugStopRef.current = true;
+    setIsScriptDebugRunning(false);
+    setFormattedOutputDisplay('(no output yet)');
+    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+      setStatus('Selected script has no steps to restart.');
+      return;
     }
-  }, [
-    methodPanelMode,
-    runSelectedReadMethod,
-    runSelectedSpCoinReadMethod,
-    runSelectedSpCoinWriteMethod,
-    runSelectedWriteMethod,
-  ]);
+    scriptDebugStopRef.current = false;
+    setIsScriptDebugRunning(true);
+    let accumulatedOutput = '(no output yet)';
+    try {
+      for (let idx = 0; idx < selectedScript.steps.length; idx += 1) {
+        const step = selectedScript.steps[idx];
+        if (idx === 0 && step.breakpoint) {
+          focusScriptStep(step);
+          setStatus(`Paused at breakpoint before step ${step.step}.`);
+          return;
+        }
+        focusScriptStep(step);
+        const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
+        accumulatedOutput = result.formattedOutput;
+        if (!result.success) return;
+        if (scriptDebugStopRef.current) {
+          setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
+          return;
+        }
+
+        const nextStep = selectedScript.steps[idx + 1];
+        if (!nextStep) {
+          setSelectedScriptStepNumber(null);
+          setStatus(`Completed ${selectedScript.name}.`);
+          return;
+        }
+
+        if (nextStep.breakpoint) {
+          focusScriptStep(nextStep);
+          setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
+          return;
+        }
+      }
+    } finally {
+      setIsScriptDebugRunning(false);
+    }
+  }, [focusScriptStep, runScriptStep, selectedScript, selectedScriptStepNumber]);
+  const runSelectedScriptStep = useCallback(async () => {
+    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+      setStatus('Selected script has no steps to run.');
+      return;
+    }
+
+    scriptDebugStopRef.current = false;
+    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+    const currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    const activeStep = selectedScript.steps[currentIndex];
+    if (!activeStep) {
+      setStatus('Unable to resolve the selected script step.');
+      return;
+    }
+
+    focusScriptStep(activeStep);
+    setIsScriptDebugRunning(true);
+    try {
+      const result = await runScriptStep(activeStep, { formattedOutputBase: formattedOutputDisplay });
+      if (!result.success) return;
+      const nextStep = selectedScript.steps[currentIndex + 1];
+      if (nextStep) {
+        focusScriptStep(nextStep);
+        setStatus(`Completed step ${activeStep.step}. Ready for step ${nextStep.step}.`);
+      } else {
+        setSelectedScriptStepNumber(null);
+        setStatus(`Completed ${selectedScript.name}.`);
+      }
+    } finally {
+      setIsScriptDebugRunning(false);
+    }
+  }, [focusScriptStep, formattedOutputDisplay, runScriptStep, selectedScript, selectedScriptStepNumber]);
+  const runRemainingScriptSteps = useCallback(async () => {
+    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+      setStatus('Selected script has no steps to run.');
+      return;
+    }
+
+    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+    const startIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    scriptDebugStopRef.current = false;
+    setIsScriptDebugRunning(true);
+
+    let accumulatedOutput = formattedOutputDisplay;
+    try {
+      for (let idx = startIndex; idx < selectedScript.steps.length; idx += 1) {
+        const step = selectedScript.steps[idx];
+        focusScriptStep(step);
+        const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
+        accumulatedOutput = result.formattedOutput;
+        if (!result.success) return;
+        if (scriptDebugStopRef.current) {
+          setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
+          return;
+        }
+
+        const nextStep = selectedScript.steps[idx + 1];
+        if (!nextStep) {
+          setSelectedScriptStepNumber(null);
+          setStatus(`Completed ${selectedScript.name}.`);
+          return;
+        }
+
+        if (nextStep.breakpoint) {
+          focusScriptStep(nextStep);
+          setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
+          return;
+        }
+      }
+    } finally {
+      setIsScriptDebugRunning(false);
+    }
+  }, [focusScriptStep, formattedOutputDisplay, runScriptStep, selectedScript, selectedScriptStepNumber]);
+  const selectScriptStep = useCallback(
+    (step: LabScriptStep) => {
+      if (selectedScriptStep?.step === step.step) {
+        setSelectedScriptStepNumber(null);
+        return;
+      }
+      if (selectedScriptStepNumber === null) {
+        setFormattedOutputDisplay('(no output yet)');
+      }
+      focusScriptStep(step);
+    },
+    [
+      focusScriptStep,
+      selectedScriptStep?.step,
+      selectedScriptStepNumber,
+      setSelectedScriptStepNumber,
+    ],
+  );
+  const editScriptStep = useCallback(
+    (step: LabScriptStep) => {
+      editScriptStepFromBuilder(step);
+    },
+    [editScriptStepFromBuilder],
+  );
   const renderScriptStepRow = useCallback(
     (step: LabScriptStep) => {
       const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
       const isSelected = selectedScriptStep?.step === step.step;
+      const isEditingStep = isEditingScriptMethod && editingScriptStepNumber === step.step;
       return (
         <ScriptStepRow
           key={`step-${step.step}`}
           step={step}
           isExpanded={isExpanded}
           isSelected={isSelected}
+          isEditingStep={isEditingStep}
           getStepSender={getStepSender}
           getStepParamEntries={getStepParamEntries}
-          loadScriptStep={loadScriptStep}
+          selectScriptStep={selectScriptStep}
+          editScriptStep={editScriptStep}
           toggleScriptStepExpanded={toggleScriptStepExpanded}
           toggleScriptStepBreakpoint={toggleScriptStepBreakpoint}
         />
       );
     },
     [
+      editingScriptStepNumber,
       expandedScriptStepIds,
+      editScriptStep,
       getStepParamEntries,
       getStepSender,
-      loadScriptStep,
+      isEditingScriptMethod,
       selectedScriptStep?.step,
+      selectScriptStep,
       toggleScriptStepBreakpoint,
       toggleScriptStepExpanded,
     ],
@@ -757,7 +970,7 @@ export default function SponsorCoinLabPage() {
             onToggleExpand={() => toggleExpandedCard('methods')}
             methodPanelTitle={methodPanelTitle}
             methodPanelMode={methodPanelMode}
-            setMethodPanelMode={setMethodPanelMode}
+              setMethodPanelMode={selectDropdownMethodPanelMode}
             scriptBuilderProps={{
               actionButtonStyle,
               hiddenScrollbarClass,
@@ -782,8 +995,10 @@ export default function SponsorCoinLabPage() {
               deleteScriptValidation,
               createNewScript,
               handleDeleteScriptClick,
-              runActiveMethod,
-              goToAdjacentScriptStep,
+              restartScriptAtStart,
+              runSelectedScriptStep,
+              runRemainingScriptSteps,
+              isScriptDebugRunning,
               moveSelectedScriptStep,
               requestDeleteSelectedScriptStep,
               renderScriptStepRow,
@@ -795,17 +1010,17 @@ export default function SponsorCoinLabPage() {
               hardhatAccounts,
               hardhatAccountMetadata,
               erc20ReadOptions,
-              setSelectedReadMethod: (value) => setSelectedReadMethod(value as Erc20ReadMethod),
+              setSelectedReadMethod: (value) => selectDropdownReadMethod(value as Erc20ReadMethod),
               activeReadLabels,
               readAddressA,
               setReadAddressA,
               readAddressB,
               setReadAddressB,
-              buttonStyle,
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedReadMethod: canRunErc20ReadMethod,
-              canAddCurrentMethodToScript: canRunErc20ReadMethod,
+              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunErc20ReadMethod : true,
+              addToScriptButtonLabel,
               missingFieldIds: erc20ReadMissingEntries.map((entry) => entry.id),
               runSelectedReadMethod,
               addCurrentMethodToScript,
@@ -824,7 +1039,7 @@ export default function SponsorCoinLabPage() {
               toggleShowWriteSenderPrivateKey: () => setShowWriteSenderPrivateKey((prev) => !prev),
               selectedWriteMethod,
               erc20WriteOptions,
-              setSelectedWriteMethod: (value) => setSelectedWriteMethod(value as Erc20WriteMethod),
+              setSelectedWriteMethod: (value) => selectDropdownWriteMethod(value as Erc20WriteMethod),
               activeWriteLabels,
               writeAddressA,
               setWriteAddressA,
@@ -833,11 +1048,11 @@ export default function SponsorCoinLabPage() {
               writeAmountRaw,
               setWriteAmountRaw,
               inputStyle,
-              buttonStyle,
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedWriteMethod: canRunErc20WriteMethod,
-              canAddCurrentMethodToScript: canRunErc20WriteMethod,
+              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunErc20WriteMethod : true,
+              addToScriptButtonLabel,
               missingFieldIds: erc20WriteMissingEntries.map((entry) => entry.id),
               runSelectedWriteMethod,
               addCurrentMethodToScript,
@@ -848,18 +1063,18 @@ export default function SponsorCoinLabPage() {
               hardhatAccounts,
               hardhatAccountMetadata,
               selectedSpCoinReadMethod,
-              setSelectedSpCoinReadMethod: (value) => setSelectedSpCoinReadMethod(value as SpCoinReadMethod),
+              setSelectedSpCoinReadMethod: (value) => selectDropdownSpCoinReadMethod(value as SpCoinReadMethod),
               spCoinReadOptions,
               spCoinReadMethodDefs: spCoinReadMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }>,
               activeSpCoinReadDef: activeSpCoinReadDef as { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean },
               spReadParams,
               setSpReadParams,
               inputStyle,
-              buttonStyle,
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinReadMethod: canRunSpCoinReadMethod,
-              canAddCurrentMethodToScript: canRunSpCoinReadMethod,
+              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunSpCoinReadMethod : true,
+              addToScriptButtonLabel,
               missingFieldIds: spCoinReadMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinReadMethod,
               addCurrentMethodToScript,
@@ -881,7 +1096,7 @@ export default function SponsorCoinLabPage() {
               recipientRateKeyHelpText,
               agentRateKeyHelpText,
               selectedSpCoinWriteMethod,
-              setSelectedSpCoinWriteMethod: (value) => setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod),
+              setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
               spCoinWriteOptions,
               spCoinWriteMethodDefs: spCoinWriteMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean }>,
               activeSpCoinWriteDef: activeSpCoinWriteDef as { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean },
@@ -893,7 +1108,8 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinWriteMethod: canRunSpCoinWriteMethod,
-              canAddCurrentMethodToScript: canRunSpCoinWriteMethod,
+              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunSpCoinWriteMethod : true,
+              addToScriptButtonLabel,
               missingFieldIds: spCoinWriteMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinWriteMethod,
               addCurrentMethodToScript,

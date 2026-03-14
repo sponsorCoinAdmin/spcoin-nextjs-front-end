@@ -28,8 +28,10 @@ type Props = {
   deleteScriptValidation: { tone: 'invalid' | 'valid'; message: string };
   createNewScript: () => void;
   handleDeleteScriptClick: () => void;
-  runActiveMethod: () => Promise<void>;
-  goToAdjacentScriptStep: (direction: -1 | 1) => void;
+  restartScriptAtStart: () => Promise<void>;
+  runSelectedScriptStep: () => Promise<void>;
+  runRemainingScriptSteps: () => Promise<void>;
+  isScriptDebugRunning: boolean;
   moveSelectedScriptStep: (direction: -1 | 1) => void;
   requestDeleteSelectedScriptStep: () => void;
   renderScriptStepRow: (step: LabScriptStep) => React.ReactNode;
@@ -59,8 +61,10 @@ export default function ScriptBuilderCard({
   deleteScriptValidation,
   createNewScript,
   handleDeleteScriptClick,
-  runActiveMethod,
-  goToAdjacentScriptStep,
+  restartScriptAtStart,
+  runSelectedScriptStep,
+  runRemainingScriptSteps,
+  isScriptDebugRunning,
   moveSelectedScriptStep,
   requestDeleteSelectedScriptStep,
   renderScriptStepRow,
@@ -173,13 +177,14 @@ export default function ScriptBuilderCard({
         <div className="flex items-center justify-end gap-[0.05rem]">
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
-            title="Run Script"
-            onClick={() => void runActiveMethod()}
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
+            title="Restart Script at Start"
+            onClick={() => void restartScriptAtStart()}
+            disabled={!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/run.png"
-              alt="Run Script"
+              alt="Restart Script at Start"
               width={21}
               height={21}
               className="block h-[21px] w-[21px]"
@@ -189,52 +194,44 @@ export default function ScriptBuilderCard({
           </button>
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-            title="Run to Next Step"
-            onClick={() => goToAdjacentScriptStep(1)}
-            disabled={!selectedScript || (selectedStepIndex >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
-          >
-            <Image src="/assets/miscellaneous/next.png" alt="Run to Next Step" width={21} height={21} className="block h-[21px] w-[21px]" unoptimized />
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-            title="Move to Previous Step"
-            onClick={() => goToAdjacentScriptStep(-1)}
-            disabled={!selectedScript || selectedStepIndex <= 0}
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-[#E5B94F] transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
+            title="Run Selected Step"
+            onClick={() => void runSelectedScriptStep()}
+            disabled={!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null || isScriptDebugRunning}
           >
             <Image
-              src="/assets/miscellaneous/back.png"
-              alt="Move to Previous Step"
+              src="/assets/miscellaneous/next.png"
+              alt="Run Selected Step"
               width={21}
               height={21}
               className="block h-[21px] w-[21px]"
-              style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(44%) saturate(633%) hue-rotate(357deg) brightness(95%) contrast(88%)' }}
+              style={{ filter: 'brightness(0) saturate(100%) invert(80%) sepia(42%) saturate(979%) hue-rotate(343deg) brightness(94%) contrast(89%)' }}
               unoptimized
             />
           </button>
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-slate-200 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
-            title="Run Remaining Scrept"
-            disabled
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-[#E5B94F] transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
+            title="Run Remaining Script"
+            onClick={() => void runRemainingScriptSteps()}
+            disabled={!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/continue.png"
-              alt="Run Remaining Scrept"
+              alt="Run Remaining Script"
               width={21}
               height={21}
               className="block h-[21px] w-[21px]"
-              style={{ filter: 'brightness(0) saturate(100%) invert(71%) sepia(39%) saturate(640%) hue-rotate(73deg) brightness(93%) contrast(90%)' }}
+              style={{ filter: 'brightness(0) saturate(100%) invert(80%) sepia(42%) saturate(979%) hue-rotate(343deg) brightness(94%) contrast(89%)' }}
               unoptimized
             />
           </button>
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
             title="Move Step Up"
             onClick={() => moveSelectedScriptStep(-1)}
-            disabled={!selectedScript || selectedStepIndex <= 0}
+            disabled={!selectedScript || selectedScriptStepNumber === null || selectedStepIndex <= 0 || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/up.png"
@@ -248,10 +245,10 @@ export default function ScriptBuilderCard({
           </button>
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-white transition-colors hover:bg-[#1E293B] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
             title="Move Step Down"
             onClick={() => moveSelectedScriptStep(1)}
-            disabled={!selectedScript || (selectedStepIndex >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0)}
+            disabled={!selectedScript || selectedScriptStepNumber === null || (selectedStepIndex >= selectedScript.steps.length - 1 && selectedScript.steps.length > 0) || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/down.png"
@@ -265,10 +262,10 @@ export default function ScriptBuilderCard({
           </button>
           <button
             type="button"
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
             title="Delete Step"
             onClick={requestDeleteSelectedScriptStep}
-            disabled={selectedScriptStepNumber === null}
+            disabled={selectedScriptStepNumber === null || isScriptDebugRunning}
           >
             <span className="block text-[21px] leading-none">x</span>
           </button>

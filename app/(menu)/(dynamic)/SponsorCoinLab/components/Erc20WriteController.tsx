@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/Erc20WriteController.tsx
 import React from 'react';
 import Image from 'next/image';
+import AccountDropdownInput from './AccountDropdownInput';
 
 type ActiveWriteLabels = {
   title: string;
@@ -36,9 +37,9 @@ type Props = {
   writeAmountRaw: string;
   setWriteAmountRaw: (value: string) => void;
   inputStyle: string;
-  buttonStyle: string;
   canRunSelectedWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  addToScriptButtonLabel: string;
   missingFieldIds: string[];
   runSelectedWriteMethod: () => void;
   addCurrentMethodToScript: () => void;
@@ -70,9 +71,9 @@ export default function Erc20WriteController(props: Props) {
     writeAmountRaw,
     setWriteAmountRaw,
     inputStyle,
-    buttonStyle,
     canRunSelectedWriteMethod,
     canAddCurrentMethodToScript,
+    addToScriptButtonLabel,
     missingFieldIds,
     runSelectedWriteMethod,
     addCurrentMethodToScript,
@@ -84,11 +85,11 @@ export default function Erc20WriteController(props: Props) {
       ? ' border-red-500 bg-red-950/40 focus:border-red-400'
       : '';
   const actionButtonClassName =
-    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+    'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
     isEnabled
       ? actionButtonClassName
-      : `h-[42px] rounded px-4 py-2 text-center font-bold transition-colors ${
+      : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
         } cursor-not-allowed`;
   const normalizeAccountValue = (value: string) => {
@@ -106,10 +107,18 @@ export default function Erc20WriteController(props: Props) {
     const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
     return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
+  const accountOptions = React.useMemo(
+    () =>
+      hardhatAccounts.map((account, idx) => ({
+        value: normalizeAccountValue(account.address),
+        label: formatAccountOptionLabel(account.address, idx),
+      })),
+    [hardhatAccounts],
+  );
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">ERC-20 Write Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedWriteMethod}
@@ -121,7 +130,7 @@ export default function Erc20WriteController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
@@ -136,29 +145,17 @@ export default function Erc20WriteController(props: Props) {
             msg.sender
           </button>
           {mode === 'hardhat' ? (
-            <>
-              <input
-                type="text"
-                list="erc20-write-sender-options"
-                data-field-id="erc20-write-sender"
-                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
-                value={selectedWriteSenderAddress}
-                onChange={(e) => {
-                  clearInvalidField('erc20-write-sender');
-                  setSelectedWriteSenderAddress(normalizeAccountValue(e.target.value));
-                }}
-                placeholder="Select account"
-              />
-              <datalist id="erc20-write-sender-options">
-                {hardhatAccounts.map((account, idx) => (
-                  <option
-                    key={`write-sender-${idx}-${account.address}`}
-                    value={normalizeAccountValue(account.address)}
-                    label={formatAccountOptionLabel(account.address, idx)}
-                  />
-                ))}
-              </datalist>
-            </>
+            <AccountDropdownInput
+              dataFieldId="erc20-write-sender"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
+              value={selectedWriteSenderAddress}
+              onChange={(value) => {
+                clearInvalidField('erc20-write-sender');
+                setSelectedWriteSenderAddress(normalizeAccountValue(value));
+              }}
+              placeholder="Select account"
+              options={accountOptions}
+            />
           ) : (
             <input
               className={inputStyle}
@@ -221,29 +218,17 @@ export default function Erc20WriteController(props: Props) {
           >
             {activeWriteLabels.addressALabel}
           </button>
-          <>
-            <input
-              type="text"
-              list="erc20-write-address-a-options"
-              data-field-id="erc20-write-address-a"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
-              value={writeAddressA}
-              onChange={(e) => {
-                clearInvalidField('erc20-write-address-a');
-                setWriteAddressA(normalizeAccountValue(e.target.value));
-              }}
-              placeholder="Select account"
-            />
-            <datalist id="erc20-write-address-a-options">
-              {hardhatAccounts.map((account, idx) => (
-                <option
-                  key={`erc20-address-a-${idx}-${account.address}`}
-                  value={normalizeAccountValue(account.address)}
-                  label={formatAccountOptionLabel(account.address, idx)}
-                />
-              ))}
-            </datalist>
-          </>
+          <AccountDropdownInput
+            dataFieldId="erc20-write-address-a"
+            className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
+            value={writeAddressA}
+            onChange={(value) => {
+              clearInvalidField('erc20-write-address-a');
+              setWriteAddressA(normalizeAccountValue(value));
+            }}
+            placeholder="Select account"
+            options={accountOptions}
+          />
         </label>
         {openAddressFields.addressA && (
           <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -286,29 +271,17 @@ export default function Erc20WriteController(props: Props) {
             >
               {activeWriteLabels.addressBLabel}
             </button>
-            <>
-              <input
-                type="text"
-                list="erc20-write-address-b-options"
-                data-field-id="erc20-write-address-b"
-                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
-                value={writeAddressB}
-                onChange={(e) => {
-                  clearInvalidField('erc20-write-address-b');
-                  setWriteAddressB(normalizeAccountValue(e.target.value));
-                }}
-                placeholder="Select account"
-              />
-              <datalist id="erc20-write-address-b-options">
-                {hardhatAccounts.map((account, idx) => (
-                  <option
-                    key={`erc20-address-b-${idx}-${account.address}`}
-                    value={normalizeAccountValue(account.address)}
-                    label={formatAccountOptionLabel(account.address, idx)}
-                  />
-                ))}
-              </datalist>
-            </>
+            <AccountDropdownInput
+              dataFieldId="erc20-write-address-b"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
+              value={writeAddressB}
+              onChange={(value) => {
+                clearInvalidField('erc20-write-address-b');
+                setWriteAddressB(normalizeAccountValue(value));
+              }}
+              placeholder="Select account"
+              options={accountOptions}
+            />
           </label>
           {openAddressFields.addressB && (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -387,7 +360,7 @@ export default function Erc20WriteController(props: Props) {
         >
           {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'
-            : 'Add To Script'}
+            : addToScriptButtonLabel}
         </button>
       </div>
     </div>

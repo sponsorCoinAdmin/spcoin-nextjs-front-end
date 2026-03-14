@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/Erc20ReadController.tsx
 import React from 'react';
 import Image from 'next/image';
+import AccountDropdownInput from './AccountDropdownInput';
 
 type ActiveReadLabels = {
   title: string;
@@ -27,9 +28,9 @@ type Props = {
   setReadAddressA: (value: string) => void;
   readAddressB: string;
   setReadAddressB: (value: string) => void;
-  buttonStyle: string;
   canRunSelectedReadMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  addToScriptButtonLabel: string;
   missingFieldIds: string[];
   runSelectedReadMethod: () => void;
   addCurrentMethodToScript: () => void;
@@ -51,9 +52,9 @@ export default function Erc20ReadController(props: Props) {
     setReadAddressA,
     readAddressB,
     setReadAddressB,
-    buttonStyle,
     canRunSelectedReadMethod,
     canAddCurrentMethodToScript,
+    addToScriptButtonLabel,
     missingFieldIds,
     runSelectedReadMethod,
     addCurrentMethodToScript,
@@ -65,11 +66,11 @@ export default function Erc20ReadController(props: Props) {
       ? ' border-red-500 bg-red-950/40 focus:border-red-400'
       : '';
   const actionButtonClassName =
-    'h-[42px] rounded px-4 py-2 text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+    'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
     isEnabled
       ? actionButtonClassName
-      : `h-[42px] rounded px-4 py-2 text-center font-bold transition-colors ${
+      : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
         } cursor-not-allowed`;
   const normalizeAccountValue = (value: string) => {
@@ -85,11 +86,19 @@ export default function Erc20ReadController(props: Props) {
     const symbol = String(metadata?.symbol || '').trim() || 'No symbol';
     return `Account ${index}, ${address}, ${name}(${symbol})`;
   };
+  const accountOptions = React.useMemo(
+    () =>
+      hardhatAccounts.map((account, idx) => ({
+        value: normalizeAccountValue(account.address),
+        label: formatAccountOptionLabel(account.address, idx),
+      })),
+    [hardhatAccounts],
+  );
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">ERC-20 Read Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedReadMethod}
@@ -101,7 +110,7 @@ export default function Erc20ReadController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${buttonStyle} justify-self-end`} onClick={toggleWriteTrace}>
+        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
@@ -116,29 +125,17 @@ export default function Erc20ReadController(props: Props) {
             >
               {activeReadLabels.addressALabel}
             </button>
-            <>
-              <input
-                type="text"
-                list="erc20-read-address-a-options"
-                data-field-id="erc20-read-address-a"
-                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
-                value={readAddressA}
-                onChange={(e) => {
-                  clearInvalidField('erc20-read-address-a');
-                  setReadAddressA(normalizeAccountValue(e.target.value));
-                }}
-                placeholder="Select account"
-              />
-              <datalist id="erc20-read-address-a-options">
-                {hardhatAccounts.map((account, idx) => (
-                  <option
-                    key={`erc20-read-address-a-${idx}-${account.address}`}
-                    value={normalizeAccountValue(account.address)}
-                    label={formatAccountOptionLabel(account.address, idx)}
-                  />
-                ))}
-              </datalist>
-            </>
+            <AccountDropdownInput
+              dataFieldId="erc20-read-address-a"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
+              value={readAddressA}
+              onChange={(value) => {
+                clearInvalidField('erc20-read-address-a');
+                setReadAddressA(normalizeAccountValue(value));
+              }}
+              placeholder="Select account"
+              options={accountOptions}
+            />
           </label>
           {openAddressFields.addressA && (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -171,29 +168,17 @@ export default function Erc20ReadController(props: Props) {
             >
               {activeReadLabels.addressBLabel}
             </button>
-            <>
-              <input
-                type="text"
-                list="erc20-read-address-b-options"
-                data-field-id="erc20-read-address-b"
-                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
-                value={readAddressB}
-                onChange={(e) => {
-                  clearInvalidField('erc20-read-address-b');
-                  setReadAddressB(normalizeAccountValue(e.target.value));
-                }}
-                placeholder="Select account"
-              />
-              <datalist id="erc20-read-address-b-options">
-                {hardhatAccounts.map((account, idx) => (
-                  <option
-                    key={`erc20-read-address-b-${idx}-${account.address}`}
-                    value={normalizeAccountValue(account.address)}
-                    label={formatAccountOptionLabel(account.address, idx)}
-                  />
-                ))}
-              </datalist>
-            </>
+            <AccountDropdownInput
+              dataFieldId="erc20-read-address-b"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
+              value={readAddressB}
+              onChange={(value) => {
+                clearInvalidField('erc20-read-address-b');
+                setReadAddressB(normalizeAccountValue(value));
+              }}
+              placeholder="Select account"
+              options={accountOptions}
+            />
           </label>
           {openAddressFields.addressB && (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -248,7 +233,7 @@ export default function Erc20ReadController(props: Props) {
         >
           {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'
-            : 'Add To Script'}
+            : addToScriptButtonLabel}
         </button>
       </div>
     </div>
