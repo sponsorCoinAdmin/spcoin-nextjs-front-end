@@ -290,18 +290,57 @@ export function useSponsorCoinLabScripts({
     },
     [spCoinReadMethodDefs, spCoinWriteMethodDefs],
   );
+  const hasStepMissingRequiredParams = useCallback(
+    (step: LabScriptStep): boolean => {
+      const params = getStepParamEntries(step);
+      const sender = getStepSender(step);
+      const findParamValue = (label: string) =>
+        String(params.find((param) => param.key === label)?.value || '').trim();
+      const stepMode = getStepMode(step, selectedScript?.network);
+
+      if (step.panel === 'ecr20_read') {
+        const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
+        if (labels.requiresAddressA && !findParamValue(labels.addressALabel)) return true;
+        if (labels.requiresAddressB && !findParamValue(labels.addressBLabel)) return true;
+        return false;
+      }
+
+      if (step.panel === 'erc20_write') {
+        const labels = getErc20WriteLabels(step.method as Erc20WriteMethod);
+        if (stepMode === 'hardhat' && !sender) return true;
+        if (!findParamValue(labels.addressALabel)) return true;
+        if (labels.requiresAddressB && !findParamValue(labels.addressBLabel)) return true;
+        if (!findParamValue('Amount')) return true;
+        return false;
+      }
+
+      if (step.panel === 'spcoin_rread') {
+        const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+        return (def?.params || []).some((param) => !findParamValue(param.label));
+      }
+
+      const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+      if (stepMode === 'hardhat' && !sender) return true;
+      return (def?.params || []).some((param) => param.type !== 'date' && !findParamValue(param.label));
+    },
+    [getStepMode, getStepParamEntries, getStepSender, selectedScript?.network, spCoinReadMethodDefs, spCoinWriteMethodDefs],
+  );
 
   const normalizeScriptStep = useCallback(
-    (step: LabScriptStep, index: number): LabScriptStep => ({
-      step: index + 1,
-      name: step.name,
-      panel: step.panel,
-      method: step.method,
-      'msg.sender': getStepSender(step) || undefined,
-      params: getStepParamEntries(step),
-      hasMissingRequiredParams: Boolean(step.hasMissingRequiredParams),
-    }),
-    [getStepParamEntries, getStepSender],
+    (step: LabScriptStep, index: number): LabScriptStep => {
+      const hasMissingRequiredParams = hasStepMissingRequiredParams(step);
+      return {
+        step: index + 1,
+        name: step.name,
+        panel: step.panel,
+        method: step.method,
+        'msg.sender': getStepSender(step) || undefined,
+        params: getStepParamEntries(step),
+        breakpoint: Boolean(step.breakpoint) || hasMissingRequiredParams,
+        hasMissingRequiredParams,
+      };
+    },
+    [getStepParamEntries, getStepSender, hasStepMissingRequiredParams],
   );
 
   const normalizeScript = useCallback(
@@ -570,7 +609,7 @@ export function useSponsorCoinLabScripts({
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
       setOutputPanelMode('raw_status');
-      return;
+      return false;
     }
 
     const activeMissingEntries =
@@ -594,10 +633,12 @@ export function useSponsorCoinLabScripts({
           : 'Fill in the following fields before adding the method to the script:',
         {
           confirmLabel: isUpdatingExistingStep ? 'Update Anyway' : 'Run Anyway',
-          onConfirm: () => addCurrentMethodToScript({ skipValidation: true }),
+          onConfirm: () => {
+            addCurrentMethodToScript({ skipValidation: true });
+          },
         },
       );
-      return;
+      return false;
     }
 
     let method = '';
@@ -651,7 +692,7 @@ export function useSponsorCoinLabScripts({
     if (!method) {
       setStatus('No active method is available to add.');
       setOutputPanelMode('raw_status');
-      return;
+      return false;
     }
 
     const nextStep: LabScriptStep = {
@@ -735,6 +776,15 @@ export function useSponsorCoinLabScripts({
         return nextExpanded;
       });
     }
+    const savedStepNumber =
+      isUpdatingExistingStep && editingScriptStepNumber !== null
+        ? editingScriptStepNumber
+        : selectedScriptStepNumber !== null && Array.isArray(selectedScript?.steps)
+          ? (() => {
+              const activeIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+              return (activeIndex >= 0 ? activeIndex : selectedScript.steps.length - 1) + 2;
+            })()
+          : (selectedScript?.steps.length || 0) + 1;
     setOutputPanelMode('formatted');
     setStatus(
       isUpdatingExistingStep && editingScriptStepNumber !== null
@@ -743,6 +793,7 @@ export function useSponsorCoinLabScripts({
           ? `Added ${name} with missing required parameters.`
           : `Added ${name} to the selected script.`,
     );
+    return savedStepNumber;
   }, [
     activeNetworkName,
     activeReadLabels.addressALabel,
@@ -785,6 +836,127 @@ export function useSponsorCoinLabScripts({
     writeAmountRaw,
   ]);
 
+  const buildCurrentScriptStepDraft = useCallback((): Omit<LabScriptStep, 'step'> | null => {
+    const activeMissingEntries =
+      methodPanelMode === 'ecr20_read'
+        ? erc20ReadMissingEntries
+        : methodPanelMode === 'erc20_write'
+          ? erc20WriteMissingEntries
+          : methodPanelMode === 'spcoin_rread'
+            ? spCoinReadMissingEntries
+            : spCoinWriteMissingEntries;
+
+    let method = '';
+    let params: LabScriptParam[] = [];
+    let name = '';
+
+    switch (methodPanelMode) {
+      case 'ecr20_read':
+        method = selectedReadMethod;
+        params = [
+          activeReadLabels.requiresAddressA ? { key: activeReadLabels.addressALabel, value: String(readAddressA || '').trim() } : null,
+          activeReadLabels.requiresAddressB ? { key: activeReadLabels.addressBLabel, value: String(readAddressB || '').trim() } : null,
+        ].filter((value): value is LabScriptParam => value !== null && value.value.length > 0);
+        name = activeReadLabels.title;
+        break;
+      case 'erc20_write':
+        method = selectedWriteMethod;
+        params = [
+          { key: activeWriteLabels.addressALabel, value: String(writeAddressA || '').trim() },
+          ...(activeWriteLabels.requiresAddressB ? [{ key: activeWriteLabels.addressBLabel, value: String(writeAddressB || '').trim() }] : []),
+          { key: 'Amount', value: String(writeAmountRaw || '').trim() },
+        ].filter((param) => param.value.length > 0);
+        name = activeWriteLabels.title;
+        break;
+      case 'spcoin_rread':
+        method = selectedSpCoinReadMethod;
+        params = spReadParams
+          .slice(0, activeSpCoinReadDef.params.length)
+          .map((value, idx) => ({
+            key: activeSpCoinReadDef.params[idx]?.label || `param${idx + 1}`,
+            value: String(value || '').trim(),
+          }))
+          .filter((param) => param.value.length > 0);
+        name = activeSpCoinReadDef.title;
+        break;
+      case 'spcoin_write':
+        method = selectedSpCoinWriteMethod;
+        params = spWriteParams
+          .slice(0, activeSpCoinWriteDef.params.length)
+          .map((value, idx) => ({
+            key: activeSpCoinWriteDef.params[idx]?.label || `param${idx + 1}`,
+            value: String(value || '').trim(),
+          }))
+          .filter((param) => param.value.length > 0);
+        name = activeSpCoinWriteDef.title;
+        break;
+      default:
+        break;
+    }
+
+    if (!method) return null;
+
+    return {
+      name,
+      panel: methodPanelMode,
+      method,
+      hasMissingRequiredParams: activeMissingEntries.length > 0,
+      'msg.sender':
+        methodPanelMode === 'erc20_write' || methodPanelMode === 'spcoin_write'
+          ? String(selectedWriteSenderAddress || '').trim() || undefined
+          : undefined,
+      params,
+    };
+  }, [
+    activeReadLabels.addressALabel,
+    activeReadLabels.addressBLabel,
+    activeReadLabels.requiresAddressA,
+    activeReadLabels.requiresAddressB,
+    activeReadLabels.title,
+    activeSpCoinReadDef.params,
+    activeSpCoinReadDef.title,
+    activeSpCoinWriteDef.params,
+    activeSpCoinWriteDef.title,
+    activeWriteLabels.addressALabel,
+    activeWriteLabels.addressBLabel,
+    activeWriteLabels.requiresAddressB,
+    activeWriteLabels.title,
+    erc20ReadMissingEntries,
+    erc20WriteMissingEntries,
+    methodPanelMode,
+    readAddressA,
+    readAddressB,
+    selectedReadMethod,
+    selectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
+    selectedWriteMethod,
+    selectedWriteSenderAddress,
+    spCoinReadMissingEntries,
+    spCoinWriteMissingEntries,
+    spReadParams,
+    spWriteParams,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+  ]);
+  const hasEditingScriptChanges = useMemo(() => {
+    if (editingScriptStepNumber === null || !Array.isArray(selectedScript?.steps)) return true;
+    const existingStep = selectedScript.steps.find((step) => step.step === editingScriptStepNumber);
+    const currentDraft = buildCurrentScriptStepDraft();
+    if (!existingStep || !currentDraft) return true;
+
+    const comparableExistingStep = {
+      name: existingStep.name,
+      panel: existingStep.panel,
+      method: existingStep.method,
+      hasMissingRequiredParams: Boolean(existingStep.hasMissingRequiredParams),
+      'msg.sender': String(existingStep['msg.sender'] || '').trim() || undefined,
+      params: getStepParamEntries(existingStep),
+    };
+
+    return JSON.stringify(comparableExistingStep) !== JSON.stringify(currentDraft);
+  }, [buildCurrentScriptStepDraft, editingScriptStepNumber, getStepParamEntries, selectedScript?.steps]);
+
   return {
     scripts,
     setScripts,
@@ -822,6 +994,7 @@ export function useSponsorCoinLabScripts({
     toggleScriptStepBreakpoint,
     createNewScript,
     handleDeleteScriptClick,
+    hasEditingScriptChanges,
     addCurrentMethodToScript,
   };
 }

@@ -36,6 +36,7 @@ import { useSponsorCoinLabPersistence } from './hooks/useSponsorCoinLabPersisten
 import { useSponsorCoinLabScripts } from './hooks/useSponsorCoinLabScripts';
 import ContractNetworkCard from './components/ContractNetworkCard';
 import DeleteStepPopup from './components/DeleteStepPopup';
+import DiscardChangesPopup from './components/DiscardChangesPopup';
 import MethodsPanelCard from './components/MethodsPanelCard';
 import NetworkSignerCard from './components/NetworkSignerCard';
 import OutputResultsCard from './components/OutputResultsCard';
@@ -158,6 +159,8 @@ export default function SponsorCoinLabPage() {
   );
   const [validationPopupConfirmLabel, setValidationPopupConfirmLabel] = useState('');
   const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
+  const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
+  const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -436,6 +439,7 @@ export default function SponsorCoinLabPage() {
     toggleScriptStepBreakpoint,
     createNewScript,
     handleDeleteScriptClick,
+    hasEditingScriptChanges,
     addCurrentMethodToScript,
   } = useSponsorCoinLabScripts({
     activeNetworkName,
@@ -483,6 +487,81 @@ export default function SponsorCoinLabPage() {
     setSelectedSpCoinWriteMethod,
     setSpWriteParams,
   });
+  const buildEditorSnapshot = useCallback(
+    () =>
+      JSON.stringify({
+        methodPanelMode,
+        methodSelectionSource,
+        editingScriptStepNumber,
+        selectedReadMethod,
+        readAddressA,
+        readAddressB,
+        selectedWriteMethod,
+        selectedWriteSenderAddress,
+        writeAddressA,
+        writeAddressB,
+        writeAmountRaw,
+        selectedSpCoinReadMethod,
+        spReadParams,
+        selectedSpCoinWriteMethod,
+        spWriteParams,
+      }),
+    [
+      editingScriptStepNumber,
+      methodPanelMode,
+      methodSelectionSource,
+      readAddressA,
+      readAddressB,
+      selectedReadMethod,
+      selectedSpCoinReadMethod,
+      selectedSpCoinWriteMethod,
+      selectedWriteMethod,
+      selectedWriteSenderAddress,
+      spReadParams,
+      spWriteParams,
+      writeAddressA,
+      writeAddressB,
+      writeAmountRaw,
+    ],
+  );
+  const editorBaselineRef = useRef<string | null>(null);
+  const shouldResetEditorBaselineRef = useRef(true);
+  const queueEditorBaselineReset = useCallback(() => {
+    shouldResetEditorBaselineRef.current = true;
+  }, []);
+  useEffect(() => {
+    if (!shouldResetEditorBaselineRef.current && editorBaselineRef.current !== null) return;
+    editorBaselineRef.current = buildEditorSnapshot();
+    shouldResetEditorBaselineRef.current = false;
+  }, [buildEditorSnapshot]);
+  const hasUnsavedEditorChanges = useCallback(() => {
+    if (editorBaselineRef.current === null) return false;
+    return editorBaselineRef.current !== buildEditorSnapshot();
+  }, [buildEditorSnapshot]);
+  const clearDiscardChangesPopup = useCallback(() => {
+    setIsDiscardChangesPopupOpen(false);
+    discardChangesConfirmRef.current = null;
+  }, []);
+  const runWithDiscardPrompt = useCallback(
+    (action: () => void | Promise<void>) => {
+      if (methodSelectionSource === 'script' && editingScriptStepNumber !== null && !hasEditingScriptChanges) {
+        queueEditorBaselineReset();
+        void action();
+        return;
+      }
+      if (!hasUnsavedEditorChanges()) {
+        queueEditorBaselineReset();
+        void action();
+        return;
+      }
+      discardChangesConfirmRef.current = () => {
+        queueEditorBaselineReset();
+        void action();
+      };
+      setIsDiscardChangesPopupOpen(true);
+    },
+    [editingScriptStepNumber, hasEditingScriptChanges, hasUnsavedEditorChanges, methodSelectionSource, queueEditorBaselineReset],
+  );
   useSponsorCoinLabPersistence({
     scripts,
     setScripts,
@@ -567,7 +646,31 @@ export default function SponsorCoinLabPage() {
         : 'New Test Method',
     [editingScriptStepNumber, methodSelectionSource],
   );
+  const currentMethodDisplayName = useMemo(() => {
+    switch (methodPanelMode) {
+      case 'ecr20_read':
+        return activeReadLabels.title;
+      case 'erc20_write':
+        return activeWriteLabels.title;
+      case 'spcoin_rread':
+        return activeSpCoinReadDef.title;
+      case 'spcoin_write':
+        return activeSpCoinWriteDef.title;
+      default:
+        return 'method';
+    }
+  }, [activeReadLabels.title, activeSpCoinReadDef.title, activeSpCoinWriteDef.title, activeWriteLabels.title, methodPanelMode]);
   const isEditingScriptMethod = methodSelectionSource === 'script' && editingScriptStepNumber !== null;
+  const discardChangesMessage = useMemo(
+    () => {
+      const activeStepNumber = editingScriptStepNumber ?? selectedScriptStepNumber;
+      return activeStepNumber !== null
+        ? `Discard unsaved changes to Step ${activeStepNumber} (${currentMethodDisplayName}) or return?`
+        : `Discard unsaved changes to ${currentMethodDisplayName} or return?`;
+    },
+    [currentMethodDisplayName, editingScriptStepNumber, selectedScriptStepNumber],
+  );
+  const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
   const addToScriptButtonLabel = useMemo(
     () =>
       isEditingScriptMethod
@@ -595,11 +698,12 @@ export default function SponsorCoinLabPage() {
 
   const editScriptStepFromBuilder = useCallback(
     (step: LabScriptStep) => {
+      queueEditorBaselineReset();
       setMethodSelectionSource('script');
       setEditingScriptStepNumber(step.step);
       loadScriptStep(step);
     },
-    [loadScriptStep],
+    [loadScriptStep, queueEditorBaselineReset],
   );
   const focusScriptStep = useCallback(
     (step: LabScriptStep) => {
@@ -609,49 +713,72 @@ export default function SponsorCoinLabPage() {
   );
   const selectDropdownMethodPanelMode = useCallback(
     (value: MethodPanelMode) => {
-      setMethodSelectionSource('dropdown');
-      setEditingScriptStepNumber(null);
-      setSelectedScriptStepNumber(null);
-      setMethodPanelMode(value);
+      if (methodPanelMode === value) return;
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        setMethodPanelMode(value);
+      });
     },
-    [setMethodPanelMode, setSelectedScriptStepNumber],
+    [methodPanelMode, runWithDiscardPrompt, setMethodPanelMode, setSelectedScriptStepNumber],
   );
   const selectDropdownReadMethod = useCallback(
     (value: Erc20ReadMethod) => {
-      setMethodSelectionSource('dropdown');
-      setEditingScriptStepNumber(null);
-      setSelectedScriptStepNumber(null);
-      setSelectedReadMethod(value);
+      if (selectedReadMethod === value) return;
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        setSelectedReadMethod(value);
+      });
     },
-    [setSelectedReadMethod, setSelectedScriptStepNumber],
+    [runWithDiscardPrompt, selectedReadMethod, setSelectedReadMethod, setSelectedScriptStepNumber],
   );
   const selectDropdownWriteMethod = useCallback(
     (value: Erc20WriteMethod) => {
-      setMethodSelectionSource('dropdown');
-      setEditingScriptStepNumber(null);
-      setSelectedScriptStepNumber(null);
-      setSelectedWriteMethod(value);
+      if (selectedWriteMethod === value) return;
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        setSelectedWriteMethod(value);
+      });
     },
-    [setSelectedWriteMethod, setSelectedScriptStepNumber],
+    [runWithDiscardPrompt, selectedWriteMethod, setSelectedScriptStepNumber, setSelectedWriteMethod],
   );
   const selectDropdownSpCoinReadMethod = useCallback(
     (value: SpCoinReadMethod) => {
-      setMethodSelectionSource('dropdown');
-      setEditingScriptStepNumber(null);
-      setSelectedScriptStepNumber(null);
-      setSelectedSpCoinReadMethod(value);
+      if (selectedSpCoinReadMethod === value) return;
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        setSelectedSpCoinReadMethod(value);
+      });
     },
-    [setSelectedSpCoinReadMethod, setSelectedScriptStepNumber],
+    [runWithDiscardPrompt, selectedSpCoinReadMethod, setSelectedScriptStepNumber, setSelectedSpCoinReadMethod],
   );
   const selectDropdownSpCoinWriteMethod = useCallback(
     (value: SpCoinWriteMethod) => {
-      setMethodSelectionSource('dropdown');
-      setEditingScriptStepNumber(null);
-      setSelectedScriptStepNumber(null);
-      setSelectedSpCoinWriteMethod(value);
+      if (selectedSpCoinWriteMethod === value) return;
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        setSelectedSpCoinWriteMethod(value);
+      });
     },
-    [setSelectedSpCoinWriteMethod, setSelectedScriptStepNumber],
+    [runWithDiscardPrompt, selectedSpCoinWriteMethod, setSelectedScriptStepNumber, setSelectedSpCoinWriteMethod],
   );
+  const handleAddCurrentMethodToScript = useCallback(() => {
+    const savedStepNumber = addCurrentMethodToScript();
+    if (!savedStepNumber) return;
+    setMethodSelectionSource('script');
+    setEditingScriptStepNumber(savedStepNumber);
+    setSelectedScriptStepNumber(savedStepNumber);
+    queueEditorBaselineReset();
+  }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
   useEffect(() => {
     const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
 
@@ -980,7 +1107,7 @@ export default function SponsorCoinLabPage() {
             onToggleExpand={() => toggleExpandedCard('methods')}
             methodPanelTitle={methodPanelTitle}
             methodPanelMode={methodPanelMode}
-              setMethodPanelMode={selectDropdownMethodPanelMode}
+            setMethodPanelMode={selectDropdownMethodPanelMode}
             scriptBuilderProps={{
               actionButtonStyle,
               hiddenScrollbarClass,
@@ -1030,10 +1157,11 @@ export default function SponsorCoinLabPage() {
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedReadMethod: canRunErc20ReadMethod,
               canAddCurrentMethodToScript: canRunErc20ReadMethod,
+              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: erc20ReadMissingEntries.map((entry) => entry.id),
               runSelectedReadMethod,
-              addCurrentMethodToScript,
+              addCurrentMethodToScript: handleAddCurrentMethodToScript,
             }}
             erc20WriteProps={{
               invalidFieldIds,
@@ -1062,10 +1190,11 @@ export default function SponsorCoinLabPage() {
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedWriteMethod: canRunErc20WriteMethod,
               canAddCurrentMethodToScript: canRunErc20WriteMethod,
+              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: erc20WriteMissingEntries.map((entry) => entry.id),
               runSelectedWriteMethod,
-              addCurrentMethodToScript,
+              addCurrentMethodToScript: handleAddCurrentMethodToScript,
             }}
             spCoinReadProps={{
               invalidFieldIds,
@@ -1084,10 +1213,11 @@ export default function SponsorCoinLabPage() {
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinReadMethod: canRunSpCoinReadMethod,
               canAddCurrentMethodToScript: canRunSpCoinReadMethod,
+              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: spCoinReadMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinReadMethod,
-              addCurrentMethodToScript,
+              addCurrentMethodToScript: handleAddCurrentMethodToScript,
             }}
             spCoinWriteProps={{
               invalidFieldIds,
@@ -1119,10 +1249,11 @@ export default function SponsorCoinLabPage() {
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinWriteMethod: canRunSpCoinWriteMethod,
               canAddCurrentMethodToScript: canRunSpCoinWriteMethod,
+              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: spCoinWriteMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinWriteMethod,
-              addCurrentMethodToScript,
+              addCurrentMethodToScript: handleAddCurrentMethodToScript,
               formatDateTimeDisplay,
               formatDateInput,
               backdateHours: backdateCalendar.backdateHours,
@@ -1212,6 +1343,16 @@ export default function SponsorCoinLabPage() {
         buttonStyle={buttonStyle}
         onCancel={() => setIsDeleteStepPopupOpen(false)}
         onConfirm={confirmDeleteSelectedScriptStep}
+      />
+      <DiscardChangesPopup
+        isOpen={isDiscardChangesPopupOpen}
+        message={discardChangesMessage}
+        onCancel={clearDiscardChangesPopup}
+        onConfirm={() => {
+          const confirmAction = discardChangesConfirmRef.current;
+          clearDiscardChangesPopup();
+          void confirmAction?.();
+        }}
       />
     </main>
   );

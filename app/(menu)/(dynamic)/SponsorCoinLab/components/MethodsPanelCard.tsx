@@ -36,6 +36,7 @@ export default function MethodsPanelCard({
   spCoinReadProps,
   spCoinWriteProps,
 }: Props) {
+  const methodPanelGroupName = React.useId();
   return (
     <article ref={methodsCardRef} className={articleClassName}>
       <LabCardHeader title="Script Test Editor" isExpanded={isExpanded} onToggleExpand={onToggleExpand} />
@@ -56,10 +57,16 @@ export default function MethodsPanelCard({
                   <input
                     type="radio"
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                    name="method-panel-mode"
+                    name={methodPanelGroupName}
                     value={value}
                     checked={methodPanelMode === value}
-                    onChange={(e) => setMethodPanelMode(e.target.value as MethodPanelMode)}
+                    onMouseDown={(e) => {
+                      if (methodPanelMode === value) e.preventDefault();
+                    }}
+                    onChange={(e) => {
+                      if (methodPanelMode === value) return;
+                      setMethodPanelMode(e.target.value as MethodPanelMode);
+                    }}
                   />
                   <span>{label}</span>
                 </label>

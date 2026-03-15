@@ -37,6 +37,7 @@ type Props = {
   toggleWriteTrace: () => void;
   canRunSelectedSpCoinWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  isAddToScriptBlockedByNoChanges: boolean;
   addToScriptButtonLabel: string;
   missingFieldIds: string[];
   runSelectedSpCoinWriteMethod: () => void;
@@ -107,6 +108,7 @@ export default function SpCoinWriteController(props: Props) {
     toggleWriteTrace,
     canRunSelectedSpCoinWriteMethod,
     canAddCurrentMethodToScript,
+    isAddToScriptBlockedByNoChanges,
     addToScriptButtonLabel,
     missingFieldIds,
     runSelectedSpCoinWriteMethod,
@@ -155,7 +157,11 @@ export default function SpCoinWriteController(props: Props) {
   const actionButtonClassName =
     'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const getActionButtonClassName = (isEnabled: boolean, buttonKind: 'execute' | 'add') =>
-    isEnabled
+    buttonKind === 'add' && isAddToScriptBlockedByNoChanges
+      ? `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
+          hoveredBlockedAction === buttonKind ? 'cursor-not-allowed bg-red-600 text-white' : 'bg-[#E5B94F] text-black'
+        }`
+      : isEnabled
       ? actionButtonClassName
       : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
@@ -513,13 +519,20 @@ export default function SpCoinWriteController(props: Props) {
         <button
           type="button"
           className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={addCurrentMethodToScript}
+          onClick={() => {
+            if (isAddToScriptBlockedByNoChanges) return;
+            addCurrentMethodToScript();
+          }}
           onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript) setHoveredBlockedAction('add');
+            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
         >
-          {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+          {isAddToScriptBlockedByNoChanges
+            ? hoveredBlockedAction === 'add'
+              ? 'No Update Changes'
+              : addToScriptButtonLabel
+            : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'
             : addToScriptButtonLabel}
         </button>
