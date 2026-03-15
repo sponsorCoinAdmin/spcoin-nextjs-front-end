@@ -71,8 +71,8 @@ export default function Erc20ReadController(props: Props) {
     isEnabled
       ? actionButtonClassName
       : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
-          hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black opacity-60'
-        } cursor-not-allowed`;
+          hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
+        }`;
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -204,15 +204,11 @@ export default function Erc20ReadController(props: Props) {
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedReadMethod, 'execute')} min-w-[50%] shrink-0`}
-          onClick={() => {
-            if (!canRunSelectedReadMethod) return;
-            runSelectedReadMethod();
-          }}
+          onClick={() => void runSelectedReadMethod()}
           onMouseEnter={() => {
             if (!canRunSelectedReadMethod) setHoveredBlockedAction('execute');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
-          aria-disabled={!canRunSelectedReadMethod}
         >
           {!canRunSelectedReadMethod && hoveredBlockedAction === 'execute'
             ? 'Missing Required Parameters'
@@ -221,15 +217,11 @@ export default function Erc20ReadController(props: Props) {
         <button
           type="button"
           className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (!canAddCurrentMethodToScript) return;
-            addCurrentMethodToScript();
-          }}
+          onClick={addCurrentMethodToScript}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
-          aria-disabled={!canAddCurrentMethodToScript}
         >
           {!canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
             ? 'Missing Required Parameters'

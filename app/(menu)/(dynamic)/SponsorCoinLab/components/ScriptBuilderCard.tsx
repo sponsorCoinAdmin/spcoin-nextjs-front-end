@@ -214,7 +214,7 @@ export default function ScriptBuilderCard({
             className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-[#E5B94F] transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-70"
             title="Run Remaining Script"
             onClick={() => void runRemainingScriptSteps()}
-            disabled={!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null || isScriptDebugRunning}
+            disabled={!selectedScript || selectedScript.steps.length === 0 || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/continue.png"
@@ -262,12 +262,20 @@ export default function ScriptBuilderCard({
           </button>
           <button
             type="button"
-            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-red-400 transition-colors hover:bg-[#1E293B] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed"
             title="Delete Step"
             onClick={requestDeleteSelectedScriptStep}
             disabled={selectedScriptStepNumber === null || isScriptDebugRunning}
           >
-            <span className="block text-[21px] leading-none">x</span>
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="block h-[21px] w-[21px] opacity-100"
+              fill="none"
+            >
+              <path d="M6 6L18 18" stroke="#FF0000" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M18 6L6 18" stroke="#FF0000" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
         <div className={`min-h-0 flex-1 overflow-auto pt-1 ${hiddenScrollbarClass}`}>

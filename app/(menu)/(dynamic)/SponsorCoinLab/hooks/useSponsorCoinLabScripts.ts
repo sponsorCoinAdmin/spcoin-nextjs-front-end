@@ -69,7 +69,15 @@ type Params = {
   erc20WriteMissingEntries: Entry[];
   spCoinReadMissingEntries: Entry[];
   spCoinWriteMissingEntries: Entry[];
-  showValidationPopup: (fieldIds: string[], labels: string[]) => void;
+  showValidationPopup: (
+    fieldIds: string[],
+    labels: string[],
+    message?: string,
+    options?: {
+      confirmLabel?: string;
+      onConfirm?: () => void | Promise<void>;
+    },
+  ) => void;
   setStatus: (value: string) => void;
   setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status') => void;
   setFormattedOutputDisplay: (value: string) => void;
@@ -558,7 +566,7 @@ export function useSponsorCoinLabScripts({
     deleteSelectedScript(scriptNameMatch?.id || '');
   }, [deleteScriptValidation.message, deleteScriptValidation.tone, deleteSelectedScript, scriptNameMatch?.id, setStatus]);
 
-  const addCurrentMethodToScript = useCallback(() => {
+  const addCurrentMethodToScript = useCallback((options?: { skipValidation?: boolean }) => {
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
       setOutputPanelMode('raw_status');
@@ -577,10 +585,17 @@ export function useSponsorCoinLabScripts({
       editingScriptStepNumber !== null &&
       Array.isArray(selectedScript?.steps) &&
       selectedScript.steps.some((step) => step.step === editingScriptStepNumber);
-    if (activeMissingEntries.length > 0 && isUpdatingExistingStep) {
+    if (!options?.skipValidation && activeMissingEntries.length > 0) {
       showValidationPopup(
         activeMissingEntries.map((entry) => entry.id),
         activeMissingEntries.map((entry) => entry.label),
+        isUpdatingExistingStep
+          ? 'Fill in the following fields before updating the script step:'
+          : 'Fill in the following fields before adding the method to the script:',
+        {
+          confirmLabel: isUpdatingExistingStep ? 'Update Anyway' : 'Run Anyway',
+          onConfirm: () => addCurrentMethodToScript({ skipValidation: true }),
+        },
       );
       return;
     }

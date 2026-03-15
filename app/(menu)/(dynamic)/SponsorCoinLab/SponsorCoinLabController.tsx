@@ -153,6 +153,11 @@ export default function SponsorCoinLabPage() {
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
+  const [validationPopupMessage, setValidationPopupMessage] = useState(
+    'Fill in the following fields before executing the method:',
+  );
+  const [validationPopupConfirmLabel, setValidationPopupConfirmLabel] = useState('');
+  const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -203,19 +208,39 @@ export default function SponsorCoinLabPage() {
     if (!fieldId) return;
     setInvalidFieldIds((prev) => prev.filter((entry) => entry !== fieldId));
   }, []);
-  const showValidationPopup = useCallback((fieldIds: string[], labels: string[]) => {
-    setInvalidFieldIds(fieldIds);
-    setValidationPopupFields(labels);
-    if (typeof window !== 'undefined' && fieldIds[0]) {
-      window.setTimeout(() => {
-        const target = document.querySelector(`[data-field-id="${fieldIds[0]}"]`) as
-          | HTMLInputElement
-          | HTMLSelectElement
-          | null;
-        target?.focus();
-      }, 0);
-    }
+  const clearValidationPopup = useCallback(() => {
+    setValidationPopupFields([]);
+    setValidationPopupMessage('Fill in the following fields before executing the method:');
+    setValidationPopupConfirmLabel('');
+    validationPopupConfirmRef.current = null;
   }, []);
+  const showValidationPopup = useCallback(
+    (
+      fieldIds: string[],
+      labels: string[],
+      message?: string,
+      options?: {
+        confirmLabel?: string;
+        onConfirm?: () => void | Promise<void>;
+      },
+    ) => {
+      setInvalidFieldIds(fieldIds);
+      setValidationPopupFields(labels);
+      setValidationPopupMessage(message || 'Fill in the following fields before executing the method:');
+      setValidationPopupConfirmLabel(options?.confirmLabel || '');
+      validationPopupConfirmRef.current = options?.onConfirm || null;
+      if (typeof window !== 'undefined' && fieldIds[0]) {
+        window.setTimeout(() => {
+          const target = document.querySelector(`[data-field-id="${fieldIds[0]}"]`) as
+            | HTMLInputElement
+            | HTMLSelectElement
+            | null;
+          target?.focus();
+        }, 0);
+      }
+    },
+    [],
+  );
 
   const {
     selectedSponsorCoinVersion,
@@ -542,35 +567,13 @@ export default function SponsorCoinLabPage() {
         : 'New Test Method',
     [editingScriptStepNumber, methodSelectionSource],
   );
-  const activeMissingEntryCount = useMemo(() => {
-    switch (methodPanelMode) {
-      case 'ecr20_read':
-        return erc20ReadMissingEntries.length;
-      case 'erc20_write':
-        return erc20WriteMissingEntries.length;
-      case 'spcoin_rread':
-        return spCoinReadMissingEntries.length;
-      case 'spcoin_write':
-        return spCoinWriteMissingEntries.length;
-      default:
-        return 0;
-    }
-  }, [
-    erc20ReadMissingEntries.length,
-    erc20WriteMissingEntries.length,
-    methodPanelMode,
-    spCoinReadMissingEntries.length,
-    spCoinWriteMissingEntries.length,
-  ]);
   const isEditingScriptMethod = methodSelectionSource === 'script' && editingScriptStepNumber !== null;
   const addToScriptButtonLabel = useMemo(
     () =>
-      !isEditingScriptMethod && activeMissingEntryCount > 0
-        ? 'Missing Required Parameters'
-        : isEditingScriptMethod
+      isEditingScriptMethod
         ? `Update Script Step ${editingScriptStepNumber}`
         : 'Add To Script',
-    [activeMissingEntryCount, editingScriptStepNumber, isEditingScriptMethod],
+    [editingScriptStepNumber, isEditingScriptMethod],
   );
   const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
   const toggleExpandedCard = useCallback((cardId: LabCardId) => {
@@ -753,7 +756,7 @@ export default function SponsorCoinLabPage() {
     }
   }, [focusScriptStep, formattedOutputDisplay, runScriptStep, selectedScript, selectedScriptStepNumber]);
   const runRemainingScriptSteps = useCallback(async () => {
-    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+    if (!selectedScript || selectedScript.steps.length === 0) {
       setStatus('Selected script has no steps to run.');
       return;
     }
@@ -851,6 +854,13 @@ export default function SponsorCoinLabPage() {
       toggleScriptStepExpanded,
     ],
   );
+  useEffect(() => {
+    if (editingScriptStepNumber === null) return;
+    const editedStepStillExists = Boolean(selectedScript?.steps.some((step) => step.step === editingScriptStepNumber));
+    if (editedStepStillExists) return;
+    setEditingScriptStepNumber(null);
+    setMethodSelectionSource('dropdown');
+  }, [editingScriptStepNumber, selectedScript?.steps]);
   const highlightedFormattedOutputLines = useMemo(() => {
     if (
       outputPanelMode !== 'formatted' ||
@@ -1019,7 +1029,7 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedReadMethod: canRunErc20ReadMethod,
-              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunErc20ReadMethod : true,
+              canAddCurrentMethodToScript: canRunErc20ReadMethod,
               addToScriptButtonLabel,
               missingFieldIds: erc20ReadMissingEntries.map((entry) => entry.id),
               runSelectedReadMethod,
@@ -1051,7 +1061,7 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedWriteMethod: canRunErc20WriteMethod,
-              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunErc20WriteMethod : true,
+              canAddCurrentMethodToScript: canRunErc20WriteMethod,
               addToScriptButtonLabel,
               missingFieldIds: erc20WriteMissingEntries.map((entry) => entry.id),
               runSelectedWriteMethod,
@@ -1073,7 +1083,7 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinReadMethod: canRunSpCoinReadMethod,
-              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunSpCoinReadMethod : true,
+              canAddCurrentMethodToScript: canRunSpCoinReadMethod,
               addToScriptButtonLabel,
               missingFieldIds: spCoinReadMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinReadMethod,
@@ -1108,7 +1118,7 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinWriteMethod: canRunSpCoinWriteMethod,
-              canAddCurrentMethodToScript: isEditingScriptMethod ? canRunSpCoinWriteMethod : true,
+              canAddCurrentMethodToScript: canRunSpCoinWriteMethod,
               addToScriptButtonLabel,
               missingFieldIds: spCoinWriteMissingEntries.map((entry) => entry.id),
               runSelectedSpCoinWriteMethod,
@@ -1186,8 +1196,15 @@ export default function SponsorCoinLabPage() {
       </section>
       <ValidationPopup
         fields={validationPopupFields}
+        message={validationPopupMessage}
         buttonStyle={buttonStyle}
-        onClose={() => setValidationPopupFields([])}
+        confirmLabel={validationPopupConfirmLabel}
+        onClose={clearValidationPopup}
+        onConfirm={() => {
+          const confirmAction = validationPopupConfirmRef.current;
+          clearValidationPopup();
+          void confirmAction?.();
+        }}
       />
       <DeleteStepPopup
         isOpen={isDeleteStepPopupOpen && !!selectedScriptStep}

@@ -68,7 +68,15 @@ type Params = {
   setFormattedOutputDisplay: (value: string) => void;
   setTreeOutputDisplay: (value: string) => void;
   setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status') => void;
-  showValidationPopup: (fieldIds: string[], labels: string[]) => void;
+  showValidationPopup: (
+    fieldIds: string[],
+    labels: string[],
+    message?: string,
+    options?: {
+      confirmLabel?: string;
+      onConfirm?: () => void | Promise<void>;
+    },
+  ) => void;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
   executeWriteConnected: (
@@ -360,11 +368,16 @@ export function useSponsorCoinLabMethods({
     setTreeOutputDisplay,
   ]);
 
-  const runSelectedWriteMethod = useCallback(async () => {
-    if (erc20WriteMissingEntries.length > 0) {
+  const runSelectedWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+    if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {
       showValidationPopup(
         erc20WriteMissingEntries.map((entry) => entry.id),
         erc20WriteMissingEntries.map((entry) => entry.label),
+        undefined,
+        {
+          confirmLabel: 'Run Anyway',
+          onConfirm: () => runSelectedWriteMethod({ skipValidation: true }),
+        },
       );
       return;
     }
@@ -417,11 +430,16 @@ export function useSponsorCoinLabMethods({
     writeAmountRaw,
   ]);
 
-  const runSelectedReadMethod = useCallback(async () => {
-    if (erc20ReadMissingEntries.length > 0) {
+  const runSelectedReadMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+    if (!options?.skipValidation && erc20ReadMissingEntries.length > 0) {
       showValidationPopup(
         erc20ReadMissingEntries.map((entry) => entry.id),
         erc20ReadMissingEntries.map((entry) => entry.label),
+        undefined,
+        {
+          confirmLabel: 'Run Anyway',
+          onConfirm: () => runSelectedReadMethod({ skipValidation: true }),
+        },
       );
       return;
     }
@@ -466,11 +484,16 @@ export function useSponsorCoinLabMethods({
     showValidationPopup,
   ]);
 
-  const runSelectedSpCoinReadMethod = useCallback(async () => {
-    if (spCoinReadMissingEntries.length > 0) {
+  const runSelectedSpCoinReadMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+    if (!options?.skipValidation && spCoinReadMissingEntries.length > 0) {
       showValidationPopup(
         spCoinReadMissingEntries.map((entry) => entry.id),
         spCoinReadMissingEntries.map((entry) => entry.label),
+        undefined,
+        {
+          confirmLabel: 'Run Anyway',
+          onConfirm: () => runSelectedSpCoinReadMethod({ skipValidation: true }),
+        },
       );
       return;
     }
@@ -519,11 +542,16 @@ export function useSponsorCoinLabMethods({
     stringifyResult,
   ]);
 
-  const runSelectedSpCoinWriteMethod = useCallback(async () => {
-    if (spCoinWriteMissingEntries.length > 0) {
+  const runSelectedSpCoinWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+    if (!options?.skipValidation && spCoinWriteMissingEntries.length > 0) {
       showValidationPopup(
         spCoinWriteMissingEntries.map((entry) => entry.id),
         spCoinWriteMissingEntries.map((entry) => entry.label),
+        undefined,
+        {
+          confirmLabel: 'Run Anyway',
+          onConfirm: () => runSelectedSpCoinWriteMethod({ skipValidation: true }),
+        },
       );
       return;
     }
