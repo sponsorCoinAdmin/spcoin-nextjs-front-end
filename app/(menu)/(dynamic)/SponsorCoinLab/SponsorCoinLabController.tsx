@@ -98,17 +98,77 @@ function formatDecimalString(value: string) {
   return negative ? `-${grouped}` : grouped;
 }
 
-function formatOutputValue(value: unknown): unknown {
+function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
+  const parseSerializedMapString = (input: string): Record<string, unknown> | null => {
+    const trimmed = input.trim();
+    if (!trimmed.includes(':')) return null;
+
+    const normalizedSeparators = trimmed
+      .replace(/\\,\s*/g, '\n')
+      .replace(/,\s*(?=[A-Za-z_][A-Za-z0-9_ ]*:)/g, '\n');
+    const segments = normalizedSeparators
+      .split(/\n+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    if (segments.length === 0 || !segments.every((entry) => entry.includes(':'))) return null;
+
+    const out: Record<string, unknown> = {};
+    for (const segment of segments) {
+      const colonIdx = segment.indexOf(':');
+      if (colonIdx <= 0) return null;
+      const rawKey = segment.slice(0, colonIdx).trim();
+      const rawValue = segment.slice(colonIdx + 1).trim();
+      if (!rawKey) return null;
+
+      const normalizedKey = rawKey.replace(/\s+/g, '_');
+      if (!rawValue) {
+        out[normalizedKey] = '';
+        continue;
+      }
+      if (rawValue === 'true' || rawValue === 'false') {
+        out[normalizedKey] = rawValue === 'true';
+        continue;
+      }
+      if (/^0x[0-9a-fA-F]+$/.test(rawValue) && !isAddressLike(rawValue)) {
+        try {
+          out[normalizedKey] = {
+            hex: rawValue,
+            dec: formatDecimalString(BigInt(rawValue).toString()),
+          };
+          continue;
+        } catch {
+          // fall through
+        }
+      }
+      out[normalizedKey] = formatOutputValue(rawValue, [...keyPath, normalizedKey]);
+    }
+
+    return out;
+  };
+
   if (typeof value === 'bigint') return formatDecimalString(value.toString());
-  if (Array.isArray(value)) return value.map((entry) => formatOutputValue(entry));
+  if (Array.isArray(value)) return value.map((entry) => formatOutputValue(entry, keyPath));
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, formatOutputValue(entry)]),
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, formatOutputValue(entry, [...keyPath, key])]),
     );
   }
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
+    if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') return value;
+    const parsedSerializedMap = parseSerializedMapString(trimmed);
+    if (parsedSerializedMap) return parsedSerializedMap;
+    if (/^0x[0-9a-fA-F]+$/.test(trimmed) && !isAddressLike(trimmed)) {
+      try {
+        return {
+          hex: trimmed,
+          dec: formatDecimalString(BigInt(trimmed).toString()),
+        };
+      } catch {
+        // fall through
+      }
+    }
     if (isIntegerString(trimmed)) return formatDecimalString(trimmed);
     return value;
   }
@@ -117,7 +177,18 @@ function formatOutputValue(value: unknown): unknown {
 }
 
 function formatOutputDisplayValue(value: unknown) {
-  const normalized = formatOutputValue(value);
+  const normalizeEnvelope = (input: unknown): unknown => {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+    const out = { ...(input as Record<string, unknown>) };
+    if (typeof out.error === 'string') {
+      out.error = {
+        message: out.error,
+      };
+    }
+    return out;
+  };
+
+  const normalized = formatOutputValue(normalizeEnvelope(value));
   if (typeof normalized === 'string') return normalized;
   return JSON.stringify(normalized, null, 2);
 }
@@ -929,15 +1000,11 @@ export default function SponsorCoinLabPage() {
         setSelectedScriptStepNumber(null);
         return;
       }
-      if (selectedScriptStepNumber === null) {
-        setFormattedOutputDisplay('(no output yet)');
-      }
       focusScriptStep(step);
     },
     [
       focusScriptStep,
       selectedScriptStep?.step,
-      selectedScriptStepNumber,
       setSelectedScriptStepNumber,
     ],
   );
@@ -1020,6 +1087,38 @@ export default function SponsorCoinLabPage() {
       active: idx >= startIndex && idx <= endIndex,
     }));
   }, [formattedPanelView, outputPanelMode, selectedScriptDisplay, selectedScriptStepNumber]);
+  const highlightedFormattedResultLines = useMemo(() => {
+    if (
+      outputPanelMode !== 'formatted' ||
+      formattedPanelView !== 'output' ||
+      selectedScriptStepNumber === null
+    ) {
+      return null;
+    }
+
+    const blocks = String(formattedOutputDisplay || '')
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter(Boolean);
+
+    if (blocks.length === 0) return null;
+
+    const targetBlockIndex =
+      selectedScriptStepNumber > 0 && selectedScriptStepNumber <= blocks.length
+        ? selectedScriptStepNumber - 1
+        : blocks.length - 1;
+
+    return blocks.flatMap((block, blockIndex) => {
+      const lines = block.split('\n');
+      const mapped = lines.map((line) => ({
+        line,
+        active: blockIndex === targetBlockIndex,
+      }));
+      return blockIndex < blocks.length - 1
+        ? [...mapped, { line: '', active: false }]
+        : mapped;
+    });
+  }, [formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScriptStepNumber]);
 
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
@@ -1313,7 +1412,10 @@ export default function SponsorCoinLabPage() {
               status,
               formattedOutputDisplay,
               scriptDisplay: selectedScriptDisplay,
-              highlightedFormattedOutputLines,
+              highlightedFormattedOutputLines:
+                formattedPanelView === 'script'
+                  ? highlightedFormattedOutputLines
+                  : highlightedFormattedResultLines,
               hiddenScrollbarClass,
             }}
             treeActions={{

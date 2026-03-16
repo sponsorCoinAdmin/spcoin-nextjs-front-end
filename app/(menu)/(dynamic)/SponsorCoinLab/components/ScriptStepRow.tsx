@@ -27,6 +27,7 @@ export default function ScriptStepRow({
 }: Props) {
   const sender = getStepSender(step);
   const params = getStepParamEntries(step);
+  const hasExpandableContent = Boolean(sender) || params.length > 0;
   const methodClassName = step.hasMissingRequiredParams
     ? isEditingStep
       ? 'text-green-400 underline underline-offset-2'
@@ -49,14 +50,16 @@ export default function ScriptStepRow({
           <span className="block h-[0.62em] w-[0.62em] rounded-full bg-[#F87171]" />
         </button>
         <div className="col-start-2 inline-flex min-w-0 items-center">
-          <button
-            type="button"
-            onClick={() => toggleScriptStepExpanded(step.step)}
-            className={`shrink-0 ${isExpanded ? 'text-green-400' : 'text-red-400'}`}
-            title={isExpanded ? `Collapse ${step.method}` : `Expand ${step.method}`}
-          >
-            {isExpanded ? '[+]' : '[-]'}
-          </button>
+          {hasExpandableContent ? (
+            <button
+              type="button"
+              onClick={() => toggleScriptStepExpanded(step.step)}
+              className={`shrink-0 ${isExpanded ? 'text-red-400' : 'text-green-400'}`}
+              title={isExpanded ? `Collapse ${step.method}` : `Expand ${step.method}`}
+            >
+              {isExpanded ? '[-]' : '[+]'}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => selectScriptStep(step)}
@@ -68,18 +71,16 @@ export default function ScriptStepRow({
           </button>
         </div>
       </div>
-      {isExpanded ? (
+      {isExpanded && hasExpandableContent ? (
         <div className="mt-1 space-y-1 whitespace-nowrap pl-[28px] text-xs text-slate-200">
           {sender ? <div>{`msg.sender: ${sender};`}</div> : null}
-          {params.length > 0 ? (
-            params.map((param, idx) => (
-              <div key={`step-${step.step}-param-${idx}`}>
-                {`${param.key}: ${param.value};`}
-              </div>
-            ))
-          ) : (
-            <div>(no params)</div>
-          )}
+          {params.length > 0
+            ? params.map((param, idx) => (
+                <div key={`step-${step.step}-param-${idx}`}>
+                  {`${param.key}: ${param.value};`}
+                </div>
+              ))
+            : null}
         </div>
       ) : null}
     </div>

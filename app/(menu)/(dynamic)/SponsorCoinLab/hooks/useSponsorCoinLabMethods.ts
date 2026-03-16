@@ -272,18 +272,19 @@ export function useSponsorCoinLabMethods({
   const runHeaderRead = useCallback(async () => {
     const call = buildMethodCallEntry('getSerializedSPCoinHeader');
     try {
-      setFormattedOutputDisplay('(no output yet)');
+      setTreeOutputDisplay('(no tree yet)');
+      setOutputPanelMode('tree');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading SponsorCoin header...');
       const result = (await (access.contract as any).getSerializedSPCoinHeader()) as string;
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getSerializedSPCoinHeader -> ${result}`);
       setStatus('Header read complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown header read error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`Header read failed: ${message}`);
       appendLog(`Header read failed: ${message}`);
     }
@@ -291,27 +292,28 @@ export function useSponsorCoinLabMethods({
     appendLog,
     buildMethodCallEntry,
     ensureReadRunner,
-    formatOutputDisplayValue,
     requireContractAddress,
-    setFormattedOutputDisplay,
+    setOutputPanelMode,
     setStatus,
+    setTreeOutputDisplay,
   ]);
 
   const runAccountListRead = useCallback(async () => {
     const call = buildMethodCallEntry('getAccountList');
     try {
-      setFormattedOutputDisplay('(no output yet)');
+      setTreeOutputDisplay('(no tree yet)');
+      setOutputPanelMode('tree');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading account list...');
       const list = (await (access.read as any).getAccountList()) as string[];
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result: list }));
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
       appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message }));
       setStatus(`Account list read failed: ${message}`);
       appendLog(`Account list read failed: ${message}`);
     }
@@ -319,10 +321,10 @@ export function useSponsorCoinLabMethods({
     appendLog,
     buildMethodCallEntry,
     ensureReadRunner,
-    formatOutputDisplayValue,
     requireContractAddress,
-    setFormattedOutputDisplay,
+    setOutputPanelMode,
     setStatus,
+    setTreeOutputDisplay,
   ]);
 
   const runTreeDump = useCallback(async () => {
@@ -361,7 +363,6 @@ export function useSponsorCoinLabMethods({
     appendLog,
     buildMethodCallEntry,
     ensureReadRunner,
-    formatOutputDisplayValue,
     requireContractAddress,
     setOutputPanelMode,
     setStatus,

@@ -6,41 +6,54 @@
   "steps": [
     {
       "step": 1,
-      "name": "decimals",
-      "panel": "ecr20_read",
-      "method": "decimals",
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "name",
-      "panel": "ecr20_read",
-      "method": "name",
+      "name": "getAccountList",
+      "panel": "spcoin_rread",
+      "method": "getAccountList",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 3,
-      "name": "symbol",
-      "panel": "ecr20_read",
-      "method": "symbol",
+      "name": "getSerializedSPCoinHeader",
+      "panel": "spcoin_rread",
+      "method": "getSerializedSPCoinHeader",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 4,
-      "name": "addRecipient",
-      "panel": "spcoin_write",
-      "method": "addRecipient",
-      "msg.sender": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
       "params": [
         {
-          "key": "Recipient Key",
-          "value": "0xdd2fd4581271e230360230f9337d5c0430bf44c0"
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
         }
       ],
       "breakpoint": false,

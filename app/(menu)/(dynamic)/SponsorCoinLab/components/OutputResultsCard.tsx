@@ -183,7 +183,6 @@ export default function OutputResultsCard({
             className={`h-full min-h-0 overflow-auto p-3 text-xs text-slate-200 ${controls.outputPanelMode === 'formatted' ? 'pr-36' : ''} ${content.hiddenScrollbarClass}`}
           >
             {controls.outputPanelMode === 'formatted' &&
-            controls.formattedPanelView === 'script' &&
             content.highlightedFormattedOutputLines
               ? content.highlightedFormattedOutputLines.map(({ line, active }, idx) => (
                   <span key={`formatted-line-${idx}`} className={active ? 'text-green-400' : undefined}>
