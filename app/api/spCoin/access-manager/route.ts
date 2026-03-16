@@ -27,7 +27,7 @@ const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 type AccessManagerRequest = {
-  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer';
+  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer' | 'prepareDeploy' | 'registerDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
@@ -39,13 +39,13 @@ type AccessManagerRequest = {
   deploymentPublicKey?: string;
   deploymentVersion?: string;
   deploymentAccountPrivateKey?: string;
-  deploymentMode?: 'mocked' | 'blockcain';
+  deploymentSignerPublicKey?: string;
   deploymentChainId?: number | string;
 };
 
 type AccessManagerResponse = {
   ok: boolean;
-  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer';
+  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer' | 'prepareDeploy' | 'registerDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
   localVersion?: string;
@@ -54,6 +54,8 @@ type AccessManagerResponse = {
   installSourceRoot?: string;
   deploymentTokenName?: string;
   deploymentPublicKey?: string;
+  deploymentAbi?: unknown[];
+  deploymentBytecode?: string;
   deploymentPrivateKey?: string;
   deploymentTxHash?: string;
   deploymentChainId?: number;
@@ -109,6 +111,22 @@ type ManagerState = {
 };
 
 export const runtime = 'nodejs';
+
+function unexpectedAccessManagerError(
+  error: unknown,
+  extras: Partial<AccessManagerResponse> = {},
+  status = 500,
+) {
+  const message = error instanceof Error ? error.message : 'Unexpected access manager failure.';
+  return NextResponse.json(
+    {
+      ok: false,
+      message,
+      ...extras,
+    } satisfies AccessManagerResponse,
+    { status },
+  );
+}
 
 function quoteArg(value: string) {
   if (/^[A-Za-z0-9_./:@=-]+$/.test(value)) return value;
@@ -743,12 +761,10 @@ async function handleDeploy(
   deploymentName: string,
   deploymentVersion: string,
   deploymentAccountPrivateKey: string,
-  deploymentMode: 'mocked' | 'blockcain',
   deploymentChainId?: number | string,
 ) {
   const normalizedName = String(deploymentName || '').trim() || 'sPCoin';
   const normalizedVersion = String(deploymentVersion || '').trim();
-  const deploymentTokenName = normalizedVersion ? `${normalizedName}.${normalizedVersion}` : normalizedName;
   const rawPrivateKey = String(deploymentAccountPrivateKey || '').trim();
   const normalizedPrivateKey = rawPrivateKey.startsWith('0x') ? rawPrivateKey : `0x${rawPrivateKey}`;
 
@@ -762,33 +778,15 @@ async function handleDeploy(
     throw new Error('Unable to resolve deployer account.');
   }
 
-  if (deploymentMode === 'blockcain') {
-    const deployed = await deploySpCoinToChain({
-      deploymentPrivateKey: normalizedPrivateKey,
-      deploymentName: normalizedName,
-      deploymentVersion: normalizedVersion,
-      deploymentChainId,
-    });
-    return {
-      ...deployed,
-      deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(deployed.deploymentChainId)),
-    };
-  }
-
-  // Scaffold token key material as a distinct keypair from the deployer account.
-  const tokenWallet = Wallet.createRandom();
-  // Use address-form public identifier for GUI compatibility.
-  const deploymentPublicKey = tokenWallet.address;
-
+  const deployed = await deploySpCoinToChain({
+    deploymentPrivateKey: normalizedPrivateKey,
+    deploymentName: normalizedName,
+    deploymentVersion: normalizedVersion,
+    deploymentChainId,
+  });
   return {
-    deploymentTokenName,
-    deploymentPublicKey,
-    deploymentPrivateKey: tokenWallet.privateKey,
-    deploymentAssetChainId: Number(
-      resolveHHForkTokenAssetChainId(
-        Number.isFinite(Number(deploymentChainId)) ? Number(deploymentChainId) : 31337,
-      ),
-    ),
+    ...deployed,
+    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(deployed.deploymentChainId)),
   };
 }
 
@@ -810,7 +808,6 @@ async function handleUpdateServer(params: {
   deploymentDecimals: number | string;
   deploymentLogoPath: string;
   deploymentPublicKey: string;
-  deploymentMode?: 'mocked' | 'blockcain';
   deploymentChainId?: number | string;
 }) {
   const chainIdRaw = Number(params.deploymentChainId);
@@ -869,7 +866,7 @@ async function handleUpdateServer(params: {
   await fs.writeFile(metadataPathAbsolute, JSON.stringify(metadata, null, 2), 'utf8');
 
   // If the token folder already exists, treat it as already-registered and skip list updates.
-  if (params.deploymentMode === 'blockcain' && !contractDirAlreadyExists) {
+  if (!contractDirAlreadyExists) {
     const networkNameByChainId: Record<number, string> = {
       1: 'ethereum',
       137: 'polygon',
@@ -916,13 +913,57 @@ async function handleUpdateServer(params: {
     debug: {
       requestedChainId,
       resolvedChainId: chainId,
-      deploymentMode: params.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked',
       contractDir,
       contractDirAlreadyExists,
       tokenStatusBefore: tokenStatusBefore.tokenStatus,
       tokenStatusAfter: tokenStatusAfter.tokenStatus,
     },
   };
+}
+
+async function handlePrepareDeployArtifact(deploymentChainId?: number | string) {
+  const network = await resolveDeployNetwork(deploymentChainId);
+  const compiled = await compileSpCoinContract({
+    solcVersion: network.solcVersion,
+    optimizerEnabled: network.optimizerEnabled,
+    optimizerRuns: network.optimizerRuns,
+  });
+  return {
+    deploymentAbi: compiled.abi,
+    deploymentBytecode: compiled.bytecode,
+    deploymentChainId: network.chainId,
+    deploymentNetworkName: network.networkName,
+    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(network.chainId)),
+  };
+}
+
+async function handleRegisterDeployment(params: {
+  deploymentName: string;
+  deploymentSymbol: string;
+  deploymentDecimals: number | string;
+  deploymentVersion: string;
+  deploymentPublicKey: string;
+  deploymentSignerPublicKey?: string;
+  deploymentChainId?: number | string;
+}) {
+  const deploymentPublicKey = String(params.deploymentPublicKey || '').trim();
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(deploymentPublicKey)) {
+    throw new Error('Invalid deployment public key.');
+  }
+  const chainId = Number(params.deploymentChainId || 0);
+  const decimalsRaw = Number(params.deploymentDecimals);
+  const decimals =
+    Number.isFinite(decimalsRaw) && decimalsRaw >= 0 ? Math.min(255, Math.floor(decimalsRaw)) : 18;
+  const mapUpsert = await upsertSpCoinDeploymentMap({
+    chainId,
+    version: String(params.deploymentVersion || '').trim() || '0',
+    publicKey: deploymentPublicKey,
+    name: String(params.deploymentName || '').trim() || 'Sponsor Coin',
+    symbol: String(params.deploymentSymbol || '').trim() || 'SPCOIN',
+    decimals,
+    signerKey: String(params.deploymentSignerPublicKey || '').trim() || undefined,
+  });
+  return mapUpsert;
 }
 
 function mapNetworkNameByChainId(chainId: number): string {
@@ -1126,93 +1167,97 @@ async function checkLocalSpCoinAccessPackage(localPathRaw: string) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const localPathRaw = String(searchParams.get('localPath') || '').trim();
-  const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
-  const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
-  const packageName = String(searchParams.get('packageName') || '').trim();
-  const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
-  const packages = await listSponsorcoinPackages();
+  try {
+    const { searchParams } = new URL(request.url);
+    const localPathRaw = String(searchParams.get('localPath') || '').trim();
+    const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
+    const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
+    const packageName = String(searchParams.get('packageName') || '').trim();
+    const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
+    const packages = await listSponsorcoinPackages();
 
-  if (localPathRaw) {
-    const result = await checkLocalDirectoryExists(localPathRaw);
-    const localPackage = result.exists
-      ? await checkLocalSpCoinAccessPackage(result.normalized)
-      : { normalized: result.normalized, exists: false, version: '' };
+    if (localPathRaw) {
+      const result = await checkLocalDirectoryExists(localPathRaw);
+      const localPackage = result.exists
+        ? await checkLocalSpCoinAccessPackage(result.normalized)
+        : { normalized: result.normalized, exists: false, version: '' };
+      return NextResponse.json({
+        ok: true,
+        message: result.exists
+          ? `Local directory exists: ${result.normalized}`
+          : `Local directory not found: ${result.normalized}`,
+        packages,
+        workspaceRoot: WORKSPACE_ROOT,
+        localPath: result.normalized,
+        localPathExists: result.exists,
+        localPackageVersion: localPackage.version,
+        localPackageExists: localPackage.exists,
+      } satisfies AccessManagerResponse);
+    }
+
+    if (deploymentPublicKey || deploymentChainIdRaw) {
+      if (!/^0[xX][a-fA-F0-9]{40}$/.test(deploymentPublicKey)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: 'Invalid deployment public key.',
+            packages,
+            workspaceRoot: WORKSPACE_ROOT,
+            contractDirExists: false,
+          } satisfies AccessManagerResponse,
+          { status: 400 },
+        );
+      }
+      const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
+      return NextResponse.json({
+        ok: true,
+        message: `Token status: ${status.tokenStatus}`,
+        packages,
+        workspaceRoot: WORKSPACE_ROOT,
+        contractDirExists: status.contractDirExists,
+        resolvedChainId: status.resolvedChainId,
+        tokenStatus: status.tokenStatus,
+      } satisfies AccessManagerResponse);
+    }
+
+    let stateFields: Partial<AccessManagerResponse> = {};
+    if (packageName) {
+      try {
+        const state = await getPackageButtonState(packageName, requestedVersion);
+        stateFields = {
+          packageName,
+          version: state.resolvedVersion,
+          localVersion: state.localVersion,
+          downloadBlocked: state.downloadBlocked,
+          uploadBlocked: state.uploadBlocked,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to resolve package state.';
+        return NextResponse.json(
+          {
+            ok: false,
+            message,
+            packages,
+            workspaceRoot: WORKSPACE_ROOT,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
     return NextResponse.json({
       ok: true,
-      message: result.exists
-        ? `Local directory exists: ${result.normalized}`
-        : `Local directory not found: ${result.normalized}`,
+      message:
+        packages.length > 0
+          ? 'Loaded SponsorCoin packages from node_modules.'
+          : 'No @sponsorcoin packages were found in node_modules.',
       packages,
       workspaceRoot: WORKSPACE_ROOT,
-      localPath: result.normalized,
-      localPathExists: result.exists,
-      localPackageVersion: localPackage.version,
-      localPackageExists: localPackage.exists,
+      ...stateFields,
     } satisfies AccessManagerResponse);
+  } catch (error) {
+    return unexpectedAccessManagerError(error, { workspaceRoot: WORKSPACE_ROOT });
   }
-
-  if (deploymentPublicKey || deploymentChainIdRaw) {
-    if (!/^0[xX][a-fA-F0-9]{40}$/.test(deploymentPublicKey)) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: 'Invalid deployment public key.',
-          packages,
-          workspaceRoot: WORKSPACE_ROOT,
-          contractDirExists: false,
-        } satisfies AccessManagerResponse,
-        { status: 400 },
-      );
-    }
-    const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
-    return NextResponse.json({
-      ok: true,
-      message: `Token status: ${status.tokenStatus}`,
-      packages,
-      workspaceRoot: WORKSPACE_ROOT,
-      contractDirExists: status.contractDirExists,
-      resolvedChainId: status.resolvedChainId,
-      tokenStatus: status.tokenStatus,
-    } satisfies AccessManagerResponse);
-  }
-
-  let stateFields: Partial<AccessManagerResponse> = {};
-  if (packageName) {
-    try {
-      const state = await getPackageButtonState(packageName, requestedVersion);
-      stateFields = {
-        packageName,
-        version: state.resolvedVersion,
-        localVersion: state.localVersion,
-        downloadBlocked: state.downloadBlocked,
-        uploadBlocked: state.uploadBlocked,
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to resolve package state.';
-      return NextResponse.json(
-        {
-          ok: false,
-          message,
-          packages,
-          workspaceRoot: WORKSPACE_ROOT,
-        } satisfies AccessManagerResponse,
-        { status: 500 },
-      );
-    }
-  }
-
-  return NextResponse.json({
-    ok: true,
-    message:
-      packages.length > 0
-        ? 'Loaded SponsorCoin packages from node_modules.'
-        : 'No @sponsorcoin packages were found in node_modules.',
-    packages,
-    workspaceRoot: WORKSPACE_ROOT,
-    ...stateFields,
-  } satisfies AccessManagerResponse);
 }
 
 export async function POST(request: Request) {
@@ -1226,152 +1271,203 @@ export async function POST(request: Request) {
       ? 'deploy'
       : body.action === 'updateServer'
       ? 'updateServer'
+      : body.action === 'prepareDeploy'
+      ? 'prepareDeploy'
+      : body.action === 'registerDeployment'
+      ? 'registerDeployment'
       : 'download';
   const mode = body.mode === 'node_modules' ? 'node_modules' : 'local';
   const requestedVersion = String(body.version || 'latest').trim() || 'latest';
   const packageName = String(body.packageName || '').trim();
   const otp = String(body.otp || '').trim();
 
-  if (action === 'updateServer') {
-    try {
-      const result = await handleUpdateServer({
-        deploymentName: String(body.deploymentName || '').trim(),
-        deploymentSymbol: String(body.deploymentSymbol || '').trim(),
-        deploymentVersion: String(body.deploymentVersion || '').trim(),
-        deploymentDecimals: body.deploymentDecimals ?? '18',
-        deploymentLogoPath: String(body.deploymentLogoPath || '/public/assets/miscellaneous/spCoin.png'),
-        deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
-        deploymentMode: body.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked',
-        deploymentChainId: body.deploymentChainId,
-      });
-      return NextResponse.json({
-        ok: true,
-        action,
-        mode,
-        message: [
-          `SponsorCoin Meta Data and Image uploader to server at:`,
-          result.metadataPathRelative,
-          result.logoPathRelative,
-          '',
-          'Debug:',
-          `requestedChainId: ${String((result as any).debug?.requestedChainId ?? 'unknown')}`,
-          `resolvedChainId: ${String((result as any).debug?.resolvedChainId ?? 'unknown')}`,
-          `deploymentMode: ${String((result as any).debug?.deploymentMode ?? 'unknown')}`,
-          `contractDirAlreadyExists: ${String((result as any).debug?.contractDirAlreadyExists ?? false)}`,
-          `tokenStatusBefore: ${String((result as any).debug?.tokenStatusBefore ?? 'unknown')}`,
-          `tokenStatusAfter: ${String((result as any).debug?.tokenStatusAfter ?? 'unknown')}`,
-          `contractDir: ${String((result as any).debug?.contractDir ?? '')}`,
-          '',
-          'MetaData:',
-          JSON.stringify(result.metadata, null, 2),
-        ].join('\n'),
-      } satisfies AccessManagerResponse);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown server update failure.';
-      return NextResponse.json(
-        {
-          ok: false,
-          action,
-          mode,
-          message: `*Error: ${message}`,
-        } satisfies AccessManagerResponse,
-        { status: 500 },
-      );
-    }
-  }
-
-  if (action === 'deploy') {
-    const deploymentName = String(body.deploymentName || '').trim();
-    const deploymentVersion = String(body.deploymentVersion || '').trim();
-    const deploymentAccountPrivateKey = String(body.deploymentAccountPrivateKey || '').trim();
-    const deploymentSymbol = String(body.deploymentSymbol || '').trim() || 'SPCOIN';
-    const deploymentDecimalsRaw = Number(body.deploymentDecimals);
-    const deploymentDecimals =
-      Number.isFinite(deploymentDecimalsRaw) && deploymentDecimalsRaw >= 0
-        ? Math.min(255, Math.floor(deploymentDecimalsRaw))
-        : 18;
-    const deploymentMode = body.deploymentMode === 'blockcain' ? 'blockcain' : 'mocked';
-    const deploymentChainId = body.deploymentChainId;
-    const normalizedDeploymentSignerKey = (() => {
-      const raw = String(deploymentAccountPrivateKey || '').trim();
-      if (!raw) return '';
-      const normalized = raw.startsWith('0x') ? raw : `0x${raw}`;
-      return /^0x[0-9a-fA-F]{64}$/.test(normalized) ? normalized : '';
-    })();
-
-    try {
-      const result = await handleDeploy(
-        deploymentName,
-        deploymentVersion,
-        deploymentAccountPrivateKey,
-        deploymentMode,
-        deploymentChainId,
-      );
-      const upsertChainId = Number((result as any).deploymentChainId || 0);
-      const upsertMappedChainId = Number(resolveHHForkTokenAssetChainId(upsertChainId));
-      const isMappedHardhatChain = upsertChainId > 0 && upsertMappedChainId !== upsertChainId;
-      const mapUpsert =
-        deploymentMode === 'blockcain'
-          ? await upsertSpCoinDeploymentMap({
-              chainId: upsertChainId,
-              version: String(deploymentVersion || '').trim() || '0',
-              publicKey: String(result.deploymentPublicKey || '').trim(),
-              name: String(deploymentName || '').trim() || 'Sponsor Coin',
-              symbol: deploymentSymbol,
-              decimals: deploymentDecimals,
-              signerKey: isMappedHardhatChain ? normalizedDeploymentSignerKey || undefined : undefined,
-            })
-          : { added: false, chainIdKey: 'n/a', versionKey: 'n/a', publicKeyUpper: 'n/a' };
-      return NextResponse.json({
-        ok: true,
-        action,
-        mode: deploymentMode === 'blockcain' ? 'node_modules' : mode,
-        deploymentTokenName: result.deploymentTokenName,
-        deploymentPublicKey: result.deploymentPublicKey,
-        deploymentPrivateKey: result.deploymentPrivateKey,
-        deploymentTxHash: (result as any).deploymentTxHash,
-        deploymentChainId: (result as any).deploymentChainId,
-        deploymentAssetChainId: (result as any).deploymentAssetChainId,
-        deploymentNetworkName: (result as any).deploymentNetworkName,
-        mapAdded: mapUpsert.added,
-        message:
-          (deploymentMode === 'blockcain'
-            ? `Contract "${result.deploymentTokenName}" deployed on ${String((result as any).deploymentNetworkName || 'chain')} (${String((result as any).deploymentChainId || 'unknown')}). Tx: ${String((result as any).deploymentTxHash || '(unknown)')}`
-            : `Deployment scaffold prepared for "${result.deploymentTokenName}". Server-side deployment automation is not connected yet.`) +
-          `\nDeployment map: ${
-            deploymentMode === 'blockcain'
-              ? `${mapUpsert.added ? 'added' : 'exists'} (${mapUpsert.chainIdKey}/${mapUpsert.versionKey}/${mapUpsert.publicKeyUpper})`
-              : 'skipped (mocked mode)'
-          }`,
-      } satisfies AccessManagerResponse);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown deployment manager failure.';
-      return NextResponse.json(
-        {
-          ok: false,
-          action,
-          mode,
-          message,
-        } satisfies AccessManagerResponse,
-        { status: 500 },
-      );
-    }
-  }
-
-  if (!packageName) {
-    return NextResponse.json(
-      {
-        ok: false,
-        action,
-        mode,
-        version: requestedVersion,
-        message: 'Select a package before running the manager action.',
-      } satisfies AccessManagerResponse,
-      { status: 400 },
-    );
-  }
-
   try {
+    if (action === 'prepareDeploy') {
+      try {
+        const result = await handlePrepareDeployArtifact(body.deploymentChainId);
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode,
+          deploymentAbi: result.deploymentAbi,
+          deploymentBytecode: result.deploymentBytecode,
+          deploymentChainId: result.deploymentChainId,
+          deploymentAssetChainId: result.deploymentAssetChainId,
+          deploymentNetworkName: result.deploymentNetworkName,
+          message: `Prepared deploy artifact for ${String(result.deploymentNetworkName || 'chain')} (${String(result.deploymentChainId || 'unknown')}).`,
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown deploy artifact preparation failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message: `*Error: ${message}`,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === 'registerDeployment') {
+      try {
+        const result = await handleRegisterDeployment({
+          deploymentName: String(body.deploymentName || '').trim(),
+          deploymentSymbol: String(body.deploymentSymbol || '').trim(),
+          deploymentDecimals: body.deploymentDecimals ?? '18',
+          deploymentVersion: String(body.deploymentVersion || '').trim(),
+          deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+          deploymentSignerPublicKey: String(body.deploymentSignerPublicKey || '').trim(),
+          deploymentChainId: body.deploymentChainId,
+        });
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode,
+          mapAdded: result.added,
+          message: `Deployment map: ${result.added ? 'added' : 'exists'} (${result.chainIdKey}/${result.versionKey}/${result.publicKeyUpper})`,
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown deployment registration failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message: `*Error: ${message}`,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === 'updateServer') {
+      try {
+        const result = await handleUpdateServer({
+          deploymentName: String(body.deploymentName || '').trim(),
+          deploymentSymbol: String(body.deploymentSymbol || '').trim(),
+          deploymentVersion: String(body.deploymentVersion || '').trim(),
+          deploymentDecimals: body.deploymentDecimals ?? '18',
+          deploymentLogoPath: String(body.deploymentLogoPath || '/public/assets/miscellaneous/spCoin.png'),
+          deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+          deploymentChainId: body.deploymentChainId,
+        });
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode,
+          message: [
+            `SponsorCoin Meta Data and Image uploader to server at:`,
+            result.metadataPathRelative,
+            result.logoPathRelative,
+            '',
+            'Debug:',
+            `requestedChainId: ${String((result as any).debug?.requestedChainId ?? 'unknown')}`,
+            `resolvedChainId: ${String((result as any).debug?.resolvedChainId ?? 'unknown')}`,
+            `contractDirAlreadyExists: ${String((result as any).debug?.contractDirAlreadyExists ?? false)}`,
+            `tokenStatusBefore: ${String((result as any).debug?.tokenStatusBefore ?? 'unknown')}`,
+            `tokenStatusAfter: ${String((result as any).debug?.tokenStatusAfter ?? 'unknown')}`,
+            `contractDir: ${String((result as any).debug?.contractDir ?? '')}`,
+            '',
+            'MetaData:',
+            JSON.stringify(result.metadata, null, 2),
+          ].join('\n'),
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown server update failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message: `*Error: ${message}`,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === 'deploy') {
+      const deploymentName = String(body.deploymentName || '').trim();
+      const deploymentVersion = String(body.deploymentVersion || '').trim();
+      const deploymentAccountPrivateKey = String(body.deploymentAccountPrivateKey || '').trim();
+      const deploymentSymbol = String(body.deploymentSymbol || '').trim() || 'SPCOIN';
+      const deploymentDecimalsRaw = Number(body.deploymentDecimals);
+      const deploymentDecimals =
+        Number.isFinite(deploymentDecimalsRaw) && deploymentDecimalsRaw >= 0
+          ? Math.min(255, Math.floor(deploymentDecimalsRaw))
+          : 18;
+      const deploymentChainId = body.deploymentChainId;
+      const normalizedDeploymentSignerKey = (() => {
+        const raw = String(deploymentAccountPrivateKey || '').trim();
+        if (!raw) return '';
+        const normalized = raw.startsWith('0x') ? raw : `0x${raw}`;
+        return /^0x[0-9a-fA-F]{64}$/.test(normalized) ? normalized : '';
+      })();
+
+      try {
+        const result = await handleDeploy(
+          deploymentName,
+          deploymentVersion,
+          deploymentAccountPrivateKey,
+          deploymentChainId,
+        );
+        const upsertChainId = Number((result as any).deploymentChainId || 0);
+        const upsertMappedChainId = Number(resolveHHForkTokenAssetChainId(upsertChainId));
+        const isMappedHardhatChain = upsertChainId > 0 && upsertMappedChainId !== upsertChainId;
+        const mapUpsert = await upsertSpCoinDeploymentMap({
+          chainId: upsertChainId,
+          version: String(deploymentVersion || '').trim() || '0',
+          publicKey: String(result.deploymentPublicKey || '').trim(),
+          name: String(deploymentName || '').trim() || 'Sponsor Coin',
+          symbol: deploymentSymbol,
+          decimals: deploymentDecimals,
+          signerKey: isMappedHardhatChain ? normalizedDeploymentSignerKey || undefined : undefined,
+        });
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode: 'node_modules',
+          deploymentTokenName: result.deploymentTokenName,
+          deploymentPublicKey: result.deploymentPublicKey,
+          deploymentPrivateKey: result.deploymentPrivateKey,
+          deploymentTxHash: (result as any).deploymentTxHash,
+          deploymentChainId: (result as any).deploymentChainId,
+          deploymentAssetChainId: (result as any).deploymentAssetChainId,
+          deploymentNetworkName: (result as any).deploymentNetworkName,
+          mapAdded: mapUpsert.added,
+          message:
+            `Contract "${result.deploymentTokenName}" deployed on ${String((result as any).deploymentNetworkName || 'chain')} (${String((result as any).deploymentChainId || 'unknown')}). Tx: ${String((result as any).deploymentTxHash || '(unknown)')}` +
+            `\nDeployment map: ${mapUpsert.added ? 'added' : 'exists'} (${mapUpsert.chainIdKey}/${mapUpsert.versionKey}/${mapUpsert.publicKeyUpper})`,
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown deployment manager failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (!packageName) {
+      return NextResponse.json(
+        {
+          ok: false,
+          action,
+          mode,
+          version: requestedVersion,
+          message: 'Select a package before running the manager action.',
+        } satisfies AccessManagerResponse,
+        { status: 400 },
+      );
+    }
+
     if (action === 'download') {
       const result = await handleDownload(packageName, requestedVersion);
       return NextResponse.json({
@@ -1413,17 +1509,11 @@ export async function POST(request: Request) {
       message: `Published ${packageName}${result.resolvedVersion ? `@${result.resolvedVersion}` : ''} from ${result.workspaceDir}. ${result.publishOutput}`,
     } satisfies AccessManagerResponse);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown npm manager failure.';
-    return NextResponse.json(
-      {
-        ok: false,
-        action,
-        mode,
-        packageName,
-        version: requestedVersion,
-        message,
-      } satisfies AccessManagerResponse,
-      { status: 500 },
-    );
+    return unexpectedAccessManagerError(error, {
+      action,
+      mode,
+      packageName,
+      version: requestedVersion,
+    });
   }
 }

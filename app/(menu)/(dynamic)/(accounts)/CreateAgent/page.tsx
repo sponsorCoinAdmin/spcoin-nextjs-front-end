@@ -17,13 +17,13 @@ interface AgentFormData {
 }
 
 export default function CreateAgentAccountPage() {
-  // ⬇️ Pull connected account → for Public Key
+  // ⬇️ Pull connected account → for Account Address
   const ctx = useContext(ExchangeContextState);
   const connected = ctx?.exchangeContext?.accounts?.activeAccount;
 
-  const [publicKey, setPublicKey] = useState<string>('');
+  const [accountAddress, setAccountAddress] = useState<string>('');
   useEffect(() => {
-    setPublicKey(connected?.address ? String(connected.address) : '');
+    setAccountAddress(connected?.address ? String(connected.address) : '');
   }, [connected?.address]);
 
   // Pre-populate all editable fields with "ToDo:" (red text via class below)
@@ -72,14 +72,14 @@ export default function CreateAgentAccountPage() {
     <main className="max-w-3xl mx-auto p-6 text-white">
       <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">Create an Agent Account</h1>
 
-      {/* Public Key (read-only, populated from connected account like ManageAccounts) */}
+      {/* Account Address (read-only, populated from connected account like ManageAccounts) */}
       <div className="mb-6 flex items-center gap-4">
-        <label className="w-56 text-right">Public Key</label>
+        <label className="w-56 text-right">Account Address</label>
         <div className="flex-1">
           <input
             type="text"
             placeholder="0x..."
-            value={publicKey}
+            value={accountAddress}
             readOnly
             className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
           />

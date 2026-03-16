@@ -73,23 +73,34 @@ export default function SpCoinAccessControllerPage() {
             {showDeploymentPanel ? (
               <DeploymentControllerPanel
                 cardClass={controller.cardClass}
-                deploymentMode={controller.deploymentMode}
                 deploymentName={controller.deploymentName}
                 deploymentSymbol={controller.deploymentSymbol}
                 deploymentDecimals={controller.deploymentDecimals}
                 deploymentVersion={controller.deploymentVersion}
+                deploymentSignerSource={controller.deploymentSignerSource}
                 hardhatDeploymentAccountNumber={controller.hardhatDeploymentAccountNumber}
                 canIncrementHardhatDeploymentAccountNumber={controller.canIncrementHardhatDeploymentAccountNumber}
                 canDecrementHardhatDeploymentAccountNumber={controller.canDecrementHardhatDeploymentAccountNumber}
                 deploymentChainName={controller.deploymentChainName}
                 deploymentChainId={controller.deploymentChainId}
                 deploymentPathDisplayValue={controller.deploymentPathDisplayValue}
+                selectedSignerAddress={controller.selectedSignerAddress}
+                showDeploymentAccountDetails={controller.showDeploymentAccountDetails}
+                onToggleDeploymentAccountDetails={() =>
+                  controller.setShowDeploymentAccountDetails((current) => !current)
+                }
+                deploymentAccountMetadata={controller.deploymentAccountMetadata}
                 deploymentFlashError={controller.deploymentFlashError}
-                deploymentAccountPrivateKey={controller.deploymentAccountPrivateKey}
+                deploymentPrivateKey={controller.deploymentPrivateKey}
                 deploymentKeyRequiredMessage={controller.deploymentKeyRequiredMessage}
                 deploymentVersionPrefix={controller.deploymentVersionPrefix}
-                deploymentPublicKey={controller.deploymentPublicKeyDisplay}
-                deploymentLogoPath={controller.deploymentLogoPath}
+                deployedContractAddress={controller.deployedContractAddressDisplay}
+                showDeployedSignerDetails={controller.showDeployedSignerDetails}
+                onToggleDeployedSignerDetails={() =>
+                  controller.setShowDeployedSignerDetails((current) => !current)
+                }
+                deployedSignerAddress={controller.deployedSignerAddress}
+                deployedSignerMetadata={controller.deployedSignerMetadata}
                 deploymentStatus={controller.deploymentStatus}
                 deploymentStatusIsError={controller.deploymentStatusIsError}
                 deployDisableReason={controller.deployDisableReason}
@@ -98,7 +109,8 @@ export default function SpCoinAccessControllerPage() {
                 onToggleExpand={() =>
                   setExpandedPanel((current) => (current === 'deploy' ? null : 'deploy'))
                 }
-                onSetDeploymentMode={controller.setDeploymentMode}
+                onSetDeploymentSignerSource={controller.setDeploymentSignerSource}
+                onDeploymentSignerAddressChange={controller.setDeploymentSignerAddressInput}
                 onDeploymentDecimalsChange={controller.handleDeploymentDecimalsInputChange}
                 onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
                 onDeploymentVersionChange={controller.handleDeploymentVersionInputChange}
@@ -109,7 +121,6 @@ export default function SpCoinAccessControllerPage() {
                 onDeploy={controller.handleDeploy}
                 onDeploymentPrivateKeyChange={controller.handleDeploymentPrivateKeyChange}
                 onDeploymentPrivateKeyBlur={controller.handleDeploymentPrivateKeyBlur}
-                onDeploymentLogoPathChange={controller.setDeploymentLogoPath}
               />
             ) : null}
           </div>

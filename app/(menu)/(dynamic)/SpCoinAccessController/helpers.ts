@@ -49,5 +49,6 @@ export const isVersionFormatValid = (value: string) => VERSION_FORMAT_REGEX.test
 
 export const sanitizeVersionInput = (value: string) =>
   value
+    .replace(/#/g, '.')
     .replace(/[^0-9.]/g, '')
     .replace(/\.{2,}/g, '.');

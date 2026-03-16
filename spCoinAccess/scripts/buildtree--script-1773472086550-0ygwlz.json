@@ -1,0 +1,50 @@
+{
+  "id": "script-1773472086550-0ygwlz",
+  "name": "BuildTree",
+  "Date Created": "Mar-14-2026, 03:08:06",
+  "network": "Hardhat Ec2-BASE",
+  "steps": [
+    {
+      "step": 1,
+      "name": "decimals",
+      "panel": "ecr20_read",
+      "method": "decimals",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "name",
+      "panel": "ecr20_read",
+      "method": "name",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "symbol",
+      "panel": "ecr20_read",
+      "method": "symbol",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "addRecipient",
+      "panel": "spcoin_write",
+      "method": "addRecipient",
+      "msg.sender": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0xdd2fd4581271e230360230f9337d5c0430bf44c0"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

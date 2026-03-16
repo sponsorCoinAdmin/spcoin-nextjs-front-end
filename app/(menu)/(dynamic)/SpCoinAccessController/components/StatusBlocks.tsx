@@ -46,13 +46,13 @@ export function DeploymentStatusBlock({
 }: DeploymentStatusBlockProps) {
   const deploymentVersionStatusMatch = deploymentStatus.match(/^(.+?)( set for deployment\.)$/);
   const deploymentScaffoldStatusMatch = deploymentStatus.match(
-    /^Status: (\d+)\r?\nMocked Deployment: ([\s\S]*?)\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
+    /^Status: (\d+)\r?\nMocked Deployment: ([\s\S]*?)\r?\nContract Address: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
   );
   const deploymentMockingStatusMatch = deploymentStatus.match(
-    /^Status: (.+)\r?\nMocked Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
+    /^Status: (.+)\r?\nMocked Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Address: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nSet toggle radio button to Blockchain for real deployment execution$/,
   );
   const deploymentReadyStatusMatch = deploymentStatus.match(
-    /^Status: (.+)\r?\nBlockchain Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Public Key: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nPress Deploy to execute blockchain deployment$/,
+    /^Status: (.+)\r?\nBlockchain Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Address: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nPress Deploy to execute blockchain deployment$/,
   );
   const deploymentErrorStatusMatch = deploymentStatus.match(/^(\*Error:)(.*)$/);
   const deploymentEmptyKeyStatusMatch = deploymentStatus.match(
@@ -75,7 +75,7 @@ export function DeploymentStatusBlock({
           <br />
           <span>{`Mocked Deployment: ${deploymentScaffoldStatusMatch[2]}`}</span>
           <br />
-          <span>{`Contract Public Key: ${deploymentScaffoldStatusMatch[3]}`}</span>
+          <span>{`Contract Address: ${deploymentScaffoldStatusMatch[3]}`}</span>
           <br />
           <span>{`Contract Name: ${deploymentScaffoldStatusMatch[4]}`}</span>
           <br />
@@ -92,7 +92,7 @@ export function DeploymentStatusBlock({
           <span className="font-semibold text-green-400">{deploymentMockingStatusMatch[2]}</span>
           <span>" is ready for deployment.</span>
           <br />
-          <span>{`Contract Public Key: ${deploymentMockingStatusMatch[3]}`}</span>
+          <span>{`Contract Address: ${deploymentMockingStatusMatch[3]}`}</span>
           <br />
           <span>{`Contract Name: ${deploymentMockingStatusMatch[4]}`}</span>
           <br />
@@ -109,7 +109,7 @@ export function DeploymentStatusBlock({
           <span className="font-semibold text-green-400">{deploymentReadyStatusMatch[2]}</span>
           <span>" is ready for deployment.</span>
           <br />
-          <span>{`Contract Public Key: ${deploymentReadyStatusMatch[3]}`}</span>
+          <span>{`Contract Address: ${deploymentReadyStatusMatch[3]}`}</span>
           <br />
           <span>{`Contract Name: ${deploymentReadyStatusMatch[4]}`}</span>
           <br />

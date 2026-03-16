@@ -272,11 +272,15 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     });
   }, []);
 
-  const renderEmptyState = (message: string) => (
+  const renderEmptyState = (message: string) => {
+    const normalizedMessage =
+      message.includes('Loading tokens') ? 'Loading token list...' : message.includes('Loading accounts') ? 'Loading accounts...' : message;
+    return (
     <div className="flex flex-1 items-center justify-center">
-      <p>{message}</p>
+      <p>{normalizedMessage}</p>
     </div>
-  );
+    );
+  };
 
   return (
     <>

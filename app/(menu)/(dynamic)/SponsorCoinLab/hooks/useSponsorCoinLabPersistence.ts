@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Erc20ReadMethod } from '../methods/erc20/read';
 import type { Erc20WriteMethod } from '../methods/erc20/write';
 import type { SpCoinReadMethod } from '../methods/spcoin/read';
@@ -7,6 +7,11 @@ import type { ConnectionMode, LabScript, MethodPanelMode } from '../scriptBuilde
 
 const spCoinLabKey = 'spCoinLabKey';
 const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
+
+type ScriptApiPayload = {
+  scripts?: LabScript[];
+  selectedScriptId?: string;
+};
 
 type Params = {
   scripts: LabScript[];
@@ -141,90 +146,156 @@ export function useSponsorCoinLabPersistence({
   backdateCalendar,
 }: Params) {
   const [spCoinLabHydrated, setSpCoinLabHydrated] = useState(false);
+  const hasPersistedScriptsRef = useRef(false);
+
+  async function fetchFileBackedScripts(): Promise<ScriptApiPayload | null> {
+    try {
+      const response = await fetch('/api/spCoin/scripts', { cache: 'no-store' });
+      if (!response.ok) return null;
+      return (await response.json()) as ScriptApiPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  async function persistFileBackedScripts(payload: ScriptApiPayload) {
+    const response = await fetch('/api/spCoin/scripts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Unable to save scripts (${response.status})`);
+    }
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const rawScripts = window.localStorage.getItem(spCoinLabScriptsKey);
-      if (rawScripts) {
-        const savedScripts = JSON.parse(rawScripts) as { scripts?: LabScript[]; selectedScriptId?: string };
-        const nextScripts = Array.isArray(savedScripts?.scripts) ? savedScripts.scripts : [];
-        setScripts(nextScripts);
-        if (typeof savedScripts?.selectedScriptId === 'string') {
-          setSelectedScriptId(savedScripts.selectedScriptId);
-        } else if (nextScripts[0]?.id) {
-          setSelectedScriptId(nextScripts[0].id);
-        }
-      }
+    let cancelled = false;
 
-      const raw = window.localStorage.getItem(spCoinLabKey);
-      if (raw) {
-        const saved = JSON.parse(raw) as Record<string, any>;
-        if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
-        if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
-        if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
-        if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
-        if (typeof saved.selectedWriteSenderAddress === 'string') {
-          setSelectedWriteSenderAddress(normalizeAddressValue(saved.selectedWriteSenderAddress));
+    const hydrate = async () => {
+      try {
+        const savedFromFiles = await fetchFileBackedScripts();
+        const nextFileScripts = Array.isArray(savedFromFiles?.scripts) ? savedFromFiles.scripts : [];
+
+        if (!cancelled && nextFileScripts.length > 0) {
+          setScripts(nextFileScripts);
+          if (typeof savedFromFiles?.selectedScriptId === 'string' && savedFromFiles.selectedScriptId.trim()) {
+            setSelectedScriptId(savedFromFiles.selectedScriptId);
+          } else if (nextFileScripts[0]?.id) {
+            setSelectedScriptId(nextFileScripts[0].id);
+          }
+        } else {
+          const rawScripts = window.localStorage.getItem(spCoinLabScriptsKey);
+          if (rawScripts) {
+            const savedScripts = JSON.parse(rawScripts) as { scripts?: LabScript[]; selectedScriptId?: string };
+            const nextScripts = Array.isArray(savedScripts?.scripts) ? savedScripts.scripts : [];
+            if (!cancelled) {
+              setScripts(nextScripts);
+              if (typeof savedScripts?.selectedScriptId === 'string') {
+                setSelectedScriptId(savedScripts.selectedScriptId);
+              } else if (nextScripts[0]?.id) {
+                setSelectedScriptId(nextScripts[0].id);
+              }
+            }
+            if (nextScripts.length > 0) {
+              await persistFileBackedScripts({
+                scripts: nextScripts,
+                selectedScriptId:
+                  typeof savedScripts?.selectedScriptId === 'string' && savedScripts.selectedScriptId.trim()
+                    ? savedScripts.selectedScriptId
+                    : nextScripts[0]?.id || '',
+              });
+              window.localStorage.removeItem(spCoinLabScriptsKey);
+            }
+          }
         }
-        if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
-        if (typeof saved.writeAddressA === 'string') setWriteAddressA(normalizeAddressValue(saved.writeAddressA));
-        if (typeof saved.writeAddressB === 'string') setWriteAddressB(normalizeAddressValue(saved.writeAddressB));
-        if (typeof saved.writeAmountRaw === 'string') setWriteAmountRaw(saved.writeAmountRaw);
-        if (typeof saved.methodPanelMode === 'string') setMethodPanelMode(saved.methodPanelMode as MethodPanelMode);
-        if (typeof saved.selectedReadMethod === 'string') setSelectedReadMethod(saved.selectedReadMethod as Erc20ReadMethod);
-        if (typeof saved.readAddressA === 'string') setReadAddressA(normalizeAddressValue(saved.readAddressA));
-        if (typeof saved.readAddressB === 'string') setReadAddressB(normalizeAddressValue(saved.readAddressB));
-        if (typeof saved.selectedSpCoinReadMethod === 'string') {
-          setSelectedSpCoinReadMethod(saved.selectedSpCoinReadMethod as SpCoinReadMethod);
+
+        const raw = window.localStorage.getItem(spCoinLabKey);
+        if (raw) {
+          const saved = JSON.parse(raw) as Record<string, any>;
+          if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
+          if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
+          if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
+          if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
+          if (typeof saved.selectedWriteSenderAddress === 'string') {
+            setSelectedWriteSenderAddress(normalizeAddressValue(saved.selectedWriteSenderAddress));
+          }
+          if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
+          if (typeof saved.writeAddressA === 'string') setWriteAddressA(normalizeAddressValue(saved.writeAddressA));
+          if (typeof saved.writeAddressB === 'string') setWriteAddressB(normalizeAddressValue(saved.writeAddressB));
+          if (typeof saved.writeAmountRaw === 'string') setWriteAmountRaw(saved.writeAmountRaw);
+          if (typeof saved.methodPanelMode === 'string') setMethodPanelMode(saved.methodPanelMode as MethodPanelMode);
+          if (typeof saved.selectedReadMethod === 'string') setSelectedReadMethod(saved.selectedReadMethod as Erc20ReadMethod);
+          if (typeof saved.readAddressA === 'string') setReadAddressA(normalizeAddressValue(saved.readAddressA));
+          if (typeof saved.readAddressB === 'string') setReadAddressB(normalizeAddressValue(saved.readAddressB));
+          if (typeof saved.selectedSpCoinReadMethod === 'string') {
+            setSelectedSpCoinReadMethod(saved.selectedSpCoinReadMethod as SpCoinReadMethod);
+          }
+          if (typeof saved.selectedSpCoinWriteMethod === 'string') {
+            setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
+          }
+          if (Array.isArray(saved.spReadParams)) {
+            setSpReadParams(saved.spReadParams.map((v) => normalizeAddressValue(String(v ?? ''))));
+          }
+          if (Array.isArray(saved.spWriteParams)) {
+            setSpWriteParams(saved.spWriteParams.map((v) => normalizeAddressValue(String(v ?? ''))));
+          }
+          if (typeof saved.status === 'string') setStatus(saved.status);
+          if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
+          if (typeof saved.formattedOutputDisplay === 'string') setFormattedOutputDisplay(saved.formattedOutputDisplay);
+          if (saved.formattedPanelView === 'script' || saved.formattedPanelView === 'output') {
+            setFormattedPanelView(saved.formattedPanelView);
+          }
+          if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
+          if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
+            backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
+          }
+          if (typeof saved.backdateYears === 'string') backdateCalendar.setBackdateYears(saved.backdateYears);
+          if (typeof saved.backdateMonths === 'string') backdateCalendar.setBackdateMonths(saved.backdateMonths);
+          if (typeof saved.backdateDays === 'string') backdateCalendar.setBackdateDays(saved.backdateDays);
+          if (typeof saved.backdateHours === 'string') backdateCalendar.setBackdateHours(saved.backdateHours);
+          if (typeof saved.backdateMinutes === 'string') backdateCalendar.setBackdateMinutes(saved.backdateMinutes);
+          if (typeof saved.backdateSeconds === 'string') backdateCalendar.setBackdateSeconds(saved.backdateSeconds);
+          if (typeof saved.hoverCalendarWarning === 'string') {
+            backdateCalendar.setHoverCalendarWarning(saved.hoverCalendarWarning);
+          }
+          if (typeof saved.calendarViewYear === 'number') backdateCalendar.setCalendarViewYear(saved.calendarViewYear);
+          if (typeof saved.calendarViewMonth === 'number') backdateCalendar.setCalendarViewMonth(saved.calendarViewMonth);
         }
-        if (typeof saved.selectedSpCoinWriteMethod === 'string') {
-          setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
+        hasPersistedScriptsRef.current = true;
+      } catch {
+        // Ignore malformed SponsorCoinLab localStorage payload.
+      } finally {
+        if (!cancelled) {
+          setSpCoinLabHydrated(true);
         }
-        if (Array.isArray(saved.spReadParams)) {
-          setSpReadParams(saved.spReadParams.map((v) => normalizeAddressValue(String(v ?? ''))));
-        }
-        if (Array.isArray(saved.spWriteParams)) {
-          setSpWriteParams(saved.spWriteParams.map((v) => normalizeAddressValue(String(v ?? ''))));
-        }
-        if (typeof saved.status === 'string') setStatus(saved.status);
-        if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
-        if (typeof saved.formattedOutputDisplay === 'string') setFormattedOutputDisplay(saved.formattedOutputDisplay);
-        if (saved.formattedPanelView === 'script' || saved.formattedPanelView === 'output') {
-          setFormattedPanelView(saved.formattedPanelView);
-        }
-        if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
-        if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
-          backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
-        }
-        if (typeof saved.backdateYears === 'string') backdateCalendar.setBackdateYears(saved.backdateYears);
-        if (typeof saved.backdateMonths === 'string') backdateCalendar.setBackdateMonths(saved.backdateMonths);
-        if (typeof saved.backdateDays === 'string') backdateCalendar.setBackdateDays(saved.backdateDays);
-        if (typeof saved.backdateHours === 'string') backdateCalendar.setBackdateHours(saved.backdateHours);
-        if (typeof saved.backdateMinutes === 'string') backdateCalendar.setBackdateMinutes(saved.backdateMinutes);
-        if (typeof saved.backdateSeconds === 'string') backdateCalendar.setBackdateSeconds(saved.backdateSeconds);
-        if (typeof saved.hoverCalendarWarning === 'string') {
-          backdateCalendar.setHoverCalendarWarning(saved.hoverCalendarWarning);
-        }
-        if (typeof saved.calendarViewYear === 'number') backdateCalendar.setCalendarViewYear(saved.calendarViewYear);
-        if (typeof saved.calendarViewMonth === 'number') backdateCalendar.setCalendarViewMonth(saved.calendarViewMonth);
       }
-    } catch {
-      // Ignore malformed SponsorCoinLab localStorage payload.
-    } finally {
-      setSpCoinLabHydrated(true);
-    }
+    };
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !spCoinLabHydrated || !hasPersistedScriptsRef.current) return;
+
+    void persistFileBackedScripts({
+      scripts,
+      selectedScriptId,
+    }).catch(() => {
+      // Ignore transient file persistence failures in the UI layer.
+    });
+  }, [scripts, selectedScriptId, spCoinLabHydrated]);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !spCoinLabHydrated) return;
-    window.localStorage.setItem(
-      spCoinLabScriptsKey,
-      JSON.stringify({
-        scripts,
-        selectedScriptId,
-      }),
-    );
+    if (window.localStorage.getItem(spCoinLabScriptsKey)) {
+      window.localStorage.removeItem(spCoinLabScriptsKey);
+    }
   }, [scripts, selectedScriptId, spCoinLabHydrated]);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { TokenContract } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { loadTokenPageRecords } from '@/lib/context/tokens/tokenStore';
+import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import {
   ALL_NETWORKS_VALUE,
 } from '@/lib/utils/network';
@@ -63,12 +64,6 @@ function renderLinkIfUrl(value: string) {
     );
   }
   return trimmed;
-}
-
-function isSponsorCoinToken(token: TokenContract): boolean {
-  const name = String((token as any)?.name ?? '').trim().toLowerCase();
-  const symbol = String((token as any)?.symbol ?? '').trim().toLowerCase();
-  return name === 'sponsorcoin' || name === 'spcoin' || symbol === 'sponsorcoin' || symbol === 'spcoin';
 }
 
 const tokenOptions = ['Active Account', 'Agents', 'Recipients', 'Sponsors', 'All Accounts'] as const;
@@ -187,7 +182,7 @@ function TokensPage({
     const pinned: TokenContract[] = [];
     const rest: TokenContract[] = [];
     for (const token of visibleTokens) {
-      if (isSponsorCoinToken(token)) {
+      if (isSpCoin(token)) {
         pinned.push(token);
       } else {
         rest.push(token);

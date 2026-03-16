@@ -5,6 +5,50 @@ import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import type { TokenContract } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
+import { resolveTokenAssetChainId } from '@/lib/utils/network/tokenAssetChainMap';
+import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
+
+type SpCoinDeploymentFile = {
+  chainId?: Record<string, Record<string, unknown>>;
+};
+
+const spCoinAddressSetsByChain = (() => {
+  const deploymentMap = (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {};
+  const byChain = new Map<number, Set<string>>();
+
+  const addAddress = (chainId: number, address: string) => {
+    if (!Number.isFinite(chainId) || chainId <= 0) return;
+    try {
+      const normalizedAddress = getAddress(normalizeAddress(address));
+      const existing = byChain.get(chainId) ?? new Set<string>();
+      existing.add(normalizedAddress);
+      byChain.set(chainId, existing);
+    } catch {
+      // Ignore invalid deployment-map addresses.
+    }
+  };
+
+  const visitAddressNode = (chainId: number, node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    for (const [address, entry] of Object.entries(node as Record<string, unknown>)) {
+      if (/^0[xX][0-9a-fA-F]{40}$/.test(address)) {
+        addAddress(chainId, address);
+        continue;
+      }
+      if (entry && typeof entry === 'object') {
+        visitAddressNode(chainId, entry);
+      }
+    }
+  };
+
+  for (const [chainIdKey, chainNode] of Object.entries(deploymentMap.chainId ?? {})) {
+    const chainId = Number(chainIdKey);
+    if (!Number.isFinite(chainId) || !chainNode || typeof chainNode !== 'object') continue;
+    visitAddressNode(chainId, chainNode);
+  }
+
+  return byChain;
+})();
 
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
@@ -116,29 +160,28 @@ const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
  */
 const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
   if (!tokenContract?.address) return false;
-  const chainId = Number(tokenContract.chainId ?? CHAIN_ID.ETHEREUM);
   try {
     const normalized = getAddress(normalizeAddress(tokenContract.address));
-    const baseSpCoinAddresses = new Set([
-      getAddress('0XC66E2444FB35FF3974A69E3AFC51579E6CEE9CBA'),
-      getAddress('0X7877438CD6B88BB63D6D257DC16DFF258EF269D1'),
-    ]);
-    const polygonSpCoinAddresses = new Set([
-      getAddress('0XC2816250C07AE56C1583E5F2B0E67F7D7F42D562'),
-    ]);
-    switch (chainId) {
-      case CHAIN_ID.BASE:
-      case CHAIN_ID.HARDHAT_BASE:
-        return baseSpCoinAddresses.has(normalized);
-      case CHAIN_ID.ETHEREUM:
-        return false;
-      case CHAIN_ID.POLYGON:
-        return polygonSpCoinAddresses.has(normalized);
-      case CHAIN_ID.SEPOLIA:
-        return false;
-      default:
-        return false;
+    const rawChainId = Number(tokenContract.chainId ?? 0);
+    const candidateChainIds = new Set<number>();
+
+    if (Number.isFinite(rawChainId) && rawChainId > 0) {
+      candidateChainIds.add(rawChainId);
+      candidateChainIds.add(resolveTokenAssetChainId(rawChainId));
+    } else {
+      candidateChainIds.add(CHAIN_ID.ETHEREUM);
+      candidateChainIds.add(CHAIN_ID.POLYGON);
+      candidateChainIds.add(CHAIN_ID.BASE);
+      candidateChainIds.add(CHAIN_ID.HARDHAT_BASE);
+      candidateChainIds.add(CHAIN_ID.SEPOLIA);
     }
+
+    for (const candidateChainId of candidateChainIds) {
+      if (spCoinAddressSetsByChain.get(candidateChainId)?.has(normalized)) {
+        return true;
+      }
+    }
+    return false;
   } catch {
     return false;
   }

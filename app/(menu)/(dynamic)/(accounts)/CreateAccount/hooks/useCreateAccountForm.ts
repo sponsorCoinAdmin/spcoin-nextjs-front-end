@@ -148,7 +148,7 @@ export function useCreateAccountForm({
 
   const validatePreSend = (values: AccountFormData): AccountFormErrors => {
     const next: AccountFormErrors = {};
-    if (!publicKey.trim()) next.publicKey = 'Account Public Key is required';
+    if (!publicKey.trim()) next.publicKey = 'Account Address is required';
     for (const field of FORM_FIELDS) {
       const error = validateField(field, values[field]);
       if (error) next[field] = error;

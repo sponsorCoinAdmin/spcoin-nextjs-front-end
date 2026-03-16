@@ -5,4 +5,3 @@ declare class SpCoinERC20Module {
     signerTransfer: (_signer: any, _to: any, _value: any) => Promise<void>;
     transfer: (_to: any, _value: any) => Promise<void>;
 }
-export { SpCoinERC20Module };

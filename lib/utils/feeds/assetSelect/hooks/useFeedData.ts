@@ -101,7 +101,7 @@ export function useFeedData(feedType: FEED_TYPE) {
       };
     }
 
-    setLoading(isAccountFeed);
+    setLoading(true);
 
     debugLog.log?.('[start]', {
       seq,

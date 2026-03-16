@@ -7,4 +7,3 @@ declare class SpCoinRewardsModule {
     constructor(_spCoinContractDeployed: any);
     updateAccountStakingRewards: (accountKey: any) => Promise<void>;
 }
-export { SpCoinRewardsModule };

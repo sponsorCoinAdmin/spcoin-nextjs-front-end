@@ -102,7 +102,7 @@ export default function CreateAccountFormPanel({
     >
       <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
         <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
-          Account Public Key
+          Account Address
         </div>
         <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
           Account Meta Data
@@ -112,7 +112,7 @@ export default function CreateAccountFormPanel({
         {!connected ? (
           <>
             <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
-              Account Public Key
+              Account Address
             </label>
             <div>
               <div className="flex h-[42px] items-center justify-center rounded border border-white bg-transparent">
@@ -123,7 +123,7 @@ export default function CreateAccountFormPanel({
         ) : (
           <>
             <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
-              Account Public Key
+              Account Address
             </label>
             <div>
               <div className="flex items-center gap-1">

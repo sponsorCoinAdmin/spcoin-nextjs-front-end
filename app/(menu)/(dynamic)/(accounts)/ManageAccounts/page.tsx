@@ -10,7 +10,7 @@ export default function ManageAccountsPage() {
   >(null);
   const [accountKey, setAccountKey] = useState('');
 
-  // Exchange context → connected account for Public Key
+  // Exchange context → connected account for Account Address
   const ctx = useContext(ExchangeContextState);
   const connected = ctx?.exchangeContext?.accounts?.activeAccount;
 
@@ -33,7 +33,7 @@ export default function ManageAccountsPage() {
     }
   }, [selectedRole]);
 
-  // Populate Public Key from the connected account
+  // Populate Account Address from the connected account
   useEffect(() => {
     const next = connected?.address ? String(connected.address) : '';
     setAccountKey(next);
@@ -147,11 +147,11 @@ export default function ManageAccountsPage() {
         maximumFractionDigits: 2,
       });
 
-  // 🔴 For fields below "Public Key": red text only; keep white border/background unchanged
+  // 🔴 For fields below "Account Address": red text only; keep white border/background unchanged
   const todoInputClasses =
     'w-[46ch] max-w-full p-2 bg-[#1A1D2E] rounded border border-white text-[#ff1a1a] focus:outline-none focus:ring-0';
 
-  // For the three "ToDo" rows under Public Key
+  // For the three "ToDo" rows under Account Address
   const summaryFields = [
     { id: 'tradeBalance', label: 'Trade Balance' },
     { id: 'sponsoredBalance', label: 'Sponsored Balance' },
@@ -187,13 +187,13 @@ export default function ManageAccountsPage() {
       <div className="mb-8 bg-[#1A1D2E] hover:bg-[rgb(79,86,101)] p-4 rounded">
         <h2 className={headerStyle}>Connected Account</h2>
         <div className="space-y-4">
-          {/* Public Key (populated from connected account) */}
+          {/* Account Address (populated from connected account) */}
           <div className="flex items-center gap-4">
             <label
               htmlFor="connectedPublicKey"
               className="w-48 font-medium whitespace-nowrap"
             >
-              Public Key
+              Account Address
             </label>
             <div className="flex-1">
               <input
@@ -207,7 +207,7 @@ export default function ManageAccountsPage() {
             </div>
           </div>
 
-          {/* New row directly under Public Key: SpCoin Contract */}
+          {/* New row directly under Account Address: SpCoin Contract */}
           <div className="flex items-center gap-4">
             <label
               htmlFor="spCoinContract"
@@ -226,7 +226,7 @@ export default function ManageAccountsPage() {
             </div>
           </div>
 
-          {/* Fields below Public Key default to "ToDo:" with red text only */}
+          {/* Fields below Account Address default to "ToDo:" with red text only */}
           {summaryFields.map(({ id, label }) => (
             <div key={id} className="flex items-center gap-4">
               <label
@@ -255,7 +255,7 @@ export default function ManageAccountsPage() {
           <table className="w-full text-sm text-left border-collapse">
             <thead className="text-white border-b border-gray-600">
               <tr>
-                <th>Sponsor Public Key</th>
+                <th>Sponsor Address</th>
                 <th>Amount Sponsored</th>
                 <th>Recipient Rate</th>
                 <th>Pending Amount</th>

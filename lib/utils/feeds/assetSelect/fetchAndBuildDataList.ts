@@ -2,7 +2,7 @@
 'use client';
 
 import { FEED_TYPE, type FeedData } from '@/lib/structure';
-import { loadTokenSeedAddresses } from '@/lib/context/tokens/tokenStore';
+import { loadTokenPageRecords, loadTokenSeedAddresses } from '@/lib/context/tokens/tokenStore';
 import { buildTokenFromJson } from '@/lib/tokens/tokenHydration';
 import {
   feedDataFromJson,
@@ -35,6 +35,7 @@ const debugLog = createDebugLogger(
 
 let CALL_SEQ = 0;
 const LEGACY_WALLETS_KEY = 'wallets' as const;
+const TOKEN_PANEL_PAGE_SIZE = 200;
 
 type SourceKind = 'manage-json' | 'bundled-fallback' | 'remote-url';
 
@@ -381,6 +382,44 @@ export async function fetchAndBuildDataList(
       chainId,
     );
     return built;
+  }
+
+  if (feedType === FEED_TYPE.TOKEN_LIST && Number.isFinite(chainId) && chainId > 0) {
+    try {
+      const tokenPage = await loadTokenPageRecords(1, TOKEN_PANEL_PAGE_SIZE, { chainId });
+      if (tokenPage.items.length > 0) {
+        const built = {
+          feedType: FEED_TYPE.TOKEN_LIST,
+          tokens: tokenPage.items,
+        } as FeedDataWithMeta;
+        attachDebugMeta(built, {
+          sourceId: `remote:/api/spCoin/tokens?allData=true&chainId=${chainId}&page=1&pageSize=${TOKEN_PANEL_PAGE_SIZE}`,
+          sourceKind: 'remote-url',
+          feedType,
+          chainId,
+          seq,
+        });
+        logBuilt(
+          'built(token-page)',
+          feedType,
+          built as FeedData,
+          {
+            sourceId: built.__sourceId ?? 'remote:/api/spCoin/tokens',
+            sourceKind: 'remote-url',
+          },
+          seq,
+          chainId,
+        );
+        return built as FeedData;
+      }
+    } catch (err) {
+      debugLog.warn?.('[token-page][error->fallback]', {
+        seq,
+        feedType,
+        chainId,
+        error: String(err),
+      });
+    }
   }
 
   const { sourceId, sourceKind, list: jsonSpec } = await getDataListObjWithSource(

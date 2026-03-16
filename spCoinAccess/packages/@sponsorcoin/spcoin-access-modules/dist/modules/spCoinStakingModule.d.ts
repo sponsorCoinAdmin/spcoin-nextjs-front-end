@@ -16,4 +16,3 @@ declare class SpCoinStakingModule {
     depositRecipientStakingRewards: (_sponsorAccount: any, _recipientAccount: any, _recipientRate: any, _amount: any) => Promise<void>;
     depositAgentStakingRewards: (_sponsorAccount: any, _recipientAccount: any, _recipientRate: any, _agentAccount: any, _agentRate: any, _amount: any) => Promise<void>;
 }
-export { SpCoinStakingModule };

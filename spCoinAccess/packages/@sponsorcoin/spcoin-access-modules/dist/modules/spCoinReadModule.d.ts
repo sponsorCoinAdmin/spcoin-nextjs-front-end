@@ -35,7 +35,6 @@ declare class SpCoinReadModule {
     getRecipientRateList: (_sponsorKey: any, _recipientKey: any) => Promise<any[]>;
     getRecipientRateTransactionList: (_sponsorCoin: any, _recipientKey: any, _recipientRateKey: any) => Promise<any>;
 }
-export { SpCoinReadModule };
 declare const getRewardType: (_accountType: any) => string;
 declare const getAccountTypeString: (_accountType: any) => string;
 declare const getSourceTypeDelimiter: (_accountType: any) => "RECIPIENT_ACCOUNT:" | "SPONSOR_ACCOUNT:";

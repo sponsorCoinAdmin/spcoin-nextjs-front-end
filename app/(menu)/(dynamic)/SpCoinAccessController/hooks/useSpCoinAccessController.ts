@@ -1,9 +1,16 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/hooks/useSpCoinAccessController.ts
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { HDNodeWallet } from 'ethers';
+import { BrowserProvider, ContractFactory, HDNodeWallet, type Signer } from 'ethers';
+import { useAccount } from 'wagmi';
+import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { useExchangeContext } from '@/lib/context/hooks';
+import {
+  defaultMissingImage,
+  getAccountLogoURL,
+  normalizeAddressForAssets,
+} from '@/lib/context/helpers/assetHelpers';
 import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
 import {
   buildDeploymentNameFromVersion,
@@ -36,9 +43,59 @@ type DeploymentMapEntry = {
   decimals?: number;
 };
 
+type AccountMetadata = {
+  logoURL: string;
+  name?: string;
+  symbol?: string;
+};
+
 const HARDHAT_CHAIN_ID = 31337;
 const HARDHAT_DEPLOYMENT_ACCOUNT_COUNT = 20;
 const HARDHAT_DEFAULT_MNEMONIC = 'test test test test test test test test test test test junk';
+
+const buildAccountMetadata = (
+  account: Record<string, unknown> | null | undefined,
+  fallbackLogoURL: string,
+): AccountMetadata => {
+  const next: AccountMetadata = {
+    logoURL: fallbackLogoURL,
+  };
+
+  const name = String(account?.name || '').trim();
+  const symbol = String(account?.symbol || '').trim();
+  const logoURL = String(account?.logoURL || '').trim();
+
+  if (name) next.name = name;
+  if (symbol) next.symbol = symbol;
+  if (logoURL) next.logoURL = logoURL;
+
+  if (!account) {
+    next.name = 'Account Not Found on Local';
+    next.symbol = 'MISSING';
+  }
+
+  return next;
+};
+
+const loadAccountMetadata = async (address: string): Promise<AccountMetadata | undefined> => {
+  const normalizedAddress = String(address || '').trim();
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(normalizedAddress)) return undefined;
+
+  const folder = normalizeAddressForAssets(normalizedAddress);
+  const accountLogoURL = folder ? getAccountLogoURL(normalizedAddress) : defaultMissingImage;
+  if (!folder) return buildAccountMetadata(null, defaultMissingImage);
+
+  try {
+    const response = await fetch(`/assets/accounts/${folder}/account.json`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return buildAccountMetadata(null, accountLogoURL);
+    const accountData = (await response.json()) as Record<string, unknown>;
+    return buildAccountMetadata(accountData, accountLogoURL);
+  } catch {
+    return buildAccountMetadata(null, accountLogoURL);
+  }
+};
 
 const getHardhatPrivateKeyByIndex = (index: number): string => {
   if (!Number.isInteger(index) || index < 0) return '';
@@ -112,12 +169,36 @@ type ManagerResponse = {
   downloadBlocked?: boolean;
   uploadBlocked?: boolean;
   deploymentPublicKey?: string;
+  deploymentAbi?: unknown[];
+  deploymentBytecode?: string;
+  deploymentChainId?: number;
+  deploymentNetworkName?: string;
+  mapAdded?: boolean;
   localPathExists?: boolean;
   contractDirExists?: boolean;
   tokenStatus?: 'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED';
 };
 
 const sanitizeNpmOtpInput = (value: string) => value.replace(/\D/g, '').slice(0, 6);
+
+const parseManagerResponse = async (response: Response): Promise<ManagerResponse> => {
+  const rawText = await response.text();
+  if (!rawText.trim()) {
+    return {
+      ok: response.ok,
+      message: response.ok ? '' : `Request failed with status ${response.status}.`,
+    };
+  }
+
+  try {
+    return JSON.parse(rawText) as ManagerResponse;
+  } catch {
+    return {
+      ok: false,
+      message: rawText.trim() || `Request failed with status ${response.status}.`,
+    };
+  }
+};
 
 type SpCoinAccessStorage = {
   useLocalPackage: boolean;
@@ -128,15 +209,19 @@ type SpCoinAccessStorage = {
   deploymentSymbol?: string;
   deploymentDecimals?: string;
   deploymentVersion: string;
+  deploymentSignerSource?: 'ec2-base' | 'metamask';
+  deploymentSignerPublicKeyInput?: string;
   hardhatDeploymentAccountNumber?: number;
   deploymentAccountPrivateKey: string;
-  deploymentPublicKey: string;
-  deploymentMode: 'mocked' | 'blockcain';
+  deployedContractAddress?: string;
+  deploymentPublicKey?: string;
   localSourceDeploymentPath: string;
 };
 
 export function useSpCoinAccessController() {
   const router = useRouter();
+  const { address: connectedWalletAddress, isConnected: isWalletConnected } = useAccount();
+  const ethersSigner = useEthersSigner();
   const [settings, setSettings] = useSettings();
   const { exchangeContext } = useExchangeContext();
   const hasHydratedStorageRef = useRef(false);
@@ -161,12 +246,17 @@ export function useSpCoinAccessController() {
   const [deploymentSymbol, setDeploymentSymbol] = useState('SPCOIN');
   const [deploymentDecimals, setDeploymentDecimals] = useState('18');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
+  const [deploymentSignerSource, setDeploymentSignerSource] = useState<'ec2-base' | 'metamask'>('ec2-base');
+  const [deploymentSignerPublicKeyInput, setDeploymentSignerPublicKeyInput] = useState('');
   const [hardhatDeploymentAccountNumber, setHardhatDeploymentAccountNumber] = useState(0);
   const [deploymentAccountPrivateKey, setDeploymentAccountPrivateKey] = useState('');
-  const [deploymentMode, setDeploymentMode] = useState<'mocked' | 'blockcain'>('mocked');
   const [localSourceDeploymentPath, setLocalSourceDeploymentPath] = useState(DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
-  const [deploymentPublicKey, setDeploymentPublicKey] = useState('');
+  const [deployedContractAddress, setDeployedContractAddress] = useState('');
   const [deploymentLogoPath, setDeploymentLogoPath] = useState('/public/assets/miscellaneous/spCoin.png');
+  const [showDeploymentAccountDetails, setShowDeploymentAccountDetails] = useState(false);
+  const [showDeployedSignerDetails, setShowDeployedSignerDetails] = useState(false);
+  const [deploymentAccountMetadata, setDeploymentAccountMetadata] = useState<AccountMetadata>();
+  const [deployedSignerMetadata, setDeployedSignerMetadata] = useState<AccountMetadata>();
   const [localInstallSourceRoot, setLocalInstallSourceRoot] = useState('/spCoinAccess');
   const [localInstallSourceRootError, setLocalInstallSourceRootError] = useState('');
   const [npmOtp, setNpmOtp] = useState('');
@@ -184,9 +274,9 @@ export function useSpCoinAccessController() {
   >('NOT_FOUND');
   const [deployUiState, setDeployUiState] = useState<'idle' | 'in_progress' | 'deployed'>('idle');
   const refreshDeploymentTokenStatus = async () => {
-    const key = String(deploymentPublicKey || '').trim();
+    const key = String(deployedContractAddress || '').trim();
     const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
-    if (deploymentMode !== 'blockcain' || !/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
+    if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
       setDeploymentContractDirExists(false);
       setDeploymentTokenStatus('NOT_FOUND');
       return;
@@ -197,7 +287,7 @@ export function useSpCoinAccessController() {
         deploymentChainId: String(chainId || 0),
       });
       const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
-      const data = (await response.json()) as ManagerResponse;
+      const data = await parseManagerResponse(response);
       const status =
         response.ok && data.ok && data.tokenStatus ? data.tokenStatus : 'NOT_FOUND';
       setDeploymentTokenStatus(status);
@@ -248,17 +338,80 @@ export function useSpCoinAccessController() {
       ) ?? hardhatDeploymentAccountOptions[0],
     [hardhatDeploymentAccountNumber, hardhatDeploymentAccountOptions],
   );
+  const selectedHardhatDeploymentPublicKey = useMemo(() => {
+    try {
+      return HDNodeWallet.fromPhrase(
+        HARDHAT_DEFAULT_MNEMONIC,
+        undefined,
+        `m/44'/60'/0'/0/${hardhatDeploymentAccountNumber}`,
+      ).address;
+    } catch {
+      return '';
+    }
+  }, [hardhatDeploymentAccountNumber]);
+  const selectedDeploymentSignerPublicKey =
+    deploymentSignerSource === 'metamask'
+      ? String(deploymentSignerPublicKeyInput || '').trim() || String(connectedWalletAddress || '').trim()
+      : selectedHardhatDeploymentPublicKey;
+  const deployedSignerAddress =
+    deployedContractAddress && /^0[xX][a-fA-F0-9]{40}$/.test(String(selectedDeploymentSignerPublicKey || '').trim())
+      ? String(selectedDeploymentSignerPublicKey || '').trim()
+      : '';
+  useEffect(() => {
+    if (deploymentSignerSource !== 'metamask') return;
+    if (String(deploymentSignerPublicKeyInput || '').trim()) return;
+    if (!connectedWalletAddress) return;
+    setDeploymentSignerPublicKeyInput(String(connectedWalletAddress).trim());
+  }, [connectedWalletAddress, deploymentSignerPublicKeyInput, deploymentSignerSource]);
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      const metadata = await loadAccountMetadata(selectedDeploymentSignerPublicKey);
+      if (active) setDeploymentAccountMetadata(metadata);
+    };
+    void run();
+    return () => {
+      active = false;
+    };
+  }, [selectedDeploymentSignerPublicKey]);
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      const metadata = await loadAccountMetadata(deployedSignerAddress);
+      if (active) setDeployedSignerMetadata(metadata);
+    };
+    void run();
+    return () => {
+      active = false;
+    };
+  }, [deployedSignerAddress]);
   const existsInSpCoinDeploymentMap = useMemo(() => {
     const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
     const chainIdKey = String(deploymentChainId || '').trim();
     const versionKey = String(deploymentVersion || '').trim() || '0';
-    const publicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
-    const signerKeyRaw = String(deploymentAccountPrivateKey || '').trim();
-    const signerKeyLower = signerKeyRaw.toLowerCase();
-    if (!/^[0][xX][a-fA-F0-9]{40}$/.test(publicKeyUpper)) return false;
-    if (!/^0x[a-fA-F0-9]{64}$/.test(signerKeyLower)) return false;
+    const contractAddressUpper = String(deployedContractAddress || '').trim().toUpperCase();
+    if (!/^[0][xX][a-fA-F0-9]{40}$/.test(contractAddressUpper)) return false;
     const chainNode = parsed?.chainId?.[chainIdKey];
     if (!chainNode || typeof chainNode !== 'object') return false;
+    if (deploymentSignerSource === 'metamask') {
+      return Object.entries(chainNode).some(([nodeKey, nodeValue]) => {
+        if (!nodeValue || typeof nodeValue !== 'object') return false;
+        if (/^0x[a-fA-F0-9]{64}$/.test(String(nodeKey || '').trim())) {
+          const versionNode = (nodeValue as Record<string, unknown>)[versionKey];
+          if (!versionNode || typeof versionNode !== 'object') return false;
+          return Object.keys(versionNode as Record<string, unknown>).some(
+            (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === contractAddressUpper,
+          );
+        }
+        if (String(nodeKey || '').trim() !== versionKey) return false;
+        return Object.keys(nodeValue as Record<string, unknown>).some(
+          (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === contractAddressUpper,
+        );
+      });
+    }
+    const signerKeyRaw = String(deploymentAccountPrivateKey || '').trim();
+    const signerKeyLower = signerKeyRaw.toLowerCase();
+    if (!/^0x[a-fA-F0-9]{64}$/.test(signerKeyLower)) return false;
     const signerNodeEntry = Object.entries(chainNode).find(
       ([nodeKey]) => String(nodeKey || '').trim().toLowerCase() === signerKeyLower,
     );
@@ -268,52 +421,41 @@ export function useSpCoinAccessController() {
     const versionNode = (signerNode as Record<string, unknown>)[versionKey];
     if (!versionNode || typeof versionNode !== 'object') return false;
     return Object.keys(versionNode as Record<string, unknown>).some(
-      (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === publicKeyUpper,
+      (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === contractAddressUpper,
     );
-  }, [deploymentAccountPrivateKey, deploymentChainId, deploymentPublicKey, deploymentVersion]);
+  }, [deployedContractAddress, deploymentAccountPrivateKey, deploymentChainId, deploymentSignerSource, deploymentVersion]);
   const deployDisableReason = useMemo(() => {
+    if (deploymentSignerSource === 'metamask' && !selectedDeploymentSignerPublicKey) {
+      return 'METAMASK_NOT_CONNECTED';
+    }
     if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
     if (deployUiState === 'deployed') return 'DEPLOYED';
-    if (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap) return 'DEPLOYED_IN_MAP';
+    if (existsInSpCoinDeploymentMap) return 'DEPLOYED_IN_MAP';
     return 'ENABLED';
-  }, [deployUiState, deploymentMode, existsInSpCoinDeploymentMap]);
+  }, [deployUiState, existsInSpCoinDeploymentMap, deploymentSignerSource, selectedDeploymentSignerPublicKey]);
   const deployButtonLabel =
     deployUiState === 'in_progress'
       ? 'Deployment In Progress'
-      : deployUiState === 'deployed' || (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap)
+      : deployUiState === 'deployed' || existsInSpCoinDeploymentMap
       ? 'Deployed'
       : 'Deploy';
-  const isDeployedState =
-    deployUiState === 'deployed' || (deploymentMode === 'blockcain' && existsInSpCoinDeploymentMap);
-  const deploymentPublicKeyDisplay = isDeployedState ? deploymentPublicKey : '';
+  const isDeployedState = deployUiState === 'deployed' || existsInSpCoinDeploymentMap;
+  const deployedContractAddressDisplay = isDeployedState ? deployedContractAddress : '';
   const deploymentGuidanceMessage = useMemo(() => {
-    const publicKey = String(deploymentPublicKey || '').trim() || '(pending)';
+    const contractAddress = String(deployedContractAddress || '').trim() || '(pending)';
     const deployLine =
       deployDisableReason === 'ENABLED'
         ? 'Deploy: ENABLED'
         : `Deploy: DISABLED (${deployDisableReason})`;
     const updateServerLine = 'Update Server: AUTO (runs after successful deploy)';
-    if (deploymentMode === 'mocked') {
-      return [
-        'Status: READY',
-        `Mocked Deployment: "${deploymentTokenName}" is ready for deployment.`,
-        `Contract Public Key: ${publicKey}`,
-        `Contract Name: ${deploymentTokenName}`,
-        `Network: ${deploymentChainName} (${deploymentChainId})`,
-        `Token Status: ${deploymentTokenStatus}`,
-        `Deployment Map Match: ${existsInSpCoinDeploymentMap ? 'YES' : 'NO'}`,
-        deployLine,
-        updateServerLine,
-        '',
-        'Set toggle radio button to Blockchain for real deployment execution',
-      ].join('\n');
-    }
     return [
       'Status: READY',
       `Blockchain Deployment: "${deploymentTokenName}" is ready for deployment.`,
-      `Contract Public Key: ${publicKey}`,
+      `Contract Address: ${contractAddress}`,
       `Contract Name: ${deploymentTokenName}`,
       `Network: ${deploymentChainName} (${deploymentChainId})`,
+      `Signer Source: ${deploymentSignerSource === 'metamask' ? 'MetaMask' : 'Hardhat Ec2-BASE'}`,
+      `Signer Address: ${selectedDeploymentSignerPublicKey || '(pending)'}`,
       `Token Status: ${deploymentTokenStatus}`,
       `Deployment Map Match: ${existsInSpCoinDeploymentMap ? 'YES' : 'NO'}`,
       deployLine,
@@ -324,16 +466,16 @@ export function useSpCoinAccessController() {
   }, [
     deploymentChainId,
     deploymentChainName,
-    deploymentMode,
-    deploymentPublicKey,
-    deploymentPublicKeyDisplay,
+    deployedContractAddress,
+    deployedContractAddressDisplay,
+    deploymentSignerSource,
     deploymentTokenStatus,
     deploymentTokenName,
     deployDisableReason,
     existsInSpCoinDeploymentMap,
+    selectedDeploymentSignerPublicKey,
   ]);
-  const deploymentPathDisplayValue =
-    deploymentMode === 'mocked' ? 'Mocking Deployment' : localSourceDeploymentPath;
+  const deploymentPathDisplayValue = localSourceDeploymentPath;
   const selectedVersion = useMemo(() => {
     const trimmed = versionInput.trim();
     if (!trimmed) return managerSettings.selectedVersion || '0.0.1';
@@ -362,12 +504,191 @@ export function useSpCoinAccessController() {
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
-    if (!isValidPrivateKey) {
+    if (deploymentSignerSource === 'ec2-base' && !isValidPrivateKey) {
       setDeploymentStatus(normalizedPrivateKey ? '*Error: Invalid Account Private Key' : '*Error: Account Private Key is required for Deployment.');
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
       setDeployUiState('idle');
       return;
+    }
+
+    if (deploymentSignerSource === 'metamask') {
+      const desiredMetaMaskAddress = String(selectedDeploymentSignerPublicKey || '').trim().toLowerCase();
+      let activeMetaMaskAddress = String(connectedWalletAddress || '').trim();
+      let activeEthersSigner: Signer | null = ethersSigner ?? null;
+
+      const resolveMetaMaskSigner = async (): Promise<{ signer: Signer; address: string } | null> => {
+        if (typeof window === 'undefined') return null;
+        const ethereum = (window as Window & { ethereum?: { request?: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
+        if (!ethereum?.request) return null;
+
+        try {
+          await ethereum.request({ method: 'eth_requestAccounts' });
+          if (desiredMetaMaskAddress) {
+            try {
+              await ethereum.request({
+                method: 'wallet_requestPermissions',
+                params: [{ eth_accounts: {} }],
+              });
+            } catch {
+              // If MetaMask declines the account-picker prompt we still re-check the active signer below.
+            }
+          }
+          const provider = new BrowserProvider(ethereum as any);
+          const signer = await provider.getSigner();
+          const address = String(await signer.getAddress()).trim();
+          return address ? { signer, address } : null;
+        } catch {
+          return null;
+        }
+      };
+
+      if (
+        !isWalletConnected ||
+        !activeMetaMaskAddress ||
+        !activeEthersSigner ||
+        (desiredMetaMaskAddress && activeMetaMaskAddress.toLowerCase() !== desiredMetaMaskAddress)
+      ) {
+        setDeploymentStatus('Requesting MetaMask account access...');
+        const resolvedMetaMaskSigner = await resolveMetaMaskSigner();
+        if (resolvedMetaMaskSigner) {
+          activeMetaMaskAddress = resolvedMetaMaskSigner.address;
+          activeEthersSigner = resolvedMetaMaskSigner.signer;
+          if (!String(deploymentSignerPublicKeyInput || '').trim()) {
+            setDeploymentSignerPublicKeyInput(resolvedMetaMaskSigner.address);
+          }
+        }
+      }
+
+      if (!activeMetaMaskAddress || !activeEthersSigner) {
+        setDeploymentStatus('*Error: Connect MetaMask before deploying.');
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        setDeployUiState('idle');
+        return;
+      }
+      if (desiredMetaMaskAddress && desiredMetaMaskAddress !== activeMetaMaskAddress.toLowerCase()) {
+        setDeploymentStatus('*Error: Switch MetaMask to the deployment account address, then deploy again.');
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        setDeployUiState('idle');
+        return;
+      }
+
+      setDeployUiState('in_progress');
+      setDeploymentStatusIsError(false);
+      setDeploymentFlashError(false);
+      setDeploymentStatus('Preparing MetaMask deployment...');
+      try {
+        const prepareResponse = await fetch('/api/spCoin/access-manager', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'prepareDeploy',
+            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+          }),
+        });
+        const prepareData = await parseManagerResponse(prepareResponse);
+        if (
+          !prepareResponse.ok ||
+          !prepareData.ok ||
+          !Array.isArray(prepareData.deploymentAbi) ||
+          !prepareData.deploymentBytecode
+        ) {
+          setDeploymentStatus(`*Error: ${prepareData.message || 'Failed to prepare MetaMask deployment.'}`);
+          setDeploymentStatusIsError(true);
+          setDeploymentFlashError(true);
+          setDeployUiState('idle');
+          return;
+        }
+
+        setDeploymentStatus('Awaiting MetaMask approval...');
+        const factory = new ContractFactory(
+          prepareData.deploymentAbi as any[],
+          String(prepareData.deploymentBytecode),
+          activeEthersSigner,
+        );
+        const contract = await factory.deploy();
+        const deploymentTx = contract.deploymentTransaction();
+        if (!deploymentTx) {
+          throw new Error('Deployment transaction was not created.');
+        }
+        const receipt = await deploymentTx.wait();
+        const contractPublicKey = String(await contract.getAddress());
+        setDeployedContractAddress(contractPublicKey);
+
+        const registerResponse = await fetch('/api/spCoin/access-manager', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'registerDeployment',
+            deploymentName: normalizedName,
+            deploymentVersion: normalizedVersion,
+            deploymentSymbol: normalizedSymbol,
+            deploymentDecimals: normalizedDecimals,
+            deploymentPublicKey: contractPublicKey,
+            deploymentSignerPublicKey: activeMetaMaskAddress,
+            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+          }),
+        });
+        const registerData = await parseManagerResponse(registerResponse);
+        if (!registerResponse.ok || !registerData.ok) {
+          setDeploymentStatus(`*Error: Contract deployed, but registration failed: ${registerData.message || 'Unknown deployment registration failure.'}`);
+          setDeploymentStatusIsError(true);
+          setDeploymentFlashError(true);
+          setDeployUiState('idle');
+          return;
+        }
+
+        setDeploymentStatus('Deployment complete. Updating server assets...');
+        const updateResponse = await fetch('/api/spCoin/access-manager', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateServer',
+            deploymentName: normalizedName,
+            deploymentVersion: normalizedVersion,
+            deploymentSymbol: normalizedSymbol,
+            deploymentDecimals: normalizedDecimals,
+            deploymentLogoPath,
+            deploymentPublicKey: contractPublicKey,
+            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+          }),
+        });
+        const updateData = await parseManagerResponse(updateResponse);
+        if (!updateResponse.ok || !updateData.ok) {
+          setDeploymentStatus(`*Error: Deploy succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`);
+          setDeploymentStatusIsError(true);
+          setDeploymentFlashError(true);
+          setDeployUiState('idle');
+          return;
+        }
+
+        setDeploymentStatus(
+          [
+            `Status: ${String(receipt?.status ?? 'success')}`,
+            `Deployment: Contract "${deploymentContractName}" deployed via MetaMask.`,
+            String(registerData.message || 'Deployment registered.'),
+            '',
+            String(updateData.message || 'Server update completed.'),
+            '',
+            `Contract Address: ${contractPublicKey || '(not returned)'}`,
+            `Signer Address: ${selectedDeploymentSignerPublicKey}`,
+            `Network: ${prepareData.deploymentNetworkName || deploymentChainName}`,
+            `Transaction Hash: ${String(receipt?.hash || deploymentTx.hash || '(unknown)')}`,
+          ].join('\n'),
+        );
+        await refreshDeploymentTokenStatus();
+        setDeployUiState('deployed');
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown MetaMask deployment failure';
+        setDeploymentStatus(`*Error: ${message}`);
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        setDeployUiState('idle');
+        return;
+      }
     }
 
     setDeployUiState('in_progress');
@@ -386,11 +707,10 @@ export function useSpCoinAccessController() {
           deploymentVersion: normalizedVersion,
           deploymentAccountPrivateKey: normalizedPrivateKey,
           hardhatDeploymentAccountNumber,
-          deploymentMode,
           deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
         }),
       });
-      const data = (await response.json()) as ManagerResponse;
+      const data = await parseManagerResponse(response);
       if (!response.ok || !data.ok) {
         setDeploymentStatus(`*Error: Status ${response.status}: ${data.message || 'Deployment request failed.'}`);
         setDeploymentStatusIsError(true);
@@ -402,22 +722,7 @@ export function useSpCoinAccessController() {
       const statusMessage =
         data.message ||
         `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`;
-      setDeploymentPublicKey(contractPublicKey);
-      if (deploymentMode === 'mocked') {
-        setDeploymentStatus(
-          [
-            `Status: ${response.status}`,
-            `Deployment: ${statusMessage}`,
-            `Contract Public Key: ${contractPublicKey || '(not returned)'}`,
-            `Contract Name: ${deploymentContractName}`,
-            `Network: ${deploymentChainName}`,
-            '',
-            'Mocked mode: server update skipped.',
-          ].join('\n'),
-        );
-        setDeployUiState('idle');
-        return;
-      }
+      setDeployedContractAddress(contractPublicKey);
       setDeploymentStatus('Deployment complete. Updating server assets...');
       const updateResponse = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
@@ -431,11 +736,10 @@ export function useSpCoinAccessController() {
           deploymentLogoPath,
           deploymentPublicKey: contractPublicKey,
           hardhatDeploymentAccountNumber,
-          deploymentMode,
           deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
         }),
       });
-      const updateData = (await updateResponse.json()) as ManagerResponse;
+      const updateData = await parseManagerResponse(updateResponse);
       if (!updateResponse.ok || !updateData.ok) {
         setDeploymentStatus(`*Error: Deploy succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`);
         setDeploymentStatusIsError(true);
@@ -450,7 +754,7 @@ export function useSpCoinAccessController() {
           '',
           String(updateData.message || 'Server update completed.'),
           '',
-          `Contract Public Key: ${contractPublicKey || '(not returned)'}`,
+          `Contract Address: ${contractPublicKey || '(not returned)'}`,
           `Contract Name: ${deploymentContractName}`,
           `Network: ${deploymentChainName}`,
         ].join('\n'),
@@ -481,10 +785,11 @@ export function useSpCoinAccessController() {
   };
 
   const handleDeploymentVersionInputChange = (nextValue: string) => {
-    const trimmed = String(nextValue || '').trim();
+    const sanitized = sanitizeVersionInput(nextValue);
+    const trimmed = String(sanitized || '').trim();
+    setDeploymentVersion(sanitized);
     if (!trimmed) {
       setDeploymentStatusIsError(false);
-      setDeploymentVersion('');
       return;
     }
     if (!VERSION_FORMAT_REGEX.test(trimmed)) {
@@ -493,7 +798,6 @@ export function useSpCoinAccessController() {
       return;
     }
     setDeploymentStatusIsError(false);
-    setDeploymentVersion(trimmed);
   };
 
   const persistManagerSettings = (next: { useLocalPackage: boolean; selectedVersion: string; selectedPackage: string }) => {
@@ -553,9 +857,9 @@ export function useSpCoinAccessController() {
         if (byPrivateKey) return byPrivateKey;
         return undefined;
       }
-      const currentPublicKeyUpper = String(deploymentPublicKey || '').trim().toUpperCase();
+      const currentContractAddressUpper = String(deployedContractAddress || '').trim().toUpperCase();
       const byPublicKey = deploymentMapEntries.find(
-        (entry) => String(entry.publicKey || '').trim().toUpperCase() === currentPublicKeyUpper,
+        (entry) => String(entry.publicKey || '').trim().toUpperCase() === currentContractAddressUpper,
       );
       if (byPublicKey) return byPublicKey;
       return deploymentMapEntries[0];
@@ -575,8 +879,8 @@ export function useSpCoinAccessController() {
     if (deploymentName !== nextName) setDeploymentName(nextName);
     if (deploymentSymbol !== nextSymbol) setDeploymentSymbol(nextSymbol);
     if (deploymentDecimals !== nextDecimals) setDeploymentDecimals(nextDecimals);
-    if (nextPublicKey && deploymentPublicKey !== nextPublicKey) setDeploymentPublicKey(nextPublicKey);
-    if (resolvedPrivateKey && deploymentAccountPrivateKey !== resolvedPrivateKey) {
+    if (nextPublicKey && deployedContractAddress !== nextPublicKey) setDeployedContractAddress(nextPublicKey);
+    if (deploymentSignerSource !== 'metamask' && resolvedPrivateKey && deploymentAccountPrivateKey !== resolvedPrivateKey) {
       setDeploymentAccountPrivateKey(resolvedPrivateKey);
     }
   }, [
@@ -585,7 +889,8 @@ export function useSpCoinAccessController() {
     deploymentDecimals,
     deploymentMapEntries,
     deploymentName,
-    deploymentPublicKey,
+    deployedContractAddress,
+    deploymentSignerSource,
     deploymentSymbol,
     deploymentVersion,
     hardhatDeploymentAccountNumber,
@@ -594,7 +899,7 @@ export function useSpCoinAccessController() {
   ]);
   useEffect(() => {
     setDeployUiState('idle');
-  }, [deploymentMode, deploymentVersion, hardhatDeploymentAccountNumber]);
+  }, [deploymentSignerSource, deploymentVersion, hardhatDeploymentAccountNumber]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -614,6 +919,8 @@ export function useSpCoinAccessController() {
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
       setDeploymentDecimals(persisted.deploymentDecimals || '18');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
+      setDeploymentSignerSource(persisted.deploymentSignerSource === 'metamask' ? 'metamask' : 'ec2-base');
+      setDeploymentSignerPublicKeyInput(String(persisted.deploymentSignerPublicKeyInput || '').trim());
       setHardhatDeploymentAccountNumber(
         Number.isInteger(persisted.hardhatDeploymentAccountNumber) &&
           Number(persisted.hardhatDeploymentAccountNumber) >= 0 &&
@@ -622,8 +929,7 @@ export function useSpCoinAccessController() {
           : 0,
       );
       setDeploymentAccountPrivateKey(persisted.deploymentAccountPrivateKey || '');
-      setDeploymentPublicKey(persisted.deploymentPublicKey || '');
-      setDeploymentMode(persisted.deploymentMode || 'mocked');
+      setDeployedContractAddress(persisted.deployedContractAddress || persisted.deploymentPublicKey || '');
       setLocalSourceDeploymentPath(persisted.localSourceDeploymentPath || DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
     } finally {
       hasHydratedStorageRef.current = true;
@@ -635,7 +941,7 @@ export function useSpCoinAccessController() {
     const loadPackages = async () => {
       try {
         const response = await fetch('/api/spCoin/access-manager', { method: 'GET' });
-        const data = (await response.json()) as ManagerResponse;
+        const data = await parseManagerResponse(response);
         const packages = Array.isArray(data.packages) ? data.packages : [];
         if (!active) return;
         setAvailablePackages(packages);
@@ -662,7 +968,7 @@ export function useSpCoinAccessController() {
       try {
         const params = new URLSearchParams({ packageName: selectedPackage, version: selectedVersion });
         const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
-        const data = (await response.json()) as ManagerResponse;
+        const data = await parseManagerResponse(response);
         if (!active) return;
         if (data.version) setResolvedNpmVersion(String(data.version).trim());
         if (typeof data.localVersion === 'string') setLocalPackageVersion(String(data.localVersion).trim());
@@ -687,6 +993,12 @@ export function useSpCoinAccessController() {
   }, [flashTarget]);
 
   useEffect(() => {
+    if (deploymentSignerSource === 'metamask') {
+      setDeploymentStatusIsError(false);
+      setDeploymentFlashError(false);
+      setDeploymentStatus(deploymentGuidanceMessage);
+      return;
+    }
     const keyValidationMessage = getDeploymentKeyValidationMessage(deploymentAccountPrivateKey);
     if (keyValidationMessage) {
       setDeploymentStatusIsError(true);
@@ -697,14 +1009,14 @@ export function useSpCoinAccessController() {
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
     setDeploymentStatus(deploymentGuidanceMessage);
-  }, [deploymentGuidanceMessage]);
+  }, [deploymentAccountPrivateKey, deploymentGuidanceMessage, deploymentSignerSource]);
 
   useEffect(() => {
     let active = true;
     const checkDeploymentContractDir = async () => {
-      const key = String(deploymentPublicKey || '').trim();
+      const key = String(deployedContractAddress || '').trim();
       const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
-      if (deploymentMode !== 'blockcain' || !/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
+      if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
         if (active) {
           setDeploymentContractDirExists(false);
           setDeploymentTokenStatus('NOT_FOUND');
@@ -717,7 +1029,7 @@ export function useSpCoinAccessController() {
           deploymentChainId: String(chainId || 0),
         });
         const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
-        const data = (await response.json()) as ManagerResponse;
+        const data = await parseManagerResponse(response);
         if (!active) return;
         const status =
           response.ok && data.ok && data.tokenStatus ? data.tokenStatus : 'NOT_FOUND';
@@ -733,7 +1045,7 @@ export function useSpCoinAccessController() {
     return () => {
       active = false;
     };
-  }, [deploymentMode, deploymentPublicKey, rawDeploymentChainId]);
+  }, [deployedContractAddress, rawDeploymentChainId]);
 
   useEffect(() => {
     if (!hasHydratedStorageRef.current || typeof window === 'undefined') return;
@@ -746,20 +1058,22 @@ export function useSpCoinAccessController() {
       deploymentSymbol,
       deploymentDecimals,
       deploymentVersion,
+      deploymentSignerSource,
+      deploymentSignerPublicKeyInput,
       hardhatDeploymentAccountNumber,
       deploymentAccountPrivateKey,
-      deploymentPublicKey,
-      deploymentMode,
+      deployedContractAddress,
       localSourceDeploymentPath,
     };
     window.localStorage.setItem(SPCOIN_ACCESS_STORAGE_KEY, JSON.stringify(persisted));
   }, [
     deploymentAccountPrivateKey,
-    deploymentMode,
     deploymentName,
     deploymentSymbol,
     deploymentDecimals,
-    deploymentPublicKey,
+    deployedContractAddress,
+    deploymentSignerSource,
+    deploymentSignerPublicKeyInput,
     localSourceDeploymentPath,
     deploymentVersion,
     hardhatDeploymentAccountNumber,
@@ -828,7 +1142,7 @@ export function useSpCoinAccessController() {
           otp: action === 'upload' ? normalizedOtp : '',
         }),
       });
-      const data = (await response.json()) as ManagerResponse;
+      const data = await parseManagerResponse(response);
       if (data.version) applyResolvedVersion(data.version);
       if (data.version) setResolvedNpmVersion(String(data.version).trim());
       if (typeof data.localVersion === 'string') setLocalPackageVersion(String(data.localVersion).trim());
@@ -845,11 +1159,13 @@ export function useSpCoinAccessController() {
   };
 
   const handleDeploymentPrivateKeyChange = (nextValue: string) => {
+    if (deploymentSignerSource === 'metamask') return;
     setDeploymentAccountPrivateKey(nextValue);
-    setDeploymentPublicKey('');
+    setDeployedContractAddress('');
     setDeployUiState('idle');
   };
   const handleDeploymentPrivateKeyBlur = () => {
+    if (deploymentSignerSource === 'metamask') return;
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     setDeploymentAccountPrivateKey(normalizedPrivateKey);
     const keyValidationMessage = getDeploymentKeyValidationMessage(normalizedPrivateKey);
@@ -897,23 +1213,31 @@ export function useSpCoinAccessController() {
     flashTarget,
     selectedVersion,
     status,
-    deploymentMode,
     deploymentName,
     deploymentSymbol,
     deploymentDecimals,
     deploymentVersion,
+    deploymentSignerSource,
     hardhatDeploymentAccountNumber,
+    selectedSignerAddress: selectedDeploymentSignerPublicKey,
+    showDeploymentAccountDetails,
+    setShowDeploymentAccountDetails,
+    deploymentAccountMetadata,
+    showDeployedSignerDetails,
+    setShowDeployedSignerDetails,
+    deployedSignerAddress,
+    deployedSignerMetadata,
     canIncrementHardhatDeploymentAccountNumber,
     canDecrementHardhatDeploymentAccountNumber,
     deploymentChainName,
     deploymentChainId,
     deploymentPathDisplayValue,
     deploymentFlashError,
-    deploymentAccountPrivateKey,
+    deploymentPrivateKey: deploymentAccountPrivateKey,
     deploymentKeyRequiredMessage,
     deploymentVersionPrefix,
-    deploymentPublicKey,
-    deploymentPublicKeyDisplay,
+    deployedContractAddress,
+    deployedContractAddressDisplay,
     deploymentLogoPath,
     deploymentStatus,
     deploymentStatusIsError,
@@ -930,7 +1254,8 @@ export function useSpCoinAccessController() {
     handleVersionPersist,
     adjustVersion,
     runManagerAction,
-    setDeploymentMode,
+    setDeploymentSignerSource,
+    setDeploymentSignerAddressInput: setDeploymentSignerPublicKeyInput,
     handleDeploymentDecimalsInputChange,
     adjustDeploymentDecimals,
     handleDeploymentVersionInputChange,
