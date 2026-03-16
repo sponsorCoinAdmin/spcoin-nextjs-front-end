@@ -104,6 +104,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onDeploymentPrivateKeyBlur,
   } = props;
   const isDeployDisabled = deployDisableReason !== 'ENABLED';
+  const isDeploymentInProgress = deployDisableReason === 'DEPLOYMENT_IN_PROGRESS';
   const signerPublicKeyPlaceholder =
     deploymentSignerSource === 'metamask'
       ? 'Connected MetaMask wallet address'
@@ -176,6 +177,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                     name="deployment-signer-source"
                     value="ec2-base"
                     checked={deploymentSignerSource === 'ec2-base'}
+                    disabled={isDeploymentInProgress}
                     onChange={() => onSetDeploymentSignerSource('ec2-base')}
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                   />
@@ -187,6 +189,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                     name="deployment-signer-source"
                     value="metamask"
                     checked={deploymentSignerSource === 'metamask'}
+                    disabled={isDeploymentInProgress}
                     onChange={() => onSetDeploymentSignerSource('metamask')}
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                   />
@@ -215,12 +218,14 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                       inputMode="numeric"
                       maxLength={3}
                       value={deploymentDecimals}
+                      disabled={isDeploymentInProgress}
                       onChange={(event) => onDeploymentDecimalsChange(event.target.value)}
                       className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
-                    <div className="flex w-[44px] flex-col">
+                    <div className="flex w-[26px] flex-col">
                       <button
                         type="button"
+                        disabled={isDeploymentInProgress}
                         onClick={() => onAdjustDeploymentDecimals(1)}
                         className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                         title="Increment Decimals"
@@ -229,6 +234,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                       </button>
                       <button
                         type="button"
+                        disabled={isDeploymentInProgress}
                         onClick={() => onAdjustDeploymentDecimals(-1)}
                         className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                         title="Decrement Decimals"
@@ -247,13 +253,15 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                       inputMode="decimal"
                       maxLength={8}
                       value={deploymentVersion}
+                      disabled={isDeploymentInProgress}
                       onChange={(event) => onDeploymentVersionChange(event.target.value)}
                       placeholder="Add optional Version"
                       className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                     />
-                    <div className="flex w-[44px] flex-col">
+                    <div className="flex w-[26px] flex-col">
                       <button
                         type="button"
+                        disabled={isDeploymentInProgress}
                         onClick={() => onAdjustDeploymentVersion(1)}
                         className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                         title="Increment Contract Version"
@@ -262,6 +270,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                       </button>
                       <button
                         type="button"
+                        disabled={isDeploymentInProgress}
                         onClick={() => onAdjustDeploymentVersion(-1)}
                         className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
                         title="Decrement Contract Version"
@@ -280,6 +289,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                 <input
                   type="text"
                   value={deploymentPathDisplayValue}
+                  disabled={isDeploymentInProgress}
                   onChange={(event) => onLocalSourceDeploymentPathChange(event.target.value)}
                   className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                   title="Enter local source deployment path"
@@ -294,6 +304,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   <div className="flex items-stretch">
                     <select
                       value={hardhatDeploymentAccountNumber}
+                      disabled={isDeploymentInProgress}
                       onChange={(event) => onHardhatDeploymentAccountNumberChange(event.target.value)}
                       className="w-[6ch] min-w-[6ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-right text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
                       aria-label="Hardhat Deployment Account Number"
@@ -305,14 +316,15 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                         </option>
                       ))}
                     </select>
-                    <div className="flex w-[38px] flex-col">
+                    <div className="flex w-[23px] flex-col">
                       <button
                         type="button"
                         onClick={() => {
                           if (canIncrementHardhatDeploymentAccountNumber) onAdjustHardhatDeploymentAccountNumber(1);
                         }}
+                        disabled={isDeploymentInProgress || !canIncrementHardhatDeploymentAccountNumber}
                         className={`h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
-                          canIncrementHardhatDeploymentAccountNumber
+                          !isDeploymentInProgress && canIncrementHardhatDeploymentAccountNumber
                             ? 'cursor-pointer hover:bg-green-500'
                             : 'cursor-not-allowed hover:bg-red-500'
                         }`}
@@ -326,8 +338,9 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                         onClick={() => {
                           if (canDecrementHardhatDeploymentAccountNumber) onAdjustHardhatDeploymentAccountNumber(-1);
                         }}
+                        disabled={isDeploymentInProgress || !canDecrementHardhatDeploymentAccountNumber}
                         className={`h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-sm font-bold leading-none text-[#8FA8FF] transition-colors hover:text-black ${
-                          canDecrementHardhatDeploymentAccountNumber
+                          !isDeploymentInProgress && canDecrementHardhatDeploymentAccountNumber
                             ? 'cursor-pointer hover:bg-green-500'
                             : 'cursor-not-allowed hover:bg-red-500'
                         }`}
@@ -350,6 +363,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <button
                   type="button"
+                  disabled={isDeploymentInProgress}
                   onClick={onToggleDeploymentAccountDetails}
                   className={accountInfoLabelClassName}
                   title="Toggle deployment account details"
@@ -360,7 +374,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   type="text"
                   value={selectedSignerAddress}
                   onChange={(event) => onDeploymentSignerAddressChange(event.target.value)}
-                  readOnly={deploymentSignerSource !== 'metamask'}
+                  readOnly={deploymentSignerSource !== 'metamask' || isDeploymentInProgress}
                   placeholder={signerPublicKeyPlaceholder}
                   className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none transition-colors focus:border-[#8FA8FF]"
                 />
@@ -400,6 +414,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                       <input
                         type="text"
                         value={deploymentPrivateKey}
+                        disabled={isDeploymentInProgress}
                         onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
                         onBlur={onDeploymentPrivateKeyBlur}
                         placeholder={privateKeyPlaceholder}
@@ -418,6 +433,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   <input
                     type="text"
                     value={deploymentPrivateKey}
+                    disabled={isDeploymentInProgress}
                     onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
                     onBlur={onDeploymentPrivateKeyBlur}
                     placeholder={privateKeyPlaceholder}
@@ -500,6 +516,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <button
                   type="button"
+                  disabled={isDeploymentInProgress}
                   onClick={onToggleDeployedSignerDetails}
                   className={accountInfoLabelClassName}
                   title={`Toggle ${deployedSignerFieldLabel.toLowerCase()} details`}

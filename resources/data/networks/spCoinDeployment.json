@@ -115,6 +115,25 @@
             "decimals": 18
           }
         }
+      },
+      "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba": {
+        "55555": {
+          "0X3236CC6811EF0CB4F562B9692344ABFA810984FE": {
+            "name": "Sponsor Coin V55555",
+            "symbol": "SPCOIN_V55555",
+            "decimals": 18
+          }
+        }
+      },
+      "0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a": {
+        "4444": {
+          "0X57DD10AAC7353707836BDB59602DE3D3F9C9F3B1": {
+            "deployer": "0X15D34AAF54267DB7D7C367839AAF71A00A2C6A65",
+            "name": "Sponsor Coin V4444",
+            "symbol": "SPCOIN_V4444",
+            "decimals": 18
+          }
+        }
       }
     }
   }

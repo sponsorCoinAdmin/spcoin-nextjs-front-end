@@ -50,7 +50,7 @@ export default function SpCoinAccessControllerPage() {
                 versionInput={controller.versionInput}
                 activeAction={controller.activeAction}
                 uploadBlocked={controller.uploadBlocked}
-                localPackageVersion={controller.localPackageVersion}
+                activeDownloadedVersion={controller.activeDownloadedVersion}
                 downloadBlocked={controller.downloadBlocked}
                 flashTarget={controller.flashTarget}
                 selectedVersion={controller.selectedVersion}

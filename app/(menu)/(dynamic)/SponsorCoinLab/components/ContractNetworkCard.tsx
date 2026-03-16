@@ -97,7 +97,7 @@ export default function ContractNetworkCard({
                   </option>
                 ))}
               </select>
-              <div className="flex w-[38px] flex-col">
+              <div className="flex w-[23px] flex-col">
                 <button
                   type="button"
                   onClick={() => {

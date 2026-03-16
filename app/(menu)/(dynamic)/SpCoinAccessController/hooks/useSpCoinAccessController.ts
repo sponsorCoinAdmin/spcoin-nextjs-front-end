@@ -166,6 +166,7 @@ type ManagerResponse = {
   installSourceRoot?: string;
   version?: string;
   localVersion?: string;
+  downloadedVersion?: string;
   downloadBlocked?: boolean;
   uploadBlocked?: boolean;
   deploymentPublicKey?: string;
@@ -264,6 +265,7 @@ export function useSpCoinAccessController() {
   const [uploadBlocked, setUploadBlocked] = useState(true);
   const [resolvedNpmVersion, setResolvedNpmVersion] = useState(managerSettings.selectedVersion || '0.0.1');
   const [localPackageVersion, setLocalPackageVersion] = useState(managerSettings.selectedVersion || '0.0.1');
+  const [activeDownloadedVersion, setActiveDownloadedVersion] = useState('');
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
   const [deploymentFlashError, setDeploymentFlashError] = useState(false);
   const [deploymentStatusIsError, setDeploymentStatusIsError] = useState(false);
@@ -972,6 +974,9 @@ export function useSpCoinAccessController() {
         if (!active) return;
         if (data.version) setResolvedNpmVersion(String(data.version).trim());
         if (typeof data.localVersion === 'string') setLocalPackageVersion(String(data.localVersion).trim());
+        if (typeof data.downloadedVersion === 'string') {
+          setActiveDownloadedVersion(String(data.downloadedVersion).trim());
+        }
         setDownloadBlocked(Boolean(data.downloadBlocked));
         setUploadBlocked(Boolean(data.uploadBlocked));
       } catch {
@@ -1209,6 +1214,7 @@ export function useSpCoinAccessController() {
     uploadBlocked,
     resolvedNpmVersion,
     localPackageVersion,
+    activeDownloadedVersion,
     downloadBlocked,
     flashTarget,
     selectedVersion,

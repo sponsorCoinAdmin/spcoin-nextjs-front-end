@@ -16,7 +16,7 @@ type NpmAccessPanelProps = {
   versionInput: string;
   activeAction: ActiveAction;
   uploadBlocked: boolean;
-  localPackageVersion: string;
+  activeDownloadedVersion: string;
   downloadBlocked: boolean;
   flashTarget: FlashTarget;
   selectedVersion: string;
@@ -44,7 +44,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
     versionInput,
     activeAction,
     uploadBlocked,
-    localPackageVersion,
+    activeDownloadedVersion,
     downloadBlocked,
     flashTarget,
     selectedVersion,
@@ -63,8 +63,8 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
   const hasValidAuthenticatorCode = npmOtp.trim().length === 6;
   const isActiveSelectedVersion =
     String(selectedVersion || '').trim().length > 0 &&
-    String(localPackageVersion || '').trim().length > 0 &&
-    String(selectedVersion || '').trim() === String(localPackageVersion || '').trim();
+    String(activeDownloadedVersion || '').trim().length > 0 &&
+    String(selectedVersion || '').trim() === String(activeDownloadedVersion || '').trim();
   const [isDownloadHovered, setIsDownloadHovered] = React.useState(false);
   const [isUploadHovered, setIsUploadHovered] = React.useState(false);
   const showDownloadActiveVersion = isDownloadHovered && isActiveSelectedVersion;
@@ -163,7 +163,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
                   placeholder="0.0.1"
                   className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                 />
-                <div className="flex w-[44px] flex-col">
+                <div className="flex w-[26px] flex-col">
                   <button
                     type="button"
                     onClick={() => onAdjustVersion(1)}

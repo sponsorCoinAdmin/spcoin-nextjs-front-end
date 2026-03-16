@@ -49,6 +49,7 @@ type AccessManagerResponse = {
   mode?: 'local' | 'node_modules';
   version?: string;
   localVersion?: string;
+  downloadedVersion?: string;
   localPackageVersion?: string;
   packageName?: string;
   installSourceRoot?: string;
@@ -427,6 +428,35 @@ async function writeLocalPackageVersion(packageName: string, nextVersion: string
   await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf8');
 }
 
+async function shouldPublishPackageWithoutScripts(workspaceDir: string) {
+  const packageJsonPath = path.join(workspaceDir, 'package.json');
+  const tsconfigPath = path.join(workspaceDir, 'tsconfig.json');
+  const distPath = path.join(workspaceDir, 'dist');
+
+  try {
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8')) as {
+      scripts?: { build?: string; prepack?: string };
+    };
+    const buildScript = String(packageJson?.scripts?.build || '').trim();
+    const prepackScript = String(packageJson?.scripts?.prepack || '').trim();
+    const tsconfigExists = await fs
+      .access(tsconfigPath)
+      .then(() => true)
+      .catch(() => false);
+    const distExists = await fs
+      .access(distPath)
+      .then(() => true)
+      .catch(() => false);
+
+    // Dist-only local package workflow:
+    // use the downloaded artifact as-is when build/prepack expects tsconfig
+    // but the extracted package only contains dist output.
+    return Boolean(distExists && !tsconfigExists && (buildScript || prepackScript));
+  } catch {
+    return false;
+  }
+}
+
 async function getPackageButtonState(packageName: string, requestedVersion: string) {
   assertSponsorcoinPackage(packageName);
 
@@ -438,7 +468,17 @@ async function getPackageButtonState(packageName: string, requestedVersion: stri
 
   const managerState = await loadManagerState();
   const packageState = managerState.packages[packageName] ?? {};
-  const downloadedVersion = String(packageState.downloadedVersion || '').trim();
+  const downloadedVersionRaw = String(packageState.downloadedVersion || '').trim();
+  const activeArchive = String(packageState.activeArchive || '').trim();
+  const activeArchivePath = activeArchive ? path.join(BACKUPS_ROOT, activeArchive) : '';
+  const activeArchiveExists =
+    !!activeArchivePath &&
+    (await fs
+      .access(activeArchivePath)
+      .then(() => true)
+      .catch(() => false));
+  const downloadedVersion =
+    activeArchiveExists && /\.tgz$/i.test(activeArchive) ? downloadedVersionRaw : '';
   const localVersion = await readLocalPackageVersion(packageName);
   const requestedVersionNormalized = String(requestedVersion || '').trim();
   const uploadTargetVersion =
@@ -452,6 +492,7 @@ async function getPackageButtonState(packageName: string, requestedVersion: stri
   return {
     resolvedVersion,
     localVersion,
+    downloadedVersion,
     downloadBlocked: archiveExists,
     uploadBlocked,
   };
@@ -589,7 +630,10 @@ async function handleUpload(packageName: string, requestedVersion: string, otp?:
   }
 
   await writeLocalPackageVersion(packageName, targetVersion);
-  const publishArgs = normalizedOtp ? ['publish', `--otp=${normalizedOtp}`] : ['publish'];
+  const publishWithoutScripts = await shouldPublishPackageWithoutScripts(workspaceDir);
+  const publishArgs = ['publish'];
+  if (normalizedOtp) publishArgs.push(`--otp=${normalizedOtp}`);
+  if (publishWithoutScripts) publishArgs.push('--ignore-scripts');
   const publishResult = await runCommand(NPM_CMD, publishArgs, workspaceDir);
 
   const activeArchive = String(packageState.activeArchive || '').trim();
@@ -614,7 +658,9 @@ async function handleUpload(packageName: string, requestedVersion: string, otp?:
 
   return {
     workspaceDir,
-    publishOutput: publishResult.stdout || publishResult.stderr || 'npm publish completed.',
+    publishOutput:
+      (publishResult.stdout || publishResult.stderr || 'npm publish completed.') +
+      (publishWithoutScripts ? '\nPublished using local dist artifact mode (--ignore-scripts).' : ''),
     resolvedVersion: targetVersion,
   };
 }
@@ -943,6 +989,7 @@ async function handleRegisterDeployment(params: {
   deploymentDecimals: number | string;
   deploymentVersion: string;
   deploymentPublicKey: string;
+  deployer?: string;
   deploymentSignerPublicKey?: string;
   deploymentChainId?: number | string;
 }) {
@@ -961,6 +1008,7 @@ async function handleRegisterDeployment(params: {
     name: String(params.deploymentName || '').trim() || 'Sponsor Coin',
     symbol: String(params.deploymentSymbol || '').trim() || 'SPCOIN',
     decimals,
+    deployer: String(params.deployer || params.deploymentSignerPublicKey || '').trim() || undefined,
     signerKey: String(params.deploymentSignerPublicKey || '').trim() || undefined,
   });
   return mapUpsert;
@@ -990,6 +1038,7 @@ async function upsertSpCoinDeploymentMap(params: {
   name: string;
   symbol: string;
   decimals: number;
+  deployer?: string;
   signerKey?: string;
 }) {
   const raw = await fs
@@ -1005,6 +1054,7 @@ async function upsertSpCoinDeploymentMap(params: {
   const chainIdKey = String(params.chainId);
   const versionKey = String(params.version || '').trim() || '0';
   const publicKeyUpper = String(params.publicKey || '').trim().toUpperCase();
+  const deployerUpper = String(params.deployer || '').trim().toUpperCase() || undefined;
   const normalizedPrivateKey =
     String(params.signerKey || '').trim().toLowerCase() || undefined;
 
@@ -1022,6 +1072,7 @@ async function upsertSpCoinDeploymentMap(params: {
     const exists = Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
     if (!exists) {
       versionNode[publicKeyUpper] = {
+        ...(deployerUpper ? { deployer: deployerUpper } : {}),
         name: params.name,
         symbol: params.symbol,
         decimals: params.decimals,
@@ -1037,6 +1088,7 @@ async function upsertSpCoinDeploymentMap(params: {
   const exists = Object.prototype.hasOwnProperty.call(versionNode, publicKeyUpper);
   if (!exists) {
     versionNode[publicKeyUpper] = {
+      ...(deployerUpper ? { deployer: deployerUpper } : {}),
       name: params.name,
       symbol: params.symbol,
       decimals: params.decimals,
@@ -1228,6 +1280,7 @@ export async function GET(request: Request) {
           packageName,
           version: state.resolvedVersion,
           localVersion: state.localVersion,
+          downloadedVersion: state.downloadedVersion,
           downloadBlocked: state.downloadBlocked,
           uploadBlocked: state.uploadBlocked,
         };
@@ -1318,6 +1371,7 @@ export async function POST(request: Request) {
           deploymentDecimals: body.deploymentDecimals ?? '18',
           deploymentVersion: String(body.deploymentVersion || '').trim(),
           deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+          deployer: String(body.deploymentSignerPublicKey || '').trim(),
           deploymentSignerPublicKey: String(body.deploymentSignerPublicKey || '').trim(),
           deploymentChainId: body.deploymentChainId,
         });
@@ -1423,6 +1477,7 @@ export async function POST(request: Request) {
           name: String(deploymentName || '').trim() || 'Sponsor Coin',
           symbol: deploymentSymbol,
           decimals: deploymentDecimals,
+          deployer: normalizedDeploymentSignerKey ? new Wallet(normalizedDeploymentSignerKey).address : undefined,
           signerKey: isMappedHardhatChain ? normalizedDeploymentSignerKey || undefined : undefined,
         });
         return NextResponse.json({
