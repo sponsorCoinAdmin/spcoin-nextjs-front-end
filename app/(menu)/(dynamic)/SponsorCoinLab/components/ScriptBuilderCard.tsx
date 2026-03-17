@@ -173,8 +173,8 @@ export default function ScriptBuilderCard({
             : 'Delete Script'}
         </button>
       </div>
-      <div className="mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-1.5 text-sm text-slate-200">
-        <div className="flex items-center justify-end gap-[0.05rem]">
+      <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-3 text-sm text-slate-200">
+        <div className="absolute right-3 top-2 flex items-center justify-end gap-[0.05rem]">
           <button
             type="button"
             className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
@@ -278,7 +278,7 @@ export default function ScriptBuilderCard({
             </svg>
           </button>
         </div>
-        <div className={`min-h-0 flex-1 overflow-auto pt-1 ${hiddenScrollbarClass}`}>
+        <div className={`min-h-0 flex-1 overflow-auto pr-24 ${hiddenScrollbarClass}`}>
           {!selectedScript ? (
             <div className="text-slate-400">(no script selected)</div>
           ) : selectedScript.steps.length === 0 ? (

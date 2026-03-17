@@ -5,15 +5,20 @@ import addAgent from './addAgent';
 import addAgents from './addAgents';
 import addAccountRecord from './addAccountRecord';
 import addAccountRecords from './addAccountRecords';
+import addSponsor from './addSponsor';
 import addSponsorship from './addSponsorship';
 import addAgentSponsorship from './addAgentSponsorship';
 import addBackDatedSponsorship from './addBackDatedSponsorship';
 import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
+import deleteAccountFromMaster from './deleteAccountFromMaster';
 import unSponsorRecipient from './unSponsorRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
 import deleteAgentRecord from './deleteAgentRecord';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
+import updateAgentAccountRewards from './updateAgentAccountRewards';
+import updateRecipietAccountRewards from './updateRecipietAccountRewards';
+import updateSponsorAccountRewards from './updateSponsorAccountRewards';
 import depositSponsorStakingRewards from './depositSponsorStakingRewards';
 import depositRecipientStakingRewards from './depositRecipientStakingRewards';
 import depositAgentStakingRewards from './depositAgentStakingRewards';
@@ -26,15 +31,20 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addAgents,
   addAccountRecord,
   addAccountRecords,
+  addSponsor,
   addSponsorship,
   addAgentSponsorship,
   addBackDatedSponsorship,
   addBackDatedAgentSponsorship,
+  deleteAccountFromMaster,
   unSponsorRecipient,
   deleteAccountRecord,
   deleteAccountRecords,
   deleteAgentRecord,
   updateAccountStakingRewards,
+  updateAgentAccountRewards,
+  updateRecipietAccountRewards,
+  updateSponsorAccountRewards,
   depositSponsorStakingRewards,
   depositRecipientStakingRewards,
   depositAgentStakingRewards,

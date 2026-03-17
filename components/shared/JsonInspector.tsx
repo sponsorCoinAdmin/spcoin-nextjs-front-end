@@ -9,6 +9,8 @@ interface JsonInspectorProps {
   updateCollapsedKeys: (next: string[]) => void;
   level?: number;
   path?: string;
+  rootLabel?: string;
+  label?: string;
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -17,6 +19,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   updateCollapsedKeys,
   level = 0,
   path = 'root',
+  rootLabel = 'Exchange Context',
+  label,
 }) => {
   const isCollapsed = collapsedKeys.includes(path ?? '');
 
@@ -24,7 +28,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     updateCollapsedKeys(
       isCollapsed
         ? collapsedKeys.filter((key) => key !== path)
-        : [...new Set([...collapsedKeys, path!])]
+        : [...new Set([...collapsedKeys, path!])],
     );
   }, [isCollapsed, collapsedKeys, updateCollapsedKeys, path]);
 
@@ -34,10 +38,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     return 'text-green-400';
   };
 
-  const getPathLabel = (path: string): string => {
-    if (path === 'root') return 'Exchange Context';
-    if (path === 'tradeData.slippage') return 'slippage';
-    return path;
+  const getPathLabel = (nextPath: string): string => {
+    if (label) return label;
+    if (nextPath === 'root') return rootLabel;
+    if (nextPath === 'tradeData.slippage') return 'slippage';
+    const segments = nextPath.split('.');
+    return segments[segments.length - 1] || nextPath;
   };
 
   const renderValue = (value: any, key: string) => {
@@ -50,29 +56,27 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           collapsedKeys={collapsedKeys}
           updateCollapsedKeys={updateCollapsedKeys}
           level={level + 1}
-          path={key} // ✅ render this subtree as key only
+          path={nextPath}
+          rootLabel={rootLabel}
+          label={key}
         />
       );
     }
 
     return (
-      <div key={nextPath} className="ml-4">
+      <div key={nextPath} className="ml-4 whitespace-nowrap">
         <span className="text-[#5981F3]">{key}</span>: <span className={getValueColor(value)}>{stringifyBigInt(value)}</span>
       </div>
     );
   };
 
   return (
-    <div className="ml-2">
-      <div className="cursor-pointer" onClick={toggle}>
-        <span className="text-green-400">{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className="text-white font-semibold">{getPathLabel(path ?? '')}</span>
+    <div className={`${level > 0 ? 'ml-2' : ''} font-mono leading-tight`}>
+      <div className="cursor-pointer whitespace-nowrap" onClick={toggle}>
+        <span className={isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>{' '}
+        <span className="font-semibold text-white">{getPathLabel(path ?? '')}</span>
       </div>
-      {!isCollapsed && (
-        <div className="ml-4">
-          {Object.entries(data).map(([key, value]) => renderValue(value, key))}
-        </div>
-      )}
+      {!isCollapsed && <div className="ml-4">{Object.entries(data).map(([key, value]) => renderValue(value, key))}</div>}
     </div>
   );
 };

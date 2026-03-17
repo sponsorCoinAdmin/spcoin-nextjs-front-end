@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ParamDef } from '../methods/shared/types';
 import {
   getErc20ReadLabels,
@@ -73,7 +73,9 @@ type Params = {
     labels: string[],
     message?: string,
     options?: {
+      title?: string;
       confirmLabel?: string;
+      cancelLabel?: string;
       onConfirm?: () => void | Promise<void>;
     },
   ) => void;
@@ -146,6 +148,11 @@ export function useSponsorCoinLabMethods({
   const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
   const [recipientRateKeyHelpText, setRecipientRateKeyHelpText] = useState('');
   const [agentRateKeyHelpText, setAgentRateKeyHelpText] = useState('');
+  const [treeAccountOptions, setTreeAccountOptions] = useState<string[]>([]);
+  const [selectedTreeAccount, setSelectedTreeAccount] = useState('');
+  const [treeAccountRefreshToken, setTreeAccountRefreshToken] = useState(0);
+  const treeAccountListCacheRef = useRef<string[] | null>(null);
+  const treeAccountRecordCacheRef = useRef<Map<string, unknown>>(new Map());
 
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
@@ -260,6 +267,28 @@ export function useSponsorCoinLabMethods({
     if (typeof result === 'string') return result;
     return JSON.stringify(result, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
   }, []);
+  const syncTreeAccountOptions = useCallback((list: string[]) => {
+    setTreeAccountOptions(list);
+    setSelectedTreeAccount((current) => {
+      if (current && list.includes(current)) return current;
+      return list[0] || '';
+    });
+    return list;
+  }, []);
+  const loadTreeAccountOptions = useCallback(async (options?: { force?: boolean }) => {
+    if (!options?.force && treeAccountListCacheRef.current) {
+      const cachedList = treeAccountListCacheRef.current;
+      syncTreeAccountOptions(cachedList);
+      return { list: cachedList };
+    }
+    const target = requireContractAddress();
+    const runner = await ensureReadRunner();
+    const access = createSpCoinLibraryAccess(target, runner);
+    const list = (await (access.read as any).getAccountList()) as string[];
+    treeAccountListCacheRef.current = list;
+    syncTreeAccountOptions(list);
+    return { list };
+  }, [ensureReadRunner, requireContractAddress, syncTreeAccountOptions]);
   const mergeFormattedOutput = useCallback(
     (nextBlock: string, baseOutput?: string) => {
       const current = String(baseOutput || '').trim();
@@ -268,16 +297,26 @@ export function useSponsorCoinLabMethods({
     },
     [],
   );
+  const formatFormattedPanelPayload = useCallback(
+    (payload: unknown) => {
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        return formatOutputDisplayValue(payload);
+      }
+      const nextPayload = { ...(payload as Record<string, unknown>) };
+      return formatOutputDisplayValue(nextPayload);
+    },
+    [formatOutputDisplayValue],
+  );
 
   const runHeaderRead = useCallback(async () => {
     const call = buildMethodCallEntry('getSerializedSPCoinHeader');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
+      setStatus('Reading SponsorCoin header...');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
-      setStatus('Reading SponsorCoin header...');
       const result = (await (access.contract as any).getSerializedSPCoinHeader()) as string;
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getSerializedSPCoinHeader -> ${result}`);
@@ -303,11 +342,8 @@ export function useSponsorCoinLabMethods({
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
-      const target = requireContractAddress();
-      const runner = await ensureReadRunner();
-      const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Reading account list...');
-      const list = (await (access.read as any).getAccountList()) as string[];
+      const { list } = await loadTreeAccountOptions();
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
       appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
@@ -321,37 +357,50 @@ export function useSponsorCoinLabMethods({
     appendLog,
     buildMethodCallEntry,
     ensureReadRunner,
+    loadTreeAccountOptions,
     requireContractAddress,
     setOutputPanelMode,
     setStatus,
     setTreeOutputDisplay,
   ]);
 
-  const runTreeDump = useCallback(async () => {
+  const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
     const listCall = buildMethodCallEntry('getAccountList');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
-      const target = requireContractAddress();
-      const runner = await ensureReadRunner();
-      const access = createSpCoinLibraryAccess(target, runner);
       setStatus('Building tree dump...');
-      const list = (await (access.read as any).getAccountList()) as string[];
+      const { list } = await loadTreeAccountOptions({ force: options?.force });
       if (list.length === 0) {
         setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
         appendLog('Tree dump skipped: no accounts available.');
         setStatus('Tree dump skipped (no accounts).');
         return;
       }
-      const first = list[0];
-      const tree = await (access.read as any).getAccountRecord(first);
+      const requestedAccount = String(accountOverride || '').trim();
+      const activeAccount =
+        requestedAccount && list.includes(requestedAccount)
+          ? requestedAccount
+          : list.includes(selectedTreeAccount)
+            ? selectedTreeAccount
+            : list[0];
+      setSelectedTreeAccount(activeAccount);
+      const treeCall = buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: activeAccount }]);
+      let tree = treeAccountRecordCacheRef.current.get(activeAccount);
+      if (!tree || options?.force) {
+        const target = requireContractAddress();
+        const runner = await ensureReadRunner();
+        const access = createSpCoinLibraryAccess(target, runner);
+        tree = await (access.read as any).getAccountRecord(activeAccount);
+        treeAccountRecordCacheRef.current.set(activeAccount, tree);
+      }
       setTreeOutputDisplay(
         formatOutputDisplayValue({
-          call: buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: first }]),
+          call: treeCall,
           result: tree,
         }),
       );
-      appendLog(`spCoinReadMethods/getAccountRecord(${first}) -> ${JSON.stringify(tree)}`);
+      appendLog(`spCoinReadMethods/getAccountRecord(${activeAccount}) -> ${JSON.stringify(tree)}`);
       setStatus('Tree dump complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
@@ -363,11 +412,85 @@ export function useSponsorCoinLabMethods({
     appendLog,
     buildMethodCallEntry,
     ensureReadRunner,
+    loadTreeAccountOptions,
+    requireContractAddress,
+    selectedTreeAccount,
+    setOutputPanelMode,
+    setStatus,
+    setTreeOutputDisplay,
+  ]);
+  const runTreeAccountsRead = useCallback(async () => {
+    const call = buildMethodCallEntry('getAccountRecords');
+    try {
+      setTreeOutputDisplay('(no tree yet)');
+      setOutputPanelMode('tree');
+      setStatus('Reading all tree accounts...');
+      const target = requireContractAddress();
+      const runner = await ensureReadRunner();
+      const access = createSpCoinLibraryAccess(target, runner);
+      const result = (await (access.read as any).getAccountRecords()) as unknown[];
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
+      appendLog(`spCoinReadMethods/getAccountRecords -> ${JSON.stringify(result)}`);
+      setStatus(`Tree accounts read complete (${result.length} account record(s)).`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown tree accounts read error.';
+      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setStatus(`Tree accounts read failed: ${message}`);
+      appendLog(`Tree accounts read failed: ${message}`);
+    }
+  }, [
+    appendLog,
+    buildMethodCallEntry,
+    ensureReadRunner,
     requireContractAddress,
     setOutputPanelMode,
     setStatus,
     setTreeOutputDisplay,
   ]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateTreeAccountOptions = async () => {
+      try {
+        const { list } = await loadTreeAccountOptions();
+        if (!cancelled) syncTreeAccountOptions(list);
+      } catch {
+        if (!cancelled) {
+          setTreeAccountOptions([]);
+          setSelectedTreeAccount('');
+        }
+      }
+    };
+
+    void hydrateTreeAccountOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadTreeAccountOptions, syncTreeAccountOptions]);
+
+  const refreshSelectedTreeAccount = useCallback(async () => {
+    const activeAccount = String(selectedTreeAccount || '').trim();
+    if (!activeAccount) {
+      setStatus('Refresh skipped: no active account selected.');
+      appendLog('Refresh skipped: no active account selected.');
+      return;
+    }
+
+    treeAccountListCacheRef.current = null;
+    treeAccountRecordCacheRef.current.delete(activeAccount);
+    setTreeAccountRefreshToken((prev) => prev + 1);
+    await runTreeDump(activeAccount, { force: true });
+  }, [appendLog, runTreeDump, selectedTreeAccount, setStatus]);
+
+  const requestRefreshSelectedTreeAccount = useCallback(() => {
+    showValidationPopup([], [], 'Reload Data Confirm', {
+      title: 'Reload Data Confirm',
+      confirmLabel: 'Reload Data',
+      cancelLabel: 'Reject',
+      onConfirm: () => refreshSelectedTreeAccount(),
+    });
+  }, [refreshSelectedTreeAccount, showValidationPopup]);
 
   const runSelectedWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
     if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {
@@ -405,10 +528,10 @@ export function useSponsorCoinLabMethods({
         appendLog,
         setStatus,
       });
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeWriteLabels.title} failed: ${message}`);
       appendLog(`${activeWriteLabels.title} failed: ${message}`);
     }
@@ -419,7 +542,7 @@ export function useSponsorCoinLabMethods({
     effectiveConnectedAddress,
     erc20WriteMissingEntries,
     executeWriteConnected,
-    formatOutputDisplayValue,
+    formatFormattedPanelPayload,
     mode,
     selectedHardhatAddress,
     selectedWriteMethod,
@@ -462,10 +585,10 @@ export function useSponsorCoinLabMethods({
         appendLog,
         setStatus,
       });
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeReadLabels.title} failed: ${message}`);
       appendLog(`${activeReadLabels.title} failed: ${message}`);
     }
@@ -475,7 +598,7 @@ export function useSponsorCoinLabMethods({
     buildMethodCallEntry,
     ensureReadRunner,
     erc20ReadMissingEntries,
-    formatOutputDisplayValue,
+    formatFormattedPanelPayload,
     readAddressA,
     readAddressB,
     requireContractAddress,
@@ -519,10 +642,10 @@ export function useSponsorCoinLabMethods({
         appendLog,
         setStatus,
       });
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin read error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeSpCoinReadDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinReadDef.title} failed: ${message}`);
     }
@@ -532,7 +655,7 @@ export function useSponsorCoinLabMethods({
     buildMethodCallEntry,
     coerceParamValue,
     ensureReadRunner,
-    formatOutputDisplayValue,
+    formatFormattedPanelPayload,
     requireContractAddress,
     selectedSpCoinReadMethod,
     setFormattedOutputDisplay,
@@ -583,10 +706,10 @@ export function useSponsorCoinLabMethods({
         spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
         setStatus,
       });
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, result }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
-      setFormattedOutputDisplay(formatOutputDisplayValue({ call, error: message }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeSpCoinWriteDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinWriteDef.title} failed: ${message}`);
     }
@@ -598,7 +721,7 @@ export function useSponsorCoinLabMethods({
     coerceParamValue,
     effectiveConnectedAddress,
     executeWriteConnected,
-    formatOutputDisplayValue,
+    formatFormattedPanelPayload,
     mode,
     selectedHardhatAddress,
     selectedSpCoinWriteMethod,
@@ -618,7 +741,7 @@ export function useSponsorCoinLabMethods({
       const stepSender = String(step['msg.sender'] || '').trim();
 
       const commitResult = (payload: unknown, success: boolean) => {
-        const nextFormattedOutput = mergeFormattedOutput(formatOutputDisplayValue(payload), formattedOutputBase);
+        const nextFormattedOutput = mergeFormattedOutput(formatFormattedPanelPayload(payload), formattedOutputBase);
         setFormattedOutputDisplay(nextFormattedOutput);
         return {
           success,
@@ -753,7 +876,7 @@ export function useSponsorCoinLabMethods({
       effectiveConnectedAddress,
       ensureReadRunner,
       executeWriteConnected,
-      formatOutputDisplayValue,
+      formatFormattedPanelPayload,
       mergeFormattedOutput,
       mode,
       requireContractAddress,
@@ -918,8 +1041,14 @@ export function useSponsorCoinLabMethods({
     agentRateKeyOptions,
     recipientRateKeyHelpText,
     agentRateKeyHelpText,
+    treeAccountOptions,
+    selectedTreeAccount,
+    setSelectedTreeAccount,
+    treeAccountRefreshToken,
+    requestRefreshSelectedTreeAccount,
     runHeaderRead,
     runAccountListRead,
+    runTreeAccountsRead,
     runTreeDump,
     runSelectedWriteMethod,
     runSelectedReadMethod,

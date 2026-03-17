@@ -147,7 +147,25 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   };
 
   if (typeof value === 'bigint') return formatDecimalString(value.toString());
-  if (Array.isArray(value)) return value.map((entry) => formatOutputValue(entry, keyPath));
+  if (Array.isArray(value)) {
+    const normalizedEntries = value.map((entry) => formatOutputValue(entry, keyPath));
+    const keyedEntries = normalizedEntries.every((entry) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+      const record = entry as Record<string, unknown>;
+      const candidateKey = record.label ?? record.key;
+      return typeof candidateKey === 'string' && ('value' in record);
+    });
+    if (keyedEntries) {
+      return Object.fromEntries(
+        normalizedEntries.map((entry) => {
+          const record = entry as Record<string, unknown>;
+          const nextKey = String(record.label ?? record.key).trim();
+          return [nextKey || 'value', record.value];
+        }),
+      );
+    }
+    return normalizedEntries;
+  }
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, formatOutputValue(entry, [...keyPath, key])]),
@@ -221,6 +239,7 @@ export default function SponsorCoinLabPage() {
   const [treeOutputDisplay, setTreeOutputDisplay] = useState('(no tree yet)');
   const [outputPanelMode, setOutputPanelMode] = useState<OutputPanelMode>('formatted');
   const [formattedPanelView, setFormattedPanelView] = useState<FormattedPanelView>('script');
+  const [formattedJsonViewEnabled, setFormattedJsonViewEnabled] = useState(true);
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
@@ -228,7 +247,9 @@ export default function SponsorCoinLabPage() {
   const [validationPopupMessage, setValidationPopupMessage] = useState(
     'Fill in the following fields before executing the method:',
   );
+  const [validationPopupTitle, setValidationPopupTitle] = useState('Missing Required Fields');
   const [validationPopupConfirmLabel, setValidationPopupConfirmLabel] = useState('');
+  const [validationPopupCancelLabel, setValidationPopupCancelLabel] = useState('Close');
   const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
   const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
   const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
@@ -284,8 +305,10 @@ export default function SponsorCoinLabPage() {
   }, []);
   const clearValidationPopup = useCallback(() => {
     setValidationPopupFields([]);
+    setValidationPopupTitle('Missing Required Fields');
     setValidationPopupMessage('Fill in the following fields before executing the method:');
     setValidationPopupConfirmLabel('');
+    setValidationPopupCancelLabel('Close');
     validationPopupConfirmRef.current = null;
   }, []);
   const showValidationPopup = useCallback(
@@ -294,14 +317,18 @@ export default function SponsorCoinLabPage() {
       labels: string[],
       message?: string,
       options?: {
+        title?: string;
         confirmLabel?: string;
+        cancelLabel?: string;
         onConfirm?: () => void | Promise<void>;
       },
     ) => {
       setInvalidFieldIds(fieldIds);
       setValidationPopupFields(labels);
+      setValidationPopupTitle(options?.title || 'Missing Required Fields');
       setValidationPopupMessage(message || 'Fill in the following fields before executing the method:');
       setValidationPopupConfirmLabel(options?.confirmLabel || '');
+      setValidationPopupCancelLabel(options?.cancelLabel || 'Close');
       validationPopupConfirmRef.current = options?.onConfirm || null;
       if (typeof window !== 'undefined' && fieldIds[0]) {
         window.setTimeout(() => {
@@ -418,8 +445,14 @@ export default function SponsorCoinLabPage() {
     agentRateKeyOptions,
     recipientRateKeyHelpText,
     agentRateKeyHelpText,
+    treeAccountOptions,
+    selectedTreeAccount,
+    setSelectedTreeAccount,
+    treeAccountRefreshToken,
+    requestRefreshSelectedTreeAccount,
     runHeaderRead,
     runAccountListRead,
+    runTreeAccountsRead,
     runTreeDump,
     runSelectedWriteMethod,
     runSelectedReadMethod,
@@ -659,6 +692,8 @@ export default function SponsorCoinLabPage() {
     setFormattedOutputDisplay,
     formattedPanelView,
     setFormattedPanelView,
+    formattedJsonViewEnabled,
+    setFormattedJsonViewEnabled,
     treeOutputDisplay,
     setTreeOutputDisplay,
     selectedWriteMethod,
@@ -690,7 +725,7 @@ export default function SponsorCoinLabPage() {
   });
   const selectedScriptDisplay = useMemo(() => {
     const nextSelectedScript = scripts.find((script) => script.id === selectedScriptId);
-    return nextSelectedScript ? JSON.stringify(nextSelectedScript, null, 2) : '(no script selected)';
+    return nextSelectedScript ? formatOutputDisplayValue(nextSelectedScript) : '(no script selected)';
   }, [scripts, selectedScriptId]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
@@ -1000,10 +1035,12 @@ export default function SponsorCoinLabPage() {
         setSelectedScriptStepNumber(null);
         return;
       }
+      setOutputPanelMode('formatted');
       focusScriptStep(step);
     },
     [
       focusScriptStep,
+      setOutputPanelMode,
       selectedScriptStep?.step,
       setSelectedScriptStepNumber,
     ],
@@ -1395,16 +1432,20 @@ export default function SponsorCoinLabPage() {
             style={!expandedCard && isDesktopSharedLayout && sharedMethodsRowHeight ? { height: `${sharedMethodsRowHeight}px` } : undefined}
             isExpanded={expandedCard === 'output'}
             onToggleExpand={() => toggleExpandedCard('output')}
+            inputStyle={inputStyle}
             controls={{
               outputPanelMode,
               setOutputPanelMode,
               buttonStyle,
               copyTextToClipboard,
               setLogs,
+              setStatus,
               setTreeOutputDisplay,
               setFormattedOutputDisplay,
               formattedPanelView,
               setFormattedPanelView,
+              formattedJsonViewEnabled,
+              setFormattedJsonViewEnabled,
             }}
             content={{
               logs,
@@ -1421,7 +1462,13 @@ export default function SponsorCoinLabPage() {
             treeActions={{
               runHeaderRead,
               runAccountListRead,
+              runTreeAccountsRead,
               runTreeDump,
+              treeAccountOptions,
+              selectedTreeAccount,
+              setSelectedTreeAccount,
+              treeAccountRefreshToken,
+              requestRefreshSelectedTreeAccount,
             }}
           />
           )}
@@ -1429,15 +1476,21 @@ export default function SponsorCoinLabPage() {
       </section>
       <ValidationPopup
         fields={validationPopupFields}
+        title={validationPopupTitle}
         message={validationPopupMessage}
         buttonStyle={buttonStyle}
         confirmLabel={validationPopupConfirmLabel}
+        cancelLabel={validationPopupCancelLabel}
         onClose={clearValidationPopup}
-        onConfirm={() => {
-          const confirmAction = validationPopupConfirmRef.current;
-          clearValidationPopup();
-          void confirmAction?.();
-        }}
+        onConfirm={
+          validationPopupConfirmRef.current
+            ? () => {
+                const confirmAction = validationPopupConfirmRef.current;
+                clearValidationPopup();
+                void confirmAction?.();
+              }
+            : undefined
+        }
       />
       <DeleteStepPopup
         isOpen={isDeleteStepPopupOpen && !!selectedScriptStep}

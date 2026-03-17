@@ -1,0 +1,1159 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      }
+    ],
+    "name": "addAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_strWholeAmount",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_strDecimalAmount",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionTimeStamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "addBackDatedSponsorship",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "addRecipient",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sponsor",
+        "type": "address"
+      }
+    ],
+    "name": "addSponsor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_strWholeAmount",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_strDecimalAmount",
+        "type": "string"
+      }
+    ],
+    "name": "addSponsorship",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "allowance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "annualInflation",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_stakedSPCoins",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_lastUpdateTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_rate",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateStakingRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "rewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "creationTime",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "deleteAccountFromMaster",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "deleteAccountRecord",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_accountType",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "depositStakingRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAccountList",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getAccountRecipientList",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      }
+    ],
+    "name": "getAgentRateList",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      }
+    ],
+    "name": "getAgentTotalRecipient",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "insertionTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stakingRewards",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "sourceList",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct SpCoinDataTypes.StakingTransactionStruct[]",
+        "name": "transactionList",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getRateTransactionStr",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientRateAgentList",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "getRecipientRateList",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientRateTransactionList",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_rewardType",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRewardAccounts",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "memoryRewards",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSerializedAccountRecord",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSerializedAccountRewards",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSerializedRateTransactionList",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSerializedRecipientRateList",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSerializedRecipientRecordList",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSerializedSPCoinHeader",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "seralized",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialTotalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "isAccountInserted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "masterAccountList",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "msgSender",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "serializeAgentRateRecordStr",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_strWholeAmount",
+        "type": "string"
+      }
+    ],
+    "name": "strToUint",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "result",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "err",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalBalanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalStakedSPCoins",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalStakingRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transfer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "unSponsorRecipient",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sourceKey",
+        "type": "address"
+      }
+    ],
+    "name": "updateAccountStakingRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sourceKey",
+        "type": "address"
+      }
+    ],
+    "name": "updateAgentAccountRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sourceKey",
+        "type": "address"
+      }
+    ],
+    "name": "updateRecipietAccountRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sourceKey",
+        "type": "address"
+      }
+    ],
+    "name": "updateSponsorAccountRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

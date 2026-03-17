@@ -39,6 +39,8 @@ type Params = {
   setFormattedOutputDisplay: (value: string) => void;
   formattedPanelView: 'script' | 'output';
   setFormattedPanelView: (value: 'script' | 'output') => void;
+  formattedJsonViewEnabled: boolean;
+  setFormattedJsonViewEnabled: (value: boolean) => void;
   treeOutputDisplay: string;
   setTreeOutputDisplay: (value: string) => void;
   selectedWriteMethod: Erc20WriteMethod;
@@ -116,6 +118,8 @@ export function useSponsorCoinLabPersistence({
   setFormattedOutputDisplay,
   formattedPanelView,
   setFormattedPanelView,
+  formattedJsonViewEnabled,
+  setFormattedJsonViewEnabled,
   treeOutputDisplay,
   setTreeOutputDisplay,
   selectedWriteMethod,
@@ -247,6 +251,9 @@ export function useSponsorCoinLabPersistence({
           if (saved.formattedPanelView === 'script' || saved.formattedPanelView === 'output') {
             setFormattedPanelView(saved.formattedPanelView);
           }
+          if (typeof saved.formattedJsonViewEnabled === 'boolean') {
+            setFormattedJsonViewEnabled(saved.formattedJsonViewEnabled);
+          }
           if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
           if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
             backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
@@ -313,6 +320,7 @@ export function useSponsorCoinLabPersistence({
       logs,
       formattedOutputDisplay,
       formattedPanelView,
+      formattedJsonViewEnabled,
       treeOutputDisplay,
       selectedWriteMethod,
       writeAddressA,
@@ -352,6 +360,7 @@ export function useSponsorCoinLabPersistence({
     logs,
     formattedOutputDisplay,
     formattedPanelView,
+    formattedJsonViewEnabled,
     treeOutputDisplay,
     selectedWriteMethod,
     writeAddressA,

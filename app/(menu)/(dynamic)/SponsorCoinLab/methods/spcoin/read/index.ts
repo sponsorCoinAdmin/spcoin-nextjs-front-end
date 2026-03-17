@@ -5,12 +5,18 @@ import { createSpCoinLibraryAccess } from '../../shared';
 
 export type SpCoinReadMethod =
   | 'getSerializedSPCoinHeader'
+  | 'annualInflation'
+  | 'calculateStakingRewards'
+  | 'creationTime'
   | 'getSPCoinHeaderRecord'
   | 'getAccountList'
   | 'getAccountListSize'
   | 'getAccountRecipientList'
   | 'getAccountRecipientListSize'
+  | 'getRateTransactionStr'
   | 'getSerializedAccountRecord'
+  | 'getSerializedRecipientRateList'
+  | 'getSerializedRecipientRecordList'
   | 'getAccountRecord'
   | 'getAccountRecords'
   | 'getSerializedAccountRewards'
@@ -36,11 +42,21 @@ export type SpCoinReadMethod =
   | 'getRecipientRateTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
+  | 'initialTotalSupply'
+  | 'isAccountInserted'
+  | 'masterAccountList'
+  | 'msgSender'
+  | 'serializeAgentRateRecordStr'
+  | 'strToUint'
   | 'testStakingRewards'
   | 'getStakingRewards'
   | 'getTimeMultiplier'
   | 'getAccountTimeInSecondeSinceUpdate'
-  | 'getMillenniumTimeIntervalDivisor';
+  | 'getMillenniumTimeIntervalDivisor'
+  | 'totalBalanceOf'
+  | 'totalStakedSPCoins'
+  | 'totalStakingRewards'
+  | 'version';
 
 export function getSpCoinReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
   const all = (Object.keys(SPCOIN_READ_METHOD_DEFS) as SpCoinReadMethod[]).sort((a, b) => a.localeCompare(b));
