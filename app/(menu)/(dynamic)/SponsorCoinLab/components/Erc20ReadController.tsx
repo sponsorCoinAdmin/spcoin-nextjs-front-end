@@ -30,6 +30,7 @@ type Props = {
   setReadAddressB: (value: string) => void;
   canRunSelectedReadMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  hasEditorScriptSelected: boolean;
   isAddToScriptBlockedByNoChanges: boolean;
   addToScriptButtonLabel: string;
   missingFieldIds: string[];
@@ -55,6 +56,7 @@ export default function Erc20ReadController(props: Props) {
     setReadAddressB,
     canRunSelectedReadMethod,
     canAddCurrentMethodToScript,
+    hasEditorScriptSelected,
     isAddToScriptBlockedByNoChanges,
     addToScriptButtonLabel,
     missingFieldIds,
@@ -217,8 +219,8 @@ export default function Erc20ReadController(props: Props) {
           onMouseLeave={() => setHoveredBlockedAction(null)}
         >
           {!canRunSelectedReadMethod && hoveredBlockedAction === 'execute'
-            ? 'Missing Required Parameters'
-            : `Execute ${activeReadLabels.title}`}
+            ? 'Missing Parameters'
+            : `Run ${activeReadLabels.title}`}
         </button>
         <button
           type="button"
@@ -231,13 +233,16 @@ export default function Erc20ReadController(props: Props) {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
+          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
         >
           {isAddToScriptBlockedByNoChanges
             ? hoveredBlockedAction === 'add'
               ? 'No Update Changes'
               : addToScriptButtonLabel
+            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+            ? 'No Editor Script'
             : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Required Parameters'
+            ? 'Missing Parameters'
             : addToScriptButtonLabel}
         </button>
       </div>

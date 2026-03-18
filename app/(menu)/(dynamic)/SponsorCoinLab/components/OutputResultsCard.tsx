@@ -39,6 +39,7 @@ type Props = {
     status: string;
     formattedOutputDisplay: string;
     scriptDisplay: string;
+    selectedScriptStepNumber: number | null;
     highlightedFormattedOutputLines:
       | Array<{
           line: string;
@@ -133,6 +134,11 @@ export default function OutputResultsCard({
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
   const activeInspectorRootLabel = controls.outputPanelMode === 'tree' ? 'Tree' : controls.formattedPanelView === 'script' ? 'Script' : 'Step';
+  const highlightedInspectorPathPrefixes = useMemo(() => {
+    if (controls.outputPanelMode !== 'formatted' || controls.formattedPanelView !== 'script') return [];
+    if (content.selectedScriptStepNumber === null || content.selectedScriptStepNumber <= 0) return [];
+    return [`script-0.steps.${content.selectedScriptStepNumber - 1}`];
+  }, [content.selectedScriptStepNumber, controls.formattedPanelView, controls.outputPanelMode]);
 
   useEffect(() => {
     const account = String(treeActions.selectedTreeAccount || '').trim();
@@ -190,7 +196,7 @@ export default function OutputResultsCard({
   return (
     <article className={className} style={style}>
       <LabCardHeader
-        title="Test Output Results"
+        title="Console Displey"
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
         secondaryRow={
@@ -417,6 +423,7 @@ export default function OutputResultsCard({
                     collapsedKeys={collapsedKeys}
                     updateCollapsedKeys={updateCollapsedKeys}
                     path={`${activeInspectorRootLabel.toLowerCase()}-${index}`}
+                    highlightPathPrefixes={highlightedInspectorPathPrefixes}
                     label={
                       collapsibleFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -449,6 +456,7 @@ export default function OutputResultsCard({
                     collapsedKeys={collapsedKeys}
                     updateCollapsedKeys={updateCollapsedKeys}
                     path={`tree-${index}`}
+                    highlightPathPrefixes={[]}
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                   />

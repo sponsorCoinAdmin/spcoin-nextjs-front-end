@@ -4,6 +4,10 @@ import type { LabScript, LabScriptStep } from '../scriptBuilder/types';
 
 type ValidationTone = 'neutral' | 'invalid' | 'valid';
 
+function normalizeScriptName(value: string) {
+  return String(value || '').trim().toLowerCase();
+}
+
 type Props = {
   actionButtonStyle: string;
   hiddenScrollbarClass: string;
@@ -27,6 +31,7 @@ type Props = {
   scriptNameValidation: { tone: ValidationTone; message: string };
   deleteScriptValidation: { tone: 'invalid' | 'valid'; message: string };
   createNewScript: () => void;
+  clearSelectedScript: () => void;
   handleDeleteScriptClick: () => void;
   restartScriptAtStart: () => Promise<void>;
   runSelectedScriptStep: () => Promise<void>;
@@ -60,6 +65,7 @@ export default function ScriptBuilderCard({
   scriptNameValidation,
   deleteScriptValidation,
   createNewScript,
+  clearSelectedScript,
   handleDeleteScriptClick,
   restartScriptAtStart,
   runSelectedScriptStep,
@@ -69,8 +75,26 @@ export default function ScriptBuilderCard({
   requestDeleteSelectedScriptStep,
   renderScriptStepRow,
 }: Props) {
+  const scriptSelectorRef = React.useRef<HTMLDivElement | null>(null);
   const visibleScriptOptions = scripts;
   const selectedStepIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
+  const hasScriptSelection = Boolean(String(selectedScriptId || '').trim());
+  const isScriptSelectorEmpty = String(scriptNameInput || '').trim() === '';
+  const primaryHoverTone = isScriptSelectorEmpty ? 'invalid' : hasScriptSelection ? 'valid' : newScriptHoverTone;
+  const primaryBaseTone = hasScriptSelection ? 'valid' : scriptNameValidation.tone;
+
+  React.useEffect(() => {
+    if (!isScriptOptionsOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && scriptSelectorRef.current?.contains(target)) return;
+      setIsScriptOptionsOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isScriptOptionsOpen, setIsScriptOptionsOpen]);
 
   return (
     <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
@@ -79,39 +103,53 @@ export default function ScriptBuilderCard({
         <button
           type="button"
           className={`w-[140px] ${actionButtonStyle} ${
-            (isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'valid'
+            (isNewScriptHovered ? primaryHoverTone : primaryBaseTone) === 'valid'
               ? 'hover:bg-green-400'
-              : (isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'invalid'
+              : (isNewScriptHovered ? primaryHoverTone : primaryBaseTone) === 'invalid'
               ? 'hover:bg-red-600 hover:text-white'
               : ''
           }`}
-          onClick={createNewScript}
+          onClick={hasScriptSelection ? clearSelectedScript : createNewScript}
           onMouseEnter={() => {
-            setNewScriptHoverTone(scriptNameValidation.tone);
+            setNewScriptHoverTone(primaryHoverTone);
             setIsNewScriptHovered(true);
           }}
           onMouseLeave={() => setIsNewScriptHovered(false)}
-          aria-disabled={scriptNameValidation.tone !== 'valid'}
-          title={scriptNameValidation.message}
+          aria-disabled={!hasScriptSelection && scriptNameValidation.tone !== 'valid'}
+          title={
+            isScriptSelectorEmpty
+              ? 'Srript Empty'
+              : hasScriptSelection
+              ? 'Clear Script'
+              : scriptNameValidation.message
+          }
         >
-          {(isNewScriptHovered ? newScriptHoverTone : scriptNameValidation.tone) === 'invalid' && isNewScriptHovered
+          {isNewScriptHovered && isScriptSelectorEmpty
+            ? 'Srript Empty'
+            : hasScriptSelection
+            ? 'Clear Script'
+            : (isNewScriptHovered ? primaryHoverTone : primaryBaseTone) === 'invalid' && isNewScriptHovered
             ? 'Name Exists'
             : 'New Script'}
         </button>
-        <div className="relative min-w-0">
+        <div ref={scriptSelectorRef} className="relative min-w-0">
           <input
             className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={scriptNameInput}
             onFocus={() => setIsScriptOptionsOpen(true)}
-            onBlur={() => {
-              window.setTimeout(() => setIsScriptOptionsOpen(false), 100);
-            }}
             onChange={(e) => {
               const nextValue = e.target.value;
               setScriptNameInput(nextValue);
-              const matchingScript = scripts.find((script) => script.name === nextValue);
+              const normalizedNextValue = normalizeScriptName(nextValue);
+              const matchingScript = normalizedNextValue
+                ? scripts.find((script) => normalizeScriptName(script.name) === normalizedNextValue)
+                : null;
               if (matchingScript && matchingScript.id !== selectedScriptId) {
                 setSelectedScriptId(matchingScript.id);
+                return;
+              }
+              if (!matchingScript && selectedScriptId) {
+                setSelectedScriptId('');
               }
             }}
             aria-label="Script selector"

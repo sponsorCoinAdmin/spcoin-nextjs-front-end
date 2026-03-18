@@ -27,6 +27,10 @@ type Tone = 'neutral' | 'invalid' | 'valid';
 
 type Entry = { id: string; label: string };
 
+function normalizeScriptName(value: string) {
+  return String(value || '').trim().toLowerCase();
+}
+
 type ReadLabels = {
   title: string;
   addressALabel: string;
@@ -160,9 +164,9 @@ export function useSponsorCoinLabScripts({
     [scripts, selectedScriptId],
   );
   const scriptNameMatch = useMemo(() => {
-    const name = String(scriptNameInput || '').trim();
+    const name = normalizeScriptName(scriptNameInput);
     if (!name) return null;
-    return scripts.find((script) => script.name.trim() === name) || null;
+    return scripts.find((script) => normalizeScriptName(script.name) === name) || null;
   }, [scriptNameInput, scripts]);
   const scriptNameValidation = useMemo(() => {
     const name = String(scriptNameInput || '').trim();
@@ -184,8 +188,8 @@ export function useSponsorCoinLabScripts({
       setScriptNameInput(selectedScript.name);
       return;
     }
-    setScriptNameInput(buildDefaultScriptName(scripts.length + 1));
-  }, [scripts.length, selectedScript]);
+    setScriptNameInput('');
+  }, [selectedScript]);
 
   const getStepNetwork = useCallback(
     (step: LabScriptStep): string =>
@@ -575,26 +579,34 @@ export function useSponsorCoinLabScripts({
     setStatus(`Created ${nextScript.name}.`);
   }, [activeNetworkName, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, scripts.length, setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
 
+  const clearSelectedScript = useCallback(() => {
+    setSelectedScriptId('');
+    setScriptNameInput('');
+    setSelectedScriptStepNumber(null);
+    setExpandedScriptStepIds({});
+    setFormattedOutputDisplay('(no output yet)');
+    setOutputPanelMode('formatted');
+    setStatus('Cleared selected script.');
+  }, [setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
+
   const deleteSelectedScript = useCallback(
     (targetScriptId: string) => {
       if (!targetScriptId) return;
       setScripts((prev) => {
         const remaining = prev.filter((script) => script.id !== targetScriptId);
-        const canKeepSelected =
-          selectedScriptId && selectedScriptId !== targetScriptId && remaining.some((script) => script.id === selectedScriptId);
-        const nextSelectedId = canKeepSelected ? selectedScriptId : remaining[0]?.id || '';
-        setSelectedScriptId(nextSelectedId);
+        setSelectedScriptId('');
+        setScriptNameInput('');
+        setSelectedScriptStepNumber(null);
+        setExpandedScriptStepIds({});
         setFormattedOutputDisplay(
-          nextSelectedId
-            ? JSON.stringify(remaining.find((script) => script.id === nextSelectedId) || { scripts: [] }, null, 2)
-            : JSON.stringify({ scripts: [] }, null, 2),
+          JSON.stringify({ scripts: [] }, null, 2),
         );
         return remaining;
       });
       setOutputPanelMode('formatted');
       setStatus('Deleted selected script.');
     },
-    [selectedScriptId, setFormattedOutputDisplay, setOutputPanelMode, setStatus],
+    [setFormattedOutputDisplay, setOutputPanelMode, setStatus],
   );
 
   const handleDeleteScriptClick = useCallback(() => {
@@ -632,7 +644,7 @@ export function useSponsorCoinLabScripts({
           ? 'Fill in the following fields before updating the script step:'
           : 'Fill in the following fields before adding the method to the script:',
         {
-          confirmLabel: isUpdatingExistingStep ? 'Update Anyway' : 'Run Anyway',
+          confirmLabel: isUpdatingExistingStep ? 'Update Anyway' : 'Add to Script Anyway',
           onConfirm: () => {
             addCurrentMethodToScript({ skipValidation: true });
           },
@@ -993,6 +1005,7 @@ export function useSponsorCoinLabScripts({
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    clearSelectedScript,
     handleDeleteScriptClick,
     hasEditingScriptChanges,
     addCurrentMethodToScript,

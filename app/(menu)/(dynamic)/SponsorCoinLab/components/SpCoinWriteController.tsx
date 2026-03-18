@@ -37,6 +37,7 @@ type Props = {
   toggleWriteTrace: () => void;
   canRunSelectedSpCoinWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  hasEditorScriptSelected: boolean;
   isAddToScriptBlockedByNoChanges: boolean;
   addToScriptButtonLabel: string;
   missingFieldIds: string[];
@@ -108,6 +109,7 @@ export default function SpCoinWriteController(props: Props) {
     toggleWriteTrace,
     canRunSelectedSpCoinWriteMethod,
     canAddCurrentMethodToScript,
+    hasEditorScriptSelected,
     isAddToScriptBlockedByNoChanges,
     addToScriptButtonLabel,
     missingFieldIds,
@@ -513,8 +515,8 @@ export default function SpCoinWriteController(props: Props) {
           onMouseLeave={() => setHoveredBlockedAction(null)}
         >
           {!canRunSelectedSpCoinWriteMethod && hoveredBlockedAction === 'execute'
-            ? 'Missing Required Parameters'
-            : `Execute ${activeSpCoinWriteDef.title}`}
+            ? 'Missing Parameters'
+            : `Run ${activeSpCoinWriteDef.title}`}
         </button>
         <button
           type="button"
@@ -527,13 +529,16 @@ export default function SpCoinWriteController(props: Props) {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
+          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
         >
           {isAddToScriptBlockedByNoChanges
             ? hoveredBlockedAction === 'add'
               ? 'No Update Changes'
               : addToScriptButtonLabel
+            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+            ? 'No Editor Script'
             : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Required Parameters'
+            ? 'Missing Parameters'
             : addToScriptButtonLabel}
         </button>
       </div>

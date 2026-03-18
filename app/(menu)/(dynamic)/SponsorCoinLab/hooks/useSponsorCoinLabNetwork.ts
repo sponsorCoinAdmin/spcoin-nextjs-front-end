@@ -15,6 +15,7 @@ import type { Erc20ReadMethod } from '../methods/erc20/read';
 import type { Erc20WriteMethod } from '../methods/erc20/write';
 import type { SpCoinReadMethod } from '../methods/spcoin/read';
 import type { SpCoinWriteMethod } from '../methods/spcoin/write';
+import { useSponsorCoinLabActiveContract } from './useSponsorCoinLabActiveContract';
 
 type HardhatAccountOption = {
   address: string;
@@ -131,7 +132,6 @@ export function useSponsorCoinLabNetwork({
   selectedReadMethod,
   selectedSpCoinReadMethod,
 }: Params) {
-  const [selectedSponsorCoinVersion, setSelectedSponsorCoinVersion] = useState('');
   const [hardhatAccounts, setHardhatAccounts] = useState<HardhatAccountOption[]>([]);
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
   const [selectedWriteSenderAddress, setSelectedWriteSenderAddress] = useState('');
@@ -453,12 +453,22 @@ export function useSponsorCoinLabNetwork({
 
     return rows;
   }, [effectiveConnectedChainId, spCoinDeploymentMap]);
-  const selectedSponsorCoinVersionEntry = useMemo(
-    () =>
-      sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion) ??
-      sponsorCoinVersionChoices[0],
-    [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
-  );
+  const {
+    selectedSponsorCoinVersion,
+    setSelectedSponsorCoinVersion,
+    selectedSponsorCoinVersionEntry,
+    adjustSponsorCoinVersion,
+    canIncrementSponsorCoinVersion,
+    canDecrementSponsorCoinVersion,
+    requireContractAddress,
+    selectedVersionSignerKey,
+    selectedVersionSymbol,
+    selectedVersionSymbolWidthCh,
+  } = useSponsorCoinLabActiveContract({
+    contractAddress,
+    setContractAddress,
+    sponsorCoinVersionChoices,
+  });
   const displayedVersionHardhatAccountIndex = useMemo(() => {
     if (mode !== 'hardhat') return -1;
     if (hardhatAccounts.length === 0) return -1;
@@ -471,10 +481,6 @@ export function useSponsorCoinLabNetwork({
     );
     return idx >= 0 ? idx : 0;
   }, [hardhatAccounts, mode, selectedSponsorCoinVersionEntry, sponsorCoinVersionChoices]);
-  const selectedVersionSignerKey = useMemo(
-    () => String(selectedSponsorCoinVersionEntry?.privateKey || '').trim(),
-    [selectedSponsorCoinVersionEntry],
-  );
   const selectedSignerAccountMetadata = useMemo(() => {
     const address = String(selectedHardhatAccount?.address || '').trim().toLowerCase();
     return hardhatAccountMetadata[address];
@@ -487,13 +493,11 @@ export function useSponsorCoinLabNetwork({
     const key = normalizeAddress(displayedSignerAccountAddress);
     return hardhatAccountMetadata[key] ?? selectedSignerAccountMetadata;
   }, [displayedSignerAccountAddress, hardhatAccountMetadata, selectedSignerAccountMetadata]);
-  const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
   const selectedSponsorCoinLogoURL = useMemo(() => {
     const address = String(selectedSponsorCoinVersionEntry?.address || '').trim();
     if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) return '';
     return getTokenLogoURL({ chainId: HARDHAT_CHAIN_ID_DEC, address });
   }, [selectedSponsorCoinVersionEntry]);
-  const selectedVersionSymbolWidthCh = Math.max(4, selectedVersionSymbol.length + 1);
   const selectedWriteSenderAccount = useMemo(() => {
     const key = normalizeAddress(selectedWriteSenderAddress);
     if (!key) return undefined;
@@ -519,29 +523,6 @@ export function useSponsorCoinLabNetwork({
     setInvalidFieldIds,
     setValidationPopupFields,
   ]);
-
-  useEffect(() => {
-    if (sponsorCoinVersionChoices.length === 0) return;
-    const existing =
-      sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion) ??
-      sponsorCoinVersionChoices[0];
-
-    if (existing.id !== selectedSponsorCoinVersion) {
-      setSelectedSponsorCoinVersion(existing.id);
-    }
-    if (normalizeAddress(contractAddress) !== normalizeAddress(existing.address)) {
-      setContractAddress(existing.address);
-    }
-  }, [contractAddress, selectedSponsorCoinVersion, setContractAddress, sponsorCoinVersionChoices]);
-
-  useEffect(() => {
-    if (!selectedSponsorCoinVersion) return;
-    const picked = sponsorCoinVersionChoices.find((entry) => entry.id === selectedSponsorCoinVersion);
-    if (!picked) return;
-    if (normalizeAddress(contractAddress) !== normalizeAddress(picked.address)) {
-      setContractAddress(picked.address);
-    }
-  }, [contractAddress, selectedSponsorCoinVersion, setContractAddress, sponsorCoinVersionChoices]);
 
   useEffect(() => {
     if (mode !== 'hardhat' || displayedVersionHardhatAccountIndex < 0) return;
@@ -586,33 +567,6 @@ export function useSponsorCoinLabNetwork({
     selectedHardhatAccount?.address,
     selectedWriteSenderAddress,
   ]);
-
-  const adjustSponsorCoinVersion = useCallback(
-    (direction: 1 | -1) => {
-      if (sponsorCoinVersionChoices.length === 0) return;
-      const currentIdx = sponsorCoinVersionChoices.findIndex(
-        (entry) => entry.id === selectedSponsorCoinVersion,
-      );
-      const baseIdx = currentIdx >= 0 ? currentIdx : 0;
-      const nextIdx = Math.max(0, Math.min(sponsorCoinVersionChoices.length - 1, baseIdx + direction));
-      const next = sponsorCoinVersionChoices[nextIdx];
-      if (next) {
-        setSelectedSponsorCoinVersion(next.id);
-      }
-    },
-    [selectedSponsorCoinVersion, sponsorCoinVersionChoices],
-  );
-
-  const selectedSponsorCoinVersionIndex = useMemo(() => {
-    if (sponsorCoinVersionChoices.length === 0) return -1;
-    const idx = sponsorCoinVersionChoices.findIndex((entry) => entry.id === selectedSponsorCoinVersion);
-    return idx >= 0 ? idx : 0;
-  }, [selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
-
-  const canIncrementSponsorCoinVersion =
-    selectedSponsorCoinVersionIndex >= 0 &&
-    selectedSponsorCoinVersionIndex < sponsorCoinVersionChoices.length - 1;
-  const canDecrementSponsorCoinVersion = selectedSponsorCoinVersionIndex > 0;
 
   const syncMetaMaskState = useCallback(async () => {
     if (mode !== 'metamask' || typeof window === 'undefined') return;
@@ -765,14 +719,6 @@ export function useSponsorCoinLabNetwork({
     if (mode !== 'hardhat' || hardhatAccounts.length === 0) return;
     reconcileHardhatSelection(hardhatAccounts, connectedAddress, selectedHardhatIndex);
   }, [connectedAddress, hardhatAccounts, mode, reconcileHardhatSelection, selectedHardhatIndex]);
-
-  const requireContractAddress = useCallback(() => {
-    const target = contractAddress.trim();
-    if (!target) {
-      throw new Error('Contract address is required.');
-    }
-    return target;
-  }, [contractAddress]);
 
   const connectSigner = useCallback(async (): Promise<Signer> => {
     appendWriteTrace(`connectSigner invoked; mode=${mode}`);

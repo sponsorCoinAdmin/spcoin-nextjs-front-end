@@ -44,6 +44,20 @@
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
+      "name": "calculateStakingRewards",
+      "panel": "spcoin_rread",
+      "method": "calculateStakingRewards",
+      "params": [
+        {
+          "key": "Staked SP Coins",
+          "value": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720"
+        }
+      ],
+      "breakpoint": true,
+      "hasMissingRequiredParams": true
     }
   ]
 }

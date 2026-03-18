@@ -2,6 +2,7 @@
 import { SPCOIN_READ_METHOD_DEFS } from './defs';
 export { SPCOIN_READ_METHOD_DEFS };
 import { createSpCoinLibraryAccess } from '../../shared';
+import { normalizeStringListResult } from '../../shared/normalizeListResult';
 
 export type SpCoinReadMethod =
   | 'getSerializedSPCoinHeader'
@@ -102,7 +103,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
         result = { header };
         break;
       }
-      const accountList = (await (access.read as any).getAccountList()) as string[];
+      const accountList = normalizeStringListResult(await (access.read as any).getAccountList());
       const body = await Promise.all(
         accountList.map(async (accountKey) => ({
           accountKey,
@@ -113,12 +114,12 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       break;
     }
     case 'getAccountListSize': {
-      const accountList = (await (access.read as any).getAccountList()) as string[];
+      const accountList = normalizeStringListResult(await (access.read as any).getAccountList());
       result = accountList.length;
       break;
     }
     case 'getAccountRecipientListSize': {
-      const recipientList = (await (access.read as any).getAccountRecipientList(methodArgs[0])) as string[];
+      const recipientList = normalizeStringListResult(await (access.read as any).getAccountRecipientList(methodArgs[0]));
       result = recipientList.length;
       break;
     }
@@ -126,12 +127,12 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       const accountKey = String(methodArgs[0]);
       const serializedAccountRecord = await (access.contract as any).getSerializedAccountRecord(accountKey);
       const serializedAccountRewards = await (access.contract as any).getSerializedAccountRewards(accountKey);
-      const recipientAccountList = await (access.read as any).getAccountRecipientList(accountKey);
+      const recipientAccountList = normalizeStringListResult(await (access.read as any).getAccountRecipientList(accountKey));
       result = { accountKey, serializedAccountRecord, serializedAccountRewards, recipientAccountList };
       break;
     }
     case 'getAccountRecords': {
-      const accountList = (await (access.read as any).getAccountList()) as string[];
+      const accountList = normalizeStringListResult(await (access.read as any).getAccountList());
       result = await Promise.all(
         accountList.map(async (accountKey) => ({
           accountKey,

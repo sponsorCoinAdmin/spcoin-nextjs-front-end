@@ -39,6 +39,7 @@ type Props = {
   inputStyle: string;
   canRunSelectedWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  hasEditorScriptSelected: boolean;
   isAddToScriptBlockedByNoChanges: boolean;
   addToScriptButtonLabel: string;
   missingFieldIds: string[];
@@ -74,6 +75,7 @@ export default function Erc20WriteController(props: Props) {
     inputStyle,
     canRunSelectedWriteMethod,
     canAddCurrentMethodToScript,
+    hasEditorScriptSelected,
     isAddToScriptBlockedByNoChanges,
     addToScriptButtonLabel,
     missingFieldIds,
@@ -344,8 +346,8 @@ export default function Erc20WriteController(props: Props) {
           onMouseLeave={() => setHoveredBlockedAction(null)}
         >
           {!canRunSelectedWriteMethod && hoveredBlockedAction === 'execute'
-            ? 'Missing Required Parameters'
-            : `Execute ${activeWriteLabels.title}`}
+            ? 'Missing Parameters'
+            : `Run ${activeWriteLabels.title}`}
         </button>
         <button
           type="button"
@@ -358,13 +360,16 @@ export default function Erc20WriteController(props: Props) {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
+          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
         >
           {isAddToScriptBlockedByNoChanges
             ? hoveredBlockedAction === 'add'
               ? 'No Update Changes'
               : addToScriptButtonLabel
+            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+            ? 'No Editor Script'
             : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Required Parameters'
+            ? 'Missing Parameters'
             : addToScriptButtonLabel}
         </button>
       </div>

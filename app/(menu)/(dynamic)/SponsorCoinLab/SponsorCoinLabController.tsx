@@ -253,6 +253,7 @@ export default function SponsorCoinLabPage() {
   const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
   const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
   const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
+  const previousContractAddressRef = useRef('');
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -275,6 +276,18 @@ export default function SponsorCoinLabPage() {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
   }, []);
+
+  useEffect(() => {
+    const previous = normalizeAddressValue(previousContractAddressRef.current);
+    const current = normalizeAddressValue(contractAddress);
+    previousContractAddressRef.current = contractAddress;
+    if (!previous || !current || previous === current) return;
+    setFormattedOutputDisplay('(no output yet)');
+    setTreeOutputDisplay('(no tree yet)');
+    setOutputPanelMode('formatted');
+    setStatus('Ready');
+    appendLog('Active SponsorCoin contract changed; cleared prior test output results.');
+  }, [appendLog, contractAddress]);
   const copyTextToClipboard = useCallback(
     async (label: string, value: string) => {
       try {
@@ -460,6 +473,7 @@ export default function SponsorCoinLabPage() {
     runSelectedSpCoinWriteMethod,
     runScriptStep,
   } = useSponsorCoinLabMethods({
+    activeContractAddress: contractAddress,
     mode,
     methodPanelMode,
     selectedReadMethod,
@@ -542,6 +556,7 @@ export default function SponsorCoinLabPage() {
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    clearSelectedScript,
     handleDeleteScriptClick,
     hasEditingScriptChanges,
     addCurrentMethodToScript,
@@ -727,6 +742,28 @@ export default function SponsorCoinLabPage() {
     const nextSelectedScript = scripts.find((script) => script.id === selectedScriptId);
     return nextSelectedScript ? formatOutputDisplayValue(nextSelectedScript) : '(no script selected)';
   }, [scripts, selectedScriptId]);
+  const previousScriptDisplayRef = useRef<string | null>(null);
+  const previousFormattedOutputDisplayRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (previousScriptDisplayRef.current === null) {
+      previousScriptDisplayRef.current = selectedScriptDisplay;
+      return;
+    }
+    if (previousScriptDisplayRef.current === selectedScriptDisplay) return;
+    previousScriptDisplayRef.current = selectedScriptDisplay;
+    setOutputPanelMode('formatted');
+    setFormattedPanelView('script');
+  }, [selectedScriptDisplay]);
+  useEffect(() => {
+    if (previousFormattedOutputDisplayRef.current === null) {
+      previousFormattedOutputDisplayRef.current = formattedOutputDisplay;
+      return;
+    }
+    if (previousFormattedOutputDisplayRef.current === formattedOutputDisplay) return;
+    previousFormattedOutputDisplayRef.current = formattedOutputDisplay;
+    setOutputPanelMode('formatted');
+    setFormattedPanelView('output');
+  }, [formattedOutputDisplay]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
   const spCoinReadOptions = useMemo(() => {
@@ -777,6 +814,7 @@ export default function SponsorCoinLabPage() {
     [currentMethodDisplayName, editingScriptStepNumber, selectedScriptStepNumber],
   );
   const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
+  const hasEditorScriptSelected = Boolean(String(selectedScriptId || '').trim());
   const addToScriptButtonLabel = useMemo(
     () =>
       isEditingScriptMethod
@@ -1036,14 +1074,10 @@ export default function SponsorCoinLabPage() {
         return;
       }
       setOutputPanelMode('formatted');
+      setFormattedPanelView('script');
       focusScriptStep(step);
     },
-    [
-      focusScriptStep,
-      setOutputPanelMode,
-      selectedScriptStep?.step,
-      setSelectedScriptStepNumber,
-    ],
+    [focusScriptStep, selectedScriptStep?.step],
   );
   const editScriptStep = useCallback(
     (step: LabScriptStep) => {
@@ -1101,7 +1135,11 @@ export default function SponsorCoinLabPage() {
       return null;
     }
     const lines = String(selectedScriptDisplay || '').split('\n');
-    const targetLineIndex = lines.findIndex((line) => line.includes(`"step": ${selectedScriptStepNumber}`));
+    const selectedStepText = String(selectedScriptStepNumber);
+    const targetLineIndex = lines.findIndex((line) => {
+      const match = line.match(/"step"\s*:\s*"?([^",]+)"?/);
+      return Boolean(match?.[1] && match[1] === selectedStepText);
+    });
     if (targetLineIndex < 0) return null;
 
     let startIndex = targetLineIndex;
@@ -1151,9 +1189,7 @@ export default function SponsorCoinLabPage() {
         line,
         active: blockIndex === targetBlockIndex,
       }));
-      return blockIndex < blocks.length - 1
-        ? [...mapped, { line: '', active: false }]
-        : mapped;
+      return blockIndex < blocks.length - 1 ? [...mapped, { line: '', active: false }] : mapped;
     });
   }, [formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScriptStepNumber]);
 
@@ -1267,6 +1303,7 @@ export default function SponsorCoinLabPage() {
               scriptNameValidation,
               deleteScriptValidation,
               createNewScript,
+              clearSelectedScript,
               handleDeleteScriptClick,
               restartScriptAtStart,
               runSelectedScriptStep,
@@ -1292,7 +1329,8 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedReadMethod: canRunErc20ReadMethod,
-              canAddCurrentMethodToScript: canRunErc20ReadMethod,
+              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunErc20ReadMethod,
+              hasEditorScriptSelected,
               isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: erc20ReadMissingEntries.map((entry) => entry.id),
@@ -1325,7 +1363,8 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedWriteMethod: canRunErc20WriteMethod,
-              canAddCurrentMethodToScript: canRunErc20WriteMethod,
+              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunErc20WriteMethod,
+              hasEditorScriptSelected,
               isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: erc20WriteMissingEntries.map((entry) => entry.id),
@@ -1348,7 +1387,8 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinReadMethod: canRunSpCoinReadMethod,
-              canAddCurrentMethodToScript: canRunSpCoinReadMethod,
+              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSpCoinReadMethod,
+              hasEditorScriptSelected,
               isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: spCoinReadMissingEntries.map((entry) => entry.id),
@@ -1384,7 +1424,8 @@ export default function SponsorCoinLabPage() {
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
               canRunSelectedSpCoinWriteMethod: canRunSpCoinWriteMethod,
-              canAddCurrentMethodToScript: canRunSpCoinWriteMethod,
+              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSpCoinWriteMethod,
+              hasEditorScriptSelected,
               isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
               addToScriptButtonLabel,
               missingFieldIds: spCoinWriteMissingEntries.map((entry) => entry.id),
@@ -1447,15 +1488,16 @@ export default function SponsorCoinLabPage() {
               formattedJsonViewEnabled,
               setFormattedJsonViewEnabled,
             }}
-            content={{
-              logs,
-              treeOutputDisplay,
-              status,
-              formattedOutputDisplay,
-              scriptDisplay: selectedScriptDisplay,
-              highlightedFormattedOutputLines:
-                formattedPanelView === 'script'
-                  ? highlightedFormattedOutputLines
+              content={{
+                logs,
+                treeOutputDisplay,
+                status,
+                formattedOutputDisplay,
+                scriptDisplay: selectedScriptDisplay,
+                selectedScriptStepNumber,
+                highlightedFormattedOutputLines:
+                  formattedPanelView === 'script'
+                    ? highlightedFormattedOutputLines
                   : highlightedFormattedResultLines,
               hiddenScrollbarClass,
             }}

@@ -23,6 +23,7 @@ type Props = {
   inputStyle: string;
   canRunSelectedSpCoinReadMethod: boolean;
   canAddCurrentMethodToScript: boolean;
+  hasEditorScriptSelected: boolean;
   isAddToScriptBlockedByNoChanges: boolean;
   addToScriptButtonLabel: string;
   missingFieldIds: string[];
@@ -48,6 +49,7 @@ export default function SpCoinReadController(props: Props) {
     inputStyle,
     canRunSelectedSpCoinReadMethod,
     canAddCurrentMethodToScript,
+    hasEditorScriptSelected,
     isAddToScriptBlockedByNoChanges,
     addToScriptButtonLabel,
     missingFieldIds,
@@ -197,8 +199,8 @@ export default function SpCoinReadController(props: Props) {
           onMouseLeave={() => setHoveredBlockedAction(null)}
         >
           {!canRunSelectedSpCoinReadMethod && hoveredBlockedAction === 'execute'
-            ? 'Missing Required Parameters'
-            : `Execute ${activeSpCoinReadDef.title}`}
+            ? 'Missing Parameters'
+            : `Run ${activeSpCoinReadDef.title}`}
         </button>
         <button
           type="button"
@@ -211,13 +213,16 @@ export default function SpCoinReadController(props: Props) {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}
           onMouseLeave={() => setHoveredBlockedAction(null)}
+          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
         >
           {isAddToScriptBlockedByNoChanges
             ? hoveredBlockedAction === 'add'
               ? 'No Update Changes'
               : addToScriptButtonLabel
+            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+            ? 'No Editor Script'
             : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Required Parameters'
+            ? 'Missing Parameters'
             : addToScriptButtonLabel}
         </button>
       </div>

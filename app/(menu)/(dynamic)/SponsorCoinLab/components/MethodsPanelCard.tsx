@@ -39,7 +39,7 @@ export default function MethodsPanelCard({
   const methodPanelGroupName = React.useId();
   return (
     <article ref={methodsCardRef} className={articleClassName}>
-      <LabCardHeader title="Script Test Editor" isExpanded={isExpanded} onToggleExpand={onToggleExpand} />
+      <LabCardHeader title="Script Editor" isExpanded={isExpanded} onToggleExpand={onToggleExpand} />
       <div className="mt-4 grid grid-cols-1 gap-4">
         <ScriptBuilderCard {...scriptBuilderProps} />
 

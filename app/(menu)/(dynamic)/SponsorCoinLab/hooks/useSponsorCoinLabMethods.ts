@@ -13,6 +13,7 @@ import {
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
 import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../methods/spcoin/write';
 import { createSpCoinLibraryAccess } from '../methods/shared';
+import { normalizeStringListResult } from '../methods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
 type Entry = { id: string; label: string };
@@ -22,6 +23,7 @@ type ScriptRunResult = {
 };
 
 type Params = {
+  activeContractAddress: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
   selectedReadMethod: Erc20ReadMethod;
@@ -100,6 +102,7 @@ type Params = {
 };
 
 export function useSponsorCoinLabMethods({
+  activeContractAddress,
   mode,
   methodPanelMode,
   selectedReadMethod,
@@ -153,6 +156,18 @@ export function useSponsorCoinLabMethods({
   const [treeAccountRefreshToken, setTreeAccountRefreshToken] = useState(0);
   const treeAccountListCacheRef = useRef<string[] | null>(null);
   const treeAccountRecordCacheRef = useRef<Map<string, unknown>>(new Map());
+
+  useEffect(() => {
+    treeAccountListCacheRef.current = null;
+    treeAccountRecordCacheRef.current.clear();
+    setRecipientRateKeyOptions([]);
+    setAgentRateKeyOptions([]);
+    setRecipientRateKeyHelpText('');
+    setAgentRateKeyHelpText('');
+    setTreeAccountOptions([]);
+    setSelectedTreeAccount('');
+    setTreeAccountRefreshToken(0);
+  }, [activeContractAddress]);
 
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
@@ -284,7 +299,7 @@ export function useSponsorCoinLabMethods({
     const target = requireContractAddress();
     const runner = await ensureReadRunner();
     const access = createSpCoinLibraryAccess(target, runner);
-    const list = (await (access.read as any).getAccountList()) as string[];
+    const list = normalizeStringListResult(await (access.read as any).getAccountList());
     treeAccountListCacheRef.current = list;
     syncTreeAccountOptions(list);
     return { list };
