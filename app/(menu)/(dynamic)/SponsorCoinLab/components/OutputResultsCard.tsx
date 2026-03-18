@@ -40,6 +40,7 @@ type Props = {
     formattedOutputDisplay: string;
     scriptDisplay: string;
     selectedScriptStepNumber: number | null;
+    selectedScriptStepHasMissingRequiredParams: boolean;
     highlightedFormattedOutputLines:
       | Array<{
           line: string;
@@ -139,6 +140,7 @@ export default function OutputResultsCard({
     if (content.selectedScriptStepNumber === null || content.selectedScriptStepNumber <= 0) return [];
     return [`script-0.steps.${content.selectedScriptStepNumber - 1}`];
   }, [content.selectedScriptStepNumber, controls.formattedPanelView, controls.outputPanelMode]);
+  const inspectorHighlightColorClass = content.selectedScriptStepHasMissingRequiredParams ? 'text-red-400' : 'text-green-400';
 
   useEffect(() => {
     const account = String(treeActions.selectedTreeAccount || '').trim();
@@ -424,6 +426,7 @@ export default function OutputResultsCard({
                     updateCollapsedKeys={updateCollapsedKeys}
                     path={`${activeInspectorRootLabel.toLowerCase()}-${index}`}
                     highlightPathPrefixes={highlightedInspectorPathPrefixes}
+                    highlightColorClass={inspectorHighlightColorClass}
                     label={
                       collapsibleFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -470,7 +473,10 @@ export default function OutputResultsCard({
               {controls.outputPanelMode === 'formatted' &&
               content.highlightedFormattedOutputLines
                 ? content.highlightedFormattedOutputLines.map(({ line, active }, idx) => (
-                    <span key={`formatted-line-${idx}`} className={active ? 'text-green-400' : undefined}>
+                    <span
+                      key={`formatted-line-${idx}`}
+                      className={active ? (content.selectedScriptStepHasMissingRequiredParams ? 'text-red-400' : 'text-green-400') : undefined}
+                    >
                       {line}
                       {'\n'}
                     </span>

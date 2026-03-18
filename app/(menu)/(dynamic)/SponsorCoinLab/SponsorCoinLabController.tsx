@@ -1495,6 +1495,7 @@ export default function SponsorCoinLabPage() {
                 formattedOutputDisplay,
                 scriptDisplay: selectedScriptDisplay,
                 selectedScriptStepNumber,
+                selectedScriptStepHasMissingRequiredParams: Boolean(selectedScriptStep?.hasMissingRequiredParams),
                 highlightedFormattedOutputLines:
                   formattedPanelView === 'script'
                     ? highlightedFormattedOutputLines

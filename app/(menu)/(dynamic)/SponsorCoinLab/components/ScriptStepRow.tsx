@@ -29,7 +29,9 @@ export default function ScriptStepRow({
   const params = getStepParamEntries(step);
   const hasExpandableContent = Boolean(sender) || params.length > 0;
   const methodClassName = step.hasMissingRequiredParams
-    ? isEditingStep
+    ? isSelected
+      ? 'text-red-400'
+      : isEditingStep
       ? 'text-green-400 underline underline-offset-2'
       : 'text-[#E5B94F]'
     : isSelected

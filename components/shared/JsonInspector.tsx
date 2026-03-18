@@ -12,6 +12,7 @@ interface JsonInspectorProps {
   rootLabel?: string;
   label?: string;
   highlightPathPrefixes?: string[];
+  highlightColorClass?: string;
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -23,6 +24,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   rootLabel = 'Exchange Context',
   label,
   highlightPathPrefixes = [],
+  highlightColorClass = 'text-green-400',
 }) => {
   const isCollapsed = collapsedKeys.includes(path ?? '');
   const isHighlighted = highlightPathPrefixes.some(
@@ -65,6 +67,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           rootLabel={rootLabel}
           label={key}
           highlightPathPrefixes={highlightPathPrefixes}
+          highlightColorClass={highlightColorClass}
         />
       );
     }
@@ -74,7 +77,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     );
     return (
       <div key={nextPath} className="ml-4 whitespace-nowrap">
-        <span className={valueHighlighted ? 'text-green-400' : 'text-[#5981F3]'}>{key}</span>: <span className={valueHighlighted ? 'text-green-400' : getValueColor(value)}>{stringifyBigInt(value)}</span>
+        <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>: <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{stringifyBigInt(value)}</span>
       </div>
     );
   };
@@ -82,8 +85,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   return (
     <div className={`${level > 0 ? 'ml-2' : ''} font-mono leading-tight`}>
       <div className="cursor-pointer whitespace-nowrap" onClick={toggle}>
-        <span className={isHighlighted ? 'text-green-400' : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className={`font-semibold ${isHighlighted ? 'text-green-400' : 'text-white'}`}>{getPathLabel(path ?? '')}</span>
+        <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>{' '}
+        <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>{getPathLabel(path ?? '')}</span>
       </div>
       {!isCollapsed && <div className="ml-4">{Object.entries(data).map(([key, value]) => renderValue(value, key))}</div>}
     </div>
