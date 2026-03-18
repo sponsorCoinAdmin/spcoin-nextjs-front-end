@@ -6,40 +6,59 @@
   "steps": [
     {
       "step": 1,
-      "name": "getSerializedSPCoinHeader",
-      "panel": "spcoin_rread",
-      "method": "getSerializedSPCoinHeader",
-      "params": [],
-      "breakpoint": false,
+      "name": "balanceOf",
+      "panel": "ecr20_read",
+      "method": "balanceOf",
+      "params": [
+        {
+          "key": "Owner Address",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+        }
+      ],
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "getAccountRecord",
-      "panel": "spcoin_rread",
-      "method": "getAccountRecord",
+      "name": "balanceOf",
+      "panel": "ecr20_read",
+      "method": "balanceOf",
+      "hasMissingRequiredParams": false,
       "params": [
         {
-          "key": "Account Key",
-          "value": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720"
+          "key": "Owner Address",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
+      ]
     },
     {
       "step": 3,
-      "name": "calculateStakingRewards",
-      "panel": "spcoin_rread",
-      "method": "calculateStakingRewards",
+      "name": "decimals",
+      "panel": "ecr20_read",
+      "method": "decimals",
+      "hasMissingRequiredParams": false,
+      "params": []
+    },
+    {
+      "step": 4,
+      "name": "totalSupply",
+      "panel": "ecr20_read",
+      "method": "totalSupply",
+      "hasMissingRequiredParams": false,
+      "params": []
+    },
+    {
+      "step": 5,
+      "name": "balanceOf",
+      "panel": "ecr20_read",
+      "method": "balanceOf",
+      "hasMissingRequiredParams": false,
       "params": [
         {
-          "key": "Staked SP Coins",
-          "value": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720"
+          "key": "Owner Address",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
-      ],
-      "breakpoint": true,
-      "hasMissingRequiredParams": true
+      ]
     }
   ]
 }

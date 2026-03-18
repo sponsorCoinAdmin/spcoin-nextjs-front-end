@@ -1071,13 +1071,16 @@ export default function SponsorCoinLabPage() {
     (step: LabScriptStep) => {
       if (selectedScriptStep?.step === step.step) {
         setSelectedScriptStepNumber(null);
+        setEditingScriptStepNumber(null);
+        setMethodSelectionSource('dropdown');
         return;
       }
       setOutputPanelMode('formatted');
       setFormattedPanelView('script');
       focusScriptStep(step);
+      editScriptStepFromBuilder(step);
     },
-    [focusScriptStep, selectedScriptStep?.step],
+    [editScriptStepFromBuilder, focusScriptStep, selectedScriptStep?.step],
   );
   const editScriptStep = useCallback(
     (step: LabScriptStep) => {
@@ -1085,6 +1088,11 @@ export default function SponsorCoinLabPage() {
     },
     [editScriptStepFromBuilder],
   );
+  const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
+    confirmDeleteSelectedScriptStep();
+    setEditingScriptStepNumber(null);
+    setMethodSelectionSource('dropdown');
+  }, [confirmDeleteSelectedScriptStep]);
   const renderScriptStepRow = useCallback(
     (step: LabScriptStep) => {
       const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
@@ -1540,7 +1548,7 @@ export default function SponsorCoinLabPage() {
         stepName={selectedScriptStep?.name || ''}
         buttonStyle={buttonStyle}
         onCancel={() => setIsDeleteStepPopupOpen(false)}
-        onConfirm={confirmDeleteSelectedScriptStep}
+        onConfirm={handleConfirmDeleteSelectedScriptStep}
       />
       <DiscardChangesPopup
         isOpen={isDiscardChangesPopupOpen}

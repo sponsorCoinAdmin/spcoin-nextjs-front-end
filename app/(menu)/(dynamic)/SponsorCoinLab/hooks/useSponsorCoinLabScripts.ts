@@ -520,12 +520,7 @@ export function useSponsorCoinLabScripts({
       });
       return nextExpanded;
     });
-    setSelectedScriptStepNumber((prev) => {
-      if (!prev) return null;
-      const remainingCount = Math.max((selectedScript?.steps.length || 0) - 1, 0);
-      if (remainingCount === 0) return null;
-      return Math.min(prev, remainingCount);
-    });
+    setSelectedScriptStepNumber(null);
   }, [selectedScript?.steps, selectedScriptId, selectedScriptStepNumber]);
 
   const requestDeleteSelectedScriptStep = useCallback(() => {
