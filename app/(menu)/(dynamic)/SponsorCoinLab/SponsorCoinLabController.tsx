@@ -606,43 +606,23 @@ export default function SponsorCoinLabPage() {
     setSelectedSpCoinWriteMethod,
     setSpWriteParams,
   });
-  const buildEditorSnapshot = useCallback(
-    () =>
-      JSON.stringify({
-        methodPanelMode,
-        methodSelectionSource,
-        editingScriptStepNumber,
-        selectedReadMethod,
-        readAddressA,
-        readAddressB,
-        selectedWriteMethod,
-        selectedWriteSenderAddress,
-        writeAddressA,
-        writeAddressB,
-        writeAmountRaw,
-        selectedSpCoinReadMethod,
-        spReadParams,
-        selectedSpCoinWriteMethod,
-        spWriteParams,
-      }),
-    [
-      editingScriptStepNumber,
-      methodPanelMode,
-      methodSelectionSource,
-      readAddressA,
-      readAddressB,
-      selectedReadMethod,
-      selectedSpCoinReadMethod,
-      selectedSpCoinWriteMethod,
-      selectedWriteMethod,
-      selectedWriteSenderAddress,
-      spReadParams,
-      spWriteParams,
-      writeAddressA,
-      writeAddressB,
-      writeAmountRaw,
-    ],
-  );
+  const editorSnapshot = JSON.stringify({
+    methodPanelMode,
+    methodSelectionSource,
+    editingScriptStepNumber,
+    selectedReadMethod,
+    readAddressA,
+    readAddressB,
+    selectedWriteMethod,
+    selectedWriteSenderAddress,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+    selectedSpCoinReadMethod,
+    spReadParams,
+    selectedSpCoinWriteMethod,
+    spWriteParams,
+  });
   const editorBaselineRef = useRef<string | null>(null);
   const shouldResetEditorBaselineRef = useRef(true);
   const queueEditorBaselineReset = useCallback(() => {
@@ -650,13 +630,13 @@ export default function SponsorCoinLabPage() {
   }, []);
   useEffect(() => {
     if (!shouldResetEditorBaselineRef.current && editorBaselineRef.current !== null) return;
-    editorBaselineRef.current = buildEditorSnapshot();
+    editorBaselineRef.current = editorSnapshot;
     shouldResetEditorBaselineRef.current = false;
-  }, [buildEditorSnapshot]);
+  }, [editorSnapshot]);
   const hasUnsavedEditorChanges = useCallback(() => {
     if (editorBaselineRef.current === null) return false;
-    return editorBaselineRef.current !== buildEditorSnapshot();
-  }, [buildEditorSnapshot]);
+    return editorBaselineRef.current !== editorSnapshot;
+  }, [editorSnapshot]);
   const clearDiscardChangesPopup = useCallback(() => {
     setIsDiscardChangesPopupOpen(false);
     discardChangesConfirmRef.current = null;
@@ -738,10 +718,7 @@ export default function SponsorCoinLabPage() {
     normalizeAddressValue,
     backdateCalendar,
   });
-  const selectedScriptDisplay = useMemo(() => {
-    const nextSelectedScript = scripts.find((script) => script.id === selectedScriptId);
-    return nextSelectedScript ? formatOutputDisplayValue(nextSelectedScript) : '(no script selected)';
-  }, [scripts, selectedScriptId]);
+  const selectedScriptDisplay = selectedScript ? formatOutputDisplayValue(selectedScript) : '(no script selected)';
   const previousScriptDisplayRef = useRef<string | null>(null);
   const previousFormattedOutputDisplayRef = useRef<string | null>(null);
   useEffect(() => {
@@ -766,12 +743,8 @@ export default function SponsorCoinLabPage() {
   }, [formattedOutputDisplay]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
-  const spCoinReadOptions = useMemo(() => {
-    return getSpCoinReadOptions(false);
-  }, []);
-  const spCoinWriteOptions = useMemo(() => {
-    return getSpCoinWriteOptions(false);
-  }, []);
+  const spCoinReadOptions = getSpCoinReadOptions(false);
+  const spCoinWriteOptions = getSpCoinWriteOptions(false);
   useEffect(() => {
     if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinReadOptions.length > 0) {
       setSelectedSpCoinReadMethod(spCoinReadOptions[0]);
@@ -782,14 +755,11 @@ export default function SponsorCoinLabPage() {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
     }
   }, [selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
-  const methodPanelTitle = useMemo(
-    () =>
-      methodSelectionSource === 'script' && editingScriptStepNumber !== null
-        ? `Edit Test Method ${editingScriptStepNumber}`
-        : 'New Test Method',
-    [editingScriptStepNumber, methodSelectionSource],
-  );
-  const currentMethodDisplayName = useMemo(() => {
+  const methodPanelTitle =
+    methodSelectionSource === 'script' && editingScriptStepNumber !== null
+      ? `Edit Test Method ${editingScriptStepNumber}`
+      : 'New Test Method';
+  const currentMethodDisplayName = (() => {
     switch (methodPanelMode) {
       case 'ecr20_read':
         return activeReadLabels.title;
@@ -802,26 +772,17 @@ export default function SponsorCoinLabPage() {
       default:
         return 'method';
     }
-  }, [activeReadLabels.title, activeSpCoinReadDef.title, activeSpCoinWriteDef.title, activeWriteLabels.title, methodPanelMode]);
+  })();
   const isEditingScriptMethod = methodSelectionSource === 'script' && editingScriptStepNumber !== null;
-  const discardChangesMessage = useMemo(
-    () => {
-      const activeStepNumber = editingScriptStepNumber ?? selectedScriptStepNumber;
-      return activeStepNumber !== null
-        ? `Discard unsaved changes to Step ${activeStepNumber} (${currentMethodDisplayName}) or return?`
-        : `Discard unsaved changes to ${currentMethodDisplayName} or return?`;
-    },
-    [currentMethodDisplayName, editingScriptStepNumber, selectedScriptStepNumber],
-  );
+  const discardChangesMessage = (() => {
+    const activeStepNumber = editingScriptStepNumber ?? selectedScriptStepNumber;
+    return activeStepNumber !== null
+      ? `Discard unsaved changes to Step ${activeStepNumber} (${currentMethodDisplayName}) or return?`
+      : `Discard unsaved changes to ${currentMethodDisplayName} or return?`;
+  })();
   const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
   const hasEditorScriptSelected = Boolean(String(selectedScriptId || '').trim());
-  const addToScriptButtonLabel = useMemo(
-    () =>
-      isEditingScriptMethod
-        ? `Update Script Step ${editingScriptStepNumber}`
-        : 'Add To Script',
-    [editingScriptStepNumber, isEditingScriptMethod],
-  );
+  const addToScriptButtonLabel = isEditingScriptMethod ? `Update Script Step ${editingScriptStepNumber}` : 'Add To Script';
   const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
   const toggleExpandedCard = useCallback((cardId: LabCardId) => {
     setExpandedCard((current) => (current === cardId ? null : cardId));
@@ -849,6 +810,11 @@ export default function SponsorCoinLabPage() {
     },
     [loadScriptStep, queueEditorBaselineReset],
   );
+  const resetToDropdownSelection = useCallback(() => {
+    setMethodSelectionSource('dropdown');
+    setEditingScriptStepNumber(null);
+    setSelectedScriptStepNumber(null);
+  }, [setSelectedScriptStepNumber]);
   const focusScriptStep = useCallback(
     (step: LabScriptStep) => {
       setSelectedScriptStepNumber(step.step);
@@ -859,61 +825,51 @@ export default function SponsorCoinLabPage() {
     (value: MethodPanelMode) => {
       if (methodPanelMode === value) return;
       runWithDiscardPrompt(() => {
-        setMethodSelectionSource('dropdown');
-        setEditingScriptStepNumber(null);
-        setSelectedScriptStepNumber(null);
+        resetToDropdownSelection();
         setMethodPanelMode(value);
       });
     },
-    [methodPanelMode, runWithDiscardPrompt, setMethodPanelMode, setSelectedScriptStepNumber],
+    [methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, setMethodPanelMode],
   );
   const selectDropdownReadMethod = useCallback(
     (value: Erc20ReadMethod) => {
       if (selectedReadMethod === value) return;
       runWithDiscardPrompt(() => {
-        setMethodSelectionSource('dropdown');
-        setEditingScriptStepNumber(null);
-        setSelectedScriptStepNumber(null);
+        resetToDropdownSelection();
         setSelectedReadMethod(value);
       });
     },
-    [runWithDiscardPrompt, selectedReadMethod, setSelectedReadMethod, setSelectedScriptStepNumber],
+    [resetToDropdownSelection, runWithDiscardPrompt, selectedReadMethod, setSelectedReadMethod],
   );
   const selectDropdownWriteMethod = useCallback(
     (value: Erc20WriteMethod) => {
       if (selectedWriteMethod === value) return;
       runWithDiscardPrompt(() => {
-        setMethodSelectionSource('dropdown');
-        setEditingScriptStepNumber(null);
-        setSelectedScriptStepNumber(null);
+        resetToDropdownSelection();
         setSelectedWriteMethod(value);
       });
     },
-    [runWithDiscardPrompt, selectedWriteMethod, setSelectedScriptStepNumber, setSelectedWriteMethod],
+    [resetToDropdownSelection, runWithDiscardPrompt, selectedWriteMethod, setSelectedWriteMethod],
   );
   const selectDropdownSpCoinReadMethod = useCallback(
     (value: SpCoinReadMethod) => {
       if (selectedSpCoinReadMethod === value) return;
       runWithDiscardPrompt(() => {
-        setMethodSelectionSource('dropdown');
-        setEditingScriptStepNumber(null);
-        setSelectedScriptStepNumber(null);
+        resetToDropdownSelection();
         setSelectedSpCoinReadMethod(value);
       });
     },
-    [runWithDiscardPrompt, selectedSpCoinReadMethod, setSelectedScriptStepNumber, setSelectedSpCoinReadMethod],
+    [resetToDropdownSelection, runWithDiscardPrompt, selectedSpCoinReadMethod, setSelectedSpCoinReadMethod],
   );
   const selectDropdownSpCoinWriteMethod = useCallback(
     (value: SpCoinWriteMethod) => {
       if (selectedSpCoinWriteMethod === value) return;
       runWithDiscardPrompt(() => {
-        setMethodSelectionSource('dropdown');
-        setEditingScriptStepNumber(null);
-        setSelectedScriptStepNumber(null);
+        resetToDropdownSelection();
         setSelectedSpCoinWriteMethod(value);
       });
     },
-    [runWithDiscardPrompt, selectedSpCoinWriteMethod, setSelectedScriptStepNumber, setSelectedSpCoinWriteMethod],
+    [resetToDropdownSelection, runWithDiscardPrompt, selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod],
   );
   const handleAddCurrentMethodToScript = useCallback(() => {
     const savedStepNumber = addCurrentMethodToScript();
@@ -949,46 +905,84 @@ export default function SponsorCoinLabPage() {
 
     return () => resizeObserver.disconnect();
   }, [expandedCard, isDesktopSharedLayout]);
+  const runScriptDebugSequence = useCallback(
+    async (options: {
+      startIndex: number;
+      emptyScriptStatus: string;
+      initialOutput: string;
+      loadFirstStepIntoEditor?: boolean;
+      stopAfterCurrentStep?: boolean;
+    }) => {
+      if (!selectedScript || selectedScript.steps.length === 0) {
+        setStatus(options.emptyScriptStatus);
+        return;
+      }
+
+      const { startIndex, initialOutput, loadFirstStepIntoEditor = false, stopAfterCurrentStep = false } = options;
+      const activeStep = selectedScript.steps[startIndex];
+      if (!activeStep) {
+        setStatus('Unable to resolve the requested script step.');
+        return;
+      }
+
+      scriptDebugStopRef.current = false;
+      if (initialOutput === '(no output yet)') {
+        setFormattedOutputDisplay(initialOutput);
+      }
+      setIsScriptDebugRunning(true);
+
+      let accumulatedOutput = initialOutput;
+      try {
+        for (let idx = startIndex; idx < selectedScript.steps.length; idx += 1) {
+          const step = selectedScript.steps[idx];
+          focusScriptStep(step);
+          if (loadFirstStepIntoEditor && idx === startIndex) {
+            loadScriptStep(step);
+          }
+
+          const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
+          accumulatedOutput = result.formattedOutput;
+          if (!result.success) return;
+
+          if (scriptDebugStopRef.current) {
+            setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
+            return;
+          }
+
+          const nextStep = selectedScript.steps[idx + 1];
+          if (!nextStep) {
+            setSelectedScriptStepNumber(null);
+            setStatus(`Completed ${selectedScript.name}.`);
+            return;
+          }
+
+          if (stopAfterCurrentStep) {
+            focusScriptStep(nextStep);
+            setStatus(`Completed step ${step.step}. Ready for step ${nextStep.step}.`);
+            return;
+          }
+
+          if (nextStep.breakpoint) {
+            focusScriptStep(nextStep);
+            setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
+            return;
+          }
+        }
+      } finally {
+        setIsScriptDebugRunning(false);
+      }
+    },
+    [focusScriptStep, loadScriptStep, runScriptStep, selectedScript],
+  );
   const restartScriptAtStart = useCallback(async () => {
     scriptDebugStopRef.current = true;
     setIsScriptDebugRunning(false);
-    setFormattedOutputDisplay('(no output yet)');
-    if (!selectedScript || selectedScript.steps.length === 0) {
-      setStatus('Selected script has no steps to restart.');
-      return;
-    }
-    scriptDebugStopRef.current = false;
-    setIsScriptDebugRunning(true);
-    let accumulatedOutput = '(no output yet)';
-    try {
-      for (let idx = 0; idx < selectedScript.steps.length; idx += 1) {
-        const step = selectedScript.steps[idx];
-        focusScriptStep(step);
-        const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
-        accumulatedOutput = result.formattedOutput;
-        if (!result.success) return;
-        if (scriptDebugStopRef.current) {
-          setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
-          return;
-        }
-
-        const nextStep = selectedScript.steps[idx + 1];
-        if (!nextStep) {
-          setSelectedScriptStepNumber(null);
-          setStatus(`Completed ${selectedScript.name}.`);
-          return;
-        }
-
-        if (nextStep.breakpoint) {
-          focusScriptStep(nextStep);
-          setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
-          return;
-        }
-      }
-    } finally {
-      setIsScriptDebugRunning(false);
-    }
-  }, [focusScriptStep, runScriptStep, selectedScript]);
+    await runScriptDebugSequence({
+      startIndex: 0,
+      emptyScriptStatus: 'Selected script has no steps to restart.',
+      initialOutput: '(no output yet)',
+    });
+  }, [runScriptDebugSequence]);
   const runSelectedScriptStep = useCallback(async () => {
     if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
       setStatus('Select a script step to run.');
@@ -996,81 +990,31 @@ export default function SponsorCoinLabPage() {
     }
 
     const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
-    const activeStep = selectedIndex >= 0 ? selectedScript.steps[selectedIndex] : null;
-    if (!activeStep) {
+    if (selectedIndex < 0) {
       setStatus('Unable to resolve the selected script step.');
       return;
     }
 
-    scriptDebugStopRef.current = false;
-    focusScriptStep(activeStep);
-    loadScriptStep(activeStep);
-    setFormattedOutputDisplay('(no output yet)');
-    setIsScriptDebugRunning(true);
-
-    try {
-      const result = await runScriptStep(activeStep, { formattedOutputBase: '(no output yet)' });
-      if (!result.success) return;
-
-      const nextStep = selectedScript.steps[selectedIndex + 1];
-      if (nextStep) {
-        focusScriptStep(nextStep);
-        setStatus(`Completed step ${activeStep.step}. Ready for step ${nextStep.step}.`);
-      } else {
-        setSelectedScriptStepNumber(null);
-        setStatus(`Completed ${selectedScript.name}.`);
-      }
-    } finally {
-      setIsScriptDebugRunning(false);
-    }
-  }, [focusScriptStep, loadScriptStep, runScriptStep, selectedScript, selectedScriptStepNumber, setStatus]);
+    await runScriptDebugSequence({
+      startIndex: selectedIndex,
+      emptyScriptStatus: 'Select a script step to run.',
+      initialOutput: '(no output yet)',
+      loadFirstStepIntoEditor: true,
+      stopAfterCurrentStep: true,
+    });
+  }, [runScriptDebugSequence, selectedScript, selectedScriptStepNumber, setStatus]);
   const runRemainingScriptSteps = useCallback(async () => {
-    if (!selectedScript || selectedScript.steps.length === 0) {
-      setStatus('Selected script has no steps to run.');
-      return;
-    }
-
-    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
-    const startIndex = selectedIndex >= 0 ? selectedIndex : 0;
-    scriptDebugStopRef.current = false;
-    setIsScriptDebugRunning(true);
-
-    let accumulatedOutput = formattedOutputDisplay;
-    try {
-      for (let idx = startIndex; idx < selectedScript.steps.length; idx += 1) {
-        const step = selectedScript.steps[idx];
-        focusScriptStep(step);
-        const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
-        accumulatedOutput = result.formattedOutput;
-        if (!result.success) return;
-        if (scriptDebugStopRef.current) {
-          setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
-          return;
-        }
-
-        const nextStep = selectedScript.steps[idx + 1];
-        if (!nextStep) {
-          setSelectedScriptStepNumber(null);
-          setStatus(`Completed ${selectedScript.name}.`);
-          return;
-        }
-
-        if (nextStep.breakpoint) {
-          focusScriptStep(nextStep);
-          setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
-          return;
-        }
-      }
-    } finally {
-      setIsScriptDebugRunning(false);
-    }
-  }, [focusScriptStep, formattedOutputDisplay, runScriptStep, selectedScript, selectedScriptStepNumber]);
+    const selectedIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
+    await runScriptDebugSequence({
+      startIndex: selectedIndex >= 0 ? selectedIndex : 0,
+      emptyScriptStatus: 'Selected script has no steps to run.',
+      initialOutput: formattedOutputDisplay,
+    });
+  }, [formattedOutputDisplay, runScriptDebugSequence, selectedScript?.steps, selectedScriptStepNumber]);
   const selectScriptStep = useCallback(
     (step: LabScriptStep) => {
       if (selectedScriptStep?.step === step.step) {
-        setSelectedScriptStepNumber(null);
-        setEditingScriptStepNumber(null);
-        setMethodSelectionSource('dropdown');
+        resetToDropdownSelection();
         return;
       }
       setOutputPanelMode('formatted');
@@ -1078,13 +1022,7 @@ export default function SponsorCoinLabPage() {
       focusScriptStep(step);
       editScriptStepFromBuilder(step);
     },
-    [editScriptStepFromBuilder, focusScriptStep, selectedScriptStep?.step],
-  );
-  const editScriptStep = useCallback(
-    (step: LabScriptStep) => {
-      editScriptStepFromBuilder(step);
-    },
-    [editScriptStepFromBuilder],
+    [editScriptStepFromBuilder, focusScriptStep, resetToDropdownSelection, selectedScriptStep?.step],
   );
   const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
     confirmDeleteSelectedScriptStep();
@@ -1106,7 +1044,7 @@ export default function SponsorCoinLabPage() {
           getStepSender={getStepSender}
           getStepParamEntries={getStepParamEntries}
           selectScriptStep={selectScriptStep}
-          editScriptStep={editScriptStep}
+          editScriptStep={editScriptStepFromBuilder}
           toggleScriptStepExpanded={toggleScriptStepExpanded}
           toggleScriptStepBreakpoint={toggleScriptStepBreakpoint}
         />
@@ -1115,7 +1053,7 @@ export default function SponsorCoinLabPage() {
     [
       editingScriptStepNumber,
       expandedScriptStepIds,
-      editScriptStep,
+      editScriptStepFromBuilder,
       getStepParamEntries,
       getStepSender,
       isEditingScriptMethod,

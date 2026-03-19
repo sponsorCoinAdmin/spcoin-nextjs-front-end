@@ -21,6 +21,13 @@ type ScriptRunResult = {
   success: boolean;
   formattedOutput: string;
 };
+type MethodParamEntry = { key: string; value: string };
+type MethodExecutionDescriptor = {
+  panel: MethodPanelMode;
+  method: string;
+  params: MethodParamEntry[];
+  sender?: string;
+};
 
 type Params = {
   activeContractAddress: string;
@@ -322,6 +329,130 @@ export function useSponsorCoinLabMethods({
     },
     [formatOutputDisplayValue],
   );
+  const executeMethodDescriptor = useCallback(
+    async (descriptor: MethodExecutionDescriptor) => {
+      const { panel, method, params, sender = '' } = descriptor;
+      const findParamValue = (label: string) =>
+        String(params.find((entry) => String(entry?.key || '') === label)?.value || '').trim();
+
+      if (panel === 'ecr20_read') {
+        const selectedMethod = method as Erc20ReadMethod;
+        const labels = getErc20ReadLabels(selectedMethod);
+        const readAddressA = labels.requiresAddressA ? findParamValue(labels.addressALabel) : '';
+        const readAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
+        const call = buildMethodCallEntry(selectedMethod, [
+          ...(labels.requiresAddressA ? [{ label: labels.addressALabel, value: readAddressA }] : []),
+          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: readAddressB }] : []),
+        ]);
+        const result = await runErc20ReadMethod({
+          selectedReadMethod: selectedMethod,
+          activeReadLabels: labels,
+          readAddressA,
+          readAddressB,
+          requireContractAddress,
+          ensureReadRunner,
+          appendLog,
+          setStatus,
+        });
+        return { call, result };
+      }
+
+      if (panel === 'erc20_write') {
+        const selectedMethod = method as Erc20WriteMethod;
+        const labels = getErc20WriteLabels(selectedMethod);
+        const writeAddressA = findParamValue(labels.addressALabel);
+        const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
+        const amount = findParamValue('Amount');
+        const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
+        const call = buildMethodCallEntry(selectedMethod, [
+          ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
+          { label: labels.addressALabel, value: writeAddressA },
+          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: writeAddressB }] : []),
+          { label: 'Amount', value: amount },
+        ]);
+        const result = await runErc20WriteMethod({
+          selectedWriteMethod: selectedMethod,
+          activeWriteLabels: labels,
+          writeAddressA,
+          writeAddressB,
+          writeAmountRaw: amount,
+          selectedHardhatAddress: signer,
+          executeWriteConnected,
+          appendLog,
+          setStatus,
+        });
+        return { call, result };
+      }
+
+      if (panel === 'spcoin_rread') {
+        const selectedMethod = method as SpCoinReadMethod;
+        const def = spCoinReadMethodDefs[selectedMethod];
+        const localParams = def.params.map((param) => findParamValue(param.label));
+        const call = buildMethodCallEntry(
+          selectedMethod,
+          def.params.map((param, idx) => ({
+            label: param.label,
+            value: localParams[idx] || '',
+          })),
+        );
+        const result = await runSpCoinReadMethod({
+          selectedMethod,
+          spReadParams: localParams,
+          coerceParamValue,
+          stringifyResult,
+          requireContractAddress,
+          ensureReadRunner,
+          appendLog,
+          setStatus,
+        });
+        return { call, result };
+      }
+
+      const selectedMethod = method as SpCoinWriteMethod;
+      const def = spCoinWriteMethodDefs[selectedMethod];
+      const localParams = def.params.map((param) => findParamValue(param.label));
+      const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
+      const call = buildMethodCallEntry(selectedMethod, [
+        ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
+        ...def.params.map((param, idx) => ({
+          label: param.label,
+          value: localParams[idx] || '',
+        })),
+      ]);
+      appendWriteTrace(
+        `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
+      );
+      const result = await runSpCoinWriteMethod({
+        selectedMethod,
+        spWriteParams: localParams,
+        coerceParamValue,
+        executeWriteConnected,
+        selectedHardhatAddress: signer,
+        appendLog,
+        appendWriteTrace,
+        spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+        setStatus,
+      });
+      return { call, result };
+    },
+    [
+      appendLog,
+      appendWriteTrace,
+      buildMethodCallEntry,
+      coerceParamValue,
+      effectiveConnectedAddress,
+      ensureReadRunner,
+      executeWriteConnected,
+      mode,
+      requireContractAddress,
+      selectedHardhatAddress,
+      setStatus,
+      spCoinReadMethodDefs,
+      spCoinWriteMethodDefs,
+      stringifyResult,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
 
   const runHeaderRead = useCallback(async () => {
     const call = buildMethodCallEntry('getSerializedSPCoinHeader');
@@ -521,31 +652,27 @@ export function useSponsorCoinLabMethods({
       return;
     }
 
-    const call = buildMethodCallEntry(selectedWriteMethod, [
-      ...(mode === 'hardhat' || effectiveConnectedAddress
-        ? [{ label: 'msg.sender', value: selectedHardhatAddress || effectiveConnectedAddress }]
-        : []),
-      { label: activeWriteLabels.addressALabel, value: writeAddressA },
-      ...(activeWriteLabels.requiresAddressB ? [{ label: activeWriteLabels.addressBLabel, value: writeAddressB }] : []),
-      { label: 'Amount', value: writeAmountRaw },
-    ]);
+    const descriptor: MethodExecutionDescriptor = {
+      panel: 'erc20_write',
+      method: selectedWriteMethod,
+      sender: mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
+      params: [
+        { key: activeWriteLabels.addressALabel, value: writeAddressA },
+        ...(activeWriteLabels.requiresAddressB ? [{ key: activeWriteLabels.addressBLabel, value: writeAddressB }] : []),
+        { key: 'Amount', value: writeAmountRaw },
+      ],
+    };
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const result = await runErc20WriteMethod({
-        selectedWriteMethod,
-        activeWriteLabels,
-        writeAddressA,
-        writeAddressB,
-        writeAmountRaw,
-        selectedHardhatAddress: mode === 'hardhat' ? selectedHardhatAddress : effectiveConnectedAddress,
-        executeWriteConnected,
-        appendLog,
-        setStatus,
-      });
+      const { call, result } = await executeMethodDescriptor(descriptor);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
+      const call = buildMethodCallEntry(descriptor.method, [
+        ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
+        ...descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
+      ]);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeWriteLabels.title} failed: ${message}`);
       appendLog(`${activeWriteLabels.title} failed: ${message}`);
@@ -553,17 +680,17 @@ export function useSponsorCoinLabMethods({
   }, [
     activeWriteLabels,
     appendLog,
+    erc20WriteMissingEntries,
+    executeMethodDescriptor,
+    formatFormattedPanelPayload,
     buildMethodCallEntry,
     effectiveConnectedAddress,
-    erc20WriteMissingEntries,
-    executeWriteConnected,
-    formatFormattedPanelPayload,
     mode,
     selectedHardhatAddress,
-    selectedWriteMethod,
     setFormattedOutputDisplay,
     setStatus,
     showValidationPopup,
+    selectedWriteMethod,
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
@@ -583,26 +710,22 @@ export function useSponsorCoinLabMethods({
       return;
     }
 
-    const call = buildMethodCallEntry(selectedReadMethod, [
-      ...(activeReadLabels.requiresAddressA ? [{ label: activeReadLabels.addressALabel, value: readAddressA }] : []),
-      ...(activeReadLabels.requiresAddressB ? [{ label: activeReadLabels.addressBLabel, value: readAddressB }] : []),
-    ]);
+    const descriptor: MethodExecutionDescriptor = {
+      panel: 'ecr20_read',
+      method: selectedReadMethod,
+      params: [
+        ...(activeReadLabels.requiresAddressA ? [{ key: activeReadLabels.addressALabel, value: readAddressA }] : []),
+        ...(activeReadLabels.requiresAddressB ? [{ key: activeReadLabels.addressBLabel, value: readAddressB }] : []),
+      ],
+    };
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const result = await runErc20ReadMethod({
-        selectedReadMethod,
-        activeReadLabels,
-        readAddressA,
-        readAddressB,
-        requireContractAddress,
-        ensureReadRunner,
-        appendLog,
-        setStatus,
-      });
+      const { call, result } = await executeMethodDescriptor(descriptor);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
+      const call = buildMethodCallEntry(descriptor.method, descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })));
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeReadLabels.title} failed: ${message}`);
       appendLog(`${activeReadLabels.title} failed: ${message}`);
@@ -611,12 +734,11 @@ export function useSponsorCoinLabMethods({
     activeReadLabels,
     appendLog,
     buildMethodCallEntry,
-    ensureReadRunner,
     erc20ReadMissingEntries,
+    executeMethodDescriptor,
     formatFormattedPanelPayload,
     readAddressA,
     readAddressB,
-    requireContractAddress,
     selectedReadMethod,
     setFormattedOutputDisplay,
     setStatus,
@@ -637,29 +759,22 @@ export function useSponsorCoinLabMethods({
       return;
     }
 
-    const call = buildMethodCallEntry(
-      selectedSpCoinReadMethod,
-      activeSpCoinReadDef.params.map((param, idx) => ({
-        label: param.label,
+    const descriptor: MethodExecutionDescriptor = {
+      panel: 'spcoin_rread',
+      method: selectedSpCoinReadMethod,
+      params: activeSpCoinReadDef.params.map((param, idx) => ({
+        key: param.label,
         value: spReadParams[idx] || '',
       })),
-    );
+    };
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const result = await runSpCoinReadMethod({
-        selectedMethod: selectedSpCoinReadMethod,
-        spReadParams,
-        coerceParamValue,
-        stringifyResult,
-        requireContractAddress,
-        ensureReadRunner,
-        appendLog,
-        setStatus,
-      });
+      const { call, result } = await executeMethodDescriptor(descriptor);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin read error.';
+      const call = buildMethodCallEntry(descriptor.method, descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })));
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeSpCoinReadDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinReadDef.title} failed: ${message}`);
@@ -668,17 +783,14 @@ export function useSponsorCoinLabMethods({
     activeSpCoinReadDef,
     appendLog,
     buildMethodCallEntry,
-    coerceParamValue,
-    ensureReadRunner,
+    executeMethodDescriptor,
     formatFormattedPanelPayload,
-    requireContractAddress,
     selectedSpCoinReadMethod,
     setFormattedOutputDisplay,
     setStatus,
     showValidationPopup,
     spCoinReadMissingEntries,
     spReadParams,
-    stringifyResult,
   ]);
 
   const runSelectedSpCoinWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
@@ -695,35 +807,26 @@ export function useSponsorCoinLabMethods({
       return;
     }
 
-    const call = buildMethodCallEntry(selectedSpCoinWriteMethod, [
-      ...(mode === 'hardhat' || effectiveConnectedAddress
-        ? [{ label: 'msg.sender', value: selectedHardhatAddress || effectiveConnectedAddress }]
-        : []),
-      ...activeSpCoinWriteDef.params.map((param, idx) => ({
-        label: param.label,
+    const descriptor: MethodExecutionDescriptor = {
+      panel: 'spcoin_write',
+      method: selectedSpCoinWriteMethod,
+      sender: mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
+      params: activeSpCoinWriteDef.params.map((param, idx) => ({
+        key: param.label,
         value: spWriteParams[idx] || '',
       })),
-    ]);
+    };
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      appendWriteTrace(
-        `runSelectedSpCoinWriteMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedSpCoinWriteMethod}`,
-      );
-      const result = await runSpCoinWriteMethod({
-        selectedMethod: selectedSpCoinWriteMethod,
-        spWriteParams,
-        coerceParamValue,
-        executeWriteConnected,
-        selectedHardhatAddress: mode === 'hardhat' ? selectedHardhatAddress : effectiveConnectedAddress,
-        appendLog,
-        appendWriteTrace,
-        spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        setStatus,
-      });
+      const { call, result } = await executeMethodDescriptor(descriptor);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
+      const call = buildMethodCallEntry(descriptor.method, [
+        ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
+        ...descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
+      ]);
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
       setStatus(`${activeSpCoinWriteDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinWriteDef.title} failed: ${message}`);
@@ -731,11 +834,9 @@ export function useSponsorCoinLabMethods({
   }, [
     activeSpCoinWriteDef,
     appendLog,
-    appendWriteTrace,
     buildMethodCallEntry,
-    coerceParamValue,
     effectiveConnectedAddress,
-    executeWriteConnected,
+    executeMethodDescriptor,
     formatFormattedPanelPayload,
     mode,
     selectedHardhatAddress,
@@ -745,14 +846,11 @@ export function useSponsorCoinLabMethods({
     showValidationPopup,
     spCoinWriteMissingEntries,
     spWriteParams,
-    useLocalSpCoinAccessPackage,
   ]);
   const runScriptStep = useCallback(
     async (step: LabScriptStep, options?: { formattedOutputBase?: string }): Promise<ScriptRunResult> => {
       const formattedOutputBase = options?.formattedOutputBase;
       const paramEntries = Array.isArray(step.params) ? step.params : [];
-      const findParamValue = (label: string) =>
-        String(paramEntries.find((entry) => String(entry?.key || '') === label)?.value || '').trim();
       const stepSender = String(step['msg.sender'] || '').trim();
 
       const commitResult = (payload: unknown, success: boolean) => {
@@ -765,105 +863,11 @@ export function useSponsorCoinLabMethods({
       };
 
       try {
-        if (step.panel === 'ecr20_read') {
-          const selectedMethod = step.method as Erc20ReadMethod;
-          const labels = getErc20ReadLabels(selectedMethod);
-          const readAddressA = labels.requiresAddressA ? findParamValue(labels.addressALabel) : '';
-          const readAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-          const call = buildMethodCallEntry(selectedMethod, [
-            ...(labels.requiresAddressA ? [{ label: labels.addressALabel, value: readAddressA }] : []),
-            ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: readAddressB }] : []),
-          ]);
-          const result = await runErc20ReadMethod({
-            selectedReadMethod: selectedMethod,
-            activeReadLabels: labels,
-            readAddressA,
-            readAddressB,
-            requireContractAddress,
-            ensureReadRunner,
-            appendLog,
-            setStatus,
-          });
-          return commitResult({ call, result }, true);
-        }
-
-        if (step.panel === 'erc20_write') {
-          const selectedMethod = step.method as Erc20WriteMethod;
-          const labels = getErc20WriteLabels(selectedMethod);
-          const writeAddressA = findParamValue(labels.addressALabel);
-          const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-          const writeAmountRaw = findParamValue('Amount');
-          const stepSigner =
-            stepSender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-          const call = buildMethodCallEntry(selectedMethod, [
-            ...(mode === 'hardhat' || stepSigner ? [{ label: 'msg.sender', value: stepSigner }] : []),
-            { label: labels.addressALabel, value: writeAddressA },
-            ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: writeAddressB }] : []),
-            { label: 'Amount', value: writeAmountRaw },
-          ]);
-          const result = await runErc20WriteMethod({
-            selectedWriteMethod: selectedMethod,
-            activeWriteLabels: labels,
-            writeAddressA,
-            writeAddressB,
-            writeAmountRaw,
-            selectedHardhatAddress: stepSigner,
-            executeWriteConnected,
-            appendLog,
-            setStatus,
-          });
-          return commitResult({ call, result }, true);
-        }
-
-        if (step.panel === 'spcoin_rread') {
-          const selectedMethod = step.method as SpCoinReadMethod;
-          const def = spCoinReadMethodDefs[selectedMethod];
-          const localParams = def.params.map((param) => findParamValue(param.label));
-          const call = buildMethodCallEntry(
-            selectedMethod,
-            def.params.map((param, idx) => ({
-              label: param.label,
-              value: localParams[idx] || '',
-            })),
-          );
-          const result = await runSpCoinReadMethod({
-            selectedMethod,
-            spReadParams: localParams,
-            coerceParamValue,
-            stringifyResult,
-            requireContractAddress,
-            ensureReadRunner,
-            appendLog,
-            setStatus,
-          });
-          return commitResult({ call, result }, true);
-        }
-
-        const selectedMethod = step.method as SpCoinWriteMethod;
-        const def = spCoinWriteMethodDefs[selectedMethod];
-        const localParams = def.params.map((param) => findParamValue(param.label));
-        const stepSigner =
-          stepSender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-        const call = buildMethodCallEntry(selectedMethod, [
-          ...(mode === 'hardhat' || stepSigner ? [{ label: 'msg.sender', value: stepSigner }] : []),
-          ...def.params.map((param, idx) => ({
-            label: param.label,
-            value: localParams[idx] || '',
-          })),
-        ]);
-        appendWriteTrace(
-          `runScriptStep start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
-        );
-        const result = await runSpCoinWriteMethod({
-          selectedMethod,
-          spWriteParams: localParams,
-          coerceParamValue,
-          executeWriteConnected,
-          selectedHardhatAddress: stepSigner,
-          appendLog,
-          appendWriteTrace,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          setStatus,
+        const { call, result } = await executeMethodDescriptor({
+          panel: step.panel,
+          method: step.method,
+          params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
+          sender: stepSender,
         });
         return commitResult({ call, result }, true);
       } catch (error) {
@@ -885,24 +889,12 @@ export function useSponsorCoinLabMethods({
     },
     [
       appendLog,
-      appendWriteTrace,
       buildMethodCallEntry,
-      coerceParamValue,
-      effectiveConnectedAddress,
-      ensureReadRunner,
-      executeWriteConnected,
+      executeMethodDescriptor,
       formatFormattedPanelPayload,
       mergeFormattedOutput,
-      mode,
-      requireContractAddress,
-      selectedHardhatAddress,
       setFormattedOutputDisplay,
-      setOutputPanelMode,
       setStatus,
-      spCoinReadMethodDefs,
-      spCoinWriteMethodDefs,
-      stringifyResult,
-      useLocalSpCoinAccessPackage,
     ],
   );
 

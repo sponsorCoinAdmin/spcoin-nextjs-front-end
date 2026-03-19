@@ -38,7 +38,7 @@
       "panel": "ecr20_read",
       "method": "decimals",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
@@ -47,7 +47,7 @@
       "panel": "ecr20_read",
       "method": "totalSupply",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
@@ -61,7 +61,7 @@
           "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
       ],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     }
   ]
