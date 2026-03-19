@@ -15,10 +15,10 @@ class SpCoinDeleteModule {
             spCoinLogger.logFunctionHeader("deleteAccountRecords = async(arrayAccounts)");
             let maxCount = _accountListKeys.length;
             spCoinLogger.logDetail("JS => Inserting " + maxCount + " Records to Blockchain Network");
-            for (idx = 0; idx < maxCount; idx++) {
+            for (let idx = 0; idx < maxCount; idx++) {
                 let accountKey = _accountListKeys[idx];
                 spCoinLogger.logDetail("JS => Deleting " + idx + ", " + accountKey);
-                await deleteAccountRecord(accountKey);
+                await this.deleteAccountRecord(accountKey);
             }
             spCoinLogger.logDetail("JS => Inserted " + maxCount + " Account to Blockchain Network");
             spCoinLogger.logExitFunction();

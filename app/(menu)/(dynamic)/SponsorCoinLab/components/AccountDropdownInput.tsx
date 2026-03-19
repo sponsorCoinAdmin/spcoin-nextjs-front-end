@@ -24,6 +24,25 @@ export default function AccountDropdownInput({
 }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [showFullList, setShowFullList] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (containerRef.current?.contains(target)) return;
+      setIsOpen(false);
+      setShowFullList(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, []);
 
   const normalizedQuery = String(value || '').trim().toLowerCase();
   const visibleOptions = React.useMemo(() => {
@@ -35,7 +54,7 @@ export default function AccountDropdownInput({
   }, [normalizedQuery, options, showFullList]);
 
   return (
-    <div className="relative w-full min-w-0">
+    <div ref={containerRef} className="relative w-full min-w-0">
       <input
         type="text"
         data-field-id={dataFieldId}

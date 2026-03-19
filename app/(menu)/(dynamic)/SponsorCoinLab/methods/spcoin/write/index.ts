@@ -9,8 +9,6 @@ export type SpCoinWriteMethod =
   | 'addRecipients'
   | 'addAgent'
   | 'addAgents'
-  | 'addAccountRecord'
-  | 'addAccountRecords'
   | 'addSponsor'
   | 'addSponsorship'
   | 'addAgentSponsorship'
@@ -20,7 +18,6 @@ export type SpCoinWriteMethod =
   | 'unSponsorRecipient'
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
-  | 'deleteAgentRecord'
   | 'updateAccountStakingRewards'
   | 'updateAgentAccountRewards'
   | 'updateRecipietAccountRewards'
@@ -72,7 +69,19 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     appendWriteTrace,
     setStatus,
   } = args;
+  if (
+    selectedMethod === ('addAccountRecord' as string) ||
+    selectedMethod === ('addAccountRecords' as string) ||
+    selectedMethod === ('deleteAgentRecord' as string)
+  ) {
+    throw new Error(
+      `${selectedMethod} is not available because it is not exposed as a callable public contract method in the current SpCoin access path.`,
+    );
+  }
   const activeDef = SPCOIN_WRITE_METHOD_DEFS[selectedMethod];
+  if (!activeDef) {
+    throw new Error(`Unsupported SpCoin write method: ${String(selectedMethod)}`);
+  }
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spWriteParams[idx], def));
   const receipts: Array<{
     label: string;
@@ -129,13 +138,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       }
       break;
     }
-    case 'addAccountRecords': {
-      const accountList = methodArgs[0] as string[];
-      for (const accountKey of accountList) {
-        await submitWrite(`addAccountRecord(${accountKey})`, (access) => access.add.addAccountRecord(accountKey));
-      }
-      break;
-    }
     case 'addSponsorship': {
       const qty = `${String(methodArgs[4])}.${String(methodArgs[5])}`;
       await submitWrite(activeDef.title, (access, signer) =>
@@ -188,10 +190,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       await submitWrite(activeDef.title, (access) => access.add.addAgent(methodArgs[0], methodArgs[1], methodArgs[2]));
       break;
     }
-    case 'addAccountRecord': {
-      await submitWrite(activeDef.title, (access) => access.add.addAccountRecord(methodArgs[0]));
-      break;
-    }
     case 'deleteAccountRecords': {
       const accountList = methodArgs[0] as string[];
       for (const accountKey of accountList) {
@@ -209,9 +207,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         return access.del.deleteAccountRecord(methodArgs[0]);
       });
       break;
-    }
-    case 'deleteAgentRecord': {
-      throw new Error('deleteAgentRecord is not exposed as a callable public contract method in current ABI.');
     }
     case 'updateAccountStakingRewards': {
       await submitWrite(activeDef.title, (access) => access.rewards.updateAccountStakingRewards(methodArgs[0]));

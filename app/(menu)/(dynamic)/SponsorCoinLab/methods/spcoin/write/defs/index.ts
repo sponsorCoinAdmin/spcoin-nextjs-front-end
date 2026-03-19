@@ -3,8 +3,6 @@ import addRecipient from './addRecipient';
 import addRecipients from './addRecipients';
 import addAgent from './addAgent';
 import addAgents from './addAgents';
-import addAccountRecord from './addAccountRecord';
-import addAccountRecords from './addAccountRecords';
 import addSponsor from './addSponsor';
 import addSponsorship from './addSponsorship';
 import addAgentSponsorship from './addAgentSponsorship';
@@ -14,7 +12,6 @@ import deleteAccountFromMaster from './deleteAccountFromMaster';
 import unSponsorRecipient from './unSponsorRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
-import deleteAgentRecord from './deleteAgentRecord';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
 import updateAgentAccountRewards from './updateAgentAccountRewards';
 import updateRecipietAccountRewards from './updateRecipietAccountRewards';
@@ -29,8 +26,6 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipients,
   addAgent,
   addAgents,
-  addAccountRecord,
-  addAccountRecords,
   addSponsor,
   addSponsorship,
   addAgentSponsorship,
@@ -40,7 +35,6 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   unSponsorRecipient,
   deleteAccountRecord,
   deleteAccountRecords,
-  deleteAgentRecord,
   updateAccountStakingRewards,
   updateAgentAccountRewards,
   updateRecipietAccountRewards,

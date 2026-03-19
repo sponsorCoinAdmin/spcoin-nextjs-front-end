@@ -403,48 +403,42 @@ export default function SpCoinWriteController(props: Props) {
             <>
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
               <div className="grid gap-2">
-              <input
-                type="text"
-                data-field-id={`spcoin-write-param-${idx}`}
-                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                list={`sp-write-recipient-rate-options-${selectedSpCoinWriteMethod}-${idx}`}
-                value={spWriteParams[idx] || ''}
-                onChange={(e) => {
-                  clearInvalidField(`spcoin-write-param-${idx}`);
-                  updateSpWriteParamAtIndex(idx, e.target.value);
-                }}
-                placeholder={`Select, type, or paste ${param.label}`}
-              />
-              <datalist id={`sp-write-recipient-rate-options-${selectedSpCoinWriteMethod}-${idx}`}>
-                {recipientRateKeyOptions.map((value) => (
-                  <option key={`recipient-rate-${idx}-${value}`} value={value} />
-                ))}
-              </datalist>
-              {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
+                <AccountDropdownInput
+                  data-field-id={`spcoin-write-param-${idx}`}
+                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                  value={spWriteParams[idx] || ''}
+                  onChange={(value) => {
+                    clearInvalidField(`spcoin-write-param-${idx}`);
+                    updateSpWriteParamAtIndex(idx, value);
+                  }}
+                  placeholder={`Select or type ${param.label}`}
+                  options={recipientRateKeyOptions.map((value) => ({
+                    value,
+                    label: value,
+                  }))}
+                />
+                {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
               </div>
             </>
           ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) ? (
             <>
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
               <div className="grid gap-2">
-              <input
-                type="text"
-                data-field-id={`spcoin-write-param-${idx}`}
-                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                list={`sp-write-agent-rate-options-${selectedSpCoinWriteMethod}-${idx}`}
-                value={spWriteParams[idx] || ''}
-                onChange={(e) => {
-                  clearInvalidField(`spcoin-write-param-${idx}`);
-                  updateSpWriteParamAtIndex(idx, e.target.value);
-                }}
-                placeholder={`Select, type, or paste ${param.label}`}
-              />
-              <datalist id={`sp-write-agent-rate-options-${selectedSpCoinWriteMethod}-${idx}`}>
-                {agentRateKeyOptions.map((value) => (
-                  <option key={`agent-rate-${idx}-${value}`} value={value} />
-                ))}
-              </datalist>
-              {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
+                <AccountDropdownInput
+                  data-field-id={`spcoin-write-param-${idx}`}
+                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                  value={spWriteParams[idx] || ''}
+                  onChange={(value) => {
+                    clearInvalidField(`spcoin-write-param-${idx}`);
+                    updateSpWriteParamAtIndex(idx, value);
+                  }}
+                  placeholder={`Select or type ${param.label}`}
+                  options={agentRateKeyOptions.map((value) => ({
+                    value,
+                    label: value,
+                  }))}
+                />
+                {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
               </div>
             </>
           ) : (

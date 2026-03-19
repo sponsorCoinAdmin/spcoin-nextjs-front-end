@@ -899,7 +899,15 @@ export function useSponsorCoinLabMethods({
   );
 
   useEffect(() => {
-    if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false) {
+    const activeReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
+    if (!activeReadDef) {
+      const next = Object.keys(spCoinReadMethodDefs).find((key) => spCoinReadMethodDefs[key as SpCoinReadMethod].executable !== false);
+      if (next) {
+        setSelectedSpCoinReadMethod(next as SpCoinReadMethod);
+      }
+      return;
+    }
+    if (activeReadDef.executable === false) {
       const next = Object.keys(spCoinReadMethodDefs).find((key) => spCoinReadMethodDefs[key as SpCoinReadMethod].executable !== false);
       if (next) {
         setSelectedSpCoinReadMethod(next as SpCoinReadMethod);
@@ -908,7 +916,15 @@ export function useSponsorCoinLabMethods({
   }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, spCoinReadMethodDefs]);
 
   useEffect(() => {
-    if (spCoinWriteMethodDefs[selectedSpCoinWriteMethod].executable === false) {
+    const activeWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
+    if (!activeWriteDef) {
+      const next = Object.keys(spCoinWriteMethodDefs).find((key) => spCoinWriteMethodDefs[key as SpCoinWriteMethod].executable !== false);
+      if (next) {
+        setSelectedSpCoinWriteMethod(next as SpCoinWriteMethod);
+      }
+      return;
+    }
+    if (activeWriteDef.executable === false) {
       const next = Object.keys(spCoinWriteMethodDefs).find((key) => spCoinWriteMethodDefs[key as SpCoinWriteMethod].executable !== false);
       if (next) {
         setSelectedSpCoinWriteMethod(next as SpCoinWriteMethod);

@@ -23,6 +23,7 @@ import {
   getSpCoinWriteOptions,
   type SpCoinWriteMethod,
 } from './methods/spcoin/write';
+import { createSpCoinLibraryAccess, createSpCoinModuleAccess } from './methods/shared';
 import {
   CALENDAR_WEEK_DAYS,
   formatDateInput,
@@ -53,6 +54,7 @@ type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type FormattedPanelView = 'script' | 'output';
 type MethodSelectionSource = 'dropdown' | 'script';
+type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
@@ -267,6 +269,14 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinReadMethod>('getSerializedSPCoinHeader');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
+  const [selectedSponsorCoinAccountRole, setSelectedSponsorCoinAccountRole] =
+    useState<SponsorCoinAccountRole>('sponsor');
+  const [managedRoleAccountAddress, setManagedRoleAccountAddress] = useState('');
+  const [managedRecipientKey, setManagedRecipientKey] = useState('');
+  const [managedRecipientRateKey, setManagedRecipientRateKey] = useState('');
+  const [managedRecipientRateKeyOptions, setManagedRecipientRateKeyOptions] = useState<string[]>([]);
+  const [managedRecipientRateKeyHelpText, setManagedRecipientRateKeyHelpText] = useState('');
+  const [sponsorCoinAccountManagementStatus, setSponsorCoinAccountManagementStatus] = useState('');
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
@@ -369,11 +379,6 @@ export default function SponsorCoinLabPage() {
     showSignerAccountDetails,
     setShowSignerAccountDetails,
     hardhatAccountMetadata,
-    addAccountInput,
-    setAddAccountInput,
-    deleteAccountInput,
-    setDeleteAccountInput,
-    signerAccountStatus,
     connectedAddress,
     connectedChainId,
     connectedNetworkName,
@@ -397,11 +402,7 @@ export default function SponsorCoinLabPage() {
     selectedWriteSenderAccount,
     writeSenderDisplayValue,
     writeSenderPrivateKeyDisplay,
-    addAccountValidation,
-    deleteAccountValidation,
     accountActionLabelClassName,
-    addSignerAccount,
-    deleteSignerAccount,
     adjustSponsorCoinVersion,
     canIncrementSponsorCoinVersion,
     canDecrementSponsorCoinVersion,
@@ -432,7 +433,8 @@ export default function SponsorCoinLabPage() {
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
   const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
-  const activeSpCoinWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
+  const activeSpCoinWriteDef =
+    spCoinWriteMethodDefs[selectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -441,7 +443,7 @@ export default function SponsorCoinLabPage() {
     });
   }, []);
   const backdateCalendar = useBackdateCalendar({
-    activeWriteParams: activeSpCoinWriteDef.params,
+    activeWriteParams: activeSpCoinWriteDef?.params || [],
     spWriteParams,
     updateSpWriteParamAtIndex,
   });
@@ -745,12 +747,173 @@ export default function SponsorCoinLabPage() {
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
   const spCoinReadOptions = getSpCoinReadOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
+  const sponsorCoinAccountManagementValidation = useMemo(() => {
+    const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
+    if (!accountAddress) return { tone: 'neutral' as const, message: '' };
+    if (!isAddressLike(accountAddress)) {
+      return { tone: 'invalid' as const, message: 'Invalid account address.' };
+    }
+    if (selectedSponsorCoinAccountRole !== 'agent') {
+      return { tone: 'valid' as const, message: 'Ready' };
+    }
+
+    const recipientKey = normalizeAddressValue(managedRecipientKey);
+    if (!recipientKey) return { tone: 'neutral' as const, message: 'Recipient Key required.' };
+    if (!isAddressLike(recipientKey)) {
+      return { tone: 'invalid' as const, message: 'Invalid recipient address.' };
+    }
+    if (!String(managedRecipientRateKey || '').trim()) {
+      return { tone: 'neutral' as const, message: 'Recipient Rate Key required.' };
+    }
+    if (!isIntegerString(managedRecipientRateKey)) {
+      return { tone: 'invalid' as const, message: 'Recipient Rate Key must be an integer.' };
+    }
+    return { tone: 'valid' as const, message: 'Ready' };
+  }, [managedRecipientKey, managedRecipientRateKey, managedRoleAccountAddress, selectedSponsorCoinAccountRole]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadManagedRecipientRateKeyOptions = async () => {
+      if (selectedSponsorCoinAccountRole !== 'agent') {
+        if (!cancelled) {
+          setManagedRecipientRateKeyOptions([]);
+          setManagedRecipientRateKeyHelpText('');
+        }
+        return;
+      }
+
+      const sponsorKey = normalizeAddressValue(selectedWriteSenderAccount?.address || selectedWriteSenderAddress || effectiveConnectedAddress);
+      const recipientKey = normalizeAddressValue(managedRecipientKey);
+      if (!isAddressLike(sponsorKey) || !isAddressLike(recipientKey)) {
+        if (!cancelled) {
+          setManagedRecipientRateKeyOptions([]);
+          setManagedRecipientRateKeyHelpText('Select msg.sender and Recipient first to load Recipient Rate Keys.');
+        }
+        return;
+      }
+
+      try {
+        const target = requireContractAddress();
+        const runner = await ensureReadRunner();
+        const access = createSpCoinLibraryAccess(target, runner);
+        const rates = (await (access.contract as any).getRecipientRateList(sponsorKey, recipientKey)) as Array<string | bigint>;
+        if (!cancelled) {
+          const nextOptions = rates.map((value) => String(value));
+          setManagedRecipientRateKeyOptions(nextOptions);
+          setManagedRecipientRateKeyHelpText(
+            nextOptions.length > 0
+              ? 'Select a Recipient Rate Key from the contract list.'
+              : 'No Recipient Rate Keys found for this sponsor/recipient pair.',
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setManagedRecipientRateKeyOptions([]);
+          setManagedRecipientRateKeyHelpText('Unable to load Recipient Rate Keys from the active contract.');
+        }
+      }
+    };
+
+    void loadManagedRecipientRateKeyOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    effectiveConnectedAddress,
+    ensureReadRunner,
+    managedRecipientKey,
+    requireContractAddress,
+    selectedSponsorCoinAccountRole,
+    selectedWriteSenderAccount?.address,
+    selectedWriteSenderAddress,
+    useLocalSpCoinAccessPackage,
+  ]);
+
+  const handleSponsorCoinAccountAction = useCallback(
+    async (action: 'add' | 'delete') => {
+      if (sponsorCoinAccountManagementValidation.tone !== 'valid') {
+        setSponsorCoinAccountManagementStatus(sponsorCoinAccountManagementValidation.message);
+        return;
+      }
+
+      const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
+      const recipientKey = normalizeAddressValue(managedRecipientKey);
+      const recipientRateKey = String(managedRecipientRateKey || '').trim();
+      const hardhatSenderAddress = selectedWriteSenderAccount?.address || selectedWriteSenderAddress;
+      const accessSource = useLocalSpCoinAccessPackage ? 'local' : 'node_modules';
+      const label = `${action}:${selectedSponsorCoinAccountRole}:${accountAddress}`;
+
+      try {
+        const tx = await executeWriteConnected(
+          label,
+          async (contract, signer) => {
+            const access = createSpCoinModuleAccess(contract, signer, accessSource);
+            const connectedContract =
+              typeof (access.contract as any)?.connect === 'function'
+                ? (access.contract as any).connect(signer)
+                : access.contract;
+
+            if (action === 'add') {
+              if (selectedSponsorCoinAccountRole === 'sponsor') {
+                return connectedContract.addSponsor(accountAddress);
+              }
+              if (selectedSponsorCoinAccountRole === 'recipient') {
+                return connectedContract.addRecipient(accountAddress);
+              }
+              return connectedContract.addAgent(recipientKey, recipientRateKey, accountAddress);
+            }
+
+            return connectedContract.deleteAccountRecord(accountAddress);
+          },
+          hardhatSenderAddress,
+        );
+
+        if (!tx || typeof tx.wait !== 'function') {
+          throw new Error(`${label} did not return a transaction response.`);
+        }
+        const receipt = await tx.wait();
+        appendLog(
+          `${action} ${selectedSponsorCoinAccountRole} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`,
+        );
+        setSponsorCoinAccountManagementStatus(
+          `${action === 'add' ? 'Added' : 'Deleted'} ${selectedSponsorCoinAccountRole} ${accountAddress}.`,
+        );
+        setManagedRoleAccountAddress('');
+        if (selectedSponsorCoinAccountRole === 'agent') {
+          setManagedRecipientKey('');
+          setManagedRecipientRateKey('');
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : `Failed to ${action} ${selectedSponsorCoinAccountRole}.`;
+        setSponsorCoinAccountManagementStatus(message);
+        appendLog(`${action} ${selectedSponsorCoinAccountRole} failed: ${message}`);
+      }
+    },
+    [
+      appendLog,
+      executeWriteConnected,
+      managedRecipientKey,
+      managedRecipientRateKey,
+      managedRoleAccountAddress,
+      selectedSponsorCoinAccountRole,
+      selectedWriteSenderAccount?.address,
+      selectedWriteSenderAddress,
+      sponsorCoinAccountManagementValidation.message,
+      sponsorCoinAccountManagementValidation.tone,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
   useEffect(() => {
     if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinReadOptions.length > 0) {
       setSelectedSpCoinReadMethod(spCoinReadOptions[0]);
     }
   }, [selectedSpCoinReadMethod, spCoinReadMethodDefs, spCoinReadOptions]);
   useEffect(() => {
+    if (!spCoinWriteMethodDefs[selectedSpCoinWriteMethod] && spCoinWriteOptions.length > 0) {
+      setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
+      return;
+    }
     if (spCoinWriteMethodDefs[selectedSpCoinWriteMethod].executable === false && spCoinWriteOptions.length > 0) {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
     }
@@ -1153,21 +1316,30 @@ export default function SponsorCoinLabPage() {
               showSignerAccountDetails,
               setShowSignerAccountDetails,
               displayedSignerAccountAddress,
+              selectedWriteSenderAddress,
+              setSelectedWriteSenderAddress,
+              writeSenderDisplayValue,
               displayedSignerAccountMetadata,
               mode,
               selectedVersionSignerKey,
             }}
             accountManagement={{
-              addSignerAccount,
-              deleteSignerAccount,
               accountActionLabelClassName,
-              addAccountValidation,
-              addAccountInput,
-              setAddAccountInput,
-              deleteAccountValidation,
-              deleteAccountInput,
-              setDeleteAccountInput,
-              signerAccountStatus,
+              hardhatAccounts,
+              hardhatAccountMetadata,
+              selectedSponsorCoinAccountRole,
+              setSelectedSponsorCoinAccountRole,
+              managedRoleAccountAddress,
+              setManagedRoleAccountAddress,
+              managedRecipientKey,
+              setManagedRecipientKey,
+              managedRecipientRateKey,
+              setManagedRecipientRateKey,
+              managedRecipientRateKeyOptions,
+              managedRecipientRateKeyHelpText,
+              sponsorCoinAccountManagementValidation,
+              sponsorCoinAccountManagementStatus,
+              onExecuteAccountAction: handleSponsorCoinAccountAction,
             }}
           />
           )}
