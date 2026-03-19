@@ -216,13 +216,13 @@ export default function ScriptBuilderCard({
           <button
             type="button"
             className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 text-green-400 transition-colors hover:bg-[#1E293B] hover:text-green-300 disabled:cursor-not-allowed disabled:opacity-70"
-            title="Restart Script at Start"
+            title="Run Script From Start"
             onClick={() => void restartScriptAtStart()}
-            disabled={!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null || isScriptDebugRunning}
+            disabled={!selectedScript || selectedScript.steps.length === 0 || isScriptDebugRunning}
           >
             <Image
               src="/assets/miscellaneous/run.png"
-              alt="Restart Script at Start"
+              alt="Run Script From Start"
               width={21}
               height={21}
               className="block h-[21px] w-[21px]"

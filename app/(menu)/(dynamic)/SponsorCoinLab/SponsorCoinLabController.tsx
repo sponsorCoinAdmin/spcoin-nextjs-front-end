@@ -953,7 +953,7 @@ export default function SponsorCoinLabPage() {
     scriptDebugStopRef.current = true;
     setIsScriptDebugRunning(false);
     setFormattedOutputDisplay('(no output yet)');
-    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+    if (!selectedScript || selectedScript.steps.length === 0) {
       setStatus('Selected script has no steps to restart.');
       return;
     }
@@ -963,11 +963,6 @@ export default function SponsorCoinLabPage() {
     try {
       for (let idx = 0; idx < selectedScript.steps.length; idx += 1) {
         const step = selectedScript.steps[idx];
-        if (idx === 0 && step.breakpoint) {
-          focusScriptStep(step);
-          setStatus(`Paused at breakpoint before step ${step.step}.`);
-          return;
-        }
         focusScriptStep(step);
         const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
         accumulatedOutput = result.formattedOutput;
@@ -993,28 +988,31 @@ export default function SponsorCoinLabPage() {
     } finally {
       setIsScriptDebugRunning(false);
     }
-  }, [focusScriptStep, runScriptStep, selectedScript, selectedScriptStepNumber]);
+  }, [focusScriptStep, runScriptStep, selectedScript]);
   const runSelectedScriptStep = useCallback(async () => {
     if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
-      setStatus('Selected script has no steps to run.');
+      setStatus('Select a script step to run.');
       return;
     }
 
-    scriptDebugStopRef.current = false;
     const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
-    const currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
-    const activeStep = selectedScript.steps[currentIndex];
+    const activeStep = selectedIndex >= 0 ? selectedScript.steps[selectedIndex] : null;
     if (!activeStep) {
       setStatus('Unable to resolve the selected script step.');
       return;
     }
 
+    scriptDebugStopRef.current = false;
     focusScriptStep(activeStep);
+    loadScriptStep(activeStep);
+    setFormattedOutputDisplay('(no output yet)');
     setIsScriptDebugRunning(true);
+
     try {
-      const result = await runScriptStep(activeStep, { formattedOutputBase: formattedOutputDisplay });
+      const result = await runScriptStep(activeStep, { formattedOutputBase: '(no output yet)' });
       if (!result.success) return;
-      const nextStep = selectedScript.steps[currentIndex + 1];
+
+      const nextStep = selectedScript.steps[selectedIndex + 1];
       if (nextStep) {
         focusScriptStep(nextStep);
         setStatus(`Completed step ${activeStep.step}. Ready for step ${nextStep.step}.`);
@@ -1025,7 +1023,7 @@ export default function SponsorCoinLabPage() {
     } finally {
       setIsScriptDebugRunning(false);
     }
-  }, [focusScriptStep, formattedOutputDisplay, runScriptStep, selectedScript, selectedScriptStepNumber]);
+  }, [focusScriptStep, loadScriptStep, runScriptStep, selectedScript, selectedScriptStepNumber, setStatus]);
   const runRemainingScriptSteps = useCallback(async () => {
     if (!selectedScript || selectedScript.steps.length === 0) {
       setStatus('Selected script has no steps to run.');

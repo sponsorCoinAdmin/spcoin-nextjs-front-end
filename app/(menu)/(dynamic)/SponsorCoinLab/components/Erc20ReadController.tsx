@@ -106,8 +106,11 @@ export default function Erc20ReadController(props: Props) {
   return (
     <div className="mt-4 grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
+        <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
+          Method
+        </label>
         <select
+          id="erc20-read-method"
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedReadMethod}
           onChange={(e) => setSelectedReadMethod(e.target.value)}
