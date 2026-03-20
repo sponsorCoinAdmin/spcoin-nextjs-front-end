@@ -1,11 +1,23 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/shared/spCoinAccessIncludes.ts
 import type { Contract, Signer } from 'ethers';
-import { SpCoinAddModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js';
-import { SpCoinDeleteModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js';
-import { SpCoinERC20Module } from '@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js';
-import { SpCoinReadModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js';
-import { SpCoinRewardsModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js';
-import { SpCoinStakingModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js';
+import { SpCoinAddModule as NodeSpCoinAddModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js';
+import { SpCoinDeleteModule as NodeSpCoinDeleteModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js';
+import { SpCoinERC20Module as NodeSpCoinERC20Module } from '@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js';
+import { SpCoinReadModule as NodeSpCoinReadModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js';
+import { SpCoinRewardsModule as NodeSpCoinRewardsModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js';
+import { SpCoinStakingModule as NodeSpCoinStakingModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinAddModule as LocalSpCoinAddModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinAddModule.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinDeleteModule as LocalSpCoinDeleteModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinDeleteModule.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinERC20Module.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinReadModule.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinRewardsModule.js';
+// @ts-ignore local dist declarations are legacy script-style files, but the runtime exports are valid
+import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinStakingModule.js';
 
 type ModuleCtor<T = any> = new (spCoinContractDeployed: Contract) => T;
 export type SpCoinAccessSource = 'local' | 'node_modules';
@@ -30,41 +42,26 @@ export type SpCoinModuleAccess = {
   signer?: Signer;
 };
 
-function loadLocalSpCoinAccessIncludes(): SpCoinAccessIncludes | null {
-  if (typeof window !== 'undefined') {
-    return null;
-  }
+const localIncludes: SpCoinAccessIncludes = {
+  SpCoinAddModule: LocalSpCoinAddModule,
+  SpCoinDeleteModule: LocalSpCoinDeleteModule,
+  SpCoinERC20Module: LocalSpCoinERC20Module,
+  SpCoinReadModule: LocalSpCoinReadModule,
+  SpCoinRewardsModule: LocalSpCoinRewardsModule,
+  SpCoinStakingModule: LocalSpCoinStakingModule,
+};
 
-  try {
-    const localBase = '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules';
-    const req = eval('require') as NodeRequire;
-    return {
-      SpCoinAddModule: req(`${localBase}/spCoinAddModule.js`).SpCoinAddModule as ModuleCtor,
-      SpCoinDeleteModule: req(`${localBase}/spCoinDeleteModule.js`).SpCoinDeleteModule as ModuleCtor,
-      SpCoinERC20Module: req(`${localBase}/spCoinERC20Module.js`).SpCoinERC20Module as ModuleCtor,
-      SpCoinReadModule: req(`${localBase}/spCoinReadModule.js`).SpCoinReadModule as ModuleCtor,
-      SpCoinRewardsModule: req(`${localBase}/spCoinRewardsModule.js`).SpCoinRewardsModule as ModuleCtor,
-      SpCoinStakingModule: req(`${localBase}/spCoinStakingModule.js`).SpCoinStakingModule as ModuleCtor,
-    };
-  } catch (error) {
-    console.warn('[spCoinAccessIncludes] Falling back to node_modules package for local source.', error);
-    return null;
-  }
-}
+const nodeModulesIncludes: SpCoinAccessIncludes = {
+  SpCoinAddModule: NodeSpCoinAddModule,
+  SpCoinDeleteModule: NodeSpCoinDeleteModule,
+  SpCoinERC20Module: NodeSpCoinERC20Module,
+  SpCoinReadModule: NodeSpCoinReadModule,
+  SpCoinRewardsModule: NodeSpCoinRewardsModule,
+  SpCoinStakingModule: NodeSpCoinStakingModule,
+};
 
 export function getSpCoinAccessIncludes(source: SpCoinAccessSource = 'node_modules'): SpCoinAccessIncludes {
-  if (source === 'local') {
-    const localIncludes = loadLocalSpCoinAccessIncludes();
-    if (localIncludes) return localIncludes;
-  }
-  return {
-    SpCoinAddModule,
-    SpCoinDeleteModule,
-    SpCoinERC20Module,
-    SpCoinReadModule,
-    SpCoinRewardsModule,
-    SpCoinStakingModule,
-  };
+  return source === 'local' ? localIncludes : nodeModulesIncludes;
 }
 
 // Convenience factory for tests/stubs that call library modules instead of direct contract methods.

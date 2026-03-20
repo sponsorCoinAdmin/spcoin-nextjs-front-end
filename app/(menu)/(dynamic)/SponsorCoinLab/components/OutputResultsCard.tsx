@@ -41,6 +41,7 @@ type Props = {
     scriptDisplay: string;
     selectedScriptStepNumber: number | null;
     selectedScriptStepHasMissingRequiredParams: boolean;
+    selectedScriptStepHasExecutionError: boolean;
     highlightedFormattedOutputLines:
       | Array<{
           line: string;
@@ -72,6 +73,8 @@ export default function OutputResultsCard({
   content,
   treeActions,
 }: Props) {
+  const actionButtonClassName =
+    'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const [showTreeAccountDetails, setShowTreeAccountDetails] = useState(false);
   const [selectedTreeAccountMetadata, setSelectedTreeAccountMetadata] = useState<{
     name?: string;
@@ -140,7 +143,10 @@ export default function OutputResultsCard({
     if (content.selectedScriptStepNumber === null || content.selectedScriptStepNumber <= 0) return [];
     return [`script-0.steps.${content.selectedScriptStepNumber - 1}`];
   }, [content.selectedScriptStepNumber, controls.formattedPanelView, controls.outputPanelMode]);
-  const inspectorHighlightColorClass = content.selectedScriptStepHasMissingRequiredParams ? 'text-red-400' : 'text-green-400';
+  const inspectorHighlightColorClass =
+    content.selectedScriptStepHasMissingRequiredParams || content.selectedScriptStepHasExecutionError
+      ? 'text-red-400'
+      : 'text-green-400';
 
   useEffect(() => {
     const account = String(treeActions.selectedTreeAccount || '').trim();
@@ -202,7 +208,7 @@ export default function OutputResultsCard({
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
         secondaryRow={
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200">
               {[
                 ['execution', 'Execution'],
@@ -223,10 +229,11 @@ export default function OutputResultsCard({
                 </label>
               ))}
             </div>
-            <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
+            <div className="ml-auto flex items-center justify-end gap-3">
               <button
                 type="button"
-                className={controls.buttonStyle}
+                className={actionButtonClassName}
+                title="Copy To Clipboard"
                 onClick={() =>
                   void controls.copyTextToClipboard(
                     controls.outputPanelMode === 'execution'
@@ -250,11 +257,11 @@ export default function OutputResultsCard({
                   )
                 }
               >
-                Copy to Clipboard
+                Copy
               </button>
               <button
                 type="button"
-                className={controls.buttonStyle}
+                className={actionButtonClassName}
                 onClick={() => {
                   if (controls.outputPanelMode === 'execution') {
                     controls.setLogs([]);
@@ -283,7 +290,7 @@ export default function OutputResultsCard({
           </div>
         }
       />
-      <div className="mt-4 min-h-0 flex flex-1 flex-col overflow-hidden">
+      <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
         {controls.outputPanelMode === 'tree' ? (
           <>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -475,7 +482,13 @@ export default function OutputResultsCard({
                 ? content.highlightedFormattedOutputLines.map(({ line, active }, idx) => (
                     <span
                       key={`formatted-line-${idx}`}
-                      className={active ? (content.selectedScriptStepHasMissingRequiredParams ? 'text-red-400' : 'text-green-400') : undefined}
+                      className={
+                        active
+                          ? content.selectedScriptStepHasMissingRequiredParams || content.selectedScriptStepHasExecutionError
+                            ? 'text-red-400'
+                            : 'text-green-400'
+                          : undefined
+                      }
                     >
                       {line}
                       {'\n'}

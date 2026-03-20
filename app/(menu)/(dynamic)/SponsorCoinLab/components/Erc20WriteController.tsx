@@ -1,7 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/Erc20WriteController.tsx
 import React from 'react';
-import Image from 'next/image';
 import AccountDropdownInput from './AccountDropdownInput';
+import AccountSelection from './AccountSelection';
 
 type ActiveWriteLabels = {
   title: string;
@@ -124,7 +124,7 @@ export default function Erc20WriteController(props: Props) {
     [hardhatAccounts],
   );
   return (
-    <div className="mt-4 grid grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
@@ -142,17 +142,13 @@ export default function Erc20WriteController(props: Props) {
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
-      <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <button
-            type="button"
-            onClick={toggleShowWriteSenderPrivateKey}
-            className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-            title="Toggle msg.sender Private Key"
-          >
-            msg.sender
-          </button>
-          {mode === 'hardhat' ? (
+      <AccountSelection
+        label="msg.sender"
+        title="Toggle msg.sender Private Key"
+        isOpen={showWriteSenderPrivateKey}
+        onToggle={toggleShowWriteSenderPrivateKey}
+        control={
+          mode === 'hardhat' ? (
             <AccountDropdownInput
               dataFieldId="erc20-write-sender"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
@@ -171,61 +167,29 @@ export default function Erc20WriteController(props: Props) {
               value={writeSenderDisplayValue}
               placeholder="Connected signer address"
             />
-          )}
-        </label>
-        {showWriteSenderPrivateKey && (
-          <>
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {senderMetadata?.logoURL ? (
-                    <Image
-                      src={senderMetadata.logoURL}
-                      alt={senderMetadata?.name || 'Selected account'}
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-contain"
-                      unoptimized
-                    />
-                  ) : (
-                    <span className="text-[10px] text-slate-400">No logo</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-white">
-                    {senderMetadata?.name || 'Unnamed account'}
-                  </div>
-                  <div className="truncate text-xs text-slate-400">
-                    {senderMetadata?.symbol || 'No symbol'}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {mode === 'hardhat' ? (
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                <input
-                  className={inputStyle}
-                  readOnly
-                  value={writeSenderPrivateKeyDisplay}
-                  placeholder="Selected signer private key"
-                />
-              </label>
-            ) : null}
-          </>
-        )}
-      </div>
-      <div className={`grid grid-cols-1 gap-3${openAddressFields.addressA ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <button
-            type="button"
-            onClick={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
-            className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-            title={`Toggle ${activeWriteLabels.addressALabel}`}
-          >
-            {activeWriteLabels.addressALabel}
-          </button>
+          )
+        }
+        metadata={senderMetadata}
+        extraDetails={
+          mode === 'hardhat' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+              <input
+                className={inputStyle}
+                readOnly
+                value={writeSenderPrivateKeyDisplay}
+                placeholder="Selected signer private key"
+              />
+            </label>
+          ) : null
+        }
+      />
+      <AccountSelection
+        label={activeWriteLabels.addressALabel}
+        title={`Toggle ${activeWriteLabels.addressALabel}`}
+        isOpen={Boolean(openAddressFields.addressA)}
+        onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
+        control={
           <AccountDropdownInput
             dataFieldId="erc20-write-address-a"
             className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
@@ -237,48 +201,16 @@ export default function Erc20WriteController(props: Props) {
             placeholder="Select account"
             options={accountOptions}
           />
-        </label>
-        {openAddressFields.addressA && (
-          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-            <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                {getMetadataForAddress(writeAddressA || '')?.logoURL ? (
-                  <Image
-                    src={getMetadataForAddress(writeAddressA || '')!.logoURL}
-                    alt={getMetadataForAddress(writeAddressA || '')?.name || activeWriteLabels.addressALabel}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-contain"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="text-[10px] text-slate-400">No logo</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate font-medium text-white">
-                  {getMetadataForAddress(writeAddressA || '')?.name || 'Unnamed account'}
-                </div>
-                <div className="truncate text-xs text-slate-400">
-                  {getMetadataForAddress(writeAddressA || '')?.symbol || 'No symbol'}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        }
+        metadata={getMetadataForAddress(writeAddressA || '')}
+      />
       {activeWriteLabels.requiresAddressB && (
-        <div className={`grid grid-cols-1 gap-3${openAddressFields.addressB ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <button
-              type="button"
-              onClick={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
-              className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-              title={`Toggle ${activeWriteLabels.addressBLabel}`}
-            >
-              {activeWriteLabels.addressBLabel}
-            </button>
+        <AccountSelection
+          label={activeWriteLabels.addressBLabel}
+          title={`Toggle ${activeWriteLabels.addressBLabel}`}
+          isOpen={Boolean(openAddressFields.addressB)}
+          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
+          control={
             <AccountDropdownInput
               dataFieldId="erc20-write-address-b"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
@@ -290,37 +222,9 @@ export default function Erc20WriteController(props: Props) {
               placeholder="Select account"
               options={accountOptions}
             />
-          </label>
-          {openAddressFields.addressB && (
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {getMetadataForAddress(writeAddressB || '')?.logoURL ? (
-                    <Image
-                      src={getMetadataForAddress(writeAddressB || '')!.logoURL}
-                      alt={getMetadataForAddress(writeAddressB || '')?.name || activeWriteLabels.addressBLabel}
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-contain"
-                      unoptimized
-                    />
-                  ) : (
-                    <span className="text-[10px] text-slate-400">No logo</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-white">
-                    {getMetadataForAddress(writeAddressB || '')?.name || 'Unnamed account'}
-                  </div>
-                  <div className="truncate text-xs text-slate-400">
-                    {getMetadataForAddress(writeAddressB || '')?.symbol || 'No symbol'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          }
+          metadata={getMetadataForAddress(writeAddressB || '')}
+        />
       )}
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">Amount (raw uint256)</span>

@@ -78,10 +78,10 @@ export default function ContractNetworkCard({
           </div>
         }
       />
-      <div className="mt-4 grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="flex w-full flex-wrap items-center gap-2">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
@@ -170,7 +170,7 @@ export default function ContractNetworkCard({
         </section>
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">Network Controller</h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="flex flex-wrap items-center gap-4">
               <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
                 <label className="flex items-center gap-2 text-[#8FA8FF]">

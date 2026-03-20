@@ -38,11 +38,10 @@ contract Transactions is RewardsManager {
         bool result;
         (sponsorAmount, result) = decimalStringToUint(_strWholeAmount, _strDecimalAmount, decimals);
 
-        require(result, concat("Unparsable Sponsor Amount ", _strWholeAmount));
+        require(result, "AMOUNT_PARSE");
         // string memory errString =
         require(balanceOf[msg.sender] >= sponsorAmount, 
-            concat("Insufficient Balance balanceOf[",toString(msg.sender),"] >= ", 
-            toString(sponsorAmount)));
+            "INSUFFICIENT_BAL");
 
 
         // validateSufficientAccountBalance(_sponsorCoinQty)
@@ -152,42 +151,43 @@ contract Transactions is RewardsManager {
         return sponsorRec;
     }
 
-    function getRecipientRateTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
-    public view returns (string memory) {
-        RecipientStruct storage recipientRec = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
-        string memory strTransactionList = "";
-        RecipientRateStruct storage recipientRateRecord = recipientRec.recipientRateMap[_recipientRateKey];
-        // console.log ("recipientRateRecord.transactionList[0].quantity = ", recipientRateRecord.transactionList[0].quantity);
-        StakingTransactionStruct[] memory transactionList = recipientRateRecord.transactionList;
-        strTransactionList = concat(strTransactionList, getRateTransactionStr(transactionList)); 
-        // console.log("RRRR strTransactionList = ", strTransactionList); 
-        return strTransactionList;
-    }
-
-    function getSerializedRateTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 _agentRateKey)
-    public view returns (string memory) {
+    function getAgentRateTransactionCount(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey
+    )
+        public
+        view
+        returns (uint256)
+    {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
-        string memory strTransactionList = "";
-        AgentRateStruct storage agentRateRecord= agentRec.agentRateMap[_agentRateKey];
-        // console.log ("agentRateRecord.transactionList[0].quantity = ", agentRateRecord.transactionList[0].quantity);
-        StakingTransactionStruct[] memory transactionList = agentRateRecord.transactionList;
-        strTransactionList = concat(strTransactionList, getRateTransactionStr(transactionList)); 
-        // console.log("RRRR strTransactionList = ", strTransactionList); 
-        return strTransactionList;
+        AgentRateStruct storage agentRateRecord = agentRec.agentRateMap[_agentRateKey];
+        return agentRateRecord.transactionList.length;
     }
 
-    function getRateTransactionStr(StakingTransactionStruct[] memory transactionList)
-    public pure returns (string memory) {
-        string memory strTransactionList = "";
-        for (uint idx; idx < transactionList.length; idx++) {
-
-            strTransactionList = concat(strTransactionList,
-            toString(transactionList[idx].insertionTime), ",",
-            toString(transactionList[idx].stakingRewards));
-            if (idx < transactionList.length - 1) {
-                strTransactionList = concat(strTransactionList, "\n");
-            }
-        }
-        return strTransactionList;
+    function getAgentRateTransactionAt(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        uint256 _transactionIndex
+    )
+        public
+        view
+        returns (
+            uint256 insertionTime,
+            uint256 stakingRewards
+        )
+    {
+        AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        AgentRateStruct storage agentRateRecord = agentRec.agentRateMap[_agentRateKey];
+        require(_transactionIndex < agentRateRecord.transactionList.length, "AGENT_TX_OOB");
+        StakingTransactionStruct storage transactionRecord = agentRateRecord.transactionList[_transactionIndex];
+        insertionTime = transactionRecord.insertionTime;
+        stakingRewards = transactionRecord.stakingRewards;
     }
+
 }

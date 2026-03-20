@@ -147,82 +147,22 @@ contract StakingManager is AgentRates{
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function getRewardAccounts(address _accountKey, uint _rewardType)
-        public view returns (string memory memoryRewards) {
-        // console.log("SOL=>17 getRewardAccounts(", _accountKey, ", ", getAccountTypeString(_rewardType));
-        
-        memoryRewards = "";
-        AccountStruct storage depositAccount = accountMap[_accountKey];
-        address[] storage accountSearchList;
-        string memory ACCOUNT_TYPE_DELIMITER = "";
-        if ( _rewardType == SPONSOR ) {
-           accountSearchList = depositAccount.recipientAccountList;
-           ACCOUNT_TYPE_DELIMITER = "RECIPIENT_ACCOUNT:";
-        }
-        else if ( _rewardType == RECIPIENT ) {
-           accountSearchList = depositAccount.sponsorAccountList;
-           ACCOUNT_TYPE_DELIMITER = "SPONSOR_ACCOUNT:";
-        }
-        else if ( _rewardType == AGENT ) {
-            accountSearchList = depositAccount.agentParentRecipientAccountList;
-            ACCOUNT_TYPE_DELIMITER = "RECIPIENT_ACCOUNT:";
-        }
-        else return memoryRewards;
+    function getAccountRewardTotals(address _accountKey)
+        public
+        view
+        accountExists(_accountKey)
+        returns (
+            uint256 sponsorRewards,
+            uint256 recipientRewards,
+            uint256 agentRewards
+        )
+    {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        mapping(string  => RewardTypeStruct) storage rewardsMap = accountRec.rewardsMap;
 
-        // Check the Recipient's Sponsor List
-        // console.log("SOL=>17.1 accountSearchList.length = ", accountSearchList.length);
-        for (uint idx = 0; idx < accountSearchList.length; idx++) {
-            address accountKey = accountSearchList[idx];
-        // console.log("SOL=>17.2 accountKey =", accountKey);
-           memoryRewards = concat(memoryRewards, ACCOUNT_TYPE_DELIMITER, toString(accountKey));
-        // console.log("SOL=>17.3 memoryRewards =", accountKey);
-
-            ///////////////// **** START REPLACE LATER **** ///////////////////////////
-
-            RewardTypeStruct storage rewardsRecord = depositAccount.rewardsMap[getAccountTypeString(_rewardType)];
-            RewardAccountStruct storage accountReward;
-            accountReward = rewardsRecord.rewardsMap[accountKey];
-            memoryRewards = concat(memoryRewards, getRewardRateRecords(accountReward));
-
-            // console.log("SOL=>17 accountKey[", idx,"] = ", accountSearchList[idx]);
-            // console.log("SOL=>17.4 memoryRewards =", accountKey);
-        }
-        // console.log("SOL=>17.5 RETURNING MEMORY REWARDS =", memoryRewards);
-        return memoryRewards;
-    }
-
-    function getRewardRateRecords(RewardAccountStruct storage _rewardAccountRecord)
-        internal  view returns (string memory memoryRewards) {
-// console.log("SOL=>18 getRewardRateRecords(RewardAccountStruct storage _rewardAccountRecord)");
-
-        uint256[] storage rewardRateList = _rewardAccountRecord.rewardRateList;
-// console.log("SOL=>18.1 BEFORE memoryRewards", memoryRewards);
-// console.log("*** ISSUE HERE SOL=>18.2 rewardRateList.length", rewardRateList.length);
-
-        for (uint rateIdx = 0; rateIdx < rewardRateList.length; rateIdx++) {
-            uint rate = rewardRateList[rateIdx];
-// console.log("SOL=>18.3 rate", rate);
-
-            RewardRateStruct storage rewardRateRecord = _rewardAccountRecord.rewardRateMap[rate];
-            RewardsTransactionStruct[] storage rewardTransactionList = rewardRateRecord.rewardTransactionList;
-
-            memoryRewards = concat(memoryRewards, ",", toString(_rewardAccountRecord.stakingRewards));
-            // console.log("SOL=> _rewardAccountRecord.rewardTransactionList.length         = ", _rewardAccountRecord.rewardTransactionList.length);
-            // console.log("SOL=> _rewardAccountRecord.rewardTransactionList.stakingRewards = ", _rewardAccountRecord.stakingRewards);
-            memoryRewards = concat(memoryRewards, "\nRATE:", toString(rate));
-            memoryRewards = concat(memoryRewards, ",", toString(rewardRateRecord.stakingRewards));
-
-// console.log("SOL=>18.4 rewardTransactionList.length", rewardTransactionList.length);
-            if (rewardTransactionList.length != 0) {
-                string memory stringRewards = serializeRewardsTransactionList(rewardTransactionList);
-// console.log("SOL=>18.5 stringRewards", stringRewards);
-                memoryRewards = concat(memoryRewards, "\n" , stringRewards);
-            }
-        }
-        // console.log("SOL=>21 AFTER memoryRewards", memoryRewards);
-        // console.log("*** END SOL ******************************************************************************");
-        // console.log("SOL=>18.6 stringRewards", memoryRewards);
-        return memoryRewards;
+        sponsorRewards = rewardsMap[getAccountTypeString(SPONSOR)].stakingRewards;
+        recipientRewards = rewardsMap[getAccountTypeString(RECIPIENT)].stakingRewards;
+        agentRewards = rewardsMap[getAccountTypeString(AGENT)].stakingRewards;
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@ type Props = {
   scriptNameValidation: { tone: ValidationTone; message: string };
   deleteScriptValidation: { tone: 'invalid' | 'valid'; message: string };
   createNewScript: () => void;
+  duplicateSelectedScript: (name: string) => boolean;
   clearSelectedScript: () => void;
   handleDeleteScriptClick: () => void;
   restartScriptAtStart: () => Promise<void>;
@@ -65,6 +66,7 @@ export default function ScriptBuilderCard({
   scriptNameValidation,
   deleteScriptValidation,
   createNewScript,
+  duplicateSelectedScript,
   clearSelectedScript,
   handleDeleteScriptClick,
   restartScriptAtStart,
@@ -76,12 +78,27 @@ export default function ScriptBuilderCard({
   renderScriptStepRow,
 }: Props) {
   const scriptSelectorRef = React.useRef<HTMLDivElement | null>(null);
+  const copyPopupRef = React.useRef<HTMLDivElement | null>(null);
   const visibleScriptOptions = scripts;
   const selectedStepIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
   const hasScriptSelection = Boolean(String(selectedScriptId || '').trim());
   const isScriptSelectorEmpty = String(scriptNameInput || '').trim() === '';
   const primaryHoverTone = isScriptSelectorEmpty ? 'invalid' : hasScriptSelection ? 'valid' : newScriptHoverTone;
   const primaryBaseTone = hasScriptSelection ? 'valid' : scriptNameValidation.tone;
+  const [isCopyPopupOpen, setIsCopyPopupOpen] = React.useState(false);
+  const [copyScriptNameInput, setCopyScriptNameInput] = React.useState('');
+  const [isCopyScriptHovered, setIsCopyScriptHovered] = React.useState(false);
+  const normalizedCopyScriptName = normalizeScriptName(copyScriptNameInput);
+  const copyScriptNameMatch = React.useMemo(() => {
+    if (!normalizedCopyScriptName) return null;
+    return scripts.find((script) => normalizeScriptName(script.name) === normalizedCopyScriptName) || null;
+  }, [normalizedCopyScriptName, scripts]);
+  const copyScriptValidation = React.useMemo(() => {
+    const nextName = String(copyScriptNameInput || '').trim();
+    if (!nextName) return { tone: 'invalid' as const, message: 'No Script Name' };
+    if (copyScriptNameMatch) return { tone: 'invalid' as const, message: 'Duplicate' };
+    return { tone: 'valid' as const, message: 'Copy Script' };
+  }, [copyScriptNameInput, copyScriptNameMatch]);
 
   React.useEffect(() => {
     if (!isScriptOptionsOpen) return;
@@ -96,10 +113,29 @@ export default function ScriptBuilderCard({
     };
   }, [isScriptOptionsOpen, setIsScriptOptionsOpen]);
 
+  React.useEffect(() => {
+    if (!isCopyPopupOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && copyPopupRef.current?.contains(target)) return;
+      setIsCopyPopupOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isCopyPopupOpen]);
+
+  React.useEffect(() => {
+    if (!isCopyPopupOpen) return;
+    setCopyScriptNameInput(selectedScript ? `${selectedScript.name} Copy` : '');
+    setIsCopyScriptHovered(false);
+  }, [isCopyPopupOpen, selectedScript]);
+
   return (
     <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
       <h3 className="text-center text-lg font-semibold text-[#5981F3]">Script Builder/Debugger</h3>
-      <div className="mt-4 grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
+      <div className="grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
         <button
           type="button"
           className={`w-[140px] ${actionButtonStyle} ${
@@ -300,6 +336,26 @@ export default function ScriptBuilderCard({
           </button>
           <button
             type="button"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed disabled:opacity-50"
+            title="Copy Script"
+            onClick={() => {
+              if (!hasScriptSelection) return;
+              setIsCopyPopupOpen(true);
+            }}
+            disabled={!hasScriptSelection}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="block h-[21px] w-[21px] opacity-100"
+              fill="none"
+            >
+              <rect x="8" y="5" width="10" height="12" rx="1.5" stroke="#8FA8FF" strokeWidth="2" />
+              <path d="M6 9H5a1 1 0 0 0-1 1v9h10a1 1 0 0 0 1-1v-1" stroke="#8FA8FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
             className="inline-flex h-[26px] w-[26px] items-center justify-center rounded p-0 transition-colors hover:bg-[#1E293B] disabled:cursor-not-allowed"
             title="Delete Step"
             onClick={requestDeleteSelectedScriptStep}
@@ -316,6 +372,54 @@ export default function ScriptBuilderCard({
             </svg>
           </button>
         </div>
+        {isCopyPopupOpen ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B1220]/80">
+            <div
+              ref={copyPopupRef}
+              className="w-full max-w-md rounded-xl border border-[#31416F] bg-[#0B1220] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+            >
+              <div className="text-center text-lg font-semibold text-[#5981F3]">Copy Script</div>
+              <div className="mt-3 grid grid-cols-1 gap-3">
+                <input
+                  className="w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400"
+                  value={copyScriptNameInput}
+                  onChange={(e) => setCopyScriptNameInput(e.target.value)}
+                  placeholder="Copy script name"
+                  title="Copy Script Name"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    className={`w-[140px] ${actionButtonStyle}`}
+                    title="Return"
+                    onClick={() => setIsCopyPopupOpen(false)}
+                  >
+                    Return
+                  </button>
+                  <button
+                    type="button"
+                    className={`w-[140px] ${actionButtonStyle} ${
+                      copyScriptValidation.tone === 'invalid' ? 'hover:bg-red-600 hover:text-white' : ''
+                    }`}
+                    title="Copy Script"
+                    onMouseEnter={() => setIsCopyScriptHovered(true)}
+                    onMouseLeave={() => setIsCopyScriptHovered(false)}
+                    onClick={() => {
+                      if (duplicateSelectedScript(copyScriptNameInput)) {
+                        setIsCopyPopupOpen(false);
+                      }
+                    }}
+                  >
+                    {copyScriptValidation.tone === 'invalid' && isCopyScriptHovered
+                      ? copyScriptValidation.message
+                      : 'Copy Script'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div className={`min-h-0 flex-1 overflow-auto pr-24 ${hiddenScrollbarClass}`}>
           {!selectedScript ? (
             <div className="text-slate-400">(no script selected)</div>

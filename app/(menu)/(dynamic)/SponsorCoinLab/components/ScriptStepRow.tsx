@@ -5,6 +5,7 @@ type Props = {
   isExpanded: boolean;
   isSelected: boolean;
   isEditingStep: boolean;
+  hasExecutionError: boolean;
   getStepSender: (step: LabScriptStep) => string;
   getStepParamEntries: (step: LabScriptStep) => LabScriptParam[];
   selectScriptStep: (step: LabScriptStep) => void;
@@ -18,6 +19,7 @@ export default function ScriptStepRow({
   isExpanded,
   isSelected,
   isEditingStep,
+  hasExecutionError,
   getStepSender,
   getStepParamEntries,
   selectScriptStep,
@@ -28,7 +30,9 @@ export default function ScriptStepRow({
   const sender = getStepSender(step);
   const params = getStepParamEntries(step);
   const hasExpandableContent = Boolean(sender) || params.length > 0;
-  const methodClassName = step.hasMissingRequiredParams
+  const methodClassName = hasExecutionError
+    ? 'text-red-400 underline underline-offset-2'
+    : step.hasMissingRequiredParams
     ? isSelected
       ? 'text-red-400'
       : isEditingStep

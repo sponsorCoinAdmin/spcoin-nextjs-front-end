@@ -1,11 +1,10 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/index.ts
 import getSerializedSPCoinHeader from './getSerializedSPCoinHeader';
-import annualInflation from './annualInflation';
+import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getAccountList from './getAccountList';
 import getAccountListSize from './getAccountListSize';
-import getRateTransactionStr from './getRateTransactionStr';
 import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
@@ -14,8 +13,6 @@ import getAccountRecord from './getAccountRecord';
 import getAccountRecords from './getAccountRecords';
 import getSerializedAccountRewards from './getSerializedAccountRewards';
 import getAccountStakingRewards from './getAccountStakingRewards';
-import getRewardAccounts from './getRewardAccounts';
-import getRewardTypeRecord from './getRewardTypeRecord';
 import getSerializedRecipientRateList from './getSerializedRecipientRateList';
 import getSerializedRecipientRecordList from './getSerializedRecipientRecordList';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
@@ -26,24 +23,26 @@ import getRecipientRateList from './getRecipientRateList';
 import getRecipientRateRecord from './getRecipientRateRecord';
 import getRecipientRateRecordList from './getRecipientRateRecordList';
 import getRecipientRateAgentList from './getRecipientRateAgentList';
+import getLowerRecipientRate from './getLowerRecipientRate';
+import getUpperRecipientRate from './getUpperRecipientRate';
+import getRecipientRateRange from './getRecipientRateRange';
 import getRecipientRecord from './getRecipientRecord';
 import getRecipientRecordList from './getRecipientRecordList';
 import getAgentRateList from './getAgentRateList';
+import getLowerAgentRate from './getLowerAgentRate';
+import getUpperAgentRate from './getUpperAgentRate';
+import getAgentRateRange from './getAgentRateRange';
 import getAgentRateRecord from './getAgentRateRecord';
 import getAgentRateRecordList from './getAgentRateRecordList';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
 import getSerializedRateTransactionList from './getSerializedRateTransactionList';
 import getAgentRateTransactionList from './getAgentRateTransactionList';
-import getRecipientRateTransactionList from './getRecipientRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
 import initialTotalSupply from './initialTotalSupply';
 import isAccountInserted from './isAccountInserted';
 import masterAccountList from './masterAccountList';
-import msgSender from './msgSender';
 import serializeAgentRateRecordStr from './serializeAgentRateRecordStr';
-import strToUint from './strToUint';
-import testStakingRewards from './testStakingRewards';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
@@ -55,12 +54,11 @@ import version from './version';
 
 export const SPCOIN_READ_METHOD_DEFS = {
   getSerializedSPCoinHeader,
-  annualInflation,
+  getInflationRate,
   calculateStakingRewards,
   creationTime,
   getAccountList,
   getAccountListSize,
-  getRateTransactionStr,
   getSPCoinHeaderRecord,
   getAccountRecipientList,
   getAccountRecipientListSize,
@@ -69,8 +67,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountRecords,
   getSerializedAccountRewards,
   getAccountStakingRewards,
-  getRewardAccounts,
-  getRewardTypeRecord,
   getSerializedRecipientRateList,
   getSerializedRecipientRecordList,
   getAccountRewardTransactionList,
@@ -81,24 +77,26 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientRateRecord,
   getRecipientRateRecordList,
   getRecipientRateAgentList,
+  getLowerRecipientRate,
+  getUpperRecipientRate,
+  getRecipientRateRange,
   getRecipientRecord,
   getRecipientRecordList,
   getAgentRateList,
+  getLowerAgentRate,
+  getUpperAgentRate,
+  getAgentRateRange,
   getAgentRateRecord,
   getAgentRateRecordList,
   getAgentTotalRecipient,
   getSerializedRateTransactionList,
   getAgentRateTransactionList,
-  getRecipientRateTransactionList,
   getAgentRecord,
   getAgentRecordList,
   initialTotalSupply,
   isAccountInserted,
   masterAccountList,
-  msgSender,
   serializeAgentRateRecordStr,
-  strToUint,
-  testStakingRewards,
   getStakingRewards,
   getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,

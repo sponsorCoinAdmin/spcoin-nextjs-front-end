@@ -7,6 +7,25 @@ const { formatTimeSeconds } = require("./dateTime");
 const { bigIntToDateTimeString, bigIntToDecString, bigIntToHexString, bigIntToString, getLocation } = require("./dateTime");
 const { SponsorCoinHeader, AccountStruct, RecipientStruct, AgentStruct, AgentRateStruct, StakingTransactionStruct, } = require("../dataTypes/spCoinDataTypes");
 let spCoinLogger;
+async function readAnnualInflation(contract) {
+    if (typeof (contract === null || contract === void 0 ? void 0 : contract.getInflationRate) === "function") {
+        try {
+            return await contract.getInflationRate();
+        }
+        catch (_a) {
+            // Fall back for older deployments that still expose annualInflation().
+        }
+    }
+    if (typeof (contract === null || contract === void 0 ? void 0 : contract.annualInflation) === "function") {
+        try {
+            return await contract.annualInflation();
+        }
+        catch (_b) {
+            // Fall through to the historical default below.
+        }
+    }
+    return 10;
+}
 class SpCoinSerialize {
     constructor(_spCoinContractDeployed) {
         this.setContract = (_spCoinContractDeployed) => {
@@ -162,7 +181,32 @@ class SpCoinSerialize {
             // console.log("JS==>1 deserializedSPCoinHeader()");
             spCoinLogger.logFunctionHeader("getAccountRecords()");
             let sponsorCoinHeader = new SponsorCoinHeader();
-            let headerData = await this.spCoinContractDeployed.getSerializedSPCoinHeader();
+            let [name, creationTime, decimals, totalSupply, initialTotalSupply, annualInflation, totalBalanceOf, totalStakingRewards, totalStakedSPCoins, symbol, version] = await Promise.all([
+                this.spCoinContractDeployed.name(),
+                this.spCoinContractDeployed.creationTime(),
+                this.spCoinContractDeployed.decimals(),
+                this.spCoinContractDeployed.totalSupply(),
+                this.spCoinContractDeployed.initialTotalSupply(),
+                readAnnualInflation(this.spCoinContractDeployed),
+                this.spCoinContractDeployed.totalBalanceOf(),
+                this.spCoinContractDeployed.totalStakingRewards(),
+                this.spCoinContractDeployed.totalStakedSPCoins(),
+                this.spCoinContractDeployed.symbol(),
+                this.spCoinContractDeployed.version(),
+            ]);
+            let headerData = [
+                "NAME:" + String(name),
+                "CREATION_TIME:" + String(creationTime),
+                "DECIMALS:" + String(decimals),
+                "TOTAL_SUPPLY:" + String(totalSupply),
+                "INITIAL_TOTAL_SUPPLY:" + String(initialTotalSupply),
+                "ANNUAL_INFLATION:" + String(annualInflation),
+                "TOTAL_BALANCE_OF:" + String(totalBalanceOf),
+                "TOTAL_STAKED_REWARDS:" + String(totalStakingRewards),
+                "TOTAL_STAKED_SP_COINS:" + String(totalStakedSPCoins),
+                "SYMBOL:" + String(symbol),
+                "VERSION:" + String(version),
+            ].join(",");
             let elements = headerData.split(",");
             // console.log("headerData", headerData);
             // console.log("elements.length", elements.length);

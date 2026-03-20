@@ -91,6 +91,23 @@ async function discoverSampleInputs(contract) {
 }
 
 async function rebuildSerializedSPCoinHeader(contract) {
+  const readAnnualInflation = async () => {
+    if (typeof contract?.getInflationRate === 'function') {
+      try {
+        return await contract.getInflationRate();
+      } catch {
+        // Fall back for older deployments that still expose annualInflation().
+      }
+    }
+    if (typeof contract?.annualInflation === 'function') {
+      try {
+        return await contract.annualInflation();
+      } catch {
+        // Fall through to the historical default below.
+      }
+    }
+    return 10;
+  };
   const [
     name,
     creationTime,
@@ -109,7 +126,7 @@ async function rebuildSerializedSPCoinHeader(contract) {
     contract.decimals(),
     contract.totalSupply(),
     contract.initialTotalSupply(),
-    contract.annualInflation(),
+    readAnnualInflation(),
     contract.totalBalanceOf(),
     contract.totalStakingRewards(),
     contract.totalStakedSPCoins(),

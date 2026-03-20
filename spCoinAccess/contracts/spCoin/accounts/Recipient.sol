@@ -53,13 +53,19 @@ contract Recipient is Sponsor {
         // return accountMap[sponsor].recipientMap[_recipientKey];
     }
 
-    function getSerializedRecipientRecordList(address _sponsorKey, address _recipientKey) public view returns (string memory) {
-// console.log("Recipient.sol:getSerializedRecipientRecordList(", _sponsorKey, ",", _recipientKey);
-        RecipientStruct storage recipientRecord =  getRecipientRecordByKeys(_sponsorKey, _recipientKey);
-        string memory recipientRecordStr = toString(recipientRecord.creationTime);
-        string memory stakedSPCoinsStr = toString(recipientRecord.stakedSPCoins);
-        recipientRecordStr = concat(recipientRecordStr, ",", stakedSPCoinsStr);
-        return recipientRecordStr;
+    function getRecipientRecordCore(address _sponsorKey, address _recipientKey)
+        public
+        view
+        returns (
+            uint256 creationTime,
+            uint256 stakedSPCoins,
+            bool inserted
+        )
+    {
+        RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
+        creationTime = recipientRecord.creationTime;
+        stakedSPCoins = recipientRecord.stakedSPCoins;
+        inserted = recipientRecord.inserted;
     }
 
     //////////////////// NESTED AGENT METHODS /////////////////////////
@@ -81,7 +87,7 @@ contract Recipient is Sponsor {
     /*
     ///////////////////// DELETE RECIPIENT METHODS ////////////////////////
     modifier recipientExists (address _sponsorKey, address _recipientKey) {
-        require (isRecipientInserted(_recipientKey) , "_recipientKey not found)");
+        require (isRecipientInserted(_recipientKey) , "RECIP_NOT_FOUND");
         _;
     }
 */

@@ -1,7 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/SpCoinReadController.tsx
 import React from 'react';
-import Image from 'next/image';
 import AccountDropdownInput from './AccountDropdownInput';
+import AccountSelection from './AccountSelection';
 
 type ParamDefLike = { label: string; placeholder: string; type?: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
@@ -15,7 +15,10 @@ type Props = {
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedSpCoinReadMethod: string;
   setSelectedSpCoinReadMethod: (value: string) => void;
-  spCoinReadOptions: string[];
+  spCoinWorldReadOptions: string[];
+  spCoinSenderReadOptions: string[];
+  spCoinAdminReadOptions: string[];
+  spCoinCompoundReadOptions: string[];
   spCoinReadMethodDefs: Record<string, MethodDef>;
   activeSpCoinReadDef: MethodDef;
   spReadParams: string[];
@@ -41,7 +44,10 @@ export default function SpCoinReadController(props: Props) {
     hardhatAccountMetadata,
     selectedSpCoinReadMethod,
     setSelectedSpCoinReadMethod,
-    spCoinReadOptions,
+    spCoinWorldReadOptions,
+    spCoinSenderReadOptions,
+    spCoinAdminReadOptions,
+    spCoinCompoundReadOptions,
     spCoinReadMethodDefs,
     activeSpCoinReadDef,
     spReadParams,
@@ -97,7 +103,7 @@ export default function SpCoinReadController(props: Props) {
   );
 
   return (
-    <div className="mt-4 grid grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
@@ -105,7 +111,15 @@ export default function SpCoinReadController(props: Props) {
           value={selectedSpCoinReadMethod}
           onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
         >
-          {spCoinReadOptions.map((name) => (
+          <option
+            key="sp-read-world-divider"
+            value="__world-divider__"
+            disabled
+            style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+          >
+            ---- World Access ----
+          </option>
+          {spCoinWorldReadOptions.map((name) => (
             <option
               key={`sp-read-${name}`}
               value={name}
@@ -114,6 +128,74 @@ export default function SpCoinReadController(props: Props) {
               {name}
             </option>
           ))}
+          {spCoinSenderReadOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-read-sender-divider"
+                value="__sender-divider__"
+                disabled
+                style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+              >
+                ---- Sender Access ----
+              </option>
+              {spCoinSenderReadOptions.map((name) => (
+                <option
+                  key={`sp-read-sender-${name}`}
+                  value={name}
+                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
+          {spCoinAdminReadOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-read-admin-divider"
+                value="__admin-divider__"
+                disabled
+                style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+              >
+                ---- Admin Access ----
+              </option>
+              {spCoinAdminReadOptions.map((name) => (
+                <option
+                  key={`sp-read-admin-${name}`}
+                  value={name}
+                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
+          {spCoinCompoundReadOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-read-compound-divider"
+                value="__compound-divider__"
+                disabled
+                style={{
+                  backgroundColor: '#E5B94F',
+                  color: '#111827',
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}
+              >
+                ---- Serialized Compound Reads ----
+              </option>,
+              {spCoinCompoundReadOptions.map((name) => (
+                <option
+                  key={`sp-read-compound-${name}`}
+                  value={name}
+                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
         </select>
         <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
@@ -122,16 +204,12 @@ export default function SpCoinReadController(props: Props) {
       {activeSpCoinReadDef.params.map((param, idx) => (
         <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
-            <div className={`grid grid-cols-1 gap-3${openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <button
-                  type="button"
-                  onClick={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                  className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                  title={`Toggle ${param.label}`}
-                >
-                  {param.label}
-                </button>
+            <AccountSelection
+              label={param.label}
+              title={`Toggle ${param.label}`}
+              isOpen={Boolean(openAddressFields[idx])}
+              onToggle={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+              control={
                 <AccountDropdownInput
                   dataFieldId={`spcoin-read-param-${idx}`}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
@@ -147,26 +225,9 @@ export default function SpCoinReadController(props: Props) {
                   placeholder="Select account"
                   options={accountOptions}
                 />
-              </label>
-              {openAddressFields[idx] && (
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                  <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                      {getMetadataForAddress(spReadParams[idx] || '')?.logoURL ? (
-                        <Image src={getMetadataForAddress(spReadParams[idx] || '')!.logoURL} alt={getMetadataForAddress(spReadParams[idx] || '')?.name || param.label} width={40} height={40} className="h-full w-full object-contain" unoptimized />
-                      ) : (
-                        <span className="text-[10px] text-slate-400">No logo</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate font-medium text-white">{getMetadataForAddress(spReadParams[idx] || '')?.name || 'Unnamed account'}</div>
-                      <div className="truncate text-xs text-slate-400">{getMetadataForAddress(spReadParams[idx] || '')?.symbol || 'No symbol'}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              }
+              metadata={getMetadataForAddress(spReadParams[idx] || '')}
+            />
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>

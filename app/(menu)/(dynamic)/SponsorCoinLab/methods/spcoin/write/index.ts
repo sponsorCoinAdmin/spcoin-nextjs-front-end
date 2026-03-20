@@ -25,7 +25,52 @@ export type SpCoinWriteMethod =
   | 'depositSponsorStakingRewards'
   | 'depositRecipientStakingRewards'
   | 'depositAgentStakingRewards'
-  | 'depositStakingRewards';
+  | 'depositStakingRewards'
+  | 'setInflationRate'
+  | 'setLowerRecipient'
+  | 'setUpperRecipient'
+  | 'setRecipientRateRange'
+  | 'setLowerAgent'
+  | 'setUpperAgent'
+  | 'setAgentRateRange';
+
+export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'setInflationRate',
+  'setLowerRecipient',
+  'setUpperRecipient',
+  'setRecipientRateRange',
+  'setLowerAgent',
+  'setUpperAgent',
+  'setAgentRateRange',
+];
+
+export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'addRecipient',
+  'addRecipients',
+  'addAgent',
+  'addAgents',
+  'addSponsorship',
+  'addAgentSponsorship',
+  'addBackDatedSponsorship',
+  'addBackDatedAgentSponsorship',
+  'unSponsorRecipient',
+  'deleteAccountRecord',
+  'deleteAccountRecords',
+];
+
+export function getSpCoinWorldWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
+  return getSpCoinWriteOptions(hideUnexecutables).filter(
+    (name) => !SPCOIN_ADMIN_WRITE_METHODS.includes(name) && !SPCOIN_SENDER_WRITE_METHODS.includes(name),
+  );
+}
+
+export function getSpCoinSenderWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
+  return getSpCoinWriteOptions(hideUnexecutables).filter((name) => SPCOIN_SENDER_WRITE_METHODS.includes(name));
+}
+
+export function getSpCoinAdminWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
+  return getSpCoinWriteOptions(hideUnexecutables).filter((name) => SPCOIN_ADMIN_WRITE_METHODS.includes(name));
+}
 
 export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
   const all = (Object.keys(SPCOIN_WRITE_METHOD_DEFS) as SpCoinWriteMethod[]).sort((a, b) => a.localeCompare(b));

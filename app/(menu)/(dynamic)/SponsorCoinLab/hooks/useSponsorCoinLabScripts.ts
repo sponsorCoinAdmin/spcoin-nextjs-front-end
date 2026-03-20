@@ -9,6 +9,7 @@ import {
 } from '../methods/erc20/write';
 import type { SpCoinReadMethod } from '../methods/spcoin/read';
 import type { SpCoinWriteMethod } from '../methods/spcoin/write';
+import type { SerializationTestMethod } from '../methods/serializationTests';
 import type { MethodDef } from '../methods/shared/types';
 import type {
   ConnectionMode,
@@ -68,11 +69,16 @@ type Params = {
   spWriteParams: string[];
   activeSpCoinWriteDef: MethodDef;
   spCoinWriteMethodDefs: Record<string, MethodDef>;
+  selectedSerializationTestMethod: SerializationTestMethod;
+  serializationTestParams: string[];
+  activeSerializationTestDef: MethodDef;
+  serializationTestMethodDefs: Record<string, MethodDef>;
   editingScriptStepNumber: number | null;
   erc20ReadMissingEntries: Entry[];
   erc20WriteMissingEntries: Entry[];
   spCoinReadMissingEntries: Entry[];
   spCoinWriteMissingEntries: Entry[];
+  serializationTestMissingEntries: Entry[];
   showValidationPopup: (
     fieldIds: string[],
     labels: string[],
@@ -99,6 +105,8 @@ type Params = {
   setSpReadParams: (value: string[]) => void;
   setSelectedSpCoinWriteMethod: (value: SpCoinWriteMethod) => void;
   setSpWriteParams: (value: string[]) => void;
+  setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
+  setSerializationTestParams: (value: string[]) => void;
 };
 
 export function useSponsorCoinLabScripts({
@@ -123,11 +131,16 @@ export function useSponsorCoinLabScripts({
   spWriteParams,
   activeSpCoinWriteDef,
   spCoinWriteMethodDefs,
+  selectedSerializationTestMethod,
+  serializationTestParams,
+  activeSerializationTestDef,
+  serializationTestMethodDefs,
   editingScriptStepNumber,
   erc20ReadMissingEntries,
   erc20WriteMissingEntries,
   spCoinReadMissingEntries,
   spCoinWriteMissingEntries,
+  serializationTestMissingEntries,
   showValidationPopup,
   setStatus,
   setOutputPanelMode,
@@ -146,6 +159,8 @@ export function useSponsorCoinLabScripts({
   setSpReadParams,
   setSelectedSpCoinWriteMethod,
   setSpWriteParams,
+  setSelectedSerializationTestMethod,
+  setSerializationTestParams,
 }: Params) {
   const [scripts, setScriptsState] = useState<LabScript[]>([]);
   const [selectedScriptId, setSelectedScriptId] = useState('');
@@ -287,12 +302,19 @@ export function useSponsorCoinLabScripts({
           .filter((param) => param.value.trim().length > 0);
       }
 
+      if (step.panel === 'serialization_tests') {
+        const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+        return legacyValues
+          .map((value, idx) => ({ key: def?.params[idx]?.label || `param${idx + 1}`, value }))
+          .filter((param) => param.value.trim().length > 0);
+      }
+
       const writeDef = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
       return legacyValues
         .map((value, idx) => ({ key: writeDef?.params[idx]?.label || `param${idx + 1}`, value }))
         .filter((param) => param.value.trim().length > 0);
     },
-    [spCoinReadMethodDefs, spCoinWriteMethodDefs],
+    [serializationTestMethodDefs, spCoinReadMethodDefs, spCoinWriteMethodDefs],
   );
   const hasStepMissingRequiredParams = useCallback(
     (step: LabScriptStep): boolean => {
@@ -323,11 +345,24 @@ export function useSponsorCoinLabScripts({
         return (def?.params || []).some((param) => !findParamValue(param.label));
       }
 
+      if (step.panel === 'serialization_tests') {
+        const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+        return (def?.params || []).some((param) => !findParamValue(param.label));
+      }
+
       const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
       if (stepMode === 'hardhat' && !sender) return true;
       return (def?.params || []).some((param) => param.type !== 'date' && !findParamValue(param.label));
     },
-    [getStepMode, getStepParamEntries, getStepSender, selectedScript?.network, spCoinReadMethodDefs, spCoinWriteMethodDefs],
+    [
+      getStepMode,
+      getStepParamEntries,
+      getStepSender,
+      selectedScript?.network,
+      serializationTestMethodDefs,
+      spCoinReadMethodDefs,
+      spCoinWriteMethodDefs,
+    ],
   );
 
   const normalizeScriptStep = useCallback(
@@ -416,10 +451,17 @@ export function useSponsorCoinLabScripts({
         return;
       }
 
-      setSelectedSpCoinWriteMethod(step.method as SpCoinWriteMethod);
-      setSelectedWriteSenderAddress(stepSender);
-      const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
-      setSpWriteParams(fillParamList(def?.params || []));
+      if (step.panel === 'spcoin_write') {
+        setSelectedSpCoinWriteMethod(step.method as SpCoinWriteMethod);
+        setSelectedWriteSenderAddress(stepSender);
+        const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+        setSpWriteParams(fillParamList(def?.params || []));
+        return;
+      }
+
+      setSelectedSerializationTestMethod(step.method as SerializationTestMethod);
+      const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+      setSerializationTestParams(fillParamList(def?.params || []));
     },
     [
       getStepMode,
@@ -433,15 +475,18 @@ export function useSponsorCoinLabScripts({
       setSelectedReadMethod,
       setSelectedSpCoinReadMethod,
       setSelectedSpCoinWriteMethod,
+      setSelectedSerializationTestMethod,
       setSelectedWriteMethod,
       setSelectedWriteSenderAddress,
       setSpReadParams,
       setSpWriteParams,
+      setSerializationTestParams,
       setWriteAddressA,
       setWriteAddressB,
       setWriteAmountRaw,
       spCoinReadMethodDefs,
       spCoinWriteMethodDefs,
+      serializationTestMethodDefs,
     ],
   );
 
@@ -566,6 +611,57 @@ export function useSponsorCoinLabScripts({
     setStatus(`Created ${nextScript.name}.`);
   }, [activeNetworkName, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, scripts.length, setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
 
+  const duplicateSelectedScript = useCallback(
+    (nextNameRaw: string) => {
+      if (!selectedScript) {
+        setStatus('Select a script to copy.');
+        return false;
+      }
+
+      const nextName = String(nextNameRaw || '').trim();
+      if (!nextName) {
+        setStatus('No Script Name');
+        return false;
+      }
+
+      const normalizedNextName = normalizeScriptName(nextName);
+      const duplicateExists = scripts.some((script) => normalizeScriptName(script.name) === normalizedNextName);
+      if (duplicateExists) {
+        setStatus('Duplicate');
+        return false;
+      }
+
+      const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nextScript: LabScript = {
+        ...selectedScript,
+        id: nextId,
+        name: nextName,
+        'Date Created': formatScriptCreatedDate(new Date()),
+        steps: Array.isArray(selectedScript.steps)
+          ? selectedScript.steps.map((step, idx) => normalizeScriptStep({ ...step }, idx))
+          : [],
+      };
+
+      setScripts((prev) => [...prev, nextScript]);
+      setSelectedScriptId(nextId);
+      setScriptNameInput(nextName);
+      setSelectedScriptStepNumber(null);
+      setExpandedScriptStepIds({});
+      setFormattedOutputDisplay(JSON.stringify(nextScript, null, 2));
+      setOutputPanelMode('formatted');
+      setStatus(`Copied ${selectedScript.name} to ${nextScript.name}.`);
+      return true;
+    },
+    [
+      normalizeScriptStep,
+      scripts,
+      selectedScript,
+      setFormattedOutputDisplay,
+      setOutputPanelMode,
+      setStatus,
+    ],
+  );
+
   const clearSelectedScript = useCallback(() => {
     setSelectedScriptId('');
     setScriptNameInput('');
@@ -673,6 +769,23 @@ export function useSponsorCoinLabScripts({
         };
       }
 
+      if (methodPanelMode === 'serialization_tests') {
+        return {
+          name: activeSerializationTestDef.title,
+          panel: methodPanelMode,
+          method: selectedSerializationTestMethod,
+          hasMissingRequiredParams,
+          'msg.sender': sender,
+          params: serializationTestParams
+            .slice(0, activeSerializationTestDef.params.length)
+            .map((value, idx) => ({
+              key: activeSerializationTestDef.params[idx]?.label || `param${idx + 1}`,
+              value: String(value || '').trim(),
+            }))
+            .filter((param) => param.value.length > 0),
+        };
+      }
+
       return null;
     },
     [
@@ -685,6 +798,8 @@ export function useSponsorCoinLabScripts({
       activeSpCoinReadDef.title,
       activeSpCoinWriteDef.params,
       activeSpCoinWriteDef.title,
+      activeSerializationTestDef.params,
+      activeSerializationTestDef.title,
       activeWriteLabels.addressALabel,
       activeWriteLabels.addressBLabel,
       activeWriteLabels.requiresAddressB,
@@ -695,8 +810,10 @@ export function useSponsorCoinLabScripts({
       selectedReadMethod,
       selectedSpCoinReadMethod,
       selectedSpCoinWriteMethod,
+      selectedSerializationTestMethod,
       selectedWriteMethod,
       selectedWriteSenderAddress,
+      serializationTestParams,
       spReadParams,
       spWriteParams,
       writeAddressA,
@@ -717,9 +834,11 @@ export function useSponsorCoinLabScripts({
         ? erc20ReadMissingEntries
         : methodPanelMode === 'erc20_write'
           ? erc20WriteMissingEntries
-        : methodPanelMode === 'spcoin_rread'
-          ? spCoinReadMissingEntries
-          : spCoinWriteMissingEntries;
+          : methodPanelMode === 'spcoin_rread'
+            ? spCoinReadMissingEntries
+            : methodPanelMode === 'spcoin_write'
+              ? spCoinWriteMissingEntries
+              : serializationTestMissingEntries;
     const isUpdatingExistingStep =
       editingScriptStepNumber !== null &&
       Array.isArray(selectedScript?.steps) &&
@@ -855,6 +974,7 @@ export function useSponsorCoinLabScripts({
     showValidationPopup,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
+    serializationTestMissingEntries,
   ]);
 
   const buildCurrentScriptStepDraft = useCallback((): Omit<LabScriptStep, 'step'> | null => {
@@ -865,7 +985,9 @@ export function useSponsorCoinLabScripts({
           ? erc20WriteMissingEntries
           : methodPanelMode === 'spcoin_rread'
             ? spCoinReadMissingEntries
-            : spCoinWriteMissingEntries;
+            : methodPanelMode === 'spcoin_write'
+              ? spCoinWriteMissingEntries
+              : serializationTestMissingEntries;
 
     return buildEditorStepDraft(activeMissingEntries.length > 0);
   }, [
@@ -875,6 +997,7 @@ export function useSponsorCoinLabScripts({
     methodPanelMode,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
+    serializationTestMissingEntries,
   ]);
   const hasEditingScriptChanges = useMemo(() => {
     if (editingScriptStepNumber === null || !Array.isArray(selectedScript?.steps)) return true;
@@ -930,6 +1053,7 @@ export function useSponsorCoinLabScripts({
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    duplicateSelectedScript,
     clearSelectedScript,
     handleDeleteScriptClick,
     hasEditingScriptChanges,

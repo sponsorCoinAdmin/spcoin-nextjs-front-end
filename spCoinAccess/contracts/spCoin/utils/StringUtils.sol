@@ -118,7 +118,7 @@ contract StringUtils {
          return (uint256Value, true);
    }
 
-   function strToUint(string memory _strWholeAmount) public pure returns(uint256 result, bool err) {
+   function strToUint(string memory _strWholeAmount) internal pure returns(uint256 result, bool err) {
       for (uint256 i = 0; i < bytes(_strWholeAmount).length; i++) {
          uint8 asciiValue = uint8(bytes(_strWholeAmount)[i]);
          // console.log("SOL==>asciiValue at ", i, " = ", asciiValue);

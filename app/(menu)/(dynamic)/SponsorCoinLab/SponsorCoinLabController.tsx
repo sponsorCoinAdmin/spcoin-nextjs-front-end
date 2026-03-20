@@ -15,14 +15,25 @@ import {
 } from './methods/erc20/write';
 import {
   SPCOIN_READ_METHOD_DEFS,
-  getSpCoinReadOptions,
+  getSpCoinAdminReadOptions,
+  getSpCoinCompoundReadOptions,
+  getSpCoinSenderReadOptions,
+  getSpCoinWorldReadOptions,
   type SpCoinReadMethod,
 } from './methods/spcoin/read';
 import {
   SPCOIN_WRITE_METHOD_DEFS,
+  getSpCoinAdminWriteOptions,
+  getSpCoinSenderWriteOptions,
+  getSpCoinWorldWriteOptions,
   getSpCoinWriteOptions,
   type SpCoinWriteMethod,
 } from './methods/spcoin/write';
+import {
+  SERIALIZATION_TEST_METHOD_DEFS,
+  getSerializationTestOptions,
+  type SerializationTestMethod,
+} from './methods/serializationTests';
 import { createSpCoinLibraryAccess, createSpCoinModuleAccess } from './methods/shared';
 import {
   CALENDAR_WEEK_DAYS,
@@ -98,6 +109,25 @@ function formatDecimalString(value: string) {
   const digits = negative ? trimmed.slice(1) : trimmed;
   const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return negative ? `-${grouped}` : grouped;
+}
+
+function buildDefaultAccountParams(
+  params: Array<{ label: string }>,
+  defaults: {
+    sponsor: string;
+    recipient: string;
+    agent: string;
+  },
+) {
+  return params.map((param) => {
+    const label = String(param.label || '').toLowerCase();
+    if (label === 'msg.sender') return defaults.sponsor;
+    if (label.includes('sponsor')) return defaults.sponsor;
+    if (label.includes('recipient') && !label.includes('rate')) return defaults.recipient;
+    if (label.includes('agent') && !label.includes('rate')) return defaults.agent;
+    if (label === 'account key') return defaults.sponsor;
+    return '';
+  });
 }
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
@@ -269,8 +299,13 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinReadMethod>('getSerializedSPCoinHeader');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
+  const [selectedSerializationTestMethod, setSelectedSerializationTestMethod] =
+    useState<SerializationTestMethod>('external_getSerializedSPCoinHeader');
   const [selectedSponsorCoinAccountRole, setSelectedSponsorCoinAccountRole] =
     useState<SponsorCoinAccountRole>('sponsor');
+  const [defaultSponsorKey, setDefaultSponsorKey] = useState('');
+  const [defaultRecipientKey, setDefaultRecipientKey] = useState('');
+  const [defaultAgentKey, setDefaultAgentKey] = useState('');
   const [managedRoleAccountAddress, setManagedRoleAccountAddress] = useState('');
   const [managedRecipientKey, setManagedRecipientKey] = useState('');
   const [managedRecipientRateKey, setManagedRecipientRateKey] = useState('');
@@ -279,6 +314,9 @@ export default function SponsorCoinLabPage() {
   const [sponsorCoinAccountManagementStatus, setSponsorCoinAccountManagementStatus] = useState('');
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
+  const [serializationTestParams, setSerializationTestParams] = useState<string[]>(
+    Array.from({ length: 7 }, () => ''),
+  );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
 
@@ -432,9 +470,14 @@ export default function SponsorCoinLabPage() {
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
+  const serializationTestMethodDefs = SERIALIZATION_TEST_METHOD_DEFS;
   const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
   const activeSpCoinWriteDef =
     spCoinWriteMethodDefs[selectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
+  const serializationTestOptions = getSerializationTestOptions();
+  const activeSerializationTestDef =
+    serializationTestMethodDefs[selectedSerializationTestMethod] ??
+    serializationTestMethodDefs[serializationTestOptions[0]];
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -452,10 +495,12 @@ export default function SponsorCoinLabPage() {
     erc20ReadMissingEntries,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
+    serializationTestMissingEntries,
     canRunErc20WriteMethod,
     canRunErc20ReadMethod,
     canRunSpCoinReadMethod,
     canRunSpCoinWriteMethod,
+    canRunSerializationTestMethod,
     recipientRateKeyOptions,
     agentRateKeyOptions,
     recipientRateKeyHelpText,
@@ -473,6 +518,7 @@ export default function SponsorCoinLabPage() {
     runSelectedReadMethod,
     runSelectedSpCoinReadMethod,
     runSelectedSpCoinWriteMethod,
+    runSelectedSerializationTestMethod,
     runScriptStep,
   } = useSponsorCoinLabMethods({
     activeContractAddress: contractAddress,
@@ -492,12 +538,17 @@ export default function SponsorCoinLabPage() {
     setSelectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
+    selectedSerializationTestMethod,
+    setSelectedSerializationTestMethod,
     spReadParams,
     spWriteParams,
+    serializationTestParams,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
+    serializationTestMethodDefs,
     activeSpCoinReadDef,
     activeSpCoinWriteDef,
+    activeSerializationTestDef,
     selectedHardhatAddress:
       mode === 'hardhat'
         ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
@@ -558,6 +609,7 @@ export default function SponsorCoinLabPage() {
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    duplicateSelectedScript,
     clearSelectedScript,
     handleDeleteScriptClick,
     hasEditingScriptChanges,
@@ -584,11 +636,16 @@ export default function SponsorCoinLabPage() {
     spWriteParams,
     activeSpCoinWriteDef,
     spCoinWriteMethodDefs,
+    selectedSerializationTestMethod,
+    serializationTestParams,
+    activeSerializationTestDef,
+    serializationTestMethodDefs,
     editingScriptStepNumber,
     erc20ReadMissingEntries,
     erc20WriteMissingEntries,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
+    serializationTestMissingEntries,
     showValidationPopup,
     setStatus,
     setOutputPanelMode,
@@ -607,6 +664,8 @@ export default function SponsorCoinLabPage() {
     setSpReadParams,
     setSelectedSpCoinWriteMethod,
     setSpWriteParams,
+    setSelectedSerializationTestMethod,
+    setSerializationTestParams,
   });
   const editorSnapshot = JSON.stringify({
     methodPanelMode,
@@ -624,6 +683,8 @@ export default function SponsorCoinLabPage() {
     spReadParams,
     selectedSpCoinWriteMethod,
     spWriteParams,
+    selectedSerializationTestMethod,
+    serializationTestParams,
   });
   const editorBaselineRef = useRef<string | null>(null);
   const shouldResetEditorBaselineRef = useRef(true);
@@ -674,6 +735,8 @@ export default function SponsorCoinLabPage() {
     setRpcUrl,
     contractAddress,
     setContractAddress,
+    selectedSponsorCoinVersion,
+    setSelectedSponsorCoinVersion,
     selectedHardhatIndex,
     setSelectedHardhatIndex,
     connectedAddress,
@@ -687,10 +750,14 @@ export default function SponsorCoinLabPage() {
     setLogs,
     formattedOutputDisplay,
     setFormattedOutputDisplay,
+    outputPanelMode,
+    setOutputPanelMode,
     formattedPanelView,
     setFormattedPanelView,
     formattedJsonViewEnabled,
     setFormattedJsonViewEnabled,
+    writeTraceEnabled,
+    setWriteTraceEnabled,
     treeOutputDisplay,
     setTreeOutputDisplay,
     selectedWriteMethod,
@@ -713,10 +780,30 @@ export default function SponsorCoinLabPage() {
     setSelectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
+    selectedSerializationTestMethod,
+    setSelectedSerializationTestMethod,
+    selectedSponsorCoinAccountRole,
+    setSelectedSponsorCoinAccountRole,
+    defaultSponsorKey,
+    setDefaultSponsorKey,
+    defaultRecipientKey,
+    setDefaultRecipientKey,
+    defaultAgentKey,
+    setDefaultAgentKey,
+    managedRoleAccountAddress,
+    setManagedRoleAccountAddress,
+    managedRecipientKey,
+    setManagedRecipientKey,
+    managedRecipientRateKey,
+    setManagedRecipientRateKey,
+    sponsorCoinAccountManagementStatus,
+    setSponsorCoinAccountManagementStatus,
     spReadParams,
     setSpReadParams,
     spWriteParams,
     setSpWriteParams,
+    serializationTestParams,
+    setSerializationTestParams,
     normalizeAddressValue,
     backdateCalendar,
   });
@@ -745,7 +832,19 @@ export default function SponsorCoinLabPage() {
   }, [formattedOutputDisplay]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
-  const spCoinReadOptions = getSpCoinReadOptions(false);
+  const spCoinWorldReadOptions = getSpCoinWorldReadOptions(false);
+  const spCoinSenderReadOptions = getSpCoinSenderReadOptions(false);
+  const spCoinAdminReadOptions = getSpCoinAdminReadOptions(false);
+  const spCoinCompoundReadOptions = getSpCoinCompoundReadOptions(false);
+  const spCoinAllReadOptions = [
+    ...spCoinWorldReadOptions,
+    ...spCoinSenderReadOptions,
+    ...spCoinAdminReadOptions,
+    ...spCoinCompoundReadOptions,
+  ];
+  const spCoinWorldWriteOptions = getSpCoinWorldWriteOptions(false);
+  const spCoinSenderWriteOptions = getSpCoinSenderWriteOptions(false);
+  const spCoinAdminWriteOptions = getSpCoinAdminWriteOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
   const sponsorCoinAccountManagementValidation = useMemo(() => {
     const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
@@ -905,10 +1004,10 @@ export default function SponsorCoinLabPage() {
     ],
   );
   useEffect(() => {
-    if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinReadOptions.length > 0) {
-      setSelectedSpCoinReadMethod(spCoinReadOptions[0]);
+    if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinAllReadOptions.length > 0) {
+      setSelectedSpCoinReadMethod(spCoinAllReadOptions[0]);
     }
-  }, [selectedSpCoinReadMethod, spCoinReadMethodDefs, spCoinReadOptions]);
+  }, [selectedSpCoinReadMethod, spCoinReadMethodDefs, spCoinAllReadOptions]);
   useEffect(() => {
     if (!spCoinWriteMethodDefs[selectedSpCoinWriteMethod] && spCoinWriteOptions.length > 0) {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
@@ -918,6 +1017,23 @@ export default function SponsorCoinLabPage() {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
     }
   }, [selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
+  useEffect(() => {
+    if (!serializationTestMethodDefs[selectedSerializationTestMethod] && serializationTestOptions.length > 0) {
+      setSelectedSerializationTestMethod(serializationTestOptions[0]);
+      return;
+    }
+    if (
+      serializationTestMethodDefs[selectedSerializationTestMethod]?.executable === false &&
+      serializationTestOptions.length > 0
+    ) {
+      setSelectedSerializationTestMethod(serializationTestOptions[0]);
+    }
+  }, [
+    selectedSerializationTestMethod,
+    serializationTestMethodDefs,
+    serializationTestOptions,
+    setSelectedSerializationTestMethod,
+  ]);
   const methodPanelTitle =
     methodSelectionSource === 'script' && editingScriptStepNumber !== null
       ? `Edit Test Method ${editingScriptStepNumber}`
@@ -932,6 +1048,8 @@ export default function SponsorCoinLabPage() {
         return activeSpCoinReadDef.title;
       case 'spcoin_write':
         return activeSpCoinWriteDef.title;
+      case 'serialization_tests':
+        return activeSerializationTestDef.title;
       default:
         return 'method';
     }
@@ -947,6 +1065,7 @@ export default function SponsorCoinLabPage() {
   const hasEditorScriptSelected = Boolean(String(selectedScriptId || '').trim());
   const addToScriptButtonLabel = isEditingScriptMethod ? `Update Script Step ${editingScriptStepNumber}` : 'Add To Script';
   const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
+  const [scriptStepExecutionErrors, setScriptStepExecutionErrors] = useState<Record<number, boolean>>({});
   const toggleExpandedCard = useCallback((cardId: LabCardId) => {
     setExpandedCard((current) => (current === cardId ? null : cardId));
   }, []);
@@ -1020,9 +1139,31 @@ export default function SponsorCoinLabPage() {
       runWithDiscardPrompt(() => {
         resetToDropdownSelection();
         setSelectedSpCoinReadMethod(value);
+        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
+        const nextDef = spCoinReadMethodDefs[value];
+        if (!nextDef) return;
+        setSpReadParams(
+          buildDefaultAccountParams(nextDef.params, {
+            sponsor: defaultSponsorKey,
+            recipient: defaultRecipientKey,
+            agent: defaultAgentKey,
+          }),
+        );
       });
     },
-    [resetToDropdownSelection, runWithDiscardPrompt, selectedSpCoinReadMethod, setSelectedSpCoinReadMethod],
+    [
+      defaultAgentKey,
+      defaultRecipientKey,
+      defaultSponsorKey,
+      editingScriptStepNumber,
+      methodSelectionSource,
+      resetToDropdownSelection,
+      runWithDiscardPrompt,
+      selectedSpCoinReadMethod,
+      setSelectedSpCoinReadMethod,
+      setSpReadParams,
+      spCoinReadMethodDefs,
+    ],
   );
   const selectDropdownSpCoinWriteMethod = useCallback(
     (value: SpCoinWriteMethod) => {
@@ -1030,9 +1171,67 @@ export default function SponsorCoinLabPage() {
       runWithDiscardPrompt(() => {
         resetToDropdownSelection();
         setSelectedSpCoinWriteMethod(value);
+        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
+        const nextDef = spCoinWriteMethodDefs[value];
+        if (!nextDef) return;
+        if (defaultSponsorKey) {
+          setSelectedWriteSenderAddress(defaultSponsorKey);
+        }
+        setSpWriteParams(
+          buildDefaultAccountParams(nextDef.params, {
+            sponsor: defaultSponsorKey,
+            recipient: defaultRecipientKey,
+            agent: defaultAgentKey,
+          }),
+        );
       });
     },
-    [resetToDropdownSelection, runWithDiscardPrompt, selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod],
+    [
+      defaultAgentKey,
+      defaultRecipientKey,
+      defaultSponsorKey,
+      editingScriptStepNumber,
+      methodSelectionSource,
+      resetToDropdownSelection,
+      runWithDiscardPrompt,
+      selectedSpCoinWriteMethod,
+      setSelectedSpCoinWriteMethod,
+      setSelectedWriteSenderAddress,
+      setSpWriteParams,
+      spCoinWriteMethodDefs,
+    ],
+  );
+  const selectDropdownSerializationTestMethod = useCallback(
+    (value: SerializationTestMethod) => {
+      if (selectedSerializationTestMethod === value) return;
+      runWithDiscardPrompt(() => {
+        resetToDropdownSelection();
+        setSelectedSerializationTestMethod(value);
+        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
+        const nextDef = serializationTestMethodDefs[value];
+        if (!nextDef) return;
+        setSerializationTestParams(
+          buildDefaultAccountParams(nextDef.params, {
+            sponsor: defaultSponsorKey,
+            recipient: defaultRecipientKey,
+            agent: defaultAgentKey,
+          }),
+        );
+      });
+    },
+    [
+      defaultAgentKey,
+      defaultRecipientKey,
+      defaultSponsorKey,
+      editingScriptStepNumber,
+      methodSelectionSource,
+      resetToDropdownSelection,
+      runWithDiscardPrompt,
+      selectedSerializationTestMethod,
+      serializationTestMethodDefs,
+      setSerializationTestParams,
+      setSelectedSerializationTestMethod,
+    ],
   );
   const handleAddCurrentMethodToScript = useCallback(() => {
     const savedStepNumber = addCurrentMethodToScript();
@@ -1042,6 +1241,43 @@ export default function SponsorCoinLabPage() {
     setSelectedScriptStepNumber(savedStepNumber);
     queueEditorBaselineReset();
   }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
+  useEffect(() => {
+    if (methodSelectionSource !== 'dropdown' || editingScriptStepNumber !== null) return;
+
+    const defaults = {
+      sponsor: defaultSponsorKey,
+      recipient: defaultRecipientKey,
+      agent: defaultAgentKey,
+    };
+
+    if (methodPanelMode === 'spcoin_rread') {
+      setSpReadParams(buildDefaultAccountParams(activeSpCoinReadDef.params, defaults));
+      return;
+    }
+
+    if (methodPanelMode === 'spcoin_write') {
+      if (defaultSponsorKey) {
+        setSelectedWriteSenderAddress(defaultSponsorKey);
+      }
+      setSpWriteParams(buildDefaultAccountParams(activeSpCoinWriteDef.params, defaults));
+      return;
+    }
+
+    if (methodPanelMode === 'serialization_tests') {
+      setSerializationTestParams(buildDefaultAccountParams(activeSerializationTestDef.params, defaults));
+    }
+  }, [
+    activeSerializationTestDef.params,
+    activeSpCoinReadDef.params,
+    activeSpCoinWriteDef.params,
+    defaultAgentKey,
+    defaultRecipientKey,
+    defaultSponsorKey,
+    editingScriptStepNumber,
+    methodPanelMode,
+    methodSelectionSource,
+    setSelectedWriteSenderAddress,
+  ]);
   useEffect(() => {
     const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
 
@@ -1104,6 +1340,14 @@ export default function SponsorCoinLabPage() {
           }
 
           const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
+          setScriptStepExecutionErrors((prev) => {
+            const nextHasError = !result.success;
+            if (prev[step.step] === nextHasError) return prev;
+            return {
+              ...prev,
+              [step.step]: nextHasError,
+            };
+          });
           accumulatedOutput = result.formattedOutput;
           if (!result.success) return;
 
@@ -1137,6 +1381,9 @@ export default function SponsorCoinLabPage() {
     },
     [focusScriptStep, loadScriptStep, runScriptStep, selectedScript],
   );
+  useEffect(() => {
+    setScriptStepExecutionErrors({});
+  }, [selectedScript?.id]);
   const restartScriptAtStart = useCallback(async () => {
     scriptDebugStopRef.current = true;
     setIsScriptDebugRunning(false);
@@ -1204,6 +1451,7 @@ export default function SponsorCoinLabPage() {
           isExpanded={isExpanded}
           isSelected={isSelected}
           isEditingStep={isEditingStep}
+          hasExecutionError={Boolean(scriptStepExecutionErrors[step.step])}
           getStepSender={getStepSender}
           getStepParamEntries={getStepParamEntries}
           selectScriptStep={selectScriptStep}
@@ -1220,6 +1468,7 @@ export default function SponsorCoinLabPage() {
       getStepParamEntries,
       getStepSender,
       isEditingScriptMethod,
+      scriptStepExecutionErrors,
       selectedScriptStep?.step,
       selectScriptStep,
       toggleScriptStepBreakpoint,
@@ -1329,6 +1578,12 @@ export default function SponsorCoinLabPage() {
               hardhatAccountMetadata,
               selectedSponsorCoinAccountRole,
               setSelectedSponsorCoinAccountRole,
+              defaultSponsorKey,
+              setDefaultSponsorKey,
+              defaultRecipientKey,
+              setDefaultRecipientKey,
+              defaultAgentKey,
+              setDefaultAgentKey,
               managedRoleAccountAddress,
               setManagedRoleAccountAddress,
               managedRecipientKey,
@@ -1419,6 +1674,7 @@ export default function SponsorCoinLabPage() {
               scriptNameValidation,
               deleteScriptValidation,
               createNewScript,
+              duplicateSelectedScript,
               clearSelectedScript,
               handleDeleteScriptClick,
               restartScriptAtStart,
@@ -1494,7 +1750,10 @@ export default function SponsorCoinLabPage() {
               hardhatAccountMetadata,
               selectedSpCoinReadMethod,
               setSelectedSpCoinReadMethod: (value) => selectDropdownSpCoinReadMethod(value as SpCoinReadMethod),
-              spCoinReadOptions,
+              spCoinWorldReadOptions,
+              spCoinSenderReadOptions,
+              spCoinAdminReadOptions,
+              spCoinCompoundReadOptions,
               spCoinReadMethodDefs: spCoinReadMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }>,
               activeSpCoinReadDef: activeSpCoinReadDef as { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean },
               spReadParams,
@@ -1529,7 +1788,9 @@ export default function SponsorCoinLabPage() {
               agentRateKeyHelpText,
               selectedSpCoinWriteMethod,
               setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
-              spCoinWriteOptions,
+              spCoinWorldWriteOptions,
+              spCoinSenderWriteOptions,
+              spCoinAdminWriteOptions,
               spCoinWriteMethodDefs: spCoinWriteMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean }>,
               activeSpCoinWriteDef: activeSpCoinWriteDef as { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean },
               spWriteParams,
@@ -1581,6 +1842,36 @@ export default function SponsorCoinLabPage() {
               backdateDays: backdateCalendar.backdateDays,
               applyBackdateBy: backdateCalendar.applyBackdateBy,
             }}
+            serializationTestProps={{
+              invalidFieldIds,
+              clearInvalidField,
+              hardhatAccounts,
+              hardhatAccountMetadata,
+              selectedSerializationTestMethod,
+              setSelectedSerializationTestMethod: (value) =>
+                selectDropdownSerializationTestMethod(value as SerializationTestMethod),
+              serializationTestOptions,
+              serializationTestMethodDefs: serializationTestMethodDefs as Record<
+                string,
+                { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }
+              >,
+              activeSerializationTestDef: activeSerializationTestDef as {
+                title: string;
+                params: { label: string; placeholder: string; type?: string }[];
+                executable?: boolean;
+              },
+              serializationTestParams,
+              setSerializationTestParams,
+              inputStyle,
+              canRunSelectedSerializationTestMethod: canRunSerializationTestMethod,
+              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSerializationTestMethod,
+              hasEditorScriptSelected,
+              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
+              addToScriptButtonLabel,
+              missingFieldIds: serializationTestMissingEntries.map((entry) => entry.id),
+              runSelectedSerializationTestMethod,
+              addCurrentMethodToScript: handleAddCurrentMethodToScript,
+            }}
           />
           )}
           {showCard('output') && (
@@ -1612,6 +1903,9 @@ export default function SponsorCoinLabPage() {
                 scriptDisplay: selectedScriptDisplay,
                 selectedScriptStepNumber,
                 selectedScriptStepHasMissingRequiredParams: Boolean(selectedScriptStep?.hasMissingRequiredParams),
+                selectedScriptStepHasExecutionError: Boolean(
+                  selectedScriptStep && scriptStepExecutionErrors[selectedScriptStep.step],
+                ),
                 highlightedFormattedOutputLines:
                   formattedPanelView === 'script'
                     ? highlightedFormattedOutputLines

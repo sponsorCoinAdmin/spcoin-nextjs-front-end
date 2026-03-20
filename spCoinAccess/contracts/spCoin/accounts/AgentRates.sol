@@ -17,6 +17,7 @@ contract AgentRates is Agent {
         AgentStruct storage agentRecord = getAgentRecord(_sponsor, _recipientKey, _recipientRateKey, _agentKey);
         AgentRateStruct storage agentRateRecord= getAgentRateRecordByKeys(_sponsor, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
         if (!agentRateRecord.inserted) {
+            validateAgentRateRange(_agentRateKey);
             agentRateRecord.agentRate = _agentRateKey;
             agentRateRecord.inserted = true;
             agentRateRecord.creationTime = _creationDate;
@@ -32,14 +33,30 @@ contract AgentRates is Agent {
         return agentRec.agentRateMap[_agentRateKey];
     }
 
-    function serializeAgentRateRecordStr(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 _agentRateKey) 
-    public view returns (string memory) {
-        AgentRateStruct storage agentRateRecord =  getAgentRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
-        string memory creationTimeStr = toString(agentRateRecord.creationTime);
-        string memory lastUpdateTimeStr = toString(agentRateRecord.lastUpdateTime);
-        string memory stakedSPCoinsStr = toString(agentRateRecord.stakedSPCoins);
-        string memory strRateHeaderStr = concat(creationTimeStr, ",", lastUpdateTimeStr, ",", stakedSPCoinsStr);
-        return strRateHeaderStr;
+    function getAgentRateRecordCore(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey
+    )
+        public
+        view
+        returns (
+            uint256 agentRate,
+            uint256 creationTime,
+            uint256 lastUpdateTime,
+            uint256 stakedSPCoins,
+            bool inserted
+        )
+    {
+        AgentRateStruct storage agentRateRecord =
+            getAgentRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        agentRate = agentRateRecord.agentRate;
+        creationTime = agentRateRecord.creationTime;
+        lastUpdateTime = agentRateRecord.lastUpdateTime;
+        stakedSPCoins = agentRateRecord.stakedSPCoins;
+        inserted = agentRateRecord.inserted;
     }
 
 

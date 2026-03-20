@@ -6,6 +6,7 @@ import Erc20ReadController from './Erc20ReadController';
 import Erc20WriteController from './Erc20WriteController';
 import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
+import SerializationTestController from './SerializationTestController';
 
 type Props = {
   articleClassName: string;
@@ -20,6 +21,7 @@ type Props = {
   erc20WriteProps: ComponentProps<typeof Erc20WriteController>;
   spCoinReadProps: ComponentProps<typeof SpCoinReadController>;
   spCoinWriteProps: ComponentProps<typeof SpCoinWriteController>;
+  serializationTestProps: ComponentProps<typeof SerializationTestController>;
 };
 
 export default function MethodsPanelCard({
@@ -35,17 +37,18 @@ export default function MethodsPanelCard({
   erc20WriteProps,
   spCoinReadProps,
   spCoinWriteProps,
+  serializationTestProps,
 }: Props) {
   const methodPanelGroupName = React.useId();
   return (
     <article ref={methodsCardRef} className={articleClassName}>
       <LabCardHeader title="Script Editor" isExpanded={isExpanded} onToggleExpand={onToggleExpand} />
-      <div className="mt-4 grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <ScriptBuilderCard {...scriptBuilderProps} />
 
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h3>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
               {[
                 ['ecr20_read', 'ECR20 Read'],
@@ -78,6 +81,7 @@ export default function MethodsPanelCard({
           {methodPanelMode === 'erc20_write' ? <Erc20WriteController {...erc20WriteProps} /> : null}
           {methodPanelMode === 'spcoin_rread' ? <SpCoinReadController {...spCoinReadProps} /> : null}
           {methodPanelMode === 'spcoin_write' ? <SpCoinWriteController {...spCoinWriteProps} /> : null}
+          {methodPanelMode === 'serialization_tests' ? <SerializationTestController {...serializationTestProps} /> : null}
         </section>
       </div>
     </article>

@@ -15,34 +15,20 @@
           "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
       ],
-      "breakpoint": true,
+      "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "balanceOf",
+      "name": "decimals",
       "panel": "ecr20_read",
-      "method": "balanceOf",
-      "params": [
-        {
-          "key": "Owner Address",
-          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
-        }
-      ],
+      "method": "decimals",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 3,
-      "name": "decimals",
-      "panel": "ecr20_read",
-      "method": "decimals",
-      "params": [],
-      "breakpoint": true,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 4,
       "name": "totalSupply",
       "panel": "ecr20_read",
       "method": "totalSupply",
@@ -51,7 +37,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 4,
       "name": "balanceOf",
       "panel": "ecr20_read",
       "method": "balanceOf",

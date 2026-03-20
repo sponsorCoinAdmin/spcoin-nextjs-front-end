@@ -1,7 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/Erc20ReadController.tsx
 import React from 'react';
-import Image from 'next/image';
 import AccountDropdownInput from './AccountDropdownInput';
+import AccountSelection from './AccountSelection';
 
 type ActiveReadLabels = {
   title: string;
@@ -104,7 +104,7 @@ export default function Erc20ReadController(props: Props) {
   );
 
   return (
-    <div className="mt-4 grid grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
           Method
@@ -126,16 +126,12 @@ export default function Erc20ReadController(props: Props) {
         </button>
       </div>
       {activeReadLabels.requiresAddressA && (
-        <div className={`grid grid-cols-1 gap-3${openAddressFields.addressA ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <button
-              type="button"
-              onClick={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
-              className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-              title={`Toggle ${activeReadLabels.addressALabel}`}
-            >
-              {activeReadLabels.addressALabel}
-            </button>
+        <AccountSelection
+          label={activeReadLabels.addressALabel}
+          title={`Toggle ${activeReadLabels.addressALabel}`}
+          isOpen={Boolean(openAddressFields.addressA)}
+          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
+          control={
             <AccountDropdownInput
               dataFieldId="erc20-read-address-a"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
@@ -147,38 +143,17 @@ export default function Erc20ReadController(props: Props) {
               placeholder="Select account"
               options={accountOptions}
             />
-          </label>
-          {openAddressFields.addressA && (
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {getMetadataForAddress(readAddressA || '')?.logoURL ? (
-                    <Image src={getMetadataForAddress(readAddressA || '')!.logoURL} alt={getMetadataForAddress(readAddressA || '')?.name || activeReadLabels.addressALabel} width={40} height={40} className="h-full w-full object-contain" unoptimized />
-                  ) : (
-                    <span className="text-[10px] text-slate-400">No logo</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-white">{getMetadataForAddress(readAddressA || '')?.name || 'Unnamed account'}</div>
-                  <div className="truncate text-xs text-slate-400">{getMetadataForAddress(readAddressA || '')?.symbol || 'No symbol'}</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          }
+          metadata={getMetadataForAddress(readAddressA || '')}
+        />
       )}
       {activeReadLabels.requiresAddressB && (
-        <div className={`grid grid-cols-1 gap-3${openAddressFields.addressB ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <button
-              type="button"
-              onClick={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
-              className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-              title={`Toggle ${activeReadLabels.addressBLabel}`}
-            >
-              {activeReadLabels.addressBLabel}
-            </button>
+        <AccountSelection
+          label={activeReadLabels.addressBLabel}
+          title={`Toggle ${activeReadLabels.addressBLabel}`}
+          isOpen={Boolean(openAddressFields.addressB)}
+          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
+          control={
             <AccountDropdownInput
               dataFieldId="erc20-read-address-b"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
@@ -190,26 +165,9 @@ export default function Erc20ReadController(props: Props) {
               placeholder="Select account"
               options={accountOptions}
             />
-          </label>
-          {openAddressFields.addressB && (
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {getMetadataForAddress(readAddressB || '')?.logoURL ? (
-                    <Image src={getMetadataForAddress(readAddressB || '')!.logoURL} alt={getMetadataForAddress(readAddressB || '')?.name || activeReadLabels.addressBLabel} width={40} height={40} className="h-full w-full object-contain" unoptimized />
-                  ) : (
-                    <span className="text-[10px] text-slate-400">No logo</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-white">{getMetadataForAddress(readAddressB || '')?.name || 'Unnamed account'}</div>
-                  <div className="truncate text-xs text-slate-400">{getMetadataForAddress(readAddressB || '')?.symbol || 'No symbol'}</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          }
+          metadata={getMetadataForAddress(readAddressB || '')}
+        />
       )}
       <div className="flex gap-2">
         <button

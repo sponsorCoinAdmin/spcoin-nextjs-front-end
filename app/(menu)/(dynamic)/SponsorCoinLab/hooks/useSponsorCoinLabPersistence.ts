@@ -3,10 +3,22 @@ import type { Erc20ReadMethod } from '../methods/erc20/read';
 import type { Erc20WriteMethod } from '../methods/erc20/write';
 import type { SpCoinReadMethod } from '../methods/spcoin/read';
 import type { SpCoinWriteMethod } from '../methods/spcoin/write';
+import type { SerializationTestMethod } from '../methods/serializationTests';
 import type { ConnectionMode, LabScript, MethodPanelMode } from '../scriptBuilder/types';
 
 const spCoinLabKey = 'spCoinLabKey';
 const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
+
+type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
+
+function normalizeSerializationTestMethodKey(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith('compare_')) return `external_${trimmed.slice('compare_'.length)}`;
+  if (trimmed.startsWith('legacy_')) return `external_${trimmed.slice('legacy_'.length)}`;
+  return trimmed;
+}
 
 type ScriptApiPayload = {
   scripts?: LabScript[];
@@ -24,6 +36,8 @@ type Params = {
   setRpcUrl: (value: string) => void;
   contractAddress: string;
   setContractAddress: (value: string) => void;
+  selectedSponsorCoinVersion: string;
+  setSelectedSponsorCoinVersion: (value: string) => void;
   selectedHardhatIndex: number;
   setSelectedHardhatIndex: (value: number) => void;
   connectedAddress: string;
@@ -37,10 +51,14 @@ type Params = {
   setLogs: (value: string[]) => void;
   formattedOutputDisplay: string;
   setFormattedOutputDisplay: (value: string) => void;
+  outputPanelMode: OutputPanelMode;
+  setOutputPanelMode: (value: OutputPanelMode) => void;
   formattedPanelView: 'script' | 'output';
   setFormattedPanelView: (value: 'script' | 'output') => void;
   formattedJsonViewEnabled: boolean;
   setFormattedJsonViewEnabled: (value: boolean) => void;
+  writeTraceEnabled: boolean;
+  setWriteTraceEnabled: (value: boolean) => void;
   treeOutputDisplay: string;
   setTreeOutputDisplay: (value: string) => void;
   selectedWriteMethod: Erc20WriteMethod;
@@ -63,10 +81,30 @@ type Params = {
   setSelectedSpCoinReadMethod: (value: SpCoinReadMethod) => void;
   selectedSpCoinWriteMethod: SpCoinWriteMethod;
   setSelectedSpCoinWriteMethod: (value: SpCoinWriteMethod) => void;
+  selectedSerializationTestMethod: SerializationTestMethod;
+  setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
+  selectedSponsorCoinAccountRole: SponsorCoinAccountRole;
+  setSelectedSponsorCoinAccountRole: (value: SponsorCoinAccountRole) => void;
+  defaultSponsorKey: string;
+  setDefaultSponsorKey: (value: string) => void;
+  defaultRecipientKey: string;
+  setDefaultRecipientKey: (value: string) => void;
+  defaultAgentKey: string;
+  setDefaultAgentKey: (value: string) => void;
+  managedRoleAccountAddress: string;
+  setManagedRoleAccountAddress: (value: string) => void;
+  managedRecipientKey: string;
+  setManagedRecipientKey: (value: string) => void;
+  managedRecipientRateKey: string;
+  setManagedRecipientRateKey: (value: string) => void;
+  sponsorCoinAccountManagementStatus: string;
+  setSponsorCoinAccountManagementStatus: (value: string) => void;
   spReadParams: string[];
   setSpReadParams: (value: string[]) => void;
   spWriteParams: string[];
   setSpWriteParams: (value: string[]) => void;
+  serializationTestParams: string[];
+  setSerializationTestParams: (value: string[]) => void;
   normalizeAddressValue: (value: string) => string;
   backdateCalendar: {
     backdatePopupParamIdx: number | null;
@@ -103,6 +141,8 @@ export function useSponsorCoinLabPersistence({
   setRpcUrl,
   contractAddress,
   setContractAddress,
+  selectedSponsorCoinVersion,
+  setSelectedSponsorCoinVersion,
   selectedHardhatIndex,
   setSelectedHardhatIndex,
   connectedAddress,
@@ -116,10 +156,14 @@ export function useSponsorCoinLabPersistence({
   setLogs,
   formattedOutputDisplay,
   setFormattedOutputDisplay,
+  outputPanelMode,
+  setOutputPanelMode,
   formattedPanelView,
   setFormattedPanelView,
   formattedJsonViewEnabled,
   setFormattedJsonViewEnabled,
+  writeTraceEnabled,
+  setWriteTraceEnabled,
   treeOutputDisplay,
   setTreeOutputDisplay,
   selectedWriteMethod,
@@ -142,10 +186,30 @@ export function useSponsorCoinLabPersistence({
   setSelectedSpCoinReadMethod,
   selectedSpCoinWriteMethod,
   setSelectedSpCoinWriteMethod,
+  selectedSerializationTestMethod,
+  setSelectedSerializationTestMethod,
+  selectedSponsorCoinAccountRole,
+  setSelectedSponsorCoinAccountRole,
+  defaultSponsorKey,
+  setDefaultSponsorKey,
+  defaultRecipientKey,
+  setDefaultRecipientKey,
+  defaultAgentKey,
+  setDefaultAgentKey,
+  managedRoleAccountAddress,
+  setManagedRoleAccountAddress,
+  managedRecipientKey,
+  setManagedRecipientKey,
+  managedRecipientRateKey,
+  setManagedRecipientRateKey,
+  sponsorCoinAccountManagementStatus,
+  setSponsorCoinAccountManagementStatus,
   spReadParams,
   setSpReadParams,
   spWriteParams,
   setSpWriteParams,
+  serializationTestParams,
+  setSerializationTestParams,
   normalizeAddressValue,
   backdateCalendar,
 }: Params) {
@@ -220,6 +284,9 @@ export function useSponsorCoinLabPersistence({
           const saved = JSON.parse(raw) as Record<string, any>;
           if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
           if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
+          if (typeof saved.selectedSponsorCoinVersion === 'string') {
+            setSelectedSponsorCoinVersion(saved.selectedSponsorCoinVersion);
+          }
           if (typeof saved.contractAddress === 'string') setContractAddress(saved.contractAddress);
           if (typeof saved.selectedHardhatIndex === 'number') setSelectedHardhatIndex(saved.selectedHardhatIndex);
           if (typeof saved.selectedWriteSenderAddress === 'string') {
@@ -239,22 +306,69 @@ export function useSponsorCoinLabPersistence({
           if (typeof saved.selectedSpCoinWriteMethod === 'string') {
             setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
           }
+          if (typeof saved.selectedSerializationTestMethod === 'string') {
+            setSelectedSerializationTestMethod(
+              normalizeSerializationTestMethodKey(saved.selectedSerializationTestMethod) as SerializationTestMethod,
+            );
+          }
           if (Array.isArray(saved.spReadParams)) {
             setSpReadParams(saved.spReadParams.map((v) => normalizeAddressValue(String(v ?? ''))));
           }
           if (Array.isArray(saved.spWriteParams)) {
             setSpWriteParams(saved.spWriteParams.map((v) => normalizeAddressValue(String(v ?? ''))));
           }
+          if (Array.isArray(saved.serializationTestParams)) {
+            setSerializationTestParams(saved.serializationTestParams.map((v) => normalizeAddressValue(String(v ?? ''))));
+          }
           if (typeof saved.status === 'string') setStatus(saved.status);
           if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
           if (typeof saved.formattedOutputDisplay === 'string') setFormattedOutputDisplay(saved.formattedOutputDisplay);
+          if (
+            saved.outputPanelMode === 'execution' ||
+            saved.outputPanelMode === 'formatted' ||
+            saved.outputPanelMode === 'tree' ||
+            saved.outputPanelMode === 'raw_status'
+          ) {
+            setOutputPanelMode(saved.outputPanelMode);
+          }
           if (saved.formattedPanelView === 'script' || saved.formattedPanelView === 'output') {
             setFormattedPanelView(saved.formattedPanelView);
           }
           if (typeof saved.formattedJsonViewEnabled === 'boolean') {
             setFormattedJsonViewEnabled(saved.formattedJsonViewEnabled);
           }
+          if (typeof saved.writeTraceEnabled === 'boolean') {
+            setWriteTraceEnabled(saved.writeTraceEnabled);
+          }
           if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
+          if (
+            saved.selectedSponsorCoinAccountRole === 'sponsor' ||
+            saved.selectedSponsorCoinAccountRole === 'recipient' ||
+            saved.selectedSponsorCoinAccountRole === 'agent'
+          ) {
+            setSelectedSponsorCoinAccountRole(saved.selectedSponsorCoinAccountRole);
+          }
+          if (typeof saved.defaultSponsorKey === 'string') {
+            setDefaultSponsorKey(normalizeAddressValue(saved.defaultSponsorKey));
+          }
+          if (typeof saved.defaultRecipientKey === 'string') {
+            setDefaultRecipientKey(normalizeAddressValue(saved.defaultRecipientKey));
+          }
+          if (typeof saved.defaultAgentKey === 'string') {
+            setDefaultAgentKey(normalizeAddressValue(saved.defaultAgentKey));
+          }
+          if (typeof saved.managedRoleAccountAddress === 'string') {
+            setManagedRoleAccountAddress(normalizeAddressValue(saved.managedRoleAccountAddress));
+          }
+          if (typeof saved.managedRecipientKey === 'string') {
+            setManagedRecipientKey(normalizeAddressValue(saved.managedRecipientKey));
+          }
+          if (typeof saved.managedRecipientRateKey === 'string') {
+            setManagedRecipientRateKey(saved.managedRecipientRateKey);
+          }
+          if (typeof saved.sponsorCoinAccountManagementStatus === 'string') {
+            setSponsorCoinAccountManagementStatus(saved.sponsorCoinAccountManagementStatus);
+          }
           if (typeof saved.backdatePopupParamIdx === 'number' || saved.backdatePopupParamIdx === null) {
             backdateCalendar.setBackdatePopupParamIdx(saved.backdatePopupParamIdx);
           }
@@ -310,6 +424,7 @@ export function useSponsorCoinLabPersistence({
     const payload = {
       mode,
       rpcUrl,
+      selectedSponsorCoinVersion,
       contractAddress,
       selectedHardhatIndex,
       connectedAddress,
@@ -319,8 +434,10 @@ export function useSponsorCoinLabPersistence({
       status,
       logs,
       formattedOutputDisplay,
+      outputPanelMode,
       formattedPanelView,
       formattedJsonViewEnabled,
+      writeTraceEnabled,
       treeOutputDisplay,
       selectedWriteMethod,
       writeAddressA,
@@ -332,8 +449,18 @@ export function useSponsorCoinLabPersistence({
       readAddressB,
       selectedSpCoinReadMethod,
       selectedSpCoinWriteMethod,
+      selectedSerializationTestMethod,
+      selectedSponsorCoinAccountRole,
+      defaultSponsorKey,
+      defaultRecipientKey,
+      defaultAgentKey,
+      managedRoleAccountAddress,
+      managedRecipientKey,
+      managedRecipientRateKey,
+      sponsorCoinAccountManagementStatus,
       spReadParams,
       spWriteParams,
+      serializationTestParams,
       backdatePopupParamIdx: backdateCalendar.backdatePopupParamIdx,
       backdateYears: backdateCalendar.backdateYears,
       backdateMonths: backdateCalendar.backdateMonths,
@@ -350,6 +477,7 @@ export function useSponsorCoinLabPersistence({
     spCoinLabHydrated,
     mode,
     rpcUrl,
+    selectedSponsorCoinVersion,
     contractAddress,
     selectedHardhatIndex,
     connectedAddress,
@@ -359,8 +487,10 @@ export function useSponsorCoinLabPersistence({
     status,
     logs,
     formattedOutputDisplay,
+    outputPanelMode,
     formattedPanelView,
     formattedJsonViewEnabled,
+    writeTraceEnabled,
     treeOutputDisplay,
     selectedWriteMethod,
     writeAddressA,
@@ -372,8 +502,18 @@ export function useSponsorCoinLabPersistence({
     readAddressB,
     selectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
+    selectedSerializationTestMethod,
+    selectedSponsorCoinAccountRole,
+    defaultSponsorKey,
+    defaultRecipientKey,
+    defaultAgentKey,
+    managedRoleAccountAddress,
+    managedRecipientKey,
+    managedRecipientRateKey,
+    sponsorCoinAccountManagementStatus,
     spReadParams,
     spWriteParams,
+    serializationTestParams,
     backdateCalendar.backdatePopupParamIdx,
     backdateCalendar.backdateYears,
     backdateCalendar.backdateMonths,

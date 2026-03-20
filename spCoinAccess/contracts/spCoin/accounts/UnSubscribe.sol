@@ -229,22 +229,22 @@ contract UnSubscribe is Transactions {
 
     modifier sponsorDoesNotExist(address _accountKey) {
         require (accountMap[_accountKey].sponsorAccountList.length == 0 &&
-            accountMap[_accountKey].agentAccountList.length == 0, "Recipient Account has a Sponsor, (Sponsor must Un-recipient Recipiented Account)");
+            accountMap[_accountKey].agentAccountList.length == 0, "RECIP_HAS_SPONSOR");
             _;
     }
     
     modifier balanceOfIsEmpty(address _accountKey) {
-        require (balanceOf[accountMap[_accountKey].accountKey] == 0, "Agent Account has a Parent Recipient, (Sponsor must Un-recipient Recipiented Account)");
+        require (balanceOf[accountMap[_accountKey].accountKey] == 0, "BAL_NOT_ZERO");
         _;
     }
 
     modifier parentRecipientDoesNotExist(address _accountKey) {
-        require (accountMap[_accountKey].agentParentRecipientAccountList.length == 0, "Agent Account has a Parent Recipient, (Sponsor must Un-recipient Recipiented Account)");
+        require (accountMap[_accountKey].agentParentRecipientAccountList.length == 0, "AGENT_HAS_PARENT");
         _;
     }
 
     modifier recipientDoesNotExist(address _sponsorKey) {
-        require (getAccountRecipientList(_sponsorKey).length == 0, "Sponsor Account has a Recipient, (Sponsor must Un-recipient Recipiented Account)");
+        require (getAccountRecipientList(_sponsorKey).length == 0, "SPONSOR_HAS_RECIP");
         _;
     }
 /*   

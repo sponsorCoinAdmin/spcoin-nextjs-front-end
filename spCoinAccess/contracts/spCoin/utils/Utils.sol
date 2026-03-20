@@ -11,9 +11,4 @@ contract Utils is Security, TimeUtils {
     constructor() {
     }
   
-    function msgSender() external view returns(address){
-        return (msg.sender);
-     }
-
-
 }

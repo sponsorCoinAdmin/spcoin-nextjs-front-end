@@ -11,6 +11,7 @@
     "build": "next build",
     "build:strict": "npm run clean && npm run typecheck && npm run lint && next build",
     "build:server": "NODE_OPTIONS='--max-old-space-size=2560' next build",
+    "compare:spcoin:size": "node tools/compareSpCoinContractSize.js",
     "start": "next start",
     "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
     "preinstall": "echo 'Executing package.json for: spcoin-hardhat-contract-access-test'",

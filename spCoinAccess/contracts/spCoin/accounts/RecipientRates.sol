@@ -15,6 +15,7 @@ contract RecipientRates is Recipient {
         RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
         RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
         if (!recipientRateRecord.inserted) {
+            validateRecipientRateRange(_recipientRateKey);
             recipientRateRecord.recipientRate = _recipientRateKey;
             recipientRateRecord.inserted = true;
             recipientRateRecord.creationTime = _creationDate;
@@ -49,15 +50,22 @@ contract RecipientRates is Recipient {
         return recipientRecord.recipientRateMap[_recipientRateKey];
     }
 
-    function getSerializedRecipientRateList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) public view returns (string memory) {
-        // console.log("ZZZZ RecipientRates.sol:getSerializedRecipientRateList ", ",", _sponsorKey,", "); 
-        // console.log("ZZZZ", _recipientKey, ", ",  _recipientRateKey);
-        RecipientRateStruct storage recipientRateRecord =  getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        string memory recipientRateRecordStr = toString(recipientRateRecord.creationTime);
-        string memory lastUpdateTimeStr = toString(recipientRateRecord.lastUpdateTime);
-        string memory stakedSPCoinsStr = toString(recipientRateRecord.stakedSPCoins);
-        recipientRateRecordStr = concat(recipientRateRecordStr, ",", lastUpdateTimeStr, ",", stakedSPCoinsStr);
-        // console.log("ZZZZ getSerializedRecipientRateList recipientRateRecordStr ", recipientRateRecordStr);
-        return recipientRateRecordStr;
+    function getRecipientRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
+        public
+        view
+        returns (
+            uint256 recipientRate,
+            uint256 creationTime,
+            uint256 lastUpdateTime,
+            uint256 stakedSPCoins,
+            bool inserted
+        )
+    {
+        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        recipientRate = recipientRateRecord.recipientRate;
+        creationTime = recipientRateRecord.creationTime;
+        lastUpdateTime = recipientRateRecord.lastUpdateTime;
+        stakedSPCoins = recipientRateRecord.stakedSPCoins;
+        inserted = recipientRateRecord.inserted;
     }
 }

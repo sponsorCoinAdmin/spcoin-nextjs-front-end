@@ -23,7 +23,11 @@ contract SpCoinDataTypes {
     uint256 public decimals;
     uint256 public initialTotalSupply = defaultTSPCoinSupply * (10 ** defaultDecimals);
     uint256 public totalSupply;
-    uint    public annualInflation = 10;
+    uint    internal annualInflation = 10;
+    uint256 internal lowerRecipientRate = 0;
+    uint256 internal upperRecipientRate = 100;
+    uint256 internal lowerAgentRate = 0;
+    uint256 internal upperAgentRate = 100;
     uint    public creationTime = block.timestamp;
     uint256 public totalStakedSPCoins = 0; // Coins Owned but steaked to recipients
     uint256 public totalStakingRewards = 0; // Coins not owned but Recipiented

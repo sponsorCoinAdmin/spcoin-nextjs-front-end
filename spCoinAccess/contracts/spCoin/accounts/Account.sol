@@ -67,6 +67,46 @@ contract Account is StructSerialization {
         return masterAccountList;
     }
 
+    function getAccountCore(address _accountKey)
+        public
+        view
+        accountExists(_accountKey)
+        returns (
+            address accountKey,
+            uint256 creationTime,
+            bool verified,
+            uint256 accountBalance,
+            uint256 stakedAccountSPCoins,
+            uint256 accountStakingRewards
+        )
+    {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        accountKey = accountRec.accountKey;
+        creationTime = accountRec.creationTime;
+        verified = accountRec.verified;
+        accountBalance = balanceOf[_accountKey];
+        stakedAccountSPCoins = accountRec.stakedSPCoins;
+        accountStakingRewards = accountRec.stakingRewards;
+    }
+
+    function getAccountLinks(address _accountKey)
+        public
+        view
+        accountExists(_accountKey)
+        returns (
+            address[] memory sponsorAccountList,
+            address[] memory recipientAccountList,
+            address[] memory agentAccountList,
+            address[] memory agentParentRecipientAccountList
+        )
+    {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        sponsorAccountList = accountRec.sponsorAccountList;
+        recipientAccountList = accountRec.recipientAccountList;
+        agentAccountList = accountRec.agentAccountList;
+        agentParentRecipientAccountList = accountRec.agentParentRecipientAccountList;
+    }
+
     /////////////////////////// AGENT REQUESTS //////////////////////////////
  
     /// @notice retreives the recipients of a specific address.
@@ -88,16 +128,7 @@ contract Account is StructSerialization {
     }
 
     modifier accountExists (address _accountKey) {
-        require (isAccountInserted(_accountKey) , concat("Account ", toString(_accountKey), " not found"));
+        require (isAccountInserted(_accountKey) , "ACCOUNT_NOT_FOUND");
         _;
-    }
-    /////////////////// ACCOUNT SERIALIZATION REQUESTS ////////////////////////
-
-    /// @notice retreives the account record of a specific accountKey address.
-    /// @param _accountKey accountKey to set new balance
-    function getSerializedAccountRecord(address _accountKey)
-        public view returns (string memory) {
-        require(isAccountInserted(_accountKey));
-        return serializeAccount(accountMap[_accountKey]);
     }
 }

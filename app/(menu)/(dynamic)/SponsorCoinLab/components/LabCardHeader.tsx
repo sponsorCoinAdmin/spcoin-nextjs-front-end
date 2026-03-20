@@ -24,7 +24,7 @@ export default function LabCardHeader({
       onDoubleClick={onToggleExpand}
       title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
     >
-      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 border-b border-[#2B3A67] pb-[0.32rem]">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
         <div className="flex min-h-10 items-center">{leftSlot}</div>
         <div className="min-w-0 justify-self-center text-center">
           <div className={`${titleClassName} text-center`}>{title}</div>

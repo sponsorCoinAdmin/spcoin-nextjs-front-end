@@ -20,6 +20,13 @@ import depositSponsorStakingRewards from './depositSponsorStakingRewards';
 import depositRecipientStakingRewards from './depositRecipientStakingRewards';
 import depositAgentStakingRewards from './depositAgentStakingRewards';
 import depositStakingRewards from './depositStakingRewards';
+import setInflationRate from './setInflationRate';
+import setLowerRecipient from './setLowerRecipient';
+import setUpperRecipient from './setUpperRecipient';
+import setRecipientRateRange from './setRecipientRateRange';
+import setLowerAgent from './setLowerAgent';
+import setUpperAgent from './setUpperAgent';
+import setAgentRateRange from './setAgentRateRange';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipient,
@@ -43,4 +50,11 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   depositRecipientStakingRewards,
   depositAgentStakingRewards,
   depositStakingRewards,
+  setInflationRate,
+  setLowerRecipient,
+  setUpperRecipient,
+  setRecipientRateRange,
+  setLowerAgent,
+  setUpperAgent,
+  setAgentRateRange,
 };

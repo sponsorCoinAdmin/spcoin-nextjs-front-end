@@ -1,8 +1,8 @@
 import React, { type Dispatch, type SetStateAction } from 'react';
-import Image from 'next/image';
 import type { ConnectionMode } from '../scriptBuilder/types';
 import LabCardHeader from './LabCardHeader';
 import AccountDropdownInput from './AccountDropdownInput';
+import AccountSelection from './AccountSelection';
 
 type Props = {
   className: string;
@@ -30,6 +30,12 @@ type Props = {
     hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
     selectedSponsorCoinAccountRole: 'sponsor' | 'recipient' | 'agent';
     setSelectedSponsorCoinAccountRole: (value: 'sponsor' | 'recipient' | 'agent') => void;
+    defaultSponsorKey: string;
+    setDefaultSponsorKey: (value: string) => void;
+    defaultRecipientKey: string;
+    setDefaultRecipientKey: (value: string) => void;
+    defaultAgentKey: string;
+    setDefaultAgentKey: (value: string) => void;
     managedRoleAccountAddress: string;
     setManagedRoleAccountAddress: (value: string) => void;
     managedRecipientKey: string;
@@ -56,6 +62,9 @@ export default function NetworkSignerCard({
   const [showManagedRoleMetadata, setShowManagedRoleMetadata] = React.useState(false);
   const [showManagedRecipientMetadata, setShowManagedRecipientMetadata] = React.useState(false);
   const [showWriteSenderDetails, setShowWriteSenderDetails] = React.useState(false);
+  const [showDefaultSponsorDetails, setShowDefaultSponsorDetails] = React.useState(false);
+  const [showDefaultRecipientDetails, setShowDefaultRecipientDetails] = React.useState(false);
+  const [showDefaultAgentDetails, setShowDefaultAgentDetails] = React.useState(false);
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -87,129 +96,54 @@ export default function NetworkSignerCard({
       : accountManagement.selectedSponsorCoinAccountRole === 'recipient'
       ? 'Recipient'
       : 'Agent';
-  const renderAccountMetadata = (address: string) => {
-    const metadata = getMetadataForAddress(address);
-    if (!metadata?.logoURL && !metadata?.name && !metadata?.symbol) return null;
-
-    return (
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-        <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-            {metadata?.logoURL ? (
-              <Image
-                src={metadata.logoURL}
-                alt={metadata?.name || 'Selected account'}
-                width={40}
-                height={40}
-                className="h-full w-full object-contain"
-                unoptimized
-              />
-            ) : (
-              <span className="text-[10px] text-slate-400">No logo</span>
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate font-medium text-white">{metadata?.name || 'Unnamed account'}</div>
-            <div className="truncate text-xs text-slate-400">{metadata?.symbol || 'No symbol'}</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <article className={className}>
       <LabCardHeader
-        title="Active Sponsor Coin Signer Account"
+        title="Active Sponsor Coin Accounts"
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
       />
 
-      <div className="mt-4">
+      <div>
         <div className="grid grid-cols-1 gap-3">
           <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-            <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Signer Account</h3>
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              <div
-                className={`grid grid-cols-1 gap-3${
-                  details.showSignerAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-                }`}
-              >
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <button
-                    type="button"
-                    onClick={() => details.setShowSignerAccountDetails((prev) => !prev)}
-                    className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                    title="Toggle signer account details"
-                  >
-                    spCoin Owner
-                  </button>
+            <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Accounts</h3>
+            <div className="grid grid-cols-1 gap-3">
+              <AccountSelection
+                label="spCoin Owner"
+                title="Toggle signer account details"
+                isOpen={details.showSignerAccountDetails}
+                onToggle={() => details.setShowSignerAccountDetails((prev) => !prev)}
+                control={
                   <input
                     className={inputStyle}
                     readOnly
                     value={details.displayedSignerAccountAddress}
                     placeholder="Selected account address"
                   />
-                </label>
-                {details.showSignerAccountDetails ? (
-                  <>
-                    <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                      <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                          {details.displayedSignerAccountMetadata?.logoURL ? (
-                            <Image
-                              src={details.displayedSignerAccountMetadata.logoURL}
-                              alt={details.displayedSignerAccountMetadata?.name || 'Selected signer account'}
-                              width={40}
-                              height={40}
-                              className="h-full w-full object-contain"
-                              unoptimized
-                            />
-                          ) : (
-                            <span className="text-[10px] text-slate-400">No logo</span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate font-medium text-white">
-                            {details.displayedSignerAccountMetadata?.name || 'Unnamed account'}
-                          </div>
-                          <div className="truncate text-xs text-slate-400">
-                            {details.displayedSignerAccountMetadata?.symbol || 'No symbol'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {details.mode === 'hardhat' ? (
-                      <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                        <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                        <input
-                          className={inputStyle}
-                          readOnly
-                          value={details.selectedVersionSignerKey}
-                          placeholder="Signer key for selected deployed version"
-                        />
-                      </label>
-                    ) : null}
-                  </>
-                ) : null}
-              </div>
-              <div
-                className={`grid grid-cols-1 gap-3${
-                  showWriteSenderDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-                }`}
-              >
-                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <button
-                    type="button"
-                    onClick={() => setShowWriteSenderDetails((prev) => !prev)}
-                    className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                    title="Toggle msg.sender details"
-                  >
-                    msg.sender
-                  </button>
-                  {details.mode === 'hardhat' ? (
+                }
+                metadata={details.displayedSignerAccountMetadata}
+                extraDetails={
+                  details.mode === 'hardhat' ? (
+                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                      <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                      <input
+                        className={inputStyle}
+                        readOnly
+                        value={details.selectedVersionSignerKey}
+                        placeholder="Signer key for selected deployed version"
+                      />
+                    </label>
+                  ) : null
+                }
+              />
+              <AccountSelection
+                label="msg.sender"
+                title="Toggle msg.sender details"
+                isOpen={showWriteSenderDetails}
+                onToggle={() => setShowWriteSenderDetails((prev) => !prev)}
+                control={
+                  details.mode === 'hardhat' ? (
                     <AccountDropdownInput
                       className={inputStyle}
                       value={details.selectedWriteSenderAddress}
@@ -225,15 +159,93 @@ export default function NetworkSignerCard({
                       value={details.writeSenderDisplayValue}
                       placeholder="Connect MetaMask"
                     />
-                  )}
-                </label>
-                {showWriteSenderDetails ? renderAccountMetadata(details.selectedWriteSenderAddress) : null}
-              </div>
+                  )
+                }
+                metadata={getMetadataForAddress(details.selectedWriteSenderAddress)}
+              />
+              <AccountSelection
+                label="Sponsor"
+                title="Toggle Sponsor metadata"
+                isOpen={showDefaultSponsorDetails}
+                onToggle={() => setShowDefaultSponsorDetails((prev) => !prev)}
+                control={
+                  details.mode === 'hardhat' ? (
+                    <AccountDropdownInput
+                      className={inputStyle}
+                      value={accountManagement.defaultSponsorKey}
+                      onChange={(value) => accountManagement.setDefaultSponsorKey(normalizeAccountValue(value))}
+                      placeholder="Default sponsor account"
+                      dataFieldId="network-default-sponsor"
+                      options={accountOptions}
+                    />
+                  ) : (
+                    <input
+                      className={inputStyle}
+                      value={accountManagement.defaultSponsorKey}
+                      onChange={(e) => accountManagement.setDefaultSponsorKey(normalizeAccountValue(e.target.value))}
+                      placeholder="Default sponsor account"
+                    />
+                  )
+                }
+                metadata={getMetadataForAddress(accountManagement.defaultSponsorKey)}
+              />
+              <AccountSelection
+                label="Recipient"
+                title="Toggle Recipient metadata"
+                isOpen={showDefaultRecipientDetails}
+                onToggle={() => setShowDefaultRecipientDetails((prev) => !prev)}
+                control={
+                  details.mode === 'hardhat' ? (
+                    <AccountDropdownInput
+                      className={inputStyle}
+                      value={accountManagement.defaultRecipientKey}
+                      onChange={(value) => accountManagement.setDefaultRecipientKey(normalizeAccountValue(value))}
+                      placeholder="Default recipient account"
+                      dataFieldId="network-default-recipient"
+                      options={accountOptions}
+                    />
+                  ) : (
+                    <input
+                      className={inputStyle}
+                      value={accountManagement.defaultRecipientKey}
+                      onChange={(e) => accountManagement.setDefaultRecipientKey(normalizeAccountValue(e.target.value))}
+                      placeholder="Default recipient account"
+                    />
+                  )
+                }
+                metadata={getMetadataForAddress(accountManagement.defaultRecipientKey)}
+              />
+              <AccountSelection
+                label="Agent"
+                title="Toggle Agent metadata"
+                isOpen={showDefaultAgentDetails}
+                onToggle={() => setShowDefaultAgentDetails((prev) => !prev)}
+                control={
+                  details.mode === 'hardhat' ? (
+                    <AccountDropdownInput
+                      className={inputStyle}
+                      value={accountManagement.defaultAgentKey}
+                      onChange={(value) => accountManagement.setDefaultAgentKey(normalizeAccountValue(value))}
+                      placeholder="Default agent account"
+                      dataFieldId="network-default-agent"
+                      options={accountOptions}
+                    />
+                  ) : (
+                    <input
+                      className={inputStyle}
+                      value={accountManagement.defaultAgentKey}
+                      onChange={(e) => accountManagement.setDefaultAgentKey(normalizeAccountValue(e.target.value))}
+                      placeholder="Default agent account"
+                    />
+                  )
+                }
+                metadata={getMetadataForAddress(accountManagement.defaultAgentKey)}
+              />
             </div>
           </section>
           <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
             <h3 className="text-center text-lg font-semibold text-[#5981F3]">SponsorCoin Account Management</h3>
-            <div className="mt-4 grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-3">
             <div className="flex flex-wrap items-center justify-end gap-6">
               <label className="flex items-center gap-2 text-sm font-semibold text-[#8FA8FF]">
                 <input
@@ -281,21 +293,13 @@ export default function NetworkSignerCard({
                 {activeButtonLabel}
               </button>
             </div>
-            <div
-              className={`grid grid-cols-1 gap-3${
-                showManagedRoleMetadata ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-              }`}
-            >
-              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <button
-                  type="button"
-                  onClick={() => setShowManagedRoleMetadata((prev) => !prev)}
-                  className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                  title={`Toggle ${roleLabel} metadata`}
-                >
-                  {roleLabel}
-                </button>
-                {details.mode === 'hardhat' ? (
+            <AccountSelection
+              label={roleLabel}
+              title={`Toggle ${roleLabel} metadata`}
+              isOpen={showManagedRoleMetadata}
+              onToggle={() => setShowManagedRoleMetadata((prev) => !prev)}
+              control={
+                details.mode === 'hardhat' ? (
                   <AccountDropdownInput
                     className={inputStyle}
                     value={accountManagement.managedRoleAccountAddress}
@@ -311,27 +315,19 @@ export default function NetworkSignerCard({
                     onChange={(e) => accountManagement.setManagedRoleAccountAddress(e.target.value)}
                     placeholder={isAddAction ? 'Add Account' : 'Delete Account'}
                   />
-                )}
-              </div>
-              {showManagedRoleMetadata ? renderAccountMetadata(accountManagement.managedRoleAccountAddress) : null}
-            </div>
+                )
+              }
+              metadata={getMetadataForAddress(accountManagement.managedRoleAccountAddress)}
+            />
             {accountManagement.selectedSponsorCoinAccountRole === 'agent' ? (
               <>
-                <div
-                  className={`grid grid-cols-1 gap-3${
-                    showManagedRecipientMetadata ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-                  }`}
-                >
-                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <button
-                      type="button"
-                      onClick={() => setShowManagedRecipientMetadata((prev) => !prev)}
-                      className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                      title="Toggle Recipient metadata"
-                    >
-                      Recipient
-                    </button>
-                    {details.mode === 'hardhat' ? (
+                <AccountSelection
+                  label="Recipient"
+                  title="Toggle Recipient metadata"
+                  isOpen={showManagedRecipientMetadata}
+                  onToggle={() => setShowManagedRecipientMetadata((prev) => !prev)}
+                  control={
+                    details.mode === 'hardhat' ? (
                       <AccountDropdownInput
                         className={inputStyle}
                         value={accountManagement.managedRecipientKey}
@@ -347,10 +343,10 @@ export default function NetworkSignerCard({
                         onChange={(e) => accountManagement.setManagedRecipientKey(e.target.value)}
                         placeholder="Recipient Account"
                       />
-                    )}
-                  </div>
-                  {showManagedRecipientMetadata ? renderAccountMetadata(accountManagement.managedRecipientKey) : null}
-                </div>
+                    )
+                  }
+                  metadata={getMetadataForAddress(accountManagement.managedRecipientKey)}
+                />
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Recipient Rate Key</span>
                   <div className="grid gap-2">

@@ -1,8 +1,8 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/components/SpCoinWriteController.tsx
 import React from 'react';
-import Image from 'next/image';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 import AccountDropdownInput from './AccountDropdownInput';
+import AccountSelection from './AccountSelection';
 
 type ParamDefLike = { label: string; placeholder: string; type: string };
 type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
@@ -25,7 +25,9 @@ type Props = {
   agentRateKeyHelpText: string;
   selectedSpCoinWriteMethod: string;
   setSelectedSpCoinWriteMethod: (value: string) => void;
-  spCoinWriteOptions: string[];
+  spCoinWorldWriteOptions: string[];
+  spCoinSenderWriteOptions: string[];
+  spCoinAdminWriteOptions: string[];
   spCoinWriteMethodDefs: Record<string, MethodDef>;
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
@@ -97,7 +99,9 @@ export default function SpCoinWriteController(props: Props) {
     agentRateKeyHelpText,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
-    spCoinWriteOptions,
+    spCoinWorldWriteOptions,
+    spCoinSenderWriteOptions,
+    spCoinAdminWriteOptions,
     spCoinWriteMethodDefs,
     activeSpCoinWriteDef,
     spWriteParams,
@@ -212,7 +216,7 @@ export default function SpCoinWriteController(props: Props) {
     });
   }, [activeSpCoinWriteDef.params, invalidFieldIds, mode]);
   return (
-    <div className="mt-4 grid grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
         <select
@@ -220,7 +224,15 @@ export default function SpCoinWriteController(props: Props) {
           value={selectedSpCoinWriteMethod}
           onChange={(e) => setSelectedSpCoinWriteMethod(e.target.value)}
         >
-          {spCoinWriteOptions.map((name) => (
+          <option
+            key="sp-write-world-divider"
+            value="__write-world-divider__"
+            disabled
+            style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+          >
+            ---- World Access ----
+          </option>
+          {spCoinWorldWriteOptions.map((name) => (
             <option
               key={`sp-write-${name}`}
               value={name}
@@ -229,22 +241,60 @@ export default function SpCoinWriteController(props: Props) {
               {name}
             </option>
           ))}
+          {spCoinSenderWriteOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-write-sender-divider"
+                value="__write-sender-divider__"
+                disabled
+                style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+              >
+                ---- Sender Access ----
+              </option>
+              {spCoinSenderWriteOptions.map((name) => (
+                <option
+                  key={`sp-write-sender-${name}`}
+                  value={name}
+                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
+          {spCoinAdminWriteOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-write-admin-divider"
+                value="__write-admin-divider__"
+                disabled
+                style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+              >
+                ---- Admin Access ----
+              </option>
+              {spCoinAdminWriteOptions.map((name) => (
+                <option
+                  key={`sp-write-admin-${name}`}
+                  value={name}
+                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
         </select>
         <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
         </button>
       </div>
-      <div className={`grid grid-cols-1 gap-3${showWriteSenderPrivateKey ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''}`}>
-        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <button
-            type="button"
-            onClick={toggleShowWriteSenderPrivateKey}
-            className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-            title="Toggle msg.sender Private Key"
-          >
-            msg.sender
-          </button>
-          {mode === 'hardhat' ? (
+      <AccountSelection
+        label="msg.sender"
+        title="Toggle msg.sender Private Key"
+        isOpen={showWriteSenderPrivateKey}
+        onToggle={toggleShowWriteSenderPrivateKey}
+        control={
+          mode === 'hardhat' ? (
             <AccountDropdownInput
               dataFieldId="spcoin-write-sender"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
@@ -263,68 +313,32 @@ export default function SpCoinWriteController(props: Props) {
               value={writeSenderDisplayValue}
               placeholder="Connected signer address"
             />
-          )}
-        </label>
-        {showWriteSenderPrivateKey && (
-          <>
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-              <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {getMetadataForAddress(selectedWriteSenderAddress || '')?.logoURL ? (
-                    <Image
-                      src={getMetadataForAddress(selectedWriteSenderAddress || '')!.logoURL}
-                      alt={getMetadataForAddress(selectedWriteSenderAddress || '')?.name || 'Selected account'}
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-contain"
-                      unoptimized
-                    />
-                  ) : (
-                    <span className="text-[10px] text-slate-400">No logo</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-white">
-                    {getMetadataForAddress(selectedWriteSenderAddress || '')?.name || 'Unnamed account'}
-                  </div>
-                  <div className="truncate text-xs text-slate-400">
-                    {getMetadataForAddress(selectedWriteSenderAddress || '')?.symbol || 'No symbol'}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {mode === 'hardhat' ? (
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                <input
-                  className={inputStyle}
-                  readOnly
-                  value={writeSenderPrivateKeyDisplay}
-                  placeholder="Selected signer private key"
-                />
-              </label>
-            ) : null}
-          </>
-        )}
-      </div>
+          )
+        }
+        metadata={getMetadataForAddress(selectedWriteSenderAddress || '')}
+        extraDetails={
+          mode === 'hardhat' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+              <input
+                className={inputStyle}
+                readOnly
+                value={writeSenderPrivateKeyDisplay}
+                placeholder="Selected signer private key"
+              />
+            </label>
+          ) : null
+        }
+      />
       {activeSpCoinWriteDef.params.map((param, idx) => (
         <div key={`sp-write-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
-            <div
-              className={`grid grid-cols-1 gap-3${
-                openAddressFields[idx] ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-              }`}
-            >
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <button
-                  type="button"
-                  onClick={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                  className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-                  title={`Toggle ${param.label}`}
-                >
-                  {param.label}
-                </button>
+            <AccountSelection
+              label={param.label}
+              title={`Toggle ${param.label}`}
+              isOpen={Boolean(openAddressFields[idx])}
+              onToggle={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+              control={
                 <AccountDropdownInput
                   dataFieldId={`spcoin-write-param-${idx}`}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
@@ -336,50 +350,22 @@ export default function SpCoinWriteController(props: Props) {
                   placeholder="Select account"
                   options={accountOptions}
                 />
-              </label>
-              {openAddressFields[idx] && (
-                <>
-                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                    <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                        {getMetadataForAddress(spWriteParams[idx] || '')?.logoURL ? (
-                          <Image
-                            src={getMetadataForAddress(spWriteParams[idx] || '')!.logoURL}
-                            alt={getMetadataForAddress(spWriteParams[idx] || '')?.name || param.label}
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-contain"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-[10px] text-slate-400">No logo</span>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="truncate font-medium text-white">
-                          {getMetadataForAddress(spWriteParams[idx] || '')?.name || 'Unnamed account'}
-                        </div>
-                        <div className="truncate text-xs text-slate-400">
-                          {getMetadataForAddress(spWriteParams[idx] || '')?.symbol || 'No symbol'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {mode === 'hardhat' ? (
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                      <input
-                        className={inputStyle}
-                        readOnly
-                        value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
-                        placeholder="Selected account private key"
-                      />
-                    </label>
-                  ) : null}
-                </>
-              )}
-            </div>
+              }
+              metadata={getMetadataForAddress(spWriteParams[idx] || '')}
+              extraDetails={
+                mode === 'hardhat' ? (
+                  <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                    <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                    <input
+                      className={inputStyle}
+                      readOnly
+                      value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
+                      placeholder="Selected account private key"
+                    />
+                  </label>
+                ) : null
+              }
+            />
           ) : param.type === 'date' ? (
             <>
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>

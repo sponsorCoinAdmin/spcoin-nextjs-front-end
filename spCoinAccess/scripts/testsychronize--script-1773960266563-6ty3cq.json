@@ -1,0 +1,145 @@
+{
+  "id": "script-1773960266563-6ty3cq",
+  "name": "testSychronize",
+  "Date Created": "Mar-19-2026, 18:44:26",
+  "network": "Hardhat Ec2-BASE",
+  "steps": [
+    {
+      "step": 1,
+      "name": "getSerializedSPCoinHeader",
+      "panel": "spcoin_rread",
+      "method": "getSerializedSPCoinHeader",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "getSerializedAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getSerializedAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getSerializedAccountRewards",
+      "panel": "spcoin_rread",
+      "method": "getSerializedAccountRewards",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "getSerializedRecipientRecordList",
+      "panel": "spcoin_rread",
+      "method": "getSerializedRecipientRecordList",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
+      "name": "getSerializedRecipientRateList",
+      "panel": "spcoin_rread",
+      "method": "getSerializedRecipientRateList",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "10"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "serializeAgentRateRecordStr",
+      "panel": "spcoin_rread",
+      "method": "serializeAgentRateRecordStr",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "10"
+        },
+        {
+          "key": "Agent Key",
+          "value": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720"
+        },
+        {
+          "key": "Agent Rate Key",
+          "value": "10"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "getSerializedRateTransactionList",
+      "panel": "spcoin_rread",
+      "method": "getSerializedRateTransactionList",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "10"
+        },
+        {
+          "key": "Agent Key",
+          "value": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720"
+        },
+        {
+          "key": "Agent Rate Key",
+          "value": "10"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

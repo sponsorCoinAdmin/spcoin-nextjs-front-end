@@ -12,7 +12,12 @@ import {
 } from '../methods/erc20/write';
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
 import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../methods/spcoin/write';
+import {
+  runSerializationTestMethod,
+  type SerializationTestMethod,
+} from '../methods/serializationTests';
 import { createSpCoinLibraryAccess } from '../methods/shared';
+import { buildSerializedSPCoinHeader } from '../methods/shared/buildSerializedSPCoinHeader';
 import { normalizeStringListResult } from '../methods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
@@ -62,12 +67,17 @@ type Params = {
   setSelectedSpCoinReadMethod: (value: SpCoinReadMethod) => void;
   selectedSpCoinWriteMethod: SpCoinWriteMethod;
   setSelectedSpCoinWriteMethod: (value: SpCoinWriteMethod) => void;
+  selectedSerializationTestMethod: SerializationTestMethod;
+  setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   spReadParams: string[];
   spWriteParams: string[];
+  serializationTestParams: string[];
   spCoinReadMethodDefs: Record<string, { title: string; params: ParamDef[]; executable?: boolean }>;
   spCoinWriteMethodDefs: Record<string, { title: string; params: ParamDef[]; executable?: boolean }>;
+  serializationTestMethodDefs: Record<string, { title: string; params: ParamDef[]; executable?: boolean }>;
   activeSpCoinReadDef: { title: string; params: ParamDef[]; executable?: boolean };
   activeSpCoinWriteDef: { title: string; params: ParamDef[]; executable?: boolean };
+  activeSerializationTestDef: { title: string; params: ParamDef[]; executable?: boolean };
   selectedHardhatAddress?: string;
   effectiveConnectedAddress: string;
   useLocalSpCoinAccessPackage: boolean;
@@ -126,12 +136,17 @@ export function useSponsorCoinLabMethods({
   setSelectedSpCoinReadMethod,
   selectedSpCoinWriteMethod,
   setSelectedSpCoinWriteMethod,
+  selectedSerializationTestMethod,
+  setSelectedSerializationTestMethod,
   spReadParams,
   spWriteParams,
+  serializationTestParams,
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
+  serializationTestMethodDefs,
   activeSpCoinReadDef,
   activeSpCoinWriteDef,
+  activeSerializationTestDef,
   selectedHardhatAddress,
   effectiveConnectedAddress,
   useLocalSpCoinAccessPackage,
@@ -246,10 +261,24 @@ export function useSponsorCoinLabMethods({
     return missingEntries;
   }, [activeSpCoinWriteDef.params, mode, selectedWriteSenderAddress, spWriteParams]);
 
+  const serializationTestMissingEntries = useMemo(
+    () =>
+      activeSerializationTestDef.params
+        .map((param, idx) => ({
+          id: `serialization-test-param-${idx}`,
+          label: param.label,
+          value: String(serializationTestParams[idx] || '').trim(),
+        }))
+        .filter((entry) => !entry.value)
+        .map(({ id, label }) => ({ id, label })),
+    [activeSerializationTestDef.params, serializationTestParams],
+  );
+
   const canRunErc20WriteMethod = erc20WriteMissingEntries.length === 0;
   const canRunErc20ReadMethod = erc20ReadMissingEntries.length === 0;
   const canRunSpCoinReadMethod = spCoinReadMissingEntries.length === 0;
   const canRunSpCoinWriteMethod = spCoinWriteMissingEntries.length === 0;
+  const canRunSerializationTestMethod = serializationTestMissingEntries.length === 0;
 
   const coerceParamValue = useCallback(
     (raw: string, def: ParamDef) => {
@@ -408,6 +437,29 @@ export function useSponsorCoinLabMethods({
         return { call, result };
       }
 
+      if (panel === 'serialization_tests') {
+        const selectedMethod = method as SerializationTestMethod;
+        const def = serializationTestMethodDefs[selectedMethod];
+        const localParams = def.params.map((param) => findParamValue(param.label));
+        const call = buildMethodCallEntry(
+          selectedMethod,
+          def.params.map((param, idx) => ({
+            label: param.label,
+            value: localParams[idx] || '',
+          })),
+        );
+        const result = await runSerializationTestMethod({
+          selectedMethod,
+          params: localParams,
+          coerceParamValue,
+          requireContractAddress,
+          ensureReadRunner,
+          appendLog,
+          setStatus,
+        });
+        return { call, result };
+      }
+
       const selectedMethod = method as SpCoinWriteMethod;
       const def = spCoinWriteMethodDefs[selectedMethod];
       const localParams = def.params.map((param) => findParamValue(param.label));
@@ -448,6 +500,7 @@ export function useSponsorCoinLabMethods({
       selectedHardhatAddress,
       setStatus,
       spCoinReadMethodDefs,
+      serializationTestMethodDefs,
       spCoinWriteMethodDefs,
       stringifyResult,
       useLocalSpCoinAccessPackage,
@@ -463,7 +516,7 @@ export function useSponsorCoinLabMethods({
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(target, runner);
-      const result = (await (access.contract as any).getSerializedSPCoinHeader()) as string;
+      const result = await buildSerializedSPCoinHeader(access.contract as any);
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getSerializedSPCoinHeader -> ${result}`);
       setStatus('Header read complete.');
@@ -847,6 +900,56 @@ export function useSponsorCoinLabMethods({
     spCoinWriteMissingEntries,
     spWriteParams,
   ]);
+  const runSelectedSerializationTestMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+    if (!options?.skipValidation && serializationTestMissingEntries.length > 0) {
+      showValidationPopup(
+        serializationTestMissingEntries.map((entry) => entry.id),
+        serializationTestMissingEntries.map((entry) => entry.label),
+        undefined,
+        {
+          confirmLabel: 'Run Anyway',
+          onConfirm: () => runSelectedSerializationTestMethod({ skipValidation: true }),
+        },
+      );
+      return;
+    }
+
+    const descriptor: MethodExecutionDescriptor = {
+      panel: 'serialization_tests',
+      method: selectedSerializationTestMethod,
+      params: activeSerializationTestDef.params.map((param, idx) => ({
+        key: param.label,
+        value: serializationTestParams[idx] || '',
+      })),
+    };
+
+    try {
+      setFormattedOutputDisplay('(no output yet)');
+      const { call, result } = await executeMethodDescriptor(descriptor);
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown serialization test error.';
+      const call = buildMethodCallEntry(
+        descriptor.method,
+        descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
+      );
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
+      setStatus(`${activeSerializationTestDef.title} failed: ${message}`);
+      appendLog(`${activeSerializationTestDef.title} failed: ${message}`);
+    }
+  }, [
+    activeSerializationTestDef,
+    appendLog,
+    buildMethodCallEntry,
+    executeMethodDescriptor,
+    formatFormattedPanelPayload,
+    selectedSerializationTestMethod,
+    serializationTestMissingEntries,
+    serializationTestParams,
+    setFormattedOutputDisplay,
+    setStatus,
+    showValidationPopup,
+  ]);
   const runScriptStep = useCallback(
     async (step: LabScriptStep, options?: { formattedOutputBase?: string }): Promise<ScriptRunResult> => {
       const formattedOutputBase = options?.formattedOutputBase;
@@ -931,6 +1034,27 @@ export function useSponsorCoinLabMethods({
       }
     }
   }, [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod, spCoinWriteMethodDefs]);
+
+  useEffect(() => {
+    const activeDef = serializationTestMethodDefs[selectedSerializationTestMethod];
+    if (!activeDef) {
+      const next = Object.keys(serializationTestMethodDefs).find(
+        (key) => serializationTestMethodDefs[key as SerializationTestMethod].executable !== false,
+      );
+      if (next) {
+        setSelectedSerializationTestMethod(next as SerializationTestMethod);
+      }
+      return;
+    }
+    if (activeDef.executable === false) {
+      const next = Object.keys(serializationTestMethodDefs).find(
+        (key) => serializationTestMethodDefs[key as SerializationTestMethod].executable !== false,
+      );
+      if (next) {
+        setSelectedSerializationTestMethod(next as SerializationTestMethod);
+      }
+    }
+  }, [selectedSerializationTestMethod, serializationTestMethodDefs, setSelectedSerializationTestMethod]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1056,10 +1180,12 @@ export function useSponsorCoinLabMethods({
     erc20ReadMissingEntries,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
+    serializationTestMissingEntries,
     canRunErc20WriteMethod,
     canRunErc20ReadMethod,
     canRunSpCoinReadMethod,
     canRunSpCoinWriteMethod,
+    canRunSerializationTestMethod,
     recipientRateKeyOptions,
     agentRateKeyOptions,
     recipientRateKeyHelpText,
@@ -1077,6 +1203,7 @@ export function useSponsorCoinLabMethods({
     runSelectedReadMethod,
     runSelectedSpCoinReadMethod,
     runSelectedSpCoinWriteMethod,
+    runSelectedSerializationTestMethod,
     runScriptStep,
   };
 }
