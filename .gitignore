@@ -17,3 +17,4 @@ cache
 artifacts
 *.log
 spCoinAccess/scripts/manifest.json
+*.tgz
