@@ -27,6 +27,8 @@ type Props = {
   contract: {
     contractAddress: string;
     selectedSponsorCoinVersionEntry?: { name?: string };
+    isRemovingFromApp: boolean;
+    onRemoveFromApp: () => void;
   };
   network: {
     mode: ConnectionMode;
@@ -82,7 +84,30 @@ export default function ContractNetworkCard({
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h3>
           <div className="grid grid-cols-1 gap-3">
-            <div className="flex w-full flex-wrap items-center gap-2">
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
+              <input className={inputStyle} value={contract.contractAddress} readOnly placeholder="SponsorCoin contract address" />
+            </label>
+            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
+              <input
+                className={inputStyle}
+                readOnly
+                value={String(contract.selectedSponsorCoinVersionEntry?.name || '')}
+                placeholder="Selected deployed SponsorCoin name"
+              />
+              <div className="flex items-center justify-self-end gap-2">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+                <input
+                  className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                  style={{ width: `${version.selectedVersionSymbolWidthCh}ch` }}
+                  readOnly
+                  value={version.selectedVersionSymbol}
+                  placeholder="symbol"
+                />
+              </div>
+            </div>
+            <div className="flex w-full flex-wrap items-center gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
                 <div className="flex min-w-0 flex-1 items-stretch">
@@ -130,42 +155,20 @@ export default function ContractNetworkCard({
                   </div>
                 </div>
               </div>
-              <span className="px-1 text-sm font-semibold text-[#8FA8FF]">Deployed on HH Account</span>
-              <label htmlFor="hardhat-account-index" className="sr-only">
-                Hardhat account index
-              </label>
-              <input
-                id="hardhat-account-index"
-                className="w-[6ch] rounded-lg border border-[#334155] bg-[#0E111B] px-2 py-2 text-center text-sm text-white"
-                value={!version.selectedVersionSignerKey ? '?' : version.displayedVersionHardhatAccountIndex >= 0 ? String(version.displayedVersionHardhatAccountIndex) : ''}
-                readOnly
-                aria-label="Hardhat account index"
-                title="Hardhat account index"
-              />
+              <button
+                type="button"
+                className={`h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors disabled:cursor-not-allowed ${
+                  contract.isRemovingFromApp
+                    ? 'bg-red-600 text-white hover:bg-red-600'
+                    : 'bg-[#E5B94F] text-black hover:bg-green-500'
+                } disabled:opacity-60`}
+                title="Remove selected Sponsor Coin contract from the app"
+                onClick={contract.onRemoveFromApp}
+                disabled={contract.isRemovingFromApp}
+              >
+                {contract.isRemovingFromApp ? 'Removing...' : 'Remove From App'}
+              </button>
             </div>
-            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
-              <input
-                className={inputStyle}
-                readOnly
-                value={String(contract.selectedSponsorCoinVersionEntry?.name || '')}
-                placeholder="Selected deployed SponsorCoin name"
-              />
-              <div className="flex items-center justify-self-end gap-2">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
-                <input
-                  className="rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  style={{ width: `${version.selectedVersionSymbolWidthCh}ch` }}
-                  readOnly
-                  value={version.selectedVersionSymbol}
-                  placeholder="symbol"
-                />
-              </div>
-            </div>
-            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
-              <input className={inputStyle} value={contract.contractAddress} readOnly placeholder="SponsorCoin contract address" />
-            </label>
           </div>
         </section>
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">

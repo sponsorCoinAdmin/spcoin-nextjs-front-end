@@ -61,6 +61,7 @@ type Params = {
   useLocalSpCoinAccessPackage: boolean;
   mode: ConnectionMode;
   rpcUrl: string;
+  excludedDeploymentAddresses?: string[];
   setContractAddress: (value: string) => void;
   contractAddress: string;
   appendLog: (line: string) => void;
@@ -119,6 +120,7 @@ export function useSponsorCoinLabNetwork({
   useLocalSpCoinAccessPackage,
   mode,
   rpcUrl,
+  excludedDeploymentAddresses = [],
   setContractAddress,
   contractAddress,
   appendLog,
@@ -405,6 +407,9 @@ export function useSponsorCoinLabNetwork({
     if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) {
       return [] as SponsorCoinVersionChoice[];
     }
+    const excludedAddressSet = new Set(
+      excludedDeploymentAddresses.map((entry) => normalizeAddress(String(entry || ''))).filter(Boolean),
+    );
 
     const chainNode = spCoinDeploymentMap.chainId?.[String(chainIdNum)] ?? {};
     const rows: SponsorCoinVersionChoice[] = [];
@@ -451,8 +456,8 @@ export function useSponsorCoinLabNetwork({
       pushVersionNode(trimmedKey, nodeValue);
     }
 
-    return rows;
-  }, [effectiveConnectedChainId, spCoinDeploymentMap]);
+    return rows.filter((entry) => !excludedAddressSet.has(normalizeAddress(entry.address)));
+  }, [effectiveConnectedChainId, excludedDeploymentAddresses, spCoinDeploymentMap]);
   const {
     selectedSponsorCoinVersion,
     setSelectedSponsorCoinVersion,

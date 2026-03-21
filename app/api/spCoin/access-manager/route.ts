@@ -28,7 +28,15 @@ const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 type AccessManagerRequest = {
-  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer' | 'prepareDeploy' | 'registerDeployment';
+  action?:
+    | 'upload'
+    | 'download'
+    | 'install'
+    | 'deploy'
+    | 'updateServer'
+    | 'prepareDeploy'
+    | 'registerDeployment'
+    | 'removeDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
   packageName?: string;
@@ -46,7 +54,15 @@ type AccessManagerRequest = {
 
 type AccessManagerResponse = {
   ok: boolean;
-  action?: 'upload' | 'download' | 'install' | 'deploy' | 'updateServer' | 'prepareDeploy' | 'registerDeployment';
+  action?:
+    | 'upload'
+    | 'download'
+    | 'install'
+    | 'deploy'
+    | 'updateServer'
+    | 'prepareDeploy'
+    | 'registerDeployment'
+    | 'removeDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
   localVersion?: string;
@@ -1172,6 +1188,165 @@ async function upsertSpCoinDeploymentMap(params: {
   return { added: !exists, chainIdKey, versionKey, publicKeyUpper };
 }
 
+function normalizeDeploymentAddress(value: string) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function isDeploymentAddressKey(value: string) {
+  return /^0[xX][a-fA-F0-9]{40}$/.test(String(value || '').trim());
+}
+
+function pruneDeploymentAddressEntries(
+  node: unknown,
+  targetAddressUpper: string,
+): { nextNode?: unknown; removedCount: number } {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) {
+    return { nextNode: node, removedCount: 0 };
+  }
+
+  const source = node as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+  let removedCount = 0;
+
+  for (const [key, value] of Object.entries(source)) {
+    if (isDeploymentAddressKey(key)) {
+      if (normalizeDeploymentAddress(key) === targetAddressUpper) {
+        removedCount += 1;
+        continue;
+      }
+      next[key] = value;
+      continue;
+    }
+
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const child = pruneDeploymentAddressEntries(value, targetAddressUpper);
+      removedCount += child.removedCount;
+      if (
+        child.nextNode &&
+        typeof child.nextNode === 'object' &&
+        !Array.isArray(child.nextNode) &&
+        Object.keys(child.nextNode as Record<string, unknown>).length > 0
+      ) {
+        next[key] = child.nextNode;
+      }
+      continue;
+    }
+
+    next[key] = value;
+  }
+
+  if (Object.keys(next).length === 0) {
+    return { nextNode: undefined, removedCount };
+  }
+
+  return { nextNode: next, removedCount };
+}
+
+async function removeAddressFromTokenList(networkName: string, targetAddressUpper: string) {
+  const tokenListPath = path.join(
+    process.cwd(),
+    'resources',
+    'data',
+    'networks',
+    networkName,
+    'tokenList.json',
+  );
+  const tokenListExists = await fs
+    .access(tokenListPath)
+    .then(() => true)
+    .catch(() => false);
+  if (!tokenListExists) {
+    return { tokenListPath, removedCount: 0 };
+  }
+
+  const raw = await fs.readFile(tokenListPath, 'utf8');
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    return { tokenListPath, removedCount: 0 };
+  }
+
+  const filtered = parsed.filter(
+    (entry) => normalizeDeploymentAddress(String(entry || '')) !== targetAddressUpper,
+  );
+  const removedCount = parsed.length - filtered.length;
+  if (removedCount > 0) {
+    await fs.writeFile(tokenListPath, JSON.stringify(filtered, null, 2), 'utf8');
+  }
+  return { tokenListPath, removedCount };
+}
+
+async function handleRemoveDeployment(params: {
+  deploymentPublicKey: string;
+  deploymentChainId?: number | string;
+}) {
+  const deploymentPublicKey = String(params.deploymentPublicKey || '').trim();
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(deploymentPublicKey)) {
+    throw new Error('Invalid deployment public key.');
+  }
+
+  const requestedChainIdParsed = Number(params.deploymentChainId);
+  const requestedChainId =
+    Number.isFinite(requestedChainIdParsed) && requestedChainIdParsed > 0
+      ? requestedChainIdParsed
+      : 31337;
+  const chainIdKey = String(requestedChainId);
+  const targetAddressUpper = normalizeDeploymentAddress(deploymentPublicKey);
+
+  const raw = await fs
+    .readFile(SPCOIN_DEPLOYMENT_MAP_PATH, 'utf8')
+    .catch(() => '{"meta":{"networkIdToName":{}},"chainId":{}}');
+  const parsed = JSON.parse(raw || '{}') as SpCoinDeploymentMapFile;
+  const nextMap: SpCoinDeploymentMapFile = {
+    meta: {
+      networkIdToName: { ...(parsed.meta?.networkIdToName ?? {}) },
+    },
+    chainId: { ...(parsed.chainId ?? {}) },
+  };
+
+  const currentChainNode = nextMap.chainId?.[chainIdKey];
+  const prunedChainNode = pruneDeploymentAddressEntries(currentChainNode, targetAddressUpper);
+  const removedDeploymentEntries = prunedChainNode.removedCount;
+  nextMap.chainId![chainIdKey] =
+    prunedChainNode.nextNode &&
+    typeof prunedChainNode.nextNode === 'object' &&
+    !Array.isArray(prunedChainNode.nextNode)
+      ? (prunedChainNode.nextNode as Record<string, unknown>)
+      : {};
+  await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(nextMap, null, 2), 'utf8');
+
+  const networkName = mapNetworkNameByChainId(requestedChainId);
+  const tokenListResult = await removeAddressFromTokenList(networkName, targetAddressUpper);
+
+  const assetChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const contractDir = path.join(
+    process.cwd(),
+    'public',
+    'assets',
+    'blockchains',
+    String(assetChainId),
+    'contracts',
+    targetAddressUpper,
+  );
+  const contractDirExisted = await fs
+    .access(contractDir)
+    .then(() => true)
+    .catch(() => false);
+  await fs.rm(contractDir, { recursive: true, force: true });
+
+  return {
+    chainIdKey,
+    requestedChainId,
+    networkName,
+    assetChainId,
+    targetAddressUpper,
+    removedDeploymentEntries,
+    removedTokenListEntries: tokenListResult.removedCount,
+    tokenListPath: tokenListResult.tokenListPath,
+    contractDir,
+    contractDirExisted,
+  };
+}
+
 async function validateTokenStatus(
   tokenPublicKey: string,
   deploymentChainIdRaw: number | string | undefined,
@@ -1407,6 +1582,8 @@ export async function POST(request: Request) {
       ? 'prepareDeploy'
       : body.action === 'registerDeployment'
       ? 'registerDeployment'
+      : body.action === 'removeDeployment'
+      ? 'removeDeployment'
       : 'download';
   const mode = body.mode === 'node_modules' ? 'node_modules' : 'local';
   const requestedVersion = String(body.version || 'latest').trim() || 'latest';
@@ -1467,6 +1644,38 @@ export async function POST(request: Request) {
         } satisfies AccessManagerResponse);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown deployment registration failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message: `*Error: ${message}`,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === 'removeDeployment') {
+      try {
+        const result = await handleRemoveDeployment({
+          deploymentPublicKey: String(body.deploymentPublicKey || '').trim(),
+          deploymentChainId: body.deploymentChainId,
+        });
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode,
+          message: [
+            `Removed SponsorCoin app entry for ${result.targetAddressUpper}.`,
+            `Deployment map entries removed: ${String(result.removedDeploymentEntries)}`,
+            `Token list entries removed: ${String(result.removedTokenListEntries)}`,
+            `Token list file: ${result.tokenListPath}`,
+            `Asset directory ${result.contractDirExisted ? 'removed' : 'not found'}: ${result.contractDir}`,
+          ].join('\n'),
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown deployment removal failure.';
         return NextResponse.json(
           {
             ok: false,

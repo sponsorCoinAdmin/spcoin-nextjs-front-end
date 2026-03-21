@@ -199,6 +199,53 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPanelArrayItem, (guiValue as any)?.visible, path, label]);
 
+  const isNpmSourceLeaf =
+    label === 'NPM_Source' &&
+    path === 'rest.settings.NPM_Source' &&
+    typeof guiValue === 'string';
+
+  useEffect(() => {
+    if (!isNpmSourceLeaf) return;
+    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
+    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
+    if (!isLocalSource) {
+      setLocalSpCoinAccessPathExists(null);
+      setLocalSpCoinAccessVersion('');
+      return;
+    }
+
+    let active = true;
+    const loadLocalSpCoinAccessVersion = async () => {
+      try {
+        const params = new URLSearchParams({ localPath: '/spCoinAccess' });
+        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+          method: 'GET',
+        });
+        const data = (await response.json()) as {
+          ok?: boolean;
+          localPathExists?: boolean;
+          localPackageExists?: boolean;
+          localPackageVersion?: string;
+        };
+        if (!active) return;
+        const exists = Boolean(
+          response.ok && data.ok && data.localPathExists === true && data.localPackageExists === true,
+        );
+        setLocalSpCoinAccessPathExists(exists);
+        setLocalSpCoinAccessVersion(exists ? String(data.localPackageVersion || '').trim() : '');
+      } catch {
+        if (!active) return;
+        setLocalSpCoinAccessPathExists(false);
+        setLocalSpCoinAccessVersion('');
+      }
+    };
+
+    void loadLocalSpCoinAccessVersion();
+    return () => {
+      active = false;
+    };
+  }, [guiValue, isNpmSourceLeaf]);
+
   // ✅ Render displayStack item rows as a single line (non-toggleable)
   if (isDisplayStackItem) {
     const lineClass = dense ? 'leading-tight' : 'leading-6';
@@ -393,53 +440,6 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
       />
     );
   }
-
-  const isNpmSourceLeaf =
-    label === 'NPM_Source' &&
-    path === 'rest.settings.NPM_Source' &&
-    typeof guiValue === 'string';
-
-  useEffect(() => {
-    if (!isNpmSourceLeaf) return;
-    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
-    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
-    if (!isLocalSource) {
-      setLocalSpCoinAccessPathExists(null);
-      setLocalSpCoinAccessVersion('');
-      return;
-    }
-
-    let active = true;
-    const loadLocalSpCoinAccessVersion = async () => {
-      try {
-        const params = new URLSearchParams({ localPath: '/spCoinAccess' });
-        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
-          method: 'GET',
-        });
-        const data = (await response.json()) as {
-          ok?: boolean;
-          localPathExists?: boolean;
-          localPackageExists?: boolean;
-          localPackageVersion?: string;
-        };
-        if (!active) return;
-        const exists = Boolean(
-          response.ok && data.ok && data.localPathExists === true && data.localPackageExists === true,
-        );
-        setLocalSpCoinAccessPathExists(exists);
-        setLocalSpCoinAccessVersion(exists ? String(data.localPackageVersion || '').trim() : '');
-      } catch {
-        if (!active) return;
-        setLocalSpCoinAccessPathExists(false);
-        setLocalSpCoinAccessVersion('');
-      }
-    };
-
-    void loadLocalSpCoinAccessVersion();
-    return () => {
-      active = false;
-    };
-  }, [guiValue, isNpmSourceLeaf]);
 
   if (isNpmSourceLeaf) {
     const onToggleNpmSource = async () => {

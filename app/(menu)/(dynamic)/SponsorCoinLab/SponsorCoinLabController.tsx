@@ -87,6 +87,7 @@ const inputStyle =
   'w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white placeholder:text-slate-400';
 const hiddenScrollbarClass =
   '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden';
+const SP_COIN_LAB_STORAGE_KEY = 'spCoinLabKey';
 
 function normalizeAddressValue(value: string) {
   const trimmed = String(value || '').trim();
@@ -297,6 +298,8 @@ export default function SponsorCoinLabPage() {
   const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
   const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
   const previousContractAddressRef = useRef('');
+  const [isRemovingContractFromApp, setIsRemovingContractFromApp] = useState(false);
+  const [removedContractAddresses, setRemovedContractAddresses] = useState<string[]>([]);
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -464,6 +467,7 @@ export default function SponsorCoinLabPage() {
     useLocalSpCoinAccessPackage,
     mode,
     rpcUrl,
+    excludedDeploymentAddresses: removedContractAddresses,
     setContractAddress,
     contractAddress,
     appendLog,
@@ -477,6 +481,123 @@ export default function SponsorCoinLabPage() {
     selectedReadMethod,
     selectedSpCoinReadMethod,
   });
+  const handleRemoveContractFromApp = useCallback(async () => {
+    const activeAddress = String(contractAddress || '').trim();
+    const activeChainId = Number(chainIdDisplayValue || 0);
+    const activeName = String(selectedSponsorCoinVersionEntry?.name || '').trim() || 'Sponsor Coin';
+    const activeSymbol = String(selectedVersionSymbol || '').trim() || 'SPCOIN';
+    const fallbackChoice = sponsorCoinVersionChoices.find(
+      (entry) => String(entry.address || '').trim().toLowerCase() !== activeAddress.toLowerCase(),
+    );
+
+    if (!/^0[xX][a-fA-F0-9]{40}$/.test(activeAddress)) {
+      setStatus('Select a valid SponsorCoin contract before removing it from the app.');
+      appendLog('Remove From App aborted: invalid contract address.');
+      return;
+    }
+    if (!Number.isFinite(activeChainId) || activeChainId <= 0) {
+      setStatus('Unable to determine the active network chain id for removal.');
+      appendLog('Remove From App aborted: invalid active chain id.');
+      return;
+    }
+
+    setIsRemovingContractFromApp(true);
+    setStatus(`Removing ${activeName} ${activeSymbol} from app...`);
+    appendLog(`Remove From App started for ${activeName} ${activeSymbol} (${activeAddress}).`);
+    if (fallbackChoice) {
+      setSelectedSponsorCoinVersion(fallbackChoice.id);
+      setContractAddress(fallbackChoice.address);
+      appendLog(
+        `Switched active SponsorCoin contract to ${String(fallbackChoice.name || fallbackChoice.version || fallbackChoice.address)} before removal.`,
+      );
+    } else {
+      setSelectedSponsorCoinVersion('');
+      setContractAddress('');
+    }
+
+    try {
+      const response = await fetch('/api/spCoin/access-manager', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'removeDeployment',
+          deploymentPublicKey: activeAddress,
+          deploymentChainId: activeChainId,
+        }),
+      });
+      const data = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+      };
+      if (!response.ok || !data.ok) {
+        throw new Error(String(data.message || 'Failed to remove SponsorCoin app entry.'));
+      }
+
+      appendLog(String(data.message || `Removed ${activeName} ${activeSymbol} from app.`));
+      setRemovedContractAddresses((prev) =>
+        prev.some((entry) => entry.toLowerCase() === activeAddress.toLowerCase()) ? prev : [...prev, activeAddress],
+      );
+      setStatus(`${activeName} ${activeSymbol} removed from app.`);
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = window.localStorage.getItem(SP_COIN_LAB_STORAGE_KEY);
+          const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+          window.localStorage.setItem(
+            SP_COIN_LAB_STORAGE_KEY,
+            JSON.stringify({
+              ...saved,
+              contractAddress: fallbackChoice?.address || '',
+              selectedSponsorCoinVersion: fallbackChoice?.id || '',
+            }),
+          );
+        } catch {
+          // Ignore transient localStorage write failures.
+        }
+      }
+      setIsRemovingContractFromApp(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown removal failure.';
+      setStatus(`Remove From App failed: ${message}`);
+      appendLog(`Remove From App failed: ${message}`);
+      setIsRemovingContractFromApp(false);
+    }
+  }, [
+    appendLog,
+    chainIdDisplayValue,
+    contractAddress,
+    removedContractAddresses,
+    selectedSponsorCoinVersionEntry?.name,
+    sponsorCoinVersionChoices,
+    setSelectedSponsorCoinVersion,
+    selectedVersionSymbol,
+    setContractAddress,
+  ]);
+
+  const requestRemoveContractFromApp = useCallback(() => {
+    const activeName = String(selectedSponsorCoinVersionEntry?.name || '').trim() || 'Sponsor Coin';
+    const activeSymbol = String(selectedVersionSymbol || '').trim() || 'SPCOIN';
+    const activeAddress = String(contractAddress || '').trim();
+
+    showValidationPopup(
+      [],
+      [],
+      `This will remove ${activeAddress} from the deployment map, remove matching token-list entries for the active network, and delete the contract asset directory from the app.`,
+      {
+        title: `Remove ${activeName} ${activeSymbol} From App`,
+        confirmLabel: 'Remove',
+        cancelLabel: 'Cancel',
+        onConfirm: () => void handleRemoveContractFromApp(),
+      },
+    );
+  }, [
+    contractAddress,
+    handleRemoveContractFromApp,
+    selectedSponsorCoinVersionEntry?.name,
+    selectedVersionSymbol,
+    showValidationPopup,
+  ]);
   const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
@@ -1735,6 +1856,8 @@ export default function SponsorCoinLabPage() {
             contract={{
               contractAddress,
               selectedSponsorCoinVersionEntry,
+              isRemovingFromApp: isRemovingContractFromApp,
+              onRemoveFromApp: requestRemoveContractFromApp,
             }}
             network={{
               mode,
