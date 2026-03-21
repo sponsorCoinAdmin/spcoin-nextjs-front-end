@@ -2,9 +2,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
-
-type ParamDefLike = { label: string; placeholder: string; type?: string };
-type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
+import type { MethodDef } from '../methods/shared/types';
 
 type Props = {
   invalidFieldIds: string[];
@@ -125,7 +123,7 @@ export default function SpCoinReadController(props: Props) {
               value={name}
               style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
             >
-              {name}
+              {spCoinReadMethodDefs[name]?.title || name}
             </option>
           ))}
           {spCoinSenderReadOptions.length > 0 ? (
@@ -144,7 +142,7 @@ export default function SpCoinReadController(props: Props) {
                   value={name}
                   style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
                 >
-                  {name}
+                  {spCoinReadMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>
@@ -165,7 +163,7 @@ export default function SpCoinReadController(props: Props) {
                   value={name}
                   style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
                 >
-                  {name}
+                  {spCoinReadMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>
@@ -183,7 +181,7 @@ export default function SpCoinReadController(props: Props) {
                   textAlign: 'center',
                 }}
               >
-                ---- Serialized Compound Reads ----
+                ---- Structured Compound Reads ----
               </option>,
               {spCoinCompoundReadOptions.map((name) => (
                 <option
@@ -191,7 +189,7 @@ export default function SpCoinReadController(props: Props) {
                   value={name}
                   style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
                 >
-                  {name}
+                  {spCoinReadMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>

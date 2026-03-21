@@ -7,7 +7,7 @@ import {
   getErc20WriteLabels,
   type Erc20WriteMethod,
 } from '../methods/erc20/write';
-import type { SpCoinReadMethod } from '../methods/spcoin/read';
+import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
 import type { SpCoinWriteMethod } from '../methods/spcoin/write';
 import type { SerializationTestMethod } from '../methods/serializationTests';
 import type { MethodDef } from '../methods/shared/types';
@@ -296,7 +296,7 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'spcoin_rread') {
-        const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+        const def = spCoinReadMethodDefs[normalizeSpCoinReadMethod(step.method)];
         return legacyValues
           .map((value, idx) => ({ key: def?.params[idx]?.label || `param${idx + 1}`, value }))
           .filter((param) => param.value.trim().length > 0);
@@ -341,7 +341,7 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'spcoin_rread') {
-        const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+        const def = spCoinReadMethodDefs[normalizeSpCoinReadMethod(step.method)];
         return (def?.params || []).some((param) => !findParamValue(param.label));
       }
 
@@ -445,8 +445,9 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'spcoin_rread') {
-        setSelectedSpCoinReadMethod(step.method as SpCoinReadMethod);
-        const def = spCoinReadMethodDefs[step.method as SpCoinReadMethod];
+        const normalizedMethod = normalizeSpCoinReadMethod(step.method);
+        setSelectedSpCoinReadMethod(normalizedMethod);
+        const def = spCoinReadMethodDefs[normalizedMethod];
         setSpReadParams(fillParamList(def?.params || []));
         return;
       }

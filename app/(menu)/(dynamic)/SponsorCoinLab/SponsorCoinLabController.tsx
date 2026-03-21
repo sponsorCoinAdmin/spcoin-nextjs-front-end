@@ -19,6 +19,7 @@ import {
   getSpCoinCompoundReadOptions,
   getSpCoinSenderReadOptions,
   getSpCoinWorldReadOptions,
+  normalizeSpCoinReadMethod,
   type SpCoinReadMethod,
 } from './methods/spcoin/read';
 import {
@@ -34,7 +35,8 @@ import {
   getSerializationTestOptions,
   type SerializationTestMethod,
 } from './methods/serializationTests';
-import { createSpCoinLibraryAccess, createSpCoinModuleAccess } from './methods/shared';
+import { createSpCoinLibraryAccess, createSpCoinModuleAccess, type SpCoinContractAccess } from './methods/shared';
+import type { MethodDef } from './methods/shared/types';
 import {
   CALENDAR_WEEK_DAYS,
   formatDateInput,
@@ -66,6 +68,13 @@ type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type FormattedPanelView = 'script' | 'output';
 type MethodSelectionSource = 'dropdown' | 'script';
 type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
+type SponsorCoinManageContract = SpCoinContractAccess & {
+  addSponsor?: (accountAddress: string) => Promise<unknown>;
+  addRecipient?: (accountAddress: string) => Promise<unknown>;
+  addAgent?: (recipientKey: string, recipientRateKey: string, accountAddress: string) => Promise<unknown>;
+  deleteAccountRecord?: (accountAddress: string) => Promise<unknown>;
+};
+type MethodDefMap = Record<string, MethodDef>;
 
 const cardStyle =
   'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
@@ -181,7 +190,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   if (typeof value === 'bigint') return formatDecimalString(value.toString());
   if (Array.isArray(value)) {
     const normalizedEntries = value.map((entry) => formatOutputValue(entry, keyPath));
-    const keyedEntries = normalizedEntries.every((entry) => {
+    const keyedEntries = normalizedEntries.length > 0 && normalizedEntries.every((entry) => {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
       const record = entry as Record<string, unknown>;
       const candidateKey = record.label ?? record.key;
@@ -296,7 +305,7 @@ export default function SponsorCoinLabPage() {
   const [readAddressA, setReadAddressA] = useState('');
   const [readAddressB, setReadAddressB] = useState('');
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
-    useState<SpCoinReadMethod>('getSerializedSPCoinHeader');
+    useState<SpCoinReadMethod>('getSPCoinHeaderRecord');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
   const [selectedSerializationTestMethod, setSelectedSerializationTestMethod] =
@@ -896,7 +905,7 @@ export default function SponsorCoinLabPage() {
         const target = requireContractAddress();
         const runner = await ensureReadRunner();
         const access = createSpCoinLibraryAccess(target, runner);
-        const rates = (await (access.contract as any).getRecipientRateList(sponsorKey, recipientKey)) as Array<string | bigint>;
+        const rates = (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
         if (!cancelled) {
           const nextOptions = rates.map((value) => String(value));
           setManagedRecipientRateKeyOptions(nextOptions);
@@ -948,21 +957,33 @@ export default function SponsorCoinLabPage() {
           label,
           async (contract, signer) => {
             const access = createSpCoinModuleAccess(contract, signer, accessSource);
-            const connectedContract =
-              typeof (access.contract as any)?.connect === 'function'
-                ? (access.contract as any).connect(signer)
-                : access.contract;
+            const baseContract = access.contract as SponsorCoinManageContract;
+            const connectedContract = (typeof baseContract.connect === 'function'
+              ? (baseContract.connect(signer) as SponsorCoinManageContract)
+              : baseContract) as SponsorCoinManageContract;
 
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
+                if (typeof connectedContract.addSponsor !== 'function') {
+                  throw new Error('addSponsor is not available on the current SpCoin contract access path.');
+                }
                 return connectedContract.addSponsor(accountAddress);
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
+                if (typeof connectedContract.addRecipient !== 'function') {
+                  throw new Error('addRecipient is not available on the current SpCoin contract access path.');
+                }
                 return connectedContract.addRecipient(accountAddress);
+              }
+              if (typeof connectedContract.addAgent !== 'function') {
+                throw new Error('addAgent is not available on the current SpCoin contract access path.');
               }
               return connectedContract.addAgent(recipientKey, recipientRateKey, accountAddress);
             }
 
+            if (typeof connectedContract.deleteAccountRecord !== 'function') {
+              throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
+            }
             return connectedContract.deleteAccountRecord(accountAddress);
           },
           hardhatSenderAddress,
@@ -1138,7 +1159,7 @@ export default function SponsorCoinLabPage() {
       if (selectedSpCoinReadMethod === value) return;
       runWithDiscardPrompt(() => {
         resetToDropdownSelection();
-        setSelectedSpCoinReadMethod(value);
+        setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value));
         if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
         const nextDef = spCoinReadMethodDefs[value];
         if (!nextDef) return;
@@ -1754,8 +1775,8 @@ export default function SponsorCoinLabPage() {
               spCoinSenderReadOptions,
               spCoinAdminReadOptions,
               spCoinCompoundReadOptions,
-              spCoinReadMethodDefs: spCoinReadMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }>,
-              activeSpCoinReadDef: activeSpCoinReadDef as { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean },
+              spCoinReadMethodDefs: spCoinReadMethodDefs as MethodDefMap,
+              activeSpCoinReadDef: activeSpCoinReadDef,
               spReadParams,
               setSpReadParams,
               inputStyle,
@@ -1791,8 +1812,8 @@ export default function SponsorCoinLabPage() {
               spCoinWorldWriteOptions,
               spCoinSenderWriteOptions,
               spCoinAdminWriteOptions,
-              spCoinWriteMethodDefs: spCoinWriteMethodDefs as Record<string, { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean }>,
-              activeSpCoinWriteDef: activeSpCoinWriteDef as { title: string; params: { label: string; placeholder: string; type: string }[]; executable?: boolean },
+              spCoinWriteMethodDefs: spCoinWriteMethodDefs as MethodDefMap,
+              activeSpCoinWriteDef: activeSpCoinWriteDef,
               spWriteParams,
               updateSpWriteParamAtIndex,
               onOpenBackdatePicker: backdateCalendar.openBackdatePickerAt,
@@ -1851,15 +1872,8 @@ export default function SponsorCoinLabPage() {
               setSelectedSerializationTestMethod: (value) =>
                 selectDropdownSerializationTestMethod(value as SerializationTestMethod),
               serializationTestOptions,
-              serializationTestMethodDefs: serializationTestMethodDefs as Record<
-                string,
-                { title: string; params: { label: string; placeholder: string; type?: string }[]; executable?: boolean }
-              >,
-              activeSerializationTestDef: activeSerializationTestDef as {
-                title: string;
-                params: { label: string; placeholder: string; type?: string }[];
-                executable?: boolean;
-              },
+              serializationTestMethodDefs: serializationTestMethodDefs as MethodDefMap,
+              activeSerializationTestDef: activeSerializationTestDef,
               serializationTestParams,
               setSerializationTestParams,
               inputStyle,

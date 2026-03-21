@@ -112,6 +112,9 @@ const getInitialContext = (
       // REQUIRED by Settings: initialize empty persisted nav stack
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
+      spCoinProperties: {
+        inflationRate: 0,
+      },
       testPage: {
         TEST_PAGE_EXCHANGE_CONTEXT: true,
         TEST_PAGE_FSM_TRACE: false,

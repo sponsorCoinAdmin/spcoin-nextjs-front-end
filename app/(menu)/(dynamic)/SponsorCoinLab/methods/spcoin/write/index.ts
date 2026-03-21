@@ -2,7 +2,17 @@
 import type { Contract } from 'ethers';
 import { SPCOIN_WRITE_METHOD_DEFS } from './defs';
 export { SPCOIN_WRITE_METHOD_DEFS };
-import { createSpCoinModuleAccess, type SpCoinAccessSource } from '../../shared';
+import type { ParamDef } from '../../shared/types';
+import {
+  createSpCoinModuleAccess,
+  type SpCoinAccessSource,
+  type SpCoinAddAccess,
+  type SpCoinDeleteAccess,
+  type SpCoinReadAccess,
+  type SpCoinRewardsAccess,
+  type SpCoinStakingAccess,
+  type SpCoinContractAccess,
+} from '../../shared';
 
 export type SpCoinWriteMethod =
   | 'addRecipient'
@@ -81,7 +91,7 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 type RunArgs = {
   selectedMethod: SpCoinWriteMethod;
   spWriteParams: string[];
-  coerceParamValue: (raw: string, def: any) => any;
+  coerceParamValue: (raw: string, def: ParamDef) => unknown;
   executeWriteConnected: (
     label: string,
     writeCall: (contract: Contract, signer: any) => Promise<any>,
@@ -93,6 +103,19 @@ type RunArgs = {
   appendWriteTrace?: (line: string) => void;
   setStatus: (value: string) => void;
 };
+
+function getDynamicMethod(target: Record<string, unknown>, method: string) {
+  const candidate = target[method];
+  return typeof candidate === 'function' ? (candidate as (...args: unknown[]) => unknown) : undefined;
+}
+
+function asString(value: unknown): string {
+  return String(value);
+}
+
+function asStringOrNumber(value: unknown): string | number {
+  return typeof value === 'number' ? value : String(value);
+}
 
 export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   Array<{
@@ -178,7 +201,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       const agentList = methodArgs[2] as string[];
       for (const agentKey of agentList) {
         await submitWrite(`addAgent(${String(methodArgs[0])}, ${String(methodArgs[1])}, ${agentKey})`, (access) =>
-          access.add.addAgent(methodArgs[0], methodArgs[1], agentKey),
+          access.add.addAgent(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentKey),
         );
       }
       break;
@@ -186,14 +209,28 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     case 'addSponsorship': {
       const qty = `${String(methodArgs[4])}.${String(methodArgs[5])}`;
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addAgentSponsorship(signer, methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], qty),
+        access.add.addAgentSponsorship(
+          signer,
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
+          qty,
+        ),
       );
       break;
     }
     case 'addAgentSponsorship': {
       const qty = String(methodArgs[4]);
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addAgentSponsorship(signer, methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], qty),
+        access.add.addAgentSponsorship(
+          signer,
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
+          qty,
+        ),
       );
       break;
     }
@@ -202,12 +239,12 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedAgentSponsorship(
           signer,
-          methodArgs[0],
-          methodArgs[1],
-          methodArgs[2],
-          methodArgs[3],
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
           qty,
-          methodArgs[6],
+          Number(methodArgs[6]),
         ),
       );
       break;
@@ -217,22 +254,24 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedAgentSponsorship(
           signer,
-          methodArgs[0],
-          methodArgs[1],
-          methodArgs[2],
-          methodArgs[3],
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
           qty,
-          methodArgs[5],
+          Number(methodArgs[5]),
         ),
       );
       break;
     }
     case 'addRecipient': {
-      await submitWrite(activeDef.title, (access) => access.add.addRecipient(methodArgs[0]));
+      await submitWrite(activeDef.title, (access) => access.add.addRecipient(asString(methodArgs[0])));
       break;
     }
     case 'addAgent': {
-      await submitWrite(activeDef.title, (access) => access.add.addAgent(methodArgs[0], methodArgs[1], methodArgs[2]));
+      await submitWrite(activeDef.title, (access) =>
+        access.add.addAgent(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), asString(methodArgs[2])),
+      );
       break;
     }
     case 'deleteAccountRecords': {
@@ -243,58 +282,78 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'unSponsorRecipient': {
-      await submitWrite(activeDef.title, (access) => (access.contract as any).unSponsorRecipient(methodArgs[0]));
+      await submitWrite(activeDef.title, (access) => {
+        const unSponsorRecipient = access.contract.unSponsorRecipient;
+        if (typeof unSponsorRecipient !== 'function') {
+          throw new Error('unSponsorRecipient is not available on the current SpCoin contract access path.');
+        }
+        return unSponsorRecipient(asString(methodArgs[0]));
+      });
       break;
     }
     case 'deleteAccountRecord': {
       await submitWrite(activeDef.title, (access, signer) => {
         access.del.signer = signer;
-        return access.del.deleteAccountRecord(methodArgs[0]);
+        return access.del.deleteAccountRecord(asString(methodArgs[0]));
       });
       break;
     }
     case 'updateAccountStakingRewards': {
-      await submitWrite(activeDef.title, (access) => access.rewards.updateAccountStakingRewards(methodArgs[0]));
+      await submitWrite(activeDef.title, (access) => access.rewards.updateAccountStakingRewards(asString(methodArgs[0])));
       break;
     }
     case 'depositSponsorStakingRewards': {
       await submitWrite(activeDef.title, (access) =>
-        access.staking.depositSponsorStakingRewards(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]),
+        access.staking.depositSponsorStakingRewards(
+          asString(methodArgs[0]),
+          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[2]),
+          methodArgs[3] as string | number | bigint,
+        ),
       );
       break;
     }
     case 'depositRecipientStakingRewards': {
       await submitWrite(activeDef.title, (access) =>
-        access.staking.depositRecipientStakingRewards(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]),
+        access.staking.depositRecipientStakingRewards(
+          asString(methodArgs[0]),
+          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[2]),
+          methodArgs[3] as string | number | bigint,
+        ),
       );
       break;
     }
     case 'depositAgentStakingRewards': {
       await submitWrite(activeDef.title, (access) =>
         access.staking.depositAgentStakingRewards(
-          methodArgs[0],
-          methodArgs[1],
-          methodArgs[2],
-          methodArgs[3],
-          methodArgs[4],
-          methodArgs[5],
+          asString(methodArgs[0]),
+          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[2]),
+          asString(methodArgs[3]),
+          asStringOrNumber(methodArgs[4]),
+          methodArgs[5] as string | number | bigint,
         ),
       );
       break;
     }
     default:
-      await submitWrite(`${activeDef.title}(${methodArgs.join(', ')})`, (access) => {
-        const readFn = (access.read as any)[selectedMethod];
-        const addFn = (access.add as any)[selectedMethod];
-        const delFn = (access.del as any)[selectedMethod];
-        const stakingFn = (access.staking as any)[selectedMethod];
-        const rewardsFn = (access.rewards as any)[selectedMethod];
-        if (typeof addFn === 'function') return addFn(...methodArgs);
-        if (typeof delFn === 'function') return delFn(...methodArgs);
-        if (typeof stakingFn === 'function') return stakingFn(...methodArgs);
-        if (typeof rewardsFn === 'function') return rewardsFn(...methodArgs);
-        if (typeof readFn === 'function') return readFn(...methodArgs);
-        return (access.contract as any)[selectedMethod](...methodArgs);
+      await submitWrite(`${activeDef.title}(${methodArgs.join(', ')})`, async (access) => {
+        const readFn = getDynamicMethod(access.read as SpCoinReadAccess & Record<string, unknown>, selectedMethod);
+        const addFn = getDynamicMethod(access.add as SpCoinAddAccess & Record<string, unknown>, selectedMethod);
+        const delFn = getDynamicMethod(access.del as SpCoinDeleteAccess & Record<string, unknown>, selectedMethod);
+        const stakingFn = getDynamicMethod(access.staking as SpCoinStakingAccess & Record<string, unknown>, selectedMethod);
+        const rewardsFn = getDynamicMethod(access.rewards as SpCoinRewardsAccess & Record<string, unknown>, selectedMethod);
+        const contractFn = getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, selectedMethod);
+        if (typeof addFn === 'function') return await addFn(...methodArgs);
+        if (typeof delFn === 'function') return await delFn(...methodArgs);
+        if (typeof stakingFn === 'function') return await stakingFn(...methodArgs);
+        if (typeof rewardsFn === 'function') return await rewardsFn(...methodArgs);
+        if (typeof readFn === 'function') return await readFn(...methodArgs);
+        if (!contractFn) {
+          throw new Error(`SpCoin write method ${selectedMethod} is not available on access modules or contract.`);
+        }
+        return await contractFn(...methodArgs);
       });
       break;
   }

@@ -1,6 +1,16 @@
-// @ts-nocheck
-// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.millennium = exports.month = exports.year = exports.week = exports.day = exports.hour = exports.minute = exports.second = exports.bigIntToDecString = exports.SpCoinStakingModule = void 0;
 const { bigIntToDecString, second, minute, hour, day, week, year, month, millennium } = require("../utils//dateTime");
+exports.bigIntToDecString = bigIntToDecString;
+exports.second = second;
+exports.minute = minute;
+exports.hour = hour;
+exports.day = day;
+exports.week = week;
+exports.year = year;
+exports.month = month;
+exports.millennium = millennium;
 const { SpCoinLogger } = require("../utils/logging");
 let spCoinLogger;
 const SPONSOR = 0;
@@ -44,8 +54,9 @@ class SpCoinStakingModule {
                 _recipientAccount + ", " +
                 _recipientRate + ", " +
                 _amount + ")");
-            await this.spCoinContractDeployed.depositStakingRewards(SPONSOR, _sponsorAccount, _recipientAccount, _recipientRate, _sponsorAccount, 0, _amount);
+            const tx = await this.spCoinContractDeployed.depositStakingRewards(SPONSOR, _sponsorAccount, _recipientAccount, _recipientRate, _sponsorAccount, 0, _amount);
             spCoinLogger.logExitFunction();
+            return tx;
         };
         this.depositRecipientStakingRewards = async (_sponsorAccount, _recipientAccount, _recipientRate, _amount) => {
             spCoinLogger.logFunctionHeader("depositRecipientStakingRewards = async(" +
@@ -53,30 +64,21 @@ class SpCoinStakingModule {
                 _recipientAccount + ", " +
                 _recipientRate + ", " +
                 _amount + ")");
-            await this.spCoinContractDeployed.depositStakingRewards(RECIPIENT, _sponsorAccount, _recipientAccount, _recipientRate, burnAddress, 0, _amount);
+            const tx = await this.spCoinContractDeployed.depositStakingRewards(RECIPIENT, _sponsorAccount, _recipientAccount, _recipientRate, burnAddress, 0, _amount);
             spCoinLogger.logExitFunction();
+            return tx;
         };
         this.depositAgentStakingRewards = async (_sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount) => {
             spCoinLogger.logFunctionHeader("depositAgentStakingRewards = async(" +
                 _recipientAccount, _agentAccount + ", " +
                 _agentRate + ", " +
                 _amount + ")");
-            await this.spCoinContractDeployed.depositStakingRewards(AGENT, _sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount);
+            const tx = await this.spCoinContractDeployed.depositStakingRewards(AGENT, _sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount);
             spCoinLogger.logExitFunction();
+            return tx;
         };
         this.spCoinContractDeployed = _spCoinContractDeployed;
         spCoinLogger = new SpCoinLogger(_spCoinContractDeployed);
     }
 }
-;
-/////////////////////// EXPORT MODULE FUNCTIONS ///////////////////////
-module.exports = {
-    SpCoinStakingModule,
-    second,
-    hour,
-    minute,
-    week,
-    year,
-    month,
-    millennium
-};
+exports.SpCoinStakingModule = SpCoinStakingModule;

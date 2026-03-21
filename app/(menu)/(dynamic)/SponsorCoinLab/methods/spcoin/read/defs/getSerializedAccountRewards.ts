@@ -2,7 +2,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'getSerializedAccountRewards',
+    title: 'getSerializedAccountRewards (legacy compat)',
     params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
   }
 

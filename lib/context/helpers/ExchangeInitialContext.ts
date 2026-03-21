@@ -64,6 +64,9 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
       showTestNets: false,
+      spCoinProperties: {
+        inflationRate: 0,
+      },
       spCoinAccessManager: {
         useLocalPackage: true,
         selectedVersion: '0.0.1',

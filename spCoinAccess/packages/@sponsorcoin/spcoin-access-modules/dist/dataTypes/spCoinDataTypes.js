@@ -1,5 +1,6 @@
-// @ts-nocheck
-// File: /@sponsorcoin/spcoin-access-modules/dataTypes/spCoinDataTypes.js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RewardTransactionStruct = exports.RewardRateStruct = exports.RewardAccountStruct = exports.RewardTypeStruct = exports.RewardsStruct = exports.StakingTransactionStruct = exports.AgentRateStruct = exports.AgentStruct = exports.RecipientRateStruct = exports.RecipientStruct = exports.AccountStruct = exports.SponsorCoinHeader = void 0;
 class SponsorCoinHeader {
     // Initialize values to maintain output display order
     constructor() {
@@ -16,9 +17,10 @@ class SponsorCoinHeader {
         this.totalBalanceOf = "ToDo";
         this.totalStakedSPCoins = "ToDo";
         this.totalStakingRewards = "ToDo";
-        this.accountRecords = "ToDo";
+        this.accountRecords = [];
     }
 }
+exports.SponsorCoinHeader = SponsorCoinHeader;
 class AccountStruct {
     // Initialize values to maintain output display order
     constructor() {
@@ -37,6 +39,7 @@ class AccountStruct {
         this.stakingRewardList = 0;
     }
 }
+exports.AccountStruct = AccountStruct;
 class RecipientStruct {
     constructor() {
         this.TYPE = "--RECIPIENT_RECORD--";
@@ -45,8 +48,10 @@ class RecipientStruct {
         this.stakedSPCoins;
         this.verified;
         this.recipientRateRecordList;
+        this.recipientRateList;
     }
 }
+exports.RecipientStruct = RecipientStruct;
 class RecipientRateStruct {
     constructor() {
         this.TYPE = "--RECIPIENT_RATE--";
@@ -59,6 +64,7 @@ class RecipientRateStruct {
         this.agentRecordList;
     }
 }
+exports.RecipientRateStruct = RecipientRateStruct;
 class AgentStruct {
     constructor() {
         this.TYPE = "--AGENT_RECORD--";
@@ -69,6 +75,7 @@ class AgentStruct {
         this.agentRateList;
     }
 }
+exports.AgentStruct = AgentStruct;
 class AgentRateStruct {
     constructor() {
         this.TYPE = "--AGENT_RATE--";
@@ -79,6 +86,7 @@ class AgentRateStruct {
         this.transactions;
     }
 }
+exports.AgentRateStruct = AgentRateStruct;
 class StakingTransactionStruct {
     constructor() {
         this.TYPE = "--STAKING TRANSACTION RECORD--";
@@ -87,6 +95,7 @@ class StakingTransactionStruct {
         this.quantity;
     }
 }
+exports.StakingTransactionStruct = StakingTransactionStruct;
 /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
 class RewardsStruct {
     constructor() {
@@ -96,6 +105,7 @@ class RewardsStruct {
         this.agentRewardsList;
     }
 }
+exports.RewardsStruct = RewardsStruct;
 class RewardTypeStruct {
     constructor() {
         this.TYPE;
@@ -103,6 +113,7 @@ class RewardTypeStruct {
         this.rewardAccountList;
     }
 }
+exports.RewardTypeStruct = RewardTypeStruct;
 class RewardAccountStruct {
     constructor() {
         this.TYPE = "--REWARD ACCOUNT--";
@@ -111,6 +122,7 @@ class RewardAccountStruct {
         this.rateList;
     }
 }
+exports.RewardAccountStruct = RewardAccountStruct;
 class RewardRateStruct {
     constructor() {
         this.TYPE = "--REWARD RATE--";
@@ -119,6 +131,7 @@ class RewardRateStruct {
         this.rewardTransactionList;
     }
 }
+exports.RewardRateStruct = RewardRateStruct;
 class RewardTransactionStruct {
     constructor() {
         this.TYPE = "--REWARD TRANSACTION--";
@@ -126,17 +139,4 @@ class RewardTransactionStruct {
         this.stakingRewards;
     }
 }
-module.exports = {
-    AccountStruct,
-    AgentRateStruct,
-    AgentStruct,
-    RewardRateStruct,
-    RecipientStruct,
-    RecipientRateStruct,
-    RewardAccountStruct,
-    RewardsStruct,
-    RewardTransactionStruct,
-    RewardTypeStruct,
-    SponsorCoinHeader,
-    StakingTransactionStruct,
-};
+exports.RewardTransactionStruct = RewardTransactionStruct;

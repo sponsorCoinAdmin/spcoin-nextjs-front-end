@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Erc20ReadMethod } from '../methods/erc20/read';
 import type { Erc20WriteMethod } from '../methods/erc20/write';
-import type { SpCoinReadMethod } from '../methods/spcoin/read';
+import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
 import type { SpCoinWriteMethod } from '../methods/spcoin/write';
 import type { SerializationTestMethod } from '../methods/serializationTests';
 import type { ConnectionMode, LabScript, MethodPanelMode } from '../scriptBuilder/types';
@@ -301,7 +301,7 @@ export function useSponsorCoinLabPersistence({
           if (typeof saved.readAddressA === 'string') setReadAddressA(normalizeAddressValue(saved.readAddressA));
           if (typeof saved.readAddressB === 'string') setReadAddressB(normalizeAddressValue(saved.readAddressB));
           if (typeof saved.selectedSpCoinReadMethod === 'string') {
-            setSelectedSpCoinReadMethod(saved.selectedSpCoinReadMethod as SpCoinReadMethod);
+            setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(saved.selectedSpCoinReadMethod));
           }
           if (typeof saved.selectedSpCoinWriteMethod === 'string') {
             setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);

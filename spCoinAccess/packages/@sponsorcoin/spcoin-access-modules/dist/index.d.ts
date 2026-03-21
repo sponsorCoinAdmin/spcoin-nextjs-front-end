@@ -1,21 +1,36 @@
-declare const ethers: any;
-declare const SpCoinLogger: any;
-declare const SpCoinERC20Module: any;
-declare const SpCoinDeleteModule: any;
-declare const SpCoinAddModule: any;
-declare const SpCoinReadModule: any;
-declare const SpCoinRewardsModule: any;
-declare const SpCoinStakingModule: any;
-declare class SpCoinAccessModules {
+import { SpCoinLogger } from "./utils/logging";
+import { SpCoinERC20Module } from "./modules/spCoinERC20Module";
+import { SpCoinDeleteModule } from "./modules/spCoinDeleteModule";
+import { SpCoinAddModule } from "./modules/spCoinAddModule";
+import { SpCoinReadModule } from "./modules/spCoinReadModule";
+import { SpCoinRewardsModule } from "./modules/spCoinRewardsModule";
+import { SpCoinStakingModule } from "./modules/spCoinStakingModule";
+export { SpCoinLogger } from "./utils/logging";
+export { SpCoinERC20Module } from "./modules/spCoinERC20Module";
+export { SpCoinDeleteModule } from "./modules/spCoinDeleteModule";
+export { SpCoinAddModule } from "./modules/spCoinAddModule";
+export { SpCoinReadModule } from "./modules/spCoinReadModule";
+export { SpCoinRewardsModule } from "./modules/spCoinRewardsModule";
+export { SpCoinStakingModule } from "./modules/spCoinStakingModule";
+export type SpCoinAccessMethods = {
+    spCoinContractDeployed: any;
+    spCoinAddMethods: SpCoinAddModule;
+    spCoinDeleteMethods: SpCoinDeleteModule;
+    spCoinERC20Methods: SpCoinERC20Module;
+    spCoinLogger: SpCoinLogger;
+    spCoinReadMethods: SpCoinReadModule;
+    spCoinRewardsMethods: SpCoinRewardsModule;
+    spCoinStakingMethods: SpCoinStakingModule;
+};
+export declare class SpCoinAccessModules {
+    spCoinContractDeployed: any;
+    spCoinAddMethods: SpCoinAddModule;
+    spCoinDeleteMethods: SpCoinDeleteModule;
+    spCoinERC20Methods: SpCoinERC20Module;
+    spCoinLogger: SpCoinLogger;
+    spCoinReadMethods: SpCoinReadModule;
+    spCoinRewardsMethods: SpCoinRewardsModule;
+    spCoinStakingMethods: SpCoinStakingModule;
+    methods: () => SpCoinAccessMethods;
     constructor(spCoinABI: any, spCoinAddress: any, signer: any);
-    methods: () => {
-        spCoinContractDeployed: any;
-        spCoinAddMethods: any;
-        spCoinDeleteMethods: any;
-        spCoinERC20Methods: any;
-        spCoinLogger: any;
-        spCoinReadMethods: any;
-        spCoinRewardsMethods: any;
-        spCoinStakingMethods: any;
-    };
 }

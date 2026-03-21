@@ -1,4 +1,4 @@
-import type { MethodDef } from '../shared/types';
+import type { MethodDef, ParamDef } from '../shared/types';
 import { createSpCoinLibraryAccess } from '../shared';
 import { buildSerializedSPCoinHeader } from '../shared/buildSerializedSPCoinHeader';
 import { Interface } from 'ethers';
@@ -135,7 +135,7 @@ export function getSerializationTestOptions(): SerializationTestMethod[] {
 type RunArgs = {
   selectedMethod: SerializationTestMethod;
   params: string[];
-  coerceParamValue: (raw: string, def: any) => any;
+  coerceParamValue: (raw: string, def: ParamDef) => unknown;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
   appendLog: (line: string) => void;
