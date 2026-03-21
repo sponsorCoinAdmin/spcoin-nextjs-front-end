@@ -1,7 +1,6 @@
-declare const SpCoinLogger: any;
-declare let spCoinLogger: any;
-declare class SpCoinERC20Module {
+export declare class SpCoinERC20Module {
+    spCoinContractDeployed: any;
+    signerTransfer: (_signer: any, _to: string, _value: string | number | bigint) => Promise<void>;
+    transfer: (_to: string, _value: string | number | bigint) => Promise<void>;
     constructor(_spCoinContractDeployed: any);
-    signerTransfer: (_signer: any, _to: any, _value: any) => Promise<void>;
-    transfer: (_to: any, _value: any) => Promise<void>;
 }

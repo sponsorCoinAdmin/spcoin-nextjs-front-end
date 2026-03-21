@@ -1,16 +1,15 @@
-declare const SpCoinLogger: any;
-declare let spCoinLogger: any;
-declare const BURN_ADDRESS = "0x0000000000000000000000000000000000000000";
-declare class SpCoinAddModule {
+import type { ContractTransactionResponse, Signer } from "ethers";
+export declare class SpCoinAddModule {
+    spCoinContractDeployed: any;
+    addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
+    addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
+    addAgent: (_recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+    addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
+    addAccountRecord: (_accountKey: string) => Promise<ContractTransactionResponse>;
+    addAccountRecords: (_accountListKeys: string[]) => Promise<number>;
+    addSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _transactionQty: string | number) => Promise<ContractTransactionResponse>;
+    addAgentSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string, _agentRateKey: string | number, _transactionQty: string | number) => Promise<ContractTransactionResponse>;
+    addBackDatedSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
+    addBackDatedAgentSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string, _agentRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
     constructor(_spCoinContractDeployed: any);
-    addRecipient: (_recipientKey: any) => Promise<any>;
-    addRecipients: (_accountKey: any, _recipientAccountList: any) => Promise<number>;
-    addAgent: (_recipientKey: any, _recipientRateKey: any, _accountAgentKey: any) => Promise<void>;
-    addAgents: (_recipientKey: any, _recipientRateKey: any, _agentAccountList: any) => Promise<number>;
-    addAccountRecord: (_accountKey: any) => Promise<void>;
-    addAccountRecords: (_accountListKeys: any) => Promise<any>;
-    addSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _transactionQty: any) => Promise<void>;
-    addAgentSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _accountAgentKey: any, _agentRateKey: any, _transactionQty: any) => Promise<void>;
-    addBackDatedSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _transactionQty: any, _transactionBackDate: any) => Promise<void>;
-    addBackDatedAgentSponsorship: (_sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _accountAgentKey: any, _agentRateKey: any, _transactionQty: any, _transactionBackDate: any) => Promise<void>;
 }

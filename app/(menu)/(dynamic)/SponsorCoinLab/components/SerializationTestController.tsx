@@ -1,9 +1,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
-
-type ParamDefLike = { label: string; placeholder: string; type?: string };
-type MethodDef = { title: string; params: ParamDefLike[]; executable?: boolean };
+import type { MethodDef } from '../methods/shared/types';
 
 type Props = {
   invalidFieldIds: string[];

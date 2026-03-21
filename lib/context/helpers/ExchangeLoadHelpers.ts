@@ -184,6 +184,9 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
 
     // Normalize displayStack to nodes (do NOT derive here; Provider/persist handles seeding)
     settings.displayStack = normalizeDisplayStackNodes(settings.displayStack);
+    settings.spCoinProperties = {
+      inflationRate: Number(settings.spCoinProperties?.inflationRate ?? 0),
+    };
 
     // Reassign cleaned settings, optionally bump schema
     settings.spCoinPanelTree = flatTree;

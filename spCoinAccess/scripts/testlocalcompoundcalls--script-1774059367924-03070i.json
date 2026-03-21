@@ -1,23 +1,28 @@
 {
-  "id": "script-1773960266563-6ty3cq",
-  "name": "testSychronize",
-  "Date Created": "Mar-19-2026, 18:44:26",
+  "id": "script-1774059367924-03070i",
+  "name": "testLocalCompoundCalls",
+  "Date Created": "Mar-20-2026, 22:16:07",
   "network": "Hardhat Ec2-BASE",
   "steps": [
     {
       "step": 1,
-      "name": "getSerializedSPCoinHeader",
+      "name": "getSPCoinHeaderRecord",
       "panel": "spcoin_rread",
-      "method": "getSerializedSPCoinHeader",
-      "params": [],
+      "method": "getSPCoinHeaderRecord",
+      "params": [
+        {
+          "key": "Get Body",
+          "value": "true"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "getSerializedAccountRecord",
+      "name": "getAccountRecord",
       "panel": "spcoin_rread",
-      "method": "getSerializedAccountRecord",
+      "method": "getAccountRecord",
       "params": [
         {
           "key": "Account Key",
@@ -29,9 +34,9 @@
     },
     {
       "step": 3,
-      "name": "getSerializedAccountRewards",
+      "name": "getAccountStakingRewards",
       "panel": "spcoin_rread",
-      "method": "getSerializedAccountRewards",
+      "method": "getAccountStakingRewards",
       "params": [
         {
           "key": "Account Key",
@@ -43,9 +48,9 @@
     },
     {
       "step": 4,
-      "name": "getSerializedRecipientRecordList",
+      "name": "getRecipientRecord",
       "panel": "spcoin_rread",
-      "method": "getSerializedRecipientRecordList",
+      "method": "getRecipientRecord",
       "params": [
         {
           "key": "Sponsor Key",
@@ -61,9 +66,9 @@
     },
     {
       "step": 5,
-      "name": "getSerializedRecipientRateList",
+      "name": "getRecipientRateRecord",
       "panel": "spcoin_rread",
-      "method": "getSerializedRecipientRateList",
+      "method": "getRecipientRateRecord",
       "params": [
         {
           "key": "Sponsor Key",
@@ -83,9 +88,9 @@
     },
     {
       "step": 6,
-      "name": "serializeAgentRateRecordStr",
+      "name": "getAgentRateRecord",
       "panel": "spcoin_rread",
-      "method": "serializeAgentRateRecordStr",
+      "method": "getAgentRateRecord",
       "params": [
         {
           "key": "Sponsor Key",
@@ -113,9 +118,9 @@
     },
     {
       "step": 7,
-      "name": "getSerializedRateTransactionList",
+      "name": "getAgentRateTransactionList",
       "panel": "spcoin_rread",
-      "method": "getSerializedRateTransactionList",
+      "method": "getAgentRateTransactionList",
       "params": [
         {
           "key": "Sponsor Key",

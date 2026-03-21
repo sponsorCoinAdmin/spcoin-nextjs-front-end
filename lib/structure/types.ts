@@ -113,6 +113,11 @@ export interface Settings {
   /** Show/hide testnets in network selector dropdown. */
   showTestNets?: boolean;
 
+  /** Persisted SponsorCoin properties for schema-backed metadata. */
+  spCoinProperties?: {
+    inflationRate: number;
+  };
+
   /** SponsorCoin access package manager settings persisted across reloads. */
   spCoinAccessManager?: {
     useLocalPackage: boolean;

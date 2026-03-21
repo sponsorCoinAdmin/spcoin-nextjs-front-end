@@ -1,5 +1,6 @@
-// @ts-nocheck
-// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinDeleteModule.js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinDeleteModule = void 0;
 const { SpCoinLogger } = require("../utils/logging");
 let spCoinLogger;
 class SpCoinDeleteModule {
@@ -8,8 +9,9 @@ class SpCoinDeleteModule {
             // ToDo: do Solidity Code and Testing
             spCoinLogger.logFunctionHeader("deleteAccountRecord = async(" + _accountKey + ")");
             spCoinLogger.logDetail("JS => Deleting Account " + _accountKey + " From Blockchain Network");
-            await this.spCoinContractDeployed.connect(this.signer).deleteAccountRecord(_accountKey);
+            const tx = await this.spCoinContractDeployed.connect(this.signer).deleteAccountRecord(_accountKey);
             spCoinLogger.logExitFunction();
+            return tx;
         };
         this.deleteAccountRecords = async (_accountListKeys) => {
             spCoinLogger.logFunctionHeader("deleteAccountRecords = async(arrayAccounts)");
@@ -22,12 +24,14 @@ class SpCoinDeleteModule {
             }
             spCoinLogger.logDetail("JS => Inserted " + maxCount + " Account to Blockchain Network");
             spCoinLogger.logExitFunction();
+            return maxCount;
         };
         /////////////////////// RECIPIENT RECORD FUNCTIONS ///////////////////////
         this.unSponsorRecipient = async (_sponsorKey, _recipientKey) => {
             spCoinLogger.logFunctionHeader("unSponsorRecipient(" + _sponsorKey.accountKey + ", " + _recipientKey + ")");
-            await this.spCoinContractDeployed.connect(this.signer).unSponsorRecipient(_recipientKey);
+            const tx = await this.spCoinContractDeployed.connect(this.signer).unSponsorRecipient(_recipientKey);
             spCoinLogger.logExitFunction();
+            return tx;
         };
         /////////////////////// AGENT RECORD FUNCTIONS ////////////////////////
         this.deleteAgentRecord = async (_accountKey, _recipientKey, _accountAgentKey) => {
@@ -44,8 +48,4 @@ class SpCoinDeleteModule {
         spCoinLogger = new SpCoinLogger(_spCoinContractDeployed);
     }
 }
-;
-/////////////////////// EXPORT MODULE FUNCTIONS ///////////////////////
-module.exports = {
-    SpCoinDeleteModule
-};
+exports.SpCoinDeleteModule = SpCoinDeleteModule;

@@ -1,13 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dateInMilliseconds = exports.dateInSeconds = exports.formatTimeSeconds = exports.bigIntToString = exports.bigIntToHexString = exports.bigIntToDecString = exports.getLocation = exports.bigIntToDateTimeString = exports.millennium = exports.month = exports.year = exports.week = exports.day = exports.hour = exports.minute = exports.second = void 0;
 // @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/dateTime.js
-const second = 1;
-const minute = second * 60;
-const hour = minute * 60;
-const day = hour * 24;
-const week = day * 7;
-const year = day * 365.242199; // Actual time in year considering leap year
-const month = year / 12;
-const millennium = year * 1000;
+exports.second = 1;
+exports.minute = exports.second * 60;
+exports.hour = exports.minute * 60;
+exports.day = exports.hour * 24;
+exports.week = exports.day * 7;
+exports.year = exports.day * 365.242199; // Actual time in year considering leap year
+exports.month = exports.year / 12;
+exports.millennium = exports.year * 1000;
 const bigIntToDateTimeString = (_value) => {
     let milliSecs = bigIntToDecMilliSecs(_value);
     const options = { month: "long",
@@ -22,18 +25,24 @@ const bigIntToDateTimeString = (_value) => {
     const dateString = new Intl.DateTimeFormat("en-US", options).format(milliSecs);
     return dateString;
 };
+exports.bigIntToDateTimeString = bigIntToDateTimeString;
 const getLocation = () => {
     let location = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return location;
 };
-const bigIntToDecMilliSecs = (_value) => { return bigIntToDecString(_value) + "000"; };
-const bigIntToDecString = (_value) => { return bigIntToString(_value, 10); };
-const bigIntToHexString = (_value) => { return bigIntToString(_value, 16); };
+exports.getLocation = getLocation;
+const bigIntToDecMilliSecs = (_value) => { return (0, exports.bigIntToDecString)(_value) + "000"; };
+const bigIntToDecString = (_value) => { return (0, exports.bigIntToString)(_value, 10); };
+exports.bigIntToDecString = bigIntToDecString;
+const bigIntToHexString = (_value) => { return (0, exports.bigIntToString)(_value, 16); };
+exports.bigIntToHexString = bigIntToHexString;
 const bigIntToString = (_value, _base) => { return BigInt(_value).toString(_base); };
+exports.bigIntToString = bigIntToString;
 const formatTimeSeconds = (timeInSeconds) => {
     let formattedTime = parseTimeSeconds(timeInSeconds);
     return formattedTime;
 };
+exports.formatTimeSeconds = formatTimeSeconds;
 const parseTimeSeconds = (timeInSeconds) => {
     // let timeInSeconds = 340047;
     let seconds = timeInSeconds;
@@ -53,25 +62,9 @@ const dateInSeconds = () => {
     let dateInSeconds = Math.round(dateInMillisecs / 1000);
     return dateInSeconds;
 };
+exports.dateInSeconds = dateInSeconds;
 const dateInMilliseconds = () => {
     let dateInMillisecs = Date.now();
     return dateInMillisecs;
 };
-module.exports = {
-    second,
-    minute,
-    hour,
-    day,
-    week,
-    year,
-    month,
-    millennium,
-    bigIntToDateTimeString,
-    bigIntToDecString,
-    bigIntToHexString,
-    bigIntToString,
-    dateInMilliseconds,
-    dateInSeconds,
-    formatTimeSeconds,
-    getLocation,
-};
+exports.dateInMilliseconds = dateInMilliseconds;

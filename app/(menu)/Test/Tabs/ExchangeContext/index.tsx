@@ -118,6 +118,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
     push('NPM_Source', realSettings.NPM_Source);
     push('showTestNets', realSettings.showTestNets);
     push('spCoinPanelSchemaVersion', realSettings.spCoinPanelSchemaVersion);
+    push('spCoinProperties', realSettings.spCoinProperties);
     push('spCoinPanelTree', treeWithNames);
     push('displayStack', realSettings.displayStack);
     push('spCoinAccessManager', realSettings.spCoinAccessManager);

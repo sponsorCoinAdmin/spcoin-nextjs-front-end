@@ -1,36 +1,120 @@
-declare class SponsorCoinHeader {
+export type SpCoinScalar = string | number;
+export type SpCoinAddressList = string[] | string | number;
+export type SpCoinDisplayValue = SpCoinScalar | Record<string, unknown>;
+export type SpCoinDisplayAddressList = string[] | Record<string, never> | string | number;
+export declare class SponsorCoinHeader {
+    TYPE: string;
+    name: string;
+    symbol: string;
+    version: string;
+    creationTime: SpCoinDisplayValue;
+    location: string;
+    initialTotalSupply: string;
+    totalSupply: string;
+    decimals: string;
+    annualInflation: string;
+    totalBalanceOf: string;
+    totalStakedSPCoins: string;
+    totalStakingRewards: string;
+    accountRecords: AccountStruct[] | string;
     constructor();
 }
-declare class AccountStruct {
+export declare class AccountStruct {
+    TYPE: string;
+    accountKey: SpCoinScalar;
+    balanceOf: SpCoinScalar;
+    stakedSPCoins: SpCoinScalar;
+    creationTime: SpCoinDisplayValue;
+    location?: string;
+    verified: boolean | string;
+    inserted?: string;
+    KYC?: string;
+    decimals?: string;
+    sponsorAccountList: SpCoinDisplayAddressList;
+    recipientAccountList: SpCoinDisplayAddressList;
+    agentAccountList: SpCoinDisplayAddressList;
+    agentParentRecipientAccountList: SpCoinDisplayAddressList;
+    recipientRecordList: SpCoinScalar | RecipientStruct[];
+    stakingRewards: SpCoinScalar;
+    stakingRewardList: SpCoinScalar | RewardsStruct;
     constructor();
 }
-declare class RecipientStruct {
+export declare class RecipientStruct {
+    TYPE: string;
+    recipientKey: string;
+    creationTime: SpCoinDisplayValue;
+    stakedSPCoins: SpCoinScalar;
+    verified: boolean | string;
+    recipientRateRecordList: RecipientRateStruct[] | SpCoinScalar;
+    recipientRateList: RecipientRateStruct[] | SpCoinScalar;
     constructor();
 }
-declare class RecipientRateStruct {
+export declare class RecipientRateStruct {
+    TYPE: string;
+    recipientRate: SpCoinScalar;
+    creationTime: SpCoinDisplayValue;
+    lastUpdateTime: SpCoinDisplayValue;
+    stakedSPCoins: SpCoinScalar;
+    transactions: StakingTransactionStruct[] | Record<string, never> | SpCoinScalar;
+    agentAccountList: string[] | SpCoinScalar;
+    agentRecordList: AgentStruct[] | Record<string, never> | SpCoinScalar;
     constructor();
 }
-declare class AgentStruct {
+export declare class AgentStruct {
+    TYPE: string;
+    agentKey: string;
+    stakedSPCoins: SpCoinScalar;
+    creationTime: SpCoinDisplayValue;
+    verified: boolean | string;
+    agentRateList: AgentRateStruct[] | Record<string, never> | SpCoinScalar;
     constructor();
 }
-declare class AgentRateStruct {
+export declare class AgentRateStruct {
+    TYPE: string;
+    agentRate: SpCoinScalar;
+    stakedSPCoins: SpCoinScalar;
+    creationTime: SpCoinDisplayValue;
+    lastUpdateTime: SpCoinDisplayValue;
+    transactions: StakingTransactionStruct[] | Record<string, never> | SpCoinScalar;
     constructor();
 }
-declare class StakingTransactionStruct {
+export declare class StakingTransactionStruct {
+    TYPE: string;
+    insertionTime: SpCoinDisplayValue;
+    location: string;
+    quantity: SpCoinScalar;
     constructor();
 }
-declare class RewardsStruct {
+export declare class RewardsStruct {
+    TYPE: string;
+    sponsorRewardsList: RewardTypeStruct;
+    recipientRewardsList: RewardTypeStruct;
+    agentRewardsList: RewardTypeStruct;
     constructor();
 }
-declare class RewardTypeStruct {
+export declare class RewardTypeStruct {
+    TYPE: string;
+    stakingRewards: SpCoinScalar;
+    rewardAccountList: RewardAccountStruct[] | SpCoinScalar;
     constructor();
 }
-declare class RewardAccountStruct {
+export declare class RewardAccountStruct {
+    TYPE: string;
+    sourceKey: string;
+    stakingRewards: SpCoinScalar;
+    rateList: RewardRateStruct[] | SpCoinScalar;
     constructor();
 }
-declare class RewardRateStruct {
+export declare class RewardRateStruct {
+    TYPE: string;
+    rate: SpCoinScalar;
+    stakingRewards: SpCoinScalar;
+    rewardTransactionList: RewardTransactionStruct[] | SpCoinScalar;
     constructor();
 }
-declare class RewardTransactionStruct {
+export declare class RewardTransactionStruct {
+    TYPE: string;
+    updateTime: SpCoinScalar;
+    stakingRewards: SpCoinScalar;
     constructor();
 }

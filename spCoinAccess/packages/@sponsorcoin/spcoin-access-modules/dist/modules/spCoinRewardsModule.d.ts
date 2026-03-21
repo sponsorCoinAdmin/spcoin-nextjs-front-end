@@ -1,9 +1,6 @@
-declare const bigIntToDateTimeString: any, bigIntToDecString: any, bigIntToHexString: any, bigIntToString: any, getLocation: any;
-declare const SpCoinLogger: any;
-declare const SpCoinSerialize: any;
-declare let spCoinLogger: any;
-declare let spCoinSerialize: any;
-declare class SpCoinRewardsModule {
+import type { ContractTransactionResponse } from "ethers";
+export declare class SpCoinRewardsModule {
+    spCoinContractDeployed: any;
+    updateAccountStakingRewards: (accountKey: string) => Promise<ContractTransactionResponse>;
     constructor(_spCoinContractDeployed: any);
-    updateAccountStakingRewards: (accountKey: any) => Promise<void>;
 }

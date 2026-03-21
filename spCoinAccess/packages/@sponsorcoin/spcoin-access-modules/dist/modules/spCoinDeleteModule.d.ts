@@ -1,9 +1,12 @@
-declare const SpCoinLogger: any;
-declare let spCoinLogger: any;
-declare class SpCoinDeleteModule {
+import type { ContractTransactionResponse, Signer } from "ethers";
+export declare class SpCoinDeleteModule {
+    spCoinContractDeployed: any;
+    signer?: Signer;
+    deleteAccountRecord: (_accountKey: string) => Promise<ContractTransactionResponse>;
+    deleteAccountRecords: (_accountListKeys: string[]) => Promise<number>;
+    unSponsorRecipient: (_sponsorKey: {
+        accountKey: string;
+    }, _recipientKey: string) => Promise<ContractTransactionResponse>;
+    deleteAgentRecord: (_accountKey: string, _recipientKey: string, _accountAgentKey: string) => Promise<void>;
     constructor(_spCoinContractDeployed: any);
-    deleteAccountRecord: (_accountKey: any) => Promise<void>;
-    deleteAccountRecords: (_accountListKeys: any) => Promise<void>;
-    unSponsorRecipient: (_sponsorKey: any, _recipientKey: any) => Promise<void>;
-    deleteAgentRecord: (_accountKey: any, _recipientKey: any, _accountAgentKey: any) => Promise<void>;
 }

@@ -1,5 +1,6 @@
-// @ts-nocheck
-// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinAddModule.js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinAddModule = void 0;
 const { SpCoinLogger } = require("../utils/logging");
 let spCoinLogger;
 const BURN_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -127,7 +128,4 @@ class SpCoinAddModule {
         spCoinLogger = new SpCoinLogger(_spCoinContractDeployed);
     }
 }
-//////////////////// MODULE EXPORTS //////////////////////
-module.exports = {
-    SpCoinAddModule,
-};
+exports.SpCoinAddModule = SpCoinAddModule;

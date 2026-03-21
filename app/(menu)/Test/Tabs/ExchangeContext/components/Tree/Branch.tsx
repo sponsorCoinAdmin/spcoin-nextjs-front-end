@@ -523,7 +523,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         <button
           type="button"
           onClick={() => void onToggleNpmSource()}
-          className="rounded px-1 text-left transition-colors hover:text-[#5981F3]"
+          className="rounded text-left transition-colors hover:text-[#5981F3]"
           title={hoverTitle}
         >
           {`${sourceLabel}: `}

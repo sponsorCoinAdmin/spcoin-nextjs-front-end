@@ -1,7 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinLogger = exports.LOG_MODE = void 0;
 // @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/logging.js
 // ************************* LOG SECTION ******************************/
-const { stringifyBigInt } = require("@sponsorcoin/spcoin-lib/utils");
+const utils_1 = require("@sponsorcoin/spcoin-lib/utils");
 let LOG = true;
 let LOG_DETAIL = false;
 let LOG_TEST_HEADER = false;
@@ -10,7 +13,7 @@ let LOG_SETUP = false;
 let LOG_TREE = false;
 let prefix = "";
 let indent = "  ";
-const LOG_MODE = {
+exports.LOG_MODE = {
     LOG: "LOG",
     LOG_DETAIL: "LOG_DETAIL",
     LOG_TEST_HEADER: "LOG_TEST_HEADER",
@@ -32,26 +35,26 @@ class SpCoinLogger {
         this.setLogMode = (_log_mode, _state) => {
             console.log("EXECUTING setLogMode = (" + _log_mode + ", " + _state + ")");
             switch (_log_mode) {
-                case LOG_MODE.LOG:
+                case exports.LOG_MODE.LOG:
                     console.log("Setting _log_mode LOG: " + _state);
                     LOG = _state;
                     break;
-                case LOG_MODE.LOG_DETAIL:
+                case exports.LOG_MODE.LOG_DETAIL:
                     console.log("Setting _log_mode LOG_DETAIL: " + _state);
                     LOG_DETAIL = _state;
                     break;
-                case LOG_MODE.LOG_TEST_HEADER:
+                case exports.LOG_MODE.LOG_TEST_HEADER:
                     console.log("Setting _log_mode LOG_TEST_HEADER: " + _state);
                     LOG_TEST_HEADER = _state;
                     break;
-                case LOG_MODE.LOG_FUNCTION_HEADER:
+                case exports.LOG_MODE.LOG_FUNCTION_HEADER:
                     console.log("Setting _log_mode LOG_FUNCTION_HEADER: " + _state);
                     LOG_FUNCTION_HEADER = _state;
                     break;
-                case LOG_MODE.LOG_SETUP:
+                case exports.LOG_MODE.LOG_SETUP:
                     console.log("Setting _log_mode LOG_SETUP: " + _state);
                     LOG_SETUP = _state;
-                case LOG_MODE.LOG_TREE:
+                case exports.LOG_MODE.LOG_TREE:
                     console.log("Setting _log_mode LOG_SETUP: " + _state);
                     LOG_TREE = _state;
                     break;
@@ -118,12 +121,12 @@ class SpCoinLogger {
         this.logJSON = (_obj, headerStr, trailerStr) => {
             if (headerStr)
                 console.log("\nheaderStr");
-            console.log(stringifyBigInt(_obj, headerStr, trailerStr));
+            console.log((0, utils_1.stringifyBigInt)(_obj, headerStr, trailerStr));
             if (trailerStr)
                 console.log("\trailerStr");
         };
         this.getJSON = (_obj) => {
-            return stringifyBigInt(_obj);
+            return (0, utils_1.stringifyBigInt)(_obj);
         };
         // if (_spCoinContractDeployed !== undefined) {
         this.spCoinContractDeployed = _spCoinContractDeployed;
@@ -131,7 +134,4 @@ class SpCoinLogger {
         // }
     }
 }
-module.exports = {
-    SpCoinLogger,
-    LOG_MODE
-};
+exports.SpCoinLogger = SpCoinLogger;

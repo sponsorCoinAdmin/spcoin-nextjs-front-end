@@ -1,5 +1,6 @@
-// @ts-nocheck
-// File: /@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinRewardsModule = void 0;
 const { bigIntToDateTimeString, bigIntToDecString, bigIntToHexString, bigIntToString, getLocation } = require("../utils//dateTime");
 const { SpCoinLogger } = require("../utils/logging");
 const { SpCoinSerialize } = require("../utils//serialize");
@@ -11,17 +12,14 @@ class SpCoinRewardsModule {
             spCoinLogger.logFunctionHeader("updateAccountStakingRewards(accountKey)");
             // console.log("=================================================================================================");
             // console.log("SpCoinRewardsModule:updateAccountStakingRewards");
-            this.spCoinContractDeployed.updateAccountStakingRewards(accountKey);
+            const tx = await this.spCoinContractDeployed.updateAccountStakingRewards(accountKey);
             // console.log("=================================================================================================");
             spCoinLogger.logExitFunction();
+            return tx;
         };
         this.spCoinContractDeployed = _spCoinContractDeployed;
         spCoinLogger = new SpCoinLogger(_spCoinContractDeployed);
         spCoinSerialize = new SpCoinSerialize(_spCoinContractDeployed);
     }
 }
-;
-/////////////////////// EXPORT MODULE FUNCTIONS ///////////////////////
-module.exports = {
-    SpCoinRewardsModule
-};
+exports.SpCoinRewardsModule = SpCoinRewardsModule;

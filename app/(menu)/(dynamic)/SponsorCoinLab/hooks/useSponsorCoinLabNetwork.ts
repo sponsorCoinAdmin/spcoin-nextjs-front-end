@@ -785,8 +785,7 @@ export function useSponsorCoinLabNetwork({
     if (mode === 'hardhat') {
       appendWriteTrace('ensureReadRunner using Hardhat JsonRpcProvider');
       const provider = new JsonRpcProvider(rpcUrl.trim());
-      const network = await provider.getNetwork();
-      setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
+      setConnectedChainId(String(HARDHAT_CHAIN_ID_DEC));
       setConnectedNetworkName(HARDHAT_NETWORK_NAME);
       return provider;
     }

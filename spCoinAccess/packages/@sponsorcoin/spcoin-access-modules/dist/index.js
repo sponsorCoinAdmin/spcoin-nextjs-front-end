@@ -1,13 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinAccessModules = exports.SpCoinStakingModule = exports.SpCoinRewardsModule = exports.SpCoinReadModule = exports.SpCoinAddModule = exports.SpCoinDeleteModule = exports.SpCoinERC20Module = exports.SpCoinLogger = void 0;
 // @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/index.js
-const { ethers } = require("ethers");
-const { SpCoinLogger } = require("./utils/logging");
-const { SpCoinERC20Module } = require("./modules/spCoinERC20Module");
-const { SpCoinDeleteModule } = require("./modules/spCoinDeleteModule");
-const { SpCoinAddModule } = require("./modules/spCoinAddModule");
-const { SpCoinReadModule } = require("./modules/spCoinReadModule");
-const { SpCoinRewardsModule } = require("./modules/spCoinRewardsModule");
-const { SpCoinStakingModule } = require("./modules/spCoinStakingModule");
+const ethers_1 = require("ethers");
+const logging_1 = require("./utils/logging");
+const spCoinERC20Module_1 = require("./modules/spCoinERC20Module");
+const spCoinDeleteModule_1 = require("./modules/spCoinDeleteModule");
+const spCoinAddModule_1 = require("./modules/spCoinAddModule");
+const spCoinReadModule_1 = require("./modules/spCoinReadModule");
+const spCoinRewardsModule_1 = require("./modules/spCoinRewardsModule");
+const spCoinStakingModule_1 = require("./modules/spCoinStakingModule");
+var logging_2 = require("./utils/logging");
+Object.defineProperty(exports, "SpCoinLogger", { enumerable: true, get: function () { return logging_2.SpCoinLogger; } });
+var spCoinERC20Module_2 = require("./modules/spCoinERC20Module");
+Object.defineProperty(exports, "SpCoinERC20Module", { enumerable: true, get: function () { return spCoinERC20Module_2.SpCoinERC20Module; } });
+var spCoinDeleteModule_2 = require("./modules/spCoinDeleteModule");
+Object.defineProperty(exports, "SpCoinDeleteModule", { enumerable: true, get: function () { return spCoinDeleteModule_2.SpCoinDeleteModule; } });
+var spCoinAddModule_2 = require("./modules/spCoinAddModule");
+Object.defineProperty(exports, "SpCoinAddModule", { enumerable: true, get: function () { return spCoinAddModule_2.SpCoinAddModule; } });
+var spCoinReadModule_2 = require("./modules/spCoinReadModule");
+Object.defineProperty(exports, "SpCoinReadModule", { enumerable: true, get: function () { return spCoinReadModule_2.SpCoinReadModule; } });
+var spCoinRewardsModule_2 = require("./modules/spCoinRewardsModule");
+Object.defineProperty(exports, "SpCoinRewardsModule", { enumerable: true, get: function () { return spCoinRewardsModule_2.SpCoinRewardsModule; } });
+var spCoinStakingModule_2 = require("./modules/spCoinStakingModule");
+Object.defineProperty(exports, "SpCoinStakingModule", { enumerable: true, get: function () { return spCoinStakingModule_2.SpCoinStakingModule; } });
 class SpCoinAccessModules {
     constructor(spCoinABI, spCoinAddress, signer) {
         this.methods = () => {
@@ -25,25 +42,16 @@ class SpCoinAccessModules {
         // console.debug(`SpCoinAccessModules.constructor.spCoinAddress = ${spCoinAddress}`)
         // console.debug(`SpCoinAccessModules.constructor.spCoinABI = ${JSON.stringify(spCoinABI,null,2)}`)
         console.debug(`SpCoinAccessModules.constructor.signer = ${JSON.stringify(signer, null, 2)}`);
-        const signedContract = new ethers.Contract(spCoinAddress, spCoinABI, signer);
+        const signedContract = new ethers_1.ethers.Contract(spCoinAddress, spCoinABI, signer);
         this.spCoinContractDeployed = signedContract;
         // console.debug(`SpCoinAccessModules.constructor.signedContract = ${JSON.stringify(signedContract,null,2)}`)
-        this.spCoinAddMethods = new SpCoinAddModule(this.spCoinContractDeployed);
-        this.spCoinDeleteMethods = new SpCoinDeleteModule(this.spCoinContractDeployed);
-        this.spCoinERC20Methods = new SpCoinERC20Module(this.spCoinContractDeployed);
-        this.spCoinLogger = new SpCoinLogger(this.spCoinContractDeployed);
-        this.spCoinReadMethods = new SpCoinReadModule(this.spCoinContractDeployed);
-        this.spCoinRewardsMethods = new SpCoinRewardsModule(this.spCoinContractDeployed);
-        this.spCoinStakingMethods = new SpCoinStakingModule(this.spCoinContractDeployed);
+        this.spCoinAddMethods = new spCoinAddModule_1.SpCoinAddModule(this.spCoinContractDeployed);
+        this.spCoinDeleteMethods = new spCoinDeleteModule_1.SpCoinDeleteModule(this.spCoinContractDeployed);
+        this.spCoinERC20Methods = new spCoinERC20Module_1.SpCoinERC20Module(this.spCoinContractDeployed);
+        this.spCoinLogger = new logging_1.SpCoinLogger(this.spCoinContractDeployed);
+        this.spCoinReadMethods = new spCoinReadModule_1.SpCoinReadModule(this.spCoinContractDeployed);
+        this.spCoinRewardsMethods = new spCoinRewardsModule_1.SpCoinRewardsModule(this.spCoinContractDeployed);
+        this.spCoinStakingMethods = new spCoinStakingModule_1.SpCoinStakingModule(this.spCoinContractDeployed);
     }
 }
-module.exports = {
-    SpCoinAccessModules,
-    SpCoinAddModule,
-    SpCoinDeleteModule,
-    SpCoinERC20Module,
-    SpCoinLogger,
-    SpCoinReadModule,
-    SpCoinRewardsModule,
-    SpCoinStakingModule
-};
+exports.SpCoinAccessModules = SpCoinAccessModules;

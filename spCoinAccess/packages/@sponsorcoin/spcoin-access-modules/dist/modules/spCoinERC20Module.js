@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpCoinERC20Module = void 0;
 // @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js
 const { SpCoinLogger } = require("../utils/logging");
@@ -14,7 +17,4 @@ class SpCoinERC20Module {
         spCoinLogger = new SpCoinLogger(_spCoinContractDeployed);
     }
 }
-//////////////////// MODULE EXPORTS //////////////////////
-module.exports = {
-    SpCoinERC20Module
-};
+exports.SpCoinERC20Module = SpCoinERC20Module;
