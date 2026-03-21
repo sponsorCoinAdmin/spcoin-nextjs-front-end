@@ -14,10 +14,6 @@ import {
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
-/* --------------------------------- Version --------------------------------- */
-
-export const PANEL_SCHEMA_VERSION = 2;
-
 /* ------------------------------- PanelBootstrap ---------------------------- */
 
 /**

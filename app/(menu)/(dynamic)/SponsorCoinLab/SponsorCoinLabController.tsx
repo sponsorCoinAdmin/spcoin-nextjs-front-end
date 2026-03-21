@@ -3,6 +3,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import {
   ERC20_READ_OPTIONS,
   getErc20ReadLabels,
@@ -267,6 +268,7 @@ function buildMethodCallEntry(
 
 export default function SponsorCoinLabPage() {
   const { exchangeContext } = useExchangeContext();
+  const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.useLocalPackage !== false;
   const [mode, setMode] = useState<ConnectionMode>('metamask');
@@ -583,6 +585,94 @@ export default function SponsorCoinLabPage() {
     buildMethodCallEntry,
     formatOutputDisplayValue,
   });
+
+  useEffect(() => {
+    let active = true;
+    const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+    const activeContractAddress = String(contractAddress || '').trim();
+    const selectedEntry = selectedSponsorCoinVersionEntry;
+    const selectedVersion = String(
+      selectedEntry?.version || selectedSponsorCoinVersion || '',
+    ).trim();
+
+    if (!selectedEntry && !selectedVersion && !activeContractAddress) return;
+
+    setSettings((prev) => ({
+      ...prev,
+      spCoinContract: {
+        version: selectedVersion,
+        name: String(selectedEntry?.name || (selectedVersion ? `Sponsor Coin V${selectedVersion}` : '')).trim(),
+        symbol: String(selectedEntry?.symbol || (selectedVersion ? `SPCOIN_V${selectedVersion}` : '')).trim(),
+        decimals: Number(prev?.spCoinContract?.decimals ?? 18),
+        totalSypply: String(prev?.spCoinContract?.totalSypply ?? '').trim(),
+        inflationRate: Number(prev?.spCoinContract?.inflationRate ?? 0),
+        recipientRateRange: Array.isArray(prev?.spCoinContract?.recipientRateRange)
+          ? prev.spCoinContract.recipientRateRange
+          : [0, 0],
+        agentRateRange: Array.isArray(prev?.spCoinContract?.agentRateRange)
+          ? prev.spCoinContract.agentRateRange
+          : [0, 0],
+      },
+    }));
+
+    const hydrate = async () => {
+      if (!/^0[xX][a-fA-F0-9]{40}$/.test(activeContractAddress)) return;
+      if (!Number.isFinite(chainId) || chainId <= 0) return;
+      try {
+        const params = new URLSearchParams({
+          deploymentPublicKey: activeContractAddress,
+          deploymentChainId: String(chainId),
+          includeMetadata: 'true',
+        });
+        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
+        const data = (await response.json()) as {
+          ok?: boolean;
+          spCoinMetaData?: {
+            version: string;
+            name: string;
+            symbol: string;
+            decimals: number;
+            totalSypply: string;
+            inflationRate: number;
+            recipientRateRange: [number, number];
+            agentRateRange: [number, number];
+          };
+        };
+        if (!active || !response.ok || !data.ok || !data.spCoinMetaData) return;
+        setSettings((prev) => ({
+          ...prev,
+          spCoinContract: {
+            version: String(data.spCoinMetaData?.version ?? '').trim(),
+            name: String(data.spCoinMetaData?.name ?? '').trim(),
+            symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
+            decimals: Number(data.spCoinMetaData?.decimals ?? 0),
+            totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
+            inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
+            recipientRateRange: Array.isArray(data.spCoinMetaData?.recipientRateRange)
+              ? data.spCoinMetaData.recipientRateRange
+              : [0, 0],
+            agentRateRange: Array.isArray(data.spCoinMetaData?.agentRateRange)
+              ? data.spCoinMetaData.agentRateRange
+              : [0, 0],
+          },
+        }));
+      } catch {
+        // Keep the seeded SponsorCoinLab values when metadata fetch fails.
+      }
+    };
+
+    void hydrate();
+    return () => {
+      active = false;
+    };
+  }, [
+    contractAddress,
+    exchangeContext,
+    selectedSponsorCoinVersion,
+    selectedSponsorCoinVersionEntry,
+    setSettings,
+  ]);
+
   const {
     scripts,
     setScripts,

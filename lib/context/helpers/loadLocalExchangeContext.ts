@@ -70,6 +70,176 @@ function enforceSettingsDisplayStackOnly(parsed: any) {
   }
 }
 
+function migrateLegacySpCoinProperties(parsed: any) {
+  if (!parsed || typeof parsed !== 'object') return;
+
+  parsed.settings = parsed.settings ?? {};
+
+  const settingsContract =
+    parsed.settings.spCoinContract &&
+    typeof parsed.settings.spCoinContract === 'object'
+      ? parsed.settings.spCoinContract
+      : {};
+
+  const legacySettingsProps =
+    parsed.settings.spCoinProperties &&
+    typeof parsed.settings.spCoinProperties === 'object'
+      ? parsed.settings.spCoinProperties
+      : {};
+
+  const legacyRootProps =
+    parsed.spCoinProperties && typeof parsed.spCoinProperties === 'object'
+      ? parsed.spCoinProperties
+      : {};
+
+  const normalizeSpCoinVersion = (value: unknown): string => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    if (!raw.includes('::')) return raw;
+    return String(raw.split('::')[1] ?? '').trim();
+  };
+
+  parsed.settings.spCoinContract = {
+    version: normalizeSpCoinVersion(
+      settingsContract.version ??
+        legacySettingsProps.version ??
+        legacyRootProps.version ??
+        '',
+    ),
+    ...legacyRootProps,
+    ...legacySettingsProps,
+    ...settingsContract,
+    totalSypply:
+      settingsContract.totalSypply ??
+      legacySettingsProps.totalSypply ??
+      legacySettingsProps.totalSupply ??
+      legacyRootProps.totalSypply ??
+      legacyRootProps.totalSupply ??
+      '',
+  };
+
+  if ('spCoinProperties' in parsed.settings) {
+    delete parsed.settings.spCoinProperties;
+  }
+  if ('spCoinProperties' in parsed) {
+    delete parsed.spCoinProperties;
+  }
+}
+
+function seedSpCoinContractFromPageStorage(parsed: any) {
+  if (typeof window === 'undefined') return;
+  if (!parsed || typeof parsed !== 'object') return;
+
+  const normalizeSpCoinVersion = (value: unknown): string => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    if (!raw.includes('::')) return raw;
+    return String(raw.split('::')[1] ?? '').trim();
+  };
+
+  parsed.settings = parsed.settings ?? {};
+  const currentContract =
+    parsed.settings.spCoinContract &&
+    typeof parsed.settings.spCoinContract === 'object'
+      ? parsed.settings.spCoinContract
+      : {};
+
+  const currentName = String(currentContract.name ?? '').trim();
+  const currentVersion = normalizeSpCoinVersion(currentContract.version);
+  if (currentVersion !== String(currentContract.version ?? '').trim()) {
+    currentContract.version = currentVersion;
+  }
+  if (currentName || currentVersion) return;
+
+  let sponsorCoinLabSeed: {
+    version?: string;
+    name?: string;
+    symbol?: string;
+  } = {};
+  let spCoinAccessSeed: {
+    version?: string;
+    name?: string;
+    symbol?: string;
+    decimals?: number;
+  } = {};
+
+  try {
+    const rawLab = window.localStorage.getItem('spCoinLabKey');
+    if (rawLab) {
+      const parsedLab = JSON.parse(rawLab) as {
+        selectedSponsorCoinVersion?: string;
+      };
+      const version = normalizeSpCoinVersion(parsedLab?.selectedSponsorCoinVersion);
+      if (version) {
+        sponsorCoinLabSeed = {
+          version,
+          name: `Sponsor Coin V${version}`,
+          symbol: `SPCOIN_V${version}`,
+        };
+      }
+    }
+  } catch {
+    // Ignore malformed SponsorCoinLab storage payloads.
+  }
+
+  try {
+    const rawAccess = window.localStorage.getItem('spCoinAccess');
+    if (rawAccess) {
+      const parsedAccess = JSON.parse(rawAccess) as {
+        deploymentVersion?: string;
+        deploymentName?: string;
+        deploymentSymbol?: string;
+        deploymentDecimals?: string;
+      };
+      spCoinAccessSeed = {
+        version: String(parsedAccess?.deploymentVersion ?? '').trim(),
+        name: String(parsedAccess?.deploymentName ?? '').trim(),
+        symbol: String(parsedAccess?.deploymentSymbol ?? '').trim(),
+        decimals: Number(parsedAccess?.deploymentDecimals ?? 0),
+      };
+    }
+  } catch {
+    // Ignore malformed SpCoinAccess storage payloads.
+  }
+
+  const mergedSeed = {
+    version:
+      sponsorCoinLabSeed.version ??
+      spCoinAccessSeed.version ??
+      '',
+    name:
+      sponsorCoinLabSeed.name ??
+      spCoinAccessSeed.name ??
+      '',
+    symbol:
+      sponsorCoinLabSeed.symbol ??
+      spCoinAccessSeed.symbol ??
+      '',
+    decimals:
+      Number.isFinite(Number(spCoinAccessSeed.decimals)) && Number(spCoinAccessSeed.decimals) > 0
+        ? Number(spCoinAccessSeed.decimals)
+        : 18,
+  };
+
+  if (!mergedSeed.version && !mergedSeed.name && !mergedSeed.symbol) return;
+
+  parsed.settings.spCoinContract = {
+    ...currentContract,
+    version: mergedSeed.version,
+    name: mergedSeed.name,
+    symbol: mergedSeed.symbol,
+    decimals: mergedSeed.decimals,
+    totalSypply: String(currentContract.totalSypply ?? ''),
+    inflationRate: Number(currentContract.inflationRate ?? 0),
+    recipientRateRange: Array.isArray(currentContract.recipientRateRange)
+      ? currentContract.recipientRateRange
+      : [0, 0],
+    agentRateRange: Array.isArray(currentContract.agentRateRange)
+      ? currentContract.agentRateRange
+      : [0, 0],
+  };
+}
+
 export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
     // Never touch localStorage on the server
@@ -110,6 +280,8 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
 
     // ✅ Enforce canonical `.settings.displayStack` and delete any root `displayStack`
     enforceSettingsDisplayStackOnly(parsed);
+    migrateLegacySpCoinProperties(parsed);
+    seedSpCoinContractFromPageStorage(parsed);
 
     // Derive stored + effective appChainId for diagnostics
     const storedAppChainId =

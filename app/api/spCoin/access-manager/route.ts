@@ -4,8 +4,9 @@ import path from 'path';
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
-import { ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
+import { Contract, ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
 import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
+import { SpCoinReadModule } from '../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinReadModule.js';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -57,12 +58,23 @@ type AccessManagerResponse = {
   deploymentPublicKey?: string;
   deploymentAbi?: unknown[];
   deploymentBytecode?: string;
+  deploymentConstructorArgs?: unknown[];
   deploymentPrivateKey?: string;
   deploymentTxHash?: string;
   deploymentChainId?: number;
   deploymentAssetChainId?: number;
   deploymentNetworkName?: string;
   mapAdded?: boolean;
+  spCoinMetaData?: {
+    version: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    totalSypply: string;
+    inflationRate: number;
+    recipientRateRange: [number, number];
+    agentRateRange: [number, number];
+  };
   message: string;
   packages?: string[];
   workspaceRoot?: string;
@@ -75,6 +87,12 @@ type AccessManagerResponse = {
   downloadBlocked?: boolean;
   uploadBlocked?: boolean;
 };
+
+function normalizeSpCoinContractVersion(version: string): string {
+  const trimmed = String(version || '').trim();
+  if (!trimmed) return '_V001';
+  return trimmed.startsWith('_V') ? trimmed : `_V${trimmed}`;
+}
 
 type NetworkRepositoryEntry = {
   name: string;
@@ -777,7 +795,9 @@ async function deploySpCoinToChain(params: {
     optimizerRuns: network.optimizerRuns,
   });
   const factory = new ContractFactory(compiled.abi, compiled.bytecode, wallet);
-  const contract = await factory.deploy();
+  const contract = await factory.deploy(
+    normalizeSpCoinContractVersion(params.deploymentVersion),
+  );
   const deploymentTx = contract.deploymentTransaction();
   if (!deploymentTx) {
     throw new Error('Deployment transaction was not created.');
@@ -967,7 +987,10 @@ async function handleUpdateServer(params: {
   };
 }
 
-async function handlePrepareDeployArtifact(deploymentChainId?: number | string) {
+async function handlePrepareDeployArtifact(
+  deploymentChainId?: number | string,
+  deploymentVersion?: string,
+) {
   const network = await resolveDeployNetwork(deploymentChainId);
   const compiled = await compileSpCoinContract({
     solcVersion: network.solcVersion,
@@ -977,9 +1000,60 @@ async function handlePrepareDeployArtifact(deploymentChainId?: number | string) 
   return {
     deploymentAbi: compiled.abi,
     deploymentBytecode: compiled.bytecode,
+    deploymentConstructorArgs: [
+      normalizeSpCoinContractVersion(String(deploymentVersion || '').trim()),
+    ],
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
     deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(network.chainId)),
+  };
+}
+
+async function handleGetSpCoinMetaData(
+  deploymentPublicKey: string,
+  deploymentChainId?: number | string,
+) {
+  const normalizeRateRangeTuple = (value: unknown): [number, number] => {
+    if (Array.isArray(value)) {
+      return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
+    }
+    return [0, Number(value ?? 0)];
+  };
+  const network = await resolveDeployNetwork(deploymentChainId);
+  const compiled = await compileSpCoinContract({
+    solcVersion: network.solcVersion,
+    optimizerEnabled: network.optimizerEnabled,
+    optimizerRuns: network.optimizerRuns,
+  });
+  const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
+  const contract = new Contract(deploymentPublicKey, compiled.abi, provider);
+  const read = new SpCoinReadModule(contract) as {
+    getSpCoinMetaData?: () => Promise<{
+      version: string;
+      name: string;
+      symbol: string;
+      decimals: number;
+      totalSupply: string;
+      inflationRate: number;
+      recipientRateRange: [number, number];
+      agentRateRange: [number, number];
+    }>;
+  };
+
+  if (typeof read.getSpCoinMetaData !== 'function') {
+    throw new Error('SpCoin access library does not expose getSpCoinMetaData().');
+  }
+
+  const metadata = await read.getSpCoinMetaData();
+  return {
+    version: String(metadata.version ?? '').trim(),
+    name: String(metadata.name ?? '').trim(),
+    symbol: String(metadata.symbol ?? '').trim(),
+    decimals: Number(metadata.decimals ?? 0),
+    totalSypply: String(metadata.totalSupply ?? '').trim(),
+    inflationRate: Number(metadata.inflationRate ?? 0),
+    recipientRateRange: normalizeRateRangeTuple(metadata.recipientRateRange),
+    agentRateRange: normalizeRateRangeTuple(metadata.agentRateRange),
   };
 }
 
@@ -1224,6 +1298,7 @@ export async function GET(request: Request) {
     const localPathRaw = String(searchParams.get('localPath') || '').trim();
     const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
     const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
+    const includeMetadata = String(searchParams.get('includeMetadata') || '').trim().toLowerCase() === 'true';
     const packageName = String(searchParams.get('packageName') || '').trim();
     const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
     const packages = await listSponsorcoinPackages();
@@ -1261,6 +1336,9 @@ export async function GET(request: Request) {
         );
       }
       const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
+      const spCoinMetaData = includeMetadata
+        ? await handleGetSpCoinMetaData(deploymentPublicKey, deploymentChainIdRaw)
+        : undefined;
       return NextResponse.json({
         ok: true,
         message: `Token status: ${status.tokenStatus}`,
@@ -1269,6 +1347,7 @@ export async function GET(request: Request) {
         contractDirExists: status.contractDirExists,
         resolvedChainId: status.resolvedChainId,
         tokenStatus: status.tokenStatus,
+        spCoinMetaData,
       } satisfies AccessManagerResponse);
     }
 
@@ -1337,13 +1416,17 @@ export async function POST(request: Request) {
   try {
     if (action === 'prepareDeploy') {
       try {
-        const result = await handlePrepareDeployArtifact(body.deploymentChainId);
+        const result = await handlePrepareDeployArtifact(
+          body.deploymentChainId,
+          body.deploymentVersion,
+        );
         return NextResponse.json({
           ok: true,
           action,
           mode,
           deploymentAbi: result.deploymentAbi,
           deploymentBytecode: result.deploymentBytecode,
+          deploymentConstructorArgs: result.deploymentConstructorArgs,
           deploymentChainId: result.deploymentChainId,
           deploymentAssetChainId: result.deploymentAssetChainId,
           deploymentNetworkName: result.deploymentNetworkName,

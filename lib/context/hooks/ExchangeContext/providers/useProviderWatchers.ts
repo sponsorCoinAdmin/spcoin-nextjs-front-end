@@ -10,6 +10,7 @@ import type {
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/utils/network';
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { getPreferredSpCoinContractAddress } from '@/lib/spCoin/coreUtils';
 
 // ✅ SSOT account hydration
 import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
@@ -87,6 +88,125 @@ type Params = {
   accountStatus?: string;
 };
 
+type SpCoinContractMetaData = {
+  version: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSypply: string;
+  inflationRate: number;
+  recipientRateRange: [number, number];
+  agentRateRange: [number, number];
+};
+
+function normalizeRateRangeTuple(value: unknown): [number, number] {
+  if (Array.isArray(value)) {
+    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
+  }
+  return [0, Number(value ?? 0)];
+}
+
+function getPersistedSpCoinAccessAddress(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = window.localStorage.getItem('spCoinAccess');
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as {
+      deployedContractAddress?: string;
+      deploymentPublicKey?: string;
+    };
+    const nextAddress = String(
+      parsed?.deployedContractAddress ?? parsed?.deploymentPublicKey ?? '',
+    ).trim();
+    return /^0x[a-fA-F0-9]{40}$/.test(nextAddress) ? nextAddress : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function getPersistedSponsorCoinLabAddress(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = window.localStorage.getItem('spCoinLabKey');
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as {
+      contractAddress?: string;
+    };
+    const nextAddress = String(parsed?.contractAddress ?? '').trim();
+    return /^0x[a-fA-F0-9]{40}$/.test(nextAddress) ? nextAddress : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function getPersistedSpCoinAccessContractSeed():
+  | {
+      version: string;
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
+  | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = window.localStorage.getItem('spCoinAccess');
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as {
+      deploymentName?: string;
+      deploymentSymbol?: string;
+      deploymentDecimals?: string;
+      deploymentVersion?: string;
+    };
+    const version = String(parsed?.deploymentVersion ?? '').trim();
+    const name = String(parsed?.deploymentName ?? '').trim();
+    const symbol = String(parsed?.deploymentSymbol ?? '').trim();
+    const decimals = Number(parsed?.deploymentDecimals ?? 0);
+    if (!version && !name && !symbol && !Number.isFinite(decimals)) {
+      return undefined;
+    }
+    return {
+      version,
+      name,
+      symbol,
+      decimals: Number.isFinite(decimals) ? decimals : 0,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function getPersistedSponsorCoinLabContractSeed():
+  | {
+      version: string;
+      name: string;
+      symbol: string;
+    }
+  | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const normalizeSpCoinVersion = (value: unknown): string => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    if (!raw.includes('::')) return raw;
+    return String(raw.split('::')[1] ?? '').trim();
+  };
+  try {
+    const raw = window.localStorage.getItem('spCoinLabKey');
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as {
+      selectedSponsorCoinVersion?: string;
+    };
+    const version = normalizeSpCoinVersion(parsed?.selectedSponsorCoinVersion);
+    if (!version) return undefined;
+    return {
+      version,
+      name: `Sponsor Coin V${version}`,
+      symbol: `SPCOIN_V${version}`,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 /* --------------------------- main hook logic --------------------------- */
 
 export function useProviderWatchers({
@@ -109,6 +229,7 @@ export function useProviderWatchers({
 
   const isFirstWagmiRunRef = useRef(true);
   const isFirstCtxRunRef = useRef(true);
+  const spCoinMetaKeyRef = useRef<string>('');
 
   /* ---------------- wagmi chain watcher (wallet-driven) ---------------- */
   useEffect(() => {
@@ -266,6 +387,128 @@ export function useProviderWatchers({
     };
     // NOTE: include `address` so the stale-write guard sees latest
   }, [address, accountStatus, isConnected, contextState, setExchangeContext]);
+
+  /* -------------------- spCoin contract metadata hydration ------------------- */
+  useEffect(() => {
+    if (!contextState) return;
+
+    const currentMeta = contextState.settings?.spCoinContract;
+    const currentName = String(currentMeta?.name ?? '').trim();
+    const currentVersion = String(currentMeta?.version ?? '').trim();
+    const persistedLabSeed = getPersistedSponsorCoinLabContractSeed();
+    const persistedAccessSeed = getPersistedSpCoinAccessContractSeed();
+    const persistedSeed = persistedLabSeed
+      ? {
+          version: persistedLabSeed.version,
+          name: persistedLabSeed.name,
+          symbol: persistedLabSeed.symbol,
+          decimals: persistedAccessSeed?.decimals ?? 18,
+        }
+      : persistedAccessSeed;
+
+    if ((currentName.length === 0 || currentVersion.length === 0) && persistedSeed) {
+      setExchangeContext(
+        (prevCtx) => {
+          const next = clone(prevCtx);
+          const prevContract = next.settings?.spCoinContract;
+          const prevName = String(prevContract?.name ?? '').trim();
+          const prevVersion = String(prevContract?.version ?? '').trim();
+          if (prevName.length > 0 && prevVersion.length > 0) return next;
+          next.settings = next.settings ?? ({} as any);
+          next.settings.spCoinContract = {
+            version: persistedSeed.version,
+            name: persistedSeed.name,
+            symbol: persistedSeed.symbol,
+            decimals: persistedSeed.decimals,
+            totalSypply: String(prevContract?.totalSypply ?? '').trim(),
+            inflationRate: Number(prevContract?.inflationRate ?? 0),
+            recipientRateRange: normalizeRateRangeTuple(prevContract?.recipientRateRange),
+            agentRateRange: normalizeRateRangeTuple(prevContract?.agentRateRange),
+          };
+          return next;
+        },
+        'watcher:spCoinMetaData:seedFromStorage',
+      );
+    }
+
+    const appChainIdNum = Number(
+      contextState.network?.appChainId ?? contextState.network?.chainId ?? 0,
+    );
+    const persistedLabAddress = getPersistedSponsorCoinLabAddress();
+    const persistedSpCoinAddress = getPersistedSpCoinAccessAddress();
+    const preferredTradeSpCoinAddress = getPreferredSpCoinContractAddress(
+      appChainIdNum,
+      contextState.tradeData,
+    );
+    const targetAddress =
+      persistedLabAddress ??
+      persistedSpCoinAddress ??
+      preferredTradeSpCoinAddress;
+    if (!targetAddress) return;
+
+    const metaKey = `${appChainIdNum}:${targetAddress.toLowerCase()}`;
+    const shouldHydrate =
+      currentName.length === 0 ||
+      currentVersion.length === 0 ||
+      spCoinMetaKeyRef.current !== metaKey;
+
+    if (!shouldHydrate) return;
+
+    let cancelled = false;
+    spCoinMetaKeyRef.current = metaKey;
+
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          deploymentPublicKey: targetAddress,
+          deploymentChainId: String(appChainIdNum),
+          includeMetadata: 'true',
+        });
+        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+          method: 'GET',
+        });
+        const data = (await response.json()) as {
+          ok?: boolean;
+          spCoinMetaData?: SpCoinContractMetaData;
+        };
+        if (!response.ok || !data.ok || !data.spCoinMetaData || cancelled) return;
+
+        setExchangeContext(
+          (prevCtx) => {
+            const next = clone(prevCtx);
+            next.settings = next.settings ?? ({} as any);
+            next.settings.spCoinContract = {
+              version: String(data.spCoinMetaData?.version ?? '').trim(),
+              name: String(data.spCoinMetaData?.name ?? '').trim(),
+              symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
+              decimals: Number(data.spCoinMetaData?.decimals ?? 0),
+              totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
+              inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
+              recipientRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.recipientRateRange),
+              agentRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.agentRateRange),
+            };
+            return next;
+          },
+          'watcher:spCoinMetaData:hydrate',
+        );
+      } catch {
+        // Ignore transient metadata hydration errors and retry on the next key change.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    contextState,
+    contextState?.network?.appChainId,
+    contextState?.network?.chainId,
+    contextState?.tradeData?.buyTokenContract?.address,
+    contextState?.tradeData?.sellTokenContract?.address,
+    contextState?.settings?.spCoinContract?.name,
+    contextState?.settings?.spCoinContract?.version,
+    setExchangeContext,
+  ]);
 
   /* ---------- tokens watcher (dedupe + auto-close selection UI) --------- */
   useEffect(() => {

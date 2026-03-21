@@ -19,7 +19,8 @@ contract SpCoinDataTypes {
     // **Standard ERC20 contract Variables
     string  public name;
     string  public symbol;
-    string  public version = "_V001";
+    string  internal defaultVersion     = "_V001";
+    string  internal version;
     uint256 public decimals;
     uint256 public initialTotalSupply = defaultTSPCoinSupply * (10 ** defaultDecimals);
     uint256 public totalSupply;

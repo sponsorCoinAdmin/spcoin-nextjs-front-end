@@ -150,6 +150,77 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
   );
 }
 
+function normalizeRateRangeTuple(value: unknown): [number, number] {
+  if (Array.isArray(value)) {
+    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
+  }
+  return [0, Number(value ?? 0)];
+}
+
+function normalizeSpCoinVersion(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (!raw.includes('::')) return raw;
+  return String(raw.split('::')[1] ?? '').trim();
+}
+
+function sanitizeSpCoinContractSettings(
+  raw: Partial<ExchangeContext> | null,
+  prevSettings: any,
+  sanitizedSettings: any,
+) {
+  const settingsContract =
+    prevSettings?.spCoinContract && typeof prevSettings.spCoinContract === 'object'
+      ? prevSettings.spCoinContract
+      : {};
+
+  const legacySettingsProps =
+    prevSettings?.spCoinProperties && typeof prevSettings.spCoinProperties === 'object'
+      ? prevSettings.spCoinProperties
+      : {};
+
+  const legacyRootProps =
+    raw && typeof (raw as any).spCoinProperties === 'object'
+      ? (raw as any).spCoinProperties
+      : {};
+
+  const merged = {
+    ...legacyRootProps,
+    ...legacySettingsProps,
+    ...settingsContract,
+  } as Record<string, unknown>;
+
+  sanitizedSettings.spCoinContract = {
+    version: normalizeSpCoinVersion(
+      merged.version ?? sanitizedSettings.spCoinContract?.version ?? '',
+    ),
+    name: String(merged.name ?? sanitizedSettings.spCoinContract?.name ?? ''),
+    symbol: String(merged.symbol ?? sanitizedSettings.spCoinContract?.symbol ?? ''),
+    decimals: Number(
+      merged.decimals ?? sanitizedSettings.spCoinContract?.decimals ?? 0,
+    ),
+    totalSypply: String(
+      merged.totalSypply ??
+        merged.totalSupply ??
+        sanitizedSettings.spCoinContract?.totalSypply ??
+        '',
+    ),
+    inflationRate: Number(
+      merged.inflationRate ?? sanitizedSettings.spCoinContract?.inflationRate ?? 0,
+    ),
+    recipientRateRange: normalizeRateRangeTuple(
+      merged.recipientRateRange ??
+        sanitizedSettings.spCoinContract?.recipientRateRange ??
+        0,
+    ),
+    agentRateRange: normalizeRateRangeTuple(
+      merged.agentRateRange ?? sanitizedSettings.spCoinContract?.agentRateRange ?? 0,
+    ),
+  };
+
+  delete sanitizedSettings.spCoinProperties;
+}
+
 function normalizeAccountLogoList(
   list: unknown,
 ): spCoinAccount[] {
@@ -199,6 +270,7 @@ export const sanitizeExchangeContext = (
   // ✅ enforce single source of truth for displayStack (settings only)
   sanitizeDisplayStack(raw as any, sanitizedSettings);
   sanitizeTestPageSettings(prevSettings, sanitizedSettings);
+  sanitizeSpCoinContractSettings(raw, prevSettings, sanitizedSettings);
 
   // Preserve persisted panel state if it looks like either the new tree or the old array
   const mpn = prevSettings.spCoinPanelTree;

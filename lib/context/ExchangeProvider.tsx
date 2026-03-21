@@ -39,7 +39,6 @@ import { useWagmiReady } from '@/lib/network/initialize/hooks/useWagmiReady';
 
 // panel helpers + PanelBootstrap
 import {
-  PANEL_SCHEMA_VERSION,
   PanelBootstrap,
   repairPanels,
   dropNonPersisted,
@@ -286,6 +285,64 @@ const normalizeSettingsDisplayStack = (ctx: any) => {
   ctx.settings.displayStack = nodes;
 };
 
+const stripLegacySpCoinProperties = (ctx: any) => {
+  if (!ctx || typeof ctx !== 'object') return;
+
+  const normalizeSpCoinVersion = (value: unknown): string => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    if (!raw.includes('::')) return raw;
+    return String(raw.split('::')[1] ?? '').trim();
+  };
+
+  ctx.settings = ctx.settings ?? {};
+
+  const currentContract =
+    ctx.settings.spCoinContract && typeof ctx.settings.spCoinContract === 'object'
+      ? ctx.settings.spCoinContract
+      : {};
+
+  const legacySettingsProps =
+    ctx.settings.spCoinProperties &&
+    typeof ctx.settings.spCoinProperties === 'object'
+      ? ctx.settings.spCoinProperties
+      : {};
+
+  const legacyRootProps =
+    ctx.spCoinProperties && typeof ctx.spCoinProperties === 'object'
+      ? ctx.spCoinProperties
+      : {};
+
+  ctx.settings.spCoinContract = {
+    version: normalizeSpCoinVersion(
+      currentContract.version ??
+        legacySettingsProps.version ??
+        legacyRootProps.version ??
+        '',
+    ),
+    ...legacyRootProps,
+    ...legacySettingsProps,
+    ...currentContract,
+    totalSypply:
+      currentContract.totalSypply ??
+      legacySettingsProps.totalSypply ??
+      legacySettingsProps.totalSupply ??
+      legacyRootProps.totalSypply ??
+      legacyRootProps.totalSupply ??
+      '',
+  };
+  ctx.settings.spCoinContract.version = normalizeSpCoinVersion(
+    ctx.settings.spCoinContract.version,
+  );
+
+  if ('spCoinProperties' in ctx.settings) {
+    delete ctx.settings.spCoinProperties;
+  }
+  if ('spCoinProperties' in ctx) {
+    delete ctx.spCoinProperties;
+  }
+};
+
 /**
  * Cold-boot fallback:
  * Build displayStack from visible panels + CHILDREN hierarchy.
@@ -399,6 +456,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       // ✅ enforce single source of truth: settings.displayStack only
       enforceSettingsDisplayStackOnly(nextBase as any);
       normalizeSettingsDisplayStack(nextBase as any);
+      stripLegacySpCoinProperties(nextBase as any);
 
       const nextStr = stringifyBigInt(nextBase);
       if (prevStr === nextStr) {
@@ -406,10 +464,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           const normalized = clone(nextBase);
           enforceSettingsDisplayStackOnly(normalized as any);
           normalizeSettingsDisplayStack(normalized as any);
-          (normalized as any).settings = {
-            ...(normalized as any).settings,
-            spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
-          };
+          stripLegacySpCoinProperties(normalized as any);
           persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
         }
 
@@ -424,11 +479,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const normalized = clone(nextBase);
       enforceSettingsDisplayStackOnly(normalized as any);
       normalizeSettingsDisplayStack(normalized as any);
-
-      (normalized as any).settings = {
-        ...(normalized as any).settings,
-        spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
-      };
+      stripLegacySpCoinProperties(normalized as any);
 
       persistWithOptDiff(prev, normalized, 'ExchangeContext.settings');
 
@@ -547,7 +598,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         // ✅ Persist with stable names so tree viewers never show blank rows.
         spCoinPanelTree: ensurePanelNamesInMemory(flatPanels),
         displayStack: chosenNodes,
-        spCoinPanelSchemaVersion: PANEL_SCHEMA_VERSION,
       };
 
       const net = ensureNetwork((base as any).network);
@@ -559,6 +609,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       // ✅ guarantee no root displayStack before persisting / storing
       enforceSettingsDisplayStackOnly(base as any);
       normalizeSettingsDisplayStack(base as any);
+      stripLegacySpCoinProperties(base as any);
 
       persistWithOptDiff(
         undefined,
@@ -568,6 +619,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       // ✅ store in state without root displayStack
       enforceSettingsDisplayStackOnly(base as any);
+      stripLegacySpCoinProperties(base as any);
 
       setContextState(base as ExchangeContextTypeOnly);
     })();

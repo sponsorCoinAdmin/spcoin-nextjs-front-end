@@ -12,6 +12,20 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
 
+function normalizeRateRangeTuple(value: unknown): [number, number] {
+  if (Array.isArray(value)) {
+    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
+  }
+  return [0, Number(value ?? 0)];
+}
+
+function normalizeSpCoinVersion(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (!raw.includes('::')) return raw;
+  return String(raw.split('::')[1] ?? '').trim();
+}
+
 /** Normalize MAIN_RADIO_OVERLAY_PANELS visibility:
  *  - If 0 overlays visible: do nothing (allow empty)
  *  - If 1 overlay visible: do nothing
@@ -184,16 +198,21 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
 
     // Normalize displayStack to nodes (do NOT derive here; Provider/persist handles seeding)
     settings.displayStack = normalizeDisplayStackNodes(settings.displayStack);
-    settings.spCoinProperties = {
-      inflationRate: Number(settings.spCoinProperties?.inflationRate ?? 0),
+    settings.spCoinContract = {
+      version: normalizeSpCoinVersion(settings.spCoinContract?.version ?? ''),
+      name: String(settings.spCoinContract?.name ?? ''),
+      symbol: String(settings.spCoinContract?.symbol ?? ''),
+      decimals: Number(settings.spCoinContract?.decimals ?? 0),
+      totalSypply: String(settings.spCoinContract?.totalSypply ?? ''),
+      inflationRate: Number(settings.spCoinContract?.inflationRate ?? 0),
+      recipientRateRange: normalizeRateRangeTuple(settings.spCoinContract?.recipientRateRange),
+      agentRateRange: normalizeRateRangeTuple(settings.spCoinContract?.agentRateRange),
     };
+    delete (settings as { spCoinProperties?: unknown }).spCoinProperties;
+    delete (settings as { spCoinPanelSchemaVersion?: unknown }).spCoinPanelSchemaVersion;
 
-    // Reassign cleaned settings, optionally bump schema
+    // Reassign cleaned settings
     settings.spCoinPanelTree = flatTree;
-    settings.spCoinPanelSchemaVersion = Math.max(
-      3,
-      Number(settings.spCoinPanelSchemaVersion ?? 0),
-    );
 
     parsed.settings = settings;
     // ----------------------------------------------------------------------

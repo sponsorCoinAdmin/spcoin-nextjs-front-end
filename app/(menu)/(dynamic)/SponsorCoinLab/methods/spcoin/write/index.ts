@@ -42,7 +42,8 @@ export type SpCoinWriteMethod =
   | 'setRecipientRateRange'
   | 'setLowerAgent'
   | 'setUpperAgent'
-  | 'setAgentRateRange';
+  | 'setAgentRateRange'
+  | 'setVersion';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'setInflationRate',
@@ -52,6 +53,7 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'setLowerAgent',
   'setUpperAgent',
   'setAgentRateRange',
+  'setVersion',
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [

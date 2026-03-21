@@ -177,14 +177,6 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    */
   const isDisplayStackItem = /(\.(?:settings\.)?displayStack\.\d+$)/.test(path);
 
-  /**
-   * ✅ Auto-expand the displayStack container when it exists
-   * Support BOTH:
-   *  - .settings.displayStack
-   *  - .displayStack
-   */
-  const isDisplayStackContainer = /(\.(?:settings\.)?displayStack$)/.test(path);
-
   // Treat any array labeled exactly 'children' as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
 
@@ -234,9 +226,6 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         expanded = (guiValue as any)?.visible === true;
       } else if (isChildrenContainer) {
         expanded = true;
-      } else if (isDisplayStackContainer) {
-        // ✅ keep displayStack open so you always see items
-        expanded = true;
       } else {
         expanded = !!exp[path];
       }
@@ -260,7 +249,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         openPanel(panelId as any, invoker);
         ensureOpen(path);
         ensureOpen(`${path}.children`);
-      } else if (hasEntries && !isDisplayStackContainer) {
+      } else if (hasEntries) {
         togglePath(path);
       }
     };
@@ -317,7 +306,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           path={path}
           depth={depth}
           open={hasEntries ? (isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) : undefined}
-          clickable={isPanelArrayItem || (hasEntries && !isDisplayStackContainer)}
+          clickable={isPanelArrayItem || hasEntries}
           onClick={onRowClick}
           dense={dense}
         />

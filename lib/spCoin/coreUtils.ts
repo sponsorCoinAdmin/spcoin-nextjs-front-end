@@ -50,6 +50,46 @@ const spCoinAddressSetsByChain = (() => {
   return byChain;
 })();
 
+const spCoinAddressListsByChain = (() => {
+  const deploymentMap = (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {};
+  const byChain = new Map<number, string[]>();
+
+  const addAddress = (chainId: number, address: string) => {
+    if (!Number.isFinite(chainId) || chainId <= 0) return;
+    try {
+      const normalizedAddress = getAddress(normalizeAddress(address));
+      const existing = byChain.get(chainId) ?? [];
+      if (!existing.includes(normalizedAddress)) {
+        existing.push(normalizedAddress);
+        byChain.set(chainId, existing);
+      }
+    } catch {
+      // Ignore invalid deployment-map addresses.
+    }
+  };
+
+  const visitAddressNode = (chainId: number, node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    for (const [address, entry] of Object.entries(node as Record<string, unknown>)) {
+      if (/^0[xX][0-9a-fA-F]{40}$/.test(address)) {
+        addAddress(chainId, address);
+        continue;
+      }
+      if (entry && typeof entry === 'object') {
+        visitAddressNode(chainId, entry);
+      }
+    }
+  };
+
+  for (const [chainIdKey, chainNode] of Object.entries(deploymentMap.chainId ?? {})) {
+    const chainId = Number(chainIdKey);
+    if (!Number.isFinite(chainId) || !chainNode || typeof chainNode !== 'object') continue;
+    visitAddressNode(chainId, chainNode);
+  }
+
+  return byChain;
+})();
+
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
  */
@@ -202,6 +242,30 @@ const isSellSpCoin = (tradeData: TradeDataLike | undefined): boolean =>
 const isBuySpCoin = (tradeData: TradeDataLike | undefined): boolean =>
   isSpCoin(tradeData?.buyTokenContract);
 
+const getPreferredSpCoinContractAddress = (
+  chainId: number | undefined,
+  tradeData?: TradeDataLike,
+): string | undefined => {
+  const preferredTradeToken = isBuySpCoin(tradeData)
+    ? tradeData?.buyTokenContract
+    : isSellSpCoin(tradeData)
+    ? tradeData?.sellTokenContract
+    : undefined;
+
+  if (preferredTradeToken?.address) {
+    try {
+      return getAddress(normalizeAddress(preferredTradeToken.address));
+    } catch {
+      // Fall through to deployment map selection.
+    }
+  }
+
+  const chainIdNum = Number(chainId ?? 0);
+  if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) return undefined;
+  const addresses = spCoinAddressListsByChain.get(chainIdNum) ?? [];
+  return addresses.length > 0 ? addresses[addresses.length - 1] : undefined;
+};
+
 /**
  * Convert between different token decimals using a bigint shift.
  */
@@ -256,6 +320,7 @@ export {
   isSpCoin,
   isSellSpCoin,
   isBuySpCoin,
+  getPreferredSpCoinContractAddress,
   bigIntDecimalShift,
   decimalAdjustTokenAmount,
   invalidTokenContract,

@@ -117,8 +117,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
     push('apiTradingProvider', realSettings.apiTradingProvider);
     push('NPM_Source', realSettings.NPM_Source);
     push('showTestNets', realSettings.showTestNets);
-    push('spCoinPanelSchemaVersion', realSettings.spCoinPanelSchemaVersion);
-    push('spCoinProperties', realSettings.spCoinProperties);
+    push('spCoinContract', realSettings.spCoinContract);
     push('spCoinPanelTree', treeWithNames);
     push('displayStack', realSettings.displayStack);
     push('spCoinAccessManager', realSettings.spCoinAccessManager);
@@ -127,7 +126,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
     const included = new Set(Object.keys(ordered));
     for (const [key, value] of Object.entries(realSettings)) {
-      if (!included.has(key)) {
+      if (!included.has(key) && key !== 'spCoinPanelSchemaVersion') {
         ordered[key] = value;
       }
     }

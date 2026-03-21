@@ -11,6 +11,7 @@ export type SpCoinReadMethod =
   | 'getInflationRate'
   | 'calculateStakingRewards'
   | 'creationTime'
+  | 'getSpCoinMetaData'
   | 'getSPCoinHeaderRecord'
   | 'getAccountList'
   | 'getAccountListSize'
@@ -58,7 +59,7 @@ export type SpCoinReadMethod =
   | 'totalBalanceOf'
   | 'totalStakedSPCoins'
   | 'totalStakingRewards'
-  | 'version';
+  | 'getVersion';
 
 export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [
   'getSerializedSPCoinHeader',
@@ -70,7 +71,8 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [
   'getSerializedRateTransactionList',
 ];
 
-const LEGACY_READ_METHOD_RENAMES: Partial<Record<SpCoinReadMethod, SpCoinReadMethod>> = {
+const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
+  version: 'getVersion',
   getSerializedSPCoinHeader: 'getSPCoinHeaderRecord',
   getSerializedAccountRecord: 'getAccountRecord',
   getSerializedAccountRewards: 'getAccountStakingRewards',

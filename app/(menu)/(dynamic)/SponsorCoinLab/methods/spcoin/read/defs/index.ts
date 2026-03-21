@@ -6,6 +6,7 @@ import creationTime from './creationTime';
 import getAccountList from './getAccountList';
 import getAccountListSize from './getAccountListSize';
 import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
+import getSpCoinMetaData from './getSpCoinMetaData';
 import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getSerializedAccountRecord from './getSerializedAccountRecord';
@@ -50,7 +51,7 @@ import getMillenniumTimeIntervalDivisor from './getMillenniumTimeIntervalDivisor
 import totalBalanceOf from './totalBalanceOf';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
-import version from './version';
+import getVersion from './version';
 
 export const SPCOIN_READ_METHOD_DEFS = {
   getSerializedSPCoinHeader,
@@ -60,6 +61,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountList,
   getAccountListSize,
   getSPCoinHeaderRecord,
+  getSpCoinMetaData,
   getAccountRecipientList,
   getAccountRecipientListSize,
   getSerializedAccountRecord,
@@ -104,5 +106,5 @@ export const SPCOIN_READ_METHOD_DEFS = {
   totalBalanceOf,
   totalStakedSPCoins,
   totalStakingRewards,
-  version,
+  getVersion,
 };

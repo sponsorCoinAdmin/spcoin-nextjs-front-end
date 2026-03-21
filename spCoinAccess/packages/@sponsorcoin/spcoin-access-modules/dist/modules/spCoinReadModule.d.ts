@@ -12,6 +12,16 @@ export declare class SpCoinReadModule {
     getAccountRateRecordList: (rateRewardList: string[]) => RewardRateStruct[];
     getRateTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
     getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
+    getSpCoinMetaData: () => Promise<{
+        version: string;
+        name: string;
+        symbol: string;
+        decimals: number;
+        totalSupply: string;
+        inflationRate: number;
+        recipientRateRange: [number, number];
+        agentRateRange: [number, number];
+    }>;
     getAccountRecords: () => Promise<AccountStruct[]>;
     getAgentRateList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<(string | number | bigint)[]>;
     getAgentRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;

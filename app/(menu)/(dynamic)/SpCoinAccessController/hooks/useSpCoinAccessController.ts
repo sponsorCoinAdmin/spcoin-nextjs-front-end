@@ -172,6 +172,7 @@ type ManagerResponse = {
   deploymentPublicKey?: string;
   deploymentAbi?: unknown[];
   deploymentBytecode?: string;
+  deploymentConstructorArgs?: unknown[];
   deploymentChainId?: number;
   deploymentNetworkName?: string;
   mapAdded?: boolean;
@@ -218,6 +219,24 @@ type SpCoinAccessStorage = {
   deploymentPublicKey?: string;
   localSourceDeploymentPath: string;
 };
+
+type SpCoinContractMetaData = {
+  version: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSypply: string;
+  inflationRate: number;
+  recipientRateRange: [number, number];
+  agentRateRange: [number, number];
+};
+
+function normalizeRateRangeTuple(value: unknown): [number, number] {
+  if (Array.isArray(value)) {
+    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
+  }
+  return [0, Number(value ?? 0)];
+}
 
 export function useSpCoinAccessController() {
   const router = useRouter();
@@ -588,6 +607,7 @@ export function useSpCoinAccessController() {
           body: JSON.stringify({
             action: 'prepareDeploy',
             deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+            deploymentVersion: normalizedVersion,
           }),
         });
         const prepareData = await parseManagerResponse(prepareResponse);
@@ -610,7 +630,11 @@ export function useSpCoinAccessController() {
           String(prepareData.deploymentBytecode),
           activeEthersSigner,
         );
-        const contract = await factory.deploy();
+        const contract = await factory.deploy(
+          ...(Array.isArray(prepareData.deploymentConstructorArgs)
+            ? prepareData.deploymentConstructorArgs
+            : []),
+        );
         const deploymentTx = contract.deploymentTransaction();
         if (!deploymentTx) {
           throw new Error('Deployment transaction was not created.');
@@ -1051,6 +1075,74 @@ export function useSpCoinAccessController() {
       active = false;
     };
   }, [deployedContractAddress, rawDeploymentChainId]);
+
+  useEffect(() => {
+    let active = true;
+    const hydrateExchangeSpCoinContract = async () => {
+      const key = String(deployedContractAddress || '').trim();
+      const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+
+      if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) return;
+      if (!Number.isFinite(chainId) || chainId <= 0) return;
+
+      setSettings((prev) => ({
+        ...prev,
+        spCoinContract: {
+          version: String(prev?.spCoinContract?.version || deploymentVersion || '').trim(),
+          name: String(prev?.spCoinContract?.name || deploymentName || '').trim(),
+          symbol: String(prev?.spCoinContract?.symbol || deploymentSymbol || '').trim(),
+          decimals: Number(prev?.spCoinContract?.decimals ?? Number(deploymentDecimals || 0)),
+          totalSypply: String(prev?.spCoinContract?.totalSypply || '').trim(),
+          inflationRate: Number(prev?.spCoinContract?.inflationRate ?? 0),
+          recipientRateRange: normalizeRateRangeTuple(prev?.spCoinContract?.recipientRateRange),
+          agentRateRange: normalizeRateRangeTuple(prev?.spCoinContract?.agentRateRange),
+        },
+      }));
+
+      try {
+        const params = new URLSearchParams({
+          deploymentPublicKey: key,
+          deploymentChainId: String(chainId),
+          includeMetadata: 'true',
+        });
+        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
+        const data = await parseManagerResponse(response) as {
+          ok?: boolean;
+          spCoinMetaData?: SpCoinContractMetaData;
+        };
+        if (!active || !response.ok || !data.ok || !data.spCoinMetaData) return;
+
+        setSettings((prev) => ({
+          ...prev,
+          spCoinContract: {
+            version: String(data.spCoinMetaData?.version ?? '').trim(),
+            name: String(data.spCoinMetaData?.name ?? '').trim(),
+            symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
+            decimals: Number(data.spCoinMetaData?.decimals ?? 0),
+            totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
+            inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
+            recipientRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.recipientRateRange),
+            agentRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.agentRateRange),
+          },
+        }));
+      } catch {
+        // Keep the seeded controller values when metadata fetch fails.
+      }
+    };
+    void hydrateExchangeSpCoinContract();
+    return () => {
+      active = false;
+    };
+  }, [
+    deployedContractAddress,
+    deploymentDecimals,
+    deploymentName,
+    deploymentSymbol,
+    deploymentVersion,
+    exchangeContext,
+    rawDeploymentChainId,
+    setSettings,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedStorageRef.current || typeof window === 'undefined') return;

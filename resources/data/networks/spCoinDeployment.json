@@ -154,6 +154,22 @@
             "symbol": "SPCOIN_V2.0.4",
             "decimals": 18
           }
+        },
+        "2.0.5": {
+          "0X3C54224E9D0D778111ADD8838432DB23632C4E91": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V2.0.5",
+            "symbol": "SPCOIN_V2.0.5",
+            "decimals": 18
+          }
+        },
+        "2.0.6": {
+          "0X2A4FEFC9B4AAFA4CAB1A07B537ECB9A4A09C3A81": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V2.0.6",
+            "symbol": "SPCOIN_V2.0.6",
+            "decimals": 18
+          }
         }
       },
       "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba": {

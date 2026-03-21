@@ -17,6 +17,11 @@ async function readAnnualInflation(contract: any) {
 }
 
 export async function buildSerializedSPCoinHeader(contract: any) {
+  const versionFn = typeof contract?.getVersion === 'function' ? contract.getVersion.bind(contract) : null;
+  if (!versionFn) {
+    throw new Error('SpCoin contract does not expose getVersion().');
+  }
+
   const [
     name,
     creationTime,
@@ -40,7 +45,7 @@ export async function buildSerializedSPCoinHeader(contract: any) {
     contract.totalStakingRewards(),
     contract.totalStakedSPCoins(),
     contract.symbol(),
-    contract.version(),
+    versionFn(),
   ]);
 
   return [

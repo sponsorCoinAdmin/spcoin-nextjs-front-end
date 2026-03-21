@@ -21,12 +21,6 @@ export interface ExchangeContextWithPanels {
   spCoinPanelTree: SpCoinPanelTree;
 
   /**
-   * Optional schema version for migrations of the persisted flat list.
-   * Bump when persistence/migration behavior changes.
-   */
-  spCoinPanelSchemaVersion?: number;
-
-  /**
    * RUNTIME-ONLY: Expanded tree used by the UI (names + transient children).
    * Never persist this — it’s derived each boot/write from `spCoinPanelTree`.
    */
