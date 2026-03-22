@@ -78,7 +78,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
       <div
-        className="relative mb-4 border-b border-slate-700 pb-3"
+        className="relative mb-4"
         onDoubleClick={onToggleExpand}
         title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
       >

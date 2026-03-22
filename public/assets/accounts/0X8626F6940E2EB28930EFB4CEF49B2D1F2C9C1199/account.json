@@ -1,8 +1,13 @@
-{
-  "address": "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199",
-  "name": "HH 19 Help Buy My Bike",
-  "symbol": "HH_BASE_19",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199",
+    "name":  "HH 19 Help Buy My Bike",
+    "symbol":  "HH_BASE_19",
+    "email":  "",
+    "website":  "",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }
+

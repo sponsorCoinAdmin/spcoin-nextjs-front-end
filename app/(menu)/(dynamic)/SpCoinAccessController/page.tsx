@@ -15,10 +15,10 @@ export default function SpCoinAccessControllerPage() {
 
   return (
     <main
-      className="relative box-border flex w-full flex-col overflow-hidden bg-[#0B1020] px-6 pt-6 text-white"
+      className="relative box-border flex w-full flex-col overflow-hidden bg-[#0B1020] px-6 pt-3 text-white"
       style={{ height: `calc(100dvh - ${controller.chromeHeight}px)` }}
     >
-      <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
+      <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
         <div />
         <h1 className="text-center text-2xl font-bold text-[#5981F3]">SpCoin Access Controller</h1>
         <div className="flex items-center justify-self-end gap-2">

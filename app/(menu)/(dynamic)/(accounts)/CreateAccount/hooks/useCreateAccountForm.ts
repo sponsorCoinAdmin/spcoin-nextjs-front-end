@@ -41,6 +41,10 @@ type Params = {
   runWithWalletAction: RunWithWalletAction;
 };
 
+function isAddress(value: string): boolean {
+  return /^0[xX][0-9a-fA-F]{40}$/.test(String(value ?? '').trim());
+}
+
 export function useCreateAccountForm({
   connected,
   activeAddress,
@@ -58,6 +62,9 @@ export function useCreateAccountForm({
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [resolvedAccountAddress, setResolvedAccountAddress] = useState<string>('');
+  const [invalidAddressPopupPreviousAddress, setInvalidAddressPopupPreviousAddress] =
+    useState<string | null>(null);
   const [, setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
@@ -83,13 +90,16 @@ export function useCreateAccountForm({
 
     const abortController = new AbortController();
 
-    const loadConnectedAccount = async () => {
+    const hydrateAccount = async () => {
       setIsLoadingAccount(true);
       try {
-        const record = (await loadAccountRecord(
-          String(activeAddress),
-        )) as AccountRegistryRecord;
+        const normalizedAddress = normalizeAddress(String(activeAddress));
+        const record = (await loadAccountRecord(normalizedAddress, {
+          forceRefresh: true,
+          signal: abortController.signal,
+        })) as AccountRegistryRecord;
         if (abortController.signal.aborted) return;
+
         const resolvedLogoURL = ensureAbsoluteAssetURL(
           String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
         );
@@ -101,8 +111,19 @@ export function useCreateAccountForm({
           website: typeof record.website === 'string' ? record.website : '',
           description:
             typeof record.description === 'string' ? record.description : '',
+          recipientNetwork: Array.isArray((record as any)?.recipientNetwork)
+            ? Array.from(
+                new Set(
+                  ((record as any).recipientNetwork as unknown[])
+                    .map((value) => Number(value))
+                    .filter((value) => Number.isFinite(value)),
+                ),
+              )
+            : [],
         };
 
+        setPublicKey(normalizedAddress);
+        setResolvedAccountAddress(normalizedAddress);
         setAccountExists(true);
         setFormData(loaded);
         setBaselineData(loaded);
@@ -129,7 +150,7 @@ export function useCreateAccountForm({
       }
     };
 
-    void loadConnectedAccount();
+    void hydrateAccount();
     return () => abortController.abort();
   }, [connected, activeAddress]);
 
@@ -193,6 +214,124 @@ export function useCreateAccountForm({
       const next = { ...prev };
       if (absoluteError) next[field] = absoluteError;
       else delete next[field];
+      return next;
+    });
+  };
+
+  const handlePublicKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!derived.isActive) return;
+    setPublicKey(e.target.value);
+    setErrors((prev) => {
+      if (!prev.publicKey) return prev;
+      const next = { ...prev };
+      delete next.publicKey;
+      return next;
+    });
+  };
+
+  const handlePublicKeyBlur = async () => {
+    const previousAddress = resolvedAccountAddress || normalizeAddress(String(activeAddress ?? ''));
+    const trimmed = String(publicKey ?? '').trim();
+
+    if (!trimmed) {
+      setPublicKey(previousAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.publicKey;
+        return next;
+      });
+      return;
+    }
+
+    if (!isAddress(trimmed)) {
+      setInvalidAddressPopupPreviousAddress(previousAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        next.publicKey = 'Invalid account address';
+        return next;
+      });
+      return;
+    }
+
+    const normalizedAddress = normalizeAddress(trimmed);
+    if (normalizedAddress === previousAddress) {
+      setPublicKey(normalizedAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.publicKey;
+        return next;
+      });
+      return;
+    }
+
+    setIsLoadingAccount(true);
+    try {
+      const record = (await loadAccountRecord(normalizedAddress, {
+        forceRefresh: true,
+      })) as AccountRegistryRecord;
+      const resolvedLogoURL = ensureAbsoluteAssetURL(
+        String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
+      );
+      const loaded: AccountFormData = {
+        name: typeof record.name === 'string' ? record.name : '',
+        symbol: typeof record.symbol === 'string' ? record.symbol : '',
+        email: typeof record.email === 'string' ? record.email : '',
+        website: typeof record.website === 'string' ? record.website : '',
+        description:
+          typeof record.description === 'string' ? record.description : '',
+        recipientNetwork: Array.isArray((record as any)?.recipientNetwork)
+          ? Array.from(
+              new Set(
+                ((record as any).recipientNetwork as unknown[])
+                  .map((value) => Number(value))
+                  .filter((value) => Number.isFinite(value)),
+              ),
+            )
+          : [],
+      };
+
+      setPublicKey(normalizedAddress);
+      setResolvedAccountAddress(normalizedAddress);
+      setAccountExists(true);
+      setFormData(loaded);
+      setBaselineData(loaded);
+      setSavedAccountName(loaded.name.trim());
+      setErrors({});
+      setLogoFile(null);
+      setHasServerLogo(
+        resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
+          !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
+      );
+      setServerLogoURL(withCacheBust(resolvedLogoURL));
+    } catch {
+      setPublicKey(previousAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        next.publicKey = 'Account not found';
+        return next;
+      });
+    } finally {
+      setIsLoadingAccount(false);
+    }
+  };
+
+  const handleInvalidAddressContinue = () => {
+    setInvalidAddressPopupPreviousAddress(null);
+    setErrors((prev) => {
+      const next = { ...prev };
+      next.publicKey = 'Invalid account address';
+      return next;
+    });
+  };
+
+  const handleInvalidAddressRevert = () => {
+    if (invalidAddressPopupPreviousAddress) {
+      setPublicKey(invalidAddressPopupPreviousAddress);
+    }
+    setInvalidAddressPopupPreviousAddress(null);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.publicKey;
       return next;
     });
   };
@@ -348,6 +487,7 @@ export function useCreateAccountForm({
           email: normalizedForm.email,
           website: normalizedForm.website,
           description: normalizedForm.description,
+          recipientNetwork: normalizedForm.recipientNetwork,
         };
         const saveMethod = accountExists ? 'PUT' : 'POST';
         await saveAccountRecord(
@@ -441,6 +581,7 @@ export function useCreateAccountForm({
     publicKey,
     formData,
     errors,
+    savedAccountName,
     accountExists,
     isLoadingAccount,
     isSaving,
@@ -451,10 +592,15 @@ export function useCreateAccountForm({
     setErrors,
     handleChange,
     handleFieldBlur,
+    handlePublicKeyChange,
+    handlePublicKeyBlur,
     handleRevertChanges,
     handleSubmit,
     handleLogoFileChange,
     logoPreviewSrc,
+    invalidAddressPopupPreviousAddress,
+    handleInvalidAddressContinue,
+    handleInvalidAddressRevert,
     ...derived,
   };
 }

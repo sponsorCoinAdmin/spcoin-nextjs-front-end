@@ -35,12 +35,18 @@ export function useCreateAccountDerivedState({
   const hasDataChanges = useMemo(() => {
     const current = trimForm(formData);
     const baseline = trimForm(baselineData);
+    const currentNetworks = [...current.recipientNetwork].sort((a, b) => a - b);
+    const baselineNetworks = [...baseline.recipientNetwork].sort((a, b) => a - b);
+    const recipientNetworkChanged =
+      currentNetworks.length !== baselineNetworks.length ||
+      currentNetworks.some((value, index) => value !== baselineNetworks[index]);
     return (
       current.name !== baseline.name ||
       current.symbol !== baseline.symbol ||
       current.email !== baseline.email ||
       current.website !== baseline.website ||
-      current.description !== baseline.description
+      current.description !== baseline.description ||
+      recipientNetworkChanged
     );
   }, [formData, baselineData]);
 

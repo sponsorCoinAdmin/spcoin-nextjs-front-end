@@ -1,8 +1,13 @@
-{
-  "address": "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
-  "name": "HH 18 Judy's Leukemia Fund",
-  "symbol": "HH_BASE_18",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
+    "name":  "HH 18 Judy\u0027s Leukemia Fund",
+    "symbol":  "HH_BASE_18",
+    "email":  "",
+    "website":  "",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }
+

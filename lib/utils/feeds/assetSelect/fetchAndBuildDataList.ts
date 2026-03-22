@@ -199,11 +199,71 @@ function getFallbackListWithSource(
   }
 }
 
+function getAccountFeedPublicUrl(feedType: FEED_TYPE, chainId?: number): string | null {
+  if (!Number.isFinite(Number(chainId)) || Number(chainId) <= 0) return null;
+  const normalizedChainId = Number(chainId);
+
+  switch (feedType) {
+    case FEED_TYPE.RECIPIENT_ACCOUNTS:
+      return `/assets/blockchains/${normalizedChainId}/recipients.accounts.json`;
+    case FEED_TYPE.AGENT_ACCOUNTS:
+      return `/assets/blockchains/${normalizedChainId}/agents.accounts.json`;
+    case FEED_TYPE.SPONSOR_ACCOUNTS:
+      return `/assets/blockchains/${normalizedChainId}/sponsors.accounts.json`;
+    default:
+      return null;
+  }
+}
+
 async function getDataListObjWithSource(
   feedType: FEED_TYPE,
   chainId?: number,
   seq?: number,
 ): Promise<{ sourceId: string; sourceKind: 'bundled-fallback' | 'remote-url'; list: unknown[] }> {
+  const accountFeedUrl = getAccountFeedPublicUrl(feedType, chainId);
+  if (accountFeedUrl) {
+    debugLog.log?.('[source:selected]', {
+      seq,
+      feedType,
+      feedTypeLabel: FEED_TYPE[feedType],
+      chainId,
+      sourceKind: 'remote-url',
+      selectedSource: `remote:${accountFeedUrl}`,
+      url: accountFeedUrl,
+    });
+
+    try {
+      const response = await fetch(accountFeedUrl, { cache: 'no-store' });
+      if (response.ok) {
+        const raw = (await response.json()) as unknown;
+        const list = normalizeList(raw);
+        if (list.length > 0) {
+          debugLog.log?.('[source:remote-account][ok]', {
+            seq,
+            feedType,
+            chainId,
+            url: accountFeedUrl,
+            normalizedLen: list.length,
+            preview: previewList(list, 5),
+          });
+          return {
+            sourceId: `remote:${accountFeedUrl}`,
+            sourceKind: 'remote-url',
+            list,
+          };
+        }
+      }
+    } catch (err) {
+      debugLog.warn?.('[source:remote-account][error->fallback]', {
+        seq,
+        feedType,
+        chainId,
+        url: accountFeedUrl,
+        error: String(err),
+      });
+    }
+  }
+
   if (feedType !== FEED_TYPE.TOKEN_LIST) {
     const fallback = getFallbackListWithSource(feedType, chainId);
     debugLog.log?.('[source:selected]', {

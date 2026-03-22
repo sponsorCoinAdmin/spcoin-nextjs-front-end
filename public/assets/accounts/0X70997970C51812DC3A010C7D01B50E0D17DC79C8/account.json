@@ -1,8 +1,13 @@
-{
-  "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-  "name": "HH 1",
-  "symbol": "HH_BASE_1",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "name":  "HH 1",
+    "symbol":  "HH_BASE_1",
+    "email":  "",
+    "website":  "",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }
+

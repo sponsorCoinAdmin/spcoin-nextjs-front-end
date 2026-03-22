@@ -12,6 +12,7 @@ export const EMPTY_FORM_DATA: AccountFormData = {
   email: '',
   website: '',
   description: '',
+  recipientNetwork: [],
 };
 
 export const FORM_FIELDS: AccountFormField[] = [

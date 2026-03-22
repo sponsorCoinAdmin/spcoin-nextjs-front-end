@@ -1,8 +1,13 @@
-{
-  "address": "0x71bE63f3384f5fb98995898A86B02Fb2426c5788",
-  "name": "HH 11 - Save the Trees",
-  "symbol": "HH_BASE_11",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0x71bE63f3384f5fb98995898A86B02Fb2426c5788",
+    "name":  "HH 11 - Save the Trees",
+    "symbol":  "HH_BASE_11",
+    "email":  "",
+    "website":  "",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }
+

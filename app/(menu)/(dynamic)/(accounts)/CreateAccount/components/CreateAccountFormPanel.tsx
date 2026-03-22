@@ -33,6 +33,8 @@ type Props = {
   disableSubmit: boolean;
   disableRevert: boolean;
   isRevertNoop: boolean;
+  onPublicKeyChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPublicKeyBlur: () => void | Promise<void>;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onFieldBlur: (field: AccountFormField) => void;
   onRevert: () => void;
@@ -57,6 +59,8 @@ export default function CreateAccountFormPanel({
   disableSubmit,
   disableRevert,
   isRevertNoop,
+  onPublicKeyChange,
+  onPublicKeyBlur,
   onChange,
   onFieldBlur,
   onRevert,
@@ -130,9 +134,9 @@ export default function CreateAccountFormPanel({
                 <input
                   id="publicKey"
                   type="text"
+                  name="publicKey"
                   value={publicKey}
-                  readOnly
-                  tabIndex={-1}
+                  readOnly={inputLocked}
                   placeholder={
                     hoveredInput === 'publicKey'
                       ? isLoading
@@ -147,10 +151,9 @@ export default function CreateAccountFormPanel({
                       ? `Required for Code Account Operations | Error: ${errors.publicKey}`
                       : 'Required for Code Account Operations'
                   }
-                  className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''} cursor-default select-none`}
-                  style={{ cursor: 'default', caretColor: 'transparent' }}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onFocus={(e) => e.currentTarget.blur()}
+                  className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
+                  onChange={onPublicKeyChange}
+                  onBlur={onPublicKeyBlur}
                   onMouseEnter={() => setHoveredInput('publicKey')}
                   onMouseLeave={() => setHoveredInput(null)}
                 />

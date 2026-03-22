@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CloseButton from '@/components/views/Buttons/CloseButton';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import {
@@ -1783,8 +1784,22 @@ export default function SponsorCoinLabPage() {
 
   return (
     <main className="min-h-screen bg-[#090C16] p-6 text-white">
-      <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin SandBox</h2>
+      <section className="mx-auto flex w-full max-w-7xl flex-col">
+        <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
+          <div />
+          <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin SandBox</h2>
+          <div className="flex items-center justify-self-end gap-2">
+            <CloseButton
+              id="sponsorCoinSandboxBackButton"
+              closeCallback={() => {
+                if (typeof window !== 'undefined') window.history.back();
+              }}
+              title="Go Back"
+              ariaLabel="Go Back"
+              className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+            />
+          </div>
+        </div>
 
         <section className={`grid grid-cols-1 gap-6 ${expandedCard ? '' : 'xl:grid-cols-2'}`}>
           {showCard('network') && (

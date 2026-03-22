@@ -1,8 +1,13 @@
-{
-  "address": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
-  "name": "HH 6",
-  "symbol": "HH_BASE_6",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+    "name":  "HH 6",
+    "symbol":  "HH_BASE_6",
+    "email":  "",
+    "website":  "",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }
+

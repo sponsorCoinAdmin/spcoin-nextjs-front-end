@@ -1,8 +1,12 @@
-{
-  "address": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-  "name": "HH 3",
-  "symbol": "HH_BASE_3",
-  "email": "",
-  "website": "",
-  "description": ""
+﻿{
+    "address":  "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "name":  "HH 3",
+    "symbol":  "HH_BASE_3",
+    "email":  "",
+    "website":  "Wilma.com",
+    "description":  "",
+    "recipientNetwork":  [
+                             31337,
+                             8453
+                         ]
 }

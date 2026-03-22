@@ -148,5 +148,12 @@ export function trimForm(data: AccountFormData): AccountFormData {
     email: data.email.trim(),
     website: data.website.trim(),
     description: data.description.trim(),
+    recipientNetwork: Array.from(
+      new Set(
+        (Array.isArray(data.recipientNetwork) ? data.recipientNetwork : [])
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value)),
+      ),
+    ),
   };
 }
