@@ -149,7 +149,6 @@ function seedSpCoinContractFromPageStorage(parsed: any) {
   if (currentVersion !== String(currentContract.version ?? '').trim()) {
     currentContract.version = currentVersion;
   }
-  if (currentName || currentVersion) return;
 
   let sponsorCoinLabSeed: {
     version?: string;
@@ -221,14 +220,22 @@ function seedSpCoinContractFromPageStorage(parsed: any) {
         : 18,
   };
 
-  if (!mergedSeed.version && !mergedSeed.name && !mergedSeed.symbol) return;
+  const hasLabSeed = Boolean(
+    sponsorCoinLabSeed.version || sponsorCoinLabSeed.name || sponsorCoinLabSeed.symbol,
+  );
+  const hasAnySeed = Boolean(mergedSeed.version || mergedSeed.name || mergedSeed.symbol);
+  if (!hasAnySeed) return;
+  if (!hasLabSeed && (currentName || currentVersion)) return;
 
   parsed.settings.spCoinContract = {
     ...currentContract,
     version: mergedSeed.version,
     name: mergedSeed.name,
     symbol: mergedSeed.symbol,
-    decimals: mergedSeed.decimals,
+    decimals:
+      Number.isFinite(Number(currentContract.decimals)) && Number(currentContract.decimals) > 0
+        ? Number(currentContract.decimals)
+        : mergedSeed.decimals,
     totalSypply: String(currentContract.totalSypply ?? ''),
     inflationRate: Number(currentContract.inflationRate ?? 0),
     recipientRateRange: Array.isArray(currentContract.recipientRateRange)

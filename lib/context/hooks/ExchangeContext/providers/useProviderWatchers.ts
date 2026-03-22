@@ -395,6 +395,7 @@ export function useProviderWatchers({
     const currentMeta = contextState.settings?.spCoinContract;
     const currentName = String(currentMeta?.name ?? '').trim();
     const currentVersion = String(currentMeta?.version ?? '').trim();
+    const currentSymbol = String(currentMeta?.symbol ?? '').trim();
     const persistedLabSeed = getPersistedSponsorCoinLabContractSeed();
     const persistedAccessSeed = getPersistedSpCoinAccessContractSeed();
     const persistedSeed = persistedLabSeed
@@ -406,14 +407,32 @@ export function useProviderWatchers({
         }
       : persistedAccessSeed;
 
-    if ((currentName.length === 0 || currentVersion.length === 0) && persistedSeed) {
+    const shouldSeedFromPersistedSource = persistedLabSeed
+      ? Boolean(
+          persistedSeed &&
+            (currentName !== persistedSeed.name ||
+              currentVersion !== persistedSeed.version ||
+              currentSymbol !== persistedSeed.symbol),
+        )
+      : Boolean((currentName.length === 0 || currentVersion.length === 0) && persistedSeed);
+
+    if (shouldSeedFromPersistedSource && persistedSeed) {
       setExchangeContext(
         (prevCtx) => {
           const next = clone(prevCtx);
           const prevContract = next.settings?.spCoinContract;
           const prevName = String(prevContract?.name ?? '').trim();
           const prevVersion = String(prevContract?.version ?? '').trim();
-          if (prevName.length > 0 && prevVersion.length > 0) return next;
+          const prevSymbol = String(prevContract?.symbol ?? '').trim();
+          if (
+            persistedLabSeed &&
+            prevName === persistedSeed.name &&
+            prevVersion === persistedSeed.version &&
+            prevSymbol === persistedSeed.symbol
+          ) {
+            return next;
+          }
+          if (!persistedLabSeed && prevName.length > 0 && prevVersion.length > 0) return next;
           next.settings = next.settings ?? ({} as any);
           next.settings.spCoinContract = {
             version: persistedSeed.version,
@@ -506,6 +525,7 @@ export function useProviderWatchers({
     contextState?.tradeData?.buyTokenContract?.address,
     contextState?.tradeData?.sellTokenContract?.address,
     contextState?.settings?.spCoinContract?.name,
+    contextState?.settings?.spCoinContract?.symbol,
     contextState?.settings?.spCoinContract?.version,
     setExchangeContext,
   ]);
