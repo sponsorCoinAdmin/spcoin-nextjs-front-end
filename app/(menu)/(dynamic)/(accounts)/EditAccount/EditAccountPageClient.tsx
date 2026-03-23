@@ -8,7 +8,6 @@ import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext
 import { useExchangeContext } from '@/lib/context/hooks';
 import CloseButton from '@/components/views/Buttons/CloseButton';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
-import EditAccountAvatarDropdown from './components/EditAccountAvatarDropdown';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
 import { ACCEPTED_IMAGE_INPUT_ACCEPT } from '../CreateAccount/utils';
@@ -34,7 +33,6 @@ export default function EditAccountPageClient() {
     publicKey,
     formData,
     errors,
-    setFormData,
     handlePublicKeyChange,
     handlePublicKeyBlur,
     handleChange,
@@ -151,7 +149,7 @@ export default function EditAccountPageClient() {
           {showAvatarPanel ? (
             <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#192134] p-4">
               <div
-                className="relative mb-4 w-full"
+                className="relative z-20 mb-4 w-full overflow-visible"
                 onDoubleClick={() =>
                   setExpandedPanel((current) => (current === 'avatar' ? null : 'avatar'))
                 }
@@ -162,21 +160,7 @@ export default function EditAccountPageClient() {
                 }
               >
                 <div className="grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-3 pr-12">
-                  <div className="invisible flex items-center" aria-hidden="true">
-                    <EditAccountAvatarDropdown
-                      avatarSrc={logoPreviewSrc}
-                      disabled={!editSessionReady}
-                      selectedNetworkIds={formData.recipientNetwork}
-                      onToggleNetwork={(networkId) =>
-                        setFormData((current) => {
-                          const nextSelected = current.recipientNetwork.includes(networkId)
-                            ? current.recipientNetwork.filter((id) => id !== networkId)
-                            : [...current.recipientNetwork, networkId];
-                          return { ...current, recipientNetwork: nextSelected };
-                        })
-                      }
-                    />
-                  </div>
+                  <div />
                   <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
                     Account Avatar
                   </h2>
