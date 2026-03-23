@@ -17,6 +17,7 @@ import {
 type Props = {
   panelMarginClass: string;
   accountPanelBorderClass: string;
+  formHeading?: string;
   connected: boolean;
   publicKey: string;
   formData: AccountFormData;
@@ -43,6 +44,7 @@ type Props = {
 export default function CreateAccountFormPanel({
   panelMarginClass,
   accountPanelBorderClass,
+  formHeading = 'Account Meta Data',
   connected,
   publicKey,
   formData,
@@ -108,8 +110,8 @@ export default function CreateAccountFormPanel({
         <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
           Account Address
         </div>
-        <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
-          Account Meta Data
+        <h2 className="-mt-[29px] w-full text-center text-lg font-semibold text-[#5981F3]">
+          {formHeading}
         </h2>
       </div>
       <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">

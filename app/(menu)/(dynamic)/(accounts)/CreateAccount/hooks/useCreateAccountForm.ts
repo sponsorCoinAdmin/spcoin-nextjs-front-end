@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Wallet } from 'ethers';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
 import type { AccountRegistryRecord } from '@/lib/context/accounts/accountRegistry';
 import {
@@ -28,6 +29,7 @@ import {
 } from '../utils';
 import { processCreateAccountLogoUpload } from '../utils/imageUpload';
 import { useCreateAccountDerivedState } from './useCreateAccountDerivedState';
+import { isConfiguredOwnerAdminAddress } from '@/lib/utils/accounts/ownerAdmin';
 
 type RunWithWalletAction = <T>(
   action: () => Promise<T>,
@@ -38,6 +40,9 @@ type RunWithWalletAction = <T>(
 type Params = {
   connected: boolean;
   activeAddress?: string;
+  targetAddress?: string;
+  authSignerSource: 'ec2-base' | 'metamask';
+  appChainId?: number;
   runWithWalletAction: RunWithWalletAction;
 };
 
@@ -48,6 +53,9 @@ function isAddress(value: string): boolean {
 export function useCreateAccountForm({
   connected,
   activeAddress,
+  targetAddress,
+  authSignerSource,
+  appChainId,
   runWithWalletAction,
 }: Params) {
   const [publicKey, setPublicKey] = useState<string>('');
@@ -77,23 +85,35 @@ export function useCreateAccountForm({
     target.style.height = `${target.scrollHeight}px`;
   };
 
+  const requestedTargetAddress = useMemo(
+    () => (isAddress(String(targetAddress ?? '').trim()) ? normalizeAddress(String(targetAddress)) : ''),
+    [targetAddress],
+  );
+  const normalizedActiveAddress = useMemo(
+    () => (isAddress(String(activeAddress ?? '').trim()) ? normalizeAddress(String(activeAddress)) : ''),
+    [activeAddress],
+  );
+  const initialAccountAddress = requestedTargetAddress || normalizedActiveAddress;
+  const canUseHardhatSigner = Number(appChainId) === 31337;
+  const isAuthSessionAvailable = connected || (authSignerSource === 'ec2-base' && canUseHardhatSigner);
+
   useEffect(() => {
-    setPublicKey(activeAddress ? String(activeAddress) : '');
-  }, [activeAddress]);
+    setPublicKey(initialAccountAddress);
+  }, [initialAccountAddress]);
 
   useEffect(() => {
     resizeDescriptionTextarea();
   }, [formData.description]);
 
   useEffect(() => {
-    if (!connected || !activeAddress) return;
+    if (!isAuthSessionAvailable || !initialAccountAddress) return;
 
     const abortController = new AbortController();
 
     const hydrateAccount = async () => {
       setIsLoadingAccount(true);
       try {
-        const normalizedAddress = normalizeAddress(String(activeAddress));
+        const normalizedAddress = initialAccountAddress;
         const record = (await loadAccountRecord(normalizedAddress, {
           forceRefresh: true,
           signal: abortController.signal,
@@ -152,7 +172,7 @@ export function useCreateAccountForm({
 
     void hydrateAccount();
     return () => abortController.abort();
-  }, [connected, activeAddress]);
+  }, [initialAccountAddress, isAuthSessionAvailable]);
 
   const validateField = (field: AccountFormField, rawValue: string): string | null => {
     const raw = String(rawValue ?? '');
@@ -178,7 +198,7 @@ export function useCreateAccountForm({
   };
 
   const derived = useCreateAccountDerivedState({
-    connected,
+    connected: isAuthSessionAvailable,
     publicKey,
     accountExists,
     formData,
@@ -230,7 +250,7 @@ export function useCreateAccountForm({
   };
 
   const handlePublicKeyBlur = async () => {
-    const previousAddress = resolvedAccountAddress || normalizeAddress(String(activeAddress ?? ''));
+    const previousAddress = resolvedAccountAddress || initialAccountAddress;
     const trimmed = String(publicKey ?? '').trim();
 
     if (!trimmed) {
@@ -356,7 +376,7 @@ export function useCreateAccountForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!derived.isEditMode) return;
-    if (!connected) return;
+    if (!isAuthSessionAvailable) return;
     const normalizedForm = trimForm(formData);
     const nextErrors = validatePreSend(normalizedForm);
     setErrors(nextErrors);
@@ -371,27 +391,85 @@ export function useCreateAccountForm({
 
     setIsSaving(true);
     try {
-      const eth = (window as any)?.ethereum;
-      if (!eth?.request) {
-        throw new Error('MetaMask provider not available');
+      const normalizedTargetAddress = normalizeAddress(derived.publicKeyTrimmed);
+      let signerAddress = '';
+      let signMessage: ((message: string) => Promise<string>) | null = null;
+
+      if (authSignerSource === 'ec2-base' && canUseHardhatSigner) {
+        const response = await fetch('/assets/spCoinLab/networks/31337/testAccounts.json', {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error('Unable to load Hardhat signing accounts.');
+        }
+        const entries = (await response.json()) as Array<{ address?: string; privateKey?: string }>;
+        const signerEntry =
+          entries.find(
+            (entry) =>
+              normalizeAddress(String(entry?.address ?? '')) === normalizedTargetAddress &&
+              /^0x[a-fA-F0-9]{64}$/.test(String(entry?.privateKey ?? '').trim()),
+          ) ??
+          entries.find(
+            (entry) =>
+              normalizeAddress(String(entry?.address ?? '')) === normalizedActiveAddress &&
+              /^0x[a-fA-F0-9]{64}$/.test(String(entry?.privateKey ?? '').trim()),
+          );
+
+        const privateKey = String(signerEntry?.privateKey ?? '').trim();
+        const hardhatSignerAddress = String(signerEntry?.address ?? '').trim();
+        if (!privateKey || !hardhatSignerAddress) {
+          throw new Error('Missing Hardhat private key for this account.');
+        }
+
+        signerAddress = normalizeAddress(hardhatSignerAddress);
+        const wallet = new Wallet(privateKey);
+        signMessage = async (message: string) => await wallet.signMessage(message);
+      } else {
+        const eth = (window as any)?.ethereum;
+        if (!eth?.request) {
+          throw new Error('MetaMask provider not available');
+        }
+
+        const accounts = (await runWithWalletAction(
+          () =>
+            eth.request({
+              method: 'eth_requestAccounts',
+            }),
+          'MetaMask action in progress',
+          'Approve the account request in MetaMask to continue.',
+        )) as string[];
+        signerAddress = String(accounts?.[0] ?? '').trim();
+        if (!signerAddress) {
+          throw new Error('No MetaMask account available for signing');
+        }
+
+        signMessage = async (message: string) => {
+          try {
+            return (await runWithWalletAction(
+              () =>
+                eth.request({
+                  method: 'personal_sign',
+                  params: [message, signerAddress],
+                }),
+              'MetaMask action in progress',
+              'Sign the authentication message in MetaMask to continue.',
+            )) as string;
+          } catch {
+            return (await runWithWalletAction(
+              () =>
+                eth.request({
+                  method: 'personal_sign',
+                  params: [signerAddress, message],
+                }),
+              'MetaMask action in progress',
+              'Sign the authentication message in MetaMask to continue.',
+            )) as string;
+          }
+        };
       }
 
-      const accounts = (await runWithWalletAction(
-        () =>
-          eth.request({
-            method: 'eth_requestAccounts',
-          }),
-        'MetaMask action in progress',
-        'Approve the account request in MetaMask to continue.',
-      )) as string[];
-      const signerAddress = String(accounts?.[0] ?? '').trim();
-      if (!signerAddress) {
-        throw new Error('No MetaMask account available for signing');
-      }
-      if (normalizeAddress(signerAddress) !== normalizeAddress(derived.publicKeyTrimmed)) {
-        throw new Error(
-          `Connected account mismatch. MetaMask=${signerAddress}, Active=${derived.publicKeyTrimmed}`,
-        );
+      if (!signMessage) {
+        throw new Error('No signing method available.');
       }
 
       const nonceRes = await fetch('/api/spCoin/auth/nonce', {
@@ -426,37 +504,27 @@ export function useCreateAccountForm({
         throw new Error('Invalid nonce payload from server');
       }
 
-      let signature = '';
-      try {
-        signature = (await runWithWalletAction(
-          () =>
-            eth.request({
-              method: 'personal_sign',
-              params: [message, signerAddress],
-            }),
-          'MetaMask action in progress',
-          'Sign the authentication message in MetaMask to continue.',
-        )) as string;
-      } catch {
-        signature = (await runWithWalletAction(
-          () =>
-            eth.request({
-              method: 'personal_sign',
-              params: [signerAddress, message],
-            }),
-          'MetaMask action in progress',
-          'Sign the authentication message in MetaMask to continue.',
-        )) as string;
-      }
+      const signature = await signMessage(message);
       if (!signature) {
         throw new Error('Signature request rejected');
+      }
+
+      const normalizedSignerAddress = normalizeAddress(signerAddress || normalizedTargetAddress);
+      const signerCanEditTarget =
+        normalizedSignerAddress === normalizedTargetAddress ||
+        isConfiguredOwnerAdminAddress(normalizedSignerAddress);
+      if (!signerCanEditTarget) {
+        const signerLabel = authSignerSource === 'ec2-base' ? 'Ec2-BASE' : 'MetaMask';
+        throw new Error(
+          `Connected account mismatch. ${signerLabel}=${normalizedSignerAddress}, Target=${derived.publicKeyTrimmed}`,
+        );
       }
 
       const verifyRes = await fetch('/api/spCoin/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          address: signerAddress,
+          address: normalizedSignerAddress,
           nonce,
           signature,
         }),
