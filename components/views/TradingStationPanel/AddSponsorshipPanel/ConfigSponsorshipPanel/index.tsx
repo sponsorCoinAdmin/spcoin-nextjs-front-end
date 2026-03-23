@@ -6,37 +6,63 @@ import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info.png';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
-const MIN_SPONSOR_STEP = 2; // 20% recipient / 80% sponsor
-const MAX_SPONSOR_STEP = 10; // 100% recipient / 0% sponsor
-
-const MIN_AGENT_STEP = 2; // 2% of remaining balance
-const MAX_AGENT_STEP = 10; // 10% of remaining balance
+const DEFAULT_RECIPIENT_RATE_RANGE: [number, number] = [0, 100];
+const DEFAULT_AGENT_RATE_RANGE: [number, number] = [0, 100];
 
 const ConfigSlippagePanel: React.FC = () => {
+  const { exchangeContext } = useExchangeContext();
   const { isVisible, closePanel } = usePanelTree();
 
   // ✅ Always evaluate visibility, but DO NOT early-return until after hooks
   const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
 
-  // Sponsor slider: step from 2..10 where
-  //   sponsorPct = 100 - step * 10
-  //   remainingBal (RB) = step * 10
-  const [sponsorStep, setSponsorStep] = useState<number>(5); // RB=50, SP=50 by default
+  // Sponsor slider: step from 0..100 where
+  //   sponsorPct = 100 - step
+  //   remainingBal (RB) = step
+  const [sponsorStep, setSponsorStep] = useState<number>(50); // RB=50, SP=50 by default
 
-  // Agent slider: step from 2..10 representing 2%..10% of remainingBal
-  //   sliderRatioRange (SRR) = agentStep / 100
+  // Agent slider: step from 0..100 representing 0%..10% of remainingBal
+  //   sliderRatioRange (SRR) = agentStep / 1000
   //   agentPct (AP) = RB * SRR
   //   recipientPct (RP) = RB - AP
-  const [agentStep, setAgentStep] = useState<number>(2); // 2% of RB by default
+  const [agentStep, setAgentStep] = useState<number>(20); // 2% of RB by default
+
+  const recipientRateRange = useMemo<[number, number]>(() => {
+    const raw = exchangeContext?.settings?.spCoinContract?.recipientRateRange;
+    return Array.isArray(raw) && raw.length === 2
+      ? [Number(raw[0]), Number(raw[1])]
+      : DEFAULT_RECIPIENT_RATE_RANGE;
+  }, [exchangeContext?.settings?.spCoinContract?.recipientRateRange]);
+
+  const agentRateRange = useMemo<[number, number]>(() => {
+    const raw = exchangeContext?.settings?.spCoinContract?.agentRateRange;
+    return Array.isArray(raw) && raw.length === 2
+      ? [Number(raw[0]), Number(raw[1])]
+      : DEFAULT_AGENT_RATE_RANGE;
+  }, [exchangeContext?.settings?.spCoinContract?.agentRateRange]);
+
+  const [MIN_RECIPIENT_STEP, MAX_RECIPIENT_STEP] = recipientRateRange;
+  const [MIN_AGENT_STEP, MAX_AGENT_STEP] = agentRateRange;
+
+  const clampedSponsorStep = useMemo(
+    () => Math.min(Math.max(sponsorStep, MIN_RECIPIENT_STEP), MAX_RECIPIENT_STEP),
+    [sponsorStep, MIN_RECIPIENT_STEP, MAX_RECIPIENT_STEP],
+  );
+
+  const clampedAgentStep = useMemo(
+    () => Math.min(Math.max(agentStep, MIN_AGENT_STEP), MAX_AGENT_STEP),
+    [agentStep, MIN_AGENT_STEP, MAX_AGENT_STEP],
+  );
 
   // --- core percentage math -------------------------------------------------
 
-  const sponsorPct = useMemo(() => 100 - sponsorStep * 10, [sponsorStep]); // SP
-  const remainingBal = useMemo(() => sponsorStep * 10, [sponsorStep]); // RB
+  const sponsorPct = useMemo(() => 100 - clampedSponsorStep, [clampedSponsorStep]); // SP
+  const remainingBal = useMemo(() => clampedSponsorStep, [clampedSponsorStep]); // RB
 
-  const sliderRatioRange = useMemo(() => agentStep / 100, [agentStep]); // SRR
+  const sliderRatioRange = useMemo(() => clampedAgentStep / 1000, [clampedAgentStep]); // SRR
 
   const agentPct = useMemo(() => {
     const raw = remainingBal * sliderRatioRange; // AP = RB * SRR
@@ -118,9 +144,9 @@ const ConfigSlippagePanel: React.FC = () => {
           type="range"
           title="Adjust Sponsor/Recipient Ratio"
           className="absolute top-[63px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
-          min={MIN_SPONSOR_STEP}
-          max={MAX_SPONSOR_STEP}
-          value={sponsorStep}
+          min={MIN_RECIPIENT_STEP}
+          max={MAX_RECIPIENT_STEP}
+          value={clampedSponsorStep}
           onChange={(e) => setSponsorStep(Number(e.target.value))}
         />
 
@@ -136,7 +162,7 @@ const ConfigSlippagePanel: React.FC = () => {
           className="absolute top-[93px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer"
           min={MIN_AGENT_STEP}
           max={MAX_AGENT_STEP}
-          value={agentStep}
+          value={clampedAgentStep}
           onChange={(e) => setAgentStep(Number(e.target.value))}
         />
       </div>
