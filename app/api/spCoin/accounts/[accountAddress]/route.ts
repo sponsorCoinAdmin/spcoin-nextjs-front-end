@@ -3,8 +3,12 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { readBearerToken, validateSessionToken } from '@/lib/server/spCoinAuth';
+import {
+  readBearerToken,
+  validateSessionTokenAnyAddress,
+} from '@/lib/server/spCoinAuth';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
+import { isConfiguredOwnerAdminAddress } from '@/lib/utils/accounts/ownerAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -153,7 +157,7 @@ export async function PUT(
   }
 
   const token = readBearerToken(request.headers.get('authorization'));
-  const auth = validateSessionToken(token, rawAddress);
+  const auth = validateSessionTokenAnyAddress(token);
   if (!auth.ok) {
     return NextResponse.json(
       { error: auth.error },
@@ -162,6 +166,16 @@ export async function PUT(
   }
 
   const address = normalizeAddress(rawAddress);
+  const callerAddress = normalizeAddress(auth.address);
+  const canEditTarget =
+    callerAddress === address || isConfiguredOwnerAdminAddress(callerAddress);
+  if (!canEditTarget) {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
   const folder = toFolderName(address);
   const dirPath = path.join(ACCOUNTS_DIR, folder);
   const url = new URL(request.url);
