@@ -147,7 +147,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    * has been removed from this UI component and is now enforced in usePanelTree().
    */
   const { openPanel, closePanel } = usePanelTree();
-  const { setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [localSpCoinAccessVersion, setLocalSpCoinAccessVersion] = React.useState('');
   const [localSpCoinAccessPathExists, setLocalSpCoinAccessPathExists] = React.useState<boolean | null>(null);
 
@@ -384,6 +384,36 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
               />
             );
           })}
+        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
+          label === 'spCoinPanelTree' &&
+          typeof exchangeContext?.settings?.displayStack !== 'undefined' && (
+            <Branch
+              key="rest.settings.displayStack"
+              label="displayStack"
+              value={exchangeContext.settings.displayStack}
+              depth={depth + 1}
+              path="rest.settings.displayStack"
+              exp={exp}
+              togglePath={togglePath}
+              enumRegistry={enumRegistry}
+              dense={dense}
+            />
+          )}
+        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
+          label === 'spCoinPanelTree' &&
+          typeof exchangeContext?.settings?.visiblePanelTreeMembers !== 'undefined' && (
+            <Branch
+              key="rest.settings.visiblePanelTreeMembers"
+              label="visiblePanelTreeMembers"
+              value={exchangeContext.settings.visiblePanelTreeMembers}
+              depth={depth + 1}
+              path="rest.settings.visiblePanelTreeMembers"
+              exp={exp}
+              togglePath={togglePath}
+              enumRegistry={enumRegistry}
+              dense={dense}
+            />
+          )}
       </>
     );
   }

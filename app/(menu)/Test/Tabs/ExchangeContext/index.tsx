@@ -74,40 +74,6 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
   const settingsObj = useMemo(() => {
     const realSettings = (exchangeContext as any)?.settings ?? {};
-    const realTestPage = (realSettings?.testPage ?? {}) as any;
-    const testPageFlagKeys = new Set([
-      'TEST_PAGE_EXCHANGE_CONTEXT',
-      'TEST_PAGE_FSM_TRACE',
-      'TEST_PAGE_ACCOUNT_LISTS',
-      'TEST_PAGE_TO_DOS',
-      'TEST_PAGE_TOKEN_LISTS',
-    ]);
-    const testPageExtras = Object.fromEntries(
-      Object.entries(realTestPage).filter(([k]) => !testPageFlagKeys.has(k)),
-    );
-    const normalizedTestPage = {
-      ...testPageExtras,
-      TEST_PAGE_EXCHANGE_CONTEXT:
-        typeof realTestPage.TEST_PAGE_EXCHANGE_CONTEXT === 'boolean'
-          ? realTestPage.TEST_PAGE_EXCHANGE_CONTEXT
-          : false,
-      TEST_PAGE_FSM_TRACE:
-        typeof realTestPage.TEST_PAGE_FSM_TRACE === 'boolean'
-          ? realTestPage.TEST_PAGE_FSM_TRACE
-          : false,
-      TEST_PAGE_ACCOUNT_LISTS:
-        typeof realTestPage.TEST_PAGE_ACCOUNT_LISTS === 'boolean'
-          ? realTestPage.TEST_PAGE_ACCOUNT_LISTS
-          : false,
-      TEST_PAGE_TO_DOS:
-        typeof realTestPage.TEST_PAGE_TO_DOS === 'boolean'
-          ? realTestPage.TEST_PAGE_TO_DOS
-          : false,
-      TEST_PAGE_TOKEN_LISTS:
-        typeof realTestPage.TEST_PAGE_TOKEN_LISTS === 'boolean'
-          ? realTestPage.TEST_PAGE_TOKEN_LISTS
-          : false,
-    };
     const ordered: Record<string, unknown> = {};
     const push = (key: string, value: unknown) => {
       if (typeof value !== 'undefined') ordered[key] = value;
@@ -118,18 +84,17 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
     push('showTestNets', realSettings.showTestNets);
     push('spCoinContract', realSettings.spCoinContract);
     push('spCoinPanelTree', treeWithNames);
-    push('displayStack', realSettings.displayStack);
     push('spCoinAccessManager', realSettings.spCoinAccessManager);
-    push('testPage', normalizedTestPage);
-    push('visiblePanelTreeMembers', realSettings.visiblePanelTreeMembers);
 
     const included = new Set(Object.keys(ordered));
+    included.add('displayStack');
+    included.add('testPage');
+    included.add('visiblePanelTreeMembers');
     for (const [key, value] of Object.entries(realSettings)) {
       if (!included.has(key) && key !== 'spCoinPanelSchemaVersion') {
         ordered[key] = value;
       }
     }
-
     return ordered;
   }, [exchangeContext, treeWithNames]);
   const accountsObj = useMemo(() => {
