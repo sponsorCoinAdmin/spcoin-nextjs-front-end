@@ -1612,6 +1612,7 @@ export default function SponsorCoinLabPage() {
   });
   const editorBaselineRef = useRef<string | null>(null);
   const shouldResetEditorBaselineRef = useRef(true);
+  const dropdownHydrationKeyRef = useRef<string>('');
   const queueEditorBaselineReset = useCallback(() => {
     shouldResetEditorBaselineRef.current = true;
   }, []);
@@ -2173,6 +2174,18 @@ export default function SponsorCoinLabPage() {
   }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
   useEffect(() => {
     if (methodSelectionSource !== 'dropdown' || editingScriptStepNumber !== null) return;
+    const hydrationKey = JSON.stringify({
+      methodPanelMode,
+      selectedReadMethod,
+      selectedWriteMethod,
+      selectedSpCoinReadMethod,
+      selectedSpCoinWriteMethod,
+      selectedSerializationTestMethod,
+      methodSelectionSource,
+      editingScriptStepNumber,
+    });
+    if (dropdownHydrationKeyRef.current === hydrationKey) return;
+    dropdownHydrationKeyRef.current = hydrationKey;
     let cancelled = false;
 
     const hydrateEditorFromExchangeContext = async () => {
@@ -2268,6 +2281,11 @@ export default function SponsorCoinLabPage() {
     methodSelectionSource,
     queueEditorBaselineReset,
     resolveScriptEditorContractMetadata,
+    selectedReadMethod,
+    selectedSerializationTestMethod,
+    selectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
+    selectedWriteMethod,
     setReadAddressA,
     setReadAddressB,
     setSerializationTestParams,
