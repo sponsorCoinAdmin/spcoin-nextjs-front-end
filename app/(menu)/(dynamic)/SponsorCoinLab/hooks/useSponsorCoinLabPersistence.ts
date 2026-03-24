@@ -85,12 +85,6 @@ type Params = {
   setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   selectedSponsorCoinAccountRole: SponsorCoinAccountRole;
   setSelectedSponsorCoinAccountRole: (value: SponsorCoinAccountRole) => void;
-  defaultSponsorKey: string;
-  setDefaultSponsorKey: (value: string) => void;
-  defaultRecipientKey: string;
-  setDefaultRecipientKey: (value: string) => void;
-  defaultAgentKey: string;
-  setDefaultAgentKey: (value: string) => void;
   managedRoleAccountAddress: string;
   setManagedRoleAccountAddress: (value: string) => void;
   managedRecipientKey: string;
@@ -190,12 +184,6 @@ export function useSponsorCoinLabPersistence({
   setSelectedSerializationTestMethod,
   selectedSponsorCoinAccountRole,
   setSelectedSponsorCoinAccountRole,
-  defaultSponsorKey,
-  setDefaultSponsorKey,
-  defaultRecipientKey,
-  setDefaultRecipientKey,
-  defaultAgentKey,
-  setDefaultAgentKey,
   managedRoleAccountAddress,
   setManagedRoleAccountAddress,
   managedRecipientKey,
@@ -348,15 +336,6 @@ export function useSponsorCoinLabPersistence({
           ) {
             setSelectedSponsorCoinAccountRole(saved.selectedSponsorCoinAccountRole);
           }
-          if (typeof saved.defaultSponsorKey === 'string') {
-            setDefaultSponsorKey(normalizeAddressValue(saved.defaultSponsorKey));
-          }
-          if (typeof saved.defaultRecipientKey === 'string') {
-            setDefaultRecipientKey(normalizeAddressValue(saved.defaultRecipientKey));
-          }
-          if (typeof saved.defaultAgentKey === 'string') {
-            setDefaultAgentKey(normalizeAddressValue(saved.defaultAgentKey));
-          }
           if (typeof saved.managedRoleAccountAddress === 'string') {
             setManagedRoleAccountAddress(normalizeAddressValue(saved.managedRoleAccountAddress));
           }
@@ -451,9 +430,6 @@ export function useSponsorCoinLabPersistence({
       selectedSpCoinWriteMethod,
       selectedSerializationTestMethod,
       selectedSponsorCoinAccountRole,
-      defaultSponsorKey,
-      defaultRecipientKey,
-      defaultAgentKey,
       managedRoleAccountAddress,
       managedRecipientKey,
       managedRecipientRateKey,
@@ -504,9 +480,6 @@ export function useSponsorCoinLabPersistence({
     selectedSpCoinWriteMethod,
     selectedSerializationTestMethod,
     selectedSponsorCoinAccountRole,
-    defaultSponsorKey,
-    defaultRecipientKey,
-    defaultAgentKey,
     managedRoleAccountAddress,
     managedRecipientKey,
     managedRecipientRateKey,

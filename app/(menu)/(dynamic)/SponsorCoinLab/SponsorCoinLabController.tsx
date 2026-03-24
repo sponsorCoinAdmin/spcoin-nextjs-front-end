@@ -145,6 +145,14 @@ function buildDefaultAccountParams(
   });
 }
 
+function normalizeParamLabel(value: string) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isDefinedNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   const parseSerializedMapString = (input: string): Record<string, unknown> | null => {
     const trimmed = input.trim();
@@ -325,9 +333,9 @@ export default function SponsorCoinLabPage() {
     useState<SerializationTestMethod>('external_getSerializedSPCoinHeader');
   const [selectedSponsorCoinAccountRole, setSelectedSponsorCoinAccountRole] =
     useState<SponsorCoinAccountRole>('sponsor');
-  const [defaultSponsorKey, setDefaultSponsorKey] = useState('');
-  const [defaultRecipientKey, setDefaultRecipientKey] = useState('');
-  const [defaultAgentKey, setDefaultAgentKey] = useState('');
+  const [defaultSponsorKey, setDefaultSponsorKeyState] = useState('');
+  const [defaultRecipientKey, setDefaultRecipientKeyState] = useState('');
+  const [defaultAgentKey, setDefaultAgentKeyState] = useState('');
   const [managedRoleAccountAddress, setManagedRoleAccountAddress] = useState('');
   const [managedRecipientKey, setManagedRecipientKey] = useState('');
   const [managedRecipientRateKey, setManagedRecipientRateKey] = useState('');
@@ -341,13 +349,391 @@ export default function SponsorCoinLabPage() {
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
+  const accountSyncRequestRef = useRef({
+    sponsor: 0,
+    recipient: 0,
+    agent: 0,
+  });
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
   }, []);
+  const sponsorAccountAddress = normalizeAddressValue(
+    String(exchangeContext?.accounts?.sponsorAccount?.address ?? ''),
+  );
+  const recipientAccountAddress = normalizeAddressValue(
+    String(exchangeContext?.accounts?.recipientAccount?.address ?? ''),
+  );
+  const agentAccountAddress = normalizeAddressValue(
+    String(exchangeContext?.accounts?.agentAccount?.address ?? ''),
+  );
+  const activeAccountAddress = normalizeAddressValue(
+    String(exchangeContext?.accounts?.activeAccount?.address ?? ''),
+  );
   const spCoinOwnerAccountAddress = normalizeAddressValue(
     String(exchangeContext?.accounts?.spCoinOwnerAccount?.address ?? ''),
+  );
+  const sellTokenAmountRaw =
+    typeof exchangeContext?.tradeData?.sellTokenContract?.amount === 'bigint'
+      ? exchangeContext.tradeData.sellTokenContract.amount.toString()
+      : '';
+  const buyTokenAmountRaw =
+    typeof exchangeContext?.tradeData?.buyTokenContract?.amount === 'bigint'
+      ? exchangeContext.tradeData.buyTokenContract.amount.toString()
+      : '';
+  const previewTokenAmountRaw =
+    typeof exchangeContext?.tradeData?.previewTokenContract?.amount === 'bigint'
+      ? exchangeContext.tradeData.previewTokenContract.amount.toString()
+      : '';
+  const syncRoleAccountToExchangeContext = useCallback(
+    (role: SponsorCoinAccountRole, nextValue: string) => {
+      const normalized = normalizeAddressValue(nextValue);
+      const currentAccount =
+        role === 'sponsor'
+          ? exchangeContext?.accounts?.sponsorAccount
+          : role === 'recipient'
+          ? exchangeContext?.accounts?.recipientAccount
+          : exchangeContext?.accounts?.agentAccount;
+      const currentAddress = normalizeAddressValue(String(currentAccount?.address ?? ''));
+      if (normalized === currentAddress) return;
+
+      const accountField =
+        role === 'sponsor'
+          ? 'sponsorAccount'
+          : role === 'recipient'
+          ? 'recipientAccount'
+          : 'agentAccount';
+
+      if (!normalized) {
+        setExchangeContext(
+          (prev) => {
+            if (!prev.accounts?.[accountField]) return prev;
+            return {
+              ...prev,
+              accounts: {
+                ...prev.accounts,
+                [accountField]: undefined,
+              },
+            };
+          },
+          `SponsorCoinLab:${role}:clearAccount`,
+        );
+        return;
+      }
+
+      if (!isAddressLike(normalized)) return;
+
+      const requestId = ++accountSyncRequestRef.current[role];
+      const preservedBalance =
+        currentAddress === normalized && typeof currentAccount?.balance === 'bigint'
+          ? currentAccount.balance
+          : undefined;
+
+      void (async () => {
+        let nextAccount: spCoinAccount;
+        try {
+          nextAccount = await hydrateAccountFromAddress(normalized as Address, {
+            balance: preservedBalance,
+          });
+        } catch {
+          nextAccount = makeAccountFallback(
+            normalized as Address,
+            STATUS.MESSAGE_ERROR,
+            `Account ${normalized} metadata could not be loaded`,
+            preservedBalance,
+          );
+        }
+
+        if (accountSyncRequestRef.current[role] !== requestId) return;
+
+        setExchangeContext(
+          (prev) => {
+            const prevAccount = prev.accounts?.[accountField];
+            const prevAddress = normalizeAddressValue(String(prevAccount?.address ?? ''));
+            if (
+              prevAddress === normalized &&
+              prevAccount?.name === nextAccount.name &&
+              prevAccount?.symbol === nextAccount.symbol &&
+              prevAccount?.logoURL === nextAccount.logoURL &&
+              prevAccount?.description === nextAccount.description &&
+              prevAccount?.website === nextAccount.website &&
+              prevAccount?.type === nextAccount.type &&
+              prevAccount?.status === nextAccount.status &&
+              prevAccount?.balance === nextAccount.balance
+            ) {
+              return prev;
+            }
+            return {
+              ...prev,
+              accounts: {
+                ...prev.accounts,
+                [accountField]: nextAccount,
+              },
+            };
+          },
+          `SponsorCoinLab:${role}:setAccount`,
+        );
+      })();
+    },
+    [
+      exchangeContext?.accounts?.agentAccount,
+      exchangeContext?.accounts?.recipientAccount,
+      exchangeContext?.accounts?.sponsorAccount,
+      setExchangeContext,
+    ],
+  );
+  const setDefaultSponsorKey = useCallback(
+    (value: string) => {
+      const normalized = normalizeAddressValue(value);
+      setDefaultSponsorKeyState(normalized);
+      syncRoleAccountToExchangeContext('sponsor', normalized);
+    },
+    [syncRoleAccountToExchangeContext],
+  );
+  const setDefaultRecipientKey = useCallback(
+    (value: string) => {
+      const normalized = normalizeAddressValue(value);
+      setDefaultRecipientKeyState(normalized);
+      syncRoleAccountToExchangeContext('recipient', normalized);
+    },
+    [syncRoleAccountToExchangeContext],
+  );
+  const setDefaultAgentKey = useCallback(
+    (value: string) => {
+      const normalized = normalizeAddressValue(value);
+      setDefaultAgentKeyState(normalized);
+      syncRoleAccountToExchangeContext('agent', normalized);
+    },
+    [syncRoleAccountToExchangeContext],
+  );
+  useEffect(() => {
+    if (defaultSponsorKey !== sponsorAccountAddress) {
+      setDefaultSponsorKeyState(sponsorAccountAddress);
+    }
+  }, [defaultSponsorKey, sponsorAccountAddress]);
+  useEffect(() => {
+    if (defaultRecipientKey !== recipientAccountAddress) {
+      setDefaultRecipientKeyState(recipientAccountAddress);
+    }
+  }, [defaultRecipientKey, recipientAccountAddress]);
+  useEffect(() => {
+    if (defaultAgentKey !== agentAccountAddress) {
+      setDefaultAgentKeyState(agentAccountAddress);
+    }
+  }, [defaultAgentKey, agentAccountAddress]);
+  const buildScriptEditorParamValues = useCallback(
+    (
+      params: Array<{ label: string }>,
+      contractMeta?: {
+        version?: string;
+        inflationRate?: number;
+        recipientRateRange?: [number, number];
+        agentRateRange?: [number, number];
+      },
+    ) => {
+      const currentMeta = exchangeContext?.settings?.spCoinContract;
+      const resolvedMeta = {
+        version:
+          contractMeta?.version ?? (String(currentMeta?.version ?? '').trim() || undefined),
+        inflationRate:
+          contractMeta?.inflationRate ??
+          (isDefinedNumber(currentMeta?.inflationRate) ? currentMeta.inflationRate : undefined),
+        recipientRateRange:
+          contractMeta?.recipientRateRange ??
+          (Array.isArray(currentMeta?.recipientRateRange) &&
+          isDefinedNumber(currentMeta.recipientRateRange[0]) &&
+          isDefinedNumber(currentMeta.recipientRateRange[1])
+            ? currentMeta.recipientRateRange
+            : undefined),
+        agentRateRange:
+          contractMeta?.agentRateRange ??
+          (Array.isArray(currentMeta?.agentRateRange) &&
+          isDefinedNumber(currentMeta.agentRateRange[0]) &&
+          isDefinedNumber(currentMeta.agentRateRange[1])
+            ? currentMeta.agentRateRange
+            : undefined),
+      };
+      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+
+      return params.map((param) => {
+        const label = normalizeParamLabel(param.label);
+        if (label === 'msg.sender') return senderAddress;
+        if (label === 'sponsor key' || label === 'sponsor account') return sponsorAccountAddress;
+        if (label === 'recipient key' || label === 'recipient account') return recipientAccountAddress;
+        if (label === 'agent key' || label === 'agent account' || label === 'account agent key') {
+          return agentAccountAddress;
+        }
+        if (label === 'account key' || label === 'source key') {
+          return sponsorAccountAddress || activeAccountAddress;
+        }
+        if (label === 'new version') return resolvedMeta.version ?? '';
+        if (label === 'new inflation rate') {
+          return resolvedMeta.inflationRate !== undefined ? String(resolvedMeta.inflationRate) : '';
+        }
+        if (label === 'new lower recipient rate') {
+          return resolvedMeta.recipientRateRange ? String(resolvedMeta.recipientRateRange[0]) : '';
+        }
+        if (label === 'new upper recipient rate') {
+          return resolvedMeta.recipientRateRange ? String(resolvedMeta.recipientRateRange[1]) : '';
+        }
+        if (label === 'new lower agent rate') {
+          return resolvedMeta.agentRateRange ? String(resolvedMeta.agentRateRange[0]) : '';
+        }
+        if (label === 'new upper agent rate') {
+          return resolvedMeta.agentRateRange ? String(resolvedMeta.agentRateRange[1]) : '';
+        }
+        return '';
+      });
+    },
+    [
+      activeAccountAddress,
+      agentAccountAddress,
+      defaultSponsorKey,
+      exchangeContext?.settings?.spCoinContract,
+      recipientAccountAddress,
+      sponsorAccountAddress,
+    ],
+  );
+  const buildErc20ReadEditorDefaults = useCallback(
+    (labels: { addressALabel: string; addressBLabel: string }) => {
+      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      const resolveByLabel = (label: string) => {
+        const normalized = normalizeParamLabel(label);
+        if (normalized === 'owner address' || normalized === 'from address') return senderAddress;
+        if (normalized === 'to address' || normalized === 'recipient address' || normalized === 'recipient key') {
+          return recipientAccountAddress;
+        }
+        if (normalized === 'spender address') return agentAccountAddress;
+        return '';
+      };
+      return {
+        addressA: resolveByLabel(labels.addressALabel),
+        addressB: resolveByLabel(labels.addressBLabel),
+      };
+    },
+    [
+      activeAccountAddress,
+      agentAccountAddress,
+      defaultSponsorKey,
+      recipientAccountAddress,
+      sponsorAccountAddress,
+    ],
+  );
+  const buildErc20WriteEditorDefaults = useCallback(
+    (labels: { addressALabel: string; addressBLabel: string }) => {
+      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      const resolveByLabel = (label: string) => {
+        const normalized = normalizeParamLabel(label);
+        if (normalized === 'from address' || normalized === 'owner address') return senderAddress;
+        if (normalized === 'to address' || normalized === 'recipient address' || normalized === 'recipient key') {
+          return recipientAccountAddress;
+        }
+        if (normalized === 'spender address') return agentAccountAddress;
+        return '';
+      };
+      const amountValue = sellTokenAmountRaw || buyTokenAmountRaw || previewTokenAmountRaw;
+      return {
+        senderAddress,
+        addressA: resolveByLabel(labels.addressALabel),
+        addressB: resolveByLabel(labels.addressBLabel),
+        amount: amountValue,
+      };
+    },
+    [
+      activeAccountAddress,
+      agentAccountAddress,
+      buyTokenAmountRaw,
+      defaultSponsorKey,
+      previewTokenAmountRaw,
+      recipientAccountAddress,
+      sellTokenAmountRaw,
+      sponsorAccountAddress,
+    ],
+  );
+  const syncEditorAddressFieldToExchangeContext = useCallback(
+    (label: string, value: string) => {
+      const normalizedLabel = normalizeParamLabel(label);
+      if (
+        normalizedLabel === 'owner address' ||
+        normalizedLabel === 'from address' ||
+        normalizedLabel === 'sponsor key' ||
+        normalizedLabel === 'sponsor account'
+      ) {
+        syncRoleAccountToExchangeContext('sponsor', value);
+        return;
+      }
+      if (
+        normalizedLabel === 'to address' ||
+        normalizedLabel === 'recipient address' ||
+        normalizedLabel === 'recipient key' ||
+        normalizedLabel === 'recipient account'
+      ) {
+        syncRoleAccountToExchangeContext('recipient', value);
+        return;
+      }
+      if (
+        normalizedLabel === 'spender address' ||
+        normalizedLabel === 'agent key' ||
+        normalizedLabel === 'agent account' ||
+        normalizedLabel === 'account agent key'
+      ) {
+        syncRoleAccountToExchangeContext('agent', value);
+      }
+    },
+    [syncRoleAccountToExchangeContext],
+  );
+  const syncEditorAmountToExchangeContext = useCallback(
+    (value: string) => {
+      const trimmed = String(value || '').trim();
+      if (!trimmed) {
+        setExchangeContext(
+          (prev) => {
+            const next = structuredClone(prev);
+            if (next.tradeData.sellTokenContract?.amount !== undefined) {
+              next.tradeData.sellTokenContract.amount = undefined;
+              return next;
+            }
+            if (next.tradeData.buyTokenContract?.amount !== undefined) {
+              next.tradeData.buyTokenContract.amount = undefined;
+              return next;
+            }
+            if (next.tradeData.previewTokenContract?.amount !== undefined) {
+              next.tradeData.previewTokenContract.amount = undefined;
+              return next;
+            }
+            return prev;
+          },
+          'SponsorCoinLab:editorAmount:clear',
+        );
+        return;
+      }
+      if (!isIntegerString(trimmed)) return;
+      const nextAmount = BigInt(trimmed);
+      setExchangeContext(
+        (prev) => {
+          const next = structuredClone(prev);
+          if (next.tradeData.sellTokenContract) {
+            if (next.tradeData.sellTokenContract.amount === nextAmount) return prev;
+            next.tradeData.sellTokenContract.amount = nextAmount;
+            return next;
+          }
+          if (next.tradeData.buyTokenContract) {
+            if (next.tradeData.buyTokenContract.amount === nextAmount) return prev;
+            next.tradeData.buyTokenContract.amount = nextAmount;
+            return next;
+          }
+          if (next.tradeData.previewTokenContract) {
+            if (next.tradeData.previewTokenContract.amount === nextAmount) return prev;
+            next.tradeData.previewTokenContract.amount = nextAmount;
+            return next;
+          }
+          return prev;
+        },
+        'SponsorCoinLab:editorAmount:set',
+      );
+    },
+    [setExchangeContext],
   );
 
   useEffect(() => {
@@ -592,6 +978,149 @@ export default function SponsorCoinLabPage() {
     displayedSpCoinOwnerAddress,
     exchangeContext?.accounts?.spCoinOwnerAccount,
   ]);
+  const resolveScriptEditorContractMetadata = useCallback(
+    async (
+      params: Array<{ label: string }>,
+    ): Promise<{
+      version?: string;
+      inflationRate?: number;
+      recipientRateRange?: [number, number];
+      agentRateRange?: [number, number];
+    }> => {
+      const labels = new Set(params.map((param) => normalizeParamLabel(param.label)));
+      const currentMeta = exchangeContext?.settings?.spCoinContract;
+      const needsVersion = labels.has('new version') && !String(currentMeta?.version ?? '').trim();
+      const needsInflationRate =
+        labels.has('new inflation rate') && !isDefinedNumber(currentMeta?.inflationRate);
+      const needsLowerRecipient =
+        labels.has('new lower recipient rate') &&
+        !isDefinedNumber(currentMeta?.recipientRateRange?.[0]);
+      const needsUpperRecipient =
+        labels.has('new upper recipient rate') &&
+        !isDefinedNumber(currentMeta?.recipientRateRange?.[1]);
+      const needsLowerAgent =
+        labels.has('new lower agent rate') && !isDefinedNumber(currentMeta?.agentRateRange?.[0]);
+      const needsUpperAgent =
+        labels.has('new upper agent rate') && !isDefinedNumber(currentMeta?.agentRateRange?.[1]);
+
+      if (
+        !needsVersion &&
+        !needsInflationRate &&
+        !needsLowerRecipient &&
+        !needsUpperRecipient &&
+        !needsLowerAgent &&
+        !needsUpperAgent
+      ) {
+        return {};
+      }
+
+      const target = requireContractAddress();
+      const runner = await ensureReadRunner();
+      const access = createSpCoinLibraryAccess(target, runner);
+      const contract = access.contract as Record<string, unknown>;
+      const read = (access.read ?? {}) as Record<string, unknown>;
+
+      const callNoArgs = async (...names: string[]) => {
+        for (const name of names) {
+          const contractFn = contract[name];
+          if (typeof contractFn === 'function') {
+            try {
+              return await (contractFn as () => Promise<unknown>)();
+            } catch {
+              // Try the next candidate.
+            }
+          }
+          const readFn = read[name];
+          if (typeof readFn === 'function') {
+            try {
+              return await (readFn as () => Promise<unknown>)();
+            } catch {
+              // Try the next candidate.
+            }
+          }
+        }
+        return undefined;
+      };
+
+      const nextMeta: {
+        version?: string;
+        inflationRate?: number;
+        recipientRateRange?: [number, number];
+        agentRateRange?: [number, number];
+      } = {};
+
+      if (needsVersion) {
+        const version = await callNoArgs('getVersion', 'version');
+        const normalized = String(version ?? '').trim();
+        if (normalized) nextMeta.version = normalized;
+      }
+
+      if (needsInflationRate) {
+        const inflationRate = await callNoArgs('getInflationRate', 'annualInflation');
+        const normalized = Number(inflationRate);
+        if (Number.isFinite(normalized)) nextMeta.inflationRate = normalized;
+      }
+
+      if (needsLowerRecipient || needsUpperRecipient) {
+        const lower = needsLowerRecipient
+          ? Number(await callNoArgs('getLowerRecipientRate'))
+          : Number(currentMeta?.recipientRateRange?.[0]);
+        const upper = needsUpperRecipient
+          ? Number(await callNoArgs('getUpperRecipientRate'))
+          : Number(currentMeta?.recipientRateRange?.[1]);
+        if (Number.isFinite(lower) && Number.isFinite(upper)) {
+          nextMeta.recipientRateRange = [lower, upper];
+        }
+      }
+
+      if (needsLowerAgent || needsUpperAgent) {
+        const lower = needsLowerAgent
+          ? Number(await callNoArgs('getLowerAgentRate'))
+          : Number(currentMeta?.agentRateRange?.[0]);
+        const upper = needsUpperAgent
+          ? Number(await callNoArgs('getUpperAgentRate'))
+          : Number(currentMeta?.agentRateRange?.[1]);
+        if (Number.isFinite(lower) && Number.isFinite(upper)) {
+          nextMeta.agentRateRange = [lower, upper];
+        }
+      }
+
+      if (
+        nextMeta.version !== undefined ||
+        nextMeta.inflationRate !== undefined ||
+        nextMeta.recipientRateRange !== undefined ||
+        nextMeta.agentRateRange !== undefined
+      ) {
+        setSettings((prev) => {
+          const prevContract = prev?.spCoinContract;
+          return {
+            ...prev,
+            spCoinContract: {
+              version: nextMeta.version ?? String(prevContract?.version ?? '').trim(),
+              name: String(prevContract?.name ?? '').trim(),
+              symbol: String(prevContract?.symbol ?? '').trim(),
+              decimals: Number(prevContract?.decimals ?? 0),
+              totalSypply: String(prevContract?.totalSypply ?? '').trim(),
+              inflationRate:
+                nextMeta.inflationRate ??
+                (isDefinedNumber(prevContract?.inflationRate) ? prevContract.inflationRate : 0),
+              recipientRateRange:
+                nextMeta.recipientRateRange ??
+                (Array.isArray(prevContract?.recipientRateRange)
+                  ? prevContract.recipientRateRange
+                  : [0, 0]),
+              agentRateRange:
+                nextMeta.agentRateRange ??
+                (Array.isArray(prevContract?.agentRateRange) ? prevContract.agentRateRange : [0, 0]),
+            },
+          };
+        });
+      }
+
+      return nextMeta;
+    },
+    [ensureReadRunner, exchangeContext?.settings?.spCoinContract, requireContractAddress, setSettings],
+  );
   const handleRemoveContractFromApp = useCallback(async () => {
     const activeAddress = String(contractAddress || '').trim();
     const activeChainId = Number(chainIdDisplayValue || 0);
@@ -1115,12 +1644,6 @@ export default function SponsorCoinLabPage() {
     setSelectedSerializationTestMethod,
     selectedSponsorCoinAccountRole,
     setSelectedSponsorCoinAccountRole,
-    defaultSponsorKey,
-    setDefaultSponsorKey,
-    defaultRecipientKey,
-    setDefaultRecipientKey,
-    defaultAgentKey,
-    setDefaultAgentKey,
     managedRoleAccountAddress,
     setManagedRoleAccountAddress,
     managedRecipientKey,
@@ -1586,41 +2109,167 @@ export default function SponsorCoinLabPage() {
   }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
   useEffect(() => {
     if (methodSelectionSource !== 'dropdown' || editingScriptStepNumber !== null) return;
+    let cancelled = false;
 
-    const defaults = {
-      sponsor: defaultSponsorKey,
-      recipient: defaultRecipientKey,
-      agent: defaultAgentKey,
+    const hydrateEditorFromExchangeContext = async () => {
+      queueEditorBaselineReset();
+      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      if (methodPanelMode === 'ecr20_read') {
+        const nextDefaults = buildErc20ReadEditorDefaults(activeReadLabels);
+        if (readAddressA !== nextDefaults.addressA) {
+          setReadAddressA(nextDefaults.addressA);
+        }
+        if (readAddressB !== nextDefaults.addressB) {
+          setReadAddressB(nextDefaults.addressB);
+        }
+        return;
+      }
+
+      if (methodPanelMode === 'erc20_write') {
+        const nextDefaults = buildErc20WriteEditorDefaults(activeWriteLabels);
+        if (nextDefaults.senderAddress && selectedWriteSenderAddress !== nextDefaults.senderAddress) {
+          setSelectedWriteSenderAddress(nextDefaults.senderAddress);
+        }
+        if (writeAddressA !== nextDefaults.addressA) {
+          setWriteAddressA(nextDefaults.addressA);
+        }
+        if (writeAddressB !== nextDefaults.addressB) {
+          setWriteAddressB(nextDefaults.addressB);
+        }
+        if (!String(writeAmountRaw || '').trim() && nextDefaults.amount) {
+          setWriteAmountRaw(nextDefaults.amount);
+        }
+        return;
+      }
+
+      if (methodPanelMode === 'spcoin_rread') {
+        setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params));
+        try {
+          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinReadDef.params);
+          if (!cancelled) {
+            queueEditorBaselineReset();
+            setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params, nextMeta));
+          }
+        } catch {
+          // Keep the ExchangeContext-derived values when contract reads are unavailable.
+        }
+        return;
+      }
+
+      if (methodPanelMode === 'spcoin_write') {
+        if (senderAddress) {
+          setSelectedWriteSenderAddress(senderAddress);
+        }
+        setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params));
+        try {
+          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinWriteDef.params);
+          if (!cancelled) {
+            queueEditorBaselineReset();
+            setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params, nextMeta));
+          }
+        } catch {
+          // Keep the ExchangeContext-derived values when contract reads are unavailable.
+        }
+        return;
+      }
+
+      if (methodPanelMode === 'serialization_tests') {
+        setSerializationTestParams(buildScriptEditorParamValues(activeSerializationTestDef.params));
+        try {
+          const nextMeta = await resolveScriptEditorContractMetadata(activeSerializationTestDef.params);
+          if (!cancelled) {
+            queueEditorBaselineReset();
+            setSerializationTestParams(
+              buildScriptEditorParamValues(activeSerializationTestDef.params, nextMeta),
+            );
+          }
+        } catch {
+          // Keep the ExchangeContext-derived values when contract reads are unavailable.
+        }
+      }
     };
 
-    if (methodPanelMode === 'spcoin_rread') {
-      setSpReadParams(buildDefaultAccountParams(activeSpCoinReadDef.params, defaults));
-      return;
-    }
-
-    if (methodPanelMode === 'spcoin_write') {
-      if (defaultSponsorKey) {
-        setSelectedWriteSenderAddress(defaultSponsorKey);
-      }
-      setSpWriteParams(buildDefaultAccountParams(activeSpCoinWriteDef.params, defaults));
-      return;
-    }
-
-    if (methodPanelMode === 'serialization_tests') {
-      setSerializationTestParams(buildDefaultAccountParams(activeSerializationTestDef.params, defaults));
-    }
+    void hydrateEditorFromExchangeContext();
+    return () => {
+      cancelled = true;
+    };
   }, [
+    activeReadLabels,
     activeSerializationTestDef.params,
     activeSpCoinReadDef.params,
     activeSpCoinWriteDef.params,
-    defaultAgentKey,
-    defaultRecipientKey,
+    activeWriteLabels,
+    activeAccountAddress,
+    buildErc20ReadEditorDefaults,
+    buildErc20WriteEditorDefaults,
+    buildScriptEditorParamValues,
     defaultSponsorKey,
     editingScriptStepNumber,
     methodPanelMode,
     methodSelectionSource,
+    queueEditorBaselineReset,
+    resolveScriptEditorContractMetadata,
+    setReadAddressA,
+    setReadAddressB,
+    setSerializationTestParams,
     setSelectedWriteSenderAddress,
+    setSpReadParams,
+    setSpWriteParams,
+    setWriteAddressA,
+    setWriteAddressB,
+    setWriteAmountRaw,
+    sponsorAccountAddress,
+    readAddressA,
+    readAddressB,
+    selectedWriteSenderAddress,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
   ]);
+  useEffect(() => {
+    if (methodPanelMode !== 'ecr20_read') return;
+    syncEditorAddressFieldToExchangeContext(activeReadLabels.addressALabel, readAddressA);
+  }, [
+    activeReadLabels.addressALabel,
+    methodPanelMode,
+    readAddressA,
+    syncEditorAddressFieldToExchangeContext,
+  ]);
+  useEffect(() => {
+    if (methodPanelMode !== 'ecr20_read') return;
+    syncEditorAddressFieldToExchangeContext(activeReadLabels.addressBLabel, readAddressB);
+  }, [
+    activeReadLabels.addressBLabel,
+    methodPanelMode,
+    readAddressB,
+    syncEditorAddressFieldToExchangeContext,
+  ]);
+  useEffect(() => {
+    if (methodPanelMode !== 'erc20_write') return;
+    syncRoleAccountToExchangeContext('sponsor', selectedWriteSenderAddress);
+  }, [methodPanelMode, selectedWriteSenderAddress, syncRoleAccountToExchangeContext]);
+  useEffect(() => {
+    if (methodPanelMode !== 'erc20_write') return;
+    syncEditorAddressFieldToExchangeContext(activeWriteLabels.addressALabel, writeAddressA);
+  }, [
+    activeWriteLabels.addressALabel,
+    methodPanelMode,
+    syncEditorAddressFieldToExchangeContext,
+    writeAddressA,
+  ]);
+  useEffect(() => {
+    if (methodPanelMode !== 'erc20_write') return;
+    syncEditorAddressFieldToExchangeContext(activeWriteLabels.addressBLabel, writeAddressB);
+  }, [
+    activeWriteLabels.addressBLabel,
+    methodPanelMode,
+    syncEditorAddressFieldToExchangeContext,
+    writeAddressB,
+  ]);
+  useEffect(() => {
+    if (methodPanelMode !== 'erc20_write') return;
+    syncEditorAmountToExchangeContext(writeAmountRaw);
+  }, [methodPanelMode, syncEditorAmountToExchangeContext, writeAmountRaw]);
   useEffect(() => {
     const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
 
