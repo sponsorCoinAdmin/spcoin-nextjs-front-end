@@ -2,9 +2,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Address } from 'viem';
 import CloseButton from '@/components/views/Buttons/CloseButton';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
+import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
 import {
   ERC20_READ_OPTIONS,
   getErc20ReadLabels,
@@ -64,6 +66,7 @@ import {
   type MethodPanelMode,
 } from './scriptBuilder/types';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
+import { STATUS, type spCoinAccount } from '@/lib/structure';
 
 type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
@@ -269,7 +272,7 @@ function buildMethodCallEntry(
 }
 
 export default function SponsorCoinLabPage() {
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
@@ -301,6 +304,10 @@ export default function SponsorCoinLabPage() {
   const previousContractAddressRef = useRef('');
   const [isRemovingContractFromApp, setIsRemovingContractFromApp] = useState(false);
   const [removedContractAddresses, setRemovedContractAddresses] = useState<string[]>([]);
+  const spCoinOwnerSyncRef = useRef({
+    contractKey: '',
+    requestId: 0,
+  });
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -339,6 +346,9 @@ export default function SponsorCoinLabPage() {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
   }, []);
+  const spCoinOwnerAccountAddress = normalizeAddressValue(
+    String(exchangeContext?.accounts?.spCoinOwnerAccount?.address ?? ''),
+  );
 
   useEffect(() => {
     const previous = normalizeAddressValue(previousContractAddressRef.current);
@@ -482,6 +492,106 @@ export default function SponsorCoinLabPage() {
     selectedReadMethod,
     selectedSpCoinReadMethod,
   });
+  useEffect(() => {
+    const contractKey = normalizeAddressValue(
+      String(selectedSponsorCoinVersionEntry?.address || contractAddress || ''),
+    );
+    if (!contractKey) {
+      spCoinOwnerSyncRef.current.contractKey = '';
+      return;
+    }
+    if (spCoinOwnerSyncRef.current.contractKey === contractKey) return;
+
+    const ownerAddress = normalizeAddressValue(displayedSignerAccountAddress);
+    if (!ownerAddress || !isAddressLike(ownerAddress)) return;
+
+    const requestId = ++spCoinOwnerSyncRef.current.requestId;
+    const preservedBalance =
+      spCoinOwnerAccountAddress === ownerAddress &&
+      typeof exchangeContext?.accounts?.spCoinOwnerAccount?.balance === 'bigint'
+        ? exchangeContext.accounts.spCoinOwnerAccount.balance
+        : undefined;
+
+    void (async () => {
+      let nextAccount: spCoinAccount;
+      try {
+        nextAccount = await hydrateAccountFromAddress(ownerAddress as Address, {
+          balance: preservedBalance,
+        });
+      } catch {
+        nextAccount = makeAccountFallback(
+          ownerAddress as Address,
+          STATUS.MESSAGE_ERROR,
+          `Account ${ownerAddress} metadata could not be loaded`,
+          preservedBalance,
+        );
+      }
+
+      if (spCoinOwnerSyncRef.current.requestId !== requestId) return;
+
+      setExchangeContext(
+        (prev) => {
+          const prevAccount = prev.accounts?.spCoinOwnerAccount;
+          const prevAddress = normalizeAddressValue(String(prevAccount?.address ?? ''));
+          if (
+            prevAddress === ownerAddress &&
+            prevAccount?.name === nextAccount.name &&
+            prevAccount?.symbol === nextAccount.symbol &&
+            prevAccount?.logoURL === nextAccount.logoURL &&
+            prevAccount?.description === nextAccount.description &&
+            prevAccount?.website === nextAccount.website &&
+            prevAccount?.type === nextAccount.type &&
+            prevAccount?.status === nextAccount.status &&
+            prevAccount?.balance === nextAccount.balance
+          ) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              spCoinOwnerAccount: nextAccount,
+            },
+          };
+        },
+        'SponsorCoinLab:setSpCoinOwnerAccount',
+      );
+
+      spCoinOwnerSyncRef.current.contractKey = contractKey;
+    })();
+  }, [
+    contractAddress,
+    displayedSignerAccountAddress,
+    exchangeContext?.accounts?.spCoinOwnerAccount?.balance,
+    selectedSponsorCoinVersion,
+    selectedSponsorCoinVersionEntry?.address,
+    selectedSponsorCoinVersionEntry?.id,
+    setExchangeContext,
+    spCoinOwnerAccountAddress,
+  ]);
+  const displayedSpCoinOwnerAddress = selectedSponsorCoinVersionEntry
+    ? spCoinOwnerAccountAddress || displayedSignerAccountAddress
+    : displayedSignerAccountAddress;
+  const displayedSpCoinOwnerMetadata = useMemo(() => {
+    const ownerAccount = exchangeContext?.accounts?.spCoinOwnerAccount;
+    if (
+      ownerAccount &&
+      normalizeAddressValue(String(ownerAccount.address ?? '')) ===
+        normalizeAddressValue(displayedSpCoinOwnerAddress)
+    ) {
+      return {
+        logoURL: ownerAccount.logoURL,
+        name: ownerAccount.name,
+        symbol: ownerAccount.symbol,
+      };
+    }
+    return displayedSignerAccountMetadata;
+  }, [
+    displayedSignerAccountMetadata,
+    displayedSpCoinOwnerAddress,
+    exchangeContext?.accounts?.spCoinOwnerAccount,
+  ]);
   const handleRemoveContractFromApp = useCallback(async () => {
     const activeAddress = String(contractAddress || '').trim();
     const activeChainId = Number(chainIdDisplayValue || 0);
@@ -1811,11 +1921,11 @@ export default function SponsorCoinLabPage() {
             details={{
               showSignerAccountDetails,
               setShowSignerAccountDetails,
-              displayedSignerAccountAddress,
+              displayedSignerAccountAddress: displayedSpCoinOwnerAddress,
               selectedWriteSenderAddress,
               setSelectedWriteSenderAddress,
               writeSenderDisplayValue,
-              displayedSignerAccountMetadata,
+              displayedSignerAccountMetadata: displayedSpCoinOwnerMetadata,
               mode,
               selectedVersionSignerKey,
             }}

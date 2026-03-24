@@ -346,6 +346,10 @@ export const sanitizeExchangeContext = (
       ? toPersistedAccountRef((raw as any).accounts.activeAccount)
       : defaultContext.accounts.activeAccount,
 
+    spCoinOwnerAccount: (raw as any).accounts?.spCoinOwnerAccount
+      ? toPersistedAccountRef((raw as any).accounts.spCoinOwnerAccount)
+      : defaultContext.accounts.spCoinOwnerAccount,
+
     sponsorAccount: (raw as any).accounts?.sponsorAccount
       ? toPersistedAccountRef((raw as any).accounts.sponsorAccount)
       : defaultContext.accounts.sponsorAccount,

@@ -132,6 +132,36 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
     return ordered;
   }, [exchangeContext, treeWithNames]);
+  const accountsObj = useMemo(() => {
+    const realAccounts = (exchangeContext as any)?.accounts ?? {};
+    const ordered: Record<string, unknown> = {};
+    const push = (key: string, value: unknown) => {
+      ordered[key] = value;
+    };
+
+    push('activeAccount', realAccounts.activeAccount);
+    push('spCoinOwnerAccount', realAccounts.spCoinOwnerAccount);
+    push('sponsorAccount', realAccounts.sponsorAccount);
+    push('recipientAccount', realAccounts.recipientAccount);
+    push('agentAccount', realAccounts.agentAccount);
+    push('sponsorAccounts', realAccounts.sponsorAccounts);
+    push('recipientAccounts', realAccounts.recipientAccounts);
+    push('agentAccounts', realAccounts.agentAccounts);
+
+    const included = new Set(Object.keys(ordered));
+    for (const [key, value] of Object.entries(realAccounts)) {
+      if (!included.has(key)) ordered[key] = value;
+    }
+
+    return ordered;
+  }, [exchangeContext]);
+  const restDisplay = useMemo(() => {
+    const { accounts, ...rest } = restRaw as Record<string, unknown>;
+    return {
+      ...(typeof accounts !== 'undefined' ? { accounts: accountsObj } : {}),
+      ...rest,
+    };
+  }, [accountsObj, restRaw]);
 
   return (
     <div className="space-y-0">
@@ -149,11 +179,11 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
       />
 
       {/* Everything except settings */}
-      {Object.keys(restRaw).map((k) => (
+      {Object.keys(restDisplay).map((k) => (
         <TreeView
           key={`rest.${k}`}
           label={k}
-          value={(restRaw as any)[k]}
+          value={(restDisplay as any)[k]}
           exp={ui.exp}
           onTogglePath={onTogglePath}
           enumRegistry={enumRegistry}

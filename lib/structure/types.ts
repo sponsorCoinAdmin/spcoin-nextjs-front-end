@@ -63,6 +63,7 @@ export interface ContractRecs {
  */
 export interface Accounts {
   activeAccount?: spCoinAccount;
+  spCoinOwnerAccount?: spCoinAccount;
   sponsorAccount?: spCoinAccount;
   recipientAccount?: spCoinAccount;
   agentAccount?: spCoinAccount;
