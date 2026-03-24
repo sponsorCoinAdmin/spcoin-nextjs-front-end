@@ -153,6 +153,67 @@ function isDefinedNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function parseStructuredErrorMessage(input: string): Record<string, unknown> | null {
+  const trimmed = String(input || '').trim();
+  if (!trimmed) return null;
+  const normalizeQuotedReason = (value: string) =>
+    String(value || '').replace(/execution reverted:\s*"([^"]+)"/i, 'execution reverted: $1');
+
+  const extractQuotedValue = (label: string) => {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = trimmed.match(new RegExp(`${escapedLabel}=\"([^\"]*)\"`));
+    return match?.[1];
+  };
+
+  const extractParenValue = (label: string) => {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = trimmed.match(new RegExp(`${escapedLabel}=([^,\\)]+)`));
+    return match?.[1]?.trim();
+  };
+
+  const messageMatch = trimmed.match(/^([^([]+?)(?:\s+\(|$)/);
+  const topLevelMessage = String(messageMatch?.[1] || '').trim();
+  const action = extractQuotedValue('action');
+  const data = extractQuotedValue('data');
+  const reason = extractQuotedValue('reason');
+  const code = extractParenValue('code');
+  const version = extractParenValue('version');
+  const transactionData = extractQuotedValue('transaction={ "data":');
+  const transactionFrom = extractQuotedValue('"from":');
+  const transactionTo = extractQuotedValue('"to":');
+  const revertName = extractQuotedValue('"name":');
+  const revertSignature = extractQuotedValue('"signature":');
+
+  const revertArgsMatch = trimmed.match(/"args":\s*\[\s*"([^"]*)"\s*\]/);
+  const revertArg = revertArgsMatch?.[1];
+
+  const out: Record<string, unknown> = {};
+  if (topLevelMessage && topLevelMessage !== trimmed) {
+    out.message = normalizeQuotedReason(topLevelMessage);
+  }
+  if (reason) out.reason = reason;
+  if (action) out.action = action;
+  if (code) out.code = code;
+  if (version) out.version = version;
+  if (data) out.data = data;
+  if (transactionData || transactionFrom || transactionTo) {
+    out.transaction = {
+      ...(transactionData ? { data: transactionData } : {}),
+      ...(transactionFrom ? { from: transactionFrom } : {}),
+      ...(transactionTo ? { to: transactionTo } : {}),
+    };
+  }
+  if (revertName || revertSignature || revertArg) {
+    out.revert = {
+      ...(revertName ? { name: revertName } : {}),
+      ...(revertSignature ? { signature: revertSignature } : {}),
+      ...(revertArg ? { args: [revertArg] } : {}),
+    };
+  }
+
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   const parseSerializedMapString = (input: string): Record<string, unknown> | null => {
     const trimmed = input.trim();
@@ -229,7 +290,10 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
-    if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') return value;
+    if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') {
+      const parsedError = parseStructuredErrorMessage(trimmed);
+      return parsedError ?? value;
+    }
     const parsedSerializedMap = parseSerializedMapString(trimmed);
     if (parsedSerializedMap) return parsedSerializedMap;
     if (/^0x[0-9a-fA-F]+$/.test(trimmed) && !isAddressLike(trimmed)) {
@@ -2116,29 +2180,24 @@ export default function SponsorCoinLabPage() {
       const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
       if (methodPanelMode === 'ecr20_read') {
         const nextDefaults = buildErc20ReadEditorDefaults(activeReadLabels);
-        if (readAddressA !== nextDefaults.addressA) {
-          setReadAddressA(nextDefaults.addressA);
-        }
-        if (readAddressB !== nextDefaults.addressB) {
-          setReadAddressB(nextDefaults.addressB);
-        }
+        setReadAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
+        setReadAddressB((prev) => (prev === nextDefaults.addressB ? prev : nextDefaults.addressB));
         return;
       }
 
       if (methodPanelMode === 'erc20_write') {
         const nextDefaults = buildErc20WriteEditorDefaults(activeWriteLabels);
-        if (nextDefaults.senderAddress && selectedWriteSenderAddress !== nextDefaults.senderAddress) {
-          setSelectedWriteSenderAddress(nextDefaults.senderAddress);
+        if (nextDefaults.senderAddress) {
+          setSelectedWriteSenderAddress((prev) =>
+            prev === nextDefaults.senderAddress ? prev : nextDefaults.senderAddress,
+          );
         }
-        if (writeAddressA !== nextDefaults.addressA) {
-          setWriteAddressA(nextDefaults.addressA);
-        }
-        if (writeAddressB !== nextDefaults.addressB) {
-          setWriteAddressB(nextDefaults.addressB);
-        }
-        if (!String(writeAmountRaw || '').trim() && nextDefaults.amount) {
-          setWriteAmountRaw(nextDefaults.amount);
-        }
+        setWriteAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
+        setWriteAddressB((prev) => (prev === nextDefaults.addressB ? prev : nextDefaults.addressB));
+        setWriteAmountRaw((prev) => {
+          if (String(prev || '').trim()) return prev;
+          return nextDefaults.amount || prev;
+        });
         return;
       }
 
@@ -2219,12 +2278,6 @@ export default function SponsorCoinLabPage() {
     setWriteAddressB,
     setWriteAmountRaw,
     sponsorAccountAddress,
-    readAddressA,
-    readAddressB,
-    selectedWriteSenderAddress,
-    writeAddressA,
-    writeAddressB,
-    writeAmountRaw,
   ]);
   useEffect(() => {
     if (methodPanelMode !== 'ecr20_read') return;
@@ -2422,9 +2475,8 @@ export default function SponsorCoinLabPage() {
       setOutputPanelMode('formatted');
       setFormattedPanelView('script');
       focusScriptStep(step);
-      editScriptStepFromBuilder(step);
     },
-    [editScriptStepFromBuilder, focusScriptStep, resetToDropdownSelection, selectedScriptStep?.step],
+    [focusScriptStep, resetToDropdownSelection, selectedScriptStep?.step],
   );
   const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
     confirmDeleteSelectedScriptStep();
