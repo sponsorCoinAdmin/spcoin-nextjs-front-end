@@ -203,7 +203,7 @@ const parseManagerResponse = async (response: Response): Promise<ManagerResponse
 };
 
 type SpCoinAccessStorage = {
-  useLocalPackage: boolean;
+  useLocalPackage?: boolean;
   selectedPackage: string;
   selectedVersion: string;
   localInstallSourceRoot: string;
@@ -247,18 +247,15 @@ export function useSpCoinAccessController() {
   const hasHydratedStorageRef = useRef(false);
   const [chromeHeight, setChromeHeight] = useState(72);
   const managerSettings = settings.spCoinAccessManager ?? {
-    useLocalPackage: true,
-    selectedVersion: '0.0.1',
-    selectedPackage: '@sponsorcoin/spcoin-access-modules',
+    source: 'local' as const,
+    activeNpmVersion: '0.0.1',
   };
-  const [versionInput, setVersionInput] = useState(managerSettings.selectedVersion || '0.0.1');
+  const [versionInput, setVersionInput] = useState(managerSettings.activeNpmVersion || '0.0.1');
   const [status, setStatus] = useState<string>(
     'Select a SponsorCoin package and version before running download or upload.',
   );
   const [availablePackages, setAvailablePackages] = useState<string[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState(
-    managerSettings.selectedPackage || '@sponsorcoin/spcoin-access-modules',
-  );
+  const [selectedPackage, setSelectedPackage] = useState('@sponsorcoin/spcoin-access-modules');
   const [deploymentStatus, setDeploymentStatus] = useState(
     'Enter your private spCoin deployment values, then use Deploy once the server-side contract automation is connected.',
   );
@@ -282,8 +279,8 @@ export function useSpCoinAccessController() {
   const [npmOtp, setNpmOtp] = useState('');
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [uploadBlocked, setUploadBlocked] = useState(true);
-  const [resolvedNpmVersion, setResolvedNpmVersion] = useState(managerSettings.selectedVersion || '0.0.1');
-  const [localPackageVersion, setLocalPackageVersion] = useState(managerSettings.selectedVersion || '0.0.1');
+  const [resolvedNpmVersion, setResolvedNpmVersion] = useState(managerSettings.activeNpmVersion || '0.0.1');
+  const [localPackageVersion, setLocalPackageVersion] = useState(managerSettings.activeNpmVersion || '0.0.1');
   const [activeDownloadedVersion, setActiveDownloadedVersion] = useState('');
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
   const [deploymentFlashError, setDeploymentFlashError] = useState(false);
@@ -499,9 +496,9 @@ export function useSpCoinAccessController() {
   const deploymentPathDisplayValue = localSourceDeploymentPath;
   const selectedVersion = useMemo(() => {
     const trimmed = versionInput.trim();
-    if (!trimmed) return managerSettings.selectedVersion || '0.0.1';
-    return isVersionFormatValid(trimmed) ? trimmed : managerSettings.selectedVersion || '0.0.1';
-  }, [managerSettings.selectedVersion, versionInput]);
+    if (!trimmed) return managerSettings.activeNpmVersion || '0.0.1';
+    return isVersionFormatValid(trimmed) ? trimmed : managerSettings.activeNpmVersion || '0.0.1';
+  }, [managerSettings.activeNpmVersion, versionInput]);
 
   const adjustDeploymentDecimals = (direction: 1 | -1) => {
     const current = Number.parseInt(String(deploymentDecimals || '18'), 10);
@@ -826,7 +823,7 @@ export function useSpCoinAccessController() {
     setDeploymentStatusIsError(false);
   };
 
-  const persistManagerSettings = (next: { useLocalPackage: boolean; selectedVersion: string; selectedPackage: string }) => {
+  const persistManagerSettings = (next: { source: 'local' | 'node'; activeNpmVersion: string }) => {
     setSettings((prev) => ({ ...prev, spCoinAccessManager: next }));
   };
   const adjustVersion = (direction: 1 | -1) => {
@@ -841,7 +838,7 @@ export function useSpCoinAccessController() {
     nextSegments[lastIndex] = Math.max(0, (nextSegments[lastIndex] ?? 0) + direction);
     const nextVersion = nextSegments.join('.');
     setVersionInput(nextVersion);
-    persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion: nextVersion, selectedPackage });
+    persistManagerSettings({ source: managerSettings.source, activeNpmVersion: nextVersion });
     setStatus(`Version set to ${nextVersion}`);
   };
 
@@ -849,7 +846,7 @@ export function useSpCoinAccessController() {
     const normalized = String(nextVersion || '').trim();
     if (!normalized) return;
     setVersionInput(normalized);
-    persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion: normalized, selectedPackage });
+    persistManagerSettings({ source: managerSettings.source, activeNpmVersion: normalized });
   };
 
   useEffect(() => {
@@ -936,10 +933,10 @@ export function useSpCoinAccessController() {
         return;
       }
       const persisted = JSON.parse(raw) as Partial<SpCoinAccessStorage>;
-      const nextSelectedPackage = persisted.selectedPackage || managerSettings.selectedPackage || selectedPackage;
+      const nextSelectedPackage = persisted.selectedPackage || selectedPackage;
       const hydratedVersion = persisted.selectedVersion === 'latest' ? '0.0.1' : persisted.selectedVersion;
-      const nextSelectedVersion = hydratedVersion || managerSettings.selectedVersion || selectedVersion;
-      persistManagerSettings({ useLocalPackage: true, selectedPackage: nextSelectedPackage, selectedVersion: nextSelectedVersion });
+      const nextSelectedVersion = hydratedVersion || managerSettings.activeNpmVersion || selectedVersion;
+      persistManagerSettings({ source: 'local', activeNpmVersion: nextSelectedVersion });
       setSelectedPackage(nextSelectedPackage);
       setVersionInput(nextSelectedVersion);
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
@@ -974,7 +971,7 @@ export function useSpCoinAccessController() {
         if (packages.length === 0) return setStatus('No @sponsorcoin packages were found in node_modules.');
         const nextSelected = packages.includes(selectedPackage) ? selectedPackage : packages[0];
         setSelectedPackage(nextSelected);
-        persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion, selectedPackage: nextSelected });
+        persistManagerSettings({ source: managerSettings.source, activeNpmVersion: selectedVersion });
       } catch (error) {
         if (!active) return;
         const message = error instanceof Error ? error.message : 'Unknown package discovery failure';
@@ -1147,7 +1144,7 @@ export function useSpCoinAccessController() {
   useEffect(() => {
     if (!hasHydratedStorageRef.current || typeof window === 'undefined') return;
     const persisted: SpCoinAccessStorage = {
-      useLocalPackage: true,
+      useLocalPackage: managerSettings.source !== 'node',
       selectedPackage,
       selectedVersion,
       localInstallSourceRoot,
@@ -1175,6 +1172,7 @@ export function useSpCoinAccessController() {
     deploymentVersion,
     hardhatDeploymentAccountNumber,
     localInstallSourceRoot,
+    managerSettings.source,
     selectedPackage,
     selectedVersion,
   ]);
@@ -1198,7 +1196,7 @@ export function useSpCoinAccessController() {
     const trimmed = versionInput.trim();
     if (!isVersionFormatValid(trimmed)) return setStatus(VERSION_FORMAT_ERROR);
     setVersionInput(trimmed);
-    persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion: trimmed, selectedPackage });
+    persistManagerSettings({ source: managerSettings.source, activeNpmVersion: trimmed });
     setStatus(`Version set to ${trimmed}`);
   };
 
@@ -1207,13 +1205,13 @@ export function useSpCoinAccessController() {
     setVersionInput(sanitized);
     const trimmed = sanitized.trim();
     if (!isVersionFormatValid(trimmed)) return setStatus(VERSION_FORMAT_ERROR);
-    persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion: trimmed, selectedPackage });
+    persistManagerSettings({ source: managerSettings.source, activeNpmVersion: trimmed });
     setStatus(`Version set to ${trimmed}`);
   };
 
   const handlePackagePersist = (nextPackage: string) => {
     setSelectedPackage(nextPackage);
-    persistManagerSettings({ useLocalPackage: managerSettings.useLocalPackage, selectedVersion, selectedPackage: nextPackage });
+    persistManagerSettings({ source: managerSettings.source, activeNpmVersion: selectedVersion });
   };
 
   const runManagerAction = async (action: 'download' | 'upload' | 'install') => {

@@ -127,13 +127,9 @@ export interface Settings {
 
   /** SponsorCoin access package manager settings persisted across reloads. */
   spCoinAccessManager?: {
-    useLocalPackage: boolean;
-    selectedVersion: string;
-    selectedPackage?: string;
+    source: 'local' | 'node';
+    activeNpmVersion: string;
   };
-
-  /** Source root displayed by SpCoin Access Controller (Node Package Manager card). */
-  NPM_Source?: string;
 
   /** Test page UI selection persisted across reloads (mutually exclusive flags). */
   testPage?: {

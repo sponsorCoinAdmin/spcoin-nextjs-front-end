@@ -199,15 +199,14 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPanelArrayItem, (guiValue as any)?.visible, path, label]);
 
-  const isNpmSourceLeaf =
-    label === 'NPM_Source' &&
-    path === 'rest.settings.NPM_Source' &&
+  const isSpCoinAccessSourceLeaf =
+    label === 'source' &&
+    path === 'rest.settings.spCoinAccessManager.source' &&
     typeof guiValue === 'string';
 
   useEffect(() => {
-    if (!isNpmSourceLeaf) return;
-    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
-    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
+    if (!isSpCoinAccessSourceLeaf) return;
+    const isLocalSource = String(guiValue || '').trim().toLowerCase() !== 'node';
     if (!isLocalSource) {
       setLocalSpCoinAccessPathExists(null);
       setLocalSpCoinAccessVersion('');
@@ -244,7 +243,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     return () => {
       active = false;
     };
-  }, [guiValue, isNpmSourceLeaf]);
+  }, [guiValue, isSpCoinAccessSourceLeaf]);
 
   // ✅ Render displayStack item rows as a single line (non-toggleable)
   if (isDisplayStackItem) {
@@ -363,6 +362,9 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
             const childVal = isArray ? (guiValue as any[])[Number(k)] : (guiValue as any)[k];
 
             let childLabel = isArray ? `[${k}]` : k;
+            if (childPath === 'rest.settings.spCoinAccessManager.activeNpmVersion') {
+              childLabel = 'activeSpCoinContract';
+            }
 
             if (isArray && PANEL_ARRAY_LABELS.has(label) && looksLikeVirtualPanelNode(childVal)) {
               childLabel = formatChildLabel(childVal, k);
@@ -441,14 +443,13 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     );
   }
 
-  if (isNpmSourceLeaf) {
-    const onToggleNpmSource = async () => {
+  if (isSpCoinAccessSourceLeaf) {
+    const onToggleSpCoinAccessSource = async () => {
       const localPath = '/spCoinAccess';
-      const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
-      const isLocal = String(guiValue || '').trim() !== nodeModulesPath;
-      const nextPath = isLocal ? nodeModulesPath : localPath;
+      const isLocal = String(guiValue || '').trim().toLowerCase() !== 'node';
+      const nextSource = isLocal ? 'node' : 'local';
 
-      if (nextPath === localPath) {
+      if (nextSource === 'local') {
         try {
           const params = new URLSearchParams({ localPath });
           const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
@@ -472,53 +473,58 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
             ...prev,
             settings: {
               ...prev.settings,
-              NPM_Source: nextPath,
               spCoinAccessManager: {
-                useLocalPackage: nextPath === localPath,
-                selectedVersion: String(currentManager.selectedVersion ?? '0.0.1'),
-                selectedPackage: String(
-                  currentManager.selectedPackage ?? '@sponsorcoin/spcoin-access-modules',
+                source: nextSource,
+                activeNpmVersion: String(
+                  currentManager.activeNpmVersion ??
+                    currentManager.activeVersion ??
+                    currentManager.selectedVersion ??
+                    '0.0.1',
                 ),
               },
             },
           };
         },
-        'Branch:toggleNpmSource',
+        'Branch:toggleSpCoinAccessSource',
       );
     };
 
-    const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
-    const nodeModulesPath = '/node_modules/@sponsorcoin/spcoin-access-modules';
-    const localPackagePath = '/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules';
-    const isLocalSource = String(guiValue || '').trim() !== nodeModulesPath;
+    const isLocalSource = String(guiValue || '').trim().toLowerCase() !== 'node';
     const sourceLabel = isLocalSource ? 'spCoinAccess(LOCAL)' : 'spCoinAccess(NODE)';
-    const installedNodeModulesVersion = String(nodeModulesSpCoinAccessPackage?.version || '').trim();
-    const displayValue =
-      !isLocalSource
-        ? installedNodeModulesVersion
-          ? `/node_modules (${installedNodeModulesVersion})`
-          : '/node_modules'
-        : localSpCoinAccessPathExists === false
-        ? '*ERROR: No Source! Reverting to "node_modules"'
-        : localSpCoinAccessVersion
-        ? `/spCoinAccess (${localSpCoinAccessVersion})`
-        : '/spCoinAccess';
-    const hoverTitle = isLocalSource ? localPackagePath : nodeModulesPath;
-    const valueClass =
-      isLocalSource && localSpCoinAccessPathExists === false ? 'text-red-400' : 'text-[#5981F3]';
+    const nodeModulesVersion = String(nodeModulesSpCoinAccessPackage?.version || '').trim();
+    const sourcePathDisplay = isLocalSource ? '/spCoinAccess' : '/node_modules';
+    const resolvedPackageVersion = isLocalSource ? localSpCoinAccessVersion : nodeModulesVersion;
+    const packageVersionDisplay =
+      resolvedPackageVersion || (isLocalSource && localSpCoinAccessPathExists === false ? 'MISSING' : '');
+
     return (
-      <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
-        <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
-        <button
-          type="button"
-          onClick={() => void onToggleNpmSource()}
-          className="rounded text-left transition-colors hover:text-[#5981F3]"
-          title={hoverTitle}
-        >
-          {`${sourceLabel}: `}
-          <span className={valueClass}>{quoteIfString(displayValue)}</span>
-        </button>
-      </div>
+      <>
+        <div className={`font-mono ${dense ? 'flex items-center leading-tight' : 'flex items-center leading-6'} text-slate-200 m-0 p-0`}>
+          <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+          <button
+            type="button"
+            onClick={() => void onToggleSpCoinAccessSource()}
+            className="rounded text-left transition-colors hover:text-[#5981F3]"
+            title={
+              isLocalSource
+                ? '/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules'
+                : '/node_modules/@sponsorcoin/spcoin-access-modules'
+            }
+          >
+            {`${sourceLabel}: `}
+            <span className="text-[#5981F3]">{quoteIfString(sourcePathDisplay)}</span>
+          </button>
+        </div>
+        <div className={`font-mono ${dense ? 'flex items-center leading-tight' : 'flex items-center leading-6'} text-slate-200 m-0 p-0`}>
+          <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+          <span>
+            {'activeNpmJsLibrary: '}
+            <span className={packageVersionDisplay === 'MISSING' ? 'text-red-400' : 'text-[#5981F3]'}>
+              {quoteIfString(packageVersionDisplay)}
+            </span>
+          </span>
+        </div>
+      </>
     );
   }
 

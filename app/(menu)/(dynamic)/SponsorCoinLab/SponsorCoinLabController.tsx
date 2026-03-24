@@ -272,7 +272,7 @@ export default function SponsorCoinLabPage() {
   const { exchangeContext } = useExchangeContext();
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
-    exchangeContext?.settings?.spCoinAccessManager?.useLocalPackage !== false;
+    exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [rpcUrl, setRpcUrl] = useState(
     'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',

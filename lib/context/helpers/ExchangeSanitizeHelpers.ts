@@ -257,15 +257,30 @@ export const sanitizeExchangeContext = (
     ...prevSettings,
   };
 
-  if (
-    typeof sanitizedSettings.NPM_Source !== 'string' ||
-    sanitizedSettings.NPM_Source.trim().length === 0
-  ) {
-    sanitizedSettings.NPM_Source =
-      sanitizedSettings?.spCoinAccessManager?.useLocalPackage === false
-        ? '/node_modules/@sponsorcoin/spcoin-access-modules'
-        : '/spCoinAccess';
-  }
+  const rawManager = prevSettings.spCoinAccessManager ?? {};
+  const rawSource = String(rawManager?.source || '').trim().toLowerCase();
+  const legacyUseLocalPackage =
+    typeof rawManager?.useLocalPackage === 'boolean' ? rawManager.useLocalPackage : undefined;
+  const legacyNpmSource = String(prevSettings?.NPM_Source || '').trim();
+  const normalizedSource: 'local' | 'node' =
+    rawSource === 'node' || rawSource === 'local'
+      ? (rawSource as 'local' | 'node')
+      : legacyUseLocalPackage === false ||
+          legacyNpmSource === '/node_modules/@sponsorcoin/spcoin-access-modules'
+        ? 'node'
+        : 'local';
+  const normalizedActiveNpmVersion = String(
+    rawManager?.activeNpmVersion ??
+      rawManager?.activeVersion ??
+      rawManager?.selectedVersion ??
+      defaultContext.settings.spCoinAccessManager?.activeNpmVersion ??
+      '0.0.1',
+  ).trim() || '0.0.1';
+  sanitizedSettings.spCoinAccessManager = {
+    source: normalizedSource,
+    activeNpmVersion: normalizedActiveNpmVersion,
+  };
+  delete sanitizedSettings.NPM_Source;
 
   // ✅ enforce single source of truth for displayStack (settings only)
   sanitizeDisplayStack(raw as any, sanitizedSettings);

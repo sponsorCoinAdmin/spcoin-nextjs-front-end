@@ -75,11 +75,9 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
         agentRateRange: [0, 0],
       },
       spCoinAccessManager: {
-        useLocalPackage: true,
-        selectedVersion: '0.0.1',
-        selectedPackage: '@sponsorcoin/spcoin-access-modules',
+        source: 'local',
+        activeNpmVersion: '0.0.1',
       },
-      NPM_Source: '/spCoinAccess',
       testPage: {
         TEST_PAGE_EXCHANGE_CONTEXT: true,
         TEST_PAGE_FSM_TRACE: false,

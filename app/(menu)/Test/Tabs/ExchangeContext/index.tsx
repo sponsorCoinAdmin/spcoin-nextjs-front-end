@@ -115,7 +115,6 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
     // Keep settings display order stable and intentional.
     push('apiTradingProvider', realSettings.apiTradingProvider);
-    push('NPM_Source', realSettings.NPM_Source);
     push('showTestNets', realSettings.showTestNets);
     push('spCoinContract', realSettings.spCoinContract);
     push('spCoinPanelTree', treeWithNames);
