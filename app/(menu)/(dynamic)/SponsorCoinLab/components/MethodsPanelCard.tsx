@@ -8,6 +8,8 @@ import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 
+type MethodPanelTab = MethodPanelMode | 'todos';
+
 type Props = {
   articleClassName: string;
   methodsCardRef: MutableRefObject<HTMLElement | null>;
@@ -15,7 +17,8 @@ type Props = {
   onToggleExpand: () => void;
   methodPanelTitle: string;
   methodPanelMode: MethodPanelMode;
-  setMethodPanelMode: (value: MethodPanelMode) => void;
+  activeMethodPanelTab: MethodPanelTab;
+  selectMethodPanelTab: (value: MethodPanelTab) => void;
   scriptBuilderProps: ComponentProps<typeof ScriptBuilderCard>;
   erc20ReadProps: ComponentProps<typeof Erc20ReadController>;
   erc20WriteProps: ComponentProps<typeof Erc20WriteController>;
@@ -31,7 +34,8 @@ export default function MethodsPanelCard({
   onToggleExpand,
   methodPanelTitle,
   methodPanelMode,
-  setMethodPanelMode,
+  activeMethodPanelTab,
+  selectMethodPanelTab,
   scriptBuilderProps,
   erc20ReadProps,
   erc20WriteProps,
@@ -53,8 +57,9 @@ export default function MethodsPanelCard({
               {[
                 ['ecr20_read', 'ECR20 Read'],
                 ['erc20_write', 'ERC20 Write'],
-                ['spcoin_rread', 'Spcoin Read'],
+                ['spcoin_rread', 'SpCoin Read'],
                 ['spcoin_write', 'SpCoin Write'],
+                ['todos', 'ToDos'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input
@@ -62,13 +67,13 @@ export default function MethodsPanelCard({
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                     name={methodPanelGroupName}
                     value={value}
-                    checked={methodPanelMode === value}
+                    checked={activeMethodPanelTab === value}
                     onMouseDown={(e) => {
-                      if (methodPanelMode === value) e.preventDefault();
+                      if (activeMethodPanelTab === value) e.preventDefault();
                     }}
                     onChange={(e) => {
-                      if (methodPanelMode === value) return;
-                      setMethodPanelMode(e.target.value as MethodPanelMode);
+                      if (activeMethodPanelTab === value) return;
+                      selectMethodPanelTab(e.target.value as MethodPanelTab);
                     }}
                   />
                   <span>{label}</span>

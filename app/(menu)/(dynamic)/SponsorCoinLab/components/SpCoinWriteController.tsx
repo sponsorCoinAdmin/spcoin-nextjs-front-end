@@ -21,11 +21,14 @@ type Props = {
   agentRateKeyOptions: string[];
   recipientRateKeyHelpText: string;
   agentRateKeyHelpText: string;
+  recipientRateRange?: [number, number];
+  agentRateRange?: [number, number];
   selectedSpCoinWriteMethod: string;
   setSelectedSpCoinWriteMethod: (value: string) => void;
   spCoinWorldWriteOptions: string[];
   spCoinSenderWriteOptions: string[];
   spCoinAdminWriteOptions: string[];
+  spCoinTodoWriteOptions: string[];
   spCoinWriteMethodDefs: Record<string, MethodDef>;
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
@@ -95,11 +98,14 @@ export default function SpCoinWriteController(props: Props) {
     agentRateKeyOptions,
     recipientRateKeyHelpText,
     agentRateKeyHelpText,
+    recipientRateRange,
+    agentRateRange,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
     spCoinWorldWriteOptions,
     spCoinSenderWriteOptions,
     spCoinAdminWriteOptions,
+    spCoinTodoWriteOptions,
     spCoinWriteMethodDefs,
     activeSpCoinWriteDef,
     spWriteParams,
@@ -174,6 +180,27 @@ export default function SpCoinWriteController(props: Props) {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
+  const normalizeSliderValue = (value: string, range?: [number, number]) => {
+    const lower = Array.isArray(range) ? Number(range[0]) : 0;
+    const upper = Array.isArray(range) ? Number(range[1]) : 100;
+    const parsed = Number(String(value || '').replace(/,/g, '').trim());
+    if (!Number.isFinite(parsed)) return lower;
+    return Math.min(Math.max(parsed, lower), upper);
+  };
+  const recipientRateSliderMethods = new Set([
+    'addAgent',
+    'addAgents',
+    'addSponsorship',
+    'addAgentSponsorship',
+    'addBackDatedSponsorship',
+    'addBackDatedAgentSponsorship',
+  ]);
+  const agentRateSliderMethods = new Set([
+    'addSponsorship',
+    'addAgentSponsorship',
+    'addBackDatedSponsorship',
+    'addBackDatedAgentSponsorship',
+  ]);
   const getPrivateKeyForAddress = (address: string) =>
     hardhatAccounts.find((account) => account.address.toLowerCase() === String(address || '').trim().toLowerCase())
       ?.privateKey || '';
@@ -281,6 +308,27 @@ export default function SpCoinWriteController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
+          {spCoinTodoWriteOptions.length > 0 ? (
+            <React.Fragment>
+              <option
+                key="sp-write-todo-divider"
+                value="__write-todo-divider__"
+                disabled
+                style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
+              >
+                ---- SpCoin Write ----
+              </option>
+              {spCoinTodoWriteOptions.map((name) => (
+                <option
+                  key={`sp-write-todo-${name}`}
+                  value={name}
+                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                >
+                  {name}
+                </option>
+              ))}
+            </React.Fragment>
+          ) : null}
         </select>
         <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
           {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
@@ -366,79 +414,141 @@ export default function SpCoinWriteController(props: Props) {
             />
           ) : param.type === 'date' ? (
             <>
-              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                className={`${inputStyle} cursor-pointer`}
-                value={formatDateTimeDisplay(
-                  spWriteParams[idx] || formatDateInput(new Date()),
-                  backdateHours,
-                  backdateMinutes,
-                  backdateSeconds,
-                )}
-                onClick={() => onOpenBackdatePicker(idx)}
-                onFocus={() => onOpenBackdatePicker(idx)}
-              />
-            </div>
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    className={`${inputStyle} cursor-pointer`}
+                    value={formatDateTimeDisplay(
+                      spWriteParams[idx] || formatDateInput(new Date()),
+                      backdateHours,
+                      backdateMinutes,
+                      backdateSeconds,
+                    )}
+                    onClick={() => onOpenBackdatePicker(idx)}
+                    onFocus={() => onOpenBackdatePicker(idx)}
+                  />
+                </div>
+              </div>
+            </>
+          ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) &&
+            recipientRateSliderMethods.has(selectedSpCoinWriteMethod) ? (
+            <>
+              <div className="grid gap-3">
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Recipient Rate</span>
+                  <input
+                    type="range"
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    title={`Adjust ${param.label}`}
+                    className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    min={Array.isArray(recipientRateRange) ? recipientRateRange[0] : 0}
+                    max={Array.isArray(recipientRateRange) ? recipientRateRange[1] : 100}
+                    step={1}
+                    value={normalizeSliderValue(spWriteParams[idx] || '', recipientRateRange)}
+                    onChange={(e) => {
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, String(e.target.value));
+                    }}
+                  />
+                  <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
+                    {`Recipient Rate: ${normalizeSliderValue(spWriteParams[idx] || '', recipientRateRange)}%`}
+                  </div>
+                </div>
+                {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
+              </div>
+            </>
+          ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) &&
+            agentRateSliderMethods.has(selectedSpCoinWriteMethod) ? (
+            <>
+              <div className="grid gap-3">
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Agent Rate</span>
+                  <input
+                    type="range"
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    title={`Adjust ${param.label}`}
+                    className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    min={Array.isArray(agentRateRange) ? agentRateRange[0] : 0}
+                    max={Array.isArray(agentRateRange) ? agentRateRange[1] : 100}
+                    step={1}
+                    value={normalizeSliderValue(spWriteParams[idx] || '', agentRateRange)}
+                    onChange={(e) => {
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, String(e.target.value));
+                    }}
+                  />
+                  <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
+                    {`Agent Rate: ${normalizeSliderValue(spWriteParams[idx] || '', agentRateRange)}%`}
+                  </div>
+                </div>
+                {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
+              </div>
             </>
           ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) ? (
             <>
-              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
               <div className="grid gap-2">
-                <AccountDropdownInput
-                  data-field-id={`spcoin-write-param-${idx}`}
-                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                  value={spWriteParams[idx] || ''}
-                  onChange={(value) => {
-                    clearInvalidField(`spcoin-write-param-${idx}`);
-                    updateSpWriteParamAtIndex(idx, value);
-                  }}
-                  placeholder={`Select or type ${param.label}`}
-                  options={recipientRateKeyOptions.map((value) => ({
-                    value,
-                    label: value,
-                  }))}
-                />
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                  <AccountDropdownInput
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    value={spWriteParams[idx] || ''}
+                    onChange={(value) => {
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, value);
+                    }}
+                    placeholder={`Select or type ${param.label}`}
+                    options={recipientRateKeyOptions.map((value) => ({
+                      value,
+                      label: value,
+                    }))}
+                  />
+                </div>
                 {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
               </div>
             </>
           ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) ? (
             <>
-              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
               <div className="grid gap-2">
-                <AccountDropdownInput
-                  data-field-id={`spcoin-write-param-${idx}`}
-                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                  value={spWriteParams[idx] || ''}
-                  onChange={(value) => {
-                    clearInvalidField(`spcoin-write-param-${idx}`);
-                    updateSpWriteParamAtIndex(idx, value);
-                  }}
-                  placeholder={`Select or type ${param.label}`}
-                  options={agentRateKeyOptions.map((value) => ({
-                    value,
-                    label: value,
-                  }))}
-                />
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                  <AccountDropdownInput
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    value={spWriteParams[idx] || ''}
+                    onChange={(value) => {
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, value);
+                    }}
+                    placeholder={`Select or type ${param.label}`}
+                    options={agentRateKeyOptions.map((value) => ({
+                      value,
+                      label: value,
+                    }))}
+                  />
+                </div>
                 {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
               </div>
             </>
           ) : (
             <>
-              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
-              <input
-                type="text"
-                data-field-id={`spcoin-write-param-${idx}`}
-                className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                value={spWriteParams[idx] || ''}
-                onChange={(e) => {
-                  clearInvalidField(`spcoin-write-param-${idx}`);
-                  updateSpWriteParamAtIndex(idx, e.target.value);
-                }}
-                placeholder={param.placeholder}
-              />
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                <input
+                  type="text"
+                  data-field-id={`spcoin-write-param-${idx}`}
+                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                  value={spWriteParams[idx] || ''}
+                  onChange={(e) => {
+                    clearInvalidField(`spcoin-write-param-${idx}`);
+                    updateSpWriteParamAtIndex(idx, e.target.value);
+                  }}
+                  placeholder={param.placeholder}
+                />
+              </div>
             </>
           )}
         </div>

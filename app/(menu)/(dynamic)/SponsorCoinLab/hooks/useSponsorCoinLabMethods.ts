@@ -35,6 +35,20 @@ type MethodExecutionDescriptor = {
 
 type MethodDefMap = Record<string, MethodDef>;
 
+function normalizeUnsignedIntegerInput(value: string) {
+  return String(value || '').trim().replace(/,/g, '');
+}
+
+function parseComparableUint(value: string): bigint | null {
+  const normalized = normalizeUnsignedIntegerInput(value);
+  if (!/^\d+$/.test(normalized)) return null;
+  try {
+    return BigInt(normalized);
+  } catch {
+    return null;
+  }
+}
+
 type Params = {
   activeContractAddress: string;
   mode: ConnectionMode;
@@ -117,6 +131,8 @@ type Params = {
     params?: Array<{ label: string; value: unknown }>,
   ) => { method: string; parameters: Array<{ label: string; value: unknown }> };
   formatOutputDisplayValue: (value: unknown) => string;
+  recipientRateRange?: [number, number];
+  agentRateRange?: [number, number];
 };
 
 export function useSponsorCoinLabMethods({
@@ -169,6 +185,8 @@ export function useSponsorCoinLabMethods({
   backdateSeconds,
   buildMethodCallEntry,
   formatOutputDisplayValue,
+  recipientRateRange,
+  agentRateRange,
 }: Params) {
   const [recipientRateKeyOptions, setRecipientRateKeyOptions] = useState<string[]>([]);
   const [agentRateKeyOptions, setAgentRateKeyOptions] = useState<string[]>([]);
@@ -255,12 +273,69 @@ export function useSponsorCoinLabMethods({
       missingEntries.push({ id: 'spcoin-write-sender', label: 'msg.sender' });
     }
     activeSpCoinWriteDef.params.forEach((param, idx) => {
-      if (param.type === 'date') return;
-      if (String(spWriteParams[idx] || '').trim()) return;
-      missingEntries.push({ id: `spcoin-write-param-${idx}`, label: param.label });
+      const fieldId = `spcoin-write-param-${idx}`;
+      const rawValue = String(spWriteParams[idx] || '').trim();
+      if (param.type !== 'date' && !rawValue) {
+        missingEntries.push({ id: fieldId, label: param.label });
+        return;
+      }
+
+      const normalizedLabel = String(param.label || '').trim().toLowerCase();
+      const parsedValue = parseComparableUint(rawValue);
+      if (normalizedLabel === 'recipient rate key' || normalizedLabel === 'recipient rate') {
+        if (rawValue && parsedValue === null) {
+          missingEntries.push({ id: fieldId, label: `${param.label} must be an integer.` });
+          return;
+        }
+        if (
+          parsedValue !== null &&
+          Array.isArray(recipientRateRange) &&
+          Number.isFinite(recipientRateRange[0]) &&
+          Number.isFinite(recipientRateRange[1])
+        ) {
+          const lower = BigInt(recipientRateRange[0]);
+          const upper = BigInt(recipientRateRange[1]);
+          if (parsedValue < lower || parsedValue > upper) {
+            missingEntries.push({
+              id: fieldId,
+              label: `${param.label} must be between ${recipientRateRange[0]} and ${recipientRateRange[1]}.`,
+            });
+          }
+        }
+        return;
+      }
+
+      if (normalizedLabel === 'agent rate key' || normalizedLabel === 'agent rate') {
+        if (rawValue && parsedValue === null) {
+          missingEntries.push({ id: fieldId, label: `${param.label} must be an integer.` });
+          return;
+        }
+        if (
+          parsedValue !== null &&
+          Array.isArray(agentRateRange) &&
+          Number.isFinite(agentRateRange[0]) &&
+          Number.isFinite(agentRateRange[1])
+        ) {
+          const lower = BigInt(agentRateRange[0]);
+          const upper = BigInt(agentRateRange[1]);
+          if (parsedValue < lower || parsedValue > upper) {
+            missingEntries.push({
+              id: fieldId,
+              label: `${param.label} must be between ${agentRateRange[0]} and ${agentRateRange[1]}.`,
+            });
+          }
+        }
+      }
     });
     return missingEntries;
-  }, [activeSpCoinWriteDef.params, mode, selectedWriteSenderAddress, spWriteParams]);
+  }, [
+    activeSpCoinWriteDef.params,
+    agentRateRange,
+    mode,
+    recipientRateRange,
+    selectedWriteSenderAddress,
+    spWriteParams,
+  ]);
 
   const serializationTestMissingEntries = useMemo(
     () =>

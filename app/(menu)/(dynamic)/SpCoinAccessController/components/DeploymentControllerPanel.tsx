@@ -127,6 +127,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
       : '';
   const accountInfoLabelClassName =
     'w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white';
+  const isHardhatNetwork = /hardhat/i.test(String(deploymentChainName || ''));
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
@@ -283,21 +284,23 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
-                <input
-                  type="text"
-                  value={deploymentPathDisplayValue}
-                  disabled={isDeploymentInProgress}
-                  onChange={(event) => onLocalSourceDeploymentPathChange(event.target.value)}
-                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                  title="Enter local source deployment path"
-                />
-              </label>
-            </div>
+            {isHardhatNetwork ? (
+              <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Deployment Path</span>
+                  <input
+                    type="text"
+                    value={deploymentPathDisplayValue}
+                    disabled={isDeploymentInProgress}
+                    onChange={(event) => onLocalSourceDeploymentPathChange(event.target.value)}
+                    className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    title="Enter local source deployment path"
+                  />
+                </label>
+              </div>
+            ) : null}
 
-            {deploymentSignerSource === 'ec2-base' ? (
+            {isHardhatNetwork && deploymentSignerSource === 'ec2-base' ? (
               <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
                 <div className="flex items-center gap-3 md:justify-self-start">
                   <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">Hardhat Deployment Account Number</span>
@@ -380,68 +383,35 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                 />
               </label>
               {showDeploymentAccountDetails ? (
-                <>
-                  <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                    <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                        {deploymentAccountMetadata?.logoURL ? (
-                          <Image
-                            src={deploymentAccountMetadata.logoURL}
-                            alt={deploymentAccountMetadata?.name || 'Deployment account'}
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-contain"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-[10px] text-slate-400">No logo</span>
-                        )}
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+                  <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                      {deploymentAccountMetadata?.logoURL ? (
+                        <Image
+                          src={deploymentAccountMetadata.logoURL}
+                          alt={deploymentAccountMetadata?.name || 'Deployment account'}
+                          width={40}
+                          height={40}
+                          className="h-full w-full object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-[10px] text-slate-400">No logo</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-white">
+                        {deploymentAccountMetadata?.name || 'Unnamed account'}
                       </div>
-                      <div className="min-w-0">
-                        <div className="truncate font-medium text-white">
-                          {deploymentAccountMetadata?.name || 'Unnamed account'}
-                        </div>
-                        <div className="truncate text-xs text-slate-400">
-                          {deploymentAccountMetadata?.symbol || 'No symbol'}
-                        </div>
+                      <div className="truncate text-xs text-slate-400">
+                        {deploymentAccountMetadata?.symbol || 'No symbol'}
                       </div>
                     </div>
                   </div>
-                  {deploymentSignerSource === 'ec2-base' ? (
-                    <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                      <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                      <input
-                        type="text"
-                        value={deploymentPrivateKey}
-                        disabled={isDeploymentInProgress}
-                        onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
-                        onBlur={onDeploymentPrivateKeyBlur}
-                        placeholder={privateKeyPlaceholder}
-                        className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                      />
-                    </label>
-                  ) : null}
-                </>
+                </div>
               ) : null}
             </div>
-
-            {deploymentSignerSource !== 'metamask' && !showDeploymentAccountDetails ? (
-              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
-                <label className="block">
-                  <input
-                    type="text"
-                    value={deploymentPrivateKey}
-                    disabled={isDeploymentInProgress}
-                    onChange={(event) => onDeploymentPrivateKeyChange(event.target.value)}
-                    onBlur={onDeploymentPrivateKeyBlur}
-                    placeholder={privateKeyPlaceholder}
-                    className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                  />
-                </label>
-              </div>
-            ) : null}
 
             <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
               <div

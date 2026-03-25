@@ -30,6 +30,7 @@ import {
   SPCOIN_WRITE_METHOD_DEFS,
   getSpCoinAdminWriteOptions,
   getSpCoinSenderWriteOptions,
+  getSpCoinTodoWriteOptions,
   getSpCoinWorldWriteOptions,
   getSpCoinWriteOptions,
   type SpCoinWriteMethod,
@@ -386,6 +387,7 @@ export default function SponsorCoinLabPage() {
   const [writeAddressB, setWriteAddressB] = useState('');
   const [writeAmountRaw, setWriteAmountRaw] = useState('');
   const [methodPanelMode, setMethodPanelMode] = useState<MethodPanelMode>('ecr20_read');
+  const [isSpCoinTodoMode, setIsSpCoinTodoMode] = useState(false);
   const [selectedReadMethod, setSelectedReadMethod] = useState<Erc20ReadMethod>('name');
   const [readAddressA, setReadAddressA] = useState('');
   const [readAddressB, setReadAddressB] = useState('');
@@ -1409,6 +1411,18 @@ export default function SponsorCoinLabPage() {
     backdateSeconds: backdateCalendar.backdateSeconds,
     buildMethodCallEntry,
     formatOutputDisplayValue,
+    recipientRateRange:
+      Array.isArray(exchangeContext?.settings?.spCoinContract?.recipientRateRange) &&
+      isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[0]) &&
+      isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[1])
+        ? exchangeContext.settings.spCoinContract.recipientRateRange
+        : undefined,
+    agentRateRange:
+      Array.isArray(exchangeContext?.settings?.spCoinContract?.agentRateRange) &&
+      isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[0]) &&
+      isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[1])
+        ? exchangeContext.settings.spCoinContract.agentRateRange
+        : undefined,
   });
 
   useEffect(() => {
@@ -1764,7 +1778,33 @@ export default function SponsorCoinLabPage() {
   const spCoinWorldWriteOptions = getSpCoinWorldWriteOptions(false);
   const spCoinSenderWriteOptions = getSpCoinSenderWriteOptions(false);
   const spCoinAdminWriteOptions = getSpCoinAdminWriteOptions(false);
+  const spCoinTodoWriteOptions = getSpCoinTodoWriteOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
+  const activeMethodPanelTab = methodPanelMode === 'spcoin_write' && isSpCoinTodoMode ? 'todos' : methodPanelMode;
+  useEffect(() => {
+    if (methodPanelMode !== 'spcoin_write' || !isSpCoinTodoMode) return;
+    if (spCoinTodoWriteOptions.includes(selectedSpCoinWriteMethod)) return;
+    if (spCoinTodoWriteOptions[0]) {
+      setSelectedSpCoinWriteMethod(spCoinTodoWriteOptions[0]);
+    }
+  }, [isSpCoinTodoMode, methodPanelMode, selectedSpCoinWriteMethod, spCoinTodoWriteOptions]);
+  useEffect(() => {
+    if (methodPanelMode !== 'spcoin_write' || isSpCoinTodoMode) return;
+    if (!spCoinTodoWriteOptions.includes(selectedSpCoinWriteMethod)) return;
+    const nextStandardMethod =
+      spCoinSenderWriteOptions[0] || spCoinWorldWriteOptions[0] || spCoinAdminWriteOptions[0] || '';
+    if (nextStandardMethod) {
+      setSelectedSpCoinWriteMethod(nextStandardMethod);
+    }
+  }, [
+    isSpCoinTodoMode,
+    methodPanelMode,
+    selectedSpCoinWriteMethod,
+    spCoinAdminWriteOptions,
+    spCoinSenderWriteOptions,
+    spCoinTodoWriteOptions,
+    spCoinWorldWriteOptions,
+  ]);
   const sponsorCoinAccountManagementValidation = useMemo(() => {
     const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
     if (!accountAddress) return { tone: 'neutral' as const, message: '' };
@@ -2038,11 +2078,36 @@ export default function SponsorCoinLabPage() {
     (value: MethodPanelMode) => {
       if (methodPanelMode === value) return;
       runWithDiscardPrompt(() => {
+        setIsSpCoinTodoMode(false);
         resetToDropdownSelection();
         setMethodPanelMode(value);
       });
     },
     [methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, setMethodPanelMode],
+  );
+  const selectMethodPanelTab = useCallback(
+    (value: MethodPanelMode | 'todos') => {
+      if (value === 'todos') {
+        if (activeMethodPanelTab === 'todos') return;
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setIsSpCoinTodoMode(true);
+          setMethodPanelMode('spcoin_write');
+        });
+        return;
+      }
+      if (value === 'spcoin_write') {
+        if (activeMethodPanelTab === 'spcoin_write') return;
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('spcoin_write');
+        });
+        return;
+      }
+      selectDropdownMethodPanelMode(value);
+    },
+    [activeMethodPanelTab, resetToDropdownSelection, runWithDiscardPrompt, selectDropdownMethodPanelMode],
   );
   const selectDropdownReadMethod = useCallback(
     (value: Erc20ReadMethod) => {
@@ -2728,7 +2793,8 @@ export default function SponsorCoinLabPage() {
             onToggleExpand={() => toggleExpandedCard('methods')}
             methodPanelTitle={methodPanelTitle}
             methodPanelMode={methodPanelMode}
-            setMethodPanelMode={selectDropdownMethodPanelMode}
+            activeMethodPanelTab={activeMethodPanelTab}
+            selectMethodPanelTab={selectMethodPanelTab}
             scriptBuilderProps={{
               actionButtonStyle,
               hiddenScrollbarClass,
@@ -2864,11 +2930,24 @@ export default function SponsorCoinLabPage() {
               agentRateKeyOptions,
               recipientRateKeyHelpText,
               agentRateKeyHelpText,
+              recipientRateRange:
+                Array.isArray(exchangeContext?.settings?.spCoinContract?.recipientRateRange) &&
+                isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[0]) &&
+                isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[1])
+                  ? exchangeContext.settings.spCoinContract.recipientRateRange
+                  : undefined,
+              agentRateRange:
+                Array.isArray(exchangeContext?.settings?.spCoinContract?.agentRateRange) &&
+                isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[0]) &&
+                isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[1])
+                  ? exchangeContext.settings.spCoinContract.agentRateRange
+                  : undefined,
               selectedSpCoinWriteMethod,
               setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
-              spCoinWorldWriteOptions,
-              spCoinSenderWriteOptions,
-              spCoinAdminWriteOptions,
+              spCoinWorldWriteOptions: isSpCoinTodoMode ? [] : spCoinWorldWriteOptions,
+              spCoinSenderWriteOptions: isSpCoinTodoMode ? [] : spCoinSenderWriteOptions,
+              spCoinAdminWriteOptions: isSpCoinTodoMode ? [] : spCoinAdminWriteOptions,
+              spCoinTodoWriteOptions: isSpCoinTodoMode ? spCoinTodoWriteOptions : [],
               spCoinWriteMethodDefs: spCoinWriteMethodDefs as MethodDefMap,
               activeSpCoinWriteDef: activeSpCoinWriteDef,
               spWriteParams,
