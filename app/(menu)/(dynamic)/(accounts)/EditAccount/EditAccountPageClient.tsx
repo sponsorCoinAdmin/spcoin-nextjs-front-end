@@ -10,7 +10,7 @@ import CloseButton from '@/components/views/Buttons/CloseButton';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
-import { ACCEPTED_IMAGE_INPUT_ACCEPT } from '../CreateAccount/utils';
+import { ACCEPTED_IMAGE_INPUT_ACCEPT, normalizeAddress } from '../CreateAccount/utils';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 
 export default function EditAccountPageClient() {
@@ -27,6 +27,9 @@ export default function EditAccountPageClient() {
   const [authSignerSource, setAuthSignerSource] = useState<'ec2-base' | 'metamask'>(
     hardhatSignerAvailable ? 'ec2-base' : 'metamask',
   );
+  const [hardhatDeploymentAccountNumber, setHardhatDeploymentAccountNumber] = useState(0);
+  const [hardhatDeploymentAccounts, setHardhatDeploymentAccounts] = useState<string[]>([]);
+  const [hardhatDeploymentAccountCount, setHardhatDeploymentAccountCount] = useState(20);
   const editSessionReady = connected || (hardhatSignerAvailable && authSignerSource === 'ec2-base');
 
   const {
@@ -35,6 +38,7 @@ export default function EditAccountPageClient() {
     errors,
     handlePublicKeyChange,
     handlePublicKeyBlur,
+    handleSelectPublicKey,
     handleChange,
     handleFieldBlur,
     handleRevertChanges,
@@ -61,6 +65,7 @@ export default function EditAccountPageClient() {
     activeAddress: activeAddress ? String(activeAddress) : undefined,
     targetAddress: requestedAccountAddress,
     authSignerSource,
+    hardhatDeploymentAccountNumber,
     appChainId,
     runWithWalletAction,
   });
@@ -74,6 +79,89 @@ export default function EditAccountPageClient() {
       setAuthSignerSource('metamask');
     }
   }, [authSignerSource, hardhatSignerAvailable]);
+
+  useEffect(() => {
+    const syncSelectedSignerAccount = async () => {
+      if (authSignerSource === 'ec2-base') {
+        if (!hardhatSignerAvailable) return;
+        const nextAddress = String(
+          hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '',
+        ).trim();
+        if (!nextAddress) return;
+        if (
+          publicKey &&
+          normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
+        ) {
+          return;
+        }
+        await handleSelectPublicKey(nextAddress);
+        return;
+      }
+
+      const nextAddress = String(activeAddress ?? '').trim();
+      if (!nextAddress) return;
+      if (
+        publicKey &&
+        normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
+      ) {
+        return;
+      }
+      await handleSelectPublicKey(nextAddress);
+    };
+
+    void syncSelectedSignerAccount();
+  }, [
+    activeAddress,
+    authSignerSource,
+    hardhatDeploymentAccountNumber,
+    hardhatDeploymentAccounts,
+    hardhatSignerAvailable,
+    handleSelectPublicKey,
+    publicKey,
+  ]);
+
+  useEffect(() => {
+    if (!hardhatSignerAvailable) return;
+
+    const abortController = new AbortController();
+
+    const loadHardhatAccounts = async () => {
+      try {
+        const response = await fetch('/assets/spCoinLab/networks/31337/testAccounts.json', {
+          cache: 'no-store',
+          signal: abortController.signal,
+        });
+        if (!response.ok) return;
+
+        const entries = (await response.json()) as Array<{ address?: string }>;
+        if (abortController.signal.aborted || !entries.length) return;
+
+        const normalizedAccounts = entries
+          .map((entry) => String(entry?.address ?? '').trim())
+          .filter(Boolean)
+          .map((entryAddress) => normalizeAddress(entryAddress));
+
+        setHardhatDeploymentAccounts(normalizedAccounts);
+        setHardhatDeploymentAccountCount(entries.length);
+
+        const normalizedPublicKey = String(publicKey ?? '').trim();
+        if (!normalizedPublicKey) return;
+
+        const matchedIndex = normalizedAccounts.findIndex(
+          (entryAddress) => entryAddress === normalizeAddress(normalizedPublicKey),
+        );
+
+        if (matchedIndex >= 0) {
+          setHardhatDeploymentAccountNumber(matchedIndex);
+        }
+      } catch {
+        // Keep the default selector range when the local account seed list is unavailable.
+      }
+    };
+
+    void loadHardhatAccounts();
+    return () => abortController.abort();
+  }, [hardhatSignerAvailable, publicKey]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -103,6 +191,37 @@ export default function EditAccountPageClient() {
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
   const showAvatarPanel = expandedPanel === null || expandedPanel === 'avatar';
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
+  const showHardhatAccountSelector = hardhatSignerAvailable && authSignerSource === 'ec2-base';
+
+  const handleHardhatDeploymentAccountChange = async (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const nextAccountNumber = Number(event.target.value);
+    setHardhatDeploymentAccountNumber(nextAccountNumber);
+
+    const nextAddress = String(hardhatDeploymentAccounts[nextAccountNumber] ?? '').trim();
+    if (!nextAddress) return;
+
+    await handleSelectPublicKey(nextAddress);
+  };
+
+  const handleHardhatSignerSourceChange = async () => {
+    setAuthSignerSource('ec2-base');
+
+    const nextAddress = String(hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '').trim();
+    if (!nextAddress) return;
+
+    await handleSelectPublicKey(nextAddress);
+  };
+
+  const handleMetaMaskSignerSourceChange = async () => {
+    setAuthSignerSource('metamask');
+
+    const nextAddress = String(activeAddress ?? '').trim();
+    if (!nextAddress) return;
+
+    await handleSelectPublicKey(nextAddress);
+  };
 
   return (
     <main className="relative flex w-full flex-col overflow-hidden bg-[#0B1020] px-6 pt-3 pb-6 text-white">
@@ -233,33 +352,64 @@ export default function EditAccountPageClient() {
                 </button>
               </div>
               <div className={`${cardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}>
-                  <div className="-mt-[5px] mb-4 flex w-full items-start justify-end gap-4 text-sm">
-                    {hardhatSignerAvailable ? (
-                      <label className="flex items-center gap-2 text-[#8FA8FF]">
-                        <input
-                          type="radio"
-                          name="edit-account-signer-source"
-                          value="ec2-base"
-                          checked={authSignerSource === 'ec2-base'}
-                          disabled={isSaving}
-                          onChange={() => setAuthSignerSource('ec2-base')}
-                          className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                        />
-                        <span>Hardhat "Ec2-BASE"</span>
-                      </label>
+                  <div className="-mt-[5px] mb-4 flex w-full flex-wrap items-center justify-between gap-4 text-sm">
+                    {showHardhatAccountSelector ? (
+                      <div className="flex items-center gap-3">
+                        <label className="flex min-w-[9rem] justify-start text-[#8FA8FF]">
+                          <div className="flex items-center justify-start gap-2">
+                            <span className="text-sm font-semibold text-[#8FA8FF]">Account #</span>
+                            <select
+                              aria-label="Account #"
+                              title="Hardhat Deployment Account Number"
+                              value={hardhatDeploymentAccountNumber}
+                              disabled={isSaving}
+                              onChange={(event) => {
+                                void handleHardhatDeploymentAccountChange(event);
+                              }}
+                              className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
+                            >
+                              {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
+                                <option key={index} value={index}>
+                                  {index}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </label>
+                      </div>
                     ) : null}
-                    <label className="flex items-center gap-2 text-[#8FA8FF]">
+                    <div className="ml-auto flex items-center gap-4">
+                      {hardhatSignerAvailable ? (
+                        <label className="flex items-center gap-2 text-[#8FA8FF]">
+                          <input
+                            type="radio"
+                            name="edit-account-signer-source"
+                            value="ec2-base"
+                            checked={authSignerSource === 'ec2-base'}
+                            disabled={isSaving}
+                            onChange={() => {
+                              void handleHardhatSignerSourceChange();
+                            }}
+                            className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
+                          />
+                          <span>Hardhat "Ec2-BASE"</span>
+                        </label>
+                      ) : null}
+                      <label className="flex items-center gap-2 text-[#8FA8FF]">
                       <input
                         type="radio"
                         name="edit-account-signer-source"
                         value="metamask"
                         checked={authSignerSource === 'metamask'}
                         disabled={isSaving}
-                        onChange={() => setAuthSignerSource('metamask')}
-                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        onChange={() => {
+                          void handleMetaMaskSignerSourceChange();
+                        }}
+                        className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
                       />
                       <span>MetaMask</span>
-                    </label>
+                      </label>
+                    </div>
                   </div>
                   <CreateAccountFormPanel
                     panelMarginClass={panelMarginClass}
@@ -267,6 +417,7 @@ export default function EditAccountPageClient() {
                     formHeading={accountDataHeading}
                     connected={editSessionReady}
                     publicKey={publicKey}
+                    publicKeyLocked
                     formData={formData}
                     errors={errors}
                     descriptionTextareaRef={descriptionTextareaRef}

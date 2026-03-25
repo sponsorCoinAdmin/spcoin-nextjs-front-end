@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useState } from 'react';
+import DisconnectedControl from './DisconnectedControl';
 
 type Props = {
   panelMarginClass: string;
@@ -35,6 +36,8 @@ export default function CreateAccountAvatarPanel({
   onFileChange,
 }: Props) {
   const [isUploadHovered, setIsUploadHovered] = useState(false);
+  const uploadControlClass = 'mx-auto w-full';
+  const uploadControlTextClass = 'px-6 text-center text-[120%] font-bold';
   return (
     <section
       className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}
@@ -44,7 +47,7 @@ export default function CreateAccountAvatarPanel({
       </h2>
       <div className="flex h-full w-full flex-1 min-h-0 flex-col items-center gap-4">
         <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
-          <div className="flex w-full max-w-md flex-col gap-4">
+          <div className="flex w-full max-w-[332px] flex-col gap-4">
             <div className="mx-auto flex h-[332px] w-[332px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
               {logoPreviewSrc ? (
                 <img
@@ -68,17 +71,16 @@ export default function CreateAccountAvatarPanel({
             />
             <div className="w-full">
               {!connected ? (
-                <div className="flex h-[42px] w-full items-center justify-center rounded border border-white bg-transparent">
-                  <span className="text-[110%] font-normal text-red-500">
-                    Wallet Connection Required
-                  </span>
-                </div>
+                <DisconnectedControl
+                  message="Wallet Connection Required"
+                  className={uploadControlClass}
+                />
               ) : (
                 <button
                   type="button"
                   aria-disabled={!connected}
                   disabled={!connected}
-                      className={`h-[42px] w-full rounded px-6 py-2 text-center font-bold text-black transition-colors ${
+                      className={`w-full rounded border border-white py-2 text-black transition-colors ${
                     !isEditMode
                       ? isUploadHovered
                         ? 'bg-red-500 text-black'
@@ -99,7 +101,7 @@ export default function CreateAccountAvatarPanel({
                   onMouseEnter={() => setIsUploadHovered(true)}
                   onMouseLeave={() => setIsUploadHovered(false)}
                 >
-                  {previewButtonLabel}
+                  <span className={uploadControlTextClass}>{previewButtonLabel}</span>
                 </button>
               )}
             </div>

@@ -42,6 +42,7 @@ type Params = {
   activeAddress?: string;
   targetAddress?: string;
   authSignerSource: 'ec2-base' | 'metamask';
+  hardhatDeploymentAccountNumber?: number;
   appChainId?: number;
   runWithWalletAction: RunWithWalletAction;
 };
@@ -55,6 +56,7 @@ export function useCreateAccountForm({
   activeAddress,
   targetAddress,
   authSignerSource,
+  hardhatDeploymentAccountNumber = 0,
   appChainId,
   runWithWalletAction,
 }: Params) {
@@ -85,6 +87,19 @@ export function useCreateAccountForm({
     target.style.height = `${target.scrollHeight}px`;
   };
 
+  const resetLoadedAccountState = () => {
+    setPublicKey('');
+    setFormData({ ...EMPTY_FORM_DATA });
+    setBaselineData({ ...EMPTY_FORM_DATA });
+    setSavedAccountName('');
+    setAccountExists(false);
+    setResolvedAccountAddress('');
+    setErrors({});
+    setLogoFile(null);
+    setHasServerLogo(false);
+    setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
+  };
+
   const requestedTargetAddress = useMemo(
     () => (isAddress(String(targetAddress ?? '').trim()) ? normalizeAddress(String(targetAddress)) : ''),
     [targetAddress],
@@ -93,13 +108,29 @@ export function useCreateAccountForm({
     () => (isAddress(String(activeAddress ?? '').trim()) ? normalizeAddress(String(activeAddress)) : ''),
     [activeAddress],
   );
-  const initialAccountAddress = requestedTargetAddress || normalizedActiveAddress;
   const canUseHardhatSigner = Number(appChainId) === 31337;
+  const initialAccountAddress = useMemo(() => {
+    if (authSignerSource === 'metamask') {
+      return normalizedActiveAddress;
+    }
+    return requestedTargetAddress || normalizedActiveAddress;
+  }, [authSignerSource, normalizedActiveAddress, requestedTargetAddress]);
   const isAuthSessionAvailable = connected || (authSignerSource === 'ec2-base' && canUseHardhatSigner);
 
   useEffect(() => {
+    if (!initialAccountAddress) {
+      if (authSignerSource === 'ec2-base' && canUseHardhatSigner) return;
+    }
     setPublicKey(initialAccountAddress);
-  }, [initialAccountAddress]);
+  }, [authSignerSource, canUseHardhatSigner, initialAccountAddress]);
+
+  useEffect(() => {
+    const keepHardhatSelection =
+      authSignerSource === 'ec2-base' && canUseHardhatSigner;
+    if (keepHardhatSelection) return;
+    if (initialAccountAddress) return;
+    resetLoadedAccountState();
+  }, [authSignerSource, canUseHardhatSigner, initialAccountAddress]);
 
   useEffect(() => {
     resizeDescriptionTextarea();
@@ -209,6 +240,69 @@ export function useCreateAccountForm({
     savedAccountName,
   });
 
+  const loadAccountByAddress = async (nextAddress: string, previousAddress: string) => {
+    const normalizedAddress = normalizeAddress(nextAddress);
+    if (normalizedAddress === previousAddress) {
+      setPublicKey(normalizedAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.publicKey;
+        return next;
+      });
+      return;
+    }
+
+    setIsLoadingAccount(true);
+    try {
+      const record = (await loadAccountRecord(normalizedAddress, {
+        forceRefresh: true,
+      })) as AccountRegistryRecord;
+      const resolvedLogoURL = ensureAbsoluteAssetURL(
+        String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
+      );
+      const loaded: AccountFormData = {
+        name: typeof record.name === 'string' ? record.name : '',
+        symbol: typeof record.symbol === 'string' ? record.symbol : '',
+        email: typeof record.email === 'string' ? record.email : '',
+        website: typeof record.website === 'string' ? record.website : '',
+        description:
+          typeof record.description === 'string' ? record.description : '',
+        recipientNetwork: Array.isArray((record as any)?.recipientNetwork)
+          ? Array.from(
+              new Set(
+                ((record as any).recipientNetwork as unknown[])
+                  .map((value) => Number(value))
+                  .filter((value) => Number.isFinite(value)),
+              ),
+            )
+          : [],
+      };
+
+      setPublicKey(normalizedAddress);
+      setResolvedAccountAddress(normalizedAddress);
+      setAccountExists(true);
+      setFormData(loaded);
+      setBaselineData(loaded);
+      setSavedAccountName(loaded.name.trim());
+      setErrors({});
+      setLogoFile(null);
+      setHasServerLogo(
+        resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
+          !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
+      );
+      setServerLogoURL(withCacheBust(resolvedLogoURL));
+    } catch {
+      setPublicKey(previousAddress);
+      setErrors((prev) => {
+        const next = { ...prev };
+        next.publicKey = 'Account not found';
+        return next;
+      });
+    } finally {
+      setIsLoadingAccount(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!derived.isActive) return;
     const { name, value } = e.target;
@@ -273,66 +367,14 @@ export function useCreateAccountForm({
       return;
     }
 
-    const normalizedAddress = normalizeAddress(trimmed);
-    if (normalizedAddress === previousAddress) {
-      setPublicKey(normalizedAddress);
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.publicKey;
-        return next;
-      });
-      return;
-    }
+    await loadAccountByAddress(trimmed, previousAddress);
+  };
 
-    setIsLoadingAccount(true);
-    try {
-      const record = (await loadAccountRecord(normalizedAddress, {
-        forceRefresh: true,
-      })) as AccountRegistryRecord;
-      const resolvedLogoURL = ensureAbsoluteAssetURL(
-        String((record as any)?.logoURL ?? DEFAULT_ACCOUNT_LOGO_URL),
-      );
-      const loaded: AccountFormData = {
-        name: typeof record.name === 'string' ? record.name : '',
-        symbol: typeof record.symbol === 'string' ? record.symbol : '',
-        email: typeof record.email === 'string' ? record.email : '',
-        website: typeof record.website === 'string' ? record.website : '',
-        description:
-          typeof record.description === 'string' ? record.description : '',
-        recipientNetwork: Array.isArray((record as any)?.recipientNetwork)
-          ? Array.from(
-              new Set(
-                ((record as any).recipientNetwork as unknown[])
-                  .map((value) => Number(value))
-                  .filter((value) => Number.isFinite(value)),
-              ),
-            )
-          : [],
-      };
-
-      setPublicKey(normalizedAddress);
-      setResolvedAccountAddress(normalizedAddress);
-      setAccountExists(true);
-      setFormData(loaded);
-      setBaselineData(loaded);
-      setSavedAccountName(loaded.name.trim());
-      setErrors({});
-      setLogoFile(null);
-      setHasServerLogo(
-        resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
-          !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
-      );
-      setServerLogoURL(withCacheBust(resolvedLogoURL));
-    } catch {
-      setPublicKey(previousAddress);
-      setErrors((prev) => {
-        const next = { ...prev };
-        next.publicKey = 'Account not found';
-        return next;
-      });
-    } finally {
-      setIsLoadingAccount(false);
-    }
+  const handleSelectPublicKey = async (nextAddress: string) => {
+    const trimmed = String(nextAddress ?? '').trim();
+    const previousAddress = resolvedAccountAddress || initialAccountAddress;
+    if (!trimmed || !isAddress(trimmed)) return;
+    await loadAccountByAddress(trimmed, previousAddress);
   };
 
   const handleInvalidAddressContinue = () => {
@@ -403,7 +445,18 @@ export function useCreateAccountForm({
           throw new Error('Unable to load Hardhat signing accounts.');
         }
         const entries = (await response.json()) as Array<{ address?: string; privateKey?: string }>;
+        const selectedSignerEntry =
+          Number.isInteger(hardhatDeploymentAccountNumber) &&
+          hardhatDeploymentAccountNumber >= 0 &&
+          hardhatDeploymentAccountNumber < entries.length
+            ? entries[hardhatDeploymentAccountNumber]
+            : undefined;
         const signerEntry =
+          (selectedSignerEntry &&
+          normalizeAddress(String(selectedSignerEntry?.address ?? '')) === normalizedTargetAddress &&
+          /^0x[a-fA-F0-9]{64}$/.test(String(selectedSignerEntry?.privateKey ?? '').trim())
+            ? selectedSignerEntry
+            : undefined) ??
           entries.find(
             (entry) =>
               normalizeAddress(String(entry?.address ?? '')) === normalizedTargetAddress &&
@@ -662,6 +715,7 @@ export function useCreateAccountForm({
     handleFieldBlur,
     handlePublicKeyChange,
     handlePublicKeyBlur,
+    handleSelectPublicKey,
     handleRevertChanges,
     handleSubmit,
     handleLogoFileChange,

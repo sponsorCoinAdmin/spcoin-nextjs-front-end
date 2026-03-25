@@ -7,6 +7,7 @@ import type {
   AccountFormErrors,
   AccountFormField,
 } from '../types';
+import DisconnectedControl from './DisconnectedControl';
 import { FIELD_PLACEHOLDERS, FIELD_TITLES } from '../utils';
 import {
   getAbsoluteFieldError,
@@ -20,6 +21,7 @@ type Props = {
   formHeading?: string;
   connected: boolean;
   publicKey: string;
+  publicKeyLocked?: boolean;
   formData: AccountFormData;
   errors: AccountFormErrors;
   descriptionTextareaRef: React.RefObject<HTMLTextAreaElement>;
@@ -47,6 +49,7 @@ export default function CreateAccountFormPanel({
   formHeading = 'Account Meta Data',
   connected,
   publicKey,
+  publicKeyLocked = false,
   formData,
   errors,
   descriptionTextareaRef,
@@ -86,6 +89,7 @@ export default function CreateAccountFormPanel({
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
   const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const lockedInputMessage = isLoading ? loadingInputMessage : disconnectedInputMessage;
+  const lockedPublicKeyMessage = 'Account Address cannot be edited from Edit Account.';
   const noChangesToUpdate = submitLabel !== 'Create Account' && !hasUnsavedChanges;
   const getLoadingClassesForField = (fieldName: string): string =>
     isLoading && hoveredInput === fieldName ? loadingFieldClasses : '';
@@ -121,9 +125,7 @@ export default function CreateAccountFormPanel({
               Account Address
             </label>
             <div>
-              <div className="flex h-[42px] items-center justify-center rounded border border-white bg-transparent">
-                <span className="text-[110%] font-normal text-red-500">Wallet Connection Required</span>
-              </div>
+              <DisconnectedControl message="Wallet Connection Required" />
             </div>
           </>
         ) : (
@@ -138,16 +140,20 @@ export default function CreateAccountFormPanel({
                   type="text"
                   name="publicKey"
                   value={publicKey}
-                  readOnly={inputLocked}
+                  readOnly={inputLocked || publicKeyLocked}
                   placeholder={
                     hoveredInput === 'publicKey'
-                      ? isLoading
+                      ? publicKeyLocked
+                        ? lockedPublicKeyMessage
+                        : isLoading
                         ? loadingInputMessage
                         : FIELD_PLACEHOLDERS.publicKey
                       : 'Required'
                   }
                   title={
-                    isLoading
+                    publicKeyLocked
+                      ? lockedPublicKeyMessage
+                      : isLoading
                       ? loadingInputMessage
                       : errors.publicKey
                       ? `Required for Code Account Operations | Error: ${errors.publicKey}`
@@ -330,7 +336,7 @@ export default function CreateAccountFormPanel({
             />
           </div>
         ) : (
-          <div className="flex w-[calc(100%-1.5rem)] gap-2">
+          <div className="flex w-full gap-2">
             <button
               type={!isEditMode ? 'button' : 'submit'}
               aria-disabled={disableSubmit}
