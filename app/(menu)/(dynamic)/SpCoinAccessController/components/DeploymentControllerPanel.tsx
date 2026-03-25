@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/components/DeploymentControllerPanel.tsx
 import React from 'react';
 import Image from 'next/image';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { DeploymentStatusBlock } from './StatusBlocks';
 
 type DeploymentControllerPanelProps = {
@@ -136,19 +137,20 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
         onDoubleClick={onToggleExpand}
         title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
       >
-        <div className="flex min-h-10 items-center justify-center pr-12">
-          <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">Contract Deployment Controller</h2>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
+          <div className="flex min-h-10 items-center" />
+          <div className="min-w-0 justify-self-center text-center">
+            <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">Contract Deployment Controller</h2>
+          </div>
+          <div className="flex shrink-0 items-center justify-self-end gap-2" onDoubleClick={(event) => event.stopPropagation()}>
+            <OpenCloseBtn
+              onClick={onToggleExpand}
+              onDoubleClick={(event) => event.stopPropagation()}
+              isExpanded={isExpanded}
+              className="relative -right-[9px] -top-[10px]"
+            />
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          onDoubleClick={(event) => event.stopPropagation()}
-          className="absolute -right-[9px] -top-[10px] flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
-          title={isExpanded ? 'Return to shared view' : 'Expand this card'}
-          aria-label={isExpanded ? 'Return to shared view' : 'Expand this card'}
-        >
-          {isExpanded ? '×' : '+'}
-        </button>
       </div>
 
       <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>

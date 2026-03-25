@@ -8,7 +8,7 @@ import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import CloseButton from '@/components/views/Buttons/CloseButton';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { SP_COIN_DISPLAY as SP_TREE, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
@@ -132,15 +132,7 @@ export default function TradeContainerHeader() {
             priority
           />
         ) : (
-          <CloseButton
-            closeCallback={handleHeaderClose}
-            className="
-              absolute top-2 right-[27px] h-10 w-10 rounded-full
-              bg-[#243056] text-[#5981F3] flex items-center justify-center
-              leading-none transition-colors text-3xl
-              hover:bg-[#5981F3] hover:text-[#243056]
-            "
-          />
+          <OpenCloseBtn onClick={handleHeaderClose} expandedTitle="Close" expandedAriaLabel="Close" className="absolute top-2 right-[27px]" />
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
-import CloseButton from '@/components/views/Buttons/CloseButton';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
@@ -249,12 +249,11 @@ export default function EditAccountPageClient() {
               Toggle Borders
             </button>
           ) : null}
-          <CloseButton
+          <OpenCloseBtn
             id="createAccountBackButton"
-            closeCallback={() => router.back()}
-            title="Go Back"
-            ariaLabel="Go Back"
-            className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+            onClick={() => router.back()}
+            expandedTitle="Go Back"
+            expandedAriaLabel="Go Back"
           />
         </div>
       </div>
@@ -278,25 +277,25 @@ export default function EditAccountPageClient() {
                     : 'Double-click to expand'
                 }
               >
-                <div className="grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-3 pr-12">
-                  <div />
-                  <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
-                    Account Avatar
-                  </h2>
-                  <div />
+                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
+                  <div className="flex min-h-10 items-center" />
+                  <div className="min-w-0 justify-self-center text-center">
+                    <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
+                      Account Avatar
+                    </h2>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-self-end gap-2" onDoubleClick={(event) => event.stopPropagation()}>
+                    <OpenCloseBtn
+                      onClick={() =>
+                        setExpandedPanel((current) => (current === 'avatar' ? null : 'avatar'))
+                      }
+                      onDoubleClick={(event) => event.stopPropagation()}
+                      isExpanded={expandedPanel === 'avatar'}
+                      className="relative -right-[9px] -top-[10px]"
+                      glyphClassName="pb-[2px] text-[2.2rem]"
+                    />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedPanel((current) => (current === 'avatar' ? null : 'avatar'))
-                  }
-                  onDoubleClick={(event) => event.stopPropagation()}
-                  className="absolute -right-[9px] -top-[10px] z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
-                  title={expandedPanel === 'avatar' ? 'Return to shared view' : 'Expand this card'}
-                  aria-label={expandedPanel === 'avatar' ? 'Return to shared view' : 'Expand this card'}
-                >
-                  {expandedPanel === 'avatar' ? 'Ã—' : '+'}
-                </button>
               </div>
               <div className={`${cardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}>
                   <CreateAccountAvatarPanel
@@ -331,25 +330,25 @@ export default function EditAccountPageClient() {
                     : 'Double-click to expand'
                 }
               >
-                <div className="grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-3 pr-12">
-                  <div />
-                  <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
-                    Account Meta Data
-                  </h2>
-                  <div />
+                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
+                  <div className="flex min-h-10 items-center" />
+                  <div className="min-w-0 justify-self-center text-center">
+                    <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
+                      Account Meta Data
+                    </h2>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-self-end gap-2" onDoubleClick={(event) => event.stopPropagation()}>
+                    <OpenCloseBtn
+                      onClick={() =>
+                        setExpandedPanel((current) => (current === 'form' ? null : 'form'))
+                      }
+                      onDoubleClick={(event) => event.stopPropagation()}
+                      isExpanded={expandedPanel === 'form'}
+                      className="relative -right-[9px] -top-[10px]"
+                      glyphClassName="pb-[2px] text-[2.2rem]"
+                    />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedPanel((current) => (current === 'form' ? null : 'form'))
-                  }
-                  onDoubleClick={(event) => event.stopPropagation()}
-                  className="absolute -right-[9px] -top-[10px] z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
-                  title={expandedPanel === 'form' ? 'Return to shared view' : 'Expand this card'}
-                  aria-label={expandedPanel === 'form' ? 'Return to shared view' : 'Expand this card'}
-                >
-                  {expandedPanel === 'form' ? 'Ã—' : '+'}
-                </button>
               </div>
               <div className={`${cardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}>
                   <div className="-mt-[5px] mb-4 flex w-full flex-wrap items-center justify-between gap-4 text-sm">

@@ -7,7 +7,6 @@ import type {
   AccountFormErrors,
   AccountFormField,
 } from '../types';
-import DisconnectedControl from './DisconnectedControl';
 import { FIELD_PLACEHOLDERS, FIELD_TITLES } from '../utils';
 import {
   getAbsoluteFieldError,
@@ -86,6 +85,7 @@ export default function CreateAccountFormPanel({
     'mb-0 text-right min-h-[42px] px-2 text-white flex items-center justify-end';
   const disconnectedInputMessage =
     'Connection Required and input is prohibited until connection is established.';
+  const disconnectedMetaMaskMessage = 'MetaMask Connection Required';
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
   const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const lockedInputMessage = isLoading ? loadingInputMessage : disconnectedInputMessage;
@@ -119,68 +119,61 @@ export default function CreateAccountFormPanel({
         </h2>
       </div>
       <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">
-        {!connected ? (
-          <>
-            <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
-              Account Address
-            </label>
-            <div>
-              <DisconnectedControl message="Wallet Connection Required" />
-            </div>
-          </>
-        ) : (
-          <>
-            <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
-              Account Address
-            </label>
-            <div>
-              <div className="flex items-center gap-1">
-                <input
-                  id="publicKey"
-                  type="text"
-                  name="publicKey"
-                  value={publicKey}
-                  readOnly={inputLocked || publicKeyLocked}
-                  placeholder={
-                    hoveredInput === 'publicKey'
-                      ? publicKeyLocked
-                        ? lockedPublicKeyMessage
-                        : isLoading
-                        ? loadingInputMessage
-                        : FIELD_PLACEHOLDERS.publicKey
-                      : 'Required'
-                  }
-                  title={
-                    publicKeyLocked
+        <>
+          <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
+            Account Address
+          </label>
+          <div>
+            <div className="flex items-center gap-1">
+              <input
+                id="publicKey"
+                type="text"
+                name="publicKey"
+                value={connected ? publicKey : disconnectedMetaMaskMessage}
+                readOnly={!connected || inputLocked || publicKeyLocked}
+                placeholder={
+                  !connected
+                    ? disconnectedMetaMaskMessage
+                    : hoveredInput === 'publicKey'
+                    ? publicKeyLocked
                       ? lockedPublicKeyMessage
                       : isLoading
                       ? loadingInputMessage
-                      : errors.publicKey
-                      ? `Required for Code Account Operations | Error: ${errors.publicKey}`
-                      : 'Required for Code Account Operations'
-                  }
-                  className={`${requiredInputClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
-                  onChange={onPublicKeyChange}
-                  onBlur={onPublicKeyBlur}
-                  onMouseEnter={() => setHoveredInput('publicKey')}
-                  onMouseLeave={() => setHoveredInput(null)}
-                />
-                <span
-                  className={`inline-flex h-[42px] w-8 shrink-0 items-center justify-center text-center text-2xl font-bold leading-[1] ${
-                    errors.publicKey ? 'text-red-500' : 'text-transparent'
-                  }`}
-                  aria-hidden={!errors.publicKey}
-                  title={errors.publicKey ? `Error: ${errors.publicKey}` : undefined}
-                >
-                  X
-                </span>
-              </div>
-              {errors.publicKey ? (
-                <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p>
-              ) : null}
+                      : FIELD_PLACEHOLDERS.publicKey
+                    : 'Required'
+                }
+                title={
+                  !connected
+                    ? disconnectedMetaMaskMessage
+                    : publicKeyLocked
+                    ? lockedPublicKeyMessage
+                    : isLoading
+                    ? loadingInputMessage
+                    : errors.publicKey
+                    ? `Required for Code Account Operations | Error: ${errors.publicKey}`
+                    : 'Required for Code Account Operations'
+                }
+                className={`${requiredInputClasses}${!connected ? ' text-center font-bold text-red-500' : ''}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
+                onChange={onPublicKeyChange}
+                onBlur={onPublicKeyBlur}
+                onMouseEnter={() => setHoveredInput('publicKey')}
+                onMouseLeave={() => setHoveredInput(null)}
+              />
+              <span
+                className={`inline-flex h-[42px] w-8 shrink-0 items-center justify-center text-center text-2xl font-bold leading-[1] ${
+                  errors.publicKey ? 'text-red-500' : 'text-transparent'
+                }`}
+                aria-hidden={!errors.publicKey}
+                title={errors.publicKey ? `Error: ${errors.publicKey}` : undefined}
+              >
+                X
+              </span>
             </div>
-          </>
-        )}
+            {errors.publicKey ? (
+              <p className="mt-1 text-sm text-red-500">{errors.publicKey}</p>
+            ) : null}
+          </div>
+        </>
 
         {formFieldRows.map(({ label, name, labelTitle }) => (
           <React.Fragment key={name}>
@@ -321,102 +314,115 @@ export default function CreateAccountFormPanel({
 
         <div className="text-right" />
         {!connected ? (
-          <div className="flex h-[42px] w-full items-center rounded border border-white bg-transparent [&>div]:h-full [&>div]:w-full [&>div>div]:h-full [&>div>div]:w-full [&>div>div>button]:!h-full [&>div>div>button]:!w-full [&>div>div>button]:!justify-center [&>div>div>button]:!font-bold [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-3 [&>div>div>button]:!py-0 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
-            <ConnectNetworkButtonProps
-              showName={false}
-              showSymbol={false}
-              showNetworkIcon={false}
-              showChevron={false}
-              showConnect={true}
-              showDisconnect={false}
-              showHoverBg={false}
-              titleDisplay={true}
-              trimHorizontalPaddingPx={0}
-              connectLabel="Connect Wallet"
-            />
+          <div className="flex items-start gap-1">
+            <div className="flex w-full gap-2">
+              <div className="flex h-[42px] flex-1 items-center rounded border border-white bg-transparent [&>div]:h-full [&>div]:w-full [&>div>div]:h-full [&>div>div]:w-full [&>div>div>button]:!h-full [&>div>div>button]:!w-full [&>div>div>button]:!justify-center [&>div>div>button]:!font-bold [&>div>div>button]:!bg-green-500 [&>div>div>button]:!text-black [&>div>div>button]:!text-[120%] [&>div>div>button]:!px-4 [&>div>div>button]:!py-2 [&>div>div>button]:!rounded [&>div>div>button]:hover:!bg-green-400 [&>div>div>button>img]:!h-6 [&>div>div>button>img]:!w-6">
+                <ConnectNetworkButtonProps
+                  showName={false}
+                  showSymbol={false}
+                  showNetworkIcon={false}
+                  showChevron={false}
+                  showConnect={true}
+                  showDisconnect={false}
+                  showHoverBg={false}
+                  titleDisplay={true}
+                  trimHorizontalPaddingPx={0}
+                  connectLabel="Connect Wallet"
+                />
+              </div>
+              <div className="h-[42px] flex-1 rounded border border-transparent bg-transparent" aria-hidden="true" />
+            </div>
+            <span className="inline-flex h-[42px] w-8 shrink-0 items-center justify-center text-transparent" aria-hidden="true">
+              X
+            </span>
           </div>
         ) : (
-          <div className="flex w-full gap-2">
-            <button
-              type={!isEditMode ? 'button' : 'submit'}
-              aria-disabled={disableSubmit}
-              className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                noChangesToUpdate
-                  ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
-                  : !isEditMode
-                  ? hoverTarget === 'createAccount'
-                    ? 'bg-red-500 text-black'
+          <div className="flex items-start gap-1">
+            <div className="flex w-full gap-2">
+              <button
+                type={!isEditMode ? 'button' : 'submit'}
+                aria-disabled={disableSubmit}
+                className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
+                  noChangesToUpdate
+                    ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
+                    : !isEditMode
+                    ? hoverTarget === 'createAccount'
+                      ? 'bg-red-500 text-black'
+                      : 'bg-[#E5B94F] text-black'
+                    : disableSubmit
+                    ? noChangesToUpdate
+                      ? 'bg-red-500 text-black cursor-default'
+                      : 'bg-red-500 text-black cursor-not-allowed'
+                    : hoverTarget === 'createAccount'
+                    ? hasUnsavedChanges || canCreateMissingAccount
+                      ? 'bg-green-500 text-black'
+                      : 'bg-red-500 text-black'
                     : 'bg-[#E5B94F] text-black'
-                  : disableSubmit
-                  ? noChangesToUpdate
-                    ? 'bg-red-500 text-black cursor-default'
-                    : 'bg-red-500 text-black cursor-not-allowed'
-                  : hoverTarget === 'createAccount'
-                  ? hasUnsavedChanges || canCreateMissingAccount
-                    ? 'bg-green-500 text-black'
-                    : 'bg-red-500 text-black'
-                  : 'bg-[#E5B94F] text-black'
-              }`}
-              title={
-                submitLabel === 'Create Account'
-                  ? undefined
-                  : !hasUnsavedChanges
-                  ? submitLabel === 'Edit Account'
-                    ? 'No changes to Edit'
-                    : 'No changes to Update'
-                  : submitLabel
-              }
-              disabled={disableSubmit}
-              onMouseEnter={() => {
-                if (noChangesToUpdate) return;
-                setHoverTarget('createAccount');
-              }}
-              onMouseLeave={() => {
-                if (noChangesToUpdate) return;
-                setHoverTarget(null);
-              }}
-            >
-              {isSaving ? 'Saving...' : submitLabel}
-            </button>
-            <button
-              type="button"
-              aria-disabled={disableRevert}
-              className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
-                isRevertNoop
-                  ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
-                  : !isEditMode
-                  ? hoverTarget === 'revertChanges'
-                    ? 'bg-red-500 text-black'
+                }`}
+                title={
+                  submitLabel === 'Create Account'
+                    ? undefined
+                    : !hasUnsavedChanges
+                    ? submitLabel === 'Edit Account'
+                      ? 'No changes to Edit'
+                      : 'No changes to Update'
+                    : submitLabel
+                }
+                disabled={disableSubmit}
+                onMouseEnter={() => {
+                  if (noChangesToUpdate) return;
+                  setHoverTarget('createAccount');
+                }}
+                onMouseLeave={() => {
+                  if (noChangesToUpdate) return;
+                  setHoverTarget(null);
+                }}
+              >
+                {isSaving ? 'Saving...' : submitLabel}
+              </button>
+              <button
+                type="button"
+                aria-disabled={disableRevert}
+                className={`h-[42px] flex-1 rounded px-4 py-2 text-center font-bold text-black transition-colors ${
+                  isRevertNoop
+                    ? 'bg-[#E5B94F] text-black hover:bg-[#E5B94F] transition-none cursor-default'
+                    : !isEditMode
+                    ? hoverTarget === 'revertChanges'
+                      ? 'bg-red-500 text-black'
+                      : 'bg-[#E5B94F] text-black'
+                    : disableRevert
+                    ? 'bg-red-500 text-black cursor-not-allowed'
+                    : hoverTarget === 'revertChanges'
+                    ? hasUnsavedChanges
+                      ? 'bg-green-500 text-black'
+                      : 'bg-red-500 text-black'
                     : 'bg-[#E5B94F] text-black'
-                  : disableRevert
-                  ? 'bg-red-500 text-black cursor-not-allowed'
-                  : hoverTarget === 'revertChanges'
-                  ? hasUnsavedChanges
-                    ? 'bg-green-500 text-black'
-                    : 'bg-red-500 text-black'
-                  : 'bg-[#E5B94F] text-black'
-              }`}
-              title={
-                disableRevert || !hasUnsavedChanges
-                  ? 'No changes to revert'
-                  : 'Revert all pending changes'
-              }
-              disabled={disableRevert}
-              onClick={() => {
-                if (isRevertNoop) return;
-                onRevert();
-              }}
-              onMouseEnter={() => {
-                if (isRevertNoop) return;
-                setHoverTarget('revertChanges');
-              }}
-              onMouseLeave={() => {
-                if (isRevertNoop) return;
-                setHoverTarget(null);
-              }}
-            >
-              Revert Changes
-            </button>
+                }`}
+                title={
+                  disableRevert || !hasUnsavedChanges
+                    ? 'No changes to revert'
+                    : 'Revert all pending changes'
+                }
+                disabled={disableRevert}
+                onClick={() => {
+                  if (isRevertNoop) return;
+                  onRevert();
+                }}
+                onMouseEnter={() => {
+                  if (isRevertNoop) return;
+                  setHoverTarget('revertChanges');
+                }}
+                onMouseLeave={() => {
+                  if (isRevertNoop) return;
+                  setHoverTarget(null);
+                }}
+              >
+                Revert Changes
+              </button>
+            </div>
+            <span className="inline-flex h-[42px] w-8 shrink-0 items-center justify-center text-transparent" aria-hidden="true">
+              X
+            </span>
           </div>
         )}
       </div>

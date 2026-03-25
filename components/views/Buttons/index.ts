@@ -8,3 +8,4 @@ export * from './ExchangeButton';
 export * from '../TradingStationPanel/SellSelectPanel/ManageSponsorsButton';
 export * from './ConnectTradeButton';
 export * from './QuoteButton';
+export { default as OpenCloseBtn } from './OpenCloseBtn';

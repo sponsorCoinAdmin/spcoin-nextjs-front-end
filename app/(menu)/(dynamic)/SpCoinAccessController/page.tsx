@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import CloseButton from '@/components/views/Buttons/CloseButton';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import NpmAccessPanel from './components/NpmAccessPanel';
 import DeploymentControllerPanel from './components/DeploymentControllerPanel';
 import { useSpCoinAccessController } from './hooks/useSpCoinAccessController';
@@ -22,12 +22,11 @@ export default function SpCoinAccessControllerPage() {
         <div />
         <h1 className="text-center text-2xl font-bold text-[#5981F3]">SpCoin Access Controller</h1>
         <div className="flex items-center justify-self-end gap-2">
-          <CloseButton
+          <OpenCloseBtn
             id="spCoinAccessManagerBackButton"
-            closeCallback={controller.handleCloseAttempt}
-            title="Go Back"
-            ariaLabel="Go Back"
-            className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+            onClick={controller.handleCloseAttempt}
+            expandedTitle="Go Back"
+            expandedAriaLabel="Go Back"
           />
         </div>
       </div>

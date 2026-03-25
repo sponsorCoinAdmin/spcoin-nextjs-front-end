@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import OpenCloseBtn from './OpenCloseBtn';
 
 type Props = {
   closeCallback: () => void;
@@ -19,20 +20,17 @@ export default function CloseButton({
   ariaLabel = 'Close',
 }: Props) {
   return (
-    <button
+    <OpenCloseBtn
       id={id}
-      type='button'
-      aria-label={ariaLabel}
-      title={title}
       onClick={closeCallback}
+      type="button"
+      expandedGlyph="X"
+      expandedTitle={title}
+      expandedAriaLabel={ariaLabel}
       className={
         className ??
-        `absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] 
-         flex items-center justify-center leading-none transition-colors text-3xl
-         hover:bg-[#5981F3] hover:text-[#243056]`
+        'absolute top-1 right-1'
       }
-    >
-      ×
-    </button>
+    />
   );
 }

@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const buttonClasses =
@@ -51,16 +52,12 @@ const TopBar: React.FC<Props> = ({
         </button>
       </div>
 
-      <button
+      <OpenCloseBtn
         onClick={onClose}
-        aria-label="Close Context"
-        title="Close Context"
-        className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
-                   hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-        type="button"
-      >
-        ×
-      </button>
+        expandedTitle="Close Context"
+        expandedAriaLabel="Close Context"
+        className="absolute top-1 right-1"
+      />
     </div>
   );
 };

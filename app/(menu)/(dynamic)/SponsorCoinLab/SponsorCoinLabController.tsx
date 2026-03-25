@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Address } from 'viem';
-import CloseButton from '@/components/views/Buttons/CloseButton';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
@@ -2683,14 +2683,13 @@ export default function SponsorCoinLabPage() {
           <div />
           <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin SandBox</h2>
           <div className="flex items-center justify-self-end gap-2">
-            <CloseButton
+            <OpenCloseBtn
               id="sponsorCoinSandboxBackButton"
-              closeCallback={() => {
+              onClick={() => {
                 if (typeof window !== 'undefined') window.history.back();
               }}
-              title="Go Back"
-              ariaLabel="Go Back"
-              className="h-10 w-10 rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] flex items-center justify-center transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
+              expandedTitle="Go Back"
+              expandedAriaLabel="Go Back"
             />
           </div>
         </div>

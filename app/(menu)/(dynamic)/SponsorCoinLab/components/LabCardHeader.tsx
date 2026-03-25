@@ -1,4 +1,5 @@
 import React from 'react';
+import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 
 type LabCardHeaderProps = {
   title: React.ReactNode;
@@ -34,15 +35,11 @@ export default function LabCardHeader({
           onDoubleClick={(event) => event.stopPropagation()}
         >
           {headerButtons}
-          <button
-            type="button"
+          <OpenCloseBtn
             onClick={onToggleExpand}
-            className="relative -right-[9px] -top-[10px] flex h-10 w-10 items-center justify-center rounded-full bg-[#243056] text-3xl leading-none text-[#5981F3] transition-colors hover:bg-[#5981F3] hover:text-[#243056]"
-            title={isExpanded ? 'Return to shared view' : 'Expand this card'}
-            aria-label={isExpanded ? 'Return to shared view' : 'Expand this card'}
-          >
-            {isExpanded ? 'x' : '+'}
-          </button>
+            isExpanded={isExpanded}
+            className="relative -right-[9px] -top-[10px]"
+          />
         </div>
       </div>
       {secondaryRow ? <div className="mt-3">{secondaryRow}</div> : null}
