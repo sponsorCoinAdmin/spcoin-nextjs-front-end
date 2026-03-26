@@ -78,7 +78,6 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentAccountMetadata,
     deploymentFlashError,
     deploymentPrivateKey,
-    deploymentKeyRequiredMessage,
     deploymentVersionPrefix,
     deployedContractAddress,
     showDeployedSignerDetails,
