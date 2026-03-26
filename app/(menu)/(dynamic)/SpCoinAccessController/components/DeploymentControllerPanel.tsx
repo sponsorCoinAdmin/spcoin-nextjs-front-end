@@ -129,11 +129,12 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
   const accountInfoLabelClassName =
     'w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white';
   const isHardhatNetwork = /hardhat/i.test(String(deploymentChainName || ''));
+  void cardClass;
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
       <div
-        className="relative mb-4"
+        className="relative"
         onDoubleClick={onToggleExpand}
         title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
       >
@@ -153,7 +154,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
         </div>
       </div>
 
-      <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
+      <div className="scrollbar-hide grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div />

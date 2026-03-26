@@ -18,6 +18,7 @@ type Props = {
   panelMarginClass: string;
   accountPanelBorderClass: string;
   formHeading?: string;
+  topRowContent?: React.ReactNode;
   connected: boolean;
   publicKey: string;
   publicKeyLocked?: boolean;
@@ -46,6 +47,7 @@ export default function CreateAccountFormPanel({
   panelMarginClass,
   accountPanelBorderClass,
   formHeading = 'Account Meta Data',
+  topRowContent,
   connected,
   publicKey,
   publicKeyLocked = false,
@@ -118,6 +120,7 @@ export default function CreateAccountFormPanel({
           {formHeading}
         </h2>
       </div>
+      {topRowContent ? <div className="w-full max-w-[46rem]">{topRowContent}</div> : null}
       <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">
         <>
           <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>

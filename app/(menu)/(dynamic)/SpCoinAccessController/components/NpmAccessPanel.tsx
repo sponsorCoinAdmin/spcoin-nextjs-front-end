@@ -75,11 +75,12 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
   const isUploadReady = !uploadBlocked && !isActiveSelectedVersion;
   const showUploadAuthenticatorCodeRequired =
     isUploadHovered && isUploadReady && !showUploadVersionExists && !hasValidAuthenticatorCode;
+  void cardClass;
 
   return (
     <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-[#192134] p-4">
       <div
-        className="relative mb-4"
+        className="relative"
         onDoubleClick={onToggleExpand}
         title={isExpanded ? 'Double-click to return to shared view' : 'Double-click to expand'}
       >
@@ -99,12 +100,11 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
         </div>
       </div>
 
-      <div className={`${cardClass} scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2`}>
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-[#8FA8FF]">Node Package Manager</h3>
-        </div>
+      <div className="scrollbar-hide grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2">
+        <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
+          <h3 className="text-center text-lg font-semibold text-[#5981F3]">Node Package Manager</h3>
 
-        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+          <div className="mt-3 grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <label htmlFor="npm-package-select" className="text-sm font-semibold text-[#8FA8FF]">
             NPM Package
           </label>
@@ -284,6 +284,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
             <NpmStatusBlock status={status} />
           </div>
         </div>
+        </section>
       </div>
     </div>
   );

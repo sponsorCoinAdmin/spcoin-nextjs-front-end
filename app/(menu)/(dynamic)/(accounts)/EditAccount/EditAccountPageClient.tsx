@@ -178,16 +178,17 @@ export default function EditAccountPageClient() {
   }, []);
 
   const panelMarginClass = 'mx-0';
+  const sponsorInnerPanelClass = 'rounded-xl border border-[#31416F] bg-[#0B1220]';
   const accountPanelBorderClass = showAllBorders
-    ? 'border-2 border-yellow-400'
-    : 'border-2 border-transparent';
+    ? `${sponsorInnerPanelClass} outline outline-2 outline-yellow-400`
+    : sponsorInnerPanelClass;
   const avatarPanelBorderClass = showAllBorders
-    ? 'border-2 border-red-500'
-    : 'border-2 border-transparent';
+    ? `${sponsorInnerPanelClass} outline outline-2 outline-red-500`
+    : sponsorInnerPanelClass;
   const loadingInputMessage =
     'Loading or updating account data. Input is temporarily disabled.';
   const accountDataHeading = `${formData.name.trim() || 'Account'} Account Data`;
-  const cardClass =
+  const outerCardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
   const showAvatarPanel = expandedPanel === null || expandedPanel === 'avatar';
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
@@ -265,7 +266,7 @@ export default function EditAccountPageClient() {
           }`}
         >
           {showAvatarPanel ? (
-            <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#192134] p-4">
+            <section className={`${outerCardClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}>
               <div
                 className="relative z-20 mb-4 w-full overflow-visible"
                 onDoubleClick={() =>
@@ -297,7 +298,7 @@ export default function EditAccountPageClient() {
                   </div>
                 </div>
               </div>
-              <div className={`${cardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}>
+              <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2">
                   <CreateAccountAvatarPanel
                     panelMarginClass={panelMarginClass}
                     avatarPanelBorderClass={avatarPanelBorderClass}
@@ -318,7 +319,7 @@ export default function EditAccountPageClient() {
           ) : null}
 
           {showFormPanel ? (
-            <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#192134] p-4">
+            <section className={`${outerCardClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}>
               <div
                 className="relative z-20 mb-4 w-full overflow-visible"
                 onDoubleClick={() =>
@@ -350,70 +351,72 @@ export default function EditAccountPageClient() {
                   </div>
                 </div>
               </div>
-              <div className={`${cardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}>
-                  <div className="-mt-[5px] mb-4 flex w-full flex-wrap items-center justify-between gap-4 text-sm">
-                    {showHardhatAccountSelector ? (
-                      <div className="flex items-center gap-3">
-                        <label className="flex min-w-[9rem] justify-start text-[#8FA8FF]">
-                          <div className="flex items-center justify-start gap-2">
-                            <span className="text-sm font-semibold text-[#8FA8FF]">Account #</span>
-                            <select
-                              aria-label="Account #"
-                              title="Hardhat Deployment Account Number"
-                              value={hardhatDeploymentAccountNumber}
-                              disabled={isSaving}
-                              onChange={(event) => {
-                                void handleHardhatDeploymentAccountChange(event);
-                              }}
-                              className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
-                            >
-                              {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
-                                <option key={index} value={index}>
-                                  {index}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </label>
-                      </div>
-                    ) : null}
-                    <div className="ml-auto flex items-center gap-4">
-                      {hardhatSignerAvailable ? (
-                        <label className="flex items-center gap-2 text-[#8FA8FF]">
-                          <input
-                            type="radio"
-                            name="edit-account-signer-source"
-                            value="ec2-base"
-                            checked={authSignerSource === 'ec2-base'}
-                            disabled={isSaving}
-                            onChange={() => {
-                              void handleHardhatSignerSourceChange();
-                            }}
-                            className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
-                          />
-                          <span>Hardhat "Ec2-BASE"</span>
-                        </label>
-                      ) : null}
-                      <label className="flex items-center gap-2 text-[#8FA8FF]">
-                      <input
-                        type="radio"
-                        name="edit-account-signer-source"
-                        value="metamask"
-                        checked={authSignerSource === 'metamask'}
-                        disabled={isSaving}
-                        onChange={() => {
-                          void handleMetaMaskSignerSourceChange();
-                        }}
-                        className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
-                      />
-                      <span>MetaMask</span>
-                      </label>
-                    </div>
-                  </div>
+              <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2">
                   <CreateAccountFormPanel
                     panelMarginClass={panelMarginClass}
                     accountPanelBorderClass={accountPanelBorderClass}
                     formHeading={accountDataHeading}
+                    topRowContent={
+                      <div className="-mt-[5px] mb-4 flex w-full flex-wrap items-center justify-between gap-4 text-sm">
+                        {showHardhatAccountSelector ? (
+                          <div className="flex items-center gap-3">
+                            <label className="flex min-w-[9rem] justify-start text-[#8FA8FF]">
+                              <div className="flex items-center justify-start gap-2">
+                                <span className="text-sm font-semibold text-[#8FA8FF]">Account #</span>
+                                <select
+                                  aria-label="Account #"
+                                  title="Hardhat Deployment Account Number"
+                                  value={hardhatDeploymentAccountNumber}
+                                  disabled={isSaving}
+                                  onChange={(event) => {
+                                    void handleHardhatDeploymentAccountChange(event);
+                                  }}
+                                  className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
+                                >
+                                  {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
+                                    <option key={index} value={index}>
+                                      {index}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </label>
+                          </div>
+                        ) : null}
+                        <div className="ml-auto flex items-center gap-4">
+                          {hardhatSignerAvailable ? (
+                            <label className="flex items-center gap-2 text-[#8FA8FF]">
+                              <input
+                                type="radio"
+                                name="edit-account-signer-source"
+                                value="ec2-base"
+                                checked={authSignerSource === 'ec2-base'}
+                                disabled={isSaving}
+                                onChange={() => {
+                                  void handleHardhatSignerSourceChange();
+                                }}
+                                className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
+                              />
+                              <span>Hardhat "Ec2-BASE"</span>
+                            </label>
+                          ) : null}
+                          <label className="flex items-center gap-2 text-[#8FA8FF]">
+                            <input
+                              type="radio"
+                              name="edit-account-signer-source"
+                              value="metamask"
+                              checked={authSignerSource === 'metamask'}
+                              disabled={isSaving}
+                              onChange={() => {
+                                void handleMetaMaskSignerSourceChange();
+                              }}
+                              className="h-3.5 w-3.5 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
+                            />
+                            <span>MetaMask</span>
+                          </label>
+                        </div>
+                      </div>
+                    }
                     connected={editSessionReady}
                     publicKey={publicKey}
                     publicKeyLocked

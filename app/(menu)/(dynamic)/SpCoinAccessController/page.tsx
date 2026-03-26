@@ -18,10 +18,10 @@ export default function SpCoinAccessControllerPage() {
       className="relative box-border flex w-full flex-col overflow-hidden bg-[#0B1020] px-6 pt-3 text-white"
       style={{ height: `calc(100dvh - ${controller.chromeHeight}px)` }}
     >
-      <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
+      <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
         <div />
-        <h1 className="text-center text-2xl font-bold text-[#5981F3]">SpCoin Access Controller</h1>
-        <div className="flex items-center justify-self-end gap-2">
+        <h1 className="text-center text-xl font-semibold text-[#8FA8FF]">SpCoin Access Controller</h1>
+        <div className="flex min-h-10 items-center justify-self-end gap-2">
           <OpenCloseBtn
             id="spCoinAccessManagerBackButton"
             onClick={controller.handleCloseAttempt}
