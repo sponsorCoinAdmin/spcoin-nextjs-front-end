@@ -187,8 +187,6 @@ export default function EditAccountPageClient() {
   const loadingInputMessage =
     'Loading or updating account data. Input is temporarily disabled.';
   const accountDataHeading = `${formData.name.trim() || 'Account'} Account Data`;
-  const outerCardClass =
-    'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)] md:p-5';
   const swappedOuterCardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#0B1220] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)] md:p-5';
   const releaseStyleOuterShellClass = 'rounded-[28px] bg-[#192134] p-4 md:p-5';
