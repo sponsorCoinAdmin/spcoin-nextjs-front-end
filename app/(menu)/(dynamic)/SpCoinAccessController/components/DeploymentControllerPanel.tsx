@@ -101,7 +101,6 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onAdjustHardhatDeploymentAccountNumber,
     onLocalSourceDeploymentPathChange,
     onDeploy,
-    onDeploymentPrivateKeyBlur,
   } = props;
   const isDeployDisabled = deployDisableReason !== 'ENABLED';
   const isDeploymentInProgress = deployDisableReason === 'DEPLOYMENT_IN_PROGRESS';
