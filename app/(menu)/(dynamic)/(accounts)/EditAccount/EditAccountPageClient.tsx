@@ -224,48 +224,6 @@ export default function EditAccountPageClient() {
     await handleSelectPublicKey(nextAddress);
   };
 
-  const renderAvatarInnerPanel = () => (
-    <div className="mx-auto flex h-full w-full max-w-[46rem] flex-col items-center justify-start pt-4 pb-0">
-      <h2 className="mb-4 w-full text-center text-lg font-semibold text-[#5981F3]">
-        {formData.name.trim() ? `${formData.name.trim()}'s Avatar` : 'Users Avatar'}
-      </h2>
-      <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center gap-4">
-        <div className="flex w-full max-w-[400px] flex-col gap-4">
-          <div className="mx-auto flex h-[400px] w-[400px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
-            {logoPreviewSrc ? (
-              <img
-                src={logoPreviewSrc}
-                alt="Account logo preview"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-sm text-slate-300">No logo found on server</span>
-            )}
-          </div>
-          <div className="w-full">
-            <button
-              type="button"
-              aria-disabled={!editSessionReady}
-              disabled={!editSessionReady}
-              className="w-full rounded border border-white bg-[#E5B94F] py-2 text-black"
-              title={isLoading ? loadingInputMessage : 'Select Preview Image'}
-              onClick={() => {
-                if (!isEditMode) return;
-                if (!logoFileInputRef.current) return;
-                logoFileInputRef.current.value = '';
-                logoFileInputRef.current.click();
-              }}
-            >
-              <span className="px-6 text-center text-[120%] font-bold">
-                Select Preview Image
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderAvatarCard = (
     panelKey: 'avatar' | 'form',
     outerTitle: string,
