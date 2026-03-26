@@ -50,7 +50,7 @@ export default function CreateAccountAvatarPanel({
       className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}
     >
       {headingContent ? (
-        <div className="mb-4 w-full max-w-[56rem] px-6 pt-1 md:px-8">{headingContent}</div>
+        <div className="mb-0 w-full max-w-[56rem] px-6 pt-0 md:px-8">{headingContent}</div>
       ) : (
         <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
           {avatarHeading}
