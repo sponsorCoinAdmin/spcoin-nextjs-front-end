@@ -1,4 +1,7 @@
 {
+    "files.associations": {
+        "*.agent.md": "plaintext"
+    },
     "cSpell.words": [
         "AAVI",
         "autoforward",

@@ -180,6 +180,7 @@ export default function EditAccountPageClient() {
 
   const panelMarginClass = 'mx-auto';
   const sponsorInnerPanelClass = 'rounded-xl border border-[#31416F] bg-[#0B1220]';
+  const sponsorSwappedPanelClass = 'rounded-xl border border-[#31416F] bg-[#11162A]';
   const accountPanelBorderClass = showAllBorders
     ? `${sponsorInnerPanelClass} outline outline-2 outline-yellow-400`
     : sponsorInnerPanelClass;
@@ -191,6 +192,8 @@ export default function EditAccountPageClient() {
   const accountDataHeading = `${formData.name.trim() || 'Account'} Account Data`;
   const outerCardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)] md:p-5';
+  const swappedOuterCardClass =
+    'rounded-2xl border border-[#2B3A67] bg-[#0B1220] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)] md:p-5';
   const releaseStyleOuterShellClass = 'rounded-[28px] bg-[#192134] p-4 md:p-5';
   const showAvatarPanel = expandedPanel === null || expandedPanel === 'avatar';
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
@@ -518,14 +521,19 @@ export default function EditAccountPageClient() {
         </div>
       </div>
       <div
-        className={`${outerCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-1`}
+        className={`${swappedOuterCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-1`}
       >
-        <div className="mb-4 w-full">{renderStableSignerRow()}</div>
+        <h2 className="mx-auto mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
+          {accountDataHeading}
+        </h2>
         <CreateAccountFormPanel
           panelMarginClass={panelMarginClass}
-          accountPanelBorderClass={accountPanelBorderClass}
+          accountPanelBorderClass={showAllBorders
+            ? `${sponsorSwappedPanelClass} outline outline-2 outline-yellow-400`
+            : sponsorSwappedPanelClass}
           idPrefix="edit-account-top-right-"
-          formHeading={accountDataHeading}
+          formHeading=""
+          topRowContent={renderStableSignerRow()}
           connected={editSessionReady}
           publicKey={publicKey}
           publicKeyLocked
@@ -554,8 +562,8 @@ export default function EditAccountPageClient() {
   );
 
   const renderStableSignerRow = () => (
-    <div className="mx-auto grid min-h-[2.25rem] w-full max-w-[56rem] grid-cols-[minmax(12rem,max-content)_minmax(0,1fr)] items-center gap-x-6 text-sm">
-      <div className="flex min-w-0 items-center">
+    <div className="mx-auto flex w-full max-w-[56rem] items-center justify-between px-[13px] py-0 text-sm">
+      <div className="flex min-w-0 items-center justify-start">
         {showHardhatAccountSelector ? (
           <label className="flex min-w-[12rem] justify-start text-[#8FA8FF]">
             <div className="flex items-center justify-start gap-2">
@@ -582,7 +590,7 @@ export default function EditAccountPageClient() {
           <div className="min-h-[1.55rem] min-w-[12rem]" aria-hidden="true" />
         )}
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-4">
+      <div className="flex min-w-0 items-center justify-end gap-8">
         {hardhatSignerAvailable ? (
           <label className="flex items-center gap-2 whitespace-nowrap text-[#8FA8FF]">
             <input

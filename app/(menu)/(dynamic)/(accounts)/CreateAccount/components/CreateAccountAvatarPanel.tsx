@@ -57,9 +57,9 @@ export default function CreateAccountAvatarPanel({
         </h2>
       )}
       <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
-        <div className="flex w-full max-w-[400px] flex-col gap-4">
+        <div className="flex w-full max-w-[410px] flex-col gap-4">
           {showImage ? (
-            <div className="mx-auto flex h-[400px] w-[400px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
+            <div className="mx-auto flex h-[410px] w-[410px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
               {logoPreviewSrc ? (
                 <img
                   src={logoPreviewSrc}

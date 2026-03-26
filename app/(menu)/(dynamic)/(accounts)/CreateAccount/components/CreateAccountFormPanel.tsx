@@ -115,15 +115,21 @@ export default function CreateAccountFormPanel({
     <section
       className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start px-0 pt-4 pb-4`}
     >
-      <div className="mb-4 grid w-full max-w-[56rem] grid-cols-1 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
-        <div className="invisible hidden h-0 overflow-hidden px-2 whitespace-nowrap md:block">
-          Account Address
+      {formHeading || topRowContent ? (
+        <div className="mb-4 w-full max-w-[56rem]">
+          {formHeading ? (
+            <div className="grid w-full grid-cols-1 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
+              <div className="invisible hidden h-0 overflow-hidden px-2 whitespace-nowrap md:block">
+                Account Address
+              </div>
+              <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
+                {formHeading}
+              </h2>
+            </div>
+          ) : null}
+          {topRowContent ? <div className={formHeading ? 'mt-3 w-full' : 'w-full'}>{topRowContent}</div> : null}
         </div>
-        <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
-          {formHeading}
-        </h2>
-      </div>
-      {topRowContent ? <div className="mt-1 w-full max-w-[56rem]">{topRowContent}</div> : null}
+      ) : null}
       <div className="grid w-full max-w-[56rem] grid-cols-1 items-center gap-x-4 gap-y-4 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
         <>
           <label htmlFor={fieldId('publicKey')} className={labelCellClasses} title={FIELD_TITLES.publicKey}>
