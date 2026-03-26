@@ -181,9 +181,6 @@ export default function EditAccountPageClient() {
   const panelMarginClass = 'mx-auto';
   const sponsorInnerPanelClass = 'rounded-xl border border-[#31416F] bg-[#0B1220]';
   const sponsorSwappedPanelClass = 'rounded-xl border border-[#31416F] bg-[#11162A]';
-  const accountPanelBorderClass = showAllBorders
-    ? `${sponsorInnerPanelClass} outline outline-2 outline-yellow-400`
-    : sponsorInnerPanelClass;
   const avatarPanelBorderClass = showAllBorders
     ? `${sponsorInnerPanelClass} outline outline-2 outline-red-500`
     : sponsorInnerPanelClass;
