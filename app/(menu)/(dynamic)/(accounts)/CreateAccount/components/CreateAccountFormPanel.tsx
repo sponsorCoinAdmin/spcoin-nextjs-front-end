@@ -17,6 +17,7 @@ import {
 type Props = {
   panelMarginClass: string;
   accountPanelBorderClass: string;
+  idPrefix?: string;
   formHeading?: string;
   topRowContent?: React.ReactNode;
   connected: boolean;
@@ -46,6 +47,7 @@ type Props = {
 export default function CreateAccountFormPanel({
   panelMarginClass,
   accountPanelBorderClass,
+  idPrefix = '',
   formHeading = 'Account Meta Data',
   topRowContent,
   connected,
@@ -84,7 +86,7 @@ export default function CreateAccountFormPanel({
   const requiredInputClasses = `${baseInputClasses} placeholder:text-red-500`;
   const optionalInputClasses = `${baseInputClasses} placeholder:text-green-400`;
   const labelCellClasses =
-    'mb-0 text-right min-h-[42px] px-2 text-white flex items-center justify-end';
+    'mb-0 flex min-h-[42px] items-center justify-start px-2 text-left text-white md:justify-end md:text-right';
   const disconnectedInputMessage =
     'Connection Required and input is prohibited until connection is established.';
   const disconnectedMetaMaskMessage = 'MetaMask Connection Required';
@@ -95,6 +97,7 @@ export default function CreateAccountFormPanel({
   const noChangesToUpdate = submitLabel !== 'Create Account' && !hasUnsavedChanges;
   const getLoadingClassesForField = (fieldName: string): string =>
     isLoading && hoveredInput === fieldName ? loadingFieldClasses : '';
+  const fieldId = (fieldName: string) => `${idPrefix}${fieldName}`;
 
   const formFieldRows: Array<{
     label: string;
@@ -112,24 +115,24 @@ export default function CreateAccountFormPanel({
     <section
       className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start px-0 pt-4 pb-4`}
     >
-      <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
-        <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
+      <div className="mb-4 grid w-full max-w-[56rem] grid-cols-1 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
+        <div className="invisible hidden h-0 overflow-hidden px-2 whitespace-nowrap md:block">
           Account Address
         </div>
         <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
           {formHeading}
         </h2>
       </div>
-      {topRowContent ? <div className="w-full max-w-[46rem]">{topRowContent}</div> : null}
-      <div className="grid w-full max-w-[46rem] grid-cols-[max-content_28rem] items-center gap-x-4 gap-y-4">
+      {topRowContent ? <div className="mt-1 w-full max-w-[56rem]">{topRowContent}</div> : null}
+      <div className="grid w-full max-w-[56rem] grid-cols-1 items-center gap-x-4 gap-y-4 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
         <>
-          <label htmlFor="publicKey" className={labelCellClasses} title={FIELD_TITLES.publicKey}>
+          <label htmlFor={fieldId('publicKey')} className={labelCellClasses} title={FIELD_TITLES.publicKey}>
             Account Address
           </label>
           <div>
             <div className="flex items-center gap-1">
               <input
-                id="publicKey"
+                id={fieldId('publicKey')}
                 type="text"
                 name="publicKey"
                 value={connected ? publicKey : disconnectedMetaMaskMessage}
@@ -181,7 +184,7 @@ export default function CreateAccountFormPanel({
         {formFieldRows.map(({ label, name, labelTitle }) => (
           <React.Fragment key={name}>
             <label
-              htmlFor={name}
+              htmlFor={fieldId(name)}
               className={`${labelCellClasses}${name === 'description' ? ' self-start h-auto items-start pt-2' : ''}`}
               title={labelTitle}
             >
@@ -213,7 +216,7 @@ export default function CreateAccountFormPanel({
                     <div className="flex items-start gap-1">
                       {key === 'description' ? (
                         <textarea
-                          id={name}
+                          id={fieldId(name)}
                           name={name}
                           ref={descriptionTextareaRef}
                           value={connected ? formData[key] : ''}
@@ -235,7 +238,7 @@ export default function CreateAccountFormPanel({
                         />
                       ) : (
                         <input
-                          id={name}
+                          id={fieldId(name)}
                           name={name}
                           type="text"
                           value={connected ? formData[key] : ''}
@@ -315,7 +318,7 @@ export default function CreateAccountFormPanel({
           </React.Fragment>
         ))}
 
-        <div className="text-right" />
+        <div className="hidden text-right md:block" />
         {!connected ? (
           <div className="flex items-start gap-1">
             <div className="flex w-full gap-2">
