@@ -479,6 +479,80 @@ export default function EditAccountPageClient() {
     </section>
   );
 
+  const renderMetaDataCard = () => (
+    <section
+      className={`${releaseStyleOuterShellClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}
+    >
+      <div
+        className="relative z-20 w-full overflow-visible"
+        onDoubleClick={() =>
+          setExpandedPanel((current) => (current === 'form' ? null : 'form'))
+        }
+        title={
+          expandedPanel === 'form'
+            ? 'Double-click to return to shared view'
+            : 'Double-click to expand'
+        }
+      >
+        <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
+          <div className="flex min-h-10 items-center" />
+          <div className="min-w-0 justify-self-center text-center">
+            <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">
+              Account Meta Data
+            </h2>
+          </div>
+          <div
+            className="flex shrink-0 items-center justify-self-end gap-2"
+            onDoubleClick={(event) => event.stopPropagation()}
+          >
+            <OpenCloseBtn
+              onClick={() =>
+                setExpandedPanel((current) => (current === 'form' ? null : 'form'))
+              }
+              onDoubleClick={(event) => event.stopPropagation()}
+              isExpanded={expandedPanel === 'form'}
+              className="relative -right-[9px] -top-[10px]"
+              glyphClassName="pb-[2px] text-[2.2rem]"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        className={`${outerCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-1`}
+      >
+        <div className="mb-4 w-full">{renderStableSignerRow()}</div>
+        <CreateAccountFormPanel
+          panelMarginClass={panelMarginClass}
+          accountPanelBorderClass={accountPanelBorderClass}
+          idPrefix="edit-account-top-right-"
+          formHeading={accountDataHeading}
+          connected={editSessionReady}
+          publicKey={publicKey}
+          publicKeyLocked
+          formData={formData}
+          errors={errors}
+          descriptionTextareaRef={descriptionTextareaRef}
+          inputLocked={false}
+          isLoading={isLoading}
+          loadingInputMessage={loadingInputMessage}
+          isSaving={isSaving}
+          isEditMode={isEditMode}
+          submitLabel={submitLabel}
+          hasUnsavedChanges={hasUnsavedChanges}
+          canCreateMissingAccount={canCreateMissingAccount}
+          disableSubmit={disableSubmit}
+          disableRevert={disableRevert}
+          isRevertNoop={isRevertNoop}
+          onPublicKeyChange={handlePublicKeyChange}
+          onPublicKeyBlur={handlePublicKeyBlur}
+          onChange={handleChange}
+          onFieldBlur={handleFieldBlur}
+          onRevert={handleRevertChanges}
+        />
+      </div>
+    </section>
+  );
+
   const renderStableSignerRow = () => (
     <div className="mx-auto grid min-h-[2.25rem] w-full max-w-[56rem] grid-cols-[minmax(12rem,max-content)_minmax(0,1fr)] items-center gap-x-6 text-sm">
       <div className="flex min-w-0 items-center">
@@ -588,24 +662,8 @@ export default function EditAccountPageClient() {
           }`}
         >
           {showAvatarPanel ? renderAvatarCard('avatar', 'Account Avatar') : null}
-          {showFormPanel
-            ? renderAvatarCard(
-                'form',
-                'Account Meta Data',
-                false,
-                false,
-                renderStableSignerRow(),
-              )
-            : null}
+          {showFormPanel ? renderMetaDataCard() : null}
         </div>
-        {!expandedPanel ? (
-          <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
-            <div className="min-w-0">
-              {renderFormPanel('edit-account-main-', 'JUNK', 'JUNK')}
-            </div>
-            <div className="hidden 2xl:block" />
-          </div>
-        ) : null}
       </form>
       </div>
       {invalidAddressPopupPreviousAddress ? (
