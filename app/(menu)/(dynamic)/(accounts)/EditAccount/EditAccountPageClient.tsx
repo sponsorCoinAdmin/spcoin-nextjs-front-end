@@ -190,7 +190,6 @@ export default function EditAccountPageClient() {
   const accountDataHeading = `${formData.name.trim() || 'Account'} Account Data`;
   const outerCardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]';
-  const releaseStyleOuterShellClass = 'rounded-2xl bg-[#192134] p-4';
   const showAvatarPanel = expandedPanel === null || expandedPanel === 'avatar';
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
   const showHardhatAccountSelector = hardhatSignerAvailable && authSignerSource === 'ec2-base';
@@ -320,9 +319,7 @@ export default function EditAccountPageClient() {
           ) : null}
 
           {showFormPanel ? (
-            <section
-              className={`${releaseStyleOuterShellClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}
-            >
+            <section className={`${outerCardClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}>
               <div
                 className="relative z-20 mb-4 w-full overflow-visible"
                 onDoubleClick={() =>
@@ -354,9 +351,7 @@ export default function EditAccountPageClient() {
                   </div>
                 </div>
               </div>
-              <div
-                className={`${outerCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}
-              >
+              <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2">
                   <CreateAccountFormPanel
                     panelMarginClass={panelMarginClass}
                     accountPanelBorderClass={accountPanelBorderClass}
