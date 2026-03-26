@@ -271,7 +271,7 @@ export default function EditAccountPageClient() {
               className={`${releaseStyleOuterShellClass} flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden`}
             >
               <div
-                className="relative z-20 mb-4 w-full overflow-visible"
+                className="relative z-20 w-full overflow-visible"
                 onDoubleClick={() =>
                   setExpandedPanel((current) => (current === 'avatar' ? null : 'avatar'))
                 }
@@ -301,24 +301,22 @@ export default function EditAccountPageClient() {
                   </div>
                 </div>
               </div>
-              <div
-                className={`${outerCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2`}
-              >
-                  <CreateAccountAvatarPanel
-                    panelMarginClass={panelMarginClass}
-                    avatarPanelBorderClass={avatarPanelBorderClass}
-                    avatarHeading={formData.name.trim() ? `${formData.name.trim()}'s Avatar` : 'Users Avatar'}
-                    logoPreviewSrc={logoPreviewSrc}
-                    connected={editSessionReady}
-                    isEditMode={isEditMode}
-                    inputLocked={false}
-                    previewButtonLabel="Select Preview Image"
-                    loadingInputMessage={loadingInputMessage}
-                    isLoading={isLoading}
-                    acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
-                    logoFileInputRef={logoFileInputRef}
-                    onFileChange={handleLogoFileChange}
-                  />
+              <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-2">
+                <CreateAccountAvatarPanel
+                  panelMarginClass={panelMarginClass}
+                  avatarPanelBorderClass={avatarPanelBorderClass}
+                  avatarHeading={formData.name.trim() ? `${formData.name.trim()}'s Avatar` : 'Users Avatar'}
+                  logoPreviewSrc={logoPreviewSrc}
+                  connected={editSessionReady}
+                  isEditMode={isEditMode}
+                  inputLocked={false}
+                  previewButtonLabel="Select Preview Image"
+                  loadingInputMessage={loadingInputMessage}
+                  isLoading={isLoading}
+                  acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
+                  logoFileInputRef={logoFileInputRef}
+                  onFileChange={handleLogoFileChange}
+                />
               </div>
             </section>
           ) : null}

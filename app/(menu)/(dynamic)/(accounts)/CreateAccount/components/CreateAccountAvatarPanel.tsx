@@ -45,66 +45,64 @@ export default function CreateAccountAvatarPanel({
       <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
         {avatarHeading}
       </h2>
-      <div className="flex h-full w-full flex-1 min-h-0 flex-col items-center gap-4">
-        <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
-          <div className="flex w-full max-w-[332px] flex-col gap-4">
-            <div className="mx-auto flex h-[332px] w-[332px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
-              {logoPreviewSrc ? (
-                <img
-                  src={logoPreviewSrc}
-                  alt="Account logo preview"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-sm text-slate-300">No logo found on server</span>
-              )}
-            </div>
-            <input
-              ref={logoFileInputRef}
-              id="logoFileUpload"
-              type="file"
-              accept={acceptedInput}
-              className="hidden"
-              aria-label="Account logo file upload"
-              title="Select account logo file"
-              onChange={onFileChange}
-            />
-            <div className="w-full">
-              {!connected ? (
-                <DisconnectedControl
-                  message="Wallet Connection Required"
-                  className={uploadControlClass}
-                />
-              ) : (
-                <button
-                  type="button"
-                  aria-disabled={!connected}
-                  disabled={!connected}
-                      className={`w-full rounded border border-white py-2 text-black transition-colors ${
-                    !isEditMode
-                      ? isUploadHovered
-                        ? 'bg-red-500 text-black'
-                        : 'bg-[#E5B94F] text-black'
-                      : inputLocked
-                      ? 'bg-red-500 text-black cursor-not-allowed'
-                      : isUploadHovered
-                      ? 'bg-green-500 text-black'
+      <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
+        <div className="flex w-full max-w-[400px] flex-col gap-4">
+          <div className="mx-auto flex h-[400px] w-[400px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
+            {logoPreviewSrc ? (
+              <img
+                src={logoPreviewSrc}
+                alt="Account logo preview"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-sm text-slate-300">No logo found on server</span>
+            )}
+          </div>
+          <input
+            ref={logoFileInputRef}
+            id="logoFileUpload"
+            type="file"
+            accept={acceptedInput}
+            className="hidden"
+            aria-label="Account logo file upload"
+            title="Select account logo file"
+            onChange={onFileChange}
+          />
+          <div className="w-full">
+            {!connected ? (
+              <DisconnectedControl
+                message="Wallet Connection Required"
+                className={uploadControlClass}
+              />
+            ) : (
+              <button
+                type="button"
+                aria-disabled={!connected}
+                disabled={!connected}
+                className={`w-full rounded border border-white py-2 text-black transition-colors ${
+                  !isEditMode
+                    ? isUploadHovered
+                      ? 'bg-red-500 text-black'
                       : 'bg-[#E5B94F] text-black'
-                  }`}
-                  title={isLoading ? loadingInputMessage : previewButtonLabel}
-                  onClick={() => {
-                    if (!isEditMode || inputLocked) return;
-                    if (!logoFileInputRef.current) return;
-                    logoFileInputRef.current.value = '';
-                    logoFileInputRef.current.click();
-                  }}
-                  onMouseEnter={() => setIsUploadHovered(true)}
-                  onMouseLeave={() => setIsUploadHovered(false)}
-                >
-                  <span className={uploadControlTextClass}>{previewButtonLabel}</span>
-                </button>
-              )}
-            </div>
+                    : inputLocked
+                    ? 'bg-red-500 text-black cursor-not-allowed'
+                    : isUploadHovered
+                    ? 'bg-green-500 text-black'
+                    : 'bg-[#E5B94F] text-black'
+                }`}
+                title={isLoading ? loadingInputMessage : previewButtonLabel}
+                onClick={() => {
+                  if (!isEditMode || inputLocked) return;
+                  if (!logoFileInputRef.current) return;
+                  logoFileInputRef.current.value = '';
+                  logoFileInputRef.current.click();
+                }}
+                onMouseEnter={() => setIsUploadHovered(true)}
+                onMouseLeave={() => setIsUploadHovered(false)}
+              >
+                <span className={uploadControlTextClass}>{previewButtonLabel}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

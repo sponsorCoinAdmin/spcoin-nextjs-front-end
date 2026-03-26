@@ -110,13 +110,13 @@ export default function CreateAccountFormPanel({
 
   return (
     <section
-      className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start pl-0 pt-4 pb-0 pr-0`}
+      className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start px-0 pt-4 pb-4`}
     >
       <div className="mb-4 grid w-full max-w-[46rem] grid-cols-[max-content_28rem]">
         <div className="invisible h-0 overflow-hidden px-2 whitespace-nowrap">
           Account Address
         </div>
-        <h2 className="-mt-[29px] w-full text-center text-lg font-semibold text-[#5981F3]">
+        <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
           {formHeading}
         </h2>
       </div>
