@@ -87,7 +87,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 pb-[0.32rem]">
           <div className="flex min-h-10 items-center" />
           <div className="min-w-0 justify-self-center text-center">
-            <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">NPM Access Controller</h2>
+            <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">NPM Deployment</h2>
           </div>
           <div className="flex shrink-0 items-center justify-self-end gap-2" onDoubleClick={(event) => event.stopPropagation()}>
             <OpenCloseBtn
@@ -102,9 +102,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
 
       <div className="scrollbar-hide grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-          <h3 className="text-center text-lg font-semibold text-[#5981F3]">Node Package Manager</h3>
-
-          <div className="mt-3 grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+          <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <label htmlFor="npm-package-select" className="text-sm font-semibold text-[#8FA8FF]">
             NPM Package
           </label>

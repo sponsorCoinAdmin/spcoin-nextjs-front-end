@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
+import WalletAccountSelection from '@/components/views/Buttons/WalletAccountSelection';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
@@ -340,9 +341,23 @@ export default function EditAccountPageClient() {
           accountPanelBorderClass={showAllBorders
             ? `${sponsorSwappedPanelClass} outline outline-2 outline-yellow-400`
             : sponsorSwappedPanelClass}
+          contentWidthClass="max-w-none"
           idPrefix="edit-account-top-right-"
           formHeading=""
-          topRowContent={renderStableSignerRow()}
+          topRowContent={(
+            <WalletAccountSelection
+              className="px-3"
+              showHardhatAccountSelector={showHardhatAccountSelector}
+              hardhatSignerAvailable={hardhatSignerAvailable}
+              authSignerSource={authSignerSource}
+              hardhatDeploymentAccountNumber={hardhatDeploymentAccountNumber}
+              hardhatDeploymentAccountCount={hardhatDeploymentAccountCount}
+              isSaving={isSaving}
+              onHardhatDeploymentAccountChange={handleHardhatDeploymentAccountChange}
+              onHardhatSignerSourceChange={handleHardhatSignerSourceChange}
+              onMetaMaskSignerSourceChange={handleMetaMaskSignerSourceChange}
+            />
+          )}
           connected={editSessionReady}
           publicKey={publicKey}
           publicKeyLocked
@@ -368,70 +383,6 @@ export default function EditAccountPageClient() {
         />
       </div>
     </section>
-  );
-
-  const renderStableSignerRow = () => (
-    <div className="mx-auto flex w-full max-w-[56rem] items-center justify-between px-[13px] py-0 text-sm">
-      <div className="flex min-w-0 items-center justify-start">
-        {showHardhatAccountSelector ? (
-          <label className="flex min-w-[12rem] justify-start text-[#8FA8FF]">
-            <div className="flex items-center justify-start gap-2">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Account #</span>
-              <select
-                aria-label="Account #"
-                title="Hardhat Deployment Account Number"
-                value={hardhatDeploymentAccountNumber}
-                disabled={isSaving}
-                onChange={(event) => {
-                  void handleHardhatDeploymentAccountChange(event);
-                }}
-                className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
-              >
-                {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
-                  <option key={index} value={index}>
-                    {index}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </label>
-        ) : (
-          <div className="min-h-[1.55rem] min-w-[12rem]" aria-hidden="true" />
-        )}
-      </div>
-      <div className="flex min-w-0 items-center justify-end gap-8">
-        {hardhatSignerAvailable ? (
-          <label className="flex items-center gap-2 whitespace-nowrap text-[#8FA8FF]">
-            <input
-              type="radio"
-              name="edit-account-signer-source"
-              value="ec2-base"
-              checked={authSignerSource === 'ec2-base'}
-              disabled={isSaving}
-              onChange={() => {
-                void handleHardhatSignerSourceChange();
-              }}
-              className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
-            />
-            <span>Hardhat "Ec2-BASE"</span>
-          </label>
-        ) : null}
-        <label className="flex items-center gap-2 whitespace-nowrap text-[#8FA8FF]">
-          <input
-            type="radio"
-            name="edit-account-signer-source"
-            value="metamask"
-            checked={authSignerSource === 'metamask'}
-            disabled={isSaving}
-            onChange={() => {
-              void handleMetaMaskSignerSourceChange();
-            }}
-            className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-[#8FA8FF] bg-transparent checked:border-green-500 checked:bg-green-500"
-          />
-          <span>MetaMask</span>
-        </label>
-      </div>
-    </div>
   );
 
   return (

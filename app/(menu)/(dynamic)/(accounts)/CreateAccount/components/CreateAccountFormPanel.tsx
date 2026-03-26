@@ -17,6 +17,7 @@ import {
 type Props = {
   panelMarginClass: string;
   accountPanelBorderClass: string;
+  contentWidthClass?: string;
   idPrefix?: string;
   formHeading?: string;
   topRowContent?: React.ReactNode;
@@ -47,6 +48,7 @@ type Props = {
 export default function CreateAccountFormPanel({
   panelMarginClass,
   accountPanelBorderClass,
+  contentWidthClass = 'max-w-[56rem]',
   idPrefix = '',
   formHeading = 'Account Meta Data',
   topRowContent,
@@ -116,7 +118,7 @@ export default function CreateAccountFormPanel({
       className={`${panelMarginClass} ${accountPanelBorderClass} order-2 flex h-full w-full flex-col items-start justify-start px-0 pt-4 pb-4`}
     >
       {formHeading || topRowContent ? (
-        <div className="mb-4 w-full max-w-[56rem]">
+        <div className={`mb-4 w-full ${contentWidthClass}`}>
           {formHeading ? (
             <div className="grid w-full grid-cols-1 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
               <div className="invisible hidden h-0 overflow-hidden px-2 whitespace-nowrap md:block">
@@ -130,7 +132,7 @@ export default function CreateAccountFormPanel({
           {topRowContent ? <div className={formHeading ? 'mt-3 w-full' : 'w-full'}>{topRowContent}</div> : null}
         </div>
       ) : null}
-      <div className="grid w-full max-w-[56rem] grid-cols-1 items-center gap-x-4 gap-y-4 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
+      <div className={`grid w-full ${contentWidthClass} grid-cols-1 items-center gap-x-4 gap-y-4 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]`}>
         <>
           <label htmlFor={fieldId('publicKey')} className={labelCellClasses} title={FIELD_TITLES.publicKey}>
             Account Address
