@@ -108,10 +108,6 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentSignerSource === 'metamask'
       ? 'Connected MetaMask wallet address'
       : 'Derived from Hardhat deployment account';
-  const privateKeyPlaceholder =
-    deploymentSignerSource === 'metamask'
-      ? 'MetaMask approval uses the connected wallet'
-      : deploymentKeyRequiredMessage;
   const deployedSignerFieldLabel =
     deploymentSignerSource === 'metamask' ? 'Signer Address' : 'Signer Key';
   const deployedSignerFieldPlaceholder =
