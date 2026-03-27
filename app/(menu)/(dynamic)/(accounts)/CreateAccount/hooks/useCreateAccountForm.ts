@@ -44,6 +44,7 @@ type Params = {
   authSignerSource: 'ec2-base' | 'metamask';
   hardhatDeploymentAccountNumber?: number;
   appChainId?: number;
+  hardhatSignerAvailable?: boolean;
   runWithWalletAction: RunWithWalletAction;
 };
 
@@ -58,6 +59,7 @@ export function useCreateAccountForm({
   authSignerSource,
   hardhatDeploymentAccountNumber = 0,
   appChainId,
+  hardhatSignerAvailable,
   runWithWalletAction,
 }: Params) {
   const [publicKey, setPublicKey] = useState<string>('');
@@ -108,7 +110,7 @@ export function useCreateAccountForm({
     () => (isAddress(String(activeAddress ?? '').trim()) ? normalizeAddress(String(activeAddress)) : ''),
     [activeAddress],
   );
-  const canUseHardhatSigner = Number(appChainId) === 31337;
+  const canUseHardhatSigner = hardhatSignerAvailable ?? (Number(appChainId) === 31337);
   const initialAccountAddress = useMemo(() => {
     if (authSignerSource === 'metamask') {
       return normalizedActiveAddress;
@@ -188,9 +190,14 @@ export function useCreateAccountForm({
         setServerLogoURL(withCacheBust(resolvedLogoURL));
       } catch {
         if (!abortController.signal.aborted) {
+          setPublicKey(initialAccountAddress);
+          setResolvedAccountAddress(initialAccountAddress);
           setAccountExists(false);
+          setFormData({ ...EMPTY_FORM_DATA });
+          setBaselineData({ ...EMPTY_FORM_DATA });
           setSavedAccountName('');
           setErrors({});
+          setLogoFile(null);
           setHasServerLogo(false);
           setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
         }
@@ -292,7 +299,15 @@ export function useCreateAccountForm({
       );
       setServerLogoURL(withCacheBust(resolvedLogoURL));
     } catch {
-      setPublicKey(previousAddress);
+      setPublicKey(normalizedAddress);
+      setResolvedAccountAddress(normalizedAddress);
+      setAccountExists(false);
+      setFormData({ ...EMPTY_FORM_DATA });
+      setBaselineData({ ...EMPTY_FORM_DATA });
+      setSavedAccountName('');
+      setLogoFile(null);
+      setHasServerLogo(false);
+      setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
       setErrors((prev) => {
         const next = { ...prev };
         next.publicKey = 'Account not found';

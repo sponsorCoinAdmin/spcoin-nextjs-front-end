@@ -31,9 +31,11 @@ type HardhatAccountMetadata = {
 type SponsorCoinVersionChoice = {
   id: string;
   version: string;
+  chainId: number;
   address: string;
   privateKey?: string;
   signerKey?: string;
+  deployer?: string;
   name?: string;
   symbol?: string;
 };
@@ -403,18 +405,17 @@ export function useSponsorCoinLabNetwork({
     [],
   );
   const sponsorCoinVersionChoices = useMemo(() => {
-    const chainIdNum = Number(effectiveConnectedChainId);
-    if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) {
-      return [] as SponsorCoinVersionChoice[];
-    }
     const excludedAddressSet = new Set(
       excludedDeploymentAddresses.map((entry) => normalizeAddress(String(entry || ''))).filter(Boolean),
     );
-
-    const chainNode = spCoinDeploymentMap.chainId?.[String(chainIdNum)] ?? {};
     const rows: SponsorCoinVersionChoice[] = [];
 
-    const pushVersionNode = (version: string, byAddress: unknown, wrapperPrivateKey?: string) => {
+    const pushVersionNode = (
+      chainIdNum: number,
+      version: string,
+      byAddress: unknown,
+      wrapperPrivateKey?: string,
+    ) => {
       if (!byAddress || typeof byAddress !== 'object') return;
       const firstAddress = Object.keys(byAddress as Record<string, unknown>).find((addr) =>
         /^0[xX][0-9a-fA-F]{40}$/.test(addr),
@@ -434,30 +435,38 @@ export function useSponsorCoinLabNetwork({
           .map((part) => String(part || '').trim().toLowerCase())
           .join('::'),
         version,
+        chainId: chainIdNum,
         address: `0x${firstAddress.slice(2).toLowerCase()}`,
         privateKey,
         signerKey: firstEntrySignerKey || undefined,
+        deployer: String(firstEntry?.deployer || '').trim() || undefined,
         name: String(firstEntry?.name || '').trim() || undefined,
         symbol: String(firstEntry?.symbol || '').trim() || undefined,
       });
     };
 
-    for (const [nodeKey, nodeValue] of Object.entries(chainNode)) {
-      const trimmedKey = String(nodeKey || '').trim();
-      if (!nodeValue || typeof nodeValue !== 'object') continue;
+    for (const [chainKey, chainNode] of Object.entries(spCoinDeploymentMap.chainId ?? {})) {
+      const chainIdNum = Number(chainKey);
+      if (!Number.isFinite(chainIdNum) || chainIdNum <= 0) continue;
+      if (!chainNode || typeof chainNode !== 'object') continue;
 
-      if (/^0x[a-fA-F0-9]{64}$/.test(trimmedKey)) {
-        for (const [version, byAddress] of Object.entries(nodeValue as Record<string, unknown>)) {
-          pushVersionNode(version, byAddress, trimmedKey);
+      for (const [nodeKey, nodeValue] of Object.entries(chainNode as Record<string, unknown>)) {
+        const trimmedKey = String(nodeKey || '').trim();
+        if (!nodeValue || typeof nodeValue !== 'object') continue;
+
+        if (/^0x[a-fA-F0-9]{64}$/.test(trimmedKey)) {
+          for (const [version, byAddress] of Object.entries(nodeValue as Record<string, unknown>)) {
+            pushVersionNode(chainIdNum, version, byAddress, trimmedKey);
+          }
+          continue;
         }
-        continue;
-      }
 
-      pushVersionNode(trimmedKey, nodeValue);
+        pushVersionNode(chainIdNum, trimmedKey, nodeValue);
+      }
     }
 
     return rows.filter((entry) => !excludedAddressSet.has(normalizeAddress(entry.address)));
-  }, [effectiveConnectedChainId, excludedDeploymentAddresses, spCoinDeploymentMap]);
+  }, [excludedDeploymentAddresses, spCoinDeploymentMap]);
   const {
     selectedSponsorCoinVersion,
     setSelectedSponsorCoinVersion,
@@ -501,7 +510,8 @@ export function useSponsorCoinLabNetwork({
   const selectedSponsorCoinLogoURL = useMemo(() => {
     const address = String(selectedSponsorCoinVersionEntry?.address || '').trim();
     if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) return '';
-    return getTokenLogoURL({ chainId: HARDHAT_CHAIN_ID_DEC, address });
+    const chainId = Number(selectedSponsorCoinVersionEntry?.chainId || HARDHAT_CHAIN_ID_DEC);
+    return getTokenLogoURL({ chainId: Number.isFinite(chainId) && chainId > 0 ? chainId : HARDHAT_CHAIN_ID_DEC, address });
   }, [selectedSponsorCoinVersionEntry]);
   const selectedWriteSenderAccount = useMemo(() => {
     const key = normalizeAddress(selectedWriteSenderAddress);

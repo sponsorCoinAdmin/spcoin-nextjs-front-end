@@ -1,4 +1,6 @@
 import { SpCoinLogger } from "./utils/logging";
+import { SpCoinOnChainProcessor } from "./onChain";
+import { SpCoinOffChainProcessor } from "./offChain";
 import { SpCoinERC20Module } from "./modules/spCoinERC20Module";
 import { SpCoinDeleteModule } from "./modules/spCoinDeleteModule";
 import { SpCoinAddModule } from "./modules/spCoinAddModule";
@@ -6,6 +8,8 @@ import { SpCoinReadModule } from "./modules/spCoinReadModule";
 import { SpCoinRewardsModule } from "./modules/spCoinRewardsModule";
 import { SpCoinStakingModule } from "./modules/spCoinStakingModule";
 export { SpCoinLogger } from "./utils/logging";
+export { SpCoinOnChainProcessor } from "./onChain";
+export { SpCoinOffChainProcessor } from "./offChain";
 export { SpCoinERC20Module } from "./modules/spCoinERC20Module";
 export { SpCoinDeleteModule } from "./modules/spCoinDeleteModule";
 export { SpCoinAddModule } from "./modules/spCoinAddModule";
@@ -18,6 +22,8 @@ export type SpCoinAccessMethods = {
     spCoinDeleteMethods: SpCoinDeleteModule;
     spCoinERC20Methods: SpCoinERC20Module;
     spCoinLogger: SpCoinLogger;
+    spCoinOnChainMethods: SpCoinOnChainProcessor;
+    spCoinOffChainMethods: SpCoinOffChainProcessor;
     spCoinReadMethods: SpCoinReadModule;
     spCoinRewardsMethods: SpCoinRewardsModule;
     spCoinStakingMethods: SpCoinStakingModule;
@@ -28,6 +34,8 @@ export declare class SpCoinAccessModules {
     spCoinDeleteMethods: SpCoinDeleteModule;
     spCoinERC20Methods: SpCoinERC20Module;
     spCoinLogger: SpCoinLogger;
+    spCoinOnChainMethods: SpCoinOnChainProcessor;
+    spCoinOffChainMethods: SpCoinOffChainProcessor;
     spCoinReadMethods: SpCoinReadModule;
     spCoinRewardsMethods: SpCoinRewardsModule;
     spCoinStakingMethods: SpCoinStakingModule;

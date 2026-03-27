@@ -97,19 +97,21 @@ class SpCoinAddModule {
             spCoinLogger.logExitFunction();
             return tx;
         };
-        this.addBackDatedSponsorship = async (_sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty, _transactionBackDate) => {
+        this.addBackDatedSponsorship = async (_adminSigner, _sponsorKey, _recipientKey, _recipientRateKey, _transactionQty, _transactionBackDate) => {
             console.log("addBackDatedSponsorship = async(" +
-                _sponsorSigner + ", " +
+                _adminSigner + ", " +
+                _sponsorKey + ", " +
                 _recipientKey + ", " +
                 _recipientRateKey + ", " +
                 _transactionQty + ", " +
                 _transactionBackDate + ")");
-            await this.addBackDatedAgentSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, BURN_ADDRESS, 0, _transactionQty, _transactionBackDate);
+            await this.addBackDatedAgentSponsorship(_adminSigner, _sponsorKey, _recipientKey, _recipientRateKey, BURN_ADDRESS, 0, _transactionQty, _transactionBackDate);
             spCoinLogger.logExitFunction();
         };
-        this.addBackDatedAgentSponsorship = async (_sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty, _transactionBackDate) => {
+        this.addBackDatedAgentSponsorship = async (_adminSigner, _sponsorKey, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty, _transactionBackDate) => {
             spCoinLogger.logFunctionHeader("addBackDatedAgentSponsorship = async(" +
-                _sponsorSigner + ", " +
+                _adminSigner + ", " +
+                _sponsorKey + ", " +
                 _recipientKey + ", " +
                 _recipientRateKey + ", " +
                 _accountAgentKey + ", " +
@@ -120,7 +122,7 @@ class SpCoinAddModule {
             let components = _transactionQty.toString().split(".");
             let wholePart = components[0].length > 0 ? components[0] : "0";
             let fractionalPart = components.length > 1 ? components[1] : "0";
-            const tx = await this.spCoinContractDeployed.connect(_sponsorSigner).addBackDatedSponsorship(_recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, wholePart, fractionalPart, _transactionBackDate);
+            const tx = await this.spCoinContractDeployed.connect(_adminSigner).addBackDatedSponsorship(_sponsorKey, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, wholePart, fractionalPart, _transactionBackDate);
             spCoinLogger.logExitFunction();
             return tx;
         };

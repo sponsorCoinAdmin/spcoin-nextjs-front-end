@@ -12,6 +12,22 @@ const ENTRY_CONTRACT = 'SPCoin';
 const SOLC_VERSION = '0.8.18';
 const EIP170_LIMIT_BYTES = 24576;
 
+function formatTimestamp(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  const offsetMinutes = -date.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const absoluteOffsetMinutes = Math.abs(offsetMinutes);
+  const offsetHours = pad(Math.floor(absoluteOffsetMinutes / 60));
+  const offsetRemainderMinutes = pad(absoluteOffsetMinutes % 60);
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${sign}${offsetHours}:${offsetRemainderMinutes}`;
+}
+
 function toPosix(value) {
   return value.replace(/\\/g, '/');
 }
@@ -135,6 +151,15 @@ function formatMargin(bytes) {
   return `${formatSignedDelta(delta)} bytes vs EIP-170`;
 }
 
+function formatPercentChange(currentValue, backupValue) {
+  if (!backupValue) return 'n/a';
+  const percent = ((currentValue - backupValue) / backupValue) * 100;
+  const absolute = Math.abs(percent).toFixed(2);
+  if (percent < 0) return `${absolute}% smaller`;
+  if (percent > 0) return `${absolute}% larger`;
+  return '0.00% unchanged';
+}
+
 function main() {
   const results = CONTRACT_VARIANTS.map((variant) => ({
     label: variant.label,
@@ -145,6 +170,7 @@ function main() {
   const current = results.find((entry) => entry.label === 'current');
   const backup = results.find((entry) => entry.label === 'backup');
 
+  console.log(`Timestamp: ${formatTimestamp()}`);
   console.log(`SPCoin contract size comparison`);
   console.log(`Compiler: solc ${SOLC_VERSION}`);
   console.log(`Entry: ${ENTRY_FILE}:${ENTRY_CONTRACT}`);
@@ -163,6 +189,10 @@ function main() {
     console.log(`Delta current-vs-backup`);
     console.log(`  Creation bytecode: ${formatSignedDelta(current.creationBytes - backup.creationBytes)} bytes`);
     console.log(`  Deployed bytecode: ${formatSignedDelta(current.deployedBytes - backup.deployedBytes)} bytes`);
+    console.log('');
+    console.log(`- Creation size: ${current.creationBytes.toLocaleString()} vs ${backup.creationBytes.toLocaleString()} bytes`);
+    console.log(`  ${formatPercentChange(current.creationBytes, backup.creationBytes)} in creation size`);
+    console.log(`  ${formatPercentChange(current.deployedBytes, backup.deployedBytes)} in deployed size`);
   }
 }
 

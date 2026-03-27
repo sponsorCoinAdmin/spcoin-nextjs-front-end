@@ -33,6 +33,7 @@ type Props = {
   network: {
     mode: ConnectionMode;
     setMode: (value: ConnectionMode) => void;
+    allowModeSelection: boolean;
     shouldPromptHardhatBaseConnect: boolean;
     connectHardhatBaseFromNetworkLabel: () => Promise<void>;
     activeNetworkName: string;
@@ -82,7 +83,7 @@ export default function ContractNetworkCard({
       />
       <div className="grid grid-cols-1 gap-3">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-          <h3 className="text-center text-lg font-semibold text-[#5981F3]">Active Sponsor Coin Contract</h3>
+          <h3 className="text-center text-lg font-semibold text-[#5981F3]">Select SpCoin Contract to Activate</h3>
           <div className="grid grid-cols-1 gap-3">
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
@@ -182,6 +183,7 @@ export default function ContractNetworkCard({
                     name="sponsorcoin-lab-network-mode"
                     value="hardhat"
                     checked={network.mode === 'hardhat'}
+                    disabled={!network.allowModeSelection}
                     onChange={() => network.setMode('hardhat')}
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                   />
@@ -193,6 +195,7 @@ export default function ContractNetworkCard({
                     name="sponsorcoin-lab-network-mode"
                     value="metamask"
                     checked={network.mode === 'metamask'}
+                    disabled={!network.allowModeSelection}
                     onChange={() => network.setMode('metamask')}
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                   />

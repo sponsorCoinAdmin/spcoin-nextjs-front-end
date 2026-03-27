@@ -9,7 +9,7 @@ export declare class SpCoinAddModule {
     addAccountRecords: (_accountListKeys: string[]) => Promise<number>;
     addSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _transactionQty: string | number) => Promise<ContractTransactionResponse>;
     addAgentSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string, _agentRateKey: string | number, _transactionQty: string | number) => Promise<ContractTransactionResponse>;
-    addBackDatedSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
-    addBackDatedAgentSponsorship: (_sponsorSigner: Signer, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string, _agentRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
+    addBackDatedSponsorship: (_adminSigner: Signer, _sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
+    addBackDatedAgentSponsorship: (_adminSigner: Signer, _sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string, _agentRateKey: string | number, _transactionQty: string | number, _transactionBackDate: number) => Promise<ContractTransactionResponse>;
     constructor(_spCoinContractDeployed: any);
 }

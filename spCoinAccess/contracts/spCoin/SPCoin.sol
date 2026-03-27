@@ -16,6 +16,7 @@ contract SPCoin is Token{
         decimals = defaultDecimals;
         balanceOf[msg.sender] = totalSupply = totalBalanceOf = defaultTotalSupply;
         stakedSPCoins = 0;
+        emit Transfer(address(0), msg.sender, defaultTotalSupply);
         // console.log("msg.sender = ", msg.sender);
         // console.log("balanceOf[msg.sender] = ", balanceOf[msg.sender]);
     }

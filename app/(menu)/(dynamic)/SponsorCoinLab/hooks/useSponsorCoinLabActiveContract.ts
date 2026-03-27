@@ -3,9 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 type SponsorCoinVersionChoice = {
   id: string;
   version: string;
+  chainId: number;
   address: string;
   privateKey?: string;
   signerKey?: string;
+  deployer?: string;
   name?: string;
   symbol?: string;
 };

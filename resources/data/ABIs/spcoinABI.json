@@ -143,17 +143,9 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "sponsor",
+        "name": "_sponsorKey",
         "type": "address"
-      }
-    ],
-    "name": "addSponsor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
         "name": "_recipientKey",
@@ -1155,32 +1147,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "newLowerAgentRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "setLowerAgent",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "newLowerRecipientRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "setLowerRecipient",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "newLowerRecipientRate",
         "type": "uint256"
       },
@@ -1191,32 +1157,6 @@
       }
     ],
     "name": "setRecipientRateRange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "newUpperAgentRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "setUpperAgent",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "newUpperRecipientRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "setUpperRecipient",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

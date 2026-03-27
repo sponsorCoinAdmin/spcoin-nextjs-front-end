@@ -77,9 +77,7 @@ export default function SpCoinAccessControllerPage() {
                 deploymentDecimals={controller.deploymentDecimals}
                 deploymentVersion={controller.deploymentVersion}
                 deploymentSignerSource={controller.deploymentSignerSource}
-                hardhatDeploymentAccountNumber={controller.hardhatDeploymentAccountNumber}
-                canIncrementHardhatDeploymentAccountNumber={controller.canIncrementHardhatDeploymentAccountNumber}
-                canDecrementHardhatDeploymentAccountNumber={controller.canDecrementHardhatDeploymentAccountNumber}
+                deploymentWalletSelection={controller.deploymentWalletSelection}
                 deploymentChainName={controller.deploymentChainName}
                 deploymentChainId={controller.deploymentChainId}
                 deploymentPathDisplayValue={controller.deploymentPathDisplayValue}
@@ -108,14 +106,12 @@ export default function SpCoinAccessControllerPage() {
                 onToggleExpand={() =>
                   setExpandedPanel((current) => (current === 'deploy' ? null : 'deploy'))
                 }
-                onSetDeploymentSignerSource={controller.setDeploymentSignerSource}
+                onDeploymentWalletSelectionChange={controller.handleDeploymentWalletSelectionChange}
                 onDeploymentSignerAddressChange={controller.setDeploymentSignerAddressInput}
                 onDeploymentDecimalsChange={controller.handleDeploymentDecimalsInputChange}
                 onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
                 onDeploymentVersionChange={controller.handleDeploymentVersionInputChange}
                 onAdjustDeploymentVersion={controller.adjustDeploymentVersion}
-                onHardhatDeploymentAccountNumberChange={controller.handleHardhatDeploymentAccountNumberChange}
-                onAdjustHardhatDeploymentAccountNumber={controller.adjustHardhatDeploymentAccountNumber}
                 onLocalSourceDeploymentPathChange={controller.setLocalSourceDeploymentPath}
                 onDeploy={controller.handleDeploy}
                 onDeploymentPrivateKeyChange={controller.handleDeploymentPrivateKeyChange}

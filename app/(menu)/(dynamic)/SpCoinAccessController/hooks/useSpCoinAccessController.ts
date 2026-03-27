@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserProvider, ContractFactory, HDNodeWallet, type Signer } from 'ethers';
 import { useAccount } from 'wagmi';
+import type { WalletAccountSelectionValue } from '@/components/views/Buttons/WalletAccountSelection';
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -293,7 +294,7 @@ export function useSpCoinAccessController() {
   const [deployUiState, setDeployUiState] = useState<'idle' | 'in_progress' | 'deployed'>('idle');
   const refreshDeploymentTokenStatus = async () => {
     const key = String(deployedContractAddress || '').trim();
-    const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+    const chainId = effectiveDeploymentChainIdNumber;
     if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
       setDeploymentContractDirExists(false);
       setDeploymentTokenStatus('NOT_FOUND');
@@ -327,11 +328,21 @@ export function useSpCoinAccessController() {
   const deploymentTokenName = buildDeploymentTokenName(deploymentName);
   const deploymentVersionPrefix = deploymentTokenName;
   const rawDeploymentChainId = Number((exchangeContext as any)?.network?.chainId);
+  const effectiveDeploymentChainIdNumber =
+    deploymentSignerSource === 'ec2-base'
+      ? HARDHAT_CHAIN_ID
+      : Number.isFinite(rawDeploymentChainId) && rawDeploymentChainId > 0
+      ? rawDeploymentChainId
+      : 0;
   const deploymentChainName =
-    rawDeploymentChainId === 31337 ? 'HardHat BASE' : String((exchangeContext as any)?.network?.name || 'Unknown');
+    deploymentSignerSource === 'ec2-base'
+      ? 'HardHat BASE'
+      : rawDeploymentChainId === HARDHAT_CHAIN_ID
+      ? 'HardHat BASE'
+      : String((exchangeContext as any)?.network?.name || 'Unknown');
   const deploymentChainId =
-    Number.isFinite(rawDeploymentChainId) && rawDeploymentChainId > 0
-      ? String(rawDeploymentChainId)
+    effectiveDeploymentChainIdNumber > 0
+      ? String(effectiveDeploymentChainIdNumber)
       : 'Unknown';
   const deploymentKeyRequiredMessage = 'Account Private Key for Deployment Required';
   const hardhatDeploymentAccountOptions = useMemo(
@@ -345,6 +356,23 @@ export function useSpCoinAccessController() {
   const canIncrementHardhatDeploymentAccountNumber =
     hardhatDeploymentAccountNumber < HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1;
   const canDecrementHardhatDeploymentAccountNumber = hardhatDeploymentAccountNumber > 0;
+  const deploymentWalletSelection: WalletAccountSelectionValue = {
+    source: deploymentSignerSource,
+    accountNumber: hardhatDeploymentAccountNumber,
+  };
+  const handleDeploymentWalletSelectionChange = (nextSelection: WalletAccountSelectionValue) => {
+    if (nextSelection.source !== deploymentSignerSource) {
+      setDeploymentSignerSource(nextSelection.source);
+    }
+    if (nextSelection.accountNumber !== hardhatDeploymentAccountNumber) {
+      setHardhatDeploymentAccountNumber(
+        Math.max(
+          0,
+          Math.min(HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1, Number(nextSelection.accountNumber) || 0),
+        ),
+      );
+    }
+  };
   const deploymentMapEntries = useMemo(() => {
     const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
     return getDeploymentEntriesForChainVersion(parsed, deploymentChainId, deploymentVersion);
@@ -603,7 +631,7 @@ export function useSpCoinAccessController() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'prepareDeploy',
-            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+            deploymentChainId: effectiveDeploymentChainIdNumber,
             deploymentVersion: normalizedVersion,
           }),
         });
@@ -651,7 +679,7 @@ export function useSpCoinAccessController() {
             deploymentDecimals: normalizedDecimals,
             deploymentPublicKey: contractPublicKey,
             deploymentSignerPublicKey: activeMetaMaskAddress,
-            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+            deploymentChainId: effectiveDeploymentChainIdNumber,
           }),
         });
         const registerData = await parseManagerResponse(registerResponse);
@@ -675,7 +703,7 @@ export function useSpCoinAccessController() {
             deploymentDecimals: normalizedDecimals,
             deploymentLogoPath,
             deploymentPublicKey: contractPublicKey,
-            deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+            deploymentChainId: effectiveDeploymentChainIdNumber,
           }),
         });
         const updateData = await parseManagerResponse(updateResponse);
@@ -730,7 +758,7 @@ export function useSpCoinAccessController() {
           deploymentVersion: normalizedVersion,
           deploymentAccountPrivateKey: normalizedPrivateKey,
           hardhatDeploymentAccountNumber,
-          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+          deploymentChainId: effectiveDeploymentChainIdNumber,
         }),
       });
       const data = await parseManagerResponse(response);
@@ -759,7 +787,7 @@ export function useSpCoinAccessController() {
           deploymentLogoPath,
           deploymentPublicKey: contractPublicKey,
           hardhatDeploymentAccountNumber,
-          deploymentChainId: Number((exchangeContext as any)?.network?.chainId || 0),
+          deploymentChainId: effectiveDeploymentChainIdNumber,
         }),
       });
       const updateData = await parseManagerResponse(updateResponse);
@@ -1041,7 +1069,7 @@ export function useSpCoinAccessController() {
     let active = true;
     const checkDeploymentContractDir = async () => {
       const key = String(deployedContractAddress || '').trim();
-      const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+      const chainId = effectiveDeploymentChainIdNumber;
       if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) {
         if (active) {
           setDeploymentContractDirExists(false);
@@ -1071,13 +1099,13 @@ export function useSpCoinAccessController() {
     return () => {
       active = false;
     };
-  }, [deployedContractAddress, rawDeploymentChainId]);
+  }, [deployedContractAddress, effectiveDeploymentChainIdNumber]);
 
   useEffect(() => {
     let active = true;
     const hydrateExchangeSpCoinContract = async () => {
       const key = String(deployedContractAddress || '').trim();
-      const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+      const chainId = effectiveDeploymentChainIdNumber;
 
       if (!/^0[xX][a-fA-F0-9]{40}$/.test(key)) return;
       if (!Number.isFinite(chainId) || chainId <= 0) return;
@@ -1137,7 +1165,7 @@ export function useSpCoinAccessController() {
     deploymentSymbol,
     deploymentVersion,
     exchangeContext,
-    rawDeploymentChainId,
+    effectiveDeploymentChainIdNumber,
     setSettings,
   ]);
 
@@ -1314,6 +1342,7 @@ export function useSpCoinAccessController() {
     deploymentDecimals,
     deploymentVersion,
     deploymentSignerSource,
+    deploymentWalletSelection,
     hardhatDeploymentAccountNumber,
     selectedSignerAddress: selectedDeploymentSignerPublicKey,
     showDeploymentAccountDetails,
@@ -1357,6 +1386,7 @@ export function useSpCoinAccessController() {
     handleDeploymentVersionInputChange,
     adjustDeploymentVersion,
     handleHardhatDeploymentAccountNumberChange,
+    handleDeploymentWalletSelectionChange,
     adjustHardhatDeploymentAccountNumber,
     setLocalSourceDeploymentPath,
     handleDeploy,

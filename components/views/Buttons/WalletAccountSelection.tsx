@@ -2,30 +2,29 @@
 
 import React from 'react';
 
+export type WalletAccountSelectionValue = {
+  source: 'ec2-base' | 'metamask';
+  accountNumber: number;
+};
+
 type WalletAccountSelectionProps = {
   className?: string;
   showHardhatAccountSelector: boolean;
   hardhatSignerAvailable: boolean;
-  authSignerSource: 'ec2-base' | 'metamask';
-  hardhatDeploymentAccountNumber: number;
   hardhatDeploymentAccountCount: number;
-  isSaving: boolean;
-  onHardhatDeploymentAccountChange: (event: React.ChangeEvent<HTMLSelectElement>) => void | Promise<void>;
-  onHardhatSignerSourceChange: () => void | Promise<void>;
-  onMetaMaskSignerSourceChange: () => void | Promise<void>;
+  disabled?: boolean;
+  value: WalletAccountSelectionValue;
+  onChange: (next: WalletAccountSelectionValue) => void | Promise<void>;
 };
 
 export default function WalletAccountSelection({
   className = '',
   showHardhatAccountSelector,
   hardhatSignerAvailable,
-  authSignerSource,
-  hardhatDeploymentAccountNumber,
   hardhatDeploymentAccountCount,
-  isSaving,
-  onHardhatDeploymentAccountChange,
-  onHardhatSignerSourceChange,
-  onMetaMaskSignerSourceChange,
+  disabled = false,
+  value,
+  onChange,
 }: WalletAccountSelectionProps) {
   return (
     <div className={`flex w-full items-center justify-between gap-4 py-0 text-sm ${className}`.trim()}>
@@ -37,10 +36,13 @@ export default function WalletAccountSelection({
               <select
                 aria-label="Account #"
                 title="Hardhat Deployment Account Number"
-                value={hardhatDeploymentAccountNumber}
-                disabled={isSaving}
+                value={value.accountNumber}
+                disabled={disabled}
                 onChange={(event) => {
-                  void onHardhatDeploymentAccountChange(event);
+                  void onChange({
+                    ...value,
+                    accountNumber: Number(event.target.value),
+                  });
                 }}
                 className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
               >
@@ -63,10 +65,13 @@ export default function WalletAccountSelection({
               type="radio"
               name="edit-account-signer-source"
               value="ec2-base"
-              checked={authSignerSource === 'ec2-base'}
-              disabled={isSaving}
+              checked={value.source === 'ec2-base'}
+              disabled={disabled}
               onChange={() => {
-                void onHardhatSignerSourceChange();
+                void onChange({
+                  ...value,
+                  source: 'ec2-base',
+                });
               }}
               className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
             />
@@ -78,10 +83,13 @@ export default function WalletAccountSelection({
             type="radio"
             name="edit-account-signer-source"
             value="metamask"
-            checked={authSignerSource === 'metamask'}
-            disabled={isSaving}
+            checked={value.source === 'metamask'}
+            disabled={disabled}
             onChange={() => {
-              void onMetaMaskSignerSourceChange();
+              void onChange({
+                ...value,
+                source: 'metamask',
+              });
             }}
             className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
           />

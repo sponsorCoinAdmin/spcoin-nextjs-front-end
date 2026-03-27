@@ -6,6 +6,8 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./onChain": "./dist/onChain/index.js",
+    "./offChain": "./dist/offChain/index.js",
     "./package.json": "./package.json",
     "./spCoinMethods.js": "./dist/spCoinMethods.js",
     "./modules/*.js": "./dist/modules/*.js",

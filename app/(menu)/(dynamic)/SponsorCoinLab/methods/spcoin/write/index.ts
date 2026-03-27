@@ -8,6 +8,7 @@ import {
   type SpCoinAccessSource,
   type SpCoinAddAccess,
   type SpCoinDeleteAccess,
+  type SpCoinOffChainAccess,
   type SpCoinReadAccess,
   type SpCoinRewardsAccess,
   type SpCoinStakingAccess,
@@ -19,7 +20,6 @@ export type SpCoinWriteMethod =
   | 'addRecipients'
   | 'addAgent'
   | 'addAgents'
-  | 'addSponsor'
   | 'addSponsorship'
   | 'addAgentSponsorship'
   | 'addBackDatedSponsorship'
@@ -37,21 +37,23 @@ export type SpCoinWriteMethod =
   | 'depositAgentStakingRewards'
   | 'depositStakingRewards'
   | 'setInflationRate'
-  | 'setLowerRecipient'
-  | 'setUpperRecipient'
+  | 'setLowerRecipientRate'
+  | 'setUpperRecipientRate'
   | 'setRecipientRateRange'
-  | 'setLowerAgent'
-  | 'setUpperAgent'
+  | 'setLowerAgentRate'
+  | 'setUpperAgentRate'
   | 'setAgentRateRange'
   | 'setVersion';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'addBackDatedSponsorship',
+  'addBackDatedAgentSponsorship',
   'setInflationRate',
-  'setLowerRecipient',
-  'setUpperRecipient',
+  'setLowerRecipientRate',
+  'setUpperRecipientRate',
   'setRecipientRateRange',
-  'setLowerAgent',
-  'setUpperAgent',
+  'setLowerAgentRate',
+  'setUpperAgentRate',
   'setAgentRateRange',
   'setVersion',
 ];
@@ -62,8 +64,6 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgents',
   'addSponsorship',
   'addAgentSponsorship',
-  'addBackDatedSponsorship',
-  'addBackDatedAgentSponsorship',
   'unSponsorRecipient',
   'deleteAccountRecord',
   'deleteAccountRecords',
@@ -204,18 +204,14 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   switch (selectedMethod) {
     case 'addRecipients': {
       const recipientList = methodArgs[1] as string[];
-      for (const recipientKey of recipientList) {
-        await submitWrite(`addRecipient(${recipientKey})`, (access) => access.add.addRecipient(recipientKey));
-      }
+      await submitWrite(activeDef.title, (access) => access.offChain.addRecipients(asString(methodArgs[0]), recipientList));
       break;
     }
     case 'addAgents': {
       const agentList = methodArgs[2] as string[];
-      for (const agentKey of agentList) {
-        await submitWrite(`addAgent(${String(methodArgs[0])}, ${String(methodArgs[1])}, ${agentKey})`, (access) =>
-          access.add.addAgent(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentKey),
-        );
-      }
+      await submitWrite(activeDef.title, (access) =>
+        access.offChain.addAgents(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentList),
+      );
       break;
     }
     case 'addSponsorship': {
@@ -247,31 +243,33 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'addBackDatedSponsorship': {
-      const qty = `${String(methodArgs[4])}.${String(methodArgs[5])}`;
+      const qty = `${String(methodArgs[5])}.${String(methodArgs[6])}`;
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedAgentSponsorship(
           signer,
           asString(methodArgs[0]),
-          asStringOrNumber(methodArgs[1]),
-          asString(methodArgs[2]),
-          asStringOrNumber(methodArgs[3]),
+          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[2]),
+          asString(methodArgs[3]),
+          asStringOrNumber(methodArgs[4]),
           qty,
-          Number(methodArgs[6]),
+          Number(methodArgs[7]),
         ),
       );
       break;
     }
     case 'addBackDatedAgentSponsorship': {
-      const qty = String(methodArgs[4]);
+      const qty = String(methodArgs[5]);
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedAgentSponsorship(
           signer,
           asString(methodArgs[0]),
-          asStringOrNumber(methodArgs[1]),
-          asString(methodArgs[2]),
-          asStringOrNumber(methodArgs[3]),
+          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[2]),
+          asString(methodArgs[3]),
+          asStringOrNumber(methodArgs[4]),
           qty,
-          Number(methodArgs[5]),
+          Number(methodArgs[6]),
         ),
       );
       break;
@@ -349,16 +347,34 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
+    case 'setLowerRecipientRate': {
+      await submitWrite(activeDef.title, (access) => access.offChain.setLowerRecipientRate(asStringOrNumber(methodArgs[0])));
+      break;
+    }
+    case 'setUpperRecipientRate': {
+      await submitWrite(activeDef.title, (access) => access.offChain.setUpperRecipientRate(asStringOrNumber(methodArgs[0])));
+      break;
+    }
+    case 'setLowerAgentRate': {
+      await submitWrite(activeDef.title, (access) => access.offChain.setLowerAgentRate(asStringOrNumber(methodArgs[0])));
+      break;
+    }
+    case 'setUpperAgentRate': {
+      await submitWrite(activeDef.title, (access) => access.offChain.setUpperAgentRate(asStringOrNumber(methodArgs[0])));
+      break;
+    }
     default:
       await submitWrite(`${activeDef.title}(${methodArgs.join(', ')})`, async (access) => {
         const readFn = getDynamicMethod(access.read as SpCoinReadAccess & Record<string, unknown>, selectedMethod);
         const addFn = getDynamicMethod(access.add as SpCoinAddAccess & Record<string, unknown>, selectedMethod);
         const delFn = getDynamicMethod(access.del as SpCoinDeleteAccess & Record<string, unknown>, selectedMethod);
+        const offChainFn = getDynamicMethod(access.offChain as SpCoinOffChainAccess & Record<string, unknown>, selectedMethod);
         const stakingFn = getDynamicMethod(access.staking as SpCoinStakingAccess & Record<string, unknown>, selectedMethod);
         const rewardsFn = getDynamicMethod(access.rewards as SpCoinRewardsAccess & Record<string, unknown>, selectedMethod);
         const contractFn = getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, selectedMethod);
         if (typeof addFn === 'function') return await addFn(...methodArgs);
         if (typeof delFn === 'function') return await delFn(...methodArgs);
+        if (typeof offChainFn === 'function') return await offChainFn(...methodArgs);
         if (typeof stakingFn === 'function') return await stakingFn(...methodArgs);
         if (typeof rewardsFn === 'function') return await rewardsFn(...methodArgs);
         if (typeof readFn === 'function') return await readFn(...methodArgs);

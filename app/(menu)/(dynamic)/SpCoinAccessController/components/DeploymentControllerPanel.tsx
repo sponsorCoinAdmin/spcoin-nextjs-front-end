@@ -2,7 +2,9 @@
 import React from 'react';
 import Image from 'next/image';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
-import WalletAccountSelection from '@/components/views/Buttons/WalletAccountSelection';
+import WalletAccountSelection, {
+  type WalletAccountSelectionValue,
+} from '@/components/views/Buttons/WalletAccountSelection';
 import { DeploymentStatusBlock } from './StatusBlocks';
 
 type DeploymentControllerPanelProps = {
@@ -12,9 +14,7 @@ type DeploymentControllerPanelProps = {
   deploymentDecimals: string;
   deploymentVersion: string;
   deploymentSignerSource: 'ec2-base' | 'metamask';
-  hardhatDeploymentAccountNumber: number;
-  canIncrementHardhatDeploymentAccountNumber: boolean;
-  canDecrementHardhatDeploymentAccountNumber: boolean;
+  deploymentWalletSelection: WalletAccountSelectionValue;
   deploymentChainName: string;
   deploymentChainId: string;
   deploymentPathDisplayValue: string;
@@ -45,14 +45,12 @@ type DeploymentControllerPanelProps = {
   deployButtonLabel: string;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  onSetDeploymentSignerSource: (value: 'ec2-base' | 'metamask') => void;
+  onDeploymentWalletSelectionChange: (next: WalletAccountSelectionValue) => void;
   onDeploymentSignerAddressChange: (value: string) => void;
   onDeploymentDecimalsChange: (value: string) => void;
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
   onDeploymentVersionChange: (value: string) => void;
   onAdjustDeploymentVersion: (direction: 1 | -1) => void;
-  onHardhatDeploymentAccountNumberChange: (value: string) => void;
-  onAdjustHardhatDeploymentAccountNumber: (direction: 1 | -1) => void;
   onLocalSourceDeploymentPathChange: (value: string) => void;
   onDeploy: () => Promise<void>;
   onDeploymentPrivateKeyChange: (value: string) => void;
@@ -67,7 +65,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentDecimals,
     deploymentVersion,
     deploymentSignerSource,
-    hardhatDeploymentAccountNumber,
+    deploymentWalletSelection,
     deploymentChainName,
     deploymentChainId,
     deploymentPathDisplayValue,
@@ -89,18 +87,18 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deployButtonLabel,
     isExpanded,
     onToggleExpand,
-    onSetDeploymentSignerSource,
+    onDeploymentWalletSelectionChange,
     onDeploymentSignerAddressChange,
     onDeploymentDecimalsChange,
     onAdjustDeploymentDecimals,
     onDeploymentVersionChange,
     onAdjustDeploymentVersion,
-    onHardhatDeploymentAccountNumberChange,
     onLocalSourceDeploymentPathChange,
     onDeploy,
   } = props;
   const isDeployDisabled = deployDisableReason !== 'ENABLED';
   const isDeploymentInProgress = deployDisableReason === 'DEPLOYMENT_IN_PROGRESS';
+  const isHardhatSelected = deploymentWalletSelection.source === 'ec2-base';
   const signerPublicKeyPlaceholder =
     deploymentSignerSource === 'metamask'
       ? 'Connected MetaMask wallet address'
@@ -119,7 +117,6 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
       : '';
   const accountInfoLabelClassName =
     'w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white';
-  const isHardhatNetwork = /hardhat/i.test(String(deploymentChainName || ''));
   void cardClass;
 
   return (
@@ -148,17 +145,12 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
       <div className="scrollbar-hide grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <WalletAccountSelection
-            showHardhatAccountSelector={isHardhatNetwork && deploymentSignerSource === 'ec2-base'}
+            showHardhatAccountSelector={deploymentWalletSelection.source === 'ec2-base'}
             hardhatSignerAvailable
-            authSignerSource={deploymentSignerSource}
-            hardhatDeploymentAccountNumber={hardhatDeploymentAccountNumber}
             hardhatDeploymentAccountCount={20}
-            isSaving={isDeploymentInProgress}
-            onHardhatDeploymentAccountChange={(event) =>
-              onHardhatDeploymentAccountNumberChange(event.target.value)
-            }
-            onHardhatSignerSourceChange={() => onSetDeploymentSignerSource('ec2-base')}
-            onMetaMaskSignerSourceChange={() => onSetDeploymentSignerSource('metamask')}
+            disabled={isDeploymentInProgress}
+            value={deploymentWalletSelection}
+            onChange={onDeploymentWalletSelectionChange}
           />
 
           <div className="mt-4 grid gap-4">
@@ -217,7 +209,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               </label>
             </div>
 
-            {isHardhatNetwork ? (
+            {isHardhatSelected ? (
               <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)_auto] md:items-end">
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Deployment Source</span>

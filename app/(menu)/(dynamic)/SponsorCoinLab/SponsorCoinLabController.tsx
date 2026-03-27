@@ -7,6 +7,7 @@ import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
+import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import {
   ERC20_READ_OPTIONS,
   getErc20ReadLabels,
@@ -75,7 +76,6 @@ type FormattedPanelView = 'script' | 'output';
 type MethodSelectionSource = 'dropdown' | 'script';
 type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
 type SponsorCoinManageContract = SpCoinContractAccess & {
-  addSponsor?: (accountAddress: string) => Promise<unknown>;
   addRecipient?: (accountAddress: string) => Promise<unknown>;
   addAgent?: (recipientKey: string, recipientRateKey: string, accountAddress: string) => Promise<unknown>;
   deleteAccountRecord?: (accountAddress: string) => Promise<unknown>;
@@ -350,6 +350,7 @@ export default function SponsorCoinLabPage() {
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
+  const [hasPersistedNetworkMode, setHasPersistedNetworkMode] = useState<boolean | null>(null);
   const [rpcUrl, setRpcUrl] = useState(
     'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',
   );
@@ -904,7 +905,6 @@ export default function SponsorCoinLabPage() {
     activeNetworkName,
     shouldPromptHardhatBaseConnect,
     chainIdDisplayValue,
-    chainIdDisplayWidthCh,
     sponsorCoinVersionChoices,
     selectedSponsorCoinVersionEntry,
     displayedVersionHardhatAccountIndex,
@@ -944,6 +944,39 @@ export default function SponsorCoinLabPage() {
     selectedReadMethod,
     selectedSpCoinReadMethod,
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(SP_COIN_LAB_STORAGE_KEY);
+      const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      const savedMode = typeof saved?.mode === 'string' ? saved.mode : '';
+      setHasPersistedNetworkMode(savedMode === 'metamask' || savedMode === 'hardhat');
+    } catch {
+      setHasPersistedNetworkMode(false);
+    }
+  }, []);
+
+  const modeSelectionChainId = Number((exchangeContext as any)?.network?.chainId || connectedChainId || 0);
+  const allowContractNetworkModeSelection = modeSelectionChainId === 31337;
+
+  useEffect(() => {
+    if (hasPersistedNetworkMode !== false) return;
+    setMode(modeSelectionChainId === 31337 ? 'hardhat' : 'metamask');
+  }, [hasPersistedNetworkMode, modeSelectionChainId, setMode]);
+  const selectedContractChainId = Number(selectedSponsorCoinVersionEntry?.chainId || 0);
+  const activeContractChainIdDisplayValue =
+    Number.isFinite(selectedContractChainId) && selectedContractChainId > 0
+      ? String(selectedContractChainId)
+      : chainIdDisplayValue;
+  const activeContractChainIdDisplayWidthCh = Math.max(4, String(activeContractChainIdDisplayValue).length + 3);
+  const activeContractNetworkName = useMemo(() => {
+    if (Number.isFinite(selectedContractChainId) && selectedContractChainId > 0) {
+      const known = getBlockChainName(selectedContractChainId);
+      if (known) return known;
+    }
+    return activeNetworkName;
+  }, [activeNetworkName, selectedContractChainId]);
   useEffect(() => {
     const contractKey = normalizeAddressValue(
       String(selectedSponsorCoinVersionEntry?.address || contractAddress || ''),
@@ -954,7 +987,9 @@ export default function SponsorCoinLabPage() {
     }
     if (spCoinOwnerSyncRef.current.contractKey === contractKey) return;
 
-    const ownerAddress = normalizeAddressValue(displayedSignerAccountAddress);
+    const ownerAddress = normalizeAddressValue(
+      String(selectedSponsorCoinVersionEntry?.deployer || displayedSignerAccountAddress || ''),
+    );
     if (!ownerAddress || !isAddressLike(ownerAddress)) return;
 
     const requestId = ++spCoinOwnerSyncRef.current.requestId;
@@ -1017,13 +1052,16 @@ export default function SponsorCoinLabPage() {
     displayedSignerAccountAddress,
     exchangeContext?.accounts?.spCoinOwnerAccount?.balance,
     selectedSponsorCoinVersion,
+    selectedSponsorCoinVersionEntry?.deployer,
     selectedSponsorCoinVersionEntry?.address,
     selectedSponsorCoinVersionEntry?.id,
     setExchangeContext,
     spCoinOwnerAccountAddress,
   ]);
   const displayedSpCoinOwnerAddress = selectedSponsorCoinVersionEntry
-    ? spCoinOwnerAccountAddress || displayedSignerAccountAddress
+    ? normalizeAddressValue(
+        String(selectedSponsorCoinVersionEntry?.deployer || spCoinOwnerAccountAddress || displayedSignerAccountAddress || ''),
+      )
     : displayedSignerAccountAddress;
   const displayedSpCoinOwnerMetadata = useMemo(() => {
     const ownerAccount = exchangeContext?.accounts?.spCoinOwnerAccount;
@@ -1427,7 +1465,7 @@ export default function SponsorCoinLabPage() {
 
   useEffect(() => {
     let active = true;
-    const chainId = Number((exchangeContext as any)?.network?.chainId || 0);
+    const chainId = Number(selectedSponsorCoinVersionEntry?.chainId || (exchangeContext as any)?.network?.chainId || 0);
     const activeContractAddress = String(contractAddress || '').trim();
     const selectedEntry = selectedSponsorCoinVersionEntry;
     const selectedVersion = String(
@@ -1914,10 +1952,9 @@ export default function SponsorCoinLabPage() {
 
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
-                if (typeof connectedContract.addSponsor !== 'function') {
-                  throw new Error('addSponsor is not available on the current SpCoin contract access path.');
-                }
-                return connectedContract.addSponsor(accountAddress);
+                throw new Error(
+                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addAgent instead.',
+                );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
                 if (typeof connectedContract.addRecipient !== 'function') {
@@ -2770,11 +2807,12 @@ export default function SponsorCoinLabPage() {
             network={{
               mode,
               setMode,
+              allowModeSelection: allowContractNetworkModeSelection,
               shouldPromptHardhatBaseConnect,
               connectHardhatBaseFromNetworkLabel,
-              activeNetworkName,
-              chainIdDisplayValue,
-              chainIdDisplayWidthCh,
+              activeNetworkName: activeContractNetworkName,
+              chainIdDisplayValue: activeContractChainIdDisplayValue,
+              chainIdDisplayWidthCh: activeContractChainIdDisplayWidthCh,
               showHardhatConnectionInputs,
               setShowHardhatConnectionInputs,
               cogSrc: cog_png,

@@ -99,7 +99,7 @@ export default function NetworkSignerCard({
   return (
     <article className={className}>
       <LabCardHeader
-        title="Active Sponsor Coin Accounts"
+        title="Sponsor Coin Accounts"
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
       />

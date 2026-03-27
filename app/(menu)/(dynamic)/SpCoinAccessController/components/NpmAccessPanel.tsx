@@ -102,106 +102,108 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
 
       <div className="scrollbar-hide grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2">
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-          <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-          <label htmlFor="npm-package-select" className="text-sm font-semibold text-[#8FA8FF]">
-            NPM Package
-          </label>
-          <select
-            id="npm-package-select"
-            aria-label="NPM Package"
-            value={selectedPackage}
-            onChange={(event) => onPackagePersist(event.target.value)}
-            className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-          >
-            {availablePackages.length > 0 ? (
-              availablePackages.map((packageName) => (
-                <option key={packageName} value={packageName}>
-                  {packageName}
-                </option>
-              ))
-            ) : (
-              <option value={selectedPackage}>{selectedPackage}</option>
-            )}
-          </select>
-        </div>
+          <div className="mt-4 grid gap-4">
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">NPM Package</span>
+              <select
+                id="npm-package-select"
+                aria-label="NPM Package"
+                value={selectedPackage}
+                onChange={(event) => onPackagePersist(event.target.value)}
+                className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+              >
+                {availablePackages.length > 0 ? (
+                  availablePackages.map((packageName) => (
+                    <option key={packageName} value={packageName}>
+                      {packageName}
+                    </option>
+                  ))
+                ) : (
+                  <option value={selectedPackage}>{selectedPackage}</option>
+                )}
+              </select>
+            </label>
 
-        <div className="grid gap-2">
-          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Install Path</span>
-            <input
-              type="text"
-              value={localInstallSourceRoot}
-              onChange={(event) => {
-                onLocalInstallSourceRootChange(event.target.value);
-                if (localInstallSourceRootError) {
-                  onValidateLocalInstallSourceRoot(event.target.value);
-                }
-              }}
-              onBlur={(event) => {
-                const normalized = normalizeProjectRelativePath(event.target.value, '/spCoinAccess');
-                onLocalInstallSourceRootChange(normalized);
-                if (!onValidateLocalInstallSourceRoot(normalized)) {
-                  window.alert('Path Not found');
-                }
-              }}
-              className={`w-full rounded-xl border px-4 py-2 text-white outline-none transition-colors ${
-                localInstallSourceRootError
-                  ? 'border-red-500 bg-red-500/10'
-                  : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
-              }`}
-              title="Enter local source install path"
-            />
-            <label className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
-              <div className="flex items-stretch">
+            <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)_auto] md:items-end">
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Local Source Install Path</span>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  value={versionInput}
-                  onChange={(event) => onVersionInputChange(event.target.value)}
-                  onBlur={onVersionPersist}
-                  placeholder="0.0.1"
-                  className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  value={localInstallSourceRoot}
+                  onChange={(event) => {
+                    onLocalInstallSourceRootChange(event.target.value);
+                    if (localInstallSourceRootError) {
+                      onValidateLocalInstallSourceRoot(event.target.value);
+                    }
+                  }}
+                  onBlur={(event) => {
+                    const normalized = normalizeProjectRelativePath(event.target.value, '/spCoinAccess');
+                    onLocalInstallSourceRootChange(normalized);
+                    if (!onValidateLocalInstallSourceRoot(normalized)) {
+                      window.alert('Path Not found');
+                    }
+                  }}
+                  className={`w-full rounded-xl border px-4 py-2 text-white outline-none transition-colors ${
+                    localInstallSourceRootError
+                      ? 'border-red-500 bg-red-500/10'
+                      : 'border-[#31416F] bg-[#0B1020] focus:border-[#8FA8FF]'
+                  }`}
+                  title="Enter local source install path"
                 />
-                <div className="flex w-[26px] flex-col">
-                  <button
-                    type="button"
-                    onClick={() => onAdjustVersion(1)}
-                    className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                    title="Increment Version"
-                  >
-                    +
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onAdjustVersion(-1)}
-                    className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                    title="Decrement Version"
-                  >
-                    -
-                  </button>
-                </div>
+              </label>
+              <div className="flex items-start justify-end gap-4">
+                <label className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
+                  <div className="flex items-stretch">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={versionInput}
+                      onChange={(event) => onVersionInputChange(event.target.value)}
+                      onBlur={onVersionPersist}
+                      placeholder="0.0.1"
+                      className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                    <div className="flex w-[26px] flex-col">
+                      <button
+                        type="button"
+                        onClick={() => onAdjustVersion(1)}
+                        className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Increment Version"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onAdjustVersion(-1)}
+                        className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Decrement Version"
+                      >
+                        -
+                      </button>
+                    </div>
+                  </div>
+                </label>
               </div>
-            </label>
-          </div>
-          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Authenticator</span>
-            <input
-              type="password"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={npmOtp}
-              onChange={(event) => onNpmOtpChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit code from your npm authenticator app"
-              className={`w-full rounded-xl border border-[#31416F] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF] ${
-                showUploadAuthenticatorCodeRequired ? 'bg-red-500/25' : 'bg-[#0B1020]'
-              }`}
-              aria-label="Enter the current 6-digit code from your npm authenticator app"
-            />
-          </div>
-        </div>
+            </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">Authenticator</span>
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={npmOtp}
+                onChange={(event) => onNpmOtpChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-digit code from your npm authenticator app"
+                className={`w-full rounded-xl border border-[#31416F] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF] ${
+                  showUploadAuthenticatorCodeRequired ? 'bg-red-500/25' : 'bg-[#0B1020]'
+                }`}
+                aria-label="Enter the current 6-digit code from your npm authenticator app"
+              />
+            </label>
+
+            <div className="grid gap-3 md:grid-cols-3">
           <button
             type="button"
             onClick={() => void onRunManagerAction('upload')}
@@ -237,7 +239,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               ? 'Upload Disabled'
               : uploadBlocked
               ? 'Upload Disabled'
-              : 'Upload To NPM Manager'}
+              : 'NPM Upload'}
           </button>
           <button
             type="button"
@@ -264,7 +266,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
               ? 'DownLoad Disabled'
               : downloadBlocked
               ? `Revert Version ${selectedVersion}`
-              : 'Download From NPM Manager'}
+              : 'NPM Download'}
           </button>
           <button
             type="button"
@@ -273,15 +275,16 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
             title="Install selected package version into node_modules"
             className="rounded-xl bg-[#5981F3] px-4 py-[0.45rem] font-semibold text-black transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {activeAction === 'install' ? 'Working...' : 'Install To node_modules'}
+            {activeAction === 'install' ? 'Working...' : 'Install node_modules'}
           </button>
-        </div>
-        <div>
-          <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
-          <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
-            <NpmStatusBlock status={status} />
+            </div>
+            <div>
+              <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
+              <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
+                <NpmStatusBlock status={status} />
+              </div>
+            </div>
           </div>
-        </div>
         </section>
       </div>
     </div>

@@ -3,7 +3,6 @@ import addRecipient from './addRecipient';
 import addRecipients from './addRecipients';
 import addAgent from './addAgent';
 import addAgents from './addAgents';
-import addSponsor from './addSponsor';
 import addSponsorship from './addSponsorship';
 import addAgentSponsorship from './addAgentSponsorship';
 import addBackDatedSponsorship from './addBackDatedSponsorship';
@@ -21,11 +20,11 @@ import depositRecipientStakingRewards from './depositRecipientStakingRewards';
 import depositAgentStakingRewards from './depositAgentStakingRewards';
 import depositStakingRewards from './depositStakingRewards';
 import setInflationRate from './setInflationRate';
-import setLowerRecipient from './setLowerRecipient';
-import setUpperRecipient from './setUpperRecipient';
+import setLowerRecipientRate from './setLowerRecipient';
+import setUpperRecipientRate from './setUpperRecipient';
 import setRecipientRateRange from './setRecipientRateRange';
-import setLowerAgent from './setLowerAgent';
-import setUpperAgent from './setUpperAgent';
+import setLowerAgentRate from './setLowerAgent';
+import setUpperAgentRate from './setUpperAgent';
 import setAgentRateRange from './setAgentRateRange';
 import setVersion from './setVersion';
 
@@ -34,7 +33,6 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipients,
   addAgent,
   addAgents,
-  addSponsor,
   addSponsorship,
   addAgentSponsorship,
   addBackDatedSponsorship,
@@ -52,11 +50,11 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   depositAgentStakingRewards,
   depositStakingRewards,
   setInflationRate,
-  setLowerRecipient,
-  setUpperRecipient,
+  setLowerRecipientRate,
+  setUpperRecipientRate,
   setRecipientRateRange,
-  setLowerAgent,
-  setUpperAgent,
+  setLowerAgentRate,
+  setUpperAgentRate,
   setAgentRateRange,
   setVersion,
 };

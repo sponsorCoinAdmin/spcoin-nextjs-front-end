@@ -27,6 +27,7 @@ contract Token is UnSubscribe{
         addAccountRecord(UNDEFINED, _to);
         balanceOf[msg.sender] = balanceOf[msg.sender] - (_value);
         balanceOf[_to] = balanceOf[_to] + (_value);
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -58,6 +59,7 @@ contract Token is UnSubscribe{
         allowance[_from][msg.sender] = allowance[_from][msg.sender] - (_value);
         balanceOf[_from] = balanceOf[_from] - (_value);
         balanceOf[_to] = balanceOf[_to] + (_value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,7 +8,9 @@ import { useAccount } from 'wagmi';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
-import WalletAccountSelection from '@/components/views/Buttons/WalletAccountSelection';
+import WalletAccountSelection, {
+  type WalletAccountSelectionValue,
+} from '@/components/views/Buttons/WalletAccountSelection';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
@@ -25,14 +27,22 @@ export default function EditAccountPageClient() {
   const activeAddress = address;
   const requestedAccountAddress = String(searchParams.get('account') ?? '').trim() || undefined;
   const appChainId = Number(exchangeContext?.network?.appChainId ?? 0);
-  const hardhatSignerAvailable = appChainId === 31337;
-  const [authSignerSource, setAuthSignerSource] = useState<'ec2-base' | 'metamask'>(
-    hardhatSignerAvailable ? 'ec2-base' : 'metamask',
-  );
-  const [hardhatDeploymentAccountNumber, setHardhatDeploymentAccountNumber] = useState(0);
+  const hardhatSignerAvailable = true;
+  const [walletSelection, setWalletSelection] = useState<WalletAccountSelectionValue>({
+    source: hardhatSignerAvailable ? 'ec2-base' : 'metamask',
+    accountNumber: 0,
+  });
+  const [requestedMetaMaskAddress, setRequestedMetaMaskAddress] = useState('');
   const [hardhatDeploymentAccounts, setHardhatDeploymentAccounts] = useState<string[]>([]);
   const [hardhatDeploymentAccountCount, setHardhatDeploymentAccountCount] = useState(20);
-  const editSessionReady = connected || (hardhatSignerAvailable && authSignerSource === 'ec2-base');
+  const authSignerSource = walletSelection.source;
+  const hardhatDeploymentAccountNumber = walletSelection.accountNumber;
+  const effectiveMetaMaskAddress = String(
+    requestedMetaMaskAddress || (connected ? activeAddress : '') || '',
+  ).trim();
+  const editSessionReady =
+    (authSignerSource === 'metamask' && Boolean(effectiveMetaMaskAddress)) ||
+    (hardhatSignerAvailable && authSignerSource === 'ec2-base');
 
   const {
     publicKey,
@@ -64,56 +74,56 @@ export default function EditAccountPageClient() {
     disableRevert,
   } = useCreateAccountForm({
     connected: editSessionReady,
-    activeAddress: activeAddress ? String(activeAddress) : undefined,
+    activeAddress: authSignerSource === 'metamask' ? effectiveMetaMaskAddress || undefined : undefined,
     targetAddress: requestedAccountAddress,
     authSignerSource,
     hardhatDeploymentAccountNumber,
     appChainId,
+    hardhatSignerAvailable,
     runWithWalletAction,
   });
 
   const [showAllBorders, setShowAllBorders] = useState(false);
   const [showBorderToggleButton, setShowBorderToggleButton] = useState(false);
   const [expandedPanel, setExpandedPanel] = useState<'avatar' | 'form' | null>(null);
+  const previousAuthSignerSourceRef = useRef<'ec2-base' | 'metamask'>(authSignerSource);
 
   useEffect(() => {
     if (!hardhatSignerAvailable && authSignerSource !== 'metamask') {
-      setAuthSignerSource('metamask');
+      setWalletSelection((previous) => ({
+        ...previous,
+        source: 'metamask',
+      }));
     }
   }, [authSignerSource, hardhatSignerAvailable]);
 
   useEffect(() => {
-    const syncSelectedSignerAccount = async () => {
-      if (authSignerSource === 'ec2-base') {
-        if (!hardhatSignerAvailable) return;
-        const nextAddress = String(
-          hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '',
-        ).trim();
-        if (!nextAddress) return;
-        if (
-          publicKey &&
-          normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
-        ) {
-          return;
-        }
-        await handleSelectPublicKey(nextAddress);
-        return;
-      }
+    if (!connected) return;
+    const normalizedActiveAddress = String(activeAddress ?? '').trim();
+    if (!normalizedActiveAddress) return;
+    setRequestedMetaMaskAddress((previous) => {
+      const normalizedPrevious = String(previous || '').trim();
+      return normalizedPrevious === normalizedActiveAddress ? previous : normalizedActiveAddress;
+    });
+  }, [activeAddress, connected]);
 
-      const nextAddress = String(activeAddress ?? '').trim();
-      if (!nextAddress) return;
-      if (
-        publicKey &&
-        normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
-      ) {
-        return;
-      }
-      await handleSelectPublicKey(nextAddress);
-    };
+  useEffect(() => {
+    if (authSignerSource !== 'ec2-base') return;
+    if (!hardhatSignerAvailable) return;
 
-    void syncSelectedSignerAccount();
+    const nextAddress = String(
+      hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '',
+    ).trim();
+    if (!nextAddress) return;
+    if (
+      publicKey &&
+      normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
+    ) {
+      return;
+    }
+
+    void handleSelectPublicKey(nextAddress);
   }, [
-    activeAddress,
     authSignerSource,
     hardhatDeploymentAccountNumber,
     hardhatDeploymentAccounts,
@@ -121,6 +131,50 @@ export default function EditAccountPageClient() {
     handleSelectPublicKey,
     publicKey,
   ]);
+
+  useEffect(() => {
+    const previousSource = previousAuthSignerSourceRef.current;
+    previousAuthSignerSourceRef.current = authSignerSource;
+    if (authSignerSource !== 'metamask') return;
+    if (previousSource === 'metamask') return;
+
+    const ethereum = (window as any)?.ethereum;
+    if (!ethereum?.request) return;
+
+    const connectMetaMaskForEditAccount = async () => {
+      try {
+        const requestedAccounts = (await runWithWalletAction(
+          () =>
+            ethereum.request({
+              method: 'eth_requestAccounts',
+            }),
+          'MetaMask action in progress',
+          'Approve the account request in MetaMask to continue.',
+        )) as string[];
+        const nextAddress = String(requestedAccounts?.[0] ?? '').trim();
+        if (!nextAddress) return;
+        const normalizedNextAddress = normalizeAddress(nextAddress);
+        setRequestedMetaMaskAddress(normalizedNextAddress);
+        await handleSelectPublicKey(normalizedNextAddress);
+      } catch {
+        // The user may decline the prompt or MetaMask may not expose an account.
+      }
+    };
+
+    void connectMetaMaskForEditAccount();
+  }, [authSignerSource, handleSelectPublicKey, runWithWalletAction]);
+
+  useEffect(() => {
+    if (authSignerSource !== 'metamask') return;
+    if (!effectiveMetaMaskAddress) return;
+    if (
+      publicKey &&
+      normalizeAddress(String(publicKey)) === normalizeAddress(effectiveMetaMaskAddress)
+    ) {
+      return;
+    }
+    void handleSelectPublicKey(effectiveMetaMaskAddress);
+  }, [authSignerSource, effectiveMetaMaskAddress, handleSelectPublicKey, publicKey]);
 
   useEffect(() => {
     if (!hardhatSignerAvailable) return;
@@ -154,7 +208,10 @@ export default function EditAccountPageClient() {
         );
 
         if (matchedIndex >= 0) {
-          setHardhatDeploymentAccountNumber(matchedIndex);
+          setWalletSelection((previous) => ({
+            ...previous,
+            accountNumber: matchedIndex,
+          }));
         }
       } catch {
         // Keep the default selector range when the local account seed list is unavailable.
@@ -195,34 +252,8 @@ export default function EditAccountPageClient() {
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
   const showHardhatAccountSelector = hardhatSignerAvailable && authSignerSource === 'ec2-base';
 
-  const handleHardhatDeploymentAccountChange = async (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    const nextAccountNumber = Number(event.target.value);
-    setHardhatDeploymentAccountNumber(nextAccountNumber);
-
-    const nextAddress = String(hardhatDeploymentAccounts[nextAccountNumber] ?? '').trim();
-    if (!nextAddress) return;
-
-    await handleSelectPublicKey(nextAddress);
-  };
-
-  const handleHardhatSignerSourceChange = async () => {
-    setAuthSignerSource('ec2-base');
-
-    const nextAddress = String(hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '').trim();
-    if (!nextAddress) return;
-
-    await handleSelectPublicKey(nextAddress);
-  };
-
-  const handleMetaMaskSignerSourceChange = async () => {
-    setAuthSignerSource('metamask');
-
-    const nextAddress = String(activeAddress ?? '').trim();
-    if (!nextAddress) return;
-
-    await handleSelectPublicKey(nextAddress);
+  const handleWalletSelectionChange = (nextSelection: WalletAccountSelectionValue) => {
+    setWalletSelection(nextSelection);
   };
 
   const renderAvatarCard = (
@@ -349,13 +380,10 @@ export default function EditAccountPageClient() {
               className="px-3"
               showHardhatAccountSelector={showHardhatAccountSelector}
               hardhatSignerAvailable={hardhatSignerAvailable}
-              authSignerSource={authSignerSource}
-              hardhatDeploymentAccountNumber={hardhatDeploymentAccountNumber}
               hardhatDeploymentAccountCount={hardhatDeploymentAccountCount}
-              isSaving={isSaving}
-              onHardhatDeploymentAccountChange={handleHardhatDeploymentAccountChange}
-              onHardhatSignerSourceChange={handleHardhatSignerSourceChange}
-              onMetaMaskSignerSourceChange={handleMetaMaskSignerSourceChange}
+              disabled={isSaving}
+              value={walletSelection}
+              onChange={handleWalletSelectionChange}
             />
           )}
           connected={editSessionReady}

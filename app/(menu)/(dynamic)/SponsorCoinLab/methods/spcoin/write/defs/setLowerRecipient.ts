@@ -1,7 +1,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'setLowerRecipient',
+  title: 'setLowerRecipientRate',
   params: [{ label: 'New Lower Recipient Rate', placeholder: 'uint lower recipient rate', type: 'uint' }],
 };
 

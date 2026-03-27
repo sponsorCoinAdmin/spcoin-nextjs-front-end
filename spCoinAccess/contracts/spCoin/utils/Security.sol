@@ -69,19 +69,10 @@ contract Security is SpCoinDataTypes {
         return (lowerRecipientRate, upperRecipientRate);
     }
 
-    function setLowerRecipient(uint256 newLowerRecipientRate) public onlyRootAdmin {
-        require(newLowerRecipientRate <= upperRecipientRate, "REC_LOW_GT_UP");
-        lowerRecipientRate = newLowerRecipientRate;
-    }
-
-    function setUpperRecipient(uint256 newUpperRecipientRate) public onlyRootAdmin {
-        require(newUpperRecipientRate >= lowerRecipientRate, "REC_UP_LT_LOW");
-        upperRecipientRate = newUpperRecipientRate;
-    }
-
     function setRecipientRateRange(uint256 newLowerRecipientRate, uint256 newUpperRecipientRate) public onlyRootAdmin {
-        setLowerRecipient(newLowerRecipientRate);
-        setUpperRecipient(newUpperRecipientRate);
+        require(newLowerRecipientRate <= newUpperRecipientRate, "REC_LOW_GT_UP");
+        lowerRecipientRate = newLowerRecipientRate;
+        upperRecipientRate = newUpperRecipientRate;
     }
 
     function getLowerAgentRate() public view returns (uint256) {
@@ -96,19 +87,10 @@ contract Security is SpCoinDataTypes {
         return (lowerAgentRate, upperAgentRate);
     }
 
-    function setLowerAgent(uint256 newLowerAgentRate) public onlyRootAdmin {
-        require(newLowerAgentRate <= upperAgentRate, "AG_LOW_GT_UP");
-        lowerAgentRate = newLowerAgentRate;
-    }
-
-    function setUpperAgent(uint256 newUpperAgentRate) public onlyRootAdmin {
-        require(newUpperAgentRate >= lowerAgentRate, "AG_UP_LT_LOW");
-        upperAgentRate = newUpperAgentRate;
-    }
-
     function setAgentRateRange(uint256 newLowerAgentRate, uint256 newUpperAgentRate) public onlyRootAdmin {
-        setLowerAgent(newLowerAgentRate);
-        setUpperAgent(newUpperAgentRate);
+        require(newLowerAgentRate <= newUpperAgentRate, "AG_LOW_GT_UP");
+        lowerAgentRate = newLowerAgentRate;
+        upperAgentRate = newUpperAgentRate;
     }
 
     function validateRecipientRateRange(uint256 _recipientRateKey) internal view {
