@@ -90,7 +90,25 @@ export type SpCoinReadAccess = {
 
 export type SpCoinContractAccess = Contract & {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
-  connect?: (signer: Signer) => Contract;
+  connect?: (signer: Signer) => SpCoinContractAccess;
+  addSponsorship?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
+  addBackDatedSponsorship?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+    transactionTimestamp: number,
+  ) => Promise<ContractTransactionResponse>;
   getRecipientRateRange?: () => Promise<[bigint, bigint] | Array<string | number | bigint>>;
   getAgentRateRange?: () => Promise<[bigint, bigint] | Array<string | number | bigint>>;
   getRecipientRateAgentList?: (

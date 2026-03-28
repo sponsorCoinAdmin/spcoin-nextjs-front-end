@@ -21,6 +21,7 @@ contract AgentRates is Agent {
             agentRateRecord.agentRate = _agentRateKey;
             agentRateRecord.inserted = true;
             agentRateRecord.creationTime = _creationDate;
+            agentRateRecord.lastUpdateTime = _creationDate;
             // agentRateRecord.stakedSPCoins = 0;
             agentRecord.agentRateList.push(_agentRateKey);
         }

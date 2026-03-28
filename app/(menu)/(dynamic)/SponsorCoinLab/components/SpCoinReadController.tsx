@@ -2,7 +2,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
-import type { MethodDef } from '../methods/shared/types';
+import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
   invalidFieldIds: string[];
@@ -36,8 +36,6 @@ export default function SpCoinReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
-    writeTraceEnabled,
-    toggleWriteTrace,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedSpCoinReadMethod,
@@ -102,8 +100,8 @@ export default function SpCoinReadController(props: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
+      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedSpCoinReadMethod}
@@ -195,9 +193,6 @@ export default function SpCoinReadController(props: Props) {
             </React.Fragment>
           ) : null}
         </select>
-        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
-          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
-        </button>
       </div>
       {activeSpCoinReadDef.params.map((param, idx) => (
         <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">

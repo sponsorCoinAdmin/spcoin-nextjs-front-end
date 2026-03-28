@@ -61,6 +61,9 @@ contract UnSubscribe is Transactions {
     function deleteRecipientRateRecords(RecipientStruct storage _recipientRecord) internal {
         // Delete Agent Rate Keys
         uint256[] storage recipientRateList = _recipientRecord.recipientRateList;
+        if (recipientRateList.length == 0) {
+            return;
+        }
         uint i = recipientRateList.length - 1;
         // Traverse Recipient Rate Records for removal of Recipiant Rate Records
         for (i; i >= 0; i--) {
@@ -128,6 +131,9 @@ contract UnSubscribe is Transactions {
 
     function deleteAgentRateRecord (AgentStruct storage agentRecord) internal {
         uint256[] storage agentRateList = agentRecord.agentRateList;
+        if (agentRateList.length == 0) {
+            return;
+        }
         // console.log("### BEFORE Delete agentRecord.agentRateList.length = ", agentRecord.agentRateList.length);
         uint i = agentRateList.length - 1;
         // Delete the agent Rate Structures one by one until empty.

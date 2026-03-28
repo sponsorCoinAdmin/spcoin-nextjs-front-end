@@ -26,6 +26,7 @@ type LabScript = {
   'Date Created': string;
   network: string;
   steps: LabScriptStep[];
+  isSystemScript?: boolean;
 };
 
 type ScriptPayload = {
@@ -34,6 +35,7 @@ type ScriptPayload = {
 };
 
 const SCRIPTS_ROOT = path.join(process.cwd(), 'spCoinAccess', 'scripts');
+const SYSTEM_SCRIPTS_ROOT = path.join(process.cwd(), 'spCoinAccess', 'systemTests');
 const MANIFEST_PATH = path.join(SCRIPTS_ROOT, 'manifest.json');
 
 function sanitizeFileSegment(value: string) {
@@ -53,8 +55,23 @@ function sortScripts(a: LabScript, b: LabScript) {
   return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 }
 
+function mergeScripts(userScripts: LabScript[], systemScripts: LabScript[]) {
+  const mergedById = new Map<string, LabScript>();
+  userScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  systemScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  return Array.from(mergedById.values()).sort(sortScripts);
+}
+
 async function ensureScriptsRoot() {
   await fs.mkdir(SCRIPTS_ROOT, { recursive: true });
+}
+
+async function ensureSystemScriptsRoot() {
+  await fs.mkdir(SYSTEM_SCRIPTS_ROOT, { recursive: true });
 }
 
 async function readManifest() {
@@ -88,10 +105,35 @@ async function readScriptsFromDisk(): Promise<LabScript[]> {
   return scripts.filter((script) => script && typeof script.id === 'string' && typeof script.name === 'string').sort(sortScripts);
 }
 
+async function readSystemScriptsFromDisk(): Promise<LabScript[]> {
+  await ensureSystemScriptsRoot();
+  const entries = await fs.readdir(SYSTEM_SCRIPTS_ROOT, { withFileTypes: true });
+  const fileNames = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+    .map((entry) => entry.name);
+
+  const scripts = await Promise.all(
+    fileNames.map(async (fileName) => {
+      const raw = await fs.readFile(path.join(SYSTEM_SCRIPTS_ROOT, fileName), 'utf8');
+      return JSON.parse(raw) as LabScript;
+    }),
+  );
+
+  return scripts
+    .filter((script) => script && typeof script.id === 'string' && typeof script.name === 'string')
+    .map((script) => ({ ...script, isSystemScript: true }))
+    .sort(sortScripts);
+}
+
 export async function GET() {
   try {
-    const [scripts, selectedScriptId] = await Promise.all([readScriptsFromDisk(), readManifest()]);
-    return NextResponse.json({ scripts, selectedScriptId });
+    const [scripts, systemScripts, selectedScriptId] = await Promise.all([
+      readScriptsFromDisk(),
+      readSystemScriptsFromDisk(),
+      readManifest(),
+    ]);
+    const mergedScripts = mergeScripts(scripts, systemScripts);
+    return NextResponse.json({ scripts: mergedScripts, selectedScriptId });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown script read error.';
     return NextResponse.json({ ok: false, message }, { status: 500 });
@@ -101,7 +143,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ScriptPayload;
-    const scripts = Array.isArray(body?.scripts) ? body.scripts : [];
+    const scripts = Array.isArray(body?.scripts) ? body.scripts.filter((script) => !script?.isSystemScript) : [];
     const selectedScriptId = typeof body?.selectedScriptId === 'string' ? body.selectedScriptId : '';
 
     await ensureScriptsRoot();

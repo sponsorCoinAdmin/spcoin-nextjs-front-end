@@ -42,8 +42,6 @@ export default function Erc20ReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
-    writeTraceEnabled,
-    toggleWriteTrace,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedReadMethod,
@@ -105,9 +103,9 @@ export default function Erc20ReadController(props: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
-          Method
+          JSON Method
         </label>
         <select
           id="erc20-read-method"
@@ -121,9 +119,6 @@ export default function Erc20ReadController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
-          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
-        </button>
       </div>
       {activeReadLabels.requiresAddressA && (
         <AccountSelection

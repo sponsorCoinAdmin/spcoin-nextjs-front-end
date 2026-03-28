@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Erc20ReadMethod } from '../methods/erc20/read';
-import type { Erc20WriteMethod } from '../methods/erc20/write';
-import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
-import type { SpCoinWriteMethod } from '../methods/spcoin/write';
-import type { SerializationTestMethod } from '../methods/serializationTests';
-import type { ConnectionMode, LabScript, MethodPanelMode } from '../scriptBuilder/types';
+import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
+import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
+import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import type { SerializationTestMethod } from '../jsonMethods/serializationTests';
+import type { ConnectionMode, LabJavaScriptScript, LabScript, MethodPanelMode, ScriptEditorKind } from '../scriptBuilder/types';
+
+function normalizeJavaScriptScriptFilePath(filePath: string | undefined, isSystemScript: boolean) {
+  if (!filePath) return undefined;
+  if (isSystemScript) return filePath;
+  return filePath.replace('/JavaScripts/Utils/', '/JavaScripts/Main/').replace('/JavaScripts/Tests/', '/JavaScripts/Main/');
+}
 
 const spCoinLabKey = 'spCoinLabKey';
 const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
@@ -28,8 +34,18 @@ type ScriptApiPayload = {
 type Params = {
   scripts: LabScript[];
   setScripts: (value: LabScript[]) => void;
+  javaScriptScripts: LabJavaScriptScript[];
+  setJavaScriptScripts: (value: LabJavaScriptScript[]) => void;
   selectedScriptId: string;
   setSelectedScriptId: (value: string) => void;
+  scriptEditorKind: ScriptEditorKind;
+  setScriptEditorKind: (value: ScriptEditorKind) => void;
+  showSystemTestsOnly: boolean;
+  setShowSystemTestsOnly: (value: boolean) => void;
+  showJavaScriptUtilScriptsOnly: boolean;
+  setShowJavaScriptUtilScriptsOnly: (value: boolean) => void;
+  selectedJavaScriptScriptId: string;
+  setSelectedJavaScriptScriptId: (value: string) => void;
   mode: ConnectionMode;
   setMode: (value: ConnectionMode) => void;
   rpcUrl: string;
@@ -127,8 +143,18 @@ type Params = {
 export function useSponsorCoinLabPersistence({
   scripts,
   setScripts,
+  javaScriptScripts,
+  setJavaScriptScripts,
   selectedScriptId,
   setSelectedScriptId,
+  scriptEditorKind,
+  setScriptEditorKind,
+  showSystemTestsOnly,
+  setShowSystemTestsOnly,
+  showJavaScriptUtilScriptsOnly,
+  setShowJavaScriptUtilScriptsOnly,
+  selectedJavaScriptScriptId,
+  setSelectedJavaScriptScriptId,
   mode,
   setMode,
   rpcUrl,
@@ -270,6 +296,32 @@ export function useSponsorCoinLabPersistence({
         const raw = window.localStorage.getItem(spCoinLabKey);
         if (raw) {
           const saved = JSON.parse(raw) as Record<string, any>;
+          if (saved.scriptEditorKind === 'json' || saved.scriptEditorKind === 'javascript') {
+            setScriptEditorKind(saved.scriptEditorKind);
+          }
+          if (typeof saved.showSystemTestsOnly === 'boolean') {
+            setShowSystemTestsOnly(saved.showSystemTestsOnly);
+          }
+          if (typeof saved.showJavaScriptUtilScriptsOnly === 'boolean') {
+            setShowJavaScriptUtilScriptsOnly(saved.showJavaScriptUtilScriptsOnly);
+          }
+          if (Array.isArray(saved.javaScriptScripts)) {
+            setJavaScriptScripts(
+              saved.javaScriptScripts.map((script) => ({
+                id: String(script?.id || ''),
+                name: String(script?.name || ''),
+                scriptType: (script?.scriptType === 'util' ? 'util' : 'test') as 'util' | 'test',
+                filePath: normalizeJavaScriptScriptFilePath(
+                  typeof script?.filePath === 'string' ? script.filePath : undefined,
+                  Boolean(script?.isSystemScript),
+                ),
+                isSystemScript: Boolean(script?.isSystemScript),
+              })).filter((script) => script.id && script.name),
+            );
+          }
+          if (typeof saved.selectedJavaScriptScriptId === 'string') {
+            setSelectedJavaScriptScriptId(saved.selectedJavaScriptScriptId);
+          }
           if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
           if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
           if (typeof saved.selectedSponsorCoinVersion === 'string') {
@@ -402,6 +454,11 @@ export function useSponsorCoinLabPersistence({
     if (typeof window === 'undefined' || !spCoinLabHydrated) return;
     const payload = {
       mode,
+      scriptEditorKind,
+      showSystemTestsOnly,
+      showJavaScriptUtilScriptsOnly,
+      javaScriptScripts,
+      selectedJavaScriptScriptId,
       rpcUrl,
       selectedSponsorCoinVersion,
       contractAddress,
@@ -452,6 +509,11 @@ export function useSponsorCoinLabPersistence({
   }, [
     spCoinLabHydrated,
     mode,
+    scriptEditorKind,
+    showSystemTestsOnly,
+    showJavaScriptUtilScriptsOnly,
+    javaScriptScripts,
+    selectedJavaScriptScriptId,
     rpcUrl,
     selectedSponsorCoinVersion,
     contractAddress,

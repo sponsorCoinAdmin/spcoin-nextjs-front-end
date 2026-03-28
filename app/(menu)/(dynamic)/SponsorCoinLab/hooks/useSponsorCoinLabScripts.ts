@@ -2,27 +2,31 @@ import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetState
 import {
   getErc20ReadLabels,
   type Erc20ReadMethod,
-} from '../methods/erc20/read';
+} from '../jsonMethods/erc20/read';
 import {
   getErc20WriteLabels,
   type Erc20WriteMethod,
-} from '../methods/erc20/write';
-import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
-import type { SpCoinWriteMethod } from '../methods/spcoin/write';
-import type { SerializationTestMethod } from '../methods/serializationTests';
-import type { MethodDef } from '../methods/shared/types';
+} from '../jsonMethods/erc20/write';
+import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import type { SerializationTestMethod } from '../jsonMethods/serializationTests';
+import type { MethodDef } from '../jsonMethods/shared/types';
 import type {
   ConnectionMode,
+  LabJavaScriptScript,
   LabScript,
   LabScriptParam,
   LabScriptStep,
   MethodPanelMode,
+  ScriptEditorKind,
 } from '../scriptBuilder/types';
 import {
   buildDefaultScriptName,
   formatScriptCreatedDate,
   inferScriptCreatedDate,
 } from '../scriptBuilder/utils';
+import { BUILTIN_SYSTEM_TEST_SCRIPTS } from '../scriptBuilder/systemTests';
+import { BUILTIN_JAVASCRIPT_TEST_SCRIPTS } from '../scriptBuilder/javascriptTests';
 
 type Tone = 'neutral' | 'invalid' | 'valid';
 
@@ -30,6 +34,28 @@ type Entry = { id: string; label: string };
 
 function normalizeScriptName(value: string) {
   return String(value || '').trim().toLowerCase();
+}
+
+function mergeScripts(userScripts: LabScript[], systemScripts: LabScript[]) {
+  const mergedById = new Map<string, LabScript>();
+  userScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  systemScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  return Array.from(mergedById.values());
+}
+
+function mergeJavaScriptScripts(userScripts: LabJavaScriptScript[], systemScripts: LabJavaScriptScript[]) {
+  const mergedById = new Map<string, LabJavaScriptScript>();
+  userScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  systemScripts.forEach((script) => {
+    mergedById.set(script.id, script);
+  });
+  return Array.from(mergedById.values());
 }
 
 type ReadLabels = {
@@ -173,16 +199,59 @@ export function useSponsorCoinLabScripts({
   const [selectedScriptStepNumber, setSelectedScriptStepNumber] = useState<number | null>(null);
   const [expandedScriptStepIds, setExpandedScriptStepIds] = useState<Record<string, boolean>>({});
   const [isDeleteStepPopupOpen, setIsDeleteStepPopupOpen] = useState(false);
+  const [showSystemTestsOnly, setShowSystemTestsOnly] = useState(false);
+  const [scriptEditorKind, setScriptEditorKind] = useState<ScriptEditorKind>('json');
+  const [showJavaScriptUtilScriptsOnly, setShowJavaScriptUtilScriptsOnly] = useState(false);
+  const [javaScriptScripts, setJavaScriptScripts] = useState<LabJavaScriptScript[]>([]);
+  const [selectedJavaScriptScriptId, setSelectedJavaScriptScriptId] = useState('');
+  const [javaScriptScriptNameInput, setJavaScriptScriptNameInput] = useState('');
+  const [isJavaScriptScriptOptionsOpen, setIsJavaScriptScriptOptionsOpen] = useState(false);
+  const availableJavaScriptScripts = useMemo(
+    () => mergeJavaScriptScripts(javaScriptScripts, BUILTIN_JAVASCRIPT_TEST_SCRIPTS),
+    [javaScriptScripts],
+  );
+  const visibleJavaScriptScripts = useMemo(
+    () =>
+      availableJavaScriptScripts.filter(
+        (script) => (script.scriptType === 'util') === showJavaScriptUtilScriptsOnly,
+      ),
+    [availableJavaScriptScripts, showJavaScriptUtilScriptsOnly],
+  );
+  const selectedJavaScriptScript = useMemo(
+    () => availableJavaScriptScripts.find((script) => script.id === selectedJavaScriptScriptId) || null,
+    [availableJavaScriptScripts, selectedJavaScriptScriptId],
+  );
+  const javaScriptScriptNameMatch = useMemo(() => {
+    const name = normalizeScriptName(javaScriptScriptNameInput);
+    if (!name) return null;
+    return visibleJavaScriptScripts.find((script) => normalizeScriptName(script.name) === name) || null;
+  }, [javaScriptScriptNameInput, visibleJavaScriptScripts]);
+  const javaScriptScriptNameValidation = useMemo(() => {
+    const name = String(javaScriptScriptNameInput || '').trim();
+    if (!name) return { tone: 'neutral' as const, message: 'Enter a script name.' };
+    if (javaScriptScriptNameMatch) return { tone: 'invalid' as const, message: 'Script Name Exists' };
+    return { tone: 'valid' as const, message: 'Valid script name' };
+  }, [javaScriptScriptNameInput, javaScriptScriptNameMatch]);
+  const javaScriptDeleteScriptValidation = useMemo(() => {
+    if (!javaScriptScriptNameMatch) return { tone: 'invalid' as const, message: 'Script Not Found' };
+    if (javaScriptScriptNameMatch.isSystemScript) return { tone: 'invalid' as const, message: 'System Test Script' };
+    return { tone: 'valid' as const, message: `Delete ${javaScriptScriptNameMatch.name}` };
+  }, [javaScriptScriptNameMatch]);
 
+  const allScripts = useMemo(() => mergeScripts(scripts, BUILTIN_SYSTEM_TEST_SCRIPTS), [scripts]);
   const selectedScript = useMemo(
-    () => scripts.find((script) => script.id === selectedScriptId) || null,
-    [scripts, selectedScriptId],
+    () => allScripts.find((script) => script.id === selectedScriptId) || null,
+    [allScripts, selectedScriptId],
+  );
+  const visibleScripts = useMemo(
+    () => allScripts.filter((script) => Boolean(script.isSystemScript) === showSystemTestsOnly),
+    [allScripts, showSystemTestsOnly],
   );
   const scriptNameMatch = useMemo(() => {
     const name = normalizeScriptName(scriptNameInput);
     if (!name) return null;
-    return scripts.find((script) => normalizeScriptName(script.name) === name) || null;
-  }, [scriptNameInput, scripts]);
+    return visibleScripts.find((script) => normalizeScriptName(script.name) === name) || null;
+  }, [scriptNameInput, visibleScripts]);
   const scriptNameValidation = useMemo(() => {
     const name = String(scriptNameInput || '').trim();
     if (!name) return { tone: 'neutral' as const, message: 'Enter a script name.' };
@@ -191,6 +260,7 @@ export function useSponsorCoinLabScripts({
   }, [scriptNameInput, scriptNameMatch]);
   const deleteScriptValidation = useMemo(() => {
     if (!scriptNameMatch) return { tone: 'invalid' as const, message: 'Script Not Found' };
+    if (scriptNameMatch.isSystemScript) return { tone: 'invalid' as const, message: 'System Test Script' };
     return { tone: 'valid' as const, message: `Delete ${scriptNameMatch.name}` };
   }, [scriptNameMatch]);
   const selectedScriptStep = useMemo(
@@ -205,6 +275,130 @@ export function useSponsorCoinLabScripts({
     }
     setScriptNameInput('');
   }, [selectedScript]);
+
+  useEffect(() => {
+    if (!selectedScript) return;
+    if (Boolean(selectedScript.isSystemScript) === showSystemTestsOnly) return;
+    setSelectedScriptId('');
+    setScriptNameInput('');
+    setSelectedScriptStepNumber(null);
+    setExpandedScriptStepIds({});
+  }, [selectedScript, showSystemTestsOnly]);
+
+  useEffect(() => {
+    if (!showSystemTestsOnly) return;
+    if (selectedScript && selectedScript.isSystemScript) return;
+    const firstSystemScript = visibleScripts[0];
+    if (!firstSystemScript) return;
+    setSelectedScriptId(firstSystemScript.id);
+    setScriptNameInput(firstSystemScript.name);
+    setSelectedScriptStepNumber(null);
+    setExpandedScriptStepIds({});
+  }, [selectedScript, setSelectedScriptId, showSystemTestsOnly, visibleScripts]);
+
+  useEffect(() => {
+    if (scriptEditorKind !== 'javascript') return;
+    if (!selectedJavaScriptScriptId) return;
+    if (visibleJavaScriptScripts.some((script) => script.id === selectedJavaScriptScriptId)) return;
+    setSelectedJavaScriptScriptId('');
+  }, [scriptEditorKind, selectedJavaScriptScriptId, visibleJavaScriptScripts]);
+
+  useEffect(() => {
+    if (scriptEditorKind !== 'javascript') return;
+    if (selectedJavaScriptScript) {
+      setJavaScriptScriptNameInput(selectedJavaScriptScript.name);
+      return;
+    }
+    setJavaScriptScriptNameInput('');
+  }, [scriptEditorKind, selectedJavaScriptScript]);
+
+  const clearSelectedJavaScriptScript = useCallback(() => {
+    setSelectedJavaScriptScriptId('');
+    setJavaScriptScriptNameInput('');
+  }, []);
+
+  const createNewJavaScriptScript = useCallback(() => {
+    const existingNames = new Set(availableJavaScriptScripts.map((script) => normalizeScriptName(script.name)));
+    const requestedName = String(javaScriptScriptNameInput || '').trim();
+    let nextName = requestedName;
+
+    if (!nextName) {
+      let counter = availableJavaScriptScripts.length + 1;
+      nextName = `${showJavaScriptUtilScriptsOnly ? 'JavaScript Util Script' : 'JavaScript Script'} ${counter}`;
+      while (existingNames.has(normalizeScriptName(nextName))) {
+        counter += 1;
+        nextName = `${showJavaScriptUtilScriptsOnly ? 'JavaScript Util Script' : 'JavaScript Script'} ${counter}`;
+      }
+    } else if (existingNames.has(normalizeScriptName(nextName))) {
+      setStatus('Script Name Exists');
+      setOutputPanelMode('raw_status');
+      return;
+    }
+
+    void (async () => {
+      try {
+        const response = await fetch('/api/spCoin/javascript-scripts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: nextName,
+            scriptType: showJavaScriptUtilScriptsOnly ? 'util' : 'test',
+          }),
+        });
+        const payload = (await response.json()) as { ok?: boolean; message?: string; script?: LabJavaScriptScript };
+        if (!response.ok || !payload?.script) {
+          throw new Error(payload?.message || `Unable to create JavaScript script (${response.status})`);
+        }
+        setJavaScriptScripts((prev) => [...prev, payload.script as LabJavaScriptScript]);
+        setSelectedJavaScriptScriptId(payload.script.id);
+        setJavaScriptScriptNameInput(payload.script.name);
+        setStatus(`Created ${payload.script.name}.`);
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'Unable to create JavaScript script.');
+      } finally {
+        setOutputPanelMode('raw_status');
+      }
+    })();
+  }, [availableJavaScriptScripts, javaScriptScriptNameInput, setOutputPanelMode, setStatus, showJavaScriptUtilScriptsOnly]);
+
+  const handleDeleteJavaScriptScriptClick = useCallback(() => {
+    const targetScript = selectedJavaScriptScript ?? javaScriptScriptNameMatch;
+    if (!targetScript) {
+      setStatus('Select a JavaScript script first.');
+      setOutputPanelMode('raw_status');
+      return;
+    }
+    if (targetScript.isSystemScript) {
+      setStatus('System Test Script');
+      setOutputPanelMode('raw_status');
+      return;
+    }
+
+    void (async () => {
+      try {
+        if (targetScript.filePath) {
+          const response = await fetch('/api/spCoin/javascript-scripts', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filePath: targetScript.filePath }),
+          });
+          if (!response.ok) {
+            const payload = (await response.json()) as { message?: string };
+            throw new Error(payload?.message || `Unable to delete JavaScript script (${response.status})`);
+          }
+        }
+        setJavaScriptScripts((prev) => prev.filter((script) => script.id !== targetScript.id));
+        setSelectedJavaScriptScriptId('');
+        setJavaScriptScriptNameInput('');
+        setIsJavaScriptScriptOptionsOpen(false);
+        setStatus(`Deleted ${targetScript.name}.`);
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'Unable to delete JavaScript script.');
+      } finally {
+        setOutputPanelMode('raw_status');
+      }
+    })();
+  }, [javaScriptScriptNameMatch, selectedJavaScriptScript, setOutputPanelMode, setStatus]);
 
   const getStepNetwork = useCallback(
     (step: LabScriptStep): string =>
@@ -511,6 +705,10 @@ export function useSponsorCoinLabScripts({
   const moveSelectedScriptStep = useCallback(
     (direction: -1 | 1) => {
       if (!selectedScriptId || !selectedScript || selectedScriptStepNumber === null) return;
+      if (selectedScript.isSystemScript) {
+        setStatus('System Tests are read-only. Copy the script to edit it.');
+        return;
+      }
       const currentIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
       if (currentIndex < 0) return;
       const targetIndex = currentIndex + direction;
@@ -540,6 +738,10 @@ export function useSponsorCoinLabScripts({
 
   const deleteSelectedScriptStep = useCallback(() => {
     if (!selectedScriptId || selectedScriptStepNumber === null) return;
+    if (selectedScript?.isSystemScript) {
+      setStatus('System Tests are read-only. Copy the script to edit it.');
+      return;
+    }
     setScripts((prev) =>
       prev.map((script) => {
         if (script.id !== selectedScriptId) return script;
@@ -559,7 +761,7 @@ export function useSponsorCoinLabScripts({
       return nextExpanded;
     });
     setSelectedScriptStepNumber(null);
-  }, [selectedScript?.steps, selectedScriptId, selectedScriptStepNumber]);
+  }, [selectedScript?.isSystemScript, selectedScript?.steps, selectedScriptId, selectedScriptStepNumber, setStatus]);
 
   const requestDeleteSelectedScriptStep = useCallback(() => {
     if (selectedScriptStepNumber === null) return;
@@ -574,6 +776,10 @@ export function useSponsorCoinLabScripts({
   const toggleScriptStepBreakpoint = useCallback(
     (stepNumber: number) => {
       if (!selectedScriptId) return;
+      if (selectedScript?.isSystemScript) {
+        setStatus('System Tests are read-only. Copy the script to edit it.');
+        return;
+      }
       setScripts((prev) =>
         prev.map((script) =>
           script.id === selectedScriptId
@@ -587,7 +793,7 @@ export function useSponsorCoinLabScripts({
         ),
       );
     },
-    [selectedScriptId],
+    [selectedScript?.isSystemScript, selectedScriptId, setStatus],
   );
 
   const createNewScript = useCallback(() => {
@@ -595,7 +801,7 @@ export function useSponsorCoinLabScripts({
       setStatus(scriptNameValidation.message);
       return;
     }
-    const nextIndex = scripts.length + 1;
+    const nextIndex = allScripts.filter((script) => !script.isSystemScript).length + 1;
     const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const nextName = String(scriptNameInput || '').trim() || buildDefaultScriptName(nextIndex);
     const nextScript: LabScript = {
@@ -610,7 +816,7 @@ export function useSponsorCoinLabScripts({
     setFormattedOutputDisplay(JSON.stringify(nextScript, null, 2));
     setOutputPanelMode('formatted');
     setStatus(`Created ${nextScript.name}.`);
-  }, [activeNetworkName, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, scripts.length, setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
+  }, [activeNetworkName, allScripts, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
 
   const duplicateSelectedScript = useCallback(
     (nextNameRaw: string) => {
@@ -626,7 +832,7 @@ export function useSponsorCoinLabScripts({
       }
 
       const normalizedNextName = normalizeScriptName(nextName);
-      const duplicateExists = scripts.some((script) => normalizeScriptName(script.name) === normalizedNextName);
+      const duplicateExists = allScripts.some((script) => normalizeScriptName(script.name) === normalizedNextName);
       if (duplicateExists) {
         setStatus('Duplicate');
         return false;
@@ -638,6 +844,7 @@ export function useSponsorCoinLabScripts({
         id: nextId,
         name: nextName,
         'Date Created': formatScriptCreatedDate(new Date()),
+        isSystemScript: undefined,
         steps: Array.isArray(selectedScript.steps)
           ? selectedScript.steps.map((step, idx) => normalizeScriptStep({ ...step }, idx))
           : [],
@@ -655,7 +862,7 @@ export function useSponsorCoinLabScripts({
     },
     [
       normalizeScriptStep,
-      scripts,
+      allScripts,
       selectedScript,
       setFormattedOutputDisplay,
       setOutputPanelMode,
@@ -676,6 +883,10 @@ export function useSponsorCoinLabScripts({
   const deleteSelectedScript = useCallback(
     (targetScriptId: string) => {
       if (!targetScriptId) return;
+      if (selectedScript?.isSystemScript || scriptNameMatch?.isSystemScript) {
+        setStatus('System Tests cannot be deleted.');
+        return;
+      }
       setScripts((prev) => {
         const remaining = prev.filter((script) => script.id !== targetScriptId);
         setSelectedScriptId('');
@@ -690,7 +901,7 @@ export function useSponsorCoinLabScripts({
       setOutputPanelMode('formatted');
       setStatus('Deleted selected script.');
     },
-    [setFormattedOutputDisplay, setOutputPanelMode, setStatus],
+    [scriptNameMatch?.isSystemScript, selectedScript?.isSystemScript, setFormattedOutputDisplay, setOutputPanelMode, setStatus],
   );
 
   const handleDeleteScriptClick = useCallback(() => {
@@ -826,6 +1037,11 @@ export function useSponsorCoinLabScripts({
   const addCurrentMethodToScript = useCallback((options?: { skipValidation?: boolean }) => {
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
+      setOutputPanelMode('raw_status');
+      return false;
+    }
+    if (selectedScript?.isSystemScript) {
+      setStatus('System Tests are read-only. Copy the script to edit it.');
       setOutputPanelMode('raw_status');
       return false;
     }
@@ -976,6 +1192,7 @@ export function useSponsorCoinLabScripts({
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
     serializationTestMissingEntries,
+    selectedScript?.isSystemScript,
   ]);
 
   const buildCurrentScriptStepDraft = useCallback((): Omit<LabScriptStep, 'step'> | null => {
@@ -1020,9 +1237,32 @@ export function useSponsorCoinLabScripts({
 
   return {
     scripts,
+    visibleScripts,
     setScripts,
+    javaScriptScripts,
+    setJavaScriptScripts,
     selectedScriptId,
     setSelectedScriptId,
+    showSystemTestsOnly,
+    setShowSystemTestsOnly,
+    scriptEditorKind,
+    setScriptEditorKind,
+    showJavaScriptUtilScriptsOnly,
+    setShowJavaScriptUtilScriptsOnly,
+    availableJavaScriptScripts,
+    visibleJavaScriptScripts,
+    selectedJavaScriptScript,
+    selectedJavaScriptScriptId,
+    setSelectedJavaScriptScriptId,
+    javaScriptScriptNameInput,
+    setJavaScriptScriptNameInput,
+    isJavaScriptScriptOptionsOpen,
+    setIsJavaScriptScriptOptionsOpen,
+    javaScriptScriptNameValidation,
+    javaScriptDeleteScriptValidation,
+    createNewJavaScriptScript,
+    clearSelectedJavaScriptScript,
+    handleDeleteJavaScriptScriptClick,
     selectedScript,
     scriptNameInput,
     setScriptNameInput,

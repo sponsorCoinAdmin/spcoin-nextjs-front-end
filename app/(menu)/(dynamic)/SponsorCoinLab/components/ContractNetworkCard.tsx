@@ -21,6 +21,7 @@ type Props = {
     adjustSponsorCoinVersion: (direction: 1 | -1) => void;
     selectedVersionSignerKey: string;
     displayedVersionHardhatAccountIndex: number;
+    selectedVersionWidthCh: number;
     selectedVersionSymbolWidthCh: number;
     selectedVersionSymbol: string;
   };
@@ -110,10 +111,11 @@ export default function ContractNetworkCard({
             </div>
             <div className="flex w-full flex-wrap items-center gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
-                <div className="flex min-w-0 flex-1 items-stretch">
+                <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">Version</span>
+                <div className="flex min-w-0 items-stretch">
                   <select
-                    className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    className="min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    style={{ width: `${version.selectedVersionWidthCh}ch` }}
                     value={version.selectedSponsorCoinVersion}
                     onChange={(e) => version.setSelectedSponsorCoinVersion(e.target.value)}
                     aria-label="SponsorCoin Version (Hardhat row)"

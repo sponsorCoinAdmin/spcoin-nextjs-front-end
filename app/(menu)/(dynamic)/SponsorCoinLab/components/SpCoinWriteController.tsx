@@ -3,7 +3,7 @@ import React from 'react';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
-import type { MethodDef } from '../methods/shared/types';
+import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
   invalidFieldIds: string[];
@@ -29,6 +29,10 @@ type Props = {
   spCoinSenderWriteOptions: string[];
   spCoinAdminWriteOptions: string[];
   spCoinTodoWriteOptions: string[];
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
+  spCoinOnChainWriteMethods: string[];
+  spCoinOffChainWriteMethods: string[];
   spCoinWriteMethodDefs: Record<string, MethodDef>;
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
@@ -106,6 +110,10 @@ export default function SpCoinWriteController(props: Props) {
     spCoinSenderWriteOptions,
     spCoinAdminWriteOptions,
     spCoinTodoWriteOptions,
+    showOnChainMethods,
+    showOffChainMethods,
+    spCoinOnChainWriteMethods,
+    spCoinOffChainWriteMethods,
     spCoinWriteMethodDefs,
     activeSpCoinWriteDef,
     spWriteParams,
@@ -113,8 +121,6 @@ export default function SpCoinWriteController(props: Props) {
     onOpenBackdatePicker,
     inputStyle,
     buttonStyle,
-    writeTraceEnabled,
-    toggleWriteTrace,
     canRunSelectedSpCoinWriteMethod,
     canAddCurrentMethodToScript,
     hasEditorScriptSelected,
@@ -240,10 +246,41 @@ export default function SpCoinWriteController(props: Props) {
       return changed ? next : prev;
     });
   }, [activeSpCoinWriteDef.params, invalidFieldIds, mode]);
+  const isMethodVisible = React.useCallback(
+    (name: string) => {
+      const isOnChain = spCoinOnChainWriteMethods.includes(name);
+      const isOffChain = spCoinOffChainWriteMethods.includes(name);
+      return (showOnChainMethods && isOnChain) || (showOffChainMethods && isOffChain);
+    },
+    [showOffChainMethods, showOnChainMethods, spCoinOffChainWriteMethods, spCoinOnChainWriteMethods],
+  );
+  const visibleWorldWriteOptions = spCoinWorldWriteOptions.filter(isMethodVisible);
+  const visibleSenderWriteOptions = spCoinSenderWriteOptions.filter(isMethodVisible);
+  const visibleAdminWriteOptions = spCoinAdminWriteOptions.filter(isMethodVisible);
+  const visibleTodoWriteOptions = spCoinTodoWriteOptions.filter(isMethodVisible);
+  React.useEffect(() => {
+    const visibleMethods = [
+      ...visibleWorldWriteOptions,
+      ...visibleSenderWriteOptions,
+      ...visibleAdminWriteOptions,
+      ...visibleTodoWriteOptions,
+    ];
+    if (visibleMethods.length === 0) return;
+    if (!visibleMethods.includes(selectedSpCoinWriteMethod)) {
+      setSelectedSpCoinWriteMethod(visibleMethods[0]);
+    }
+  }, [
+    selectedSpCoinWriteMethod,
+    setSelectedSpCoinWriteMethod,
+    visibleAdminWriteOptions,
+    visibleSenderWriteOptions,
+    visibleTodoWriteOptions,
+    visibleWorldWriteOptions,
+  ]);
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedSpCoinWriteMethod}
@@ -257,7 +294,7 @@ export default function SpCoinWriteController(props: Props) {
           >
             ---- World Access ----
           </option>
-          {spCoinWorldWriteOptions.map((name) => (
+          {visibleWorldWriteOptions.map((name) => (
             <option
               key={`sp-write-${name}`}
               value={name}
@@ -266,7 +303,7 @@ export default function SpCoinWriteController(props: Props) {
               {name}
             </option>
           ))}
-          {spCoinSenderWriteOptions.length > 0 ? (
+          {visibleSenderWriteOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-write-sender-divider"
@@ -276,7 +313,7 @@ export default function SpCoinWriteController(props: Props) {
               >
                 ---- Sender Access ----
               </option>
-              {spCoinSenderWriteOptions.map((name) => (
+              {visibleSenderWriteOptions.map((name) => (
                 <option
                   key={`sp-write-sender-${name}`}
                   value={name}
@@ -287,7 +324,7 @@ export default function SpCoinWriteController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
-          {spCoinAdminWriteOptions.length > 0 ? (
+          {visibleAdminWriteOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-write-admin-divider"
@@ -297,7 +334,7 @@ export default function SpCoinWriteController(props: Props) {
               >
                 ---- Admin Access ----
               </option>
-              {spCoinAdminWriteOptions.map((name) => (
+              {visibleAdminWriteOptions.map((name) => (
                 <option
                   key={`sp-write-admin-${name}`}
                   value={name}
@@ -308,7 +345,7 @@ export default function SpCoinWriteController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
-          {spCoinTodoWriteOptions.length > 0 ? (
+          {visibleTodoWriteOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-write-todo-divider"
@@ -316,9 +353,9 @@ export default function SpCoinWriteController(props: Props) {
                 disabled
                 style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}
               >
-                ---- SpCoin Write ----
+                ---- ToDos ----
               </option>
-              {spCoinTodoWriteOptions.map((name) => (
+              {visibleTodoWriteOptions.map((name) => (
                 <option
                   key={`sp-write-todo-${name}`}
                   value={name}
@@ -330,9 +367,6 @@ export default function SpCoinWriteController(props: Props) {
             </React.Fragment>
           ) : null}
         </select>
-        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
-          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
-        </button>
       </div>
       <AccountSelection
         label="msg.sender"

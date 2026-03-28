@@ -21,6 +21,7 @@ const SPCOIN_DEPLOYMENT_MAP_PATH = path.join(
   'networks',
   'spCoinDeployment.json',
 );
+const SPCOIN_ABI_PATH = path.join(process.cwd(), 'resources', 'data', 'ABIs', 'spcoinABI.json');
 const SPONSORCOIN_SCOPE_DIR = path.join(process.cwd(), 'node_modules', '@sponsorcoin');
 const MANAGER_STATE_PATH = path.join(BACKUPS_ROOT, 'manager-state.json');
 const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -36,6 +37,7 @@ type AccessManagerRequest = {
     | 'updateServer'
     | 'prepareDeploy'
     | 'registerDeployment'
+    | 'generateAbi'
     | 'removeDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
@@ -62,6 +64,7 @@ type AccessManagerResponse = {
     | 'updateServer'
     | 'prepareDeploy'
     | 'registerDeployment'
+    | 'generateAbi'
     | 'removeDeployment';
   mode?: 'local' | 'node_modules';
   version?: string;
@@ -1025,6 +1028,23 @@ async function handlePrepareDeployArtifact(
   };
 }
 
+async function handleGenerateAbi(deploymentChainId?: number | string) {
+  const network = await resolveDeployNetwork(deploymentChainId);
+  const compiled = await compileSpCoinContract({
+    solcVersion: network.solcVersion,
+    optimizerEnabled: network.optimizerEnabled,
+    optimizerRuns: network.optimizerRuns,
+  });
+  await fs.writeFile(SPCOIN_ABI_PATH, `${JSON.stringify(compiled.abi, null, 2)}\n`, 'utf8');
+  return {
+    deploymentAbi: compiled.abi,
+    deploymentChainId: network.chainId,
+    deploymentNetworkName: network.networkName,
+    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(network.chainId)),
+    abiPath: SPCOIN_ABI_PATH,
+  };
+}
+
 async function handleGetSpCoinMetaData(
   deploymentPublicKey: string,
   deploymentChainId?: number | string,
@@ -1275,6 +1295,35 @@ async function removeAddressFromTokenList(networkName: string, targetAddressUppe
   return { tokenListPath, removedCount };
 }
 
+async function removeAddressFromRelevantTokenLists(requestedChainId: number, targetAddressUpper: string) {
+  const networksRoot = path.join(process.cwd(), 'resources', 'data', 'networks');
+  const knownEntries = await fs.readdir(networksRoot, { withFileTypes: true }).catch(() => []);
+  const networkNames = new Set<string>();
+  knownEntries
+    .filter((entry) => entry.isDirectory())
+    .forEach((entry) => {
+      networkNames.add(entry.name);
+    });
+
+  networkNames.add(mapNetworkNameByChainId(requestedChainId));
+  const assetChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  if (Number.isFinite(assetChainId) && assetChainId > 0) {
+    networkNames.add(mapNetworkNameByChainId(assetChainId));
+  }
+
+  const results = await Promise.all(
+    Array.from(networkNames)
+      .filter((networkName) => networkName && !networkName.startsWith('chain-'))
+      .map((networkName) => removeAddressFromTokenList(networkName, targetAddressUpper)),
+  );
+
+  return {
+    removedCount: results.reduce((sum, entry) => sum + entry.removedCount, 0),
+    tokenListPaths: results.map((entry) => entry.tokenListPath),
+    networkNames: Array.from(networkNames).filter((networkName) => !networkName.startsWith('chain-')),
+  };
+}
+
 async function handleRemoveDeployment(params: {
   deploymentPublicKey: string;
   deploymentChainId?: number | string;
@@ -1314,10 +1363,9 @@ async function handleRemoveDeployment(params: {
       : {};
   await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(nextMap, null, 2), 'utf8');
 
-  const networkName = mapNetworkNameByChainId(requestedChainId);
-  const tokenListResult = await removeAddressFromTokenList(networkName, targetAddressUpper);
-
   const assetChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const networkName = mapNetworkNameByChainId(requestedChainId);
+  const tokenListResult = await removeAddressFromRelevantTokenLists(requestedChainId, targetAddressUpper);
   const contractDir = path.join(
     process.cwd(),
     'public',
@@ -1341,7 +1389,7 @@ async function handleRemoveDeployment(params: {
     targetAddressUpper,
     removedDeploymentEntries,
     removedTokenListEntries: tokenListResult.removedCount,
-    tokenListPath: tokenListResult.tokenListPath,
+    tokenListPath: tokenListResult.tokenListPaths.join(', '),
     contractDir,
     contractDirExisted,
   };
@@ -1582,6 +1630,8 @@ export async function POST(request: Request) {
       ? 'prepareDeploy'
       : body.action === 'registerDeployment'
       ? 'registerDeployment'
+      : body.action === 'generateAbi'
+      ? 'generateAbi'
       : body.action === 'removeDeployment'
       ? 'removeDeployment'
       : 'download';
@@ -1611,6 +1661,33 @@ export async function POST(request: Request) {
         } satisfies AccessManagerResponse);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown deploy artifact preparation failure.';
+        return NextResponse.json(
+          {
+            ok: false,
+            action,
+            mode,
+            message: `*Error: ${message}`,
+          } satisfies AccessManagerResponse,
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === 'generateAbi') {
+      try {
+        const result = await handleGenerateAbi(body.deploymentChainId);
+        return NextResponse.json({
+          ok: true,
+          action,
+          mode,
+          deploymentAbi: result.deploymentAbi,
+          deploymentChainId: result.deploymentChainId,
+          deploymentAssetChainId: result.deploymentAssetChainId,
+          deploymentNetworkName: result.deploymentNetworkName,
+          message: `Generated SPCoin ABI for ${String(result.deploymentNetworkName || 'chain')} (${String(result.deploymentChainId || 'unknown')}) and wrote ${result.abiPath}.`,
+        } satisfies AccessManagerResponse);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown ABI generation failure.';
         return NextResponse.json(
           {
             ok: false,
@@ -1670,7 +1747,7 @@ export async function POST(request: Request) {
             `Removed SponsorCoin app entry for ${result.targetAddressUpper}.`,
             `Deployment map entries removed: ${String(result.removedDeploymentEntries)}`,
             `Token list entries removed: ${String(result.removedTokenListEntries)}`,
-            `Token list file: ${result.tokenListPath}`,
+            `Token list files: ${result.tokenListPath || '(none)'}`,
             `Asset directory ${result.contractDirExisted ? 'removed' : 'not found'}: ${result.contractDir}`,
           ].join('\n'),
         } satisfies AccessManagerResponse);

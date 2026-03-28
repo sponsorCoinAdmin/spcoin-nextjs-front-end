@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MethodDef, ParamDef } from '../methods/shared/types';
+import type { MethodDef, ParamDef } from '../jsonMethods/shared/types';
 import {
   getErc20ReadLabels,
   runErc20ReadMethod,
   type Erc20ReadMethod,
-} from '../methods/erc20/read';
+} from '../jsonMethods/erc20/read';
 import {
   getErc20WriteLabels,
   runErc20WriteMethod,
   type Erc20WriteMethod,
-} from '../methods/erc20/write';
-import { runSpCoinReadMethod, type SpCoinReadMethod } from '../methods/spcoin/read';
-import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../methods/spcoin/write';
+} from '../jsonMethods/erc20/write';
+import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import {
   runSerializationTestMethod,
   type SerializationTestMethod,
-} from '../methods/serializationTests';
-import { createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../methods/shared';
-import { normalizeStringListResult } from '../methods/shared/normalizeListResult';
+} from '../jsonMethods/serializationTests';
+import { createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
+import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
 type Entry = { id: string; label: string };

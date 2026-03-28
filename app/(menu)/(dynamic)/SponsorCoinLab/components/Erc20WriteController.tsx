@@ -51,8 +51,6 @@ export default function Erc20WriteController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
-    writeTraceEnabled,
-    toggleWriteTrace,
     mode,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -125,8 +123,8 @@ export default function Erc20WriteController(props: Props) {
   );
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
+      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedWriteMethod}
@@ -138,9 +136,6 @@ export default function Erc20WriteController(props: Props) {
             </option>
           ))}
         </select>
-        <button type="button" className={`${actionButtonClassName} justify-self-end`} onClick={toggleWriteTrace}>
-          {writeTraceEnabled ? 'Trace On' : 'Trace Off'}
-        </button>
       </div>
       <AccountSelection
         label="msg.sender"

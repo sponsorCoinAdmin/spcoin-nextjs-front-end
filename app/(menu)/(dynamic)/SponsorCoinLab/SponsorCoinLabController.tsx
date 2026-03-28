@@ -12,12 +12,12 @@ import {
   ERC20_READ_OPTIONS,
   getErc20ReadLabels,
   type Erc20ReadMethod,
-} from './methods/erc20/read';
+} from './jsonMethods/erc20/read';
 import {
   ERC20_WRITE_OPTIONS,
   getErc20WriteLabels,
   type Erc20WriteMethod,
-} from './methods/erc20/write';
+} from './jsonMethods/erc20/write';
 import {
   SPCOIN_READ_METHOD_DEFS,
   getSpCoinAdminReadOptions,
@@ -26,23 +26,30 @@ import {
   getSpCoinWorldReadOptions,
   normalizeSpCoinReadMethod,
   type SpCoinReadMethod,
-} from './methods/spcoin/read';
+} from './jsonMethods/spCoin/read';
 import {
   SPCOIN_WRITE_METHOD_DEFS,
+  SPCOIN_OFFCHAIN_WRITE_METHODS,
+  SPCOIN_ONCHAIN_WRITE_METHODS,
   getSpCoinAdminWriteOptions,
   getSpCoinSenderWriteOptions,
   getSpCoinTodoWriteOptions,
   getSpCoinWorldWriteOptions,
   getSpCoinWriteOptions,
   type SpCoinWriteMethod,
-} from './methods/spcoin/write';
+} from './jsonMethods/spCoin/write';
 import {
   SERIALIZATION_TEST_METHOD_DEFS,
   getSerializationTestOptions,
   type SerializationTestMethod,
-} from './methods/serializationTests';
-import { createSpCoinLibraryAccess, createSpCoinModuleAccess, type SpCoinContractAccess } from './methods/shared';
-import type { MethodDef } from './methods/shared/types';
+} from './jsonMethods/serializationTests';
+import { createSpCoinLibraryAccess, createSpCoinModuleAccess, type SpCoinContractAccess } from './jsonMethods/shared';
+import {
+  SPCOIN_ABI_UPDATED_EVENT,
+  SPCOIN_ABI_VERSION_STORAGE_KEY,
+  setSpCoinLabAbi,
+} from './jsonMethods/shared/spCoinAbi';
+import type { MethodDef } from './jsonMethods/shared/types';
 import {
   CALENDAR_WEEK_DAYS,
   formatDateInput,
@@ -93,6 +100,16 @@ const inputStyle =
 const hiddenScrollbarClass =
   '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden';
 const SP_COIN_LAB_STORAGE_KEY = 'spCoinLabKey';
+
+async function refreshSponsorCoinLabAbi() {
+  const response = await fetch('/api/spCoin/abi', { cache: 'no-store' });
+  const payload = (await response.json()) as { ok?: boolean; abi?: unknown[] };
+  if (!response.ok || payload?.ok === false || !Array.isArray(payload?.abi)) {
+    throw new Error('Unable to refresh SPCoin ABI.');
+  }
+  setSpCoinLabAbi(payload.abi);
+  return payload.abi.length;
+}
 
 function normalizeAddressValue(value: string) {
   const trimmed = String(value || '').trim();
@@ -396,6 +413,8 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinReadMethod>('getSPCoinHeaderRecord');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
+  const [showOnChainMethods, setShowOnChainMethods] = useState(true);
+  const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [selectedSerializationTestMethod, setSelectedSerializationTestMethod] =
     useState<SerializationTestMethod>('external_getSerializedSPCoinHeader');
   const [selectedSponsorCoinAccountRole, setSelectedSponsorCoinAccountRole] =
@@ -425,6 +444,46 @@ export default function SponsorCoinLabPage() {
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
+  }, []);
+  useEffect(() => {
+    const applyLatestAbi = async () => {
+      try {
+        await refreshSponsorCoinLabAbi();
+      } catch {
+        // Keep the currently loaded ABI if refresh fails.
+      }
+    };
+
+    const handleAbiUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ abi?: unknown[]; version?: string }>).detail;
+      if (Array.isArray(detail?.abi)) {
+        setSpCoinLabAbi(detail.abi);
+      } else {
+        void applyLatestAbi();
+      }
+      if (detail?.version && typeof window !== 'undefined') {
+        window.localStorage.setItem(SPCOIN_ABI_VERSION_STORAGE_KEY, String(detail.version));
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== SPCOIN_ABI_VERSION_STORAGE_KEY) return;
+      void applyLatestAbi();
+    };
+
+    void applyLatestAbi();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(SPCOIN_ABI_UPDATED_EVENT, handleAbiUpdated as EventListener);
+      window.addEventListener('storage', handleStorage);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(SPCOIN_ABI_UPDATED_EVENT, handleAbiUpdated as EventListener);
+        window.removeEventListener('storage', handleStorage);
+      }
+    };
   }, []);
   const sponsorAccountAddress = normalizeAddressValue(
     String(exchangeContext?.accounts?.sponsorAccount?.address ?? ''),
@@ -913,6 +972,7 @@ export default function SponsorCoinLabPage() {
     displayedSignerAccountMetadata,
     selectedVersionSymbol,
     selectedSponsorCoinLogoURL,
+    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
     selectedWriteSenderAccount,
     writeSenderDisplayValue,
@@ -1227,7 +1287,7 @@ export default function SponsorCoinLabPage() {
   );
   const handleRemoveContractFromApp = useCallback(async () => {
     const activeAddress = String(contractAddress || '').trim();
-    const activeChainId = Number(chainIdDisplayValue || 0);
+    const activeChainId = Number(selectedSponsorCoinVersionEntry?.chainId || chainIdDisplayValue || 0);
     const activeName = String(selectedSponsorCoinVersionEntry?.name || '').trim() || 'Sponsor Coin';
     const activeSymbol = String(selectedVersionSymbol || '').trim() || 'SPCOIN';
     const fallbackChoice = sponsorCoinVersionChoices.find(
@@ -1312,6 +1372,7 @@ export default function SponsorCoinLabPage() {
     chainIdDisplayValue,
     contractAddress,
     removedContractAddresses,
+    selectedSponsorCoinVersionEntry?.chainId,
     selectedSponsorCoinVersionEntry?.name,
     sponsorCoinVersionChoices,
     setSelectedSponsorCoinVersion,
@@ -1552,9 +1613,32 @@ export default function SponsorCoinLabPage() {
 
   const {
     scripts,
+    visibleScripts,
     setScripts,
+    javaScriptScripts,
+    setJavaScriptScripts,
     selectedScriptId,
     setSelectedScriptId,
+    showSystemTestsOnly,
+    setShowSystemTestsOnly,
+    scriptEditorKind,
+    setScriptEditorKind,
+    showJavaScriptUtilScriptsOnly,
+    setShowJavaScriptUtilScriptsOnly,
+    availableJavaScriptScripts,
+    visibleJavaScriptScripts,
+    selectedJavaScriptScript,
+    selectedJavaScriptScriptId,
+    setSelectedJavaScriptScriptId,
+    javaScriptScriptNameInput,
+    setJavaScriptScriptNameInput,
+    isJavaScriptScriptOptionsOpen,
+    setIsJavaScriptScriptOptionsOpen,
+    javaScriptScriptNameValidation,
+    javaScriptDeleteScriptValidation,
+    createNewJavaScriptScript,
+    clearSelectedJavaScriptScript,
+    handleDeleteJavaScriptScriptClick,
     selectedScript,
     scriptNameInput,
     setScriptNameInput,
@@ -1704,8 +1788,18 @@ export default function SponsorCoinLabPage() {
   useSponsorCoinLabPersistence({
     scripts,
     setScripts,
+    javaScriptScripts,
+    setJavaScriptScripts,
     selectedScriptId,
     setSelectedScriptId,
+    scriptEditorKind,
+    setScriptEditorKind,
+    showSystemTestsOnly,
+    setShowSystemTestsOnly,
+    showJavaScriptUtilScriptsOnly,
+    setShowJavaScriptUtilScriptsOnly,
+    selectedJavaScriptScriptId,
+    setSelectedJavaScriptScriptId,
     mode,
     setMode,
     rpcUrl,
@@ -2043,9 +2137,67 @@ export default function SponsorCoinLabPage() {
     setSelectedSerializationTestMethod,
   ]);
   const methodPanelTitle =
-    methodSelectionSource === 'script' && editingScriptStepNumber !== null
-      ? `Edit Test Method ${editingScriptStepNumber}`
-      : 'New Test Method';
+    scriptEditorKind === 'json' && methodSelectionSource === 'script' && editingScriptStepNumber !== null
+      ? `Edit JSON Test Method ${editingScriptStepNumber}`
+      : `New ${scriptEditorKind === 'javascript' ? 'JavaScript' : 'JSON'} Test Method`;
+  const [javaScriptFileContent, setJavaScriptFileContent] = useState('');
+  const [isJavaScriptFileLoading, setIsJavaScriptFileLoading] = useState(false);
+  const selectedJavaScriptFilePath = String(selectedJavaScriptScript?.filePath || '').trim();
+
+  const reloadJavaScriptFile = useCallback(() => {
+    if (!selectedJavaScriptFilePath) {
+      setJavaScriptFileContent('');
+      return;
+    }
+    setIsJavaScriptFileLoading(true);
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/spCoin/javascript-scripts?filePath=${encodeURIComponent(selectedJavaScriptFilePath)}`,
+          { cache: 'no-store' },
+        );
+        const payload = (await response.json()) as { ok?: boolean; message?: string; content?: string };
+        if (!response.ok) {
+          throw new Error(payload?.message || `Unable to load JavaScript script (${response.status})`);
+        }
+        setJavaScriptFileContent(String(payload?.content || ''));
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : 'Unable to load JavaScript script.');
+        setOutputPanelMode('raw_status');
+      } finally {
+        setIsJavaScriptFileLoading(false);
+      }
+    })();
+  }, [selectedJavaScriptFilePath, setOutputPanelMode, setStatus]);
+
+  useEffect(() => {
+    if (scriptEditorKind !== 'javascript') return;
+    if (!selectedJavaScriptFilePath) {
+      setJavaScriptFileContent('');
+      return;
+    }
+    reloadJavaScriptFile();
+  }, [reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptFilePath]);
+
+  const runSelectedJavaScriptScript = useCallback(() => {
+    const scriptName = String(selectedJavaScriptScript?.name || '').trim();
+    if (!scriptName) {
+      setStatus('Select a JavaScript script first.');
+    } else {
+      setStatus(`JavaScript execution is not connected yet for ${scriptName}.`);
+    }
+    setOutputPanelMode('raw_status');
+  }, [selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
+
+  const addSelectedJavaScriptScriptToScript = useCallback(() => {
+    const scriptName = String(selectedJavaScriptScript?.name || '').trim();
+    if (!scriptName) {
+      setStatus('Select a JavaScript script first.');
+    } else {
+      setStatus(`Add To Script is not connected yet for ${scriptName}.`);
+    }
+    setOutputPanelMode('raw_status');
+  }, [selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
   const currentMethodDisplayName = (() => {
     switch (methodPanelMode) {
       case 'ecr20_read':
@@ -2062,7 +2214,8 @@ export default function SponsorCoinLabPage() {
         return 'method';
     }
   })();
-  const isEditingScriptMethod = methodSelectionSource === 'script' && editingScriptStepNumber !== null;
+  const isEditingScriptMethod =
+    scriptEditorKind === 'json' && methodSelectionSource === 'script' && editingScriptStepNumber !== null;
   const discardChangesMessage = (() => {
     const activeStepNumber = editingScriptStepNumber ?? selectedScriptStepNumber;
     return activeStepNumber !== null
@@ -2070,7 +2223,7 @@ export default function SponsorCoinLabPage() {
       : `Discard unsaved changes to ${currentMethodDisplayName} or return?`;
   })();
   const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
-  const hasEditorScriptSelected = Boolean(String(selectedScriptId || '').trim());
+  const hasEditorScriptSelected = scriptEditorKind === 'json' && Boolean(String(selectedScriptId || '').trim());
   const addToScriptButtonLabel = isEditingScriptMethod ? `Update Script Step ${editingScriptStepNumber}` : 'Add To Script';
   const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
   const [scriptStepExecutionErrors, setScriptStepExecutionErrors] = useState<Record<number, boolean>>({});
@@ -2795,6 +2948,7 @@ export default function SponsorCoinLabPage() {
               adjustSponsorCoinVersion,
               selectedVersionSignerKey,
               displayedVersionHardhatAccountIndex,
+              selectedVersionWidthCh,
               selectedVersionSymbolWidthCh,
               selectedVersionSymbol,
             }}
@@ -2832,10 +2986,47 @@ export default function SponsorCoinLabPage() {
             methodPanelMode={methodPanelMode}
             activeMethodPanelTab={activeMethodPanelTab}
             selectMethodPanelTab={selectMethodPanelTab}
+            writeTraceEnabled={writeTraceEnabled}
+            toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
+            showOnChainMethods={showOnChainMethods}
+            setShowOnChainMethods={setShowOnChainMethods}
+            showOffChainMethods={showOffChainMethods}
+            setShowOffChainMethods={setShowOffChainMethods}
+            javaScriptEditorProps={{
+              hiddenScrollbarClass,
+              selectedScriptName: String(selectedJavaScriptScript?.name || ''),
+              selectedFilePath: selectedJavaScriptFilePath,
+              javaScriptFileContent,
+              isJavaScriptFileLoading,
+              canRunSelectedJavaScriptScript: Boolean(String(selectedJavaScriptScript?.id || '').trim()),
+              runSelectedJavaScriptScript,
+              canAddSelectedJavaScriptScriptToScript: Boolean(String(selectedJavaScriptScript?.id || '').trim()),
+              addSelectedJavaScriptScriptToScript,
+            }}
             scriptBuilderProps={{
               actionButtonStyle,
               hiddenScrollbarClass,
               scripts,
+              visibleScripts,
+              showSystemTestsOnly,
+              setShowSystemTestsOnly,
+              scriptEditorKind,
+              setScriptEditorKind,
+              showJavaScriptUtilScriptsOnly,
+              setShowJavaScriptUtilScriptsOnly,
+              availableJavaScriptScripts,
+              visibleJavaScriptScripts,
+              selectedJavaScriptScriptId,
+              setSelectedJavaScriptScriptId,
+              javaScriptScriptNameInput,
+              setJavaScriptScriptNameInput,
+              isJavaScriptScriptOptionsOpen,
+              setIsJavaScriptScriptOptionsOpen,
+              javaScriptScriptNameValidation,
+              javaScriptDeleteScriptValidation,
+              createNewJavaScriptScript,
+              clearSelectedJavaScriptScript,
+              handleDeleteJavaScriptScriptClick,
               selectedScript,
               selectedScriptStepNumber,
               scriptNameInput,
@@ -2985,6 +3176,10 @@ export default function SponsorCoinLabPage() {
               spCoinSenderWriteOptions: isSpCoinTodoMode ? [] : spCoinSenderWriteOptions,
               spCoinAdminWriteOptions: isSpCoinTodoMode ? [] : spCoinAdminWriteOptions,
               spCoinTodoWriteOptions: isSpCoinTodoMode ? spCoinTodoWriteOptions : [],
+              showOnChainMethods,
+              showOffChainMethods,
+              spCoinOnChainWriteMethods: SPCOIN_ONCHAIN_WRITE_METHODS,
+              spCoinOffChainWriteMethods: SPCOIN_OFFCHAIN_WRITE_METHODS,
               spCoinWriteMethodDefs: spCoinWriteMethodDefs as MethodDefMap,
               activeSpCoinWriteDef: activeSpCoinWriteDef,
               spWriteParams,

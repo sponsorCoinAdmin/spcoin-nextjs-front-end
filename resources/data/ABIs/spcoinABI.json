@@ -87,6 +87,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "_recipientKey",
         "type": "address"
       },
@@ -141,11 +146,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
       {
         "internalType": "address",
         "name": "_recipientKey",

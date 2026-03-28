@@ -27,6 +27,7 @@ import {
   VERSION_FORMAT_ERROR,
   VERSION_FORMAT_REGEX,
 } from '../helpers';
+import { SPCOIN_ABI_UPDATED_EVENT, SPCOIN_ABI_VERSION_STORAGE_KEY } from '../../SponsorCoinLab/jsonMethods/shared/spCoinAbi';
 
 type SpCoinDeploymentFile = {
   meta?: {
@@ -287,6 +288,7 @@ export function useSpCoinAccessController() {
   const [deploymentFlashError, setDeploymentFlashError] = useState(false);
   const [deploymentStatusIsError, setDeploymentStatusIsError] = useState(false);
   const [activeAction, setActiveAction] = useState<'download' | 'upload' | 'install' | null>(null);
+  const [isGeneratingAbi, setIsGeneratingAbi] = useState(false);
   const [deploymentContractDirExists, setDeploymentContractDirExists] = useState(false);
   const [deploymentTokenStatus, setDeploymentTokenStatus] = useState<
     'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED'
@@ -818,6 +820,51 @@ export function useSpCoinAccessController() {
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
       setDeployUiState('idle');
+    }
+  };
+
+  const handleGenerateAbi = async () => {
+    if (isGeneratingAbi) return;
+    setIsGeneratingAbi(true);
+    setDeploymentStatusIsError(false);
+    setDeploymentFlashError(false);
+    setDeploymentStatus('Generating SPCoin ABI...');
+    try {
+      const response = await fetch('/api/spCoin/access-manager', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generateAbi',
+          deploymentChainId: effectiveDeploymentChainIdNumber,
+        }),
+      });
+      const data = await parseManagerResponse(response);
+      if (!response.ok || !data.ok) {
+        setDeploymentStatus(`*Error: ${data.message || 'Failed to generate SPCoin ABI.'}`);
+        setDeploymentStatusIsError(true);
+        setDeploymentFlashError(true);
+        return;
+      }
+      if (typeof window !== 'undefined') {
+        const version = String(Date.now());
+        window.dispatchEvent(
+          new CustomEvent(SPCOIN_ABI_UPDATED_EVENT, {
+            detail: {
+              abi: Array.isArray(data.deploymentAbi) ? data.deploymentAbi : undefined,
+              version,
+            },
+          }),
+        );
+        window.localStorage.setItem(SPCOIN_ABI_VERSION_STORAGE_KEY, version);
+      }
+      setDeploymentStatus(String(data.message || 'SPCoin ABI generated.'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown ABI generation failure.';
+      setDeploymentStatus(`*Error: ${message}`);
+      setDeploymentStatusIsError(true);
+      setDeploymentFlashError(true);
+    } finally {
+      setIsGeneratingAbi(false);
     }
   };
 
@@ -1370,6 +1417,7 @@ export function useSpCoinAccessController() {
     deploymentTokenStatus,
     deployDisableReason,
     deployButtonLabel,
+    isGeneratingAbi,
     handleCloseAttempt,
     handlePackagePersist,
     setLocalInstallSourceRoot,
@@ -1390,6 +1438,7 @@ export function useSpCoinAccessController() {
     adjustHardhatDeploymentAccountNumber,
     setLocalSourceDeploymentPath,
     handleDeploy,
+    handleGenerateAbi,
     handleDeploymentPrivateKeyChange,
     handleDeploymentPrivateKeyBlur,
     setDeploymentLogoPath,

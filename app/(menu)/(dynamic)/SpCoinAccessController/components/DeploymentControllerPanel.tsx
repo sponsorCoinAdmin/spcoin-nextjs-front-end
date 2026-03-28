@@ -43,6 +43,7 @@ type DeploymentControllerPanelProps = {
   deploymentStatusIsError: boolean;
   deployDisableReason: string;
   deployButtonLabel: string;
+  isGeneratingAbi: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
   onDeploymentWalletSelectionChange: (next: WalletAccountSelectionValue) => void;
@@ -53,6 +54,7 @@ type DeploymentControllerPanelProps = {
   onAdjustDeploymentVersion: (direction: 1 | -1) => void;
   onLocalSourceDeploymentPathChange: (value: string) => void;
   onDeploy: () => Promise<void>;
+  onGenerateAbi: () => Promise<void>;
   onDeploymentPrivateKeyChange: (value: string) => void;
   onDeploymentPrivateKeyBlur: () => void;
 };
@@ -85,6 +87,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentStatusIsError,
     deployDisableReason,
     deployButtonLabel,
+    isGeneratingAbi,
     isExpanded,
     onToggleExpand,
     onDeploymentWalletSelectionChange,
@@ -95,9 +98,11 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onAdjustDeploymentVersion,
     onLocalSourceDeploymentPathChange,
     onDeploy,
+    onGenerateAbi,
   } = props;
   const isDeployDisabled = deployDisableReason !== 'ENABLED';
   const isDeploymentInProgress = deployDisableReason === 'DEPLOYMENT_IN_PROGRESS';
+  const isGenerateAbiDisabled = isGeneratingAbi || isDeploymentInProgress;
   const isHardhatSelected = deploymentWalletSelection.source === 'ec2-base';
   const signerPublicKeyPlaceholder =
     deploymentSignerSource === 'metamask'
@@ -153,59 +158,135 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
             onChange={onDeploymentWalletSelectionChange}
           />
 
-          <div className="mt-4 grid gap-4">
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1.16fr)_minmax(0,0.84fr)_auto] md:items-center">
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
+            <div className="mt-4 grid gap-4">
+              <div
+                className={`grid grid-cols-1 gap-3${
+                  showDeploymentAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
+                }`}
+              >
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <button
+                    type="button"
+                  disabled={isDeploymentInProgress}
+                  onClick={onToggleDeploymentAccountDetails}
+                  className={accountInfoLabelClassName}
+                  title="Toggle deployment account details"
+                >
+                  Deployment Account Address
+                </button>
                 <input
                   type="text"
-                  value={deploymentName}
-                  readOnly
-                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  value={selectedSignerAddress}
+                  onChange={(event) => onDeploymentSignerAddressChange(event.target.value)}
+                  readOnly={deploymentSignerSource !== 'metamask' || isDeploymentInProgress}
+                  placeholder={signerPublicKeyPlaceholder}
+                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none transition-colors focus:border-[#8FA8FF]"
                 />
               </label>
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)] md:justify-self-end md:w-full">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
-                <input
-                  type="text"
-                  value={deploymentSymbol}
-                  readOnly
-                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                />
-              </label>
-              <label className="flex items-center gap-3 md:justify-self-end">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Decimals</span>
-                <div className="flex items-stretch">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={3}
-                    value={deploymentDecimals}
-                    disabled={isDeploymentInProgress}
-                    onChange={(event) => onDeploymentDecimalsChange(event.target.value)}
-                    className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                  />
-                  <div className="flex w-[26px] flex-col">
-                    <button
-                      type="button"
-                      disabled={isDeploymentInProgress}
-                      onClick={() => onAdjustDeploymentDecimals(1)}
-                      className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                      title="Increment Decimals"
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isDeploymentInProgress}
-                      onClick={() => onAdjustDeploymentDecimals(-1)}
-                      className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                      title="Decrement Decimals"
-                    >
-                      -
-                    </button>
+              {showDeploymentAccountDetails ? (
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
+                  <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                      {deploymentAccountMetadata?.logoURL ? (
+                        <Image
+                          src={deploymentAccountMetadata.logoURL}
+                          alt={deploymentAccountMetadata?.name || 'Deployment account'}
+                          width={40}
+                          height={40}
+                          className="h-full w-full object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-[10px] text-slate-400">No logo</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-white">
+                        {deploymentAccountMetadata?.name || 'Unnamed account'}
+                      </div>
+                      <div className="truncate text-xs text-slate-400">
+                        {deploymentAccountMetadata?.symbol || 'No symbol'}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              ) : null}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1.16fr)_minmax(0,0.84fr)_auto] md:items-center">
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
+                  <input
+                    type="text"
+                    value={deploymentName}
+                    readOnly
+                    className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  />
+                </label>
+                <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)] md:justify-self-end md:w-full">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
+                  <input
+                    type="text"
+                    value={deploymentSymbol}
+                    readOnly
+                    className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                  />
+                </label>
+                <label className="flex items-center gap-3 md:justify-self-end">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Decimals</span>
+                  <div className="flex items-stretch">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={3}
+                      value={deploymentDecimals}
+                      disabled={isDeploymentInProgress}
+                      onChange={(event) => onDeploymentDecimalsChange(event.target.value)}
+                      className="w-[4ch] min-w-[4ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                    <div className="flex w-[26px] flex-col">
+                      <button
+                        type="button"
+                        disabled={isDeploymentInProgress}
+                        onClick={() => onAdjustDeploymentDecimals(1)}
+                        className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Increment Decimals"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isDeploymentInProgress}
+                        onClick={() => onAdjustDeploymentDecimals(-1)}
+                        className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Decrement Decimals"
+                      >
+                        -
+                      </button>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Network Name</span>
+                <input
+                  type="text"
+                  value={deploymentChainName}
+                  readOnly
+                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none"
+                />
+              </label>
+              <label className="grid items-center gap-3 md:grid-cols-[auto_auto] justify-self-end">
+                <span className="text-right text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
+                <input
+                  type="text"
+                  value={deploymentChainId}
+                  readOnly
+                  className="w-[8ch] min-w-[8ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-slate-300 outline-none"
+                />
               </label>
             </div>
 
@@ -262,103 +343,39 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
               </div>
             ) : null}
 
-            <div
-              className={`grid grid-cols-1 gap-3${
-                showDeploymentAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
-              }`}
-            >
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <button
-                  type="button"
-                  disabled={isDeploymentInProgress}
-                  onClick={onToggleDeploymentAccountDetails}
-                  className={accountInfoLabelClassName}
-                  title="Toggle deployment account details"
-                >
-                  Deployment Account Address
-                </button>
-                <input
-                  type="text"
-                  value={selectedSignerAddress}
-                  onChange={(event) => onDeploymentSignerAddressChange(event.target.value)}
-                  readOnly={deploymentSignerSource !== 'metamask' || isDeploymentInProgress}
-                  placeholder={signerPublicKeyPlaceholder}
-                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none transition-colors focus:border-[#8FA8FF]"
-                />
-              </label>
-              {showDeploymentAccountDetails ? (
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
-                  <div className="flex items-center gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                      {deploymentAccountMetadata?.logoURL ? (
-                        <Image
-                          src={deploymentAccountMetadata.logoURL}
-                          alt={deploymentAccountMetadata?.name || 'Deployment account'}
-                          width={40}
-                          height={40}
-                          className="h-full w-full object-contain"
-                          unoptimized
-                        />
-                      ) : (
-                        <span className="text-[10px] text-slate-400">No logo</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate font-medium text-white">
-                        {deploymentAccountMetadata?.name || 'Unnamed account'}
-                      </div>
-                      <div className="truncate text-xs text-slate-400">
-                        {deploymentAccountMetadata?.symbol || 'No symbol'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+            <div className="grid gap-3 md:grid-cols-2">
               <div
-                className={isDeployDisabled ? 'group inline-flex md:justify-self-start' : 'inline-flex md:justify-self-start'}
-                title={
-                  isDeployDisabled
-                    ? `Deploy disabled: ${deployDisableReason}`
-                    : 'Deploy'
-                }
+                className={isDeployDisabled ? 'group' : ''}
+                title={isDeployDisabled ? `Deploy disabled: ${deployDisableReason}` : 'Deploy'}
               >
                 <button
                   type="button"
                   disabled={isDeployDisabled}
                   onClick={() => void onDeploy()}
-                  className={`rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors ${
+                  className={`w-full rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     isDeployDisabled
-                      ? 'pointer-events-none cursor-not-allowed bg-[#7a7a7a] group-hover:bg-red-600'
+                      ? 'bg-[#EBCA6A] group-hover:bg-red-500'
                       : deploymentFlashError
                       ? 'bg-red-500 hover:bg-red-400'
-                      : 'bg-[#EBCA6A] hover:bg-[#F4D883]'
+                      : 'bg-[#EBCA6A] hover:bg-green-500'
                   }`}
                 >
                   {deployButtonLabel}
                 </button>
               </div>
-              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">Network Name</span>
-                <input
-                  type="text"
-                  value={deploymentChainName}
-                  readOnly
-                  className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-slate-300 outline-none"
-                />
-              </label>
-              <label className="grid items-center gap-3 md:grid-cols-[auto_auto] justify-self-end">
-                <span className="text-right text-sm font-semibold text-[#8FA8FF]">Chain Id</span>
-                <input
-                  type="text"
-                  value={deploymentChainId}
-                  readOnly
-                  className="w-[8ch] min-w-[8ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-slate-300 outline-none"
-                />
-              </label>
+              <button
+                type="button"
+                disabled={isGenerateAbiDisabled}
+                onClick={() => void onGenerateAbi()}
+                className={`w-full rounded-xl px-4 py-[0.45rem] font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                  isGenerateAbiDisabled
+                    ? 'bg-[#5981F3]'
+                    : 'bg-[#5981F3] hover:bg-green-500'
+                }`}
+                title="Generate SPCoin ABI"
+              >
+                {isGeneratingAbi ? 'Generating ABI...' : 'Generate ABI'}
+              </button>
             </div>
           </div>
         </section>

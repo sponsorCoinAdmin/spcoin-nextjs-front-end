@@ -9,12 +9,12 @@ import {
 } from '@/lib/context/helpers/assetHelpers';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
-import { createSpCoinContract } from '../methods/shared';
+import { createSpCoinContract } from '../jsonMethods/shared';
 import type { ConnectionMode, MethodPanelMode } from '../scriptBuilder/types';
-import type { Erc20ReadMethod } from '../methods/erc20/read';
-import type { Erc20WriteMethod } from '../methods/erc20/write';
-import type { SpCoinReadMethod } from '../methods/spcoin/read';
-import type { SpCoinWriteMethod } from '../methods/spcoin/write';
+import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
+import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
+import type { SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import { useSponsorCoinLabActiveContract } from './useSponsorCoinLabActiveContract';
 
 type HardhatAccountOption = {
@@ -477,6 +477,7 @@ export function useSponsorCoinLabNetwork({
     requireContractAddress,
     selectedVersionSignerKey,
     selectedVersionSymbol,
+    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
   } = useSponsorCoinLabActiveContract({
     contractAddress,
@@ -989,6 +990,7 @@ export function useSponsorCoinLabNetwork({
     displayedSignerAccountMetadata,
     selectedVersionSymbol,
     selectedSponsorCoinLogoURL,
+    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
     selectedWriteSenderAccount,
     writeSenderDisplayValue,

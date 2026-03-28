@@ -1,7 +1,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
-import type { MethodDef } from '../methods/shared/types';
+import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
   invalidFieldIds: string[];
@@ -92,7 +92,7 @@ export default function SerializationTestController(props: Props) {
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Method</span>
+        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[28ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={selectedSerializationTestMethod}

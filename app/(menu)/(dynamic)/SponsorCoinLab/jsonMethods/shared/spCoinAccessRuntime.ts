@@ -2,10 +2,10 @@
 import { Contract } from 'ethers';
 import type { Signer } from 'ethers';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from './spCoinAccessIncludes';
-import { SPCOIN_LAB_ABI } from './spCoinAbi';
+import { getSpCoinLabAbi } from './spCoinAbi';
 
 export function createSpCoinContract(address: string, runner: any) {
-  return new Contract(address, SPCOIN_LAB_ABI, runner);
+  return new Contract(address, getSpCoinLabAbi(), runner);
 }
 
 export function createSpCoinLibraryAccess(

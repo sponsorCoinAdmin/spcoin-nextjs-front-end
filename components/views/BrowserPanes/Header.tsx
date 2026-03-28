@@ -1,7 +1,7 @@
 // File: components/views/BrowserPanes/Header.tsx
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 
-import { labelForPath, PATH_TO_ID } from '@/lib/utils/tabs/registry';
+import { labelForPath, PATH_TO_ID, TAB_REGISTRY } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
 
 // ✅ NEW: prevent “double close” when header X also triggers overlay close handlers
@@ -41,6 +41,35 @@ export default function Header() {
   const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_TAB === 'true';
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
+
+  const orderedOpenTabs = useMemo(() => {
+    const orderByPath = new Map<string, number>(
+      (Object.values(TAB_REGISTRY) as Array<{ path: string; order: number }>).map((tab) => [tab.path, tab.order]),
+    );
+
+    return [...openTabs].sort((left, right) => {
+      const leftOrder = orderByPath.get(left) ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = orderByPath.get(right) ?? Number.MAX_SAFE_INTEGER;
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return left.localeCompare(right);
+    });
+  }, [openTabs]);
+
+  const orderedHeaderTabs = useMemo(() => {
+    const testHref = TEST_LINK ? ['/Test'] : [];
+    return [...testHref, ...orderedOpenTabs].sort((left, right) => {
+      const explicitOrder: Record<string, number> = {
+        '/EditAccount': 24,
+        '/Test': 25,
+        '/SpCoinAccessController': 26,
+        '/SponsorCoinLab': 27,
+      };
+      const leftOrder = explicitOrder[left] ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = explicitOrder[right] ?? Number.MAX_SAFE_INTEGER;
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return left.localeCompare(right);
+    });
+  }, [TEST_LINK, orderedOpenTabs]);
 
   // ✅ Lock per-tab close clicks (prevents double-fire / bubbled duplicates)
   const closingTabsRef = useRef<Set<string>>(new Set());
@@ -149,21 +178,11 @@ export default function Header() {
             </Link>
           )}
 
-          {TEST_LINK && (
-            <Link
-              href="/Test"
-              className={linkClass('/Test')}
-              onMouseEnter={onMouseEnter('/Test')}
-              onMouseLeave={onMouseLeave}
-            >
-              Test
-            </Link>
-          )}
-
-          {openTabs.length > 0 && (
+          {orderedHeaderTabs.length > 0 && (
             <div className="flex items-center gap-2">
-              {openTabs.map((href) => {
+              {orderedHeaderTabs.map((href) => {
                 const isHovered = hoveredTab === href; // show 'X' only on hover
+                const isTestTab = href === '/Test';
                 return (
                   <div
                     key={`tab-${href}`}
@@ -171,43 +190,44 @@ export default function Header() {
                     onMouseEnter={onMouseEnter(href)}
                     onMouseLeave={onMouseLeave}
                   >
-                    <Link href={href} className={`${linkClass(href)} pr-7`}>
-                      {labelForPath(href)}
+                    <Link href={href} className={`${linkClass(href)} ${isTestTab ? '' : 'pr-7'}`}>
+                      {href === '/Test' ? 'Test' : labelForPath(href)}
                     </Link>
 
-                    {/* Show the close X ONLY on hover; light orange + bold */}
-                    <button
-                      type="button"
-                      aria-label={`Close ${labelForPath(href)}`}
-                      className={[
-                        'absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 leading-none select-none z-10',
-                        isHovered ? 'inline-block' : 'hidden',
-                        '!text-orange-400 hover:!text-orange-300 focus:!text-orange-300 font-extrabold',
-                      ].join(' ')}
-                      style={{ color: '#fb923c' }}
+                    {!isTestTab && (
+                      <button
+                        type="button"
+                        aria-label={`Close ${labelForPath(href)}`}
+                        className={[
+                          'absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 leading-none select-none z-10',
+                          isHovered ? 'inline-block' : 'hidden',
+                          '!text-orange-400 hover:!text-orange-300 focus:!text-orange-300 font-extrabold',
+                        ].join(' ')}
+                        style={{ color: '#fb923c' }}
 
-                      // ✅ IMPORTANT: run suppression EARLY (pointer down), in CAPTURE phase
-                      onPointerDownCapture={(e) => {
-                        suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      // (optional) extra belt-and-suspenders for older mouse-only listeners
-                      onMouseDownCapture={(e) => {
-                        suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                        // ✅ IMPORTANT: run suppression EARLY (pointer down), in CAPTURE phase
+                        onPointerDownCapture={(e) => {
+                          suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        // (optional) extra belt-and-suspenders for older mouse-only listeners
+                        onMouseDownCapture={(e) => {
+                          suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
 
-                      onClick={(e) => {
-                        // keep this too (harmless), but now it's not the first line of defense
-                        e.preventDefault();
-                        e.stopPropagation();
-                        closeTab(href);
-                      }}
-                    >
-                      X
-                    </button>
+                        onClick={(e) => {
+                          // keep this too (harmless), but now it's not the first line of defense
+                          e.preventDefault();
+                          e.stopPropagation();
+                          closeTab(href);
+                        }}
+                      >
+                        X
+                      </button>
+                    )}
                   </div>
                 );
               })}

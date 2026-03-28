@@ -1,0 +1,56 @@
+{
+  "id": "builtin-system-test-clear-token-records",
+  "name": "Clear Token Records",
+  "Date Created": "Mar-28-2026, 12:12:00",
+  "network": "Hardhat Ec2-BASE",
+  "steps": [
+    {
+      "step": 1,
+      "name": "unSponsorRecipient",
+      "panel": "spcoin_write",
+      "method": "unSponsorRecipient",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "unSponsorRecipient",
+      "panel": "spcoin_write",
+      "method": "unSponsorRecipient",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getAccountList",
+      "panel": "spcoin_rread",
+      "method": "getAccountList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "getAccountRecords",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecords",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

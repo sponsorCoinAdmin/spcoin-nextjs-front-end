@@ -275,7 +275,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
             title="Install selected package version into node_modules"
             className="rounded-xl bg-[#5981F3] px-4 py-[0.45rem] font-semibold text-black transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {activeAction === 'install' ? 'Working...' : 'Install node_modules'}
+            {activeAction === 'install' ? 'Working...' : 'Install'}
           </button>
             </div>
             <div>

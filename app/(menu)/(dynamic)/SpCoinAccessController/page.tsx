@@ -102,6 +102,7 @@ export default function SpCoinAccessControllerPage() {
                 deploymentStatusIsError={controller.deploymentStatusIsError}
                 deployDisableReason={controller.deployDisableReason}
                 deployButtonLabel={controller.deployButtonLabel}
+                isGeneratingAbi={controller.isGeneratingAbi}
                 isExpanded={expandedPanel === 'deploy'}
                 onToggleExpand={() =>
                   setExpandedPanel((current) => (current === 'deploy' ? null : 'deploy'))
@@ -114,6 +115,7 @@ export default function SpCoinAccessControllerPage() {
                 onAdjustDeploymentVersion={controller.adjustDeploymentVersion}
                 onLocalSourceDeploymentPathChange={controller.setLocalSourceDeploymentPath}
                 onDeploy={controller.handleDeploy}
+                onGenerateAbi={controller.handleGenerateAbi}
                 onDeploymentPrivateKeyChange={controller.handleDeploymentPrivateKeyChange}
                 onDeploymentPrivateKeyBlur={controller.handleDeploymentPrivateKeyBlur}
               />

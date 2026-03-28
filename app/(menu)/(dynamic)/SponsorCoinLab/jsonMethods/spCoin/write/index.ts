@@ -62,7 +62,6 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipient',
   'addRecipients',
   'addAgents',
-  'addSponsorship',
   'addAgentSponsorship',
   'unSponsorRecipient',
   'deleteAccountRecord',
@@ -71,7 +70,17 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
 
 export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgent',
+  'addSponsorship',
 ];
+
+export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'addRecipients',
+  'addAgents',
+];
+
+export const SPCOIN_ONCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = (
+  Object.keys(SPCOIN_WRITE_METHOD_DEFS) as SpCoinWriteMethod[]
+).filter((name) => !SPCOIN_OFFCHAIN_WRITE_METHODS.includes(name));
 
 export function getSpCoinWorldWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
   return getSpCoinWriteOptions(hideUnexecutables).filter(

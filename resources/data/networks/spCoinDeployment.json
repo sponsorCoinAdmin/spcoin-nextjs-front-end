@@ -9,41 +9,14 @@
     }
   },
   "chainId": {
-    "1": {
-      "1.00": {
-        "0XD177438CD6B88BB63D6D257DC16DFF258EF269D5": {
-          "name": "Sponsor Coin V0.10",
-          "symbol": "SPCOIN_V0.10",
-          "decimals": 18,
-          "signerKey": ""
-        }
-      }
-    },
-    "137": {
-      "0": {
-        "0XC2816250C07AE56C1583E5F2B0E67F7D7F42D562": {
-          "name": "SponsorCoin",
-          "symbol": "SPCOIN",
-          "decimals": 18,
-          "website": "https://alchemydao.com/"
-        }
-      }
-    },
-    "8453": {
-      "0.10": {
-        "0X7877438CD6B88BB63D6D257DC16DFF258EF269D1": {
-          "name": "Sponsor Coin V0.10",
-          "symbol": "SPCOIN_V0.10",
-          "decimals": 18,
-          "signerKey": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
-        }
-      }
-    },
+    "1": {},
+    "137": {},
+    "8453": {},
     "31337": {
-      "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6": {
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80": {
         "0.0.1": {
-          "0XE4B6C1483C974C5CDAE0A6D42B2A1B252A7324A8": {
-            "deployer": "0XA0EE7A142D267C1F36714E4A8F75612F20A79720",
+          "0X0C57C0A8DD7472B933F69B5A67377336CE2454F4": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
             "name": "Sponsor Coin V0.0.1",
             "symbol": "SPCOIN_V0.0.1",
             "decimals": 18

@@ -1,6 +1,7 @@
 export type ConnectionMode = 'metamask' | 'hardhat';
 export type MethodPanelMode = 'ecr20_read' | 'erc20_write' | 'spcoin_rread' | 'spcoin_write' | 'serialization_tests';
 export type ScriptStepPanelMode = MethodPanelMode;
+export type ScriptEditorKind = 'json' | 'javascript';
 
 export type LabScriptParam = {
   key: string;
@@ -26,4 +27,13 @@ export type LabScript = {
   'Date Created': string;
   network: string;
   steps: LabScriptStep[];
+  isSystemScript?: boolean;
+};
+
+export type LabJavaScriptScript = {
+  id: string;
+  name: string;
+  scriptType?: 'test' | 'util';
+  filePath?: string;
+  isSystemScript?: boolean;
 };
