@@ -1,0 +1,124 @@
+spCoin Debug Summary
+Date: 2026-03-29
+Repo: c:\Users\robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end
+
+Main conclusion
+- Direct deployment is working.
+- The broken part is the post-deploy metadata/hydration path.
+- Current evidence points more to the server-side access-manager/read path than to MetaMask or Solidity deploy failure.
+
+What was confirmed
+- Direct POST to /api/spCoin/access-manager with action=deploy succeeded.
+- Example successful deploy:
+  - deploymentPublicKey: 0x7161D44Cd71d74BFFd4D2ccf4fDCa2D4485D9CE1
+  - deploymentTxHash: 0xaa4992d1c65cbbafc7ac39172da0261d8bfcfa6dfe14e6f104228918a7a08989
+  - chainId: 31337
+- A later successful deploy also appeared in HH logs:
+  - deploymentPublicKey: 0x9c2de433ee6a0dae0acc55d2c39eed9e4a95882c
+  - deploymentTxHash: 0x4e20688b8d88e175b7b260a7c284645d887eae8dcdddd1db43190c6653b623ea
+- Direct GET to /api/spCoin/access-manager?deploymentPublicKey=...&deploymentChainId=31337&includeMetadata=true still timed out, including for fresh deployed addresses.
+- Therefore:
+  - deploy path works
+  - metadata readback path does not
+
+Important route behavior
+- File: app/api/spCoin/access-manager/route.ts
+- The includeMetadata=true path recompiles SponsorCoin before reading metadata.
+- That route then creates a contract instance and calls getSpCoinMetaData() through SpCoinReadModule.
+- This metadata path appears to be the current bottleneck/failure point.
+
+Frontend/browser observations
+- Browser showed 500s and/or hanging on:
+  - GET /api/spCoin/access-manager?deploymentPublicKey=...&deploymentChainId=31337&includeMetadata=true
+- Browser symptom was misleading because raw deploy still succeeded.
+- UI problem is likely after deploy, during hydration/update/readback.
+
+Hardhat findings
+- PM2 process is actually running:
+  - npx hardhat node --network hardhat --hostname 127.0.0.1 --port 8545
+- hh-status showed a live listener on 127.0.0.1:8545.
+- PM2 logs proved deploy txs are mined quickly.
+- Hardhat logs also showed repeated eth_call activity against fresh deployed contracts.
+- This suggests Hardhat is responsive enough for deploy and eth_call.
+
+Hardhat reset issue
+- resetHH / hardhat_reset did NOT work.
+- Response returned:
+  - Method hardhat_reset is not supported
+- So rollback through resetHH is currently unavailable.
+- Current block observed during that check:
+  - hex: 0x29f42b9
+  - decimal: 43958969
+
+Interpretation of timing
+- Hardhat log timestamps bunch close together once RPC calls start.
+- That suggests the long wall-clock delay is likely NOT mostly EVM execution inside Hardhat.
+- Current best judgment:
+  - delay is more likely in the caller/server route/orchestration path
+  - possibly compile + read flow in access-manager
+  - not MetaMask
+  - not raw deploy transaction mining
+
+Mixed-version mismatch that was found and fixed
+- File mismatch discovered:
+  - spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule.ts
+  - spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/serialize.ts
+- Problem:
+  - spCoinReadModule.ts imported bigIntToDecString / bigIntToDateTimeString / getLocation from serialize.ts
+  - serialize.ts did not export them
+- Fix applied:
+  - spCoinReadModule.ts now imports SpCoinSerialize from serialize.ts
+  - formatting helpers now import from utils/dateTime.ts
+- npm run -s typecheck passed after this fix
+
+spCoin snapshot comparison
+- Compared:
+  - spCoinAccess/contracts/spCoin-2026-03-27
+  - spCoinAccess/contracts/spCoin-2026-03-28
+- Only meaningful differences found:
+  1. SPCoin.sol
+     - getSpCoinMetaData() in 03-28 adds owner() as first returned field
+  2. accounts/UnSubscribe.sol
+     - adds deleteAgentSponsorship(...)
+     - adds deleteUintRecordFromSearchKeys(...)
+     - removes BAL_NOT_ZERO restriction from deleteAccountRecord(...)
+  3. utils/Security.sol
+     - rootAdmin reworked into contractOwner
+     - owner() added
+  4. extra file only in 03-28:
+     - accounts/UnSubscribeBROKE.sol
+- Both snapshots behaved the same in direct deploy testing:
+  - both timed out when tested earlier through the route
+  - later evidence showed deploy route itself can succeed
+  - so snapshot differences do not appear to explain the main deploy/hydration problem
+
+Other code changes from today/session context
+- clearSpCoinAccounts renamed to deleteAccountTree
+- deleteAccountTree made recursive with cycle protection
+- deleteAccountTree moved under Admin Access in lab UI
+- deleteAgentSponsorship added to UnSubscribe.sol and lab wiring
+- BAL_NOT_ZERO restriction removed from deleteAccountRecord in UnSubscribe.sol
+- access-manager route updated with viaIR compile path and some timeout handling
+
+Most likely next step tomorrow
+- Instrument or simplify app/api/spCoin/access-manager/route.ts metadata path.
+- Strong candidate fix:
+  - stop recompiling SponsorCoin on every includeMetadata=true request
+  - use saved ABI / known ABI instead
+  - log exact start/end timestamps around:
+    - compileSpCoinContract(...)
+    - new Contract(...)
+    - read.getSpCoinMetaData()
+- Also verify whether getSpCoinMetaData() shape matches currently deployed SPCoin.sol.
+
+Useful addresses and txs from today
+- 0x101cf10b024b4ab32ae61be88c67d9575f6e3b26
+  - tx: 0x17feea94fa2e2f7427d86fc55dd16b65860977a1dd158bd1834d77d4366bdde9
+- 0x7161D44Cd71d74BFFd4D2ccf4fDCa2D4485D9CE1
+  - tx: 0xaa4992d1c65cbbafc7ac39172da0261d8bfcfa6dfe14e6f104228918a7a08989
+- 0x9c2de433ee6a0dae0acc55d2c39eed9e4a95882c
+  - tx: 0x4e20688b8d88e175b7b260a7c284645d887eae8dcdddd1db43190c6653b623ea
+
+Bottom line
+- Deployment is not the blocker anymore.
+- The server-side metadata/readback path is the blocker.

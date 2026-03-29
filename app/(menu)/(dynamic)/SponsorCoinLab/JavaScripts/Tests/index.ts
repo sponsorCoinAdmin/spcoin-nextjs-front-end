@@ -4,7 +4,6 @@ import { firstUtilScript } from '../Utils';
 const ACCESS_MODULES_TYPESCRIPT_ROOT = 'spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src';
 const OFFCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/offChain`;
 const ONCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/onChain`;
-const MODULES_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/modules`;
 
 export const BUILTIN_JAVASCRIPT_TEST_SCRIPTS: LabJavaScriptScript[] = [
   {
@@ -62,39 +61,45 @@ export const BUILTIN_JAVASCRIPT_TEST_SCRIPTS: LabJavaScriptScript[] = [
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-onchain-add-module',
-    name: 'spCoinAddModule.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinAddModule.ts`,
+    id: 'builtin-typescript-onchain-processor-class',
+    name: 'spCoinOnChainProcessor.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/spCoinOnChainProcessor.ts`,
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-read-module',
-    name: 'spCoinReadModule.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinReadModule.ts`,
+    id: 'builtin-typescript-onchain-add',
+    name: 'add.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/add.ts`,
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-rewards-module',
-    name: 'spCoinRewardsModule.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinRewardsModule.ts`,
+    id: 'builtin-typescript-onchain-delete',
+    name: 'delete.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/delete.ts`,
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-staking-module',
-    name: 'spCoinStakingModule.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinStakingModule.ts`,
+    id: 'builtin-typescript-onchain-erc20',
+    name: 'erc20.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/erc20.ts`,
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-delete-module',
-    name: 'spCoinDeleteModule.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinDeleteModule.ts`,
+    id: 'builtin-typescript-onchain-read',
+    name: 'read.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/read.ts`,
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-erc20-module',
-    name: 'spCoinERC20Module.ts',
-    filePath: `${MODULES_TYPESCRIPT_ROOT}/spCoinERC20Module.ts`,
+    id: 'builtin-typescript-onchain-rewards',
+    name: 'rewards.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/rewards.ts`,
+    isSystemScript: true,
+  },
+  {
+    id: 'builtin-typescript-onchain-staking',
+    name: 'staking.ts',
+    filePath: `${ONCHAIN_TYPESCRIPT_ROOT}/staking.ts`,
     isSystemScript: true,
   },
   firstUtilScript,

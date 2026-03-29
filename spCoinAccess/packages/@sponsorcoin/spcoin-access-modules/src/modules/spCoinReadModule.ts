@@ -8,7 +8,8 @@
 // File: /@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js
 import { SpCoinLogger } from "../utils/logging";
 import { RewardAccountStruct, AccountStruct, AgentRateStruct, AgentStruct, RecipientStruct, RecipientRateStruct, RewardRateStruct, RewardsStruct, RewardTransactionStruct, RewardTypeStruct, StakingTransactionStruct } from "../dataTypes/spCoinDataTypes";
-import { SpCoinSerialize, bigIntToDecString, bigIntToDateTimeString, getLocation } from "../utils//serialize";
+import { SpCoinSerialize } from "../utils//serialize";
+import { bigIntToDecString, bigIntToDateTimeString, getLocation } from "../utils//dateTime";
 export const SPONSOR = 0;
 export const RECIPIENT = 1;
 export const AGENT = 2;

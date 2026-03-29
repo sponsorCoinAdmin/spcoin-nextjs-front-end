@@ -32,6 +32,10 @@ type Tone = 'neutral' | 'invalid' | 'valid';
 
 type Entry = { id: string; label: string };
 
+const ACCESS_MODULES_TYPESCRIPT_ROOT = 'spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src';
+const OFFCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/offChain/`;
+const ONCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/onChain/`;
+
 function normalizeScriptName(value: string) {
   return String(value || '').trim().toLowerCase();
 }
@@ -133,6 +137,8 @@ type Params = {
   setSpWriteParams: (value: string[]) => void;
   setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   setSerializationTestParams: (value: string[]) => void;
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
 };
 
 export function useSponsorCoinLabScripts({
@@ -187,6 +193,8 @@ export function useSponsorCoinLabScripts({
   setSpWriteParams,
   setSelectedSerializationTestMethod,
   setSerializationTestParams,
+  showOnChainMethods,
+  showOffChainMethods,
 }: Params) {
   const [scripts, setScriptsState] = useState<LabScript[]>([]);
   const [selectedScriptId, setSelectedScriptId] = useState('');
@@ -213,9 +221,16 @@ export function useSponsorCoinLabScripts({
   const visibleJavaScriptScripts = useMemo(
     () =>
       availableJavaScriptScripts.filter(
-        (script) => (script.scriptType === 'util') === showJavaScriptUtilScriptsOnly,
+        (script) =>
+          (script.scriptType === 'util') === showJavaScriptUtilScriptsOnly &&
+          (
+            showJavaScriptUtilScriptsOnly ||
+            !script.isSystemScript ||
+            ((showOnChainMethods && String(script.filePath || '').includes(ONCHAIN_TYPESCRIPT_ROOT)) ||
+              (showOffChainMethods && String(script.filePath || '').includes(OFFCHAIN_TYPESCRIPT_ROOT)))
+          ),
       ),
-    [availableJavaScriptScripts, showJavaScriptUtilScriptsOnly],
+    [availableJavaScriptScripts, showJavaScriptUtilScriptsOnly, showOffChainMethods, showOnChainMethods],
   );
   const selectedJavaScriptScript = useMemo(
     () => availableJavaScriptScripts.find((script) => script.id === selectedJavaScriptScriptId) || null,

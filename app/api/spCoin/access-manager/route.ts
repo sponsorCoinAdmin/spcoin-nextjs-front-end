@@ -6,7 +6,6 @@ import { promisify } from 'util';
 import { NextResponse } from 'next/server';
 import { Contract, ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
 import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
-import { SpCoinReadModule } from '../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -1072,6 +1071,19 @@ async function handleGenerateAbi(deploymentChainId?: number | string) {
   };
 }
 
+const SPCOIN_METADATA_ABI = [
+  'function getSpCoinMetaData() view returns (address ownerAddress, string version, string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 inflationRate, uint256 lowerRecipientRate, uint256 upperRecipientRate, uint256 lowerAgentRate, uint256 upperAgentRate)',
+  'function getRecipientRateRange() view returns (uint256 lowerRecipientRate, uint256 upperRecipientRate)',
+  'function getAgentRateRange() view returns (uint256 lowerAgentRate, uint256 upperAgentRate)',
+  'function getInflationRate() view returns (uint256)',
+  'function owner() view returns (address)',
+  'function getVersion() view returns (string)',
+  'function name() view returns (string)',
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+  'function totalSupply() view returns (uint256)',
+] as const;
+
 async function handleGetSpCoinMetaData(
   deploymentPublicKey: string,
   deploymentChainId?: number | string,
@@ -1083,42 +1095,97 @@ async function handleGetSpCoinMetaData(
     return [0, Number(value ?? 0)];
   };
   const network = await resolveDeployNetwork(deploymentChainId);
-  const compiled = await compileSpCoinContract({
-    solcVersion: network.solcVersion,
-    optimizerEnabled: network.optimizerEnabled,
-    optimizerRuns: network.optimizerRuns,
-  });
   const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
-  const contract = new Contract(deploymentPublicKey, compiled.abi, provider);
-  const read = new SpCoinReadModule(contract) as {
-    getSpCoinMetaData?: () => Promise<{
-      owner: string;
-      version: string;
-      name: string;
-      symbol: string;
-      decimals: number;
-      totalSupply: string;
-      inflationRate: number;
-      recipientRateRange: [number, number];
-      agentRateRange: [number, number];
-    }>;
-  };
-
-  if (typeof read.getSpCoinMetaData !== 'function') {
-    throw new Error('SpCoin access library does not expose getSpCoinMetaData().');
+  const contract = new Contract(deploymentPublicKey, SPCOIN_METADATA_ABI, provider);
+  const code = await withTimeout(
+    provider.getCode(deploymentPublicKey),
+    10000,
+    `getCode(${deploymentPublicKey})`,
+  );
+  if (!code || code === '0x') {
+    throw new Error(`No deployed contract code found at ${deploymentPublicKey}.`);
   }
 
-  const metadata = await read.getSpCoinMetaData();
+  const readOptionalValue = async <T>(reader: string, fallbackValue: T): Promise<T> => {
+    const contractReader = (contract as Record<string, (...args: never[]) => Promise<T>>)[reader];
+    if (typeof contractReader !== 'function') return fallbackValue;
+    try {
+      return await withTimeout(contractReader.call(contract), 10000, `${reader}()`);
+    } catch (_error) {
+      return fallbackValue;
+    }
+  };
+
+  const normalizeBigInt = (value: unknown) => String(value ?? '0').trim();
+
+  let owner = '';
+  let version = '';
+  let name = '';
+  let symbol = '';
+  let decimals = 0;
+  let totalSupply = '0';
+  let inflationRate = 0;
+  let recipientRateRange: [number, number] = [0, 0];
+  let agentRateRange: [number, number] = [0, 0];
+
+  try {
+    const metadata = await withTimeout(
+      ((contract as unknown) as { getSpCoinMetaData: () => Promise<unknown[]> }).getSpCoinMetaData(),
+      15000,
+      'getSpCoinMetaData()',
+    );
+    owner = String(metadata?.[0] ?? '').trim();
+    version = String(metadata?.[1] ?? '').trim();
+    name = String(metadata?.[2] ?? '').trim();
+    symbol = String(metadata?.[3] ?? '').trim();
+    decimals = Number(metadata?.[4] ?? 0);
+    totalSupply = normalizeBigInt(metadata?.[5] ?? '0');
+    inflationRate = Number(metadata?.[6] ?? 0);
+    recipientRateRange = [Number(metadata?.[7] ?? 0), Number(metadata?.[8] ?? 0)];
+    agentRateRange = [Number(metadata?.[9] ?? 0), Number(metadata?.[10] ?? 0)];
+  } catch (_error) {
+    const [
+      ownerValue,
+      versionValue,
+      nameValue,
+      symbolValue,
+      decimalsValue,
+      totalSupplyValue,
+      inflationRateValue,
+      recipientRateRangeValue,
+      agentRateRangeValue,
+    ] = await Promise.all([
+      readOptionalValue('owner', ''),
+      readOptionalValue('getVersion', ''),
+      readOptionalValue('name', ''),
+      readOptionalValue('symbol', ''),
+      readOptionalValue('decimals', 0),
+      readOptionalValue('totalSupply', 0),
+      readOptionalValue('getInflationRate', 10),
+      readOptionalValue('getRecipientRateRange', [0, 0]),
+      readOptionalValue('getAgentRateRange', [0, 0]),
+    ]);
+    owner = String(ownerValue ?? '').trim();
+    version = String(versionValue ?? '').trim();
+    name = String(nameValue ?? '').trim();
+    symbol = String(symbolValue ?? '').trim();
+    decimals = Number(decimalsValue ?? 0);
+    totalSupply = normalizeBigInt(totalSupplyValue);
+    inflationRate = Number(inflationRateValue ?? 0);
+    recipientRateRange = normalizeRateRangeTuple(recipientRateRangeValue);
+    agentRateRange = normalizeRateRangeTuple(agentRateRangeValue);
+  }
+
   return {
-    owner: String(metadata.owner ?? '').trim(),
-    version: String(metadata.version ?? '').trim(),
-    name: String(metadata.name ?? '').trim(),
-    symbol: String(metadata.symbol ?? '').trim(),
-    decimals: Number(metadata.decimals ?? 0),
-    totalSypply: String(metadata.totalSupply ?? '').trim(),
-    inflationRate: Number(metadata.inflationRate ?? 0),
-    recipientRateRange: normalizeRateRangeTuple(metadata.recipientRateRange),
-    agentRateRange: normalizeRateRangeTuple(metadata.agentRateRange),
+    owner,
+    version,
+    name,
+    symbol,
+    decimals,
+    totalSypply: totalSupply,
+    inflationRate,
+    recipientRateRange: normalizeRateRangeTuple(recipientRateRange),
+    agentRateRange: normalizeRateRangeTuple(agentRateRange),
   };
 }
 

@@ -109,54 +109,11 @@ export default function MethodsPanelCard({
                   onChange={() => setScriptEditorKind('javascript')}
                   className="h-4 w-4 accent-[#5981F3]"
                 />
-                <span>TypeScript Files</span>
+                <span>Typescript</span>
               </label>
             </div>
-            {isJavaScriptScriptMode ? (
-              <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
-                <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-[#5981F3]"
-                    checked={javaScriptEditorProps.isTypeScriptEditEnabled}
-                    onChange={(event) => javaScriptEditorProps.setIsTypeScriptEditEnabled(event.target.checked)}
-                    disabled={!javaScriptEditorProps.canEditSelectedTypeScriptFile}
-                  />
-                  <span>Edit</span>
-                </label>
-                <button
-                  type="button"
-                  className={`h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    javaScriptEditorProps.isSavingSelectedTypeScriptFile
-                      ? 'bg-[#d7ae45]'
-                      : 'bg-[#E5B94F] hover:bg-green-500'
-                  }`}
-                  onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
-                  disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
-                >
-                  {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
-                <label className="inline-flex items-center justify-end gap-2 text-right">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-green-500"
-                    checked={showOnChainMethods}
-                    onChange={(event) => setShowOnChainMethods(event.target.checked)}
-                  />
-                  <span className="text-green-400">On-Chain</span>
-                </label>
-                <label className="inline-flex items-center justify-end gap-2 text-right">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-[#5981F3]"
-                    checked={showOffChainMethods}
-                    onChange={(event) => setShowOffChainMethods(event.target.checked)}
-                  />
-                  <span className="text-[#8FA8FF]">Off-Chain</span>
-                </label>
+            <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
+              {isJavaScriptScriptMode ? null : (
                 <label className="inline-flex items-center justify-end gap-2">
                   <input
                     type="checkbox"
@@ -166,8 +123,52 @@ export default function MethodsPanelCard({
                   />
                   <span>Trace</span>
                 </label>
-              </div>
-            )}
+              )}
+              <label className="inline-flex items-center justify-end gap-2 text-right">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-green-500"
+                  checked={showOnChainMethods}
+                  onChange={(event) => setShowOnChainMethods(event.target.checked)}
+                />
+                <span className="text-green-400">On-Chain</span>
+              </label>
+              <label className="inline-flex items-center justify-end gap-2 text-right">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-[#5981F3]"
+                  checked={showOffChainMethods}
+                  onChange={(event) => setShowOffChainMethods(event.target.checked)}
+                />
+                <span className="text-[#8FA8FF]">Off-Chain</span>
+              </label>
+              {isJavaScriptScriptMode ? (
+                <>
+                  <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-[#5981F3]"
+                      checked={javaScriptEditorProps.isTypeScriptEditEnabled}
+                      onChange={(event) => javaScriptEditorProps.setIsTypeScriptEditEnabled(event.target.checked)}
+                      disabled={!javaScriptEditorProps.canEditSelectedTypeScriptFile}
+                    />
+                    <span>Edit</span>
+                  </label>
+                  <button
+                    type="button"
+                    className={`h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                      javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                        ? 'bg-[#d7ae45]'
+                        : 'bg-[#E5B94F] hover:bg-green-500'
+                    }`}
+                    onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
+                    disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
+                  >
+                    {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save'}
+                  </button>
+                </>
+              ) : null}
+            </div>
           </div>
           {isJavaScriptScriptMode ? (
             <div className="grid grid-cols-1 gap-3">

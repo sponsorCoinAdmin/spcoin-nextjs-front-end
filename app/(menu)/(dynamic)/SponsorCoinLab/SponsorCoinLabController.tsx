@@ -1720,6 +1720,8 @@ export default function SponsorCoinLabPage() {
     setSpWriteParams,
     setSelectedSerializationTestMethod,
     setSerializationTestParams,
+    showOnChainMethods,
+    showOffChainMethods,
   });
   const editorSnapshot = JSON.stringify({
     methodPanelMode,
