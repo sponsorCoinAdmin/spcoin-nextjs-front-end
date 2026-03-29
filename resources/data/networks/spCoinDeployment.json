@@ -14,11 +14,25 @@
     "8453": {},
     "31337": {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80": {
-        "0.0.1": {
-          "0X0C57C0A8DD7472B933F69B5A67377336CE2454F4": {
+        "2": {
+          "0XBDBFBFA728334453D9FF2EFBFA6061A3F23D255C": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-            "name": "Sponsor Coin V0.0.1",
-            "symbol": "SPCOIN_V0.0.1",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
+            "decimals": 18
+          },
+          "0X3A2501424045ED5316DDA83E4D92C870CEA922D8": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
+            "decimals": 18
+          }
+        },
+        "3": {
+          "0X6D7C5BADCFABB012D4DFEE45BEEDF7C5A08497A0": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V3",
+            "symbol": "SPCOIN_V3",
             "decimals": 18
           }
         }
