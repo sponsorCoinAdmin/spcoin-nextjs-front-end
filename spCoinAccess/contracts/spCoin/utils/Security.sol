@@ -5,14 +5,18 @@ import "../dataTypes/SpCoinDataTypes.sol";
 import "hardhat/console.sol";
 
 contract Security is SpCoinDataTypes {
-    address private  rootAdmin;
+    address private contractOwner;
  
     constructor()  {
-        rootAdmin = msg.sender;
+        contractOwner = msg.sender;
+    }
+
+    function owner() public view returns (address) {
+        return contractOwner;
     }
 
     modifier onlyRootAdmin () {
-        require (msg.sender == rootAdmin, "ROOT_ONLY");
+        require (msg.sender == contractOwner, "ROOT_ONLY");
         _;
     }
 
@@ -23,7 +27,7 @@ contract Security is SpCoinDataTypes {
 
     modifier onlyOwnerOrRootAdmin (string memory callingMethod, address _account) {
         // console.log(callingMethod, " => onlyOwnerOrRootAdmin (", _account, msg.sender);
-        require (msg.sender == rootAdmin || msg.sender == _account, "OWNER_OR_ROOT");
+        require (msg.sender == contractOwner || msg.sender == _account, "OWNER_OR_ROOT");
         _;
     }
 

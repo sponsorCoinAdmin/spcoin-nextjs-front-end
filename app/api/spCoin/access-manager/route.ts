@@ -6,7 +6,7 @@ import { promisify } from 'util';
 import { NextResponse } from 'next/server';
 import { Contract, ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
 import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
-import { SpCoinReadModule } from '../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinReadModule.js';
+import { SpCoinReadModule } from '../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -1065,6 +1065,7 @@ async function handleGetSpCoinMetaData(
   const contract = new Contract(deploymentPublicKey, compiled.abi, provider);
   const read = new SpCoinReadModule(contract) as {
     getSpCoinMetaData?: () => Promise<{
+      owner: string;
       version: string;
       name: string;
       symbol: string;
@@ -1082,6 +1083,7 @@ async function handleGetSpCoinMetaData(
 
   const metadata = await read.getSpCoinMetaData();
   return {
+    owner: String(metadata.owner ?? '').trim(),
     version: String(metadata.version ?? '').trim(),
     name: String(metadata.name ?? '').trim(),
     symbol: String(metadata.symbol ?? '').trim(),

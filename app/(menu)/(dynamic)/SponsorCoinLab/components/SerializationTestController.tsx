@@ -6,6 +6,8 @@ import type { MethodDef } from '../jsonMethods/shared/types';
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedSerializationTestMethod: string;
@@ -30,6 +32,7 @@ export default function SerializationTestController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    showOffChainMethods,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedSerializationTestMethod,
@@ -88,6 +91,20 @@ export default function SerializationTestController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const visibleSerializationOptions = React.useMemo(
+    () => (showOffChainMethods ? serializationTestOptions : []),
+    [serializationTestOptions, showOffChainMethods],
+  );
+  React.useEffect(() => {
+    if (visibleSerializationOptions.length === 0) return;
+    if (visibleSerializationOptions.includes(selectedSerializationTestMethod)) return;
+    setSelectedSerializationTestMethod(visibleSerializationOptions[0]);
+  }, [selectedSerializationTestMethod, setSelectedSerializationTestMethod, visibleSerializationOptions]);
+  const hasVisibleSerializationMethods = visibleSerializationOptions.length > 0;
+  const displayedSerializationMethod =
+    hasVisibleSerializationMethods && visibleSerializationOptions.includes(selectedSerializationTestMethod)
+      ? selectedSerializationTestMethod
+      : '__no_methods__';
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -95,10 +112,12 @@ export default function SerializationTestController(props: Props) {
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[28ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={selectedSerializationTestMethod}
+          value={displayedSerializationMethod}
           onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
+          disabled={!hasVisibleSerializationMethods}
         >
-          {serializationTestOptions.map((name) => (
+          {!hasVisibleSerializationMethods ? <option value="__no_methods__">No methods available</option> : null}
+          {visibleSerializationOptions.map((name) => (
             <option
               key={`serialization-test-${name}`}
               value={name}
@@ -109,7 +128,8 @@ export default function SerializationTestController(props: Props) {
           ))}
         </select>
       </div>
-      {activeSerializationTestDef.params.map((param, idx) => (
+      {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}
+      {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => (
         <div key={`serialization-test-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection
@@ -156,12 +176,13 @@ export default function SerializationTestController(props: Props) {
             </label>
           )}
         </div>
-      ))}
+      )) : null}
       <div className="flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSerializationTestMethod, 'execute')} min-w-[50%] shrink-0`}
           onClick={() => void runSelectedSerializationTestMethod()}
+          disabled={!hasVisibleSerializationMethods}
           onMouseEnter={() => {
             if (!canRunSelectedSerializationTestMethod) setHoveredBlockedAction('execute');
           }}
@@ -178,6 +199,7 @@ export default function SerializationTestController(props: Props) {
             if (isAddToScriptBlockedByNoChanges) return;
             addCurrentMethodToScript();
           }}
+          disabled={!hasVisibleSerializationMethods}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}

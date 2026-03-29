@@ -20,8 +20,10 @@ export type SpCoinWriteMethod =
   | 'addRecipients'
   | 'addAgent'
   | 'addAgents'
+  | 'deleteAccountTree'
   | 'addSponsorship'
   | 'addAgentSponsorship'
+  | 'deleteAgentSponsorship'
   | 'addBackDatedSponsorship'
   | 'addBackDatedAgentSponsorship'
   | 'deleteAccountFromMaster'
@@ -46,6 +48,7 @@ export type SpCoinWriteMethod =
   | 'setVersion';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'deleteAccountTree',
   'addBackDatedSponsorship',
   'addBackDatedAgentSponsorship',
   'setInflationRate',
@@ -63,6 +66,7 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
   'addAgents',
   'addAgentSponsorship',
+  'deleteAgentSponsorship',
   'unSponsorRecipient',
   'deleteAccountRecord',
   'deleteAccountRecords',
@@ -71,11 +75,13 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
 export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgent',
   'addSponsorship',
+  'deleteAccountFromMaster',
 ];
 
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
   'addAgents',
+  'deleteAccountTree',
 ];
 
 export const SPCOIN_ONCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = (
@@ -221,6 +227,22 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       await submitWrite(activeDef.title, (access) =>
         access.offChain.addAgents(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentList),
       );
+      break;
+    }
+    case 'deleteAccountTree': {
+      setStatus(`Submitting ${activeDef.title}...`);
+      appendWriteTrace?.(`submitWorkflow(${activeDef.title}) start`);
+      const summary = await executeWriteConnected(
+        activeDef.title,
+        (contract: Contract, signer: any) => {
+          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource);
+          access.del.signer = signer;
+          return access.offChain.deleteAccountTree();
+        },
+        selectedHardhatAddress,
+      );
+      appendWriteTrace?.(`submitWorkflow(${activeDef.title}) complete summary=${JSON.stringify(summary)}`);
+      appendLog(`${activeDef.title} complete: ${JSON.stringify(summary)}`);
       break;
     }
     case 'addSponsorship': {

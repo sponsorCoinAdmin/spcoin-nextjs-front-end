@@ -966,6 +966,11 @@
     "name": "getSpCoinMetaData",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "metaOwner",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "metaVersion",
         "type": "string"
@@ -1107,6 +1112,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

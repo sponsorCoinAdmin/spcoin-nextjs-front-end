@@ -277,15 +277,28 @@ export default function SpCoinWriteController(props: Props) {
     visibleTodoWriteOptions,
     visibleWorldWriteOptions,
   ]);
+  const visibleWriteMethods = [
+    ...visibleWorldWriteOptions,
+    ...visibleSenderWriteOptions,
+    ...visibleAdminWriteOptions,
+    ...visibleTodoWriteOptions,
+  ];
+  const hasVisibleWriteMethods = visibleWriteMethods.length > 0;
+  const displayedWriteMethod =
+    hasVisibleWriteMethods && visibleWriteMethods.includes(selectedSpCoinWriteMethod)
+      ? selectedSpCoinWriteMethod
+      : '__no_methods__';
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={selectedSpCoinWriteMethod}
+          value={displayedWriteMethod}
           onChange={(e) => setSelectedSpCoinWriteMethod(e.target.value)}
+          disabled={!hasVisibleWriteMethods}
         >
+          {!hasVisibleWriteMethods ? <option value="__no_methods__">No methods available</option> : null}
           <option
             key="sp-write-world-divider"
             value="__write-world-divider__"
@@ -368,7 +381,8 @@ export default function SpCoinWriteController(props: Props) {
           ) : null}
         </select>
       </div>
-      <AccountSelection
+      {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no SpCoin write methods match the current filter)</div> : null}
+      {hasVisibleWriteMethods ? <AccountSelection
         label="msg.sender"
         title="Toggle msg.sender Private Key"
         isOpen={showWriteSenderPrivateKey}
@@ -409,8 +423,8 @@ export default function SpCoinWriteController(props: Props) {
             </label>
           ) : null
         }
-      />
-      {activeSpCoinWriteDef.params.map((param, idx) => (
+      /> : null}
+      {hasVisibleWriteMethods ? activeSpCoinWriteDef.params.map((param, idx) => (
         <div key={`sp-write-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection
@@ -586,7 +600,7 @@ export default function SpCoinWriteController(props: Props) {
             </>
           )}
         </div>
-      ))}
+      )) : null}
       <BackdateCalendarPopup
         backdatePopupParamIdx={backdatePopupParamIdx}
         setBackdatePopupParamIdx={setBackdatePopupParamIdx}
@@ -631,6 +645,7 @@ export default function SpCoinWriteController(props: Props) {
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSpCoinWriteMethod, 'execute')} min-w-[50%] shrink-0`}
           onClick={() => void runSelectedSpCoinWriteMethod()}
+          disabled={!hasVisibleWriteMethods}
           onMouseEnter={() => {
             if (!canRunSelectedSpCoinWriteMethod) setHoveredBlockedAction('execute');
           }}
@@ -647,6 +662,7 @@ export default function SpCoinWriteController(props: Props) {
             if (isAddToScriptBlockedByNoChanges) return;
             addCurrentMethodToScript();
           }}
+          disabled={!hasVisibleWriteMethods}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}

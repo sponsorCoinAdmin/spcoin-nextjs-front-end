@@ -223,6 +223,7 @@ type SpCoinAccessStorage = {
 };
 
 type SpCoinContractMetaData = {
+  owner: string;
   version: string;
   name: string;
   symbol: string;
@@ -1160,6 +1161,7 @@ export function useSpCoinAccessController() {
       setSettings((prev) => ({
         ...prev,
         spCoinContract: {
+          owner: String(prev?.spCoinContract?.owner || '').trim(),
           version: String(prev?.spCoinContract?.version || deploymentVersion || '').trim(),
           name: String(prev?.spCoinContract?.name || deploymentName || '').trim(),
           symbol: String(prev?.spCoinContract?.symbol || deploymentSymbol || '').trim(),
@@ -1187,6 +1189,7 @@ export function useSpCoinAccessController() {
         setSettings((prev) => ({
           ...prev,
           spCoinContract: {
+            owner: String(data.spCoinMetaData?.owner ?? '').trim(),
             version: String(data.spCoinMetaData?.version ?? '').trim(),
             name: String(data.spCoinMetaData?.name ?? '').trim(),
             symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),

@@ -324,10 +324,10 @@ export function useSponsorCoinLabScripts({
 
     if (!nextName) {
       let counter = availableJavaScriptScripts.length + 1;
-      nextName = `${showJavaScriptUtilScriptsOnly ? 'JavaScript Util Script' : 'JavaScript Script'} ${counter}`;
+      nextName = `${showJavaScriptUtilScriptsOnly ? 'TypeScript Util File' : 'Offchain TypeScript File'} ${counter}`;
       while (existingNames.has(normalizeScriptName(nextName))) {
         counter += 1;
-        nextName = `${showJavaScriptUtilScriptsOnly ? 'JavaScript Util Script' : 'JavaScript Script'} ${counter}`;
+        nextName = `${showJavaScriptUtilScriptsOnly ? 'TypeScript Util File' : 'Offchain TypeScript File'} ${counter}`;
       }
     } else if (existingNames.has(normalizeScriptName(nextName))) {
       setStatus('Script Name Exists');
@@ -347,14 +347,14 @@ export function useSponsorCoinLabScripts({
         });
         const payload = (await response.json()) as { ok?: boolean; message?: string; script?: LabJavaScriptScript };
         if (!response.ok || !payload?.script) {
-          throw new Error(payload?.message || `Unable to create JavaScript script (${response.status})`);
+          throw new Error(payload?.message || `Unable to create TypeScript file (${response.status})`);
         }
         setJavaScriptScripts((prev) => [...prev, payload.script as LabJavaScriptScript]);
         setSelectedJavaScriptScriptId(payload.script.id);
         setJavaScriptScriptNameInput(payload.script.name);
         setStatus(`Created ${payload.script.name}.`);
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'Unable to create JavaScript script.');
+        setStatus(error instanceof Error ? error.message : 'Unable to create TypeScript file.');
       } finally {
         setOutputPanelMode('raw_status');
       }
@@ -364,7 +364,7 @@ export function useSponsorCoinLabScripts({
   const handleDeleteJavaScriptScriptClick = useCallback(() => {
     const targetScript = selectedJavaScriptScript ?? javaScriptScriptNameMatch;
     if (!targetScript) {
-      setStatus('Select a JavaScript script first.');
+      setStatus('Select a TypeScript file first.');
       setOutputPanelMode('raw_status');
       return;
     }
@@ -384,7 +384,7 @@ export function useSponsorCoinLabScripts({
           });
           if (!response.ok) {
             const payload = (await response.json()) as { message?: string };
-            throw new Error(payload?.message || `Unable to delete JavaScript script (${response.status})`);
+            throw new Error(payload?.message || `Unable to delete TypeScript file (${response.status})`);
           }
         }
         setJavaScriptScripts((prev) => prev.filter((script) => script.id !== targetScript.id));
@@ -393,7 +393,7 @@ export function useSponsorCoinLabScripts({
         setIsJavaScriptScriptOptionsOpen(false);
         setStatus(`Deleted ${targetScript.name}.`);
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'Unable to delete JavaScript script.');
+        setStatus(error instanceof Error ? error.message : 'Unable to delete TypeScript file.');
       } finally {
         setOutputPanelMode('raw_status');
       }

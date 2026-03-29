@@ -16,6 +16,8 @@ type ActiveReadLabels = {
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
@@ -42,6 +44,7 @@ export default function Erc20ReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    showOnChainMethods,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedReadMethod,
@@ -100,6 +103,17 @@ export default function Erc20ReadController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const visibleReadOptions = React.useMemo(
+    () => (showOnChainMethods ? erc20ReadOptions : []),
+    [erc20ReadOptions, showOnChainMethods],
+  );
+  React.useEffect(() => {
+    if (visibleReadOptions.length === 0) return;
+    if (visibleReadOptions.includes(selectedReadMethod)) return;
+    setSelectedReadMethod(visibleReadOptions[0]);
+  }, [selectedReadMethod, setSelectedReadMethod, visibleReadOptions]);
+  const hasVisibleReadMethods = visibleReadOptions.length > 0;
+  const displayedReadMethod = hasVisibleReadMethods && visibleReadOptions.includes(selectedReadMethod) ? selectedReadMethod : '__no_methods__';
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -110,17 +124,19 @@ export default function Erc20ReadController(props: Props) {
         <select
           id="erc20-read-method"
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={selectedReadMethod}
+          value={displayedReadMethod}
           onChange={(e) => setSelectedReadMethod(e.target.value)}
+          disabled={!hasVisibleReadMethods}
         >
-          {erc20ReadOptions.map((name) => (
+          {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
+          {visibleReadOptions.map((name) => (
             <option key={`erc20-read-${name}`} value={name}>
               {name}
             </option>
           ))}
         </select>
       </div>
-      {activeReadLabels.requiresAddressA && (
+      {hasVisibleReadMethods && activeReadLabels.requiresAddressA && (
         <AccountSelection
           label={activeReadLabels.addressALabel}
           title={`Toggle ${activeReadLabels.addressALabel}`}
@@ -142,7 +158,7 @@ export default function Erc20ReadController(props: Props) {
           metadata={getMetadataForAddress(readAddressA || '')}
         />
       )}
-      {activeReadLabels.requiresAddressB && (
+      {hasVisibleReadMethods && activeReadLabels.requiresAddressB && (
         <AccountSelection
           label={activeReadLabels.addressBLabel}
           title={`Toggle ${activeReadLabels.addressBLabel}`}
@@ -164,11 +180,13 @@ export default function Erc20ReadController(props: Props) {
           metadata={getMetadataForAddress(readAddressB || '')}
         />
       )}
+      {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 read methods match the current filter)</div> : null}
       <div className="flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedReadMethod, 'execute')} min-w-[50%] shrink-0`}
           onClick={() => void runSelectedReadMethod()}
+          disabled={!hasVisibleReadMethods}
           onMouseEnter={() => {
             if (!canRunSelectedReadMethod) setHoveredBlockedAction('execute');
           }}
@@ -185,6 +203,7 @@ export default function Erc20ReadController(props: Props) {
             if (isAddToScriptBlockedByNoChanges) return;
             addCurrentMethodToScript();
           }}
+          disabled={!hasVisibleReadMethods}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}

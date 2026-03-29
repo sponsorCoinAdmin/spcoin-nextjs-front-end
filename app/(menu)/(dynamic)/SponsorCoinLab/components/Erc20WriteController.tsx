@@ -15,6 +15,8 @@ type ActiveWriteLabels = {
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   mode: 'metamask' | 'hardhat';
@@ -51,6 +53,7 @@ export default function Erc20WriteController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    showOnChainMethods,
     mode,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -121,23 +124,38 @@ export default function Erc20WriteController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const visibleWriteOptions = React.useMemo(
+    () => (showOnChainMethods ? erc20WriteOptions : []),
+    [erc20WriteOptions, showOnChainMethods],
+  );
+  React.useEffect(() => {
+    if (visibleWriteOptions.length === 0) return;
+    if (visibleWriteOptions.includes(selectedWriteMethod)) return;
+    setSelectedWriteMethod(visibleWriteOptions[0]);
+  }, [selectedWriteMethod, setSelectedWriteMethod, visibleWriteOptions]);
+  const hasVisibleWriteMethods = visibleWriteOptions.length > 0;
+  const displayedWriteMethod =
+    hasVisibleWriteMethods && visibleWriteOptions.includes(selectedWriteMethod) ? selectedWriteMethod : '__no_methods__';
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={selectedWriteMethod}
+          value={displayedWriteMethod}
           onChange={(e) => setSelectedWriteMethod(e.target.value)}
+          disabled={!hasVisibleWriteMethods}
         >
-          {erc20WriteOptions.map((name) => (
+          {!hasVisibleWriteMethods ? <option value="__no_methods__">No methods available</option> : null}
+          {visibleWriteOptions.map((name) => (
             <option key={`erc20-write-${name}`} value={name}>
               {name}
             </option>
           ))}
         </select>
       </div>
-      <AccountSelection
+      {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
+      {hasVisibleWriteMethods ? <AccountSelection
         label="msg.sender"
         title="Toggle msg.sender Private Key"
         isOpen={showWriteSenderPrivateKey}
@@ -178,8 +196,8 @@ export default function Erc20WriteController(props: Props) {
             </label>
           ) : null
         }
-      />
-      <AccountSelection
+      /> : null}
+      {hasVisibleWriteMethods ? <AccountSelection
         label={activeWriteLabels.addressALabel}
         title={`Toggle ${activeWriteLabels.addressALabel}`}
         isOpen={Boolean(openAddressFields.addressA)}
@@ -198,8 +216,8 @@ export default function Erc20WriteController(props: Props) {
           />
         }
         metadata={getMetadataForAddress(writeAddressA || '')}
-      />
-      {activeWriteLabels.requiresAddressB && (
+      /> : null}
+      {hasVisibleWriteMethods && activeWriteLabels.requiresAddressB && (
         <AccountSelection
           label={activeWriteLabels.addressBLabel}
           title={`Toggle ${activeWriteLabels.addressBLabel}`}
@@ -239,6 +257,7 @@ export default function Erc20WriteController(props: Props) {
           type="button"
           className={`${getActionButtonClassName(canRunSelectedWriteMethod, 'execute')} min-w-[50%] shrink-0`}
           onClick={() => void runSelectedWriteMethod()}
+          disabled={!hasVisibleWriteMethods}
           onMouseEnter={() => {
             if (!canRunSelectedWriteMethod) setHoveredBlockedAction('execute');
           }}
@@ -255,6 +274,7 @@ export default function Erc20WriteController(props: Props) {
             if (isAddToScriptBlockedByNoChanges) return;
             addCurrentMethodToScript();
           }}
+          disabled={!hasVisibleWriteMethods}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}

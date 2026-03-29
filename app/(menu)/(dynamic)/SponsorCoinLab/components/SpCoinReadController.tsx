@@ -7,6 +7,8 @@ import type { MethodDef } from '../jsonMethods/shared/types';
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  showOnChainMethods: boolean;
+  showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
@@ -36,6 +38,8 @@ export default function SpCoinReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    showOnChainMethods,
+    showOffChainMethods,
     hardhatAccounts,
     hardhatAccountMetadata,
     selectedSpCoinReadMethod,
@@ -97,6 +101,41 @@ export default function SpCoinReadController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const visibleWorldReadOptions = React.useMemo(
+    () => (showOnChainMethods ? spCoinWorldReadOptions : []),
+    [showOnChainMethods, spCoinWorldReadOptions],
+  );
+  const visibleSenderReadOptions = React.useMemo(
+    () => (showOnChainMethods ? spCoinSenderReadOptions : []),
+    [showOnChainMethods, spCoinSenderReadOptions],
+  );
+  const visibleAdminReadOptions = React.useMemo(
+    () => (showOnChainMethods ? spCoinAdminReadOptions : []),
+    [showOnChainMethods, spCoinAdminReadOptions],
+  );
+  const visibleCompoundReadOptions = React.useMemo(
+    () => (showOffChainMethods ? spCoinCompoundReadOptions : []),
+    [showOffChainMethods, spCoinCompoundReadOptions],
+  );
+  const visibleReadMethods = React.useMemo(
+    () => [
+      ...visibleWorldReadOptions,
+      ...visibleSenderReadOptions,
+      ...visibleAdminReadOptions,
+      ...visibleCompoundReadOptions,
+    ],
+    [visibleAdminReadOptions, visibleCompoundReadOptions, visibleSenderReadOptions, visibleWorldReadOptions],
+  );
+  React.useEffect(() => {
+    if (visibleReadMethods.length === 0) return;
+    if (visibleReadMethods.includes(selectedSpCoinReadMethod)) return;
+    setSelectedSpCoinReadMethod(visibleReadMethods[0]);
+  }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, visibleReadMethods]);
+  const hasVisibleReadMethods = visibleReadMethods.length > 0;
+  const displayedReadMethod =
+    hasVisibleReadMethods && visibleReadMethods.includes(selectedSpCoinReadMethod)
+      ? selectedSpCoinReadMethod
+      : '__no_methods__';
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -104,9 +143,11 @@ export default function SpCoinReadController(props: Props) {
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
           className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={selectedSpCoinReadMethod}
+          value={displayedReadMethod}
           onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
+          disabled={!hasVisibleReadMethods}
         >
+          {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
           <option
             key="sp-read-world-divider"
             value="__world-divider__"
@@ -115,7 +156,7 @@ export default function SpCoinReadController(props: Props) {
           >
             ---- World Access ----
           </option>
-          {spCoinWorldReadOptions.map((name) => (
+          {visibleWorldReadOptions.map((name) => (
             <option
               key={`sp-read-${name}`}
               value={name}
@@ -124,7 +165,7 @@ export default function SpCoinReadController(props: Props) {
               {spCoinReadMethodDefs[name]?.title || name}
             </option>
           ))}
-          {spCoinSenderReadOptions.length > 0 ? (
+          {visibleSenderReadOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-read-sender-divider"
@@ -134,7 +175,7 @@ export default function SpCoinReadController(props: Props) {
               >
                 ---- Sender Access ----
               </option>
-              {spCoinSenderReadOptions.map((name) => (
+              {visibleSenderReadOptions.map((name) => (
                 <option
                   key={`sp-read-sender-${name}`}
                   value={name}
@@ -145,7 +186,7 @@ export default function SpCoinReadController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
-          {spCoinAdminReadOptions.length > 0 ? (
+          {visibleAdminReadOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-read-admin-divider"
@@ -155,7 +196,7 @@ export default function SpCoinReadController(props: Props) {
               >
                 ---- Admin Access ----
               </option>
-              {spCoinAdminReadOptions.map((name) => (
+              {visibleAdminReadOptions.map((name) => (
                 <option
                   key={`sp-read-admin-${name}`}
                   value={name}
@@ -166,7 +207,7 @@ export default function SpCoinReadController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
-          {spCoinCompoundReadOptions.length > 0 ? (
+          {visibleCompoundReadOptions.length > 0 ? (
             <React.Fragment>
               <option
                 key="sp-read-compound-divider"
@@ -181,7 +222,7 @@ export default function SpCoinReadController(props: Props) {
               >
                 ---- Structured Compound Reads ----
               </option>,
-              {spCoinCompoundReadOptions.map((name) => (
+              {visibleCompoundReadOptions.map((name) => (
                 <option
                   key={`sp-read-compound-${name}`}
                   value={name}
@@ -194,7 +235,8 @@ export default function SpCoinReadController(props: Props) {
           ) : null}
         </select>
       </div>
-      {activeSpCoinReadDef.params.map((param, idx) => (
+      {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
+      {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
         <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection
@@ -241,12 +283,13 @@ export default function SpCoinReadController(props: Props) {
             </label>
           )}
         </div>
-      ))}
+      )) : null}
       <div className="flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSpCoinReadMethod, 'execute')} min-w-[50%] shrink-0`}
           onClick={() => void runSelectedSpCoinReadMethod()}
+          disabled={!hasVisibleReadMethods}
           onMouseEnter={() => {
             if (!canRunSelectedSpCoinReadMethod) setHoveredBlockedAction('execute');
           }}
@@ -263,6 +306,7 @@ export default function SpCoinReadController(props: Props) {
             if (isAddToScriptBlockedByNoChanges) return;
             addCurrentMethodToScript();
           }}
+          disabled={!hasVisibleReadMethods}
           onMouseEnter={() => {
             if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
           }}

@@ -4,11 +4,27 @@ import type { SpCoinOnChainProcessor } from "../onChain";
 import * as dateTime from "../utils/dateTime";
 import * as dataTypes from "../dataTypes/spCoinDataTypes";
 import * as printTreeStructures from "../utils/printTreeStructures";
+export { addRecipients } from "./addRecipients";
+export { addAgents } from "./addAgents";
+export { deleteAccountTree } from "./deleteAccountTree";
+export { setLowerRecipientRate } from "./setLowerRecipientRate";
+export { setUpperRecipientRate } from "./setUpperRecipientRate";
+export { setLowerAgentRate } from "./setLowerAgentRate";
+export { setUpperAgentRate } from "./setUpperAgentRate";
 export type SpCoinOffChainMethods = {
     contract: any;
     onChain?: SpCoinOnChainProcessor;
     addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
     addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
+    deleteAccountTree: () => Promise<{
+        accountCount: number;
+        recipientCount: number;
+        recipientRateCount: number;
+        agentCount: number;
+        deletedAgentCount: number;
+        deletedRecipientCount: number;
+        deletedAccountCount: number;
+    }>;
     setLowerRecipientRate: (newLowerRecipientRate: string | number) => Promise<any>;
     setUpperRecipientRate: (newUpperRecipientRate: string | number) => Promise<any>;
     setLowerAgentRate: (newLowerAgentRate: string | number) => Promise<any>;
@@ -30,6 +46,15 @@ export declare class SpCoinOffChainProcessor {
     constructor(onChainOrContract?: any);
     addRecipients(_accountKey: string, recipientAccountList: string[]): Promise<number>;
     addAgents(recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]): Promise<number>;
+    deleteAccountTree(): Promise<{
+        accountCount: number;
+        recipientCount: number;
+        recipientRateCount: number;
+        agentCount: number;
+        deletedAgentCount: number;
+        deletedRecipientCount: number;
+        deletedAccountCount: number;
+    }>;
     setLowerRecipientRate(newLowerRecipientRate: string | number): Promise<any>;
     setUpperRecipientRate(newUpperRecipientRate: string | number): Promise<any>;
     setLowerAgentRate(newLowerAgentRate: string | number): Promise<any>;

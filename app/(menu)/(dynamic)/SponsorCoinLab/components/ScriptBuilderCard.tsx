@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import type { LabJavaScriptScript, LabScript, LabScriptStep, ScriptEditorKind } from '../scriptBuilder/types';
+import type { LabScript, LabScriptStep } from '../scriptBuilder/types';
 
 type ValidationTone = 'neutral' | 'invalid' | 'valid';
 
@@ -15,23 +15,6 @@ type Props = {
   visibleScripts: LabScript[];
   showSystemTestsOnly: boolean;
   setShowSystemTestsOnly: React.Dispatch<React.SetStateAction<boolean>>;
-  scriptEditorKind: ScriptEditorKind;
-  setScriptEditorKind: React.Dispatch<React.SetStateAction<ScriptEditorKind>>;
-  showJavaScriptUtilScriptsOnly: boolean;
-  setShowJavaScriptUtilScriptsOnly: React.Dispatch<React.SetStateAction<boolean>>;
-  availableJavaScriptScripts: LabJavaScriptScript[];
-  visibleJavaScriptScripts: LabJavaScriptScript[];
-  selectedJavaScriptScriptId: string;
-  setSelectedJavaScriptScriptId: (value: string) => void;
-  javaScriptScriptNameInput: string;
-  setJavaScriptScriptNameInput: (value: string) => void;
-  isJavaScriptScriptOptionsOpen: boolean;
-  setIsJavaScriptScriptOptionsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  javaScriptScriptNameValidation: { tone: ValidationTone; message: string };
-  javaScriptDeleteScriptValidation: { tone: 'invalid' | 'valid'; message: string };
-  createNewJavaScriptScript: () => void;
-  clearSelectedJavaScriptScript: () => void;
-  handleDeleteJavaScriptScriptClick: () => void;
   selectedScript: LabScript | null;
   selectedScriptStepNumber: number | null;
   scriptNameInput: string;
@@ -70,23 +53,6 @@ export default function ScriptBuilderCard({
   visibleScripts,
   showSystemTestsOnly,
   setShowSystemTestsOnly,
-  scriptEditorKind,
-  setScriptEditorKind,
-  showJavaScriptUtilScriptsOnly,
-  setShowJavaScriptUtilScriptsOnly,
-  availableJavaScriptScripts,
-  visibleJavaScriptScripts,
-  selectedJavaScriptScriptId,
-  setSelectedJavaScriptScriptId,
-  javaScriptScriptNameInput,
-  setJavaScriptScriptNameInput,
-  isJavaScriptScriptOptionsOpen,
-  setIsJavaScriptScriptOptionsOpen,
-  javaScriptScriptNameValidation,
-  javaScriptDeleteScriptValidation,
-  createNewJavaScriptScript,
-  clearSelectedJavaScriptScript,
-  handleDeleteJavaScriptScriptClick,
   selectedScript,
   selectedScriptStepNumber,
   scriptNameInput,
@@ -117,23 +83,18 @@ export default function ScriptBuilderCard({
   requestDeleteSelectedScriptStep,
   renderScriptStepRow,
 }: Props) {
-  const isJsonScriptMode = scriptEditorKind === 'json';
   const scriptSelectorRef = React.useRef<HTMLDivElement | null>(null);
   const copyPopupRef = React.useRef<HTMLDivElement | null>(null);
-  const visibleScriptOptions = isJsonScriptMode ? visibleScripts : [];
-  const activeSelectedScript = isJsonScriptMode ? selectedScript : null;
+  const visibleScriptOptions = visibleScripts;
+  const activeSelectedScript = selectedScript;
   const selectedStepIndex = activeSelectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
-  const hasScriptSelection = isJsonScriptMode && Boolean(String(selectedScriptId || '').trim());
-  const isScriptSelectorEmpty = isJsonScriptMode ? String(scriptNameInput || '').trim() === '' : false;
+  const hasScriptSelection = Boolean(String(selectedScriptId || '').trim());
+  const isScriptSelectorEmpty = String(scriptNameInput || '').trim() === '';
   const primaryHoverTone = isScriptSelectorEmpty ? 'invalid' : hasScriptSelection ? 'valid' : newScriptHoverTone;
   const primaryBaseTone = hasScriptSelection ? 'valid' : scriptNameValidation.tone;
   const [isCopyPopupOpen, setIsCopyPopupOpen] = React.useState(false);
   const [copyScriptNameInput, setCopyScriptNameInput] = React.useState('');
   const [isCopyScriptHovered, setIsCopyScriptHovered] = React.useState(false);
-  const hasJavaScriptSelection = !isJsonScriptMode && Boolean(String(selectedJavaScriptScriptId || '').trim());
-  const isJavaScriptSelectorEmpty = !isJsonScriptMode ? String(javaScriptScriptNameInput || '').trim() === '' : false;
-  const javaScriptPrimaryHoverTone = isJavaScriptSelectorEmpty ? 'invalid' : hasJavaScriptSelection ? 'valid' : newScriptHoverTone;
-  const javaScriptPrimaryBaseTone = hasJavaScriptSelection ? 'valid' : javaScriptScriptNameValidation.tone;
   const normalizedCopyScriptName = normalizeScriptName(copyScriptNameInput);
   const copyScriptNameMatch = React.useMemo(() => {
     if (!normalizedCopyScriptName) return null;
@@ -159,19 +120,6 @@ export default function ScriptBuilderCard({
   }, [isScriptOptionsOpen, setIsScriptOptionsOpen]);
 
   React.useEffect(() => {
-    if (!isJavaScriptScriptOptionsOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (target && scriptSelectorRef.current?.contains(target)) return;
-      setIsJavaScriptScriptOptionsOpen(false);
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-    };
-  }, [isJavaScriptScriptOptionsOpen, setIsJavaScriptScriptOptionsOpen]);
-
-  React.useEffect(() => {
     if (!isCopyPopupOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
@@ -192,54 +140,19 @@ export default function ScriptBuilderCard({
 
   return (
     <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
-      <h3 className="text-center text-lg font-semibold text-[#5981F3]">
-        {isJsonScriptMode ? 'JSON Script Builder/Debugger' : 'JavaScript Builder/Debugger'}
-      </h3>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-4 text-sm text-[#8FA8FF]">
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="radio"
-              checked={scriptEditorKind === 'json'}
-              onChange={() => setScriptEditorKind('json')}
-              className="h-4 w-4 accent-[#5981F3]"
-            />
-            <span>JSON Scripts</span>
-          </label>
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="radio"
-              checked={scriptEditorKind === 'javascript'}
-              onChange={() => setScriptEditorKind('javascript')}
-              className="h-4 w-4 accent-[#5981F3]"
-            />
-            <span>JavaScript Scripts</span>
-          </label>
-        </div>
-        {isJsonScriptMode ? (
-          <label className="inline-flex items-center gap-2 text-sm text-[#8FA8FF]">
-            <input
-              type="checkbox"
-              checked={showSystemTestsOnly}
-              onChange={(e) => setShowSystemTestsOnly(e.target.checked)}
-              className="h-4 w-4 rounded border border-[#334155] bg-[#0E111B] accent-[#5981F3]"
-            />
-            <span>System Tests</span>
-          </label>
-        ) : (
-          <label className="inline-flex items-center gap-2 text-sm text-[#8FA8FF]">
-            <input
-              type="checkbox"
-              checked={showJavaScriptUtilScriptsOnly}
-              onChange={(e) => setShowJavaScriptUtilScriptsOnly(e.target.checked)}
-              className="h-4 w-4 rounded border border-[#334155] bg-[#0E111B] accent-[#5981F3]"
-            />
-            <span>Util Scripts</span>
-          </label>
-        )}
+      <h3 className="text-center text-lg font-semibold text-[#5981F3]">Script Builder/Debugger</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-3">
+        <label className="inline-flex items-center gap-2 text-sm text-[#8FA8FF]">
+          <input
+            type="checkbox"
+            checked={showSystemTestsOnly}
+            onChange={(e) => setShowSystemTestsOnly(e.target.checked)}
+            className="h-4 w-4 rounded border border-[#334155] bg-[#0E111B] accent-[#5981F3]"
+          />
+          <span>System Tests</span>
+        </label>
       </div>
-      {isJsonScriptMode ? (
-        <div className="grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
+      <div className="grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
           <button
             type="button"
             className={`w-[140px] ${actionButtonStyle} ${
@@ -350,124 +263,7 @@ export default function ScriptBuilderCard({
               ? 'Not Found'
               : 'Delete Script'}
           </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-[140px_minmax(0,1fr)_140px] items-center gap-3">
-          <button
-            type="button"
-            className={`w-[140px] ${actionButtonStyle} ${
-              (isNewScriptHovered ? javaScriptPrimaryHoverTone : javaScriptPrimaryBaseTone) === 'valid'
-                ? 'hover:bg-green-400'
-                : (isNewScriptHovered ? javaScriptPrimaryHoverTone : javaScriptPrimaryBaseTone) === 'invalid'
-                ? 'hover:bg-red-600 hover:text-white'
-                : ''
-            }`}
-            onClick={hasJavaScriptSelection ? clearSelectedJavaScriptScript : createNewJavaScriptScript}
-            onMouseEnter={() => {
-              setNewScriptHoverTone(javaScriptPrimaryHoverTone);
-              setIsNewScriptHovered(true);
-            }}
-            onMouseLeave={() => setIsNewScriptHovered(false)}
-            title={
-              isJavaScriptSelectorEmpty
-                ? 'Script Empty'
-                : hasJavaScriptSelection
-                ? 'Clear Script'
-                : javaScriptScriptNameValidation.message
-            }
-          >
-            {isNewScriptHovered && isJavaScriptSelectorEmpty
-              ? 'Script Empty'
-              : hasJavaScriptSelection
-              ? 'Clear Script'
-              : (isNewScriptHovered ? javaScriptPrimaryHoverTone : javaScriptPrimaryBaseTone) === 'invalid' &&
-                isNewScriptHovered
-              ? 'Name Exists'
-              : 'New Script'}
-          </button>
-          <div ref={scriptSelectorRef} className="relative min-w-0">
-            <input
-              className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={javaScriptScriptNameInput}
-              onFocus={() => setIsJavaScriptScriptOptionsOpen(true)}
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                setJavaScriptScriptNameInput(nextValue);
-                const normalizedNextValue = normalizeScriptName(nextValue);
-                const matchingScript = normalizedNextValue
-                  ? visibleJavaScriptScripts.find((script) => normalizeScriptName(script.name) === normalizedNextValue)
-                  : null;
-                if (matchingScript && matchingScript.id !== selectedJavaScriptScriptId) {
-                  setSelectedJavaScriptScriptId(matchingScript.id);
-                  return;
-                }
-                if (!matchingScript && selectedJavaScriptScriptId) {
-                  setSelectedJavaScriptScriptId('');
-                }
-              }}
-              aria-label="JavaScript script selector"
-              title="JavaScript script selector"
-              placeholder={
-                visibleJavaScriptScripts.length === 0
-                  ? showJavaScriptUtilScriptsOnly
-                    ? 'Utility Script 1'
-                    : 'JavaScript Script 1'
-                  : 'Select or name a script'
-              }
-            />
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setIsJavaScriptScriptOptionsOpen((prev) => !prev);
-              }}
-              className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center rounded-r-lg text-[#8FA8FF] transition-colors hover:text-white"
-              title="Show JavaScript scripts"
-              aria-label="Show JavaScript scripts"
-            >
-              v
-            </button>
-            {isJavaScriptScriptOptionsOpen && visibleJavaScriptScripts.length > 0 ? (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-56 overflow-y-auto rounded-lg border border-[#334155] bg-[#0E111B] shadow-lg">
-                {visibleJavaScriptScripts.map((script) => (
-                  <button
-                    key={script.id}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      setSelectedJavaScriptScriptId(script.id);
-                      setJavaScriptScriptNameInput(script.name);
-                      setIsJavaScriptScriptOptionsOpen(false);
-                    }}
-                    className="block w-full px-3 py-2 text-left text-sm text-white transition-colors hover:bg-[#1E293B]"
-                    title={script.name}
-                  >
-                    {script.name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            className={`w-[140px] ${actionButtonStyle} ${
-              javaScriptDeleteScriptValidation.tone === 'invalid' ? 'hover:bg-red-600 hover:text-white' : ''
-            }`}
-            onClick={handleDeleteJavaScriptScriptClick}
-            onMouseEnter={() => {
-              setDeleteScriptHoverTone(javaScriptDeleteScriptValidation.tone);
-              setIsDeleteScriptHovered(true);
-            }}
-            onMouseLeave={() => setIsDeleteScriptHovered(false)}
-            title={javaScriptDeleteScriptValidation.message}
-          >
-            {(isDeleteScriptHovered ? deleteScriptHoverTone : javaScriptDeleteScriptValidation.tone) === 'invalid' &&
-            isDeleteScriptHovered
-              ? 'Not Found'
-              : 'Delete Script'}
-          </button>
-        </div>
-      )}
+      </div>
       <div className="relative mt-4 flex h-56 flex-col rounded-lg border border-[#31416F] bg-[#0E111B] px-3 pb-3 pt-3 text-sm text-slate-200">
         <div className="absolute right-3 top-2 flex items-center justify-end gap-[0.05rem]">
           <button
@@ -649,15 +445,7 @@ export default function ScriptBuilderCard({
           </div>
         ) : null}
         <div className={`min-h-0 flex-1 overflow-auto pr-24 ${hiddenScrollbarClass}`}>
-          {!isJsonScriptMode ? (
-            <div className="text-slate-400">
-              {availableJavaScriptScripts.length === 0
-                ? '(no JavaScript scripts registered yet)'
-                : selectedJavaScriptScriptId
-                ? '(JavaScript script selected)'
-                : '(select a JavaScript script)'}
-            </div>
-          ) : !activeSelectedScript ? (
+          {!activeSelectedScript ? (
             <div className="text-slate-400">(no script selected)</div>
           ) : activeSelectedScript.steps.length === 0 ? (
             <div className="text-slate-400">(script has no steps yet)</div>

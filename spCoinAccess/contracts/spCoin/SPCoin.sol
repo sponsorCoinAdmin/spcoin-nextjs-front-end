@@ -29,6 +29,7 @@ contract SPCoin is Token{
         public
         view
         returns (
+            address metaOwner,
             string memory metaVersion,
             string memory metaName,
             string memory metaSymbol,
@@ -42,6 +43,7 @@ contract SPCoin is Token{
         (uint256 lowerRecipientRate, uint256 upperRecipientRate) = getRecipientRateRange();
         (uint256 lowerAgentRate, uint256 upperAgentRate) = getAgentRateRange();
         return (
+            owner(),
             version,
             name,
             symbol,

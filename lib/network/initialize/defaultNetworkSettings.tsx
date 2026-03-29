@@ -113,6 +113,7 @@ const getInitialContext = (
       // Contract: DISPLAY_STACK_NODE[] = [{ id, name }]
       displayStack: [] as DISPLAY_STACK_NODE[],
       spCoinContract: {
+        owner: '',
         version: '',
         name: '',
         symbol: '',

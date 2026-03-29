@@ -116,6 +116,7 @@ export interface Settings {
 
   /** Persisted SponsorCoin contract metadata shown in debug settings views. */
   spCoinContract?: {
+    owner: string;
     version: string;
     name: string;
     symbol: string;

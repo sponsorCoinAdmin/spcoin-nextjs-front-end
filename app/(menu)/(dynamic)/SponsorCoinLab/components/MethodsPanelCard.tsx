@@ -1,5 +1,5 @@
 import React, { type ComponentProps, type MutableRefObject } from 'react';
-import type { MethodPanelMode } from '../scriptBuilder/types';
+import type { MethodPanelMode, ScriptEditorKind } from '../scriptBuilder/types';
 import LabCardHeader from './LabCardHeader';
 import ScriptBuilderCard from './ScriptBuilderCard';
 import Erc20ReadController from './Erc20ReadController';
@@ -16,6 +16,8 @@ type Props = {
   isExpanded: boolean;
   onToggleExpand: () => void;
   methodPanelTitle: string;
+  scriptEditorKind: ScriptEditorKind;
+  setScriptEditorKind: React.Dispatch<React.SetStateAction<ScriptEditorKind>>;
   methodPanelMode: MethodPanelMode;
   activeMethodPanelTab: MethodPanelTab;
   selectMethodPanelTab: (value: MethodPanelTab) => void;
@@ -27,10 +29,19 @@ type Props = {
   setShowOffChainMethods: (value: boolean) => void;
   javaScriptEditorProps: {
     hiddenScrollbarClass: string;
+    visibleJavaScriptScripts: Array<{ id: string; name: string }>;
+    selectedJavaScriptScriptId: string;
+    setSelectedJavaScriptScriptId: (value: string) => void;
     selectedScriptName: string;
     selectedFilePath: string;
     javaScriptFileContent: string;
     isJavaScriptFileLoading: boolean;
+    isTypeScriptEditEnabled: boolean;
+    setIsTypeScriptEditEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+    canEditSelectedTypeScriptFile: boolean;
+    saveSelectedTypeScriptFile: () => void;
+    isSavingSelectedTypeScriptFile: boolean;
+    setJavaScriptFileContent: (value: string) => void;
     canRunSelectedJavaScriptScript: boolean;
     runSelectedJavaScriptScript: () => void;
     canAddSelectedJavaScriptScriptToScript: boolean;
@@ -50,6 +61,8 @@ export default function MethodsPanelCard({
   isExpanded,
   onToggleExpand,
   methodPanelTitle,
+  scriptEditorKind,
+  setScriptEditorKind,
   methodPanelMode,
   activeMethodPanelTab,
   selectMethodPanelTab,
@@ -68,7 +81,7 @@ export default function MethodsPanelCard({
   serializationTestProps,
 }: Props) {
   const methodPanelGroupName = React.useId();
-  const isJavaScriptScriptMode = scriptBuilderProps.scriptEditorKind === 'javascript';
+  const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
 
   return (
     <article ref={methodsCardRef} className={articleClassName}>
@@ -78,19 +91,97 @@ export default function MethodsPanelCard({
 
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h3>
-          {isJavaScriptScriptMode ? (
-            <div className="mt-3 grid grid-cols-1 gap-3">
-              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">JavaScript</span>
-                <select
-                  className="w-fit min-w-[28ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  value={scriptBuilderProps.selectedJavaScriptScriptId}
-                  onChange={(event) => scriptBuilderProps.setSelectedJavaScriptScriptId(event.target.value)}
+          <div className="mb-3 mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-[#8FA8FF]">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={scriptEditorKind === 'json'}
+                  onChange={() => setScriptEditorKind('json')}
+                  className="h-4 w-4 accent-[#5981F3]"
+                />
+                <span>JSON Scripts</span>
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={scriptEditorKind === 'javascript'}
+                  onChange={() => setScriptEditorKind('javascript')}
+                  className="h-4 w-4 accent-[#5981F3]"
+                />
+                <span>TypeScript Files</span>
+              </label>
+            </div>
+            {isJavaScriptScriptMode ? (
+              <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
+                <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#5981F3]"
+                    checked={javaScriptEditorProps.isTypeScriptEditEnabled}
+                    onChange={(event) => javaScriptEditorProps.setIsTypeScriptEditEnabled(event.target.checked)}
+                    disabled={!javaScriptEditorProps.canEditSelectedTypeScriptFile}
+                  />
+                  <span>Edit</span>
+                </label>
+                <button
+                  type="button"
+                  className={`h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                    javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                      ? 'bg-[#d7ae45]'
+                      : 'bg-[#E5B94F] hover:bg-green-500'
+                  }`}
+                  onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
+                  disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
                 >
-                  {scriptBuilderProps.visibleJavaScriptScripts.length === 0 ? (
-                    <option value="">No JavaScript Scripts</option>
+                  {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
+                <label className="inline-flex items-center justify-end gap-2 text-right">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-green-500"
+                    checked={showOnChainMethods}
+                    onChange={(event) => setShowOnChainMethods(event.target.checked)}
+                  />
+                  <span className="text-green-400">On-Chain</span>
+                </label>
+                <label className="inline-flex items-center justify-end gap-2 text-right">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#5981F3]"
+                    checked={showOffChainMethods}
+                    onChange={(event) => setShowOffChainMethods(event.target.checked)}
+                  />
+                  <span className="text-[#8FA8FF]">Off-Chain</span>
+                </label>
+                <label className="inline-flex items-center justify-end gap-2">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#E5B94F]"
+                    checked={writeTraceEnabled}
+                    onChange={toggleWriteTrace}
+                  />
+                  <span>Trace</span>
+                </label>
+              </div>
+            )}
+          </div>
+          {isJavaScriptScriptMode ? (
+            <div className="grid grid-cols-1 gap-3">
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
+                <select
+                  className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                  value={javaScriptEditorProps.selectedJavaScriptScriptId}
+                  onChange={(event) => javaScriptEditorProps.setSelectedJavaScriptScriptId(event.target.value)}
+                >
+                  {javaScriptEditorProps.visibleJavaScriptScripts.length === 0 ? (
+                    <option value="">No TypeScript Files</option>
                   ) : null}
-                  {scriptBuilderProps.visibleJavaScriptScripts.map((script) => (
+                  {javaScriptEditorProps.visibleJavaScriptScripts.map((script) => (
                     <option key={script.id} value={script.id}>
                       {script.name}
                     </option>
@@ -100,13 +191,14 @@ export default function MethodsPanelCard({
               <textarea
                 className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
                 value={javaScriptEditorProps.javaScriptFileContent}
-                readOnly
+                onChange={(event) => javaScriptEditorProps.setJavaScriptFileContent(event.target.value)}
+                readOnly={!javaScriptEditorProps.isTypeScriptEditEnabled}
                 placeholder={
                   javaScriptEditorProps.selectedFilePath
                     ? javaScriptEditorProps.isJavaScriptFileLoading
-                      ? 'Loading JavaScript file...'
-                      : 'No file contents loaded.'
-                    : 'Select a JavaScript script to view it here.'
+                      ? 'Loading TypeScript file...'
+                      : 'No TypeScript file contents loaded.'
+                    : 'Select a TypeScript file to view it here.'
                 }
                 spellCheck={false}
               />
@@ -120,7 +212,7 @@ export default function MethodsPanelCard({
                   }`}
                   onClick={javaScriptEditorProps.runSelectedJavaScriptScript}
                 >
-                  {`Run ${javaScriptEditorProps.selectedScriptName || 'JavaScript'}`}
+                  {`Run ${javaScriptEditorProps.selectedScriptName || 'TypeScript'}`}
                 </button>
                 <button
                   type="button"
@@ -131,7 +223,7 @@ export default function MethodsPanelCard({
                   }`}
                   onClick={javaScriptEditorProps.addSelectedJavaScriptScriptToScript}
                 >
-                  Add To Script
+                  Queue In JSON Flow
                 </button>
               </div>
             </div>
@@ -164,35 +256,6 @@ export default function MethodsPanelCard({
                       <span>{label}</span>
                     </label>
                   ))}
-                </div>
-                <div className="ml-auto flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
-                  <label className="inline-flex items-center justify-end gap-2">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-[#E5B94F]"
-                      checked={writeTraceEnabled}
-                      onChange={toggleWriteTrace}
-                    />
-                    <span>Trace</span>
-                  </label>
-                  <label className="inline-flex items-center justify-end gap-2 text-right">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-green-500"
-                      checked={showOnChainMethods}
-                      onChange={(event) => setShowOnChainMethods(event.target.checked)}
-                    />
-                    <span className="text-green-400">On-Chain</span>
-                  </label>
-                  <label className="inline-flex items-center justify-end gap-2 text-right">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-[#5981F3]"
-                      checked={showOffChainMethods}
-                      onChange={(event) => setShowOffChainMethods(event.target.checked)}
-                    />
-                    <span className="text-[#8FA8FF]">Off-Chain</span>
-                  </label>
                 </div>
               </div>
 

@@ -65,6 +65,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       displayStack: [] as DISPLAY_STACK_NODE[],
       showTestNets: false,
       spCoinContract: {
+        owner: '',
         version: '',
         name: '',
         symbol: '',

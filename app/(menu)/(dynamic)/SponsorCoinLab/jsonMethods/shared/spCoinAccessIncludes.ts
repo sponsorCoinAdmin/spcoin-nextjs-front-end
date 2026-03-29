@@ -6,12 +6,12 @@ import { SpCoinERC20Module as NodeSpCoinERC20Module } from '@sponsorcoin/spcoin-
 import { SpCoinReadModule as NodeSpCoinReadModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js';
 import { SpCoinRewardsModule as NodeSpCoinRewardsModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js';
 import { SpCoinStakingModule as NodeSpCoinStakingModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js';
-import { SpCoinAddModule as LocalSpCoinAddModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinAddModule.js';
-import { SpCoinDeleteModule as LocalSpCoinDeleteModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinDeleteModule.js';
-import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinERC20Module.js';
-import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinReadModule.js';
-import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinRewardsModule.js';
-import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/modules/spCoinStakingModule.js';
+import { SpCoinAddModule as LocalSpCoinAddModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinAddModule';
+import { SpCoinDeleteModule as LocalSpCoinDeleteModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinDeleteModule';
+import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinERC20Module';
+import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule';
+import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinRewardsModule';
+import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinStakingModule';
 import type {
   AccountStruct,
   AgentRateStruct,
@@ -20,7 +20,7 @@ import type {
   RewardsStruct,
   SponsorCoinHeader,
   StakingTransactionStruct,
-} from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/dataTypes/spCoinDataTypes.js';
+} from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/dataTypes/spCoinDataTypes';
 
 type ModuleCtor = new (spCoinContractDeployed: Contract) => unknown;
 export type SpCoinAccessSource = 'local' | 'node_modules';
@@ -51,11 +51,22 @@ export type SpCoinAddAccess = {
 export type SpCoinDeleteAccess = {
   signer?: Signer;
   deleteAccountRecord: (_accountKey: string) => Promise<ContractTransactionResponse>;
+  unSponsorRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
+  deleteAgentRecord?: (_accountKey: string, _recipientKey: string, _accountAgentKey: string) => Promise<unknown>;
 };
 
 export type SpCoinOffChainAccess = {
   addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
   addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
+  deleteAccountTree: () => Promise<{
+    accountCount: number;
+    recipientCount: number;
+    recipientRateCount: number;
+    agentCount: number;
+    deletedAgentCount: number;
+    deletedRecipientCount: number;
+    deletedAccountCount: number;
+  }>;
   setLowerRecipientRate: (newLowerRecipientRate: string | number) => Promise<ContractTransactionResponse>;
   setUpperRecipientRate: (newUpperRecipientRate: string | number) => Promise<ContractTransactionResponse>;
   setLowerAgentRate: (newLowerAgentRate: string | number) => Promise<ContractTransactionResponse>;
@@ -70,6 +81,8 @@ export type SpCoinReadAccess = {
   getAccountRecords: () => Promise<AccountStruct[]>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
+  getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
+  getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
   getRecipientRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
   getAgentRateRecord: (
@@ -132,6 +145,12 @@ export type SpCoinContractAccess = Contract & {
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   unSponsorRecipient?: (...args: unknown[]) => Promise<unknown>;
+  deleteAgentSponsorship?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+  ) => Promise<ContractTransactionResponse>;
 };
 
 export type SpCoinRewardsAccess = {
@@ -216,7 +235,12 @@ function getRangePair(rangeValue: unknown, label: string): [string | number | bi
   return [normalizeRateValue(rangeValue[0]), normalizeRateValue(rangeValue[1])];
 }
 
-function createSpCoinOffChainAccess(contract: Contract, add: SpCoinAddAccess): SpCoinOffChainAccess {
+function createSpCoinOffChainAccess(
+  contract: Contract,
+  add: SpCoinAddAccess,
+  read: SpCoinReadAccess,
+  del: SpCoinDeleteAccess,
+): SpCoinOffChainAccess {
   const typedContract = contract as SpCoinContractAccess;
   return {
     addRecipients: async (_accountKey: string, recipientAccountList: string[]) => {
@@ -234,6 +258,72 @@ function createSpCoinOffChainAccess(contract: Contract, add: SpCoinAddAccess): S
         agentCount += 1;
       }
       return agentCount;
+    },
+    deleteAccountTree: async () => {
+      const summary = {
+        accountCount: 0,
+        recipientCount: 0,
+        recipientRateCount: 0,
+        agentCount: 0,
+        deletedAgentCount: 0,
+        deletedRecipientCount: 0,
+        deletedAccountCount: 0,
+      };
+      const accountList = await read.getAccountList();
+      const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
+      const processedAccountKeys = new Set<string>();
+      const activeAccountKeys = new Set<string>();
+      const walkAccountTree = async (sponsorKey: string): Promise<void> => {
+        if (processedAccountKeys.has(sponsorKey)) {
+          return;
+        }
+        if (activeAccountKeys.has(sponsorKey)) {
+          return;
+        }
+        activeAccountKeys.add(sponsorKey);
+        try {
+          summary.accountCount += 1;
+          const recipientList = await read.getAccountRecipientList(sponsorKey);
+          for (const recipientKeyValue of Array.isArray(recipientList) ? recipientList : []) {
+            const recipientKey = String(recipientKeyValue);
+            summary.recipientCount += 1;
+            if (accountKeySet.has(recipientKey)) {
+              await walkAccountTree(recipientKey);
+            }
+            const recipientRateList = await read.getRecipientRateList(sponsorKey, recipientKey);
+            for (const recipientRateKey of Array.isArray(recipientRateList) ? recipientRateList : []) {
+              summary.recipientRateCount += 1;
+              const normalizedRecipientRateKey =
+                typeof recipientRateKey === 'bigint' ? recipientRateKey.toString() : recipientRateKey;
+              const agentList = await read.getRecipientRateAgentList(
+                sponsorKey,
+                recipientKey,
+                normalizedRecipientRateKey,
+              );
+              for (const agentKeyValue of Array.isArray(agentList) ? agentList : []) {
+                summary.agentCount += 1;
+                if (typeof del.deleteAgentRecord === 'function') {
+                  await del.deleteAgentRecord(sponsorKey, recipientKey, String(agentKeyValue));
+                  summary.deletedAgentCount += 1;
+                }
+              }
+            }
+            if (typeof del.unSponsorRecipient === 'function') {
+              await del.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
+              summary.deletedRecipientCount += 1;
+            }
+          }
+          await del.deleteAccountRecord(sponsorKey);
+          summary.deletedAccountCount += 1;
+          processedAccountKeys.add(sponsorKey);
+        } finally {
+          activeAccountKeys.delete(sponsorKey);
+        }
+      };
+      for (const sponsorKey of accountKeySet) {
+        await walkAccountTree(sponsorKey);
+      }
+      return summary;
     },
     setLowerRecipientRate: async (newLowerRecipientRate: string | number) => {
       if (typeof typedContract.getRecipientRateRange !== 'function' || typeof typedContract.setRecipientRateRange !== 'function') {
@@ -274,12 +364,14 @@ export function createSpCoinModuleAccess(
 ): SpCoinModuleAccess {
   const includes = getSpCoinAccessIncludes(source);
   const add = new includes.SpCoinAddModule(contract) as SpCoinAddAccess;
+  const del = new includes.SpCoinDeleteModule(contract) as SpCoinDeleteAccess;
+  const read = new includes.SpCoinReadModule(contract) as SpCoinReadAccess;
   return {
     add,
-    del: new includes.SpCoinDeleteModule(contract) as SpCoinDeleteAccess,
+    del,
     erc20: new includes.SpCoinERC20Module(contract) as NodeSpCoinERC20Module,
-    offChain: createSpCoinOffChainAccess(contract, add),
-    read: new includes.SpCoinReadModule(contract) as SpCoinReadAccess,
+    offChain: createSpCoinOffChainAccess(contract, add, read, del),
+    read,
     rewards: new includes.SpCoinRewardsModule(contract) as SpCoinRewardsAccess,
     staking: new includes.SpCoinStakingModule(contract) as SpCoinStakingAccess,
     contract: contract as SpCoinContractAccess,

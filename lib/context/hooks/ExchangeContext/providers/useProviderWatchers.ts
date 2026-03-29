@@ -89,6 +89,7 @@ type Params = {
 };
 
 type SpCoinContractMetaData = {
+  owner: string;
   version: string;
   name: string;
   symbol: string;
@@ -435,6 +436,7 @@ export function useProviderWatchers({
           if (!persistedLabSeed && prevName.length > 0 && prevVersion.length > 0) return next;
           next.settings = next.settings ?? ({} as any);
           next.settings.spCoinContract = {
+            owner: String(prevContract?.owner ?? '').trim(),
             version: persistedSeed.version,
             name: persistedSeed.name,
             symbol: persistedSeed.symbol,
@@ -497,6 +499,7 @@ export function useProviderWatchers({
             const next = clone(prevCtx);
             next.settings = next.settings ?? ({} as any);
             next.settings.spCoinContract = {
+              owner: String(data.spCoinMetaData?.owner ?? '').trim(),
               version: String(data.spCoinMetaData?.version ?? '').trim(),
               name: String(data.spCoinMetaData?.name ?? '').trim(),
               symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),

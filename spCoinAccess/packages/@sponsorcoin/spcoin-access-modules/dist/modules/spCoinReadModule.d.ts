@@ -13,6 +13,7 @@ export declare class SpCoinReadModule {
     getRateTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
     getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
     getSpCoinMetaData: () => Promise<{
+        owner: string;
         version: string;
         name: string;
         symbol: string;

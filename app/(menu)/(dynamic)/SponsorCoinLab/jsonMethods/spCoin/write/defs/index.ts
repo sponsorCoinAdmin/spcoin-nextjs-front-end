@@ -3,8 +3,10 @@ import addRecipient from './addRecipient';
 import addRecipients from './addRecipients';
 import addAgent from './addAgent';
 import addAgents from './addAgents';
+import deleteAccountTree from './deleteAccountTree';
 import addSponsorship from './addSponsorship';
 import addAgentSponsorship from './addAgentSponsorship';
+import deleteAgentSponsorship from './deleteAgentSponsorship';
 import addBackDatedSponsorship from './addBackDatedSponsorship';
 import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
 import deleteAccountFromMaster from './deleteAccountFromMaster';
@@ -33,8 +35,10 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipients,
   addAgent,
   addAgents,
+  deleteAccountTree,
   addSponsorship,
   addAgentSponsorship,
+  deleteAgentSponsorship,
   addBackDatedSponsorship,
   addBackDatedAgentSponsorship,
   deleteAccountFromMaster,
