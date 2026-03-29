@@ -14,19 +14,29 @@
     "8453": {},
     "31337": {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80": {
-        "0.1": {
-          "0XACA0DCAD7770ECEA9FE7DF534D1C5E2EE7F02C48": {
+        "2": {
+          "0X9D075FAABD89F43852CDE5E7B6DD77F714454C4E": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-            "name": "Sponsor Coin V0.1",
-            "symbol": "SPCOIN_V0.1",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
             "decimals": 18
-          }
-        },
-        "0.2": {
-          "0XF81EFF382BFC806EE8300DCCC8EB534A70DAE34F": {
+          },
+          "0X9FEA6582DBA3DC02BBD1D216AF74DF333D04A2F8": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-            "name": "Sponsor Coin V0.2",
-            "symbol": "SPCOIN_V0.2",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
+            "decimals": 18
+          },
+          "0XB593655598232782BC2B1FEA7618BA489FC9B534": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
+            "decimals": 18
+          },
+          "0XD57039E6D324DB7FE4DA11D5928C43CE0B224F19": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V2",
+            "symbol": "SPCOIN_V2",
             "decimals": 18
           }
         }

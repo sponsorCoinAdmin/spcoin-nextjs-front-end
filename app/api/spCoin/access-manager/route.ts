@@ -171,6 +171,22 @@ function quoteArg(value: string) {
   return `"${value.replace(/"/g, '\\"')}"`;
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timeoutHandle: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms.`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  }
+}
+
 async function runCommand(command: string, args: string[], cwd: string) {
   const commandLine = [command, ...args.map(quoteArg)].join(' ');
   const { stdout, stderr } = await execAsync(commandLine, {
@@ -751,6 +767,7 @@ library console {
     language: 'Solidity',
     sources,
     settings: {
+      viaIR: true,
       optimizer: { enabled: optimizerEnabled, runs: optimizerRuns },
       outputSelection: {
         '*': {
@@ -807,6 +824,16 @@ async function deploySpCoinToChain(params: {
 }) {
   const network = await resolveDeployNetwork(params.deploymentChainId);
   const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
+  try {
+    await withTimeout(
+      provider.getBlockNumber(),
+      10000,
+      `RPC health check for ${network.networkName} (${network.rpcUrl})`,
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown RPC health check failure.';
+    throw new Error(`Unable to reach deployment RPC ${network.rpcUrl}: ${message}`);
+  }
   const wallet = new Wallet(params.deploymentPrivateKey, provider);
   const compiled = await compileSpCoinContract({
     solcVersion: network.solcVersion,
@@ -1440,7 +1467,11 @@ async function validateTokenStatus(
   try {
     const network = await resolveDeployNetwork(requestedChainId);
     const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
-    const code = await provider.getCode(address);
+    const code = await withTimeout(
+      provider.getCode(address),
+      5000,
+      `token status lookup for ${network.networkName} (${network.rpcUrl})`,
+    );
     if (code && code !== '0x') {
       return {
         tokenStatus: 'DEPLOYED',
