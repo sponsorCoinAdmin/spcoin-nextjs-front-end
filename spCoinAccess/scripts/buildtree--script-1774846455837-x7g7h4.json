@@ -1,0 +1,57 @@
+{
+  "id": "script-1774846455837-x7g7h4",
+  "name": "BuildTree",
+  "Date Created": "Mar-30-2026, 00:54:15",
+  "network": "Hardhat Ec2-BASE",
+  "steps": [
+    {
+      "step": 1,
+      "name": "creationTime",
+      "panel": "spcoin_rread",
+      "method": "creationTime",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "getAccountList",
+      "panel": "spcoin_rread",
+      "method": "getAccountList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "addAgentSponsorship",
+      "panel": "spcoin_write",
+      "method": "addAgentSponsorship",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "20"
+        },
+        {
+          "key": "Agent Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        },
+        {
+          "key": "Agent Rate Key",
+          "value": "3"
+        },
+        {
+          "key": "Transaction Quantity",
+          "value": "99999"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "script-1774853004374-r0x9aq",
+  "name": "OffLine Test",
+  "Date Created": "Mar-30-2026, 02:43:24",
+  "network": "Hardhat Ec2-BASE",
+  "steps": [
+    {
+      "step": 1,
+      "name": "getAccountRecords",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecords",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "getOffLineAccountRecords",
+      "panel": "spcoin_rread",
+      "method": "getOffLineAccountRecords",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "creationTime",
+      "panel": "spcoin_rread",
+      "method": "creationTime",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "compareSpCoinContractSize",
+      "panel": "spcoin_rread",
+      "method": "compareSpCoinContractSize",
+      "params": [
+        {
+          "key": "Previous Release Directory",
+          "value": "spCoinAccess/contracts/spCoinOrig.BAK"
+        },
+        {
+          "key": "Latest Release Directory",
+          "value": "spCoinAccess/contracts/spCoin"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

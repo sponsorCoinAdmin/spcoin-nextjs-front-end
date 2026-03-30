@@ -17,6 +17,7 @@ type ActiveReadLabels = {
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  markEditorAsUserEdited: () => void;
   showOnChainMethods: boolean;
   showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
@@ -45,6 +46,7 @@ export default function Erc20ReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    markEditorAsUserEdited,
     showOnChainMethods,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -149,6 +151,7 @@ export default function Erc20ReadController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
               value={readAddressA}
               onChange={(value) => {
+                markEditorAsUserEdited();
                 clearInvalidField('erc20-read-address-a');
                 setReadAddressA(normalizeAccountValue(value));
               }}
@@ -171,6 +174,7 @@ export default function Erc20ReadController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
               value={readAddressB}
               onChange={(value) => {
+                markEditorAsUserEdited();
                 clearInvalidField('erc20-read-address-b');
                 setReadAddressB(normalizeAccountValue(value));
               }}

@@ -6,26 +6,6 @@ import "../rewardsManagement/RewardsManager.sol";
 contract Transactions is RewardsManager {
     constructor() { }
 
-    function addSponsorship(address _recipientKey, 
-                                 uint _recipientRateKey,
-                                 address _agentKey,
-                                 uint _agentRateKey,
-                                 string memory _strWholeAmount,
-                                 string memory _strDecimalAmount ) public 
-    {
-        uint256 transactionTimeStamp = block.timestamp;
-        _addSponsorshipForSponsor(
-            msg.sender,
-            _recipientKey,
-            _recipientRateKey,
-            _agentKey,
-            _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount,
-            transactionTimeStamp
-        );
-    }
-
     function addBackDatedSponsorship(address _sponsorKey,
                                  address _recipientKey, 
                                  uint _recipientRateKey,

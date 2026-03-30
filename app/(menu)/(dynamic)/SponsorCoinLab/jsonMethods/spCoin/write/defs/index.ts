@@ -1,15 +1,15 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
 import addRecipient from './addRecipient';
 import addRecipients from './addRecipients';
+import addOffChainRecipients from './addOffChainRecipients';
 import addAgent from './addAgent';
 import addAgents from './addAgents';
+import addOffChainAgents from './addOffChainAgents';
 import deleteAccountTree from './deleteAccountTree';
-import addSponsorship from './addSponsorship';
 import addAgentSponsorship from './addAgentSponsorship';
 import deleteAgentSponsorship from './deleteAgentSponsorship';
 import addBackDatedSponsorship from './addBackDatedSponsorship';
 import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
-import deleteAccountFromMaster from './deleteAccountFromMaster';
 import unSponsorRecipient from './unSponsorRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
@@ -33,15 +33,15 @@ import setVersion from './setVersion';
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipient,
   addRecipients,
+  addOffChainRecipients,
   addAgent,
   addAgents,
+  addOffChainAgents,
   deleteAccountTree,
-  addSponsorship,
   addAgentSponsorship,
   deleteAgentSponsorship,
   addBackDatedSponsorship,
   addBackDatedAgentSponsorship,
-  deleteAccountFromMaster,
   unSponsorRecipient,
   deleteAccountRecord,
   deleteAccountRecords,

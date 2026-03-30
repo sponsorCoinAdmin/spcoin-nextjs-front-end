@@ -3,14 +3,32 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const REPO_ROOT = process.cwd();
-const CONTRACT_VARIANTS = [
-  { label: 'current', root: path.join(REPO_ROOT, 'spCoinAccess', 'contracts', 'spCoin') },
-  { label: 'backup', root: path.join(REPO_ROOT, 'spCoinAccess', 'contracts', 'spCoinOrig.BAK') },
-];
 const ENTRY_FILE = 'SPCoin.sol';
 const ENTRY_CONTRACT = 'SPCoin';
 const SOLC_VERSION = '0.8.18';
 const EIP170_LIMIT_BYTES = 24576;
+
+function resolveVariantRoot(inputPath, fallbackPath) {
+  const raw = String(inputPath || '').trim();
+  if (!raw) return fallbackPath;
+  return path.isAbsolute(raw) ? raw : path.resolve(REPO_ROOT, raw);
+}
+
+function getContractVariants() {
+  const previousReleaseRoot = resolveVariantRoot(
+    process.argv[2],
+    path.join(REPO_ROOT, 'spCoinAccess', 'contracts', 'spCoinOrig.BAK'),
+  );
+  const latestReleaseRoot = resolveVariantRoot(
+    process.argv[3],
+    path.join(REPO_ROOT, 'spCoinAccess', 'contracts', 'spCoin'),
+  );
+
+  return [
+    { label: 'latest', root: latestReleaseRoot },
+    { label: 'previous', root: previousReleaseRoot },
+  ];
+}
 
 function formatTimestamp(date = new Date()) {
   const pad = (value) => String(value).padStart(2, '0');
@@ -78,6 +96,7 @@ library console {
     sources,
     settings: {
       optimizer: { enabled: true, runs: 200 },
+      viaIR: true,
       outputSelection: {
         '*': {
           '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'],
@@ -146,9 +165,8 @@ function formatSignedDelta(value) {
   return `${value > 0 ? '+' : ''}${value}`;
 }
 
-function formatMargin(bytes) {
-  const delta = EIP170_LIMIT_BYTES - bytes;
-  return `${formatSignedDelta(delta)} bytes vs EIP-170`;
+function getMarginBytes(bytes) {
+  return EIP170_LIMIT_BYTES - bytes;
 }
 
 function formatPercentChange(currentValue, backupValue) {
@@ -161,39 +179,43 @@ function formatPercentChange(currentValue, backupValue) {
 }
 
 function main() {
-  const results = CONTRACT_VARIANTS.map((variant) => ({
+  const contractVariants = getContractVariants();
+  const results = contractVariants.map((variant) => ({
     label: variant.label,
     root: variant.root,
     ...compileVariant(variant.root),
   }));
 
-  const current = results.find((entry) => entry.label === 'current');
-  const backup = results.find((entry) => entry.label === 'backup');
-
-  console.log(`Timestamp: ${formatTimestamp()}`);
-  console.log(`SPCoin contract size comparison`);
-  console.log(`Compiler: solc ${SOLC_VERSION}`);
-  console.log(`Entry: ${ENTRY_FILE}:${ENTRY_CONTRACT}`);
-  console.log('');
-
-  for (const result of results) {
-    console.log(`[${result.label}] ${result.root}`);
-    console.log(`  Sources: ${result.sourceCount}`);
-    console.log(`  ABI entries: ${result.abiLength}`);
-    console.log(`  Creation bytecode: ${result.creationBytes} bytes`);
-    console.log(`  Deployed bytecode: ${result.deployedBytes} bytes (${formatMargin(result.deployedBytes)})`);
-    console.log('');
-  }
-
-  if (current && backup) {
-    console.log(`Delta current-vs-backup`);
-    console.log(`  Creation bytecode: ${formatSignedDelta(current.creationBytes - backup.creationBytes)} bytes`);
-    console.log(`  Deployed bytecode: ${formatSignedDelta(current.deployedBytes - backup.deployedBytes)} bytes`);
-    console.log('');
-    console.log(`- Creation size: ${current.creationBytes.toLocaleString()} vs ${backup.creationBytes.toLocaleString()} bytes`);
-    console.log(`  ${formatPercentChange(current.creationBytes, backup.creationBytes)} in creation size`);
-    console.log(`  ${formatPercentChange(current.deployedBytes, backup.deployedBytes)} in deployed size`);
-  }
+  const latest = results.find((entry) => entry.label === 'latest');
+  const previous = results.find((entry) => entry.label === 'previous');
+  const report = {
+    timestamp: formatTimestamp(),
+    title: 'SPCoin contract size comparison',
+    compiler: `solc ${SOLC_VERSION}`,
+    entry: `${ENTRY_FILE}:${ENTRY_CONTRACT}`,
+    eip170LimitBytes: EIP170_LIMIT_BYTES,
+    variants: results.map((result) => ({
+      label: result.label,
+      root: result.root,
+      sourceCount: result.sourceCount,
+      abiEntries: result.abiLength,
+      creationBytes: result.creationBytes,
+      deployedBytes: result.deployedBytes,
+      deployedMarginBytes: getMarginBytes(result.deployedBytes),
+      deployedMarginLabel: `${formatSignedDelta(getMarginBytes(result.deployedBytes))} bytes vs EIP-170`,
+    })),
+    delta:
+      latest && previous
+        ? {
+            label: 'latest-vs-previous',
+            creationBytes: latest.creationBytes - previous.creationBytes,
+            deployedBytes: latest.deployedBytes - previous.deployedBytes,
+            creationPercentChange: formatPercentChange(latest.creationBytes, previous.creationBytes),
+            deployedPercentChange: formatPercentChange(latest.deployedBytes, previous.deployedBytes),
+          }
+        : null,
+  };
+  console.log(JSON.stringify(report, null, 2));
 }
 
 try {

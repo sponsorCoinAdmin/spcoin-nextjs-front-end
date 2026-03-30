@@ -710,6 +710,12 @@ export default function SponsorCoinLabPage() {
         if (label === 'new upper agent rate') {
           return resolvedMeta.agentRateRange ? String(resolvedMeta.agentRateRange[1]) : '';
         }
+        if (label === 'previous release directory') {
+          return 'spCoinAccess/contracts/spCoinOrig.BAK';
+        }
+        if (label === 'latest release directory') {
+          return 'spCoinAccess/contracts/spCoin';
+        }
         return '';
       });
     },
@@ -1744,8 +1750,13 @@ export default function SponsorCoinLabPage() {
   });
   const editorBaselineRef = useRef<string | null>(null);
   const shouldResetEditorBaselineRef = useRef(true);
+  const hasUserEditedMethodInputsRef = useRef(false);
   const dropdownHydrationKeyRef = useRef<string>('');
+  const markEditorAsUserEdited = useCallback(() => {
+    hasUserEditedMethodInputsRef.current = true;
+  }, []);
   const queueEditorBaselineReset = useCallback(() => {
+    hasUserEditedMethodInputsRef.current = false;
     shouldResetEditorBaselineRef.current = true;
   }, []);
   useEffect(() => {
@@ -1763,6 +1774,11 @@ export default function SponsorCoinLabPage() {
   }, []);
   const runWithDiscardPrompt = useCallback(
     (action: () => void | Promise<void>) => {
+      if (!hasUserEditedMethodInputsRef.current) {
+        queueEditorBaselineReset();
+        void action();
+        return;
+      }
       if (methodSelectionSource === 'script' && editingScriptStepNumber !== null && !hasEditingScriptChanges) {
         queueEditorBaselineReset();
         void action();
@@ -1779,7 +1795,13 @@ export default function SponsorCoinLabPage() {
       };
       setIsDiscardChangesPopupOpen(true);
     },
-    [editingScriptStepNumber, hasEditingScriptChanges, hasUnsavedEditorChanges, methodSelectionSource, queueEditorBaselineReset],
+    [
+      editingScriptStepNumber,
+      hasEditingScriptChanges,
+      hasUnsavedEditorChanges,
+      methodSelectionSource,
+      queueEditorBaselineReset,
+    ],
   );
   useSponsorCoinLabPersistence({
     scripts,
@@ -2043,7 +2065,7 @@ export default function SponsorCoinLabPage() {
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
                 throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addAgent instead.',
+                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addOffChainAgents instead.',
                 );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
@@ -3106,6 +3128,7 @@ export default function SponsorCoinLabPage() {
             erc20ReadProps={{
               invalidFieldIds,
               clearInvalidField,
+              markEditorAsUserEdited,
               showOnChainMethods,
               showOffChainMethods,
               selectedReadMethod,
@@ -3132,6 +3155,7 @@ export default function SponsorCoinLabPage() {
             erc20WriteProps={{
               invalidFieldIds,
               clearInvalidField,
+              markEditorAsUserEdited,
               showOnChainMethods,
               showOffChainMethods,
               mode,
@@ -3168,6 +3192,7 @@ export default function SponsorCoinLabPage() {
             spCoinReadProps={{
               invalidFieldIds,
               clearInvalidField,
+              markEditorAsUserEdited,
               showOnChainMethods,
               showOffChainMethods,
               hardhatAccounts,
@@ -3197,6 +3222,7 @@ export default function SponsorCoinLabPage() {
             spCoinWriteProps={{
               invalidFieldIds,
               clearInvalidField,
+              markEditorAsUserEdited,
               mode,
               hardhatAccounts,
               hardhatAccountMetadata,
@@ -3286,6 +3312,7 @@ export default function SponsorCoinLabPage() {
             serializationTestProps={{
               invalidFieldIds,
               clearInvalidField,
+              markEditorAsUserEdited,
               showOnChainMethods,
               showOffChainMethods,
               hardhatAccounts,

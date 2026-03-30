@@ -711,7 +711,7 @@ export function useSponsorCoinLabMethods({
     setTreeOutputDisplay,
   ]);
   const runTreeAccountsRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getAccountRecords');
+    const call = buildMethodCallEntry('getOffLineAccountRecords');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -724,9 +724,12 @@ export function useSponsorCoinLabMethods({
         undefined,
         useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
       );
-      const result = (await (access.read as SpCoinReadAccess).getAccountRecords()) as unknown[];
+      const accountKeys = (await (access.read as SpCoinReadAccess).getAccountList()) as string[];
+      const result = await Promise.all(
+        (accountKeys ?? []).map(async (accountKey) => (access.read as SpCoinReadAccess).getAccountRecord(String(accountKey))),
+      );
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
-      appendLog(`spCoinReadMethods/getAccountRecords -> ${JSON.stringify(result)}`);
+      appendLog(`spCoinReadMethods/getOffLineAccountRecords -> ${JSON.stringify(result)}`);
       setStatus(`Tree accounts read complete (${result.length} account record(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree accounts read error.';

@@ -272,7 +272,7 @@ contract UnSubscribe is Transactions {
     }
 
     function deleteAccountFromMaster(address _accountKey) 
-    public returns (bool){
+    internal returns (bool){
         // console.log("XXXXXXXXXXXXXXXXXXXX deleteAccountFromMaster(",_accountKey,") XXXXXXXXXXXXXXXXXXXX");
         // console.log("accountMap[",_accountKey,"].sponsorAccountList.length =", accountMap[_accountKey].sponsorAccountList.length);
         // console.log("accountMap[",_accountKey,"].recipientAccountList.length =", accountMap[_accountKey].recipientAccountList.length);

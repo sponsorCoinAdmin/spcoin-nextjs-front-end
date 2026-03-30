@@ -18,15 +18,15 @@ import {
 export type SpCoinWriteMethod =
   | 'addRecipient'
   | 'addRecipients'
+  | 'addOffChainRecipients'
   | 'addAgent'
   | 'addAgents'
+  | 'addOffChainAgents'
   | 'deleteAccountTree'
-  | 'addSponsorship'
   | 'addAgentSponsorship'
   | 'deleteAgentSponsorship'
   | 'addBackDatedSponsorship'
   | 'addBackDatedAgentSponsorship'
-  | 'deleteAccountFromMaster'
   | 'unSponsorRecipient'
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
@@ -63,24 +63,24 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipient',
-  'addRecipients',
-  'addAgents',
   'addAgentSponsorship',
   'deleteAgentSponsorship',
   'unSponsorRecipient',
   'deleteAccountRecord',
-  'deleteAccountRecords',
 ];
 
 export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgent',
-  'addSponsorship',
-  'deleteAccountFromMaster',
+  'addRecipients',
+  'addAgents',
+  'deleteAccountRecords',
 ];
 
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
+  'addOffChainRecipients',
   'addAgents',
+  'addOffChainAgents',
   'deleteAccountTree',
 ];
 
@@ -222,10 +222,24 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       await submitWrite(activeDef.title, (access) => access.offChain.addRecipients(asString(methodArgs[0]), recipientList));
       break;
     }
+    case 'addOffChainRecipients': {
+      const recipientList = methodArgs[1] as string[];
+      await submitWrite(activeDef.title, (access) =>
+        access.offChain.addOffChainRecipients(asString(methodArgs[0]), recipientList),
+      );
+      break;
+    }
     case 'addAgents': {
       const agentList = methodArgs[2] as string[];
       await submitWrite(activeDef.title, (access) =>
         access.offChain.addAgents(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentList),
+      );
+      break;
+    }
+    case 'addOffChainAgents': {
+      const agentList = methodArgs[2] as string[];
+      await submitWrite(activeDef.title, (access) =>
+        access.offChain.addOffChainAgents(asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), agentList),
       );
       break;
     }
@@ -243,20 +257,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       appendWriteTrace?.(`submitWorkflow(${activeDef.title}) complete summary=${JSON.stringify(summary)}`);
       appendLog(`${activeDef.title} complete: ${JSON.stringify(summary)}`);
-      break;
-    }
-    case 'addSponsorship': {
-      const qty = `${String(methodArgs[4])}.${String(methodArgs[5])}`;
-      await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addAgentSponsorship(
-          signer,
-          asString(methodArgs[0]),
-          asStringOrNumber(methodArgs[1]),
-          asString(methodArgs[2]),
-          asStringOrNumber(methodArgs[3]),
-          qty,
-        ),
-      );
       break;
     }
     case 'addAgentSponsorship': {

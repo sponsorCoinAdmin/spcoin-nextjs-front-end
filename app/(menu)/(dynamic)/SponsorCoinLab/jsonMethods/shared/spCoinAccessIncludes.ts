@@ -58,6 +58,8 @@ export type SpCoinDeleteAccess = {
 export type SpCoinOffChainAccess = {
   addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
   addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
+  addOffChainRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
+  addOffChainAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
   deleteAccountTree: () => Promise<{
     accountCount: number;
     recipientCount: number;
@@ -104,14 +106,6 @@ export type SpCoinReadAccess = {
 export type SpCoinContractAccess = Contract & {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
   connect?: (signer: Signer) => SpCoinContractAccess;
-  addSponsorship?: (
-    recipientKey: string,
-    recipientRateKey: string | number | bigint,
-    agentKey: string,
-    agentRateKey: string | number | bigint,
-    wholeAmount: string,
-    decimalAmount: string,
-  ) => Promise<ContractTransactionResponse>;
   addBackDatedSponsorship?: (
     sponsorKey: string,
     recipientKey: string,
@@ -252,6 +246,22 @@ function createSpCoinOffChainAccess(
       return recipientCount;
     },
     addAgents: async (recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]) => {
+      let agentCount = 0;
+      for (const agentKey of agentAccountList) {
+        await add.addAgent(String(recipientKey), recipientRateKey, String(agentKey));
+        agentCount += 1;
+      }
+      return agentCount;
+    },
+    addOffChainRecipients: async (_accountKey: string, recipientAccountList: string[]) => {
+      let recipientCount = 0;
+      for (const recipientKey of recipientAccountList) {
+        await add.addRecipient(String(recipientKey));
+        recipientCount += 1;
+      }
+      return recipientCount;
+    },
+    addOffChainAgents: async (recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]) => {
       let agentCount = 0;
       for (const agentKey of agentAccountList) {
         await add.addAgent(String(recipientKey), recipientRateKey, String(agentKey));

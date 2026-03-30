@@ -22,6 +22,9 @@ const GREEN_HIGHLIGHT_METHODS = new Set([
   'setRecipientRateRange',
   'getAgentRateRange',
   'setAgentRateRange',
+  'getUpperAgentRate',
+  'setInflationRate',
+  'setLowerAgentRate',
 ]);
 
 export function getMethodOptionColor(methodName: string, executable?: boolean): string | undefined {

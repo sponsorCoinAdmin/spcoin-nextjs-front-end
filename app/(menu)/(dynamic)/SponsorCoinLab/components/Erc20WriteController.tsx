@@ -15,6 +15,7 @@ type ActiveWriteLabels = {
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  markEditorAsUserEdited: () => void;
   showOnChainMethods: boolean;
   showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
@@ -53,6 +54,7 @@ export default function Erc20WriteController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    markEditorAsUserEdited,
     showOnChainMethods,
     mode,
     hardhatAccounts,
@@ -167,6 +169,7 @@ export default function Erc20WriteController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
               value={selectedWriteSenderAddress}
               onChange={(value) => {
+                markEditorAsUserEdited();
                 clearInvalidField('erc20-write-sender');
                 setSelectedWriteSenderAddress(normalizeAccountValue(value));
               }}
@@ -208,6 +211,7 @@ export default function Erc20WriteController(props: Props) {
             className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
             value={writeAddressA}
             onChange={(value) => {
+              markEditorAsUserEdited();
               clearInvalidField('erc20-write-address-a');
               setWriteAddressA(normalizeAccountValue(value));
             }}
@@ -229,6 +233,7 @@ export default function Erc20WriteController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
               value={writeAddressB}
               onChange={(value) => {
+                markEditorAsUserEdited();
                 clearInvalidField('erc20-write-address-b');
                 setWriteAddressB(normalizeAccountValue(value));
               }}
@@ -246,6 +251,7 @@ export default function Erc20WriteController(props: Props) {
           className={`${inputStyle}${invalidClass('erc20-write-amount')}`}
           value={writeAmountRaw}
           onChange={(e) => {
+            markEditorAsUserEdited();
             clearInvalidField('erc20-write-amount');
             setWriteAmountRaw(e.target.value);
           }}

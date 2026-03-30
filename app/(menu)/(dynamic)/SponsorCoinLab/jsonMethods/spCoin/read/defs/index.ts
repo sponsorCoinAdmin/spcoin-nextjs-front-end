@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/index.ts
 import getSerializedSPCoinHeader from './getSerializedSPCoinHeader';
 import getInflationRate from './getInflationRate';
+import compareSpCoinContractSize from './compareSpCoinContractSize';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getAccountList from './getAccountList';
@@ -11,7 +12,7 @@ import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getSerializedAccountRecord from './getSerializedAccountRecord';
 import getAccountRecord from './getAccountRecord';
-import getAccountRecords from './getAccountRecords';
+import getOffLineAccountRecords from './getOffLineAccountRecords';
 import getSerializedAccountRewards from './getSerializedAccountRewards';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import getSerializedRecipientRateList from './getSerializedRecipientRateList';
@@ -56,6 +57,7 @@ import getVersion from './version';
 export const SPCOIN_READ_METHOD_DEFS = {
   getSerializedSPCoinHeader,
   getInflationRate,
+  compareSpCoinContractSize,
   calculateStakingRewards,
   creationTime,
   getAccountList,
@@ -66,7 +68,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountRecipientListSize,
   getSerializedAccountRecord,
   getAccountRecord,
-  getAccountRecords,
+  getOffLineAccountRecords,
   getSerializedAccountRewards,
   getAccountStakingRewards,
   getSerializedRecipientRateList,

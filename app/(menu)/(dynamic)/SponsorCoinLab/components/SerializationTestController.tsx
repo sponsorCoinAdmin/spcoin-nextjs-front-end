@@ -7,6 +7,7 @@ import type { MethodDef } from '../jsonMethods/shared/types';
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  markEditorAsUserEdited: () => void;
   showOnChainMethods: boolean;
   showOffChainMethods: boolean;
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
@@ -33,6 +34,7 @@ export default function SerializationTestController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    markEditorAsUserEdited,
     showOffChainMethods,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -143,14 +145,15 @@ export default function SerializationTestController(props: Props) {
                   dataFieldId={`serialization-test-param-${idx}`}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`serialization-test-param-${idx}`)}`}
                   value={serializationTestParams[idx] || ''}
-                  onChange={(value) =>
+                  onChange={(value) => {
+                    markEditorAsUserEdited();
                     setSerializationTestParams((prev) => {
                       clearInvalidField(`serialization-test-param-${idx}`);
                       const next = [...prev];
                       next[idx] = normalizeAccountValue(value);
                       return next;
-                    })
-                  }
+                    });
+                  }}
                   placeholder="Select account"
                   options={accountOptions}
                 />
@@ -164,14 +167,15 @@ export default function SerializationTestController(props: Props) {
                 data-field-id={`serialization-test-param-${idx}`}
                 className={`${inputStyle}${invalidClass(`serialization-test-param-${idx}`)}`}
                 value={serializationTestParams[idx] || ''}
-                onChange={(e) =>
+                onChange={(e) => {
+                  markEditorAsUserEdited();
                   setSerializationTestParams((prev) => {
                     clearInvalidField(`serialization-test-param-${idx}`);
                     const next = [...prev];
                     next[idx] = e.target.value;
                     return next;
-                  })
-                }
+                  });
+                }}
                 placeholder={param.placeholder}
               />
             </label>

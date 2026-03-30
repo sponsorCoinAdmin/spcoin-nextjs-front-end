@@ -8,6 +8,7 @@ import type { MethodDef } from '../jsonMethods/shared/types';
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  markEditorAsUserEdited: () => void;
   showOnChainMethods: boolean;
   showOffChainMethods: boolean;
   writeTraceEnabled: boolean;
@@ -39,6 +40,7 @@ export default function SpCoinReadController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    markEditorAsUserEdited,
     showOnChainMethods,
     showOffChainMethods,
     hardhatAccounts,
@@ -250,14 +252,15 @@ export default function SpCoinReadController(props: Props) {
                   dataFieldId={`spcoin-read-param-${idx}`}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
                   value={spReadParams[idx] || ''}
-                  onChange={(value) =>
+                  onChange={(value) => {
+                    markEditorAsUserEdited();
                     setSpReadParams((prev) => {
                       clearInvalidField(`spcoin-read-param-${idx}`);
                       const next = [...prev];
                       next[idx] = normalizeAccountValue(value);
                       return next;
-                    })
-                  }
+                    });
+                  }}
                   placeholder="Select account"
                   options={accountOptions}
                 />
@@ -271,14 +274,15 @@ export default function SpCoinReadController(props: Props) {
                 data-field-id={`spcoin-read-param-${idx}`}
                 className={`${inputStyle}${invalidClass(`spcoin-read-param-${idx}`)}`}
                 value={spReadParams[idx] || ''}
-                onChange={(e) =>
+                onChange={(e) => {
+                  markEditorAsUserEdited();
                   setSpReadParams((prev) => {
                     clearInvalidField(`spcoin-read-param-${idx}`);
                     const next = [...prev];
                     next[idx] = e.target.value;
                     return next;
-                  })
-                }
+                  });
+                }}
                 placeholder={param.placeholder}
               />
             </label>

@@ -9,6 +9,7 @@ import type { MethodDef } from '../jsonMethods/shared/types';
 type Props = {
   invalidFieldIds: string[];
   clearInvalidField: (fieldId: string) => void;
+  markEditorAsUserEdited: () => void;
   mode: 'metamask' | 'hardhat';
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
@@ -90,6 +91,7 @@ export default function SpCoinWriteController(props: Props) {
   const {
     invalidFieldIds,
     clearInvalidField,
+    markEditorAsUserEdited,
     mode,
     hardhatAccounts,
     hardhatAccountMetadata,
@@ -197,13 +199,12 @@ export default function SpCoinWriteController(props: Props) {
   const recipientRateSliderMethods = new Set([
     'addAgent',
     'addAgents',
-    'addSponsorship',
+    'addOffChainAgents',
     'addAgentSponsorship',
     'addBackDatedSponsorship',
     'addBackDatedAgentSponsorship',
   ]);
   const agentRateSliderMethods = new Set([
-    'addSponsorship',
     'addAgentSponsorship',
     'addBackDatedSponsorship',
     'addBackDatedAgentSponsorship',
@@ -395,6 +396,7 @@ export default function SpCoinWriteController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
               value={selectedWriteSenderAddress}
               onChange={(value) => {
+                markEditorAsUserEdited();
                 clearInvalidField('spcoin-write-sender');
                 setSelectedWriteSenderAddress(normalizeAccountValue(value));
               }}
@@ -439,6 +441,7 @@ export default function SpCoinWriteController(props: Props) {
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
                   value={spWriteParams[idx] || ''}
                   onChange={(value) => {
+                    markEditorAsUserEdited();
                     clearInvalidField(`spcoin-write-param-${idx}`);
                     updateSpWriteParamAtIndex(idx, normalizeAccountValue(value));
                   }}
@@ -498,6 +501,7 @@ export default function SpCoinWriteController(props: Props) {
                     step={1}
                     value={normalizeSliderValue(spWriteParams[idx] || '', recipientRateRange)}
                     onChange={(e) => {
+                      markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
                       updateSpWriteParamAtIndex(idx, String(e.target.value));
                     }}
@@ -525,6 +529,7 @@ export default function SpCoinWriteController(props: Props) {
                     step={1}
                     value={normalizeSliderValue(spWriteParams[idx] || '', agentRateRange)}
                     onChange={(e) => {
+                      markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
                       updateSpWriteParamAtIndex(idx, String(e.target.value));
                     }}
@@ -546,6 +551,7 @@ export default function SpCoinWriteController(props: Props) {
                     className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                     value={spWriteParams[idx] || ''}
                     onChange={(value) => {
+                      markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
                       updateSpWriteParamAtIndex(idx, value);
                     }}
@@ -569,6 +575,7 @@ export default function SpCoinWriteController(props: Props) {
                     className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                     value={spWriteParams[idx] || ''}
                     onChange={(value) => {
+                      markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
                       updateSpWriteParamAtIndex(idx, value);
                     }}
@@ -592,6 +599,7 @@ export default function SpCoinWriteController(props: Props) {
                   className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                   value={spWriteParams[idx] || ''}
                   onChange={(e) => {
+                    markEditorAsUserEdited();
                     clearInvalidField(`spcoin-write-param-${idx}`);
                     updateSpWriteParamAtIndex(idx, e.target.value);
                   }}

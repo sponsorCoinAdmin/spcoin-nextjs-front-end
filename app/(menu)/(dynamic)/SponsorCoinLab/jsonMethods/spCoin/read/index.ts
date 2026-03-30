@@ -9,6 +9,7 @@ import { buildExternalSerializerResult, type SerializationBaseMethod } from '../
 export type SpCoinReadMethod =
   | 'getSerializedSPCoinHeader'
   | 'getInflationRate'
+  | 'compareSpCoinContractSize'
   | 'calculateStakingRewards'
   | 'creationTime'
   | 'getSpCoinMetaData'
@@ -21,7 +22,7 @@ export type SpCoinReadMethod =
   | 'getSerializedRecipientRateList'
   | 'getSerializedRecipientRecordList'
   | 'getAccountRecord'
-  | 'getAccountRecords'
+  | 'getOffLineAccountRecords'
   | 'getSerializedAccountRewards'
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
@@ -83,8 +84,10 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 };
 
 export const SPCOIN_COMPOUND_READ_METHODS: SpCoinReadMethod[] = [
+  'compareSpCoinContractSize',
   'getSPCoinHeaderRecord',
   'getAccountRecord',
+  'getOffLineAccountRecords',
   'getAccountStakingRewards',
   'getRecipientRecord',
   'getRecipientRateRecord',
@@ -211,6 +214,39 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   let result: unknown;
 
   switch (canonicalMethod) {
+    case 'compareSpCoinContractSize': {
+      const response = await fetch('/api/spCoin/contract-size-comparison', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          previousReleaseDir: String(methodArgs[0] || ''),
+          latestReleaseDir: String(methodArgs[1] || ''),
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        report?: unknown;
+        scriptPath?: string;
+        stderr?: string;
+        previousReleaseDir?: string;
+        latestReleaseDir?: string;
+        cached?: boolean;
+      };
+      if (!response.ok || payload?.ok === false) {
+        throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
+      }
+      result = {
+        scriptPath: String(payload?.scriptPath || ''),
+        previousReleaseDir: String(payload?.previousReleaseDir || ''),
+        latestReleaseDir: String(payload?.latestReleaseDir || ''),
+        cached: Boolean(payload?.cached),
+        report: payload?.report ?? {},
+        stderr: String(payload?.stderr || ''),
+      };
+      break;
+    }
     case 'getSerializedSPCoinHeader': {
       if (spCoinAccessSource === 'local') {
         result = await read.getSPCoinHeaderRecord(false);
@@ -357,8 +393,9 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       result = await read.getAccountRecord(String(methodArgs[0]));
       break;
     }
-    case 'getAccountRecords': {
-      result = await read.getAccountRecords();
+    case 'getOffLineAccountRecords': {
+      const accountKeys = normalizeStringListResult(await read.getAccountList());
+      result = await Promise.all(accountKeys.map(async (accountKey) => read.getAccountRecord(String(accountKey))));
       break;
     }
     case 'getAccountStakingRewards': {
@@ -486,6 +523,23 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
 
   if (canonicalMethod === 'creationTime') {
     result = formatCreationTimeResult(result);
+  }
+
+  if (canonicalMethod === 'getSpCoinMetaData' && result && typeof result === 'object' && !Array.isArray(result)) {
+    let creationDate = '';
+    try {
+      const creationTimeMethod = getDynamicMethod(contract as Record<string, unknown>, 'creationTime');
+      if (creationTimeMethod) {
+        creationDate = formatCreationTimeResult(await creationTimeMethod()).formatted;
+      }
+    } catch {
+      creationDate = '';
+    }
+    result = {
+      contractAddress: target,
+      ...result,
+      creationDate,
+    };
   }
 
   const out = stringifyResult(result);

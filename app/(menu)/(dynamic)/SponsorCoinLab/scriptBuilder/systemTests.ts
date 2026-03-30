@@ -34,9 +34,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 3,
-        name: 'addSponsorship',
+        name: 'addAgentSponsorship',
         panel: 'spcoin_write',
-        method: 'addSponsorship',
+        method: 'addAgentSponsorship',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
@@ -193,9 +193,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 3,
-        name: 'getAccountRecords',
+        name: 'getOffLineAccountRecords',
         panel: 'spcoin_rread',
-        method: 'getAccountRecords',
+        method: 'getOffLineAccountRecords',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,
@@ -229,9 +229,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 3,
-        name: 'getAccountRecords',
+        name: 'getOffLineAccountRecords',
         panel: 'spcoin_rread',
-        method: 'getAccountRecords',
+        method: 'getOffLineAccountRecords',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,
@@ -276,9 +276,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 4,
-        name: 'getAccountRecords',
+        name: 'getOffLineAccountRecords',
         panel: 'spcoin_rread',
-        method: 'getAccountRecords',
+        method: 'getOffLineAccountRecords',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,

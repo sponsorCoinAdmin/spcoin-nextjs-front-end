@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "scriptPath": "c:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\tools\\compareSpCoinContractSize.js",
+  "previousReleaseDir": "spCoinAccess/contracts/spCoinOrig.BAK",
+  "latestReleaseDir": "spCoinAccess/contracts/spCoin",
+  "report": {
+    "timestamp": "2026-03-30 03:22:06 -04:00",
+    "title": "SPCoin contract size comparison",
+    "compiler": "solc 0.8.18",
+    "entry": "SPCoin.sol:SPCoin",
+    "eip170LimitBytes": 24576,
+    "variants": [
+      {
+        "label": "latest",
+        "root": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoin",
+        "sourceCount": 20,
+        "abiEntries": 59,
+        "creationBytes": 20337,
+        "deployedBytes": 17813,
+        "deployedMarginBytes": 6763,
+        "deployedMarginLabel": "+6763 bytes vs EIP-170"
+      },
+      {
+        "label": "previous",
+        "root": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoinOrig.BAK",
+        "sourceCount": 20,
+        "abiEntries": 53,
+        "creationBytes": 20128,
+        "deployedBytes": 18226,
+        "deployedMarginBytes": 6350,
+        "deployedMarginLabel": "+6350 bytes vs EIP-170"
+      }
+    ],
+    "delta": {
+      "label": "latest-vs-previous",
+      "creationBytes": 209,
+      "deployedBytes": -413,
+      "creationPercentChange": "1.04% larger",
+      "deployedPercentChange": "2.27% smaller"
+    }
+  },
+  "stderr": "",
+  "cached": false
+}

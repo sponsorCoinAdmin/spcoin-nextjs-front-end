@@ -148,44 +148,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_agentRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "_strWholeAmount",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_strDecimalAmount",
-        "type": "string"
-      }
-    ],
-    "name": "addSponsorship",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "",
         "type": "address"
       },
@@ -307,25 +269,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_accountKey",
-        "type": "address"
-      }
-    ],
-    "name": "deleteAccountFromMaster",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
