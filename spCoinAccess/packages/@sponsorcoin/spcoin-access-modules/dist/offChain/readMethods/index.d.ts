@@ -1,2 +1,11 @@
-import type { SpCoinReadMethodHandler } from '../../readMethodRuntime';
-export declare const OFFCHAIN_READ_METHOD_HANDLERS: Record<string, SpCoinReadMethodHandler>;
+export declare const OFFCHAIN_READ_METHOD_HANDLERS: {
+    compareSpCoinContractSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getSPCoinHeaderRecord: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAccountRecord: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getOffLineAccountRecords: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAccountStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getRecipientRecord: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getRecipientRateRecord: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAgentRateRecord: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAgentRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
+};

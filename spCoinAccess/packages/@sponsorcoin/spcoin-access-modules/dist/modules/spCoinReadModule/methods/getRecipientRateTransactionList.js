@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getRecipientRateTransactionList(context, _sponsorCoin, _recipientKey, _recipientRateKey) {
     context.spCoinLogger.logFunctionHeader("getRecipientRateTransactionList = async(" + _recipientKey + ", " + _recipientRateKey + ")");
     let agentRateTransactionList = "";

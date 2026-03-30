@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createDynamicHandler, getDynamicMethod } from '../../readMethodRuntime';
 const handler = createDynamicHandler('getSpCoinMetaData', async (result, context) => {
     if (!result || typeof result !== 'object' || Array.isArray(result)) {

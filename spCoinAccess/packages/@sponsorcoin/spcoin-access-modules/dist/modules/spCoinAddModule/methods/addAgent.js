@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const addAgent = async (context, _recipientKey, _recipientRateKey, _accountAgentKey) => {
     context.spCoinLogger.logFunctionHeader("addAgent = async(" + _recipientKey + ", " + _recipientRateKey + ", " + _accountAgentKey + ")");
     context.spCoinLogger.logDetail("JS => Adding Agent " + _accountAgentKey + " To Blockchain Network");

@@ -1,2 +1,1 @@
-import type { SpCoinStakingModuleMethods } from "../types";
-export declare const getTimeMultiplier: SpCoinStakingModuleMethods["getTimeMultiplier"];
+export declare const getTimeMultiplier: (context: any, _timeRateMultiplier: any) => Promise<any>;

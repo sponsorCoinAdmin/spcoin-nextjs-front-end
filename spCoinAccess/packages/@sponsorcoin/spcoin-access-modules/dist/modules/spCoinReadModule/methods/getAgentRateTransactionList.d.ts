@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAgentRateTransactionList(context: SpCoinReadModuleContext, _sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number): Promise<unknown>;
+export declare function getAgentRateTransactionList(context: any, _sponsorCoin: any, _recipientKey: any, _recipientRateKey: any, _agentKey: any, _agentRateKey: any): Promise<any>;

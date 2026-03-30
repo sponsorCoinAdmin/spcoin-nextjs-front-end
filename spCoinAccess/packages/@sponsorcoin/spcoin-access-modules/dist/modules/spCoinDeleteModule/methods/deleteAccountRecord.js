@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const deleteAccountRecord = async (context, _accountKey) => {
     context.spCoinLogger.logFunctionHeader("deleteAccountRecord = async(" + _accountKey + ")");
     context.spCoinLogger.logDetail("JS => Deleting Account " + _accountKey + " From Blockchain Network");

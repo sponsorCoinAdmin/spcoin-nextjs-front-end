@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const addRecipient = async (context, _recipientKey) => {
     context.spCoinLogger.logFunctionHeader("addRecipient = async(" + _recipientKey + ")");
     context.spCoinLogger.logDetail("JS => Inserting " + _recipientKey + " Recipient To Blockchain Network");

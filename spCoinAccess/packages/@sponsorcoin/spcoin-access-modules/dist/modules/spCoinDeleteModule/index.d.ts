@@ -1,14 +1,5 @@
-import type { SpCoinDeleteModuleBoundMethods } from "./types";
-import type { SpCoinLoggerLike, SpCoinModuleContract } from "../shared/runtimeTypes";
 export declare class SpCoinDeleteModule {
-    spCoinContractDeployed: SpCoinModuleContract;
-    spCoinLogger: SpCoinLoggerLike;
-    signer?: import("ethers").Signer;
-    deleteAccountRecord: SpCoinDeleteModuleBoundMethods["deleteAccountRecord"];
-    deleteAccountRecords: SpCoinDeleteModuleBoundMethods["deleteAccountRecords"];
-    unSponsorRecipient: SpCoinDeleteModuleBoundMethods["unSponsorRecipient"];
-    deleteAgentRecord: SpCoinDeleteModuleBoundMethods["deleteAgentRecord"];
-    constructor(_spCoinContractDeployed: SpCoinModuleContract);
+    constructor(_spCoinContractDeployed: any);
 }
 export { bindDeleteMethods } from "./bindDeleteMethods";
 export * from "./methods";

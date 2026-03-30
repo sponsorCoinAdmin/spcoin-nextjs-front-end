@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const addAgentSponsorship = async (context, _sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty) => {
     context.spCoinLogger.logFunctionHeader("addAgentSponsorship = async(" +
         _sponsorSigner + ", " +

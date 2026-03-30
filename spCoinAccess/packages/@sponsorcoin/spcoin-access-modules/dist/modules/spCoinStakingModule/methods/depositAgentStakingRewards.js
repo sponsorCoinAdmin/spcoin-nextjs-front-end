@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AGENT } from "../shared";
 export const depositAgentStakingRewards = async (context, _sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount) => {
     context.spCoinLogger.logFunctionHeader("depositAgentStakingRewards = async(" +

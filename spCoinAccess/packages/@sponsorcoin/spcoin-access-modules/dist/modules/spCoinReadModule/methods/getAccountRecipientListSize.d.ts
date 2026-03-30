@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAccountRecipientListSize(context: SpCoinReadModuleContext, _accountKey: string): Promise<any>;
+export declare function getAccountRecipientListSize(context: any, _accountKey: any): Promise<any>;

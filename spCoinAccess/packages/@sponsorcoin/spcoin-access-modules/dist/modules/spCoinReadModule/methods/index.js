@@ -1,3 +1,4 @@
+// @ts-nocheck
 export { getAccountList } from './getAccountList';
 export { getAccountListSize } from './getAccountListSize';
 export { getAccountRecipientList } from './getAccountRecipientList';

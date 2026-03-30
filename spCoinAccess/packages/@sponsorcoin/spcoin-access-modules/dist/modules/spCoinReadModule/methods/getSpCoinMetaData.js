@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getSpCoinMetaData(context) {
     context.spCoinLogger.logFunctionHeader("getSpCoinMetaData()");
     const normalizeRangeTuple = (value) => {

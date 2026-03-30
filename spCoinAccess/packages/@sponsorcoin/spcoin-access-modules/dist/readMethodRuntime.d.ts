@@ -1,43 +1,27 @@
-export type SpCoinAccessSource = 'local' | 'node_modules';
-export type CompareContractSizeResult = {
-    scriptPath: string;
-    previousReleaseDir: string;
-    latestReleaseDir: string;
-    cached: boolean;
-    report: unknown;
-    stderr: string;
-};
-export type FormatCreationTimeResult = {
-    ms_offset: string;
-    formatted: string;
-};
-export type SpCoinReadExecutionContext = {
+import type { SpCoinDynamicMethod, SpCoinDynamicMethodHost } from "./modules/shared/runtimeTypes";
+export interface ReadMethodHandlerContext {
     canonicalMethod: string;
     selectedMethod: string;
     methodArgs: unknown[];
-    spCoinAccessSource: SpCoinAccessSource;
-    target: string;
-    read: Record<string, unknown>;
-    staking: Record<string, unknown>;
-    contract: Record<string, unknown>;
-    normalizeStringListResult: (value: unknown) => string[];
-    toStringOrNumber: (value: unknown) => string | number;
-    formatCreationTimeResult: (value: unknown) => FormatCreationTimeResult;
-    requireExternalSerializedValue: (method: string, methodArgs: unknown[]) => Promise<string>;
-    compareSpCoinContractSize: (previousReleaseDir: string, latestReleaseDir: string) => Promise<CompareContractSizeResult>;
-};
-export type SpCoinReadMethodHandler = {
+    spCoinAccessSource: string;
+    read: SpCoinDynamicMethodHost;
+    staking: SpCoinDynamicMethodHost;
+    contract: SpCoinDynamicMethodHost;
+    requireExternalSerializedValue: (method: string, args: unknown[]) => unknown;
+}
+export interface ReadMethodHandler<Result = unknown> {
     method: string;
-    run: (context: SpCoinReadExecutionContext) => Promise<unknown>;
-};
-export declare function buildHandler(method: string, run: (context: SpCoinReadExecutionContext) => Promise<unknown>): SpCoinReadMethodHandler;
-export declare function getDynamicMethod(target: Record<string, unknown>, method: string): (...args: unknown[]) => unknown;
-export declare function runDynamicMethod(context: SpCoinReadExecutionContext, method?: string): Promise<unknown>;
-export declare function createDynamicHandler(method: string, after?: (result: unknown, context: SpCoinReadExecutionContext) => Promise<unknown> | unknown): SpCoinReadMethodHandler;
-export declare function createReadHandler(method: string, mapArgs?: (context: SpCoinReadExecutionContext) => unknown[]): SpCoinReadMethodHandler;
-export declare function createPassthroughFirstArgHandler(method: string): SpCoinReadMethodHandler;
-export declare function createSerializedHandler(config: {
+    run: (context: ReadMethodHandlerContext) => Promise<Result>;
+}
+export interface SerializedHandlerConfig {
     method: string;
     localMethod: string;
-    localArgs?: (context: SpCoinReadExecutionContext) => unknown[];
-}): SpCoinReadMethodHandler;
+    localArgs?: (context: ReadMethodHandlerContext) => unknown[];
+}
+export declare function buildHandler<Result = unknown>(method: string, run: (context: ReadMethodHandlerContext) => Promise<Result>): ReadMethodHandler<Result>;
+export declare function getDynamicMethod(target: SpCoinDynamicMethodHost, method: string): SpCoinDynamicMethod | undefined;
+export declare function runDynamicMethod(context: ReadMethodHandlerContext, method?: string): Promise<unknown>;
+export declare function createDynamicHandler<Result = unknown>(method: string, after?: (result: unknown, context: ReadMethodHandlerContext) => Result | Promise<Result>): ReadMethodHandler<Result | unknown>;
+export declare function createReadHandler(method: string, mapArgs?: (context: ReadMethodHandlerContext) => unknown[]): ReadMethodHandler;
+export declare function createPassthroughFirstArgHandler(method: string): ReadMethodHandler;
+export declare function createSerializedHandler(config: SerializedHandlerConfig): ReadMethodHandler;

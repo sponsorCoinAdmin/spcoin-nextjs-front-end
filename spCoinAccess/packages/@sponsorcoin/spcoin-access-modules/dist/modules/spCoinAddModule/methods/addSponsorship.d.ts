@@ -1,2 +1,1 @@
-import type { SpCoinAddModuleMethods } from "../types";
-export declare const addSponsorship: SpCoinAddModuleMethods["addSponsorship"];
+export declare const addSponsorship: (context: any, _sponsorSigner: any, _recipientKey: any, _recipientRateKey: any, _transactionQty: any) => Promise<void>;

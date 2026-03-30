@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as erc20Methods from "./methods";
 export function bindERC20Methods(context) {
     const boundMethods = context;

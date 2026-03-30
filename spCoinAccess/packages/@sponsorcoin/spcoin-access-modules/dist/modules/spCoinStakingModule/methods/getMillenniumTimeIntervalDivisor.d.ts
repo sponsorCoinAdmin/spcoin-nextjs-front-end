@@ -1,2 +1,1 @@
-import type { SpCoinStakingModuleMethods } from "../types";
-export declare const getMillenniumTimeIntervalDivisor: SpCoinStakingModuleMethods["getMillenniumTimeIntervalDivisor"];
+export declare const getMillenniumTimeIntervalDivisor: (context: any, _timeInSeconds: any) => Promise<string>;

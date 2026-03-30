@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SpCoinLogger } from "../../utils/logging";
 import { bindStakingMethods } from "./bindStakingMethods";
 export class SpCoinStakingModule {

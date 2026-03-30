@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SpCoinLogger } from "../../utils/logging";
 import { bindERC20Methods } from "./bindERC20Methods";
 export class SpCoinERC20Module {

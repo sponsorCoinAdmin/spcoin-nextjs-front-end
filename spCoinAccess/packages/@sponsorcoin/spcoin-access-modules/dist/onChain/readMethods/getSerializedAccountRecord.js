@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createSerializedHandler } from '../../readMethodRuntime';
 const handler = createSerializedHandler({
     method: 'getSerializedAccountRecord',

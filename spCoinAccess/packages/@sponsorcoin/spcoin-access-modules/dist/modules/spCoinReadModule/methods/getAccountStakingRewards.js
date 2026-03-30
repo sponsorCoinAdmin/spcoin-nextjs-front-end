@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RewardsStruct } from "../../../dataTypes/spCoinDataTypes";
 import { AGENT, RECIPIENT, SPONSOR } from "../shared";
 export async function getAccountStakingRewards(context, _accountKey) {

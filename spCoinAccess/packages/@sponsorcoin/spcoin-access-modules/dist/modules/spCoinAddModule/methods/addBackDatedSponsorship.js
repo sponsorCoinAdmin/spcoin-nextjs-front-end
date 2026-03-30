@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BURN_ADDRESS } from "../shared";
 export const addBackDatedSponsorship = async (context, _adminSigner, _sponsorKey, _recipientKey, _recipientRateKey, _transactionQty, _transactionBackDate) => {
     console.log("addBackDatedSponsorship = async(" +

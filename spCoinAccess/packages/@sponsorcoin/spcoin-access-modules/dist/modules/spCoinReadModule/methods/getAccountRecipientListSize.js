@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getAccountRecipientListSize(context, _accountKey) {
     const runtime = context;
     runtime.spCoinLogger.logFunctionHeader("getAccountRecipientListSize = async(" + _accountKey + ")");

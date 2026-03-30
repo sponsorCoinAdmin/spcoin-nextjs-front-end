@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/printTreeStructures.js
 export const printTestHHAccounts = () => {
     return JSON.stringify(TEST_HH_ACCOUNT_LIST, null, 2);

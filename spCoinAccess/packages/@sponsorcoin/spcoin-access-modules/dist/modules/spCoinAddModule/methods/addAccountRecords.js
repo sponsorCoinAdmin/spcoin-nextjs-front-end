@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const addAccountRecords = async (context, _accountListKeys) => {
     context.spCoinLogger.logFunctionHeader("addAccountRecord = async(arrayAccounts)");
     const maxCount = _accountListKeys.length;

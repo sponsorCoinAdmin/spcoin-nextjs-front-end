@@ -1,3 +1,4 @@
+// @ts-nocheck
 export { testStakingRewards } from "./testStakingRewards";
 export { getStakingRewards } from "./getStakingRewards";
 export { getTimeMultiplier } from "./getTimeMultiplier";

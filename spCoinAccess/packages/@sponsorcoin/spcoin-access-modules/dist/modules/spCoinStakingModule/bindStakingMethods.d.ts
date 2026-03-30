@@ -1,2 +1,1 @@
-import type { SpCoinStakingModuleContext } from "./types";
-export declare function bindStakingMethods(context: SpCoinStakingModuleContext): void;
+export declare function bindStakingMethods(context: any): void;

@@ -16,6 +16,5 @@ export declare const LOG_MODE: {
 };
 export declare const setLogDefaults: (_log_mode: any, _state: any) => void;
 export declare class SpCoinLogger {
-    spCoinContractDeployed: any;
     constructor(_spCoinContractDeployed: any);
 }

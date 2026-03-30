@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function getAccountRewardTransactionList(context, _rewardAccountList) {
     const runtime = context;
     const rewardTransactionsByAccountList = [];

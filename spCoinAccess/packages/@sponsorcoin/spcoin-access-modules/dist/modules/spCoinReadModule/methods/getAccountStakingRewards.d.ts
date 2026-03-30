@@ -1,2 +1,2 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAccountStakingRewards(context: SpCoinReadModuleContext, _accountKey: string): Promise<any>;
+import { RewardsStruct } from "../../../dataTypes/spCoinDataTypes";
+export declare function getAccountStakingRewards(context: any, _accountKey: any): Promise<RewardsStruct>;

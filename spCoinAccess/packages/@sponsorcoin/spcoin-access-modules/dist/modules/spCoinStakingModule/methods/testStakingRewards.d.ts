@@ -1,2 +1,1 @@
-import type { SpCoinStakingModuleMethods } from "../types";
-export declare const testStakingRewards: SpCoinStakingModuleMethods["testStakingRewards"];
+export declare const testStakingRewards: (context: any, lastUpdateTime: any, testUpdateTime: any, interestRate: any, quantity: any) => Promise<any>;

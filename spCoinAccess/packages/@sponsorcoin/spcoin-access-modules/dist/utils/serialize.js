@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/serialize.js
 // const {  spCoinContractDeployed } = require("../contracts/spCoin");
 // const { BigNumber, ethers, utils } = require("ethers");

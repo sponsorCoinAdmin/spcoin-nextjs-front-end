@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RecipientStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDateTimeString, bigIntToDecString } from "../../../utils/dateTime";
 export async function getRecipientRecord(context, _sponsorKey, _recipientKey) {

@@ -1,2 +1,1 @@
-import type { SpCoinAddModuleMethods } from "../types";
-export declare const addAgents: SpCoinAddModuleMethods["addAgents"];
+export declare const addAgents: (context: any, _recipientKey: any, _recipientRateKey: any, _agentAccountList: any) => Promise<number>;

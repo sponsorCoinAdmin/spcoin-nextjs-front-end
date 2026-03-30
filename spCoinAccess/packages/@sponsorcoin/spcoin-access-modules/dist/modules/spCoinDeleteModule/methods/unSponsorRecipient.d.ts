@@ -1,2 +1,1 @@
-import type { SpCoinDeleteModuleMethods } from "../types";
-export declare const unSponsorRecipient: SpCoinDeleteModuleMethods["unSponsorRecipient"];
+export declare const unSponsorRecipient: (context: any, _sponsorKey: any, _recipientKey: any) => Promise<any>;

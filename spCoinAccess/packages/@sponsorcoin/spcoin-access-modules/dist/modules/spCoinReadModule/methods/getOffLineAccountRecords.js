@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getOffLineAccountRecords(context) {
     const runtime = context;
     runtime.spCoinLogger.logFunctionHeader("getOffLineAccountRecords()");

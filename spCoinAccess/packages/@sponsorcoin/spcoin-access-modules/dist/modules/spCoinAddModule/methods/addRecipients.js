@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const addRecipients = async (context, _accountKey, _recipientAccountList) => {
     context.spCoinLogger.logFunctionHeader("addRecipients = async(" + _accountKey + ", " + _recipientAccountList + ")");
     context.spCoinLogger.logDetail("JS => For Account[" + _accountKey + "]: " + _accountKey + ")");

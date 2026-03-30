@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { buildHandler } from '../../readMethodRuntime';
 const handler = buildHandler('getRecipientRateRecordList', async (context) => {
     const rates = (await context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])) ?? [];

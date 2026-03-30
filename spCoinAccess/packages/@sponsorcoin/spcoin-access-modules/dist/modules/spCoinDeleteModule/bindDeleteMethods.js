@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as deleteMethods from "./methods";
 export function bindDeleteMethods(context) {
     const boundMethods = context;

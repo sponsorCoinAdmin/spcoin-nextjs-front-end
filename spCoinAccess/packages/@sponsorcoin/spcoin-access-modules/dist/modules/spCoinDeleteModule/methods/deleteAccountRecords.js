@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const deleteAccountRecords = async (context, _accountListKeys) => {
     context.spCoinLogger.logFunctionHeader("deleteAccountRecords = async(arrayAccounts)");
     const maxCount = _accountListKeys.length;

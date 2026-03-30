@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAccountRateRecordList(context: SpCoinReadModuleContext, rateRewardList: string[]): any[];
+export declare function getAccountRateRecordList(context: any, rateRewardList: any): any[];

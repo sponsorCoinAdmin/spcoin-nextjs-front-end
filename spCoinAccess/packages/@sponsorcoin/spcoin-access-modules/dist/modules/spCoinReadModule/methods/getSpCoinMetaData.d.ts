@@ -1,5 +1,4 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getSpCoinMetaData(context: SpCoinReadModuleContext): Promise<{
+export declare function getSpCoinMetaData(context: any): Promise<{
     owner: string;
     version: string;
     name: string;

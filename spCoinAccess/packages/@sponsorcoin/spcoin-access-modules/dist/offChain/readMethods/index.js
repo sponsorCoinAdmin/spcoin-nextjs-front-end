@@ -1,3 +1,4 @@
+// @ts-nocheck
 import compareSpCoinContractSize from './compareSpCoinContractSize';
 import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getAccountRecord from './getAccountRecord';

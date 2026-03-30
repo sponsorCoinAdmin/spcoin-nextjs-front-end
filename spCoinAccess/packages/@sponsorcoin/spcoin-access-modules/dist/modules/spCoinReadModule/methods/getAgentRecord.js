@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDecString } from "../../../utils/dateTime";
 export async function getAgentRecord(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey) {

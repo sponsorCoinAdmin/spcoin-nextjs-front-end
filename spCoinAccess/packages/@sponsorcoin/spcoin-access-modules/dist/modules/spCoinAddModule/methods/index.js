@@ -1,3 +1,4 @@
+// @ts-nocheck
 export { addRecipient } from "./addRecipient";
 export { addRecipients } from "./addRecipients";
 export { addAgent } from "./addAgent";

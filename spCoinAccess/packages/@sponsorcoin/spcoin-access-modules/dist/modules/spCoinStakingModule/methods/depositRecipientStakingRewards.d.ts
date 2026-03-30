@@ -1,2 +1,1 @@
-import type { SpCoinStakingModuleMethods } from "../types";
-export declare const depositRecipientStakingRewards: SpCoinStakingModuleMethods["depositRecipientStakingRewards"];
+export declare const depositRecipientStakingRewards: (context: any, _sponsorAccount: any, _recipientAccount: any, _recipientRate: any, _amount: any) => Promise<any>;

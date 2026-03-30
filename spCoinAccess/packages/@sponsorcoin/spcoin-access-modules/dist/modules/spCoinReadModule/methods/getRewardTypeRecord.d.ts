@@ -1,2 +1,2 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getRewardTypeRecord(context: SpCoinReadModuleContext, _accountKey: string, _rewardType: number, _reward: string | number): Promise<any>;
+import { RewardTypeStruct } from "../../../dataTypes/spCoinDataTypes";
+export declare function getRewardTypeRecord(context: any, _accountKey: any, _rewardType: any, _reward: any): Promise<RewardTypeStruct>;

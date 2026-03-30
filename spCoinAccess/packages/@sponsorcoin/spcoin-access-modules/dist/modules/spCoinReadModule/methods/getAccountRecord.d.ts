@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAccountRecord(context: SpCoinReadModuleContext, _accountKey: string): Promise<any>;
+export declare function getAccountRecord(context: any, _accountKey: any): Promise<any>;

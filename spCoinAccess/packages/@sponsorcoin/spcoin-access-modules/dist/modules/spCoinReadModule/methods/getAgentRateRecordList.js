@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getAgentRateRecordList(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey) {
     const runtime = context;
     runtime.spCoinLogger.logFunctionHeader("getAgentRateRecordList(" + ", " + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ")");

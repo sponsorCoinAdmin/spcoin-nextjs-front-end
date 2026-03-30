@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RECIPIENT, burnAddress } from "../shared";
 export const depositRecipientStakingRewards = async (context, _sponsorAccount, _recipientAccount, _recipientRate, _amount) => {
     context.spCoinLogger.logFunctionHeader("depositRecipientStakingRewards = async(" +

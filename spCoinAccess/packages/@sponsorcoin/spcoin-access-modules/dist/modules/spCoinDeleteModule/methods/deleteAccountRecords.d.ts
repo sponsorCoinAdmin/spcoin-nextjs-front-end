@@ -1,2 +1,1 @@
-import type { SpCoinDeleteModuleMethods } from "../types";
-export declare const deleteAccountRecords: SpCoinDeleteModuleMethods["deleteAccountRecords"];
+export declare const deleteAccountRecords: (context: any, _accountListKeys: any) => Promise<any>;

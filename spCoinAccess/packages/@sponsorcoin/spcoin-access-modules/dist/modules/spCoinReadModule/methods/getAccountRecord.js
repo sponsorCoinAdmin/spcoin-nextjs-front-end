@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getAccountRecord(context, _accountKey) {
     const runtime = context;
     const accountStruct = await runtime.spCoinSerialize.getAccountRecordObject(_accountKey);

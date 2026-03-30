@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function getRecipientRecordList(context, _sponsorKey, _recipientAccountList) {
     const runtime = context;
     runtime.spCoinLogger.logFunctionHeader("getRecipientRecordList = async(" + _sponsorKey + "," + _recipientAccountList + ")");

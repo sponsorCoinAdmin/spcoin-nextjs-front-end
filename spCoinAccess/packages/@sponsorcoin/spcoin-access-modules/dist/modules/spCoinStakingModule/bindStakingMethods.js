@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as stakingMethods from "./methods";
 export function bindStakingMethods(context) {
     const boundMethods = context;

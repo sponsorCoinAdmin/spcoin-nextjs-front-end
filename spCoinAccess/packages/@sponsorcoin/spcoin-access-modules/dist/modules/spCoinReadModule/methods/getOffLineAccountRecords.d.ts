@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getOffLineAccountRecords(context: SpCoinReadModuleContext): Promise<any[]>;
+export declare function getOffLineAccountRecords(context: any): Promise<any[]>;

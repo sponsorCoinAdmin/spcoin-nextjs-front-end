@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { buildHandler } from '../../readMethodRuntime';
 const handler = buildHandler('getAgentRecord', async (context) => {
     const stakedSPCoins = await context.contract.getAgentTotalRecipient?.(context.methodArgs[0], context.methodArgs[1], context.methodArgs[2], context.methodArgs[3]);

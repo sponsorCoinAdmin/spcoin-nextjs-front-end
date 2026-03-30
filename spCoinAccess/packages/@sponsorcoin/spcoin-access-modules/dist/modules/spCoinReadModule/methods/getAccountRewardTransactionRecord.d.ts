@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getAccountRewardTransactionRecord(context: SpCoinReadModuleContext, _rewardRecordStr: string): any;
+export declare function getAccountRewardTransactionRecord(context: any, _rewardRecordStr: any): any;

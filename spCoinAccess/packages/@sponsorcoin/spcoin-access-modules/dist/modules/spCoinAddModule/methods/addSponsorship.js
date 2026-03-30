@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BURN_ADDRESS } from "../shared";
 export const addSponsorship = async (context, _sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty) => {
     context.spCoinLogger.logFunctionHeader("addSponsorship = async(" +

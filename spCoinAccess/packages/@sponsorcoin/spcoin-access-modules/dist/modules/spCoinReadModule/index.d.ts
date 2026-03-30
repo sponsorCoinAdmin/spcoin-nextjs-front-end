@@ -1,10 +1,10 @@
-import type { SpCoinLoggerLike, SpCoinModuleContract, SpCoinSerializeLike } from "../shared/runtimeTypes";
-export declare class SpCoinReadModule {
-    [key: string]: unknown;
-    spCoinContractDeployed: SpCoinModuleContract & Record<string, any>;
-    spCoinSerialize: SpCoinSerializeLike;
-    spCoinLogger: SpCoinLoggerLike;
-    constructor(_spCoinContractDeployed: SpCoinModuleContract & Record<string, any>);
+import type { SpCoinReadModuleContext } from "./types";
+export declare class SpCoinReadModule implements SpCoinReadModuleContext {
+    [methodName: string]: unknown;
+    spCoinContractDeployed: any;
+    spCoinSerialize: any;
+    spCoinLogger: any;
+    constructor(_spCoinContractDeployed: SpCoinReadModuleContext["spCoinContractDeployed"]);
 }
 export { bindReadMethods } from './bindReadMethods';
 export * from './methods';

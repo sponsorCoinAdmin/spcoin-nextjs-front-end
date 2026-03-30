@@ -1,2 +1,1 @@
-import type { SpCoinERC20ModuleMethods } from "../types";
-export declare const signerTransfer: SpCoinERC20ModuleMethods["signerTransfer"];
+export declare const signerTransfer: (context: any, _signer: any, _to: any, _value: any) => Promise<void>;

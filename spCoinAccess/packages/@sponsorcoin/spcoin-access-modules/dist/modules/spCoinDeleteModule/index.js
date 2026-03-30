@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SpCoinLogger } from "../../utils/logging";
 import { bindDeleteMethods } from "./bindDeleteMethods";
 export class SpCoinDeleteModule {

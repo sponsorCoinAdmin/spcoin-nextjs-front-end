@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { buildHandler } from '../../readMethodRuntime';
 const handler = buildHandler('getAgentRecordList', async (context) => {
     const sponsorKey = String(context.methodArgs[0]);

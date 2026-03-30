@@ -3,7 +3,7 @@ export function buildHandler(method, run) {
 }
 export function getDynamicMethod(target, method) {
     const candidate = target[method];
-    return typeof candidate === 'function' ? candidate : undefined;
+    return typeof candidate === "function" ? candidate : undefined;
 }
 export async function runDynamicMethod(context, method = context.canonicalMethod) {
     const readMethod = getDynamicMethod(context.read, method);
@@ -40,7 +40,7 @@ export function createPassthroughFirstArgHandler(method) {
 }
 export function createSerializedHandler(config) {
     return buildHandler(config.method, async (context) => {
-        if (context.spCoinAccessSource === 'local') {
+        if (context.spCoinAccessSource === "local") {
             const localMethod = getDynamicMethod(context.read, config.localMethod);
             if (!localMethod) {
                 throw new Error(`Local read method ${config.localMethod} is not available.`);

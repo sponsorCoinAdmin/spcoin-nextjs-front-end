@@ -1,3 +1,4 @@
+// @ts-nocheck
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import getAccountList from './getAccountList';

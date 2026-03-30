@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/utils.js
 export const dumpList = (_prefix, _arr) => {
     spCoinLogger.logFunctionHeader("dumpList = async(" + _prefix + ", _arr)");

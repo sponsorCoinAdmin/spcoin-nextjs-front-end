@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as rewardsMethods from "./methods";
 export function bindRewardsMethods(context) {
     const boundMethods = context;

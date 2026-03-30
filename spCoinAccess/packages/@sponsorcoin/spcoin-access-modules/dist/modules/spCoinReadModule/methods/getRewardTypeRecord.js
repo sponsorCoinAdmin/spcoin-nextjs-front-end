@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RewardTypeStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDecString } from "../../../utils/dateTime";
 import { getRewardType, getSourceTypeDelimiter } from "../shared";

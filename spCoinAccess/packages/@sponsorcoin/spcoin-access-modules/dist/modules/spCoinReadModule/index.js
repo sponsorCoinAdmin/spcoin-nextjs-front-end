@@ -1,5 +1,5 @@
 import { SpCoinLogger } from "../../utils/logging";
-import { SpCoinSerialize } from "../../utils//serialize";
+import { SpCoinSerialize } from "../../utils/serialize";
 import { bindReadMethods } from "./bindReadMethods";
 export class SpCoinReadModule {
     constructor(_spCoinContractDeployed) {

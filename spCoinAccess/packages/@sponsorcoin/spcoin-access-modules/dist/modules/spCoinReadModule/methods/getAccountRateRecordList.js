@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { RewardRateStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDecString } from "../../../utils/dateTime";
 export function getAccountRateRecordList(context, rateRewardList) {

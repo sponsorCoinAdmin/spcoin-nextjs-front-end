@@ -1,2 +1,2 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getRecipientRecord(context: SpCoinReadModuleContext, _sponsorKey: string, _recipientKey: string): Promise<any>;
+import { RecipientStruct } from "../../../dataTypes/spCoinDataTypes";
+export declare function getRecipientRecord(context: any, _sponsorKey: any, _recipientKey: any): Promise<RecipientStruct>;

@@ -1,2 +1,1 @@
-import type { SpCoinReadModuleContext } from "../types";
-export declare function getSPCoinHeaderRecord(context: SpCoinReadModuleContext, getBody: boolean): Promise<any>;
+export declare function getSPCoinHeaderRecord(context: any, getBody: any): Promise<any>;
