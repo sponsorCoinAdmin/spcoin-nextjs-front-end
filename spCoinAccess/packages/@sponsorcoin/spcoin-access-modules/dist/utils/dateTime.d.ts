@@ -1,16 +1,10 @@
-export declare const second = 1;
-export declare const minute: number;
-export declare const hour: number;
-export declare const day: number;
-export declare const week: number;
-export declare const year: number;
-export declare const month: number;
-export declare const millennium: number;
 export declare const bigIntToDateTimeString: (_value: any) => string;
 export declare const getLocation: () => string;
+export declare const bigIntToDecMilliSecs: (_value: any) => string;
 export declare const bigIntToDecString: (_value: any) => string;
 export declare const bigIntToHexString: (_value: any) => string;
 export declare const bigIntToString: (_value: any, _base: any) => string;
 export declare const formatTimeSeconds: (timeInSeconds: any) => string;
+export declare const parseTimeSeconds: (timeInSeconds: any) => string;
 export declare const dateInSeconds: () => number;
 export declare const dateInMilliseconds: () => number;

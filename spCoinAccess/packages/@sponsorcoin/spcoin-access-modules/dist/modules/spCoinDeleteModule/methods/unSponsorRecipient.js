@@ -1,0 +1,6 @@
+export const unSponsorRecipient = async (context, _sponsorKey, _recipientKey) => {
+    context.spCoinLogger.logFunctionHeader("unSponsorRecipient(" + _sponsorKey.accountKey + ", " + _recipientKey + ")");
+    const tx = await context.spCoinContractDeployed.connect(context.signer).unSponsorRecipient(_recipientKey);
+    context.spCoinLogger.logExitFunction();
+    return tx;
+};

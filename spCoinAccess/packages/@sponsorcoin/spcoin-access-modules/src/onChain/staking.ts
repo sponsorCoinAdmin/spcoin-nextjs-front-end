@@ -1,1 +1,3 @@
-export { SpCoinStakingModule } from "../modules/spCoinStakingModule";
+// @ts-nocheck
+export { SpCoinStakingModule } from "../modules/spCoinStakingModule/index";
+

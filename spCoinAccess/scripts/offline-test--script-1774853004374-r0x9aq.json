@@ -6,15 +6,6 @@
   "steps": [
     {
       "step": 1,
-      "name": "getAccountRecords",
-      "panel": "spcoin_rread",
-      "method": "getAccountRecords",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 2,
       "name": "getOffLineAccountRecords",
       "panel": "spcoin_rread",
       "method": "getOffLineAccountRecords",
@@ -23,7 +14,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 3,
+      "step": 2,
       "name": "creationTime",
       "panel": "spcoin_rread",
       "method": "creationTime",
@@ -32,7 +23,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 4,
+      "step": 3,
       "name": "compareSpCoinContractSize",
       "panel": "spcoin_rread",
       "method": "compareSpCoinContractSize",
@@ -46,6 +37,15 @@
           "value": "spCoinAccess/contracts/spCoin"
         }
       ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "getOffLineAccountRecords",
+      "panel": "spcoin_rread",
+      "method": "getOffLineAccountRecords",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

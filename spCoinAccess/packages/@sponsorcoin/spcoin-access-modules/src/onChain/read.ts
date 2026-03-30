@@ -1,1 +1,3 @@
-export { SpCoinReadModule } from "../modules/spCoinReadModule";
+// @ts-nocheck
+export { SpCoinReadModule } from "../modules/spCoinReadModule/index";
+

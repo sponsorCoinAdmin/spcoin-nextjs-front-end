@@ -1415,7 +1415,10 @@ export default function SponsorCoinLabPage() {
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
   const serializationTestMethodDefs = SERIALIZATION_TEST_METHOD_DEFS;
-  const activeSpCoinReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
+  const normalizedSelectedSpCoinReadMethod = normalizeSpCoinReadMethod(selectedSpCoinReadMethod);
+  const fallbackSpCoinReadMethod = Object.keys(spCoinReadMethodDefs)[0] as SpCoinReadMethod;
+  const activeSpCoinReadDef =
+    spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod] ?? spCoinReadMethodDefs[fallbackSpCoinReadMethod];
   const activeSpCoinWriteDef =
     spCoinWriteMethodDefs[selectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
   const serializationTestOptions = getSerializationTestOptions();
@@ -1478,7 +1481,7 @@ export default function SponsorCoinLabPage() {
     writeAmountRaw,
     activeReadLabels,
     activeWriteLabels,
-    selectedSpCoinReadMethod,
+    selectedSpCoinReadMethod: normalizedSelectedSpCoinReadMethod,
     setSelectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
     setSelectedSpCoinWriteMethod,
@@ -2124,10 +2127,16 @@ export default function SponsorCoinLabPage() {
     ],
   );
   useEffect(() => {
-    if (spCoinReadMethodDefs[selectedSpCoinReadMethod].executable === false && spCoinAllReadOptions.length > 0) {
+    const activeReadDef = spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod];
+    if (activeReadDef?.executable === false && spCoinAllReadOptions.length > 0) {
       setSelectedSpCoinReadMethod(spCoinAllReadOptions[0]);
     }
-  }, [selectedSpCoinReadMethod, spCoinReadMethodDefs, spCoinAllReadOptions]);
+  }, [normalizedSelectedSpCoinReadMethod, spCoinReadMethodDefs, spCoinAllReadOptions]);
+  useEffect(() => {
+    if (selectedSpCoinReadMethod !== normalizedSelectedSpCoinReadMethod) {
+      setSelectedSpCoinReadMethod(normalizedSelectedSpCoinReadMethod);
+    }
+  }, [normalizedSelectedSpCoinReadMethod, selectedSpCoinReadMethod]);
   useEffect(() => {
     if (!spCoinWriteMethodDefs[selectedSpCoinWriteMethod] && spCoinWriteOptions.length > 0) {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
@@ -2164,7 +2173,9 @@ export default function SponsorCoinLabPage() {
   const [isJavaScriptFileLoading, setIsJavaScriptFileLoading] = useState(false);
   const [isTypeScriptEditEnabled, setIsTypeScriptEditEnabled] = useState(false);
   const [isSavingSelectedTypeScriptFile, setIsSavingSelectedTypeScriptFile] = useState(false);
-  const selectedJavaScriptFilePath = String(selectedJavaScriptScript?.filePath || '').trim();
+  const selectedJavaScriptDisplayFilePath = String(
+    selectedJavaScriptScript?.displayFilePath || selectedJavaScriptScript?.filePath || '',
+  ).trim();
   const selectedTypeScriptFocusPattern = String(selectedJavaScriptScript?.focusPattern || '').trim();
 
   const formatFocusedTypeScriptContent = useCallback((content: string, filePath: string, focusPattern: string) => {
@@ -2179,7 +2190,7 @@ export default function SponsorCoinLabPage() {
   }, []);
 
   const reloadJavaScriptFile = useCallback((options?: { applyFocus?: boolean }) => {
-    if (!selectedJavaScriptFilePath) {
+    if (!selectedJavaScriptDisplayFilePath) {
       setJavaScriptFileContent('');
       return;
     }
@@ -2188,7 +2199,7 @@ export default function SponsorCoinLabPage() {
     void (async () => {
       try {
         const response = await fetch(
-          `/api/spCoin/javascript-scripts?filePath=${encodeURIComponent(selectedJavaScriptFilePath)}`,
+          `/api/spCoin/javascript-scripts?filePath=${encodeURIComponent(selectedJavaScriptDisplayFilePath)}`,
           { cache: 'no-store' },
         );
         const payload = (await response.json()) as { ok?: boolean; message?: string; content?: string };
@@ -2198,7 +2209,7 @@ export default function SponsorCoinLabPage() {
         const content = String(payload?.content || '');
         setJavaScriptFileContent(
           applyFocus
-            ? formatFocusedTypeScriptContent(content, selectedJavaScriptFilePath, selectedTypeScriptFocusPattern)
+            ? formatFocusedTypeScriptContent(content, selectedJavaScriptDisplayFilePath, selectedTypeScriptFocusPattern)
             : content,
         );
       } catch (error) {
@@ -2208,27 +2219,27 @@ export default function SponsorCoinLabPage() {
         setIsJavaScriptFileLoading(false);
       }
     })();
-  }, [formatFocusedTypeScriptContent, selectedJavaScriptFilePath, selectedTypeScriptFocusPattern, setOutputPanelMode, setStatus]);
+  }, [formatFocusedTypeScriptContent, selectedJavaScriptDisplayFilePath, selectedTypeScriptFocusPattern, setOutputPanelMode, setStatus]);
 
   useEffect(() => {
     if (scriptEditorKind !== 'javascript') return;
-    if (!selectedJavaScriptFilePath) {
+    if (!selectedJavaScriptDisplayFilePath) {
       setJavaScriptFileContent('');
       return;
     }
     setIsTypeScriptEditEnabled(false);
     reloadJavaScriptFile({ applyFocus: true });
-  }, [reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptFilePath, selectedJavaScriptScriptId]);
+  }, [reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptDisplayFilePath, selectedJavaScriptScriptId]);
 
   useEffect(() => {
-    if (scriptEditorKind !== 'javascript' || !selectedJavaScriptFilePath) return;
+    if (scriptEditorKind !== 'javascript' || !selectedJavaScriptDisplayFilePath) return;
     reloadJavaScriptFile({ applyFocus: !isTypeScriptEditEnabled });
-  }, [isTypeScriptEditEnabled, reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptFilePath]);
+  }, [isTypeScriptEditEnabled, reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptDisplayFilePath]);
 
-  const canEditSelectedTypeScriptFile = Boolean(String(selectedJavaScriptFilePath || '').trim());
+  const canEditSelectedTypeScriptFile = Boolean(String(selectedJavaScriptDisplayFilePath || '').trim());
 
   const saveSelectedTypeScriptFile = useCallback(() => {
-    if (!selectedJavaScriptFilePath) {
+    if (!selectedJavaScriptDisplayFilePath) {
       setStatus('Select a TypeScript file first.');
       setOutputPanelMode('raw_status');
       return;
@@ -2240,7 +2251,7 @@ export default function SponsorCoinLabPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            filePath: selectedJavaScriptFilePath,
+            filePath: selectedJavaScriptDisplayFilePath,
             content: javaScriptFileContent,
           }),
         });
@@ -2248,7 +2259,7 @@ export default function SponsorCoinLabPage() {
         if (!response.ok) {
           throw new Error(payload?.message || `Unable to save TypeScript file (${response.status})`);
         }
-        setStatus(`Saved ${String(selectedJavaScriptScript?.name || selectedJavaScriptFilePath)}.`);
+        setStatus(`Saved ${String(selectedJavaScriptScript?.name || selectedJavaScriptDisplayFilePath)}.`);
         setOutputPanelMode('raw_status');
       } catch (error) {
         setStatus(error instanceof Error ? error.message : 'Unable to save TypeScript file.');
@@ -2257,7 +2268,7 @@ export default function SponsorCoinLabPage() {
         setIsSavingSelectedTypeScriptFile(false);
       }
     })();
-  }, [javaScriptFileContent, selectedJavaScriptFilePath, selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
+  }, [javaScriptFileContent, selectedJavaScriptDisplayFilePath, selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
 
   const runSelectedJavaScriptScript = useCallback(() => {
     const scriptName = String(selectedJavaScriptScript?.name || '').trim();
@@ -3074,7 +3085,7 @@ export default function SponsorCoinLabPage() {
               selectedJavaScriptScriptId,
               setSelectedJavaScriptScriptId,
               selectedScriptName: String(selectedJavaScriptScript?.name || ''),
-              selectedFilePath: selectedJavaScriptFilePath,
+              selectedFilePath: selectedJavaScriptDisplayFilePath,
               javaScriptFileContent,
               isJavaScriptFileLoading,
               isTypeScriptEditEnabled,
@@ -3197,7 +3208,7 @@ export default function SponsorCoinLabPage() {
               showOffChainMethods,
               hardhatAccounts,
               hardhatAccountMetadata,
-              selectedSpCoinReadMethod,
+              selectedSpCoinReadMethod: normalizedSelectedSpCoinReadMethod,
               setSelectedSpCoinReadMethod: (value) => selectDropdownSpCoinReadMethod(value as SpCoinReadMethod),
               spCoinWorldReadOptions,
               spCoinSenderReadOptions,

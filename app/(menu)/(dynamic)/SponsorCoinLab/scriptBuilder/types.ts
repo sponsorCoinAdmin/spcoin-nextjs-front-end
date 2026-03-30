@@ -35,6 +35,8 @@ export type LabJavaScriptScript = {
   name: string;
   scriptType?: 'test' | 'util';
   filePath?: string;
+  displayFilePath?: string;
+  executionFilePath?: string;
   focusPattern?: string;
   isSystemScript?: boolean;
 };

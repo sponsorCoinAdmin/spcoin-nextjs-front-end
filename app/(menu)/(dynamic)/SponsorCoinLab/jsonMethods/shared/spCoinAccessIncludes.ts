@@ -6,12 +6,12 @@ import { SpCoinERC20Module as NodeSpCoinERC20Module } from '@sponsorcoin/spcoin-
 import { SpCoinReadModule as NodeSpCoinReadModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js';
 import { SpCoinRewardsModule as NodeSpCoinRewardsModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js';
 import { SpCoinStakingModule as NodeSpCoinStakingModule } from '@sponsorcoin/spcoin-access-modules/modules/spCoinStakingModule.js';
-import { SpCoinAddModule as LocalSpCoinAddModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinAddModule';
-import { SpCoinDeleteModule as LocalSpCoinDeleteModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinDeleteModule';
-import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinERC20Module';
-import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule';
-import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinRewardsModule';
-import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinStakingModule';
+import { SpCoinAddModule as LocalSpCoinAddModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinAddModule/index';
+import { SpCoinDeleteModule as LocalSpCoinDeleteModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinDeleteModule/index';
+import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinERC20Module/index';
+import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/index';
+import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinRewardsModule/index';
+import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinStakingModule/index';
 import type {
   AccountStruct,
   AgentRateStruct,
@@ -22,7 +22,7 @@ import type {
   StakingTransactionStruct,
 } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/dataTypes/spCoinDataTypes';
 
-type ModuleCtor = new (spCoinContractDeployed: Contract) => unknown;
+type ModuleCtor = new (...args: any[]) => unknown;
 export type SpCoinAccessSource = 'local' | 'node_modules';
 
 export type SpCoinAddAccess = {
@@ -80,7 +80,7 @@ export type SpCoinReadAccess = {
   getAccountList: () => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
-  getAccountRecords: () => Promise<AccountStruct[]>;
+  getOffLineAccountRecords: () => Promise<AccountStruct[]>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
   getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;

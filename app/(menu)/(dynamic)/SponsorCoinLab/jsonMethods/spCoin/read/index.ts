@@ -152,11 +152,6 @@ async function requireExternalSerializedValue(
   return external.value;
 }
 
-function getDynamicMethod(target: Record<string, unknown>, method: string) {
-  const candidate = target[method];
-  return typeof candidate === 'function' ? (candidate as (...args: unknown[]) => unknown) : undefined;
-}
-
 function toStringOrNumber(value: unknown): string | number {
   return typeof value === 'number' ? value : String(value);
 }
@@ -189,6 +184,18 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
+const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
+  ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+};
+const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
+  OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+};
+
+const READ_METHOD_HANDLERS = {
+  ...ONCHAIN_READ_METHOD_HANDLERS,
+  ...OFFCHAIN_READ_METHOD_HANDLERS,
+} as const;
+
 export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const {
     selectedMethod,
@@ -204,6 +211,9 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
 
   const canonicalMethod = normalizeSpCoinReadMethod(selectedMethod);
   const activeDef = SPCOIN_READ_METHOD_DEFS[canonicalMethod];
+  if (!activeDef) {
+    throw new Error(`SpCoin read method ${selectedMethod} is not registered.`);
+  }
   const target = requireContractAddress();
   const runner = await ensureReadRunner();
   const access = createSpCoinLibraryAccess(target, runner, undefined, spCoinAccessSource);
@@ -211,17 +221,32 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-  let result: unknown;
-
-  switch (canonicalMethod) {
-    case 'compareSpCoinContractSize': {
+  const handler = READ_METHOD_HANDLERS[canonicalMethod];
+  if (!handler) {
+    throw new Error(`SpCoin read method ${selectedMethod} is not wired to a read-method source file.`);
+  }
+  const result = await handler.run({
+    canonicalMethod,
+    selectedMethod,
+    methodArgs,
+    spCoinAccessSource,
+    target,
+    read: read as Record<string, unknown>,
+    staking,
+    contract: contract as Record<string, unknown>,
+    normalizeStringListResult,
+    toStringOrNumber,
+    formatCreationTimeResult,
+    requireExternalSerializedValue: (method: string, args: unknown[]) =>
+      requireExternalSerializedValue(contract, method as SerializationBaseMethod, args),
+    compareSpCoinContractSize: async (previousReleaseDir: string, latestReleaseDir: string) => {
       const response = await fetch('/api/spCoin/contract-size-comparison', {
         method: 'POST',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          previousReleaseDir: String(methodArgs[0] || ''),
-          latestReleaseDir: String(methodArgs[1] || ''),
+          previousReleaseDir,
+          latestReleaseDir,
         }),
       });
       const payload = (await response.json()) as {
@@ -237,7 +262,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       if (!response.ok || payload?.ok === false) {
         throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
       }
-      result = {
+      return {
         scriptPath: String(payload?.scriptPath || ''),
         previousReleaseDir: String(payload?.previousReleaseDir || ''),
         latestReleaseDir: String(payload?.latestReleaseDir || ''),
@@ -245,302 +270,8 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
         report: payload?.report ?? {},
         stderr: String(payload?.stderr || ''),
       };
-      break;
-    }
-    case 'getSerializedSPCoinHeader': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getSPCoinHeaderRecord(false);
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSerializedAccountRecord': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getAccountRecord(String(methodArgs[0]));
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSerializedAccountRewards': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getAccountStakingRewards(String(methodArgs[0]));
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSerializedRecipientRecordList': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getRecipientRecord(String(methodArgs[0]), String(methodArgs[1]));
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSerializedRecipientRateList': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getRecipientRateRecord(
-          String(methodArgs[0]),
-          String(methodArgs[1]),
-          toStringOrNumber(methodArgs[2]),
-        );
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'serializeAgentRateRecordStr': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getAgentRateRecord(
-          String(methodArgs[0]),
-          String(methodArgs[1]),
-          toStringOrNumber(methodArgs[2]),
-          String(methodArgs[3]),
-          toStringOrNumber(methodArgs[4]),
-        );
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSerializedRateTransactionList': {
-      if (spCoinAccessSource === 'local') {
-        result = await read.getAgentRateTransactionList(
-          String(methodArgs[0]),
-          String(methodArgs[1]),
-          toStringOrNumber(methodArgs[2]),
-          String(methodArgs[3]),
-          toStringOrNumber(methodArgs[4]),
-        );
-        break;
-      }
-      const external = await buildExternalSerializerResult(
-        contract,
-        selectedMethod as SerializationBaseMethod,
-        methodArgs,
-      );
-      if (external.blocked) {
-        throw new Error(external.reason);
-      }
-      result = external.value;
-      break;
-    }
-    case 'getSPCoinHeaderRecord': {
-      result = await read.getSPCoinHeaderRecord(Boolean(methodArgs[0]));
-      break;
-    }
-    case 'getAccountListSize': {
-      const accountList = normalizeStringListResult(await read.getAccountList());
-      result = accountList.length;
-      break;
-    }
-    case 'getAccountRecipientListSize': {
-      const recipientList = normalizeStringListResult(await read.getAccountRecipientList(String(methodArgs[0])));
-      result = recipientList.length;
-      break;
-    }
-    case 'getAccountRecord': {
-      result = await read.getAccountRecord(String(methodArgs[0]));
-      break;
-    }
-    case 'getOffLineAccountRecords': {
-      const accountKeys = normalizeStringListResult(await read.getAccountList());
-      result = await Promise.all(accountKeys.map(async (accountKey) => read.getAccountRecord(String(accountKey))));
-      break;
-    }
-    case 'getAccountStakingRewards': {
-      result = await read.getAccountStakingRewards(String(methodArgs[0]));
-      break;
-    }
-    case 'getAccountRewardTransactionList':
-    case 'getAccountRewardTransactionRecord':
-    case 'getAccountRateRecordList':
-    case 'getRateTransactionList': {
-      result = methodArgs[0];
-      break;
-    }
-    case 'getRecipientRateRecord': {
-      result = await read.getRecipientRateRecord(
-        String(methodArgs[0]),
-        String(methodArgs[1]),
-        toStringOrNumber(methodArgs[2]),
-      );
-      break;
-    }
-    case 'getRecipientRateRecordList': {
-      const rates = (await contract.getRecipientRateList?.(methodArgs[0], methodArgs[1])) ?? [];
-      result = await Promise.all(
-        rates.map(async (rate) => ({
-          recipientRateKey: String(rate),
-          serializedRecipientRateList: await requireExternalSerializedValue(
-            contract,
-            'getSerializedRecipientRateList',
-            [methodArgs[0], methodArgs[1], String(rate)],
-          ),
-        })),
-      );
-      break;
-    }
-    case 'getRecipientRecord': {
-      result = await read.getRecipientRecord(String(methodArgs[0]), String(methodArgs[1]));
-      break;
-    }
-    case 'getRecipientRecordList': {
-      const sponsorKey = String(methodArgs[0]);
-      const recipientAccountList = methodArgs[1] as string[];
-      result = await Promise.all(
-        recipientAccountList.map(async (recipientKey) => ({
-          recipientKey,
-          serializedRecipientRecordList: await requireExternalSerializedValue(
-            contract,
-            'getSerializedRecipientRecordList',
-            [sponsorKey, recipientKey],
-          ),
-        })),
-      );
-      break;
-    }
-    case 'getAgentRateRecord': {
-      result = await read.getAgentRateRecord(
-        String(methodArgs[0]),
-        String(methodArgs[1]),
-        toStringOrNumber(methodArgs[2]),
-        String(methodArgs[3]),
-        toStringOrNumber(methodArgs[4]),
-      );
-      break;
-    }
-    case 'getAgentRateRecordList': {
-      const agentRateKeys = (await contract.getAgentRateList?.(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3])) as
-        | Array<string | bigint>
-        | undefined;
-      result = await Promise.all(
-        (agentRateKeys ?? []).map(async (agentRateKey) => ({
-          agentRateKey: String(agentRateKey),
-          serializedAgentRateRecord: await requireExternalSerializedValue(
-            contract,
-            'serializeAgentRateRecordStr',
-            [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], String(agentRateKey)],
-          ),
-        })),
-      );
-      break;
-    }
-    case 'getAgentRateTransactionList': {
-      result = await read.getAgentRateTransactionList(
-        String(methodArgs[0]),
-        String(methodArgs[1]),
-        toStringOrNumber(methodArgs[2]),
-        String(methodArgs[3]),
-        toStringOrNumber(methodArgs[4]),
-      );
-      break;
-    }
-    case 'getAgentRecord': {
-      const stakedSPCoins = await contract.getAgentTotalRecipient?.(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]);
-      const agentRateList = await contract.getAgentRateList?.(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3]);
-      result = { agentKey: methodArgs[3], stakedSPCoins, agentRateList };
-      break;
-    }
-    case 'getAgentRecordList': {
-      const sponsorKey = String(methodArgs[0]);
-      const recipientKey = String(methodArgs[1]);
-      const recipientRateKey = String(methodArgs[2]);
-      const agentAccountList = methodArgs[3] as string[];
-      result = await Promise.all(
-        agentAccountList.map(async (agentKey) => ({
-          agentKey,
-          stakedSPCoins: await contract.getAgentTotalRecipient?.(sponsorKey, recipientKey, recipientRateKey, agentKey),
-          agentRateList: await contract.getAgentRateList?.(sponsorKey, recipientKey, recipientRateKey, agentKey),
-        })),
-      );
-      break;
-    }
-    default:
-      if (getDynamicMethod(read as Record<string, unknown>, selectedMethod)) {
-        result = await getDynamicMethod(read as Record<string, unknown>, selectedMethod)!(...methodArgs);
-      } else if (getDynamicMethod(staking, selectedMethod)) {
-        result = await getDynamicMethod(staking, selectedMethod)!(...methodArgs);
-      } else {
-        const contractMethod = getDynamicMethod(contract as Record<string, unknown>, selectedMethod);
-        if (!contractMethod) {
-          throw new Error(`SpCoin read method ${selectedMethod} is not available on access modules or contract.`);
-        }
-        result = await contractMethod(...methodArgs);
-      }
-      break;
-  }
-
-  if (canonicalMethod === 'creationTime') {
-    result = formatCreationTimeResult(result);
-  }
-
-  if (canonicalMethod === 'getSpCoinMetaData' && result && typeof result === 'object' && !Array.isArray(result)) {
-    let creationDate = '';
-    try {
-      const creationTimeMethod = getDynamicMethod(contract as Record<string, unknown>, 'creationTime');
-      if (creationTimeMethod) {
-        creationDate = formatCreationTimeResult(await creationTimeMethod()).formatted;
-      }
-    } catch {
-      creationDate = '';
-    }
-    result = {
-      contractAddress: target,
-      ...result,
-      creationDate,
-    };
-  }
+    },
+  });
 
   const out = stringifyResult(result);
   appendLog(`${activeDef.title}(${methodArgs.join(', ')}) -> ${out}`);

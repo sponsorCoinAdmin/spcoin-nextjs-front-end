@@ -1,8 +1,8 @@
 {
   "packages": {
     "@sponsorcoin/spcoin-access-modules": {
-      "downloadedVersion": "3.0.0",
-      "activeArchive": "sponsorcoin-spcoin-access-modules-3.0.0.tgz"
+      "downloadedVersion": "3.0.1",
+      "activeArchive": "sponsorcoin-spcoin-access-modules-3.0.1.tgz"
     }
   }
 }

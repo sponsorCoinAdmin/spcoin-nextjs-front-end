@@ -1,1 +1,3 @@
-export { SpCoinRewardsModule } from "../modules/spCoinRewardsModule";
+// @ts-nocheck
+export { SpCoinRewardsModule } from "../modules/spCoinRewardsModule/index";
+

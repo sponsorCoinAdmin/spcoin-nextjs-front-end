@@ -36,6 +36,10 @@ const ACCESS_MODULES_TYPESCRIPT_ROOT = 'spCoinAccess/packages/@sponsorcoin/spcoi
 const OFFCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/offChain/`;
 const ONCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/onChain/`;
 
+function getJavaScriptScriptCategoryPath(script: LabJavaScriptScript) {
+  return String(script.executionFilePath || script.filePath || script.displayFilePath || '').trim();
+}
+
 function normalizeScriptName(value: string) {
   return String(value || '').trim().toLowerCase();
 }
@@ -226,8 +230,8 @@ export function useSponsorCoinLabScripts({
           (
             showJavaScriptUtilScriptsOnly ||
             !script.isSystemScript ||
-            ((showOnChainMethods && String(script.filePath || '').includes(ONCHAIN_TYPESCRIPT_ROOT)) ||
-              (showOffChainMethods && String(script.filePath || '').includes(OFFCHAIN_TYPESCRIPT_ROOT)))
+            ((showOnChainMethods && getJavaScriptScriptCategoryPath(script).includes(ONCHAIN_TYPESCRIPT_ROOT)) ||
+              (showOffChainMethods && getJavaScriptScriptCategoryPath(script).includes(OFFCHAIN_TYPESCRIPT_ROOT)))
           ),
       ),
     [availableJavaScriptScripts, showJavaScriptUtilScriptsOnly, showOffChainMethods, showOnChainMethods],

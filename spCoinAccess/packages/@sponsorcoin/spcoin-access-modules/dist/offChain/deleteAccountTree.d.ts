@@ -1,9 +1,9 @@
 /**
  * SponsorCoin Access Modules
- * File: dist/offChain/deleteAccountTree.d.ts
- * Role: Type declarations for the off-chain deleteAccountTree helper.
+ * File: dist/offChain/deleteAccountTree.js
+ * Role: Off-chain helper that walks the SponsorCoin account tree and deletes leaf records first.
  */
-export declare function deleteAccountTree(this: any): Promise<{
+export declare function deleteAccountTree(): Promise<{
     accountCount: number;
     recipientCount: number;
     recipientRateCount: number;
