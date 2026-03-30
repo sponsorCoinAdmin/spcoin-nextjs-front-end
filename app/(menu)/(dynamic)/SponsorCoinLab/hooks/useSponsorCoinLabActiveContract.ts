@@ -79,9 +79,7 @@ export function useSponsorCoinLabActiveContract({
     [selectedSponsorCoinVersionEntry],
   );
   const selectedVersionSymbol = String(selectedSponsorCoinVersionEntry?.symbol || '');
-  const selectedVersionLabel = String(selectedSponsorCoinVersionEntry?.version || '').trim() || '(no deployment map entries)';
-  const selectedVersionWidthCh = Math.max(10, selectedVersionLabel.length + 2);
-  const selectedVersionSymbolWidthCh = Math.max(4, selectedVersionSymbol.length + 1);
+  const selectedVersionSymbolWidthCh = Math.max(6, selectedVersionSymbol.length + 2);
 
   return {
     selectedSponsorCoinVersion,
@@ -94,7 +92,6 @@ export function useSponsorCoinLabActiveContract({
     canDecrementSponsorCoinVersion: selectedSponsorCoinVersionIndex > 0,
     requireContractAddress,
     selectedVersionSignerKey,
-    selectedVersionWidthCh,
     selectedVersionSymbol,
     selectedVersionSymbolWidthCh,
   };

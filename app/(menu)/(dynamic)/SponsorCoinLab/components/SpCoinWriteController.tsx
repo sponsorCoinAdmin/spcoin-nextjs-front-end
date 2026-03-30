@@ -3,6 +3,7 @@ import React from 'react';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
@@ -311,7 +312,7 @@ export default function SpCoinWriteController(props: Props) {
             <option
               key={`sp-write-${name}`}
               value={name}
-              style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+              style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
             >
               {name}
             </option>
@@ -330,7 +331,7 @@ export default function SpCoinWriteController(props: Props) {
                 <option
                   key={`sp-write-sender-${name}`}
                   value={name}
-                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
                   {name}
                 </option>
@@ -351,7 +352,7 @@ export default function SpCoinWriteController(props: Props) {
                 <option
                   key={`sp-write-admin-${name}`}
                   value={name}
-                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
                   {name}
                 </option>
@@ -372,7 +373,7 @@ export default function SpCoinWriteController(props: Props) {
                 <option
                   key={`sp-write-todo-${name}`}
                   value={name}
-                  style={{ color: spCoinWriteMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
                   {name}
                 </option>

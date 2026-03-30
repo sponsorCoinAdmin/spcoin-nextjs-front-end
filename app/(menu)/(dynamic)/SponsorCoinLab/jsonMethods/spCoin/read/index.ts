@@ -158,6 +158,22 @@ function toStringOrNumber(value: unknown): string | number {
   return typeof value === 'number' ? value : String(value);
 }
 
+function formatCreationTimeResult(value: unknown) {
+  const raw = typeof value === 'bigint' ? value : BigInt(String(value ?? '0'));
+  const seconds = Number(raw);
+  const timestamp = new Date(seconds * 1000);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pad2 = (input: number) => String(input).padStart(2, '0');
+  const pad3 = (input: number) => String(input).padStart(3, '0');
+  const month = months[timestamp.getUTCMonth()] || 'Jan';
+  const formatted = `${month}-${pad2(timestamp.getUTCDate())}-${timestamp.getUTCFullYear()},.${pad2(timestamp.getUTCHours())}:${pad2(timestamp.getUTCMinutes())}:${pad2(timestamp.getUTCSeconds())}:${pad3(timestamp.getUTCMilliseconds())}`;
+
+  return {
+    ms_offset: seconds.toLocaleString('en-US'),
+    formatted,
+  };
+}
+
 type RunArgs = {
   selectedMethod: SpCoinReadMethod;
   spReadParams: string[];
@@ -466,6 +482,10 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
         result = await contractMethod(...methodArgs);
       }
       break;
+  }
+
+  if (canonicalMethod === 'creationTime') {
+    result = formatCreationTimeResult(result);
   }
 
   const out = stringifyResult(result);

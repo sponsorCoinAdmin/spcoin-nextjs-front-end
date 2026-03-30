@@ -308,6 +308,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
+    if (keyPath[keyPath.length - 1] === 'formatted') return value;
     if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') {
       const parsedError = parseStructuredErrorMessage(trimmed);
       return parsedError ?? value;
@@ -972,7 +973,6 @@ export default function SponsorCoinLabPage() {
     displayedSignerAccountMetadata,
     selectedVersionSymbol,
     selectedSponsorCoinLogoURL,
-    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
     selectedWriteSenderAccount,
     writeSenderDisplayValue,
@@ -3001,7 +3001,6 @@ export default function SponsorCoinLabPage() {
               adjustSponsorCoinVersion,
               selectedVersionSignerKey,
               displayedVersionHardhatAccountIndex,
-              selectedVersionWidthCh,
               selectedVersionSymbolWidthCh,
               selectedVersionSymbol,
             }}

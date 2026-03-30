@@ -2,6 +2,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import { getMethodOptionColor } from './methodOptionColors';
 
 type ActiveReadLabels = {
   title: string;
@@ -130,7 +131,7 @@ export default function Erc20ReadController(props: Props) {
         >
           {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
           {visibleReadOptions.map((name) => (
-            <option key={`erc20-read-${name}`} value={name}>
+            <option key={`erc20-read-${name}`} value={name} style={{ color: getMethodOptionColor(name) }}>
               {name}
             </option>
           ))}

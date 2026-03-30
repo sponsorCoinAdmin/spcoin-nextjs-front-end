@@ -2,6 +2,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
@@ -160,7 +161,7 @@ export default function SpCoinReadController(props: Props) {
             <option
               key={`sp-read-${name}`}
               value={name}
-              style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+              style={{ color: getMethodOptionColor(name, spCoinReadMethodDefs[name].executable) }}
             >
               {spCoinReadMethodDefs[name]?.title || name}
             </option>
@@ -179,7 +180,7 @@ export default function SpCoinReadController(props: Props) {
                 <option
                   key={`sp-read-sender-${name}`}
                   value={name}
-                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinReadMethodDefs[name].executable) }}
                 >
                   {spCoinReadMethodDefs[name]?.title || name}
                 </option>
@@ -200,7 +201,7 @@ export default function SpCoinReadController(props: Props) {
                 <option
                   key={`sp-read-admin-${name}`}
                   value={name}
-                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinReadMethodDefs[name].executable) }}
                 >
                   {spCoinReadMethodDefs[name]?.title || name}
                 </option>
@@ -226,7 +227,7 @@ export default function SpCoinReadController(props: Props) {
                 <option
                   key={`sp-read-compound-${name}`}
                   value={name}
-                  style={{ color: spCoinReadMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+                  style={{ color: getMethodOptionColor(name, spCoinReadMethodDefs[name].executable) }}
                 >
                   {spCoinReadMethodDefs[name]?.title || name}
                 </option>

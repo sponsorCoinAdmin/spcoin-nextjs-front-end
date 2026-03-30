@@ -107,6 +107,16 @@ function normalizeRateRangeTuple(value: unknown): [number, number] {
   return [0, Number(value ?? 0)];
 }
 
+function hasNonZeroRateRangeTuple(value: unknown): value is [number, number] {
+  return (
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    Number.isFinite(Number(value[0])) &&
+    Number.isFinite(Number(value[1])) &&
+    (Number(value[0]) !== 0 || Number(value[1]) !== 0)
+  );
+}
+
 function getPersistedSpCoinAccessAddress(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   try {
@@ -397,6 +407,8 @@ export function useProviderWatchers({
     const currentName = String(currentMeta?.name ?? '').trim();
     const currentVersion = String(currentMeta?.version ?? '').trim();
     const currentSymbol = String(currentMeta?.symbol ?? '').trim();
+    const currentRecipientRateRange = currentMeta?.recipientRateRange;
+    const currentAgentRateRange = currentMeta?.agentRateRange;
     const persistedLabSeed = getPersistedSponsorCoinLabContractSeed();
     const persistedAccessSeed = getPersistedSpCoinAccessContractSeed();
     const persistedSeed = persistedLabSeed
@@ -471,12 +483,13 @@ export function useProviderWatchers({
     const shouldHydrate =
       currentName.length === 0 ||
       currentVersion.length === 0 ||
+      !hasNonZeroRateRangeTuple(currentRecipientRateRange) ||
+      !hasNonZeroRateRangeTuple(currentAgentRateRange) ||
       spCoinMetaKeyRef.current !== metaKey;
 
     if (!shouldHydrate) return;
 
     let cancelled = false;
-    spCoinMetaKeyRef.current = metaKey;
 
     (async () => {
       try {
@@ -513,6 +526,7 @@ export function useProviderWatchers({
           },
           'watcher:spCoinMetaData:hydrate',
         );
+        spCoinMetaKeyRef.current = metaKey;
       } catch {
         // Ignore transient metadata hydration errors and retry on the next key change.
       }
@@ -527,7 +541,9 @@ export function useProviderWatchers({
     contextState?.network?.chainId,
     contextState?.tradeData?.buyTokenContract?.address,
     contextState?.tradeData?.sellTokenContract?.address,
+    contextState?.settings?.spCoinContract?.agentRateRange,
     contextState?.settings?.spCoinContract?.name,
+    contextState?.settings?.spCoinContract?.recipientRateRange,
     contextState?.settings?.spCoinContract?.symbol,
     contextState?.settings?.spCoinContract?.version,
     setExchangeContext,

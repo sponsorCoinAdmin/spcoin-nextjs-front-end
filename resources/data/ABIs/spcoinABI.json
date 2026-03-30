@@ -350,6 +350,34 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "deleteAgentSponsorship",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_accountType",
         "type": "uint256"

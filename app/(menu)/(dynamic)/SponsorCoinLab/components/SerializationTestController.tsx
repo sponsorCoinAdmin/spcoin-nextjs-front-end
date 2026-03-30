@@ -1,6 +1,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
@@ -121,7 +122,7 @@ export default function SerializationTestController(props: Props) {
             <option
               key={`serialization-test-${name}`}
               value={name}
-              style={{ color: serializationTestMethodDefs[name].executable === false ? '#ef4444' : undefined }}
+              style={{ color: getMethodOptionColor(name, serializationTestMethodDefs[name].executable) }}
             >
               {name}
             </option>

@@ -477,7 +477,6 @@ export function useSponsorCoinLabNetwork({
     requireContractAddress,
     selectedVersionSignerKey,
     selectedVersionSymbol,
-    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
   } = useSponsorCoinLabActiveContract({
     contractAddress,
@@ -990,7 +989,6 @@ export function useSponsorCoinLabNetwork({
     displayedSignerAccountMetadata,
     selectedVersionSymbol,
     selectedSponsorCoinLogoURL,
-    selectedVersionWidthCh,
     selectedVersionSymbolWidthCh,
     selectedWriteSenderAccount,
     writeSenderDisplayValue,
