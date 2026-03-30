@@ -1,10 +1,15 @@
-// @ts-nocheck
 import * as addMethods from "./methods";
-export function bindAddMethods(context) {
-    const boundMethods = context;
-    const methodEntries = Object.entries(addMethods);
-    for (const [name, method] of methodEntries) {
-        boundMethods[name] = (...args) => method(context, ...args);
-    }
+import type {
+  SpCoinAddBoundMethod,
+  SpCoinAddMethod,
+  SpCoinAddModuleContext,
+} from "./types";
+
+export function bindAddMethods(context: SpCoinAddModuleContext): void {
+  const methodEntries = Object.entries(addMethods) as Array<[string, SpCoinAddMethod]>;
+
+  for (const [name, method] of methodEntries) {
+    context[name] = ((...args: unknown[]) => method(context, ...args)) as SpCoinAddBoundMethod;
+  }
 }
 

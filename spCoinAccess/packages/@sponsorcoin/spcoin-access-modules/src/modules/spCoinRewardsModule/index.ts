@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { SpCoinLogger } from "../../utils/logging";
-import { SpCoinSerialize } from "../../utils//serialize";
+import { SpCoinSerialize } from "../../utils/serialize";
 import { bindRewardsMethods } from "./bindRewardsMethods";
 export class SpCoinRewardsModule {
     constructor(_spCoinContractDeployed) {

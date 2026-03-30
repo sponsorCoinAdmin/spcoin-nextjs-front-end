@@ -1,10 +1,15 @@
-// @ts-nocheck
 import * as readMethods from "./methods";
-export function bindReadMethods(context) {
-    const boundMethods = context;
-    const methodEntries = Object.entries(readMethods);
-    for (const [name, method] of methodEntries) {
-        boundMethods[name] = (...args) => method(context, ...args);
-    }
+import type {
+  SpCoinReadBoundMethod,
+  SpCoinReadMethod,
+  SpCoinReadModuleContext,
+} from "./types";
+
+export function bindReadMethods(context: SpCoinReadModuleContext): void {
+  const methodEntries = Object.entries(readMethods) as Array<[string, SpCoinReadMethod]>;
+
+  for (const [name, method] of methodEntries) {
+    context[name] = ((...args: unknown[]) => method(context, ...args)) as SpCoinReadBoundMethod;
+  }
 }
 

@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/index.js
 import * as ethers_1 from "ethers";
 import * as logging_1 from "./utils/logging";
