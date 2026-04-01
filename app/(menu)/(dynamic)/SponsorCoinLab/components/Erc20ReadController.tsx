@@ -147,7 +147,7 @@ export default function Erc20ReadController(props: Props) {
           </select>
         </div>
       ) : null}
-      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {hasVisibleReadMethods && activeReadLabels.requiresAddressA && (
           <AccountSelection
             label={activeReadLabels.addressALabel}

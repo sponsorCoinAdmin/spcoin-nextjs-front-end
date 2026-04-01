@@ -86,6 +86,7 @@ export default function MethodsPanelCard({
   const methodPanelGroupName = React.useId();
   const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
   const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
+  const [isMethodPanelLoading, setIsMethodPanelLoading] = React.useState(false);
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
   const isErc20Mode = methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write';
@@ -222,9 +223,48 @@ export default function MethodsPanelCard({
     javaScriptEditorProps.selectedFilePath.split(/[\\/]/).pop() ||
     javaScriptEditorProps.selectedJavaScriptScriptId ||
     'UnknownFile';
+  const activePanelKey = React.useMemo(() => {
+    if (isJavaScriptScriptMode) {
+      return `ts:${javaScriptEditorProps.selectedJavaScriptScriptId || javaScriptEditorProps.selectedFilePath || 'none'}`;
+    }
+    if (methodPanelMode === 'ecr20_read') {
+      return `json:${methodPanelMode}:${erc20ReadProps.selectedReadMethod}`;
+    }
+    if (methodPanelMode === 'erc20_write') {
+      return `json:${methodPanelMode}:${erc20WriteProps.selectedWriteMethod}`;
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      return `json:${methodPanelMode}:${spCoinReadProps.selectedSpCoinReadMethod}`;
+    }
+    if (methodPanelMode === 'spcoin_write') {
+      return `json:${methodPanelMode}:${spCoinWriteProps.selectedSpCoinWriteMethod}`;
+    }
+    return `json:${methodPanelMode}:${serializationTestProps.selectedSerializationTestMethod}`;
+  }, [
+    erc20ReadProps.selectedReadMethod,
+    erc20WriteProps.selectedWriteMethod,
+    isJavaScriptScriptMode,
+    javaScriptEditorProps.selectedFilePath,
+    javaScriptEditorProps.selectedJavaScriptScriptId,
+    methodPanelMode,
+    serializationTestProps.selectedSerializationTestMethod,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+  ]);
+  React.useEffect(() => {
+    setIsMethodPanelLoading(true);
+    const timer = window.setTimeout(() => setIsMethodPanelLoading(false), 180);
+    return () => window.clearTimeout(timer);
+  }, [activePanelKey]);
+  const showLoadingPanel = isMethodPanelLoading || (isJavaScriptScriptMode && javaScriptEditorProps.isJavaScriptFileLoading);
+  const loadingPanel = (
+    <div className="rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-6 text-sm text-slate-400">
+      {isJavaScriptScriptMode ? 'Loading TypeScript file...' : 'Loading method panel...'}
+    </div>
+  );
   const sharedMethodSelect = React.useMemo(() => {
     if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
-    const baseClassName = 'grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]';
+    const baseClassName = 'grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]';
     if (isErc20Mode) {
       return (
         <div className={baseClassName}>
@@ -453,7 +493,7 @@ export default function MethodsPanelCard({
           <>
             {isJavaScriptScriptMode || (showAllCardSectionsForVisualTest && !isJsonScriptMode) ? (
               <div className="mb-3 grid grid-cols-1 gap-3">
-                <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
+                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
                   <select
                     className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
@@ -470,41 +510,73 @@ export default function MethodsPanelCard({
                     ))}
                   </select>
                 </div>
-                <textarea
-                  className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
-                  value={javaScriptEditorProps.javaScriptFileContent}
-                  onChange={(event) => javaScriptEditorProps.setJavaScriptFileContent(event.target.value)}
-                  readOnly={!javaScriptEditorProps.isTypeScriptEditEnabled}
-                  placeholder={
-                    javaScriptEditorProps.selectedFilePath
-                      ? javaScriptEditorProps.isJavaScriptFileLoading
-                        ? 'Loading TypeScript file...'
-                        : 'No TypeScript file contents loaded.'
-                      : 'Select a TypeScript file to view it here.'
-                  }
-                  spellCheck={false}
-                />
+                {showLoadingPanel ? (
+                  loadingPanel
+                ) : (
+                  <textarea
+                    className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
+                    value={javaScriptEditorProps.javaScriptFileContent}
+                    onChange={(event) => javaScriptEditorProps.setJavaScriptFileContent(event.target.value)}
+                    readOnly={!javaScriptEditorProps.isTypeScriptEditEnabled}
+                    placeholder={
+                      javaScriptEditorProps.selectedFilePath
+                        ? javaScriptEditorProps.isJavaScriptFileLoading
+                          ? 'Loading TypeScript file...'
+                          : 'No TypeScript file contents loaded.'
+                        : 'Select a TypeScript file to view it here.'
+                    }
+                    spellCheck={false}
+                  />
+                )}
               </div>
             ) : null}
-            {!showAllCardSectionsForVisualTest && isJsonScriptMode ? sharedMethodSelect : null}
-            <div className={isJsonScriptMode ? '' : 'hidden'}>
-              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'ecr20_read') ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'erc20_write') ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            </div>
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                  activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                }`}
-                onClick={activeRunControl.onClick}
-              >
-                {activeRunControl.label}
-              </button>
-              {isJavaScriptScriptMode ? (
+            {isJsonScriptMode ? (
+              <div className="mb-3 grid grid-cols-1 gap-3">
+                {!showAllCardSectionsForVisualTest ? sharedMethodSelect : null}
+                {showLoadingPanel ? (
+                  loadingPanel
+                ) : (
+                  <div>
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'ecr20_read') ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'erc20_write') ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                      activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                    }`}
+                    onClick={activeRunControl.onClick}
+                  >
+                    {activeRunControl.label}
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
+                      activeAddControl.enabled ? 'bg-[#E5B94F] text-black hover:bg-green-500' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
+                    }`}
+                    onClick={activeAddControl.onClick}
+                  >
+                    {activeAddControl.label}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {isJavaScriptScriptMode ? (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                    activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                  }`}
+                  onClick={activeRunControl.onClick}
+                >
+                  {activeRunControl.label}
+                </button>
                 <button
                   type="button"
                   className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
@@ -531,18 +603,8 @@ export default function MethodsPanelCard({
                       ? 'Saving...'
                       : 'Save TypeScript'}
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
-                    activeAddControl.enabled ? 'bg-[#E5B94F] text-black hover:bg-green-500' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
-                  }`}
-                  onClick={activeAddControl.onClick}
-                >
-                  {activeAddControl.label}
-                </button>
-              )}
-            </div>
+              </div>
+            ) : null}
           </>
         </section>
         {isTypeScriptSavePopupOpen ? (

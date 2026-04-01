@@ -137,7 +137,7 @@ export default function SerializationTestController(props: Props) {
           ))}
         </select>
       </div> : null}
-      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}
         {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => (
           <div key={`serialization-test-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">

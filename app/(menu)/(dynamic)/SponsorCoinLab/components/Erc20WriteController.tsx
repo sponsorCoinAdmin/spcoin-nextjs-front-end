@@ -164,7 +164,7 @@ export default function Erc20WriteController(props: Props) {
           </select>
         </div>
       ) : null}
-      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
         {hasVisibleWriteMethods ? <AccountSelection
           label="msg.sender"

@@ -258,7 +258,7 @@ export default function SpCoinReadController(props: Props) {
           ) : null}
         </select>
       </div> : null}
-      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
         {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
           <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
