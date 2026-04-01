@@ -148,6 +148,57 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "sponsor",
+        "type": "address"
+      }
+    ],
+    "name": "addSponsor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_strWholeAmount",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_strDecimalAmount",
+        "type": "string"
+      }
+    ],
+    "name": "addSponsorship",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       },
@@ -541,24 +592,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getAgentRateRange",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "lowerRate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "upperRate",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -832,24 +865,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getRecipientRateRange",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "lowerRate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "upperRate",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -927,59 +942,6 @@
         "internalType": "bool",
         "name": "inserted",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getSpCoinMetaData",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "metaOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "metaVersion",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "metaName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "metaSymbol",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "metaDecimals",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "metaTotalSupply",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "metaInflationRate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[2]",
-        "name": "metaRecipientRateRange",
-        "type": "uint256[2]"
-      },
-      {
-        "internalType": "uint256[2]",
-        "name": "metaAgentRateRange",
-        "type": "uint256[2]"
       }
     ],
     "stateMutability": "view",

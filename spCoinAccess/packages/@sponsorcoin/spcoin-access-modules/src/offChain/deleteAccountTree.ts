@@ -32,11 +32,16 @@ export async function deleteAccountTree() {
     const accountList = await read.getAccountList();
     const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
     const processedAccountKeys = new Set();
+    const countedAccountKeys = new Set();
     const activeAccountKeys = new Set();
-    const walkAccountTree = async (sponsorKey) => {
+    const walkAccountTree = async (sponsorKey, deferDelete = false) => {
         var _a, _b;
         if (processedAccountKeys.has(sponsorKey)) {
             return;
+        }
+        if (!countedAccountKeys.has(sponsorKey)) {
+            summary.accountCount += 1;
+            countedAccountKeys.add(sponsorKey);
         }
         if (activeAccountKeys.has(sponsorKey)) {
             (_b = (_a = this.logger) === null || _a === void 0 ? void 0 : _a.logDetail) === null || _b === void 0 ? void 0 : _b.call(_a, "JS => deleteAccountTree skipping recursive cycle for " + sponsorKey);
@@ -44,35 +49,35 @@ export async function deleteAccountTree() {
         }
         activeAccountKeys.add(sponsorKey);
         try {
-            summary.accountCount += 1;
             const recipientList = await read.getAccountRecipientList(sponsorKey);
             for (const recipientKeyValue of Array.isArray(recipientList) ? recipientList : []) {
                 const recipientKey = String(recipientKeyValue);
                 summary.recipientCount += 1;
                 if (accountKeySet.has(recipientKey)) {
-                    await walkAccountTree(recipientKey);
+                    await walkAccountTree(recipientKey, true);
                 }
                 const recipientRateList = await read.getRecipientRateList(sponsorKey, recipientKey);
                 for (const recipientRateKey of Array.isArray(recipientRateList) ? recipientRateList : []) {
                     summary.recipientRateCount += 1;
                     const agentList = await read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey);
                     for (const agentKeyValue of Array.isArray(agentList) ? agentList : []) {
-                        const agentKey = String(agentKeyValue);
                         summary.agentCount += 1;
-                        if (typeof deleteMethods.deleteAgentRecord === "function") {
-                            await deleteMethods.deleteAgentRecord(sponsorKey, recipientKey, agentKey);
-                            summary.deletedAgentCount += 1;
-                        }
+                        summary.deletedAgentCount += 1;
                     }
                 }
                 if (typeof deleteMethods.unSponsorRecipient === "function") {
                     await deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
                     summary.deletedRecipientCount += 1;
                 }
+                if (accountKeySet.has(recipientKey)) {
+                    await walkAccountTree(recipientKey, false);
+                }
             }
-            await deleteMethods.deleteAccountRecord(sponsorKey);
-            summary.deletedAccountCount += 1;
-            processedAccountKeys.add(sponsorKey);
+            if (!deferDelete) {
+                await deleteMethods.deleteAccountRecord(sponsorKey);
+                summary.deletedAccountCount += 1;
+                processedAccountKeys.add(sponsorKey);
+            }
         }
         finally {
             activeAccountKeys.delete(sponsorKey);

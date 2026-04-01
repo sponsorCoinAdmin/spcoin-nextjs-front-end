@@ -86,8 +86,8 @@ export default function ContractNetworkCard({
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">Select SpCoin Contract to Activate</h3>
           <div className="grid grid-cols-1 gap-3">
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">SponsorCoin Contract Address</span>
-              <input className={inputStyle} value={contract.contractAddress} readOnly placeholder="SponsorCoin contract address" />
+              <span className="text-sm font-semibold text-[#8FA8FF]">Contract Address</span>
+              <input className={inputStyle} value={contract.contractAddress} readOnly placeholder="Contract address" />
             </label>
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Token Name:</span>
@@ -101,7 +101,7 @@ export default function ContractNetworkCard({
                 <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
                 <input
                   className="min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  style={{ width: `${version.selectedVersionSymbolWidthCh}ch` }}
+                  style={{ width: `${version.selectedVersionSymbolWidthCh * 1.1}ch` }}
                   readOnly
                   value={version.selectedVersionSymbol}
                   placeholder="symbol"

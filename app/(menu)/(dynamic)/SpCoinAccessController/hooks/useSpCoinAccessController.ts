@@ -627,7 +627,7 @@ export function useSpCoinAccessController() {
       setDeployUiState('in_progress');
       setDeploymentStatusIsError(false);
       setDeploymentFlashError(false);
-      setDeploymentStatus('Preparing MetaMask deployment...');
+      setDeploymentStatus(`Deployment ${deploymentContractName} in Progress.`);
       try {
         const prepareResponse = await fetch('/api/spCoin/access-manager', {
           method: 'POST',
@@ -645,14 +645,16 @@ export function useSpCoinAccessController() {
           !Array.isArray(prepareData.deploymentAbi) ||
           !prepareData.deploymentBytecode
         ) {
-          setDeploymentStatus(`*Error: ${prepareData.message || 'Failed to prepare MetaMask deployment.'}`);
+          setDeploymentStatus(
+            `*Error: Deployment ${deploymentContractName} failed: ${prepareData.message || 'Failed to prepare MetaMask deployment.'}`,
+          );
           setDeploymentStatusIsError(true);
           setDeploymentFlashError(true);
           setDeployUiState('idle');
           return;
         }
 
-        setDeploymentStatus('Awaiting MetaMask approval...');
+        setDeploymentStatus(`Deployment ${deploymentContractName} in Progress. Awaiting MetaMask approval...`);
         const factory = new ContractFactory(
           prepareData.deploymentAbi as any[],
           String(prepareData.deploymentBytecode),
@@ -687,14 +689,16 @@ export function useSpCoinAccessController() {
         });
         const registerData = await parseManagerResponse(registerResponse);
         if (!registerResponse.ok || !registerData.ok) {
-          setDeploymentStatus(`*Error: Contract deployed, but registration failed: ${registerData.message || 'Unknown deployment registration failure.'}`);
+          setDeploymentStatus(
+            `*Error: Deployment ${deploymentContractName} failed during registration: ${registerData.message || 'Unknown deployment registration failure.'}`,
+          );
           setDeploymentStatusIsError(true);
           setDeploymentFlashError(true);
           setDeployUiState('idle');
           return;
         }
 
-        setDeploymentStatus('Deployment complete. Updating server assets...');
+        setDeploymentStatus(`Deployment ${deploymentContractName} complete. Updating server assets...`);
         const updateResponse = await fetch('/api/spCoin/access-manager', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -711,7 +715,9 @@ export function useSpCoinAccessController() {
         });
         const updateData = await parseManagerResponse(updateResponse);
         if (!updateResponse.ok || !updateData.ok) {
-          setDeploymentStatus(`*Error: Deploy succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`);
+          setDeploymentStatus(
+            `*Error: Deployment ${deploymentContractName} succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+          );
           setDeploymentStatusIsError(true);
           setDeploymentFlashError(true);
           setDeployUiState('idle');
@@ -737,7 +743,7 @@ export function useSpCoinAccessController() {
         return;
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown MetaMask deployment failure';
-        setDeploymentStatus(`*Error: ${message}`);
+        setDeploymentStatus(`*Error: Deployment ${deploymentContractName} failed: ${message}`);
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
         setDeployUiState('idle');
@@ -748,7 +754,7 @@ export function useSpCoinAccessController() {
     setDeployUiState('in_progress');
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
-    setDeploymentStatus('Deployment in progress');
+    setDeploymentStatus(`Deployment ${deploymentContractName} in Progress.`);
     try {
       const response = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
@@ -766,7 +772,9 @@ export function useSpCoinAccessController() {
       });
       const data = await parseManagerResponse(response);
       if (!response.ok || !data.ok) {
-        setDeploymentStatus(`*Error: Status ${response.status}: ${data.message || 'Deployment request failed.'}`);
+        setDeploymentStatus(
+          `*Error: Deployment ${deploymentContractName} failed: Status ${response.status}: ${data.message || 'Deployment request failed.'}`,
+        );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
         setDeployUiState('idle');
@@ -777,7 +785,7 @@ export function useSpCoinAccessController() {
         data.message ||
         `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`;
       setDeployedContractAddress(contractPublicKey);
-      setDeploymentStatus('Deployment complete. Updating server assets...');
+      setDeploymentStatus(`Deployment ${deploymentContractName} complete. Updating server assets...`);
       const updateResponse = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -795,7 +803,9 @@ export function useSpCoinAccessController() {
       });
       const updateData = await parseManagerResponse(updateResponse);
       if (!updateResponse.ok || !updateData.ok) {
-        setDeploymentStatus(`*Error: Deploy succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`);
+        setDeploymentStatus(
+          `*Error: Deployment ${deploymentContractName} succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+        );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
         setDeployUiState('idle');
@@ -817,7 +827,7 @@ export function useSpCoinAccessController() {
       setDeployUiState('deployed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment request failure';
-      setDeploymentStatus(`*Error: ${message}`);
+      setDeploymentStatus(`*Error: Deployment ${deploymentContractName} failed: ${message}`);
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
       setDeployUiState('idle');

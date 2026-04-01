@@ -42,6 +42,7 @@ import getAgentRateTransactionList from './getAgentRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
 import initialTotalSupply from './initialTotalSupply';
+import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import masterAccountList from './masterAccountList';
 import serializeAgentRateRecordStr from './serializeAgentRateRecordStr';
@@ -98,6 +99,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentRecord,
   getAgentRecordList,
   initialTotalSupply,
+  isDeployed,
   isAccountInserted,
   masterAccountList,
   serializeAgentRateRecordStr,

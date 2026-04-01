@@ -24,28 +24,50 @@
     },
     {
       "step": 3,
-      "name": "compareSpCoinContractSize",
+      "name": "getOffLineAccountRecords",
       "panel": "spcoin_rread",
-      "method": "compareSpCoinContractSize",
-      "params": [
-        {
-          "key": "Previous Release Directory",
-          "value": "spCoinAccess/contracts/spCoinOrig.BAK"
-        },
-        {
-          "key": "Latest Release Directory",
-          "value": "spCoinAccess/contracts/spCoin"
-        }
-      ],
+      "method": "getOffLineAccountRecords",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 4,
-      "name": "getOffLineAccountRecords",
+      "name": "getAccountListSize",
       "panel": "spcoin_rread",
-      "method": "getOffLineAccountRecords",
+      "method": "getAccountListSize",
       "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
+      "name": "addAgentSponsorship",
+      "panel": "spcoin_write",
+      "method": "addAgentSponsorship",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "20"
+        },
+        {
+          "key": "Agent Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        },
+        {
+          "key": "Agent Rate Key",
+          "value": "2"
+        },
+        {
+          "key": "Transaction Quantity",
+          "value": "9999999"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

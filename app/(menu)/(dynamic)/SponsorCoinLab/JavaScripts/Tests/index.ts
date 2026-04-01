@@ -1,6 +1,6 @@
 import type { LabJavaScriptScript } from '../../scriptBuilder/types';
 import { firstUtilScript } from '../Utils';
-import { SPCOIN_COMPOUND_READ_METHODS, getSpCoinReadOptions } from '../../jsonMethods/spCoin/read';
+import { SPCOIN_OFFCHAIN_READ_METHODS, getSpCoinReadOptions } from '../../jsonMethods/spCoin/read';
 
 const ACCESS_MODULES_TYPESCRIPT_ROOT = 'spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src';
 const OFFCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/offChain`;
@@ -19,11 +19,11 @@ const builtinSpCoinReadMethodScripts: LabJavaScriptScript[] = getSpCoinReadOptio
   id: `builtin-typescript-spcoin-read-${method}`,
   name: `${method}.ts`,
   filePath: `${
-    SPCOIN_COMPOUND_READ_METHODS.includes(method) ? OFFCHAIN_READ_METHODS_ROOT : ONCHAIN_READ_METHODS_ROOT
+    SPCOIN_OFFCHAIN_READ_METHODS.includes(method) ? OFFCHAIN_READ_METHODS_ROOT : ONCHAIN_READ_METHODS_ROOT
   }/${method}.ts`,
   displayFilePath: `${READ_MODULE_METHODS_ROOT}/${method}.ts`,
   executionFilePath: `${
-    SPCOIN_COMPOUND_READ_METHODS.includes(method) ? OFFCHAIN_READ_METHODS_ROOT : ONCHAIN_READ_METHODS_ROOT
+    SPCOIN_OFFCHAIN_READ_METHODS.includes(method) ? OFFCHAIN_READ_METHODS_ROOT : ONCHAIN_READ_METHODS_ROOT
   }/${method}.ts`,
   isSystemScript: true,
 }));

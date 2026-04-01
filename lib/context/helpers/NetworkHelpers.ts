@@ -3,9 +3,23 @@ import rawChainIdList from '@/resources/data/networks/chainIds.json';
 import type { NetworkElement } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
+import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
 const debugLog = createDebugLogger('NetworkHelpers', DEBUG_ENABLED, /* timestamp */ false);
+const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+  networkHeader?: { rpcUrl?: string };
+};
+const DEFAULT_HARDHAT_RPC_URL =
+  hardhatDefaultSettings?.networkHeader?.rpcUrl ||
+  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+
+const getDefaultRpcUrl = (chainId: number): string => {
+  const settings = getDefaultNetworkSettings(chainId) as {
+    networkHeader?: { rpcUrl?: string };
+  };
+  return String(settings?.networkHeader?.rpcUrl || '').trim();
+};
 
 /* ────────────────────────────────────────────────────────────────────────── *
  *                         Chain list normalization / map
@@ -55,7 +69,7 @@ const BLOCK_EXPLORER_URL: Record<CHAIN_ID, string> = {
   [CHAIN_ID.GOERLI]:   'https://goerli.etherscan.io/',
   [CHAIN_ID.POLYGON]:  'https://polygonscan.com/',
   [CHAIN_ID.BASE]:     'https://basescan.org/',
-  [CHAIN_ID.HARDHAT_BASE]:  'http://localhost:8545/',
+  [CHAIN_ID.HARDHAT_BASE]: DEFAULT_HARDHAT_RPC_URL,
   [CHAIN_ID.MUMBAI]:   'https://mumbai.polygonscan.com/',
   [CHAIN_ID.SEPOLIA]:  'https://sepolia.etherscan.io/',
 };
@@ -97,6 +111,7 @@ export function resolveNetworkElement(
     symbol:  getBlockChainSymbol(chainId)  || '',
     logoURL: getBlockChainLogoURL(chainId),
     url:     getBlockExplorerURL(chainId),
+    rpcUrl:  getDefaultRpcUrl(chainId) || prevNet?.rpcUrl || '',
   };
 
   if (prevNet && networkEquals(prevNet, next)) return prevNet;
@@ -133,6 +148,7 @@ export function deriveNetworkFromApp(
     symbol:  getBlockChainSymbol(appChainId)  || '',
     logoURL: getBlockChainLogoURL(appChainId),
     url:     getBlockExplorerURL(appChainId),
+    rpcUrl:  getDefaultRpcUrl(appChainId) || prevNet?.rpcUrl || '',
   };
 
   // If nothing substantive changed, return prev to avoid re-renders
@@ -142,7 +158,8 @@ export function deriveNetworkFromApp(
     prevNet.name === next.name &&
     prevNet.symbol === next.symbol &&
     prevNet.logoURL === next.logoURL &&
-    prevNet.url === next.url
+    prevNet.url === next.url &&
+    prevNet.rpcUrl === next.rpcUrl
   ) {
     return prevNet;
   }

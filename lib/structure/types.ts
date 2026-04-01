@@ -158,6 +158,7 @@ export interface NetworkElement {
   name: string;
   symbol: string;
   url: string;
+  rpcUrl?: string;
 }
 
 export interface Slippage {

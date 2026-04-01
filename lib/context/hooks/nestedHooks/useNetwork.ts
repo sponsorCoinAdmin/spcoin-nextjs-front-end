@@ -34,6 +34,7 @@ export const useNetwork = () => {
     const name    = ctxNet.name    || getBlockChainName(chainId)    || '';
     const logoURL = ctxNet.logoURL || getBlockChainLogoURL(chainId) || '';
     const url     = ctxNet.url     || getBlockExplorerURL(chainId)  || '';
+    const rpcUrl  = ctxNet.rpcUrl || '';
 
     const connected = status === 'connected';
 
@@ -43,6 +44,7 @@ export const useNetwork = () => {
       name,
       logoURL,
       url,
+      rpcUrl,
       connected,
     };
 
@@ -64,6 +66,7 @@ export const useNetwork = () => {
     name: network.name as string,
     logoURL: network.logoURL as string,
     url: network.url as string,
+    rpcUrl: (network.rpcUrl ?? '') as string,
     connected: network.connected as boolean,
     status,
   };

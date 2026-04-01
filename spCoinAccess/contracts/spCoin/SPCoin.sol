@@ -25,36 +25,6 @@ contract SPCoin is Token{
         return version;
     }
 
-    function getSpCoinMetaData()
-        public
-        view
-        returns (
-            address metaOwner,
-            string memory metaVersion,
-            string memory metaName,
-            string memory metaSymbol,
-            uint256 metaDecimals,
-            uint256 metaTotalSupply,
-            uint256 metaInflationRate,
-            uint256[2] memory metaRecipientRateRange,
-            uint256[2] memory metaAgentRateRange
-        )
-    {
-        (uint256 lowerRecipientRate, uint256 upperRecipientRate) = getRecipientRateRange();
-        (uint256 lowerAgentRate, uint256 upperAgentRate) = getAgentRateRange();
-        return (
-            owner(),
-            version,
-            name,
-            symbol,
-            decimals,
-            totalSupply,
-            getInflationRate(),
-            [lowerRecipientRate, upperRecipientRate],
-            [lowerAgentRate, upperAgentRate]
-        );
-    }
-
     function setVersion(string memory newVersion) public onlyRootAdmin {
         version = bytes(newVersion).length == 0 ? defaultVersion : newVersion;
         name = concat(defaultName, version);

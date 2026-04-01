@@ -1,5 +1,6 @@
 // @ts-nocheck
 export { addRecipient } from "./addRecipient";
+export { addSponsor } from "./addSponsor";
 export { addRecipients } from "./addRecipients";
 export { addAgent } from "./addAgent";
 export { addAgents } from "./addAgents";

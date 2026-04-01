@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { CHAIN_ID } from '@/lib/structure';
+import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
 import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
 import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
@@ -14,6 +16,22 @@ function normalizeJavaScriptScriptFilePath(filePath: string | undefined, isSyste
 
 const spCoinLabKey = 'spCoinLabKey';
 const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
+const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+  networkHeader?: { rpcUrl?: string };
+};
+const DEFAULT_HARDHAT_RPC_URL =
+  String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
+  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+
+function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
+  if (typeof savedRpcUrl !== 'string') return undefined;
+  const trimmed = savedRpcUrl.trim();
+  if (!trimmed) return undefined;
+  if (savedMode === 'hardhat' && /^http:\/\/localhost:8545\/?$/i.test(trimmed)) {
+    return DEFAULT_HARDHAT_RPC_URL;
+  }
+  return trimmed;
+}
 
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
@@ -323,7 +341,8 @@ export function useSponsorCoinLabPersistence({
             setSelectedJavaScriptScriptId(saved.selectedJavaScriptScriptId);
           }
           if (saved.mode === 'metamask' || saved.mode === 'hardhat') setMode(saved.mode);
-          if (typeof saved.rpcUrl === 'string') setRpcUrl(saved.rpcUrl);
+          const normalizedRpcUrl = normalizePersistedRpcUrl(saved.mode, saved.rpcUrl);
+          if (typeof normalizedRpcUrl === 'string') setRpcUrl(normalizedRpcUrl);
           if (typeof saved.selectedSponsorCoinVersion === 'string') {
             setSelectedSponsorCoinVersion(saved.selectedSponsorCoinVersion);
           }

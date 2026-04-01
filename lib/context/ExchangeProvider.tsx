@@ -119,6 +119,7 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   name: n?.name ?? '',
   symbol: n?.symbol ?? '',
   url: n?.url ?? '',
+  rpcUrl: n?.rpcUrl ?? '',
 });
 
 const clone = <T,>(o: T): T =>
@@ -1005,6 +1006,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
             name: derived?.name ?? '',
             symbol: derived?.symbol ?? '',
             url: derived?.url ?? '',
+            rpcUrl: derived?.rpcUrl ?? next.network?.rpcUrl ?? '',
             logoURL: `/assets/blockchains/${appId}/logo.png`,
           };
           return next;

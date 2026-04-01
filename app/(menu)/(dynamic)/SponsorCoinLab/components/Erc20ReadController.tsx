@@ -40,6 +40,9 @@ type Props = {
   missingFieldIds: string[];
   runSelectedReadMethod: () => void;
   addCurrentMethodToScript: () => void;
+  hideMethodSelect?: boolean;
+  hideActionButtons?: boolean;
+  hideAddToScript?: boolean;
 };
 
 export default function Erc20ReadController(props: Props) {
@@ -66,6 +69,9 @@ export default function Erc20ReadController(props: Props) {
     missingFieldIds,
     runSelectedReadMethod,
     addCurrentMethodToScript,
+    hideMethodSelect = false,
+    hideActionButtons = false,
+    hideAddToScript = false,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
@@ -120,73 +126,77 @@ export default function Erc20ReadController(props: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-        <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
-          JSON Method
-        </label>
-        <select
-          id="erc20-read-method"
-          className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={displayedReadMethod}
-          onChange={(e) => setSelectedReadMethod(e.target.value)}
-          disabled={!hasVisibleReadMethods}
-        >
-          {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
-          {visibleReadOptions.map((name) => (
-            <option key={`erc20-read-${name}`} value={name} style={{ color: getMethodOptionColor(name) }}>
-              {name}
-            </option>
-          ))}
-        </select>
+      {!hideMethodSelect ? (
+        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
+            JSON Method
+          </label>
+          <select
+            id="erc20-read-method"
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={displayedReadMethod}
+            onChange={(e) => setSelectedReadMethod(e.target.value)}
+            disabled={!hasVisibleReadMethods}
+          >
+            {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleReadOptions.map((name) => (
+              <option key={`erc20-read-${name}`} value={name} style={{ color: getMethodOptionColor(name) }}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+        {hasVisibleReadMethods && activeReadLabels.requiresAddressA && (
+          <AccountSelection
+            label={activeReadLabels.addressALabel}
+            title={`Toggle ${activeReadLabels.addressALabel}`}
+            isOpen={Boolean(openAddressFields.addressA)}
+            onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
+            control={
+              <AccountDropdownInput
+                dataFieldId="erc20-read-address-a"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
+                value={readAddressA}
+                onChange={(value) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField('erc20-read-address-a');
+                  setReadAddressA(normalizeAccountValue(value));
+                }}
+                placeholder="Select account"
+                options={accountOptions}
+              />
+            }
+            metadata={getMetadataForAddress(readAddressA || '')}
+          />
+        )}
+        {hasVisibleReadMethods && activeReadLabels.requiresAddressB && (
+          <AccountSelection
+            label={activeReadLabels.addressBLabel}
+            title={`Toggle ${activeReadLabels.addressBLabel}`}
+            isOpen={Boolean(openAddressFields.addressB)}
+            onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
+            control={
+              <AccountDropdownInput
+                dataFieldId="erc20-read-address-b"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
+                value={readAddressB}
+                onChange={(value) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField('erc20-read-address-b');
+                  setReadAddressB(normalizeAccountValue(value));
+                }}
+                placeholder="Select account"
+                options={accountOptions}
+              />
+            }
+            metadata={getMetadataForAddress(readAddressB || '')}
+          />
+        )}
+        {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 read methods match the current filter)</div> : null}
       </div>
-      {hasVisibleReadMethods && activeReadLabels.requiresAddressA && (
-        <AccountSelection
-          label={activeReadLabels.addressALabel}
-          title={`Toggle ${activeReadLabels.addressALabel}`}
-          isOpen={Boolean(openAddressFields.addressA)}
-          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
-          control={
-            <AccountDropdownInput
-              dataFieldId="erc20-read-address-a"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-a')}`}
-              value={readAddressA}
-              onChange={(value) => {
-                markEditorAsUserEdited();
-                clearInvalidField('erc20-read-address-a');
-                setReadAddressA(normalizeAccountValue(value));
-              }}
-              placeholder="Select account"
-              options={accountOptions}
-            />
-          }
-          metadata={getMetadataForAddress(readAddressA || '')}
-        />
-      )}
-      {hasVisibleReadMethods && activeReadLabels.requiresAddressB && (
-        <AccountSelection
-          label={activeReadLabels.addressBLabel}
-          title={`Toggle ${activeReadLabels.addressBLabel}`}
-          isOpen={Boolean(openAddressFields.addressB)}
-          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
-          control={
-            <AccountDropdownInput
-              dataFieldId="erc20-read-address-b"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-address-b')}`}
-              value={readAddressB}
-              onChange={(value) => {
-                markEditorAsUserEdited();
-                clearInvalidField('erc20-read-address-b');
-                setReadAddressB(normalizeAccountValue(value));
-              }}
-              placeholder="Select account"
-              options={accountOptions}
-            />
-          }
-          metadata={getMetadataForAddress(readAddressB || '')}
-        />
-      )}
-      {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 read methods match the current filter)</div> : null}
-      <div className="flex gap-2">
+      {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedReadMethod, 'execute')} min-w-[50%] shrink-0`}
@@ -201,31 +211,33 @@ export default function Erc20ReadController(props: Props) {
             ? 'Missing Parameters'
             : `Run ${activeReadLabels.title}`}
         </button>
-        <button
-          type="button"
-          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (isAddToScriptBlockedByNoChanges) return;
-            addCurrentMethodToScript();
-          }}
-          disabled={!hasVisibleReadMethods}
-          onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
-          }}
-          onMouseLeave={() => setHoveredBlockedAction(null)}
-          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
-        >
-          {isAddToScriptBlockedByNoChanges
-            ? hoveredBlockedAction === 'add'
-              ? 'No Update Changes'
-              : addToScriptButtonLabel
-            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
-            ? 'No Editor Script'
-            : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Parameters'
-            : addToScriptButtonLabel}
-        </button>
-      </div>
+        {!hideAddToScript ? (
+          <button
+            type="button"
+            className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+            onClick={() => {
+              if (isAddToScriptBlockedByNoChanges) return;
+              addCurrentMethodToScript();
+            }}
+            disabled={!hasVisibleReadMethods}
+            onMouseEnter={() => {
+              if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
+            }}
+            onMouseLeave={() => setHoveredBlockedAction(null)}
+            title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
+          >
+            {isAddToScriptBlockedByNoChanges
+              ? hoveredBlockedAction === 'add'
+                ? 'No Update Changes'
+                : addToScriptButtonLabel
+              : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+              ? 'No Editor Script'
+              : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+              ? 'Missing Parameters'
+              : addToScriptButtonLabel}
+          </button>
+        ) : null}
+      </div> : null}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "@sponsorcoin/spcoin-access-modules",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "description": "Package to interface with Sponsor Coin (SPCOIN)",
   "main": "./dist/index.ts",
   "types": "./dist/index.d.ts",

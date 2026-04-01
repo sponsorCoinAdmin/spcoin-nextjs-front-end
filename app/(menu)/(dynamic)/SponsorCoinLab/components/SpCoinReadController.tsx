@@ -25,6 +25,7 @@ type Props = {
   activeSpCoinReadDef: MethodDef;
   spReadParams: string[];
   setSpReadParams: React.Dispatch<React.SetStateAction<string[]>>;
+  activeContractAddress: string;
   inputStyle: string;
   canRunSelectedSpCoinReadMethod: boolean;
   canAddCurrentMethodToScript: boolean;
@@ -34,6 +35,9 @@ type Props = {
   missingFieldIds: string[];
   runSelectedSpCoinReadMethod: () => void;
   addCurrentMethodToScript: () => void;
+  hideMethodSelect?: boolean;
+  hideActionButtons?: boolean;
+  hideAddToScript?: boolean;
 };
 
 export default function SpCoinReadController(props: Props) {
@@ -55,6 +59,7 @@ export default function SpCoinReadController(props: Props) {
     activeSpCoinReadDef,
     spReadParams,
     setSpReadParams,
+    activeContractAddress,
     inputStyle,
     canRunSelectedSpCoinReadMethod,
     canAddCurrentMethodToScript,
@@ -64,6 +69,9 @@ export default function SpCoinReadController(props: Props) {
     missingFieldIds,
     runSelectedSpCoinReadMethod,
     addCurrentMethodToScript,
+    hideMethodSelect = false,
+    hideActionButtons = false,
+    hideAddToScript = false,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
@@ -134,6 +142,18 @@ export default function SpCoinReadController(props: Props) {
     if (visibleReadMethods.includes(selectedSpCoinReadMethod)) return;
     setSelectedSpCoinReadMethod(visibleReadMethods[0]);
   }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, visibleReadMethods]);
+  React.useEffect(() => {
+    activeSpCoinReadDef.params.forEach((param, idx) => {
+      if (param.type !== 'contract_address') return;
+      const nextValue = String(activeContractAddress || '').trim();
+      if (String(spReadParams[idx] || '').trim() === nextValue) return;
+      setSpReadParams((prev) => {
+        const next = [...prev];
+        next[idx] = nextValue;
+        return next;
+      });
+    });
+  }, [activeContractAddress, activeSpCoinReadDef.params, setSpReadParams, spReadParams]);
   const hasVisibleReadMethods = visibleReadMethods.length > 0;
   const displayedReadMethod =
     hasVisibleReadMethods && visibleReadMethods.includes(selectedSpCoinReadMethod)
@@ -142,10 +162,10 @@ export default function SpCoinReadController(props: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+      {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
-          className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={displayedReadMethod}
           onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
           disabled={!hasVisibleReadMethods}
@@ -223,7 +243,7 @@ export default function SpCoinReadController(props: Props) {
                   textAlign: 'center',
                 }}
               >
-                ---- Structured Compound Reads ----
+                ---- Off-Chain Structured Reads ----
               </option>,
               {visibleCompoundReadOptions.map((name) => (
                 <option
@@ -237,10 +257,11 @@ export default function SpCoinReadController(props: Props) {
             </React.Fragment>
           ) : null}
         </select>
-      </div>
-      {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
-      {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
-        <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
+      </div> : null}
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+        {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
+        {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
+          <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection
               label={param.label}
@@ -267,6 +288,18 @@ export default function SpCoinReadController(props: Props) {
               }
               metadata={getMetadataForAddress(spReadParams[idx] || '')}
             />
+          ) : param.type === 'contract_address' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <input
+                data-field-id={`spcoin-read-param-${idx}`}
+                className={`${inputStyle}${invalidClass(`spcoin-read-param-${idx}`)}`}
+                value={activeContractAddress || spReadParams[idx] || ''}
+                readOnly
+                disabled
+                placeholder={param.placeholder}
+              />
+            </label>
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
@@ -287,9 +320,10 @@ export default function SpCoinReadController(props: Props) {
               />
             </label>
           )}
-        </div>
-      )) : null}
-      <div className="flex gap-2">
+          </div>
+        )) : null}
+      </div>
+      {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSpCoinReadMethod, 'execute')} min-w-[50%] shrink-0`}
@@ -304,31 +338,33 @@ export default function SpCoinReadController(props: Props) {
             ? 'Missing Parameters'
             : `Run ${activeSpCoinReadDef.title}`}
         </button>
-        <button
-          type="button"
-          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (isAddToScriptBlockedByNoChanges) return;
-            addCurrentMethodToScript();
-          }}
-          disabled={!hasVisibleReadMethods}
-          onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
-          }}
-          onMouseLeave={() => setHoveredBlockedAction(null)}
-          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
-        >
-          {isAddToScriptBlockedByNoChanges
-            ? hoveredBlockedAction === 'add'
-              ? 'No Update Changes'
-              : addToScriptButtonLabel
-            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
-            ? 'No Editor Script'
-            : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Parameters'
-            : addToScriptButtonLabel}
-        </button>
-      </div>
+        {!hideAddToScript ? (
+          <button
+            type="button"
+            className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+            onClick={() => {
+              if (isAddToScriptBlockedByNoChanges) return;
+              addCurrentMethodToScript();
+            }}
+            disabled={!hasVisibleReadMethods}
+            onMouseEnter={() => {
+              if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
+            }}
+            onMouseLeave={() => setHoveredBlockedAction(null)}
+            title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
+          >
+            {isAddToScriptBlockedByNoChanges
+              ? hoveredBlockedAction === 'add'
+                ? 'No Update Changes'
+                : addToScriptButtonLabel
+              : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+              ? 'No Editor Script'
+              : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+              ? 'Missing Parameters'
+              : addToScriptButtonLabel}
+          </button>
+        ) : null}
+      </div> : null}
     </div>
   );
 }

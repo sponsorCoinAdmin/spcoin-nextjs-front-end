@@ -50,6 +50,7 @@ export type SpCoinReadMethod =
   | 'getAgentRecord'
   | 'getAgentRecordList'
   | 'initialTotalSupply'
+  | 'isDeployed'
   | 'isAccountInserted'
   | 'masterAccountList'
   | 'serializeAgentRateRecordStr'
@@ -83,7 +84,7 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedRateTransactionList: 'getAgentRateTransactionList',
 };
 
-export const SPCOIN_COMPOUND_READ_METHODS: SpCoinReadMethod[] = [
+export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'compareSpCoinContractSize',
   'getSPCoinHeaderRecord',
   'getAccountRecord',
@@ -95,6 +96,8 @@ export const SPCOIN_COMPOUND_READ_METHODS: SpCoinReadMethod[] = [
   'getAgentRateTransactionList',
 ];
 
+export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
+
 export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
@@ -102,7 +105,7 @@ export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
 export function getSpCoinWorldReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
   return getSpCoinReadOptions(hideUnexecutables).filter(
     (name) =>
-      !SPCOIN_COMPOUND_READ_METHODS.includes(name) &&
+      !SPCOIN_OFFCHAIN_READ_METHODS.includes(name) &&
       !SPCOIN_ADMIN_READ_METHODS.includes(name) &&
       !SPCOIN_SENDER_READ_METHODS.includes(name) &&
       !SPCOIN_LEGACY_READ_METHODS.includes(name),
@@ -128,7 +131,11 @@ export function getSpCoinStandardReadOptions(hideUnexecutables: boolean): SpCoin
 }
 
 export function getSpCoinCompoundReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
-  return getSpCoinReadOptions(hideUnexecutables).filter((name) => SPCOIN_COMPOUND_READ_METHODS.includes(name));
+  return getSpCoinReadOptions(hideUnexecutables).filter((name) => SPCOIN_OFFCHAIN_READ_METHODS.includes(name));
+}
+
+export function getSpCoinOffChainReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
+  return getSpCoinCompoundReadOptions(hideUnexecutables);
 }
 
 export function getSpCoinLegacyReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
@@ -154,6 +161,45 @@ async function requireExternalSerializedValue(
 
 function toStringOrNumber(value: unknown): string | number {
   return typeof value === 'number' ? value : String(value);
+}
+
+function isBadDataError(error: unknown) {
+  const code = String((error as { code?: unknown } | null)?.code || '');
+  const message = String((error as { message?: unknown } | null)?.message || '');
+  return code === 'BAD_DATA' || /could not decode result data/i.test(message);
+}
+
+async function buildReadDecodeError(params: {
+  error: unknown;
+  method: string;
+  target: string;
+  runner: any;
+}) {
+  const { error, method, target, runner } = params;
+  const provider = runner?.provider ?? runner;
+  if (!provider || typeof provider.getCode !== 'function') {
+    return error;
+  }
+
+  try {
+    const [code, network] = await Promise.all([
+      provider.getCode(target),
+      typeof provider.getNetwork === 'function' ? provider.getNetwork() : Promise.resolve(null),
+    ]);
+    const chainId = network?.chainId != null ? String(network.chainId) : 'unknown';
+    const hasCode = typeof code === 'string' && code !== '0x';
+    const nextError = new Error(
+      hasCode
+        ? `SpCoin read method ${method} failed at ${target} on chain ${chainId}: the contract returned undecodable data. This usually means the deployed bytecode does not match the current SPCoin ABI or does not implement ${method}().`
+        : `SpCoin read method ${method} failed at ${target} on chain ${chainId}: no contract code was found at that address.`,
+    );
+    (nextError as Error & { cause?: unknown; code?: unknown }).cause = error;
+    (nextError as Error & { cause?: unknown; code?: unknown }).code =
+      (error as { code?: unknown } | null)?.code || 'BAD_DATA';
+    return nextError;
+  } catch {
+    return error;
+  }
 }
 
 function formatCreationTimeResult(value: unknown) {
@@ -225,53 +271,66 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   if (!handler) {
     throw new Error(`SpCoin read method ${selectedMethod} is not wired to a read-method source file.`);
   }
-  const result = await handler.run({
-    canonicalMethod,
-    selectedMethod,
-    methodArgs,
-    spCoinAccessSource,
-    target,
-    read: read as Record<string, unknown>,
-    staking,
-    contract: contract as Record<string, unknown>,
-    normalizeStringListResult,
-    toStringOrNumber,
-    formatCreationTimeResult,
-    requireExternalSerializedValue: (method: string, args: unknown[]) =>
-      requireExternalSerializedValue(contract, method as SerializationBaseMethod, args),
-    compareSpCoinContractSize: async (previousReleaseDir: string, latestReleaseDir: string) => {
-      const response = await fetch('/api/spCoin/contract-size-comparison', {
-        method: 'POST',
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          previousReleaseDir,
-          latestReleaseDir,
-        }),
+  let result: unknown;
+  try {
+    result = await handler.run({
+      canonicalMethod,
+      selectedMethod,
+      methodArgs,
+      spCoinAccessSource,
+      target,
+      read: read as Record<string, unknown>,
+      staking,
+      contract: contract as Record<string, unknown>,
+      normalizeStringListResult,
+      toStringOrNumber,
+      formatCreationTimeResult,
+      requireExternalSerializedValue: (method: string, args: unknown[]) =>
+        requireExternalSerializedValue(contract, method as SerializationBaseMethod, args),
+      compareSpCoinContractSize: async (previousReleaseDir: string, latestReleaseDir: string) => {
+        const response = await fetch('/api/spCoin/contract-size-comparison', {
+          method: 'POST',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            previousReleaseDir,
+            latestReleaseDir,
+          }),
+        });
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          message?: string;
+          report?: unknown;
+          scriptPath?: string;
+          stderr?: string;
+          previousReleaseDir?: string;
+          latestReleaseDir?: string;
+          cached?: boolean;
+        };
+        if (!response.ok || payload?.ok === false) {
+          throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
+        }
+        return {
+          scriptPath: String(payload?.scriptPath || ''),
+          previousReleaseDir: String(payload?.previousReleaseDir || ''),
+          latestReleaseDir: String(payload?.latestReleaseDir || ''),
+          cached: Boolean(payload?.cached),
+          report: payload?.report ?? {},
+          stderr: String(payload?.stderr || ''),
+        };
+      },
+    });
+  } catch (error) {
+    if (isBadDataError(error)) {
+      throw await buildReadDecodeError({
+        error,
+        method: canonicalMethod,
+        target,
+        runner,
       });
-      const payload = (await response.json()) as {
-        ok?: boolean;
-        message?: string;
-        report?: unknown;
-        scriptPath?: string;
-        stderr?: string;
-        previousReleaseDir?: string;
-        latestReleaseDir?: string;
-        cached?: boolean;
-      };
-      if (!response.ok || payload?.ok === false) {
-        throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
-      }
-      return {
-        scriptPath: String(payload?.scriptPath || ''),
-        previousReleaseDir: String(payload?.previousReleaseDir || ''),
-        latestReleaseDir: String(payload?.latestReleaseDir || ''),
-        cached: Boolean(payload?.cached),
-        report: payload?.report ?? {},
-        stderr: String(payload?.stderr || ''),
-      };
-    },
-  });
+    }
+    throw error;
+  }
 
   const out = stringifyResult(result);
   appendLog(`${activeDef.title}(${methodArgs.join(', ')}) -> ${out}`);

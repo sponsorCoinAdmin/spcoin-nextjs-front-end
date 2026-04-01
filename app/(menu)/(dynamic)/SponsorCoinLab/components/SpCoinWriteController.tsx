@@ -52,6 +52,9 @@ type Props = {
   missingFieldIds: string[];
   runSelectedSpCoinWriteMethod: () => void;
   addCurrentMethodToScript: () => void;
+  hideMethodSelect?: boolean;
+  hideActionButtons?: boolean;
+  hideAddToScript?: boolean;
   formatDateTimeDisplay: (datePart: string, hours: string, minutes: string, seconds: string) => string;
   formatDateInput: (date: Date) => string;
   backdateHours: string;
@@ -132,6 +135,9 @@ export default function SpCoinWriteController(props: Props) {
     missingFieldIds,
     runSelectedSpCoinWriteMethod,
     addCurrentMethodToScript,
+    hideMethodSelect = false,
+    hideActionButtons = false,
+    hideAddToScript = false,
     formatDateTimeDisplay,
     formatDateInput,
     backdateHours,
@@ -292,10 +298,10 @@ export default function SpCoinWriteController(props: Props) {
       : '__no_methods__';
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+      {!hideMethodSelect ? <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
-          className="w-fit min-w-[18ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={displayedWriteMethod}
           onChange={(e) => setSelectedSpCoinWriteMethod(e.target.value)}
           disabled={!hasVisibleWriteMethods}
@@ -382,7 +388,8 @@ export default function SpCoinWriteController(props: Props) {
             </React.Fragment>
           ) : null}
         </select>
-      </div>
+      </div> : null}
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
       {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no SpCoin write methods match the current filter)</div> : null}
       {hasVisibleWriteMethods ? <AccountSelection
         label="msg.sender"
@@ -466,7 +473,7 @@ export default function SpCoinWriteController(props: Props) {
             />
           ) : param.type === 'date' ? (
             <>
-              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+      <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
                 <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
                 <div className="flex items-center gap-2">
                   <input
@@ -649,7 +656,7 @@ export default function SpCoinWriteController(props: Props) {
         backdateDays={backdateDays}
         applyBackdateBy={applyBackdateBy}
       />
-      <div className="flex gap-2">
+      {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSpCoinWriteMethod, 'execute')} min-w-[50%] shrink-0`}
@@ -664,30 +671,33 @@ export default function SpCoinWriteController(props: Props) {
             ? 'Missing Parameters'
             : `Run ${activeSpCoinWriteDef.title}`}
         </button>
-        <button
-          type="button"
-          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (isAddToScriptBlockedByNoChanges) return;
-            addCurrentMethodToScript();
-          }}
-          disabled={!hasVisibleWriteMethods}
-          onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
-          }}
-          onMouseLeave={() => setHoveredBlockedAction(null)}
-          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
-        >
-          {isAddToScriptBlockedByNoChanges
-            ? hoveredBlockedAction === 'add'
-              ? 'No Update Changes'
-              : addToScriptButtonLabel
-            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
-            ? 'No Editor Script'
-            : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Parameters'
-            : addToScriptButtonLabel}
-        </button>
+        {!hideAddToScript ? (
+          <button
+            type="button"
+            className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+            onClick={() => {
+              if (isAddToScriptBlockedByNoChanges) return;
+              addCurrentMethodToScript();
+            }}
+            disabled={!hasVisibleWriteMethods}
+            onMouseEnter={() => {
+              if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
+            }}
+            onMouseLeave={() => setHoveredBlockedAction(null)}
+            title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
+          >
+            {isAddToScriptBlockedByNoChanges
+              ? hoveredBlockedAction === 'add'
+                ? 'No Update Changes'
+                : addToScriptButtonLabel
+              : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+              ? 'No Editor Script'
+              : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+              ? 'Missing Parameters'
+              : addToScriptButtonLabel}
+          </button>
+        ) : null}
+      </div> : null}
       </div>
     </div>
   );

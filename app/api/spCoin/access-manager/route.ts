@@ -1072,9 +1072,6 @@ async function handleGenerateAbi(deploymentChainId?: number | string) {
 }
 
 const SPCOIN_METADATA_ABI = [
-  'function getSpCoinMetaData() view returns (address ownerAddress, string version, string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 inflationRate, uint256 lowerRecipientRate, uint256 upperRecipientRate, uint256 lowerAgentRate, uint256 upperAgentRate)',
-  'function getRecipientRateRange() view returns (uint256 lowerRecipientRate, uint256 upperRecipientRate)',
-  'function getAgentRateRange() view returns (uint256 lowerAgentRate, uint256 upperAgentRate)',
   'function getInflationRate() view returns (uint256)',
   'function owner() view returns (address)',
   'function getVersion() view returns (string)',
@@ -1082,18 +1079,17 @@ const SPCOIN_METADATA_ABI = [
   'function symbol() view returns (string)',
   'function decimals() view returns (uint8)',
   'function totalSupply() view returns (uint256)',
+  'function creationTime() view returns (uint256)',
+  'function getLowerRecipientRate() view returns (uint256)',
+  'function getUpperRecipientRate() view returns (uint256)',
+  'function getLowerAgentRate() view returns (uint256)',
+  'function getUpperAgentRate() view returns (uint256)',
 ] as const;
 
 async function handleGetSpCoinMetaData(
   deploymentPublicKey: string,
   deploymentChainId?: number | string,
 ) {
-  const normalizeRateRangeTuple = (value: unknown): [number, number] => {
-    if (Array.isArray(value)) {
-      return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
-    }
-    return [0, Number(value ?? 0)];
-  };
   const network = await resolveDeployNetwork(deploymentChainId);
   const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
   const contract = new Contract(deploymentPublicKey, SPCOIN_METADATA_ABI, provider);
@@ -1128,53 +1124,47 @@ async function handleGetSpCoinMetaData(
   let recipientRateRange: [number, number] = [0, 0];
   let agentRateRange: [number, number] = [0, 0];
 
-  try {
-    const metadata = await withTimeout(
-      ((contract as unknown) as { getSpCoinMetaData: () => Promise<unknown[]> }).getSpCoinMetaData(),
-      15000,
-      'getSpCoinMetaData()',
-    );
-    owner = String(metadata?.[0] ?? '').trim();
-    version = String(metadata?.[1] ?? '').trim();
-    name = String(metadata?.[2] ?? '').trim();
-    symbol = String(metadata?.[3] ?? '').trim();
-    decimals = Number(metadata?.[4] ?? 0);
-    totalSupply = normalizeBigInt(metadata?.[5] ?? '0');
-    inflationRate = Number(metadata?.[6] ?? 0);
-    recipientRateRange = [Number(metadata?.[7] ?? 0), Number(metadata?.[8] ?? 0)];
-    agentRateRange = [Number(metadata?.[9] ?? 0), Number(metadata?.[10] ?? 0)];
-  } catch (_error) {
-    const [
-      ownerValue,
-      versionValue,
-      nameValue,
-      symbolValue,
-      decimalsValue,
-      totalSupplyValue,
-      inflationRateValue,
-      recipientRateRangeValue,
-      agentRateRangeValue,
-    ] = await Promise.all([
-      readOptionalValue('owner', ''),
-      readOptionalValue('getVersion', ''),
-      readOptionalValue('name', ''),
-      readOptionalValue('symbol', ''),
-      readOptionalValue('decimals', 0),
-      readOptionalValue('totalSupply', 0),
-      readOptionalValue('getInflationRate', 10),
-      readOptionalValue('getRecipientRateRange', [0, 0]),
-      readOptionalValue('getAgentRateRange', [0, 0]),
-    ]);
-    owner = String(ownerValue ?? '').trim();
-    version = String(versionValue ?? '').trim();
-    name = String(nameValue ?? '').trim();
-    symbol = String(symbolValue ?? '').trim();
-    decimals = Number(decimalsValue ?? 0);
-    totalSupply = normalizeBigInt(totalSupplyValue);
-    inflationRate = Number(inflationRateValue ?? 0);
-    recipientRateRange = normalizeRateRangeTuple(recipientRateRangeValue);
-    agentRateRange = normalizeRateRangeTuple(agentRateRangeValue);
-  }
+  const [
+    ownerValue,
+    versionValue,
+    nameValue,
+    symbolValue,
+    decimalsValue,
+    totalSupplyValue,
+    inflationRateValue,
+    lowerRecipientRateValue,
+    upperRecipientRateValue,
+    lowerAgentRateValue,
+    upperAgentRateValue,
+    creationTimeValue,
+  ] = await Promise.all([
+    readOptionalValue('owner', ''),
+    readOptionalValue('getVersion', ''),
+    readOptionalValue('name', ''),
+    readOptionalValue('symbol', ''),
+    readOptionalValue('decimals', 0),
+    readOptionalValue('totalSupply', 0),
+    readOptionalValue('getInflationRate', 10),
+    readOptionalValue('getLowerRecipientRate', 0),
+    readOptionalValue('getUpperRecipientRate', 0),
+    readOptionalValue('getLowerAgentRate', 0),
+    readOptionalValue('getUpperAgentRate', 0),
+    readOptionalValue('creationTime', 0),
+  ]);
+  owner = String(ownerValue ?? '').trim();
+  version = String(versionValue ?? '').trim();
+  name = String(nameValue ?? '').trim();
+  symbol = String(symbolValue ?? '').trim();
+  decimals = Number(decimalsValue ?? 0);
+  totalSupply = normalizeBigInt(totalSupplyValue);
+  inflationRate = Number(inflationRateValue ?? 0);
+  recipientRateRange = [Number(lowerRecipientRateValue ?? 0), Number(upperRecipientRateValue ?? 0)];
+  agentRateRange = [Number(lowerAgentRateValue ?? 0), Number(upperAgentRateValue ?? 0)];
+  const creationDateSeconds = Number(creationTimeValue ?? 0);
+  const creationDate =
+    Number.isFinite(creationDateSeconds) && creationDateSeconds > 0
+      ? new Date(creationDateSeconds * 1000).toISOString()
+      : '';
 
   return {
     owner,
@@ -1184,8 +1174,9 @@ async function handleGetSpCoinMetaData(
     decimals,
     totalSypply: totalSupply,
     inflationRate,
-    recipientRateRange: normalizeRateRangeTuple(recipientRateRange),
-    agentRateRange: normalizeRateRangeTuple(agentRateRange),
+    recipientRateRange,
+    agentRateRange,
+    creationDate,
   };
 }
 

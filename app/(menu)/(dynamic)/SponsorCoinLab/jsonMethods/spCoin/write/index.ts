@@ -16,6 +16,7 @@ import {
 } from '../../shared';
 
 export type SpCoinWriteMethod =
+  | 'addSponsor'
   | 'addRecipient'
   | 'addRecipients'
   | 'addOffChainRecipients'
@@ -191,29 +192,54 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   ) => {
     setStatus(`Submitting ${label}...`);
     appendWriteTrace?.(`submitWrite(${label}) start`);
-    const tx = await executeWriteConnected(
-      label,
-      (contract: Contract, signer: any) => {
-        const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource);
-        return writeCall(access, signer);
-      },
-      selectedHardhatAddress,
-    );
-    appendWriteTrace?.(`submitWrite(${label}) tx returned=${tx ? 'yes' : 'no'} hash=${String(tx?.hash || '')}`);
-    appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
-    if (!tx || typeof tx.wait !== 'function') {
-      throw new Error(`${label} did not return a transaction response.`);
+    try {
+      const tx = await executeWriteConnected(
+        label,
+        (contract: Contract, signer: any) => {
+          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
+          appendWriteTrace?.(
+            `submitWrite(${label}) contract target=${String((contract as any)?.target || (contract as any)?.address || '')} signer=${String(signer?.address || '')}`,
+          );
+          return writeCall(access, signer);
+        },
+        selectedHardhatAddress,
+      );
+      appendWriteTrace?.(`submitWrite(${label}) tx returned=${tx ? 'yes' : 'no'} hash=${String(tx?.hash || '')}`);
+      appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
+      if (!tx || typeof tx.wait !== 'function') {
+        throw new Error(`${label} did not return a transaction response.`);
+      }
+      const receipt = await tx.wait();
+      appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
+      appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
+      receipts.push({
+        label,
+        txHash: String(tx?.hash || ''),
+        receiptHash: String(receipt?.hash || tx?.hash || ''),
+        blockNumber: String(receipt?.blockNumber ?? ''),
+        status: String(receipt?.status ?? ''),
+      });
+    } catch (error) {
+      const detail = error && typeof error === 'object'
+        ? JSON.stringify(
+            {
+              message: (error as any)?.message,
+              reason: (error as any)?.reason,
+              code: (error as any)?.code,
+              action: (error as any)?.action,
+              data: (error as any)?.data,
+              shortMessage: (error as any)?.shortMessage,
+              info: (error as any)?.info,
+              error: (error as any)?.error,
+            },
+            null,
+            2,
+          )
+        : String(error);
+      appendWriteTrace?.(`submitWrite(${label}) failed detail=${detail}`);
+      appendLog(`${label} failed: ${detail}`);
+      throw error;
     }
-    const receipt = await tx.wait();
-    appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
-    appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-    receipts.push({
-      label,
-      txHash: String(tx?.hash || ''),
-      receiptHash: String(receipt?.hash || tx?.hash || ''),
-      blockNumber: String(receipt?.blockNumber ?? ''),
-      status: String(receipt?.status ?? ''),
-    });
   };
 
   switch (selectedMethod) {
@@ -307,6 +333,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addRecipient': {
       await submitWrite(activeDef.title, (access) => access.add.addRecipient(asString(methodArgs[0])));
+      break;
+    }
+    case 'addSponsor': {
+      await submitWrite(activeDef.title, (access) => access.add.addSponsor(asString(methodArgs[0])));
       break;
     }
     case 'addAgent': {

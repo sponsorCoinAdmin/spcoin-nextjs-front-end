@@ -53,6 +53,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       name: header.name,
       symbol: header.symbol,
       url: header.url,
+      rpcUrl: (header as NetworkElement).rpcUrl ?? '',
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,

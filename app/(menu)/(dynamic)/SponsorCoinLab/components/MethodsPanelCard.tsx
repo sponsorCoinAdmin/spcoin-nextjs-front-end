@@ -8,7 +8,7 @@ import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 
-type MethodPanelTab = MethodPanelMode | 'todos';
+type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20';
 
 type Props = {
   articleClassName: string;
@@ -80,8 +80,269 @@ export default function MethodsPanelCard({
   spCoinWriteProps,
   serializationTestProps,
 }: Props) {
+  const showAllCardSectionsForVisualTest = true;
+  const showAllMethodPanelsForVisualTest = true;
   const methodPanelGroupName = React.useId();
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
+  const isErc20Mode = methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write';
+  const methodPanelOptions: Array<[MethodPanelTab, string]> = [
+    ['erc20', 'ERC20'],
+    ['spcoin_rread', 'SpCoin Read'],
+    ['spcoin_write', 'SpCoin Write'],
+    ['todos', 'ToDos'],
+  ];
+  const visibleErc20ReadOptions = erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : [];
+  const visibleErc20WriteOptions = erc20WriteProps.showOnChainMethods ? erc20WriteProps.erc20WriteOptions : [];
+  const hasVisibleErc20Methods = visibleErc20ReadOptions.length > 0 || visibleErc20WriteOptions.length > 0;
+  const combinedErc20MethodValue =
+    methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
+  const visibleSpCoinReadOptions = [
+    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
+    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
+    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
+    ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
+  ];
+  const visibleSpCoinWriteOptions = [
+    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
+    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
+    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinAdminWriteOptions : []),
+    ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
+  ];
+  const visibleSerializationOptions = serializationTestProps.showOffChainMethods ? serializationTestProps.serializationTestOptions : [];
+  const activeRunControl = React.useMemo(() => {
+    if (methodPanelMode === 'ecr20_read') {
+      return {
+        label: `Run ${erc20ReadProps.activeReadLabels.title}`,
+        onClick: () => void erc20ReadProps.runSelectedReadMethod(),
+        enabled: erc20ReadProps.canRunSelectedReadMethod,
+      };
+    }
+    if (methodPanelMode === 'erc20_write') {
+      return {
+        label: `Run ${erc20WriteProps.activeWriteLabels.title}`,
+        onClick: () => void erc20WriteProps.runSelectedWriteMethod(),
+        enabled: erc20WriteProps.canRunSelectedWriteMethod,
+      };
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      return {
+        label: `Run ${spCoinReadProps.activeSpCoinReadDef.title}`,
+        onClick: () => void spCoinReadProps.runSelectedSpCoinReadMethod(),
+        enabled: spCoinReadProps.canRunSelectedSpCoinReadMethod,
+      };
+    }
+    if (methodPanelMode === 'spcoin_write') {
+      return {
+        label: `Run ${spCoinWriteProps.activeSpCoinWriteDef.title}`,
+        onClick: () => void spCoinWriteProps.runSelectedSpCoinWriteMethod(),
+        enabled: spCoinWriteProps.canRunSelectedSpCoinWriteMethod,
+      };
+    }
+    return {
+      label: `Run ${serializationTestProps.activeSerializationTestDef.title}`,
+      onClick: () => void serializationTestProps.runSelectedSerializationTestMethod(),
+      enabled: serializationTestProps.canRunSelectedSerializationTestMethod,
+    };
+  }, [
+    erc20ReadProps.activeReadLabels.title,
+    erc20ReadProps.canRunSelectedReadMethod,
+    erc20ReadProps.runSelectedReadMethod,
+    erc20WriteProps.activeWriteLabels.title,
+    erc20WriteProps.canRunSelectedWriteMethod,
+    erc20WriteProps.runSelectedWriteMethod,
+    methodPanelMode,
+    serializationTestProps.activeSerializationTestDef.title,
+    serializationTestProps.canRunSelectedSerializationTestMethod,
+    serializationTestProps.runSelectedSerializationTestMethod,
+    spCoinReadProps.activeSpCoinReadDef.title,
+    spCoinReadProps.canRunSelectedSpCoinReadMethod,
+    spCoinReadProps.runSelectedSpCoinReadMethod,
+    spCoinWriteProps.activeSpCoinWriteDef.title,
+    spCoinWriteProps.canRunSelectedSpCoinWriteMethod,
+    spCoinWriteProps.runSelectedSpCoinWriteMethod,
+  ]);
+  const activeAddControl = React.useMemo(() => {
+    if (methodPanelMode === 'ecr20_read') {
+      return {
+        label: erc20ReadProps.addToScriptButtonLabel,
+        onClick: () => void erc20ReadProps.addCurrentMethodToScript(),
+        enabled: erc20ReadProps.canAddCurrentMethodToScript,
+      };
+    }
+    if (methodPanelMode === 'erc20_write') {
+      return {
+        label: erc20WriteProps.addToScriptButtonLabel,
+        onClick: () => void erc20WriteProps.addCurrentMethodToScript(),
+        enabled: erc20WriteProps.canAddCurrentMethodToScript,
+      };
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      return {
+        label: spCoinReadProps.addToScriptButtonLabel,
+        onClick: () => void spCoinReadProps.addCurrentMethodToScript(),
+        enabled: spCoinReadProps.canAddCurrentMethodToScript,
+      };
+    }
+    if (methodPanelMode === 'spcoin_write') {
+      return {
+        label: spCoinWriteProps.addToScriptButtonLabel,
+        onClick: () => void spCoinWriteProps.addCurrentMethodToScript(),
+        enabled: spCoinWriteProps.canAddCurrentMethodToScript,
+      };
+    }
+    return {
+      label: serializationTestProps.addToScriptButtonLabel,
+      onClick: () => void serializationTestProps.addCurrentMethodToScript(),
+      enabled: serializationTestProps.canAddCurrentMethodToScript,
+    };
+  }, [
+    erc20ReadProps.addCurrentMethodToScript,
+    erc20ReadProps.addToScriptButtonLabel,
+    erc20ReadProps.canAddCurrentMethodToScript,
+    erc20WriteProps.addCurrentMethodToScript,
+    erc20WriteProps.addToScriptButtonLabel,
+    erc20WriteProps.canAddCurrentMethodToScript,
+    methodPanelMode,
+    serializationTestProps.addCurrentMethodToScript,
+    serializationTestProps.addToScriptButtonLabel,
+    serializationTestProps.canAddCurrentMethodToScript,
+    spCoinReadProps.addCurrentMethodToScript,
+    spCoinReadProps.addToScriptButtonLabel,
+    spCoinReadProps.canAddCurrentMethodToScript,
+    spCoinWriteProps.addCurrentMethodToScript,
+    spCoinWriteProps.addToScriptButtonLabel,
+    spCoinWriteProps.canAddCurrentMethodToScript,
+  ]);
+  const sharedMethodSelect = React.useMemo(() => {
+    if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
+    const baseClassName = 'grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]';
+    if (isErc20Mode) {
+      return (
+        <div className={baseClassName}>
+          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+          <select
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              if (visibleErc20ReadOptions.includes(nextValue)) {
+                selectMethodPanelTab('ecr20_read');
+                erc20ReadProps.setSelectedReadMethod(nextValue);
+                return;
+              }
+              if (visibleErc20WriteOptions.includes(nextValue)) {
+                selectMethodPanelTab('erc20_write');
+                erc20WriteProps.setSelectedWriteMethod(nextValue);
+              }
+            }}
+            disabled={!hasVisibleErc20Methods}
+          >
+            {!hasVisibleErc20Methods ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleErc20ReadOptions.length > 0 ? (
+              <>
+                <option value="__erc20-read-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- ERC Read ----
+                </option>
+                {visibleErc20ReadOptions.map((name) => (
+                  <option key={`erc20-read-${name}`} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {visibleErc20WriteOptions.length > 0 ? (
+              <>
+                <option value="__erc20-write-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- ERC Write ----
+                </option>
+                {visibleErc20WriteOptions.map((name) => (
+                  <option key={`erc20-write-${name}`} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+          </select>
+        </div>
+      );
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      return (
+        <div className={baseClassName}>
+          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+          <select
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
+            onChange={(e) => spCoinReadProps.setSelectedSpCoinReadMethod(e.target.value)}
+            disabled={visibleSpCoinReadOptions.length === 0}
+          >
+            {visibleSpCoinReadOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleSpCoinReadOptions.map((name) => (
+              <option key={`sp-read-shared-${name}`} value={name}>
+                {spCoinReadProps.spCoinReadMethodDefs[name]?.title || name}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    if (methodPanelMode === 'spcoin_write') {
+      return (
+        <div className={baseClassName}>
+          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+          <select
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
+            onChange={(e) => spCoinWriteProps.setSelectedSpCoinWriteMethod(e.target.value)}
+            disabled={visibleSpCoinWriteOptions.length === 0}
+          >
+            {visibleSpCoinWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleSpCoinWriteOptions.map((name) => (
+              <option key={`sp-write-shared-${name}`} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    return (
+      <div className={baseClassName}>
+        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+        <select
+          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+          value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
+          onChange={(e) => serializationTestProps.setSelectedSerializationTestMethod(e.target.value)}
+          disabled={visibleSerializationOptions.length === 0}
+        >
+          {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+          {visibleSerializationOptions.map((name) => (
+            <option key={`serialization-shared-${name}`} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }, [
+    combinedErc20MethodValue,
+    erc20ReadProps,
+    erc20WriteProps,
+    hasVisibleErc20Methods,
+    isErc20Mode,
+    isJavaScriptScriptMode,
+    methodPanelMode,
+    selectMethodPanelTab,
+    showAllCardSectionsForVisualTest,
+    serializationTestProps,
+    spCoinReadProps,
+    spCoinWriteProps,
+    visibleErc20ReadOptions,
+    visibleErc20WriteOptions,
+    visibleSerializationOptions,
+    visibleSpCoinReadOptions,
+    visibleSpCoinWriteOptions,
+  ]);
 
   return (
     <article ref={methodsCardRef} className={articleClassName}>
@@ -91,8 +352,8 @@ export default function MethodsPanelCard({
 
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">{methodPanelTitle}</h3>
-          <div className="mb-3 mt-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-4 text-sm text-[#8FA8FF]">
+          <div className="mb-3 mt-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-max flex-nowrap items-start gap-4 whitespace-nowrap text-sm text-[#8FA8FF]">
               <label className="inline-flex items-center gap-2">
                 <input
                   type="radio"
@@ -100,7 +361,7 @@ export default function MethodsPanelCard({
                   onChange={() => setScriptEditorKind('json')}
                   className="h-4 w-4 accent-[#5981F3]"
                 />
-                <span>JSON Scripts</span>
+                <span>JSON</span>
               </label>
               <label className="inline-flex items-center gap-2">
                 <input
@@ -111,39 +372,26 @@ export default function MethodsPanelCard({
                 />
                 <span>Typescript</span>
               </label>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
-              {isJavaScriptScriptMode ? null : (
-                <label className="inline-flex items-center justify-end gap-2">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-[#E5B94F]"
-                    checked={writeTraceEnabled}
-                    onChange={toggleWriteTrace}
-                  />
-                  <span>Trace</span>
-                </label>
-              )}
               <label className="inline-flex items-center justify-end gap-2 text-right">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-green-500"
-                  checked={showOnChainMethods}
-                  onChange={(event) => setShowOnChainMethods(event.target.checked)}
-                />
-                <span className="text-green-400">On-Chain</span>
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-green-500"
+                checked={showOnChainMethods}
+                onChange={(event) => setShowOnChainMethods(event.target.checked)}
+              />
+              <span className="text-green-400">On-Chain</span>
               </label>
               <label className="inline-flex items-center justify-end gap-2 text-right">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-[#5981F3]"
-                  checked={showOffChainMethods}
-                  onChange={(event) => setShowOffChainMethods(event.target.checked)}
-                />
-                <span className="text-[#8FA8FF]">Off-Chain</span>
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-[#5981F3]"
+                checked={showOffChainMethods}
+                onChange={(event) => setShowOffChainMethods(event.target.checked)}
+              />
+              <span className="text-[#8FA8FF]">Off-Chain</span>
               </label>
               {isJavaScriptScriptMode ? (
-                <>
+                <div className="ml-auto flex items-start gap-4">
                   <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
                     <input
                       type="checkbox"
@@ -154,119 +402,175 @@ export default function MethodsPanelCard({
                     />
                     <span>Edit</span>
                   </label>
+                </div>
+              ) : (
+                <div className="ml-auto flex items-start gap-4">
+                  <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-[#E5B94F]"
+                      checked={writeTraceEnabled}
+                      onChange={toggleWriteTrace}
+                    />
+                    <span>Trace</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+          {showAllCardSectionsForVisualTest ? (
+            <div className="mb-3 flex gap-2">
+              <button
+                type="button"
+                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                  activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                }`}
+                onClick={activeRunControl.onClick}
+              >
+                {activeRunControl.label}
+              </button>
+              <button
+                type="button"
+                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                  javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                    ? 'bg-[#E5B94F] hover:bg-green-500'
+                    : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                }`}
+                onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
+                disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
+              >
+                {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
+              </button>
+            </div>
+          ) : null}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
+              {methodPanelOptions.map(([value, label]) => (
+                <label key={value} className="inline-flex items-center gap-1">
+                  <input
+                    type="radio"
+                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    name={methodPanelGroupName}
+                    value={value}
+                    checked={activeMethodPanelTab === value}
+                    onMouseDown={(e) => {
+                      if (activeMethodPanelTab === value) e.preventDefault();
+                    }}
+                    onChange={(e) => {
+                      if (activeMethodPanelTab === value) return;
+                      selectMethodPanelTab(e.target.value as MethodPanelTab);
+                    }}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <>
+            {isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (
+              <div className="mb-3 grid grid-cols-1 gap-3">
+                <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
+                  <select
+                    className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+                    value={javaScriptEditorProps.selectedJavaScriptScriptId}
+                    onChange={(event) => javaScriptEditorProps.setSelectedJavaScriptScriptId(event.target.value)}
+                  >
+                    {javaScriptEditorProps.visibleJavaScriptScripts.length === 0 ? (
+                      <option value="">No TypeScript Files</option>
+                    ) : null}
+                    {javaScriptEditorProps.visibleJavaScriptScripts.map((script) => (
+                      <option key={script.id} value={script.id}>
+                        {script.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {sharedMethodSelect}
+                {!showAllCardSectionsForVisualTest ? <div className="flex gap-2">
                   <button
                     type="button"
-                    className={`h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                      javaScriptEditorProps.isSavingSelectedTypeScriptFile
-                        ? 'bg-[#d7ae45]'
-                        : 'bg-[#E5B94F] hover:bg-green-500'
+                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                      activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                    }`}
+                    onClick={activeRunControl.onClick}
+                  >
+                    {activeRunControl.label}
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                      javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                        ? 'bg-[#E5B94F] hover:bg-green-500'
+                        : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
                     }`}
                     onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
                     disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
                   >
-                    {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save'}
+                    {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
                   </button>
-                </>
-              ) : null}
-            </div>
-          </div>
-          {isJavaScriptScriptMode ? (
-            <div className="grid grid-cols-1 gap-3">
-              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
-                <select
-                  className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                  value={javaScriptEditorProps.selectedJavaScriptScriptId}
-                  onChange={(event) => javaScriptEditorProps.setSelectedJavaScriptScriptId(event.target.value)}
-                >
-                  {javaScriptEditorProps.visibleJavaScriptScripts.length === 0 ? (
-                    <option value="">No TypeScript Files</option>
-                  ) : null}
-                  {javaScriptEditorProps.visibleJavaScriptScripts.map((script) => (
-                    <option key={script.id} value={script.id}>
-                      {script.name}
-                    </option>
-                  ))}
-                </select>
+                </div> : null}
+                <textarea
+                  className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
+                  value={javaScriptEditorProps.javaScriptFileContent}
+                  onChange={(event) => javaScriptEditorProps.setJavaScriptFileContent(event.target.value)}
+                  readOnly={!javaScriptEditorProps.isTypeScriptEditEnabled}
+                  placeholder={
+                    javaScriptEditorProps.selectedFilePath
+                      ? javaScriptEditorProps.isJavaScriptFileLoading
+                        ? 'Loading TypeScript file...'
+                        : 'No TypeScript file contents loaded.'
+                      : 'Select a TypeScript file to view it here.'
+                  }
+                  spellCheck={false}
+                />
               </div>
-              <textarea
-                className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
-                value={javaScriptEditorProps.javaScriptFileContent}
-                onChange={(event) => javaScriptEditorProps.setJavaScriptFileContent(event.target.value)}
-                readOnly={!javaScriptEditorProps.isTypeScriptEditEnabled}
-                placeholder={
-                  javaScriptEditorProps.selectedFilePath
-                    ? javaScriptEditorProps.isJavaScriptFileLoading
-                      ? 'Loading TypeScript file...'
-                      : 'No TypeScript file contents loaded.'
-                    : 'Select a TypeScript file to view it here.'
-                }
-                spellCheck={false}
-              />
-              <div className="flex gap-2">
+            ) : null}
+            {!showAllCardSectionsForVisualTest ? sharedMethodSelect : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'ecr20_read') ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'erc20_write') ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            {showAllCardSectionsForVisualTest ? (
+              <div className="mt-3 flex gap-2">
                 <button
                   type="button"
-                  className={`h-[36px] min-w-[50%] shrink-0 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    javaScriptEditorProps.canRunSelectedJavaScriptScript
+                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                    javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
                       ? 'bg-[#E5B94F] hover:bg-green-500'
                       : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
                   }`}
-                  onClick={javaScriptEditorProps.runSelectedJavaScriptScript}
+                  onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
+                  disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
                 >
-                  {`Run ${javaScriptEditorProps.selectedScriptName || 'TypeScript'}`}
+                  {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
+                </button>
+              </div>
+            ) : null}
+            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                    activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                  }`}
+                  onClick={activeRunControl.onClick}
+                >
+                  {activeRunControl.label}
                 </button>
                 <button
                   type="button"
                   className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    javaScriptEditorProps.canAddSelectedJavaScriptScriptToScript
-                      ? 'bg-[#E5B94F] hover:bg-green-500'
-                      : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                    activeAddControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
                   }`}
-                  onClick={javaScriptEditorProps.addSelectedJavaScriptScriptToScript}
+                  onClick={activeAddControl.onClick}
                 >
-                  Queue In JSON Flow
+                  {activeAddControl.label}
                 </button>
               </div>
-            </div>
-          ) : (
-            <>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
-                  {[
-                    ['ecr20_read', 'ECR20 Read'],
-                    ['erc20_write', 'ERC20 Write'],
-                    ['spcoin_rread', 'SpCoin Read'],
-                    ['spcoin_write', 'SpCoin Write'],
-                    ['todos', 'ToDos'],
-                  ].map(([value, label]) => (
-                    <label key={value} className="inline-flex items-center gap-1">
-                      <input
-                        type="radio"
-                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                        name={methodPanelGroupName}
-                        value={value}
-                        checked={activeMethodPanelTab === value}
-                        onMouseDown={(e) => {
-                          if (activeMethodPanelTab === value) e.preventDefault();
-                        }}
-                        onChange={(e) => {
-                          if (activeMethodPanelTab === value) return;
-                          selectMethodPanelTab(e.target.value as MethodPanelTab);
-                        }}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {methodPanelMode === 'ecr20_read' ? <Erc20ReadController {...erc20ReadProps} /> : null}
-              {methodPanelMode === 'erc20_write' ? <Erc20WriteController {...erc20WriteProps} /> : null}
-              {methodPanelMode === 'spcoin_rread' ? <SpCoinReadController {...spCoinReadProps} /> : null}
-              {methodPanelMode === 'spcoin_write' ? <SpCoinWriteController {...spCoinWriteProps} /> : null}
-              {methodPanelMode === 'serialization_tests' ? <SerializationTestController {...serializationTestProps} /> : null}
-            </>
-          )}
+            ) : null}
+          </>
         </section>
       </div>
     </article>

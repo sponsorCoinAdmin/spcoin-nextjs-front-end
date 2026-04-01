@@ -6,15 +6,6 @@
   "steps": [
     {
       "step": 1,
-      "name": "creationTime",
-      "panel": "spcoin_rread",
-      "method": "creationTime",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 2,
       "name": "getAccountList",
       "panel": "spcoin_rread",
       "method": "getAccountList",
@@ -23,7 +14,40 @@
       "hasMissingRequiredParams": false
     },
     {
+      "step": 2,
+      "name": "isAccountInserted",
+      "panel": "spcoin_rread",
+      "method": "isAccountInserted",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
       "step": 3,
+      "name": "deleteAccountTree",
+      "panel": "spcoin_write",
+      "method": "deleteAccountTree",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
       "name": "addAgentSponsorship",
       "panel": "spcoin_write",
       "method": "addAgentSponsorship",
@@ -35,7 +59,7 @@
         },
         {
           "key": "Recipient Rate Key",
-          "value": "20"
+          "value": "27"
         },
         {
           "key": "Agent Key",
@@ -43,11 +67,40 @@
         },
         {
           "key": "Agent Rate Key",
-          "value": "3"
+          "value": "2"
         },
         {
           "key": "Transaction Quantity",
-          "value": "99999"
+          "value": "1000000"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "getAccountRecipientList",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecipientList",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "addRecipient",
+      "panel": "spcoin_write",
+      "method": "addRecipient",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Recipient Key",
+          "value": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955"
         }
       ],
       "breakpoint": false,

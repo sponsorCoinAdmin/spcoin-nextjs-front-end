@@ -8,6 +8,8 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { CHAIN_ID } from '@/lib/structure';
+import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import {
   ERC20_READ_OPTIONS,
   getErc20ReadLabels,
@@ -21,7 +23,7 @@ import {
 import {
   SPCOIN_READ_METHOD_DEFS,
   getSpCoinAdminReadOptions,
-  getSpCoinCompoundReadOptions,
+  getSpCoinOffChainReadOptions,
   getSpCoinSenderReadOptions,
   getSpCoinWorldReadOptions,
   normalizeSpCoinReadMethod,
@@ -309,6 +311,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath[keyPath.length - 1] === 'formatted') return value;
+    if (keyPath[keyPath.length - 1] === 'creationDate') return value;
     if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') {
       const parsedError = parseStructuredErrorMessage(trimmed);
       return parsedError ?? value;
@@ -367,11 +370,15 @@ export default function SponsorCoinLabPage() {
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
+  const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+    networkHeader?: { rpcUrl?: string };
+  };
+  const defaultHardhatRpcUrl =
+    String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
+    'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [hasPersistedNetworkMode, setHasPersistedNetworkMode] = useState<boolean | null>(null);
-  const [rpcUrl, setRpcUrl] = useState(
-    'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',
-  );
+  const [rpcUrl, setRpcUrl] = useState(defaultHardhatRpcUrl);
   const [contractAddress, setContractAddress] = useState('');
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin SandBox] Ready']);
@@ -382,6 +389,7 @@ export default function SponsorCoinLabPage() {
   const [formattedJsonViewEnabled, setFormattedJsonViewEnabled] = useState(true);
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
+  const recentWriteTraceRef = useRef<string[]>([]);
   const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
   const [validationPopupMessage, setValidationPopupMessage] = useState(
@@ -411,7 +419,7 @@ export default function SponsorCoinLabPage() {
   const [readAddressA, setReadAddressA] = useState('');
   const [readAddressB, setReadAddressB] = useState('');
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
-    useState<SpCoinReadMethod>('getSPCoinHeaderRecord');
+    useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
     useState<SpCoinWriteMethod>('addRecipient');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
@@ -716,6 +724,9 @@ export default function SponsorCoinLabPage() {
         if (label === 'latest release directory') {
           return 'spCoinAccess/contracts/spCoin';
         }
+        if (label === 'contract address') {
+          return String(contractAddress || '').trim();
+        }
         return '';
       });
     },
@@ -899,11 +910,14 @@ export default function SponsorCoinLabPage() {
   );
   const appendWriteTrace = useCallback(
     (line: string) => {
+      const nextLine = String(line || '');
+      recentWriteTraceRef.current = [...recentWriteTraceRef.current.slice(-49), nextLine];
       if (!writeTraceEnabled) return;
-      appendLog(`[TRACE] ${line}`);
+      appendLog(`[TRACE] ${nextLine}`);
     },
     [appendLog, writeTraceEnabled],
   );
+  const getRecentWriteTrace = useCallback(() => recentWriteTraceRef.current.slice(), []);
   const clearInvalidField = useCallback((fieldId: string) => {
     if (!fieldId) return;
     setInvalidFieldIds((prev) => prev.filter((entry) => entry !== fieldId));
@@ -1489,6 +1503,7 @@ export default function SponsorCoinLabPage() {
     setSelectedSerializationTestMethod,
     spReadParams,
     spWriteParams,
+    setSpWriteParams,
     serializationTestParams,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
@@ -1504,6 +1519,7 @@ export default function SponsorCoinLabPage() {
     useLocalSpCoinAccessPackage,
     appendLog,
     appendWriteTrace,
+    getRecentWriteTrace,
     setStatus,
     setFormattedOutputDisplay,
     setTreeOutputDisplay,
@@ -1921,7 +1937,7 @@ export default function SponsorCoinLabPage() {
   const spCoinWorldReadOptions = getSpCoinWorldReadOptions(false);
   const spCoinSenderReadOptions = getSpCoinSenderReadOptions(false);
   const spCoinAdminReadOptions = getSpCoinAdminReadOptions(false);
-  const spCoinCompoundReadOptions = getSpCoinCompoundReadOptions(false);
+  const spCoinCompoundReadOptions = getSpCoinOffChainReadOptions(false);
   const spCoinAllReadOptions = [
     ...spCoinWorldReadOptions,
     ...spCoinSenderReadOptions,
@@ -1933,7 +1949,12 @@ export default function SponsorCoinLabPage() {
   const spCoinAdminWriteOptions = getSpCoinAdminWriteOptions(false);
   const spCoinTodoWriteOptions = getSpCoinTodoWriteOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
-  const activeMethodPanelTab = methodPanelMode === 'spcoin_write' && isSpCoinTodoMode ? 'todos' : methodPanelMode;
+  const activeMethodPanelTab =
+    methodPanelMode === 'spcoin_write' && isSpCoinTodoMode
+      ? 'todos'
+      : methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write'
+      ? 'erc20'
+      : methodPanelMode;
   useEffect(() => {
     if (methodPanelMode !== 'spcoin_write' || !isSpCoinTodoMode) return;
     if (spCoinTodoWriteOptions.includes(selectedSpCoinWriteMethod)) return;
@@ -2367,13 +2388,22 @@ export default function SponsorCoinLabPage() {
     [methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, setMethodPanelMode],
   );
   const selectMethodPanelTab = useCallback(
-    (value: MethodPanelMode | 'todos') => {
+    (value: MethodPanelMode | 'todos' | 'erc20') => {
       if (value === 'todos') {
         if (activeMethodPanelTab === 'todos') return;
         runWithDiscardPrompt(() => {
           resetToDropdownSelection();
           setIsSpCoinTodoMode(true);
           setMethodPanelMode('spcoin_write');
+        });
+        return;
+      }
+      if (value === 'erc20') {
+        if (activeMethodPanelTab === 'erc20') return;
+        runWithDiscardPrompt(() => {
+          setIsSpCoinTodoMode(false);
+          resetToDropdownSelection();
+          setMethodPanelMode(methodPanelMode === 'erc20_write' ? 'erc20_write' : 'ecr20_read');
         });
         return;
       }
@@ -2388,7 +2418,7 @@ export default function SponsorCoinLabPage() {
       }
       selectDropdownMethodPanelMode(value);
     },
-    [activeMethodPanelTab, resetToDropdownSelection, runWithDiscardPrompt, selectDropdownMethodPanelMode],
+    [activeMethodPanelTab, methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, selectDropdownMethodPanelMode],
   );
   const selectDropdownReadMethod = useCallback(
     (value: Erc20ReadMethod) => {
@@ -3218,6 +3248,7 @@ export default function SponsorCoinLabPage() {
               activeSpCoinReadDef: activeSpCoinReadDef,
               spReadParams,
               setSpReadParams,
+              activeContractAddress: contractAddress,
               inputStyle,
               writeTraceEnabled,
               toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),

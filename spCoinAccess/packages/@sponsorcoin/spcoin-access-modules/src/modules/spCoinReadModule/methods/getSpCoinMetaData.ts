@@ -7,6 +7,23 @@ export async function getSpCoinMetaData(context) {
         }
         return [0, Number(value ?? 0)];
     };
+    const readCreationDate = async () => {
+        const creationTimeFn = context.spCoinContractDeployed?.creationTime;
+        if (typeof creationTimeFn !== "function") {
+            return "";
+        }
+        try {
+            const rawCreationTime = await creationTimeFn.call(context.spCoinContractDeployed);
+            const seconds = Number(rawCreationTime ?? 0);
+            if (!Number.isFinite(seconds) || seconds <= 0) {
+                return "";
+            }
+            return new Date(seconds * 1000).toISOString();
+        }
+        catch (_error) {
+            return "";
+        }
+    };
     const getRateRangeTuple = async (rangeReader, lowerReader, upperReader) => {
         const rangeFn = context.spCoinContractDeployed?.[rangeReader];
         if (typeof rangeFn === "function") {
@@ -24,25 +41,6 @@ export async function getSpCoinMetaData(context) {
         }
         return [0, 0];
     };
-    if (typeof context.spCoinContractDeployed.getSpCoinMetaData === "function") {
-        const ret = await context.spCoinContractDeployed.getSpCoinMetaData();
-        const [recipientRateRange, agentRateRange] = await Promise.all([
-            getRateRangeTuple("getRecipientRateRange", "getLowerRecipientRate", "getUpperRecipientRate"),
-            getRateRangeTuple("getAgentRateRange", "getLowerAgentRate", "getUpperAgentRate"),
-        ]);
-        context.spCoinLogger.logExitFunction();
-        return {
-            owner: String(ret?.[0] ?? ""),
-            version: String(ret?.[1] ?? ""),
-            name: String(ret?.[2] ?? ""),
-            symbol: String(ret?.[3] ?? ""),
-            decimals: Number(ret?.[4] ?? 0),
-            totalSupply: String(ret?.[5] ?? "0"),
-            inflationRate: Number(ret?.[6] ?? 0),
-            recipientRateRange,
-            agentRateRange,
-        };
-    }
     const readOptionalValue = async (readers, fallbackValue) => {
         for (const reader of readers) {
             const contractReader = context.spCoinContractDeployed?.[reader];
@@ -57,7 +55,7 @@ export async function getSpCoinMetaData(context) {
         }
         return fallbackValue;
     };
-    const [owner, version, name, symbol, decimals, totalSupply, inflationRate, recipientRateRange, agentRateRange] = await Promise.all([
+    const [owner, version, name, symbol, decimals, totalSupply, inflationRate, recipientRateRange, agentRateRange, creationDate] = await Promise.all([
         readOptionalValue(["owner", "getRootAdmin"], ""),
         readOptionalValue(["getVersion"], ""),
         readOptionalValue(["name"], ""),
@@ -67,6 +65,7 @@ export async function getSpCoinMetaData(context) {
         readOptionalValue(["getInflationRate"], 10),
         getRateRangeTuple("getRecipientRateRange", "getLowerRecipientRate", "getUpperRecipientRate"),
         getRateRangeTuple("getAgentRateRange", "getLowerAgentRate", "getUpperAgentRate"),
+        readCreationDate(),
     ]);
     context.spCoinLogger.logExitFunction();
     return {
@@ -79,6 +78,7 @@ export async function getSpCoinMetaData(context) {
         inflationRate: Number(inflationRate ?? 0),
         recipientRateRange: normalizeRangeTuple(recipientRateRange),
         agentRateRange: normalizeRangeTuple(agentRateRange),
+        creationDate,
     };
 }
 

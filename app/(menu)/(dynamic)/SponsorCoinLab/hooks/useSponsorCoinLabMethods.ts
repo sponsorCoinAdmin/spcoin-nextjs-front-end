@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import type { MethodDef, ParamDef } from '../jsonMethods/shared/types';
 import {
   getErc20ReadLabels,
@@ -49,6 +49,47 @@ function parseComparableUint(value: string): bigint | null {
   }
 }
 
+function isBadDataError(error: unknown) {
+  const code = String((error as { code?: unknown } | null)?.code || '');
+  const message = String((error as { message?: unknown } | null)?.message || '');
+  return code === 'BAD_DATA' || /could not decode result data/i.test(message);
+}
+
+async function enrichDirectReadError(params: {
+  error: unknown;
+  method: string;
+  target: string;
+  runner: any;
+}) {
+  const { error, method, target, runner } = params;
+  if (!isBadDataError(error)) return error;
+
+  const provider = runner?.provider ?? runner;
+  if (!provider || typeof provider.getCode !== 'function') {
+    return error;
+  }
+
+  try {
+    const [code, network] = await Promise.all([
+      provider.getCode(target),
+      typeof provider.getNetwork === 'function' ? provider.getNetwork() : Promise.resolve(null),
+    ]);
+    const chainId = network?.chainId != null ? String(network.chainId) : 'unknown';
+    const hasCode = typeof code === 'string' && code !== '0x';
+    const nextError = new Error(
+      hasCode
+        ? `SpCoin read method ${method} failed at ${target} on chain ${chainId}: the contract returned undecodable data. This usually means the deployed bytecode does not match the current SPCoin ABI or does not implement ${method}().`
+        : `SpCoin read method ${method} failed at ${target} on chain ${chainId}: no contract code was found at that address.`,
+    );
+    (nextError as Error & { cause?: unknown; code?: unknown }).cause = error;
+    (nextError as Error & { cause?: unknown; code?: unknown }).code =
+      (error as { code?: unknown } | null)?.code || 'BAD_DATA';
+    return nextError;
+  } catch {
+    return error;
+  }
+}
+
 type Params = {
   activeContractAddress: string;
   mode: ConnectionMode;
@@ -86,6 +127,7 @@ type Params = {
   setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   spReadParams: string[];
   spWriteParams: string[];
+  setSpWriteParams: Dispatch<SetStateAction<string[]>>;
   serializationTestParams: string[];
   spCoinReadMethodDefs: MethodDefMap;
   spCoinWriteMethodDefs: MethodDefMap;
@@ -98,6 +140,7 @@ type Params = {
   useLocalSpCoinAccessPackage: boolean;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
+  getRecentWriteTrace: () => string[];
   setStatus: (value: string) => void;
   setFormattedOutputDisplay: (value: string) => void;
   setTreeOutputDisplay: (value: string) => void;
@@ -157,6 +200,7 @@ export function useSponsorCoinLabMethods({
   setSelectedSerializationTestMethod,
   spReadParams,
   spWriteParams,
+  setSpWriteParams,
   serializationTestParams,
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
@@ -169,6 +213,7 @@ export function useSponsorCoinLabMethods({
   useLocalSpCoinAccessPackage,
   appendLog,
   appendWriteTrace,
+  getRecentWriteTrace,
   setStatus,
   setFormattedOutputDisplay,
   setTreeOutputDisplay,
@@ -416,7 +461,17 @@ export function useSponsorCoinLabMethods({
       undefined,
       useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
     );
-    const list = normalizeStringListResult(await (access.read as SpCoinReadAccess).getAccountList());
+    let list: string[];
+    try {
+      list = normalizeStringListResult(await (access.read as SpCoinReadAccess).getAccountList());
+    } catch (error) {
+      throw await enrichDirectReadError({
+        error,
+        method: 'getAccountList',
+        target,
+        runner,
+      });
+    }
     treeAccountListCacheRef.current = list;
     syncTreeAccountOptions(list);
     return { list };
@@ -603,7 +658,17 @@ export function useSponsorCoinLabMethods({
         undefined,
         useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
       );
-      const result = await (access.read as SpCoinReadAccess).getSPCoinHeaderRecord(false);
+      let result: unknown;
+      try {
+        result = await (access.read as SpCoinReadAccess).getSPCoinHeaderRecord(false);
+      } catch (error) {
+        throw await enrichDirectReadError({
+          error,
+          method: 'getSPCoinHeaderRecord',
+          target,
+          runner,
+        });
+      }
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getSPCoinHeaderRecord -> ${result}`);
       setStatus('Header read complete.');
@@ -682,7 +747,16 @@ export function useSponsorCoinLabMethods({
           undefined,
           useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
         );
-        tree = await (access.read as SpCoinReadAccess).getAccountRecord(activeAccount);
+        try {
+          tree = await (access.read as SpCoinReadAccess).getAccountRecord(activeAccount);
+        } catch (error) {
+          throw await enrichDirectReadError({
+            error,
+            method: 'getAccountRecord',
+            target,
+            runner,
+          });
+        }
         treeAccountRecordCacheRef.current.set(activeAccount, tree);
       }
       setTreeOutputDisplay(
@@ -724,7 +798,17 @@ export function useSponsorCoinLabMethods({
         undefined,
         useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
       );
-      const accountKeys = (await (access.read as SpCoinReadAccess).getAccountList()) as string[];
+      let accountKeys: string[];
+      try {
+        accountKeys = (await (access.read as SpCoinReadAccess).getAccountList()) as string[];
+      } catch (error) {
+        throw await enrichDirectReadError({
+          error,
+          method: 'getAccountList',
+          target,
+          runner,
+        });
+      }
       const result = await Promise.all(
         (accountKeys ?? []).map(async (accountKey) => (access.read as SpCoinReadAccess).getAccountRecord(String(accountKey))),
       );
@@ -943,6 +1027,7 @@ export function useSponsorCoinLabMethods({
               panel: 'spcoin_rread',
               source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
               method: selectedSpCoinReadMethod,
+              trace: getRecentWriteTrace(),
             },
           },
         }),
@@ -956,6 +1041,7 @@ export function useSponsorCoinLabMethods({
     buildMethodCallEntry,
     executeMethodDescriptor,
     formatFormattedPanelPayload,
+    getRecentWriteTrace,
     selectedSpCoinReadMethod,
     setFormattedOutputDisplay,
     setStatus,
@@ -999,7 +1085,26 @@ export function useSponsorCoinLabMethods({
         ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
         ...descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
       ]);
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
+      setFormattedOutputDisplay(
+        formatFormattedPanelPayload({
+          call,
+          error: {
+            message,
+            name: error instanceof Error ? error.name : typeof error,
+            stack: error instanceof Error ? error.stack : undefined,
+            cause:
+              error instanceof Error && 'cause' in error
+                ? String((error as Error & { cause?: unknown }).cause ?? '')
+                : undefined,
+            debug: {
+              panel: 'spcoin_write',
+              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              method: selectedSpCoinWriteMethod,
+              trace: getRecentWriteTrace(),
+            },
+          },
+        }),
+      );
       setStatus(`${activeSpCoinWriteDef.title} failed: ${message}`);
       appendLog(`${activeSpCoinWriteDef.title} failed: ${message}`);
     }
@@ -1010,12 +1115,14 @@ export function useSponsorCoinLabMethods({
     effectiveConnectedAddress,
     executeMethodDescriptor,
     formatFormattedPanelPayload,
+    getRecentWriteTrace,
     mode,
     selectedHardhatAddress,
     selectedSpCoinWriteMethod,
     setFormattedOutputDisplay,
     setStatus,
     showValidationPopup,
+    useLocalSpCoinAccessPackage,
     spCoinWriteMissingEntries,
     spWriteParams,
   ]);
@@ -1121,6 +1228,7 @@ export function useSponsorCoinLabMethods({
                 panel: step.panel,
                 source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
                 method: step.method,
+                trace: getRecentWriteTrace(),
               },
             },
           },
@@ -1137,6 +1245,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay,
       setStatus,
       useLocalSpCoinAccessPackage,
+      getRecentWriteTrace,
     ],
   );
 
@@ -1213,6 +1322,8 @@ export function useSponsorCoinLabMethods({
         const idx = activeSpCoinWriteDef.params.findIndex((param) => labels.includes(param.label));
         return idx >= 0 ? String(spWriteParams[idx] || '').trim() : '';
       };
+      const findParamIndex = (labels: string[]) =>
+        activeSpCoinWriteDef.params.findIndex((param) => labels.includes(param.label));
       const hasRecipientRateField = activeSpCoinWriteDef.params.some((param) =>
         ['Recipient Rate Key', 'Recipient Rate'].includes(param.label),
       );
@@ -1247,12 +1358,26 @@ export function useSponsorCoinLabMethods({
           );
           const rates = (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
           if (!cancelled) {
-            setRecipientRateKeyOptions(rates.map((value) => String(value)));
+            const normalizedRates = rates.map((value) => String(value));
+            setRecipientRateKeyOptions(normalizedRates);
             setRecipientRateKeyHelpText(
               rates.length > 0
                 ? 'Select a Recipient Rate Key from the contract list.'
                 : 'No Recipient Rate Keys found for this sponsor/recipient pair.',
             );
+            const recipientRateIdx = findParamIndex(['Recipient Rate Key', 'Recipient Rate']);
+            if (
+              recipientRateIdx >= 0 &&
+              !String(spWriteParams[recipientRateIdx] || '').trim() &&
+              normalizedRates.length > 0
+            ) {
+              setSpWriteParams((prev) => {
+                if (String(prev[recipientRateIdx] || '').trim()) return prev;
+                const next = [...prev];
+                next[recipientRateIdx] = normalizedRates[0];
+                return next;
+              });
+            }
           }
         } catch {
           if (!cancelled) {
@@ -1290,12 +1415,26 @@ export function useSponsorCoinLabMethods({
           agentKey,
         )) as Array<string | bigint> | undefined;
         if (!cancelled) {
-          setAgentRateKeyOptions((rates ?? []).map((value) => String(value)));
+          const normalizedRates = (rates ?? []).map((value) => String(value));
+          setAgentRateKeyOptions(normalizedRates);
           setAgentRateKeyHelpText(
             (rates ?? []).length > 0
               ? 'Select an Agent Rate Key from the contract list.'
               : 'No Agent Rate Keys found for this sponsor/recipient/agent combination.',
           );
+          const agentRateIdx = findParamIndex(['Agent Rate Key', 'Agent Rate']);
+          if (
+            agentRateIdx >= 0 &&
+            !String(spWriteParams[agentRateIdx] || '').trim() &&
+            normalizedRates.length > 0
+          ) {
+            setSpWriteParams((prev) => {
+              if (String(prev[agentRateIdx] || '').trim()) return prev;
+              const next = [...prev];
+              next[agentRateIdx] = normalizedRates[0];
+              return next;
+            });
+          }
         }
       } catch {
         if (!cancelled) {
@@ -1316,6 +1455,7 @@ export function useSponsorCoinLabMethods({
     requireContractAddress,
     selectedWriteSenderAddress,
     spWriteParams,
+    setSpWriteParams,
   ]);
 
   return {

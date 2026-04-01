@@ -28,6 +28,9 @@ type Props = {
   missingFieldIds: string[];
   runSelectedSerializationTestMethod: () => void;
   addCurrentMethodToScript: () => void;
+  hideMethodSelect?: boolean;
+  hideActionButtons?: boolean;
+  hideAddToScript?: boolean;
 };
 
 export default function SerializationTestController(props: Props) {
@@ -54,6 +57,9 @@ export default function SerializationTestController(props: Props) {
     missingFieldIds,
     runSelectedSerializationTestMethod,
     addCurrentMethodToScript,
+    hideMethodSelect = false,
+    hideActionButtons = false,
+    hideAddToScript = false,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
@@ -111,10 +117,10 @@ export default function SerializationTestController(props: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+      {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <select
-          className="w-fit min-w-[28ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={displayedSerializationMethod}
           onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
           disabled={!hasVisibleSerializationMethods}
@@ -130,10 +136,11 @@ export default function SerializationTestController(props: Props) {
             </option>
           ))}
         </select>
-      </div>
-      {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}
-      {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => (
-        <div key={`serialization-test-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
+      </div> : null}
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+        {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}
+        {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => (
+          <div key={`serialization-test-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection
               label={param.label}
@@ -180,9 +187,10 @@ export default function SerializationTestController(props: Props) {
               />
             </label>
           )}
-        </div>
-      )) : null}
-      <div className="flex gap-2">
+          </div>
+        )) : null}
+      </div>
+      {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedSerializationTestMethod, 'execute')} min-w-[50%] shrink-0`}
@@ -197,31 +205,33 @@ export default function SerializationTestController(props: Props) {
             ? 'Missing Parameters'
             : `Run ${activeSerializationTestDef.title}`}
         </button>
-        <button
-          type="button"
-          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (isAddToScriptBlockedByNoChanges) return;
-            addCurrentMethodToScript();
-          }}
-          disabled={!hasVisibleSerializationMethods}
-          onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
-          }}
-          onMouseLeave={() => setHoveredBlockedAction(null)}
-          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
-        >
-          {isAddToScriptBlockedByNoChanges
-            ? hoveredBlockedAction === 'add'
-              ? 'No Update Changes'
-              : addToScriptButtonLabel
-            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
-              ? 'No Editor Script'
-              : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-                ? 'Missing Parameters'
-                : addToScriptButtonLabel}
-        </button>
-      </div>
+        {!hideAddToScript ? (
+          <button
+            type="button"
+            className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+            onClick={() => {
+              if (isAddToScriptBlockedByNoChanges) return;
+              addCurrentMethodToScript();
+            }}
+            disabled={!hasVisibleSerializationMethods}
+            onMouseEnter={() => {
+              if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
+            }}
+            onMouseLeave={() => setHoveredBlockedAction(null)}
+            title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
+          >
+            {isAddToScriptBlockedByNoChanges
+              ? hoveredBlockedAction === 'add'
+                ? 'No Update Changes'
+                : addToScriptButtonLabel
+              : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+                ? 'No Editor Script'
+                : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+                  ? 'Missing Parameters'
+                  : addToScriptButtonLabel}
+          </button>
+        ) : null}
+      </div> : null}
     </div>
   );
 }

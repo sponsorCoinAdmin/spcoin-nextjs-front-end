@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
+import { BrowserProvider, JsonRpcProvider, NonceManager, Wallet } from 'ethers';
 import type { Contract, Signer } from 'ethers';
 import {
   defaultMissingImage,
@@ -115,6 +115,14 @@ function normalizeAddress(value: string) {
 
 function isAddressLike(value: string) {
   return /^0[xX][0-9a-fA-F]{40}$/.test(String(value || '').trim());
+}
+
+function createHardhatRpcUnavailableError(contextLabel: string, rpcUrl: string, detail?: string) {
+  return new Error(
+    `Contract call reverted during ${contextLabel}. Hardhat RPC unreachable at ${String(rpcUrl || '').trim()}${
+      detail ? ` (${detail})` : ''
+    }. Hardhat mode requires the selected private-key signer and does not allow MetaMask fallback.`,
+  );
 }
 
 export function useSponsorCoinLabNetwork({
@@ -735,77 +743,106 @@ export function useSponsorCoinLabNetwork({
     reconcileHardhatSelection(hardhatAccounts, connectedAddress, selectedHardhatIndex);
   }, [connectedAddress, hardhatAccounts, mode, reconcileHardhatSelection, selectedHardhatIndex]);
 
-  const connectSigner = useCallback(async (): Promise<Signer> => {
-    appendWriteTrace(`connectSigner invoked; mode=${mode}`);
-    if (mode === 'metamask') {
-      if (!window.ethereum) {
-        throw new Error('MetaMask provider not found.');
+  const executeConnected = useCallback(
+    async <T,>(
+      contextLabel: string,
+      handlers: {
+        metamask: () => Promise<T>;
+        hardhat: () => Promise<T>;
+      },
+    ): Promise<T> => {
+      appendWriteTrace(`executeConnected context=${contextLabel}; mode=${mode}`);
+      switch (mode) {
+        case 'metamask':
+          return handlers.metamask();
+        case 'hardhat':
+          return handlers.hardhat();
+        default:
+          throw new Error(`Unsupported connector mode: ${String(mode)}`);
       }
-      const provider = new BrowserProvider(window.ethereum);
-      await provider.send('eth_requestAccounts', []);
+    },
+    [appendWriteTrace, mode],
+  );
 
-      try {
-        await provider.send('wallet_switchEthereumChain', [{ chainId: HARDHAT_CHAIN_ID_HEX }]);
-      } catch (switchError: any) {
-        const code = Number(switchError?.code ?? switchError?.error?.code ?? 0);
-        if (code !== 4902) throw switchError;
-        await provider.send('wallet_addEthereumChain', [
-          {
-            chainId: HARDHAT_CHAIN_ID_HEX,
-            chainName: HARDHAT_NETWORK_NAME,
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-            rpcUrls: [rpcUrl.trim()],
-          },
-        ]);
-        await provider.send('wallet_switchEthereumChain', [{ chainId: HARDHAT_CHAIN_ID_HEX }]);
-      }
+  const connectMetaMaskSigner = useCallback(async (): Promise<Signer> => {
+    appendWriteTrace('connectMetaMaskSigner invoked');
+    if (!window.ethereum) {
+      throw new Error('MetaMask provider not found.');
+    }
+    const provider = new BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
 
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const network = await provider.getNetwork();
-      const chainIdNum = Number(network.chainId);
-      const knownName = Number.isFinite(chainIdNum) ? getBlockChainName(chainIdNum) : undefined;
-      const fallbackName = String((network as any)?.name || '').trim();
-
-      setActiveSigner(signer);
-      setConnectedAddress(address);
-      setConnectedChainId(String(network.chainId));
-      setConnectedNetworkName(knownName || fallbackName || '(unknown)');
-      setStatus(`Connected via MetaMask: ${address}`);
-      appendLog(`Connected MetaMask signer ${address} on chain ${String(network.chainId)}.`);
-      appendWriteTrace(`connectSigner returning MetaMask signer ${address}`);
-      return signer;
+    try {
+      await provider.send('wallet_switchEthereumChain', [{ chainId: HARDHAT_CHAIN_ID_HEX }]);
+    } catch (switchError: any) {
+      const code = Number(switchError?.code ?? switchError?.error?.code ?? 0);
+      if (code !== 4902) throw switchError;
+      await provider.send('wallet_addEthereumChain', [
+        {
+          chainId: HARDHAT_CHAIN_ID_HEX,
+          chainName: HARDHAT_NETWORK_NAME,
+          nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+          rpcUrls: [rpcUrl.trim()],
+        },
+      ]);
+      await provider.send('wallet_switchEthereumChain', [{ chainId: HARDHAT_CHAIN_ID_HEX }]);
     }
 
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    const network = await provider.getNetwork();
+    const chainIdNum = Number(network.chainId);
+    const knownName = Number.isFinite(chainIdNum) ? getBlockChainName(chainIdNum) : undefined;
+    const fallbackName = String((network as any)?.name || '').trim();
+
+    setActiveSigner(signer);
+    setConnectedAddress(address);
+    setConnectedChainId(String(network.chainId));
+    setConnectedNetworkName(knownName || fallbackName || '(unknown)');
+    setStatus(`Connected via MetaMask: ${address}`);
+    appendLog(`Connected MetaMask signer ${address} on chain ${String(network.chainId)}.`);
+    appendWriteTrace(`connectMetaMaskSigner returning signer ${address}`);
+    return signer;
+  }, [appendLog, appendWriteTrace, rpcUrl, setStatus]);
+
+  const connectHardhatSigner = useCallback(async (): Promise<Signer> => {
+    appendWriteTrace('connectHardhatSigner invoked');
     if (!selectedHardhatAccount?.address || !selectedHardhatAccount.privateKey) {
       throw new Error('Select a Hardhat account with a private key.');
     }
 
-    const provider = new JsonRpcProvider(rpcUrl.trim());
-    const wallet = new Wallet(selectedHardhatAccount.privateKey, provider);
-    const network = await provider.getNetwork();
-    const address = await wallet.getAddress();
-
-    setActiveSigner(wallet);
-    setConnectedAddress(address);
-    setConnectedChainId(String(network.chainId));
-    setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-    setStatus(`Connected via Hardhat signer: ${address}`);
-    appendLog(`Connected Hardhat signer ${address} on chain ${String(network.chainId)}.`);
-    appendWriteTrace(`connectSigner returning Hardhat signer ${address}`);
-    return wallet;
-  }, [appendLog, appendWriteTrace, mode, rpcUrl, selectedHardhatAccount, setStatus]);
-
-  const ensureReadRunner = useCallback(async () => {
-    if (mode === 'hardhat') {
-      appendWriteTrace('ensureReadRunner using Hardhat JsonRpcProvider');
+    try {
       const provider = new JsonRpcProvider(rpcUrl.trim());
-      setConnectedChainId(String(HARDHAT_CHAIN_ID_DEC));
-      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-      return provider;
-    }
+      const wallet = new Wallet(selectedHardhatAccount.privateKey, provider);
+      const signer = new NonceManager(wallet);
+      const network = await provider.getNetwork();
+      const address = await signer.getAddress();
 
-    appendWriteTrace('ensureReadRunner using MetaMask BrowserProvider');
+      setActiveSigner(signer);
+      setConnectedAddress(address);
+      setConnectedChainId(String(network.chainId));
+      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
+      setStatus(`Connected via Hardhat signer: ${address}`);
+      appendLog(`Connected Hardhat signer ${address} on chain ${String(network.chainId)}.`);
+      appendWriteTrace(`connectHardhatSigner returning signer ${address}`);
+      return signer;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      appendLog(`Hardhat signer connection failed via ${rpcUrl.trim()}: ${message}`);
+      throw createHardhatRpcUnavailableError('connectSigner', rpcUrl);
+    }
+  }, [appendLog, appendWriteTrace, rpcUrl, selectedHardhatAccount, setStatus]);
+
+  const connectSigner = useCallback(async (): Promise<Signer> => {
+    appendWriteTrace(`connectSigner invoked; mode=${mode}`);
+    return executeConnected('connectSigner', {
+      metamask: connectMetaMaskSigner,
+      hardhat: connectHardhatSigner,
+    });
+  }, [appendWriteTrace, connectHardhatSigner, connectMetaMaskSigner, executeConnected, mode]);
+
+  const ensureMetaMaskReadRunner = useCallback(async () => {
+    appendWriteTrace('ensureMetaMaskReadRunner using BrowserProvider');
     if (!window.ethereum) {
       throw new Error('MetaMask provider not found.');
     }
@@ -817,7 +854,41 @@ export function useSponsorCoinLabNetwork({
     setConnectedChainId(String(network.chainId));
     setConnectedNetworkName(knownName || fallbackName || '(unknown)');
     return provider;
-  }, [appendWriteTrace, mode, rpcUrl]);
+  }, [appendWriteTrace]);
+
+  const ensureHardhatReadRunner = useCallback(async () => {
+    appendWriteTrace('ensureHardhatReadRunner using JsonRpcProvider');
+    const trimmedRpcUrl = rpcUrl.trim();
+    const attemptReadRunner = async () => {
+      const provider = new JsonRpcProvider(trimmedRpcUrl);
+      const network = await provider.getNetwork();
+      setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
+      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
+      return provider;
+    };
+    try {
+      return await attemptReadRunner();
+    } catch (error) {
+      const firstMessage = error instanceof Error ? error.message : String(error);
+      appendLog(`Hardhat read runner failed via ${trimmedRpcUrl}: ${firstMessage}`);
+      appendWriteTrace(`ensureHardhatReadRunner retrying after failure=${firstMessage}`);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      try {
+        return await attemptReadRunner();
+      } catch (retryError) {
+        const retryMessage = retryError instanceof Error ? retryError.message : String(retryError);
+        appendLog(`Hardhat read runner retry failed via ${trimmedRpcUrl}: ${retryMessage}`);
+        throw createHardhatRpcUnavailableError('read runner', rpcUrl, retryMessage);
+      }
+    }
+  }, [appendLog, appendWriteTrace, rpcUrl]);
+
+  const ensureReadRunner = useCallback(async (): Promise<any> => {
+    return executeConnected<any>('ensureReadRunner', {
+      metamask: ensureMetaMaskReadRunner,
+      hardhat: ensureHardhatReadRunner,
+    });
+  }, [ensureHardhatReadRunner, ensureMetaMaskReadRunner, executeConnected]);
 
   const isConnectionRetryableError = useCallback((error: unknown): boolean => {
     const message = String((error as any)?.message || '').toLowerCase();
@@ -843,8 +914,9 @@ export function useSponsorCoinLabNetwork({
     [hardhatAccounts, selectedHardhatAccount],
   );
 
-  const executeHHConnected = useCallback(
+  const executeHardhatConnected = useCallback(
     async (
+      label: string,
       accountKey: string | undefined,
       writeCall: (contract: Contract, signer: Signer) => Promise<any>,
     ) => {
@@ -854,26 +926,39 @@ export function useSponsorCoinLabNetwork({
         throw new Error('Select a Hardhat account with a private key.');
       }
 
-      const provider = new JsonRpcProvider(rpcUrl.trim());
-      const network = await provider.getNetwork();
-      appendWriteTrace(`executeHHConnected start; desired=${account.address}`);
-
-      const signer = new Wallet(account.privateKey, provider);
-      const signerAddress = await signer.getAddress();
-      appendWriteTrace(`executeHHConnected using signer=${signerAddress}`);
-      setActiveSigner(signer);
-      setConnectedAddress(signerAddress);
-      setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
-      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-      const contract = createSpCoinContract(target, signer);
-      return writeCall(contract, signer);
+      appendWriteTrace(`executeHardhatConnected start; label=${label}; desired=${account.address}`);
+      try {
+        const provider = new JsonRpcProvider(rpcUrl.trim());
+        const network = await provider.getNetwork();
+        const signer = new NonceManager(new Wallet(account.privateKey, provider));
+        const signerAddress = await signer.getAddress();
+        if (normalizeAddress(signerAddress) !== normalizeAddress(account.address)) {
+          throw new Error(
+            `Contract call reverted during ${label}. Selected signer ${account.address} does not match connected signer ${signerAddress}.`,
+          );
+        }
+        appendWriteTrace(`executeHardhatConnected using signer=${signerAddress}`);
+        setActiveSigner(signer);
+        setConnectedAddress(signerAddress);
+        setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
+        setConnectedNetworkName(HARDHAT_NETWORK_NAME);
+        const contract = createSpCoinContract(target, signer);
+        return writeCall(contract, signer);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        appendLog(`Hardhat write transport failed via ${rpcUrl.trim()}: ${message}`);
+        if (message.includes('Selected signer') && message.includes('does not match connected signer')) {
+          throw error;
+        }
+        throw createHardhatRpcUnavailableError(label, rpcUrl);
+      }
     },
-    [appendWriteTrace, requireContractAddress, resolveHardhatAccount, rpcUrl],
+    [appendLog, appendWriteTrace, requireContractAddress, resolveHardhatAccount, rpcUrl],
   );
 
   const executeMetaMaskConnected = useCallback(
-    async (writeCall: (contract: Contract, signer: Signer) => Promise<any>) => {
-      appendWriteTrace('executeMetaMaskConnected invoked');
+    async (label: string, writeCall: (contract: Contract, signer: Signer) => Promise<any>) => {
+      appendWriteTrace(`executeMetaMaskConnected invoked; label=${label}`);
       const target = requireContractAddress();
       const runWithSigner = async (signer: Signer) => {
         const signerAddress = await signer.getAddress();
@@ -904,12 +989,15 @@ export function useSponsorCoinLabNetwork({
       writeCall: (contract: Contract, signer: Signer) => Promise<any>,
       accountKey?: string,
     ) => {
-      appendWriteTrace(`executeWriteConnected label=${label}; mode=${mode}; accountKey=${String(accountKey || '')}`);
-      if (mode === 'hardhat') return executeHHConnected(accountKey, writeCall);
-      appendLog(`${label}: using MetaMask signer flow.`);
-      return executeMetaMaskConnected(writeCall);
+      return executeConnected(`executeWriteConnected:${label}`, {
+        hardhat: () => executeHardhatConnected(label, accountKey, writeCall),
+        metamask: async () => {
+          appendLog(`${label}: using MetaMask signer flow.`);
+          return executeMetaMaskConnected(label, writeCall);
+        },
+      });
     },
-    [appendLog, appendWriteTrace, executeHHConnected, executeMetaMaskConnected, mode],
+    [appendLog, executeConnected, executeHardhatConnected, executeMetaMaskConnected],
   );
 
   const connectHardhatBaseFromNetworkLabel = useCallback(async () => {

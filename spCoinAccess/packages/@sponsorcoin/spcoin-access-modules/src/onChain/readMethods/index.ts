@@ -12,6 +12,7 @@ import getLowerAgentRate from './getLowerAgentRate';
 import getUpperAgentRate from './getUpperAgentRate';
 import getAgentRateRange from './getAgentRateRange';
 import initialTotalSupply from './initialTotalSupply';
+import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import masterAccountList from './masterAccountList';
 import getStakingRewards from './getStakingRewards';
@@ -27,6 +28,7 @@ import getAccountRewardTransactionRecord from './getAccountRewardTransactionReco
 import getAccountRateRecordList from './getAccountRateRecordList';
 import getRateTransactionList from './getRateTransactionList';
 import getAccountListSize from './getAccountListSize';
+import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getRecipientRateRecordList from './getRecipientRateRecordList';
 import getRecipientRecordList from './getRecipientRecordList';
@@ -56,6 +58,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getUpperAgentRate,
     getAgentRateRange,
     initialTotalSupply,
+    isDeployed,
     isAccountInserted,
     masterAccountList,
     getStakingRewards,
@@ -71,6 +74,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountRateRecordList,
     getRateTransactionList,
     getAccountListSize,
+    getAccountRecipientList,
     getAccountRecipientListSize,
     getRecipientRateRecordList,
     getRecipientRecordList,

@@ -48,6 +48,9 @@ type Props = {
   missingFieldIds: string[];
   runSelectedWriteMethod: () => void;
   addCurrentMethodToScript: () => void;
+  hideMethodSelect?: boolean;
+  hideActionButtons?: boolean;
+  hideAddToScript?: boolean;
 };
 
 export default function Erc20WriteController(props: Props) {
@@ -84,6 +87,9 @@ export default function Erc20WriteController(props: Props) {
     missingFieldIds,
     runSelectedWriteMethod,
     addCurrentMethodToScript,
+    hideMethodSelect = false,
+    hideActionButtons = false,
+    hideAddToScript = false,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
@@ -140,125 +146,129 @@ export default function Erc20WriteController(props: Props) {
     hasVisibleWriteMethods && visibleWriteOptions.includes(selectedWriteMethod) ? selectedWriteMethod : '__no_methods__';
   return (
     <div className="grid grid-cols-1 gap-3">
-      <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-        <select
-          className="w-fit min-w-[14ch] rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={displayedWriteMethod}
-          onChange={(e) => setSelectedWriteMethod(e.target.value)}
-          disabled={!hasVisibleWriteMethods}
-        >
-          {!hasVisibleWriteMethods ? <option value="__no_methods__">No methods available</option> : null}
-          {visibleWriteOptions.map((name) => (
-            <option key={`erc20-write-${name}`} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
-      {hasVisibleWriteMethods ? <AccountSelection
-        label="msg.sender"
-        title="Toggle msg.sender Private Key"
-        isOpen={showWriteSenderPrivateKey}
-        onToggle={toggleShowWriteSenderPrivateKey}
-        control={
-          mode === 'hardhat' ? (
-            <AccountDropdownInput
-              dataFieldId="erc20-write-sender"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
-              value={selectedWriteSenderAddress}
-              onChange={(value) => {
-                markEditorAsUserEdited();
-                clearInvalidField('erc20-write-sender');
-                setSelectedWriteSenderAddress(normalizeAccountValue(value));
-              }}
-              placeholder="Select account"
-              options={accountOptions}
-            />
-          ) : (
-            <input
-              className={inputStyle}
-              readOnly
-              value={writeSenderDisplayValue}
-              placeholder="Connected signer address"
-            />
-          )
-        }
-        metadata={senderMetadata}
-        extraDetails={
-          mode === 'hardhat' ? (
-            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-              <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+      {!hideMethodSelect ? (
+        <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+          <select
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={displayedWriteMethod}
+            onChange={(e) => setSelectedWriteMethod(e.target.value)}
+            disabled={!hasVisibleWriteMethods}
+          >
+            {!hasVisibleWriteMethods ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleWriteOptions.map((name) => (
+              <option key={`erc20-write-${name}`} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg bg-red-900/40 p-3">
+        {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
+        {hasVisibleWriteMethods ? <AccountSelection
+          label="msg.sender"
+          title="Toggle msg.sender Private Key"
+          isOpen={showWriteSenderPrivateKey}
+          onToggle={toggleShowWriteSenderPrivateKey}
+          control={
+            mode === 'hardhat' ? (
+              <AccountDropdownInput
+                dataFieldId="erc20-write-sender"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
+                value={selectedWriteSenderAddress}
+                onChange={(value) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField('erc20-write-sender');
+                  setSelectedWriteSenderAddress(normalizeAccountValue(value));
+                }}
+                placeholder="Select account"
+                options={accountOptions}
+              />
+            ) : (
               <input
                 className={inputStyle}
                 readOnly
-                value={writeSenderPrivateKeyDisplay}
-                placeholder="Selected signer private key"
+                value={writeSenderDisplayValue}
+                placeholder="Connected signer address"
               />
-            </label>
-          ) : null
-        }
-      /> : null}
-      {hasVisibleWriteMethods ? <AccountSelection
-        label={activeWriteLabels.addressALabel}
-        title={`Toggle ${activeWriteLabels.addressALabel}`}
-        isOpen={Boolean(openAddressFields.addressA)}
-        onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
-        control={
-          <AccountDropdownInput
-            dataFieldId="erc20-write-address-a"
-            className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
-            value={writeAddressA}
-            onChange={(value) => {
-              markEditorAsUserEdited();
-              clearInvalidField('erc20-write-address-a');
-              setWriteAddressA(normalizeAccountValue(value));
-            }}
-            placeholder="Select account"
-            options={accountOptions}
-          />
-        }
-        metadata={getMetadataForAddress(writeAddressA || '')}
-      /> : null}
-      {hasVisibleWriteMethods && activeWriteLabels.requiresAddressB && (
-        <AccountSelection
-          label={activeWriteLabels.addressBLabel}
-          title={`Toggle ${activeWriteLabels.addressBLabel}`}
-          isOpen={Boolean(openAddressFields.addressB)}
-          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
+            )
+          }
+          metadata={senderMetadata}
+          extraDetails={
+            mode === 'hardhat' ? (
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                <input
+                  className={inputStyle}
+                  readOnly
+                  value={writeSenderPrivateKeyDisplay}
+                  placeholder="Selected signer private key"
+                />
+              </label>
+            ) : null
+          }
+        /> : null}
+        {hasVisibleWriteMethods ? <AccountSelection
+          label={activeWriteLabels.addressALabel}
+          title={`Toggle ${activeWriteLabels.addressALabel}`}
+          isOpen={Boolean(openAddressFields.addressA)}
+          onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressA: !prev.addressA }))}
           control={
             <AccountDropdownInput
-              dataFieldId="erc20-write-address-b"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
-              value={writeAddressB}
+              dataFieldId="erc20-write-address-a"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-a')}`}
+              value={writeAddressA}
               onChange={(value) => {
                 markEditorAsUserEdited();
-                clearInvalidField('erc20-write-address-b');
-                setWriteAddressB(normalizeAccountValue(value));
+                clearInvalidField('erc20-write-address-a');
+                setWriteAddressA(normalizeAccountValue(value));
               }}
               placeholder="Select account"
               options={accountOptions}
             />
           }
-          metadata={getMetadataForAddress(writeAddressB || '')}
-        />
-      )}
-      <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-        <span className="text-sm font-semibold text-[#8FA8FF]">Amount (raw uint256)</span>
-        <input
-          data-field-id="erc20-write-amount"
-          className={`${inputStyle}${invalidClass('erc20-write-amount')}`}
-          value={writeAmountRaw}
-          onChange={(e) => {
-            markEditorAsUserEdited();
-            clearInvalidField('erc20-write-amount');
-            setWriteAmountRaw(e.target.value);
-          }}
-          placeholder={`${activeWriteLabels.title}(amount raw uint256)`}
-        />
-      </label>
-      <div className="flex gap-2">
+          metadata={getMetadataForAddress(writeAddressA || '')}
+        /> : null}
+        {hasVisibleWriteMethods && activeWriteLabels.requiresAddressB && (
+          <AccountSelection
+            label={activeWriteLabels.addressBLabel}
+            title={`Toggle ${activeWriteLabels.addressBLabel}`}
+            isOpen={Boolean(openAddressFields.addressB)}
+            onToggle={() => setOpenAddressFields((prev) => ({ ...prev, addressB: !prev.addressB }))}
+            control={
+              <AccountDropdownInput
+                dataFieldId="erc20-write-address-b"
+                className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-address-b')}`}
+                value={writeAddressB}
+                onChange={(value) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField('erc20-write-address-b');
+                  setWriteAddressB(normalizeAccountValue(value));
+                }}
+                placeholder="Select account"
+                options={accountOptions}
+              />
+            }
+            metadata={getMetadataForAddress(writeAddressB || '')}
+          />
+        )}
+        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">Amount (raw uint256)</span>
+          <input
+            data-field-id="erc20-write-amount"
+            className={`${inputStyle}${invalidClass('erc20-write-amount')}`}
+            value={writeAmountRaw}
+            onChange={(e) => {
+              markEditorAsUserEdited();
+              clearInvalidField('erc20-write-amount');
+              setWriteAmountRaw(e.target.value);
+            }}
+            placeholder={`${activeWriteLabels.title}(amount raw uint256)`}
+          />
+        </label>
+      </div>
+      {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"
           className={`${getActionButtonClassName(canRunSelectedWriteMethod, 'execute')} min-w-[50%] shrink-0`}
@@ -273,31 +283,33 @@ export default function Erc20WriteController(props: Props) {
             ? 'Missing Parameters'
             : `Run ${activeWriteLabels.title}`}
         </button>
-        <button
-          type="button"
-          className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
-          onClick={() => {
-            if (isAddToScriptBlockedByNoChanges) return;
-            addCurrentMethodToScript();
-          }}
-          disabled={!hasVisibleWriteMethods}
-          onMouseEnter={() => {
-            if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
-          }}
-          onMouseLeave={() => setHoveredBlockedAction(null)}
-          title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
-        >
-          {isAddToScriptBlockedByNoChanges
-            ? hoveredBlockedAction === 'add'
-              ? 'No Update Changes'
-              : addToScriptButtonLabel
-            : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
-            ? 'No Editor Script'
-            : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
-            ? 'Missing Parameters'
-            : addToScriptButtonLabel}
-        </button>
-      </div>
+        {!hideAddToScript ? (
+          <button
+            type="button"
+            className={`${getActionButtonClassName(canAddCurrentMethodToScript, 'add')} min-w-0 flex-1`}
+            onClick={() => {
+              if (isAddToScriptBlockedByNoChanges) return;
+              addCurrentMethodToScript();
+            }}
+            disabled={!hasVisibleWriteMethods}
+            onMouseEnter={() => {
+              if (!canAddCurrentMethodToScript || isAddToScriptBlockedByNoChanges) setHoveredBlockedAction('add');
+            }}
+            onMouseLeave={() => setHoveredBlockedAction(null)}
+            title={!hasEditorScriptSelected ? 'Create a Script in the Editor Editor' : undefined}
+          >
+            {isAddToScriptBlockedByNoChanges
+              ? hoveredBlockedAction === 'add'
+                ? 'No Update Changes'
+                : addToScriptButtonLabel
+              : !hasEditorScriptSelected && hoveredBlockedAction === 'add'
+              ? 'No Editor Script'
+              : !canAddCurrentMethodToScript && hoveredBlockedAction === 'add'
+              ? 'Missing Parameters'
+              : addToScriptButtonLabel}
+          </button>
+        ) : null}
+      </div> : null}
     </div>
   );
 }
