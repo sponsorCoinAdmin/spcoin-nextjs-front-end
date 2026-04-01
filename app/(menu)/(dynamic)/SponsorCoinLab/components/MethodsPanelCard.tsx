@@ -7,6 +7,7 @@ import Erc20WriteController from './Erc20WriteController';
 import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
+import ValidationPopup from './ValidationPopup';
 
 type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20';
 
@@ -80,10 +81,13 @@ export default function MethodsPanelCard({
   spCoinWriteProps,
   serializationTestProps,
 }: Props) {
-  const showAllCardSectionsForVisualTest = true;
-  const showAllMethodPanelsForVisualTest = true;
+  const showAllCardSectionsForVisualTest = false;
+  const showAllMethodPanelsForVisualTest = false;
   const methodPanelGroupName = React.useId();
+  const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
+  const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
+  const isJsonScriptMode = scriptEditorKind === 'json';
   const isErc20Mode = methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write';
   const methodPanelOptions: Array<[MethodPanelTab, string]> = [
     ['erc20', 'ERC20'],
@@ -213,6 +217,11 @@ export default function MethodsPanelCard({
     spCoinWriteProps.addToScriptButtonLabel,
     spCoinWriteProps.canAddCurrentMethodToScript,
   ]);
+  const typeScriptFileName =
+    javaScriptEditorProps.selectedScriptName ||
+    javaScriptEditorProps.selectedFilePath.split(/[\\/]/).pop() ||
+    javaScriptEditorProps.selectedJavaScriptScriptId ||
+    'UnknownFile';
   const sharedMethodSelect = React.useMemo(() => {
     if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
     const baseClassName = 'grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]';
@@ -418,31 +427,6 @@ export default function MethodsPanelCard({
               )}
             </div>
           </div>
-          {showAllCardSectionsForVisualTest ? (
-            <div className="mb-3 flex gap-2">
-              <button
-                type="button"
-                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                  activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                }`}
-                onClick={activeRunControl.onClick}
-              >
-                {activeRunControl.label}
-              </button>
-              <button
-                type="button"
-                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                  javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
-                    ? 'bg-[#E5B94F] hover:bg-green-500'
-                    : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                }`}
-                onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
-                disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
-              >
-                {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
-              </button>
-            </div>
-          ) : null}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
               {methodPanelOptions.map(([value, label]) => (
@@ -467,7 +451,7 @@ export default function MethodsPanelCard({
             </div>
           </div>
           <>
-            {isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (
+            {isJavaScriptScriptMode || (showAllCardSectionsForVisualTest && !isJsonScriptMode) ? (
               <div className="mb-3 grid grid-cols-1 gap-3">
                 <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
@@ -486,30 +470,6 @@ export default function MethodsPanelCard({
                     ))}
                   </select>
                 </div>
-                {sharedMethodSelect}
-                {!showAllCardSectionsForVisualTest ? <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                      activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                    }`}
-                    onClick={activeRunControl.onClick}
-                  >
-                    {activeRunControl.label}
-                  </button>
-                  <button
-                    type="button"
-                    className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                      javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
-                        ? 'bg-[#E5B94F] hover:bg-green-500'
-                        : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                    }`}
-                    onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
-                    disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
-                  >
-                    {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
-                  </button>
-                </div> : null}
                 <textarea
                   className={`min-h-[20rem] w-full overflow-auto rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-[#5981F3] ${javaScriptEditorProps.hiddenScrollbarClass}`}
                   value={javaScriptEditorProps.javaScriptFileContent}
@@ -526,52 +486,80 @@ export default function MethodsPanelCard({
                 />
               </div>
             ) : null}
-            {!showAllCardSectionsForVisualTest ? sharedMethodSelect : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'ecr20_read') ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'erc20_write') ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-            {showAllCardSectionsForVisualTest ? (
-              <div className="mt-3 flex gap-2">
+            {!showAllCardSectionsForVisualTest && isJsonScriptMode ? sharedMethodSelect : null}
+            <div className={isJsonScriptMode ? '' : 'hidden'}>
+              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'ecr20_read') ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'erc20_write') ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+              {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
+                  activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                }`}
+                onClick={activeRunControl.onClick}
+              >
+                {activeRunControl.label}
+              </button>
+              {isJavaScriptScriptMode ? (
                 <button
                   type="button"
-                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
-                      ? 'bg-[#E5B94F] hover:bg-green-500'
-                      : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
+                    !javaScriptEditorProps.isTypeScriptEditEnabled && isHoveringTypeScriptSaveBlocked
+                      ? 'bg-red-600 text-white'
+                      : javaScriptEditorProps.isTypeScriptEditEnabled && !javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                        ? 'bg-[#E5B94F] text-black hover:bg-green-500'
+                        : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
                   }`}
-                  onClick={javaScriptEditorProps.saveSelectedTypeScriptFile}
-                  disabled={!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile}
+                  onClick={() => {
+                    if (!javaScriptEditorProps.isTypeScriptEditEnabled || javaScriptEditorProps.isSavingSelectedTypeScriptFile) return;
+                    setIsTypeScriptSavePopupOpen(true);
+                  }}
+                  onMouseEnter={() => {
+                    if (!javaScriptEditorProps.isTypeScriptEditEnabled) {
+                      setIsHoveringTypeScriptSaveBlocked(true);
+                    }
+                  }}
+                  onMouseLeave={() => setIsHoveringTypeScriptSaveBlocked(false)}
                 >
-                  {javaScriptEditorProps.isSavingSelectedTypeScriptFile ? 'Saving...' : 'Save TypeScript'}
+                  {!javaScriptEditorProps.isTypeScriptEditEnabled && isHoveringTypeScriptSaveBlocked
+                    ? 'Not Editable'
+                    : javaScriptEditorProps.isSavingSelectedTypeScriptFile
+                      ? 'Saving...'
+                      : 'Save TypeScript'}
                 </button>
-              </div>
-            ) : null}
-            {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (
-              <div className="mt-3 flex gap-2">
+              ) : (
                 <button
                   type="button"
-                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    activeRunControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
-                  }`}
-                  onClick={activeRunControl.onClick}
-                >
-                  {activeRunControl.label}
-                </button>
-                <button
-                  type="button"
-                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors ${
-                    activeAddControl.enabled ? 'bg-[#E5B94F] hover:bg-green-500' : 'bg-[#E5B94F] hover:bg-[#d7ae45]'
+                  className={`h-[36px] min-w-0 flex-1 rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
+                    activeAddControl.enabled ? 'bg-[#E5B94F] text-black hover:bg-green-500' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
                   }`}
                   onClick={activeAddControl.onClick}
                 >
                   {activeAddControl.label}
                 </button>
-              </div>
-            ) : null}
+              )}
+            </div>
           </>
         </section>
+        {isTypeScriptSavePopupOpen ? (
+          <ValidationPopup
+            fields={[]}
+            title="Save File"
+            message={`Saving Save File ${typeScriptFileName}`}
+            buttonStyle="rounded-lg border border-[#31416F] bg-[#0E111B] px-3 py-[0.28rem] text-sm font-semibold text-slate-200 transition-colors hover:border-[#5981F3] hover:text-white"
+            confirmLabel="Save File"
+            cancelLabel="Cancel"
+            onClose={() => setIsTypeScriptSavePopupOpen(false)}
+            onConfirm={() => {
+              setIsTypeScriptSavePopupOpen(false);
+              javaScriptEditorProps.saveSelectedTypeScriptFile();
+            }}
+          />
+        ) : null}
       </div>
     </article>
   );
