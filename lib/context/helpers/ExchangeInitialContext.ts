@@ -13,6 +13,10 @@ import {
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+} from './spCoinRateDefaults';
 
 // ✅ displayStack node type (strict shape: [{id,name}])
 import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
@@ -73,8 +77,8 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
         decimals: 0,
         totalSypply: '',
         inflationRate: 0,
-        recipientRateRange: [0, 0],
-        agentRateRange: [0, 0],
+        recipientRateRange: DEFAULT_RECIPIENT_RATE_RANGE,
+        agentRateRange: DEFAULT_AGENT_RATE_RANGE,
       },
       spCoinAccessManager: {
         source: 'local',

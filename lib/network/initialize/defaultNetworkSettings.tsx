@@ -21,6 +21,10 @@ import {
   getDefaultNetworkSettings,
   normalizeChainId,
 } from '@/lib/utils/network';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+} from '@/lib/context/helpers/spCoinRateDefaults';
 
 // displayStack node type (strict shape: [{id,name}])
 import type { DISPLAY_STACK_NODE } from '@/lib/structure/types';
@@ -120,8 +124,8 @@ const getInitialContext = (
         decimals: 0,
         totalSypply: '',
         inflationRate: 0,
-        recipientRateRange: [0, 0],
-        agentRateRange: [0, 0],
+        recipientRateRange: DEFAULT_RECIPIENT_RATE_RANGE,
+        agentRateRange: DEFAULT_AGENT_RATE_RANGE,
       },
       testPage: {
         TEST_PAGE_EXCHANGE_CONTEXT: true,

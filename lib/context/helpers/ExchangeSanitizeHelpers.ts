@@ -14,6 +14,11 @@ import type {
   PanelNode,
   SpCoinPanelTree,
 } from '@/lib/structure/exchangeContext/types/PanelNode';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+  normalizeSpCoinRateRange,
+} from './spCoinRateDefaults';
 
 /** Legacy guards — we only use them to decide whether to preserve or drop. */
 function isPanelNodeArray(x: unknown): x is PanelNode[] {
@@ -151,10 +156,7 @@ function sanitizeTestPageSettings(prevSettings: any, sanitizedSettings: any) {
 }
 
 function normalizeRateRangeTuple(value: unknown): [number, number] {
-  if (Array.isArray(value)) {
-    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
-  }
-  return [0, Number(value ?? 0)];
+  return normalizeSpCoinRateRange(value, DEFAULT_RECIPIENT_RATE_RANGE);
 }
 
 function normalizeSpCoinVersion(value: unknown): string {
@@ -211,10 +213,11 @@ function sanitizeSpCoinContractSettings(
     recipientRateRange: normalizeRateRangeTuple(
       merged.recipientRateRange ??
         sanitizedSettings.spCoinContract?.recipientRateRange ??
-        0,
+        DEFAULT_RECIPIENT_RATE_RANGE,
     ),
-    agentRateRange: normalizeRateRangeTuple(
-      merged.agentRateRange ?? sanitizedSettings.spCoinContract?.agentRateRange ?? 0,
+    agentRateRange: normalizeSpCoinRateRange(
+      merged.agentRateRange ?? sanitizedSettings.spCoinContract?.agentRateRange,
+      DEFAULT_AGENT_RATE_RANGE,
     ),
   };
 

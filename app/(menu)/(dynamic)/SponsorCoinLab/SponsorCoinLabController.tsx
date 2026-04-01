@@ -7,6 +7,11 @@ import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
 import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+  normalizeSpCoinRateRange,
+} from '@/lib/context/helpers/spCoinRateDefaults';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { CHAIN_ID } from '@/lib/structure';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
@@ -171,6 +176,16 @@ function normalizeParamLabel(value: string) {
 
 function isDefinedNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function hasNonZeroRateRangeTuple(value: unknown): value is [number, number] {
+  return (
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    Number.isFinite(Number(value[0])) &&
+    Number.isFinite(Number(value[1])) &&
+    (Number(value[0]) !== 0 || Number(value[1]) !== 0)
+  );
 }
 
 function parseStructuredErrorMessage(input: string): Record<string, unknown> | null {
@@ -424,6 +439,7 @@ export default function SponsorCoinLabPage() {
     useState<SpCoinWriteMethod>('addRecipient');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
+  const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'utils' | null>(null);
   const [selectedSerializationTestMethod, setSelectedSerializationTestMethod] =
     useState<SerializationTestMethod>('external_getSerializedSPCoinHeader');
   const [selectedSponsorCoinAccountRole, setSelectedSponsorCoinAccountRole] =
@@ -676,16 +692,12 @@ export default function SponsorCoinLabPage() {
           (isDefinedNumber(currentMeta?.inflationRate) ? currentMeta.inflationRate : undefined),
         recipientRateRange:
           contractMeta?.recipientRateRange ??
-          (Array.isArray(currentMeta?.recipientRateRange) &&
-          isDefinedNumber(currentMeta.recipientRateRange[0]) &&
-          isDefinedNumber(currentMeta.recipientRateRange[1])
+          (hasNonZeroRateRangeTuple(currentMeta?.recipientRateRange)
             ? currentMeta.recipientRateRange
             : undefined),
         agentRateRange:
           contractMeta?.agentRateRange ??
-          (Array.isArray(currentMeta?.agentRateRange) &&
-          isDefinedNumber(currentMeta.agentRateRange[0]) &&
-          isDefinedNumber(currentMeta.agentRateRange[1])
+          (hasNonZeroRateRangeTuple(currentMeta?.agentRateRange)
             ? currentMeta.agentRateRange
             : undefined),
       };
@@ -1291,12 +1303,16 @@ export default function SponsorCoinLabPage() {
                 (isDefinedNumber(prevContract?.inflationRate) ? prevContract.inflationRate : 0),
               recipientRateRange:
                 nextMeta.recipientRateRange ??
-                (Array.isArray(prevContract?.recipientRateRange)
-                  ? prevContract.recipientRateRange
-                  : [0, 0]),
+                normalizeSpCoinRateRange(
+                  prevContract?.recipientRateRange,
+                  DEFAULT_RECIPIENT_RATE_RANGE,
+                ),
               agentRateRange:
                 nextMeta.agentRateRange ??
-                (Array.isArray(prevContract?.agentRateRange) ? prevContract.agentRateRange : [0, 0]),
+                normalizeSpCoinRateRange(
+                  prevContract?.agentRateRange,
+                  DEFAULT_AGENT_RATE_RANGE,
+                ),
             },
           };
         });
@@ -1537,17 +1553,13 @@ export default function SponsorCoinLabPage() {
     buildMethodCallEntry,
     formatOutputDisplayValue,
     recipientRateRange:
-      Array.isArray(exchangeContext?.settings?.spCoinContract?.recipientRateRange) &&
-      isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[0]) &&
-      isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[1])
+      hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
         ? exchangeContext.settings.spCoinContract.recipientRateRange
-        : undefined,
+        : DEFAULT_RECIPIENT_RATE_RANGE,
     agentRateRange:
-      Array.isArray(exchangeContext?.settings?.spCoinContract?.agentRateRange) &&
-      isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[0]) &&
-      isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[1])
+      hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
         ? exchangeContext.settings.spCoinContract.agentRateRange
-        : undefined,
+        : DEFAULT_AGENT_RATE_RANGE,
   });
 
   useEffect(() => {
@@ -1571,12 +1583,14 @@ export default function SponsorCoinLabPage() {
         decimals: Number(prev?.spCoinContract?.decimals ?? 18),
         totalSypply: String(prev?.spCoinContract?.totalSypply ?? '').trim(),
         inflationRate: Number(prev?.spCoinContract?.inflationRate ?? 0),
-        recipientRateRange: Array.isArray(prev?.spCoinContract?.recipientRateRange)
-          ? prev.spCoinContract.recipientRateRange
-          : [0, 0],
-        agentRateRange: Array.isArray(prev?.spCoinContract?.agentRateRange)
-          ? prev.spCoinContract.agentRateRange
-          : [0, 0],
+        recipientRateRange: normalizeSpCoinRateRange(
+          prev?.spCoinContract?.recipientRateRange,
+          DEFAULT_RECIPIENT_RATE_RANGE,
+        ),
+        agentRateRange: normalizeSpCoinRateRange(
+          prev?.spCoinContract?.agentRateRange,
+          DEFAULT_AGENT_RATE_RANGE,
+        ),
       },
     }));
 
@@ -1615,12 +1629,14 @@ export default function SponsorCoinLabPage() {
             decimals: Number(data.spCoinMetaData?.decimals ?? 0),
             totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
             inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
-            recipientRateRange: Array.isArray(data.spCoinMetaData?.recipientRateRange)
-              ? data.spCoinMetaData.recipientRateRange
-              : [0, 0],
-            agentRateRange: Array.isArray(data.spCoinMetaData?.agentRateRange)
-              ? data.spCoinMetaData.agentRateRange
-              : [0, 0],
+            recipientRateRange: normalizeSpCoinRateRange(
+              data.spCoinMetaData?.recipientRateRange,
+              DEFAULT_RECIPIENT_RATE_RANGE,
+            ),
+            agentRateRange: normalizeSpCoinRateRange(
+              data.spCoinMetaData?.agentRateRange,
+              DEFAULT_AGENT_RATE_RANGE,
+            ),
           },
         }));
       } catch {
@@ -1950,7 +1966,9 @@ export default function SponsorCoinLabPage() {
   const spCoinTodoWriteOptions = getSpCoinTodoWriteOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
   const activeMethodPanelTab =
-    methodPanelMode === 'spcoin_write' && isSpCoinTodoMode
+    auxMethodPanelTab === 'utils'
+      ? 'utils'
+      : methodPanelMode === 'spcoin_write' && isSpCoinTodoMode
       ? 'todos'
       : methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write'
       ? 'erc20'
@@ -2388,7 +2406,12 @@ export default function SponsorCoinLabPage() {
     [methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, setMethodPanelMode],
   );
   const selectMethodPanelTab = useCallback(
-    (value: MethodPanelMode | 'todos' | 'erc20') => {
+    (value: MethodPanelMode | 'todos' | 'erc20' | 'utils') => {
+      if (value === 'utils') {
+        setAuxMethodPanelTab('utils');
+        return;
+      }
+      if (auxMethodPanelTab) setAuxMethodPanelTab(null);
       if (value === 'todos') {
         if (activeMethodPanelTab === 'todos') return;
         runWithDiscardPrompt(() => {
@@ -2418,7 +2441,7 @@ export default function SponsorCoinLabPage() {
       }
       selectDropdownMethodPanelMode(value);
     },
-    [activeMethodPanelTab, methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, selectDropdownMethodPanelMode],
+    [activeMethodPanelTab, auxMethodPanelTab, methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, selectDropdownMethodPanelMode],
   );
   const selectDropdownReadMethod = useCallback(
     (value: Erc20ReadMethod) => {
@@ -2538,6 +2561,62 @@ export default function SponsorCoinLabPage() {
       serializationTestMethodDefs,
       setSerializationTestParams,
       setSelectedSerializationTestMethod,
+    ],
+  );
+  const selectMappedJsonMethod = useCallback(
+    (value: string) => {
+      if (!value) return;
+      if (activeMethodPanelTab === 'utils') return;
+      if (activeMethodPanelTab === 'erc20') {
+        if (ERC20_READ_OPTIONS.includes(value as Erc20ReadMethod)) {
+          runWithDiscardPrompt(() => {
+            resetToDropdownSelection();
+            setIsSpCoinTodoMode(false);
+            setMethodPanelMode('ecr20_read');
+            setSelectedReadMethod(value as Erc20ReadMethod);
+          });
+          return;
+        }
+        if (ERC20_WRITE_OPTIONS.includes(value as Erc20WriteMethod)) {
+          runWithDiscardPrompt(() => {
+            resetToDropdownSelection();
+            setIsSpCoinTodoMode(false);
+            setMethodPanelMode('erc20_write');
+            setSelectedWriteMethod(value as Erc20WriteMethod);
+          });
+        }
+        return;
+      }
+      if (activeMethodPanelTab === 'spcoin_rread') {
+        selectDropdownSpCoinReadMethod(value as SpCoinReadMethod);
+        return;
+      }
+      if (activeMethodPanelTab === 'spcoin_write') {
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('spcoin_write');
+          setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
+        });
+        return;
+      }
+      runWithDiscardPrompt(() => {
+        resetToDropdownSelection();
+        setIsSpCoinTodoMode(true);
+        setMethodPanelMode('spcoin_write');
+        setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
+      });
+    },
+    [
+      activeMethodPanelTab,
+      resetToDropdownSelection,
+      runWithDiscardPrompt,
+      selectDropdownSpCoinReadMethod,
+      setIsSpCoinTodoMode,
+      setMethodPanelMode,
+      setSelectedReadMethod,
+      setSelectedSpCoinWriteMethod,
+      setSelectedWriteMethod,
     ],
   );
   const handleAddCurrentMethodToScript = useCallback(() => {
@@ -3103,6 +3182,7 @@ export default function SponsorCoinLabPage() {
             methodPanelMode={methodPanelMode}
             activeMethodPanelTab={activeMethodPanelTab}
             selectMethodPanelTab={selectMethodPanelTab}
+            selectMappedJsonMethod={selectMappedJsonMethod}
             writeTraceEnabled={writeTraceEnabled}
             toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
             showOnChainMethods={showOnChainMethods}
@@ -3279,17 +3359,13 @@ export default function SponsorCoinLabPage() {
               recipientRateKeyHelpText,
               agentRateKeyHelpText,
               recipientRateRange:
-                Array.isArray(exchangeContext?.settings?.spCoinContract?.recipientRateRange) &&
-                isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[0]) &&
-                isDefinedNumber(exchangeContext.settings.spCoinContract.recipientRateRange[1])
+                hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
                   ? exchangeContext.settings.spCoinContract.recipientRateRange
-                  : undefined,
+                  : DEFAULT_RECIPIENT_RATE_RANGE,
               agentRateRange:
-                Array.isArray(exchangeContext?.settings?.spCoinContract?.agentRateRange) &&
-                isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[0]) &&
-                isDefinedNumber(exchangeContext.settings.spCoinContract.agentRateRange[1])
+                hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
                   ? exchangeContext.settings.spCoinContract.agentRateRange
-                  : undefined,
+                  : DEFAULT_AGENT_RATE_RANGE,
               selectedSpCoinWriteMethod,
               setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
               spCoinWorldWriteOptions: isSpCoinTodoMode ? [] : spCoinWorldWriteOptions,

@@ -5,6 +5,11 @@ import type { ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { EXCHANGE_CONTEXT_LS_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+  normalizeSpCoinRateRange,
+} from './spCoinRateDefaults';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -238,12 +243,14 @@ function seedSpCoinContractFromPageStorage(parsed: any) {
         : mergedSeed.decimals,
     totalSypply: String(currentContract.totalSypply ?? ''),
     inflationRate: Number(currentContract.inflationRate ?? 0),
-    recipientRateRange: Array.isArray(currentContract.recipientRateRange)
-      ? currentContract.recipientRateRange
-      : [0, 0],
-    agentRateRange: Array.isArray(currentContract.agentRateRange)
-      ? currentContract.agentRateRange
-      : [0, 0],
+    recipientRateRange: normalizeSpCoinRateRange(
+      currentContract.recipientRateRange,
+      DEFAULT_RECIPIENT_RATE_RANGE,
+    ),
+    agentRateRange: normalizeSpCoinRateRange(
+      currentContract.agentRateRange,
+      DEFAULT_AGENT_RATE_RANGE,
+    ),
   };
 }
 

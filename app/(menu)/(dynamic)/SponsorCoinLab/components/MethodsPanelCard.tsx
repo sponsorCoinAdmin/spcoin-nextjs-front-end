@@ -9,7 +9,88 @@ import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
 
-type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20';
+type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'utils';
+
+const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
+  allowance: 'erc20.ts',
+  balanceOf: 'erc20.ts',
+  creationTime: 'creationTime.ts',
+  decimals: 'erc20.ts',
+  name: 'erc20.ts',
+  symbol: 'erc20.ts',
+  totalSupply: 'erc20.ts',
+  approve: 'erc20.ts',
+  transfer: 'transfer.ts',
+  transferFrom: 'erc20.ts',
+};
+
+const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
+  creationTime: 'creationTime.ts',
+  getVersion: 'getVersion.ts',
+};
+
+const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
+  addRecipient: 'add.ts',
+  addAgent: 'add.ts',
+  addSponsor: 'add.ts',
+  addSponsorship: 'add.ts',
+  addBackDatedSponsorship: 'add.ts',
+  addBackDatedAgentSponsorship: 'add.ts',
+  addAgentSponsorship: 'addAgentSponsorship.ts',
+  addRecipients: 'addRecipients.ts',
+  addAgents: 'addAgents.ts',
+  addOffChainRecipients: 'addOffChainRecipients.ts',
+  addOffChainAgents: 'addOffChainAgents.ts',
+  deleteAccountRecord: 'delete.ts',
+  deleteAccountRecords: 'delete.ts',
+  deleteAgentRecord: 'delete.ts',
+  deleteAgentSponsorship: 'delete.ts',
+  unSponsorRecipient: 'delete.ts',
+  deleteAccountTree: 'deleteAccountTree.ts',
+  depositSponsorStakingRewards: 'staking.ts',
+  depositRecipientStakingRewards: 'staking.ts',
+  depositAgentStakingRewards: 'staking.ts',
+  depositStakingRewards: 'staking.ts',
+  updateAccountStakingRewards: 'rewards.ts',
+  updateRecipietAccountRewards: 'rewards.ts',
+  updateAgentAccountRewards: 'rewards.ts',
+  updateSponsorAccountRewards: 'rewards.ts',
+  setInflationRate: 'add.ts',
+  setVersion: 'add.ts',
+  setRecipientRateRange: 'add.ts',
+  setAgentRateRange: 'add.ts',
+  setLowerRecipient: 'setLowerRecipientRate.ts',
+  setUpperRecipient: 'setUpperRecipientRate.ts',
+  setLowerAgent: 'setLowerAgentRate.ts',
+  setUpperAgent: 'setUpperAgentRate.ts',
+};
+
+const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
+  addRecipients: 'addRecipients.ts',
+  addAgents: 'addAgents.ts',
+  addOffChainRecipients: 'addOffChainRecipients.ts',
+  addOffChainAgents: 'addOffChainAgents.ts',
+  deleteAccountTree: 'deleteAccountTree.ts',
+};
+
+const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {};
+
+function normalizeMethodScriptLookup(value: string) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\.ts$/i, '');
+}
+
+function resolveTypeScriptTargetFile(tab: MethodPanelTab, methodName: string) {
+  if (!methodName) return '';
+  if (tab === 'erc20') return ERC20_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  if (tab === 'spcoin_rread') return SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  if (tab === 'spcoin_write') return SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  if (tab === 'todos') return TODO_TYPESCRIPT_TARGET_BY_METHOD[methodName] || SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  if (tab === 'utils') return UTILS_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  return `${methodName}.ts`;
+}
 
 type Props = {
   articleClassName: string;
@@ -22,6 +103,7 @@ type Props = {
   methodPanelMode: MethodPanelMode;
   activeMethodPanelTab: MethodPanelTab;
   selectMethodPanelTab: (value: MethodPanelTab) => void;
+  selectMappedJsonMethod: (value: string) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   showOnChainMethods: boolean;
@@ -67,6 +149,7 @@ export default function MethodsPanelCard({
   methodPanelMode,
   activeMethodPanelTab,
   selectMethodPanelTab,
+  selectMappedJsonMethod,
   writeTraceEnabled,
   toggleWriteTrace,
   showOnChainMethods,
@@ -94,6 +177,7 @@ export default function MethodsPanelCard({
     ['erc20', 'ERC20'],
     ['spcoin_rread', 'SpCoin Read'],
     ['spcoin_write', 'SpCoin Write'],
+    ['utils', 'utils'],
     ['todos', 'ToDos'],
   ];
   const visibleErc20ReadOptions = erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : [];
@@ -223,6 +307,57 @@ export default function MethodsPanelCard({
     javaScriptEditorProps.selectedFilePath.split(/[\\/]/).pop() ||
     javaScriptEditorProps.selectedJavaScriptScriptId ||
     'UnknownFile';
+  const currentJsonMethodName = React.useMemo(() => {
+    if (methodPanelMode === 'ecr20_read') return erc20ReadProps.selectedReadMethod;
+    if (methodPanelMode === 'erc20_write') return erc20WriteProps.selectedWriteMethod;
+    if (methodPanelMode === 'spcoin_rread') return spCoinReadProps.selectedSpCoinReadMethod;
+    if (methodPanelMode === 'spcoin_write') return spCoinWriteProps.selectedSpCoinWriteMethod;
+    return serializationTestProps.selectedSerializationTestMethod;
+  }, [
+    erc20ReadProps.selectedReadMethod,
+    erc20WriteProps.selectedWriteMethod,
+    methodPanelMode,
+    serializationTestProps.selectedSerializationTestMethod,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+  ]);
+  const typeScriptMethodOptions = React.useMemo(() => {
+    if (activeMethodPanelTab === 'erc20') return [...visibleErc20ReadOptions, ...visibleErc20WriteOptions];
+    if (activeMethodPanelTab === 'spcoin_rread') return visibleSpCoinReadOptions;
+    if (activeMethodPanelTab === 'spcoin_write') return visibleSpCoinWriteOptions;
+    if (activeMethodPanelTab === 'utils') return [];
+    return spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method));
+  }, [
+    activeMethodPanelTab,
+    showOffChainMethods,
+    showOnChainMethods,
+    spCoinWriteProps.spCoinTodoWriteOptions,
+    visibleErc20ReadOptions,
+    visibleErc20WriteOptions,
+    visibleSpCoinReadOptions,
+    visibleSpCoinWriteOptions,
+  ]);
+  const mappedTypeScriptScriptId = React.useMemo(() => {
+    const targetFile = resolveTypeScriptTargetFile(activeMethodPanelTab, currentJsonMethodName);
+    const candidateNames = [targetFile, currentJsonMethodName].filter(Boolean) as string[];
+    const normalizedCandidates = new Set(candidateNames.map(normalizeMethodScriptLookup));
+    const match = javaScriptEditorProps.visibleJavaScriptScripts.find((script) =>
+      normalizedCandidates.has(normalizeMethodScriptLookup(script.name)),
+    );
+    return match?.id || '';
+  }, [
+    activeMethodPanelTab,
+    currentJsonMethodName,
+    javaScriptEditorProps.visibleJavaScriptScripts,
+  ]);
+  React.useEffect(() => {
+    if (!mappedTypeScriptScriptId) return;
+    if (javaScriptEditorProps.selectedJavaScriptScriptId === mappedTypeScriptScriptId) return;
+    javaScriptEditorProps.setSelectedJavaScriptScriptId(mappedTypeScriptScriptId);
+  }, [
+    javaScriptEditorProps,
+    mappedTypeScriptScriptId,
+  ]);
   const activePanelKey = React.useMemo(() => {
     if (isJavaScriptScriptMode) {
       return `ts:${javaScriptEditorProps.selectedJavaScriptScriptId || javaScriptEditorProps.selectedFilePath || 'none'}`;
@@ -272,18 +407,7 @@ export default function MethodsPanelCard({
           <select
             className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
             value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
-            onChange={(e) => {
-              const nextValue = e.target.value;
-              if (visibleErc20ReadOptions.includes(nextValue)) {
-                selectMethodPanelTab('ecr20_read');
-                erc20ReadProps.setSelectedReadMethod(nextValue);
-                return;
-              }
-              if (visibleErc20WriteOptions.includes(nextValue)) {
-                selectMethodPanelTab('erc20_write');
-                erc20WriteProps.setSelectedWriteMethod(nextValue);
-              }
-            }}
+            onChange={(e) => selectMappedJsonMethod(e.target.value)}
             disabled={!hasVisibleErc20Methods}
           >
             {!hasVisibleErc20Methods ? <option value="__no_methods__">No methods available</option> : null}
@@ -322,7 +446,7 @@ export default function MethodsPanelCard({
           <select
             className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
             value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
-            onChange={(e) => spCoinReadProps.setSelectedSpCoinReadMethod(e.target.value)}
+            onChange={(e) => selectMappedJsonMethod(e.target.value)}
             disabled={visibleSpCoinReadOptions.length === 0}
           >
             {visibleSpCoinReadOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
@@ -342,7 +466,7 @@ export default function MethodsPanelCard({
           <select
             className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
             value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
-            onChange={(e) => spCoinWriteProps.setSelectedSpCoinWriteMethod(e.target.value)}
+            onChange={(e) => selectMappedJsonMethod(e.target.value)}
             disabled={visibleSpCoinWriteOptions.length === 0}
           >
             {visibleSpCoinWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
@@ -361,7 +485,7 @@ export default function MethodsPanelCard({
         <select
           className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
           value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
-          onChange={(e) => serializationTestProps.setSelectedSerializationTestMethod(e.target.value)}
+          onChange={(e) => selectMappedJsonMethod(e.target.value)}
           disabled={visibleSerializationOptions.length === 0}
         >
           {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
@@ -386,6 +510,7 @@ export default function MethodsPanelCard({
     serializationTestProps,
     spCoinReadProps,
     spCoinWriteProps,
+    selectMappedJsonMethod,
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
     visibleSerializationOptions,
@@ -497,15 +622,15 @@ export default function MethodsPanelCard({
                   <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
                   <select
                     className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                    value={javaScriptEditorProps.selectedJavaScriptScriptId}
-                    onChange={(event) => javaScriptEditorProps.setSelectedJavaScriptScriptId(event.target.value)}
+                    value={typeScriptMethodOptions.includes(currentJsonMethodName) ? currentJsonMethodName : ''}
+                    onChange={(event) => selectMappedJsonMethod(event.target.value)}
                   >
-                    {javaScriptEditorProps.visibleJavaScriptScripts.length === 0 ? (
-                      <option value="">No TypeScript Files</option>
+                    {typeScriptMethodOptions.length === 0 ? (
+                      <option value="">No TypeScript Methods</option>
                     ) : null}
-                    {javaScriptEditorProps.visibleJavaScriptScripts.map((script) => (
-                      <option key={script.id} value={script.id}>
-                        {script.name}
+                    {typeScriptMethodOptions.map((methodName) => (
+                      <option key={methodName} value={methodName}>
+                        {methodName}
                       </option>
                     ))}
                   </select>

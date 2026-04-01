@@ -174,6 +174,8 @@ export default function SpCoinWriteController(props: Props) {
   } = props;
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
+  const [recipientRateValue, setRecipientRateValue] = React.useState('0');
+  const [agentRateValue, setAgentRateValue] = React.useState('0');
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
@@ -237,6 +239,42 @@ export default function SpCoinWriteController(props: Props) {
   React.useEffect(() => {
     setOpenAddressFields({});
   }, [selectedSpCoinWriteMethod]);
+  React.useEffect(() => {
+    const recipientRateIdx = activeSpCoinWriteDef.params.findIndex((param) =>
+      ['Recipient Rate Key', 'Recipient Rate'].includes(param.label),
+    );
+    if (!recipientRateSliderMethods.has(selectedSpCoinWriteMethod) || recipientRateIdx < 0) return;
+    const fallback = String(Array.isArray(recipientRateRange) ? Number(recipientRateRange[0]) : 0);
+    const nextValue = String(spWriteParams[recipientRateIdx] || '').trim() || fallback;
+    setRecipientRateValue(nextValue);
+    if (String(spWriteParams[recipientRateIdx] || '').trim() === nextValue) return;
+    updateSpWriteParamAtIndex(recipientRateIdx, nextValue);
+  }, [
+    activeSpCoinWriteDef.params,
+    recipientRateRange,
+    recipientRateSliderMethods,
+    selectedSpCoinWriteMethod,
+    spWriteParams,
+    updateSpWriteParamAtIndex,
+  ]);
+  React.useEffect(() => {
+    const agentRateIdx = activeSpCoinWriteDef.params.findIndex((param) =>
+      ['Agent Rate Key', 'Agent Rate'].includes(param.label),
+    );
+    if (!agentRateSliderMethods.has(selectedSpCoinWriteMethod) || agentRateIdx < 0) return;
+    const fallback = String(Array.isArray(agentRateRange) ? Number(agentRateRange[0]) : 0);
+    const nextValue = String(spWriteParams[agentRateIdx] || '').trim() || fallback;
+    setAgentRateValue(nextValue);
+    if (String(spWriteParams[agentRateIdx] || '').trim() === nextValue) return;
+    updateSpWriteParamAtIndex(agentRateIdx, nextValue);
+  }, [
+    activeSpCoinWriteDef.params,
+    agentRateRange,
+    agentRateSliderMethods,
+    selectedSpCoinWriteMethod,
+    spWriteParams,
+    updateSpWriteParamAtIndex,
+  ]);
   React.useEffect(() => {
     const addressFieldIndexes = activeSpCoinWriteDef.params
       .map((param, idx) => ({ param, idx }))
@@ -506,15 +544,17 @@ export default function SpCoinWriteController(props: Props) {
                     min={Array.isArray(recipientRateRange) ? recipientRateRange[0] : 0}
                     max={Array.isArray(recipientRateRange) ? recipientRateRange[1] : 100}
                     step={1}
-                    value={normalizeSliderValue(spWriteParams[idx] || '', recipientRateRange)}
+                    value={normalizeSliderValue(recipientRateValue, recipientRateRange)}
                     onChange={(e) => {
                       markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
-                      updateSpWriteParamAtIndex(idx, String(e.target.value));
+                      const nextValue = String(e.target.value);
+                      setRecipientRateValue(nextValue);
+                      updateSpWriteParamAtIndex(idx, nextValue);
                     }}
                   />
                   <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
-                    {`Recipient Rate: ${normalizeSliderValue(spWriteParams[idx] || '', recipientRateRange)}%`}
+                    {`Recipient Rate: ${normalizeSliderValue(recipientRateValue, recipientRateRange)}%`}
                   </div>
                 </div>
                 {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
@@ -534,15 +574,17 @@ export default function SpCoinWriteController(props: Props) {
                     min={Array.isArray(agentRateRange) ? agentRateRange[0] : 0}
                     max={Array.isArray(agentRateRange) ? agentRateRange[1] : 100}
                     step={1}
-                    value={normalizeSliderValue(spWriteParams[idx] || '', agentRateRange)}
+                    value={normalizeSliderValue(agentRateValue, agentRateRange)}
                     onChange={(e) => {
                       markEditorAsUserEdited();
                       clearInvalidField(`spcoin-write-param-${idx}`);
-                      updateSpWriteParamAtIndex(idx, String(e.target.value));
+                      const nextValue = String(e.target.value);
+                      setAgentRateValue(nextValue);
+                      updateSpWriteParamAtIndex(idx, nextValue);
                     }}
                   />
                   <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
-                    {`Agent Rate: ${normalizeSliderValue(spWriteParams[idx] || '', agentRateRange)}%`}
+                    {`Agent Rate: ${normalizeSliderValue(agentRateValue, agentRateRange)}%`}
                   </div>
                 </div>
                 {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}

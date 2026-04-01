@@ -6,18 +6,16 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { panelName } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
+import {
+  DEFAULT_AGENT_RATE_RANGE,
+  DEFAULT_RECIPIENT_RATE_RANGE,
+  normalizeSpCoinRateRange,
+} from './spCoinRateDefaults';
 
 const EXCHANGE_CONTEXT_TREE_DISPLAY_MAP = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeLoadHelpers', DEBUG_ENABLED, LOG_TIME);
-
-function normalizeRateRangeTuple(value: unknown): [number, number] {
-  if (Array.isArray(value)) {
-    return [Number(value[0] ?? 0), Number(value[1] ?? 0)];
-  }
-  return [0, Number(value ?? 0)];
-}
 
 function normalizeSpCoinVersion(value: unknown): string {
   const raw = String(value ?? '').trim();
@@ -205,8 +203,14 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       decimals: Number(settings.spCoinContract?.decimals ?? 0),
       totalSypply: String(settings.spCoinContract?.totalSypply ?? ''),
       inflationRate: Number(settings.spCoinContract?.inflationRate ?? 0),
-      recipientRateRange: normalizeRateRangeTuple(settings.spCoinContract?.recipientRateRange),
-      agentRateRange: normalizeRateRangeTuple(settings.spCoinContract?.agentRateRange),
+      recipientRateRange: normalizeSpCoinRateRange(
+        settings.spCoinContract?.recipientRateRange,
+        DEFAULT_RECIPIENT_RATE_RANGE,
+      ),
+      agentRateRange: normalizeSpCoinRateRange(
+        settings.spCoinContract?.agentRateRange,
+        DEFAULT_AGENT_RATE_RANGE,
+      ),
     };
     delete (settings as { spCoinProperties?: unknown }).spCoinProperties;
     delete (settings as { spCoinPanelSchemaVersion?: unknown }).spCoinPanelSchemaVersion;
