@@ -157,13 +157,17 @@ function buildDefaultAccountParams(
     sponsor: string;
     recipient: string;
     agent: string;
+    recipientRate?: string;
+    agentRate?: string;
   },
 ) {
   return params.map((param) => {
     const label = String(param.label || '').toLowerCase();
     if (label === 'msg.sender') return defaults.sponsor;
     if (label.includes('sponsor')) return defaults.sponsor;
+    if (label.includes('recipient rate')) return String(defaults.recipientRate || '');
     if (label.includes('recipient') && !label.includes('rate')) return defaults.recipient;
+    if (label.includes('agent rate')) return String(defaults.agentRate || '');
     if (label.includes('agent') && !label.includes('rate')) return defaults.agent;
     if (label === 'account key') return defaults.sponsor;
     return '';
@@ -250,6 +254,49 @@ function parseStructuredErrorMessage(input: string): Record<string, unknown> | n
 }
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
+  const normalizeDisplayDateString = (input: string): string | null => {
+    const trimmed = input.trim();
+    const normalized = trimmed.replace(/_/g, ' ');
+    const match = normalized.match(
+      /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)(?:\s+([A-Z]{2,5}))?$/i,
+    );
+    if (!match) return null;
+
+    const [, monthName, day, year, hourText, minute, , meridiem] = match;
+    const monthMap: Record<string, string> = {
+      january: 'JAN',
+      february: 'FEB',
+      march: 'MAR',
+      april: 'APR',
+      may: 'MAY',
+      june: 'JUN',
+      july: 'JUL',
+      august: 'AUG',
+      september: 'SEP',
+      october: 'OCT',
+      november: 'NOV',
+      december: 'DEC',
+    };
+    const month = monthMap[monthName.toLowerCase()] || 'JAN';
+    const normalizedDay = String(Number(day)).padStart(2, '0');
+    const hour = String(Number(hourText));
+    const normalizedMeridiem = meridiem.toUpperCase() === 'AM' ? 'a.m.' : 'p.m.';
+    return `${month}-${normalizedDay}-${year}, ${hour}:${minute} ${normalizedMeridiem}`;
+  };
+
+  const normalizeLegacyDateObject = (input: unknown): string | null => {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+    const entries = Object.entries(input as Record<string, unknown>);
+    if (entries.length !== 1) return null;
+    const [outerKey, outerValue] = entries[0];
+    if (!outerValue || typeof outerValue !== 'object' || Array.isArray(outerValue)) return null;
+    const innerEntries = Object.entries(outerValue as Record<string, unknown>);
+    if (innerEntries.length !== 1) return null;
+    const [minuteKey, secondValue] = innerEntries[0];
+    if (typeof secondValue !== 'string') return null;
+    return normalizeDisplayDateString(`${outerKey}:${minuteKey}:${secondValue}`);
+  };
+
   const parseSerializedMapString = (input: string): Record<string, unknown> | null => {
     const trimmed = input.trim();
     if (!trimmed.includes(':')) return null;
@@ -318,6 +365,10 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     return normalizedEntries;
   }
   if (value && typeof value === 'object') {
+    const normalizedLegacyDate = normalizeLegacyDateObject(value);
+    if (normalizedLegacyDate && ['creationTime', 'creationDate'].includes(keyPath[keyPath.length - 1] || '')) {
+      return normalizedLegacyDate;
+    }
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, formatOutputValue(entry, [...keyPath, key])]),
     );
@@ -326,7 +377,11 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath[keyPath.length - 1] === 'formatted') return value;
-    if (keyPath[keyPath.length - 1] === 'creationDate') return value;
+    if (keyPath[keyPath.length - 1] === 'creationDate' || keyPath[keyPath.length - 1] === 'creationTime') {
+      return normalizeDisplayDateString(trimmed) ?? value;
+    }
+    const normalizedDateString = normalizeDisplayDateString(trimmed);
+    if (normalizedDateString) return normalizedDateString;
     if (keyPath.includes('error') || keyPath[keyPath.length - 1] === 'message') {
       const parsedError = parseStructuredErrorMessage(trimmed);
       return parsedError ?? value;
@@ -1455,6 +1510,12 @@ export default function SponsorCoinLabPage() {
   const activeSerializationTestDef =
     serializationTestMethodDefs[selectedSerializationTestMethod] ??
     serializationTestMethodDefs[serializationTestOptions[0]];
+  const effectiveRecipientRateRange = hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
+    ? exchangeContext.settings.spCoinContract.recipientRateRange
+    : DEFAULT_RECIPIENT_RATE_RANGE;
+  const effectiveAgentRateRange = hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
+    ? exchangeContext.settings.spCoinContract.agentRateRange
+    : DEFAULT_AGENT_RATE_RANGE;
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -2477,12 +2538,16 @@ export default function SponsorCoinLabPage() {
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
+            recipientRate: String(effectiveRecipientRateRange[0]),
+            agentRate: String(effectiveAgentRateRange[0]),
           }),
         );
       });
     },
     [
       defaultAgentKey,
+      effectiveAgentRateRange,
+      effectiveRecipientRateRange,
       defaultRecipientKey,
       defaultSponsorKey,
       editingScriptStepNumber,
@@ -2512,12 +2577,16 @@ export default function SponsorCoinLabPage() {
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
+            recipientRate: String(effectiveRecipientRateRange[0]),
+            agentRate: String(effectiveAgentRateRange[0]),
           }),
         );
       });
     },
     [
       defaultAgentKey,
+      effectiveAgentRateRange,
+      effectiveRecipientRateRange,
       defaultRecipientKey,
       defaultSponsorKey,
       editingScriptStepNumber,
@@ -2545,12 +2614,16 @@ export default function SponsorCoinLabPage() {
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
+            recipientRate: String(effectiveRecipientRateRange[0]),
+            agentRate: String(effectiveAgentRateRange[0]),
           }),
         );
       });
     },
     [
       defaultAgentKey,
+      effectiveAgentRateRange,
+      effectiveRecipientRateRange,
       defaultRecipientKey,
       defaultSponsorKey,
       editingScriptStepNumber,
@@ -3062,7 +3135,7 @@ export default function SponsorCoinLabPage() {
   }, [formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScriptStepNumber]);
 
   return (
-    <main className="min-h-screen bg-[#090C16] p-6 text-white">
+    <main id="sponsorcoin-sandbox-root" className="min-h-screen bg-[#090C16] p-6 text-white">
       <section className="mx-auto flex w-full max-w-7xl flex-col">
         <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
           <div />
@@ -3358,14 +3431,8 @@ export default function SponsorCoinLabPage() {
               agentRateKeyOptions,
               recipientRateKeyHelpText,
               agentRateKeyHelpText,
-              recipientRateRange:
-                hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
-                  ? exchangeContext.settings.spCoinContract.recipientRateRange
-                  : DEFAULT_RECIPIENT_RATE_RANGE,
-              agentRateRange:
-                hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
-                  ? exchangeContext.settings.spCoinContract.agentRateRange
-                  : DEFAULT_AGENT_RATE_RANGE,
+              recipientRateRange: effectiveRecipientRateRange,
+              agentRateRange: effectiveAgentRateRange,
               selectedSpCoinWriteMethod,
               setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
               spCoinWorldWriteOptions: isSpCoinTodoMode ? [] : spCoinWorldWriteOptions,

@@ -1,18 +1,37 @@
 // @ts-nocheck
 // File: /@sponsorcoin/spcoin-access-modules/utils/dateTime.js
+const MONTH_ABBREVIATIONS = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
+];
+const pad2 = (value) => String(value).padStart(2, '0');
+const formatMeridiem = (hours) => (hours >= 12 ? 'p.m.' : 'a.m.');
+const formatHour12 = (hours) => {
+    const normalized = hours % 12;
+    return normalized === 0 ? 12 : normalized;
+};
 export const bigIntToDateTimeString = (_value) => {
-    let milliSecs = bigIntToDecMilliSecs(_value);
-    const options = { month: "long",
-        // era: 'long',
-        day: "numeric",
-        year: "numeric",
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZoneName: 'short' };
-    const date = new Date(1683963292000);
-    const dateString = new Intl.DateTimeFormat("en-US", options).format(milliSecs);
-    return dateString;
+    const milliSecs = Number(bigIntToDecMilliSecs(_value));
+    const date = new Date(milliSecs);
+    if (Number.isNaN(date.getTime()))
+        return String(_value);
+    const month = MONTH_ABBREVIATIONS[date.getMonth()] || 'UNK';
+    const day = pad2(date.getDate());
+    const year = date.getFullYear();
+    const hour = formatHour12(date.getHours());
+    const minute = pad2(date.getMinutes());
+    const meridiem = formatMeridiem(date.getHours());
+    return `${month}-${day}-${year}, ${hour}:${minute} ${meridiem}`;
 };
 export const getLocation = () => {
     let location = Intl.DateTimeFormat().resolvedOptions().timeZone;

@@ -228,6 +228,7 @@ function createSpCoinOffChainAccess(
   add: SpCoinAddAccess,
   read: SpCoinReadAccess,
   del: SpCoinDeleteAccess,
+  trace?: (line: string) => void,
 ): SpCoinOffChainAccess {
   const typedContract = contract as SpCoinContractAccess;
   const toDebugJson = (value: unknown): string =>
@@ -237,10 +238,67 @@ function createSpCoinOffChainAccess(
       2,
     );
   const logDebug = (message: string) => {
-    const logger = (contract as { spCoinLogger?: { logDetail?: (value: string) => void } }).spCoinLogger;
-    if (typeof logger?.logDetail === 'function') {
-      logger.logDetail(message);
+    if (typeof trace === 'function' && String(message || '').trim()) {
+      trace(String(message));
     }
+    const candidateLoggers = [
+      (add as { spCoinLogger?: { logDetail?: (value: string) => void } }).spCoinLogger,
+      (del as { spCoinLogger?: { logDetail?: (value: string) => void } }).spCoinLogger,
+      (read as { spCoinLogger?: { logDetail?: (value: string) => void } }).spCoinLogger,
+      (contract as { spCoinLogger?: { logDetail?: (value: string) => void } }).spCoinLogger,
+    ];
+    for (const logger of candidateLoggers) {
+      if (typeof logger?.logDetail === 'function') {
+        logger.logDetail(message);
+        return;
+      }
+    }
+  };
+  const waitForReceipt = async (label: string, tx: unknown) => {
+    const txHash = String((tx as { hash?: string })?.hash || '');
+    logDebug(`JS => ${label} tx hash = ${txHash}`);
+    if (!tx || typeof (tx as { wait?: () => Promise<unknown> }).wait !== 'function') {
+      logDebug(`JS => ${label} returned without waitable receipt`);
+      return tx;
+    }
+    const receipt = await (tx as { wait: () => Promise<{ status?: unknown; hash?: unknown }> }).wait();
+    logDebug(
+      `JS => ${label} receipt status = ${String((receipt as { status?: unknown })?.status ?? '')} hash = ${String(
+        (receipt as { hash?: unknown })?.hash ?? txHash,
+      )}`,
+    );
+    return receipt;
+  };
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const sendDeleteAccountRecordWithRecovery = async (accountKey: string, attempts = 2) => {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      try {
+        logDebug(`JS => deleteAccountTree deleteAccountRecord ${accountKey} send attempt ${String(attempt)}`);
+        return await del.deleteAccountRecord(accountKey);
+      } catch (error) {
+        lastError = error;
+        const message = String((error as { message?: unknown })?.message ?? error ?? '');
+        logDebug(`JS => deleteAccountTree deleteAccountRecord ${accountKey} send attempt ${String(attempt)} failed = ${message}`);
+        if (!/Failed to fetch/i.test(message)) {
+          throw error;
+        }
+        await sleep(1200);
+        if (typeof typedContract.isAccountInserted === 'function') {
+          const stillInserted = await typedContract.isAccountInserted(accountKey);
+          logDebug(
+            `JS => deleteAccountTree deleteAccountRecord ${accountKey} post-failure visibility after attempt ${String(attempt)} = ${String(
+              stillInserted,
+            )}`,
+          );
+          if (!stillInserted) {
+            logDebug(`JS => deleteAccountTree deleteAccountRecord ${accountKey} treating transport failure as success because account is gone`);
+            return null;
+          }
+        }
+      }
+    }
+    throw lastError;
   };
   const logDeleteStructure = async (stageLabel: string, sponsorKey: string) => {
     const snapshot: Record<string, unknown> = { sponsorKey };
@@ -384,7 +442,8 @@ function createSpCoinOffChainAccess(
             }
             if (typeof del.unSponsorRecipient === 'function') {
               logDebug(`JS => deleteAccountTree unSponsorRecipient sponsor=${sponsorKey} recipient=${recipientKey}`);
-              await del.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
+              const tx = await del.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
+              await waitForReceipt(`deleteAccountTree unSponsorRecipient sponsor=${sponsorKey} recipient=${recipientKey}`, tx);
               summary.deletedRecipientCount += 1;
               await logRecipientStructure('after unSponsorRecipient', sponsorKey, recipientKey);
               await logDeleteStructure('after unSponsorRecipient', sponsorKey);
@@ -395,7 +454,10 @@ function createSpCoinOffChainAccess(
           }
           if (!deferDelete) {
             logDebug(`JS => deleteAccountTree deleteAccountRecord ${sponsorKey}`);
-            await del.deleteAccountRecord(sponsorKey);
+            const tx = await sendDeleteAccountRecordWithRecovery(sponsorKey);
+            if (tx) {
+              await waitForReceipt(`deleteAccountTree deleteAccountRecord ${sponsorKey}`, tx);
+            }
             summary.deletedAccountCount += 1;
             processedAccountKeys.add(sponsorKey);
             await logDeleteStructure('after deleteAccountRecord', sponsorKey);
@@ -477,7 +539,7 @@ export function createSpCoinModuleAccess(
     add,
     del,
     erc20: new includes.SpCoinERC20Module(contract) as NodeSpCoinERC20Module,
-    offChain: createSpCoinOffChainAccess(contract, add, read, del),
+    offChain: createSpCoinOffChainAccess(contract, add, read, del, trace),
     read,
     rewards: new includes.SpCoinRewardsModule(contract) as SpCoinRewardsAccess,
     staking: new includes.SpCoinStakingModule(contract) as SpCoinStakingAccess,

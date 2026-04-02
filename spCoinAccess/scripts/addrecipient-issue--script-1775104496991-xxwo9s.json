@@ -1,7 +1,7 @@
 {
-  "id": "script-1774846455837-x7g7h4",
-  "name": "BuildTree",
-  "Date Created": "Mar-30-2026, 00:54:15",
+  "id": "script-1775104496991-xxwo9s",
+  "name": "AddRecipient Issue",
+  "Date Created": "Apr-02-2026, 00:34:56",
   "network": "Hardhat Ec2-BASE",
   "steps": [
     {
@@ -31,7 +31,7 @@
       "params": [
         {
           "key": "Recipient Key",
-          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
         }
       ],
       "breakpoint": false,
@@ -92,7 +92,7 @@
       "params": [
         {
           "key": "Recipient Key",
-          "value": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955"
+          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
         }
       ],
       "breakpoint": false,

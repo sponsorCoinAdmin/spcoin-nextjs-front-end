@@ -275,8 +275,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       const summary = await executeWriteConnected(
         activeDef.title,
         (contract: Contract, signer: any) => {
-          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource);
+          appendWriteTrace?.(`submitWorkflow(${activeDef.title}) build access start`);
+          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
           access.del.signer = signer;
+          appendWriteTrace?.(`submitWorkflow(${activeDef.title}) offChain.deleteAccountTree enter`);
           return access.offChain.deleteAccountTree();
         },
         selectedHardhatAddress,

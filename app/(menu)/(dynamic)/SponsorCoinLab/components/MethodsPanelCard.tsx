@@ -92,6 +92,10 @@ function resolveTypeScriptTargetFile(tab: MethodPanelTab, methodName: string) {
   return `${methodName}.ts`;
 }
 
+function sortMethodNames(values: string[]) {
+  return [...values].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}
+
 type Props = {
   articleClassName: string;
   methodsCardRef: MutableRefObject<HTMLElement | null>;
@@ -180,24 +184,58 @@ export default function MethodsPanelCard({
     ['utils', 'utils'],
     ['todos', 'ToDos'],
   ];
-  const visibleErc20ReadOptions = erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : [];
-  const visibleErc20WriteOptions = erc20WriteProps.showOnChainMethods ? erc20WriteProps.erc20WriteOptions : [];
+  const visibleErc20ReadOptions = React.useMemo(
+    () => sortMethodNames(erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : []),
+    [erc20ReadProps.erc20ReadOptions, erc20ReadProps.showOnChainMethods],
+  );
+  const visibleErc20WriteOptions = React.useMemo(
+    () => sortMethodNames(erc20WriteProps.showOnChainMethods ? erc20WriteProps.erc20WriteOptions : []),
+    [erc20WriteProps.erc20WriteOptions, erc20WriteProps.showOnChainMethods],
+  );
   const hasVisibleErc20Methods = visibleErc20ReadOptions.length > 0 || visibleErc20WriteOptions.length > 0;
   const combinedErc20MethodValue =
     methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
-  const visibleSpCoinReadOptions = [
-    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
-    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
-    ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
-    ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
-  ];
-  const visibleSpCoinWriteOptions = [
-    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
-    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
-    ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinAdminWriteOptions : []),
-    ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
-  ];
-  const visibleSerializationOptions = serializationTestProps.showOffChainMethods ? serializationTestProps.serializationTestOptions : [];
+  const visibleSpCoinReadOptions = React.useMemo(
+    () =>
+      sortMethodNames([
+        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
+        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
+        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
+        ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
+      ]),
+    [
+      spCoinReadProps.showOffChainMethods,
+      spCoinReadProps.showOnChainMethods,
+      spCoinReadProps.spCoinAdminReadOptions,
+      spCoinReadProps.spCoinCompoundReadOptions,
+      spCoinReadProps.spCoinSenderReadOptions,
+      spCoinReadProps.spCoinWorldReadOptions,
+    ],
+  );
+  const visibleSpCoinWriteOptions = React.useMemo(
+    () =>
+      sortMethodNames([
+        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
+        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
+        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinAdminWriteOptions : []),
+        ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
+      ]),
+    [
+      spCoinWriteProps.showOffChainMethods,
+      spCoinWriteProps.showOnChainMethods,
+      spCoinWriteProps.spCoinAdminWriteOptions,
+      spCoinWriteProps.spCoinSenderWriteOptions,
+      spCoinWriteProps.spCoinTodoWriteOptions,
+      spCoinWriteProps.spCoinWorldWriteOptions,
+    ],
+  );
+  const visibleSerializationOptions = React.useMemo(
+    () =>
+      sortMethodNames(
+        serializationTestProps.showOffChainMethods ? serializationTestProps.serializationTestOptions : [],
+      ),
+    [serializationTestProps.serializationTestOptions, serializationTestProps.showOffChainMethods],
+  );
   const activeRunControl = React.useMemo(() => {
     if (methodPanelMode === 'ecr20_read') {
       return {
@@ -322,11 +360,13 @@ export default function MethodsPanelCard({
     spCoinWriteProps.selectedSpCoinWriteMethod,
   ]);
   const typeScriptMethodOptions = React.useMemo(() => {
-    if (activeMethodPanelTab === 'erc20') return [...visibleErc20ReadOptions, ...visibleErc20WriteOptions];
+    if (activeMethodPanelTab === 'erc20') return sortMethodNames([...visibleErc20ReadOptions, ...visibleErc20WriteOptions]);
     if (activeMethodPanelTab === 'spcoin_rread') return visibleSpCoinReadOptions;
     if (activeMethodPanelTab === 'spcoin_write') return visibleSpCoinWriteOptions;
     if (activeMethodPanelTab === 'utils') return [];
-    return spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method));
+    return sortMethodNames(
+      spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method)),
+    );
   }, [
     activeMethodPanelTab,
     showOffChainMethods,

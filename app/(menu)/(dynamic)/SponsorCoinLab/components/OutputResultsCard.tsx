@@ -76,6 +76,7 @@ export default function OutputResultsCard({
   const actionButtonClassName =
     'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const [showTreeAccountDetails, setShowTreeAccountDetails] = useState(false);
+  const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [selectedTreeAccountMetadata, setSelectedTreeAccountMetadata] = useState<{
     name?: string;
     symbol?: string;
@@ -385,6 +386,17 @@ export default function OutputResultsCard({
         <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220]">
           {controls.outputPanelMode === 'formatted' || controls.outputPanelMode === 'tree' ? (
             <div className="absolute right-3 top-3 z-10 flex items-center gap-3 rounded-md bg-[#0B1220]/90 px-2 py-1 text-xs text-slate-200">
+              {!controls.formattedJsonViewEnabled ? (
+                <label className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                    checked={showAllTreeRecords}
+                    onChange={(e) => setShowAllTreeRecords(e.target.checked)}
+                  />
+                  <span>Show All</span>
+                </label>
+              ) : null}
               <label className="inline-flex items-center gap-1">
                 <input
                   type="checkbox"
@@ -434,6 +446,7 @@ export default function OutputResultsCard({
                     path={`${activeInspectorRootLabel.toLowerCase()}-${index}`}
                     highlightPathPrefixes={highlightedInspectorPathPrefixes}
                     highlightColorClass={inspectorHighlightColorClass}
+                    showAll={showAllTreeRecords}
                     label={
                       collapsibleFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -469,6 +482,7 @@ export default function OutputResultsCard({
                     highlightPathPrefixes={[]}
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
+                    showAll={showAllTreeRecords}
                   />
                 ))}
               </div>

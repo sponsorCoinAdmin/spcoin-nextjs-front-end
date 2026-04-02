@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserProvider, JsonRpcProvider, NonceManager, Wallet } from 'ethers';
+import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
 import type { Contract, Signer } from 'ethers';
 import {
   defaultMissingImage,
@@ -119,7 +119,7 @@ function isAddressLike(value: string) {
 
 function createHardhatRpcUnavailableError(contextLabel: string, rpcUrl: string, detail?: string) {
   return new Error(
-    `Contract call reverted during ${contextLabel}. Hardhat RPC unreachable at ${String(rpcUrl || '').trim()}${
+    `Hardhat RPC request failed during ${contextLabel} at ${String(rpcUrl || '').trim()}${
       detail ? ` (${detail})` : ''
     }. Hardhat mode requires the selected private-key signer and does not allow MetaMask fallback.`,
   );
@@ -144,6 +144,11 @@ export function useSponsorCoinLabNetwork({
   selectedReadMethod,
   selectedSpCoinReadMethod,
 }: Params) {
+  const trimmedRpcUrl = useMemo(() => String(rpcUrl || '').trim(), [rpcUrl]);
+  const hardhatProvider = useMemo(() => {
+    if (!trimmedRpcUrl) return null;
+    return new JsonRpcProvider(trimmedRpcUrl);
+  }, [trimmedRpcUrl]);
   const [hardhatAccounts, setHardhatAccounts] = useState<HardhatAccountOption[]>([]);
   const [selectedHardhatIndex, setSelectedHardhatIndex] = useState(0);
   const [selectedWriteSenderAddress, setSelectedWriteSenderAddress] = useState('');
@@ -638,18 +643,17 @@ export function useSponsorCoinLabNetwork({
   }, [useLocalSpCoinAccessPackage]);
 
   const syncHardhatState = useCallback(async () => {
-    if (mode !== 'hardhat' || !rpcUrl.trim()) return;
+    if (mode !== 'hardhat' || !hardhatProvider) return;
 
     try {
-      const provider = new JsonRpcProvider(rpcUrl.trim());
-      const network = await provider.getNetwork();
+      const network = await hardhatProvider.getNetwork();
       setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
       setConnectedNetworkName(HARDHAT_NETWORK_NAME);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown Hardhat sync error.';
       appendLog(`Hardhat state sync failed: ${message}`);
     }
-  }, [appendLog, mode, rpcUrl]);
+  }, [appendLog, hardhatProvider, mode]);
 
   const reconcileHardhatSelection = useCallback(
     (accounts: HardhatAccountOption[], publicAccountHint?: string, preferredIndex?: number) => {
@@ -812,10 +816,11 @@ export function useSponsorCoinLabNetwork({
     }
 
     try {
-      const provider = new JsonRpcProvider(rpcUrl.trim());
-      const wallet = new Wallet(selectedHardhatAccount.privateKey, provider);
-      const signer = new NonceManager(wallet);
-      const network = await provider.getNetwork();
+      if (!hardhatProvider) {
+        throw new Error('Hardhat RPC URL is empty.');
+      }
+      const signer = new Wallet(selectedHardhatAccount.privateKey, hardhatProvider);
+      const network = await hardhatProvider.getNetwork();
       const address = await signer.getAddress();
 
       setActiveSigner(signer);
@@ -828,10 +833,10 @@ export function useSponsorCoinLabNetwork({
       return signer;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      appendLog(`Hardhat signer connection failed via ${rpcUrl.trim()}: ${message}`);
+      appendLog(`Hardhat signer connection failed via ${trimmedRpcUrl}: ${message}`);
       throw createHardhatRpcUnavailableError('connectSigner', rpcUrl);
     }
-  }, [appendLog, appendWriteTrace, rpcUrl, selectedHardhatAccount, setStatus]);
+  }, [appendLog, appendWriteTrace, hardhatProvider, rpcUrl, selectedHardhatAccount, setStatus, trimmedRpcUrl]);
 
   const connectSigner = useCallback(async (): Promise<Signer> => {
     appendWriteTrace(`connectSigner invoked; mode=${mode}`);
@@ -858,13 +863,14 @@ export function useSponsorCoinLabNetwork({
 
   const ensureHardhatReadRunner = useCallback(async () => {
     appendWriteTrace('ensureHardhatReadRunner using JsonRpcProvider');
-    const trimmedRpcUrl = rpcUrl.trim();
     const attemptReadRunner = async () => {
-      const provider = new JsonRpcProvider(trimmedRpcUrl);
-      const network = await provider.getNetwork();
+      if (!hardhatProvider) {
+        throw new Error('Hardhat RPC URL is empty.');
+      }
+      const network = await hardhatProvider.getNetwork();
       setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
       setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-      return provider;
+      return hardhatProvider;
     };
     try {
       return await attemptReadRunner();
@@ -881,7 +887,7 @@ export function useSponsorCoinLabNetwork({
         throw createHardhatRpcUnavailableError('read runner', rpcUrl, retryMessage);
       }
     }
-  }, [appendLog, appendWriteTrace, rpcUrl]);
+  }, [appendLog, appendWriteTrace, hardhatProvider, rpcUrl, trimmedRpcUrl]);
 
   const ensureReadRunner = useCallback(async (): Promise<any> => {
     return executeConnected<any>('ensureReadRunner', {
@@ -927,10 +933,16 @@ export function useSponsorCoinLabNetwork({
       }
 
       appendWriteTrace(`executeHardhatConnected start; label=${label}; desired=${account.address}`);
+      let stage = 'connect provider';
       try {
-        const provider = new JsonRpcProvider(rpcUrl.trim());
-        const network = await provider.getNetwork();
-        const signer = new NonceManager(new Wallet(account.privateKey, provider));
+        if (!hardhatProvider) {
+          throw new Error('Hardhat RPC URL is empty.');
+        }
+        stage = 'load network';
+        const network = await hardhatProvider.getNetwork();
+        stage = 'create signer';
+        const signer = new Wallet(account.privateKey, hardhatProvider);
+        stage = 'resolve signer address';
         const signerAddress = await signer.getAddress();
         if (normalizeAddress(signerAddress) !== normalizeAddress(account.address)) {
           throw new Error(
@@ -942,18 +954,20 @@ export function useSponsorCoinLabNetwork({
         setConnectedAddress(signerAddress);
         setConnectedChainId(String(network.chainId || HARDHAT_CHAIN_ID_DEC));
         setConnectedNetworkName(HARDHAT_NETWORK_NAME);
+        stage = 'create contract';
         const contract = createSpCoinContract(target, signer);
+        stage = `run ${label}`;
         return writeCall(contract, signer);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        appendLog(`Hardhat write transport failed via ${rpcUrl.trim()}: ${message}`);
+        appendLog(`Hardhat write transport failed via ${trimmedRpcUrl} during ${stage}: ${message}`);
         if (message.includes('Selected signer') && message.includes('does not match connected signer')) {
           throw error;
         }
-        throw createHardhatRpcUnavailableError(label, rpcUrl);
+        throw createHardhatRpcUnavailableError(label, rpcUrl, `${stage}: ${message}`);
       }
     },
-    [appendLog, appendWriteTrace, requireContractAddress, resolveHardhatAccount, rpcUrl],
+    [appendLog, appendWriteTrace, hardhatProvider, requireContractAddress, resolveHardhatAccount, rpcUrl, trimmedRpcUrl],
   );
 
   const executeMetaMaskConnected = useCallback(

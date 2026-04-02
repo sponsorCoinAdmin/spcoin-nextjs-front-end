@@ -17,7 +17,7 @@ export const addAgentSponsorship = async (
     );
   const toAddressList = (value) =>
     Array.isArray(value) ? value.map((entry) => String(entry || "").toLowerCase()) : [];
-  const waitForVisibility = async (label, loadValue, isVisible, attempts = 12, delayMs = 300) => {
+  const waitForVisibility = async (label, loadValue, isVisible, attempts = 40, delayMs = 500) => {
     let lastValue;
     for (let attempt = 1; attempt <= attempts; attempt++) {
       lastValue = await loadValue();
@@ -160,6 +160,7 @@ export const addAgentSponsorship = async (
     const addRecipientReceipt = await addRecipientTx.wait();
     ensureSuccessfulReceipt("addRecipient", addRecipientReceipt);
     context.spCoinLogger.logDetail("JS => addRecipient mined");
+    await sleep(1000);
     if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
       await waitForVisibility(
         "addRecipient recipient account inserted",

@@ -110,6 +110,20 @@ footer {
   display: none; /* Chrome, Safari, Opera */
 }
 
+button[class*="hover:bg-green-500"]:active {
+  background: #e5b94f !important;
+  color: #000000 !important;
+  border-color: transparent !important;
+}
+
+button[class*="hover:bg-\\[\\#1E293B\\]"]:active,
+button[class*="hover:bg-\\[\\#2B335A\\]"]:active,
+button[class*="hover:bg-\\[\\#d7ae45\\]"]:active {
+  background: #0e111b !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
 /* Keep dark form styling when browser autofill is applied (e.g., email fields). */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
