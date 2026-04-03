@@ -582,7 +582,7 @@ export function useCreateAccountForm({
         normalizedSignerAddress === normalizedTargetAddress ||
         isConfiguredOwnerAdminAddress(normalizedSignerAddress);
       if (!signerCanEditTarget) {
-        const signerLabel = authSignerSource === 'ec2-base' ? 'Ec2-BASE' : 'MetaMask';
+        const signerLabel = authSignerSource === 'ec2-base' ? 'Hardhat EC2' : 'MetaMask';
         throw new Error(
           `Connected account mismatch. ${signerLabel}=${normalizedSignerAddress}, Target=${derived.publicKeyTrimmed}`,
         );

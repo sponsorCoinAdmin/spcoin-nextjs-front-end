@@ -3015,10 +3015,18 @@ export default function SponsorCoinLabPage() {
       }
       setOutputPanelMode('formatted');
       setFormattedPanelView('script');
-      focusScriptStep(step);
+      setMethodSelectionSource('script');
+      setEditingScriptStepNumber(null);
+      loadScriptStep(step);
     },
-    [focusScriptStep, selectedScriptStep?.step, setSelectedScriptStepNumber],
+    [loadScriptStep, selectedScriptStep?.step, setSelectedScriptStepNumber],
   );
+  useEffect(() => {
+    if (!selectedScript || selectedScript.steps.length === 0) return;
+    if (selectedScriptStepNumber !== null) return;
+    if (editingScriptStepNumber !== null) return;
+    loadScriptStep(selectedScript.steps[0]);
+  }, [editingScriptStepNumber, loadScriptStep, selectedScript, selectedScriptStepNumber]);
   const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
     confirmDeleteSelectedScriptStep();
     setEditingScriptStepNumber(null);

@@ -126,3 +126,4 @@ export class RewardTransactionStruct {
         this.stakingRewards;
     }
 }
+  
