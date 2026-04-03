@@ -99,6 +99,7 @@ async function enrichDirectReadError(params: {
 
 type Params = {
   activeContractAddress: string;
+  rpcUrl: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
   selectedReadMethod: Erc20ReadMethod;
@@ -187,6 +188,7 @@ type Params = {
 
 export function useSponsorCoinLabMethods({
   activeContractAddress,
+  rpcUrl,
   mode,
   methodPanelMode,
   selectedReadMethod,
@@ -1274,6 +1276,7 @@ export function useSponsorCoinLabMethods({
         body: JSON.stringify({
           script: params.script,
           contractAddress: requireContractAddress(),
+          rpcUrl,
           startIndex: params.startIndex,
           stopAfterCurrentStep: params.stopAfterCurrentStep === true,
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
@@ -1315,6 +1318,7 @@ export function useSponsorCoinLabMethods({
       formatFormattedPanelPayload,
       mergeFormattedOutput,
       requireContractAddress,
+      rpcUrl,
       setFormattedOutputDisplay,
       useLocalSpCoinAccessPackage,
     ],

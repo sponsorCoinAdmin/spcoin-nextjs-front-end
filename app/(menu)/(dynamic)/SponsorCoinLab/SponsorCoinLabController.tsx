@@ -1561,6 +1561,7 @@ export default function SponsorCoinLabPage() {
     runScriptSequenceOnServer,
   } = useSponsorCoinLabMethods({
     activeContractAddress: contractAddress,
+    rpcUrl,
     mode,
     methodPanelMode,
     selectedReadMethod,
