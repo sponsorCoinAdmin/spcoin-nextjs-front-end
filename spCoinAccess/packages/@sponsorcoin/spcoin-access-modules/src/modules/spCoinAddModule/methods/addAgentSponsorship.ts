@@ -150,33 +150,52 @@ export const addAgentSponsorship = async (
       String(transactionTimeStamp)
   );
 
-  try {
-    await logStructureSnapshot("before addRecipient");
-    const addRecipientTx = await sendTxWithDiagnostics(
-      "addRecipient",
-      () => context.spCoinContractDeployed.addRecipient(_recipientKey)
+    try {
+      await logStructureSnapshot("before addRecipient");
+      const addRecipientTx = await sendTxWithDiagnostics(
+        "addRecipient",
+        () => context.spCoinContractDeployed.addRecipient(_recipientKey)
     );
     context.spCoinLogger.logDetail("JS => addRecipient tx hash = " + String(addRecipientTx?.hash || ""));
     const addRecipientReceipt = await addRecipientTx.wait();
-    ensureSuccessfulReceipt("addRecipient", addRecipientReceipt);
-    context.spCoinLogger.logDetail("JS => addRecipient mined");
-    await sleep(1000);
-    if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
-      await waitForVisibility(
-        "addRecipient recipient account inserted",
-        () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
-        (value) => value === true
-      );
-    }
-    if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
-      await waitForVisibility(
-        "addRecipient sponsor recipient list",
-        () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
-        (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
-      );
-    }
-    await logStructureSnapshot("after addRecipient");
-  } catch (error) {
+      ensureSuccessfulReceipt("addRecipient", addRecipientReceipt);
+      context.spCoinLogger.logDetail("JS => addRecipient mined");
+      await sleep(1000);
+      let recipientInsertedVisible = false;
+      if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
+        try {
+          await waitForVisibility(
+            "addRecipient recipient account inserted",
+            () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
+            (value) => value === true
+          );
+          recipientInsertedVisible = true;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          context.spCoinLogger.logDetail("JS => addRecipient recipient inserted visibility fallback: " + message);
+        }
+      }
+      let sponsorRecipientListVisible = false;
+      if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
+        try {
+          await waitForVisibility(
+            "addRecipient sponsor recipient list",
+            () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+            (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
+          );
+          sponsorRecipientListVisible = true;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          context.spCoinLogger.logDetail("JS => addRecipient sponsor recipient visibility fallback: " + message);
+        }
+      }
+      if (!recipientInsertedVisible && !sponsorRecipientListVisible) {
+        throw new Error(
+          "addRecipient receipt was mined but neither isAccountInserted(recipient) nor getAccountRecipientList(sponsor) reflected the recipient after visibility polling."
+        );
+      }
+      await logStructureSnapshot("after addRecipient");
+    } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.spCoinLogger.logDetail("JS => addRecipient failed: " + message);
     throw error;

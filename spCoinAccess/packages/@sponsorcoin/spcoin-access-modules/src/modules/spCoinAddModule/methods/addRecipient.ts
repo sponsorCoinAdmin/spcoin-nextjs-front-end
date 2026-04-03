@@ -33,12 +33,19 @@ export const addRecipient = async (context, _recipientKey) => {
 
     await sleep(1000);
 
+    let recipientInsertedVisible = false;
     if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
-        await waitForVisibility(
-            "addRecipient recipient account inserted",
-            () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
-            (value) => value === true
-        );
+        try {
+            await waitForVisibility(
+                "addRecipient recipient account inserted",
+                () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
+                (value) => value === true
+            );
+            recipientInsertedVisible = true;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            context.spCoinLogger.logDetail("JS => addRecipient recipient inserted visibility fallback: " + message);
+        }
     }
 
     const sponsorKey =
@@ -46,11 +53,24 @@ export const addRecipient = async (context, _recipientKey) => {
             ? await context.spCoinContractDeployed.runner.getAddress()
             : "";
 
+    let sponsorRecipientListVisible = false;
     if (sponsorKey && typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
-        await waitForVisibility(
-            "addRecipient sponsor recipient list",
-            () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
-            (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
+        try {
+            await waitForVisibility(
+                "addRecipient sponsor recipient list",
+                () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+                (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
+            );
+            sponsorRecipientListVisible = true;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            context.spCoinLogger.logDetail("JS => addRecipient sponsor recipient visibility fallback: " + message);
+        }
+    }
+
+    if (!recipientInsertedVisible && !sponsorRecipientListVisible) {
+        throw new Error(
+            "addRecipient receipt was mined but neither isAccountInserted(recipient) nor getAccountRecipientList(sponsor) reflected the recipient after visibility polling."
         );
     }
 
