@@ -31,11 +31,40 @@ export async function deleteAccountTree() {
     };
     const accountList = await read.getAccountList();
     const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
+    const signerKey = String(((((_a = this.onChain) === null || _a === void 0 ? void 0 : _a.delete) === null || (_b = (_a = this.onChain) === null || _a === void 0 ? void 0 : _a.delete) === void 0 ? void 0 : _b.signer) && (((_c = this.onChain) === null || _c === void 0 ? void 0 : _c.delete.signer.address) || '')) || '').trim();
     const processedAccountKeys = new Set();
     const countedAccountKeys = new Set();
     const activeAccountKeys = new Set();
+    const sleep = async (ms) => await new Promise((resolve) => setTimeout(resolve, ms));
+    const isRetryableTransportError = (error) => {
+        const text = String((error === null || error === void 0 ? void 0 : error.message) || error || '').toLowerCase();
+        return (text.includes('failed to fetch') ||
+            text.includes('fetchrequest.geturl') ||
+            text.includes('network error') ||
+            text.includes('timeout') ||
+            text.includes('socket hang up') ||
+            text.includes('missing response') ||
+            text.includes('could not coalesce error'));
+    };
+    const callWithRetry = async (label, fn, attempts = 3, delayMs = 350) => {
+        let lastError;
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                return await fn();
+            }
+            catch (error) {
+                lastError = error;
+                if (!isRetryableTransportError(error) || attempt === attempts) {
+                    throw error;
+                }
+                (_d = (_c = this.logger) === null || _c === void 0 ? void 0 : _c.logDetail) === null || _d === void 0 ? void 0 : _d.call(_c, "JS => deleteAccountTree " + label + " retry #" + String(attempt) + " after transport error: " + String((error === null || error === void 0 ? void 0 : error.message) || error));
+                await sleep(delayMs * attempt);
+            }
+        }
+        throw lastError;
+    };
     const walkAccountTree = async (sponsorKey, deferDelete = false) => {
-        var _a, _b;
+        var _d, _e;
         if (processedAccountKeys.has(sponsorKey)) {
             return;
         }
@@ -49,34 +78,40 @@ export async function deleteAccountTree() {
         }
         activeAccountKeys.add(sponsorKey);
         try {
-            const recipientList = await read.getAccountRecipientList(sponsorKey);
+            const recipientList = await callWithRetry("getAccountRecipientList(" + sponsorKey + ")", () => read.getAccountRecipientList(sponsorKey));
             for (const recipientKeyValue of Array.isArray(recipientList) ? recipientList : []) {
                 const recipientKey = String(recipientKeyValue);
                 summary.recipientCount += 1;
                 if (accountKeySet.has(recipientKey)) {
                     await walkAccountTree(recipientKey, true);
                 }
-                const recipientRateList = await read.getRecipientRateList(sponsorKey, recipientKey);
+                const recipientRateList = await callWithRetry("getRecipientRateList(" + sponsorKey + "," + recipientKey + ")", () => read.getRecipientRateList(sponsorKey, recipientKey));
                 for (const recipientRateKey of Array.isArray(recipientRateList) ? recipientRateList : []) {
                     summary.recipientRateCount += 1;
-                    const agentList = await read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey);
+                    const agentList = await callWithRetry("getRecipientRateAgentList(" + sponsorKey + "," + recipientKey + "," + String(recipientRateKey) + ")", () => read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey));
                     for (const agentKeyValue of Array.isArray(agentList) ? agentList : []) {
                         summary.agentCount += 1;
                         summary.deletedAgentCount += 1;
                     }
                 }
                 if (typeof deleteMethods.unSponsorRecipient === "function") {
-                    await deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
+                    await callWithRetry("unSponsorRecipient(" + sponsorKey + "," + recipientKey + ")", () => deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey));
                     summary.deletedRecipientCount += 1;
+                    await sleep(200);
                 }
                 if (accountKeySet.has(recipientKey)) {
                     await walkAccountTree(recipientKey, false);
                 }
             }
-            if (!deferDelete) {
-                await deleteMethods.deleteAccountRecord(sponsorKey);
+            const shouldDeferSignerDelete = !deferDelete && signerKey && sponsorKey.toLowerCase() === signerKey.toLowerCase();
+            if (!deferDelete && !shouldDeferSignerDelete) {
+                await callWithRetry("deleteAccountRecord(" + sponsorKey + ")", () => deleteMethods.deleteAccountRecord(sponsorKey));
                 summary.deletedAccountCount += 1;
                 processedAccountKeys.add(sponsorKey);
+                await sleep(200);
+            }
+            else if (shouldDeferSignerDelete) {
+                (_e = (_d = this.logger) === null || _d === void 0 ? void 0 : _d.logDetail) === null || _e === void 0 ? void 0 : _e.call(_d, "JS => deleteAccountTree deferring signer account delete for " + sponsorKey + " until end of traversal");
             }
         }
         finally {
@@ -84,7 +119,13 @@ export async function deleteAccountTree() {
         }
     };
     for (const sponsorKey of accountKeySet) {
+        if (signerKey && sponsorKey.toLowerCase() === signerKey.toLowerCase()) {
+            continue;
+        }
         await walkAccountTree(sponsorKey);
+    }
+    if (signerKey && accountKeySet.has(signerKey) && !processedAccountKeys.has(signerKey)) {
+        await walkAccountTree(signerKey, false);
     }
     (_d = (_c = this.logger) === null || _c === void 0 ? void 0 : _c.logDetail) === null || _d === void 0 ? void 0 : _d.call(_c, "JS => deleteAccountTree summary = " + JSON.stringify(summary));
     return summary;

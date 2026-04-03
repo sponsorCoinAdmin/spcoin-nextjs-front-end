@@ -21,6 +21,14 @@
             "symbol": "SPCOIN_V0",
             "decimals": 18
           }
+        },
+        "1": {
+          "0X6DA949C8C75817877D7ECB83BA7B08003D080636": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "Sponsor Coin V1",
+            "symbol": "SPCOIN_V1",
+            "decimals": 18
+          }
         }
       }
     }

@@ -106,6 +106,8 @@ contract UnSubscribe is Transactions {
             // console.log("UnSubscribe:AFTER balanceOf() msg.sender = ", balanceOf[msg.sender]);
             // console.log("unSponsorRecipient(", totalSponsored, ")");
             unSponsorRecipient(recipientRecord);
+            delete sponsorAccount.recipientMap[_recipientKey];
+            deleteAccountFromMaster(_recipientKey);
         }
     }
 

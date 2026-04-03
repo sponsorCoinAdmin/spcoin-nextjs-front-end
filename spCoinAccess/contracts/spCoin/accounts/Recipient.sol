@@ -12,6 +12,17 @@ contract Recipient is Sponsor {
     /// @param _recipientKey new recipient to add to account list
     function addRecipient(address _recipientKey) 
     public nonRedundantRecipient (msg.sender, _recipientKey) {
+        AccountStruct storage sponsorRecord = getSponsorAccountRecord(msg.sender);
+        RecipientStruct storage recipientRecord = accountMap[msg.sender].recipientMap[_recipientKey];
+        bool sponsorHasRecipientLink = accountInList(_recipientKey, sponsorRecord.recipientAccountList);
+        bool recipientHasSponsorLink = accountInList(msg.sender, accountMap[_recipientKey].sponsorAccountList);
+
+        if (recipientRecord.inserted) {
+            require(sponsorHasRecipientLink && recipientHasSponsorLink, "RECIP_LINK_STALE");
+            revert("RECIP_LINK_EXISTS");
+        }
+
+        require(!sponsorHasRecipientLink && !recipientHasSponsorLink, "RECIP_LIST_STALE");
         getRecipientRecord(msg.sender, _recipientKey);
     }
 

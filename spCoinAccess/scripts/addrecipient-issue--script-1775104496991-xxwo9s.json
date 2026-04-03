@@ -27,11 +27,11 @@
       "name": "addRecipient",
       "panel": "spcoin_write",
       "method": "addRecipient",
-      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "msg.sender": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
       "params": [
         {
           "key": "Recipient Key",
-          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
+          "value": "0x71be63f3384f5fb98995898a86b02fb2426c5788"
         }
       ],
       "breakpoint": false,
@@ -62,7 +62,7 @@
       "method": "deleteAccountTree",
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
