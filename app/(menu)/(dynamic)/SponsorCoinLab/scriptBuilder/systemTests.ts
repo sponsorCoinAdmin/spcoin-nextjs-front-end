@@ -5,7 +5,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-add-agent',
     name: 'Add Agent Extends Relationship',
     'Date Created': 'Mar-27-2026, 05:18:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -70,7 +70,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-add-recipient',
     name: 'Add Recipient Creates Relationship',
     'Date Created': 'Mar-27-2026, 05:17:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -101,7 +101,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-backdated-admin',
     name: 'Backdated Agent Sponsorship Accepts Admin',
     'Date Created': 'Mar-27-2026, 05:16:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -128,7 +128,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-backdated-reject',
     name: 'Backdated Sponsorship Rejects Non-Admin',
     'Date Created': 'Mar-27-2026, 05:15:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -156,7 +156,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-backdated-rewards-no-agent',
     name: 'Backdated Rewards No Agent',
     'Date Created': 'Mar-27-2026, 05:30:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -206,7 +206,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-dump-token-contents',
     name: 'Dump Token Contents',
     'Date Created': 'Mar-28-2026, 12:05:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {
@@ -242,7 +242,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     id: 'builtin-system-test-clear-token-records',
     name: 'Clear Token Records',
     'Date Created': 'Mar-28-2026, 12:12:00',
-    network: 'Hardhat Ec2-BASE',
+    network: 'Hardhat EC2',
     isSystemScript: true,
     steps: [
       {

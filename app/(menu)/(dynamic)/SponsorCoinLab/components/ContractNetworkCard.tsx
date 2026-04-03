@@ -187,7 +187,7 @@ export default function ContractNetworkCard({
                     onChange={() => network.setMode('hardhat')}
                     className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                   />
-                  <span>Hardhat Ec2-BASE</span>
+                  <span>Hardhat EC2</span>
                 </label>
                 <label className="flex items-center gap-2 text-[#8FA8FF]">
                   <input
@@ -208,7 +208,7 @@ export default function ContractNetworkCard({
                 className={`text-sm font-semibold ${
                   network.shouldPromptHardhatBaseConnect ? 'cursor-pointer text-[#F59E0B] hover:text-[#FACC15]' : 'text-[#8FA8FF]'
                 }`}
-                title={network.shouldPromptHardhatBaseConnect ? 'connect "Hardhat Base"' : undefined}
+                title={network.shouldPromptHardhatBaseConnect ? 'connect "Hardhat EC2"' : undefined}
                 onClick={network.shouldPromptHardhatBaseConnect ? () => void network.connectHardhatBaseFromNetworkLabel() : undefined}
               >
                 Connected Network
@@ -273,7 +273,7 @@ export default function ContractNetworkCard({
                   </label>
                 </div>
                 <p className="text-sm text-slate-300">
-                  Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat Ec2-BASE.
+                  Hardhat-specific deployment metadata is shown read-only while Network Connection Mode is not set to Hardhat EC2.
                 </p>
               </>
             ) : null}

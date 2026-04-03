@@ -18,12 +18,19 @@ import {
 } from '../jsonMethods/serializationTests';
 import { createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
-import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
+import type { ConnectionMode, LabScript, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
 type Entry = { id: string; label: string };
 type ScriptRunResult = {
   success: boolean;
   formattedOutput: string;
+};
+type ServerScriptSequenceResult = {
+  success: boolean;
+  formattedOutput: string;
+  haltedReason: 'completed' | 'breakpoint' | 'step' | 'error';
+  nextStepNumber: number | null;
+  stepErrors: Record<number, boolean>;
 };
 type MethodParamEntry = { key: string; value: string };
 type MethodExecutionDescriptor = {
@@ -1248,6 +1255,70 @@ export function useSponsorCoinLabMethods({
       getRecentWriteTrace,
     ],
   );
+  const runScriptSequenceOnServer = useCallback(
+    async (params: {
+      script: LabScript;
+      startIndex: number;
+      stopAfterCurrentStep?: boolean;
+      formattedOutputBase?: string;
+    }): Promise<ServerScriptSequenceResult> => {
+      const formattedOutputBase = params.formattedOutputBase;
+      let nextFormattedOutput = String(formattedOutputBase || '').trim() || '(no output yet)';
+      const stepErrors: Record<number, boolean> = {};
+
+      const response = await fetch('/api/spCoin/run-script', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          script: params.script,
+          contractAddress: requireContractAddress(),
+          startIndex: params.startIndex,
+          stopAfterCurrentStep: params.stopAfterCurrentStep === true,
+          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        haltedReason?: 'completed' | 'breakpoint' | 'step' | 'error';
+        nextStepNumber?: number | null;
+        results?: Array<{ step: number; success: boolean; payload: unknown }>;
+      };
+
+      if (!response.ok || payload?.ok === false) {
+        throw new Error(String(payload?.message || 'Server script execution failed.'));
+      }
+
+      for (const entry of Array.isArray(payload.results) ? payload.results : []) {
+        const nextBlock = formatFormattedPanelPayload(entry.payload);
+        nextFormattedOutput = mergeFormattedOutput(nextBlock, nextFormattedOutput);
+        stepErrors[entry.step] = !entry.success;
+      }
+
+      setFormattedOutputDisplay(nextFormattedOutput);
+
+      return {
+        success: (payload.haltedReason || 'completed') !== 'error',
+        formattedOutput: nextFormattedOutput,
+        haltedReason: payload.haltedReason || 'completed',
+        nextStepNumber:
+          typeof payload.nextStepNumber === 'number' && Number.isFinite(payload.nextStepNumber)
+            ? payload.nextStepNumber
+            : null,
+        stepErrors,
+      };
+    },
+    [
+      formatFormattedPanelPayload,
+      mergeFormattedOutput,
+      requireContractAddress,
+      setFormattedOutputDisplay,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
 
   useEffect(() => {
     const activeReadDef = spCoinReadMethodDefs[selectedSpCoinReadMethod];
@@ -1494,5 +1565,6 @@ export function useSponsorCoinLabMethods({
     runSelectedSpCoinWriteMethod,
     runSelectedSerializationTestMethod,
     runScriptStep,
+    runScriptSequenceOnServer,
   };
 }

@@ -23,7 +23,7 @@
   {
     "name": "HardHat",
     "chainId": 31337,
-    "symbol": "HH_BASE",
+    "symbol": "HH",
     "img": "/assets/blockchains/31337/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
     "url": "NA"
   },    

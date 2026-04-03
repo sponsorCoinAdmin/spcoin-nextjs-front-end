@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { CHAIN_ID } from '@/lib/structure';
-import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
 import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
 import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
@@ -16,20 +14,11 @@ function normalizeJavaScriptScriptFilePath(filePath: string | undefined, isSyste
 
 const spCoinLabKey = 'spCoinLabKey';
 const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
-const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
-  networkHeader?: { rpcUrl?: string };
-};
-const DEFAULT_HARDHAT_RPC_URL =
-  String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
-  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
 
-function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
+function normalizePersistedRpcUrl(_savedMode: unknown, savedRpcUrl: unknown) {
   if (typeof savedRpcUrl !== 'string') return undefined;
   const trimmed = savedRpcUrl.trim();
   if (!trimmed) return undefined;
-  if (savedMode === 'hardhat' && /^http:\/\/localhost:8545\/?$/i.test(trimmed)) {
-    return DEFAULT_HARDHAT_RPC_URL;
-  }
   return trimmed;
 }
 

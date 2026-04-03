@@ -2,7 +2,7 @@
   "networkHeader": {
     "chainId": 31337,
     "name": "HardHat",
-    "symbol": "HH_BASE",
+    "symbol": "HH",
     "logoURL": "/public/assets/blockchains/31337.png",
     "url": "http://localhost:3000/Exchange",
     "rpcUrl": "https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a"

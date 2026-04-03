@@ -1105,7 +1105,7 @@ export default function SponsorCoinLabPage() {
   }, []);
 
   const modeSelectionChainId = Number((exchangeContext as any)?.network?.chainId || connectedChainId || 0);
-  const allowContractNetworkModeSelection = modeSelectionChainId === 31337;
+  const allowContractNetworkModeSelection = true;
 
   useEffect(() => {
     if (hasPersistedNetworkMode !== false) return;
@@ -1558,6 +1558,7 @@ export default function SponsorCoinLabPage() {
     runSelectedSpCoinWriteMethod,
     runSelectedSerializationTestMethod,
     runScriptStep,
+    runScriptSequenceOnServer,
   } = useSponsorCoinLabMethods({
     activeContractAddress: contractAddress,
     mode,
@@ -2922,6 +2923,45 @@ export default function SponsorCoinLabPage() {
 
       let accumulatedOutput = initialOutput;
       try {
+        const selectedScriptNetwork = String(selectedScript.network || '').trim();
+        const shouldUseServerRunner =
+          mode === 'hardhat' &&
+          (/hardhat/i.test(selectedScriptNetwork) || selectedScript.steps.some((step) => step.mode === 'hardhat'));
+
+        if (shouldUseServerRunner) {
+          const result = await runScriptSequenceOnServer({
+            script: selectedScript,
+            startIndex,
+            stopAfterCurrentStep,
+            formattedOutputBase: accumulatedOutput,
+          });
+          setScriptStepExecutionErrors((prev) => ({
+            ...prev,
+            ...result.stepErrors,
+          }));
+          accumulatedOutput = result.formattedOutput;
+          if (!result.success) return;
+          if (result.haltedReason === 'step' && result.nextStepNumber !== null) {
+            const nextStep = selectedScript.steps.find((step) => step.step === result.nextStepNumber) || null;
+            if (nextStep) {
+              focusScriptStep(nextStep);
+              setStatus(`Completed step ${activeStep.step}. Ready for step ${nextStep.step}.`);
+              return;
+            }
+          }
+          if (result.haltedReason === 'breakpoint' && result.nextStepNumber !== null) {
+            const nextStep = selectedScript.steps.find((step) => step.step === result.nextStepNumber) || null;
+            if (nextStep) {
+              focusScriptStep(nextStep);
+              setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
+              return;
+            }
+          }
+          setSelectedScriptStepNumber(null);
+          setStatus(`Completed ${selectedScript.name}.`);
+          return;
+        }
+
         for (let idx = startIndex; idx < selectedScript.steps.length; idx += 1) {
           const step = selectedScript.steps[idx];
           focusScriptStep(step);
@@ -2966,7 +3006,7 @@ export default function SponsorCoinLabPage() {
         setIsScriptDebugRunning(false);
       }
     },
-    [focusScriptStep, runScriptStep, selectedScript],
+    [focusScriptStep, mode, runScriptSequenceOnServer, runScriptStep, selectedScript],
   );
   useEffect(() => {
     setScriptStepExecutionErrors({});
@@ -3015,10 +3055,18 @@ export default function SponsorCoinLabPage() {
       }
       setOutputPanelMode('formatted');
       setFormattedPanelView('script');
-      focusScriptStep(step);
+      setMethodSelectionSource('script');
+      setEditingScriptStepNumber(null);
+      loadScriptStep(step);
     },
-    [focusScriptStep, selectedScriptStep?.step, setSelectedScriptStepNumber],
+    [loadScriptStep, selectedScriptStep?.step, setSelectedScriptStepNumber],
   );
+  useEffect(() => {
+    if (!selectedScript || selectedScript.steps.length === 0) return;
+    if (selectedScriptStepNumber !== null) return;
+    if (editingScriptStepNumber !== null) return;
+    loadScriptStep(selectedScript.steps[0]);
+  }, [editingScriptStepNumber, loadScriptStep, selectedScript, selectedScriptStepNumber]);
   const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
     confirmDeleteSelectedScriptStep();
     setEditingScriptStepNumber(null);

@@ -23,11 +23,9 @@ function normalizeMap(input: unknown): PositiveIntMap {
 
 const ASSET_MAP = normalizeMap((chainIdMapRaw as { assetMap?: unknown })?.assetMap);
 
-export const HH_FORK_CHAIN_ID = ASSET_MAP[31337]
-  ? 31337
-  : Number(Object.keys(ASSET_MAP)[0]) || 31337;
+export const HH_FORK_CHAIN_ID = 31337;
 
-export const HH_FORK_TOKEN_ASSET_CHAIN_ID = ASSET_MAP[HH_FORK_CHAIN_ID] || HH_FORK_CHAIN_ID;
+export const HH_FORK_TOKEN_ASSET_CHAIN_ID = HH_FORK_CHAIN_ID;
 
 export function resolveHHForkTokenAssetChainId(chainId: unknown): number {
   const id = toPositiveInt(chainId);

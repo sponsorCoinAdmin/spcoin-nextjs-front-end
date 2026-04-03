@@ -80,7 +80,7 @@ type Params = {
 
 const HARDHAT_CHAIN_ID_DEC = 31337;
 const HARDHAT_CHAIN_ID_HEX = '0x7a69';
-const HARDHAT_NETWORK_NAME = 'SponsorCoin HH BASE';
+const HARDHAT_NETWORK_NAME = 'HardHat';
 const MISSING_LOCAL_ACCOUNT_NAME = 'Account Not Found on Local';
 const MISSING_LOCAL_ACCOUNT_SYMBOL = 'MISSING';
 

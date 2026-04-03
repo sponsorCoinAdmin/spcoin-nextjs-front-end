@@ -419,10 +419,13 @@ export function useSponsorCoinLabScripts({
     })();
   }, [javaScriptScriptNameMatch, selectedJavaScriptScript, setOutputPanelMode, setStatus]);
 
+  const HARDHAT_NETWORK_LABEL = 'Hardhat EC2';
+  const LEGACY_HARDHAT_NETWORK_LABEL = 'Hardhat Ec2-BASE';
+
   const getStepNetwork = useCallback(
     (step: LabScriptStep): string =>
       String(step.network || '').trim() ||
-      ((step.mode || '') === 'hardhat' ? 'Hardhat Ec2-BASE' : activeNetworkName || 'MetaMask'),
+      ((step.mode || '') === 'hardhat' ? HARDHAT_NETWORK_LABEL : activeNetworkName || 'MetaMask'),
     [activeNetworkName],
   );
 
@@ -435,8 +438,10 @@ export function useSponsorCoinLabScripts({
 
   const getStepMode = useCallback(
     (step: LabScriptStep, scriptNetwork?: string): ConnectionMode =>
-      String(scriptNetwork || '').trim() === 'Hardhat Ec2-BASE' ||
-      getStepNetwork(step) === 'Hardhat Ec2-BASE' ||
+      String(scriptNetwork || '').trim() === HARDHAT_NETWORK_LABEL ||
+      String(scriptNetwork || '').trim() === LEGACY_HARDHAT_NETWORK_LABEL ||
+      getStepNetwork(step) === HARDHAT_NETWORK_LABEL ||
+      getStepNetwork(step) === LEGACY_HARDHAT_NETWORK_LABEL ||
       step.mode === 'hardhat'
         ? 'hardhat'
         : 'metamask',
@@ -827,7 +832,7 @@ export function useSponsorCoinLabScripts({
       id: nextId,
       name: nextName,
       'Date Created': formatScriptCreatedDate(new Date()),
-      network: mode === 'hardhat' ? 'Hardhat Ec2-BASE' : activeNetworkName || 'MetaMask',
+      network: mode === 'hardhat' ? HARDHAT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
       steps: [],
     };
     setScripts((prev) => [...prev, nextScript]);
@@ -1139,7 +1144,7 @@ export function useSponsorCoinLabScripts({
                 network: String(script.network || '').trim()
                   ? script.network
                   : mode === 'hardhat'
-                    ? 'Hardhat Ec2-BASE'
+                    ? HARDHAT_NETWORK_LABEL
                     : activeNetworkName || 'MetaMask',
                 steps: nextSteps,
               };

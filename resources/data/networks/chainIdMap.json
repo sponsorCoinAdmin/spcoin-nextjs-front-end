@@ -1,9 +1,5 @@
 {
-  "assetMap": {
-    "31337": 8453
-  },
-  "reverseMap": {
-    "8453": 31337
-  }
+  "assetMap": {},
+  "reverseMap": {}
 }
 

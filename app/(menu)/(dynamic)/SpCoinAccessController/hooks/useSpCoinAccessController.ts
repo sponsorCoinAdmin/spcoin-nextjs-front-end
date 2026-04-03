@@ -339,9 +339,9 @@ export function useSpCoinAccessController() {
       : 0;
   const deploymentChainName =
     deploymentSignerSource === 'ec2-base'
-      ? 'HardHat BASE'
+      ? 'Hardhat EC2'
       : rawDeploymentChainId === HARDHAT_CHAIN_ID
-      ? 'HardHat BASE'
+      ? 'Hardhat'
       : String((exchangeContext as any)?.network?.name || 'Unknown');
   const deploymentChainId =
     effectiveDeploymentChainIdNumber > 0
@@ -503,7 +503,7 @@ export function useSpCoinAccessController() {
       `Contract Address: ${contractAddress}`,
       `Contract Name: ${deploymentTokenName}`,
       `Network: ${deploymentChainName} (${deploymentChainId})`,
-      `Signer Source: ${deploymentSignerSource === 'metamask' ? 'MetaMask' : 'Hardhat Ec2-BASE'}`,
+      `Signer Source: ${deploymentSignerSource === 'metamask' ? 'MetaMask' : 'Hardhat EC2'}`,
       `Signer Address: ${selectedDeploymentSignerPublicKey || '(pending)'}`,
       `Token Status: ${deploymentTokenStatus}`,
       `Deployment Map Match: ${existsInSpCoinDeploymentMap ? 'YES' : 'NO'}`,

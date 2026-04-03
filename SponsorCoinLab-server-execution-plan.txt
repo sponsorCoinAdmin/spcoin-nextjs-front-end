@@ -1,0 +1,226 @@
+SponsorCoinLab Issue Summary and Server Execution Plan
+Date: April 2, 2026
+
+Context
+This document summarizes the current SponsorCoinLab failure mode, what was investigated, what was fixed already, what still appears broken, and the proposed proof-of-concept plan to move execution to the server.
+
+Primary Problem
+SponsorCoinLab direct execution against the current EC2/Hardhat-style RPC is unreliable for multi-step flows.
+
+Observed symptoms:
+- Read methods such as getAccountList and getAccountListSize can succeed.
+- Write methods can return a mined receipt with status = 1.
+- After the write receipt is confirmed, follow-up reads sometimes do not reflect the state change.
+- Multi-step workflows such as addRecipient -> getAccountList -> deleteAccountTree can behave inconsistently.
+- deleteAccountTree can partially complete, then fail on a later write/send step.
+- Re-adding a previously deleted recipient is especially unreliable.
+
+Example of the critical issue
+1. getAccountList returns only sponsor account.
+2. addRecipient submits successfully and receipt status is 1.
+3. getAccountList sometimes still does not show the new recipient, or isAccountInserted(recipient) remains false.
+4. deleteAccountTree may:
+   - unSponsorRecipient successfully
+   - delete the recipient successfully
+   - then fail when deleting the root sponsor account
+   - or later reads may still not reflect the expected state
+
+Important conclusion
+The remaining instability appears dominated by transport / RPC consistency problems rather than only UI bugs.
+
+Why this conclusion was reached
+- We strengthened client-side receipt waiting and visibility checks.
+- We improved deleteAccountTree sequencing and tracing.
+- We removed the hardhat-to-base chain remap.
+- We restored the EC2 RPC for direct hardhat transport.
+- Even after these fixes, receipts can be mined while follow-up reads remain stale or inconsistent.
+
+Likely root cause
+The RPC endpoint behaves unlike a single stable local Hardhat process.
+Possible reasons:
+- non-sticky backend routing
+- inconsistent read-after-write visibility
+- backend lag between mined transaction and state visibility
+- transport failures on final send steps
+
+What was fixed already
+1. Removed chain remap
+- Removed the 31337 -> 8453 hardhat-to-base remap.
+- This was considered clugy and misleading.
+- Hardhat mode should represent the actual transport target, not a disguised Base mapping.
+
+2. Restored direct EC2 RPC for hardhat transport
+- Direct hardhat path now points at:
+  https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+- Localhost 127.0.0.1:8545 was removed from the active path because there is no local node in this setup.
+
+3. Improved hardhat transport handling
+- Reused provider in hardhat mode.
+- Switched signer handling to a cleaner path.
+- Improved hardhat RPC error reporting.
+
+4. Improved addRecipient behavior
+- addRecipient no longer reports false success just because the receipt is mined.
+- It now verifies post-write visibility.
+- This exposed the RPC inconsistency more honestly.
+
+5. Improved deleteAccountTree logic
+- Added internal tracing.
+- Added receipt waits for intermediate delete calls.
+- Added recovery handling for some transport failures.
+- deleteAccountTree is now much more observable than before.
+
+6. Fixed Script Builder / Debugger selection sync
+- Selecting a script step now reloads that step into the method editor.
+- The stale method display bug was fixed.
+
+What is still broken
+The main remaining issue is that direct client-side execution against the current RPC still cannot be trusted for complex write/read workflows.
+
+Known broken or unstable patterns:
+- addRecipient may mine but never become visible through RPC follow-up reads.
+- deleteAccountTree may partially succeed and then fail on the final account deletion step.
+- re-add after delete is unreliable.
+- browser-driven execution is too fragile for this workflow.
+
+User requirement
+The goal is to run these workflows more like a real server, with direct execution handled in one place, using one provider and one signer, instead of relying on fragile client-side browser transport.
+
+Server-side proof-of-concept plan
+We will move selected SponsorCoinLab execution flows to the server.
+
+High-level design
+1. The browser sends a saved script payload to the server.
+2. The server executes the script step-by-step.
+3. The server talks directly to the RPC.
+4. One server-side provider and signer are reused for the whole run.
+5. The server returns per-step results, errors, and traces back to the browser.
+
+Why this helps
+- no browser fetch instability
+- no MetaMask interference
+- one stable runtime
+- one provider
+- one signer
+- easier retries and visibility checks
+- easier logging and diagnostics
+
+Proof-of-concept target
+Use the existing saved script JSON shape and execute it on the server.
+
+Example script target
+The following sequence is a good initial test:
+- getAccountList
+- getAccountListSize
+- addRecipient
+- getAccountList
+- getAccountListSize
+- deleteAccountTree
+- getAccountList
+- getAccountListSize
+- addRecipient again
+- getAccountList
+- getAccountListSize
+- deleteAccountTree again
+
+The user-provided sample script named:
+"AddRecipient Issue"
+is an ideal proof-of-concept input because it reproduces the exact unstable flow.
+
+Recommended MVP scope
+Initial server MVP should support:
+- panel: spcoin_rread
+- panel: spcoin_write
+
+Initial methods:
+- getAccountList
+- getAccountListSize
+- addRecipient
+- deleteAccountTree
+
+Optional early additions:
+- addSponsor
+- addAgentSponsorship
+
+Recommended implementation path
+Preferred:
+- Next.js API route or server route
+- Node/TypeScript runner on server
+- reuse existing app/business logic where possible
+
+Possible route:
+- /api/spCoin/run-script
+
+Input:
+- the existing saved script JSON
+
+Output per step:
+- call
+- result or error
+- debug trace
+- status metadata
+
+Suggested runtime behavior
+For each script step:
+1. Normalize panel and method.
+2. Build params and sender.
+3. Execute using one server-side provider/signer session.
+4. Wait for receipt if write.
+5. Perform post-write visibility verification for unstable methods.
+6. Capture trace and return structured result.
+
+Important architecture decision
+Keep transport honest.
+
+Do not:
+- remap hardhat to base for transaction execution
+- let presentation remapping affect actual RPC routing
+
+Do:
+- let UI branding / metadata be remapped client-side if desired
+- keep transaction execution pointed at the real target RPC
+
+Estimate
+Focused MVP:
+- 4 to 8 hours
+
+More solid version with:
+- better retry policy
+- parity with current output formatting
+- stronger diagnostics
+- broader method support
+
+Estimated:
+- 1 to 2 days
+
+Key open questions for next session
+1. Which exact server runtime will own the workflow?
+   - Next.js API route
+   - server-side Node module
+   - external script wrapper
+
+2. Should the server call existing off-chain module methods directly?
+   - likely yes for MVP
+
+3. Should all methods move to the server?
+   - no, start with unstable write workflows first
+
+4. Should browser execution remain available?
+   - yes, probably keep both paths while comparing behavior
+
+Recommended next steps
+1. Create server route for script execution.
+2. Accept the existing script JSON payload.
+3. Implement support for:
+   - getAccountList
+   - getAccountListSize
+   - addRecipient
+   - deleteAccountTree
+4. Reuse one provider and signer for the full run.
+5. Return structured results to the UI.
+6. Compare reliability against the existing client path.
+
+Bottom line
+The current evidence strongly suggests the remaining major failures are caused by the client/RPC transport path, not just method logic.
+Moving the unstable workflows to server-side direct execution is the right next proof of concept.
+

@@ -75,7 +75,7 @@ export default function WalletAccountSelection({
               }}
               className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
             />
-            <span>Hardhat "Ec2-BASE"</span>
+            <span>Hardhat EC2</span>
           </label>
         ) : null}
         <label className="flex items-center gap-2 whitespace-nowrap text-[#8FA8FF]">

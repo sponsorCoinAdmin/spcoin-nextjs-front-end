@@ -6,66 +6,14 @@
   "steps": [
     {
       "step": 1,
-      "name": "getOffLineAccountRecords",
-      "panel": "spcoin_rread",
-      "method": "getOffLineAccountRecords",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 2,
-      "name": "creationTime",
-      "panel": "spcoin_rread",
-      "method": "creationTime",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 3,
-      "name": "getOffLineAccountRecords",
-      "panel": "spcoin_rread",
-      "method": "getOffLineAccountRecords",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 4,
-      "name": "getAccountListSize",
-      "panel": "spcoin_rread",
-      "method": "getAccountListSize",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 5,
-      "name": "addAgentSponsorship",
+      "name": "addSponsor",
       "panel": "spcoin_write",
-      "method": "addAgentSponsorship",
+      "method": "addSponsor",
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [
         {
-          "key": "Recipient Key",
-          "value": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955"
-        },
-        {
-          "key": "Recipient Rate Key",
-          "value": "20"
-        },
-        {
-          "key": "Agent Key",
-          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
-        },
-        {
-          "key": "Agent Rate Key",
-          "value": "2"
-        },
-        {
-          "key": "Transaction Quantity",
-          "value": "9999999"
+          "key": "Sponsor Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
         }
       ],
       "breakpoint": false,

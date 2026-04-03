@@ -7,13 +7,6 @@ import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
 const debugLog = createDebugLogger('NetworkHelpers', DEBUG_ENABLED, /* timestamp */ false);
-const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
-  networkHeader?: { rpcUrl?: string };
-};
-const DEFAULT_HARDHAT_RPC_URL =
-  hardhatDefaultSettings?.networkHeader?.rpcUrl ||
-  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
-
 const getDefaultRpcUrl = (chainId: number): string => {
   const settings = getDefaultNetworkSettings(chainId) as {
     networkHeader?: { rpcUrl?: string };
@@ -69,7 +62,7 @@ const BLOCK_EXPLORER_URL: Record<CHAIN_ID, string> = {
   [CHAIN_ID.GOERLI]:   'https://goerli.etherscan.io/',
   [CHAIN_ID.POLYGON]:  'https://polygonscan.com/',
   [CHAIN_ID.BASE]:     'https://basescan.org/',
-  [CHAIN_ID.HARDHAT_BASE]: DEFAULT_HARDHAT_RPC_URL,
+  [CHAIN_ID.HARDHAT_BASE]: '',
   [CHAIN_ID.MUMBAI]:   'https://mumbai.polygonscan.com/',
   [CHAIN_ID.SEPOLIA]:  'https://sepolia.etherscan.io/',
 };

@@ -1,0 +1,61 @@
+SponsorCoinLab RPC Endpoint Issue
+Date: April 2, 2026
+
+Summary
+The direct RPC endpoint currently being used for SponsorCoinLab direct execution is not serving JSON-RPC correctly.
+
+Endpoint in question
+https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+
+Observed behavior
+When opening the endpoint directly, it does not behave like a blockchain RPC endpoint.
+Instead, it returns an Azure Front Door error page that says:
+
+"Page not found"
+"Oops! We weren't able to find your Azure Front Door Service configuration."
+
+Meaning
+This strongly suggests one of the following:
+- the RPC URL is wrong
+- the Azure Front Door route is broken
+- the backend route for this RPC path no longer exists
+- the endpoint is misconfigured and not currently serving JSON-RPC
+
+Why this matters
+SponsorCoinLab direct execution depends on this endpoint for the hardhat/direct path.
+
+If the endpoint is returning an Azure page instead of JSON-RPC, then:
+- direct writes and reads cannot be trusted
+- browser-side transport errors are expected
+- post-write visibility checks may fail
+- methods like addRecipient and deleteAccountTree will appear unstable even if the app code is improved
+
+Connection to earlier failures
+Earlier failures included:
+- transaction receipt status = 1
+- follow-up reads did not reflect state changes
+- deleteAccountTree failed partway through
+- addRecipient did not become visible after the receipt
+
+The broken/misrouted RPC endpoint provides a strong explanation for these failures.
+
+Current conclusion
+The issue is not only in the app.
+The currently configured direct RPC endpoint appears to be invalid or unavailable.
+
+Recommended next steps
+1. Confirm the correct RPC server URL.
+2. Test the real RPC with a basic JSON-RPC method such as:
+   - eth_chainId
+   - eth_blockNumber
+3. Do not continue debugging direct execution against the broken endpoint.
+4. Once the correct RPC is restored, retest:
+   - addSponsor
+   - addRecipient
+   - deleteAccountTree
+5. Continue with the server-side execution proof of concept if desired.
+
+Bottom line
+The current SponsorCoinLab direct hardhat path is pointing at an endpoint that is not behaving like a blockchain RPC endpoint.
+That must be corrected before direct execution can be considered reliable.
+

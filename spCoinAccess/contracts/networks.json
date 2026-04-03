@@ -3,7 +3,7 @@
   "updatedAt": "2026-03-06",
   "networks": [
     {
-      "name": "SponsorCoin HH BASE",
+      "name": "SponsorCoin HardHat",
       "chainId": 31337,
       "currencySymbol": "ETH",
       "defaultRpcUrl": "https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a",
