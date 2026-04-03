@@ -55,6 +55,7 @@ type StepPayload =
       error: {
         message: string;
         name: string;
+        classification?: 'token_state' | 'token_revert' | 'transport' | 'server';
         stack?: { message?: string };
         debug: {
           panel: string;
@@ -81,6 +82,46 @@ const TEST_ACCOUNTS_PATH = path.join(
   '31337',
   'testAccounts.json',
 );
+
+function classifyScriptError(error: unknown, trace: string[]): 'token_state' | 'token_revert' | 'transport' | 'server' {
+  const message = String((error as { message?: unknown } | null)?.message || error || '').toLowerCase();
+  const stack = String((error as { stack?: unknown } | null)?.stack || '').toLowerCase();
+  const combined = `${message}\n${stack}\n${trace.join('\n').toLowerCase()}`;
+
+  if (
+    combined.includes('receipt was mined but neither isaccountinserted') ||
+    combined.includes('recipient inserted visibility fallback') ||
+    combined.includes('sponsor recipient visibility fallback')
+  ) {
+    return 'token_state';
+  }
+
+  if (
+    combined.includes('execution reverted') ||
+    combined.includes('reverted on-chain') ||
+    combined.includes('recip_') ||
+    combined.includes('agent_') ||
+    combined.includes('account_not_found') ||
+    combined.includes('owner_or_root') ||
+    combined.includes('root_only')
+  ) {
+    return 'token_revert';
+  }
+
+  if (
+    combined.includes('econnrefused') ||
+    combined.includes('failed to fetch') ||
+    combined.includes('network error') ||
+    combined.includes('socket hang up') ||
+    combined.includes('timeout') ||
+    combined.includes('missing response') ||
+    combined.includes('could not coalesce error')
+  ) {
+    return 'transport';
+  }
+
+  return 'server';
+}
 
 function normalizeAddress(value: string) {
   return String(value || '').trim().toLowerCase();
@@ -283,6 +324,7 @@ export async function POST(request: NextRequest) {
           break;
         }
       } catch (error) {
+        const classification = classifyScriptError(error, stepTrace);
         results.push({
           step: step.step,
           success: false,
@@ -291,6 +333,7 @@ export async function POST(request: NextRequest) {
             error: {
               message: error instanceof Error ? error.message : String(error),
               name: error instanceof Error ? error.name : typeof error,
+              classification,
               ...(error instanceof Error && error.stack ? { stack: { message: error.stack } } : {}),
               debug: {
                 panel: String(step.panel || ''),
