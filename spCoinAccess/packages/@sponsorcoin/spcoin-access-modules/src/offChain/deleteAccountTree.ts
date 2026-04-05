@@ -94,8 +94,10 @@ export async function deleteAccountTree() {
                         summary.deletedAgentCount += 1;
                     }
                 }
-                if (typeof deleteMethods.unSponsorRecipient === "function") {
-                    await callWithRetry("unSponsorRecipient(" + sponsorKey + "," + recipientKey + ")", () => deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey));
+                if (typeof deleteMethods.delRecipient === "function" || typeof deleteMethods.unSponsorRecipient === "function") {
+                    await callWithRetry("delRecipient(" + sponsorKey + "," + recipientKey + ")", () => typeof deleteMethods.delRecipient === "function"
+                        ? deleteMethods.delRecipient({ accountKey: sponsorKey }, recipientKey)
+                        : deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey));
                     summary.deletedRecipientCount += 1;
                     await sleep(200);
                 }
@@ -118,13 +120,14 @@ export async function deleteAccountTree() {
             activeAccountKeys.delete(sponsorKey);
         }
     };
-    for (const sponsorKey of accountKeySet) {
-        if (signerKey && sponsorKey.toLowerCase() === signerKey.toLowerCase()) {
-            continue;
-        }
-        await walkAccountTree(sponsorKey);
+    if (!signerKey) {
+        throw new Error("deleteAccountTree requires a connected signer.");
     }
-    if (signerKey && accountKeySet.has(signerKey) && !processedAccountKeys.has(signerKey)) {
+    if (!accountKeySet.has(signerKey)) {
+        (_d = (_c = this.logger) === null || _c === void 0 ? void 0 : _c.logDetail) === null || _d === void 0 ? void 0 : _d.call(_c, "JS => deleteAccountTree signer tree not found for " + signerKey + "; nothing to delete");
+        return summary;
+    }
+    if (!processedAccountKeys.has(signerKey)) {
         await walkAccountTree(signerKey, false);
     }
     (_d = (_c = this.logger) === null || _c === void 0 ? void 0 : _c.logDetail) === null || _d === void 0 ? void 0 : _d.call(_c, "JS => deleteAccountTree summary = " + JSON.stringify(summary));

@@ -107,30 +107,67 @@ export const addAgentSponsorship = async (
       ? await _sponsorSigner.getAddress()
       : _sponsorSigner?.address;
   const transactionTimeStamp = Math.trunc(Date.now() / 1000);
+  const safeRead = async (label, loadValue, fallback) => {
+    try {
+      return await loadValue();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      context.spCoinLogger.logDetail("JS => " + label + " read failed: " + message);
+      return fallback;
+    }
+  };
   const logStructureSnapshot = async (stageLabel) => {
     const snapshot = {};
     if (typeof context.spCoinContractDeployed.getAccountList === "function") {
-      snapshot.accountList = await context.spCoinContractDeployed.getAccountList();
+      snapshot.accountList = await safeRead(
+        "addAgentSponsorship accountList",
+        () => context.spCoinContractDeployed.getAccountList(),
+        []
+      );
     }
     if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
-      snapshot.sponsorInserted = await context.spCoinContractDeployed.isAccountInserted(sponsorKey);
-      snapshot.recipientInserted = await context.spCoinContractDeployed.isAccountInserted(_recipientKey);
-      snapshot.agentInserted = await context.spCoinContractDeployed.isAccountInserted(_accountAgentKey);
+      snapshot.sponsorInserted = await safeRead(
+        "addAgentSponsorship sponsorInserted",
+        () => context.spCoinContractDeployed.isAccountInserted(sponsorKey),
+        null
+      );
+      snapshot.recipientInserted = await safeRead(
+        "addAgentSponsorship recipientInserted",
+        () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
+        null
+      );
+      snapshot.agentInserted = await safeRead(
+        "addAgentSponsorship agentInserted",
+        () => context.spCoinContractDeployed.isAccountInserted(_accountAgentKey),
+        null
+      );
     }
     if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
-      snapshot.sponsorRecipientList = await context.spCoinContractDeployed.getAccountRecipientList(sponsorKey);
+      snapshot.sponsorRecipientList = await safeRead(
+        "addAgentSponsorship sponsorRecipientList",
+        () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+        []
+      );
     }
     if (typeof context.spCoinContractDeployed.getRecipientRateList === "function") {
-      snapshot.recipientRateList = await context.spCoinContractDeployed.getRecipientRateList(
-        sponsorKey,
-        _recipientKey
+      snapshot.recipientRateList = await safeRead(
+        "addAgentSponsorship recipientRateList",
+        () => context.spCoinContractDeployed.getRecipientRateList(
+          sponsorKey,
+          _recipientKey
+        ),
+        []
       );
     }
     if (typeof context.spCoinContractDeployed.getRecipientRateAgentList === "function") {
-      snapshot.recipientRateAgentList = await context.spCoinContractDeployed.getRecipientRateAgentList(
-        sponsorKey,
-        _recipientKey,
-        _recipientRateKey
+      snapshot.recipientRateAgentList = await safeRead(
+        "addAgentSponsorship recipientRateAgentList",
+        () => context.spCoinContractDeployed.getRecipientRateAgentList(
+          sponsorKey,
+          _recipientKey,
+          _recipientRateKey
+        ),
+        []
       );
     }
     context.spCoinLogger.logDetail(
@@ -151,17 +188,22 @@ export const addAgentSponsorship = async (
   );
 
   try {
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:start");
     await logStructureSnapshot("before addRecipient");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:send");
     const addRecipientTx = await sendTxWithDiagnostics(
       "addRecipient",
       () => context.spCoinContractDeployed.addRecipient(_recipientKey)
     );
     context.spCoinLogger.logDetail("JS => addRecipient tx hash = " + String(addRecipientTx?.hash || ""));
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:wait");
     const addRecipientReceipt = await addRecipientTx.wait();
     ensureSuccessfulReceipt("addRecipient", addRecipientReceipt);
     context.spCoinLogger.logDetail("JS => addRecipient mined");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:settle");
     await sleep(1000);
     if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
+      context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:check-inserted");
       await waitForVisibility(
         "addRecipient recipient account inserted",
         () => context.spCoinContractDeployed.isAccountInserted(_recipientKey),
@@ -169,13 +211,16 @@ export const addAgentSponsorship = async (
       );
     }
     if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
+      context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:check-recipient-list");
       await waitForVisibility(
         "addRecipient sponsor recipient list",
         () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
         (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
       );
     }
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:post-snapshot");
     await logStructureSnapshot("after addRecipient");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:complete");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.spCoinLogger.logDetail("JS => addRecipient failed: " + message);
@@ -183,7 +228,9 @@ export const addAgentSponsorship = async (
   }
 
   try {
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:start");
     await logStructureSnapshot("before addAgent");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:send");
     const addAgentTx = await sendTxWithDiagnostics(
       "addAgent",
       () => context.spCoinContractDeployed.addAgent(
@@ -193,10 +240,12 @@ export const addAgentSponsorship = async (
       )
     );
     context.spCoinLogger.logDetail("JS => addAgent tx hash = " + String(addAgentTx?.hash || ""));
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:wait");
     const addAgentReceipt = await addAgentTx.wait();
     ensureSuccessfulReceipt("addAgent", addAgentReceipt);
     context.spCoinLogger.logDetail("JS => addAgent mined");
     if (typeof context.spCoinContractDeployed.getRecipientRateAgentList === "function") {
+      context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:check-agent-list");
       await waitForVisibility(
         "addAgent recipient rate agent list",
         () =>
@@ -208,7 +257,9 @@ export const addAgentSponsorship = async (
         (value) => toAddressList(value).includes(String(_accountAgentKey || "").toLowerCase())
       );
     }
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:post-snapshot");
     await logStructureSnapshot("after addAgent");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:complete");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.spCoinLogger.logDetail("JS => addAgent failed: " + message);
@@ -216,6 +267,7 @@ export const addAgentSponsorship = async (
   }
 
   try {
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addBackDatedSponsorship:pre-snapshot");
     await logStructureSnapshot("pre-addBackDatedSponsorship");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -223,6 +275,7 @@ export const addAgentSponsorship = async (
   }
 
   try {
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addBackDatedSponsorship:send");
     const tx = await sendTxWithDiagnostics(
       "addBackDatedSponsorship",
       () => context.spCoinContractDeployed.addBackDatedSponsorship(
@@ -237,7 +290,9 @@ export const addAgentSponsorship = async (
       )
     );
     context.spCoinLogger.logDetail("JS => addBackDatedSponsorship tx hash = " + String(tx?.hash || ""));
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addBackDatedSponsorship:post-send-snapshot");
     await logStructureSnapshot("after addBackDatedSponsorship send");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addBackDatedSponsorship:complete");
     context.spCoinLogger.logExitFunction();
     return tx;
   } catch (error) {

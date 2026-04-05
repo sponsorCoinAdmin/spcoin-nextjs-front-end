@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
+import { BrowserProvider, JsonRpcProvider, Wallet, getAddress } from 'ethers';
 import type { Contract, Signer } from 'ethers';
 import {
   defaultMissingImage,
@@ -117,6 +117,12 @@ function isAddressLike(value: string) {
   return /^0[xX][0-9a-fA-F]{40}$/.test(String(value || '').trim());
 }
 
+function normalizeHardhatAccountAddress(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!isAddressLike(trimmed)) return '';
+  return getAddress(trimmed.replace(/^0X/, '0x'));
+}
+
 function createHardhatRpcUnavailableError(contextLabel: string, rpcUrl: string, detail?: string) {
   return new Error(
     `Hardhat RPC request failed during ${contextLabel} at ${String(rpcUrl || '').trim()}${
@@ -185,11 +191,11 @@ export function useSponsorCoinLabNetwork({
       const normalizedEntries = rawEntries
         .map((entry) => {
           if (typeof entry === 'string') {
-            const address = String(entry || '').trim();
+            const address = normalizeHardhatAccountAddress(entry);
             return address ? { address } : null;
           }
 
-          const address = String(entry?.address || '').trim();
+          const address = normalizeHardhatAccountAddress(String(entry?.address || ''));
           const privateKey = String(entry?.privateKey || '').trim();
           if (!address) return null;
           return {

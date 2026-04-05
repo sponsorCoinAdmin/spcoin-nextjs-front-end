@@ -23,24 +23,32 @@ export class AccountStruct {
     constructor() {
         this.TYPE = "--ACCOUNT--";
         this.accountKey = 0;
-        this.balanceOf = 0;
-        this.stakedSPCoins = 0;
         this.creationTime = 0;
+        this.balanceOf = 0;
+        this.stakedBalance = 0;
+        this.totalPending = 0;
+        this.totalSpCoins = 0;
         this.verified = false;
         this.sponsorAccountList = 0;
         this.recipientAccountList = 0;
         this.agentAccountList = 0;
         this.agentParentRecipientAccountList = 0;
-        this.recipientRecordList = 0;
-        this.stakingRewards = 0;
-        this.stakingRewardList = 0;
+        this.pendingStakedRewards = 0;
     }
 }
-export class RecipientStruct {
+export class RelationshipRecordStruct {
     constructor() {
-        this.TYPE = "--RECIPIENT_RECORD--";
+        this.TYPE = "--RELATIONSHIP_RECORD--";
+        this.role = "";
+    }
+}
+export class RecipientStruct extends RelationshipRecordStruct {
+    constructor() {
+        super();
+        this.role = "RECIPIENT";
         this.recipientKey;
         this.creationTime;
+        this.location;
         this.stakedSPCoins;
         this.verified;
         this.recipientRateRecordList;
@@ -59,9 +67,10 @@ export class RecipientRateStruct {
         this.agentRecordList;
     }
 }
-export class AgentStruct {
+export class AgentStruct extends RelationshipRecordStruct {
     constructor() {
-        this.TYPE = "--AGENT_RECORD--";
+        super();
+        this.role = "AGENT";
         this.agentKey;
         this.stakedSPCoins;
         this.creationTime;
@@ -96,6 +105,11 @@ export class RewardsStruct {
         this.agentRewardsList;
     }
 }
+export class PendingRewardsByTypeStruct {
+    constructor() {
+        this.pendingRewardsByType = new RewardsStruct();
+    }
+}
 export class RewardTypeStruct {
     constructor() {
         this.TYPE;
@@ -126,4 +140,3 @@ export class RewardTransactionStruct {
         this.stakingRewards;
     }
 }
-  

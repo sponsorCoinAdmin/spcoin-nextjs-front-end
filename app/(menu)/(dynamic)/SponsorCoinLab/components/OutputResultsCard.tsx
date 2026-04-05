@@ -60,6 +60,7 @@ type Props = {
     setSelectedTreeAccount: (value: string) => void;
     treeAccountRefreshToken: number;
     requestRefreshSelectedTreeAccount: () => void;
+    openAccountFromAddress: (account: string) => Promise<void>;
   };
 };
 
@@ -457,6 +458,7 @@ export default function OutputResultsCard({
                         ? activeInspectorRootLabel
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
+                    onLeafValueClick={(value) => void treeActions.openAccountFromAddress(value)}
                   />
                 ))}
               </div>
@@ -483,6 +485,7 @@ export default function OutputResultsCard({
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={showAllTreeRecords}
+                    onLeafValueClick={(value) => void treeActions.openAccountFromAddress(value)}
                   />
                 ))}
               </div>

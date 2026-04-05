@@ -128,17 +128,15 @@ export class SpCoinSerialize {
                     accountRecord.balanceOf = bigIntToDecString(_value);
                     break;
                 case "stakingRewards":
-                    accountRecord.stakingRewards = bigIntToDecString(_value);
                     break;
                 case "decimals":
                     accountRecord.decimals = bigIntToDecString(_value);
                     break;
                 case "stakedSPCoins":
-                    accountRecord.stakedSPCoins = bigIntToDecString(_value);
+                    accountRecord.stakedBalance = bigIntToDecString(_value);
                     break;
                 case "creationTime":
                     accountRecord.creationTime = bigIntToDateTimeString(_value);
-                    accountRecord.location = getLocation();
                     break;
                 case "inserted":
                     accountRecord.inserted = _value;

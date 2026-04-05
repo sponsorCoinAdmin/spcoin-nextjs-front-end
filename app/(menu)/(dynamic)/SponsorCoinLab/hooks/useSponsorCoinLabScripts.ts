@@ -8,7 +8,7 @@ import {
   type Erc20WriteMethod,
 } from '../jsonMethods/erc20/write';
 import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
-import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import { normalizeSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import type { SerializationTestMethod } from '../jsonMethods/serializationTests';
 import type { MethodDef } from '../jsonMethods/shared/types';
 import type {
@@ -85,6 +85,7 @@ type Params = {
   activeNetworkName: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
+  activeMethodPanelTab: MethodPanelMode | 'todos' | 'erc20' | 'utils';
   selectedReadMethod: Erc20ReadMethod;
   readAddressA: string;
   readAddressB: string;
@@ -149,6 +150,7 @@ export function useSponsorCoinLabScripts({
   activeNetworkName,
   mode,
   methodPanelMode,
+  activeMethodPanelTab,
   selectedReadMethod,
   readAddressA,
   readAddressB,
@@ -200,6 +202,8 @@ export function useSponsorCoinLabScripts({
   showOnChainMethods,
   showOffChainMethods,
 }: Params) {
+  const effectiveScriptPanelMode: MethodPanelMode =
+    activeMethodPanelTab === 'utils' ? 'serialization_tests' : methodPanelMode;
   const [scripts, setScriptsState] = useState<LabScript[]>([]);
   const [selectedScriptId, setSelectedScriptId] = useState('');
   const [scriptNameInput, setScriptNameInput] = useState('');
@@ -527,7 +531,7 @@ export function useSponsorCoinLabScripts({
           .filter((param) => param.value.trim().length > 0);
       }
 
-      const writeDef = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+      const writeDef = spCoinWriteMethodDefs[normalizeSpCoinWriteMethod(step.method)];
       return legacyValues
         .map((value, idx) => ({ key: writeDef?.params[idx]?.label || `param${idx + 1}`, value }))
         .filter((param) => param.value.trim().length > 0);
@@ -568,7 +572,7 @@ export function useSponsorCoinLabScripts({
         return (def?.params || []).some((param) => !findParamValue(param.label));
       }
 
-      const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+      const def = spCoinWriteMethodDefs[normalizeSpCoinWriteMethod(step.method)];
       if (stepMode === 'hardhat' && !sender) return true;
       return (def?.params || []).some((param) => param.type !== 'date' && !findParamValue(param.label));
     },
@@ -671,9 +675,10 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'spcoin_write') {
-        setSelectedSpCoinWriteMethod(step.method as SpCoinWriteMethod);
+        const normalizedMethod = normalizeSpCoinWriteMethod(step.method);
+        setSelectedSpCoinWriteMethod(normalizedMethod);
         setSelectedWriteSenderAddress(stepSender);
-        const def = spCoinWriteMethodDefs[step.method as SpCoinWriteMethod];
+        const def = spCoinWriteMethodDefs[normalizedMethod];
         setSpWriteParams(fillParamList(def?.params || []));
         return;
       }
@@ -938,14 +943,14 @@ export function useSponsorCoinLabScripts({
   const buildEditorStepDraft = useCallback(
     (hasMissingRequiredParams: boolean): Omit<LabScriptStep, 'step'> | null => {
       const sender =
-        methodPanelMode === 'erc20_write' || methodPanelMode === 'spcoin_write'
+        effectiveScriptPanelMode === 'erc20_write' || effectiveScriptPanelMode === 'spcoin_write'
           ? String(selectedWriteSenderAddress || '').trim() || undefined
           : undefined;
 
-      if (methodPanelMode === 'ecr20_read') {
+      if (effectiveScriptPanelMode === 'ecr20_read') {
         return {
           name: activeReadLabels.title,
-          panel: methodPanelMode,
+          panel: effectiveScriptPanelMode,
           method: selectedReadMethod,
           hasMissingRequiredParams,
           'msg.sender': sender,
@@ -956,10 +961,10 @@ export function useSponsorCoinLabScripts({
         };
       }
 
-      if (methodPanelMode === 'erc20_write') {
+      if (effectiveScriptPanelMode === 'erc20_write') {
         return {
           name: activeWriteLabels.title,
-          panel: methodPanelMode,
+          panel: effectiveScriptPanelMode,
           method: selectedWriteMethod,
           hasMissingRequiredParams,
           'msg.sender': sender,
@@ -971,10 +976,10 @@ export function useSponsorCoinLabScripts({
         };
       }
 
-      if (methodPanelMode === 'spcoin_rread') {
+      if (effectiveScriptPanelMode === 'spcoin_rread') {
         return {
           name: activeSpCoinReadDef.title,
-          panel: methodPanelMode,
+          panel: effectiveScriptPanelMode,
           method: selectedSpCoinReadMethod,
           hasMissingRequiredParams,
           'msg.sender': sender,
@@ -988,10 +993,10 @@ export function useSponsorCoinLabScripts({
         };
       }
 
-      if (methodPanelMode === 'spcoin_write') {
+      if (effectiveScriptPanelMode === 'spcoin_write') {
         return {
           name: activeSpCoinWriteDef.title,
-          panel: methodPanelMode,
+          panel: effectiveScriptPanelMode,
           method: selectedSpCoinWriteMethod,
           hasMissingRequiredParams,
           'msg.sender': sender,
@@ -1005,10 +1010,10 @@ export function useSponsorCoinLabScripts({
         };
       }
 
-      if (methodPanelMode === 'serialization_tests') {
+      if (effectiveScriptPanelMode === 'serialization_tests') {
         return {
           name: activeSerializationTestDef.title,
-          panel: methodPanelMode,
+          panel: effectiveScriptPanelMode,
           method: selectedSerializationTestMethod,
           hasMissingRequiredParams,
           'msg.sender': sender,
@@ -1040,7 +1045,7 @@ export function useSponsorCoinLabScripts({
       activeWriteLabels.addressBLabel,
       activeWriteLabels.requiresAddressB,
       activeWriteLabels.title,
-      methodPanelMode,
+      effectiveScriptPanelMode,
       readAddressA,
       readAddressB,
       selectedReadMethod,
@@ -1071,13 +1076,13 @@ export function useSponsorCoinLabScripts({
     }
 
     const activeMissingEntries =
-      methodPanelMode === 'ecr20_read'
+      effectiveScriptPanelMode === 'ecr20_read'
         ? erc20ReadMissingEntries
-        : methodPanelMode === 'erc20_write'
+        : effectiveScriptPanelMode === 'erc20_write'
           ? erc20WriteMissingEntries
-          : methodPanelMode === 'spcoin_rread'
+          : effectiveScriptPanelMode === 'spcoin_rread'
             ? spCoinReadMissingEntries
-            : methodPanelMode === 'spcoin_write'
+            : effectiveScriptPanelMode === 'spcoin_write'
               ? spCoinWriteMissingEntries
               : serializationTestMissingEntries;
     const isUpdatingExistingStep =
@@ -1205,7 +1210,7 @@ export function useSponsorCoinLabScripts({
     editingScriptStepNumber,
     erc20ReadMissingEntries,
     erc20WriteMissingEntries,
-    methodPanelMode,
+    effectiveScriptPanelMode,
     mode,
     selectedScript?.steps,
     selectedScriptId,
@@ -1221,13 +1226,13 @@ export function useSponsorCoinLabScripts({
 
   const buildCurrentScriptStepDraft = useCallback((): Omit<LabScriptStep, 'step'> | null => {
     const activeMissingEntries =
-      methodPanelMode === 'ecr20_read'
+      effectiveScriptPanelMode === 'ecr20_read'
         ? erc20ReadMissingEntries
-        : methodPanelMode === 'erc20_write'
+        : effectiveScriptPanelMode === 'erc20_write'
           ? erc20WriteMissingEntries
-          : methodPanelMode === 'spcoin_rread'
+          : effectiveScriptPanelMode === 'spcoin_rread'
             ? spCoinReadMissingEntries
-            : methodPanelMode === 'spcoin_write'
+            : effectiveScriptPanelMode === 'spcoin_write'
               ? spCoinWriteMissingEntries
               : serializationTestMissingEntries;
 
@@ -1236,7 +1241,7 @@ export function useSponsorCoinLabScripts({
     buildEditorStepDraft,
     erc20ReadMissingEntries,
     erc20WriteMissingEntries,
-    methodPanelMode,
+    effectiveScriptPanelMode,
     spCoinReadMissingEntries,
     spCoinWriteMissingEntries,
     serializationTestMissingEntries,

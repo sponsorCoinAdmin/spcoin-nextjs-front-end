@@ -135,6 +135,7 @@ type Params = {
   activeSpCoinReadDef: MethodDef;
   activeSpCoinWriteDef: MethodDef;
   activeSerializationTestDef: MethodDef;
+  hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   selectedHardhatAddress?: string;
   effectiveConnectedAddress: string;
   useLocalSpCoinAccessPackage: boolean;
@@ -142,6 +143,7 @@ type Params = {
   appendWriteTrace: (line: string) => void;
   getRecentWriteTrace: () => string[];
   setStatus: (value: string) => void;
+  formattedOutputDisplay: string;
   setFormattedOutputDisplay: (value: string) => void;
   setTreeOutputDisplay: (value: string) => void;
   setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status') => void;
@@ -208,6 +210,7 @@ export function useSponsorCoinLabMethods({
   activeSpCoinReadDef,
   activeSpCoinWriteDef,
   activeSerializationTestDef,
+  hardhatAccounts,
   selectedHardhatAddress,
   effectiveConnectedAddress,
   useLocalSpCoinAccessPackage,
@@ -215,6 +218,7 @@ export function useSponsorCoinLabMethods({
   appendWriteTrace,
   getRecentWriteTrace,
   setStatus,
+  formattedOutputDisplay,
   setFormattedOutputDisplay,
   setTreeOutputDisplay,
   setOutputPanelMode,
@@ -490,6 +494,32 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       const nextPayload = { ...(payload as Record<string, unknown>) };
+      if (
+        nextPayload.call &&
+        typeof nextPayload.call === 'object' &&
+        !Array.isArray(nextPayload.call) &&
+        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getMasterSponsorList' &&
+        Array.isArray(nextPayload.result)
+      ) {
+        nextPayload.result = (nextPayload.result as unknown[]).map((entry) => {
+          if (typeof entry === 'string') {
+            return { address: entry };
+          }
+          if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+            return entry;
+          }
+          const record = entry as Record<string, unknown>;
+          if (typeof record.address === 'string') return record;
+          const keys = Object.keys(record);
+          if (keys.length === 1 && /^0x[0-9a-f]{40}$/i.test(keys[0] || '')) {
+            return {
+              address: keys[0],
+              accountRecord: record[keys[0]],
+            };
+          }
+          return record;
+        });
+      }
       return formatOutputDisplayValue(nextPayload);
     },
     [formatOutputDisplayValue],
@@ -591,6 +621,11 @@ export function useSponsorCoinLabMethods({
           coerceParamValue,
           requireContractAddress,
           ensureReadRunner,
+          mode,
+          hardhatAccounts,
+          executeWriteConnected,
+          selectedHardhatAddress:
+            mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
           appendLog,
           setStatus,
         });
@@ -632,6 +667,7 @@ export function useSponsorCoinLabMethods({
       effectiveConnectedAddress,
       ensureReadRunner,
       executeWriteConnected,
+      hardhatAccounts,
       mode,
       requireContractAddress,
       selectedHardhatAddress,
@@ -874,6 +910,92 @@ export function useSponsorCoinLabMethods({
       onConfirm: () => refreshSelectedTreeAccount(),
     });
   }, [refreshSelectedTreeAccount, showValidationPopup]);
+
+  const loadAccountRecordForAddress = useCallback(
+    async (account: string) => {
+      const normalizedAccount = normalizeAddressValue(account);
+      let tree = treeAccountRecordCacheRef.current.get(normalizedAccount);
+      if (!tree) {
+        const target = requireContractAddress();
+        const runner = await ensureReadRunner();
+        const access = createSpCoinLibraryAccess(
+          target,
+          runner,
+          undefined,
+          useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+        );
+        tree = await (access.read as SpCoinReadAccess).getAccountRecord(normalizedAccount);
+        treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
+      }
+      return tree;
+    },
+    [ensureReadRunner, normalizeAddressValue, requireContractAddress, useLocalSpCoinAccessPackage],
+  );
+
+  const expandMasterSponsorListAccountInline = useCallback(
+    async (account: string) => {
+      const normalizedAccount = normalizeAddressValue(account);
+      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return false;
+      let payload: Record<string, unknown> | null = null;
+      try {
+        const parsed = JSON.parse(String(formattedOutputDisplay || '').trim());
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          payload = parsed as Record<string, unknown>;
+        }
+      } catch {
+        payload = null;
+      }
+      if (!payload) return false;
+      const call = payload.call as Record<string, unknown> | undefined;
+      if (String(call?.method || '').trim() !== 'getMasterSponsorList') return false;
+      const currentResult = Array.isArray(payload.result) ? [...payload.result] : null;
+      if (!currentResult) return false;
+      const targetIndex = currentResult.findIndex((entry) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+        const record = entry as Record<string, unknown>;
+        return normalizeAddressValue(String(record.address || '')) === normalizedAccount;
+      });
+      if (targetIndex < 0) return false;
+      const accountRecord = await loadAccountRecordForAddress(normalizedAccount);
+      currentResult[targetIndex] = {
+        address: normalizedAccount,
+        accountRecord,
+      };
+      setFormattedOutputDisplay(
+        formatFormattedPanelPayload({
+          ...payload,
+          result: currentResult,
+        }),
+      );
+      setStatus(`Loaded account record for ${normalizedAccount}.`);
+      appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+      return true;
+    },
+    [
+      appendLog,
+      formatFormattedPanelPayload,
+      formattedOutputDisplay,
+      loadAccountRecordForAddress,
+      normalizeAddressValue,
+      setFormattedOutputDisplay,
+      setStatus,
+    ],
+  );
+
+  const openAccountFromAddress = useCallback(
+    async (account: string) => {
+      if (await expandMasterSponsorListAccountInline(account)) {
+        setOutputPanelMode('formatted');
+        return;
+      }
+      const normalizedAccount = normalizeAddressValue(account);
+      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return;
+      setSelectedTreeAccount(normalizedAccount);
+      setOutputPanelMode('tree');
+      await runTreeDump(normalizedAccount);
+    },
+    [expandMasterSponsorListAccountInline, normalizeAddressValue, runTreeDump, setOutputPanelMode],
+  );
 
   const runSelectedWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
     if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {
@@ -1484,6 +1606,7 @@ export function useSponsorCoinLabMethods({
     setSelectedTreeAccount,
     treeAccountRefreshToken,
     requestRefreshSelectedTreeAccount,
+    openAccountFromAddress,
     runHeaderRead,
     runAccountListRead,
     runTreeAccountsRead,

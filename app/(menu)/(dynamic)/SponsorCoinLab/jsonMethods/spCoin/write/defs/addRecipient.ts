@@ -2,7 +2,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'addRecipient',
+    title: 'addAccountRecipient',
     params: [{ label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' }],
   }
 

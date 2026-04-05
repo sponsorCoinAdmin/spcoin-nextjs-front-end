@@ -1,8 +1,7 @@
-// File: app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/spCoin/write/defs/deleteAgentSponsorship.ts
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'delAccountAgentSponsorship',
+  title: 'delAccountAgentRate',
   params: [
     { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },
     { label: 'Recipient Rate Key', placeholder: 'uint256 _recipientRateKey', type: 'uint' },

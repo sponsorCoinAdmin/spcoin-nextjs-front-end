@@ -1,19 +1,26 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
-import addRecipient from './addRecipient';
-import addSponsor from './addSponsor';
+import addAccountRecipient from './addRecipient';
+import addAccountRecipientRate from './addRecipientRateAmount';
+import addAccountSponsor from './addSponsor';
 import addRecipients from './addRecipients';
-import addOffChainRecipients from './addOffChainRecipients';
 import addAgent from './addAgent';
+import addAccountAgentRate from './addAgentRateAmount';
 import addAgents from './addAgents';
-import addOffChainAgents from './addOffChainAgents';
-import deleteAccountTree from './deleteAccountTree';
-import addAgentSponsorship from './addAgentSponsorship';
-import deleteAgentSponsorship from './deleteAgentSponsorship';
-import addBackDatedSponsorship from './addBackDatedSponsorship';
-import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
+import delAccountTree from './deleteAccountTree';
+import delAccountSponsor from './deleteSponsor';
+import delAccountRecipient from './deleteRecipient';
+import delAccountRecipientRate from './deleteRecipientRate';
+import delAccountRecipientRateAmount from './deleteRecipientRateAmount';
+import delAccountAgent from './deleteAgent';
+import delAccountAgentRate from './deleteAgentRate';
+import delAccountAgentRateAmount from './deleteAgentRateAmount';
+import delAccountAgentSponsorship from './deleteAgentSponsorship';
+import addAccountRecipientRateBackdated from './addBackDatedSponsorship';
+import addAccountAgentRateBackdated from './addBackDatedAgentSponsorship';
 import unSponsorRecipient from './unSponsorRecipient';
-import deleteAccountRecord from './deleteAccountRecord';
-import deleteAccountRecords from './deleteAccountRecords';
+import delRecipient from './delRecipient';
+import delAccountRecord from './deleteAccountRecord';
+import delAccountRecords from './deleteAccountRecords';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
 import updateAgentAccountRewards from './updateAgentAccountRewards';
 import updateRecipietAccountRewards from './updateRecipietAccountRewards';
@@ -32,21 +39,28 @@ import setAgentRateRange from './setAgentRateRange';
 import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
-  addRecipient,
-  addSponsor,
+  addAccountRecipient,
+  addAccountRecipientRate,
+  addAccountSponsor,
   addRecipients,
-  addOffChainRecipients,
   addAgent,
+  addAccountAgentRate,
   addAgents,
-  addOffChainAgents,
-  deleteAccountTree,
-  addAgentSponsorship,
-  deleteAgentSponsorship,
-  addBackDatedSponsorship,
-  addBackDatedAgentSponsorship,
+  delAccountTree,
+  delAccountSponsor,
+  delAccountRecipient,
+  delAccountRecipientRate,
+  delAccountRecipientRateAmount,
+  delAccountAgent,
+  delAccountAgentRate,
+  delAccountAgentRateAmount,
+  delAccountAgentSponsorship,
+  addAccountRecipientRateBackdated,
+  addAccountAgentRateBackdated,
   unSponsorRecipient,
-  deleteAccountRecord,
-  deleteAccountRecords,
+  delRecipient,
+  delAccountRecord,
+  delAccountRecords,
   updateAccountStakingRewards,
   updateAgentAccountRewards,
   updateRecipietAccountRewards,

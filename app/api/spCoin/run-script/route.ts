@@ -274,21 +274,116 @@ export async function POST(request: NextRequest) {
           }
         } else if (step.panel === 'spcoin_write') {
           switch (step.method) {
-            case 'addSponsor': {
+            case 'addSponsor':
+            case 'addAccountSponsor': {
               const sponsorKey = findParam('Sponsor Key');
               const tx = await access.add.addSponsor(sponsorKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addSponsor', tx, receipt);
+              result = formatReceiptResult('addAccountSponsor', tx, receipt);
               break;
             }
-            case 'addRecipient': {
+            case 'addRecipient':
+            case 'addAccountRecipient': {
               const recipientKey = findParam('Recipient Key');
               const tx = await access.add.addRecipient(recipientKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipient', tx, receipt);
+              result = formatReceiptResult('addAccountRecipient', tx, receipt);
               break;
             }
-            case 'deleteAccountTree': {
+            case 'addRecipientRateAmount':
+            case 'addAccountRecipientRate': {
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const transactionQty = findParam('Transaction Quantity');
+              const tx = await access.add.addRecipientRateAmount(recipientKey, recipientRateKey, transactionQty);
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addAccountRecipientRate', tx, receipt);
+              break;
+            }
+            case 'addAgentRateAmount':
+            case 'addAccountAgentRate': {
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const agentRateKey = findParam('Agent Rate Key');
+              const transactionQty = findParam('Transaction Quantity');
+              const tx = await access.add.addAgentRateAmount(
+                recipientKey,
+                recipientRateKey,
+                agentKey,
+                agentRateKey,
+                transactionQty,
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addAccountAgentRate', tx, receipt);
+              break;
+            }
+            case 'addBackDatedSponsorship':
+            case 'addAccountRecipientRateBackdated': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const agentRateKey = findParam('Agent Rate Key');
+              const wholeAmount = findParam('Whole Amount');
+              const decimalAmount = findParam('Decimal Amount');
+              const backDate = findParam('Transaction Back Date');
+              const transactionQty = `${wholeAmount}.${decimalAmount}`;
+              const tx = await access.add.addBackDatedAgentSponsorship(
+                signer,
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                agentKey,
+                agentRateKey,
+                transactionQty,
+                Math.floor(new Date(backDate).getTime() / 1000),
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addAccountRecipientRateBackdated', tx, receipt);
+              break;
+            }
+            case 'addBackDatedAgentSponsorship':
+            case 'addAccountAgentRateBackdated': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const agentRateKey = findParam('Agent Rate Key');
+              const transactionQty = findParam('Transaction Quantity');
+              const backDate = findParam('Transaction Back Date');
+              const tx = await access.add.addBackDatedAgentSponsorship(
+                signer,
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                agentKey,
+                agentRateKey,
+                transactionQty,
+                Math.floor(new Date(backDate).getTime() / 1000),
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addAccountAgentRateBackdated', tx, receipt);
+              break;
+            }
+            case 'delRecipient': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const delRecipient = (contract as unknown as { delRecipient?: (sponsor: string, recipient: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).delRecipient;
+              if (typeof delRecipient !== 'function') {
+                throw new Error('delRecipient is not available on the current SpCoin contract access path.');
+              }
+              const tx = await delRecipient(sponsorKey, recipientKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult(
+                'delRecipient',
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
+              break;
+            }
+            case 'deleteAccountTree':
+            case 'delAccountTree': {
               access.del.signer = signer;
               await access.offChain.deleteAccountTree();
               result = [];

@@ -14,6 +14,14 @@ interface JsonInspectorProps {
   highlightPathPrefixes?: string[];
   highlightColorClass?: string;
   showAll?: boolean;
+  onLeafValueClick?: (value: string, path: string, key: string) => void;
+}
+
+function getAddressNodeLabel(data: any, fallbackLabel: string): string {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return fallbackLabel;
+  const address = typeof data.address === 'string' ? data.address.trim() : '';
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) return fallbackLabel;
+  return `${fallbackLabel}: "${address}"`;
 }
 
 function normalizeLegacyDateDisplay(value: any): string | null {
@@ -99,7 +107,8 @@ function getVisibleEntries(value: any, showAll: boolean): Array<[string, any]> {
       });
   }
 
-  return Object.entries(value).filter(([, childValue]) => {
+  return Object.entries(value).filter(([childKey, childValue]) => {
+    if (childKey === 'address') return false;
     if (!childValue || typeof childValue !== 'object') return true;
     return hasPopulatedContent(childValue);
   });
@@ -116,6 +125,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   highlightPathPrefixes = [],
   highlightColorClass = 'text-green-400',
   showAll = true,
+  onLeafValueClick,
 }) => {
   const visibleEntries = getVisibleEntries(data, showAll);
   const isCollapsed = collapsedKeys.includes(path ?? '');
@@ -124,12 +134,24 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   );
 
   const toggle = useCallback(() => {
+    const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
+    const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
+    const hasLoadedAccountRecord =
+      isAddressNode &&
+      data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      typeof (data as Record<string, unknown>).accountRecord === 'object' &&
+      (data as Record<string, unknown>).accountRecord !== null;
+    if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
+      onLeafValueClick?.(addressNode, path ?? '', 'address');
+    }
     updateCollapsedKeys(
       isCollapsed
         ? collapsedKeys.filter((key) => key !== path)
         : [...new Set([...collapsedKeys, path!])],
     );
-  }, [isCollapsed, collapsedKeys, updateCollapsedKeys, path]);
+  }, [collapsedKeys, data, isCollapsed, onLeafValueClick, path, updateCollapsedKeys]);
 
   const getValueColor = (value: any): string => {
     if (value === false || value === undefined || value === null) return 'text-red-500';
@@ -138,11 +160,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   };
 
   const getPathLabel = (nextPath: string): string => {
-    if (label) return label;
+    if (label) return getAddressNodeLabel(data, label);
     if (nextPath === 'root') return rootLabel;
     if (nextPath === 'tradeData.slippage') return 'slippage';
     const segments = nextPath.split('.');
-    return segments[segments.length - 1] || nextPath;
+    return getAddressNodeLabel(data, segments[segments.length - 1] || nextPath);
   };
 
   const renderValue = (value: any, key: string) => {
@@ -176,6 +198,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
           showAll={showAll}
+          onLeafValueClick={onLeafValueClick}
         />
       );
     }
@@ -183,9 +206,36 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const valueHighlighted = highlightPathPrefixes.some(
       (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
     );
+    const renderedValue = stringifyBigInt(value);
+    const rawStringValue = typeof value === 'string' ? value.trim() : '';
+    const isClickableAddress =
+      typeof onLeafValueClick === 'function' &&
+      /^0x[0-9a-fA-F]{40}$/.test(rawStringValue);
     return (
       <div key={nextPath} className="ml-4 whitespace-nowrap">
-        <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>: <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{stringifyBigInt(value)}</span>
+        <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>:{' '}
+        {isClickableAddress ? (
+          <span
+            role="button"
+            tabIndex={0}
+            className={`cursor-pointer font-mono underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${valueHighlighted ? highlightColorClass : getValueColor(value)}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onLeafValueClick?.(rawStringValue, nextPath, key);
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              event.stopPropagation();
+              onLeafValueClick?.(rawStringValue, nextPath, key);
+            }}
+            title={`Open account ${rawStringValue}`}
+          >
+            {renderedValue}
+          </span>
+        ) : (
+          <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{renderedValue}</span>
+        )}
       </div>
     );
   };

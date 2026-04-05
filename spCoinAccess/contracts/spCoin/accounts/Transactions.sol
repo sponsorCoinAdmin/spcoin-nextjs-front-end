@@ -26,6 +26,48 @@ contract Transactions is RewardsManager {
         );
     }
 
+    function addRecipientRateAmount(
+        address _recipientKey,
+        uint _recipientRateKey,
+        string memory _strWholeAmount,
+        string memory _strDecimalAmount
+    )
+        public
+    {
+        _addSponsorshipForSponsor(
+            msg.sender,
+            _recipientKey,
+            _recipientRateKey,
+            burnAddress,
+            0,
+            _strWholeAmount,
+            _strDecimalAmount,
+            block.timestamp
+        );
+    }
+
+    function addAgentRateAmount(
+        address _recipientKey,
+        uint _recipientRateKey,
+        address _agentKey,
+        uint _agentRateKey,
+        string memory _strWholeAmount,
+        string memory _strDecimalAmount
+    )
+        public
+    {
+        _addSponsorshipForSponsor(
+            msg.sender,
+            _recipientKey,
+            _recipientRateKey,
+            _agentKey,
+            _agentRateKey,
+            _strWholeAmount,
+            _strDecimalAmount,
+            block.timestamp
+        );
+    }
+
     function addBackDatedSponsorship(address _sponsorKey,
                                  address _recipientKey, 
                                  uint _recipientRateKey,

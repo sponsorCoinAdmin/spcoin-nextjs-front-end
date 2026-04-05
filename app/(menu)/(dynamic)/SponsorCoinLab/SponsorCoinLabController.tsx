@@ -48,6 +48,7 @@ import {
 import {
   SERIALIZATION_TEST_METHOD_DEFS,
   getSerializationTestOptions,
+  getUtilityMethodOptions,
   type SerializationTestMethod,
 } from './jsonMethods/serializationTests';
 import { createSpCoinLibraryAccess, createSpCoinModuleAccess, type SpCoinContractAccess } from './jsonMethods/shared';
@@ -159,6 +160,8 @@ function buildDefaultAccountParams(
     agent: string;
     recipientRate?: string;
     agentRate?: string;
+    previousReleaseDir?: string;
+    latestReleaseDir?: string;
   },
 ) {
   return params.map((param) => {
@@ -170,6 +173,8 @@ function buildDefaultAccountParams(
     if (label.includes('agent rate')) return String(defaults.agentRate || '');
     if (label.includes('agent') && !label.includes('rate')) return defaults.agent;
     if (label === 'account key') return defaults.sponsor;
+    if (label === 'previous release directory') return String(defaults.previousReleaseDir || '');
+    if (label === 'latest release directory') return String(defaults.latestReleaseDir || '');
     return '';
   });
 }
@@ -419,7 +424,7 @@ function formatOutputDisplayValue(value: unknown) {
 
   const normalized = formatOutputValue(normalizeEnvelope(value));
   if (typeof normalized === 'string') return normalized;
-  return JSON.stringify(normalized, null, 2);
+  return JSON.stringify(normalized, (_key, entry) => (typeof entry === 'bigint' ? entry.toString() : entry), 2);
 }
 
 function buildMethodCallEntry(
@@ -491,7 +496,7 @@ export default function SponsorCoinLabPage() {
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
     useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
-    useState<SpCoinWriteMethod>('addRecipient');
+    useState<SpCoinWriteMethod>('addAccountRecipient');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'utils' | null>(null);
@@ -1507,9 +1512,18 @@ export default function SponsorCoinLabPage() {
   const activeSpCoinWriteDef =
     spCoinWriteMethodDefs[selectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
   const serializationTestOptions = getSerializationTestOptions();
+  const utilityMethodOptions = getUtilityMethodOptions();
   const activeSerializationTestDef =
     serializationTestMethodDefs[selectedSerializationTestMethod] ??
     serializationTestMethodDefs[serializationTestOptions[0]];
+  const activeMethodPanelTab =
+    auxMethodPanelTab === 'utils'
+      ? 'utils'
+      : methodPanelMode === 'spcoin_write' && isSpCoinTodoMode
+      ? 'todos'
+      : methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write'
+      ? 'erc20'
+      : methodPanelMode;
   const effectiveRecipientRateRange = hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
     ? exchangeContext.settings.spCoinContract.recipientRateRange
     : DEFAULT_RECIPIENT_RATE_RANGE;
@@ -1548,6 +1562,7 @@ export default function SponsorCoinLabPage() {
     setSelectedTreeAccount,
     treeAccountRefreshToken,
     requestRefreshSelectedTreeAccount,
+    openAccountFromAddress,
     runHeaderRead,
     runAccountListRead,
     runTreeAccountsRead,
@@ -1588,6 +1603,7 @@ export default function SponsorCoinLabPage() {
     activeSpCoinReadDef,
     activeSpCoinWriteDef,
     activeSerializationTestDef,
+    hardhatAccounts,
     selectedHardhatAddress:
       mode === 'hardhat'
         ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
@@ -1598,6 +1614,7 @@ export default function SponsorCoinLabPage() {
     appendWriteTrace,
     getRecentWriteTrace,
     setStatus,
+    formattedOutputDisplay,
     setFormattedOutputDisplay,
     setTreeOutputDisplay,
     setOutputPanelMode,
@@ -1774,6 +1791,7 @@ export default function SponsorCoinLabPage() {
     activeNetworkName,
     mode,
     methodPanelMode,
+    activeMethodPanelTab,
     selectedReadMethod,
     readAddressA,
     readAddressB,
@@ -2026,14 +2044,10 @@ export default function SponsorCoinLabPage() {
   const spCoinAdminWriteOptions = getSpCoinAdminWriteOptions(false);
   const spCoinTodoWriteOptions = getSpCoinTodoWriteOptions(false);
   const spCoinWriteOptions = getSpCoinWriteOptions(false);
-  const activeMethodPanelTab =
-    auxMethodPanelTab === 'utils'
-      ? 'utils'
-      : methodPanelMode === 'spcoin_write' && isSpCoinTodoMode
-      ? 'todos'
-      : methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write'
-      ? 'erc20'
-      : methodPanelMode;
+  const effectiveSerializationTestOptions = activeMethodPanelTab === 'utils' ? utilityMethodOptions : serializationTestOptions;
+  const effectiveSerializationTestDef =
+    serializationTestMethodDefs[selectedSerializationTestMethod] ??
+    serializationTestMethodDefs[effectiveSerializationTestOptions[0]];
   useEffect(() => {
     if (methodPanelMode !== 'spcoin_write' || !isSpCoinTodoMode) return;
     if (spCoinTodoWriteOptions.includes(selectedSpCoinWriteMethod)) return;
@@ -2168,7 +2182,7 @@ export default function SponsorCoinLabPage() {
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
                 throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addOffChainAgents instead.',
+                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addAccountRecipient or addAgents instead.',
                 );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
@@ -2247,6 +2261,7 @@ export default function SponsorCoinLabPage() {
     }
   }, [selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
   useEffect(() => {
+    if (activeMethodPanelTab === 'utils') return;
     if (!serializationTestMethodDefs[selectedSerializationTestMethod] && serializationTestOptions.length > 0) {
       setSelectedSerializationTestMethod(serializationTestOptions[0]);
       return;
@@ -2258,10 +2273,39 @@ export default function SponsorCoinLabPage() {
       setSelectedSerializationTestMethod(serializationTestOptions[0]);
     }
   }, [
+    activeMethodPanelTab,
     selectedSerializationTestMethod,
     serializationTestMethodDefs,
     serializationTestOptions,
     setSelectedSerializationTestMethod,
+  ]);
+  useEffect(() => {
+    if (selectedSerializationTestMethod !== 'compareSpCoinContractSize') return;
+    const previousValue = String(serializationTestParams[0] || '').trim();
+    const latestValue = String(serializationTestParams[1] || '').trim();
+    if (previousValue && latestValue) return;
+    const nextDef = serializationTestMethodDefs[selectedSerializationTestMethod];
+    if (!nextDef) return;
+    setSerializationTestParams(
+      buildDefaultAccountParams(nextDef.params, {
+        sponsor: defaultSponsorKey,
+        recipient: defaultRecipientKey,
+        agent: defaultAgentKey,
+        recipientRate: String(effectiveRecipientRateRange[0]),
+        agentRate: String(effectiveAgentRateRange[0]),
+        previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
+        latestReleaseDir: 'spCoinAccess/contracts/spCoin',
+      }),
+    );
+  }, [
+    defaultAgentKey,
+    defaultRecipientKey,
+    defaultSponsorKey,
+    effectiveAgentRateRange,
+    effectiveRecipientRateRange,
+    selectedSerializationTestMethod,
+    serializationTestMethodDefs,
+    serializationTestParams,
   ]);
   const methodPanelTitle =
     scriptEditorKind === 'json' && methodSelectionSource === 'script' && editingScriptStepNumber !== null
@@ -2438,11 +2482,26 @@ export default function SponsorCoinLabPage() {
   const editScriptStepFromBuilder = useCallback(
     (step: LabScriptStep) => {
       queueEditorBaselineReset();
+      setScriptEditorKind('json');
+      setAuxMethodPanelTab(
+        step.panel === 'serialization_tests' && utilityMethodOptions.includes(step.method as SerializationTestMethod)
+          ? 'utils'
+          : null,
+      );
+      setIsSpCoinTodoMode(
+        step.panel === 'spcoin_write' && spCoinTodoWriteOptions.includes(step.method as SpCoinWriteMethod),
+      );
       setMethodSelectionSource('script');
       setEditingScriptStepNumber(step.step);
       loadScriptStep(step);
     },
-    [loadScriptStep, queueEditorBaselineReset],
+    [
+      loadScriptStep,
+      queueEditorBaselineReset,
+      setScriptEditorKind,
+      utilityMethodOptions,
+      spCoinTodoWriteOptions,
+    ],
   );
   const resetToDropdownSelection = useCallback(() => {
     setMethodSelectionSource('dropdown');
@@ -2616,6 +2675,8 @@ export default function SponsorCoinLabPage() {
             agent: defaultAgentKey,
             recipientRate: String(effectiveRecipientRateRange[0]),
             agentRate: String(effectiveAgentRateRange[0]),
+            previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
+            latestReleaseDir: 'spCoinAccess/contracts/spCoin',
           }),
         );
       });
@@ -2639,7 +2700,10 @@ export default function SponsorCoinLabPage() {
   const selectMappedJsonMethod = useCallback(
     (value: string) => {
       if (!value) return;
-      if (activeMethodPanelTab === 'utils') return;
+      if (activeMethodPanelTab === 'utils') {
+        selectDropdownSerializationTestMethod(value as SerializationTestMethod);
+        return;
+      }
       if (activeMethodPanelTab === 'erc20') {
         if (ERC20_READ_OPTIONS.includes(value as Erc20ReadMethod)) {
           runWithDiscardPrompt(() => {
@@ -2995,10 +3059,10 @@ export default function SponsorCoinLabPage() {
     await runScriptDebugSequence({
       startIndex: selectedIndex,
       emptyScriptStatus: 'Select a script step to run.',
-      initialOutput: '(no output yet)',
+      initialOutput: formattedOutputDisplay,
       stopAfterCurrentStep: true,
     });
-  }, [runScriptDebugSequence, selectedScript, selectedScriptStepNumber, setStatus]);
+  }, [formattedOutputDisplay, runScriptDebugSequence, selectedScript, selectedScriptStepNumber, setStatus]);
   const runRemainingScriptSteps = useCallback(async () => {
     const selectedIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
     await runScriptDebugSequence({
@@ -3013,20 +3077,17 @@ export default function SponsorCoinLabPage() {
         setSelectedScriptStepNumber(null);
         return;
       }
-      setOutputPanelMode('formatted');
-      setFormattedPanelView('script');
-      setMethodSelectionSource('script');
-      setEditingScriptStepNumber(null);
-      loadScriptStep(step);
+      setSelectedScriptStepNumber(step.step);
     },
-    [loadScriptStep, selectedScriptStep?.step, setSelectedScriptStepNumber],
+    [selectedScriptStep?.step, setSelectedScriptStepNumber],
   );
   useEffect(() => {
     if (!selectedScript || selectedScript.steps.length === 0) return;
+    if (methodSelectionSource !== 'script') return;
     if (selectedScriptStepNumber !== null) return;
     if (editingScriptStepNumber !== null) return;
     loadScriptStep(selectedScript.steps[0]);
-  }, [editingScriptStepNumber, loadScriptStep, selectedScript, selectedScriptStepNumber]);
+  }, [editingScriptStepNumber, loadScriptStep, methodSelectionSource, selectedScript, selectedScriptStepNumber]);
   const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
     confirmDeleteSelectedScriptStep();
     setEditingScriptStepNumber(null);
@@ -3513,9 +3574,9 @@ export default function SponsorCoinLabPage() {
               selectedSerializationTestMethod,
               setSelectedSerializationTestMethod: (value) =>
                 selectDropdownSerializationTestMethod(value as SerializationTestMethod),
-              serializationTestOptions,
+              serializationTestOptions: effectiveSerializationTestOptions,
               serializationTestMethodDefs: serializationTestMethodDefs as MethodDefMap,
-              activeSerializationTestDef: activeSerializationTestDef,
+              activeSerializationTestDef: effectiveSerializationTestDef,
               serializationTestParams,
               setSerializationTestParams,
               inputStyle,
@@ -3578,6 +3639,7 @@ export default function SponsorCoinLabPage() {
               setSelectedTreeAccount,
               treeAccountRefreshToken,
               requestRefreshSelectedTreeAccount,
+              openAccountFromAddress,
             }}
           />
           )}

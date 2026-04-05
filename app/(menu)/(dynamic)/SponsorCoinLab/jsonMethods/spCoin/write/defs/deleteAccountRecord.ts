@@ -2,7 +2,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'deleteAccountRecord',
+    title: 'delAccountRecord',
     params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
   }
 

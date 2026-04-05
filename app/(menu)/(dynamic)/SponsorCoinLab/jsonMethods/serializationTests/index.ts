@@ -1,7 +1,7 @@
 import type { MethodDef, ParamDef } from '../shared/types';
 import { createSpCoinLibraryAccess } from '../shared';
 import { buildSerializedSPCoinHeader } from '../shared/buildSerializedSPCoinHeader';
-import { Interface } from 'ethers';
+import { Interface, getAddress, parseUnits } from 'ethers';
 
 export type SerializationBaseMethod =
   | 'getSerializedSPCoinHeader'
@@ -17,6 +17,14 @@ type SerializationMethodSpec = {
   params: MethodDef['params'];
   baseMethod: SerializationBaseMethod;
 };
+
+type UtilityMethodSpec = {
+  title: string;
+  params: MethodDef['params'];
+  utilityMethod: 'compareSpCoinContractSize' | 'getSponsorAccounts' | 'getMasterSponsorList' | 'hhFundAccounts';
+};
+
+type MethodSpec = SerializationMethodSpec | UtilityMethodSpec;
 
 function buildHeaderParams() {
   return [] as MethodDef['params'];
@@ -48,6 +56,31 @@ function buildAgentRateParams() {
     { label: 'Recipient Rate Key', placeholder: 'uint _recipientRateKey', type: 'uint' as const },
     { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' as const },
     { label: 'Agent Rate Key', placeholder: 'uint _agentRateKey', type: 'uint' as const },
+  ];
+}
+
+function buildContractSizeComparisonParams() {
+  return [
+    {
+      label: 'Previous Release Directory',
+      placeholder: 'spCoinAccess/contracts/spCoinOrig.BAK',
+      type: 'string' as const,
+    },
+    {
+      label: 'Latest Release Directory',
+      placeholder: 'spCoinAccess/contracts/spCoin',
+      type: 'string' as const,
+    },
+  ];
+}
+
+function buildHardhatFundAccountsParams() {
+  return [
+    {
+      label: 'Total Token Amount',
+      placeholder: 'total amount to divide across Hardhat accounts 1-19',
+      type: 'string' as const,
+    },
   ];
 }
 
@@ -122,14 +155,42 @@ const METHOD_SPECS = {
     params: PARAMS_BY_BASE_METHOD.getSerializedRateTransactionList,
     baseMethod: 'getSerializedRateTransactionList',
   },
-} as const satisfies Record<string, SerializationMethodSpec>;
+  compareSpCoinContractSize: {
+    title: 'compareSpCoinContractSize',
+    params: buildContractSizeComparisonParams(),
+    utilityMethod: 'compareSpCoinContractSize',
+  },
+  getSponsorAccounts: {
+    title: 'getSponsorAccounts',
+    params: [],
+    utilityMethod: 'getSponsorAccounts',
+  },
+  getMasterSponsorList: {
+    title: 'getMasterSponsorList',
+    params: [],
+    utilityMethod: 'getMasterSponsorList',
+  },
+  hhFundAccounts: {
+    title: 'hhFundAccounts',
+    params: buildHardhatFundAccountsParams(),
+    utilityMethod: 'hhFundAccounts',
+  },
+} as const satisfies Record<string, MethodSpec>;
 
 export type SerializationTestMethod = Extract<keyof typeof METHOD_SPECS, string>;
-export const SERIALIZATION_TEST_METHOD_DEFS: Record<SerializationTestMethod, MethodDef & SerializationMethodSpec> =
-  METHOD_SPECS as Record<SerializationTestMethod, MethodDef & SerializationMethodSpec>;
+export const SERIALIZATION_TEST_METHOD_DEFS: Record<SerializationTestMethod, MethodDef & MethodSpec> =
+  METHOD_SPECS as Record<SerializationTestMethod, MethodDef & MethodSpec>;
 
 export function getSerializationTestOptions(): SerializationTestMethod[] {
-  return (Object.keys(SERIALIZATION_TEST_METHOD_DEFS) as SerializationTestMethod[]).sort((a, b) => a.localeCompare(b));
+  return (Object.keys(SERIALIZATION_TEST_METHOD_DEFS) as SerializationTestMethod[])
+    .filter((name) => 'baseMethod' in SERIALIZATION_TEST_METHOD_DEFS[name])
+    .sort((a, b) => a.localeCompare(b));
+}
+
+export function getUtilityMethodOptions(): SerializationTestMethod[] {
+  return (Object.keys(SERIALIZATION_TEST_METHOD_DEFS) as SerializationTestMethod[])
+    .filter((name) => 'utilityMethod' in SERIALIZATION_TEST_METHOD_DEFS[name])
+    .sort((a, b) => a.localeCompare(b));
 }
 
 type RunArgs = {
@@ -138,6 +199,14 @@ type RunArgs = {
   coerceParamValue: (raw: string, def: ParamDef) => unknown;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
+  mode: 'hardhat' | 'metamask';
+  hardhatAccounts: Array<{ address: string; privateKey?: string }>;
+  executeWriteConnected: (
+    label: string,
+    writeCall: (contract: any, signer: any) => Promise<any>,
+    accountKey?: string,
+  ) => Promise<any>;
+  selectedHardhatAddress?: string;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
 };
@@ -195,7 +264,16 @@ async function callViewFunction(contract: any, iface: Interface, functionName: s
 }
 
 function normalizeAddress(value: unknown) {
-  return String(value || '').trim().toLowerCase();
+  const trimmed = String(value || '').trim();
+  return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed.toLowerCase();
+}
+
+function toCanonicalAddress(value: unknown, label: string) {
+  const trimmed = String(value || '').trim();
+  if (!/^0[xX][0-9a-fA-F]{40}$/.test(trimmed)) {
+    throw new Error(`${label} is not a valid address: ${trimmed || '(empty)'}`);
+  }
+  return getAddress(trimmed.replace(/^0X/, '0x'));
 }
 
 function normalizeAddressList(values: unknown[]) {
@@ -295,6 +373,9 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     coerceParamValue,
     requireContractAddress,
     ensureReadRunner,
+    mode,
+    hardhatAccounts,
+    executeWriteConnected,
     appendLog,
     setStatus,
   } = args;
@@ -303,6 +384,127 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   const runner = await ensureReadRunner();
   const access = createSpCoinLibraryAccess(target, runner);
   const methodArgs = def.params.map((param, idx) => coerceParamValue(params[idx], param));
+
+  if ('utilityMethod' in def && def.utilityMethod === 'compareSpCoinContractSize') {
+    const response = await fetch('/api/spCoin/contract-size-comparison', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        previousReleaseDir: String(methodArgs[0] || ''),
+        latestReleaseDir: String(methodArgs[1] || ''),
+      }),
+    });
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      message?: string;
+      report?: unknown;
+      scriptPath?: string;
+      stderr?: string;
+      previousReleaseDir?: string;
+      latestReleaseDir?: string;
+      cached?: boolean;
+    };
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
+    }
+    appendLog(`${selectedMethod} -> contract size comparison complete.`);
+    setStatus(`${def.title} complete.`);
+    return {
+      scriptPath: String(payload?.scriptPath || ''),
+      previousReleaseDir: String(payload?.previousReleaseDir || ''),
+      latestReleaseDir: String(payload?.latestReleaseDir || ''),
+      cached: Boolean(payload?.cached),
+      report: payload?.report ?? {},
+      stderr: String(payload?.stderr || ''),
+    };
+  }
+
+  if ('utilityMethod' in def && (def.utilityMethod === 'getSponsorAccounts' || def.utilityMethod === 'getMasterSponsorList')) {
+    if (typeof access.read.getAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
+      throw new Error(`${def.title} requires getAccountList() and getAccountRecipientList() read methods.`);
+    }
+    const accountList = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+    const recipientLists = await Promise.all(
+      accountList.map(async (account) => {
+        const recipients = Array.from((await access.read.getAccountRecipientList(account)) as unknown[]).map((value) =>
+          normalizeAddress(value),
+        );
+        return { account, recipients };
+      }),
+    );
+    const sponsorAccounts = recipientLists.filter((entry) => entry.recipients.length > 0).map((entry) => entry.account);
+    appendLog(`${selectedMethod} -> loaded ${sponsorAccounts.length} sponsor account(s).`);
+    setStatus(`${def.title} complete.`);
+    return sponsorAccounts;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'hhFundAccounts') {
+    if (mode !== 'hardhat') {
+      throw new Error('hhFundAccounts only works when connected to Hardhat.');
+    }
+
+    const senderAccount = hardhatAccounts[0];
+    const senderAddress = toCanonicalAddress(senderAccount?.address, 'Hardhat funding account 0');
+    const recipientAccounts = hardhatAccounts
+      .slice(1, 20)
+      .map((account, idx) => toCanonicalAddress(account.address, `Hardhat account ${idx + 1}`))
+      .filter(Boolean);
+    if (recipientAccounts.length !== 19) {
+      throw new Error('hhFundAccounts requires Hardhat accounts 1 through 19 to be available.');
+    }
+
+    const normalizedAmount = String(methodArgs[0] || '').replace(/,/g, '').trim();
+    if (!normalizedAmount) {
+      throw new Error('Total Token Amount is required.');
+    }
+
+    const summary = await executeWriteConnected(
+      def.title,
+      async (contract, signer) => {
+        const decimalsValue = typeof contract.decimals === 'function' ? await contract.decimals() : 18;
+        const decimals = Number(decimalsValue);
+        const totalUnits = parseUnits(normalizedAmount, decimals);
+        const recipientCount = BigInt(recipientAccounts.length);
+        const baseShare = totalUnits / recipientCount;
+        const remainder = totalUnits % recipientCount;
+        const txHashes: string[] = [];
+        let nextNonce =
+          signer && typeof (signer as any).getNonce === 'function' ? await (signer as any).getNonce('pending') : undefined;
+
+        for (let idx = 0; idx < recipientAccounts.length; idx += 1) {
+          const recipient = recipientAccounts[idx];
+          const amountUnits = baseShare + (BigInt(idx) < remainder ? 1n : 0n);
+          if (amountUnits <= 0n) continue;
+          const tx =
+            typeof nextNonce === 'number'
+              ? await contract.transfer(recipient, amountUnits, { nonce: nextNonce++ })
+              : await contract.transfer(recipient, amountUnits);
+          txHashes.push(String(tx?.hash || ''));
+          await tx.wait();
+        }
+
+        return {
+          sender: senderAddress,
+          recipientCount: recipientAccounts.length,
+          totalAmount: normalizedAmount,
+          recipients: recipientAccounts,
+          txHashes,
+          baseShareUnits: baseShare.toString(),
+          remainderUnits: remainder.toString(),
+        };
+      },
+      senderAddress,
+    );
+
+    appendLog(`${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`);
+    setStatus(`${def.title} complete.`);
+    return summary;
+  }
+
+  if (!('baseMethod' in def)) {
+    throw new Error(`Unsupported utility method: ${selectedMethod}`);
+  }
 
   const external = await buildExternalSerializerResult(access.contract as any, def.baseMethod, methodArgs);
   appendLog(

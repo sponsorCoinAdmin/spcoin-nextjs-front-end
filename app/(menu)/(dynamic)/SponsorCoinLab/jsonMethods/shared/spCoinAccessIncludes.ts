@@ -28,7 +28,19 @@ export type SpCoinAccessSource = 'local' | 'node_modules';
 export type SpCoinAddAccess = {
   addSponsor: (_sponsorKey: string) => Promise<ContractTransactionResponse>;
   addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
+  addRecipientRateAmount: (
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addAgent: (_recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+  addAgentRateAmount: (
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addAgentSponsorship: (
     _sponsorSigner: Signer,
     _recipientKey: string,
@@ -52,6 +64,7 @@ export type SpCoinAddAccess = {
 export type SpCoinDeleteAccess = {
   signer?: Signer;
   deleteAccountRecord: (_accountKey: string) => Promise<ContractTransactionResponse>;
+  delRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
   unSponsorRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
   deleteAgentRecord?: (_accountKey: string, _recipientKey: string, _accountAgentKey: string) => Promise<unknown>;
 };
@@ -59,8 +72,6 @@ export type SpCoinDeleteAccess = {
 export type SpCoinOffChainAccess = {
   addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
   addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
-  addOffChainRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
-  addOffChainAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
   deleteAccountTree: () => Promise<{
     accountCount: number;
     recipientCount: number;
@@ -117,6 +128,20 @@ export type SpCoinContractAccess = Contract & {
     decimalAmount: string,
     transactionTimestamp: number,
   ) => Promise<ContractTransactionResponse>;
+  addRecipientRateAmount?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
+  addAgentRateAmount?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
   getRecipientRateRange?: () => Promise<[bigint, bigint] | Array<string | number | bigint>>;
   getAgentRateRange?: () => Promise<[bigint, bigint] | Array<string | number | bigint>>;
   getRecipientRateAgentList?: (
@@ -139,6 +164,34 @@ export type SpCoinContractAccess = Contract & {
   ) => Promise<unknown>;
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
+  delRecipient?: (...args: unknown[]) => Promise<unknown>;
+  deleteSponsor?: () => Promise<ContractTransactionResponse>;
+  deleteRecipient?: (recipientKey: string) => Promise<ContractTransactionResponse>;
+  deleteRecipientRate?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+  ) => Promise<ContractTransactionResponse>;
+  deleteRecipientRateAmount?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+  ) => Promise<ContractTransactionResponse>;
+  deleteAgent?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+  ) => Promise<ContractTransactionResponse>;
+  deleteAgentRate?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+  ) => Promise<ContractTransactionResponse>;
+  deleteAgentRateAmount?: (
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+  ) => Promise<ContractTransactionResponse>;
   unSponsorRecipient?: (...args: unknown[]) => Promise<unknown>;
   deleteAgentSponsorship?: (
     recipientKey: string,
@@ -356,22 +409,6 @@ function createSpCoinOffChainAccess(
       }
       return agentCount;
     },
-    addOffChainRecipients: async (_accountKey: string, recipientAccountList: string[]) => {
-      let recipientCount = 0;
-      for (const recipientKey of recipientAccountList) {
-        await add.addRecipient(String(recipientKey));
-        recipientCount += 1;
-      }
-      return recipientCount;
-    },
-    addOffChainAgents: async (recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]) => {
-      let agentCount = 0;
-      for (const agentKey of agentAccountList) {
-        await add.addAgent(String(recipientKey), recipientRateKey, String(agentKey));
-        agentCount += 1;
-      }
-      return agentCount;
-    },
     deleteAccountTree: async () => {
       const summary = {
         accountCount: 0,
@@ -384,6 +421,7 @@ function createSpCoinOffChainAccess(
       };
       const accountList = await read.getAccountList();
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
+      const signerKey = String((del.signer as { address?: string } | undefined)?.address || '').trim();
       const processedAccountKeys = new Set<string>();
       const countedAccountKeys = new Set<string>();
       const activeAccountKeys = new Set<string>();
@@ -440,13 +478,16 @@ function createSpCoinOffChainAccess(
                 summary.deletedAgentCount += 1;
               }
             }
-            if (typeof del.unSponsorRecipient === 'function') {
-              logDebug(`JS => deleteAccountTree unSponsorRecipient sponsor=${sponsorKey} recipient=${recipientKey}`);
-              const tx = await del.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey);
-              await waitForReceipt(`deleteAccountTree unSponsorRecipient sponsor=${sponsorKey} recipient=${recipientKey}`, tx);
+            if (typeof del.delRecipient === 'function' || typeof del.unSponsorRecipient === 'function') {
+              logDebug(`JS => deleteAccountTree delRecipient sponsor=${sponsorKey} recipient=${recipientKey}`);
+              const tx =
+                typeof del.delRecipient === 'function'
+                  ? await del.delRecipient({ accountKey: sponsorKey }, recipientKey)
+                  : await del.unSponsorRecipient!({ accountKey: sponsorKey }, recipientKey);
+              await waitForReceipt(`deleteAccountTree delRecipient sponsor=${sponsorKey} recipient=${recipientKey}`, tx);
               summary.deletedRecipientCount += 1;
-              await logRecipientStructure('after unSponsorRecipient', sponsorKey, recipientKey);
-              await logDeleteStructure('after unSponsorRecipient', sponsorKey);
+              await logRecipientStructure('after delRecipient', sponsorKey, recipientKey);
+              await logDeleteStructure('after delRecipient', sponsorKey);
             }
             if (accountKeySet.has(recipientKey)) {
               await walkAccountTree(recipientKey, false);
@@ -466,8 +507,15 @@ function createSpCoinOffChainAccess(
           activeAccountKeys.delete(sponsorKey);
         }
       };
-      for (const sponsorKey of accountKeySet) {
-        await walkAccountTree(sponsorKey);
+      if (!signerKey) {
+        throw new Error('deleteAccountTree requires a connected signer.');
+      }
+      if (!accountKeySet.has(signerKey)) {
+        logDebug(`JS => deleteAccountTree signer tree not found for ${signerKey}; nothing to delete`);
+        return summary;
+      }
+      if (!processedAccountKeys.has(signerKey)) {
+        await walkAccountTree(signerKey);
       }
       return summary;
     },

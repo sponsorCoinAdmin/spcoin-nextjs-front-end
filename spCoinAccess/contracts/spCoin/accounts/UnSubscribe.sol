@@ -6,6 +6,122 @@ import "./Transactions.sol";
 contract UnSubscribe is Transactions {
     constructor() { }
 
+    function deleteSponsor()
+        public
+        accountExists(msg.sender)
+        returns (bool)
+    {
+        return deleteAccountRecord(msg.sender);
+    }
+
+    function deleteRecipient(address _recipientKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        nonRedundantRecipient(msg.sender, _recipientKey)
+    {
+        RecipientStruct storage recipientRecord = accountMap[msg.sender].recipientMap[_recipientKey];
+        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+
+        uint256[] memory recipientRateList = getRecipientRateList(msg.sender, _recipientKey);
+        while (recipientRateList.length > 0) {
+            deleteRecipientRate(_recipientKey, recipientRateList[recipientRateList.length - 1]);
+            recipientRateList = getRecipientRateList(msg.sender, _recipientKey);
+        }
+
+        if (accountMap[msg.sender].recipientMap[_recipientKey].inserted) {
+            delRecipient(msg.sender, _recipientKey);
+        }
+    }
+
+    function deleteRecipientRate(address _recipientKey, uint256 _recipientRateKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        nonRedundantRecipient(msg.sender, _recipientKey)
+    {
+        RecipientStruct storage recipientRecord = accountMap[msg.sender].recipientMap[_recipientKey];
+        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+        RecipientRateStruct storage recipientRateRecord = recipientRecord.recipientRateMap[_recipientRateKey];
+        require(recipientRateRecord.inserted, "RECIP_RATE_NOT_FOUND");
+
+        address[] memory agentList = getRecipientRateAgentList(msg.sender, _recipientKey, _recipientRateKey);
+        while (agentList.length > 0) {
+            deleteAgent(_recipientKey, _recipientRateKey, agentList[agentList.length - 1]);
+            agentList = getRecipientRateAgentList(msg.sender, _recipientKey, _recipientRateKey);
+        }
+
+        if (recipientRecord.recipientRateMap[_recipientRateKey].inserted) {
+            deleteRecipientRateAmount(_recipientKey, _recipientRateKey);
+        }
+    }
+
+    function deleteRecipientRateAmount(address _recipientKey, uint256 _recipientRateKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        nonRedundantRecipient(msg.sender, _recipientKey)
+    {
+        AccountStruct storage sponsorAccount = accountMap[msg.sender];
+        RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
+        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+
+        RecipientRateStruct storage recipientRateRecord = recipientRecord.recipientRateMap[_recipientRateKey];
+        require(recipientRateRecord.inserted, "RECIP_RATE_NOT_FOUND");
+        require(recipientRateRecord.agentAccountList.length == 0, "RECIP_RATE_HAS_AGENT");
+
+        uint256 totalSponsored = recipientRateRecord.stakedSPCoins;
+
+        totalStakedSPCoins -= totalSponsored;
+        totalBalanceOf += totalSponsored;
+        balanceOf[msg.sender] += totalSponsored;
+        sponsorAccount.stakedSPCoins -= totalSponsored;
+        recipientRecord.stakedSPCoins -= totalSponsored;
+
+        deleteTransactionRecords(recipientRateRecord.transactionList);
+        deleteUintRecordFromSearchKeys(_recipientRateKey, recipientRecord.recipientRateList);
+        delete recipientRecord.recipientRateMap[_recipientRateKey];
+
+        if (recipientRecord.recipientRateList.length == 0 && recipientRecord.inserted) {
+            delRecipient(msg.sender, _recipientKey);
+        }
+    }
+
+    function deleteAgent(address _recipientKey, uint256 _recipientRateKey, address _agentKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        accountExists(_agentKey)
+    {
+        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(msg.sender, _recipientKey, _recipientRateKey);
+        AgentStruct storage agentRecord = recipientRateRecord.agentMap[_agentKey];
+        require(agentRecord.inserted, "AGENT_NOT_FOUND");
+
+        uint256[] memory agentRateList = getAgentRateList(msg.sender, _recipientKey, _recipientRateKey, _agentKey);
+        while (agentRateList.length > 0) {
+            deleteAgentRate(_recipientKey, _recipientRateKey, _agentKey, agentRateList[agentRateList.length - 1]);
+            agentRateList = getAgentRateList(msg.sender, _recipientKey, _recipientRateKey, _agentKey);
+        }
+    }
+
+    function deleteAgentRate(address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        accountExists(_agentKey)
+    {
+        deleteAgentSponsorship(_recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+    }
+
+    function deleteAgentRateAmount(address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey)
+        public
+        accountExists(msg.sender)
+        accountExists(_recipientKey)
+        accountExists(_agentKey)
+    {
+        deleteAgentSponsorship(_recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+    }
+
     function deleteAgentSponsorship(
         address _recipientKey,
         uint256 _recipientRateKey,
@@ -78,33 +194,25 @@ contract UnSubscribe is Transactions {
         accountExists(msg.sender)
         accountExists(_recipientKey)
         nonRedundantRecipient (msg.sender, _recipientKey) {
-// console.log("UN-SPONSOR FROM ACCOUNT", msg.sender, "FOR RECIPIANT",_recipientKey); 
- 
-        // Clean up Sponsor References and Balances
-        // Move Recipient's steaked Coins back to Sponsors BalanceOf
-        AccountStruct storage sponsorAccount = accountMap[msg.sender];
-        // Remove Sponsors reference to Recipient in recipientAccountList
-        // console.log("DELETE RECIPIENT KEY",_recipientKey, "FROM SPONSOR ACCOUNT",sponsorAccount.accountKey);
-        if (deleteAccountRecordFromSearchKeys(_recipientKey, sponsorAccount.recipientAccountList)) {
+        delRecipient(msg.sender, _recipientKey);
+    }
 
+    function delRecipient(address _sponsorKey, address _recipientKey)
+        public
+        onlyOwnerOrRootAdmin("delRecipient", _sponsorKey)
+        accountExists(_sponsorKey)
+        accountExists(_recipientKey)
+        nonRedundantRecipient(_sponsorKey, _recipientKey)
+    {
+        AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
+        if (deleteAccountRecordFromSearchKeys(_recipientKey, sponsorAccount.recipientAccountList)) {
             RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
             uint256 totalSponsored = recipientRecord.stakedSPCoins;
-            // console.log("UnSubscribe:BEFORE balanceOf() msg.sender = ", balanceOf[msg.sender]);
-            // console.log("UnSubscribe:BEFORE totalSponsored         = ", totalSponsored);
             totalStakedSPCoins -= totalSponsored;
             totalBalanceOf += totalSponsored;
             balanceOf[sponsorAccount.accountKey] += totalSponsored;
             sponsorAccount.stakedSPCoins -= totalSponsored;
-            // ToDo: Robin Here
-            // console.log("UnSubscribe:BEFORE balanceOf[",msg.sender,"]", balanceOf[msg.sender]);
-            // balanceOf[msg.sender] += totalSponsored;
-            // totalBalanceOf += totalSponsored;
-            // console.log("UnSubscribe:AFTER  balanceOf[",msg.sender,"]", balanceOf[msg.sender]);
 
-            // Delete Recipient and Clean up Recipient's References
-            // console.log("UnSubscribe:AFTER unSponsorRecipient() msg.sender = ", msg.sender);
-            // console.log("UnSubscribe:AFTER balanceOf() msg.sender = ", balanceOf[msg.sender]);
-            // console.log("unSponsorRecipient(", totalSponsored, ")");
             unSponsorRecipient(recipientRecord);
             delete sponsorAccount.recipientMap[_recipientKey];
             deleteAccountFromMaster(_recipientKey);
