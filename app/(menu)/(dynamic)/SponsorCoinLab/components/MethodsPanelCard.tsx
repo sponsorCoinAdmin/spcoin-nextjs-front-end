@@ -467,6 +467,30 @@ export default function MethodsPanelCard({
   const sharedMethodSelect = React.useMemo(() => {
     if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
     const baseClassName = 'grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]';
+    if (activeMethodPanelTab === 'utils') {
+      return (
+        <div className={baseClassName}>
+          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
+          <select
+            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={
+              visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)
+                ? serializationTestProps.selectedSerializationTestMethod
+                : '__no_methods__'
+            }
+            onChange={(e) => selectMappedJsonMethod(e.target.value)}
+            disabled={visibleSerializationOptions.length === 0}
+          >
+            {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleSerializationOptions.map((name) => (
+              <option key={`utility-shared-${name}`} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
     if (isErc20Mode) {
       return (
         <div className={baseClassName}>
@@ -502,30 +526,6 @@ export default function MethodsPanelCard({
                 ))}
               </>
             ) : null}
-          </select>
-        </div>
-      );
-    }
-    if (activeMethodPanelTab === 'utils') {
-      return (
-        <div className={baseClassName}>
-          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <select
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={
-              visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)
-                ? serializationTestProps.selectedSerializationTestMethod
-                : '__no_methods__'
-            }
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={visibleSerializationOptions.length === 0}
-          >
-            {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleSerializationOptions.map((name) => (
-              <option key={`utility-shared-${name}`} value={name}>
-                {name}
-              </option>
-            ))}
           </select>
         </div>
       );
