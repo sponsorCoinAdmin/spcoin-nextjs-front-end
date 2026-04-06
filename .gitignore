@@ -16,5 +16,3 @@ lint.out
 cache
 artifacts
 *.log
-spCoinAccess/scripts/manifest.json
-spCoinAccess/scripts/*--script-*.json
