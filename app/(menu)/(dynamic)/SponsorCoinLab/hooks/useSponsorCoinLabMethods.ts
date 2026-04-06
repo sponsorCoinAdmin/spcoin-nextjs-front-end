@@ -11,7 +11,11 @@ import {
   type Erc20WriteMethod,
 } from '../jsonMethods/erc20/write';
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
-import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import {
+  normalizeSpCoinWriteMethod,
+  runSpCoinWriteMethod,
+  type SpCoinWriteMethod,
+} from '../jsonMethods/spCoin/write';
 import {
   runSerializationTestMethod,
   type SerializationTestMethod,
@@ -509,12 +513,30 @@ export function useSponsorCoinLabMethods({
             return entry;
           }
           const record = entry as Record<string, unknown>;
+          if (
+            typeof record.address === 'string' &&
+            record.accountRecord &&
+            typeof record.accountRecord === 'object' &&
+            !Array.isArray(record.accountRecord)
+          ) {
+            return {
+              address: record.address,
+              ...(record.accountRecord as Record<string, unknown>),
+            };
+          }
           if (typeof record.address === 'string') return record;
           const keys = Object.keys(record);
           if (keys.length === 1 && /^0x[0-9a-f]{40}$/i.test(keys[0] || '')) {
+            const nestedRecord = record[keys[0]];
+            if (nestedRecord && typeof nestedRecord === 'object' && !Array.isArray(nestedRecord)) {
+              return {
+                address: keys[0],
+                ...(nestedRecord as Record<string, unknown>),
+              };
+            }
             return {
               address: keys[0],
-              accountRecord: record[keys[0]],
+              value: nestedRecord,
             };
           }
           return record;
@@ -632,8 +654,11 @@ export function useSponsorCoinLabMethods({
         return { call, result };
       }
 
-      const selectedMethod = method as SpCoinWriteMethod;
+      const selectedMethod = normalizeSpCoinWriteMethod(method);
       const def = spCoinWriteMethodDefs[selectedMethod];
+      if (!def) {
+        throw new Error(`Unsupported SpCoin write method: ${String(method)}`);
+      }
       const localParams = def.params.map((param) => findParamValue(param.label));
       const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
       const call = buildMethodCallEntry(selectedMethod, [
@@ -959,7 +984,9 @@ export function useSponsorCoinLabMethods({
       const accountRecord = await loadAccountRecordForAddress(normalizedAccount);
       currentResult[targetIndex] = {
         address: normalizedAccount,
-        accountRecord,
+        ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+          ? (accountRecord as Record<string, unknown>)
+          : { value: accountRecord }),
       };
       setFormattedOutputDisplay(
         formatFormattedPanelPayload({

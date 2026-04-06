@@ -3,6 +3,7 @@
 import type { Address } from 'viem';
 import { FEED_TYPE, type spCoinAccount } from '@/lib/structure';
 import { headOk, get } from '@/lib/rest/http';
+import { toAccountDiskFolderName } from '@/lib/accounts/accountAddress';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
@@ -50,12 +51,7 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
  *   building `/assets/accounts/...` and related paths.
  */
 export function normalizeAddressForAssets(address?: string): string {
-  if (!address) return '';
-  const trimmed = address.trim();
-  if (trimmed.length < 10) return '';
-
-  // Your filesystem convention: EVERYTHING UPPERCASE, including 0X
-  return trimmed.toUpperCase();
+  return toAccountDiskFolderName(address);
 }
 
 /**

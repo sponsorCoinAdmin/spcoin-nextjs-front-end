@@ -1,6 +1,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
+import {
+  normalizeAccountAddress,
+  toAccountDiskFolderName,
+} from '@/lib/accounts/accountAddress';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,11 +23,7 @@ function isAddress(value: string): boolean {
 }
 
 function normalizeAddress(value: string): string {
-  return `0x${value.slice(2).toLowerCase()}`;
-}
-
-function toFolderAddress(value: string): string {
-  return `0X${normalizeAddress(value).slice(2).toUpperCase()}`;
+  return normalizeAccountAddress(value) ?? '';
 }
 
 function getEntryAddress(entry: TestAccountEntry): string {
@@ -54,7 +54,7 @@ async function writeTestAccounts(testAccountsPath: string, entries: TestAccountE
 }
 
 async function hasLocalAccount(accountsDir: string, rawAddress: string) {
-  const folder = toFolderAddress(rawAddress);
+  const folder = toAccountDiskFolderName(rawAddress);
   const filePath = path.join(accountsDir, folder, 'account.json');
   try {
     await fs.access(filePath);
@@ -102,8 +102,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const nextEntry: TestAccountEntry = privateKey
-      ? { address: toFolderAddress(rawAddress), privateKey }
-      : toFolderAddress(rawAddress);
+      ? { address: toAccountDiskFolderName(rawAddress), privateKey }
+      : toAccountDiskFolderName(rawAddress);
     const nextEntries = [...entries, nextEntry];
     await writeTestAccounts(testAccountsPath, nextEntries);
 
@@ -111,7 +111,7 @@ export async function POST(request: Request, context: RouteContext) {
       {
         ok: true,
         status: 'Account added.',
-        address: toFolderAddress(rawAddress),
+        address: toAccountDiskFolderName(rawAddress),
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );
@@ -161,7 +161,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       {
         ok: true,
         status: 'Account deleted.',
-        address: toFolderAddress(rawAddress),
+        address: toAccountDiskFolderName(rawAddress),
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );

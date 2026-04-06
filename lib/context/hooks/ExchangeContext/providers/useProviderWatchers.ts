@@ -150,6 +150,20 @@ function getPersistedSponsorCoinLabAddress(): string | undefined {
   }
 }
 
+function clearPersistedSponsorCoinLabAddress() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.localStorage.getItem('spCoinLabKey');
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as { contractAddress?: string; [key: string]: unknown };
+    if (!parsed || typeof parsed !== 'object' || !('contractAddress' in parsed)) return;
+    delete parsed.contractAddress;
+    window.localStorage.setItem('spCoinLabKey', JSON.stringify(parsed));
+  } catch {
+    // Ignore malformed SponsorCoinLab localStorage payloads.
+  }
+}
+
 function getPersistedSpCoinAccessContractSeed():
   | {
       version: string;
@@ -473,13 +487,17 @@ export function useProviderWatchers({
       appChainIdNum,
       contextState.tradeData,
     );
-    const targetAddress =
-      persistedLabAddress ??
-      persistedSpCoinAddress ??
-      preferredTradeSpCoinAddress;
-    if (!targetAddress) return;
+    const candidateAddresses = [
+      persistedLabAddress,
+      persistedSpCoinAddress,
+      preferredTradeSpCoinAddress,
+    ].filter((value, index, source) => {
+      const normalized = String(value || '').trim().toLowerCase();
+      return /^0x[a-f0-9]{40}$/.test(normalized) && source.findIndex((inner) => String(inner || '').trim().toLowerCase() === normalized) === index;
+    }) as string[];
+    if (candidateAddresses.length === 0) return;
 
-    const metaKey = `${appChainIdNum}:${targetAddress.toLowerCase()}`;
+    const metaKey = `${appChainIdNum}:${candidateAddresses.join('|').toLowerCase()}`;
     const shouldHydrate =
       currentName.length === 0 ||
       currentVersion.length === 0 ||
@@ -493,40 +511,57 @@ export function useProviderWatchers({
 
     (async () => {
       try {
-        const params = new URLSearchParams({
-          deploymentPublicKey: targetAddress,
-          deploymentChainId: String(appChainIdNum),
-          includeMetadata: 'true',
-        });
-        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
-          method: 'GET',
-        });
-        const data = (await response.json()) as {
-          ok?: boolean;
-          spCoinMetaData?: SpCoinContractMetaData;
-        };
-        if (!response.ok || !data.ok || !data.spCoinMetaData || cancelled) return;
+        let resolvedAddress = '';
+        let resolvedMetaData: SpCoinContractMetaData | undefined;
+        for (const candidateAddress of candidateAddresses) {
+          const params = new URLSearchParams({
+            deploymentPublicKey: candidateAddress,
+            deploymentChainId: String(appChainIdNum),
+            includeMetadata: 'true',
+          });
+          const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, {
+            method: 'GET',
+          });
+          const data = (await response.json()) as {
+            ok?: boolean;
+            tokenStatus?: string;
+            spCoinMetaData?: SpCoinContractMetaData;
+          };
+          if (!response.ok || !data.ok || !data.spCoinMetaData) {
+            if (
+              persistedLabAddress &&
+              String(candidateAddress).trim().toLowerCase() === persistedLabAddress.trim().toLowerCase()
+            ) {
+              clearPersistedSponsorCoinLabAddress();
+            }
+            continue;
+          }
+          resolvedAddress = candidateAddress;
+          resolvedMetaData = data.spCoinMetaData;
+          break;
+        }
+        if (!resolvedAddress || !resolvedMetaData || cancelled) return;
 
         setExchangeContext(
           (prevCtx) => {
             const next = clone(prevCtx);
             next.settings = next.settings ?? ({} as any);
             next.settings.spCoinContract = {
-              owner: String(data.spCoinMetaData?.owner ?? '').trim(),
-              version: String(data.spCoinMetaData?.version ?? '').trim(),
-              name: String(data.spCoinMetaData?.name ?? '').trim(),
-              symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
-              decimals: Number(data.spCoinMetaData?.decimals ?? 0),
-              totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
-              inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
-              recipientRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.recipientRateRange),
-              agentRateRange: normalizeRateRangeTuple(data.spCoinMetaData?.agentRateRange),
+              owner: String(resolvedMetaData?.owner ?? '').trim(),
+              version: String(resolvedMetaData?.version ?? '').trim(),
+              name: String(resolvedMetaData?.name ?? '').trim(),
+              symbol: String(resolvedMetaData?.symbol ?? '').trim(),
+              decimals: Number(resolvedMetaData?.decimals ?? 0),
+              totalSypply: String(resolvedMetaData?.totalSypply ?? '').trim(),
+              inflationRate: Number(resolvedMetaData?.inflationRate ?? 0),
+              recipientRateRange: normalizeRateRangeTuple(resolvedMetaData?.recipientRateRange),
+              agentRateRange: normalizeRateRangeTuple(resolvedMetaData?.agentRateRange),
             };
             return next;
           },
           'watcher:spCoinMetaData:hydrate',
         );
-        spCoinMetaKeyRef.current = metaKey;
+        spCoinMetaKeyRef.current = `${appChainIdNum}:${resolvedAddress.toLowerCase()}`;
       } catch {
         // Ignore transient metadata hydration errors and retry on the next key change.
       }

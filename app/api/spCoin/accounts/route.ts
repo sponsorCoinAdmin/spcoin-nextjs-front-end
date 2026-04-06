@@ -2,6 +2,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
+import {
+  normalizeAccountAddress,
+  toAccountDiskFolderName,
+} from '@/lib/accounts/accountAddress';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,18 +44,8 @@ function isAddress(value: string): boolean {
   return /^0[xX][0-9a-fA-F]{40}$/.test(value);
 }
 
-function normalizeAddress(value: string): string {
-  return `0x${value.slice(2).toLowerCase()}`;
-}
-
-function toFolderName(normalizedAddress: string): string {
-  return `0X${normalizedAddress.slice(2).toUpperCase()}`;
-}
-
 function normalizeAddressFolderName(folderName: string): string | null {
-  const trimmed = folderName.trim();
-  if (!/^0[xX][0-9a-fA-F]{40}$/.test(trimmed)) return null;
-  return `0x${trimmed.slice(2).toLowerCase()}`;
+  return normalizeAccountAddress(folderName) ?? null;
 }
 
 async function getAccountDirectories(): Promise<AccountDirectoryRow[]> {
@@ -82,8 +76,9 @@ async function loadAccountData(row: AccountDirectoryRow): Promise<AccountRow | n
 
 async function loadAccountDataByAddress(rawAddress: string): Promise<AccountRow | null> {
   if (!isAddress(rawAddress)) return null;
-  const address = normalizeAddress(rawAddress);
-  const folderName = toFolderName(address);
+  const address = normalizeAccountAddress(rawAddress);
+  if (!address) return null;
+  const folderName = toAccountDiskFolderName(address);
   const filePath = path.join(ACCOUNTS_DIR, folderName, 'account.json');
   try {
     const raw = await fs.readFile(filePath, 'utf8');
@@ -174,7 +169,10 @@ export async function POST(request: Request) {
     const rows = await Promise.all(valid.map(loadAccountDataByAddress));
     const items = rows.filter((row): row is AccountRow => row !== null);
     const found = new Set(items.map((x) => x.address));
-    const missing = valid.map(normalizeAddress).filter((a) => !found.has(a));
+    const missing = valid
+      .map((address) => normalizeAccountAddress(address))
+      .filter((address): address is `0x${string}` => address !== undefined)
+      .filter((address) => !found.has(address));
 
     return NextResponse.json(
       {

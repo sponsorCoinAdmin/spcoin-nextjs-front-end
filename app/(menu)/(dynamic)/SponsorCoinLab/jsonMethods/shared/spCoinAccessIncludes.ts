@@ -72,7 +72,7 @@ export type SpCoinDeleteAccess = {
 export type SpCoinOffChainAccess = {
   addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
   addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
-  deleteAccountTree: () => Promise<{
+  deleteAccountTree: (_accountKey: string) => Promise<{
     accountCount: number;
     recipientCount: number;
     recipientRateCount: number;
@@ -284,6 +284,41 @@ function createSpCoinOffChainAccess(
   trace?: (line: string) => void,
 ): SpCoinOffChainAccess {
   const typedContract = contract as SpCoinContractAccess;
+  const isBadDataError = (error: unknown) => {
+    const code = String((error as { code?: unknown } | null)?.code || '');
+    const message = String((error as { message?: unknown } | null)?.message || '');
+    return code === 'BAD_DATA' || /could not decode result data/i.test(message);
+  };
+  const buildReadDecodeError = async (error: unknown, method: string) => {
+    if (!isBadDataError(error)) return error;
+    const runner = (contract as Contract & { runner?: any }).runner;
+    const provider = runner?.provider ?? runner;
+    if (!provider || typeof provider.getCode !== 'function') {
+      return new Error(`Unable to read ${method}() before validating deleteAccountTree. The contract returned undecodable data.`);
+    }
+    try {
+      const target =
+        String((contract as Contract & { target?: unknown }).target || '') ||
+        (typeof typedContract.getAddress === 'function' ? String(await typedContract.getAddress()) : '');
+      const [code, network] = await Promise.all([
+        provider.getCode(target),
+        typeof provider.getNetwork === 'function' ? provider.getNetwork() : Promise.resolve(null),
+      ]);
+      const chainId = network?.chainId != null ? String(network.chainId) : 'unknown';
+      const hasCode = typeof code === 'string' && code !== '0x';
+      const nextError = new Error(
+        hasCode
+          ? `Unable to read ${method}() before validating deleteAccountTree at ${target} on chain ${chainId}. The contract returned undecodable data, so account existence could not be verified.`
+          : `Unable to read ${method}() before validating deleteAccountTree at ${target} on chain ${chainId}. No contract code was found at that address.`,
+      );
+      (nextError as Error & { cause?: unknown; code?: unknown }).cause = error;
+      (nextError as Error & { cause?: unknown; code?: unknown }).code =
+        (error as { code?: unknown } | null)?.code || 'BAD_DATA';
+      return nextError;
+    } catch {
+      return new Error(`Unable to read ${method}() before validating deleteAccountTree. The contract returned undecodable data, so account existence could not be verified.`);
+    }
+  };
   const toDebugJson = (value: unknown): string =>
     JSON.stringify(
       value,
@@ -409,7 +444,7 @@ function createSpCoinOffChainAccess(
       }
       return agentCount;
     },
-    deleteAccountTree: async () => {
+    deleteAccountTree: async (_accountKey: string) => {
       const summary = {
         accountCount: 0,
         recipientCount: 0,
@@ -419,9 +454,14 @@ function createSpCoinOffChainAccess(
         deletedRecipientCount: 0,
         deletedAccountCount: 0,
       };
-      const accountList = await read.getAccountList();
+      let accountList: string[];
+      try {
+        accountList = await read.getAccountList();
+      } catch (error) {
+        throw await buildReadDecodeError(error, 'getAccountList');
+      }
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
-      const signerKey = String((del.signer as { address?: string } | undefined)?.address || '').trim();
+      const targetAccountKey = String(_accountKey || '').trim();
       const processedAccountKeys = new Set<string>();
       const countedAccountKeys = new Set<string>();
       const activeAccountKeys = new Set<string>();
@@ -507,15 +547,14 @@ function createSpCoinOffChainAccess(
           activeAccountKeys.delete(sponsorKey);
         }
       };
-      if (!signerKey) {
-        throw new Error('deleteAccountTree requires a connected signer.');
+      if (!targetAccountKey) {
+        throw new Error('deleteAccountTree requires an Account Key.');
       }
-      if (!accountKeySet.has(signerKey)) {
-        logDebug(`JS => deleteAccountTree signer tree not found for ${signerKey}; nothing to delete`);
-        return summary;
+      if (!accountKeySet.has(targetAccountKey)) {
+        throw new Error(`deleteAccountTree target account not found in masterAccountList: ${targetAccountKey}`);
       }
-      if (!processedAccountKeys.has(signerKey)) {
-        await walkAccountTree(signerKey);
+      if (!processedAccountKeys.has(targetAccountKey)) {
+        await walkAccountTree(targetAccountKey);
       }
       return summary;
     },

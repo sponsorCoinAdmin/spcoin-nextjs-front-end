@@ -24,6 +24,15 @@ function getAddressNodeLabel(data: any, fallbackLabel: string): string {
   return `${fallbackLabel}: "${address}"`;
 }
 
+function hasInlineAccountRecord(data: any): boolean {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const record = data as Record<string, unknown>;
+  if (record.accountRecord && typeof record.accountRecord === 'object' && record.accountRecord !== null) {
+    return true;
+  }
+  return typeof record.accountKey === 'string' || typeof record.TYPE === 'string';
+}
+
 function normalizeLegacyDateDisplay(value: any): string | null {
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = String(input || '').trim();
@@ -136,13 +145,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const toggle = useCallback(() => {
     const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
     const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
-    const hasLoadedAccountRecord =
-      isAddressNode &&
-      data &&
-      typeof data === 'object' &&
-      !Array.isArray(data) &&
-      typeof (data as Record<string, unknown>).accountRecord === 'object' &&
-      (data as Record<string, unknown>).accountRecord !== null;
+    const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
     if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
       onLeafValueClick?.(addressNode, path ?? '', 'address');
     }

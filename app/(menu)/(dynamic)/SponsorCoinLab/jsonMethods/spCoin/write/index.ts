@@ -232,10 +232,14 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   ) => {
     setStatus(`Submitting ${label}...`);
     appendWriteTrace?.(`submitWrite(${label}) start`);
+    let activeContract: Contract | null = null;
+    let activeSigner: any = null;
     try {
       const tx = await executeWriteConnected(
         label,
         (contract: Contract, signer: any) => {
+          activeContract = contract;
+          activeSigner = signer;
           const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
           appendWriteTrace?.(
             `submitWrite(${label}) contract target=${String((contract as any)?.target || (contract as any)?.address || '')} signer=${String(signer?.address || '')}`,
@@ -260,6 +264,33 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         status: String(receipt?.status ?? ''),
       });
     } catch (error) {
+      const errorCode = String((error as any)?.code || '');
+      const errorReason = String((error as any)?.reason || '');
+      const errorMessage = String((error as any)?.message || '');
+      if (
+        errorCode === 'CALL_EXCEPTION' &&
+        /INSUFFICIENT_BAL/i.test(`${errorReason} ${errorMessage}`) &&
+        activeContract &&
+        activeSigner &&
+        typeof (activeContract as any).balanceOf === 'function'
+      ) {
+        try {
+          const sponsorKey = String(activeSigner?.address || selectedHardhatAddress || '').trim();
+          const balanceRaw = await (activeContract as any).balanceOf(sponsorKey);
+          const enrichedMessage = `INSUFFICIENT_BAL: sponsor ${sponsorKey} balanceOf=${String(balanceRaw)}`;
+          appendWriteTrace?.(`submitWrite(${label}) insufficient balance detail=${enrichedMessage}`);
+          appendLog(`${label} failed: ${enrichedMessage}`);
+          const enrichedError = new Error(enrichedMessage);
+          (enrichedError as any).code = errorCode;
+          (enrichedError as any).reason = errorReason || 'INSUFFICIENT_BAL';
+          (enrichedError as any).cause = error;
+          throw enrichedError;
+        } catch (balanceLookupError) {
+          appendWriteTrace?.(
+            `submitWrite(${label}) insufficient balance lookup failed=${String((balanceLookupError as any)?.message || balanceLookupError)}`,
+          );
+        }
+      }
       const detail = error && typeof error === 'object'
         ? JSON.stringify(
             {
@@ -296,6 +327,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'delAccountTree': {
+      const accountKey = asString(methodArgs[0]);
       setStatus(`Submitting ${activeDef.title}...`);
       appendWriteTrace?.(`submitWorkflow(${activeDef.title}) start`);
       const summary = await executeWriteConnected(
@@ -305,7 +337,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
           access.del.signer = signer;
           appendWriteTrace?.(`submitWorkflow(${activeDef.title}) offChain.deleteAccountTree enter`);
-          return access.offChain.deleteAccountTree();
+          return access.offChain.deleteAccountTree(accountKey);
         },
         selectedHardhatAddress,
       );

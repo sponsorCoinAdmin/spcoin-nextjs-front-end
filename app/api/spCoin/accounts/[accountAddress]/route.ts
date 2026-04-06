@@ -7,6 +7,10 @@ import {
   readBearerToken,
   validateSessionTokenAnyAddress,
 } from '@/lib/server/spCoinAuth';
+import {
+  normalizeAccountAddress,
+  toAccountDiskFolderName,
+} from '@/lib/accounts/accountAddress';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
 import { isConfiguredOwnerAdminAddress } from '@/lib/utils/accounts/ownerAdmin';
 
@@ -29,11 +33,7 @@ function isAddress(value: string): boolean {
 }
 
 function normalizeAddress(value: string): string {
-  return `0x${value.slice(2).toLowerCase()}`;
-}
-
-function toFolderName(normalizedAddress: string): string {
-  return `0X${normalizedAddress.slice(2).toUpperCase()}`;
+  return normalizeAccountAddress(value) ?? '';
 }
 
 function parseTarget(url: URL): Target {
@@ -100,7 +100,7 @@ export async function GET(
   }
 
   const address = normalizeAddress(rawAddress);
-  const folder = toFolderName(address);
+  const folder = toAccountDiskFolderName(address);
   const filePath = path.join(ACCOUNTS_DIR, folder, 'account.json');
   const logoFilePath = path.join(ACCOUNTS_DIR, folder, 'logo.png');
 
@@ -176,7 +176,7 @@ export async function PUT(
     );
   }
 
-  const folder = toFolderName(address);
+  const folder = toAccountDiskFolderName(address);
   const dirPath = path.join(ACCOUNTS_DIR, folder);
   const url = new URL(request.url);
   const target = parseTarget(url);

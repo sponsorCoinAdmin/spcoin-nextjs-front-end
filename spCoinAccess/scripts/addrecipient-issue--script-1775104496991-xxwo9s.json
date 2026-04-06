@@ -72,7 +72,7 @@
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [],
       "breakpoint": true,
-      "hasMissingRequiredParams": false
+      "hasMissingRequiredParams": true
     },
     {
       "step": 8,
@@ -132,8 +132,8 @@
       "method": "deleteAccountTree",
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
+      "breakpoint": true,
+      "hasMissingRequiredParams": true
     },
     {
       "step": 14,

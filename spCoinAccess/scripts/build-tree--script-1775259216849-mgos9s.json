@@ -6,37 +6,6 @@
   "steps": [
     {
       "step": 1,
-      "name": "addAgentSponsorship",
-      "panel": "spcoin_write",
-      "method": "addAgentSponsorship",
-      "msg.sender": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
-      "params": [
-        {
-          "key": "Recipient Key",
-          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
-        },
-        {
-          "key": "Recipient Rate Key",
-          "value": "20"
-        },
-        {
-          "key": "Agent Key",
-          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
-        },
-        {
-          "key": "Agent Rate Key",
-          "value": "2"
-        },
-        {
-          "key": "Transaction Quantity",
-          "value": "999999"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 2,
       "name": "getAccountList",
       "panel": "spcoin_rread",
       "method": "getAccountList",
@@ -45,20 +14,11 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 3,
-      "name": "deleteAccountTree",
+      "step": 2,
+      "name": "delAccountTree",
       "panel": "spcoin_write",
-      "method": "deleteAccountTree",
+      "method": "delAccountTree",
       "msg.sender": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 4,
-      "name": "getAccountRecord",
-      "panel": "spcoin_rread",
-      "method": "getAccountRecord",
       "params": [
         {
           "key": "Account Key",
@@ -69,7 +29,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 3,
       "name": "delRecipient",
       "panel": "spcoin_write",
       "method": "delRecipient",
@@ -84,7 +44,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 4,
       "name": "addRecipient",
       "panel": "spcoin_write",
       "method": "addRecipient",
@@ -99,11 +59,62 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 5,
       "name": "getSponsorAccounts",
       "panel": "serialization_tests",
       "method": "getSponsorAccounts",
       "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "getMasterSponsorList",
+      "panel": "serialization_tests",
+      "method": "getMasterSponsorList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 8,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "\"0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 9,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }
