@@ -4,7 +4,11 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { readBearerToken, validateSessionTokenAnyAddress } from '@/lib/server/spCoinAuth';
-import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
+import {
+  getDiskContractsPublicRoot,
+  resolveSpCoinDiskChainId,
+  toDiskAddressFolderName,
+} from '@/lib/spCoin/diskPathResolver';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,10 +29,6 @@ function isAddress(value: string): boolean {
 
 function normalizeAddress(value: string): string {
   return `0x${value.slice(2).toLowerCase()}`;
-}
-
-function toFolderName(normalizedAddress: string): string {
-  return `0X${normalizedAddress.slice(2).toUpperCase()}`;
 }
 
 function parseTarget(url: URL): Target {
@@ -102,8 +102,8 @@ export async function GET(
   }
 
   const address = normalizeAddress(tokenAddressRaw);
-  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
-  const folder = toFolderName(address);
+  const assetChainId = resolveSpCoinDiskChainId(chainId);
+  const folder = toDiskAddressFolderName(address);
   const infoPath = path.join(
     TOKENS_DIR,
     String(assetChainId),
@@ -125,7 +125,7 @@ export async function GET(
         error: 'Token not found',
         chainId,
         address,
-        file: `/assets/blockchains/${assetChainId}/contracts/${folder}/info.json`,
+        file: `${getDiskContractsPublicRoot(chainId, address)}/info.json`,
       },
       { status: 404, headers: { 'Cache-Control': 'no-store' } },
     );
@@ -160,8 +160,8 @@ export async function PUT(
   }
 
   const address = normalizeAddress(tokenAddressRaw);
-  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
-  const folder = toFolderName(address);
+  const assetChainId = resolveSpCoinDiskChainId(chainId);
+  const folder = toDiskAddressFolderName(address);
   const dirPath = path.join(
     TOKENS_DIR,
     String(assetChainId),
@@ -193,7 +193,7 @@ export async function PUT(
           chainId,
           address,
           target: 'info',
-          file: `/assets/blockchains/${assetChainId}/contracts/${folder}/info.json`,
+          file: `${getDiskContractsPublicRoot(chainId, address)}/info.json`,
         },
         { status: 200, headers: { 'Cache-Control': 'no-store' } },
       );
@@ -210,7 +210,7 @@ export async function PUT(
         address,
         target: 'logo',
         bytes: logo.length,
-        file: `/assets/blockchains/${assetChainId}/contracts/${folder}/logo.png`,
+        file: `${getDiskContractsPublicRoot(chainId, address)}/logo.png`,
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );

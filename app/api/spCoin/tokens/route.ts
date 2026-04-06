@@ -2,7 +2,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
+import {
+  getDiskContractsPublicRoot,
+  resolveSpCoinDiskChainId,
+  toDiskAddressFolderName,
+} from '@/lib/spCoin/diskPathResolver';
 
 import baseTokenListRaw from '@/resources/data/networks/base/tokenList.json';
 import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.json';
@@ -65,10 +69,6 @@ function normalizeAddress(value: string): string {
   return `0x${value.slice(2).toLowerCase()}`;
 }
 
-function toFolderName(normalizedAddress: string): string {
-  return `0X${normalizedAddress.slice(2).toUpperCase()}`;
-}
-
 function normalizeAndValidateAddress(value: string): string | null {
   const trimmed = value.trim();
   if (!isAddress(trimmed)) return null;
@@ -114,8 +114,8 @@ function flattenRequests(chainIds: number[]): TokenRequestRow[] {
 }
 
 async function loadTokenData(chainId: number, normalizedAddress: string): Promise<TokenResponseRow | null> {
-  const assetChainId = resolveHHForkTokenAssetChainId(chainId);
-  const folder = toFolderName(normalizedAddress);
+  const assetChainId = resolveSpCoinDiskChainId(chainId);
+  const folder = toDiskAddressFolderName(normalizedAddress);
   const infoPath = path.join(
     TOKENS_DIR,
     String(assetChainId),
@@ -150,7 +150,7 @@ async function loadTokenData(chainId: number, normalizedAddress: string): Promis
         address: normalizedAddress,
         chainId,
         logoURL: hasLogo
-          ? `/assets/blockchains/${assetChainId}/contracts/${folder}/logo.png`
+          ? `${getDiskContractsPublicRoot(chainId, normalizedAddress)}/logo.png`
           : (info?.logoURL ?? undefined),
       },
     };

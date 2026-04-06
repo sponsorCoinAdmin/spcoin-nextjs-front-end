@@ -4,6 +4,11 @@ import type { Address } from 'viem';
 import { FEED_TYPE, type spCoinAccount } from '@/lib/structure';
 import { headOk, get } from '@/lib/rest/http';
 import { toAccountDiskFolderName } from '@/lib/accounts/accountAddress';
+import {
+  getDiskAccountsPublicRoot,
+  getDiskBlockchainsPublicRoot,
+  getDiskContractsPublicRoot,
+} from '@/lib/spCoin/diskPathResolver';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
@@ -117,9 +122,7 @@ export type RequiredAssetMembers = { address: string; chainId: number };
  * Example: /assets/blockchains/1/contracts/0XABC...123
  */
 export function getContractRoot(chainId: number, address?: string): string {
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return '';
-  return `/assets/blockchains/${chainId}/contracts/${normalized}`;
+  return getDiskContractsPublicRoot(chainId, address);
 }
 
 /**
@@ -127,9 +130,7 @@ export function getContractRoot(chainId: number, address?: string): string {
  * Example: /assets/accounts/0XABC...123
  */
 export function getWalletRoot(address?: string): string {
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return '';
-  return `/assets/accounts/${normalized}`;
+  return getDiskAccountsPublicRoot(address);
 }
 
 /**
@@ -168,7 +169,8 @@ export function getNetworkLogoURL(chainId?: number): string {
   if (typeof chainId !== 'number' || !Number.isFinite(chainId)) {
     return defaultMissingImage;
   }
-  return `/assets/blockchains/${chainId}/logo.png`;
+  const root = getDiskBlockchainsPublicRoot(chainId);
+  return root ? `${root}/logo.png` : defaultMissingImage;
 }
 
 /**

@@ -21,6 +21,7 @@ import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.j
 
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { resolveSpCoinDiskChainId } from '@/lib/spCoin/diskPathResolver';
 
 const LOG_TIME = false as const;
 const DEBUG_ENABLED =
@@ -201,7 +202,7 @@ function getFallbackListWithSource(
 
 function getAccountFeedPublicUrl(feedType: FEED_TYPE, chainId?: number): string | null {
   if (!Number.isFinite(Number(chainId)) || Number(chainId) <= 0) return null;
-  const normalizedChainId = Number(chainId);
+  const normalizedChainId = resolveSpCoinDiskChainId(chainId);
 
   switch (feedType) {
     case FEED_TYPE.RECIPIENT_ACCOUNTS:

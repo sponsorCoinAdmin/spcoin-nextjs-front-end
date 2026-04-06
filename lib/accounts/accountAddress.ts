@@ -1,4 +1,5 @@
 import { isAddress } from '@/lib/utils/address';
+import { toDiskAddressFolderName } from '@/lib/spCoin/diskPathResolver';
 
 import type { spCoinAccount } from '@/lib/structure';
 
@@ -9,9 +10,7 @@ export function normalizeAccountAddress(value: unknown): `0x${string}` | undefin
 }
 
 export function toAccountDiskFolderName(value: unknown): string {
-  const normalized = normalizeAccountAddress(value);
-  if (!normalized) return '';
-  return `0X${normalized.slice(2).toUpperCase()}`;
+  return toDiskAddressFolderName(value);
 }
 
 export function normalizeAccountAddressKey(value: unknown): string {

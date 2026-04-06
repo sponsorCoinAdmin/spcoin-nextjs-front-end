@@ -1,4 +1,5 @@
 import chainIdMapRaw from '@/resources/data/networks/chainIdMap.json';
+import { resolveSpCoinDiskChainId } from '@/lib/spCoin/diskPathResolver';
 
 type PositiveIntMap = Record<number, number>;
 
@@ -30,7 +31,5 @@ export const HH_FORK_CHAIN_ID = ASSET_MAP[31337]
 export const HH_FORK_TOKEN_ASSET_CHAIN_ID = ASSET_MAP[HH_FORK_CHAIN_ID] || HH_FORK_CHAIN_ID;
 
 export function resolveHHForkTokenAssetChainId(chainId: unknown): number {
-  const id = toPositiveInt(chainId);
-  if (!id) return Number(chainId) || 0;
-  return ASSET_MAP[id] || id;
+  return resolveSpCoinDiskChainId(chainId);
 }

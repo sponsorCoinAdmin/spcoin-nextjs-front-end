@@ -4,6 +4,7 @@ import type { NetworkElement } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
+import { resolveSpCoinDiskChainId } from '@/lib/spCoin/diskPathResolver';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
 const debugLog = createDebugLogger('NetworkHelpers', DEBUG_ENABLED, /* timestamp */ false);
@@ -52,10 +53,10 @@ const getMeta = (chainId: number) => chainIdMap[Number(chainId)];
  * ────────────────────────────────────────────────────────────────────────── */
 
 export const getBlockChainLogoURL = (chainId: number): string =>
-  `/assets/blockchains/${chainId}/logo.png`;
+  `/assets/blockchains/${resolveSpCoinDiskChainId(chainId)}/logo.png`;
 
 export const getBlockChainInfoURL = (chainId: number): string =>
-  `/assets/blockchains/${chainId}/info.json`;
+  `/assets/blockchains/${resolveSpCoinDiskChainId(chainId)}/info.json`;
 
 export const getBlockChainName = (chainId: number): string | undefined =>
   getMeta(chainId)?.name;

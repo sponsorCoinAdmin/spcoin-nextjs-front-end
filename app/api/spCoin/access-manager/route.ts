@@ -5,7 +5,10 @@ import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
 import { Contract, ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
-import { resolveHHForkTokenAssetChainId } from '@/lib/config/hhForkTokenAssetChain';
+import {
+  resolveSpCoinDiskChainId,
+  toDiskAddressFolderName,
+} from '@/lib/spCoin/diskPathResolver';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -897,7 +900,7 @@ async function handleDeploy(
   });
   return {
     ...deployed,
-    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(deployed.deploymentChainId)),
+    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(deployed.deploymentChainId)),
   };
 }
 
@@ -923,12 +926,12 @@ async function handleUpdateServer(params: {
 }) {
   const chainIdRaw = Number(params.deploymentChainId);
   const requestedChainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
-  const chainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const chainId = Number(resolveSpCoinDiskChainId(requestedChainId));
   const address = String(params.deploymentPublicKey || '').trim();
   if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) {
     throw new Error('Invalid deployment public key. Deploy token first.');
   }
-  const addressFolder = address.toUpperCase();
+  const addressFolder = toDiskAddressFolderName(address);
 
   const version = String(params.deploymentVersion || '').trim() || 'N/A';
   const versionTag = version === 'N/A' ? '' : `V${version}`;
@@ -1003,7 +1006,7 @@ async function handleUpdateServer(params: {
         const rawTokenList = await fs.readFile(tokenListPath, 'utf8');
         const parsed = JSON.parse(rawTokenList);
         if (Array.isArray(parsed)) {
-          const upperAddress = address.toUpperCase();
+          const upperAddress = toDiskAddressFolderName(address);
           const filtered = parsed.filter(
             (entry) => String(entry || '').toUpperCase() !== upperAddress,
           );
@@ -1050,7 +1053,7 @@ async function handlePrepareDeployArtifact(
     ],
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
-    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(network.chainId)),
+    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
   };
 }
 
@@ -1066,7 +1069,7 @@ async function handleGenerateAbi(deploymentChainId?: number | string) {
     deploymentAbi: compiled.abi,
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
-    deploymentAssetChainId: Number(resolveHHForkTokenAssetChainId(network.chainId)),
+    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
     abiPath: SPCOIN_ABI_PATH,
   };
 }
@@ -1250,8 +1253,8 @@ async function upsertSpCoinDeploymentMap(params: {
   };
   const chainIdKey = String(params.chainId);
   const versionKey = String(params.version || '').trim() || '0';
-  const publicKeyUpper = String(params.publicKey || '').trim().toUpperCase();
-  const deployerUpper = String(params.deployer || '').trim().toUpperCase() || undefined;
+  const publicKeyUpper = toDiskAddressFolderName(params.publicKey);
+  const deployerUpper = toDiskAddressFolderName(params.deployer) || undefined;
   const normalizedPrivateKey =
     String(params.signerKey || '').trim().toLowerCase() || undefined;
 
@@ -1296,7 +1299,7 @@ async function upsertSpCoinDeploymentMap(params: {
 }
 
 function normalizeDeploymentAddress(value: string) {
-  return String(value || '').trim().toUpperCase();
+  return toDiskAddressFolderName(value);
 }
 
 function isDeploymentAddressKey(value: string) {
@@ -1393,7 +1396,7 @@ async function removeAddressFromRelevantTokenLists(requestedChainId: number, tar
     });
 
   networkNames.add(mapNetworkNameByChainId(requestedChainId));
-  const assetChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const assetChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
   if (Number.isFinite(assetChainId) && assetChainId > 0) {
     networkNames.add(mapNetworkNameByChainId(assetChainId));
   }
@@ -1450,7 +1453,7 @@ async function handleRemoveDeployment(params: {
       : {};
   await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(nextMap, null, 2), 'utf8');
 
-  const assetChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const assetChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
   const networkName = mapNetworkNameByChainId(requestedChainId);
   const tokenListResult = await removeAddressFromRelevantTokenLists(requestedChainId, targetAddressUpper);
   const contractDir = path.join(
@@ -1498,9 +1501,9 @@ async function validateTokenStatus(
     Number.isFinite(requestedChainIdParsed) && requestedChainIdParsed > 0
       ? requestedChainIdParsed
       : 31337;
-  const resolvedChainId = Number(resolveHHForkTokenAssetChainId(requestedChainId));
+  const resolvedChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
   const address = String(tokenPublicKey || '').trim();
-  const addressFolder = address.toUpperCase();
+  const addressFolder = toDiskAddressFolderName(address);
   const contractDir = path.join(
     process.cwd(),
     'public',
@@ -1928,7 +1931,7 @@ export async function POST(request: Request) {
           deploymentChainId,
         );
         const upsertChainId = Number((result as any).deploymentChainId || 0);
-        const upsertMappedChainId = Number(resolveHHForkTokenAssetChainId(upsertChainId));
+        const upsertMappedChainId = Number(resolveSpCoinDiskChainId(upsertChainId));
         const isMappedHardhatChain = upsertChainId > 0 && upsertMappedChainId !== upsertChainId;
         const mapUpsert = await upsertSpCoinDeploymentMap({
           chainId: upsertChainId,
