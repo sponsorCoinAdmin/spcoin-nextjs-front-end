@@ -227,13 +227,7 @@ export class SpCoinSerialize {
         this.getAccountRecordObject = async (_accountKey) => {
             // console.log("==>3 getSerializedAccountRecord = async(" + _accountKey + ")");
             spCoinLogger.logFunctionHeader("getSerializedAccountRecord = async(" + _accountKey + ")");
-            let serializedAccountRec;
-            try {
-                serializedAccountRec = await this.spCoinContractDeployed.getSerializedAccountRecord(_accountKey);
-            }
-            catch (_error) {
-                serializedAccountRec = await buildSerializedAccountRecordFallback(this.spCoinContractDeployed, _accountKey);
-            }
+            const serializedAccountRec = await buildSerializedAccountRecordFallback(this.spCoinContractDeployed, _accountKey);
             spCoinLogger.logExitFunction();
             return this.deSerializedAccountRec(serializedAccountRec);
         };

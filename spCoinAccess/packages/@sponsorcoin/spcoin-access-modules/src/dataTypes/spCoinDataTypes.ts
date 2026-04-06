@@ -29,10 +29,10 @@ export class AccountStruct {
         this.totalPending = 0;
         this.totalSpCoins = 0;
         this.verified = false;
-        this.sponsorAccountList = 0;
+        this.parentSponsorList = 0;
         this.recipientAccountList = 0;
         this.agentAccountList = 0;
-        this.agentParentRecipientAccountList = 0;
+        this.parentRecipientList = 0;
         this.pendingStakedRewards = 0;
     }
 }

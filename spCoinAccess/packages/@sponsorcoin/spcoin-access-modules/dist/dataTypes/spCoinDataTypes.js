@@ -27,10 +27,10 @@ export class AccountStruct {
         this.stakedSPCoins = 0;
         this.creationTime = 0;
         this.verified = false;
-        this.sponsorAccountList = 0;
+        this.parentSponsorList = 0;
         this.recipientAccountList = 0;
         this.agentAccountList = 0;
-        this.agentParentRecipientAccountList = 0;
+        this.parentRecipientList = 0;
         this.recipientRecordList = 0;
         this.stakingRewards = 0;
         this.stakingRewardList = 0;

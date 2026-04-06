@@ -105,7 +105,12 @@ function hasVisibleDescendants(value: any, showAll: boolean): boolean {
 
 function getVisibleEntries(value: any, showAll: boolean): Array<[string, any]> {
   if (!value || typeof value !== 'object') return [];
-  if (showAll) return Object.entries(value);
+  if (showAll) {
+    if (Array.isArray(value)) {
+      return value.map((entry, index) => [String(index), entry] as [string, any]);
+    }
+    return Object.entries(value).filter(([childKey]) => childKey !== 'address');
+  }
 
   if (Array.isArray(value)) {
     return value
@@ -137,15 +142,16 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   onLeafValueClick,
 }) => {
   const visibleEntries = getVisibleEntries(data, showAll);
-  const isCollapsed = collapsedKeys.includes(path ?? '');
+  const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
+  const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
+  const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
+  const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
+  const isCollapsed = collapsedKeys.includes(path ?? '') || isLazyAddressStub;
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
   );
 
   const toggle = useCallback(() => {
-    const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
-    const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
-    const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
     if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
       onLeafValueClick?.(addressNode, path ?? '', 'address');
     }
