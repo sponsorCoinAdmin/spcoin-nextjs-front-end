@@ -464,28 +464,47 @@ export function useSponsorCoinLabMethods({
       return { list: cachedList };
     }
     const target = requireContractAddress();
-    const runner = await ensureReadRunner();
-    const access = createSpCoinLibraryAccess(
-      target,
-      runner,
-      undefined,
-      useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-    );
-    let list: string[];
-    try {
-      list = normalizeStringListResult(await (access.read as SpCoinReadAccess).getAccountList());
-    } catch (error) {
-      throw await enrichDirectReadError({
-        error,
-        method: 'getAccountList',
-        target,
-        runner,
-      });
+    const response = await fetch('/api/spCoin/run-script', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contractAddress: target,
+        rpcUrl,
+        spCoinAccessSource: 'local',
+        script: {
+          id: `load-account-list-${Date.now()}`,
+          name: 'Load Account List',
+          network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+          steps: [
+            {
+              step: 1,
+              name: 'getAccountList',
+              panel: 'spcoin_rread',
+              method: 'getAccountList',
+              mode,
+              params: [],
+            },
+          ],
+        },
+      }),
+    });
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      message?: string;
+      results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+    };
+    if (!response.ok) {
+      throw new Error(String(payload?.message || `Unable to load account list (${response.status})`));
     }
+    const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
+    if (!firstResult?.success) {
+      throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account list.'));
+    }
+    const list = normalizeStringListResult(firstResult?.payload?.result);
     treeAccountListCacheRef.current = list;
     syncTreeAccountOptions(list);
     return { list };
-  }, [ensureReadRunner, requireContractAddress, syncTreeAccountOptions]);
+  }, [mode, normalizeStringListResult, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
   const mergeFormattedOutput = useCallback(
     (nextBlock: string, baseOutput?: string) => {
       const current = String(baseOutput || '').trim();
@@ -778,75 +797,6 @@ export function useSponsorCoinLabMethods({
     setTreeOutputDisplay,
   ]);
 
-  const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
-    const listCall = buildMethodCallEntry('getAccountList');
-    try {
-      setTreeOutputDisplay('(no tree yet)');
-      setOutputPanelMode('tree');
-      setStatus('Building tree dump...');
-      const { list } = await loadTreeAccountOptions({ force: options?.force });
-      if (list.length === 0) {
-        setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
-        appendLog('Tree dump skipped: no accounts available.');
-        setStatus('Tree dump skipped (no accounts).');
-        return;
-      }
-      const requestedAccount = String(accountOverride || '').trim();
-      const activeAccount =
-        requestedAccount && list.includes(requestedAccount)
-          ? requestedAccount
-          : list.includes(selectedTreeAccount)
-            ? selectedTreeAccount
-            : list[0];
-      setSelectedTreeAccount(activeAccount);
-      const treeCall = buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: activeAccount }]);
-      let tree = treeAccountRecordCacheRef.current.get(activeAccount);
-      if (!tree || options?.force) {
-        const target = requireContractAddress();
-        const runner = await ensureReadRunner();
-        const access = createSpCoinLibraryAccess(
-          target,
-          runner,
-          undefined,
-          useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        );
-        try {
-          tree = await (access.read as SpCoinReadAccess).getAccountRecord(activeAccount);
-        } catch (error) {
-          throw await enrichDirectReadError({
-            error,
-            method: 'getAccountRecord',
-            target,
-            runner,
-          });
-        }
-        treeAccountRecordCacheRef.current.set(activeAccount, tree);
-      }
-      setTreeOutputDisplay(
-        formatOutputDisplayValue({
-          call: treeCall,
-          result: tree,
-        }),
-      );
-      appendLog(`spCoinReadMethods/getAccountRecord(${activeAccount}) -> ${JSON.stringify(tree)}`);
-      setStatus('Tree dump complete.');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
-      setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message }));
-      setStatus(`Tree dump failed: ${message}`);
-      appendLog(`Tree dump failed: ${message}`);
-    }
-  }, [
-    appendLog,
-    buildMethodCallEntry,
-    ensureReadRunner,
-    loadTreeAccountOptions,
-    requireContractAddress,
-    selectedTreeAccount,
-    setOutputPanelMode,
-    setStatus,
-    setTreeOutputDisplay,
-  ]);
   const runTreeAccountsRead = useCallback(async () => {
     const call = buildMethodCallEntry('getOffLineAccountRecords');
     try {
@@ -915,33 +865,10 @@ export function useSponsorCoinLabMethods({
     };
   }, [loadTreeAccountOptions, syncTreeAccountOptions]);
 
-  const refreshSelectedTreeAccount = useCallback(async () => {
-    const activeAccount = String(selectedTreeAccount || '').trim();
-    if (!activeAccount) {
-      setStatus('Refresh skipped: no active account selected.');
-      appendLog('Refresh skipped: no active account selected.');
-      return;
-    }
-
-    treeAccountListCacheRef.current = null;
-    treeAccountRecordCacheRef.current.delete(activeAccount);
-    setTreeAccountRefreshToken((prev) => prev + 1);
-    await runTreeDump(activeAccount, { force: true });
-  }, [appendLog, runTreeDump, selectedTreeAccount, setStatus]);
-
-  const requestRefreshSelectedTreeAccount = useCallback(() => {
-    showValidationPopup([], [], 'Reload Data Confirm', {
-      title: 'Reload Data Confirm',
-      confirmLabel: 'Reload Data',
-      cancelLabel: 'Reject',
-      onConfirm: () => refreshSelectedTreeAccount(),
-    });
-  }, [refreshSelectedTreeAccount, showValidationPopup]);
-
   const loadAccountRecordForAddress = useCallback(
-    async (account: string) => {
+    async (account: string, options?: { force?: boolean }) => {
       const normalizedAccount = normalizeAddressValue(account);
-      let tree = treeAccountRecordCacheRef.current.get(normalizedAccount);
+      let tree = options?.force ? undefined : treeAccountRecordCacheRef.current.get(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
         const response = await fetch('/api/spCoin/run-script', {
@@ -950,7 +877,7 @@ export function useSponsorCoinLabMethods({
           body: JSON.stringify({
             contractAddress: target,
             rpcUrl,
-            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            spCoinAccessSource: 'local',
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
@@ -985,13 +912,88 @@ export function useSponsorCoinLabMethods({
       }
       return tree;
     },
-    [mode, normalizeAddressValue, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
+    [mode, normalizeAddressValue, requireContractAddress, rpcUrl],
   );
 
+  const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
+    const listCall = buildMethodCallEntry('getAccountList');
+    try {
+      setTreeOutputDisplay('(no tree yet)');
+      setOutputPanelMode('tree');
+      setStatus('Building tree dump...');
+      const { list } = await loadTreeAccountOptions({ force: options?.force });
+      if (list.length === 0) {
+        setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [] }));
+        appendLog('Tree dump skipped: no accounts available.');
+        setStatus('Tree dump skipped (no accounts).');
+        return;
+      }
+      const requestedAccount = String(accountOverride || '').trim();
+      const activeAccount =
+        requestedAccount && list.includes(requestedAccount)
+          ? requestedAccount
+          : list.includes(selectedTreeAccount)
+            ? selectedTreeAccount
+            : list[0];
+      setSelectedTreeAccount(activeAccount);
+      const treeCall = buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: activeAccount }]);
+      let tree = treeAccountRecordCacheRef.current.get(activeAccount);
+      if (!tree || options?.force) {
+        tree = await loadAccountRecordForAddress(activeAccount);
+        treeAccountRecordCacheRef.current.set(activeAccount, tree);
+      }
+      setTreeOutputDisplay(
+        formatOutputDisplayValue({
+          call: treeCall,
+          result: tree,
+        }),
+      );
+      appendLog(`spCoinReadMethods/getAccountRecord(${activeAccount}) -> ${JSON.stringify(tree)}`);
+      setStatus('Tree dump complete.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
+      setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message }));
+      setStatus(`Tree dump failed: ${message}`);
+      appendLog(`Tree dump failed: ${message}`);
+    }
+  }, [
+    appendLog,
+    buildMethodCallEntry,
+    loadAccountRecordForAddress,
+    loadTreeAccountOptions,
+    selectedTreeAccount,
+    setOutputPanelMode,
+    setStatus,
+    setTreeOutputDisplay,
+  ]);
+
+  const refreshSelectedTreeAccount = useCallback(async () => {
+    const activeAccount = String(selectedTreeAccount || '').trim();
+    if (!activeAccount) {
+      setStatus('Refresh skipped: no active account selected.');
+      appendLog('Refresh skipped: no active account selected.');
+      return;
+    }
+
+    treeAccountListCacheRef.current = null;
+    treeAccountRecordCacheRef.current.delete(activeAccount);
+    setTreeAccountRefreshToken((prev) => prev + 1);
+    await runTreeDump(activeAccount, { force: true });
+  }, [appendLog, runTreeDump, selectedTreeAccount, setStatus]);
+
+  const requestRefreshSelectedTreeAccount = useCallback(() => {
+    showValidationPopup([], [], 'Reload Data Confirm', {
+      title: 'Reload Data Confirm',
+      confirmLabel: 'Reload Data',
+      cancelLabel: 'Reject',
+      onConfirm: () => refreshSelectedTreeAccount(),
+    });
+  }, [refreshSelectedTreeAccount, showValidationPopup]);
+
   const expandMasterSponsorListAccountInline = useCallback(
-    async (account: string) => {
+    async (account: string, pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedAccount = normalizeAddressValue(account);
-      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return false;
+      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
       let payload: Record<string, unknown> | null = null;
       try {
         const parsed = JSON.parse(String(formattedOutputDisplay || '').trim());
@@ -1001,33 +1003,48 @@ export function useSponsorCoinLabMethods({
       } catch {
         payload = null;
       }
-      if (!payload) return false;
+      if (!payload) return 'unhandled';
       const call = payload.call as Record<string, unknown> | undefined;
-      if (String(call?.method || '').trim() !== 'getMasterSponsorList') return false;
+      if (String(call?.method || '').trim() !== 'getMasterSponsorList') return 'unhandled';
       const currentResult = Array.isArray(payload.result) ? [...payload.result] : null;
-      if (!currentResult) return false;
-      const targetIndex = currentResult.findIndex((entry) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
-        const record = entry as Record<string, unknown>;
-        return normalizeAddressValue(String(record.address || '')) === normalizedAccount;
-      });
-      if (targetIndex < 0) return false;
-      const accountRecord = await loadAccountRecordForAddress(normalizedAccount);
-      currentResult[targetIndex] = {
-        address: normalizedAccount,
-        ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
-          ? (accountRecord as Record<string, unknown>)
-          : { value: accountRecord }),
-      };
-      setFormattedOutputDisplay(
-        formatFormattedPanelPayload({
-          ...payload,
-          result: currentResult,
-        }),
-      );
-      setStatus(`Loaded account record for ${normalizedAccount}.`);
-      appendLog(`Inline account record loaded for ${normalizedAccount}.`);
-      return true;
+      if (!currentResult) return 'unhandled';
+      const pathMatch = String(pathHint || '').match(/\.result\.(\d+)$/);
+      const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
+      const targetIndex =
+        Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
+          ? hintedIndex
+          : currentResult.findIndex((entry) => {
+              if (typeof entry === 'string') {
+                return normalizeAddressValue(entry) === normalizedAccount;
+              }
+              if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+              const record = entry as Record<string, unknown>;
+              return normalizeAddressValue(String(record.address || record.accountKey || '')) === normalizedAccount;
+            });
+      if (targetIndex < 0) return 'unhandled';
+      try {
+        const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
+        currentResult[targetIndex] = {
+          address: normalizedAccount,
+          ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+            ? (accountRecord as Record<string, unknown>)
+            : { value: accountRecord }),
+        };
+        setFormattedOutputDisplay(
+          formatFormattedPanelPayload({
+            ...payload,
+            result: currentResult,
+          }),
+        );
+        setStatus(`Loaded account record for ${normalizedAccount}.`);
+        appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+        return 'expanded';
+      } catch (error) {
+        const message = String(error instanceof Error ? error.message : error || '').trim() || 'Unable to load account record.';
+        setStatus(`Unable to load account record for ${normalizedAccount}.`);
+        appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
+        return 'handled';
+      }
     },
     [
       appendLog,
@@ -1041,8 +1058,9 @@ export function useSponsorCoinLabMethods({
   );
 
   const openAccountFromAddress = useCallback(
-    async (account: string) => {
-      if (await expandMasterSponsorListAccountInline(account)) {
+    async (account: string, pathHint?: string) => {
+      const inlineResult = await expandMasterSponsorListAccountInline(account, pathHint);
+      if (inlineResult === 'expanded' || inlineResult === 'handled') {
         setOutputPanelMode('formatted');
         return;
       }

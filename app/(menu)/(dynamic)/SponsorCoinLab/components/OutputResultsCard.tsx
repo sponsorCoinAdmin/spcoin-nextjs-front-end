@@ -22,6 +22,7 @@ type Props = {
   controls: {
     outputPanelMode: OutputPanelMode;
     setOutputPanelMode: (value: OutputPanelMode) => void;
+    refreshActiveOutput: () => void;
     buttonStyle: string;
     copyTextToClipboard: (label: string, value: string) => Promise<void>;
     setLogs: (value: string[]) => void;
@@ -60,7 +61,7 @@ type Props = {
     setSelectedTreeAccount: (value: string) => void;
     treeAccountRefreshToken: number;
     requestRefreshSelectedTreeAccount: () => void;
-    openAccountFromAddress: (account: string) => Promise<void>;
+    openAccountFromAddress: (account: string, pathHint?: string) => Promise<void>;
   };
 };
 
@@ -76,6 +77,8 @@ export default function OutputResultsCard({
 }: Props) {
   const actionButtonClassName =
     'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
+  const refreshIconButtonClassName =
+    'inline-flex h-10 w-10 min-w-10 shrink-0 items-center justify-center rounded-full border-0 bg-[#243056] text-[#5981F3] outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
   const [showTreeAccountDetails, setShowTreeAccountDetails] = useState(false);
   const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [selectedTreeAccountMetadata, setSelectedTreeAccountMetadata] = useState<{
@@ -232,6 +235,15 @@ export default function OutputResultsCard({
               ))}
             </div>
             <div className="ml-auto flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className={refreshIconButtonClassName}
+                onClick={() => controls.refreshActiveOutput()}
+                title="Refresh active command"
+                aria-label="Refresh active command"
+              >
+                <RotateCcw className="h-5 w-5" strokeWidth={2.2} />
+              </button>
               <button
                 type="button"
                 className={actionButtonClassName}
@@ -458,7 +470,7 @@ export default function OutputResultsCard({
                         ? activeInspectorRootLabel
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
-                    onLeafValueClick={(value) => void treeActions.openAccountFromAddress(value)}
+                    onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                   />
                 ))}
               </div>
@@ -485,7 +497,7 @@ export default function OutputResultsCard({
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={showAllTreeRecords}
-                    onLeafValueClick={(value) => void treeActions.openAccountFromAddress(value)}
+                    onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                   />
                 ))}
               </div>

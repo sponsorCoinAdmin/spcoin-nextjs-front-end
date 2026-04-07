@@ -215,7 +215,6 @@ export async function POST(request: NextRequest) {
     }
 
     const provider = new JsonRpcProvider(rpcUrl);
-    await provider.getNetwork();
 
     const hardhatAccounts = await readHardhatAccounts();
     const traceBase = [`server run-script start; rpc=${rpcUrl}; contract=${contractAddress}; script=${script.name || script.id}`];

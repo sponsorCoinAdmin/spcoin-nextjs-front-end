@@ -2757,6 +2757,38 @@ export default function SponsorCoinLabPage() {
       setSelectedWriteMethod,
     ],
   );
+  const refreshActiveOutput = useCallback(() => {
+    if (outputPanelMode === 'tree') {
+      requestRefreshSelectedTreeAccount();
+      return;
+    }
+    if (activeMethodPanelTab === 'utils') {
+      void runSelectedSerializationTestMethod();
+      return;
+    }
+    if (activeMethodPanelTab === 'erc20') {
+      if (methodPanelMode === 'ecr20_read') {
+        void runSelectedReadMethod();
+        return;
+      }
+      setStatus('Refresh is available for read/test/tree commands only.');
+      return;
+    }
+    if (activeMethodPanelTab === 'spcoin_rread') {
+      void runSelectedSpCoinReadMethod();
+      return;
+    }
+    setStatus('Refresh is available for read/test/tree commands only.');
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    outputPanelMode,
+    requestRefreshSelectedTreeAccount,
+    runSelectedReadMethod,
+    runSelectedSerializationTestMethod,
+    runSelectedSpCoinReadMethod,
+    setStatus,
+  ]);
   const handleAddCurrentMethodToScript = useCallback(() => {
     const savedStepNumber = addCurrentMethodToScript();
     if (!savedStepNumber) return;
@@ -3602,6 +3634,7 @@ export default function SponsorCoinLabPage() {
             controls={{
               outputPanelMode,
               setOutputPanelMode,
+              refreshActiveOutput,
               buttonStyle,
               copyTextToClipboard,
               setLogs,

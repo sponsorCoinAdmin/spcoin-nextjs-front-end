@@ -13,17 +13,81 @@ function toBigIntValue(value) {
     }
 }
 
+function getRelationshipReadCache(runtime) {
+    if (!runtime.__relationshipReadCache) {
+        runtime.__relationshipReadCache = {
+            accountRecordObject: new Map(),
+            recipientRateList: new Map(),
+            recipientRateAgentList: new Map(),
+            agentRateList: new Map(),
+            pendingRewardsSummary: new Map(),
+        };
+    }
+    return runtime.__relationshipReadCache;
+}
+
+async function getAccountRecordObjectCached(runtime, accountKey) {
+    const cache = getRelationshipReadCache(runtime);
+    const key = String(accountKey ?? "").trim().toLowerCase();
+    if (!cache.accountRecordObject.has(key)) {
+        cache.accountRecordObject.set(key, runtime.spCoinSerialize.getAccountRecordObject(accountKey));
+    }
+    return await cache.accountRecordObject.get(key);
+}
+
+async function getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey) {
+    const cache = getRelationshipReadCache(runtime);
+    const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}`;
+    if (!cache.recipientRateList.has(key)) {
+        cache.recipientRateList.set(key, runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey));
+    }
+    return await cache.recipientRateList.get(key);
+}
+
+async function getRecipientRateAgentListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
+    const cache = getRelationshipReadCache(runtime);
+    const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}`;
+    if (!cache.recipientRateAgentList.has(key)) {
+        cache.recipientRateAgentList.set(
+            key,
+            runtime.getRecipientRateAgentList(sponsorAccountKey, recipientAccountKey, recipientRateKey),
+        );
+    }
+    return await cache.recipientRateAgentList.get(key);
+}
+
+async function getAgentRateListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey) {
+    const cache = getRelationshipReadCache(runtime);
+    const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}|${String(agentAccountKey ?? "").trim().toLowerCase()}`;
+    if (!cache.agentRateList.has(key)) {
+        cache.agentRateList.set(
+            key,
+            runtime.getAgentRateList(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey),
+        );
+    }
+    return await cache.agentRateList.get(key);
+}
+
 async function getPendingRewardsSummary(runtime, accountKey) {
-    const rewardsByType = await runtime.getAccountStakingRewards(accountKey);
-    const pendingRewards = new PendingRewardsByTypeStruct();
-    pendingRewards.pendingRewardsByType = rewardsByType;
-    const totalPending = toBigIntValue(rewardsByType?.sponsorRewardsList?.stakingRewards) +
-        toBigIntValue(rewardsByType?.recipientRewardsList?.stakingRewards) +
-        toBigIntValue(rewardsByType?.agentRewardsList?.stakingRewards);
-    return {
-        pendingStakedRewards: [pendingRewards],
-        totalPending,
-    };
+    const cache = getRelationshipReadCache(runtime);
+    const key = String(accountKey ?? "").trim().toLowerCase();
+    if (cache.pendingRewardsSummary.has(key)) {
+        return await cache.pendingRewardsSummary.get(key);
+    }
+    const summaryPromise = (async () => {
+        const rewardsByType = await runtime.getAccountStakingRewards(accountKey);
+        const pendingRewards = new PendingRewardsByTypeStruct();
+        pendingRewards.pendingRewardsByType = rewardsByType;
+        const totalPending = toBigIntValue(rewardsByType?.sponsorRewardsList?.stakingRewards) +
+            toBigIntValue(rewardsByType?.recipientRewardsList?.stakingRewards) +
+            toBigIntValue(rewardsByType?.agentRewardsList?.stakingRewards);
+        return {
+            pendingStakedRewards: [pendingRewards],
+            totalPending,
+        };
+    })();
+    cache.pendingRewardsSummary.set(key, summaryPromise);
+    return await summaryPromise;
 }
 
 function createRelationshipBuildDebug(runtime, rootAccountKey) {
@@ -76,18 +140,20 @@ function toAgentRateKeysRecord(relationships) {
 async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKey, recipientAccountKey, agentAccountKey, debugState) {
     const relationships = [];
     if (debugState) debugState.recipientRateReads += 1;
-    const recipientRateKeys = await runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey);
-    for (const recipientRateKey of Array.isArray(recipientRateKeys) ? recipientRateKeys : []) {
+    const recipientRateKeys = await getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey);
+    for (const recipientRateKey of Array.from(new Set(Array.isArray(recipientRateKeys) ? recipientRateKeys.map((value) => String(value ?? "")) : []))) {
         if (debugState) debugState.recipientAgentReads += 1;
-        const agentAccountKeys = await runtime.getRecipientRateAgentList(
+        const agentAccountKeys = await getRecipientRateAgentListCached(
+            runtime,
             sponsorAccountKey,
             recipientAccountKey,
             recipientRateKey,
         );
-        for (const candidateAgentKey of Array.isArray(agentAccountKeys) ? agentAccountKeys : []) {
+        for (const candidateAgentKey of Array.from(new Set(Array.isArray(agentAccountKeys) ? agentAccountKeys.map((value) => String(value ?? "")) : []))) {
             if (String(candidateAgentKey ?? "").trim().toLowerCase() !== String(agentAccountKey ?? "").trim().toLowerCase()) continue;
             if (debugState) debugState.agentRateReads += 1;
-            const agentRateKeys = await runtime.getAgentRateList(
+            const agentRateKeys = await getAgentRateListCached(
+                runtime,
                 sponsorAccountKey,
                 recipientAccountKey,
                 recipientRateKey,
@@ -111,10 +177,11 @@ async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKe
 
 async function buildAgentParentRelationshipList(runtime, agentAccountKey, parentRecipientKeys, debugState) {
     const relationshipList = [];
-    for (const recipientAccountKey of Array.isArray(parentRecipientKeys) ? parentRecipientKeys : []) {
+    const uniqueParentRecipientKeys = Array.from(new Set(Array.isArray(parentRecipientKeys) ? parentRecipientKeys.map((value) => String(value ?? "").trim().toLowerCase()) : []));
+    for (const recipientAccountKey of uniqueParentRecipientKeys) {
         if (debugState) debugState.accountRecordReads += 1;
-        const recipientAccount = await runtime.spCoinSerialize.getAccountRecordObject(recipientAccountKey);
-        const sponsorAccountKeys = Array.isArray(recipientAccount?.sponsorAccountList) ? recipientAccount.sponsorAccountList : [];
+        const recipientAccount = await getAccountRecordObjectCached(runtime, recipientAccountKey);
+        const sponsorAccountKeys = Array.from(new Set(Array.isArray(recipientAccount?.sponsorAccountList) ? recipientAccount.sponsorAccountList.map((value) => String(value ?? "").trim().toLowerCase()) : []));
         for (const sponsorAccountKey of sponsorAccountKeys) {
             const relationships = await getAgentParentRelationshipsForRecipient(
                 runtime,
@@ -135,26 +202,28 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
     }
     try {
         if (debugState) debugState.recipientRateReads += 1;
-        const recipientRateList = await runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey);
+        const recipientRateList = await getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey);
         const recipientRateBranches = {};
-        for (const recipientRateKey of Array.isArray(recipientRateList) ? recipientRateList : []) {
+        for (const recipientRateKey of Array.from(new Set(Array.isArray(recipientRateList) ? recipientRateList.map((value) => String(value ?? "")) : []))) {
             if (debugState) debugState.recipientAgentReads += 1;
-            const agentAccountKeys = await runtime.getRecipientRateAgentList(
+            const agentAccountKeys = await getRecipientRateAgentListCached(
+                runtime,
                 sponsorAccountKey,
                 recipientAccountKey,
                 recipientRateKey,
             );
             const agentAccountList = [];
-            for (const agentAccountKey of Array.isArray(agentAccountKeys) ? agentAccountKeys : []) {
+            for (const agentAccountKey of Array.from(new Set(Array.isArray(agentAccountKeys) ? agentAccountKeys.map((value) => String(value ?? "").trim().toLowerCase()) : []))) {
                 if (debugState) debugState.agentRateReads += 1;
-                const agentRateKeys = await runtime.getAgentRateList(
+                const agentRateKeys = await getAgentRateListCached(
+                    runtime,
                     sponsorAccountKey,
                     recipientAccountKey,
                     recipientRateKey,
                     agentAccountKey,
                 );
                 const agentAccount = await getShallowAccountRecord(runtime, agentAccountKey);
-                const agentRelationships = (Array.isArray(agentRateKeys) ? agentRateKeys : []).map((agentRateKey) =>
+                const agentRelationships = (Array.isArray(agentRateKeys) ? Array.from(new Set(agentRateKeys.map((value) => String(value ?? "")))) : []).map((agentRateKey) =>
                     buildAgentParentRelationshipRecord(
                         sponsorAccountKey,
                         recipientAccountKey,
@@ -188,7 +257,8 @@ function normalizeDisplayAddress(value) {
 }
 
 async function getShallowAccountRecord(runtime, accountKey) {
-    const accountStruct = await runtime.spCoinSerialize.getAccountRecordObject(accountKey);
+    const baseAccountStruct = await getAccountRecordObjectCached(runtime, accountKey);
+    const accountStruct = { ...(baseAccountStruct || {}) };
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     const sponsorAccountKeys = Array.isArray(accountStruct.sponsorAccountList) ? accountStruct.sponsorAccountList : [];
     const parentRecipientKeys = Array.isArray(accountStruct.agentParentRecipientAccountList)
@@ -215,7 +285,8 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     if (normalizedKey)
         nextVisitedKeys.add(normalizedKey);
     if (debugState) debugState.accountRecordReads += 1;
-    const accountStruct = await runtime.spCoinSerialize.getAccountRecordObject(accountKey);
+    const baseAccountStruct = await getAccountRecordObjectCached(runtime, accountKey);
+    const accountStruct = { ...(baseAccountStruct || {}) };
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     const sponsorAccountKeys = Array.isArray(accountStruct.sponsorAccountList) ? accountStruct.sponsorAccountList : [];
     const recipientAccountKeys = Array.isArray(accountStruct.recipientAccountList) ? accountStruct.recipientAccountList : [];
@@ -277,23 +348,25 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
     const agentAccountList = [];
     for (const sponsorAccountKey of Array.isArray(sponsorAccountKeys) ? sponsorAccountKeys : []) {
         if (debugState) debugState.recipientRateReads += 1;
-        const recipientRateKeys = await runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey);
-        for (const recipientRateKey of Array.isArray(recipientRateKeys) ? recipientRateKeys : []) {
+        const recipientRateKeys = await getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey);
+        for (const recipientRateKey of Array.from(new Set(Array.isArray(recipientRateKeys) ? recipientRateKeys.map((value) => String(value ?? "")) : []))) {
             if (debugState) debugState.recipientAgentReads += 1;
-            const agentAccountKeys = await runtime.getRecipientRateAgentList(
+            const agentAccountKeys = await getRecipientRateAgentListCached(
+                runtime,
                 sponsorAccountKey,
                 recipientAccountKey,
                 recipientRateKey,
             );
-            for (const agentAccountKey of Array.isArray(agentAccountKeys) ? agentAccountKeys : []) {
+            for (const agentAccountKey of Array.from(new Set(Array.isArray(agentAccountKeys) ? agentAccountKeys.map((value) => String(value ?? "").trim().toLowerCase()) : []))) {
                 if (debugState) debugState.agentRateReads += 1;
-                const agentRateKeys = await runtime.getAgentRateList(
+                const agentRateKeys = await getAgentRateListCached(
+                    runtime,
                     sponsorAccountKey,
                     recipientAccountKey,
                     recipientRateKey,
                     agentAccountKey,
                 );
-                for (const agentRateKey of Array.isArray(agentRateKeys) ? agentRateKeys : []) {
+                for (const agentRateKey of Array.from(new Set(Array.isArray(agentRateKeys) ? agentRateKeys.map((value) => String(value ?? "")) : []))) {
                     const agentAccount = await buildNestedAccountRecord(runtime, agentAccountKey, depthRemaining, visitedKeys, debugState);
                     agentAccount.agentRateBranches = toAgentRateKeysRecord([
                         buildAgentParentRelationshipRecord(
