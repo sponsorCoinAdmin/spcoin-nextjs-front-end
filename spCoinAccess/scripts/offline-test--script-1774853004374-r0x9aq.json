@@ -15,15 +15,6 @@
     },
     {
       "step": 2,
-      "name": "creationTime",
-      "panel": "spcoin_rread",
-      "method": "creationTime",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 3,
       "name": "getOffLineAccountRecords",
       "panel": "spcoin_rread",
       "method": "getOffLineAccountRecords",
@@ -32,7 +23,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 4,
+      "step": 3,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -41,7 +32,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 4,
       "name": "addAgentSponsorship",
       "panel": "spcoin_write",
       "method": "addAgentSponsorship",
@@ -72,7 +63,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 5,
       "name": "getMasterSponsorList",
       "panel": "serialization_tests",
       "method": "getMasterSponsorList",

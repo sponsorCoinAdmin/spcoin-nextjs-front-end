@@ -96,6 +96,7 @@ async function enrichDirectReadError(params: {
 
 type Params = {
   activeContractAddress: string;
+  rpcUrl?: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
   selectedReadMethod: Erc20ReadMethod;
@@ -186,6 +187,7 @@ type Params = {
 
 export function useSponsorCoinLabMethods({
   activeContractAddress,
+  rpcUrl,
   mode,
   methodPanelMode,
   selectedReadMethod,
@@ -942,19 +944,48 @@ export function useSponsorCoinLabMethods({
       let tree = treeAccountRecordCacheRef.current.get(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
-        const runner = await ensureReadRunner();
-        const access = createSpCoinLibraryAccess(
-          target,
-          runner,
-          undefined,
-          useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        );
-        tree = await (access.read as SpCoinReadAccess).getAccountRecord(normalizedAccount);
+        const response = await fetch('/api/spCoin/run-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contractAddress: target,
+            rpcUrl,
+            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            script: {
+              id: `expand-account-record-${Date.now()}`,
+              name: 'Expand Account Record',
+              network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+              steps: [
+                {
+                  step: 1,
+                  name: 'getAccountRecord',
+                  panel: 'spcoin_rread',
+                  method: 'getAccountRecord',
+                  mode,
+                  params: [{ key: 'Account Key', value: normalizedAccount }],
+                },
+              ],
+            },
+          }),
+        });
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          message?: string;
+          results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+        };
+        if (!response.ok) {
+          throw new Error(String(payload?.message || `Unable to load account record (${response.status})`));
+        }
+        const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
+        if (!firstResult?.success) {
+          throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account record.'));
+        }
+        tree = firstResult?.payload?.result;
         treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
       }
       return tree;
     },
-    [ensureReadRunner, normalizeAddressValue, requireContractAddress, useLocalSpCoinAccessPackage],
+    [mode, normalizeAddressValue, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
   );
 
   const expandMasterSponsorListAccountInline = useCallback(

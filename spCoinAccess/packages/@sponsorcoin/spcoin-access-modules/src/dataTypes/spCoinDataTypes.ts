@@ -29,11 +29,11 @@ export class AccountStruct {
         this.totalPending = 0;
         this.totalSpCoins = 0;
         this.verified = false;
-        this.parentSponsorList = 0;
-        this.recipientAccountList = 0;
-        this.agentAccountList = 0;
-        this.parentRecipientList = 0;
-        this.pendingStakedRewards = 0;
+        this.recipientAccountList = [];
+        this.recipientRateBranches = {};
+        this.agentAccountList = [];
+        this.agentRateBranches = {};
+        this.pendingStakedRewards = [];
     }
 }
 export class RelationshipRecordStruct {

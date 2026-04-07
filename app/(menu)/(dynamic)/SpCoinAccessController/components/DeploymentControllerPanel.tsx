@@ -172,7 +172,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   className={accountInfoLabelClassName}
                   title="Toggle deployment account details"
                 >
-                  Deployment Owner
+                  Owner
                 </button>
                 <input
                   type="text"

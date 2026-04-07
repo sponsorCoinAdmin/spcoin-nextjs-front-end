@@ -27,7 +27,11 @@ function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
   if (typeof savedRpcUrl !== 'string') return undefined;
   const trimmed = savedRpcUrl.trim();
   if (!trimmed) return undefined;
-  if (savedMode === 'hardhat' && /^http:\/\/localhost:8545\/?$/i.test(trimmed)) {
+  if (
+    savedMode === 'hardhat' &&
+    (/^http:\/\/localhost:8545\/?$/i.test(trimmed) ||
+      /^http:\/\/127\.0\.0\.1:8545\/?$/i.test(trimmed))
+  ) {
     return DEFAULT_HARDHAT_RPC_URL;
   }
   return trimmed;

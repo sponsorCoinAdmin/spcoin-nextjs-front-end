@@ -1653,12 +1653,20 @@ export async function GET(request: Request) {
         );
       }
       const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
-      const spCoinMetaData = includeMetadata
-        ? await handleGetSpCoinMetaData(deploymentPublicKey, deploymentChainIdRaw)
-        : undefined;
+      let spCoinMetaData: AccessManagerResponse['spCoinMetaData'] | undefined;
+      let metadataWarning = '';
+      if (includeMetadata) {
+        try {
+          spCoinMetaData = await handleGetSpCoinMetaData(deploymentPublicKey, deploymentChainIdRaw);
+        } catch (error) {
+          metadataWarning = String(error instanceof Error ? error.message : error || '').trim();
+        }
+      }
       return NextResponse.json({
         ok: true,
-        message: `Token status: ${status.tokenStatus}`,
+        message: metadataWarning
+          ? `Token status: ${status.tokenStatus}. Metadata unavailable: ${metadataWarning}`
+          : `Token status: ${status.tokenStatus}`,
         packages,
         workspaceRoot: WORKSPACE_ROOT,
         contractDirExists: status.contractDirExists,

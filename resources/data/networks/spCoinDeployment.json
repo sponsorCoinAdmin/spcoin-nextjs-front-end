@@ -14,11 +14,11 @@
     "8453": {},
     "31337": {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80": {
-        "3": {
-          "0X8800FD7DF7315A0B17B781711C154513A2E9CF95": {
+        "0": {
+          "0X659521C9DA035B6A9FE21CED9E324859711AD1D5": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-            "name": "Sponsor Coin V3",
-            "symbol": "SPCOIN_V3",
+            "name": "Sponsor Coin V0",
+            "symbol": "SPCOIN_V0",
             "decimals": 18
           }
         }

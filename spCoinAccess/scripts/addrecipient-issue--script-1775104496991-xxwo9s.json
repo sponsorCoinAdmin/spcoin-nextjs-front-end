@@ -15,15 +15,6 @@
     },
     {
       "step": 2,
-      "name": "getAccountList",
-      "panel": "spcoin_rread",
-      "method": "getAccountList",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 3,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -32,7 +23,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 4,
+      "step": 3,
       "name": "addRecipient",
       "panel": "spcoin_write",
       "method": "addRecipient",
@@ -47,7 +38,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 4,
       "name": "getAccountList",
       "panel": "spcoin_rread",
       "method": "getAccountList",
@@ -56,7 +47,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 5,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -65,7 +56,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 6,
       "name": "deleteAccountTree",
       "panel": "spcoin_write",
       "method": "deleteAccountTree",
@@ -75,7 +66,7 @@
       "hasMissingRequiredParams": true
     },
     {
-      "step": 8,
+      "step": 7,
       "name": "getAccountList",
       "panel": "spcoin_rread",
       "method": "getAccountList",
@@ -84,7 +75,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 9,
+      "step": 8,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -93,7 +84,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 10,
+      "step": 9,
       "name": "addRecipient",
       "panel": "spcoin_write",
       "method": "addRecipient",
@@ -108,7 +99,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 11,
+      "step": 10,
       "name": "getAccountList",
       "panel": "spcoin_rread",
       "method": "getAccountList",
@@ -117,7 +108,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 12,
+      "step": 11,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -126,7 +117,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 13,
+      "step": 12,
       "name": "deleteAccountTree",
       "panel": "spcoin_write",
       "method": "deleteAccountTree",
@@ -136,7 +127,7 @@
       "hasMissingRequiredParams": true
     },
     {
-      "step": 14,
+      "step": 13,
       "name": "addRecipient",
       "panel": "spcoin_write",
       "method": "addRecipient",

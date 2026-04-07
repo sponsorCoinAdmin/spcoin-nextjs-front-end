@@ -261,6 +261,9 @@ export async function POST(request: NextRequest) {
             case 'getAccountList':
               result = await access.read.getAccountList();
               break;
+            case 'getAccountRecord':
+              result = await access.read.getAccountRecord(findParam('Account Key'));
+              break;
             case 'getAccountListSize':
               if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
                 result = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
