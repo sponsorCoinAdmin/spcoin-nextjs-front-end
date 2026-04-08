@@ -21,19 +21,24 @@ export class SponsorCoinHeader {
 export class AccountStruct {
     // Initialize values to maintain output display order
     constructor() {
-        this.TYPE = "--ACCOUNT--";
         this.accountKey = 0;
         this.creationTime = 0;
-        this.balanceOf = 0;
-        this.stakedBalance = 0;
-        this.totalPending = 0;
-        this.totalSpCoins = 0;
-        this.verified = false;
+        this.totalSpCoins = new TotalSpCoinsStruct();
+        this.pendingSponsorRewards = 0;
+        this.pendingRecipientRewards = 0;
+        this.pendingAgentRewards = 0;
         this.recipientAccountList = [];
         this.recipientRateBranches = {};
         this.agentAccountList = [];
         this.agentRateBranches = {};
-        this.pendingStakedRewards = [];
+    }
+}
+export class TotalSpCoinsStruct {
+    constructor() {
+        this.totalSpCoins = 0;
+        this.balanceOf = 0;
+        this.stakedBalance = 0;
+        this.pendingRewards = 0;
     }
 }
 export class RelationshipRecordStruct {

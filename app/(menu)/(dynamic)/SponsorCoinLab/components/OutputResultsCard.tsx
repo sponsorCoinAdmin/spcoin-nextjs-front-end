@@ -65,6 +65,42 @@ type Props = {
   };
 };
 
+function groupFormattedPendingRewards(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => groupFormattedPendingRewards(entry));
+  }
+  if (!value || typeof value !== 'object') return value;
+
+  const record = value as Record<string, unknown>;
+  const nextRecord: Record<string, unknown> = {};
+  const hasGroupedPendingRewards =
+    ['pendingRewards', 'pendingSponsorRewards', 'pendingRecipientRewards', 'pendingAgentRewards'].every(
+      (key) => Object.prototype.hasOwnProperty.call(record, key),
+    ) &&
+    typeof record.pendingRewards !== 'object';
+
+  for (const [key, childValue] of Object.entries(record)) {
+    if (
+      hasGroupedPendingRewards &&
+      (key === 'pendingSponsorRewards' || key === 'pendingRecipientRewards' || key === 'pendingAgentRewards')
+    ) {
+      continue;
+    }
+    if (hasGroupedPendingRewards && key === 'pendingRewards') {
+      nextRecord.pendingRewards = {
+        pendingRewards: record.pendingRewards,
+        pendingSponsorRewards: record.pendingSponsorRewards,
+        pendingRecipientRewards: record.pendingRecipientRewards,
+        pendingAgentRewards: record.pendingAgentRewards,
+      };
+      continue;
+    }
+    nextRecord[key] = groupFormattedPendingRewards(childValue);
+  }
+
+  return nextRecord;
+}
+
 export default function OutputResultsCard({
   className,
   style,
@@ -136,7 +172,9 @@ export default function OutputResultsCard({
   );
   const collapsibleFormattedBlocks = useMemo(() => {
     if (controls.formattedJsonViewEnabled) return null;
-    return parseCollapsibleBlocks(currentFormattedDisplay);
+    const parsedBlocks = parseCollapsibleBlocks(currentFormattedDisplay);
+    if (!parsedBlocks) return null;
+    return parsedBlocks.map((block) => groupFormattedPendingRewards(block));
   }, [controls.formattedJsonViewEnabled, currentFormattedDisplay, parseCollapsibleBlocks]);
   const collapsibleTreeBlocks = useMemo(() => {
     if (controls.formattedJsonViewEnabled || controls.outputPanelMode !== 'tree') return null;
