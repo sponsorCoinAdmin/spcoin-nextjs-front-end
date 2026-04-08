@@ -36,6 +36,17 @@ export async function deleteAccountTree() {
     const countedAccountKeys = new Set();
     const activeAccountKeys = new Set();
     const sleep = async (ms) => await new Promise((resolve) => setTimeout(resolve, ms));
+    const isLiveAccount = async (accountKey) => {
+        if (typeof read.isAccountInserted === "function") {
+            try {
+                return Boolean(await callWithRetry("isAccountInserted(" + accountKey + ")", () => read.isAccountInserted(accountKey)));
+            }
+            catch (_e) {
+                return false;
+            }
+        }
+        return accountKeySet.has(accountKey);
+    };
     const isRetryableTransportError = (error) => {
         const text = String((error === null || error === void 0 ? void 0 : error.message) || error || '').toLowerCase();
         return (text.includes('failed to fetch') ||
@@ -68,6 +79,10 @@ export async function deleteAccountTree() {
         if (processedAccountKeys.has(sponsorKey)) {
             return;
         }
+        if (!(await isLiveAccount(sponsorKey))) {
+            processedAccountKeys.add(sponsorKey);
+            return;
+        }
         if (!countedAccountKeys.has(sponsorKey)) {
             summary.accountCount += 1;
             countedAccountKeys.add(sponsorKey);
@@ -82,8 +97,12 @@ export async function deleteAccountTree() {
             for (const recipientKeyValue of Array.isArray(recipientList) ? recipientList : []) {
                 const recipientKey = String(recipientKeyValue);
                 summary.recipientCount += 1;
-                if (accountKeySet.has(recipientKey)) {
+                const recipientIsLiveBeforeUnlink = await isLiveAccount(recipientKey);
+                if (recipientIsLiveBeforeUnlink && accountKeySet.has(recipientKey)) {
                     await walkAccountTree(recipientKey, true);
+                }
+                if (!(await isLiveAccount(sponsorKey)) || !(await isLiveAccount(recipientKey))) {
+                    continue;
                 }
                 const recipientRateList = await callWithRetry("getRecipientRateList(" + sponsorKey + "," + recipientKey + ")", () => read.getRecipientRateList(sponsorKey, recipientKey));
                 for (const recipientRateKey of Array.isArray(recipientRateList) ? recipientRateList : []) {
@@ -101,16 +120,24 @@ export async function deleteAccountTree() {
                     summary.deletedRecipientCount += 1;
                     await sleep(200);
                 }
-                if (accountKeySet.has(recipientKey)) {
-                    await walkAccountTree(recipientKey, false);
+                if (recipientIsLiveBeforeUnlink &&
+                    accountKeySet.has(recipientKey) &&
+                    (await isLiveAccount(recipientKey))) {
+                    await callWithRetry("deleteAccountRecord(" + recipientKey + ")", () => deleteMethods.deleteAccountRecord(recipientKey));
+                    summary.deletedAccountCount += 1;
+                    processedAccountKeys.add(recipientKey);
+                    await sleep(200);
                 }
             }
             const shouldDeferSignerDelete = !deferDelete && signerKey && sponsorKey.toLowerCase() === signerKey.toLowerCase();
-            if (!deferDelete && !shouldDeferSignerDelete) {
+            if (!deferDelete && !shouldDeferSignerDelete && (await isLiveAccount(sponsorKey))) {
                 await callWithRetry("deleteAccountRecord(" + sponsorKey + ")", () => deleteMethods.deleteAccountRecord(sponsorKey));
                 summary.deletedAccountCount += 1;
                 processedAccountKeys.add(sponsorKey);
                 await sleep(200);
+            }
+            else if (!deferDelete && !shouldDeferSignerDelete) {
+                processedAccountKeys.add(sponsorKey);
             }
             else if (shouldDeferSignerDelete) {
                 (_e = (_d = this.logger) === null || _d === void 0 ? void 0 : _d.logDetail) === null || _e === void 0 ? void 0 : _e.call(_d, "JS => deleteAccountTree deferring signer account delete for " + sponsorKey + " until end of traversal");

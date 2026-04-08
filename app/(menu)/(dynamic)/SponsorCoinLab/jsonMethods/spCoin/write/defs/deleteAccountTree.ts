@@ -3,7 +3,7 @@ import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
   title: 'delAccountTree',
-  params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
+  params: [],
 };
 
 export default methodDef;

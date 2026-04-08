@@ -39,6 +39,7 @@ function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
 
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
+type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 
 function normalizeSerializationTestMethodKey(value: string) {
   const trimmed = String(value || '').trim();
@@ -99,6 +100,22 @@ type Params = {
   setWriteTraceEnabled: (value: boolean) => void;
   treeOutputDisplay: string;
   setTreeOutputDisplay: (value: string) => void;
+  showTreeAccountDetails: boolean;
+  setShowTreeAccountDetails: (value: boolean) => void;
+  showAllTreeRecords: boolean;
+  setShowAllTreeRecords: (value: boolean) => void;
+  expandedCard: LabCardId | null;
+  setExpandedCard: (value: LabCardId | null) => void;
+  showOnChainMethods: boolean;
+  setShowOnChainMethods: (value: boolean) => void;
+  showOffChainMethods: boolean;
+  setShowOffChainMethods: (value: boolean) => void;
+  auxMethodPanelTab: 'utils' | null;
+  setAuxMethodPanelTab: (value: 'utils' | null) => void;
+  isSpCoinTodoMode: boolean;
+  setIsSpCoinTodoMode: (value: boolean) => void;
+  selectedTreeAccount: string;
+  setSelectedTreeAccount: (value: string) => void;
   selectedWriteMethod: Erc20WriteMethod;
   setSelectedWriteMethod: (value: Erc20WriteMethod) => void;
   writeAddressA: string;
@@ -208,6 +225,22 @@ export function useSponsorCoinLabPersistence({
   setWriteTraceEnabled,
   treeOutputDisplay,
   setTreeOutputDisplay,
+  showTreeAccountDetails,
+  setShowTreeAccountDetails,
+  showAllTreeRecords,
+  setShowAllTreeRecords,
+  expandedCard,
+  setExpandedCard,
+  showOnChainMethods,
+  setShowOnChainMethods,
+  showOffChainMethods,
+  setShowOffChainMethods,
+  auxMethodPanelTab,
+  setAuxMethodPanelTab,
+  isSpCoinTodoMode,
+  setIsSpCoinTodoMode,
+  selectedTreeAccount,
+  setSelectedTreeAccount,
   selectedWriteMethod,
   setSelectedWriteMethod,
   writeAddressA,
@@ -404,6 +437,27 @@ export function useSponsorCoinLabPersistence({
             setWriteTraceEnabled(saved.writeTraceEnabled);
           }
           if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
+          if (typeof saved.showTreeAccountDetails === 'boolean') setShowTreeAccountDetails(saved.showTreeAccountDetails);
+          if (typeof saved.showAllTreeRecords === 'boolean') setShowAllTreeRecords(saved.showAllTreeRecords);
+          if (
+            saved.expandedCard === 'network' ||
+            saved.expandedCard === 'contract' ||
+            saved.expandedCard === 'methods' ||
+            saved.expandedCard === 'log' ||
+            saved.expandedCard === 'output' ||
+            saved.expandedCard === null
+          ) {
+            setExpandedCard(saved.expandedCard ?? null);
+          }
+          if (typeof saved.showOnChainMethods === 'boolean') setShowOnChainMethods(saved.showOnChainMethods);
+          if (typeof saved.showOffChainMethods === 'boolean') setShowOffChainMethods(saved.showOffChainMethods);
+          if (saved.auxMethodPanelTab === 'utils' || saved.auxMethodPanelTab === null) {
+            setAuxMethodPanelTab(saved.auxMethodPanelTab ?? null);
+          }
+          if (typeof saved.isSpCoinTodoMode === 'boolean') setIsSpCoinTodoMode(saved.isSpCoinTodoMode);
+          if (typeof saved.selectedTreeAccount === 'string') {
+            setSelectedTreeAccount(normalizeAddressValue(saved.selectedTreeAccount));
+          }
           if (
             saved.selectedSponsorCoinAccountRole === 'sponsor' ||
             saved.selectedSponsorCoinAccountRole === 'recipient' ||
@@ -498,6 +552,14 @@ export function useSponsorCoinLabPersistence({
       formattedJsonViewEnabled,
       writeTraceEnabled,
       treeOutputDisplay,
+      showTreeAccountDetails,
+      showAllTreeRecords,
+      expandedCard,
+      showOnChainMethods,
+      showOffChainMethods,
+      auxMethodPanelTab,
+      isSpCoinTodoMode,
+      selectedTreeAccount,
       selectedWriteMethod,
       writeAddressA,
       writeAddressB,
@@ -553,6 +615,14 @@ export function useSponsorCoinLabPersistence({
     formattedJsonViewEnabled,
     writeTraceEnabled,
     treeOutputDisplay,
+    showTreeAccountDetails,
+    showAllTreeRecords,
+    expandedCard,
+    showOnChainMethods,
+    showOffChainMethods,
+    auxMethodPanelTab,
+    isSpCoinTodoMode,
+    selectedTreeAccount,
     selectedWriteMethod,
     writeAddressA,
     writeAddressB,

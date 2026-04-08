@@ -327,7 +327,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'delAccountTree': {
-      const accountKey = asString(methodArgs[0]);
       setStatus(`Submitting ${activeDef.title}...`);
       appendWriteTrace?.(`submitWorkflow(${activeDef.title}) start`);
       const summary = await executeWriteConnected(
@@ -337,7 +336,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
           access.del.signer = signer;
           appendWriteTrace?.(`submitWorkflow(${activeDef.title}) offChain.deleteAccountTree enter`);
-          return access.offChain.deleteAccountTree(accountKey);
+          return access.offChain.deleteAccountTree();
         },
         selectedHardhatAddress,
       );

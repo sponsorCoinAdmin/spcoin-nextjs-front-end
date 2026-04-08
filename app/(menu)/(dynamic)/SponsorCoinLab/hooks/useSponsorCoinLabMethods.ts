@@ -253,6 +253,51 @@ export function useSponsorCoinLabMethods({
   const treeAccountListCacheRef = useRef<string[] | null>(null);
   const treeAccountRecordCacheRef = useRef<Map<string, unknown>>(new Map());
 
+  const runServerBackedSpCoinStep = useCallback(
+    async (panel: 'spcoin_rread' | 'spcoin_write', method: string, params: Array<{ key: string; value: string }>, sender?: string) => {
+      const target = requireContractAddress();
+      const response = await fetch('/api/spCoin/run-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractAddress: target,
+          rpcUrl,
+          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+          script: {
+            id: `spcoin-rread-${method}-${Date.now()}`,
+            name: method,
+            network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+            steps: [
+              {
+                step: 1,
+                name: method,
+                panel,
+                method,
+                mode,
+                ...(sender ? { 'msg.sender': sender } : {}),
+                params,
+              },
+            ],
+          },
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+      };
+      if (!response.ok) {
+        throw new Error(String(payload?.message || `Unable to run ${method} (${response.status})`));
+      }
+      const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
+      if (!firstResult?.success) {
+        throw new Error(String(firstResult?.payload?.error?.message || `Unable to run ${method}.`));
+      }
+      return firstResult?.payload?.result;
+    },
+    [mode, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
+  );
+
   useEffect(() => {
     treeAccountListCacheRef.current = null;
     treeAccountRecordCacheRef.current.clear();
@@ -633,17 +678,30 @@ export function useSponsorCoinLabMethods({
             value: localParams[idx] || '',
           })),
         );
-        const result = await runSpCoinReadMethod({
-          selectedMethod,
-          spReadParams: localParams,
-          coerceParamValue,
-          stringifyResult,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          requireContractAddress,
-          ensureReadRunner,
-          appendLog,
-          setStatus,
-        });
+        const shouldUseServerBackedRead =
+          useLocalSpCoinAccessPackage &&
+          mode === 'hardhat' &&
+          ['getAccountRecord', 'getAccountList', 'getAccountListSize'].includes(selectedMethod);
+        const result = shouldUseServerBackedRead
+          ? await runServerBackedSpCoinStep(
+              'spcoin_rread',
+              selectedMethod,
+              def.params.map((param, idx) => ({
+                key: param.label,
+                value: localParams[idx] || '',
+              })),
+            )
+          : await runSpCoinReadMethod({
+              selectedMethod,
+              spReadParams: localParams,
+              coerceParamValue,
+              stringifyResult,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              requireContractAddress,
+              ensureReadRunner,
+              appendLog,
+              setStatus,
+            });
         return { call, result };
       }
 
@@ -692,17 +750,29 @@ export function useSponsorCoinLabMethods({
       appendWriteTrace(
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
-      const result = await runSpCoinWriteMethod({
-        selectedMethod,
-        spWriteParams: localParams,
-        coerceParamValue,
-        executeWriteConnected,
-        selectedHardhatAddress: signer,
-        appendLog,
-        appendWriteTrace,
-        spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        setStatus,
-      });
+      const shouldUseServerBackedWrite =
+        useLocalSpCoinAccessPackage && mode === 'hardhat' && selectedMethod === 'delAccountTree';
+      const result = shouldUseServerBackedWrite
+        ? await runServerBackedSpCoinStep(
+            'spcoin_write',
+            selectedMethod,
+            def.params.map((param, idx) => ({
+              key: param.label,
+              value: localParams[idx] || '',
+            })),
+            signer,
+          )
+        : await runSpCoinWriteMethod({
+            selectedMethod,
+            spWriteParams: localParams,
+            coerceParamValue,
+            executeWriteConnected,
+            selectedHardhatAddress: signer,
+            appendLog,
+            appendWriteTrace,
+            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            setStatus,
+          });
       return { call, result };
     },
     [
@@ -716,6 +786,7 @@ export function useSponsorCoinLabMethods({
       hardhatAccounts,
       mode,
       requireContractAddress,
+      runServerBackedSpCoinStep,
       selectedHardhatAddress,
       setStatus,
       spCoinReadMethodDefs,
@@ -1225,7 +1296,7 @@ export function useSponsorCoinLabMethods({
               panel: 'spcoin_rread',
               source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
               method: selectedSpCoinReadMethod,
-              trace: getRecentWriteTrace(),
+              trace: [],
             },
           },
         }),
@@ -1426,7 +1497,7 @@ export function useSponsorCoinLabMethods({
                 panel: step.panel,
                 source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
                 method: step.method,
-                trace: getRecentWriteTrace(),
+                trace: step.panel === 'spcoin_write' || step.panel === 'erc20_write' ? getRecentWriteTrace() : [],
               },
             },
           },

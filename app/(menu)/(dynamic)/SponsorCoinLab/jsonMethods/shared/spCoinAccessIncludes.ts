@@ -72,7 +72,7 @@ export type SpCoinDeleteAccess = {
 export type SpCoinOffChainAccess = {
   addRecipients: (_accountKey: string, _recipientAccountList: string[]) => Promise<number>;
   addAgents: (_recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<number>;
-  deleteAccountTree: (_accountKey: string) => Promise<{
+  deleteAccountTree: () => Promise<{
     accountCount: number;
     recipientCount: number;
     recipientRateCount: number;
@@ -444,7 +444,7 @@ function createSpCoinOffChainAccess(
       }
       return agentCount;
     },
-    deleteAccountTree: async (_accountKey: string) => {
+    deleteAccountTree: async () => {
       const summary = {
         accountCount: 0,
         recipientCount: 0,
@@ -461,7 +461,10 @@ function createSpCoinOffChainAccess(
         throw await buildReadDecodeError(error, 'getAccountList');
       }
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
-      const targetAccountKey = String(_accountKey || '').trim();
+      const targetAccountKey = String((await del.signer?.getAddress?.()) || '').trim();
+      if (!targetAccountKey) {
+        throw new Error('deleteAccountTree requires a connected signer.');
+      }
       const processedAccountKeys = new Set<string>();
       const countedAccountKeys = new Set<string>();
       const activeAccountKeys = new Set<string>();

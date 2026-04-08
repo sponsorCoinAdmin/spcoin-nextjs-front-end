@@ -24,9 +24,6 @@ export class AccountStruct {
         this.accountKey = 0;
         this.creationTime = 0;
         this.totalSpCoins = new TotalSpCoinsStruct();
-        this.pendingSponsorRewards = 0;
-        this.pendingRecipientRewards = 0;
-        this.pendingAgentRewards = 0;
         this.recipientAccountList = [];
         this.recipientRateBranches = {};
         this.agentAccountList = [];
@@ -41,7 +38,15 @@ export class TotalSpCoinsStruct {
         this.totalSpCoins = 0;
         this.balanceOf = 0;
         this.stakedBalance = 0;
+        this.pendingRewards = new PendingRewardsStruct();
+    }
+}
+export class PendingRewardsStruct {
+    constructor() {
         this.pendingRewards = 0;
+        this.pendingSponsorRewards = 0;
+        this.pendingRecipientRewards = 0;
+        this.pendingAgentRewards = 0;
     }
 }
 export class RecipientStruct {

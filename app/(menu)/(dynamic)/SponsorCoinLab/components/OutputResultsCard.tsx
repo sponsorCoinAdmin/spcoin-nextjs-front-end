@@ -33,6 +33,10 @@ type Props = {
     setFormattedPanelView: (value: FormattedPanelView) => void;
     formattedJsonViewEnabled: boolean;
     setFormattedJsonViewEnabled: (value: boolean) => void;
+    showTreeAccountDetails: boolean;
+    setShowTreeAccountDetails: (value: boolean) => void;
+    showAllTreeRecords: boolean;
+    setShowAllTreeRecords: (value: boolean) => void;
   };
   content: {
     logs: string[];
@@ -65,42 +69,6 @@ type Props = {
   };
 };
 
-function groupFormattedPendingRewards(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => groupFormattedPendingRewards(entry));
-  }
-  if (!value || typeof value !== 'object') return value;
-
-  const record = value as Record<string, unknown>;
-  const nextRecord: Record<string, unknown> = {};
-  const hasGroupedPendingRewards =
-    ['pendingRewards', 'pendingSponsorRewards', 'pendingRecipientRewards', 'pendingAgentRewards'].every(
-      (key) => Object.prototype.hasOwnProperty.call(record, key),
-    ) &&
-    typeof record.pendingRewards !== 'object';
-
-  for (const [key, childValue] of Object.entries(record)) {
-    if (
-      hasGroupedPendingRewards &&
-      (key === 'pendingSponsorRewards' || key === 'pendingRecipientRewards' || key === 'pendingAgentRewards')
-    ) {
-      continue;
-    }
-    if (hasGroupedPendingRewards && key === 'pendingRewards') {
-      nextRecord.pendingRewards = {
-        pendingRewards: record.pendingRewards,
-        pendingSponsorRewards: record.pendingSponsorRewards,
-        pendingRecipientRewards: record.pendingRecipientRewards,
-        pendingAgentRewards: record.pendingAgentRewards,
-      };
-      continue;
-    }
-    nextRecord[key] = groupFormattedPendingRewards(childValue);
-  }
-
-  return nextRecord;
-}
-
 export default function OutputResultsCard({
   className,
   style,
@@ -115,8 +83,6 @@ export default function OutputResultsCard({
     'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const refreshIconButtonClassName =
     'inline-flex h-10 w-10 min-w-10 shrink-0 items-center justify-center rounded-full border-0 bg-[#243056] text-[#5981F3] outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
-  const [showTreeAccountDetails, setShowTreeAccountDetails] = useState(false);
-  const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [selectedTreeAccountMetadata, setSelectedTreeAccountMetadata] = useState<{
     name?: string;
     symbol?: string;
@@ -172,9 +138,7 @@ export default function OutputResultsCard({
   );
   const collapsibleFormattedBlocks = useMemo(() => {
     if (controls.formattedJsonViewEnabled) return null;
-    const parsedBlocks = parseCollapsibleBlocks(currentFormattedDisplay);
-    if (!parsedBlocks) return null;
-    return parsedBlocks.map((block) => groupFormattedPendingRewards(block));
+    return parseCollapsibleBlocks(currentFormattedDisplay);
   }, [controls.formattedJsonViewEnabled, currentFormattedDisplay, parseCollapsibleBlocks]);
   const collapsibleTreeBlocks = useMemo(() => {
     if (controls.formattedJsonViewEnabled || controls.outputPanelMode !== 'tree') return null;
@@ -358,13 +322,13 @@ export default function OutputResultsCard({
             </div>
             <div
               className={`mt-4 grid grid-cols-1 gap-3${
-                showTreeAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
+                controls.showTreeAccountDetails ? ' rounded-xl border border-[#31416F] bg-[#0B1220] p-3' : ''
               }`}
             >
               <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <button
                   type="button"
-                  onClick={() => setShowTreeAccountDetails((prev) => !prev)}
+                  onClick={() => controls.setShowTreeAccountDetails(!controls.showTreeAccountDetails)}
                   className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
                   title="Toggle active account details"
                 >
@@ -400,7 +364,7 @@ export default function OutputResultsCard({
                   </button>
                 </div>
               </div>
-              {showTreeAccountDetails ? (
+              {controls.showTreeAccountDetails ? (
                 <>
                   <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Metadata</span>
@@ -442,8 +406,8 @@ export default function OutputResultsCard({
                   <input
                     type="checkbox"
                     className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
-                    checked={showAllTreeRecords}
-                    onChange={(e) => setShowAllTreeRecords(e.target.checked)}
+                    checked={controls.showAllTreeRecords}
+                    onChange={(e) => controls.setShowAllTreeRecords(e.target.checked)}
                   />
                   <span>Show All</span>
                 </label>
@@ -497,7 +461,7 @@ export default function OutputResultsCard({
                     path={`${activeInspectorRootLabel.toLowerCase()}-${index}`}
                     highlightPathPrefixes={highlightedInspectorPathPrefixes}
                     highlightColorClass={inspectorHighlightColorClass}
-                    showAll={showAllTreeRecords}
+                    showAll={controls.showAllTreeRecords}
                     label={
                       collapsibleFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -534,7 +498,7 @@ export default function OutputResultsCard({
                     highlightPathPrefixes={[]}
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
-                    showAll={showAllTreeRecords}
+                    showAll={controls.showAllTreeRecords}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                   />
                 ))}

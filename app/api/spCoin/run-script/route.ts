@@ -387,8 +387,7 @@ export async function POST(request: NextRequest) {
             case 'deleteAccountTree':
             case 'delAccountTree': {
               access.del.signer = signer;
-              const accountKey = findParam('Account Key');
-              result = await access.offChain.deleteAccountTree(accountKey);
+              result = await access.offChain.deleteAccountTree();
               break;
             }
             default:
