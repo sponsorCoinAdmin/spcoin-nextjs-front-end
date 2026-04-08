@@ -6,12 +6,12 @@ import "./Transactions.sol";
 contract UnSubscribe is Transactions {
     constructor() { }
 
-    function deleteSponsor()
+    function deleteSponsor(address _sponsorKey)
         public
-        accountExists(msg.sender)
+        accountExists(_sponsorKey)
         returns (bool)
     {
-        return deleteAccountRecord(msg.sender);
+        return deleteAccountRecord(_sponsorKey);
     }
 
     function deleteRecipient(address _recipientKey)

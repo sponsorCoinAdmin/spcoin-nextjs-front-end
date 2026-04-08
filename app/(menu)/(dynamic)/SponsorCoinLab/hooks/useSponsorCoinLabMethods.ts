@@ -143,6 +143,7 @@ type Params = {
   hardhatAccounts: Array<{ address: string; privateKey?: string }>;
   selectedHardhatAddress?: string;
   effectiveConnectedAddress: string;
+  ownerAddress?: string;
   useLocalSpCoinAccessPackage: boolean;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
@@ -219,6 +220,7 @@ export function useSponsorCoinLabMethods({
   hardhatAccounts,
   selectedHardhatAddress,
   effectiveConnectedAddress,
+  ownerAddress,
   useLocalSpCoinAccessPackage,
   appendLog,
   appendWriteTrace,
@@ -729,6 +731,7 @@ export function useSponsorCoinLabMethods({
             mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
           appendLog,
           setStatus,
+          ownerAddress,
         });
         return { call, result };
       }
@@ -750,8 +753,7 @@ export function useSponsorCoinLabMethods({
       appendWriteTrace(
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
-      const shouldUseServerBackedWrite =
-        useLocalSpCoinAccessPackage && mode === 'hardhat' && selectedMethod === 'delAccountTree';
+      const shouldUseServerBackedWrite = false;
       const result = shouldUseServerBackedWrite
         ? await runServerBackedSpCoinStep(
             'spcoin_write',
@@ -869,7 +871,13 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const runTreeAccountsRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getOffLineAccountRecords');
+    const call = {
+      method: 'getTreeAccounts',
+      parameters: [
+        { label: 'via', value: 'getAccountList' },
+        { label: 'expand', value: 'getAccountRecord(each)' },
+      ],
+    };
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -897,7 +905,7 @@ export function useSponsorCoinLabMethods({
         (accountKeys ?? []).map(async (accountKey) => (access.read as SpCoinReadAccess).getAccountRecord(String(accountKey))),
       );
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
-      appendLog(`spCoinReadMethods/getOffLineAccountRecords -> ${JSON.stringify(result)}`);
+      appendLog(`spCoinReadMethods/getTreeAccounts -> ${JSON.stringify(result)}`);
       setStatus(`Tree accounts read complete (${result.length} account record(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree accounts read error.';

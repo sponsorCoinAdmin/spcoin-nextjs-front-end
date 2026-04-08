@@ -1,7 +1,5 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/index.ts
-import getSerializedSPCoinHeader from './getSerializedSPCoinHeader';
 import getInflationRate from './getInflationRate';
-import compareSpCoinContractSize from './compareSpCoinContractSize';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getAccountList from './getAccountList';
@@ -10,13 +8,8 @@ import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getSpCoinMetaData from './getSpCoinMetaData';
 import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
-import getSerializedAccountRecord from './getSerializedAccountRecord';
 import getAccountRecord from './getAccountRecord';
-import getOffLineAccountRecords from './getOffLineAccountRecords';
-import getSerializedAccountRewards from './getSerializedAccountRewards';
 import getAccountStakingRewards from './getAccountStakingRewards';
-import getSerializedRecipientRateList from './getSerializedRecipientRateList';
-import getSerializedRecipientRecordList from './getSerializedRecipientRecordList';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
 import getAccountRateRecordList from './getAccountRateRecordList';
@@ -37,7 +30,6 @@ import getAgentRateRange from './getAgentRateRange';
 import getAgentRateRecord from './getAgentRateRecord';
 import getAgentRateRecordList from './getAgentRateRecordList';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
-import getSerializedRateTransactionList from './getSerializedRateTransactionList';
 import getAgentRateTransactionList from './getAgentRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
@@ -45,7 +37,6 @@ import initialTotalSupply from './initialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import masterAccountList from './masterAccountList';
-import serializeAgentRateRecordStr from './serializeAgentRateRecordStr';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
@@ -56,9 +47,7 @@ import totalStakingRewards from './totalStakingRewards';
 import getVersion from './version';
 
 export const SPCOIN_READ_METHOD_DEFS = {
-  getSerializedSPCoinHeader,
   getInflationRate,
-  compareSpCoinContractSize,
   calculateStakingRewards,
   creationTime,
   getAccountList,
@@ -67,13 +56,8 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getSpCoinMetaData,
   getAccountRecipientList,
   getAccountRecipientListSize,
-  getSerializedAccountRecord,
   getAccountRecord,
-  getOffLineAccountRecords,
-  getSerializedAccountRewards,
   getAccountStakingRewards,
-  getSerializedRecipientRateList,
-  getSerializedRecipientRecordList,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,
   getAccountRateRecordList,
@@ -94,7 +78,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentRateRecord,
   getAgentRateRecordList,
   getAgentTotalRecipient,
-  getSerializedRateTransactionList,
   getAgentRateTransactionList,
   getAgentRecord,
   getAgentRecordList,
@@ -102,7 +85,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isDeployed,
   isAccountInserted,
   masterAccountList,
-  serializeAgentRateRecordStr,
   getStakingRewards,
   getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,

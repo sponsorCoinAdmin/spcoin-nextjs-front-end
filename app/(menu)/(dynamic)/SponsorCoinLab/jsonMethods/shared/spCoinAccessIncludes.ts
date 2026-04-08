@@ -59,6 +59,14 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
     _transactionBackDate: number,
   ) => Promise<ContractTransactionResponse>;
+  addBackDatedSponsorship: (
+    _adminSigner: Signer,
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+    _transactionBackDate: number,
+  ) => Promise<ContractTransactionResponse>;
 };
 
 export type SpCoinDeleteAccess = {
@@ -92,7 +100,6 @@ export type SpCoinReadAccess = {
   getAccountList: () => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
-  getOffLineAccountRecords: () => Promise<AccountStruct[]>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
   getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
@@ -165,7 +172,7 @@ export type SpCoinContractAccess = Contract & {
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   delRecipient?: (...args: unknown[]) => Promise<unknown>;
-  deleteSponsor?: () => Promise<ContractTransactionResponse>;
+  deleteSponsor?: (sponsorKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipient?: (recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
     recipientKey: string,

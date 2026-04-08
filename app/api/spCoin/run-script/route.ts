@@ -293,17 +293,19 @@ export async function POST(request: NextRequest) {
               break;
             }
             case 'addRecipientRateAmount':
-            case 'addAccountRecipientRate': {
+            case 'addAccountRecipientRate':
+            case 'addSponsorship': {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
               const tx = await access.add.addRecipientRateAmount(recipientKey, recipientRateKey, transactionQty);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountRecipientRate', tx, receipt);
+              result = formatReceiptResult('addSponsorship', tx, receipt);
               break;
             }
             case 'addAgentRateAmount':
-            case 'addAccountAgentRate': {
+            case 'addAccountAgentRate':
+            case 'addAgentSponsorship': {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
@@ -317,7 +319,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountAgentRate', tx, receipt);
+              result = formatReceiptResult('addAgentSponsorship', tx, receipt);
               break;
             }
             case 'addBackDatedSponsorship':
@@ -342,7 +344,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountRecipientRateBackdated', tx, receipt);
+              result = formatReceiptResult('addBackDatedSponsorship', tx, receipt);
               break;
             }
             case 'addBackDatedAgentSponsorship':
@@ -365,7 +367,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountAgentRateBackdated', tx, receipt);
+              result = formatReceiptResult('addBackDatedAgentSponsorship', tx, receipt);
               break;
             }
             case 'delRecipient': {
@@ -384,10 +386,46 @@ export async function POST(request: NextRequest) {
               );
               break;
             }
-            case 'deleteAccountTree':
-            case 'delAccountTree': {
-              access.del.signer = signer;
-              result = await access.offChain.deleteAccountTree();
+            case 'deleteSponsor': {
+              const sponsorKey = findParam('Sponsor Key') || findParam('Account Key') || senderAddress;
+              const deleteSponsor = (contract as unknown as { deleteSponsor?: (sponsorKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteSponsor;
+              if (typeof deleteSponsor !== 'function') {
+                throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+              }
+              const tx = await deleteSponsor(sponsorKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult(
+                'deleteSponsor',
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
+              break;
+            }
+            case 'delAccountAgentSponsorship': {
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const agentRateKey = findParam('Agent Rate Key');
+              const deleteAgentSponsorship = (
+                contract as unknown as {
+                  deleteAgentSponsorship?: (
+                    recipientKey: string,
+                    recipientRateKey: string | number,
+                    agentKey: string,
+                    agentRateKey: string | number,
+                  ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+                }
+              ).deleteAgentSponsorship;
+              if (typeof deleteAgentSponsorship !== 'function') {
+                throw new Error('deleteAgentSponsorship is not available on the current SpCoin contract access path.');
+              }
+              const tx = await deleteAgentSponsorship(recipientKey, recipientRateKey, agentKey, agentRateKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult(
+                'delAccountAgentSponsorship',
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
               break;
             }
             default:

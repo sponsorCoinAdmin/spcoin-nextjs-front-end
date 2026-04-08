@@ -9,7 +9,7 @@ import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
 
-type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'utils';
+type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'admin_utils';
 
 const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   allowance: 'erc20.ts',
@@ -34,31 +34,22 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addAgent: 'add.ts',
   addAccountSponsor: 'add.ts',
   addSponsorship: 'add.ts',
-  addAccountRecipientRateBackdated: 'add.ts',
-  addAccountAgentRateBackdated: 'add.ts',
+  addAgentSponsorship: 'add.ts',
+  addBackDatedSponsorship: 'add.ts',
+  addBackDatedAgentSponsorship: 'add.ts',
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
-  delAccountSponsor: 'delete.ts',
-  delAccountRecipient: 'delete.ts',
-  delAccountRecipientRate: 'delete.ts',
+  deleteSponsor: 'delete.ts',
+  delAccountRecipientSponsorship: 'delete.ts',
   delAccountRecipientRateAmount: 'delete.ts',
   delAccountAgent: 'delete.ts',
-  delAccountAgentRate: 'delete.ts',
-  delAccountAgentRateAmount: 'delete.ts',
   delAccountRecord: 'delete.ts',
   delAccountRecords: 'delete.ts',
-  deleteAgentRecord: 'delete.ts',
   delAccountAgentSponsorship: 'delete.ts',
-  unSponsorRecipient: 'delete.ts',
-  delAccountTree: 'deleteAccountTree.ts',
   depositSponsorStakingRewards: 'staking.ts',
   depositRecipientStakingRewards: 'staking.ts',
   depositAgentStakingRewards: 'staking.ts',
-  depositStakingRewards: 'staking.ts',
   updateAccountStakingRewards: 'rewards.ts',
-  updateRecipietAccountRewards: 'rewards.ts',
-  updateAgentAccountRewards: 'rewards.ts',
-  updateSponsorAccountRewards: 'rewards.ts',
   setInflationRate: 'add.ts',
   setVersion: 'add.ts',
   setRecipientRateRange: 'add.ts',
@@ -72,12 +63,13 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
-  delAccountTree: 'deleteAccountTree.ts',
+  deleteSponsor: 'delete.ts',
 };
 
 const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
+  deleteMasterSponsorList: 'delete.ts',
 };
 
 function normalizeMethodScriptLookup(value: string) {
@@ -93,7 +85,7 @@ function resolveTypeScriptTargetFile(tab: MethodPanelTab, methodName: string) {
   if (tab === 'spcoin_rread') return SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
   if (tab === 'spcoin_write') return SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
   if (tab === 'todos') return TODO_TYPESCRIPT_TARGET_BY_METHOD[methodName] || SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
-  if (tab === 'utils') return UTILS_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
+  if (tab === 'admin_utils') return UTILS_TYPESCRIPT_TARGET_BY_METHOD[methodName] || `${methodName}.ts`;
   return `${methodName}.ts`;
 }
 
@@ -186,7 +178,7 @@ export default function MethodsPanelCard({
     ['erc20', 'ERC20'],
     ['spcoin_rread', 'SpCoin Read'],
     ['spcoin_write', 'SpCoin Write'],
-    ['utils', 'utils'],
+    ['admin_utils', 'Admin Utils'],
     ['todos', 'ToDos'],
   ];
   const visibleErc20ReadOptions = React.useMemo(
@@ -241,8 +233,34 @@ export default function MethodsPanelCard({
       ),
     [serializationTestProps.serializationTestOptions, serializationTestProps.showOffChainMethods],
   );
+  const adminUtilityReadOptions = React.useMemo(
+    () =>
+      sortMethodNames(
+        serializationTestProps.serializationTestOptions.filter((name) =>
+          ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
+        ),
+      ),
+    [serializationTestProps.serializationTestOptions],
+  );
+  const adminUtilityWriteOptions = React.useMemo(
+    () =>
+      sortMethodNames(
+        serializationTestProps.serializationTestOptions.filter((name) => ['hhFundAccounts'].includes(name)),
+      ),
+    [serializationTestProps.serializationTestOptions],
+  );
+  const visibleAdminUtilsReadOptions = React.useMemo(
+    () => sortMethodNames([...adminUtilityReadOptions, ...spCoinReadProps.spCoinAdminReadOptions]),
+    [adminUtilityReadOptions, spCoinReadProps.spCoinAdminReadOptions],
+  );
+  const visibleAdminUtilsWriteOptions = React.useMemo(
+    () => sortMethodNames([...adminUtilityWriteOptions, ...spCoinWriteProps.spCoinAdminWriteOptions]),
+    [adminUtilityWriteOptions, spCoinWriteProps.spCoinAdminWriteOptions],
+  );
+  const hasVisibleAdminUtilsMethods =
+    visibleAdminUtilsReadOptions.length > 0 || visibleAdminUtilsWriteOptions.length > 0;
   const activeRunControl = React.useMemo(() => {
-    if (activeMethodPanelTab === 'utils') {
+    if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
       return {
         label: `Run ${serializationTestProps.activeSerializationTestDef.title}`,
         onClick: () => void serializationTestProps.runSelectedSerializationTestMethod(),
@@ -302,7 +320,7 @@ export default function MethodsPanelCard({
     spCoinWriteProps.runSelectedSpCoinWriteMethod,
   ]);
   const activeAddControl = React.useMemo(() => {
-    if (activeMethodPanelTab === 'utils') {
+    if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
       return {
         label: serializationTestProps.addToScriptButtonLabel,
         onClick: () => void serializationTestProps.addCurrentMethodToScript(),
@@ -367,7 +385,11 @@ export default function MethodsPanelCard({
     javaScriptEditorProps.selectedJavaScriptScriptId ||
     'UnknownFile';
   const currentJsonMethodName = React.useMemo(() => {
-    if (activeMethodPanelTab === 'utils') return serializationTestProps.selectedSerializationTestMethod;
+    if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') return spCoinReadProps.selectedSpCoinReadMethod;
+      if (methodPanelMode === 'spcoin_write') return spCoinWriteProps.selectedSpCoinWriteMethod;
+      return serializationTestProps.selectedSerializationTestMethod;
+    }
     if (methodPanelMode === 'ecr20_read') return erc20ReadProps.selectedReadMethod;
     if (methodPanelMode === 'erc20_write') return erc20WriteProps.selectedWriteMethod;
     if (methodPanelMode === 'spcoin_rread') return spCoinReadProps.selectedSpCoinReadMethod;
@@ -382,11 +404,41 @@ export default function MethodsPanelCard({
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinWriteProps.selectedSpCoinWriteMethod,
   ]);
+  const adminUtilsSelectedMethod = React.useMemo(() => {
+    if (methodPanelMode === 'spcoin_write') {
+      if (visibleAdminUtilsWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) {
+        return spCoinWriteProps.selectedSpCoinWriteMethod;
+      }
+      if (visibleAdminUtilsWriteOptions.length > 0) return visibleAdminUtilsWriteOptions[0];
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
+        return spCoinReadProps.selectedSpCoinReadMethod;
+      }
+      if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
+    }
+    if (visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) {
+      return serializationTestProps.selectedSerializationTestMethod;
+    }
+    if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
+    if (visibleAdminUtilsWriteOptions.length > 0) return visibleAdminUtilsWriteOptions[0];
+    return '__no_methods__';
+  }, [
+    methodPanelMode,
+    serializationTestProps.selectedSerializationTestMethod,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+    visibleAdminUtilsReadOptions,
+    visibleAdminUtilsWriteOptions,
+    visibleSerializationOptions,
+  ]);
   const typeScriptMethodOptions = React.useMemo(() => {
     if (activeMethodPanelTab === 'erc20') return sortMethodNames([...visibleErc20ReadOptions, ...visibleErc20WriteOptions]);
     if (activeMethodPanelTab === 'spcoin_rread') return visibleSpCoinReadOptions;
     if (activeMethodPanelTab === 'spcoin_write') return visibleSpCoinWriteOptions;
-    if (activeMethodPanelTab === 'utils') return visibleSerializationOptions;
+    if (activeMethodPanelTab === 'admin_utils') {
+      return sortMethodNames([...visibleAdminUtilsReadOptions, ...visibleAdminUtilsWriteOptions]);
+    }
     return sortMethodNames(
       spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method)),
     );
@@ -425,8 +477,14 @@ export default function MethodsPanelCard({
     if (isJavaScriptScriptMode) {
       return `ts:${javaScriptEditorProps.selectedJavaScriptScriptId || javaScriptEditorProps.selectedFilePath || 'none'}`;
     }
-    if (activeMethodPanelTab === 'utils') {
-      return `json:utils:${serializationTestProps.selectedSerializationTestMethod}`;
+    if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') {
+        return `json:admin_utils:read:${spCoinReadProps.selectedSpCoinReadMethod}`;
+      }
+      if (methodPanelMode === 'spcoin_write') {
+        return `json:admin_utils:write:${spCoinWriteProps.selectedSpCoinWriteMethod}`;
+      }
+      return `json:admin_utils:utility:${serializationTestProps.selectedSerializationTestMethod}`;
     }
     if (methodPanelMode === 'ecr20_read') {
       return `json:${methodPanelMode}:${erc20ReadProps.selectedReadMethod}`;
@@ -467,26 +525,41 @@ export default function MethodsPanelCard({
   const sharedMethodSelect = React.useMemo(() => {
     if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
     const baseClassName = 'grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]';
-    if (activeMethodPanelTab === 'utils') {
+    if (activeMethodPanelTab === 'admin_utils') {
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
           <select
             className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={
-              visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)
-                ? serializationTestProps.selectedSerializationTestMethod
-                : '__no_methods__'
-            }
+            value={hasVisibleAdminUtilsMethods ? adminUtilsSelectedMethod : '__no_methods__'}
             onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={visibleSerializationOptions.length === 0}
+            disabled={!hasVisibleAdminUtilsMethods}
           >
-            {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleSerializationOptions.map((name) => (
-              <option key={`utility-shared-${name}`} value={name}>
-                {name}
-              </option>
-            ))}
+            {!hasVisibleAdminUtilsMethods ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleAdminUtilsReadOptions.length > 0 ? (
+              <>
+                <option value="__admin-utils-read-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- Read Admin ----
+                </option>
+                {visibleAdminUtilsReadOptions.map((name) => (
+                  <option key={`admin-utils-read-${name}`} value={name}>
+                    {spCoinReadProps.spCoinReadMethodDefs[name]?.title || serializationTestProps.serializationTestMethodDefs[name]?.title || name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {visibleAdminUtilsWriteOptions.length > 0 ? (
+              <>
+                <option value="__admin-utils-write-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- Owner Admin ----
+                </option>
+                {visibleAdminUtilsWriteOptions.map((name) => (
+                  <option key={`admin-utils-write-${name}`} value={name}>
+                    {spCoinWriteProps.spCoinWriteMethodDefs[name]?.title || serializationTestProps.serializationTestMethodDefs[name]?.title || name}
+                  </option>
+                ))}
+              </>
+            ) : null}
           </select>
         </div>
       );
@@ -589,9 +662,11 @@ export default function MethodsPanelCard({
       </div>
     );
   }, [
+    adminUtilsSelectedMethod,
     combinedErc20MethodValue,
     erc20ReadProps,
     erc20WriteProps,
+    hasVisibleAdminUtilsMethods,
     hasVisibleErc20Methods,
     isErc20Mode,
     isJavaScriptScriptMode,
@@ -605,6 +680,8 @@ export default function MethodsPanelCard({
     selectMappedJsonMethod,
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
+    visibleAdminUtilsReadOptions,
+    visibleAdminUtilsWriteOptions,
     visibleSerializationOptions,
     visibleSpCoinReadOptions,
     visibleSpCoinWriteOptions,
@@ -754,11 +831,11 @@ export default function MethodsPanelCard({
                   loadingPanel
                 ) : (
                   <div>
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'utils' && methodPanelMode === 'ecr20_read')) ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'utils' && methodPanelMode === 'erc20_write')) ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'utils' && methodPanelMode === 'spcoin_rread')) ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'utils' && methodPanelMode === 'spcoin_write')) ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests' || activeMethodPanelTab === 'utils') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'admin_utils' && methodPanelMode === 'ecr20_read')) ? <Erc20ReadController {...erc20ReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'admin_utils' && methodPanelMode === 'erc20_write')) ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
                   </div>
                 )}
                 <div className="flex gap-2">

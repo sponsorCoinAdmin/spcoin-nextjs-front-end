@@ -85,7 +85,6 @@ type Params = {
   activeNetworkName: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
-  activeMethodPanelTab: MethodPanelMode | 'todos' | 'erc20' | 'utils';
   selectedReadMethod: Erc20ReadMethod;
   readAddressA: string;
   readAddressB: string;
@@ -150,7 +149,6 @@ export function useSponsorCoinLabScripts({
   activeNetworkName,
   mode,
   methodPanelMode,
-  activeMethodPanelTab,
   selectedReadMethod,
   readAddressA,
   readAddressB,
@@ -202,8 +200,7 @@ export function useSponsorCoinLabScripts({
   showOnChainMethods,
   showOffChainMethods,
 }: Params) {
-  const effectiveScriptPanelMode: MethodPanelMode =
-    activeMethodPanelTab === 'utils' ? 'serialization_tests' : methodPanelMode;
+  const effectiveScriptPanelMode: MethodPanelMode = methodPanelMode;
   const [scripts, setScriptsState] = useState<LabScript[]>([]);
   const [selectedScriptId, setSelectedScriptId] = useState('');
   const [scriptNameInput, setScriptNameInput] = useState('');

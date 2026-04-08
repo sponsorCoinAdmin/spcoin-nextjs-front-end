@@ -21,7 +21,7 @@ type SerializationMethodSpec = {
 type UtilityMethodSpec = {
   title: string;
   params: MethodDef['params'];
-  utilityMethod: 'compareSpCoinContractSize' | 'getSponsorAccounts' | 'getMasterSponsorList' | 'hhFundAccounts';
+  utilityMethod: 'compareSpCoinContractSize' | 'getSponsorAccounts' | 'getMasterSponsorList' | 'hhFundAccounts' | 'deleteMasterSponsorList';
 };
 
 type MethodSpec = SerializationMethodSpec | UtilityMethodSpec;
@@ -175,6 +175,11 @@ const METHOD_SPECS = {
     params: buildHardhatFundAccountsParams(),
     utilityMethod: 'hhFundAccounts',
   },
+  deleteMasterSponsorList: {
+    title: 'deleteMasterSponsorList',
+    params: [],
+    utilityMethod: 'deleteMasterSponsorList',
+  },
 } as const satisfies Record<string, MethodSpec>;
 
 export type SerializationTestMethod = Extract<keyof typeof METHOD_SPECS, string>;
@@ -209,7 +214,24 @@ type RunArgs = {
   selectedHardhatAddress?: string;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
+  ownerAddress?: string;
 };
+
+async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
+  if (typeof access.read.getAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
+    throw new Error(`getMasterSponsorList requires getAccountList() and getAccountRecipientList() read methods.`);
+  }
+  const accountList = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  const recipientLists = await Promise.all(
+    accountList.map(async (account) => {
+      const recipients = Array.from((await access.read.getAccountRecipientList(account)) as unknown[]).map((value) =>
+        normalizeAddress(value),
+      );
+      return { account, recipients };
+    }),
+  );
+  return recipientLists.filter((entry) => entry.recipients.length > 0).map((entry) => entry.account);
+}
 
 export async function buildExternalSerializerResult(contract: any, baseMethod: SerializationBaseMethod, methodArgs: any[]) {
   try {
@@ -378,6 +400,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     executeWriteConnected,
     appendLog,
     setStatus,
+    ownerAddress,
   } = args;
   const def = SERIALIZATION_TEST_METHOD_DEFS[selectedMethod];
   const target = requireContractAddress();
@@ -421,19 +444,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   }
 
   if ('utilityMethod' in def && (def.utilityMethod === 'getSponsorAccounts' || def.utilityMethod === 'getMasterSponsorList')) {
-    if (typeof access.read.getAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
-      throw new Error(`${def.title} requires getAccountList() and getAccountRecipientList() read methods.`);
-    }
-    const accountList = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
-    const recipientLists = await Promise.all(
-      accountList.map(async (account) => {
-        const recipients = Array.from((await access.read.getAccountRecipientList(account)) as unknown[]).map((value) =>
-          normalizeAddress(value),
-        );
-        return { account, recipients };
-      }),
-    );
-    const sponsorAccounts = recipientLists.filter((entry) => entry.recipients.length > 0).map((entry) => entry.account);
+    const sponsorAccounts = await loadSponsorAccounts(access);
     appendLog(`${selectedMethod} -> loaded ${sponsorAccounts.length} sponsor account(s).`);
     setStatus(`${def.title} complete.`);
     return sponsorAccounts;
@@ -500,6 +511,54 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     appendLog(`${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`);
     setStatus(`${def.title} complete.`);
     return summary;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorList') {
+    const sponsorAccounts = await loadSponsorAccounts(access);
+    const resolvedOwnerAddress = toCanonicalAddress(
+      ownerAddress || hardhatAccounts[0]?.address || '',
+      'Token owner address',
+    );
+    const deletedSponsors: string[] = [];
+    const txHashes: string[] = [];
+
+    for (const sponsorKey of sponsorAccounts) {
+      const summary = await executeWriteConnected(
+        `${def.title}(${sponsorKey})`,
+        async (contract) => {
+          const deleteSponsor = (contract as { deleteSponsor?: (value: string) => Promise<any> }).deleteSponsor;
+          if (typeof deleteSponsor !== 'function') {
+            throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+          }
+          const tx = await deleteSponsor(sponsorKey);
+          await tx.wait();
+          return { sponsorKey, txHash: String(tx?.hash || '') };
+        },
+        resolvedOwnerAddress,
+      );
+      deletedSponsors.push(sponsorKey);
+      if (summary && typeof summary === 'object' && 'txHash' in (summary as Record<string, unknown>)) {
+        txHashes.push(String((summary as Record<string, unknown>).txHash || ''));
+      }
+    }
+
+    const remainingAccounts = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+    if (remainingAccounts.length > 0) {
+      throw new Error(
+        `deleteMasterSponsorList incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`,
+      );
+    }
+
+    appendLog(`${selectedMethod} -> deleted ${deletedSponsors.length} sponsor account(s); verified account list is empty.`);
+    setStatus(`${def.title} complete.`);
+    return {
+      ownerAddress: resolvedOwnerAddress,
+      deletedSponsorCount: deletedSponsors.length,
+      deletedSponsors,
+      txHashes,
+      remainingAccountCount: 0,
+      remainingAccounts: [],
+    };
   }
 
   if (!('baseMethod' in def)) {

@@ -7,9 +7,7 @@ import { normalizeStringListResult } from '../../shared/normalizeListResult';
 import { buildExternalSerializerResult, type SerializationBaseMethod } from '../../serializationTests';
 
 export type SpCoinReadMethod =
-  | 'getSerializedSPCoinHeader'
   | 'getInflationRate'
-  | 'compareSpCoinContractSize'
   | 'calculateStakingRewards'
   | 'creationTime'
   | 'getSpCoinMetaData'
@@ -18,12 +16,7 @@ export type SpCoinReadMethod =
   | 'getAccountListSize'
   | 'getAccountRecipientList'
   | 'getAccountRecipientListSize'
-  | 'getSerializedAccountRecord'
-  | 'getSerializedRecipientRateList'
-  | 'getSerializedRecipientRecordList'
   | 'getAccountRecord'
-  | 'getOffLineAccountRecords'
-  | 'getSerializedAccountRewards'
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
   | 'getAccountRewardTransactionRecord'
@@ -45,7 +38,6 @@ export type SpCoinReadMethod =
   | 'getAgentRateRecord'
   | 'getAgentRateRecordList'
   | 'getAgentTotalRecipient'
-  | 'getSerializedRateTransactionList'
   | 'getAgentRateTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
@@ -53,7 +45,6 @@ export type SpCoinReadMethod =
   | 'isDeployed'
   | 'isAccountInserted'
   | 'masterAccountList'
-  | 'serializeAgentRateRecordStr'
   | 'getStakingRewards'
   | 'getTimeMultiplier'
   | 'getAccountTimeInSecondeSinceUpdate'
@@ -63,15 +54,7 @@ export type SpCoinReadMethod =
   | 'totalStakingRewards'
   | 'getVersion';
 
-export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [
-  'getSerializedSPCoinHeader',
-  'getSerializedAccountRecord',
-  'getSerializedAccountRewards',
-  'getSerializedRecipientRecordList',
-  'getSerializedRecipientRateList',
-  'serializeAgentRateRecordStr',
-  'getSerializedRateTransactionList',
-];
+export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
@@ -85,10 +68,8 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 };
 
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
-  'compareSpCoinContractSize',
   'getSPCoinHeaderRecord',
   'getAccountRecord',
-  'getOffLineAccountRecords',
   'getAccountStakingRewards',
   'getRecipientRecord',
   'getRecipientRateRecord',

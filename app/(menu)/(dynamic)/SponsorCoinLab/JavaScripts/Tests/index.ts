@@ -48,12 +48,6 @@ export const BUILTIN_JAVASCRIPT_TEST_SCRIPTS: LabJavaScriptScript[] = [
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-offchain-delete-account-tree',
-    name: 'deleteAccountTree.ts',
-    filePath: `${OFFCHAIN_TYPESCRIPT_ROOT}/deleteAccountTree.ts`,
-    isSystemScript: true,
-  },
-  {
     id: 'builtin-typescript-offchain-set-lower-recipient-rate',
     name: 'setLowerRecipientRate.ts',
     filePath: `${OFFCHAIN_TYPESCRIPT_ROOT}/setLowerRecipientRate.ts`,

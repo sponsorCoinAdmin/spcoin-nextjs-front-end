@@ -110,8 +110,8 @@ type Params = {
   setShowOnChainMethods: (value: boolean) => void;
   showOffChainMethods: boolean;
   setShowOffChainMethods: (value: boolean) => void;
-  auxMethodPanelTab: 'utils' | null;
-  setAuxMethodPanelTab: (value: 'utils' | null) => void;
+  auxMethodPanelTab: 'admin_utils' | null;
+  setAuxMethodPanelTab: (value: 'admin_utils' | null) => void;
   isSpCoinTodoMode: boolean;
   setIsSpCoinTodoMode: (value: boolean) => void;
   selectedTreeAccount: string;
@@ -451,8 +451,14 @@ export function useSponsorCoinLabPersistence({
           }
           if (typeof saved.showOnChainMethods === 'boolean') setShowOnChainMethods(saved.showOnChainMethods);
           if (typeof saved.showOffChainMethods === 'boolean') setShowOffChainMethods(saved.showOffChainMethods);
-          if (saved.auxMethodPanelTab === 'utils' || saved.auxMethodPanelTab === null) {
-            setAuxMethodPanelTab(saved.auxMethodPanelTab ?? null);
+          if (
+            saved.auxMethodPanelTab === 'admin_utils' ||
+            saved.auxMethodPanelTab === 'utils' ||
+            saved.auxMethodPanelTab === null
+          ) {
+            setAuxMethodPanelTab(
+              saved.auxMethodPanelTab === 'utils' ? 'admin_utils' : (saved.auxMethodPanelTab ?? null),
+            );
           }
           if (typeof saved.isSpCoinTodoMode === 'boolean') setIsSpCoinTodoMode(saved.isSpCoinTodoMode);
           if (typeof saved.selectedTreeAccount === 'string') {

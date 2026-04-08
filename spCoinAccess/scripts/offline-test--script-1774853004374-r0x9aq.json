@@ -25,8 +25,8 @@
       "method": "delAccountTree",
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
+      "breakpoint": true,
+      "hasMissingRequiredParams": true
     },
     {
       "step": 3,
@@ -48,24 +48,6 @@
     },
     {
       "step": 5,
-      "name": "getOffLineAccountRecords",
-      "panel": "spcoin_rread",
-      "method": "getOffLineAccountRecords",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 6,
-      "name": "getOffLineAccountRecords",
-      "panel": "spcoin_rread",
-      "method": "getOffLineAccountRecords",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 7,
       "name": "addAgentSponsorship",
       "panel": "spcoin_write",
       "method": "addAgentSponsorship",

@@ -582,7 +582,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
     "name": "deleteSponsor",
     "outputs": [
       {
