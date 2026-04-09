@@ -220,7 +220,6 @@ export function useSponsorCoinLabMethods({
   hardhatAccounts,
   selectedHardhatAddress,
   effectiveConnectedAddress,
-  ownerAddress,
   useLocalSpCoinAccessPackage,
   appendLog,
   appendWriteTrace,
@@ -731,7 +730,6 @@ export function useSponsorCoinLabMethods({
             mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
           appendLog,
           setStatus,
-          ownerAddress,
         });
         return { call, result };
       }
@@ -753,6 +751,28 @@ export function useSponsorCoinLabMethods({
       appendWriteTrace(
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
+      const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
+        deleteRecipientSponsorships: 'deleteRecipientSponsorships',
+        deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
+        deleteAgentSponsorships: 'deleteAgentSponsorships',
+      };
+      const utilityWorkflowMethod = workflowWriteToUtilityMethod[selectedMethod];
+      if (utilityWorkflowMethod) {
+        const result = await runSerializationTestMethod({
+          selectedMethod: utilityWorkflowMethod,
+          params: localParams,
+          coerceParamValue,
+          requireContractAddress,
+          ensureReadRunner,
+          mode,
+          hardhatAccounts,
+          executeWriteConnected,
+          selectedHardhatAddress: signer,
+          appendLog,
+          setStatus,
+        });
+        return { call, result };
+      }
       const shouldUseServerBackedWrite = false;
       const result = shouldUseServerBackedWrite
         ? await runServerBackedSpCoinStep(

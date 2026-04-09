@@ -6,27 +6,21 @@
   "steps": [
     {
       "step": 1,
-      "name": "getAccountRecord",
+      "name": "getAccountList",
       "panel": "spcoin_rread",
-      "method": "getAccountRecord",
-      "params": [
-        {
-          "key": "Account Key",
-          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        }
-      ],
+      "method": "getAccountList",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "delAccountTree",
-      "panel": "spcoin_write",
-      "method": "delAccountTree",
-      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
       "params": [],
-      "breakpoint": true,
-      "hasMissingRequiredParams": true
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     },
     {
       "step": 3,
@@ -39,10 +33,15 @@
     },
     {
       "step": 4,
-      "name": "getAccountListSize",
+      "name": "getAccountRecord",
       "panel": "spcoin_rread",
-      "method": "getAccountListSize",
-      "params": [],
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
@@ -74,6 +73,29 @@
           "value": "9999999"
         }
       ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "deleteSponsorship",
+      "panel": "serialization_tests",
+      "method": "deleteSponsorship",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "deleteSponsorships",
+      "panel": "serialization_tests",
+      "method": "deleteSponsorships",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

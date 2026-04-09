@@ -1519,7 +1519,10 @@ export default function SponsorCoinLabPage() {
     ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
   );
   const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
-    ['hhFundAccounts', 'deleteMasterSponsorList'].includes(name),
+    [
+      'hhFundAccounts',
+      'deleteMasterSponsorships',
+    ].includes(name),
   );
   const activeSerializationTestDef =
     serializationTestMethodDefs[selectedSerializationTestMethod] ??
@@ -1965,7 +1968,11 @@ export default function SponsorCoinLabPage() {
   const spCoinSenderWriteOptions = getSpCoinSenderWriteOptions(false);
   const spCoinAdminWriteOptions = getSpCoinAdminWriteOptions(false);
   const spCoinTodoWriteOptions = getSpCoinTodoWriteOptions(false);
-  const spCoinWriteOptions = getSpCoinWriteOptions(false);
+  const spCoinWriteOptions = [
+    ...spCoinWorldWriteOptions,
+    ...spCoinSenderWriteOptions,
+    ...spCoinTodoWriteOptions,
+  ];
   const effectiveSerializationTestOptions =
     activeMethodPanelTab === 'admin_utils' ? utilityMethodOptions : serializationTestOptions;
   const effectiveSerializationTestDef =

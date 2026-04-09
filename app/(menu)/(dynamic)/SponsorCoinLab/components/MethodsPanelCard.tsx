@@ -40,12 +40,15 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
   deleteSponsor: 'delete.ts',
-  delAccountRecipientSponsorship: 'delete.ts',
-  delAccountRecipientRateAmount: 'delete.ts',
-  delAccountAgent: 'delete.ts',
-  delAccountRecord: 'delete.ts',
-  delAccountRecords: 'delete.ts',
-  delAccountAgentSponsorship: 'delete.ts',
+  deleteRecipientSponsorships: 'delete.ts',
+  deleteRecipientSponsorshipTree: 'delete.ts',
+  deleteAgentSponsorships: 'delete.ts',
+  deleteRecipientRateSponsorship: 'delete.ts',
+  deleteRecipientRateAmount: 'delete.ts',
+  deleteAgent: 'delete.ts',
+  deleteAccountRecord: 'delete.ts',
+  deleteAccountRecords: 'delete.ts',
+  deleteAgentSponsorship: 'delete.ts',
   depositSponsorStakingRewards: 'staking.ts',
   depositRecipientStakingRewards: 'staking.ts',
   depositAgentStakingRewards: 'staking.ts',
@@ -69,7 +72,9 @@ const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
-  deleteMasterSponsorList: 'delete.ts',
+  deleteMasterSponsorships: 'delete.ts',
+  deleteRecipientSponsorships: 'delete.ts',
+  deleteAgentSponsorships: 'delete.ts',
 };
 
 function normalizeMethodScriptLookup(value: string) {
@@ -211,20 +216,40 @@ export default function MethodsPanelCard({
   );
   const visibleSpCoinWriteOptions = React.useMemo(
     () =>
-      sortMethodNames([
-        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
-        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
-        ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinAdminWriteOptions : []),
-        ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
-      ]),
+      sortMethodNames(
+        Array.from(
+          new Set([
+            ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
+            ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
+            ...(spCoinWriteProps.showOffChainMethods
+              ? ['deleteRecipientSponsorships', 'deleteRecipientSponsorshipTree', 'deleteAgentSponsorships']
+              : []),
+            ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
+          ]),
+        ),
+      ),
     [
       spCoinWriteProps.showOffChainMethods,
       spCoinWriteProps.showOnChainMethods,
-      spCoinWriteProps.spCoinAdminWriteOptions,
       spCoinWriteProps.spCoinSenderWriteOptions,
       spCoinWriteProps.spCoinTodoWriteOptions,
       spCoinWriteProps.spCoinWorldWriteOptions,
     ],
+  );
+  const visibleSpCoinAddWriteOptions = React.useMemo(
+    () => visibleSpCoinWriteOptions.filter((name) => name.startsWith('add')),
+    [visibleSpCoinWriteOptions],
+  );
+  const visibleSpCoinDeleteWriteOptions = React.useMemo(
+    () => visibleSpCoinWriteOptions.filter((name) => name.startsWith('delete')),
+    [visibleSpCoinWriteOptions],
+  );
+  const visibleSpCoinUtilityWriteOptions = React.useMemo(
+    () =>
+      visibleSpCoinWriteOptions.filter(
+        (name) => !name.startsWith('add') && !name.startsWith('delete'),
+      ),
+    [visibleSpCoinWriteOptions],
   );
   const visibleSerializationOptions = React.useMemo(
     () =>
@@ -233,32 +258,41 @@ export default function MethodsPanelCard({
       ),
     [serializationTestProps.serializationTestOptions, serializationTestProps.showOffChainMethods],
   );
+  const adminUtilityMethodNames = React.useMemo(
+    () => Object.keys(serializationTestProps.serializationTestMethodDefs),
+    [serializationTestProps.serializationTestMethodDefs],
+  );
   const adminUtilityReadOptions = React.useMemo(
     () =>
       sortMethodNames(
-        serializationTestProps.serializationTestOptions.filter((name) =>
+        adminUtilityMethodNames.filter((name) =>
           ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
         ),
       ),
-    [serializationTestProps.serializationTestOptions],
+    [adminUtilityMethodNames],
   );
-  const adminUtilityWriteOptions = React.useMemo(
+  const adminUtilityOwnerOptions = React.useMemo(
     () =>
       sortMethodNames(
-        serializationTestProps.serializationTestOptions.filter((name) => ['hhFundAccounts'].includes(name)),
+        adminUtilityMethodNames.filter((name) =>
+          [
+            'hhFundAccounts',
+            'deleteMasterSponsorships',
+          ].includes(name),
+        ),
       ),
-    [serializationTestProps.serializationTestOptions],
+    [adminUtilityMethodNames],
   );
   const visibleAdminUtilsReadOptions = React.useMemo(
     () => sortMethodNames([...adminUtilityReadOptions, ...spCoinReadProps.spCoinAdminReadOptions]),
     [adminUtilityReadOptions, spCoinReadProps.spCoinAdminReadOptions],
   );
-  const visibleAdminUtilsWriteOptions = React.useMemo(
-    () => sortMethodNames([...adminUtilityWriteOptions, ...spCoinWriteProps.spCoinAdminWriteOptions]),
-    [adminUtilityWriteOptions, spCoinWriteProps.spCoinAdminWriteOptions],
+  const visibleAdminUtilsOwnerOptions = React.useMemo(
+    () => sortMethodNames([...adminUtilityOwnerOptions, ...spCoinWriteProps.spCoinAdminWriteOptions]),
+    [adminUtilityOwnerOptions, spCoinWriteProps.spCoinAdminWriteOptions],
   );
   const hasVisibleAdminUtilsMethods =
-    visibleAdminUtilsReadOptions.length > 0 || visibleAdminUtilsWriteOptions.length > 0;
+    visibleAdminUtilsReadOptions.length > 0 || visibleAdminUtilsOwnerOptions.length > 0;
   const activeRunControl = React.useMemo(() => {
     if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
       return {
@@ -405,11 +439,12 @@ export default function MethodsPanelCard({
     spCoinWriteProps.selectedSpCoinWriteMethod,
   ]);
   const adminUtilsSelectedMethod = React.useMemo(() => {
+    const combinedAdminUtilsWriteOptions = sortMethodNames([...visibleAdminUtilsOwnerOptions]);
     if (methodPanelMode === 'spcoin_write') {
-      if (visibleAdminUtilsWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) {
+      if (combinedAdminUtilsWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) {
         return spCoinWriteProps.selectedSpCoinWriteMethod;
       }
-      if (visibleAdminUtilsWriteOptions.length > 0) return visibleAdminUtilsWriteOptions[0];
+      if (combinedAdminUtilsWriteOptions.length > 0) return combinedAdminUtilsWriteOptions[0];
     }
     if (methodPanelMode === 'spcoin_rread') {
       if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
@@ -421,7 +456,7 @@ export default function MethodsPanelCard({
       return serializationTestProps.selectedSerializationTestMethod;
     }
     if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
-    if (visibleAdminUtilsWriteOptions.length > 0) return visibleAdminUtilsWriteOptions[0];
+    if (combinedAdminUtilsWriteOptions.length > 0) return combinedAdminUtilsWriteOptions[0];
     return '__no_methods__';
   }, [
     methodPanelMode,
@@ -429,7 +464,7 @@ export default function MethodsPanelCard({
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinWriteProps.selectedSpCoinWriteMethod,
     visibleAdminUtilsReadOptions,
-    visibleAdminUtilsWriteOptions,
+    visibleAdminUtilsOwnerOptions,
     visibleSerializationOptions,
   ]);
   const typeScriptMethodOptions = React.useMemo(() => {
@@ -437,7 +472,10 @@ export default function MethodsPanelCard({
     if (activeMethodPanelTab === 'spcoin_rread') return visibleSpCoinReadOptions;
     if (activeMethodPanelTab === 'spcoin_write') return visibleSpCoinWriteOptions;
     if (activeMethodPanelTab === 'admin_utils') {
-      return sortMethodNames([...visibleAdminUtilsReadOptions, ...visibleAdminUtilsWriteOptions]);
+      return sortMethodNames([
+        ...visibleAdminUtilsReadOptions,
+        ...visibleAdminUtilsOwnerOptions,
+      ]);
     }
     return sortMethodNames(
       spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method)),
@@ -548,12 +586,12 @@ export default function MethodsPanelCard({
                 ))}
               </>
             ) : null}
-            {visibleAdminUtilsWriteOptions.length > 0 ? (
+            {visibleAdminUtilsOwnerOptions.length > 0 ? (
               <>
                 <option value="__admin-utils-write-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
                   ---- Owner Admin ----
                 </option>
-                {visibleAdminUtilsWriteOptions.map((name) => (
+                {visibleAdminUtilsOwnerOptions.map((name) => (
                   <option key={`admin-utils-write-${name}`} value={name}>
                     {spCoinWriteProps.spCoinWriteMethodDefs[name]?.title || serializationTestProps.serializationTestMethodDefs[name]?.title || name}
                   </option>
@@ -634,11 +672,42 @@ export default function MethodsPanelCard({
             disabled={visibleSpCoinWriteOptions.length === 0}
           >
             {visibleSpCoinWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleSpCoinWriteOptions.map((name) => (
-              <option key={`sp-write-shared-${name}`} value={name}>
-                {name}
-              </option>
-            ))}
+            {visibleSpCoinAddWriteOptions.length > 0 ? (
+              <>
+                <option value="__sp-write-add-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- Add Methods ----
+                </option>
+                {visibleSpCoinAddWriteOptions.map((name) => (
+                  <option key={`sp-write-add-${name}`} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {visibleSpCoinDeleteWriteOptions.length > 0 ? (
+              <>
+                <option value="__sp-write-delete-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- Delete Methods ----
+                </option>
+                {visibleSpCoinDeleteWriteOptions.map((name) => (
+                  <option key={`sp-write-delete-${name}`} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {visibleSpCoinUtilityWriteOptions.length > 0 ? (
+              <>
+                <option value="__sp-write-utils-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
+                  ---- Utils ----
+                </option>
+                {visibleSpCoinUtilityWriteOptions.map((name) => (
+                  <option key={`sp-write-utils-${name}`} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
           </select>
         </div>
       );
@@ -681,9 +750,12 @@ export default function MethodsPanelCard({
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
     visibleAdminUtilsReadOptions,
-    visibleAdminUtilsWriteOptions,
+    visibleAdminUtilsOwnerOptions,
     visibleSerializationOptions,
+    visibleSpCoinAddWriteOptions,
+    visibleSpCoinDeleteWriteOptions,
     visibleSpCoinReadOptions,
+    visibleSpCoinUtilityWriteOptions,
     visibleSpCoinWriteOptions,
   ]);
 

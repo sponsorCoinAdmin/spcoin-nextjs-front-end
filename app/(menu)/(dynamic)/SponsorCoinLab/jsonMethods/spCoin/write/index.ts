@@ -24,15 +24,18 @@ export type SpCoinWriteMethod =
   | 'addAgentSponsorship'
   | 'addAgents'
   | 'deleteSponsor'
-  | 'delAccountRecipientSponsorship'
-  | 'delAccountRecipientRateAmount'
-  | 'delAccountAgent'
-  | 'delAccountAgentSponsorship'
+  | 'deleteRecipientSponsorships'
+  | 'deleteRecipientSponsorshipTree'
+  | 'deleteAgentSponsorships'
+  | 'deleteRecipientRateSponsorship'
+  | 'deleteRecipientRateAmount'
+  | 'deleteAgent'
+  | 'deleteAgentSponsorship'
   | 'addBackDatedSponsorship'
   | 'addBackDatedAgentSponsorship'
-  | 'delRecipient'
-  | 'delAccountRecord'
-  | 'delAccountRecords'
+  | 'deleteRecipientSponsorship'
+  | 'deleteAccountRecord'
+  | 'deleteAccountRecords'
   | 'updateAccountStakingRewards'
   | 'depositSponsorStakingRewards'
   | 'depositRecipientStakingRewards'
@@ -47,7 +50,6 @@ export type SpCoinWriteMethod =
   | 'setVersion';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addAgentSponsorship',
   'addBackDatedSponsorship',
   'addBackDatedAgentSponsorship',
   'setInflationRate',
@@ -63,20 +65,24 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAccountRecipient',
   'addSponsorship',
+  'addAgentSponsorship',
+  'deleteRecipientSponsorships',
+  'deleteRecipientSponsorshipTree',
+  'deleteAgentSponsorships',
   'deleteSponsor',
-  'delAccountRecipientSponsorship',
-  'delAccountRecipientRateAmount',
-  'delAccountAgent',
-  'delAccountAgentSponsorship',
-  'delRecipient',
-  'delAccountRecord',
+  'deleteRecipientRateSponsorship',
+  'deleteRecipientRateAmount',
+  'deleteAgent',
+  'deleteAgentSponsorship',
+  'deleteRecipientSponsorship',
+  'deleteAccountRecord',
 ];
 
 export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgent',
   'addRecipients',
   'addAgents',
-  'delAccountRecords',
+  'deleteAccountRecords',
 ];
 
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
@@ -128,16 +134,23 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   addAccountAgentRateBackdated: 'addBackDatedAgentSponsorship',
   deleteAccountTree: 'deleteSponsor',
   delAccountTree: 'deleteSponsor',
-  deleteRecipient: 'delRecipient',
-  deleteRecipientRate: 'delAccountRecipientSponsorship',
-  deleteRecipientRateAmount: 'delAccountRecipientRateAmount',
-  deleteAgent: 'delAccountAgent',
-  deleteAgentRate: 'delAccountAgentSponsorship',
-  deleteAgentRateAmount: 'delAccountAgentSponsorship',
-  deleteAgentSponsorship: 'delAccountAgentSponsorship',
-  deleteAccountRecord: 'delAccountRecord',
-  deleteAccountRecords: 'delAccountRecords',
-  delAccountRecipientRate: 'delAccountRecipientSponsorship',
+  deleteRecipient: 'deleteRecipientSponsorship',
+  deleteRecipientSponsorship: 'deleteRecipientSponsorship',
+  deleteRecipientRate: 'deleteRecipientRateSponsorship',
+  delRecipient: 'deleteRecipientSponsorship',
+  delAccountRecipientSponsorship: 'deleteRecipientRateSponsorship',
+  delAccountRecipientRateAmount: 'deleteRecipientRateAmount',
+  deleteRecipientRateAmount: 'deleteRecipientRateAmount',
+  delAccountAgent: 'deleteAgent',
+  deleteAgent: 'deleteAgent',
+  deleteAgentRate: 'deleteAgentSponsorship',
+  deleteAgentRateAmount: 'deleteAgentSponsorship',
+  delAccountAgentSponsorship: 'deleteAgentSponsorship',
+  delAccountRecord: 'deleteAccountRecord',
+  deleteAccountRecord: 'deleteAccountRecord',
+  delAccountRecords: 'deleteAccountRecords',
+  deleteAccountRecords: 'deleteAccountRecords',
+  delAccountRecipientRate: 'deleteRecipientRateSponsorship',
 };
 
 export function normalizeSpCoinWriteMethod(method: string): SpCoinWriteMethod {
@@ -325,7 +338,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'delAccountRecipientSponsorship': {
+    case 'deleteRecipientRateSponsorship': {
       await submitWrite(activeDef.title, (access) => {
         const method = access.contract.deleteRecipientRate;
         if (typeof method !== 'function') {
@@ -335,7 +348,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'delAccountRecipientRateAmount': {
+    case 'deleteRecipientRateAmount': {
       await submitWrite(activeDef.title, (access) => {
         const method = access.contract.deleteRecipientRateAmount;
         if (typeof method !== 'function') {
@@ -345,7 +358,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'delAccountAgent': {
+    case 'deleteAgent': {
       await submitWrite(activeDef.title, (access) => {
         const method = access.contract.deleteAgent;
         if (typeof method !== 'function') {
@@ -423,14 +436,14 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'delAccountRecords': {
+    case 'deleteAccountRecords': {
       const accountList = methodArgs[0] as string[];
       for (const accountKey of accountList) {
-        await submitWrite(`delAccountRecord(${accountKey})`, (access) => access.del.deleteAccountRecord(accountKey));
+        await submitWrite(`deleteAccountRecord(${accountKey})`, (access) => access.del.deleteAccountRecord(accountKey));
       }
       break;
     }
-    case 'delRecipient': {
+    case 'deleteRecipientSponsorship': {
       await submitWrite(activeDef.title, (access, signer) => {
         const delRecipient = access.contract.delRecipient;
         if (typeof delRecipient !== 'function') {
@@ -440,14 +453,14 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'delAccountRecord': {
+    case 'deleteAccountRecord': {
       await submitWrite(activeDef.title, (access, signer) => {
         access.del.signer = signer;
         return access.del.deleteAccountRecord(asString(methodArgs[0]));
       });
       break;
     }
-    case 'delAccountAgentSponsorship': {
+    case 'deleteAgentSponsorship': {
       await submitWrite(`${activeDef.title}(${methodArgs.join(', ')})`, (access) => {
         const deleteAgentSponsorship = access.contract.deleteAgentSponsorship;
         if (typeof deleteAgentSponsorship !== 'function') {

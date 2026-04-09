@@ -21,7 +21,15 @@ type SerializationMethodSpec = {
 type UtilityMethodSpec = {
   title: string;
   params: MethodDef['params'];
-  utilityMethod: 'compareSpCoinContractSize' | 'getSponsorAccounts' | 'getMasterSponsorList' | 'hhFundAccounts' | 'deleteMasterSponsorList';
+  utilityMethod:
+    | 'compareSpCoinContractSize'
+    | 'getSponsorAccounts'
+    | 'getMasterSponsorList'
+    | 'hhFundAccounts'
+    | 'deleteMasterSponsorships'
+    | 'deleteRecipientSponsorships'
+    | 'deleteRecipientSponsorshipTree'
+    | 'deleteAgentSponsorships';
 };
 
 type MethodSpec = SerializationMethodSpec | UtilityMethodSpec;
@@ -175,10 +183,25 @@ const METHOD_SPECS = {
     params: buildHardhatFundAccountsParams(),
     utilityMethod: 'hhFundAccounts',
   },
-  deleteMasterSponsorList: {
-    title: 'deleteMasterSponsorList',
+  deleteMasterSponsorships: {
+    title: 'deleteMasterSponsorships',
     params: [],
-    utilityMethod: 'deleteMasterSponsorList',
+    utilityMethod: 'deleteMasterSponsorships',
+  },
+  deleteRecipientSponsorships: {
+    title: 'deleteRecipientSponsorships',
+    params: buildRecipientScopeParams(),
+    utilityMethod: 'deleteRecipientSponsorships',
+  },
+  deleteRecipientSponsorshipTree: {
+    title: 'deleteRecipientSponsorshipTree',
+    params: buildRecipientRateParams(),
+    utilityMethod: 'deleteRecipientSponsorshipTree',
+  },
+  deleteAgentSponsorships: {
+    title: 'deleteAgentSponsorships',
+    params: buildAgentScopeParams(),
+    utilityMethod: 'deleteAgentSponsorships',
   },
 } as const satisfies Record<string, MethodSpec>;
 
@@ -214,7 +237,6 @@ type RunArgs = {
   selectedHardhatAddress?: string;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
-  ownerAddress?: string;
 };
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
@@ -231,6 +253,77 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
     }),
   );
   return recipientLists.filter((entry) => entry.recipients.length > 0).map((entry) => entry.account);
+}
+
+async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
+  if (typeof access.read.getAccountList !== 'function') {
+    throw new Error('getAccountList() read method is required.');
+  }
+  return Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+}
+
+async function loadRecipientAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>, sponsorKey: string) {
+  if (typeof access.read.getAccountRecipientList !== 'function') {
+    throw new Error('getAccountRecipientList() read method is required.');
+  }
+  return Array.from((await access.read.getAccountRecipientList(sponsorKey)) as unknown[]).map((value) => normalizeAddress(value));
+}
+
+async function loadRecipientRateKeys(
+  access: ReturnType<typeof createSpCoinLibraryAccess>,
+  sponsorKey: string,
+  recipientKey: string,
+) {
+  if (typeof access.read.getRecipientRateList !== 'function') {
+    throw new Error('getRecipientRateList() read method is required.');
+  }
+  return Array.from((await access.read.getRecipientRateList(sponsorKey, recipientKey)) as unknown[]).map((value) => String(value));
+}
+
+async function loadRecipientRateAgents(
+  access: ReturnType<typeof createSpCoinLibraryAccess>,
+  sponsorKey: string,
+  recipientKey: string,
+  recipientRateKey: string,
+) {
+  if (typeof access.read.getRecipientRateAgentList !== 'function') {
+    throw new Error('getRecipientRateAgentList() read method is required.');
+  }
+  return Array.from((await access.read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey)) as unknown[]).map(
+    (value) => normalizeAddress(value),
+  );
+}
+
+async function loadAgentRateKeys(
+  access: ReturnType<typeof createSpCoinLibraryAccess>,
+  sponsorKey: string,
+  recipientKey: string,
+  recipientRateKey: string,
+  agentKey: string,
+) {
+  const getAgentRateList = (access.contract as { getAgentRateList?: (...args: unknown[]) => Promise<unknown> }).getAgentRateList;
+  if (typeof getAgentRateList !== 'function') {
+    throw new Error('getAgentRateList() is not available on the current SpCoin contract access path.');
+  }
+  return Array.from((await getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey)) as unknown[]).map((value) =>
+    String(value),
+  );
+}
+
+function buildRecipientScopeParams() {
+  return [
+    { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' as const },
+    { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' as const },
+  ];
+}
+
+function buildAgentScopeParams() {
+  return [
+    { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' as const },
+    { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' as const },
+    { label: 'Recipient Rate Key', placeholder: 'uint _recipientRateKey', type: 'uint' as const },
+    { label: 'Agent Key', placeholder: 'address _agentKey', type: 'address' as const },
+  ];
 }
 
 export async function buildExternalSerializerResult(contract: any, baseMethod: SerializationBaseMethod, methodArgs: any[]) {
@@ -400,7 +493,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     executeWriteConnected,
     appendLog,
     setStatus,
-    ownerAddress,
   } = args;
   const def = SERIALIZATION_TEST_METHOD_DEFS[selectedMethod];
   const target = requireContractAddress();
@@ -513,52 +605,234 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     return summary;
   }
 
-  if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorList') {
-    const sponsorAccounts = await loadSponsorAccounts(access);
-    const resolvedOwnerAddress = toCanonicalAddress(
-      ownerAddress || hardhatAccounts[0]?.address || '',
-      'Token owner address',
+  const executeAs = async <T>(label: string, signerAddress: string, writeCall: (contract: any, signer: any) => Promise<T>) =>
+    executeWriteConnected(label, writeCall, signerAddress);
+
+  const deleteAgentSponsorshipLeaf = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string,
+    agentKey: string,
+    agentRateKey: string,
+  ) =>
+    executeAs(
+      `deleteAgentSponsorship(${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
+      sponsorKey,
+      async (contract) => {
+        const fn = (contract as { deleteAgentSponsorship?: (...args: unknown[]) => Promise<any> }).deleteAgentSponsorship;
+        if (typeof fn !== 'function') {
+          throw new Error('deleteAgentSponsorship is not available on the current SpCoin contract access path.');
+        }
+        const tx = await fn(recipientKey, recipientRateKey, agentKey, agentRateKey);
+        await tx.wait();
+        return tx;
+      },
     );
-    const deletedSponsors: string[] = [];
-    const txHashes: string[] = [];
 
-    for (const sponsorKey of sponsorAccounts) {
-      const summary = await executeWriteConnected(
-        `${def.title}(${sponsorKey})`,
-        async (contract) => {
-          const deleteSponsor = (contract as { deleteSponsor?: (value: string) => Promise<any> }).deleteSponsor;
-          if (typeof deleteSponsor !== 'function') {
-            throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
-          }
-          const tx = await deleteSponsor(sponsorKey);
-          await tx.wait();
-          return { sponsorKey, txHash: String(tx?.hash || '') };
-        },
-        resolvedOwnerAddress,
-      );
-      deletedSponsors.push(sponsorKey);
-      if (summary && typeof summary === 'object' && 'txHash' in (summary as Record<string, unknown>)) {
-        txHashes.push(String((summary as Record<string, unknown>).txHash || ''));
+  const deleteAgentNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string, agentKey: string) =>
+    executeAs(`deleteAgent(${recipientKey}, ${recipientRateKey}, ${agentKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteAgent?: (...args: unknown[]) => Promise<any> }).deleteAgent;
+      if (typeof fn !== 'function') {
+        throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
       }
-    }
+      const tx = await fn(recipientKey, recipientRateKey, agentKey);
+      await tx.wait();
+      return tx;
+    });
 
-    const remainingAccounts = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
-    if (remainingAccounts.length > 0) {
+  const deleteRecipientRateNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string) =>
+    executeAs(`deleteRecipientRate(${recipientKey}, ${recipientRateKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteRecipientRate?: (...args: unknown[]) => Promise<any> }).deleteRecipientRate;
+      if (typeof fn !== 'function') {
+        throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
+      }
+      const tx = await fn(recipientKey, recipientRateKey);
+      await tx.wait();
+      return tx;
+    });
+
+  const deleteRecipientRelationship = async (sponsorKey: string, recipientKey: string) =>
+    executeAs(`delRecipient(${sponsorKey}, ${recipientKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { delRecipient?: (...args: unknown[]) => Promise<any> }).delRecipient;
+      if (typeof fn !== 'function') {
+        throw new Error('delRecipient is not available on the current SpCoin contract access path.');
+      }
+      const tx = await fn(sponsorKey, recipientKey);
+      await tx.wait();
+      return tx;
+    });
+
+  const deleteSponsorAccount = async (sponsorKey: string) =>
+    executeAs(`deleteSponsor(${sponsorKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteSponsor?: (...args: unknown[]) => Promise<any> }).deleteSponsor;
+      if (typeof fn !== 'function') {
+        throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+      }
+      const tx = await fn(sponsorKey);
+      await tx.wait();
+      return tx;
+    });
+
+  const deleteAgentSponsorshipsWorkflow = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string,
+    agentKey: string,
+  ) => {
+    const deletedAgentRateKeys: string[] = [];
+    let agentRateKeys = await loadAgentRateKeys(access, sponsorKey, recipientKey, recipientRateKey, agentKey);
+    while (agentRateKeys.length > 0) {
+      const agentRateKey = agentRateKeys[0];
+      await deleteAgentSponsorshipLeaf(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      deletedAgentRateKeys.push(agentRateKey);
+      agentRateKeys = await loadAgentRateKeys(access, sponsorKey, recipientKey, recipientRateKey, agentKey);
+    }
+    const remainingAgents = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    if (remainingAgents.includes(normalizeAddress(agentKey))) {
+      await deleteAgentNode(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    }
+    return {
+      sponsorKey,
+      recipientKey,
+      recipientRateKey,
+      agentKey,
+      deletedAgentRateKeys,
+    };
+  };
+
+  const deleteRecipientSponsorshipWorkflow = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string,
+    visitedSponsors = new Set<string>(),
+  ) => {
+    const agentKeys = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    const childResults = [];
+    for (const agentKey of agentKeys) {
+      childResults.push(await deleteAgentSponsorshipsWorkflow(sponsorKey, recipientKey, recipientRateKey, agentKey));
+    }
+    const remainingAgentKeys = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    if (remainingAgentKeys.length > 0) {
       throw new Error(
-        `deleteMasterSponsorList incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`,
+        `deleteRecipientSponsorshipTree incomplete: agent accounts remain for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}: ${remainingAgentKeys.join(', ')}`,
       );
     }
-
-    appendLog(`${selectedMethod} -> deleted ${deletedSponsors.length} sponsor account(s); verified account list is empty.`);
-    setStatus(`${def.title} complete.`);
+    const remainingRateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+    if (remainingRateKeys.includes(String(recipientRateKey))) {
+      await deleteRecipientRateNode(sponsorKey, recipientKey, recipientRateKey);
+    }
     return {
-      ownerAddress: resolvedOwnerAddress,
-      deletedSponsorCount: deletedSponsors.length,
-      deletedSponsors,
-      txHashes,
-      remainingAccountCount: 0,
-      remainingAccounts: [],
+      sponsorKey,
+      recipientKey,
+      recipientRateKey,
+      deletedAgentCount: childResults.length,
+      deletedAgents: childResults,
+      visitedSponsors: Array.from(visitedSponsors),
     };
+  };
+
+  const deleteSponsorshipWorkflow = async (sponsorKey: string, visitedSponsors = new Set<string>()) => {
+    const normalizedSponsorKey = normalizeAddress(sponsorKey);
+    if (visitedSponsors.has(normalizedSponsorKey)) {
+      return { sponsorKey, skipped: true, reason: 'already_visited' as const };
+    }
+    visitedSponsors.add(normalizedSponsorKey);
+
+    const currentSponsorAccounts = new Set(await loadSponsorAccounts(access));
+    const recipients = await loadRecipientAccounts(access, sponsorKey);
+    const deletedRecipients = [];
+    for (const recipientKey of recipients) {
+      const normalizedRecipientKey = normalizeAddress(recipientKey);
+      if (currentSponsorAccounts.has(normalizedRecipientKey)) {
+        await deleteSponsorshipWorkflow(recipientKey, visitedSponsors);
+      }
+      const rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+      const deletedRates = [];
+      for (const rateKey of rateKeys) {
+        deletedRates.push(await deleteRecipientSponsorshipWorkflow(sponsorKey, recipientKey, rateKey, visitedSponsors));
+      }
+      const remainingRecipientRateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+      if (remainingRecipientRateKeys.length === 0) {
+        const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
+        if (remainingRecipients.includes(normalizedRecipientKey)) {
+          await deleteRecipientRelationship(sponsorKey, recipientKey);
+        }
+      }
+      deletedRecipients.push({ recipientKey, deletedRates });
+    }
+
+    const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
+    if (remainingRecipients.length > 0) {
+      throw new Error(`deleteSponsorshipTree incomplete: recipients remain for ${sponsorKey}: ${remainingRecipients.join(', ')}`);
+    }
+
+    const accountList = await loadAccountList(access);
+    if (accountList.includes(normalizedSponsorKey)) {
+      await deleteSponsorAccount(sponsorKey);
+    }
+
+    return {
+      sponsorKey,
+      deletedRecipientCount: deletedRecipients.length,
+      deletedRecipients,
+      visitedSponsors: Array.from(visitedSponsors),
+    };
+  };
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteAgentSponsorships') {
+    const result = await deleteAgentSponsorshipsWorkflow(
+      toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+      String(methodArgs[2]),
+      toCanonicalAddress(methodArgs[3], 'Agent Key'),
+    );
+    appendLog(
+      `${selectedMethod} -> deleted ${result.deletedAgentRateKeys.length} agent sponsorship leaf/leaves for ${result.agentKey}.`,
+    );
+    setStatus(`${def.title} complete.`);
+    return result;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientSponsorshipTree') {
+    const result = await deleteRecipientSponsorshipWorkflow(
+      toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+      String(methodArgs[2]),
+    );
+    appendLog(
+      `${selectedMethod} -> deleted recipient sponsorship branch ${result.sponsorKey} -> ${result.recipientKey} @ ${result.recipientRateKey}.`,
+    );
+    setStatus(`${def.title} complete.`);
+    return result;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientSponsorships') {
+    const sponsorKey = toCanonicalAddress(methodArgs[0], 'Sponsor Key');
+    const recipientKey = toCanonicalAddress(methodArgs[1], 'Recipient Key');
+    const rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+    const results = [];
+    for (const rateKey of rateKeys) {
+      results.push(await deleteRecipientSponsorshipWorkflow(sponsorKey, recipientKey, rateKey));
+    }
+    appendLog(`${selectedMethod} -> deleted ${results.length} recipient sponsorship branch(es) for ${recipientKey}.`);
+    setStatus(`${def.title} complete.`);
+    return { sponsorKey, recipientKey, deletedRecipientSponsorships: results };
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorships') {
+    const deletedSponsorships = [];
+    let sponsorAccounts = await loadSponsorAccounts(access);
+    while (sponsorAccounts.length > 0) {
+      deletedSponsorships.push(await deleteSponsorshipWorkflow(sponsorAccounts[0]));
+      sponsorAccounts = await loadSponsorAccounts(access);
+    }
+    const remainingAccounts = await loadAccountList(access);
+    if (remainingAccounts.length > 0) {
+      throw new Error(`deleteMasterSponsorships incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`);
+    }
+    appendLog(`${selectedMethod} -> deleted ${deletedSponsorships.length} sponsorship tree(s).`);
+    setStatus(`${def.title} complete.`);
+    return { deletedSponsorships };
   }
 
   if (!('baseMethod' in def)) {

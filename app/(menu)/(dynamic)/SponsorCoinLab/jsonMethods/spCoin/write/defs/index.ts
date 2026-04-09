@@ -7,15 +7,18 @@ import addAgent from './addAgent';
 import addAgentSponsorship from './addAgentRateAmount';
 import addAgents from './addAgents';
 import deleteSponsor from './deleteSponsor';
-import delAccountRecipientSponsorship from './deleteRecipientRate';
-import delAccountRecipientRateAmount from './deleteRecipientRateAmount';
-import delAccountAgent from './deleteAgent';
-import delAccountAgentSponsorship from './deleteAgentSponsorship';
+import deleteRecipientSponsorships from './deleteRecipientSponsorships';
+import deleteRecipientSponsorshipTree from './deleteRecipientSponsorshipTree';
+import deleteAgentSponsorships from './deleteAgentSponsorships';
+import deleteRecipientRateSponsorship from './deleteRecipientRate';
+import deleteRecipientRateAmount from './deleteRecipientRateAmount';
+import deleteAgent from './deleteAgent';
+import deleteAgentSponsorship from './deleteAgentSponsorship';
 import addBackDatedSponsorship from './addBackDatedSponsorship';
 import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
-import delRecipient from './delRecipient';
-import delAccountRecord from './deleteAccountRecord';
-import delAccountRecords from './deleteAccountRecords';
+import deleteRecipientSponsorship from './delRecipient';
+import deleteAccountRecord from './deleteAccountRecord';
+import deleteAccountRecords from './deleteAccountRecords';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
 import depositSponsorStakingRewards from './depositSponsorStakingRewards';
 import depositRecipientStakingRewards from './depositRecipientStakingRewards';
@@ -38,15 +41,18 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addAgentSponsorship,
   addAgents,
   deleteSponsor,
-  delAccountRecipientSponsorship,
-  delAccountRecipientRateAmount,
-  delAccountAgent,
-  delAccountAgentSponsorship,
+  deleteRecipientSponsorships,
+  deleteRecipientSponsorshipTree,
+  deleteAgentSponsorships,
+  deleteRecipientRateSponsorship,
+  deleteRecipientRateAmount,
+  deleteAgent,
+  deleteAgentSponsorship,
   addBackDatedSponsorship,
   addBackDatedAgentSponsorship,
-  delRecipient,
-  delAccountRecord,
-  delAccountRecords,
+  deleteRecipientSponsorship,
+  deleteAccountRecord,
+  deleteAccountRecords,
   updateAccountStakingRewards,
   depositSponsorStakingRewards,
   depositRecipientStakingRewards,

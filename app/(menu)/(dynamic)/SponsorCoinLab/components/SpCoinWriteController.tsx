@@ -209,16 +209,16 @@ export default function SpCoinWriteController(props: Props) {
     'addAgents',
     'addSponsorship',
     'addAgentSponsorship',
-    'delAccountRecipientSponsorship',
-    'delAccountRecipientRateAmount',
-    'delAccountAgent',
-    'delAccountAgentSponsorship',
+    'deleteRecipientRateSponsorship',
+    'deleteRecipientRateAmount',
+    'deleteAgent',
+    'deleteAgentSponsorship',
     'addBackDatedSponsorship',
     'addBackDatedAgentSponsorship',
   ]);
   const agentRateSliderMethods = new Set([
     'addAgentSponsorship',
-    'delAccountAgentSponsorship',
+    'deleteAgentSponsorship',
     'addBackDatedSponsorship',
     'addBackDatedAgentSponsorship',
   ]);
