@@ -4,6 +4,14 @@ import { AGENT, RECIPIENT, SPONSOR } from "../shared";
 export async function getAccountStakingRewards(context, _accountKey) {
     const runtime = context;
     const rewardsRecord = new RewardsStruct();
+    try {
+        const updateTx = await runtime.spCoinContractDeployed.updateAccountStakingRewards(_accountKey);
+        if (updateTx && typeof updateTx.wait === "function") {
+            await updateTx.wait();
+        }
+    }
+    catch (_error) {
+    }
     const accountRewardsValue = await runtime.spCoinSerialize.getAccountRewardsValue(_accountKey);
     const accountRewardsStr = typeof accountRewardsValue === 'string'
         ? accountRewardsValue

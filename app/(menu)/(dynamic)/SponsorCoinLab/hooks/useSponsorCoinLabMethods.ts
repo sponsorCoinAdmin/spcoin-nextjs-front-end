@@ -1093,57 +1093,86 @@ export function useSponsorCoinLabMethods({
     async (account: string, pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedAccount = normalizeAddressValue(account);
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
-      let payload: Record<string, unknown> | null = null;
-      try {
-        const parsed = JSON.parse(String(formattedOutputDisplay || '').trim());
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          payload = parsed as Record<string, unknown>;
+      const trimmedDisplay = String(formattedOutputDisplay || '').trim();
+      if (!trimmedDisplay) return 'unhandled';
+
+      const parsePayload = (raw: string): Record<string, unknown> | null => {
+        try {
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>)
+            : null;
+        } catch {
+          return null;
         }
-      } catch {
-        payload = null;
-      }
-      if (!payload) return 'unhandled';
-      const call = payload.call as Record<string, unknown> | undefined;
-      if (String(call?.method || '').trim() !== 'getMasterSponsorList') return 'unhandled';
-      const currentResult = Array.isArray(payload.result) ? [...payload.result] : null;
-      if (!currentResult) return 'unhandled';
-      const pathMatch = String(pathHint || '').match(/\.result\.(\d+)$/);
-      const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
-      const targetIndex =
-        Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
-          ? hintedIndex
-          : currentResult.findIndex((entry) => {
-              if (typeof entry === 'string') {
-                return normalizeAddressValue(entry) === normalizedAccount;
-              }
-              if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
-              const record = entry as Record<string, unknown>;
-              return normalizeAddressValue(String(record.address || record.accountKey || '')) === normalizedAccount;
-            });
-      if (targetIndex < 0) return 'unhandled';
-      try {
-        const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
-        currentResult[targetIndex] = {
-          address: normalizedAccount,
-          ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
-            ? (accountRecord as Record<string, unknown>)
-            : { value: accountRecord }),
-        };
-        setFormattedOutputDisplay(
-          formatFormattedPanelPayload({
+      };
+
+      const blocks = trimmedDisplay
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      const blockEntries =
+        blocks.length > 1
+          ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
+          : [{ raw: trimmedDisplay, index: 0, payload: parsePayload(trimmedDisplay) }];
+      const rootPathMatch = String(pathHint || '').match(/^(?:step|output)-(\d+)(?:\.|$)/i);
+      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
+      const candidateEntries =
+        Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
+          ? [blockEntries[hintedBlockIndex]]
+          : blockEntries;
+
+      for (const entry of candidateEntries) {
+        const payload = entry.payload;
+        if (!payload) continue;
+        const call = payload.call as Record<string, unknown> | undefined;
+        if (String(call?.method || '').trim() !== 'getMasterSponsorList') continue;
+        const currentResult = Array.isArray(payload.result) ? [...payload.result] : null;
+        if (!currentResult) continue;
+        const pathMatch = String(pathHint || '').match(/(?:^|\.)result\.(\d+)(?:\.|$)/);
+        const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
+        const targetIndex =
+          Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
+            ? hintedIndex
+            : currentResult.findIndex((resultEntry) => {
+                if (typeof resultEntry === 'string') {
+                  return normalizeAddressValue(resultEntry) === normalizedAccount;
+                }
+                if (!resultEntry || typeof resultEntry !== 'object' || Array.isArray(resultEntry)) return false;
+                const record = resultEntry as Record<string, unknown>;
+                return normalizeAddressValue(String(record.address || record.accountKey || '')) === normalizedAccount;
+              });
+        if (targetIndex < 0) continue;
+        try {
+          const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
+          currentResult[targetIndex] = {
+            address: normalizedAccount,
+            ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+              ? (accountRecord as Record<string, unknown>)
+              : { value: accountRecord }),
+          };
+          const nextPayload = formatFormattedPanelPayload({
             ...payload,
             result: currentResult,
-          }),
-        );
-        setStatus(`Loaded account record for ${normalizedAccount}.`);
-        appendLog(`Inline account record loaded for ${normalizedAccount}.`);
-        return 'expanded';
-      } catch (error) {
-        const message = String(error instanceof Error ? error.message : error || '').trim() || 'Unable to load account record.';
-        setStatus(`Unable to load account record for ${normalizedAccount}.`);
-        appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
-        return 'handled';
+          });
+          if (blocks.length > 1) {
+            const nextBlocks = [...blocks];
+            nextBlocks[entry.index] = nextPayload;
+            setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+          } else {
+            setFormattedOutputDisplay(nextPayload);
+          }
+          setStatus(`Loaded account record for ${normalizedAccount}.`);
+          appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+          return 'expanded';
+        } catch (error) {
+          const message = String(error instanceof Error ? error.message : error || '').trim() || 'Unable to load account record.';
+          setStatus(`Unable to load account record for ${normalizedAccount}.`);
+          appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
+          return 'handled';
+        }
       }
+      return 'unhandled';
     },
     [
       appendLog,
@@ -1158,11 +1187,13 @@ export function useSponsorCoinLabMethods({
 
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string) => {
+      const inTreePanel = /^tree-/i.test(String(pathHint || '').trim());
       const inlineResult = await expandMasterSponsorListAccountInline(account, pathHint);
       if (inlineResult === 'expanded' || inlineResult === 'handled') {
         setOutputPanelMode('formatted');
         return;
       }
+      if (!inTreePanel) return;
       const normalizedAccount = normalizeAddressValue(account);
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return;
       setSelectedTreeAccount(normalizedAccount);

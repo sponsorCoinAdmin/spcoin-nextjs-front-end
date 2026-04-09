@@ -14,6 +14,14 @@ interface JsonInspectorProps {
   highlightPathPrefixes?: string[];
   highlightColorClass?: string;
   showAll?: boolean;
+  hiddenRules?: {
+    zeroValues: boolean;
+    emptyValues: boolean;
+    falseValues: boolean;
+    todoValues: boolean;
+    emptyCollections: boolean;
+    creationDates: boolean;
+  };
   onLeafValueClick?: (value: string, path: string, key: string) => void;
   hideEntryKeys?: string[];
 }
@@ -80,30 +88,47 @@ function normalizeLegacyDateDisplay(value: any): string | null {
   return normalizeDisplayDateString(`${outerKey}:${minuteKey}:${secondValue}`);
 }
 
-function hasPopulatedContent(value: any): boolean {
-  if (value === null || value === undefined) return false;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return Number.isFinite(value) && value !== 0;
-  if (typeof value === 'bigint') return value !== 0n;
+function hasPopulatedContent(
+  value: any,
+  hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
+): boolean {
+  if (value === null || value === undefined) return !hiddenRules.emptyValues;
+  if (typeof value === 'boolean') return value || !hiddenRules.falseValues;
+  if (typeof value === 'number') return Number.isFinite(value) && (value !== 0 || !hiddenRules.zeroValues);
+  if (typeof value === 'bigint') return value !== 0n || !hiddenRules.zeroValues;
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    if (!trimmed) return false;
-    return !['0', 'false', 'undefined', 'null', 'todo'].includes(trimmed.toLowerCase());
+    const normalized = trimmed.toLowerCase();
+    if (!trimmed) return !hiddenRules.emptyValues;
+    if (normalized === '0') return !hiddenRules.zeroValues;
+    if (normalized === 'false') return !hiddenRules.falseValues;
+    if (normalized === 'todo') return !hiddenRules.todoValues;
+    if (normalized === 'undefined' || normalized === 'null') return !hiddenRules.emptyValues;
+    return true;
   }
-  if (Array.isArray(value)) return value.some((entry) => hasPopulatedContent(entry));
+  if (Array.isArray(value)) {
+    if (value.length === 0) return !hiddenRules.emptyCollections;
+    return value.some((entry) => hasPopulatedContent(entry, hiddenRules));
+  }
   if (typeof value === 'object') {
-    return Object.entries(value).some(([key, childValue]) => {
+    const entries = Object.entries(value).filter(([key]) => key !== 'TYPE');
+    if (entries.length === 0) return !hiddenRules.emptyCollections;
+    return entries.some(([key, childValue]) => {
       if (key === 'TYPE') return false;
-      return hasPopulatedContent(childValue);
+      return hasPopulatedContent(childValue, hiddenRules);
     });
   }
   return true;
 }
 
-function hasVisibleDescendants(value: any, showAll: boolean): boolean {
+function hasVisibleDescendants(
+  value: any,
+  showAll: boolean,
+  hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
+): boolean {
   if (showAll) return true;
   if (!value || typeof value !== 'object') return true;
-  return hasPopulatedContent(value);
+  return hasPopulatedContent(value, hiddenRules);
 }
 
 function formatInlineSummaryValue(value: unknown): string {
@@ -111,7 +136,25 @@ function formatInlineSummaryValue(value: unknown): string {
   return typeof value === 'string' ? `"${String(value)}"` : String(renderedValue);
 }
 
-function getVisibleEntries(value: any, showAll: boolean, hideEntryKeys: string[] = []): Array<[string, any]> {
+function formatPathSegmentLabel(nextPath: string): string {
+  const segments = nextPath.split('.');
+  const currentSegment = segments[segments.length - 1] || nextPath;
+  const parentSegment = segments[segments.length - 2] || '';
+  if (
+    /^(recipientRateBranches|agentRateBranches)$/.test(parentSegment) &&
+    /^\d+(\.\d+)?$/.test(currentSegment)
+  ) {
+    return `${currentSegment}%`;
+  }
+  return currentSegment;
+}
+
+function getVisibleEntries(
+  value: any,
+  showAll: boolean,
+  hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
+  hideEntryKeys: string[] = [],
+): Array<[string, any]> {
   if (!value || typeof value !== 'object') return [];
   if (showAll) {
     if (Array.isArray(value)) {
@@ -125,15 +168,15 @@ function getVisibleEntries(value: any, showAll: boolean, hideEntryKeys: string[]
       .map((entry, index) => [String(index), entry] as [string, any])
       .filter(([, entry]) => {
         if (!entry || typeof entry !== 'object') return true;
-        return hasPopulatedContent(entry);
+        return hasPopulatedContent(entry, hiddenRules);
       });
   }
 
   return Object.entries(value).filter(([childKey, childValue]) => {
     if (childKey === 'address') return false;
     if (hideEntryKeys.includes(childKey)) return false;
-    if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue);
-    return hasPopulatedContent(childValue);
+    if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules);
+    return hasPopulatedContent(childValue, hiddenRules);
   });
 }
 
@@ -148,6 +191,14 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   highlightPathPrefixes = [],
   highlightColorClass = 'text-green-400',
   showAll = true,
+  hiddenRules = {
+    zeroValues: true,
+    emptyValues: true,
+    falseValues: true,
+    todoValues: true,
+    emptyCollections: true,
+    creationDates: true,
+  },
   onLeafValueClick,
   hideEntryKeys = [],
 }) => {
@@ -162,7 +213,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   ) {
     effectiveHideEntryKeys.push('accountKey');
   }
-  const visibleEntries = getVisibleEntries(data, showAll, effectiveHideEntryKeys);
+  const visibleEntries = getVisibleEntries(data, showAll, hiddenRules, effectiveHideEntryKeys);
   const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
   const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
@@ -190,11 +241,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   };
 
   const getPathLabel = (nextPath: string): string => {
-    if (label) return getAddressNodeLabel(data, label);
+    if (label) return getAddressNodeLabel(data, formatPathSegmentLabel(nextPath));
     if (nextPath === 'root') return rootLabel;
     if (nextPath === 'tradeData.slippage') return 'slippage';
-    const segments = nextPath.split('.');
-    return getAddressNodeLabel(data, segments[segments.length - 1] || nextPath);
+    return getAddressNodeLabel(data, formatPathSegmentLabel(nextPath));
   };
 
   const getDisplayLabel = (nextPath: string): string => {
@@ -210,6 +260,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const renderValue = (value: any, key: string) => {
     const nextPath = `${path}.${key}`;
     if (key === 'creationTime' || key === 'creationDate') {
+      if (!showAll && hiddenRules.creationDates) return null;
       const normalizedDate = normalizeLegacyDateDisplay(value);
       if (normalizedDate) {
         const valueHighlighted = highlightPathPrefixes.some(
@@ -224,7 +275,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     }
 
     if (value && typeof value === 'object') {
-      if (!hasVisibleDescendants(value, showAll)) return null;
+      if (!hasVisibleDescendants(value, showAll, hiddenRules)) return null;
       return (
         <JsonInspector
           key={nextPath}
@@ -239,6 +290,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
           showAll={showAll}
+          hiddenRules={hiddenRules}
           onLeafValueClick={onLeafValueClick}
         />
       );

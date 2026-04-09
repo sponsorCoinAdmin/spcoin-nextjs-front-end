@@ -79,6 +79,24 @@ export default function OutputResultsCard({
   content,
   treeActions,
 }: Props) {
+  const hiddenRuleOptions = [
+    ['zeroValues', '0 values'],
+    ['emptyValues', 'empty / null'],
+    ['falseValues', 'false values'],
+    ['todoValues', 'todo markers'],
+    ['emptyCollections', 'empty arrays / objects'],
+    ['creationDates', 'creationTime / creationDate'],
+  ] as const;
+  const [hiddenInspectorRules, setHiddenInspectorRules] = useState({
+    zeroValues: true,
+    emptyValues: true,
+    falseValues: true,
+    todoValues: true,
+    emptyCollections: true,
+    creationDates: true,
+  });
+  const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
+  const showAllMenuRef = useRef<HTMLDivElement | null>(null);
   const actionButtonClassName =
     'h-[36px] rounded px-4 py-[0.28rem] text-center font-bold text-black transition-colors bg-[#E5B94F] hover:bg-green-500';
   const refreshIconButtonClassName =
@@ -207,6 +225,20 @@ export default function OutputResultsCard({
       cancelled = true;
     };
   }, [treeActions.selectedTreeAccount, treeActions.treeAccountRefreshToken]);
+
+  useEffect(() => {
+    if (!isShowAllMenuOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (showAllMenuRef.current?.contains(event.target as Node)) return;
+      setIsShowAllMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [isShowAllMenuOpen]);
+
+  const allShownRulesSelected = hiddenRuleOptions.every(
+    ([key]) => !hiddenInspectorRules[key],
+  );
 
   return (
     <article className={className} style={style}>
@@ -402,15 +434,66 @@ export default function OutputResultsCard({
           {controls.outputPanelMode === 'formatted' || controls.outputPanelMode === 'tree' ? (
             <div className="absolute right-3 top-3 z-10 flex items-center gap-3 rounded-md bg-[#0B1220]/90 px-2 py-1 text-xs text-slate-200">
               {!controls.formattedJsonViewEnabled ? (
-                <label className="inline-flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
-                    checked={controls.showAllTreeRecords}
-                    onChange={(e) => controls.setShowAllTreeRecords(e.target.checked)}
-                  />
-                  <span>Show All</span>
-                </label>
+                <div ref={showAllMenuRef} className="relative flex items-center gap-1">
+                  <button
+                    type="button"
+                    className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition-colors ${
+                      controls.showAllTreeRecords ? 'text-white' : 'text-slate-300 hover:text-white'
+                    }`}
+                    onClick={() => controls.setShowAllTreeRecords(!controls.showAllTreeRecords)}
+                    aria-pressed={controls.showAllTreeRecords}
+                  >
+                    <span>Show</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-4 w-4 items-center justify-center rounded text-[10px] text-slate-400 transition-colors hover:text-white"
+                    onClick={() => setIsShowAllMenuOpen((prev) => !prev)}
+                    aria-label="Toggle Show All filters"
+                    aria-expanded={isShowAllMenuOpen}
+                  >
+                    v
+                  </button>
+                  {isShowAllMenuOpen ? (
+                    <div className="absolute left-0 top-6 z-20 w-56 rounded-md border border-[#334155] bg-[#0B1220] p-2 text-[10px] leading-4 text-slate-300 shadow-lg">
+                      <div className="mb-1 font-semibold text-[#8FA8FF]">Show Field</div>
+                      <label className="flex items-center gap-2 py-0.5">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                          checked={allShownRulesSelected}
+                          onChange={(event) =>
+                            setHiddenInspectorRules({
+                              zeroValues: !event.target.checked,
+                              emptyValues: !event.target.checked,
+                              falseValues: !event.target.checked,
+                              todoValues: !event.target.checked,
+                              emptyCollections: !event.target.checked,
+                              creationDates: !event.target.checked,
+                            })
+                          }
+                        />
+                        <span>{allShownRulesSelected ? 'None' : 'All'}</span>
+                      </label>
+                      {hiddenRuleOptions.map(([key, label]) => (
+                        <label key={key} className="flex items-center gap-2 py-0.5">
+                          <input
+                            type="checkbox"
+                            className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                            checked={!hiddenInspectorRules[key as keyof typeof hiddenInspectorRules]}
+                            onChange={(event) =>
+                              setHiddenInspectorRules((prev) => ({
+                                ...prev,
+                                [key]: !event.target.checked,
+                              }))
+                            }
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
               <label className="inline-flex items-center gap-1">
                 <input
@@ -462,6 +545,7 @@ export default function OutputResultsCard({
                     highlightPathPrefixes={highlightedInspectorPathPrefixes}
                     highlightColorClass={inspectorHighlightColorClass}
                     showAll={controls.showAllTreeRecords}
+                    hiddenRules={hiddenInspectorRules}
                     label={
                       collapsibleFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -499,6 +583,7 @@ export default function OutputResultsCard({
                     label={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={controls.showAllTreeRecords}
+                    hiddenRules={hiddenInspectorRules}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                   />
                 ))}
