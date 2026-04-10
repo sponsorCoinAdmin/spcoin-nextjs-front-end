@@ -4,6 +4,7 @@ import { RotateCcw } from 'lucide-react';
 import LabCardHeader from './LabCardHeader';
 import AccountSelection from './AccountSelection';
 import JsonInspector from '@/components/shared/JsonInspector';
+import { BaseModal } from '@/components/modals';
 import {
   defaultMissingImage,
   getAccountLogoURL,
@@ -790,26 +791,39 @@ export default function OutputResultsCard({
             </pre>
           )}
         </div>
-        {selectedFormattedAccount ? (
-          <div className="mt-3">
-            <AccountSelection
-              label="Selected Account"
-              title="Toggle selected account metadata"
-              isOpen
-              onToggle={() => setSelectedFormattedAccount('')}
-              control={
-                <input
-                  className={inputStyle}
-                  readOnly
-                  value={selectedFormattedAccount}
-                  placeholder="Selected account address"
-                />
-              }
-              metadata={selectedFormattedAccountMetadata}
-            />
-          </div>
-        ) : null}
       </div>
+      <BaseModal
+        isOpen={Boolean(selectedFormattedAccount)}
+        title="Account Metadata"
+        maxWidthClassName="max-w-3xl"
+        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+        titleClassName="text-xl font-semibold text-[#8FA8FF]"
+        footer={
+          <button
+            type="button"
+            className={actionButtonClassName}
+            onClick={() => setSelectedFormattedAccount('')}
+          >
+            Close
+          </button>
+        }
+      >
+        <AccountSelection
+          label="Selected Account"
+          title="Close selected account metadata"
+          isOpen
+          onToggle={() => setSelectedFormattedAccount('')}
+          control={
+            <input
+              className={inputStyle}
+              readOnly
+              value={selectedFormattedAccount}
+              placeholder="Selected account address"
+            />
+          }
+          metadata={selectedFormattedAccountMetadata}
+        />
+      </BaseModal>
     </article>
   );
 }

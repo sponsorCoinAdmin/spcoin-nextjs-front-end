@@ -1217,7 +1217,6 @@ export default function SponsorCoinLabPage() {
     highlightedFormattedOutputLines,
     highlightedFormattedResultLines,
   } = useControllerScriptPresentation({
-    selectedScriptStep,
     setSelectedScriptStepNumber,
     selectedScript,
     methodSelectionSource,
@@ -1257,6 +1256,7 @@ export default function SponsorCoinLabPage() {
     hasValidationConfirmAction,
     handleValidationConfirm,
     isDeleteStepPopupOpen,
+    selectedScriptStep,
     setIsDeleteStepPopupOpen,
     handleConfirmDeleteSelectedScriptStep,
     isDiscardChangesPopupOpen,

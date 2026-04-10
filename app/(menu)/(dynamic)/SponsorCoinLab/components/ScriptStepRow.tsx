@@ -31,7 +31,9 @@ export default function ScriptStepRow({
   const params = getStepParamEntries(step);
   const hasExpandableContent = Boolean(sender) || params.length > 0;
   const methodClassName = hasExecutionError
-    ? 'text-red-400 underline underline-offset-2'
+    ? isSelected
+      ? 'text-red-300 underline underline-offset-2'
+      : 'text-red-400 underline underline-offset-2'
     : step.hasMissingRequiredParams
     ? isSelected
       ? 'text-red-400'
@@ -41,9 +43,12 @@ export default function ScriptStepRow({
     : isSelected
       ? 'text-green-400 underline underline-offset-2'
       : 'text-slate-200';
+  const rowClassName = isSelected
+    ? 'rounded-md bg-[#131A2A] ring-1 ring-[#5981F3]/50'
+    : '';
 
   return (
-    <div className="m-0 flex flex-col p-0 font-mono leading-tight">
+    <div className={`m-0 flex flex-col p-0 font-mono leading-tight ${rowClassName}`}>
       <div className="grid w-full grid-cols-[calc(1.05em+3px)_minmax(0,1fr)] items-center gap-x-[2px] px-0 py-0 text-left text-sm">
         <button
           type="button"
