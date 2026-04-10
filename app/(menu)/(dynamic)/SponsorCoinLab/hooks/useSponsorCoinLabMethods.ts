@@ -565,49 +565,125 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       const nextPayload = { ...(payload as Record<string, unknown>) };
-      if (
-        nextPayload.call &&
-        typeof nextPayload.call === 'object' &&
-        !Array.isArray(nextPayload.call) &&
-        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getMasterSponsorList' &&
-        Array.isArray(nextPayload.result)
-      ) {
-        nextPayload.result = (nextPayload.result as unknown[]).map((entry) => {
-          if (typeof entry === 'string') {
-            return { address: entry };
+      const normalizeInflationRateDisplay = (value: unknown) => {
+        const trimmed = String(value ?? '').trim();
+        if (!trimmed) return '';
+        return trimmed.endsWith('%') ? trimmed : `${trimmed}%`;
+      };
+      const stripSponsorRewardRateFromTree = (value: unknown): unknown => {
+        if (!value || typeof value !== 'object') return value;
+        if (Array.isArray(value)) return value.map((entry) => stripSponsorRewardRateFromTree(entry));
+
+        const record = value as Record<string, unknown>;
+        const nextRecord: Record<string, unknown> = {};
+        for (const [key, nestedValue] of Object.entries(record)) {
+          if (key === 'totalSpCoins' && nestedValue && typeof nestedValue === 'object' && !Array.isArray(nestedValue)) {
+            const totalSpCoinsRecord = { ...(nestedValue as Record<string, unknown>) };
+            delete totalSpCoinsRecord.sponsorRewardRate;
+            nextRecord[key] = Object.fromEntries(
+              Object.entries(totalSpCoinsRecord).map(([nestedKey, nestedEntry]) => [nestedKey, stripSponsorRewardRateFromTree(nestedEntry)]),
+            );
+            continue;
           }
-          if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-            return entry;
-          }
-          const record = entry as Record<string, unknown>;
-          if (
-            typeof record.address === 'string' &&
-            record.accountRecord &&
-            typeof record.accountRecord === 'object' &&
-            !Array.isArray(record.accountRecord)
-          ) {
-            return {
-              address: record.address,
-              ...(record.accountRecord as Record<string, unknown>),
-            };
-          }
-          if (typeof record.address === 'string') return record;
+          nextRecord[key] = stripSponsorRewardRateFromTree(nestedValue);
+        }
+        return nextRecord;
+      };
+      const normalizeMasterSponsorEntry = (entry: unknown) => {
+        if (typeof entry === 'string') {
+          return { address: entry };
+        }
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+          return entry;
+        }
+        const record = entry as Record<string, unknown>;
+        let normalizedEntry: Record<string, unknown>;
+        if (
+          typeof record.address === 'string' &&
+          record.accountRecord &&
+          typeof record.accountRecord === 'object' &&
+          !Array.isArray(record.accountRecord)
+        ) {
+          normalizedEntry = {
+            address: record.address,
+            ...(record.accountRecord as Record<string, unknown>),
+          };
+        } else if (typeof record.address === 'string') {
+          normalizedEntry = { ...record };
+        } else {
           const keys = Object.keys(record);
           if (keys.length === 1 && /^0x[0-9a-f]{40}$/i.test(keys[0] || '')) {
             const nestedRecord = record[keys[0]];
             if (nestedRecord && typeof nestedRecord === 'object' && !Array.isArray(nestedRecord)) {
-              return {
+              normalizedEntry = {
                 address: keys[0],
                 ...(nestedRecord as Record<string, unknown>),
               };
+            } else {
+              normalizedEntry = {
+                address: keys[0],
+                value: nestedRecord,
+              };
             }
-            return {
-              address: keys[0],
-              value: nestedRecord,
-            };
+          } else {
+            normalizedEntry = { ...record };
           }
-          return record;
-        });
+        }
+
+        return stripSponsorRewardRateFromTree(normalizedEntry) as Record<string, unknown>;
+      };
+      if (
+        nextPayload.call &&
+        typeof nextPayload.call === 'object' &&
+        !Array.isArray(nextPayload.call) &&
+        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getMasterSponsorList'
+      ) {
+        const rawResult = nextPayload.result;
+        const sponsorEntries = Array.isArray(rawResult)
+          ? rawResult
+          : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
+            ? Array.isArray((rawResult as Record<string, unknown>).sponsors)
+              ? (((rawResult as Record<string, unknown>).sponsors as unknown[]) ?? [])
+              : []
+            : [];
+        const rawMetadata =
+          nextPayload.spCoinMetsData && typeof nextPayload.spCoinMetsData === 'object' && !Array.isArray(nextPayload.spCoinMetsData)
+            ? (nextPayload.spCoinMetsData as Record<string, unknown>)
+            : nextPayload.spCoinMetaData && typeof nextPayload.spCoinMetaData === 'object' && !Array.isArray(nextPayload.spCoinMetaData)
+              ? (nextPayload.spCoinMetaData as Record<string, unknown>)
+              : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult) &&
+                  (rawResult as Record<string, unknown>).spCoinMetsData &&
+                  typeof (rawResult as Record<string, unknown>).spCoinMetsData === 'object' &&
+                  !Array.isArray((rawResult as Record<string, unknown>).spCoinMetsData)
+                ? ((rawResult as Record<string, unknown>).spCoinMetsData as Record<string, unknown>)
+                : null;
+        const normalizedMetadata = rawMetadata
+          ? {
+              ...rawMetadata,
+              inflationRate: normalizeInflationRateDisplay(rawMetadata.inflationRate),
+            }
+          : null;
+
+        nextPayload.result = {
+          ...(normalizedMetadata ? { spCoinMetsData: normalizedMetadata } : {}),
+          sponsors: sponsorEntries.map((entry) => normalizeMasterSponsorEntry(entry)),
+        };
+        delete nextPayload.spCoinMetaData;
+        delete nextPayload.spCoinMetsData;
+      }
+      if (
+        nextPayload.call &&
+        typeof nextPayload.call === 'object' &&
+        !Array.isArray(nextPayload.call) &&
+        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getSpCoinMetaData' &&
+        nextPayload.result &&
+        typeof nextPayload.result === 'object' &&
+        !Array.isArray(nextPayload.result)
+      ) {
+        nextPayload.result = {
+          ...(nextPayload.result as Record<string, unknown>),
+          inflationRate: normalizeInflationRateDisplay((nextPayload.result as Record<string, unknown>).inflationRate),
+        };
       }
       return formatOutputDisplayValue(nextPayload);
     },
@@ -731,6 +807,30 @@ export function useSponsorCoinLabMethods({
           appendLog,
           setStatus,
         });
+        if (selectedMethod === 'getMasterSponsorList') {
+          try {
+            const spCoinMetsData = await runSpCoinReadMethod({
+              selectedMethod: 'getSpCoinMetaData',
+              spReadParams: [],
+              coerceParamValue,
+              stringifyResult,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              requireContractAddress,
+              ensureReadRunner,
+              appendLog: () => {},
+              setStatus: () => {},
+            });
+            return {
+              call,
+              result: {
+                spCoinMetsData,
+                sponsors: Array.isArray(result) ? result : [],
+              },
+            };
+          } catch {
+            return { call, result };
+          }
+        }
         return { call, result };
       }
 
@@ -1127,9 +1227,16 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         if (String(call?.method || '').trim() !== 'getMasterSponsorList') continue;
-        const currentResult = Array.isArray(payload.result) ? [...payload.result] : null;
+        const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
+          ? (payload.result as Record<string, unknown>)
+          : null;
+        const currentResult = Array.isArray(payload.result)
+          ? [...payload.result]
+          : resultRecord && Array.isArray(resultRecord.sponsors)
+            ? [...(resultRecord.sponsors as unknown[])]
+            : null;
         if (!currentResult) continue;
-        const pathMatch = String(pathHint || '').match(/(?:^|\.)result\.(\d+)(?:\.|$)/);
+        const pathMatch = String(pathHint || '').match(/(?:^|\.)result(?:\.sponsors)?\.(\d+)(?:\.|$)/);
         const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
         const targetIndex =
           Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
@@ -1153,7 +1260,13 @@ export function useSponsorCoinLabMethods({
           };
           const nextPayload = formatFormattedPanelPayload({
             ...payload,
-            result: currentResult,
+            result:
+              resultRecord && Array.isArray(resultRecord.sponsors)
+                ? {
+                    ...resultRecord,
+                    sponsors: currentResult,
+                  }
+                : currentResult,
           });
           if (blocks.length > 1) {
             const nextBlocks = [...blocks];

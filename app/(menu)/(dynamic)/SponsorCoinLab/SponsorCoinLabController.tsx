@@ -476,6 +476,7 @@ export default function SponsorCoinLabPage() {
   const [validationPopupConfirmLabel, setValidationPopupConfirmLabel] = useState('');
   const [validationPopupCancelLabel, setValidationPopupCancelLabel] = useState('Close');
   const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
+  const refreshFormattedOutputSequenceRef = useRef<(() => void) | null>(null);
   const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
   const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
   const previousContractAddressRef = useRef('');
@@ -2932,7 +2933,45 @@ export default function SponsorCoinLabPage() {
       spCoinWriteMethodDefs,
     ],
   );
-  const refreshActiveOutput = useCallback(() => {
+  const displayedOutputCalls = useMemo(() => {
+    const blocks = String(formattedOutputDisplay || '')
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter(Boolean);
+    if (blocks.length === 0) return [];
+
+    const parsedCalls = blocks
+      .map((block) => {
+        try {
+          const parsed = JSON.parse(block) as {
+            call?: { method?: unknown; parameters?: Array<{ label?: unknown; value?: unknown }> };
+          };
+          const method = String(parsed?.call?.method || '').trim();
+          if (!method) return null;
+          const parameters = Array.isArray(parsed?.call?.parameters)
+            ? parsed.call.parameters.map((entry) => ({
+                label: String(entry?.label || '').trim(),
+                value: String(entry?.value || '').trim(),
+              }))
+            : [];
+          return { method, parameters };
+        } catch {
+          return null;
+        }
+      })
+      .filter((entry): entry is { method: string; parameters: Array<{ label: string; value: string }> } => entry !== null);
+
+    return parsedCalls;
+  }, [formattedOutputDisplay]);
+  const executeRefreshActiveOutput = useCallback(() => {
+    if (
+      outputPanelMode === 'formatted' &&
+      formattedPanelView === 'output' &&
+      displayedOutputCalls.length > 0
+    ) {
+      refreshFormattedOutputSequenceRef.current?.();
+      return;
+    }
     if (outputPanelMode === 'tree') {
       requestRefreshSelectedTreeAccount();
       return;
@@ -2964,13 +3003,69 @@ export default function SponsorCoinLabPage() {
     setStatus('Refresh is available for read/test/tree commands only.');
   }, [
     activeMethodPanelTab,
+    formattedPanelView,
     methodPanelMode,
     outputPanelMode,
     requestRefreshSelectedTreeAccount,
     runSelectedReadMethod,
     runSelectedSerializationTestMethod,
     runSelectedSpCoinReadMethod,
+    displayedOutputCalls.length,
     setStatus,
+  ]);
+  const refreshActiveOutput = useCallback(() => {
+    let refreshItems: string[] = [];
+
+    if (
+      outputPanelMode === 'formatted' &&
+      formattedPanelView === 'output' &&
+      displayedOutputCalls.length > 0
+    ) {
+      refreshItems = displayedOutputCalls.map(
+        (call, index) => `Run output step ${index + 1}: ${call.method}`,
+      );
+    } else if (outputPanelMode === 'tree') {
+      refreshItems = [
+        'Clear the cached data for the selected tree account',
+        'Run a fresh tree dump for the active account',
+      ];
+    } else if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') {
+        refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
+      } else if (methodPanelMode === 'serialization_tests') {
+        refreshItems = [`Run serialization test: ${activeSerializationTestDef.title}`];
+      }
+    } else if (activeMethodPanelTab === 'erc20') {
+      if (methodPanelMode === 'ecr20_read') {
+        refreshItems = [`Run ERC20 read method: ${selectedReadMethod}`];
+      }
+    } else if (activeMethodPanelTab === 'spcoin_rread') {
+      refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
+    }
+
+    if (refreshItems.length === 0) {
+      setStatus('Refresh is available for read/test/tree commands only.');
+      return;
+    }
+
+    showValidationPopup([], refreshItems, 'The following action(s) will be run:', {
+      title: 'Refresh Output Confirm',
+      confirmLabel: 'Run Refresh',
+      cancelLabel: 'Cancel',
+      onConfirm: () => executeRefreshActiveOutput(),
+    });
+  }, [
+    activeMethodPanelTab,
+    activeSerializationTestDef.title,
+    activeSpCoinReadDef.title,
+    displayedOutputCalls,
+    executeRefreshActiveOutput,
+    formattedPanelView,
+    methodPanelMode,
+    outputPanelMode,
+    selectedReadMethod,
+    setStatus,
+    showValidationPopup,
   ]);
   const handleAddCurrentMethodToScript = useCallback(() => {
     const savedStepNumber = addCurrentMethodToScript();
@@ -3260,6 +3355,81 @@ export default function SponsorCoinLabPage() {
       initialOutput: '(no output yet)',
     });
   }, [runScriptDebugSequence]);
+  const runDisplayedOutputSequence = useCallback(async () => {
+    if (displayedOutputCalls.length === 0) {
+      setStatus('No Console Display output steps are available to refresh.');
+      return;
+    }
+
+    scriptDebugStopRef.current = true;
+    setIsScriptDebugRunning(false);
+    setScriptStepExecutionErrors({});
+
+    let accumulatedOutput = '(no output yet)';
+    setFormattedOutputDisplay(accumulatedOutput);
+    setIsScriptDebugRunning(true);
+
+    try {
+      for (const [index, call] of displayedOutputCalls.entries()) {
+        const panel: LabScriptStep['panel'] | null = ERC20_READ_OPTIONS.includes(call.method as Erc20ReadMethod)
+          ? 'ecr20_read'
+          : ERC20_WRITE_OPTIONS.includes(call.method as Erc20WriteMethod)
+            ? 'erc20_write'
+            : Object.prototype.hasOwnProperty.call(spCoinReadMethodDefs, call.method)
+              ? 'spcoin_rread'
+              : Object.prototype.hasOwnProperty.call(serializationTestMethodDefs, call.method)
+                ? 'serialization_tests'
+                : Object.prototype.hasOwnProperty.call(spCoinWriteMethodDefs, call.method)
+                  ? 'spcoin_write'
+                  : null;
+        if (!panel) {
+          setStatus(`Unable to refresh Console Display output for ${call.method}.`);
+          return;
+        }
+        const syntheticStep: LabScriptStep = {
+          step: index + 1,
+          name: call.method,
+          panel,
+          method: call.method,
+          'msg.sender': call.parameters.find((entry) => entry.label === 'msg.sender')?.value || undefined,
+          params: call.parameters
+            .filter((entry) => entry.label !== 'msg.sender' && entry.label)
+            .map((entry) => ({ key: entry.label, value: entry.value })),
+        };
+        const result = await runScriptStep(syntheticStep, { formattedOutputBase: accumulatedOutput });
+        setScriptStepExecutionErrors((prev) => ({
+          ...prev,
+          [syntheticStep.step]: !result.success,
+        }));
+        accumulatedOutput = result.formattedOutput;
+        if (!result.success) return;
+      }
+
+      setStatus(
+        displayedOutputCalls.length === 1
+          ? 'Refreshed 1 Console Display output step.'
+          : `Refreshed ${displayedOutputCalls.length} Console Display output steps.`,
+      );
+    } finally {
+      setIsScriptDebugRunning(false);
+    }
+  }, [
+    displayedOutputCalls,
+    runScriptStep,
+    serializationTestMethodDefs,
+    setFormattedOutputDisplay,
+    setStatus,
+    spCoinReadMethodDefs,
+    spCoinWriteMethodDefs,
+  ]);
+  useEffect(() => {
+    refreshFormattedOutputSequenceRef.current =
+      displayedOutputCalls.length > 0
+        ? () => {
+            void runDisplayedOutputSequence();
+          }
+        : null;
+  }, [displayedOutputCalls.length, runDisplayedOutputSequence]);
   const runSelectedScriptStep = useCallback(async () => {
     if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
       setStatus('Select a script step to run.');
@@ -3418,7 +3588,6 @@ export default function SponsorCoinLabPage() {
       return blockIndex < blocks.length - 1 ? [...mapped, { line: '', active: false }] : mapped;
     });
   }, [formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScriptStepNumber]);
-
   return (
     <main id="sponsorcoin-sandbox-root" className="min-h-screen bg-[#090C16] p-6 text-white">
       <section className="mx-auto flex w-full max-w-7xl flex-col">

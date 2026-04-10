@@ -56,6 +56,7 @@ export default function ScriptStepRow({
           <span className="block h-[0.62em] w-[0.62em] rounded-full bg-[#F87171]" />
         </button>
         <div className="col-start-2 inline-flex min-w-0 items-center">
+          <span className={`mr-1 shrink-0 ${methodClassName}`}>{`${step.step}.`}</span>
           {hasExpandableContent ? (
             <button
               type="button"

@@ -20,6 +20,7 @@ import deleteRecipientSponsorship from './delRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
+import updateMasterStakingRewards from './updateMasterStakingRewards';
 import depositSponsorStakingRewards from './depositSponsorStakingRewards';
 import depositRecipientStakingRewards from './depositRecipientStakingRewards';
 import depositAgentStakingRewards from './depositAgentStakingRewards';
@@ -54,6 +55,7 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   deleteAccountRecord,
   deleteAccountRecords,
   updateAccountStakingRewards,
+  updateMasterStakingRewards,
   depositSponsorStakingRewards,
   depositRecipientStakingRewards,
   depositAgentStakingRewards,

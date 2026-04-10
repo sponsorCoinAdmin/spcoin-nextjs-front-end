@@ -86,6 +86,7 @@ export default function OutputResultsCard({
     ['todoValues', 'todo markers'],
     ['emptyCollections', 'empty arrays / objects'],
     ['creationDates', 'creationTime / creationDate'],
+    ['formattedAmounts', 'Formatted Amounts'],
   ] as const;
   const [hiddenInspectorRules, setHiddenInspectorRules] = useState({
     zeroValues: true,
@@ -94,6 +95,7 @@ export default function OutputResultsCard({
     todoValues: true,
     emptyCollections: true,
     creationDates: true,
+    formattedAmounts: false,
   });
   const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
   const showAllMenuRef = useRef<HTMLDivElement | null>(null);
@@ -172,6 +174,100 @@ export default function OutputResultsCard({
     content.selectedScriptStepHasMissingRequiredParams || content.selectedScriptStepHasExecutionError
       ? 'text-red-400'
       : 'text-green-400';
+  const activeTokenDecimals = useMemo(() => {
+    const extractDecimals = (value: unknown): number | null => {
+      if (!value || typeof value !== 'object') return null;
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          const nested = extractDecimals(entry);
+          if (nested !== null) return nested;
+        }
+        return null;
+      }
+
+      const record = value as Record<string, unknown>;
+      const rawDecimals = record.decimals;
+      const nextDecimals = Number(rawDecimals);
+      if (Number.isInteger(nextDecimals) && nextDecimals >= 0) return nextDecimals;
+
+      for (const nestedValue of Object.values(record)) {
+        const nested = extractDecimals(nestedValue);
+        if (nested !== null) return nested;
+      }
+      return null;
+    };
+
+    if (controls.outputPanelMode === 'tree') {
+      for (const block of collapsibleTreeBlocks || []) {
+        const decimals = extractDecimals(block);
+        if (decimals !== null) return decimals;
+      }
+      return 18;
+    }
+
+    for (const block of collapsibleFormattedBlocks || []) {
+      const decimals = extractDecimals(block);
+      if (decimals !== null) return decimals;
+    }
+    return 18;
+  }, [collapsibleFormattedBlocks, collapsibleTreeBlocks, controls.outputPanelMode]);
+
+  const displayFormattedBlocks = useMemo(() => {
+    const hoistMasterSponsorRewardRate = (block: unknown) => {
+      if (!block || typeof block !== 'object' || Array.isArray(block)) return block;
+
+      const record = block as Record<string, unknown>;
+      const call = record.call;
+      const method =
+        call && typeof call === 'object' && !Array.isArray(call) ? String((call as Record<string, unknown>).method || '').trim() : '';
+
+      if (method !== 'getMasterSponsorList') return block;
+
+      const result = record.result;
+      if (!result || typeof result !== 'object' || Array.isArray(result) === false) return block;
+
+      const sponsorEntries = Array.isArray(result) ? result : [];
+      const topLevelSponsorRewardRate = sponsorEntries.reduce<string | null>((foundRate, entry) => {
+        if (foundRate) return foundRate;
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return foundRate;
+        const totalSpCoins =
+          (entry as Record<string, unknown>).totalSpCoins &&
+          typeof (entry as Record<string, unknown>).totalSpCoins === 'object' &&
+          !Array.isArray((entry as Record<string, unknown>).totalSpCoins)
+            ? ((entry as Record<string, unknown>).totalSpCoins as Record<string, unknown>)
+            : null;
+        const rewardRate = totalSpCoins ? String(totalSpCoins.sponsorRewardRate || '').trim() : '';
+        return rewardRate || foundRate;
+      }, null);
+
+      const normalizedResult = sponsorEntries.reduce<Record<string, unknown>>((nextResult, entry, index) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+          nextResult[String(index)] = entry;
+          return nextResult;
+        }
+
+        const entryRecord = entry as Record<string, unknown>;
+        const totalSpCoins =
+          entryRecord.totalSpCoins && typeof entryRecord.totalSpCoins === 'object' && !Array.isArray(entryRecord.totalSpCoins)
+            ? ({ ...(entryRecord.totalSpCoins as Record<string, unknown>) } as Record<string, unknown>)
+            : null;
+
+        if (totalSpCoins && 'sponsorRewardRate' in totalSpCoins) {
+          delete totalSpCoins.sponsorRewardRate;
+        }
+
+        nextResult[String(index)] = totalSpCoins ? { ...entryRecord, totalSpCoins } : entry;
+        return nextResult;
+      }, {});
+
+      return {
+        ...record,
+        result: topLevelSponsorRewardRate ? { sponsorRewardRate: topLevelSponsorRewardRate, ...normalizedResult } : normalizedResult,
+      };
+    };
+
+    return (collapsibleFormattedBlocks || []).map((block) => hoistMasterSponsorRewardRate(block));
+  }, [collapsibleFormattedBlocks]);
 
   useEffect(() => {
     const account = String(treeActions.selectedTreeAccount || '').trim();
@@ -243,9 +339,10 @@ export default function OutputResultsCard({
   return (
     <article className={className} style={style}>
       <LabCardHeader
-        title="Console Displey"
+        title="Console Display"
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
+        secondaryRowClassName="mt-0"
         secondaryRow={
           <div className="flex items-center gap-3">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200">
@@ -253,7 +350,6 @@ export default function OutputResultsCard({
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
                 ['raw_status', 'Raw Status'],
-                ['tree', 'Tree'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input
@@ -269,15 +365,17 @@ export default function OutputResultsCard({
               ))}
             </div>
             <div className="ml-auto flex items-center justify-end gap-3">
-              <button
-                type="button"
-                className={refreshIconButtonClassName}
-                onClick={() => controls.refreshActiveOutput()}
-                title="Refresh active command"
-                aria-label="Refresh active command"
-              >
-                <RotateCcw className="h-5 w-5" strokeWidth={2.2} />
-              </button>
+              {controls.outputPanelMode === 'formatted' && controls.formattedPanelView === 'output' ? (
+                <button
+                  type="button"
+                  className={refreshIconButtonClassName}
+                  onClick={() => controls.refreshActiveOutput()}
+                  title="Refresh active command"
+                  aria-label="Refresh active command"
+                >
+                  <RotateCcw className="h-5 w-5" strokeWidth={2.2} />
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={actionButtonClassName}
@@ -463,34 +561,42 @@ export default function OutputResultsCard({
                           className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
                           checked={allShownRulesSelected}
                           onChange={(event) =>
-                            setHiddenInspectorRules({
+                            setHiddenInspectorRules((prev) => ({
+                              ...prev,
                               zeroValues: !event.target.checked,
                               emptyValues: !event.target.checked,
                               falseValues: !event.target.checked,
                               todoValues: !event.target.checked,
                               emptyCollections: !event.target.checked,
                               creationDates: !event.target.checked,
-                            })
+                            }))
                           }
                         />
                         <span>{allShownRulesSelected ? 'None' : 'All'}</span>
                       </label>
-                      {hiddenRuleOptions.map(([key, label]) => (
-                        <label key={key} className="flex items-center gap-2 py-0.5">
-                          <input
-                            type="checkbox"
-                            className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
-                            checked={!hiddenInspectorRules[key as keyof typeof hiddenInspectorRules]}
-                            onChange={(event) =>
-                              setHiddenInspectorRules((prev) => ({
-                                ...prev,
-                                [key]: !event.target.checked,
-                              }))
-                            }
-                          />
-                          <span>{label}</span>
-                        </label>
-                      ))}
+                      {hiddenRuleOptions.map(([key, label]) => {
+                        const isFormattedAmountsRule = key === 'formattedAmounts';
+                        const isChecked = isFormattedAmountsRule
+                          ? hiddenInspectorRules.formattedAmounts
+                          : !hiddenInspectorRules[key as keyof typeof hiddenInspectorRules];
+
+                        return (
+                          <label key={key} className="flex items-center gap-2 py-0.5">
+                            <input
+                              type="checkbox"
+                              className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                              checked={isChecked}
+                              onChange={(event) =>
+                                setHiddenInspectorRules((prev) => ({
+                                  ...prev,
+                                  [key]: isFormattedAmountsRule ? event.target.checked : !event.target.checked,
+                                }))
+                              }
+                            />
+                            <span>{label}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   ) : null}
                 </div>
@@ -529,7 +635,7 @@ export default function OutputResultsCard({
           collapsibleFormattedBlocks ? (
             <div className={`h-full min-h-0 overflow-auto p-3 pr-36 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
               <div className="space-y-3">
-                {collapsibleFormattedBlocks.map((block, index) => (
+                {displayFormattedBlocks.map((block, index) => (
                   <JsonInspector
                     key={`${activeInspectorRootLabel}-${index}`}
                     data={
@@ -546,13 +652,15 @@ export default function OutputResultsCard({
                     highlightColorClass={inspectorHighlightColorClass}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
+                    formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
+                    tokenDecimals={activeTokenDecimals}
                     label={
-                      collapsibleFormattedBlocks.length === 1
+                      displayFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
                     rootLabel={
-                      collapsibleFormattedBlocks.length === 1
+                      displayFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
@@ -584,6 +692,8 @@ export default function OutputResultsCard({
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
+                    formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
+                    tokenDecimals={activeTokenDecimals}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                   />
                 ))}

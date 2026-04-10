@@ -37,6 +37,7 @@ export type SpCoinWriteMethod =
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
   | 'updateAccountStakingRewards'
+  | 'updateMasterStakingRewards'
   | 'depositSponsorStakingRewards'
   | 'depositRecipientStakingRewards'
   | 'depositAgentStakingRewards'
@@ -50,6 +51,7 @@ export type SpCoinWriteMethod =
   | 'setVersion';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'updateMasterStakingRewards',
   'addBackDatedSponsorship',
   'addBackDatedAgentSponsorship',
   'setInflationRate',
@@ -66,6 +68,7 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAccountRecipient',
   'addSponsorship',
   'addAgentSponsorship',
+  'updateAccountStakingRewards',
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
@@ -184,6 +187,28 @@ function asString(value: unknown): string {
 
 function asStringOrNumber(value: unknown): string | number {
   return typeof value === 'number' ? value : String(value);
+}
+
+function normalizeAddress(value: unknown): string {
+  const trimmed = String(value ?? '').trim();
+  return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+}
+
+async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
+  const read = access.read as SpCoinReadAccess & Record<string, unknown>;
+  if (typeof read.getAccountList !== 'function' || typeof read.getAccountRecipientList !== 'function') {
+    throw new Error('updateMasterStakingRewards requires getAccountList() and getAccountRecipientList() read methods.');
+  }
+  const accountList = Array.from((await read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  const recipientLists = await Promise.all(
+    accountList.map(async (account) => {
+      const recipients = Array.from((await read.getAccountRecipientList(account)) as unknown[]).map((value) =>
+        normalizeAddress(value),
+      );
+      return { account, recipients };
+    }),
+  );
+  return recipientLists.filter((entry) => entry.recipients.length > 0).map((entry) => entry.account);
 }
 
 export async function runSpCoinWriteMethod(args: RunArgs): Promise<
@@ -477,6 +502,32 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'updateAccountStakingRewards': {
       await submitWrite(activeDef.title, (access) => access.rewards.updateAccountStakingRewards(asString(methodArgs[0])));
+      break;
+    }
+    case 'updateMasterStakingRewards': {
+      setStatus('Loading master sponsor accounts...');
+      const sponsorAccounts = await executeWriteConnected(
+        `${activeDef.title}:loadSponsorAccounts`,
+        async (contract: Contract, signer: any) => {
+          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
+          return await loadSponsorAccounts(access);
+        },
+        selectedHardhatAddress,
+      );
+      const normalizedSponsorAccounts = Array.from(
+        new Set((Array.isArray(sponsorAccounts) ? sponsorAccounts : []).map((value) => normalizeAddress(value)).filter(Boolean)),
+      );
+      if (normalizedSponsorAccounts.length === 0) {
+        appendLog(`${activeDef.title} skipped: no sponsor accounts found.`);
+        setStatus(`${activeDef.title} skipped (no sponsor accounts).`);
+        break;
+      }
+      for (const sponsorAccount of normalizedSponsorAccounts) {
+        await submitWrite(`${activeDef.title}(${sponsorAccount})`, (access) =>
+          access.rewards.updateAccountStakingRewards(sponsorAccount),
+        );
+      }
+      appendLog(`${activeDef.title} -> updated ${normalizedSponsorAccounts.length} sponsor account(s).`);
       break;
     }
     case 'depositSponsorStakingRewards': {

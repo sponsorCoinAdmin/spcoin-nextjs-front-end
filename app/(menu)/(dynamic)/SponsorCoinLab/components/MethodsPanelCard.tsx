@@ -53,6 +53,7 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   depositRecipientStakingRewards: 'staking.ts',
   depositAgentStakingRewards: 'staking.ts',
   updateAccountStakingRewards: 'rewards.ts',
+  updateMasterStakingRewards: 'rewards.ts',
   setInflationRate: 'add.ts',
   setVersion: 'add.ts',
   setRecipientRateRange: 'add.ts',

@@ -3,7 +3,7 @@ import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
     title: 'updateAccountStakingRewards',
-    params: [{ label: 'Source Key', placeholder: 'address _sourceKey', type: 'address' }],
+    params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
   }
 
 export default methodDef;

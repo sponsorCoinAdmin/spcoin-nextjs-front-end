@@ -98,6 +98,25 @@
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 8,
+      "name": "updateMasterStakingRewards",
+      "panel": "spcoin_write",
+      "method": "updateMasterStakingRewards",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 9,
+      "name": "getSpCoinMetaData",
+      "panel": "spcoin_rread",
+      "method": "getSpCoinMetaData",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     }
   ]
 }

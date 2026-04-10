@@ -21,9 +21,12 @@ interface JsonInspectorProps {
     todoValues: boolean;
     emptyCollections: boolean;
     creationDates: boolean;
+    formattedAmounts: boolean;
   };
   onLeafValueClick?: (value: string, path: string, key: string) => void;
   hideEntryKeys?: string[];
+  formatTokenAmounts?: boolean;
+  tokenDecimals?: number | null;
 }
 
 function getAddressNodeLabel(data: any, fallbackLabel: string): string {
@@ -131,8 +134,59 @@ function hasVisibleDescendants(
   return hasPopulatedContent(value, hiddenRules);
 }
 
-function formatInlineSummaryValue(value: unknown): string {
+function isTokenAmountKey(key: string): boolean {
+  return [
+    'totalSupply',
+    'totalSpCoins',
+    'balanceOf',
+    'stakedBalance',
+    'stakedAmount',
+    'stakingRewards',
+    'pendingRewards',
+    'pendingSponsorRewards',
+    'pendingRecipientRewards',
+    'pendingAgentRewards',
+    'totalBalanceOf',
+    'totalStakingRewards',
+    'totalStakedSPCoins',
+    'amount',
+  ].includes(String(key || '').trim());
+}
+
+function unwrapNumericDisplayString(value: unknown): { raw: string; wasQuoted: boolean } {
+  const trimmed = String(value ?? '').trim();
+  const wasQuoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"));
+  const unwrapped = wasQuoted ? trimmed.slice(1, -1).trim() : trimmed;
+  return { raw: unwrapped.replace(/,/g, '').trim(), wasQuoted };
+}
+
+function displayFormattedAmount(value: unknown, tokenDecimals?: number | null): string | null {
+  const { raw, wasQuoted } = unwrapNumericDisplayString(value);
+  if (!/^-?\d+$/.test(raw)) return null;
+
+  const decimals = Number.isInteger(tokenDecimals) && Number(tokenDecimals) >= 0 ? Number(tokenDecimals) : 18;
+  const negativePrefix = raw.startsWith('-') ? '-' : '';
+  const digits = raw.startsWith('-') ? raw.slice(1) : raw;
+  const padded = digits.padStart(decimals + 1, '0');
+  const integerPart = padded.slice(0, -decimals) || '0';
+  const fractionalPart = padded.slice(-decimals).replace(/0+$/, '');
+  const groupedInteger = BigInt(integerPart || '0').toLocaleString('en-US');
+  const formatted = fractionalPart ? `${negativePrefix}${groupedInteger}.${fractionalPart}` : `${negativePrefix}${groupedInteger}`;
+  return wasQuoted ? `"${formatted}"` : formatted;
+}
+
+function formatDisplayScalar(
+  key: string,
+  value: unknown,
+  formatTokenAmounts: boolean,
+  tokenDecimals?: number | null,
+): string {
   const renderedValue = stringifyBigInt(value);
+  if (formatTokenAmounts && isTokenAmountKey(key)) {
+    return displayFormattedAmount(renderedValue, tokenDecimals) ?? String(renderedValue);
+  }
   return typeof value === 'string' ? `"${String(value)}"` : String(renderedValue);
 }
 
@@ -160,7 +214,14 @@ function getVisibleEntries(
     if (Array.isArray(value)) {
       return value.map((entry, index) => [String(index), entry] as [string, any]);
     }
-    return Object.entries(value).filter(([childKey]) => childKey !== 'address' && !hideEntryKeys.includes(childKey));
+    return Object.entries(value)
+      .filter(([childKey]) => childKey !== 'address' && !hideEntryKeys.includes(childKey))
+      .sort(([leftKey], [rightKey]) => {
+        const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
+        const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
+        if (leftIsNumericIndex === rightIsNumericIndex) return 0;
+        return leftIsNumericIndex ? 1 : -1;
+      });
   }
 
   if (Array.isArray(value)) {
@@ -172,12 +233,19 @@ function getVisibleEntries(
       });
   }
 
-  return Object.entries(value).filter(([childKey, childValue]) => {
-    if (childKey === 'address') return false;
-    if (hideEntryKeys.includes(childKey)) return false;
-    if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules);
-    return hasPopulatedContent(childValue, hiddenRules);
-  });
+  return Object.entries(value)
+    .filter(([childKey, childValue]) => {
+      if (childKey === 'address') return false;
+      if (hideEntryKeys.includes(childKey)) return false;
+      if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules);
+      return hasPopulatedContent(childValue, hiddenRules);
+    })
+    .sort(([leftKey], [rightKey]) => {
+      const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
+      const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
+      if (leftIsNumericIndex === rightIsNumericIndex) return 0;
+      return leftIsNumericIndex ? 1 : -1;
+    });
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -198,9 +266,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     todoValues: true,
     emptyCollections: true,
     creationDates: true,
+    formattedAmounts: false,
   },
   onLeafValueClick,
   hideEntryKeys = [],
+  formatTokenAmounts = false,
+  tokenDecimals = null,
 }) => {
   const effectiveHideEntryKeys = [...hideEntryKeys];
   if (
@@ -252,7 +323,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     if (!label || !data || typeof data !== 'object' || Array.isArray(data)) return baseLabel;
     const inlineSummaryValue = (data as Record<string, unknown>)[label];
     if (inlineSummaryValue !== undefined && inlineSummaryValue !== null && typeof inlineSummaryValue !== 'object') {
-      return `${baseLabel}: ${formatInlineSummaryValue(inlineSummaryValue)}`;
+      return `${baseLabel}: ${formatDisplayScalar(label, inlineSummaryValue, formatTokenAmounts, tokenDecimals)}`;
     }
     return baseLabel;
   };
@@ -292,6 +363,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           showAll={showAll}
           hiddenRules={hiddenRules}
           onLeafValueClick={onLeafValueClick}
+          formatTokenAmounts={formatTokenAmounts}
+          tokenDecimals={tokenDecimals}
         />
       );
     }
@@ -299,7 +372,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const valueHighlighted = highlightPathPrefixes.some(
       (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
     );
-    const renderedValue = stringifyBigInt(value);
+    const displayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
     const rawStringValue = typeof value === 'string' ? value.trim() : '';
     const isClickableAddress =
       typeof onLeafValueClick === 'function' &&
@@ -324,10 +397,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             }}
             title={`Open account ${rawStringValue}`}
           >
-            {renderedValue}
+            {displayValue}
           </span>
         ) : (
-          <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{renderedValue}</span>
+          <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{displayValue}</span>
         )}
       </div>
     );

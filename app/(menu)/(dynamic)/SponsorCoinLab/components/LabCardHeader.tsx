@@ -9,6 +9,7 @@ type LabCardHeaderProps = {
   leftSlot?: React.ReactNode;
   headerButtons?: React.ReactNode;
   secondaryRow?: React.ReactNode;
+  secondaryRowClassName?: string;
 };
 
 export default function LabCardHeader({
@@ -19,6 +20,7 @@ export default function LabCardHeader({
   leftSlot,
   headerButtons,
   secondaryRow,
+  secondaryRowClassName = 'mt-3',
 }: LabCardHeaderProps) {
   return (
     <div
@@ -42,7 +44,7 @@ export default function LabCardHeader({
           />
         </div>
       </div>
-      {secondaryRow ? <div className="mt-3">{secondaryRow}</div> : null}
+      {secondaryRow ? <div className={secondaryRowClassName}>{secondaryRow}</div> : null}
     </div>
   );
 }
