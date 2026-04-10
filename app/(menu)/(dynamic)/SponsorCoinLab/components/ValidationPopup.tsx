@@ -1,3 +1,5 @@
+import { ListModal } from '@/components/modals';
+
 type Props = {
   fields: string[];
   message: string;
@@ -28,32 +30,17 @@ export default function ValidationPopup({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-red-500 bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
-        <h3 className="text-lg font-semibold text-red-400">{title || 'Missing Required Fields'}</h3>
-        <p className="mt-2 text-sm text-slate-200">{message}</p>
-        {fields.length > 0 ? (
-          <ul className="mt-3 list-disc pl-5 text-sm text-slate-100">
-            {fields.map((label) => (
-              <li key={`missing-${label}`}>{label}</li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="mt-4 flex justify-end gap-2">
-          <button type="button" className={buttonStyle} onClick={onClose}>
-            {cancelLabel || 'Close'}
-          </button>
-          {onConfirm ? (
-            <button
-              type="button"
-              className="rounded-lg bg-[#E5B94F] px-3 py-[0.28rem] text-sm font-semibold text-black transition-colors hover:bg-green-500"
-              onClick={onConfirm}
-            >
-              {confirmLabel || 'Continue'}
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </div>
+    <ListModal
+      isOpen
+      title={title || 'Missing Required Fields'}
+      message={message}
+      items={fields}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      closeLabel={cancelLabel || 'Close'}
+      confirmLabel={confirmLabel || 'Continue'}
+      closeButtonClassName={buttonStyle}
+      titleClassName="text-lg font-semibold text-red-400"
+    />
   );
 }

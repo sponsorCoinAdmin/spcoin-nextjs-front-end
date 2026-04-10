@@ -88,6 +88,8 @@ export function normalizeParamLabel(value: string) {
   return String(value || '').trim().toLowerCase();
 }
 
+export { isAddressLike, isIntegerString };
+
 export function isDefinedNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }

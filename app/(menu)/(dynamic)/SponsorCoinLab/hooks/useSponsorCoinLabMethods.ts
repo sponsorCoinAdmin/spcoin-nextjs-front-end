@@ -632,18 +632,20 @@ export function useSponsorCoinLabMethods({
 
         return stripSponsorRewardRateFromTree(normalizedEntry) as Record<string, unknown>;
       };
-      if (
+      const normalizedPayloadMethod =
         nextPayload.call &&
         typeof nextPayload.call === 'object' &&
-        !Array.isArray(nextPayload.call) &&
-        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getMasterSponsorList'
-      ) {
+        !Array.isArray(nextPayload.call)
+          ? String((nextPayload.call as Record<string, unknown>).method || '').trim()
+          : '';
+      if (normalizedPayloadMethod === 'getMasterSponsorList' || normalizedPayloadMethod === 'getAccountList') {
         const rawResult = nextPayload.result;
-        const sponsorEntries = Array.isArray(rawResult)
+        const entryListKey = normalizedPayloadMethod === 'getAccountList' ? 'accounts' : 'sponsors';
+        const normalizedEntries = Array.isArray(rawResult)
           ? rawResult
           : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
-            ? Array.isArray((rawResult as Record<string, unknown>).sponsors)
-              ? (((rawResult as Record<string, unknown>).sponsors as unknown[]) ?? [])
+            ? Array.isArray((rawResult as Record<string, unknown>)[entryListKey])
+              ? (((rawResult as Record<string, unknown>)[entryListKey] as unknown[]) ?? [])
               : []
             : [];
         const rawMetadata =
@@ -666,7 +668,7 @@ export function useSponsorCoinLabMethods({
 
         nextPayload.result = {
           ...(normalizedMetadata ? { spCoinMetsData: normalizedMetadata } : {}),
-          sponsors: sponsorEntries.map((entry) => normalizeMasterSponsorEntry(entry)),
+          [entryListKey]: normalizedEntries.map((entry) => normalizeMasterSponsorEntry(entry)),
         };
         delete nextPayload.spCoinMetaData;
         delete nextPayload.spCoinMetsData;
@@ -779,6 +781,52 @@ export function useSponsorCoinLabMethods({
               appendLog,
               setStatus,
             });
+        if (selectedMethod === 'getAccountList') {
+          try {
+            const accountKeys = Array.isArray(result) ? result : [];
+            const [metadataResult, accountResults] = await Promise.allSettled([
+              runSpCoinReadMethod({
+                selectedMethod: 'getSpCoinMetaData',
+                spReadParams: [],
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog: () => {},
+                setStatus: () => {},
+              }),
+              Promise.allSettled(
+                accountKeys.map(async (accountKey) => loadAccountRecordForAddress(String(accountKey), { force: true })),
+              ),
+            ]);
+            const spCoinMetsData = metadataResult.status === 'fulfilled' ? metadataResult.value : undefined;
+            const accounts =
+              accountResults.status === 'fulfilled'
+                ? accountResults.value.map((entry, index) => {
+                    const accountKey = String(accountKeys[index] || '');
+                    if (entry.status === 'fulfilled') {
+                      return {
+                        address: accountKey,
+                        ...(entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value)
+                          ? (entry.value as Record<string, unknown>)
+                          : { value: entry.value }),
+                      };
+                    }
+                    return accountKey;
+                  })
+                : accountKeys;
+            return {
+              call,
+              result: {
+                ...(spCoinMetsData ? { spCoinMetsData } : {}),
+                accounts,
+              },
+            };
+          } catch {
+            return { call, result };
+          }
+        }
         return { call, result };
       }
 
@@ -1226,17 +1274,19 @@ export function useSponsorCoinLabMethods({
         const payload = entry.payload;
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
-        if (String(call?.method || '').trim() !== 'getMasterSponsorList') continue;
+        const methodName = String(call?.method || '').trim();
+        if (!['getMasterSponsorList', 'getAccountList'].includes(methodName)) continue;
+        const listKey = methodName === 'getAccountList' ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
           : null;
         const currentResult = Array.isArray(payload.result)
           ? [...payload.result]
-          : resultRecord && Array.isArray(resultRecord.sponsors)
-            ? [...(resultRecord.sponsors as unknown[])]
+          : resultRecord && Array.isArray(resultRecord[listKey])
+            ? [...(resultRecord[listKey] as unknown[])]
             : null;
         if (!currentResult) continue;
-        const pathMatch = String(pathHint || '').match(/(?:^|\.)result(?:\.sponsors)?\.(\d+)(?:\.|$)/);
+        const pathMatch = String(pathHint || '').match(/(?:^|\.)result(?:\.(?:sponsors|accounts))?\.(\d+)(?:\.|$)/);
         const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
         const targetIndex =
           Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
@@ -1261,10 +1311,10 @@ export function useSponsorCoinLabMethods({
           const nextPayload = formatFormattedPanelPayload({
             ...payload,
             result:
-              resultRecord && Array.isArray(resultRecord.sponsors)
+              resultRecord && Array.isArray(resultRecord[listKey])
                 ? {
                     ...resultRecord,
-                    sponsors: currentResult,
+                    [listKey]: currentResult,
                   }
                 : currentResult,
           });

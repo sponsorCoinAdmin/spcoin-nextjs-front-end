@@ -2,17 +2,12 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Address } from 'viem';
-import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSettings } from '@/lib/context/hooks/ExchangeContext/nested/useSettings';
-import { hydrateAccountFromAddress, makeAccountFallback } from '@/lib/context/helpers/accountHydration';
 import {
   DEFAULT_AGENT_RATE_RANGE,
   DEFAULT_RECIPIENT_RATE_RANGE,
-  normalizeSpCoinRateRange,
 } from '@/lib/context/helpers/spCoinRateDefaults';
-import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { CHAIN_ID } from '@/lib/structure';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import {
@@ -51,12 +46,11 @@ import {
   getUtilityMethodOptions,
   type SerializationTestMethod,
 } from '../jsonMethods/serializationTests';
-import { createSpCoinLibraryAccess, createSpCoinModuleAccess, type SpCoinContractAccess } from '../jsonMethods/shared';
 import {
   SPCOIN_ABI_UPDATED_EVENT,
   SPCOIN_ABI_VERSION_STORAGE_KEY,
+  setSpCoinLabAbi,
 } from '../jsonMethods/shared/spCoinAbi';
-import type { MethodDef } from '../jsonMethods/shared/types';
 import {
   CALENDAR_WEEK_DAYS,
   formatDateInput,
@@ -68,23 +62,19 @@ import { useSponsorCoinLabMethods } from '../hooks/useSponsorCoinLabMethods';
 import { useSponsorCoinLabNetwork } from '../hooks/useSponsorCoinLabNetwork';
 import { useSponsorCoinLabPersistence } from '../hooks/useSponsorCoinLabPersistence';
 import { useSponsorCoinLabScripts } from '../hooks/useSponsorCoinLabScripts';
-import ContractNetworkCard from '../components/ContractNetworkCard';
-import DeleteStepPopup from '../components/DeleteStepPopup';
-import DiscardChangesPopup from '../components/DiscardChangesPopup';
-import MethodsPanelCard from '../components/MethodsPanelCard';
-import NetworkSignerCard from '../components/NetworkSignerCard';
-import OutputResultsCard from '../components/OutputResultsCard';
-import ScriptStepRow from '../components/ScriptStepRow';
-import ValidationPopup from '../components/ValidationPopup';
 import {
   type ConnectionMode,
   type LabScriptStep,
   type MethodPanelMode,
 } from '../scriptBuilder/types';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import { STATUS, type spCoinAccount } from '@/lib/structure';
+import type {
+  FormattedPanelView,
+  MethodSelectionSource,
+  OutputPanelMode,
+  SponsorCoinAccountRole,
+} from './types';
 import {
-  SP_COIN_LAB_STORAGE_KEY,
   actionButtonStyle,
   buildDefaultAccountParams,
   buildMethodCallEntry,
@@ -94,24 +84,22 @@ import {
   hasNonZeroRateRangeTuple,
   hiddenScrollbarClass,
   inputStyle,
-  isDefinedNumber,
   normalizeAddressValue,
-  normalizeParamLabel,
   parseListParam,
   refreshSponsorCoinLabAbi,
 } from './utils';
-
-type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
-type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
-type FormattedPanelView = 'script' | 'output';
-type MethodSelectionSource = 'dropdown' | 'script';
-type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
-type SponsorCoinManageContract = SpCoinContractAccess & {
-  addRecipient?: (accountAddress: string) => Promise<unknown>;
-  addAgent?: (recipientKey: string, recipientRateKey: string, accountAddress: string) => Promise<unknown>;
-  deleteAccountRecord?: (accountAddress: string) => Promise<unknown>;
-};
-type MethodDefMap = Record<string, MethodDef>;
+import { useControllerPopups } from './hooks/useControllerPopups';
+import { useControllerLayout } from './hooks/useControllerLayout';
+import { useControllerContractMetadata } from './hooks/useControllerContractMetadata';
+import { useControllerAccounts } from './hooks/useControllerAccounts';
+import { useControllerEditorSync } from './hooks/useControllerEditorSync';
+import { useControllerScriptExecution } from './hooks/useControllerScriptExecution';
+import SponsorCoinLabView from './SponsorCoinLabView';
+import { useControllerTypeScriptEditor } from './hooks/useControllerTypeScriptEditor';
+import { useControllerEditorHydration } from './hooks/useControllerEditorHydration';
+import { useControllerMethodSelection } from './hooks/useControllerMethodSelection';
+import { useControllerScriptPresentation } from './hooks/useControllerScriptPresentation';
+import { useControllerViewProps } from './hooks/useControllerViewProps';
 
 export default function SponsorCoinLabPage() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
@@ -125,7 +113,6 @@ export default function SponsorCoinLabPage() {
     String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
     'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
-  const [hasPersistedNetworkMode, setHasPersistedNetworkMode] = useState<boolean | null>(null);
   const [rpcUrl, setRpcUrl] = useState(defaultHardhatRpcUrl);
   const [contractAddress, setContractAddress] = useState('');
   const [status, setStatus] = useState('Ready');
@@ -140,25 +127,26 @@ export default function SponsorCoinLabPage() {
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
   const recentWriteTraceRef = useRef<string[]>([]);
-  const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
-  const [validationPopupFields, setValidationPopupFields] = useState<string[]>([]);
-  const [validationPopupMessage, setValidationPopupMessage] = useState(
-    'Fill in the following fields before executing the method:',
-  );
-  const [validationPopupTitle, setValidationPopupTitle] = useState('Missing Required Fields');
-  const [validationPopupConfirmLabel, setValidationPopupConfirmLabel] = useState('');
-  const [validationPopupCancelLabel, setValidationPopupCancelLabel] = useState('Close');
-  const validationPopupConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
-  const refreshFormattedOutputSequenceRef = useRef<(() => void) | null>(null);
-  const [isDiscardChangesPopupOpen, setIsDiscardChangesPopupOpen] = useState(false);
-  const discardChangesConfirmRef = useRef<(() => void | Promise<void>) | null>(null);
+  const {
+    invalidFieldIds,
+    setInvalidFieldIds,
+    clearInvalidField,
+    validationPopupFields,
+    validationPopupMessage,
+    validationPopupTitle,
+    validationPopupConfirmLabel,
+    validationPopupCancelLabel,
+    showValidationPopup,
+    clearValidationPopup,
+    handleValidationConfirm,
+    hasValidationConfirmAction,
+    isDiscardChangesPopupOpen,
+    openDiscardChangesPopup,
+    clearDiscardChangesPopup,
+    handleDiscardConfirm,
+  } = useControllerPopups();
   const previousContractAddressRef = useRef('');
-  const [isRemovingContractFromApp, setIsRemovingContractFromApp] = useState(false);
   const [removedContractAddresses, setRemovedContractAddresses] = useState<string[]>([]);
-  const spCoinOwnerSyncRef = useRef({
-    contractKey: '',
-    requestId: 0,
-  });
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
   const [writeAddressA, setWriteAddressA] = useState('');
@@ -186,9 +174,6 @@ export default function SponsorCoinLabPage() {
   const [managedRoleAccountAddress, setManagedRoleAccountAddress] = useState('');
   const [managedRecipientKey, setManagedRecipientKey] = useState('');
   const [managedRecipientRateKey, setManagedRecipientRateKey] = useState('');
-  const [managedRecipientRateKeyOptions, setManagedRecipientRateKeyOptions] = useState<string[]>([]);
-  const [managedRecipientRateKeyHelpText, setManagedRecipientRateKeyHelpText] = useState('');
-  const [sponsorCoinAccountManagementStatus, setSponsorCoinAccountManagementStatus] = useState('');
   const [spReadParams, setSpReadParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [spWriteParams, setSpWriteParams] = useState<string[]>(Array.from({ length: 7 }, () => ''));
   const [serializationTestParams, setSerializationTestParams] = useState<string[]>(
@@ -196,11 +181,6 @@ export default function SponsorCoinLabPage() {
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
-  const accountSyncRequestRef = useRef({
-    sponsor: 0,
-    recipient: 0,
-    agent: 0,
-  });
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
@@ -246,21 +226,6 @@ export default function SponsorCoinLabPage() {
       }
     };
   }, []);
-  const sponsorAccountAddress = normalizeAddressValue(
-    String(exchangeContext?.accounts?.sponsorAccount?.address ?? ''),
-  );
-  const recipientAccountAddress = normalizeAddressValue(
-    String(exchangeContext?.accounts?.recipientAccount?.address ?? ''),
-  );
-  const agentAccountAddress = normalizeAddressValue(
-    String(exchangeContext?.accounts?.agentAccount?.address ?? ''),
-  );
-  const activeAccountAddress = normalizeAddressValue(
-    String(exchangeContext?.accounts?.activeAccount?.address ?? ''),
-  );
-  const spCoinOwnerAccountAddress = normalizeAddressValue(
-    String(exchangeContext?.accounts?.spCoinOwnerAccount?.address ?? ''),
-  );
   const sellTokenAmountRaw =
     typeof exchangeContext?.tradeData?.sellTokenContract?.amount === 'bigint'
       ? exchangeContext.tradeData.sellTokenContract.amount.toString()
@@ -273,361 +238,6 @@ export default function SponsorCoinLabPage() {
     typeof exchangeContext?.tradeData?.previewTokenContract?.amount === 'bigint'
       ? exchangeContext.tradeData.previewTokenContract.amount.toString()
       : '';
-  const syncRoleAccountToExchangeContext = useCallback(
-    (role: SponsorCoinAccountRole, nextValue: string) => {
-      const normalized = normalizeAddressValue(nextValue);
-      const currentAccount =
-        role === 'sponsor'
-          ? exchangeContext?.accounts?.sponsorAccount
-          : role === 'recipient'
-          ? exchangeContext?.accounts?.recipientAccount
-          : exchangeContext?.accounts?.agentAccount;
-      const currentAddress = normalizeAddressValue(String(currentAccount?.address ?? ''));
-      if (normalized === currentAddress) return;
-
-      const accountField =
-        role === 'sponsor'
-          ? 'sponsorAccount'
-          : role === 'recipient'
-          ? 'recipientAccount'
-          : 'agentAccount';
-
-      if (!normalized) {
-        setExchangeContext(
-          (prev) => {
-            if (!prev.accounts?.[accountField]) return prev;
-            return {
-              ...prev,
-              accounts: {
-                ...prev.accounts,
-                [accountField]: undefined,
-              },
-            };
-          },
-          `SponsorCoinLab:${role}:clearAccount`,
-        );
-        return;
-      }
-
-      if (!isAddressLike(normalized)) return;
-
-      const requestId = ++accountSyncRequestRef.current[role];
-      const preservedBalance =
-        currentAddress === normalized && typeof currentAccount?.balance === 'bigint'
-          ? currentAccount.balance
-          : undefined;
-
-      void (async () => {
-        let nextAccount: spCoinAccount;
-        try {
-          nextAccount = await hydrateAccountFromAddress(normalized as Address, {
-            balance: preservedBalance,
-          });
-        } catch {
-          nextAccount = makeAccountFallback(
-            normalized as Address,
-            STATUS.MESSAGE_ERROR,
-            `Account ${normalized} metadata could not be loaded`,
-            preservedBalance,
-          );
-        }
-
-        if (accountSyncRequestRef.current[role] !== requestId) return;
-
-        setExchangeContext(
-          (prev) => {
-            const prevAccount = prev.accounts?.[accountField];
-            const prevAddress = normalizeAddressValue(String(prevAccount?.address ?? ''));
-            if (
-              prevAddress === normalized &&
-              prevAccount?.name === nextAccount.name &&
-              prevAccount?.symbol === nextAccount.symbol &&
-              prevAccount?.logoURL === nextAccount.logoURL &&
-              prevAccount?.description === nextAccount.description &&
-              prevAccount?.website === nextAccount.website &&
-              prevAccount?.type === nextAccount.type &&
-              prevAccount?.status === nextAccount.status &&
-              prevAccount?.balance === nextAccount.balance
-            ) {
-              return prev;
-            }
-            return {
-              ...prev,
-              accounts: {
-                ...prev.accounts,
-                [accountField]: nextAccount,
-              },
-            };
-          },
-          `SponsorCoinLab:${role}:setAccount`,
-        );
-      })();
-    },
-    [
-      exchangeContext?.accounts?.agentAccount,
-      exchangeContext?.accounts?.recipientAccount,
-      exchangeContext?.accounts?.sponsorAccount,
-      setExchangeContext,
-    ],
-  );
-  const setDefaultSponsorKey = useCallback(
-    (value: string) => {
-      const normalized = normalizeAddressValue(value);
-      setDefaultSponsorKeyState(normalized);
-      syncRoleAccountToExchangeContext('sponsor', normalized);
-    },
-    [syncRoleAccountToExchangeContext],
-  );
-  const setDefaultRecipientKey = useCallback(
-    (value: string) => {
-      const normalized = normalizeAddressValue(value);
-      setDefaultRecipientKeyState(normalized);
-      syncRoleAccountToExchangeContext('recipient', normalized);
-    },
-    [syncRoleAccountToExchangeContext],
-  );
-  const setDefaultAgentKey = useCallback(
-    (value: string) => {
-      const normalized = normalizeAddressValue(value);
-      setDefaultAgentKeyState(normalized);
-      syncRoleAccountToExchangeContext('agent', normalized);
-    },
-    [syncRoleAccountToExchangeContext],
-  );
-  useEffect(() => {
-    if (defaultSponsorKey !== sponsorAccountAddress) {
-      setDefaultSponsorKeyState(sponsorAccountAddress);
-    }
-  }, [defaultSponsorKey, sponsorAccountAddress]);
-  useEffect(() => {
-    if (defaultRecipientKey !== recipientAccountAddress) {
-      setDefaultRecipientKeyState(recipientAccountAddress);
-    }
-  }, [defaultRecipientKey, recipientAccountAddress]);
-  useEffect(() => {
-    if (defaultAgentKey !== agentAccountAddress) {
-      setDefaultAgentKeyState(agentAccountAddress);
-    }
-  }, [defaultAgentKey, agentAccountAddress]);
-  const buildScriptEditorParamValues = useCallback(
-    (
-      params: Array<{ label: string }>,
-      contractMeta?: {
-        version?: string;
-        inflationRate?: number;
-        recipientRateRange?: [number, number];
-        agentRateRange?: [number, number];
-      },
-    ) => {
-      const currentMeta = exchangeContext?.settings?.spCoinContract;
-      const resolvedMeta = {
-        version:
-          contractMeta?.version ?? (String(currentMeta?.version ?? '').trim() || undefined),
-        inflationRate:
-          contractMeta?.inflationRate ??
-          (isDefinedNumber(currentMeta?.inflationRate) ? currentMeta.inflationRate : undefined),
-        recipientRateRange:
-          contractMeta?.recipientRateRange ??
-          (hasNonZeroRateRangeTuple(currentMeta?.recipientRateRange)
-            ? currentMeta.recipientRateRange
-            : undefined),
-        agentRateRange:
-          contractMeta?.agentRateRange ??
-          (hasNonZeroRateRangeTuple(currentMeta?.agentRateRange)
-            ? currentMeta.agentRateRange
-            : undefined),
-      };
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
-
-      return params.map((param) => {
-        const label = normalizeParamLabel(param.label);
-        if (label === 'msg.sender') return senderAddress;
-        if (label === 'sponsor key' || label === 'sponsor account') return sponsorAccountAddress;
-        if (label === 'recipient key' || label === 'recipient account') return recipientAccountAddress;
-        if (label === 'agent key' || label === 'agent account' || label === 'account agent key') {
-          return agentAccountAddress;
-        }
-        if (label === 'account key' || label === 'source key') {
-          return sponsorAccountAddress || activeAccountAddress;
-        }
-        if (label === 'new version') return resolvedMeta.version ?? '';
-        if (label === 'new inflation rate') {
-          return resolvedMeta.inflationRate !== undefined ? String(resolvedMeta.inflationRate) : '';
-        }
-        if (label === 'new lower recipient rate') {
-          return resolvedMeta.recipientRateRange ? String(resolvedMeta.recipientRateRange[0]) : '';
-        }
-        if (label === 'new upper recipient rate') {
-          return resolvedMeta.recipientRateRange ? String(resolvedMeta.recipientRateRange[1]) : '';
-        }
-        if (label === 'new lower agent rate') {
-          return resolvedMeta.agentRateRange ? String(resolvedMeta.agentRateRange[0]) : '';
-        }
-        if (label === 'new upper agent rate') {
-          return resolvedMeta.agentRateRange ? String(resolvedMeta.agentRateRange[1]) : '';
-        }
-        if (label === 'previous release directory') {
-          return 'spCoinAccess/contracts/spCoinOrig.BAK';
-        }
-        if (label === 'latest release directory') {
-          return 'spCoinAccess/contracts/spCoin';
-        }
-        if (label === 'contract address') {
-          return String(contractAddress || '').trim();
-        }
-        return '';
-      });
-    },
-    [
-      activeAccountAddress,
-      agentAccountAddress,
-      defaultSponsorKey,
-      exchangeContext?.settings?.spCoinContract,
-      recipientAccountAddress,
-      sponsorAccountAddress,
-    ],
-  );
-  const buildErc20ReadEditorDefaults = useCallback(
-    (labels: { addressALabel: string; addressBLabel: string }) => {
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
-      const resolveByLabel = (label: string) => {
-        const normalized = normalizeParamLabel(label);
-        if (normalized === 'owner address' || normalized === 'from address') return senderAddress;
-        if (normalized === 'to address' || normalized === 'recipient address' || normalized === 'recipient key') {
-          return recipientAccountAddress;
-        }
-        if (normalized === 'spender address') return agentAccountAddress;
-        return '';
-      };
-      return {
-        addressA: resolveByLabel(labels.addressALabel),
-        addressB: resolveByLabel(labels.addressBLabel),
-      };
-    },
-    [
-      activeAccountAddress,
-      agentAccountAddress,
-      defaultSponsorKey,
-      recipientAccountAddress,
-      sponsorAccountAddress,
-    ],
-  );
-  const buildErc20WriteEditorDefaults = useCallback(
-    (labels: { addressALabel: string; addressBLabel: string }) => {
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
-      const resolveByLabel = (label: string) => {
-        const normalized = normalizeParamLabel(label);
-        if (normalized === 'from address' || normalized === 'owner address') return senderAddress;
-        if (normalized === 'to address' || normalized === 'recipient address' || normalized === 'recipient key') {
-          return recipientAccountAddress;
-        }
-        if (normalized === 'spender address') return agentAccountAddress;
-        return '';
-      };
-      const amountValue = sellTokenAmountRaw || buyTokenAmountRaw || previewTokenAmountRaw;
-      return {
-        senderAddress,
-        addressA: resolveByLabel(labels.addressALabel),
-        addressB: resolveByLabel(labels.addressBLabel),
-        amount: amountValue,
-      };
-    },
-    [
-      activeAccountAddress,
-      agentAccountAddress,
-      buyTokenAmountRaw,
-      defaultSponsorKey,
-      previewTokenAmountRaw,
-      recipientAccountAddress,
-      sellTokenAmountRaw,
-      sponsorAccountAddress,
-    ],
-  );
-  const syncEditorAddressFieldToExchangeContext = useCallback(
-    (label: string, value: string) => {
-      const normalizedLabel = normalizeParamLabel(label);
-      if (
-        normalizedLabel === 'owner address' ||
-        normalizedLabel === 'from address' ||
-        normalizedLabel === 'sponsor key' ||
-        normalizedLabel === 'sponsor account'
-      ) {
-        syncRoleAccountToExchangeContext('sponsor', value);
-        return;
-      }
-      if (
-        normalizedLabel === 'to address' ||
-        normalizedLabel === 'recipient address' ||
-        normalizedLabel === 'recipient key' ||
-        normalizedLabel === 'recipient account'
-      ) {
-        syncRoleAccountToExchangeContext('recipient', value);
-        return;
-      }
-      if (
-        normalizedLabel === 'spender address' ||
-        normalizedLabel === 'agent key' ||
-        normalizedLabel === 'agent account' ||
-        normalizedLabel === 'account agent key'
-      ) {
-        syncRoleAccountToExchangeContext('agent', value);
-      }
-    },
-    [syncRoleAccountToExchangeContext],
-  );
-  const syncEditorAmountToExchangeContext = useCallback(
-    (value: string) => {
-      const trimmed = String(value || '').trim();
-      if (!trimmed) {
-        setExchangeContext(
-          (prev) => {
-            const next = structuredClone(prev);
-            if (next.tradeData.sellTokenContract?.amount !== undefined) {
-              next.tradeData.sellTokenContract.amount = undefined;
-              return next;
-            }
-            if (next.tradeData.buyTokenContract?.amount !== undefined) {
-              next.tradeData.buyTokenContract.amount = undefined;
-              return next;
-            }
-            if (next.tradeData.previewTokenContract?.amount !== undefined) {
-              next.tradeData.previewTokenContract.amount = undefined;
-              return next;
-            }
-            return prev;
-          },
-          'SponsorCoinLab:editorAmount:clear',
-        );
-        return;
-      }
-      if (!isIntegerString(trimmed)) return;
-      const nextAmount = BigInt(trimmed);
-      setExchangeContext(
-        (prev) => {
-          const next = structuredClone(prev);
-          if (next.tradeData.sellTokenContract) {
-            if (next.tradeData.sellTokenContract.amount === nextAmount) return prev;
-            next.tradeData.sellTokenContract.amount = nextAmount;
-            return next;
-          }
-          if (next.tradeData.buyTokenContract) {
-            if (next.tradeData.buyTokenContract.amount === nextAmount) return prev;
-            next.tradeData.buyTokenContract.amount = nextAmount;
-            return next;
-          }
-          if (next.tradeData.previewTokenContract) {
-            if (next.tradeData.previewTokenContract.amount === nextAmount) return prev;
-            next.tradeData.previewTokenContract.amount = nextAmount;
-            return next;
-          }
-          return prev;
-        },
-        'SponsorCoinLab:editorAmount:set',
-      );
-    },
-    [setExchangeContext],
-  );
-
   useEffect(() => {
     const previous = normalizeAddressValue(previousContractAddressRef.current);
     const current = normalizeAddressValue(contractAddress);
@@ -666,49 +276,6 @@ export default function SponsorCoinLabPage() {
     [appendLog, writeTraceEnabled],
   );
   const getRecentWriteTrace = useCallback(() => recentWriteTraceRef.current.slice(), []);
-  const clearInvalidField = useCallback((fieldId: string) => {
-    if (!fieldId) return;
-    setInvalidFieldIds((prev) => prev.filter((entry) => entry !== fieldId));
-  }, []);
-  const clearValidationPopup = useCallback(() => {
-    setValidationPopupFields([]);
-    setValidationPopupTitle('Missing Required Fields');
-    setValidationPopupMessage('Fill in the following fields before executing the method:');
-    setValidationPopupConfirmLabel('');
-    setValidationPopupCancelLabel('Close');
-    validationPopupConfirmRef.current = null;
-  }, []);
-  const showValidationPopup = useCallback(
-    (
-      fieldIds: string[],
-      labels: string[],
-      message?: string,
-      options?: {
-        title?: string;
-        confirmLabel?: string;
-        cancelLabel?: string;
-        onConfirm?: () => void | Promise<void>;
-      },
-    ) => {
-      setInvalidFieldIds(fieldIds);
-      setValidationPopupFields(labels);
-      setValidationPopupTitle(options?.title || 'Missing Required Fields');
-      setValidationPopupMessage(message || 'Fill in the following fields before executing the method:');
-      setValidationPopupConfirmLabel(options?.confirmLabel || '');
-      setValidationPopupCancelLabel(options?.cancelLabel || 'Close');
-      validationPopupConfirmRef.current = options?.onConfirm || null;
-      if (typeof window !== 'undefined' && fieldIds[0]) {
-        window.setTimeout(() => {
-          const target = document.querySelector(`[data-field-id="${fieldIds[0]}"]`) as
-            | HTMLInputElement
-            | HTMLSelectElement
-            | null;
-          target?.focus();
-        }, 0);
-      }
-    },
-    [],
-  );
 
   const {
     selectedSponsorCoinVersion,
@@ -765,419 +332,123 @@ export default function SponsorCoinLabPage() {
     appendWriteTrace,
     setStatus,
     setInvalidFieldIds,
-    setValidationPopupFields,
+    clearValidationPopup,
     methodPanelMode,
     selectedWriteMethod,
     selectedSpCoinWriteMethod,
     selectedReadMethod,
     selectedSpCoinReadMethod,
   });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = window.localStorage.getItem(SP_COIN_LAB_STORAGE_KEY);
-      const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
-      const savedMode = typeof saved?.mode === 'string' ? saved.mode : '';
-      setHasPersistedNetworkMode(savedMode === 'metamask' || savedMode === 'hardhat');
-    } catch {
-      setHasPersistedNetworkMode(false);
-    }
-  }, []);
-
-  const modeSelectionChainId = Number((exchangeContext as any)?.network?.chainId || connectedChainId || 0);
-  const allowContractNetworkModeSelection = modeSelectionChainId === 31337;
-
-  useEffect(() => {
-    if (hasPersistedNetworkMode !== false) return;
-    setMode(modeSelectionChainId === 31337 ? 'hardhat' : 'metamask');
-  }, [hasPersistedNetworkMode, modeSelectionChainId, setMode]);
-  const selectedContractChainId = Number(selectedSponsorCoinVersionEntry?.chainId || 0);
-  const activeContractChainIdDisplayValue =
-    Number.isFinite(selectedContractChainId) && selectedContractChainId > 0
-      ? String(selectedContractChainId)
-      : chainIdDisplayValue;
-  const activeContractChainIdDisplayWidthCh = Math.max(4, String(activeContractChainIdDisplayValue).length + 3);
-  const activeContractNetworkName = useMemo(() => {
-    if (Number.isFinite(selectedContractChainId) && selectedContractChainId > 0) {
-      const known = getBlockChainName(selectedContractChainId);
-      if (known) return known;
-    }
-    return activeNetworkName;
-  }, [activeNetworkName, selectedContractChainId]);
-  useEffect(() => {
-    const contractKey = normalizeAddressValue(
-      String(selectedSponsorCoinVersionEntry?.address || contractAddress || ''),
-    );
-    if (!contractKey) {
-      spCoinOwnerSyncRef.current.contractKey = '';
-      return;
-    }
-    if (spCoinOwnerSyncRef.current.contractKey === contractKey) return;
-
-    const ownerAddress = normalizeAddressValue(
-      String(selectedSponsorCoinVersionEntry?.deployer || displayedSignerAccountAddress || ''),
-    );
-    if (!ownerAddress || !isAddressLike(ownerAddress)) return;
-
-    const requestId = ++spCoinOwnerSyncRef.current.requestId;
-    const preservedBalance =
-      spCoinOwnerAccountAddress === ownerAddress &&
-      typeof exchangeContext?.accounts?.spCoinOwnerAccount?.balance === 'bigint'
-        ? exchangeContext.accounts.spCoinOwnerAccount.balance
-        : undefined;
-
-    void (async () => {
-      let nextAccount: spCoinAccount;
-      try {
-        nextAccount = await hydrateAccountFromAddress(ownerAddress as Address, {
-          balance: preservedBalance,
-        });
-      } catch {
-        nextAccount = makeAccountFallback(
-          ownerAddress as Address,
-          STATUS.MESSAGE_ERROR,
-          `Account ${ownerAddress} metadata could not be loaded`,
-          preservedBalance,
-        );
-      }
-
-      if (spCoinOwnerSyncRef.current.requestId !== requestId) return;
-
-      setExchangeContext(
-        (prev) => {
-          const prevAccount = prev.accounts?.spCoinOwnerAccount;
-          const prevAddress = normalizeAddressValue(String(prevAccount?.address ?? ''));
-          if (
-            prevAddress === ownerAddress &&
-            prevAccount?.name === nextAccount.name &&
-            prevAccount?.symbol === nextAccount.symbol &&
-            prevAccount?.logoURL === nextAccount.logoURL &&
-            prevAccount?.description === nextAccount.description &&
-            prevAccount?.website === nextAccount.website &&
-            prevAccount?.type === nextAccount.type &&
-            prevAccount?.status === nextAccount.status &&
-            prevAccount?.balance === nextAccount.balance
-          ) {
-            return prev;
-          }
-
-          return {
-            ...prev,
-            accounts: {
-              ...prev.accounts,
-              spCoinOwnerAccount: nextAccount,
-            },
-          };
-        },
-        'SponsorCoinLab:setSpCoinOwnerAccount',
-      );
-
-      spCoinOwnerSyncRef.current.contractKey = contractKey;
-    })();
-  }, [
-    contractAddress,
-    displayedSignerAccountAddress,
-    exchangeContext?.accounts?.spCoinOwnerAccount?.balance,
-    selectedSponsorCoinVersion,
-    selectedSponsorCoinVersionEntry?.deployer,
-    selectedSponsorCoinVersionEntry?.address,
-    selectedSponsorCoinVersionEntry?.id,
-    setExchangeContext,
+  const {
+    sponsorAccountAddress,
+    recipientAccountAddress,
+    agentAccountAddress,
+    activeAccountAddress,
     spCoinOwnerAccountAddress,
-  ]);
-  const displayedSpCoinOwnerAddress = selectedSponsorCoinVersionEntry
-    ? normalizeAddressValue(
-        String(selectedSponsorCoinVersionEntry?.deployer || spCoinOwnerAccountAddress || displayedSignerAccountAddress || ''),
-      )
-    : displayedSignerAccountAddress;
-  const displayedSpCoinOwnerMetadata = useMemo(() => {
-    const ownerAccount = exchangeContext?.accounts?.spCoinOwnerAccount;
-    if (
-      ownerAccount &&
-      normalizeAddressValue(String(ownerAccount.address ?? '')) ===
-        normalizeAddressValue(displayedSpCoinOwnerAddress)
-    ) {
-      return {
-        logoURL: ownerAccount.logoURL,
-        name: ownerAccount.name,
-        symbol: ownerAccount.symbol,
-      };
-    }
-    return displayedSignerAccountMetadata;
-  }, [
-    displayedSignerAccountMetadata,
-    displayedSpCoinOwnerAddress,
-    exchangeContext?.accounts?.spCoinOwnerAccount,
-  ]);
-  const resolveScriptEditorContractMetadata = useCallback(
-    async (
-      params: Array<{ label: string }>,
-    ): Promise<{
-      version?: string;
-      inflationRate?: number;
-      recipientRateRange?: [number, number];
-      agentRateRange?: [number, number];
-    }> => {
-      const labels = new Set(params.map((param) => normalizeParamLabel(param.label)));
-      const currentMeta = exchangeContext?.settings?.spCoinContract;
-      const needsVersion = labels.has('new version') && !String(currentMeta?.version ?? '').trim();
-      const needsInflationRate =
-        labels.has('new inflation rate') && !isDefinedNumber(currentMeta?.inflationRate);
-      const needsLowerRecipient =
-        labels.has('new lower recipient rate') &&
-        !isDefinedNumber(currentMeta?.recipientRateRange?.[0]);
-      const needsUpperRecipient =
-        labels.has('new upper recipient rate') &&
-        !isDefinedNumber(currentMeta?.recipientRateRange?.[1]);
-      const needsLowerAgent =
-        labels.has('new lower agent rate') && !isDefinedNumber(currentMeta?.agentRateRange?.[0]);
-      const needsUpperAgent =
-        labels.has('new upper agent rate') && !isDefinedNumber(currentMeta?.agentRateRange?.[1]);
-
-      if (
-        !needsVersion &&
-        !needsInflationRate &&
-        !needsLowerRecipient &&
-        !needsUpperRecipient &&
-        !needsLowerAgent &&
-        !needsUpperAgent
-      ) {
-        return {};
-      }
-
-      const target = requireContractAddress();
-      const runner = await ensureReadRunner();
-      const access = createSpCoinLibraryAccess(target, runner);
-      const contract = access.contract as Record<string, unknown>;
-      const read = (access.read ?? {}) as Record<string, unknown>;
-
-      const callNoArgs = async (...names: string[]) => {
-        for (const name of names) {
-          const contractFn = contract[name];
-          if (typeof contractFn === 'function') {
-            try {
-              return await (contractFn as () => Promise<unknown>)();
-            } catch {
-              // Try the next candidate.
-            }
-          }
-          const readFn = read[name];
-          if (typeof readFn === 'function') {
-            try {
-              return await (readFn as () => Promise<unknown>)();
-            } catch {
-              // Try the next candidate.
-            }
-          }
-        }
-        return undefined;
-      };
-
-      const nextMeta: {
-        version?: string;
-        inflationRate?: number;
-        recipientRateRange?: [number, number];
-        agentRateRange?: [number, number];
-      } = {};
-
-      if (needsVersion) {
-        const version = await callNoArgs('getVersion', 'version');
-        const normalized = String(version ?? '').trim();
-        if (normalized) nextMeta.version = normalized;
-      }
-
-      if (needsInflationRate) {
-        const inflationRate = await callNoArgs('getInflationRate', 'annualInflation');
-        const normalized = Number(inflationRate);
-        if (Number.isFinite(normalized)) nextMeta.inflationRate = normalized;
-      }
-
-      if (needsLowerRecipient || needsUpperRecipient) {
-        const lower = needsLowerRecipient
-          ? Number(await callNoArgs('getLowerRecipientRate'))
-          : Number(currentMeta?.recipientRateRange?.[0]);
-        const upper = needsUpperRecipient
-          ? Number(await callNoArgs('getUpperRecipientRate'))
-          : Number(currentMeta?.recipientRateRange?.[1]);
-        if (Number.isFinite(lower) && Number.isFinite(upper)) {
-          nextMeta.recipientRateRange = [lower, upper];
-        }
-      }
-
-      if (needsLowerAgent || needsUpperAgent) {
-        const lower = needsLowerAgent
-          ? Number(await callNoArgs('getLowerAgentRate'))
-          : Number(currentMeta?.agentRateRange?.[0]);
-        const upper = needsUpperAgent
-          ? Number(await callNoArgs('getUpperAgentRate'))
-          : Number(currentMeta?.agentRateRange?.[1]);
-        if (Number.isFinite(lower) && Number.isFinite(upper)) {
-          nextMeta.agentRateRange = [lower, upper];
-        }
-      }
-
-      if (
-        nextMeta.version !== undefined ||
-        nextMeta.inflationRate !== undefined ||
-        nextMeta.recipientRateRange !== undefined ||
-        nextMeta.agentRateRange !== undefined
-      ) {
-        setSettings((prev) => {
-          const prevContract = prev?.spCoinContract;
-          return {
-            ...prev,
-            spCoinContract: {
-              owner: String(prevContract?.owner ?? '').trim(),
-              version: nextMeta.version ?? String(prevContract?.version ?? '').trim(),
-              name: String(prevContract?.name ?? '').trim(),
-              symbol: String(prevContract?.symbol ?? '').trim(),
-              decimals: Number(prevContract?.decimals ?? 0),
-              totalSypply: String(prevContract?.totalSypply ?? '').trim(),
-              inflationRate:
-                nextMeta.inflationRate ??
-                (isDefinedNumber(prevContract?.inflationRate) ? prevContract.inflationRate : 0),
-              recipientRateRange:
-                nextMeta.recipientRateRange ??
-                normalizeSpCoinRateRange(
-                  prevContract?.recipientRateRange,
-                  DEFAULT_RECIPIENT_RATE_RANGE,
-                ),
-              agentRateRange:
-                nextMeta.agentRateRange ??
-                normalizeSpCoinRateRange(
-                  prevContract?.agentRateRange,
-                  DEFAULT_AGENT_RATE_RANGE,
-                ),
-            },
-          };
-        });
-      }
-
-      return nextMeta;
-    },
-    [ensureReadRunner, exchangeContext?.settings?.spCoinContract, requireContractAddress, setSettings],
-  );
-  const handleRemoveContractFromApp = useCallback(async () => {
-    const activeAddress = String(contractAddress || '').trim();
-    const activeChainId = Number(selectedSponsorCoinVersionEntry?.chainId || chainIdDisplayValue || 0);
-    const activeName = String(selectedSponsorCoinVersionEntry?.name || '').trim() || 'Sponsor Coin';
-    const activeSymbol = String(selectedVersionSymbol || '').trim() || 'SPCOIN';
-    const fallbackChoice = sponsorCoinVersionChoices.find(
-      (entry) => String(entry.address || '').trim().toLowerCase() !== activeAddress.toLowerCase(),
-    );
-
-    if (!/^0[xX][a-fA-F0-9]{40}$/.test(activeAddress)) {
-      setStatus('Select a valid SponsorCoin contract before removing it from the app.');
-      appendLog('Remove From App aborted: invalid contract address.');
-      return;
-    }
-    if (!Number.isFinite(activeChainId) || activeChainId <= 0) {
-      setStatus('Unable to determine the active network chain id for removal.');
-      appendLog('Remove From App aborted: invalid active chain id.');
-      return;
-    }
-
-    setIsRemovingContractFromApp(true);
-    setStatus(`Removing ${activeName} ${activeSymbol} from app...`);
-    appendLog(`Remove From App started for ${activeName} ${activeSymbol} (${activeAddress}).`);
-    if (fallbackChoice) {
-      setSelectedSponsorCoinVersion(fallbackChoice.id);
-      setContractAddress(fallbackChoice.address);
-      appendLog(
-        `Switched active SponsorCoin contract to ${String(fallbackChoice.name || fallbackChoice.version || fallbackChoice.address)} before removal.`,
-      );
-    } else {
-      setSelectedSponsorCoinVersion('');
-      setContractAddress('');
-    }
-
-    try {
-      const response = await fetch('/api/spCoin/access-manager', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'removeDeployment',
-          deploymentPublicKey: activeAddress,
-          deploymentChainId: activeChainId,
-        }),
-      });
-      const data = (await response.json()) as {
-        ok?: boolean;
-        message?: string;
-      };
-      if (!response.ok || !data.ok) {
-        throw new Error(String(data.message || 'Failed to remove SponsorCoin app entry.'));
-      }
-
-      appendLog(String(data.message || `Removed ${activeName} ${activeSymbol} from app.`));
-      setRemovedContractAddresses((prev) =>
-        prev.some((entry) => entry.toLowerCase() === activeAddress.toLowerCase()) ? prev : [...prev, activeAddress],
-      );
-      setStatus(`${activeName} ${activeSymbol} removed from app.`);
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = window.localStorage.getItem(SP_COIN_LAB_STORAGE_KEY);
-          const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
-          window.localStorage.setItem(
-            SP_COIN_LAB_STORAGE_KEY,
-            JSON.stringify({
-              ...saved,
-              contractAddress: fallbackChoice?.address || '',
-              selectedSponsorCoinVersion: fallbackChoice?.id || '',
-            }),
-          );
-        } catch {
-          // Ignore transient localStorage write failures.
-        }
-      }
-      setIsRemovingContractFromApp(false);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown removal failure.';
-      setStatus(`Remove From App failed: ${message}`);
-      appendLog(`Remove From App failed: ${message}`);
-      setIsRemovingContractFromApp(false);
-    }
-  }, [
+    setDefaultSponsorKey,
+    setDefaultRecipientKey,
+    setDefaultAgentKey,
+    syncRoleAccountToExchangeContext,
+    syncEditorAddressFieldToExchangeContext,
+    managedRecipientRateKeyOptions,
+    managedRecipientRateKeyHelpText,
+    sponsorCoinAccountManagementValidation,
+    sponsorCoinAccountManagementStatus,
+    setSponsorCoinAccountManagementStatus,
+    handleSponsorCoinAccountAction,
+  } = useControllerAccounts({
+    exchangeContext,
+    setExchangeContext,
+    defaultSponsorKey,
+    setDefaultSponsorKeyState,
+    defaultRecipientKey,
+    setDefaultRecipientKeyState,
+    defaultAgentKey,
+    setDefaultAgentKeyState,
+    selectedSponsorCoinAccountRole,
+    managedRoleAccountAddress,
+    setManagedRoleAccountAddress,
+    managedRecipientKey,
+    setManagedRecipientKey,
+    managedRecipientRateKey,
+    setManagedRecipientRateKey,
+    selectedWriteSenderAccount,
+    selectedWriteSenderAddress,
+    effectiveConnectedAddress,
+    ensureReadRunner,
+    requireContractAddress,
+    executeWriteConnected,
+    useLocalSpCoinAccessPackage,
     appendLog,
+  });
+  const {
+    allowContractNetworkModeSelection,
+    activeContractChainIdDisplayValue,
+    activeContractChainIdDisplayWidthCh,
+    activeContractNetworkName,
+    displayedSpCoinOwnerAddress,
+    displayedSpCoinOwnerMetadata,
+    resolveScriptEditorContractMetadata,
+    isRemovingContractFromApp,
+    requestRemoveContractFromApp,
+    effectiveRecipientRateRange,
+    effectiveAgentRateRange,
+  } = useControllerContractMetadata({
+    exchangeContext,
+    setExchangeContext,
+    setSettings,
+    setMode,
+    connectedChainId,
+    activeNetworkName,
     chainIdDisplayValue,
     contractAddress,
-    removedContractAddresses,
-    selectedSponsorCoinVersionEntry?.chainId,
-    selectedSponsorCoinVersionEntry?.name,
-    sponsorCoinVersionChoices,
-    setSelectedSponsorCoinVersion,
-    selectedVersionSymbol,
     setContractAddress,
-  ]);
-
-  const requestRemoveContractFromApp = useCallback(() => {
-    const activeName = String(selectedSponsorCoinVersionEntry?.name || '').trim() || 'Sponsor Coin';
-    const activeSymbol = String(selectedVersionSymbol || '').trim() || 'SPCOIN';
-    const activeAddress = String(contractAddress || '').trim();
-
-    showValidationPopup(
-      [],
-      [],
-      `This will remove ${activeAddress} from the deployment map, remove matching token-list entries for the active network, and delete the contract asset directory from the app.`,
-      {
-        title: `Remove ${activeName} ${activeSymbol} From App`,
-        confirmLabel: 'Remove',
-        cancelLabel: 'Cancel',
-        onConfirm: () => void handleRemoveContractFromApp(),
-      },
-    );
-  }, [
-    contractAddress,
-    handleRemoveContractFromApp,
-    selectedSponsorCoinVersionEntry?.name,
+    selectedSponsorCoinVersion,
+    setSelectedSponsorCoinVersion,
+    selectedSponsorCoinVersionEntry,
+    sponsorCoinVersionChoices,
+    displayedSignerAccountAddress,
+    displayedSignerAccountMetadata,
     selectedVersionSymbol,
+    spCoinOwnerAccountAddress,
+    ensureReadRunner,
+    requireContractAddress,
+    appendLog,
+    setStatus,
     showValidationPopup,
-  ]);
+    removedContractAddresses,
+    setRemovedContractAddresses,
+  });
   const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
+  const {
+    buildScriptEditorParamValues,
+    buildErc20ReadEditorDefaults,
+    buildErc20WriteEditorDefaults,
+  } = useControllerEditorSync({
+    exchangeContext,
+    contractAddress,
+    defaultSponsorKey,
+    sponsorAccountAddress,
+    recipientAccountAddress,
+    agentAccountAddress,
+    activeAccountAddress,
+    sellTokenAmountRaw,
+    buyTokenAmountRaw,
+    previewTokenAmountRaw,
+    methodPanelMode,
+    activeReadLabels,
+    activeWriteLabels,
+    readAddressA,
+    readAddressB,
+    writeAddressA,
+    writeAddressB,
+    writeAmountRaw,
+    selectedWriteSenderAddress,
+    setExchangeContext,
+    syncRoleAccountToExchangeContext,
+    syncEditorAddressFieldToExchangeContext,
+  });
   const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
   const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
   const serializationTestMethodDefs = SERIALIZATION_TEST_METHOD_DEFS;
@@ -1209,12 +480,6 @@ export default function SponsorCoinLabPage() {
       : methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write'
       ? 'erc20'
       : methodPanelMode;
-  const effectiveRecipientRateRange = hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.recipientRateRange)
-    ? exchangeContext.settings.spCoinContract.recipientRateRange
-    : DEFAULT_RECIPIENT_RATE_RANGE;
-  const effectiveAgentRateRange = hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
-    ? exchangeContext.settings.spCoinContract.agentRateRange
-    : DEFAULT_AGENT_RATE_RANGE;
   const updateSpWriteParamAtIndex = useCallback((idx: number, value: string) => {
     setSpWriteParams((prev) => {
       const next = [...prev];
@@ -1326,100 +591,6 @@ export default function SponsorCoinLabPage() {
         ? exchangeContext.settings.spCoinContract.agentRateRange
         : DEFAULT_AGENT_RATE_RANGE,
   });
-
-  useEffect(() => {
-    let active = true;
-    const chainId = Number(selectedSponsorCoinVersionEntry?.chainId || (exchangeContext as any)?.network?.chainId || 0);
-    const activeContractAddress = String(contractAddress || '').trim();
-    const selectedEntry = selectedSponsorCoinVersionEntry;
-    const selectedVersion = String(
-      selectedEntry?.version || selectedSponsorCoinVersion || '',
-    ).trim();
-
-    if (!selectedEntry && !selectedVersion && !activeContractAddress) return;
-
-    setSettings((prev) => ({
-      ...prev,
-      spCoinContract: {
-        owner: String(prev?.spCoinContract?.owner ?? '').trim(),
-        version: selectedVersion,
-        name: String(selectedEntry?.name || (selectedVersion ? `Sponsor Coin V${selectedVersion}` : '')).trim(),
-        symbol: String(selectedEntry?.symbol || (selectedVersion ? `SPCOIN_V${selectedVersion}` : '')).trim(),
-        decimals: Number(prev?.spCoinContract?.decimals ?? 18),
-        totalSypply: String(prev?.spCoinContract?.totalSypply ?? '').trim(),
-        inflationRate: Number(prev?.spCoinContract?.inflationRate ?? 0),
-        recipientRateRange: normalizeSpCoinRateRange(
-          prev?.spCoinContract?.recipientRateRange,
-          DEFAULT_RECIPIENT_RATE_RANGE,
-        ),
-        agentRateRange: normalizeSpCoinRateRange(
-          prev?.spCoinContract?.agentRateRange,
-          DEFAULT_AGENT_RATE_RANGE,
-        ),
-      },
-    }));
-
-    const hydrate = async () => {
-      if (!/^0[xX][a-fA-F0-9]{40}$/.test(activeContractAddress)) return;
-      if (!Number.isFinite(chainId) || chainId <= 0) return;
-      try {
-        const params = new URLSearchParams({
-          deploymentPublicKey: activeContractAddress,
-          deploymentChainId: String(chainId),
-          includeMetadata: 'true',
-        });
-        const response = await fetch(`/api/spCoin/access-manager?${params.toString()}`, { method: 'GET' });
-        const data = (await response.json()) as {
-          ok?: boolean;
-          spCoinMetaData?: {
-            owner: string;
-            version: string;
-            name: string;
-            symbol: string;
-            decimals: number;
-            totalSypply: string;
-            inflationRate: number;
-            recipientRateRange: [number, number];
-            agentRateRange: [number, number];
-          };
-        };
-        if (!active || !response.ok || !data.ok || !data.spCoinMetaData) return;
-        setSettings((prev) => ({
-          ...prev,
-          spCoinContract: {
-            owner: String(data.spCoinMetaData?.owner ?? '').trim(),
-            version: String(data.spCoinMetaData?.version ?? '').trim(),
-            name: String(data.spCoinMetaData?.name ?? '').trim(),
-            symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
-            decimals: Number(data.spCoinMetaData?.decimals ?? 0),
-            totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
-            inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
-            recipientRateRange: normalizeSpCoinRateRange(
-              data.spCoinMetaData?.recipientRateRange,
-              DEFAULT_RECIPIENT_RATE_RANGE,
-            ),
-            agentRateRange: normalizeSpCoinRateRange(
-              data.spCoinMetaData?.agentRateRange,
-              DEFAULT_AGENT_RATE_RANGE,
-            ),
-          },
-        }));
-      } catch {
-        // Keep the seeded SponsorCoinLab values when metadata fetch fails.
-      }
-    };
-
-    void hydrate();
-    return () => {
-      active = false;
-    };
-  }, [
-    contractAddress,
-    exchangeContext,
-    selectedSponsorCoinVersion,
-    selectedSponsorCoinVersionEntry,
-    setSettings,
-  ]);
 
   const {
     scripts,
@@ -1551,7 +722,6 @@ export default function SponsorCoinLabPage() {
   const editorBaselineRef = useRef<string | null>(null);
   const shouldResetEditorBaselineRef = useRef(true);
   const hasUserEditedMethodInputsRef = useRef(false);
-  const dropdownHydrationKeyRef = useRef<string>('');
   const markEditorAsUserEdited = useCallback(() => {
     hasUserEditedMethodInputsRef.current = true;
   }, []);
@@ -1568,10 +738,6 @@ export default function SponsorCoinLabPage() {
     if (editorBaselineRef.current === null) return false;
     return editorBaselineRef.current !== editorSnapshot;
   }, [editorSnapshot]);
-  const clearDiscardChangesPopup = useCallback(() => {
-    setIsDiscardChangesPopupOpen(false);
-    discardChangesConfirmRef.current = null;
-  }, []);
   const runWithDiscardPrompt = useCallback(
     (action: () => void | Promise<void>) => {
       if (!hasUserEditedMethodInputsRef.current) {
@@ -1589,17 +755,17 @@ export default function SponsorCoinLabPage() {
         void action();
         return;
       }
-      discardChangesConfirmRef.current = () => {
+      openDiscardChangesPopup(() => {
         queueEditorBaselineReset();
         void action();
-      };
-      setIsDiscardChangesPopupOpen(true);
+      });
     },
     [
       editingScriptStepNumber,
       hasEditingScriptChanges,
       hasUnsavedEditorChanges,
       methodSelectionSource,
+      openDiscardChangesPopup,
       queueEditorBaselineReset,
     ],
   );
@@ -1676,174 +842,6 @@ export default function SponsorCoinLabPage() {
     spCoinTodoWriteOptions,
     spCoinWorldWriteOptions,
   ]);
-  const sponsorCoinAccountManagementValidation = useMemo(() => {
-    const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
-    if (!accountAddress) return { tone: 'neutral' as const, message: '' };
-    if (!isAddressLike(accountAddress)) {
-      return { tone: 'invalid' as const, message: 'Invalid account address.' };
-    }
-    if (selectedSponsorCoinAccountRole !== 'agent') {
-      return { tone: 'valid' as const, message: 'Ready' };
-    }
-
-    const recipientKey = normalizeAddressValue(managedRecipientKey);
-    if (!recipientKey) return { tone: 'neutral' as const, message: 'Recipient Key required.' };
-    if (!isAddressLike(recipientKey)) {
-      return { tone: 'invalid' as const, message: 'Invalid recipient address.' };
-    }
-    if (!String(managedRecipientRateKey || '').trim()) {
-      return { tone: 'neutral' as const, message: 'Recipient Rate Key required.' };
-    }
-    if (!isIntegerString(managedRecipientRateKey)) {
-      return { tone: 'invalid' as const, message: 'Recipient Rate Key must be an integer.' };
-    }
-    return { tone: 'valid' as const, message: 'Ready' };
-  }, [managedRecipientKey, managedRecipientRateKey, managedRoleAccountAddress, selectedSponsorCoinAccountRole]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadManagedRecipientRateKeyOptions = async () => {
-      if (selectedSponsorCoinAccountRole !== 'agent') {
-        if (!cancelled) {
-          setManagedRecipientRateKeyOptions([]);
-          setManagedRecipientRateKeyHelpText('');
-        }
-        return;
-      }
-
-      const sponsorKey = normalizeAddressValue(selectedWriteSenderAccount?.address || selectedWriteSenderAddress || effectiveConnectedAddress);
-      const recipientKey = normalizeAddressValue(managedRecipientKey);
-      if (!isAddressLike(sponsorKey) || !isAddressLike(recipientKey)) {
-        if (!cancelled) {
-          setManagedRecipientRateKeyOptions([]);
-          setManagedRecipientRateKeyHelpText('Select msg.sender and Recipient first to load Recipient Rate Keys.');
-        }
-        return;
-      }
-
-      try {
-        const target = requireContractAddress();
-        const runner = await ensureReadRunner();
-        const access = createSpCoinLibraryAccess(target, runner);
-        const rates = (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
-        if (!cancelled) {
-          const nextOptions = rates.map((value) => String(value));
-          setManagedRecipientRateKeyOptions(nextOptions);
-          setManagedRecipientRateKeyHelpText(
-            nextOptions.length > 0
-              ? 'Select a Recipient Rate Key from the contract list.'
-              : 'No Recipient Rate Keys found for this sponsor/recipient pair.',
-          );
-        }
-      } catch {
-        if (!cancelled) {
-          setManagedRecipientRateKeyOptions([]);
-          setManagedRecipientRateKeyHelpText('Unable to load Recipient Rate Keys from the active contract.');
-        }
-      }
-    };
-
-    void loadManagedRecipientRateKeyOptions();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    effectiveConnectedAddress,
-    ensureReadRunner,
-    managedRecipientKey,
-    requireContractAddress,
-    selectedSponsorCoinAccountRole,
-    selectedWriteSenderAccount?.address,
-    selectedWriteSenderAddress,
-    useLocalSpCoinAccessPackage,
-  ]);
-
-  const handleSponsorCoinAccountAction = useCallback(
-    async (action: 'add' | 'delete') => {
-      if (sponsorCoinAccountManagementValidation.tone !== 'valid') {
-        setSponsorCoinAccountManagementStatus(sponsorCoinAccountManagementValidation.message);
-        return;
-      }
-
-      const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
-      const recipientKey = normalizeAddressValue(managedRecipientKey);
-      const recipientRateKey = String(managedRecipientRateKey || '').trim();
-      const hardhatSenderAddress = selectedWriteSenderAccount?.address || selectedWriteSenderAddress;
-      const accessSource = useLocalSpCoinAccessPackage ? 'local' : 'node_modules';
-      const label = `${action}:${selectedSponsorCoinAccountRole}:${accountAddress}`;
-
-      try {
-        const tx = await executeWriteConnected(
-          label,
-          async (contract, signer) => {
-            const access = createSpCoinModuleAccess(contract, signer, accessSource);
-            const baseContract = access.contract as SponsorCoinManageContract;
-            const connectedContract = (typeof baseContract.connect === 'function'
-              ? (baseContract.connect(signer) as SponsorCoinManageContract)
-              : baseContract) as SponsorCoinManageContract;
-
-            if (action === 'add') {
-              if (selectedSponsorCoinAccountRole === 'sponsor') {
-                throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addAccountRecipient or addAgents instead.',
-                );
-              }
-              if (selectedSponsorCoinAccountRole === 'recipient') {
-                if (typeof connectedContract.addRecipient !== 'function') {
-                  throw new Error('addRecipient is not available on the current SpCoin contract access path.');
-                }
-                return connectedContract.addRecipient(accountAddress);
-              }
-              if (typeof connectedContract.addAgent !== 'function') {
-                throw new Error('addAgent is not available on the current SpCoin contract access path.');
-              }
-              return connectedContract.addAgent(recipientKey, recipientRateKey, accountAddress);
-            }
-
-            if (typeof connectedContract.deleteAccountRecord !== 'function') {
-              throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
-            }
-            return connectedContract.deleteAccountRecord(accountAddress);
-          },
-          hardhatSenderAddress,
-        );
-
-        if (!tx || typeof tx.wait !== 'function') {
-          throw new Error(`${label} did not return a transaction response.`);
-        }
-        const receipt = await tx.wait();
-        appendLog(
-          `${action} ${selectedSponsorCoinAccountRole} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`,
-        );
-        setSponsorCoinAccountManagementStatus(
-          `${action === 'add' ? 'Added' : 'Deleted'} ${selectedSponsorCoinAccountRole} ${accountAddress}.`,
-        );
-        setManagedRoleAccountAddress('');
-        if (selectedSponsorCoinAccountRole === 'agent') {
-          setManagedRecipientKey('');
-          setManagedRecipientRateKey('');
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : `Failed to ${action} ${selectedSponsorCoinAccountRole}.`;
-        setSponsorCoinAccountManagementStatus(message);
-        appendLog(`${action} ${selectedSponsorCoinAccountRole} failed: ${message}`);
-      }
-    },
-    [
-      appendLog,
-      executeWriteConnected,
-      managedRecipientKey,
-      managedRecipientRateKey,
-      managedRoleAccountAddress,
-      selectedSponsorCoinAccountRole,
-      selectedWriteSenderAccount?.address,
-      selectedWriteSenderAddress,
-      sponsorCoinAccountManagementValidation.message,
-      sponsorCoinAccountManagementValidation.tone,
-      useLocalSpCoinAccessPackage,
-    ],
-  );
   useEffect(() => {
     const activeReadDef = spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod];
     if (activeReadDef?.executable === false && spCoinAllReadOptions.length > 0) {
@@ -1917,126 +915,25 @@ export default function SponsorCoinLabPage() {
       : scriptEditorKind === 'javascript'
       ? 'Standalone Offchain TypeScript File'
       : 'New JSON Test Method';
-  const [javaScriptFileContent, setJavaScriptFileContent] = useState('');
-  const [isJavaScriptFileLoading, setIsJavaScriptFileLoading] = useState(false);
-  const [isTypeScriptEditEnabled, setIsTypeScriptEditEnabled] = useState(false);
-  const [isSavingSelectedTypeScriptFile, setIsSavingSelectedTypeScriptFile] = useState(false);
-  const selectedJavaScriptDisplayFilePath = String(
-    selectedJavaScriptScript?.displayFilePath || selectedJavaScriptScript?.filePath || '',
-  ).trim();
-  const selectedTypeScriptFocusPattern = String(selectedJavaScriptScript?.focusPattern || '').trim();
-
-  const formatFocusedTypeScriptContent = useCallback((content: string, filePath: string, focusPattern: string) => {
-    if (!focusPattern) return content;
-    const lines = String(content || '').split(/\r?\n/);
-    const focusIndex = lines.findIndex((line) => line.includes(focusPattern));
-    if (focusIndex < 0) return content;
-    const start = Math.max(0, focusIndex - 8);
-    const end = Math.min(lines.length, focusIndex + 13);
-    const excerpt = lines.slice(start, end).join('\n');
-    return `// File: ${filePath}\n// Focus: ${focusPattern}\n// Showing excerpt around the selected method.\n\n${excerpt}`;
-  }, []);
-
-  const reloadJavaScriptFile = useCallback((options?: { applyFocus?: boolean }) => {
-    if (!selectedJavaScriptDisplayFilePath) {
-      setJavaScriptFileContent('');
-      return;
-    }
-    const applyFocus = options?.applyFocus !== false;
-    setIsJavaScriptFileLoading(true);
-    void (async () => {
-      try {
-        const response = await fetch(
-          `/api/spCoin/javascript-scripts?filePath=${encodeURIComponent(selectedJavaScriptDisplayFilePath)}`,
-          { cache: 'no-store' },
-        );
-        const payload = (await response.json()) as { ok?: boolean; message?: string; content?: string };
-        if (!response.ok) {
-          throw new Error(payload?.message || `Unable to load TypeScript file (${response.status})`);
-        }
-        const content = String(payload?.content || '');
-        setJavaScriptFileContent(
-          applyFocus
-            ? formatFocusedTypeScriptContent(content, selectedJavaScriptDisplayFilePath, selectedTypeScriptFocusPattern)
-            : content,
-        );
-      } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'Unable to load TypeScript file.');
-        setOutputPanelMode('raw_status');
-      } finally {
-        setIsJavaScriptFileLoading(false);
-      }
-    })();
-  }, [formatFocusedTypeScriptContent, selectedJavaScriptDisplayFilePath, selectedTypeScriptFocusPattern, setOutputPanelMode, setStatus]);
-
-  useEffect(() => {
-    if (scriptEditorKind !== 'javascript') return;
-    if (!selectedJavaScriptDisplayFilePath) {
-      setJavaScriptFileContent('');
-      return;
-    }
-    setIsTypeScriptEditEnabled(false);
-    reloadJavaScriptFile({ applyFocus: true });
-  }, [reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptDisplayFilePath, selectedJavaScriptScriptId]);
-
-  useEffect(() => {
-    if (scriptEditorKind !== 'javascript' || !selectedJavaScriptDisplayFilePath) return;
-    reloadJavaScriptFile({ applyFocus: !isTypeScriptEditEnabled });
-  }, [isTypeScriptEditEnabled, reloadJavaScriptFile, scriptEditorKind, selectedJavaScriptDisplayFilePath]);
-
-  const canEditSelectedTypeScriptFile = Boolean(String(selectedJavaScriptDisplayFilePath || '').trim());
-
-  const saveSelectedTypeScriptFile = useCallback(() => {
-    if (!selectedJavaScriptDisplayFilePath) {
-      setStatus('Select a TypeScript file first.');
-      setOutputPanelMode('raw_status');
-      return;
-    }
-    setIsSavingSelectedTypeScriptFile(true);
-    void (async () => {
-      try {
-        const response = await fetch('/api/spCoin/javascript-scripts', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filePath: selectedJavaScriptDisplayFilePath,
-            content: javaScriptFileContent,
-          }),
-        });
-        const payload = (await response.json()) as { ok?: boolean; message?: string };
-        if (!response.ok) {
-          throw new Error(payload?.message || `Unable to save TypeScript file (${response.status})`);
-        }
-        setStatus(`Saved ${String(selectedJavaScriptScript?.name || selectedJavaScriptDisplayFilePath)}.`);
-        setOutputPanelMode('raw_status');
-      } catch (error) {
-        setStatus(error instanceof Error ? error.message : 'Unable to save TypeScript file.');
-        setOutputPanelMode('raw_status');
-      } finally {
-        setIsSavingSelectedTypeScriptFile(false);
-      }
-    })();
-  }, [javaScriptFileContent, selectedJavaScriptDisplayFilePath, selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
-
-  const runSelectedJavaScriptScript = useCallback(() => {
-    const scriptName = String(selectedJavaScriptScript?.name || '').trim();
-    if (!scriptName) {
-      setStatus('Select a TypeScript file first.');
-    } else {
-      setStatus(`TypeScript execution is not connected yet for ${scriptName}.`);
-    }
-    setOutputPanelMode('raw_status');
-  }, [selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
-
-  const addSelectedJavaScriptScriptToScript = useCallback(() => {
-    const scriptName = String(selectedJavaScriptScript?.name || '').trim();
-    if (!scriptName) {
-      setStatus('Select a TypeScript file first.');
-    } else {
-      setStatus(`Queue In JSON Flow is not connected yet for ${scriptName}.`);
-    }
-    setOutputPanelMode('raw_status');
-  }, [selectedJavaScriptScript?.name, setOutputPanelMode, setStatus]);
+  const {
+    javaScriptFileContent,
+    setJavaScriptFileContent,
+    isJavaScriptFileLoading,
+    isTypeScriptEditEnabled,
+    setIsTypeScriptEditEnabled,
+    isSavingSelectedTypeScriptFile,
+    selectedJavaScriptDisplayFilePath,
+    canEditSelectedTypeScriptFile,
+    saveSelectedTypeScriptFile,
+    runSelectedJavaScriptScript,
+    addSelectedJavaScriptScriptToScript,
+  } = useControllerTypeScriptEditor({
+    selectedJavaScriptScript,
+    selectedJavaScriptScriptId,
+    scriptEditorKind,
+    setOutputPanelMode,
+    setStatus,
+  });
   const currentMethodDisplayName = (() => {
     switch (methodPanelMode) {
       case 'ecr20_read':
@@ -2064,24 +961,18 @@ export default function SponsorCoinLabPage() {
   const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
   const hasEditorScriptSelected = scriptEditorKind === 'json' && Boolean(String(selectedScriptId || '').trim());
   const addToScriptButtonLabel = isEditingScriptMethod ? `Update Script Step ${editingScriptStepNumber}` : 'Add To Script';
-  const [expandedCard, setExpandedCard] = useState<LabCardId | null>(null);
   const [scriptStepExecutionErrors, setScriptStepExecutionErrors] = useState<Record<number, boolean>>({});
-  const toggleExpandedCard = useCallback((cardId: LabCardId) => {
-    setExpandedCard((current) => (current === cardId ? null : cardId));
-  }, []);
-  const showCard = useCallback(
-    (cardId: LabCardId) => expandedCard === null || expandedCard === cardId,
-    [expandedCard],
-  );
-  const getCardClassName = useCallback(
-    (cardId: LabCardId, placement = '') =>
-      `${cardStyle} flex flex-col ${expandedCard === cardId ? 'min-h-[calc(100dvh-10rem)]' : ''} ${placement}`.trim(),
-    [expandedCard],
-  );
-  const methodsCardRef = useRef<HTMLElement | null>(null);
   const scriptDebugStopRef = useRef(false);
-  const [sharedMethodsRowHeight, setSharedMethodsRowHeight] = useState<number | null>(null);
-  const [isDesktopSharedLayout, setIsDesktopSharedLayout] = useState(false);
+  const {
+    expandedCard,
+    setExpandedCard,
+    toggleExpandedCard,
+    showCard,
+    getCardClassName,
+    methodsCardRef,
+    sharedMethodsRowHeight,
+    isDesktopSharedLayout,
+  } = useControllerLayout(cardStyle);
 
   useSponsorCoinLabPersistence({
     scripts,
@@ -2187,559 +1078,63 @@ export default function SponsorCoinLabPage() {
     backdateCalendar,
   });
 
-  const editScriptStepFromBuilder = useCallback(
-    (step: LabScriptStep) => {
-      queueEditorBaselineReset();
-      setScriptEditorKind('json');
-      setAuxMethodPanelTab(
-        (
-          (step.panel === 'serialization_tests' && utilityMethodOptions.includes(step.method as SerializationTestMethod)) ||
-          (step.panel === 'spcoin_rread' && spCoinAdminReadOptions.includes(step.method as SpCoinReadMethod)) ||
-          (step.panel === 'spcoin_write' && spCoinAdminWriteOptions.includes(step.method as SpCoinWriteMethod))
-        )
-          ? 'admin_utils'
-          : null,
-      );
-      setIsSpCoinTodoMode(
-        step.panel === 'spcoin_write' && spCoinTodoWriteOptions.includes(step.method as SpCoinWriteMethod),
-      );
-      setMethodSelectionSource('script');
-      setEditingScriptStepNumber(step.step);
-      loadScriptStep(step);
-    },
-    [
-      loadScriptStep,
-      queueEditorBaselineReset,
-      setScriptEditorKind,
-      spCoinAdminReadOptions,
-      spCoinAdminWriteOptions,
-      utilityMethodOptions,
-      spCoinTodoWriteOptions,
-    ],
-  );
-  const resetToDropdownSelection = useCallback(() => {
-    setMethodSelectionSource('dropdown');
-    setEditingScriptStepNumber(null);
-    setSelectedScriptStepNumber(null);
+  const focusScriptStep = useCallback((step: LabScriptStep) => {
+    setSelectedScriptStepNumber(step.step);
   }, [setSelectedScriptStepNumber]);
-  const focusScriptStep = useCallback(
-    (step: LabScriptStep) => {
-      setSelectedScriptStepNumber(step.step);
-    },
-    [setSelectedScriptStepNumber],
-  );
-  const selectDropdownMethodPanelMode = useCallback(
-    (value: MethodPanelMode) => {
-      if (methodPanelMode === value) return;
-      runWithDiscardPrompt(() => {
-        setIsSpCoinTodoMode(false);
-        resetToDropdownSelection();
-        setMethodPanelMode(value);
-      });
-    },
-    [methodPanelMode, resetToDropdownSelection, runWithDiscardPrompt, setMethodPanelMode],
-  );
-  const selectMethodPanelTab = useCallback(
-    (value: MethodPanelMode | 'todos' | 'erc20' | 'admin_utils') => {
-      if (value === 'admin_utils') {
-        runWithDiscardPrompt(() => {
-          setAuxMethodPanelTab('admin_utils');
-          setIsSpCoinTodoMode(false);
-          if (methodPanelMode === 'spcoin_rread' && spCoinAdminReadOptions.includes(selectedSpCoinReadMethod)) return;
-          if (methodPanelMode === 'spcoin_write' && spCoinAdminWriteOptions.includes(selectedSpCoinWriteMethod)) return;
-          if (methodPanelMode === 'serialization_tests' && utilityMethodOptions.includes(selectedSerializationTestMethod)) return;
-          if (adminUtilityReadOptions[0]) {
-            setMethodPanelMode('serialization_tests');
-            setSelectedSerializationTestMethod(adminUtilityReadOptions[0]);
-            return;
-          }
-          if (spCoinAdminReadOptions[0]) {
-            setMethodPanelMode('spcoin_rread');
-            setSelectedSpCoinReadMethod(spCoinAdminReadOptions[0]);
-            return;
-          }
-          if (adminUtilityWriteOptions[0]) {
-            setMethodPanelMode('serialization_tests');
-            setSelectedSerializationTestMethod(adminUtilityWriteOptions[0]);
-            return;
-          }
-          if (spCoinAdminWriteOptions[0]) {
-            setMethodPanelMode('spcoin_write');
-            setSelectedSpCoinWriteMethod(spCoinAdminWriteOptions[0]);
-            return;
-          }
-          setMethodPanelMode('serialization_tests');
-        });
-        return;
-      }
-      if (auxMethodPanelTab) setAuxMethodPanelTab(null);
-      if (value === 'todos') {
-        if (activeMethodPanelTab === 'todos') return;
-        runWithDiscardPrompt(() => {
-          resetToDropdownSelection();
-          setIsSpCoinTodoMode(true);
-          setMethodPanelMode('spcoin_write');
-        });
-        return;
-      }
-      if (value === 'erc20') {
-        if (activeMethodPanelTab === 'erc20') return;
-        runWithDiscardPrompt(() => {
-          setIsSpCoinTodoMode(false);
-          resetToDropdownSelection();
-          setMethodPanelMode(methodPanelMode === 'erc20_write' ? 'erc20_write' : 'ecr20_read');
-        });
-        return;
-      }
-      if (value === 'spcoin_write') {
-        if (activeMethodPanelTab === 'spcoin_write') return;
-        runWithDiscardPrompt(() => {
-          resetToDropdownSelection();
-          setIsSpCoinTodoMode(false);
-          setMethodPanelMode('spcoin_write');
-        });
-        return;
-      }
-      selectDropdownMethodPanelMode(value);
-    },
-    [
-      activeMethodPanelTab,
-      adminUtilityReadOptions,
-      adminUtilityWriteOptions,
-      auxMethodPanelTab,
-      methodPanelMode,
-      resetToDropdownSelection,
-      runWithDiscardPrompt,
-      selectDropdownMethodPanelMode,
-      selectedSerializationTestMethod,
-      selectedSpCoinReadMethod,
-      selectedSpCoinWriteMethod,
-      setSelectedSerializationTestMethod,
-      setSelectedSpCoinReadMethod,
-      setSelectedSpCoinWriteMethod,
-      spCoinAdminReadOptions,
-      spCoinAdminWriteOptions,
-      utilityMethodOptions,
-    ],
-  );
-  const selectDropdownReadMethod = useCallback(
-    (value: Erc20ReadMethod) => {
-      if (selectedReadMethod === value) return;
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setSelectedReadMethod(value);
-      });
-    },
-    [resetToDropdownSelection, runWithDiscardPrompt, selectedReadMethod, setSelectedReadMethod],
-  );
-  const selectDropdownWriteMethod = useCallback(
-    (value: Erc20WriteMethod) => {
-      if (selectedWriteMethod === value) return;
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setSelectedWriteMethod(value);
-      });
-    },
-    [resetToDropdownSelection, runWithDiscardPrompt, selectedWriteMethod, setSelectedWriteMethod],
-  );
-  const selectDropdownSpCoinReadMethod = useCallback(
-    (value: SpCoinReadMethod) => {
-      if (selectedSpCoinReadMethod === value) return;
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value));
-        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
-        const nextDef = spCoinReadMethodDefs[value];
-        if (!nextDef) return;
-        setSpReadParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
-          }),
-        );
-      });
-    },
-    [
-      defaultAgentKey,
-      effectiveAgentRateRange,
-      effectiveRecipientRateRange,
-      defaultRecipientKey,
-      defaultSponsorKey,
-      editingScriptStepNumber,
-      methodSelectionSource,
-      resetToDropdownSelection,
-      runWithDiscardPrompt,
-      selectedSpCoinReadMethod,
-      setSelectedSpCoinReadMethod,
-      setSpReadParams,
-      spCoinReadMethodDefs,
-    ],
-  );
-  const selectDropdownSpCoinWriteMethod = useCallback(
-    (value: SpCoinWriteMethod) => {
-      if (selectedSpCoinWriteMethod === value) return;
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setSelectedSpCoinWriteMethod(value);
-        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
-        const nextDef = spCoinWriteMethodDefs[value];
-        if (!nextDef) return;
-        if (defaultSponsorKey) {
-          setSelectedWriteSenderAddress(defaultSponsorKey);
-        }
-        setSpWriteParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
-          }),
-        );
-      });
-    },
-    [
-      defaultAgentKey,
-      effectiveAgentRateRange,
-      effectiveRecipientRateRange,
-      defaultRecipientKey,
-      defaultSponsorKey,
-      editingScriptStepNumber,
-      methodSelectionSource,
-      resetToDropdownSelection,
-      runWithDiscardPrompt,
-      selectedSpCoinWriteMethod,
-      setSelectedSpCoinWriteMethod,
-      setSelectedWriteSenderAddress,
-      setSpWriteParams,
-      spCoinWriteMethodDefs,
-    ],
-  );
-  const selectDropdownSerializationTestMethod = useCallback(
-    (value: SerializationTestMethod) => {
-      if (selectedSerializationTestMethod === value) return;
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setSelectedSerializationTestMethod(value);
-        if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
-        const nextDef = serializationTestMethodDefs[value];
-        if (!nextDef) return;
-        setSerializationTestParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
-            previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
-            latestReleaseDir: 'spCoinAccess/contracts/spCoin',
-          }),
-        );
-      });
-    },
-    [
-      defaultAgentKey,
-      effectiveAgentRateRange,
-      effectiveRecipientRateRange,
-      defaultRecipientKey,
-      defaultSponsorKey,
-      editingScriptStepNumber,
-      methodSelectionSource,
-      resetToDropdownSelection,
-      runWithDiscardPrompt,
-      selectedSerializationTestMethod,
-      serializationTestMethodDefs,
-      setSerializationTestParams,
-      setSelectedSerializationTestMethod,
-    ],
-  );
-  const selectMappedJsonMethod = useCallback(
-    (value: string) => {
-      if (!value) return;
-      if (activeMethodPanelTab === 'admin_utils') {
-        if (spCoinAdminReadOptions.includes(value as SpCoinReadMethod)) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setAuxMethodPanelTab('admin_utils');
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('spcoin_rread');
-            setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value as SpCoinReadMethod));
-            const nextDef = spCoinReadMethodDefs[value as SpCoinReadMethod];
-            if (!nextDef) return;
-            setSpReadParams(
-              buildDefaultAccountParams(nextDef.params, {
-                sponsor: defaultSponsorKey,
-                recipient: defaultRecipientKey,
-                agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
-              }),
-            );
-          });
-          return;
-        }
-        if (spCoinAdminWriteOptions.includes(value as SpCoinWriteMethod)) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setAuxMethodPanelTab('admin_utils');
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('spcoin_write');
-            setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
-            if (defaultSponsorKey) {
-              setSelectedWriteSenderAddress(defaultSponsorKey);
-            }
-            const nextDef = spCoinWriteMethodDefs[value as SpCoinWriteMethod];
-            if (!nextDef) return;
-            setSpWriteParams(
-              buildDefaultAccountParams(nextDef.params, {
-                sponsor: defaultSponsorKey,
-                recipient: defaultRecipientKey,
-                agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
-              }),
-            );
-          });
-          return;
-        }
-        if (
-          adminUtilityReadOptions.includes(value as SerializationTestMethod) ||
-          adminUtilityWriteOptions.includes(value as SerializationTestMethod)
-        ) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setAuxMethodPanelTab('admin_utils');
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('serialization_tests');
-            setSelectedSerializationTestMethod(value as SerializationTestMethod);
-            const nextDef = serializationTestMethodDefs[value as SerializationTestMethod];
-            if (!nextDef) return;
-            setSerializationTestParams(
-              buildDefaultAccountParams(nextDef.params, {
-                sponsor: defaultSponsorKey,
-                recipient: defaultRecipientKey,
-                agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
-                previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
-                latestReleaseDir: 'spCoinAccess/contracts/spCoin',
-              }),
-            );
-          });
-          return;
-        }
-        selectDropdownSerializationTestMethod(value as SerializationTestMethod);
-        return;
-      }
-      if (activeMethodPanelTab === 'erc20') {
-        if (ERC20_READ_OPTIONS.includes(value as Erc20ReadMethod)) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('ecr20_read');
-            setSelectedReadMethod(value as Erc20ReadMethod);
-          });
-          return;
-        }
-        if (ERC20_WRITE_OPTIONS.includes(value as Erc20WriteMethod)) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('erc20_write');
-            setSelectedWriteMethod(value as Erc20WriteMethod);
-          });
-        }
-        return;
-      }
-      if (activeMethodPanelTab === 'spcoin_rread') {
-        selectDropdownSpCoinReadMethod(value as SpCoinReadMethod);
-        return;
-      }
-      if (activeMethodPanelTab === 'spcoin_write') {
-        runWithDiscardPrompt(() => {
-          resetToDropdownSelection();
-          setIsSpCoinTodoMode(false);
-          setMethodPanelMode('spcoin_write');
-          setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
-        });
-        return;
-      }
-      runWithDiscardPrompt(() => {
-        resetToDropdownSelection();
-        setIsSpCoinTodoMode(true);
-        setMethodPanelMode('spcoin_write');
-        setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
-      });
-    },
-    [
-      activeMethodPanelTab,
-      adminUtilityReadOptions,
-      adminUtilityWriteOptions,
-      defaultAgentKey,
-      defaultRecipientKey,
-      defaultSponsorKey,
-      effectiveAgentRateRange,
-      effectiveRecipientRateRange,
-      resetToDropdownSelection,
-      runWithDiscardPrompt,
-      selectDropdownSerializationTestMethod,
-      selectDropdownSpCoinReadMethod,
-      setAuxMethodPanelTab,
-      setIsSpCoinTodoMode,
-      setMethodPanelMode,
-      setSelectedReadMethod,
-      setSelectedSerializationTestMethod,
-      setSelectedSpCoinReadMethod,
-      setSelectedSpCoinWriteMethod,
-      setSelectedWriteSenderAddress,
-      setSelectedWriteMethod,
-      setSerializationTestParams,
-      setSpReadParams,
-      setSpWriteParams,
-      serializationTestMethodDefs,
-      spCoinAdminReadOptions,
-      spCoinAdminWriteOptions,
-      spCoinReadMethodDefs,
-      spCoinWriteMethodDefs,
-    ],
-  );
-  const displayedOutputCalls = useMemo(() => {
-    const blocks = String(formattedOutputDisplay || '')
-      .split(/\n\s*\n/)
-      .map((block) => block.trim())
-      .filter(Boolean);
-    if (blocks.length === 0) return [];
-
-    const parsedCalls = blocks
-      .map((block) => {
-        try {
-          const parsed = JSON.parse(block) as {
-            call?: { method?: unknown; parameters?: Array<{ label?: unknown; value?: unknown }> };
-          };
-          const method = String(parsed?.call?.method || '').trim();
-          if (!method) return null;
-          const parameters = Array.isArray(parsed?.call?.parameters)
-            ? parsed.call.parameters.map((entry) => ({
-                label: String(entry?.label || '').trim(),
-                value: String(entry?.value || '').trim(),
-              }))
-            : [];
-          return { method, parameters };
-        } catch {
-          return null;
-        }
-      })
-      .filter((entry): entry is { method: string; parameters: Array<{ label: string; value: string }> } => entry !== null);
-
-    return parsedCalls;
-  }, [formattedOutputDisplay]);
-  const executeRefreshActiveOutput = useCallback(() => {
-    if (
-      outputPanelMode === 'formatted' &&
-      formattedPanelView === 'output' &&
-      displayedOutputCalls.length > 0
-    ) {
-      refreshFormattedOutputSequenceRef.current?.();
-      return;
-    }
-    if (outputPanelMode === 'tree') {
-      requestRefreshSelectedTreeAccount();
-      return;
-    }
-    if (activeMethodPanelTab === 'admin_utils') {
-      if (methodPanelMode === 'spcoin_rread') {
-        void runSelectedSpCoinReadMethod();
-        return;
-      }
-      if (methodPanelMode === 'serialization_tests') {
-        void runSelectedSerializationTestMethod();
-        return;
-      }
-      setStatus('Refresh is available for read/test/tree commands only.');
-      return;
-    }
-    if (activeMethodPanelTab === 'erc20') {
-      if (methodPanelMode === 'ecr20_read') {
-        void runSelectedReadMethod();
-        return;
-      }
-      setStatus('Refresh is available for read/test/tree commands only.');
-      return;
-    }
-    if (activeMethodPanelTab === 'spcoin_rread') {
-      void runSelectedSpCoinReadMethod();
-      return;
-    }
-    setStatus('Refresh is available for read/test/tree commands only.');
-  }, [
-    activeMethodPanelTab,
-    formattedPanelView,
+  const {
+    editScriptStepFromBuilder,
+    selectMethodPanelTab,
+    selectDropdownReadMethod,
+    selectDropdownWriteMethod,
+    selectDropdownSpCoinReadMethod,
+    selectDropdownSpCoinWriteMethod,
+    selectDropdownSerializationTestMethod,
+    selectMappedJsonMethod,
+  } = useControllerMethodSelection({
     methodPanelMode,
-    outputPanelMode,
-    requestRefreshSelectedTreeAccount,
-    runSelectedReadMethod,
-    runSelectedSerializationTestMethod,
-    runSelectedSpCoinReadMethod,
-    displayedOutputCalls.length,
-    setStatus,
-  ]);
-  const refreshActiveOutput = useCallback(() => {
-    let refreshItems: string[] = [];
-
-    if (
-      outputPanelMode === 'formatted' &&
-      formattedPanelView === 'output' &&
-      displayedOutputCalls.length > 0
-    ) {
-      refreshItems = displayedOutputCalls.map(
-        (call, index) => `Run output step ${index + 1}: ${call.method}`,
-      );
-    } else if (outputPanelMode === 'tree') {
-      refreshItems = [
-        'Clear the cached data for the selected tree account',
-        'Run a fresh tree dump for the active account',
-      ];
-    } else if (activeMethodPanelTab === 'admin_utils') {
-      if (methodPanelMode === 'spcoin_rread') {
-        refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
-      } else if (methodPanelMode === 'serialization_tests') {
-        refreshItems = [`Run serialization test: ${activeSerializationTestDef.title}`];
-      }
-    } else if (activeMethodPanelTab === 'erc20') {
-      if (methodPanelMode === 'ecr20_read') {
-        refreshItems = [`Run ERC20 read method: ${selectedReadMethod}`];
-      }
-    } else if (activeMethodPanelTab === 'spcoin_rread') {
-      refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
-    }
-
-    if (refreshItems.length === 0) {
-      setStatus('Refresh is available for read/test/tree commands only.');
-      return;
-    }
-
-    showValidationPopup([], refreshItems, 'The following action(s) will be run:', {
-      title: 'Refresh Output Confirm',
-      confirmLabel: 'Run Refresh',
-      cancelLabel: 'Cancel',
-      onConfirm: () => executeRefreshActiveOutput(),
-    });
-  }, [
+    setMethodPanelMode,
     activeMethodPanelTab,
-    activeSerializationTestDef.title,
-    activeSpCoinReadDef.title,
-    displayedOutputCalls,
-    executeRefreshActiveOutput,
-    formattedPanelView,
-    methodPanelMode,
-    outputPanelMode,
+    auxMethodPanelTab,
+    setAuxMethodPanelTab,
+    setIsSpCoinTodoMode,
+    methodSelectionSource,
+    setMethodSelectionSource,
+    editingScriptStepNumber,
+    setEditingScriptStepNumber,
+    setSelectedScriptStepNumber,
     selectedReadMethod,
-    setStatus,
-    showValidationPopup,
-  ]);
+    setSelectedReadMethod,
+    selectedWriteMethod,
+    setSelectedWriteMethod,
+    selectedSpCoinReadMethod,
+    setSelectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
+    setSelectedSpCoinWriteMethod,
+    selectedSerializationTestMethod,
+    setSelectedSerializationTestMethod,
+    setSelectedWriteSenderAddress,
+    defaultSponsorKey,
+    defaultRecipientKey,
+    defaultAgentKey,
+    effectiveRecipientRateRange,
+    effectiveAgentRateRange,
+    spCoinReadMethodDefs,
+    spCoinWriteMethodDefs,
+    serializationTestMethodDefs,
+    setSpReadParams,
+    setSpWriteParams,
+    setSerializationTestParams,
+    spCoinAdminReadOptions,
+    spCoinAdminWriteOptions,
+    spCoinTodoWriteOptions,
+    utilityMethodOptions,
+    adminUtilityReadOptions,
+    adminUtilityWriteOptions,
+    runWithDiscardPrompt,
+    queueEditorBaselineReset,
+    loadScriptStep,
+    setScriptEditorKind,
+  });
   const handleAddCurrentMethodToScript = useCallback(() => {
     const savedStepNumber = addCurrentMethodToScript();
     if (!savedStepNumber) return;
@@ -2748,1001 +1143,367 @@ export default function SponsorCoinLabPage() {
     setSelectedScriptStepNumber(savedStepNumber);
     queueEditorBaselineReset();
   }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
-  useEffect(() => {
-    if (methodSelectionSource !== 'dropdown' || editingScriptStepNumber !== null) return;
-    const hydrationKey = JSON.stringify({
-      methodPanelMode,
-      selectedReadMethod,
-      selectedWriteMethod,
-      selectedSpCoinReadMethod,
-      selectedSpCoinWriteMethod,
-      selectedSerializationTestMethod,
-      methodSelectionSource,
-      editingScriptStepNumber,
-    });
-    if (dropdownHydrationKeyRef.current === hydrationKey) return;
-    dropdownHydrationKeyRef.current = hydrationKey;
-    let cancelled = false;
-
-    const hydrateEditorFromExchangeContext = async () => {
-      queueEditorBaselineReset();
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
-      if (methodPanelMode === 'ecr20_read') {
-        const nextDefaults = buildErc20ReadEditorDefaults(activeReadLabels);
-        setReadAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
-        setReadAddressB((prev) => (prev === nextDefaults.addressB ? prev : nextDefaults.addressB));
-        return;
-      }
-
-      if (methodPanelMode === 'erc20_write') {
-        const nextDefaults = buildErc20WriteEditorDefaults(activeWriteLabels);
-        if (nextDefaults.senderAddress) {
-          setSelectedWriteSenderAddress((prev) =>
-            prev === nextDefaults.senderAddress ? prev : nextDefaults.senderAddress,
-          );
-        }
-        setWriteAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
-        setWriteAddressB((prev) => (prev === nextDefaults.addressB ? prev : nextDefaults.addressB));
-        setWriteAmountRaw((prev) => {
-          if (String(prev || '').trim()) return prev;
-          return nextDefaults.amount || prev;
-        });
-        return;
-      }
-
-      if (methodPanelMode === 'spcoin_rread') {
-        setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinReadDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params, nextMeta));
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
-        return;
-      }
-
-      if (methodPanelMode === 'spcoin_write') {
-        if (senderAddress) {
-          setSelectedWriteSenderAddress(senderAddress);
-        }
-        setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinWriteDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params, nextMeta));
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
-        return;
-      }
-
-      if (methodPanelMode === 'serialization_tests') {
-        setSerializationTestParams(buildScriptEditorParamValues(activeSerializationTestDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSerializationTestDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSerializationTestParams(
-              buildScriptEditorParamValues(activeSerializationTestDef.params, nextMeta),
-            );
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
-      }
-    };
-
-    void hydrateEditorFromExchangeContext();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    activeReadLabels,
-    activeSerializationTestDef.params,
-    activeSpCoinReadDef.params,
-    activeSpCoinWriteDef.params,
-    activeWriteLabels,
+  useControllerEditorHydration({
+    methodSelectionSource,
+    editingScriptStepNumber,
+    methodPanelMode,
+    selectedReadMethod,
+    selectedWriteMethod,
+    selectedSpCoinReadMethod,
+    selectedSpCoinWriteMethod,
+    selectedSerializationTestMethod,
+    queueEditorBaselineReset,
+    defaultSponsorKey,
+    sponsorAccountAddress,
     activeAccountAddress,
+    activeReadLabels,
+    activeWriteLabels,
+    activeSpCoinReadDef,
+    activeSpCoinWriteDef,
+    activeSerializationTestDef,
     buildErc20ReadEditorDefaults,
     buildErc20WriteEditorDefaults,
     buildScriptEditorParamValues,
-    defaultSponsorKey,
-    editingScriptStepNumber,
-    methodPanelMode,
-    methodSelectionSource,
-    queueEditorBaselineReset,
     resolveScriptEditorContractMetadata,
-    selectedReadMethod,
-    selectedSerializationTestMethod,
-    selectedSpCoinReadMethod,
-    selectedSpCoinWriteMethod,
-    selectedWriteMethod,
     setReadAddressA,
     setReadAddressB,
-    setSerializationTestParams,
     setSelectedWriteSenderAddress,
-    setSpReadParams,
-    setSpWriteParams,
     setWriteAddressA,
     setWriteAddressB,
     setWriteAmountRaw,
-    sponsorAccountAddress,
-  ]);
-  useEffect(() => {
-    if (methodPanelMode !== 'ecr20_read') return;
-    syncEditorAddressFieldToExchangeContext(activeReadLabels.addressALabel, readAddressA);
-  }, [
-    activeReadLabels.addressALabel,
-    methodPanelMode,
-    readAddressA,
-    syncEditorAddressFieldToExchangeContext,
-  ]);
-  useEffect(() => {
-    if (methodPanelMode !== 'ecr20_read') return;
-    syncEditorAddressFieldToExchangeContext(activeReadLabels.addressBLabel, readAddressB);
-  }, [
-    activeReadLabels.addressBLabel,
-    methodPanelMode,
-    readAddressB,
-    syncEditorAddressFieldToExchangeContext,
-  ]);
-  useEffect(() => {
-    if (methodPanelMode !== 'erc20_write') return;
-    syncRoleAccountToExchangeContext('sponsor', selectedWriteSenderAddress);
-  }, [methodPanelMode, selectedWriteSenderAddress, syncRoleAccountToExchangeContext]);
-  useEffect(() => {
-    if (methodPanelMode !== 'erc20_write') return;
-    syncEditorAddressFieldToExchangeContext(activeWriteLabels.addressALabel, writeAddressA);
-  }, [
-    activeWriteLabels.addressALabel,
-    methodPanelMode,
-    syncEditorAddressFieldToExchangeContext,
-    writeAddressA,
-  ]);
-  useEffect(() => {
-    if (methodPanelMode !== 'erc20_write') return;
-    syncEditorAddressFieldToExchangeContext(activeWriteLabels.addressBLabel, writeAddressB);
-  }, [
-    activeWriteLabels.addressBLabel,
-    methodPanelMode,
-    syncEditorAddressFieldToExchangeContext,
-    writeAddressB,
-  ]);
-  useEffect(() => {
-    if (methodPanelMode !== 'erc20_write') return;
-    syncEditorAmountToExchangeContext(writeAmountRaw);
-  }, [methodPanelMode, syncEditorAmountToExchangeContext, writeAmountRaw]);
-  useEffect(() => {
-    const updateViewportMode = () => setIsDesktopSharedLayout(window.innerWidth >= 1280);
-
-    updateViewportMode();
-    window.addEventListener('resize', updateViewportMode);
-    return () => window.removeEventListener('resize', updateViewportMode);
-  }, []);
-
-  useEffect(() => {
-    if (!isDesktopSharedLayout || expandedCard !== null) {
-      setSharedMethodsRowHeight(null);
-      return;
-    }
-
-    const node = methodsCardRef.current;
-    if (!node) return;
-
-    const updateHeight = () => setSharedMethodsRowHeight(Math.ceil(node.getBoundingClientRect().height));
-
-    updateHeight();
-
-    const resizeObserver = new ResizeObserver(() => updateHeight());
-    resizeObserver.observe(node);
-
-    return () => resizeObserver.disconnect();
-  }, [expandedCard, isDesktopSharedLayout]);
-  const runScriptDebugSequence = useCallback(
-    async (options: {
-      startIndex: number;
-      emptyScriptStatus: string;
-      initialOutput: string;
-      stopAfterCurrentStep?: boolean;
-    }) => {
-      if (!selectedScript || selectedScript.steps.length === 0) {
-        setStatus(options.emptyScriptStatus);
-        return;
-      }
-
-      const { startIndex, initialOutput, stopAfterCurrentStep = false } = options;
-      const activeStep = selectedScript.steps[startIndex];
-      if (!activeStep) {
-        setStatus('Unable to resolve the requested script step.');
-        return;
-      }
-
-      scriptDebugStopRef.current = false;
-      if (initialOutput === '(no output yet)') {
-        setFormattedOutputDisplay(initialOutput);
-      }
-      setIsScriptDebugRunning(true);
-
-      let accumulatedOutput = initialOutput;
-      try {
-        for (let idx = startIndex; idx < selectedScript.steps.length; idx += 1) {
-          const step = selectedScript.steps[idx];
-          focusScriptStep(step);
-
-          const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
-          setScriptStepExecutionErrors((prev) => {
-            const nextHasError = !result.success;
-            if (prev[step.step] === nextHasError) return prev;
-            return {
-              ...prev,
-              [step.step]: nextHasError,
-            };
-          });
-          accumulatedOutput = result.formattedOutput;
-          if (!result.success) return;
-
-          if (scriptDebugStopRef.current) {
-            setStatus(`Stopped ${selectedScript.name} at step ${step.step}.`);
-            return;
-          }
-
-          const nextStep = selectedScript.steps[idx + 1];
-          if (!nextStep) {
-            setSelectedScriptStepNumber(null);
-            setStatus(`Completed ${selectedScript.name}.`);
-            return;
-          }
-
-          if (stopAfterCurrentStep) {
-            focusScriptStep(nextStep);
-            setStatus(`Completed step ${step.step}. Ready for step ${nextStep.step}.`);
-            return;
-          }
-
-          if (nextStep.breakpoint) {
-            focusScriptStep(nextStep);
-            setStatus(`Paused at breakpoint before step ${nextStep.step}.`);
-            return;
-          }
-        }
-      } finally {
-        setIsScriptDebugRunning(false);
-      }
-    },
-    [focusScriptStep, runScriptStep, selectedScript],
-  );
+    setSpReadParams,
+    setSpWriteParams,
+    setSerializationTestParams,
+  });
   useEffect(() => {
     setScriptStepExecutionErrors({});
   }, [selectedScript?.id]);
-  const restartScriptAtStart = useCallback(async () => {
-    scriptDebugStopRef.current = true;
-    setIsScriptDebugRunning(false);
-    await runScriptDebugSequence({
-      startIndex: 0,
-      emptyScriptStatus: 'Selected script has no steps to restart.',
-      initialOutput: '(no output yet)',
-    });
-  }, [runScriptDebugSequence]);
-  const runDisplayedOutputSequence = useCallback(async () => {
-    if (displayedOutputCalls.length === 0) {
-      setStatus('No Console Display output steps are available to refresh.');
-      return;
-    }
-
-    scriptDebugStopRef.current = true;
-    setIsScriptDebugRunning(false);
-    setScriptStepExecutionErrors({});
-
-    let accumulatedOutput = '(no output yet)';
-    setFormattedOutputDisplay(accumulatedOutput);
-    setIsScriptDebugRunning(true);
-
-    try {
-      for (const [index, call] of displayedOutputCalls.entries()) {
-        const panel: LabScriptStep['panel'] | null = ERC20_READ_OPTIONS.includes(call.method as Erc20ReadMethod)
-          ? 'ecr20_read'
-          : ERC20_WRITE_OPTIONS.includes(call.method as Erc20WriteMethod)
-            ? 'erc20_write'
-            : Object.prototype.hasOwnProperty.call(spCoinReadMethodDefs, call.method)
-              ? 'spcoin_rread'
-              : Object.prototype.hasOwnProperty.call(serializationTestMethodDefs, call.method)
-                ? 'serialization_tests'
-                : Object.prototype.hasOwnProperty.call(spCoinWriteMethodDefs, call.method)
-                  ? 'spcoin_write'
-                  : null;
-        if (!panel) {
-          setStatus(`Unable to refresh Console Display output for ${call.method}.`);
-          return;
-        }
-        const syntheticStep: LabScriptStep = {
-          step: index + 1,
-          name: call.method,
-          panel,
-          method: call.method,
-          'msg.sender': call.parameters.find((entry) => entry.label === 'msg.sender')?.value || undefined,
-          params: call.parameters
-            .filter((entry) => entry.label !== 'msg.sender' && entry.label)
-            .map((entry) => ({ key: entry.label, value: entry.value })),
-        };
-        const result = await runScriptStep(syntheticStep, { formattedOutputBase: accumulatedOutput });
-        setScriptStepExecutionErrors((prev) => ({
-          ...prev,
-          [syntheticStep.step]: !result.success,
-        }));
-        accumulatedOutput = result.formattedOutput;
-        if (!result.success) return;
-      }
-
-      setStatus(
-        displayedOutputCalls.length === 1
-          ? 'Refreshed 1 Console Display output step.'
-          : `Refreshed ${displayedOutputCalls.length} Console Display output steps.`,
-      );
-    } finally {
-      setIsScriptDebugRunning(false);
-    }
-  }, [
-    displayedOutputCalls,
-    runScriptStep,
-    serializationTestMethodDefs,
-    setFormattedOutputDisplay,
+  const {
+    refreshActiveOutput,
+    restartScriptAtStart,
+    runSelectedScriptStep,
+    runRemainingScriptSteps,
+  } = useControllerScriptExecution({
+    formattedOutputDisplay,
+    outputPanelMode,
+    formattedPanelView,
+    activeMethodPanelTab,
+    methodPanelMode,
+    activeSpCoinReadDef,
+    activeSerializationTestDef,
+    selectedReadMethod,
+    showValidationPopup,
     setStatus,
+    requestRefreshSelectedTreeAccount,
+    runSelectedSpCoinReadMethod,
+    runSelectedSerializationTestMethod,
+    runSelectedReadMethod,
+    setFormattedOutputDisplay,
+    setIsScriptDebugRunning,
+    setScriptStepExecutionErrors,
+    scriptDebugStopRef,
+    selectedScript,
+    selectedScriptStepNumber,
+    runScriptStep,
+    focusScriptStep,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
-  ]);
-  useEffect(() => {
-    refreshFormattedOutputSequenceRef.current =
-      displayedOutputCalls.length > 0
-        ? () => {
-            void runDisplayedOutputSequence();
-          }
-        : null;
-  }, [displayedOutputCalls.length, runDisplayedOutputSequence]);
-  const runSelectedScriptStep = useCallback(async () => {
-    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
-      setStatus('Select a script step to run.');
-      return;
-    }
-
-    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
-    if (selectedIndex < 0) {
-      setStatus('Unable to resolve the selected script step.');
-      return;
-    }
-
-    await runScriptDebugSequence({
-      startIndex: selectedIndex,
-      emptyScriptStatus: 'Select a script step to run.',
-      initialOutput: formattedOutputDisplay,
-      stopAfterCurrentStep: true,
-    });
-  }, [formattedOutputDisplay, runScriptDebugSequence, selectedScript, selectedScriptStepNumber, setStatus]);
-  const runRemainingScriptSteps = useCallback(async () => {
-    const selectedIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
-    await runScriptDebugSequence({
-      startIndex: selectedIndex >= 0 ? selectedIndex : 0,
-      emptyScriptStatus: 'Selected script has no steps to run.',
-      initialOutput: formattedOutputDisplay,
-    });
-  }, [formattedOutputDisplay, runScriptDebugSequence, selectedScript?.steps, selectedScriptStepNumber]);
-  const selectScriptStep = useCallback(
-    (step: LabScriptStep) => {
-      if (selectedScriptStep?.step === step.step) {
-        setSelectedScriptStepNumber(null);
-        return;
-      }
-      setSelectedScriptStepNumber(step.step);
-    },
-    [selectedScriptStep?.step, setSelectedScriptStepNumber],
-  );
-  useEffect(() => {
-    if (!selectedScript || selectedScript.steps.length === 0) return;
-    if (methodSelectionSource !== 'script') return;
-    if (selectedScriptStepNumber !== null) return;
-    if (editingScriptStepNumber !== null) return;
-    loadScriptStep(selectedScript.steps[0]);
-  }, [editingScriptStepNumber, loadScriptStep, methodSelectionSource, selectedScript, selectedScriptStepNumber]);
-  const handleConfirmDeleteSelectedScriptStep = useCallback(() => {
-    confirmDeleteSelectedScriptStep();
-    setEditingScriptStepNumber(null);
-    setMethodSelectionSource('dropdown');
-  }, [confirmDeleteSelectedScriptStep]);
-  const renderScriptStepRow = useCallback(
-    (step: LabScriptStep) => {
-      const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
-      const isSelected = selectedScriptStep?.step === step.step;
-      const isEditingStep = isEditingScriptMethod && editingScriptStepNumber === step.step;
-      return (
-        <ScriptStepRow
-          key={`step-${step.step}`}
-          step={step}
-          isExpanded={isExpanded}
-          isSelected={isSelected}
-          isEditingStep={isEditingStep}
-          hasExecutionError={Boolean(scriptStepExecutionErrors[step.step])}
-          getStepSender={getStepSender}
-          getStepParamEntries={getStepParamEntries}
-          selectScriptStep={selectScriptStep}
-          editScriptStep={editScriptStepFromBuilder}
-          toggleScriptStepExpanded={toggleScriptStepExpanded}
-          toggleScriptStepBreakpoint={toggleScriptStepBreakpoint}
-        />
-      );
-    },
-    [
-      editingScriptStepNumber,
-      expandedScriptStepIds,
-      editScriptStepFromBuilder,
-      getStepParamEntries,
-      getStepSender,
-      isEditingScriptMethod,
-      scriptStepExecutionErrors,
-      selectedScriptStep?.step,
-      selectScriptStep,
-      toggleScriptStepBreakpoint,
-      toggleScriptStepExpanded,
-    ],
-  );
-  useEffect(() => {
-    if (editingScriptStepNumber === null) return;
-    const editedStepStillExists = Boolean(selectedScript?.steps.some((step) => step.step === editingScriptStepNumber));
-    if (editedStepStillExists) return;
-    setEditingScriptStepNumber(null);
-    setMethodSelectionSource('dropdown');
-  }, [editingScriptStepNumber, selectedScript?.steps]);
-  const highlightedFormattedOutputLines = useMemo(() => {
-    if (
-      outputPanelMode !== 'formatted' ||
-      formattedPanelView !== 'script' ||
-      selectedScriptStepNumber === null
-    ) {
-      return null;
-    }
-    const lines = String(selectedScriptDisplay || '').split('\n');
-    const selectedStepText = String(selectedScriptStepNumber);
-    const targetLineIndex = lines.findIndex((line) => {
-      const match = line.match(/"step"\s*:\s*"?([^",]+)"?/);
-      return Boolean(match?.[1] && match[1] === selectedStepText);
-    });
-    if (targetLineIndex < 0) return null;
-
-    let startIndex = targetLineIndex;
-    if (targetLineIndex > 0 && lines[targetLineIndex - 1].trim().startsWith('{')) {
-      startIndex = targetLineIndex - 1;
-    }
-
-    let depth = 0;
-    let endIndex = targetLineIndex;
-    for (let idx = startIndex; idx < lines.length; idx += 1) {
-      const line = lines[idx];
-      depth += (line.match(/\{/g) || []).length;
-      depth -= (line.match(/\}/g) || []).length;
-      endIndex = idx;
-      if (idx > startIndex && depth <= 0) break;
-    }
-
-    return lines.map((line, idx) => ({
-      line,
-      active: idx >= startIndex && idx <= endIndex,
-    }));
-  }, [formattedPanelView, outputPanelMode, selectedScriptDisplay, selectedScriptStepNumber]);
-  const highlightedFormattedResultLines = useMemo(() => {
-    if (
-      outputPanelMode !== 'formatted' ||
-      formattedPanelView !== 'output' ||
-      selectedScriptStepNumber === null
-    ) {
-      return null;
-    }
-
-    const blocks = String(formattedOutputDisplay || '')
-      .split(/\n\s*\n/)
-      .map((block) => block.trim())
-      .filter(Boolean);
-
-    if (blocks.length === 0) return null;
-
-    const targetBlockIndex =
-      selectedScriptStepNumber > 0 && selectedScriptStepNumber <= blocks.length
-        ? selectedScriptStepNumber - 1
-        : blocks.length - 1;
-
-    return blocks.flatMap((block, blockIndex) => {
-      const lines = block.split('\n');
-      const mapped = lines.map((line) => ({
-        line,
-        active: blockIndex === targetBlockIndex,
-      }));
-      return blockIndex < blocks.length - 1 ? [...mapped, { line: '', active: false }] : mapped;
-    });
-  }, [formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScriptStepNumber]);
-  return (
-    <main id="sponsorcoin-sandbox-root" className="min-h-screen bg-[#090C16] p-6 text-white">
-      <section className="mx-auto flex w-full max-w-7xl flex-col">
-        <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
-          <div />
-          <h2 className="text-center text-xl font-semibold text-[#8FA8FF]">SponsorCoin SandBox</h2>
-          <div className="flex items-center justify-self-end gap-2">
-            <OpenCloseBtn
-              id="sponsorCoinSandboxBackButton"
-              onClick={() => {
-                if (typeof window !== 'undefined') window.history.back();
-              }}
-              expandedTitle="Go Back"
-              expandedAriaLabel="Go Back"
-            />
-          </div>
-        </div>
-
-        <section className={`grid grid-cols-1 gap-6 ${expandedCard ? '' : 'xl:grid-cols-2'}`}>
-          {showCard('network') && (
-          <NetworkSignerCard
-            className={getCardClassName('network', expandedCard ? '' : 'xl:col-start-2 xl:row-start-1')}
-            isExpanded={expandedCard === 'network'}
-            onToggleExpand={() => toggleExpandedCard('network')}
-            inputStyle={inputStyle}
-            details={{
-              showSignerAccountDetails,
-              setShowSignerAccountDetails,
-              displayedSignerAccountAddress: displayedSpCoinOwnerAddress,
-              selectedWriteSenderAddress,
-              setSelectedWriteSenderAddress,
-              writeSenderDisplayValue,
-              displayedSignerAccountMetadata: displayedSpCoinOwnerMetadata,
-              mode,
-              selectedVersionSignerKey,
-            }}
-            accountManagement={{
-              accountActionLabelClassName,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              selectedSponsorCoinAccountRole,
-              setSelectedSponsorCoinAccountRole,
-              defaultSponsorKey,
-              setDefaultSponsorKey,
-              defaultRecipientKey,
-              setDefaultRecipientKey,
-              defaultAgentKey,
-              setDefaultAgentKey,
-              managedRoleAccountAddress,
-              setManagedRoleAccountAddress,
-              managedRecipientKey,
-              setManagedRecipientKey,
-              managedRecipientRateKey,
-              setManagedRecipientRateKey,
-              managedRecipientRateKeyOptions,
-              managedRecipientRateKeyHelpText,
-              sponsorCoinAccountManagementValidation,
-              sponsorCoinAccountManagementStatus,
-              onExecuteAccountAction: handleSponsorCoinAccountAction,
-            }}
-          />
-          )}
-
-          {showCard('contract') && (
-          <ContractNetworkCard
-            className={getCardClassName('contract', expandedCard ? '' : 'xl:col-start-1 xl:row-start-1')}
-            isExpanded={expandedCard === 'contract'}
-            onToggleExpand={() => toggleExpandedCard('contract')}
-            inputStyle={inputStyle}
-            logo={{
-              selectedSponsorCoinLogoURL,
-              selectedSponsorCoinVersionEntry,
-            }}
-            version={{
-              selectedSponsorCoinVersion,
-              setSelectedSponsorCoinVersion,
-              sponsorCoinVersionChoices,
-              canIncrementSponsorCoinVersion,
-              canDecrementSponsorCoinVersion,
-              adjustSponsorCoinVersion,
-              selectedVersionSignerKey,
-              displayedVersionHardhatAccountIndex,
-              selectedVersionSymbolWidthCh,
-              selectedVersionSymbol,
-            }}
-            contract={{
-              contractAddress,
-              selectedSponsorCoinVersionEntry,
-              isRemovingFromApp: isRemovingContractFromApp,
-              onRemoveFromApp: requestRemoveContractFromApp,
-            }}
-            network={{
-              mode,
-              setMode,
-              allowModeSelection: allowContractNetworkModeSelection,
-              shouldPromptHardhatBaseConnect,
-              connectHardhatBaseFromNetworkLabel,
-              activeNetworkName: activeContractNetworkName,
-              chainIdDisplayValue: activeContractChainIdDisplayValue,
-              chainIdDisplayWidthCh: activeContractChainIdDisplayWidthCh,
-              showHardhatConnectionInputs,
-              setShowHardhatConnectionInputs,
-              cogSrc: cog_png,
-              rpcUrl,
-              setRpcUrl,
-              effectiveConnectedAddress,
-            }}
-          />
-          )}
-          {showCard('methods') && (
-          <MethodsPanelCard
-            articleClassName={`${getCardClassName('methods', expandedCard ? '' : 'xl:col-start-1 xl:row-start-2')} self-start`}
-            methodsCardRef={methodsCardRef}
-            isExpanded={expandedCard === 'methods'}
-            onToggleExpand={() => toggleExpandedCard('methods')}
-            methodPanelTitle={methodPanelTitle}
-            scriptEditorKind={scriptEditorKind}
-            setScriptEditorKind={setScriptEditorKind}
-            methodPanelMode={methodPanelMode}
-            activeMethodPanelTab={activeMethodPanelTab}
-            selectMethodPanelTab={selectMethodPanelTab}
-            selectMappedJsonMethod={selectMappedJsonMethod}
-            writeTraceEnabled={writeTraceEnabled}
-            toggleWriteTrace={() => setWriteTraceEnabled((prev) => !prev)}
-            showOnChainMethods={showOnChainMethods}
-            setShowOnChainMethods={setShowOnChainMethods}
-            showOffChainMethods={showOffChainMethods}
-            setShowOffChainMethods={setShowOffChainMethods}
-            javaScriptEditorProps={{
-              hiddenScrollbarClass,
-              visibleJavaScriptScripts,
-              selectedJavaScriptScriptId,
-              setSelectedJavaScriptScriptId,
-              selectedScriptName: String(selectedJavaScriptScript?.name || ''),
-              selectedFilePath: selectedJavaScriptDisplayFilePath,
-              javaScriptFileContent,
-              isJavaScriptFileLoading,
-              isTypeScriptEditEnabled,
-              setIsTypeScriptEditEnabled,
-              canEditSelectedTypeScriptFile,
-              saveSelectedTypeScriptFile,
-              isSavingSelectedTypeScriptFile,
-              setJavaScriptFileContent,
-              canRunSelectedJavaScriptScript: Boolean(String(selectedJavaScriptScript?.id || '').trim()),
-              runSelectedJavaScriptScript,
-              canAddSelectedJavaScriptScriptToScript: Boolean(String(selectedJavaScriptScript?.id || '').trim()),
-              addSelectedJavaScriptScriptToScript,
-            }}
-            scriptBuilderProps={{
-              actionButtonStyle,
-              hiddenScrollbarClass,
-              scripts,
-              visibleScripts,
-              showSystemTestsOnly,
-              setShowSystemTestsOnly,
-              selectedScript,
-              selectedScriptStepNumber,
-              scriptNameInput,
-              setScriptNameInput,
-              selectedScriptId,
-              setSelectedScriptId,
-              isScriptOptionsOpen,
-              setIsScriptOptionsOpen,
-              isNewScriptHovered,
-              setIsNewScriptHovered,
-              isDeleteScriptHovered,
-              setIsDeleteScriptHovered,
-              newScriptHoverTone,
-              setNewScriptHoverTone,
-              deleteScriptHoverTone,
-              setDeleteScriptHoverTone,
-              scriptNameValidation,
-              deleteScriptValidation,
-              createNewScript,
-              duplicateSelectedScript,
-              clearSelectedScript,
-              handleDeleteScriptClick,
-              restartScriptAtStart,
-              runSelectedScriptStep,
-              runRemainingScriptSteps,
-              isScriptDebugRunning,
-              moveSelectedScriptStep,
-              requestDeleteSelectedScriptStep,
-              renderScriptStepRow,
-            }}
-            erc20ReadProps={{
-              invalidFieldIds,
-              clearInvalidField,
-              markEditorAsUserEdited,
-              showOnChainMethods,
-              showOffChainMethods,
-              selectedReadMethod,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              erc20ReadOptions,
-              setSelectedReadMethod: (value) => selectDropdownReadMethod(value as Erc20ReadMethod),
-              activeReadLabels,
-              readAddressA,
-              setReadAddressA,
-              readAddressB,
-              setReadAddressB,
-              writeTraceEnabled,
-              toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
-              canRunSelectedReadMethod: canRunErc20ReadMethod,
-              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunErc20ReadMethod,
-              hasEditorScriptSelected,
-              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
-              addToScriptButtonLabel,
-              missingFieldIds: erc20ReadMissingEntries.map((entry) => entry.id),
-              runSelectedReadMethod,
-              addCurrentMethodToScript: handleAddCurrentMethodToScript,
-            }}
-            erc20WriteProps={{
-              invalidFieldIds,
-              clearInvalidField,
-              markEditorAsUserEdited,
-              showOnChainMethods,
-              showOffChainMethods,
-              mode,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              selectedWriteSenderAddress: selectedWriteSenderAccount?.address || selectedWriteSenderAddress,
-              setSelectedWriteSenderAddress,
-              writeSenderDisplayValue,
-              writeSenderPrivateKeyDisplay,
-              showWriteSenderPrivateKey,
-              toggleShowWriteSenderPrivateKey: () => setShowWriteSenderPrivateKey((prev) => !prev),
-              selectedWriteMethod,
-              erc20WriteOptions,
-              setSelectedWriteMethod: (value) => selectDropdownWriteMethod(value as Erc20WriteMethod),
-              activeWriteLabels,
-              writeAddressA,
-              setWriteAddressA,
-              writeAddressB,
-              setWriteAddressB,
-              writeAmountRaw,
-              setWriteAmountRaw,
-              inputStyle,
-              writeTraceEnabled,
-              toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
-              canRunSelectedWriteMethod: canRunErc20WriteMethod,
-              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunErc20WriteMethod,
-              hasEditorScriptSelected,
-              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
-              addToScriptButtonLabel,
-              missingFieldIds: erc20WriteMissingEntries.map((entry) => entry.id),
-              runSelectedWriteMethod,
-              addCurrentMethodToScript: handleAddCurrentMethodToScript,
-            }}
-            spCoinReadProps={{
-              invalidFieldIds,
-              clearInvalidField,
-              markEditorAsUserEdited,
-              showOnChainMethods,
-              showOffChainMethods,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              selectedSpCoinReadMethod: normalizedSelectedSpCoinReadMethod,
-              setSelectedSpCoinReadMethod: (value) => selectDropdownSpCoinReadMethod(value as SpCoinReadMethod),
-              spCoinWorldReadOptions,
-              spCoinSenderReadOptions,
-              spCoinAdminReadOptions,
-              spCoinCompoundReadOptions,
-              spCoinReadMethodDefs: spCoinReadMethodDefs as MethodDefMap,
-              activeSpCoinReadDef: activeSpCoinReadDef,
-              spReadParams,
-              setSpReadParams,
-              activeContractAddress: contractAddress,
-              inputStyle,
-              writeTraceEnabled,
-              toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
-              canRunSelectedSpCoinReadMethod: canRunSpCoinReadMethod,
-              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSpCoinReadMethod,
-              hasEditorScriptSelected,
-              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
-              addToScriptButtonLabel,
-              missingFieldIds: spCoinReadMissingEntries.map((entry) => entry.id),
-              runSelectedSpCoinReadMethod,
-              addCurrentMethodToScript: handleAddCurrentMethodToScript,
-            }}
-            spCoinWriteProps={{
-              invalidFieldIds,
-              clearInvalidField,
-              markEditorAsUserEdited,
-              mode,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              selectedWriteSenderAddress: selectedWriteSenderAccount?.address || selectedWriteSenderAddress,
-              setSelectedWriteSenderAddress,
-              writeSenderDisplayValue,
-              writeSenderPrivateKeyDisplay,
-              showWriteSenderPrivateKey,
-              toggleShowWriteSenderPrivateKey: () => setShowWriteSenderPrivateKey((prev) => !prev),
-              recipientRateKeyOptions,
-              agentRateKeyOptions,
-              recipientRateKeyHelpText,
-              agentRateKeyHelpText,
-              recipientRateRange: effectiveRecipientRateRange,
-              agentRateRange: effectiveAgentRateRange,
-              selectedSpCoinWriteMethod,
-              setSelectedSpCoinWriteMethod: (value) => selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod),
-              spCoinWorldWriteOptions: isSpCoinTodoMode ? [] : spCoinWorldWriteOptions,
-              spCoinSenderWriteOptions: isSpCoinTodoMode ? [] : spCoinSenderWriteOptions,
-              spCoinAdminWriteOptions: isSpCoinTodoMode ? [] : spCoinAdminWriteOptions,
-              spCoinTodoWriteOptions: isSpCoinTodoMode ? spCoinTodoWriteOptions : [],
-              showOnChainMethods,
-              showOffChainMethods,
-              spCoinOnChainWriteMethods: SPCOIN_ONCHAIN_WRITE_METHODS,
-              spCoinOffChainWriteMethods: SPCOIN_OFFCHAIN_WRITE_METHODS,
-              spCoinWriteMethodDefs: spCoinWriteMethodDefs as MethodDefMap,
-              activeSpCoinWriteDef: activeSpCoinWriteDef,
-              spWriteParams,
-              updateSpWriteParamAtIndex,
-              onOpenBackdatePicker: backdateCalendar.openBackdatePickerAt,
-              inputStyle,
-              buttonStyle,
-              writeTraceEnabled,
-              toggleWriteTrace: () => setWriteTraceEnabled((prev) => !prev),
-              canRunSelectedSpCoinWriteMethod: canRunSpCoinWriteMethod,
-              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSpCoinWriteMethod,
-              hasEditorScriptSelected,
-              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
-              addToScriptButtonLabel,
-              missingFieldIds: spCoinWriteMissingEntries.map((entry) => entry.id),
-              runSelectedSpCoinWriteMethod,
-              addCurrentMethodToScript: handleAddCurrentMethodToScript,
-              formatDateTimeDisplay,
-              formatDateInput,
-              backdateHours: backdateCalendar.backdateHours,
-              setBackdateHours: backdateCalendar.setBackdateHours,
-              backdateMinutes: backdateCalendar.backdateMinutes,
-              setBackdateMinutes: backdateCalendar.setBackdateMinutes,
-              backdateSeconds: backdateCalendar.backdateSeconds,
-              setBackdateSeconds: backdateCalendar.setBackdateSeconds,
-              setBackdateYears: backdateCalendar.setBackdateYears,
-              setBackdateMonths: backdateCalendar.setBackdateMonths,
-              setBackdateDays: backdateCalendar.setBackdateDays,
-              backdatePopupParamIdx: backdateCalendar.backdatePopupParamIdx,
-              setBackdatePopupParamIdx: backdateCalendar.setBackdatePopupParamIdx,
-              shiftCalendarMonth: backdateCalendar.shiftCalendarMonth,
-              calendarMonthOptions: backdateCalendar.calendarMonthOptions,
-              calendarViewMonth: backdateCalendar.calendarViewMonth,
-              setCalendarViewMonth: backdateCalendar.setCalendarViewMonth,
-              calendarYearOptions: backdateCalendar.calendarYearOptions,
-              calendarViewYear: backdateCalendar.calendarViewYear,
-              setCalendarViewYear: backdateCalendar.setCalendarViewYear,
-              isViewingCurrentMonth: backdateCalendar.isViewingCurrentMonth,
-              setHoverCalendarWarning: backdateCalendar.setHoverCalendarWarning,
-              CALENDAR_WEEK_DAYS,
-              calendarDayCells: backdateCalendar.calendarDayCells,
-              isViewingFutureMonth: backdateCalendar.isViewingFutureMonth,
-              today: backdateCalendar.today,
-              selectedBackdateDate: backdateCalendar.selectedBackdateDate,
-              hoverCalendarWarning: backdateCalendar.hoverCalendarWarning,
-              maxBackdateYears: backdateCalendar.maxBackdateYears,
-              backdateYears: backdateCalendar.backdateYears,
-              backdateMonths: backdateCalendar.backdateMonths,
-              backdateDays: backdateCalendar.backdateDays,
-              applyBackdateBy: backdateCalendar.applyBackdateBy,
-            }}
-            serializationTestProps={{
-              invalidFieldIds,
-              clearInvalidField,
-              markEditorAsUserEdited,
-              showOnChainMethods,
-              showOffChainMethods,
-              hardhatAccounts,
-              hardhatAccountMetadata,
-              selectedSerializationTestMethod,
-              setSelectedSerializationTestMethod: (value) =>
-                selectDropdownSerializationTestMethod(value as SerializationTestMethod),
-              serializationTestOptions: effectiveSerializationTestOptions,
-              serializationTestMethodDefs: serializationTestMethodDefs as MethodDefMap,
-              activeSerializationTestDef: effectiveSerializationTestDef,
-              serializationTestParams,
-              setSerializationTestParams,
-              inputStyle,
-              canRunSelectedSerializationTestMethod: canRunSerializationTestMethod,
-              canAddCurrentMethodToScript: hasEditorScriptSelected && canRunSerializationTestMethod,
-              hasEditorScriptSelected,
-              isAddToScriptBlockedByNoChanges: isUpdateBlockedByNoChanges,
-              addToScriptButtonLabel,
-              missingFieldIds: serializationTestMissingEntries.map((entry) => entry.id),
-              runSelectedSerializationTestMethod,
-              addCurrentMethodToScript: handleAddCurrentMethodToScript,
-            }}
-          />
-          )}
-          {showCard('output') && (
-          <OutputResultsCard
-            className={`${getCardClassName('output', expandedCard ? '' : 'xl:col-start-2 xl:row-start-2')} min-h-0 self-start overflow-hidden`}
-            style={!expandedCard && isDesktopSharedLayout && sharedMethodsRowHeight ? { height: `${sharedMethodsRowHeight}px` } : undefined}
-            isExpanded={expandedCard === 'output'}
-            onToggleExpand={() => toggleExpandedCard('output')}
-            inputStyle={inputStyle}
-            controls={{
-              outputPanelMode,
-              setOutputPanelMode,
-              refreshActiveOutput,
-              buttonStyle,
-              copyTextToClipboard,
-              setLogs,
-              setStatus,
-              setTreeOutputDisplay,
-              setFormattedOutputDisplay,
-              formattedPanelView,
-              setFormattedPanelView,
-              formattedJsonViewEnabled,
-              setFormattedJsonViewEnabled,
-              showTreeAccountDetails,
-              setShowTreeAccountDetails,
-              showAllTreeRecords,
-              setShowAllTreeRecords,
-            }}
-              content={{
-                logs,
-                treeOutputDisplay,
-                status,
-                formattedOutputDisplay,
-                scriptDisplay: selectedScriptDisplay,
-                selectedScriptStepNumber,
-                selectedScriptStepHasMissingRequiredParams: Boolean(selectedScriptStep?.hasMissingRequiredParams),
-                selectedScriptStepHasExecutionError: Boolean(
-                  selectedScriptStep && scriptStepExecutionErrors[selectedScriptStep.step],
-                ),
-                highlightedFormattedOutputLines:
-                  formattedPanelView === 'script'
-                    ? highlightedFormattedOutputLines
-                  : highlightedFormattedResultLines,
-              hiddenScrollbarClass,
-            }}
-            treeActions={{
-              runHeaderRead,
-              runAccountListRead,
-              runTreeAccountsRead,
-              runTreeDump,
-              treeAccountOptions,
-              selectedTreeAccount,
-              setSelectedTreeAccount,
-              treeAccountRefreshToken,
-              requestRefreshSelectedTreeAccount,
-              openAccountFromAddress,
-            }}
-          />
-          )}
-        </section>
-      </section>
-      <ValidationPopup
-        fields={validationPopupFields}
-        title={validationPopupTitle}
-        message={validationPopupMessage}
-        buttonStyle={buttonStyle}
-        confirmLabel={validationPopupConfirmLabel}
-        cancelLabel={validationPopupCancelLabel}
-        onClose={clearValidationPopup}
-        onConfirm={
-          validationPopupConfirmRef.current
-            ? () => {
-                const confirmAction = validationPopupConfirmRef.current;
-                clearValidationPopup();
-                void confirmAction?.();
-              }
-            : undefined
-        }
-      />
-      <DeleteStepPopup
-        isOpen={isDeleteStepPopupOpen && !!selectedScriptStep}
-        stepName={selectedScriptStep?.name || ''}
-        buttonStyle={buttonStyle}
-        onCancel={() => setIsDeleteStepPopupOpen(false)}
-        onConfirm={handleConfirmDeleteSelectedScriptStep}
-      />
-      <DiscardChangesPopup
-        isOpen={isDiscardChangesPopupOpen}
-        message={discardChangesMessage}
-        onCancel={clearDiscardChangesPopup}
-        onConfirm={() => {
-          const confirmAction = discardChangesConfirmRef.current;
-          clearDiscardChangesPopup();
-          void confirmAction?.();
-        }}
-      />
-    </main>
-  );
+    serializationTestMethodDefs,
+    setSelectedScriptStepNumber,
+  });
+  const {
+    handleConfirmDeleteSelectedScriptStep,
+    renderScriptStepRow,
+    highlightedFormattedOutputLines,
+    highlightedFormattedResultLines,
+  } = useControllerScriptPresentation({
+    selectedScriptStep,
+    setSelectedScriptStepNumber,
+    selectedScript,
+    methodSelectionSource,
+    selectedScriptStepNumber,
+    editingScriptStepNumber,
+    loadScriptStep,
+    confirmDeleteSelectedScriptStep,
+    setEditingScriptStepNumber,
+    setMethodSelectionSource,
+    expandedScriptStepIds,
+    isEditingScriptMethod,
+    scriptStepExecutionErrors,
+    getStepSender,
+    getStepParamEntries,
+    editScriptStepFromBuilder,
+    toggleScriptStepExpanded,
+    toggleScriptStepBreakpoint,
+    outputPanelMode,
+    formattedPanelView,
+    selectedScriptDisplay,
+    formattedOutputDisplay,
+  });
+  const viewProps = useControllerViewProps({
+    expandedCard,
+    showCard,
+    getCardClassName,
+    toggleExpandedCard,
+    methodsCardRef,
+    isDesktopSharedLayout,
+    sharedMethodsRowHeight,
+    validationPopupFields,
+    validationPopupTitle,
+    validationPopupMessage,
+    validationPopupConfirmLabel,
+    validationPopupCancelLabel,
+    clearValidationPopup,
+    hasValidationConfirmAction,
+    handleValidationConfirm,
+    isDeleteStepPopupOpen,
+    setIsDeleteStepPopupOpen,
+    handleConfirmDeleteSelectedScriptStep,
+    isDiscardChangesPopupOpen,
+    discardChangesMessage,
+    clearDiscardChangesPopup,
+    handleDiscardConfirm,
+    methodPanelTitle,
+    scriptEditorKind,
+    setScriptEditorKind,
+    methodPanelMode,
+    activeMethodPanelTab,
+    selectMethodPanelTab,
+    selectMappedJsonMethod,
+    writeTraceEnabled,
+    setWriteTraceEnabled,
+    showOnChainMethods,
+    setShowOnChainMethods,
+    showOffChainMethods,
+    setShowOffChainMethods,
+    hiddenScrollbarClass,
+    visibleJavaScriptScripts,
+    selectedJavaScriptScriptId,
+    setSelectedJavaScriptScriptId,
+    selectedJavaScriptScript,
+    selectedJavaScriptDisplayFilePath,
+    javaScriptFileContent,
+    isJavaScriptFileLoading,
+    isTypeScriptEditEnabled,
+    setIsTypeScriptEditEnabled,
+    canEditSelectedTypeScriptFile,
+    saveSelectedTypeScriptFile,
+    isSavingSelectedTypeScriptFile,
+    setJavaScriptFileContent,
+    runSelectedJavaScriptScript,
+    addSelectedJavaScriptScriptToScript,
+    actionButtonStyle,
+    scripts,
+    visibleScripts,
+    showSystemTestsOnly,
+    setShowSystemTestsOnly,
+    selectedScript,
+    selectedScriptStepNumber,
+    scriptNameInput,
+    setScriptNameInput,
+    selectedScriptId,
+    setSelectedScriptId,
+    isScriptOptionsOpen,
+    setIsScriptOptionsOpen,
+    isNewScriptHovered,
+    setIsNewScriptHovered,
+    isDeleteScriptHovered,
+    setIsDeleteScriptHovered,
+    newScriptHoverTone,
+    setNewScriptHoverTone,
+    deleteScriptHoverTone,
+    setDeleteScriptHoverTone,
+    scriptNameValidation,
+    deleteScriptValidation,
+    createNewScript,
+    duplicateSelectedScript,
+    clearSelectedScript,
+    handleDeleteScriptClick,
+    restartScriptAtStart,
+    runSelectedScriptStep,
+    runRemainingScriptSteps,
+    isScriptDebugRunning,
+    moveSelectedScriptStep,
+    requestDeleteSelectedScriptStep,
+    renderScriptStepRow,
+    invalidFieldIds,
+    clearInvalidField,
+    markEditorAsUserEdited,
+    selectedReadMethod,
+    erc20ReadOptions,
+    selectDropdownReadMethod,
+    activeReadLabels,
+    readAddressA,
+    setReadAddressA,
+    readAddressB,
+    setReadAddressB,
+    canRunErc20ReadMethod,
+    hasEditorScriptSelected,
+    isUpdateBlockedByNoChanges,
+    addToScriptButtonLabel,
+    erc20ReadMissingEntries,
+    runSelectedReadMethod,
+    handleAddCurrentMethodToScript,
+    selectedWriteSenderAccount,
+    writeSenderPrivateKeyDisplay,
+    showWriteSenderPrivateKey,
+    setShowWriteSenderPrivateKey,
+    selectedWriteMethod,
+    erc20WriteOptions,
+    selectDropdownWriteMethod,
+    activeWriteLabels,
+    writeAddressA,
+    setWriteAddressA,
+    writeAddressB,
+    setWriteAddressB,
+    writeAmountRaw,
+    setWriteAmountRaw,
+    canRunErc20WriteMethod,
+    erc20WriteMissingEntries,
+    runSelectedWriteMethod,
+    normalizedSelectedSpCoinReadMethod,
+    selectDropdownSpCoinReadMethod,
+    spCoinWorldReadOptions,
+    spCoinSenderReadOptions,
+    spCoinAdminReadOptions,
+    spCoinCompoundReadOptions,
+    spCoinReadMethodDefs,
+    activeSpCoinReadDef,
+    spReadParams,
+    setSpReadParams,
+    canRunSpCoinReadMethod,
+    spCoinReadMissingEntries,
+    runSelectedSpCoinReadMethod,
+    recipientRateKeyOptions,
+    agentRateKeyOptions,
+    recipientRateKeyHelpText,
+    agentRateKeyHelpText,
+    effectiveRecipientRateRange,
+    effectiveAgentRateRange,
+    selectedSpCoinWriteMethod,
+    selectDropdownSpCoinWriteMethod,
+    isSpCoinTodoMode,
+    spCoinWorldWriteOptions,
+    spCoinSenderWriteOptions,
+    spCoinAdminWriteOptions,
+    spCoinTodoWriteOptions,
+    SPCOIN_ONCHAIN_WRITE_METHODS,
+    SPCOIN_OFFCHAIN_WRITE_METHODS,
+    spCoinWriteMethodDefs,
+    activeSpCoinWriteDef,
+    spWriteParams,
+    updateSpWriteParamAtIndex,
+    canRunSpCoinWriteMethod,
+    spCoinWriteMissingEntries,
+    runSelectedSpCoinWriteMethod,
+    formatDateTimeDisplay,
+    formatDateInput,
+    backdateCalendar,
+    CALENDAR_WEEK_DAYS,
+    selectedSerializationTestMethod,
+    selectDropdownSerializationTestMethod,
+    effectiveSerializationTestOptions,
+    serializationTestMethodDefs,
+    effectiveSerializationTestDef,
+    serializationTestParams,
+    setSerializationTestParams,
+    canRunSerializationTestMethod,
+    serializationTestMissingEntries,
+    runSelectedSerializationTestMethod,
+    inputStyle,
+    showSignerAccountDetails,
+    setShowSignerAccountDetails,
+    displayedSpCoinOwnerAddress,
+    selectedWriteSenderAddress,
+    setSelectedWriteSenderAddress,
+    writeSenderDisplayValue,
+    displayedSpCoinOwnerMetadata,
+    mode,
+    selectedVersionSignerKey,
+    accountActionLabelClassName,
+    hardhatAccounts,
+    hardhatAccountMetadata,
+    selectedSponsorCoinAccountRole,
+    setSelectedSponsorCoinAccountRole,
+    defaultSponsorKey,
+    setDefaultSponsorKey,
+    defaultRecipientKey,
+    setDefaultRecipientKey,
+    defaultAgentKey,
+    setDefaultAgentKey,
+    managedRoleAccountAddress,
+    setManagedRoleAccountAddress,
+    managedRecipientKey,
+    setManagedRecipientKey,
+    managedRecipientRateKey,
+    setManagedRecipientRateKey,
+    managedRecipientRateKeyOptions,
+    managedRecipientRateKeyHelpText,
+    sponsorCoinAccountManagementValidation,
+    sponsorCoinAccountManagementStatus,
+    handleSponsorCoinAccountAction,
+    selectedSponsorCoinLogoURL,
+    selectedSponsorCoinVersionEntry,
+    selectedSponsorCoinVersion,
+    setSelectedSponsorCoinVersion,
+    sponsorCoinVersionChoices,
+    canIncrementSponsorCoinVersion,
+    canDecrementSponsorCoinVersion,
+    adjustSponsorCoinVersion,
+    displayedVersionHardhatAccountIndex,
+    selectedVersionSymbolWidthCh,
+    selectedVersionSymbol,
+    contractAddress,
+    isRemovingContractFromApp,
+    requestRemoveContractFromApp,
+    setMode,
+    allowContractNetworkModeSelection,
+    shouldPromptHardhatBaseConnect,
+    connectHardhatBaseFromNetworkLabel,
+    activeContractNetworkName,
+    activeContractChainIdDisplayValue,
+    activeContractChainIdDisplayWidthCh,
+    showHardhatConnectionInputs,
+    setShowHardhatConnectionInputs,
+    cog_png,
+    rpcUrl,
+    setRpcUrl,
+    effectiveConnectedAddress,
+    outputPanelMode,
+    setOutputPanelMode,
+    refreshActiveOutput,
+    buttonStyle,
+    copyTextToClipboard,
+    setLogs,
+    setStatus,
+    setTreeOutputDisplay,
+    setFormattedOutputDisplay,
+    formattedPanelView,
+    setFormattedPanelView,
+    formattedJsonViewEnabled,
+    setFormattedJsonViewEnabled,
+    showTreeAccountDetails,
+    setShowTreeAccountDetails,
+    showAllTreeRecords,
+    setShowAllTreeRecords,
+    logs,
+    treeOutputDisplay,
+    status,
+    formattedOutputDisplay,
+    selectedScriptDisplay,
+    scriptStepExecutionErrors,
+    highlightedFormattedOutputLines,
+    highlightedFormattedResultLines,
+    runHeaderRead,
+    runAccountListRead,
+    runTreeAccountsRead,
+    runTreeDump,
+    treeAccountOptions,
+    selectedTreeAccount,
+    setSelectedTreeAccount,
+    treeAccountRefreshToken,
+    requestRefreshSelectedTreeAccount,
+    openAccountFromAddress,
+  });
+  return <SponsorCoinLabView {...viewProps} />;
 }

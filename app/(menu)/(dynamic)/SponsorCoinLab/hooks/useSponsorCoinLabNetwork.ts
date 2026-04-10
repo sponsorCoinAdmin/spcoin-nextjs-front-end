@@ -70,7 +70,7 @@ type Params = {
   appendWriteTrace: (line: string) => void;
   setStatus: (value: string) => void;
   setInvalidFieldIds: (value: string[]) => void;
-  setValidationPopupFields: (value: string[]) => void;
+  clearValidationPopup: () => void;
   methodPanelMode: MethodPanelMode;
   selectedWriteMethod: Erc20WriteMethod;
   selectedSpCoinWriteMethod: SpCoinWriteMethod;
@@ -143,7 +143,7 @@ export function useSponsorCoinLabNetwork({
   appendWriteTrace,
   setStatus,
   setInvalidFieldIds,
-  setValidationPopupFields,
+  clearValidationPopup,
   methodPanelMode,
   selectedWriteMethod,
   selectedSpCoinWriteMethod,
@@ -547,15 +547,15 @@ export function useSponsorCoinLabNetwork({
   useEffect(() => {
     setShowWriteSenderPrivateKey(false);
     setInvalidFieldIds([]);
-    setValidationPopupFields([]);
+    clearValidationPopup();
   }, [
+    clearValidationPopup,
     methodPanelMode,
     selectedWriteMethod,
     selectedSpCoinWriteMethod,
     selectedReadMethod,
     selectedSpCoinReadMethod,
     setInvalidFieldIds,
-    setValidationPopupFields,
   ]);
 
   useEffect(() => {
