@@ -24,6 +24,7 @@ interface JsonInspectorProps {
     formattedAmounts: boolean;
   };
   onLeafValueClick?: (value: string, path: string, key: string) => void;
+  onAddressNodeClick?: (value: string, path: string, key: string) => void;
   hideEntryKeys?: string[];
   formatTokenAmounts?: boolean;
   tokenDecimals?: number | null;
@@ -269,6 +270,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     formattedAmounts: false,
   },
   onLeafValueClick,
+  onAddressNodeClick,
   hideEntryKeys = [],
   formatTokenAmounts = false,
   tokenDecimals = null,
@@ -285,7 +287,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     effectiveHideEntryKeys.push('accountKey');
   }
   const visibleEntries = getVisibleEntries(data, showAll, hiddenRules, effectiveHideEntryKeys);
-  const addressNode = data && typeof data === 'object' && !Array.isArray(data) ? String(data.address || '').trim() : '';
+  const addressNode =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
+      : '';
   const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
   const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
@@ -303,7 +308,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         ? collapsedKeys.filter((key) => key !== path)
         : [...new Set([...collapsedKeys, path!])],
     );
-  }, [collapsedKeys, data, isCollapsed, onLeafValueClick, path, updateCollapsedKeys]);
+  }, [addressNode, collapsedKeys, hasLoadedAccountRecord, isAddressNode, isCollapsed, onLeafValueClick, path, updateCollapsedKeys]);
 
   const getValueColor = (value: any): string => {
     if (value === false || value === undefined || value === null) return 'text-red-500';
@@ -363,6 +368,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           showAll={showAll}
           hiddenRules={hiddenRules}
           onLeafValueClick={onLeafValueClick}
+          onAddressNodeClick={onAddressNodeClick}
           formatTokenAmounts={formatTokenAmounts}
           tokenDecimals={tokenDecimals}
         />
@@ -408,9 +414,27 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   return (
     <div className={`${level > 0 ? 'ml-2' : ''} font-mono leading-tight`}>
-      <div className="cursor-pointer whitespace-nowrap" onClick={toggle}>
-        <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>{getDisplayLabel(path ?? '')}</span>
+      <div className="whitespace-nowrap">
+        <button type="button" className="inline-flex items-center bg-transparent p-0" onClick={toggle}>
+          <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>
+        </button>{' '}
+        {isAddressNode && typeof onAddressNodeClick === 'function' ? (
+          <button
+            type="button"
+            className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+              isHighlighted ? highlightColorClass : 'text-white'
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAddressNodeClick(addressNode, path ?? '', label || 'address');
+            }}
+            title={`Show metadata for ${addressNode}`}
+          >
+            {getDisplayLabel(path ?? '')}
+          </button>
+        ) : (
+          <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>{getDisplayLabel(path ?? '')}</span>
+        )}
       </div>
       {!isCollapsed && <div className="ml-4">{visibleEntries.map(([key, value]) => renderValue(value, key))}</div>}
     </div>

@@ -5,7 +5,6 @@ import ScriptStepRow from '../../components/ScriptStepRow';
 import type { LabScriptParam, LabScriptStep } from '../../scriptBuilder/types';
 
 type Props = {
-  selectedScriptStep?: LabScriptStep | null;
   setSelectedScriptStepNumber: React.Dispatch<React.SetStateAction<number | null>>;
   selectedScript?: { id?: string | number; steps: LabScriptStep[] } | null;
   methodSelectionSource: 'dropdown' | 'script';
@@ -30,7 +29,6 @@ type Props = {
 };
 
 export function useControllerScriptPresentation({
-  selectedScriptStep,
   setSelectedScriptStepNumber,
   selectedScript,
   methodSelectionSource,
@@ -55,13 +53,13 @@ export function useControllerScriptPresentation({
 }: Props) {
   const selectScriptStep = useCallback(
     (step: LabScriptStep) => {
-      if (selectedScriptStep?.step === step.step) {
+      if (selectedScriptStepNumber === step.step) {
         setSelectedScriptStepNumber(null);
         return;
       }
       setSelectedScriptStepNumber(step.step);
     },
-    [selectedScriptStep?.step, setSelectedScriptStepNumber],
+    [selectedScriptStepNumber, setSelectedScriptStepNumber],
   );
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export function useControllerScriptPresentation({
   const renderScriptStepRow = useCallback(
     (step: LabScriptStep) => {
       const isExpanded = Boolean(expandedScriptStepIds[String(step.step)]);
-      const isSelected = selectedScriptStep?.step === step.step;
+      const isSelected = selectedScriptStepNumber === step.step;
       const isEditingStep = isEditingScriptMethod && editingScriptStepNumber === step.step;
       return (
         <ScriptStepRow
@@ -108,7 +106,7 @@ export function useControllerScriptPresentation({
       getStepSender,
       isEditingScriptMethod,
       scriptStepExecutionErrors,
-      selectedScriptStep?.step,
+      selectedScriptStepNumber,
       selectScriptStep,
       toggleScriptStepBreakpoint,
       toggleScriptStepExpanded,
