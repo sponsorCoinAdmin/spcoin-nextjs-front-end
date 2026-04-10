@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { RotateCcw } from 'lucide-react';
 import LabCardHeader from './LabCardHeader';
+import AccountSelection from './AccountSelection';
 import JsonInspector from '@/components/shared/JsonInspector';
 import {
   defaultMissingImage,
@@ -104,6 +105,14 @@ export default function OutputResultsCard({
   const refreshIconButtonClassName =
     'inline-flex h-10 w-10 min-w-10 shrink-0 items-center justify-center rounded-full border-0 bg-[#243056] text-[#5981F3] outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0';
   const [selectedTreeAccountMetadata, setSelectedTreeAccountMetadata] = useState<{
+    name?: string;
+    symbol?: string;
+    logoURL: string;
+  }>({
+    logoURL: defaultMissingImage,
+  });
+  const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
+  const [selectedFormattedAccountMetadata, setSelectedFormattedAccountMetadata] = useState<{
     name?: string;
     symbol?: string;
     logoURL: string;
@@ -321,6 +330,55 @@ export default function OutputResultsCard({
       cancelled = true;
     };
   }, [treeActions.selectedTreeAccount, treeActions.treeAccountRefreshToken]);
+
+  useEffect(() => {
+    const account = String(selectedFormattedAccount || '').trim();
+    const folder = normalizeAddressForAssets(account);
+    if (!folder) {
+      setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
+      return;
+    }
+
+    let cancelled = false;
+    const logoURL = getAccountLogoURL(account);
+    const cached = treeAccountMetadataCacheRef.current.get(folder);
+    if (cached) {
+      setSelectedFormattedAccountMetadata(cached);
+      return;
+    }
+
+    const loadAccountMetadata = async () => {
+      try {
+        const response = await fetch(`/assets/accounts/${folder}/account.json`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          if (!cancelled) setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
+          return;
+        }
+        const payload = (await response.json()) as {
+          name?: string;
+          symbol?: string;
+          logoURL?: string;
+        };
+        if (cancelled) return;
+        const nextMetadata = {
+          name: String(payload?.name || '').trim() || undefined,
+          symbol: String(payload?.symbol || '').trim() || undefined,
+          logoURL,
+        };
+        treeAccountMetadataCacheRef.current.set(folder, nextMetadata);
+        setSelectedFormattedAccountMetadata(nextMetadata);
+      } catch {
+        if (!cancelled) setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
+      }
+    };
+
+    void loadAccountMetadata();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedFormattedAccount]);
 
   useEffect(() => {
     if (!isShowAllMenuOpen) return;
@@ -665,6 +723,7 @@ export default function OutputResultsCard({
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
+                    onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
                   />
                 ))}
               </div>
@@ -695,6 +754,7 @@ export default function OutputResultsCard({
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
+                    onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
                   />
                 ))}
               </div>
@@ -730,6 +790,25 @@ export default function OutputResultsCard({
             </pre>
           )}
         </div>
+        {selectedFormattedAccount ? (
+          <div className="mt-3">
+            <AccountSelection
+              label="Selected Account"
+              title="Toggle selected account metadata"
+              isOpen
+              onToggle={() => setSelectedFormattedAccount('')}
+              control={
+                <input
+                  className={inputStyle}
+                  readOnly
+                  value={selectedFormattedAccount}
+                  placeholder="Selected account address"
+                />
+              }
+              metadata={selectedFormattedAccountMetadata}
+            />
+          </div>
+        ) : null}
       </div>
     </article>
   );
