@@ -28,6 +28,41 @@ interface JsonInspectorProps {
   hideEntryKeys?: string[];
   formatTokenAmounts?: boolean;
   tokenDecimals?: number | null;
+  scriptStepDragState?: {
+    enabled: boolean;
+    draggedStepNumber: number | null;
+    dropTarget: { stepNumber: number; placement: 'before' | 'after' } | null;
+    setDraggedStepNumber: (value: number | null) => void;
+    setDropTarget: (value: { stepNumber: number; placement: 'before' | 'after' } | null) => void;
+    beginDrag: (stepNumber: number) => void;
+    onStepDoubleClick?: (stepNumber: number, methodName: string) => void;
+  };
+}
+
+function getScriptStepNumberFromPath(path: string): number | null {
+  const normalizedPath = String(path || '').trim();
+  const indexedMatch = normalizedPath.match(/(?:^|\.)(?:steps\.(\d+)|step-(\d+)|script-(\d+))$/);
+  if (!indexedMatch) return null;
+  const rawStepNumber = indexedMatch[1] ?? indexedMatch[2] ?? indexedMatch[3];
+  if (rawStepNumber == null) return null;
+  const parsed = Number(rawStepNumber);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed + 1 : null;
+}
+
+function getScriptStepNumberFromLabel(label: string): number | null {
+  const normalized = String(label || '').trim();
+  const match = normalized.match(/(?:^|[^a-zA-Z])(step|script)-(\d+)(?::|$)/i);
+  if (!match) return null;
+  const parsed = Number(match[2]);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed + 1 : null;
+}
+
+function getScriptStepNumberFromExactSegment(value: string): number | null {
+  const normalized = String(value || '').trim();
+  const match = normalized.match(/^(step|script)-(\d+)$/i);
+  if (!match) return null;
+  const parsed = Number(match[2]);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed + 1 : null;
 }
 
 function getAddressNodeLabel(data: any, fallbackLabel: string): string {
@@ -195,6 +230,13 @@ function formatPathSegmentLabel(nextPath: string): string {
   const segments = nextPath.split('.');
   const currentSegment = segments[segments.length - 1] || nextPath;
   const parentSegment = segments[segments.length - 2] || '';
+  const indexedStepMatch = currentSegment.match(/^(step|script)-(\d+)$/i);
+  if (indexedStepMatch) {
+    const parsedIndex = Number(indexedStepMatch[2]);
+    if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
+      return `${indexedStepMatch[1]}-${parsedIndex + 1}`;
+    }
+  }
   if (
     /^(recipientRateBranches|agentRateBranches)$/.test(parentSegment) &&
     /^\d+(\.\d+)?$/.test(currentSegment)
@@ -274,6 +316,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   hideEntryKeys = [],
   formatTokenAmounts = false,
   tokenDecimals = null,
+  scriptStepDragState,
 }) => {
   const effectiveHideEntryKeys = [...hideEntryKeys];
   if (
@@ -298,7 +341,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
   );
-
   const toggle = useCallback(() => {
     if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
       onLeafValueClick?.(addressNode, path ?? '', 'address');
@@ -332,6 +374,63 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     }
     return baseLabel;
   };
+
+  const visibleStepLabel = getDisplayLabel(path ?? '');
+  const lastPathSegment = String(path || '')
+    .trim()
+    .split('.')
+    .filter(Boolean)
+    .at(-1) || '';
+  const draggableScriptStepNumber =
+    getScriptStepNumberFromExactSegment(label || '') ??
+    getScriptStepNumberFromExactSegment(lastPathSegment) ??
+    getScriptStepNumberFromLabel(label || '') ??
+    getScriptStepNumberFromLabel(visibleStepLabel) ??
+    getScriptStepNumberFromPath(path);
+  const isDraggableScriptStep = Boolean(
+    scriptStepDragState?.enabled && draggableScriptStepNumber !== null,
+  );
+  const activeDropPlacement =
+    scriptStepDragState?.dropTarget?.stepNumber === draggableScriptStepNumber
+      ? scriptStepDragState.dropTarget.placement
+      : null;
+  const stepCallRecord =
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    (data as Record<string, unknown>).call &&
+    typeof (data as Record<string, unknown>).call === 'object' &&
+    !Array.isArray((data as Record<string, unknown>).call)
+      ? ((data as Record<string, unknown>).call as Record<string, unknown>)
+      : null;
+  const inlineStepMethod =
+    stepCallRecord && typeof stepCallRecord.method === 'string'
+      ? String(stepCallRecord.method).trim()
+      : '';
+  const promotedStepEntries =
+    stepCallRecord && !Array.isArray(stepCallRecord)
+      ? [
+          ...(stepCallRecord.parameters !== undefined ? ([['parameters', stepCallRecord.parameters]] as Array<[string, any]>) : []),
+          ...visibleEntries.filter(([key]) => key !== 'call'),
+        ]
+      : visibleEntries;
+  const beginScriptStepDrag = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (!isDraggableScriptStep || !scriptStepDragState) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('button')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (draggableScriptStepNumber !== null) {
+        scriptStepDragState.beginDrag(draggableScriptStepNumber);
+      }
+    },
+    [draggableScriptStepNumber, isDraggableScriptStep, scriptStepDragState],
+  );
+  const handleScriptStepDoubleClick = useCallback(() => {
+    if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumber === null) return;
+    scriptStepDragState.onStepDoubleClick(draggableScriptStepNumber, inlineStepMethod);
+  }, [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState]);
 
   const renderValue = (value: any, key: string) => {
     const nextPath = `${path}.${key}`;
@@ -371,6 +470,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           onAddressNodeClick={onAddressNodeClick}
           formatTokenAmounts={formatTokenAmounts}
           tokenDecimals={tokenDecimals}
+          scriptStepDragState={scriptStepDragState}
         />
       );
     }
@@ -414,7 +514,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   return (
     <div className={`${level > 0 ? 'ml-2' : ''} font-mono leading-tight`}>
-      <div className="whitespace-nowrap">
+      <div
+        data-script-step-number={isDraggableScriptStep ? String(draggableScriptStepNumber) : undefined}
+        data-script-step-label={visibleStepLabel}
+        data-script-step-path={path}
+        data-script-step-draggable={isDraggableScriptStep ? 'true' : 'false'}
+        onMouseDown={beginScriptStepDrag}
+        onDoubleClick={handleScriptStepDoubleClick}
+        style={isDraggableScriptStep ? { cursor: 'grab' } : undefined}
+        className={`whitespace-nowrap rounded-sm ${isDraggableScriptStep ? 'cursor-pointer select-none' : ''}`}
+      >
+        <div className={`mb-[2px] h-[2px] rounded-full ${activeDropPlacement === 'before' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />
         <button type="button" className="inline-flex items-center bg-transparent p-0" onClick={toggle}>
           <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>
         </button>{' '}
@@ -433,10 +543,24 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             {getDisplayLabel(path ?? '')}
           </button>
         ) : (
-          <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>{getDisplayLabel(path ?? '')}</span>
+          <span
+            style={isDraggableScriptStep ? { cursor: 'grab' } : undefined}
+            className={`font-semibold ${isDraggableScriptStep ? 'cursor-pointer select-none active:cursor-grabbing' : ''} ${
+              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumber ? 'opacity-70' : ''
+            } ${isHighlighted ? highlightColorClass : 'text-white'}`}
+            title={isDraggableScriptStep ? 'Drag to reorder this step' : undefined}
+          >
+            {visibleStepLabel}
+          </span>
         )}
+        {inlineStepMethod ? (
+          <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
+            {formatDisplayScalar('method', inlineStepMethod, false, tokenDecimals)}
+          </span>
+        ) : null}
+        <div className={`mt-[2px] h-[2px] rounded-full ${activeDropPlacement === 'after' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />
       </div>
-      {!isCollapsed && <div className="ml-4">{visibleEntries.map(([key, value]) => renderValue(value, key))}</div>}
+      {!isCollapsed && <div className="ml-4">{promotedStepEntries.map(([key, value]) => renderValue(value, key))}</div>}
     </div>
   );
 };

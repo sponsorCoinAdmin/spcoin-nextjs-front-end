@@ -593,6 +593,7 @@ export default function SponsorCoinLabPage() {
   });
 
   const {
+    allScripts,
     scripts,
     visibleScripts,
     setScripts,
@@ -636,10 +637,14 @@ export default function SponsorCoinLabPage() {
     loadScriptStep,
     toggleScriptStepExpanded,
     moveSelectedScriptStep,
+    moveScriptStepToPosition,
+    deleteScriptStepByNumber,
+    duplicateScriptStepByNumber,
     requestDeleteSelectedScriptStep,
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    createScriptFromSteps,
     duplicateSelectedScript,
     clearSelectedScript,
     handleDeleteScriptClick,
@@ -780,7 +785,7 @@ export default function SponsorCoinLabPage() {
     if (previousScriptDisplayRef.current === selectedScriptDisplay) return;
     previousScriptDisplayRef.current = selectedScriptDisplay;
     setOutputPanelMode('formatted');
-    setFormattedPanelView('script');
+    setFormattedPanelView((previous) => (previous === 'output' ? previous : 'script'));
   }, [selectedScriptDisplay]);
   useEffect(() => {
     if (previousFormattedOutputDisplayRef.current === null) {
@@ -1324,6 +1329,7 @@ export default function SponsorCoinLabPage() {
     runRemainingScriptSteps,
     isScriptDebugRunning,
     moveSelectedScriptStep,
+    moveScriptStepToPosition,
     requestDeleteSelectedScriptStep,
     renderScriptStepRow,
     invalidFieldIds,
@@ -1504,6 +1510,10 @@ export default function SponsorCoinLabPage() {
     treeAccountRefreshToken,
     requestRefreshSelectedTreeAccount,
     openAccountFromAddress,
+    deleteScriptStepByNumber,
+    duplicateScriptStepByNumber,
+    createScriptFromSteps,
+    existingScriptNames: allScripts.map((script) => script.name),
   });
   return <SponsorCoinLabView {...viewProps} />;
 }

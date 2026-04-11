@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { ConnectionMode } from '../scriptBuilder/types';
+import type { LabScriptStep } from '../scriptBuilder/types';
 import type { FormattedPanelView, OutputPanelMode, SponsorCoinAccountRole } from './types';
 
 type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -110,6 +111,11 @@ export type BuildControllerCardPropsArgs = {
   treeAccountRefreshToken: number;
   requestRefreshSelectedTreeAccount: () => void;
   openAccountFromAddress: (account: string, pathHint?: string) => Promise<void>;
+  moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => void;
+  deleteScriptStepByNumber: (stepNumber: number) => void;
+  duplicateScriptStepByNumber: (stepNumber: number) => void;
+  createScriptFromSteps: (nextNameRaw: string, steps: LabScriptStep[]) => boolean;
+  existingScriptNames: string[];
 };
 
 export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
@@ -243,6 +249,13 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
       treeAccountRefreshToken: args.treeAccountRefreshToken,
       requestRefreshSelectedTreeAccount: args.requestRefreshSelectedTreeAccount,
       openAccountFromAddress: args.openAccountFromAddress,
+    },
+    scriptActions: {
+      moveScriptStepToPosition: args.moveScriptStepToPosition,
+      deleteScriptStepByNumber: args.deleteScriptStepByNumber,
+      duplicateScriptStepByNumber: args.duplicateScriptStepByNumber,
+      createScriptFromSteps: args.createScriptFromSteps,
+      existingScriptNames: args.existingScriptNames,
     },
   };
 

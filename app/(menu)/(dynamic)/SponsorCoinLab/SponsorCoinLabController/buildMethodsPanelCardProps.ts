@@ -129,6 +129,7 @@ export type BuildMethodsPanelCardPropsArgs = {
   runRemainingScriptSteps: () => Promise<void>;
   isScriptDebugRunning: boolean;
   moveSelectedScriptStep: (direction: -1 | 1) => void | Promise<void>;
+  moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => void | Promise<void>;
   requestDeleteSelectedScriptStep: () => void;
   renderScriptStepRow: (step: LabScriptStep) => React.ReactNode;
   invalidFieldIds: string[];
@@ -295,6 +296,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       runRemainingScriptSteps: args.runRemainingScriptSteps,
       isScriptDebugRunning: args.isScriptDebugRunning,
       moveSelectedScriptStep: args.moveSelectedScriptStep,
+      moveScriptStepToPosition: args.moveScriptStepToPosition,
       requestDeleteSelectedScriptStep: args.requestDeleteSelectedScriptStep,
       renderScriptStepRow: args.renderScriptStepRow,
     },

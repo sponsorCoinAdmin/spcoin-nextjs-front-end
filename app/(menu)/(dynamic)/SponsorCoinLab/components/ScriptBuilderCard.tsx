@@ -42,6 +42,7 @@ type Props = {
   runRemainingScriptSteps: () => Promise<void>;
   isScriptDebugRunning: boolean;
   moveSelectedScriptStep: (direction: -1 | 1) => void;
+  moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => void;
   requestDeleteSelectedScriptStep: () => void;
   renderScriptStepRow: (step: LabScriptStep) => React.ReactNode;
 };
@@ -80,6 +81,7 @@ export default function ScriptBuilderCard({
   runRemainingScriptSteps,
   isScriptDebugRunning,
   moveSelectedScriptStep,
+  moveScriptStepToPosition,
   requestDeleteSelectedScriptStep,
   renderScriptStepRow,
 }: Props) {
@@ -95,6 +97,8 @@ export default function ScriptBuilderCard({
   const [isCopyPopupOpen, setIsCopyPopupOpen] = React.useState(false);
   const [copyScriptNameInput, setCopyScriptNameInput] = React.useState('');
   const [isCopyScriptHovered, setIsCopyScriptHovered] = React.useState(false);
+  const [draggedStepNumber, setDraggedStepNumber] = React.useState<number | null>(null);
+  const [dropTarget, setDropTarget] = React.useState<{ stepNumber: number; placement: 'before' | 'after' } | null>(null);
   const normalizedCopyScriptName = normalizeScriptName(copyScriptNameInput);
   const copyScriptNameMatch = React.useMemo(() => {
     if (!normalizedCopyScriptName) return null;
@@ -137,6 +141,13 @@ export default function ScriptBuilderCard({
     setCopyScriptNameInput(selectedScript ? `${selectedScript.name} Copy` : '');
     setIsCopyScriptHovered(false);
   }, [isCopyPopupOpen, selectedScript]);
+
+  React.useEffect(() => {
+    setDraggedStepNumber(null);
+    setDropTarget(null);
+  }, [selectedScript?.id]);
+
+  const canDragSteps = Boolean(activeSelectedScript && !activeSelectedScript.isSystemScript && !isScriptDebugRunning);
 
   return (
     <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
@@ -450,7 +461,73 @@ export default function ScriptBuilderCard({
           ) : activeSelectedScript.steps.length === 0 ? (
             <div className="text-slate-400">(script has no steps yet)</div>
           ) : (
-            <div className="grid grid-cols-1 gap-1">{activeSelectedScript.steps.map((step) => renderScriptStepRow(step))}</div>
+            <div className="grid grid-cols-1 gap-0">
+              {activeSelectedScript.steps.map((step) => {
+                const isDropBefore = dropTarget?.stepNumber === step.step && dropTarget.placement === 'before';
+                const isDropAfter = dropTarget?.stepNumber === step.step && dropTarget.placement === 'after';
+                return (
+                  <div
+                    key={`step-drop-${step.step}`}
+                    draggable={canDragSteps}
+                    onDragStart={(event) => {
+                      if (!canDragSteps) {
+                        event.preventDefault();
+                        return;
+                      }
+                      setDraggedStepNumber(step.step);
+                      setDropTarget(null);
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', String(step.step));
+                    }}
+                    onDragOver={(event) => {
+                      if (!canDragSteps || draggedStepNumber === null || draggedStepNumber === step.step) return;
+                      event.preventDefault();
+                      const bounds = event.currentTarget.getBoundingClientRect();
+                      const midpoint = bounds.top + bounds.height / 2;
+                      const placement = event.clientY < midpoint ? 'before' : 'after';
+                      setDropTarget((prev) =>
+                        prev?.stepNumber === step.step && prev.placement === placement
+                          ? prev
+                          : { stepNumber: step.step, placement },
+                      );
+                    }}
+                    onDragLeave={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                        setDropTarget((prev) => (prev?.stepNumber === step.step ? null : prev));
+                      }
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (
+                        !canDragSteps ||
+                        draggedStepNumber === null ||
+                        dropTarget === null ||
+                        dropTarget.stepNumber !== step.step ||
+                        draggedStepNumber === step.step
+                      ) {
+                        setDraggedStepNumber(null);
+                        setDropTarget(null);
+                        return;
+                      }
+                      moveScriptStepToPosition(draggedStepNumber, step.step, dropTarget.placement);
+                      setDraggedStepNumber(null);
+                      setDropTarget(null);
+                    }}
+                    onDragEnd={() => {
+                      setDraggedStepNumber(null);
+                      setDropTarget(null);
+                    }}
+                    className={`rounded-md transition-opacity ${
+                      draggedStepNumber === step.step ? 'cursor-grabbing opacity-70' : canDragSteps ? 'cursor-grab' : ''
+                    }`}
+                  >
+                    <div className={`h-[2px] rounded-full transition-opacity ${isDropBefore ? 'mb-1 bg-[#8FA8FF] opacity-100' : 'mb-0 opacity-0'}`} />
+                    {renderScriptStepRow(step)}
+                    <div className={`h-[2px] rounded-full transition-opacity ${isDropAfter ? 'mt-1 bg-[#8FA8FF] opacity-100' : 'mt-0 opacity-0'}`} />
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

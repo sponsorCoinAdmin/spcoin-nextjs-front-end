@@ -6,47 +6,6 @@
   "steps": [
     {
       "step": 1,
-      "name": "getAccountList",
-      "panel": "spcoin_rread",
-      "method": "getAccountList",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 2,
-      "name": "getAccountListSize",
-      "panel": "spcoin_rread",
-      "method": "getAccountListSize",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 3,
-      "name": "getMasterSponsorList",
-      "panel": "serialization_tests",
-      "method": "getMasterSponsorList",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 4,
-      "name": "getAccountRecord",
-      "panel": "spcoin_rread",
-      "method": "getAccountRecord",
-      "params": [
-        {
-          "key": "Account Key",
-          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 5,
       "name": "addAgentSponsorship",
       "panel": "spcoin_write",
       "method": "addAgentSponsorship",
@@ -77,30 +36,39 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
-      "name": "deleteSponsorship",
+      "step": 2,
+      "name": "getMasterSponsorList",
       "panel": "serialization_tests",
-      "method": "deleteSponsorship",
+      "method": "getMasterSponsorList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
       "params": [
         {
-          "key": "Sponsor Key",
-          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
         }
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
-      "name": "deleteSponsorships",
-      "panel": "serialization_tests",
-      "method": "deleteSponsorships",
+      "step": 4,
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
-      "step": 8,
+      "step": 5,
       "name": "updateMasterStakingRewards",
       "panel": "spcoin_write",
       "method": "updateMasterStakingRewards",
@@ -110,25 +78,11 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 9,
+      "step": 6,
       "name": "getSpCoinMetaData",
       "panel": "spcoin_rread",
       "method": "getSpCoinMetaData",
       "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 10,
-      "name": "balanceOf",
-      "panel": "ecr20_read",
-      "method": "balanceOf",
-      "params": [
-        {
-          "key": "Owner Address",
-          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
-        }
-      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

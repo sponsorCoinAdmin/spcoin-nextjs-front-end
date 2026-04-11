@@ -762,6 +762,53 @@ export function useSponsorCoinLabScripts({
     [selectedScriptId, selectedScript, selectedScriptStepNumber],
   );
 
+  const moveScriptStepToPosition = useCallback(
+    (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => {
+      if (!selectedScriptId || !selectedScript) return;
+      if (selectedScript.isSystemScript) {
+        setStatus('System Tests are read-only. Copy the script to edit it.');
+        return;
+      }
+
+      const currentSteps = Array.isArray(selectedScript.steps) ? selectedScript.steps : [];
+      const sourceIndex = currentSteps.findIndex((step) => step.step === sourceStepNumber);
+      const targetIndex = currentSteps.findIndex((step) => step.step === targetStepNumber);
+      if (sourceIndex < 0 || targetIndex < 0) return;
+
+      const reorderedSteps = [...currentSteps];
+      const [movedStep] = reorderedSteps.splice(sourceIndex, 1);
+      if (!movedStep) return;
+
+      const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+      const insertIndex = placement === 'before' ? adjustedTargetIndex : adjustedTargetIndex + 1;
+      if (insertIndex === sourceIndex) return;
+
+      reorderedSteps.splice(insertIndex, 0, movedStep);
+      const normalizedSteps = reorderedSteps.map((step, idx) => ({ ...step, step: idx + 1 }));
+
+      setScripts((prev) =>
+        prev.map((script) => (script.id === selectedScriptId ? { ...script, steps: normalizedSteps } : script)),
+      );
+      setExpandedScriptStepIds((prev) => {
+        const nextExpanded: Record<string, boolean> = {};
+        reorderedSteps.forEach((step, idx) => {
+          nextExpanded[String(idx + 1)] = Boolean(prev[String(step.step)]);
+        });
+        return nextExpanded;
+      });
+
+      const selectedStepRef =
+        selectedScriptStepNumber === null ? null : currentSteps.find((step) => step.step === selectedScriptStepNumber) || null;
+      if (!selectedStepRef) {
+        setSelectedScriptStepNumber(null);
+        return;
+      }
+      const nextSelectedIndex = reorderedSteps.indexOf(selectedStepRef);
+      setSelectedScriptStepNumber(nextSelectedIndex >= 0 ? nextSelectedIndex + 1 : null);
+    },
+    [selectedScript, selectedScriptId, selectedScriptStepNumber, setStatus],
+  );
+
   const deleteSelectedScriptStep = useCallback(() => {
     if (!selectedScriptId || selectedScriptStepNumber === null) return;
     if (selectedScript?.isSystemScript) {
@@ -788,6 +835,75 @@ export function useSponsorCoinLabScripts({
     });
     setSelectedScriptStepNumber(null);
   }, [selectedScript?.isSystemScript, selectedScript?.steps, selectedScriptId, selectedScriptStepNumber, setStatus]);
+
+  const deleteScriptStepByNumber = useCallback(
+    (stepNumber: number) => {
+      if (!selectedScriptId || stepNumber === null) return;
+      if (selectedScript?.isSystemScript) {
+        setStatus('System Tests are read-only. Copy the script to edit it.');
+        return;
+      }
+      setScripts((prev) =>
+        prev.map((script) => {
+          if (script.id !== selectedScriptId) return script;
+          const remainingSteps = script.steps
+            .filter((step) => step.step !== stepNumber)
+            .map((step, idx) => ({ ...step, step: idx + 1 }));
+          return { ...script, steps: remainingSteps };
+        }),
+      );
+      setExpandedScriptStepIds((prev) => {
+        const currentSteps = Array.isArray(selectedScript?.steps) ? selectedScript.steps : [];
+        const remainingSteps = currentSteps.filter((step) => step.step !== stepNumber);
+        const nextExpanded: Record<string, boolean> = {};
+        remainingSteps.forEach((step, idx) => {
+          nextExpanded[String(idx + 1)] = Boolean(prev[String(step.step)]);
+        });
+        return nextExpanded;
+      });
+      setSelectedScriptStepNumber((current) => (current === stepNumber ? null : current));
+    },
+    [selectedScript?.isSystemScript, selectedScript?.steps, selectedScriptId, setStatus],
+  );
+
+  const duplicateScriptStepByNumber = useCallback(
+    (stepNumber: number) => {
+      if (!selectedScriptId || !selectedScript) return;
+      if (selectedScript.isSystemScript) {
+        setStatus('System Tests are read-only. Copy the script to edit it.');
+        return;
+      }
+      const currentSteps = Array.isArray(selectedScript.steps) ? selectedScript.steps : [];
+      const sourceIndex = currentSteps.findIndex((step) => step.step === stepNumber);
+      if (sourceIndex < 0) return;
+      const sourceStep = currentSteps[sourceIndex];
+      if (!sourceStep) return;
+
+      setScripts((prev) =>
+        prev.map((script) => {
+          if (script.id !== selectedScriptId) return script;
+          const nextSteps = [...script.steps];
+          nextSteps.splice(sourceIndex + 1, 0, { ...sourceStep });
+          return {
+            ...script,
+            steps: nextSteps.map((step, idx) => ({ ...step, step: idx + 1 })),
+          };
+        }),
+      );
+      setExpandedScriptStepIds((prev) => {
+        const nextExpanded: Record<string, boolean> = {};
+        currentSteps.forEach((step, idx) => {
+          nextExpanded[String(idx + 1)] = Boolean(prev[String(step.step)]);
+          if (idx === sourceIndex) {
+            nextExpanded[String(idx + 2)] = Boolean(prev[String(step.step)]);
+          }
+        });
+        return nextExpanded;
+      });
+      setSelectedScriptStepNumber(sourceIndex + 2);
+    },
+    [selectedScript, selectedScriptId, setStatus],
+  );
 
   const requestDeleteSelectedScriptStep = useCallback(() => {
     if (selectedScriptStepNumber === null) return;
@@ -843,6 +959,41 @@ export function useSponsorCoinLabScripts({
     setOutputPanelMode('formatted');
     setStatus(`Created ${nextScript.name}.`);
   }, [activeNetworkName, allScripts, mode, scriptNameInput, scriptNameValidation.message, scriptNameValidation.tone, setFormattedOutputDisplay, setOutputPanelMode, setStatus]);
+
+  const createScriptFromSteps = useCallback(
+    (nextNameRaw: string, steps: LabScriptStep[]) => {
+      const nextName = String(nextNameRaw || '').trim();
+      if (!nextName) {
+        setStatus('Srript Name Required');
+        return false;
+      }
+
+      const normalizedNextName = normalizeScriptName(nextName);
+      const duplicateExists = allScripts.some((script) => normalizeScriptName(script.name) === normalizedNextName);
+      if (duplicateExists) {
+        setStatus('Duplicate Name');
+        return false;
+      }
+
+      const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nextScript: LabScript = {
+        id: nextId,
+        name: nextName,
+        'Date Created': formatScriptCreatedDate(new Date()),
+        network: mode === 'hardhat' ? HARDHAT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
+        steps: Array.isArray(steps) ? steps.map((step, idx) => normalizeScriptStep({ ...step }, idx)) : [],
+      };
+
+      setScripts((prev) => [...prev, nextScript]);
+      setSelectedScriptId(nextId);
+      setScriptNameInput(nextName);
+      setSelectedScriptStepNumber(null);
+      setExpandedScriptStepIds({});
+      setStatus(`Saved ${nextScript.name}.`);
+      return true;
+    },
+    [activeNetworkName, allScripts, mode, normalizeScriptStep, setStatus],
+  );
 
   const duplicateSelectedScript = useCallback(
     (nextNameRaw: string) => {
@@ -919,15 +1070,11 @@ export function useSponsorCoinLabScripts({
         setScriptNameInput('');
         setSelectedScriptStepNumber(null);
         setExpandedScriptStepIds({});
-        setFormattedOutputDisplay(
-          JSON.stringify({ scripts: [] }, null, 2),
-        );
         return remaining;
       });
-      setOutputPanelMode('formatted');
       setStatus('Deleted selected script.');
     },
-    [scriptNameMatch?.isSystemScript, selectedScript?.isSystemScript, setFormattedOutputDisplay, setOutputPanelMode, setStatus],
+    [scriptNameMatch?.isSystemScript, selectedScript?.isSystemScript, setStatus],
   );
 
   const handleDeleteScriptClick = useCallback(() => {
@@ -1262,6 +1409,7 @@ export function useSponsorCoinLabScripts({
   }, [buildCurrentScriptStepDraft, editingScriptStepNumber, getStepParamEntries, selectedScript?.steps]);
 
   return {
+    allScripts,
     scripts,
     visibleScripts,
     setScripts,
@@ -1316,10 +1464,14 @@ export function useSponsorCoinLabScripts({
     toggleScriptStepExpanded,
     goToAdjacentScriptStep,
     moveSelectedScriptStep,
+    moveScriptStepToPosition,
+    deleteScriptStepByNumber,
+    duplicateScriptStepByNumber,
     requestDeleteSelectedScriptStep,
     confirmDeleteSelectedScriptStep,
     toggleScriptStepBreakpoint,
     createNewScript,
+    createScriptFromSteps,
     duplicateSelectedScript,
     clearSelectedScript,
     handleDeleteScriptClick,

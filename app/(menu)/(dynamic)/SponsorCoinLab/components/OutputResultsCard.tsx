@@ -5,15 +5,152 @@ import LabCardHeader from './LabCardHeader';
 import AccountSelection from './AccountSelection';
 import JsonInspector from '@/components/shared/JsonInspector';
 import { BaseModal } from '@/components/modals';
+import { ERC20_READ_OPTIONS } from '../jsonMethods/erc20/read';
+import { ERC20_WRITE_OPTIONS } from '../jsonMethods/erc20/write';
+import { SERIALIZATION_TEST_METHOD_DEFS } from '../jsonMethods/serializationTests';
+import { SPCOIN_READ_METHOD_DEFS } from '../jsonMethods/spCoin/read';
+import { SPCOIN_WRITE_METHOD_DEFS } from '../jsonMethods/spCoin/write';
 import {
   defaultMissingImage,
   getAccountLogoURL,
   normalizeAddressForAssets,
 } from '@/lib/context/helpers/assetHelpers';
 import { useJsonInspector } from '@/lib/hooks/useJsonInspector';
+import type { LabScriptStep } from '../scriptBuilder/types';
 
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type FormattedPanelView = 'script' | 'output';
+type DragPlacement = 'before' | 'after';
+
+type DisplayedOutputCall = {
+  method: string;
+  parameters: Array<{ label: string; value: string }>;
+};
+
+function reorderFormattedOutputBlocks(
+  rawDisplay: string,
+  sourceStepNumber: number,
+  targetStepNumber: number,
+  placement: DragPlacement,
+): string | null {
+  const trimmedDisplay = String(rawDisplay || '').trim();
+  if (!trimmedDisplay || trimmedDisplay.startsWith('(no output')) return null;
+
+  const blocks = trimmedDisplay
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  const sourceIndex = sourceStepNumber - 1;
+  const targetIndex = targetStepNumber - 1;
+  if (
+    sourceIndex < 0 ||
+    targetIndex < 0 ||
+    sourceIndex >= blocks.length ||
+    targetIndex >= blocks.length
+  ) {
+    return null;
+  }
+
+  const reorderedBlocks = [...blocks];
+  const [movedBlock] = reorderedBlocks.splice(sourceIndex, 1);
+  if (!movedBlock) return null;
+
+  const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  const insertIndex = placement === 'before' ? adjustedTargetIndex : adjustedTargetIndex + 1;
+  if (insertIndex === sourceIndex) return null;
+
+  reorderedBlocks.splice(insertIndex, 0, movedBlock);
+  return reorderedBlocks.join('\n\n');
+}
+
+function removeFormattedOutputBlock(rawDisplay: string, stepNumber: number): string | null {
+  const trimmedDisplay = String(rawDisplay || '').trim();
+  if (!trimmedDisplay || trimmedDisplay.startsWith('(no output')) return null;
+  const blocks = trimmedDisplay
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const index = stepNumber - 1;
+  if (index < 0 || index >= blocks.length) return null;
+  const nextBlocks = blocks.filter((_, blockIndex) => blockIndex !== index);
+  return nextBlocks.length ? nextBlocks.join('\n\n') : '(no output yet)';
+}
+
+function duplicateFormattedOutputBlock(rawDisplay: string, stepNumber: number): string | null {
+  const trimmedDisplay = String(rawDisplay || '').trim();
+  if (!trimmedDisplay || trimmedDisplay.startsWith('(no output')) return null;
+  const blocks = trimmedDisplay
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const index = stepNumber - 1;
+  if (index < 0 || index >= blocks.length) return null;
+  const targetBlock = blocks[index];
+  if (!targetBlock) return null;
+  const nextBlocks = [...blocks];
+  nextBlocks.splice(index + 1, 0, targetBlock);
+  return nextBlocks.join('\n\n');
+}
+
+function parseDisplayedOutputCalls(rawDisplay: string): DisplayedOutputCall[] {
+  return String(rawDisplay || '')
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      try {
+        const parsed = JSON.parse(block) as {
+          call?: { method?: unknown; parameters?: Array<{ label?: unknown; value?: unknown }> };
+        };
+        const method = String(parsed?.call?.method || '').trim();
+        if (!method) return null;
+        const parameters = Array.isArray(parsed?.call?.parameters)
+          ? parsed.call.parameters.map((entry) => ({
+              label: String(entry?.label || '').trim(),
+              value: String(entry?.value || '').trim(),
+            }))
+          : [];
+        return { method, parameters };
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is DisplayedOutputCall => entry !== null);
+}
+
+function buildScriptStepsFromOutputCalls(calls: DisplayedOutputCall[]): LabScriptStep[] {
+  return calls.reduce<LabScriptStep[]>((steps, call, index) => {
+    const panel: LabScriptStep['panel'] | null = ERC20_READ_OPTIONS.includes(call.method as never)
+      ? 'ecr20_read'
+      : ERC20_WRITE_OPTIONS.includes(call.method as never)
+        ? 'erc20_write'
+        : Object.prototype.hasOwnProperty.call(SPCOIN_READ_METHOD_DEFS, call.method)
+          ? 'spcoin_rread'
+          : Object.prototype.hasOwnProperty.call(SERIALIZATION_TEST_METHOD_DEFS, call.method)
+            ? 'serialization_tests'
+            : Object.prototype.hasOwnProperty.call(SPCOIN_WRITE_METHOD_DEFS, call.method)
+              ? 'spcoin_write'
+              : null;
+    if (!panel) return steps;
+
+    const senderEntry = call.parameters.find((entry) => entry.label === 'msg.sender');
+    steps.push({
+      step: index + 1,
+      name: call.method,
+      panel,
+      method: call.method,
+      params: call.parameters
+        .filter((entry) => entry.label && entry.label !== 'msg.sender')
+        .map((entry) => ({
+          key: entry.label,
+          value: entry.value,
+        })),
+      ...(senderEntry?.value ? { 'msg.sender': senderEntry.value } : {}),
+    });
+    return steps;
+  }, []);
+}
 
 type Props = {
   className: string;
@@ -69,6 +206,13 @@ type Props = {
     requestRefreshSelectedTreeAccount: () => void;
     openAccountFromAddress: (account: string, pathHint?: string) => Promise<void>;
   };
+  scriptActions: {
+    moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: DragPlacement) => void;
+    deleteScriptStepByNumber: (stepNumber: number) => void;
+    duplicateScriptStepByNumber: (stepNumber: number) => void;
+    createScriptFromSteps: (nextNameRaw: string, steps: LabScriptStep[]) => boolean;
+    existingScriptNames: string[];
+  };
 };
 
 export default function OutputResultsCard({
@@ -80,6 +224,7 @@ export default function OutputResultsCard({
   controls,
   content,
   treeActions,
+  scriptActions,
 }: Props) {
   const hiddenRuleOptions = [
     ['zeroValues', '0 values'],
@@ -113,6 +258,20 @@ export default function OutputResultsCard({
     logoURL: defaultMissingImage,
   });
   const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
+  const [isSaveScriptModalOpen, setIsSaveScriptModalOpen] = useState(false);
+  const [saveScriptNameInput, setSaveScriptNameInput] = useState('');
+  const [isSaveButtonHovered, setIsSaveButtonHovered] = useState(false);
+  const [isSaveConfirmHovered, setIsSaveConfirmHovered] = useState(false);
+  const [stepActionModalState, setStepActionModalState] = useState<{
+    stepNumber: number;
+    methodName: string;
+    confirmingDelete: boolean;
+  } | null>(null);
+  const [draggedScriptStepNumber, setDraggedScriptStepNumber] = useState<number | null>(null);
+  const [scriptStepDropTarget, setScriptStepDropTarget] = useState<{ stepNumber: number; placement: DragPlacement } | null>(null);
+  const activeDraggedScriptStepNumberRef = useRef<number | null>(null);
+  const activeScriptStepDropTargetRef = useRef<{ stepNumber: number; placement: DragPlacement } | null>(null);
+  const scriptStepDragCleanupRef = useRef<(() => void) | null>(null);
   const [selectedFormattedAccountMetadata, setSelectedFormattedAccountMetadata] = useState<{
     name?: string;
     symbol?: string;
@@ -133,6 +292,31 @@ export default function OutputResultsCard({
   const lastMetadataRefreshTokenRef = useRef(treeActions.treeAccountRefreshToken);
   const currentFormattedDisplay =
     controls.formattedPanelView === 'script' ? content.scriptDisplay : content.formattedOutputDisplay;
+  const displayedOutputCalls = useMemo(
+    () => parseDisplayedOutputCalls(content.formattedOutputDisplay),
+    [content.formattedOutputDisplay],
+  );
+  const saveableOutputSteps = useMemo(
+    () => buildScriptStepsFromOutputCalls(displayedOutputCalls),
+    [displayedOutputCalls],
+  );
+  const normalizedSaveScriptName = String(saveScriptNameInput || '').trim().toLowerCase();
+  const saveScriptNameExists = useMemo(
+    () => scriptActions.existingScriptNames.some((name) => String(name || '').trim().toLowerCase() === normalizedSaveScriptName),
+    [normalizedSaveScriptName, scriptActions.existingScriptNames],
+  );
+  const saveScriptValidation = useMemo(() => {
+    if (saveableOutputSteps.length === 0) {
+      return { tone: 'invalid' as const, title: 'No Methods Available' };
+    }
+    if (!String(saveScriptNameInput || '').trim()) {
+      return { tone: 'invalid' as const, title: 'Srript Name Required' };
+    }
+    if (saveScriptNameExists) {
+      return { tone: 'invalid' as const, title: 'Duplicate Name' };
+    }
+    return { tone: 'valid' as const, title: 'Save Script' };
+  }, [saveScriptNameExists, saveScriptNameInput, saveableOutputSteps.length]);
   const inspectorNamespace =
     controls.outputPanelMode === 'tree'
       ? 'sponsorCoinLab.tree'
@@ -279,6 +463,153 @@ export default function OutputResultsCard({
     return (collapsibleFormattedBlocks || []).map((block) => hoistMasterSponsorRewardRate(block));
   }, [collapsibleFormattedBlocks]);
 
+  const formattedInspectorLooksStepBased = useMemo(() => {
+    if (!displayFormattedBlocks.length) return false;
+    return displayFormattedBlocks.every((block) => {
+      if (!block || typeof block !== 'object' || Array.isArray(block)) return false;
+      const record = block as Record<string, unknown>;
+      return 'call' in record || 'result' in record || 'parameters' in record || 'step' in record;
+    });
+  }, [displayFormattedBlocks]);
+
+  const isScriptInspectorReorderEnabled =
+    controls.outputPanelMode === 'formatted' &&
+    controls.formattedPanelView === 'output' &&
+    !controls.formattedJsonViewEnabled &&
+    formattedInspectorLooksStepBased;
+
+  const moveInspectorScriptStep = React.useCallback(
+    (sourceStepNumber: number, targetStepNumber: number, placement: DragPlacement) => {
+      if (sourceStepNumber === targetStepNumber) return;
+      console.debug('[OutputResultsCard] moveInspectorScriptStep', {
+        sourceStepNumber,
+        targetStepNumber,
+        placement,
+      });
+      scriptActions.moveScriptStepToPosition(sourceStepNumber, targetStepNumber, placement);
+      if (controls.formattedPanelView === 'output') {
+        const reorderedOutputDisplay = reorderFormattedOutputBlocks(
+          content.formattedOutputDisplay,
+          sourceStepNumber,
+          targetStepNumber,
+          placement,
+        );
+        if (reorderedOutputDisplay) {
+          controls.setFormattedOutputDisplay(reorderedOutputDisplay);
+        }
+      }
+    },
+    [content.formattedOutputDisplay, controls, scriptActions],
+  );
+
+  const stopInspectorScriptDrag = React.useCallback(() => {
+    console.debug('[OutputResultsCard] stopInspectorScriptDrag', {
+      draggedStepNumber: activeDraggedScriptStepNumberRef.current,
+      dropTarget: activeScriptStepDropTargetRef.current,
+    });
+    scriptStepDragCleanupRef.current?.();
+    scriptStepDragCleanupRef.current = null;
+    activeDraggedScriptStepNumberRef.current = null;
+    activeScriptStepDropTargetRef.current = null;
+    setDraggedScriptStepNumber(null);
+    setScriptStepDropTarget(null);
+  }, []);
+
+  const beginInspectorScriptDrag = React.useCallback(
+    (sourceStepNumber: number) => {
+      if (!isScriptInspectorReorderEnabled) {
+        console.debug('[OutputResultsCard] beginInspectorScriptDrag blocked', {
+          sourceStepNumber,
+          outputPanelMode: controls.outputPanelMode,
+          formattedPanelView: controls.formattedPanelView,
+          formattedJsonViewEnabled: controls.formattedJsonViewEnabled,
+          formattedInspectorLooksStepBased,
+        });
+        return;
+      }
+      stopInspectorScriptDrag();
+
+      console.debug('[OutputResultsCard] beginInspectorScriptDrag', { sourceStepNumber });
+      activeDraggedScriptStepNumberRef.current = sourceStepNumber;
+      activeScriptStepDropTargetRef.current = null;
+      setDraggedScriptStepNumber(sourceStepNumber);
+      setScriptStepDropTarget(null);
+
+      const previousUserSelect = document.body.style.userSelect;
+      const previousCursor = document.body.style.cursor;
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'grabbing';
+
+      const handleMouseMove = (event: MouseEvent) => {
+        const activeSourceStepNumber = activeDraggedScriptStepNumberRef.current;
+        if (activeSourceStepNumber === null) return;
+
+        const target = document.elementFromPoint(event.clientX, event.clientY);
+        const row = target instanceof Element ? target.closest('[data-script-step-number]') : null;
+        const targetStepNumberRaw = row?.getAttribute('data-script-step-number') || '';
+        const targetStepNumber = Number(targetStepNumberRaw);
+        if (!Number.isInteger(targetStepNumber) || targetStepNumber === activeSourceStepNumber) {
+          return;
+        }
+
+        if (!(row instanceof Element)) {
+          return;
+        }
+
+        const bounds = row.getBoundingClientRect();
+        const placement: DragPlacement = event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after';
+        const nextDropTarget = { stepNumber: targetStepNumber, placement };
+        console.debug('[OutputResultsCard] drag target', {
+          sourceStepNumber: activeSourceStepNumber,
+          targetStepNumber,
+          placement,
+        });
+        activeScriptStepDropTargetRef.current = nextDropTarget;
+        setScriptStepDropTarget((previous) =>
+          previous?.stepNumber === nextDropTarget.stepNumber && previous.placement === nextDropTarget.placement
+            ? previous
+            : nextDropTarget,
+        );
+      };
+
+      const handleMouseUp = () => {
+        const activeSourceStepNumber = activeDraggedScriptStepNumberRef.current;
+        const activeDropTarget = activeScriptStepDropTargetRef.current;
+        console.debug('[OutputResultsCard] mouseup', {
+          activeSourceStepNumber,
+          activeDropTarget,
+        });
+        stopInspectorScriptDrag();
+        if (
+          activeSourceStepNumber === null ||
+          !activeDropTarget ||
+          activeDropTarget.stepNumber === activeSourceStepNumber
+        ) {
+          return;
+        }
+        moveInspectorScriptStep(activeSourceStepNumber, activeDropTarget.stepNumber, activeDropTarget.placement);
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp, { once: true });
+      scriptStepDragCleanupRef.current = () => {
+        document.body.style.userSelect = previousUserSelect;
+        document.body.style.cursor = previousCursor;
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    },
+    [
+      controls.formattedJsonViewEnabled,
+      controls.formattedPanelView,
+      controls.outputPanelMode,
+      formattedInspectorLooksStepBased,
+      isScriptInspectorReorderEnabled,
+      moveInspectorScriptStep,
+      stopInspectorScriptDrag,
+    ],
+  );
+
   useEffect(() => {
     const account = String(treeActions.selectedTreeAccount || '').trim();
     const folder = normalizeAddressForAssets(account);
@@ -391,6 +722,60 @@ export default function OutputResultsCard({
     return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [isShowAllMenuOpen]);
 
+  useEffect(() => () => stopInspectorScriptDrag(), [stopInspectorScriptDrag]);
+
+  const handleStepDoubleClick = React.useCallback((stepNumber: number, methodName: string) => {
+    setStepActionModalState({
+      stepNumber,
+      methodName: String(methodName || '').trim(),
+      confirmingDelete: false,
+    });
+  }, []);
+
+  const handleDeleteStepFromModal = React.useCallback(() => {
+    if (!stepActionModalState) return;
+    if (!stepActionModalState.confirmingDelete) {
+      setStepActionModalState((current) => (current ? { ...current, confirmingDelete: true } : current));
+      return;
+    }
+    scriptActions.deleteScriptStepByNumber(stepActionModalState.stepNumber);
+    if (controls.formattedPanelView === 'output') {
+      const nextDisplay = removeFormattedOutputBlock(content.formattedOutputDisplay, stepActionModalState.stepNumber);
+      if (nextDisplay !== null) {
+        controls.setFormattedOutputDisplay(nextDisplay);
+      }
+    }
+    setStepActionModalState(null);
+  }, [content.formattedOutputDisplay, controls, scriptActions, stepActionModalState]);
+
+  const handleCopyStepFromModal = React.useCallback(() => {
+    if (!stepActionModalState) return;
+    scriptActions.duplicateScriptStepByNumber(stepActionModalState.stepNumber);
+    if (controls.formattedPanelView === 'output') {
+      const nextDisplay = duplicateFormattedOutputBlock(content.formattedOutputDisplay, stepActionModalState.stepNumber);
+      if (nextDisplay !== null) {
+        controls.setFormattedOutputDisplay(nextDisplay);
+      }
+    }
+    setStepActionModalState(null);
+  }, [content.formattedOutputDisplay, controls, scriptActions, stepActionModalState]);
+
+  const handleOpenSaveScriptModal = React.useCallback(() => {
+    if (saveableOutputSteps.length === 0) return;
+    setSaveScriptNameInput('');
+    setIsSaveConfirmHovered(false);
+    setIsSaveScriptModalOpen(true);
+  }, [saveableOutputSteps.length]);
+
+  const handleConfirmSaveScript = React.useCallback(() => {
+    if (saveScriptValidation.tone !== 'valid') return;
+    if (scriptActions.createScriptFromSteps(String(saveScriptNameInput || '').trim(), saveableOutputSteps)) {
+      setIsSaveScriptModalOpen(false);
+      setSaveScriptNameInput('');
+      setIsSaveConfirmHovered(false);
+    }
+  }, [saveScriptNameInput, saveScriptValidation.tone, saveableOutputSteps, scriptActions]);
+
   const allShownRulesSelected = hiddenRuleOptions.every(
     ([key]) => !hiddenInspectorRules[key],
   );
@@ -491,6 +876,22 @@ export default function OutputResultsCard({
               >
                 Clear
               </button>
+              {controls.outputPanelMode === 'formatted' && controls.formattedPanelView === 'output' ? (
+                <button
+                  type="button"
+                  className={`${actionButtonClassName} ${
+                    (isSaveButtonHovered ? saveScriptValidation.tone : 'valid') === 'invalid'
+                      ? 'hover:bg-red-600 hover:text-white'
+                      : ''
+                  }`}
+                  title={saveableOutputSteps.length === 0 ? 'No Methods Available' : 'Save Script'}
+                  onMouseEnter={() => setIsSaveButtonHovered(true)}
+                  onMouseLeave={() => setIsSaveButtonHovered(false)}
+                  onClick={handleOpenSaveScriptModal}
+                >
+                  Save
+                </button>
+              ) : null}
             </div>
           </div>
         }
@@ -693,7 +1094,7 @@ export default function OutputResultsCard({
           !controls.formattedJsonViewEnabled &&
           collapsibleFormattedBlocks ? (
             <div className={`h-full min-h-0 overflow-auto p-3 pr-36 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
-              <div className="space-y-3">
+              <div className="space-y-0">
                 {displayFormattedBlocks.map((block, index) => (
                   <JsonInspector
                     key={`${activeInspectorRootLabel}-${index}`}
@@ -725,6 +1126,15 @@ export default function OutputResultsCard({
                     }
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                     onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
+                    scriptStepDragState={{
+                      enabled: isScriptInspectorReorderEnabled,
+                      draggedStepNumber: draggedScriptStepNumber,
+                      dropTarget: scriptStepDropTarget,
+                      setDraggedStepNumber: setDraggedScriptStepNumber,
+                      setDropTarget: setScriptStepDropTarget,
+                      beginDrag: beginInspectorScriptDrag,
+                      onStepDoubleClick: handleStepDoubleClick,
+                    }}
                   />
                 ))}
               </div>
@@ -756,6 +1166,15 @@ export default function OutputResultsCard({
                     tokenDecimals={activeTokenDecimals}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                     onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
+                    scriptStepDragState={{
+                      enabled: false,
+                      draggedStepNumber: null,
+                      dropTarget: null,
+                      setDraggedStepNumber: () => undefined,
+                      setDropTarget: () => undefined,
+                      beginDrag: () => undefined,
+                      onStepDoubleClick: () => undefined,
+                    }}
                   />
                 ))}
               </div>
@@ -823,6 +1242,96 @@ export default function OutputResultsCard({
           }
           metadata={selectedFormattedAccountMetadata}
         />
+      </BaseModal>
+      <BaseModal
+        isOpen={isSaveScriptModalOpen}
+        title="Save Script"
+        maxWidthClassName="max-w-md"
+        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+        titleClassName="text-xl font-semibold text-[#8FA8FF]"
+        footer={
+          <>
+            <button
+              type="button"
+              className={actionButtonClassName}
+              onClick={() => {
+                setIsSaveScriptModalOpen(false);
+                setIsSaveConfirmHovered(false);
+              }}
+            >
+              Return
+            </button>
+            <button
+              type="button"
+              className={`${actionButtonClassName} ${
+                (isSaveConfirmHovered ? saveScriptValidation.tone : 'valid') === 'invalid'
+                  ? 'hover:bg-red-600 hover:text-white'
+                  : ''
+              }`}
+              title={saveScriptValidation.title}
+              onMouseEnter={() => setIsSaveConfirmHovered(true)}
+              onMouseLeave={() => setIsSaveConfirmHovered(false)}
+              onClick={handleConfirmSaveScript}
+            >
+              Save
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div className="text-sm text-slate-200">Enter a script name to save the current output methods.</div>
+          <input
+            className={inputStyle}
+            value={saveScriptNameInput}
+            onChange={(event) => setSaveScriptNameInput(event.target.value)}
+            placeholder="Script name"
+            title="Script name"
+          />
+        </div>
+      </BaseModal>
+      <BaseModal
+        isOpen={Boolean(stepActionModalState)}
+        title={
+          stepActionModalState?.confirmingDelete
+            ? 'Confirm Delete Action'
+            : `Step ${stepActionModalState?.stepNumber ?? ''} Action`
+        }
+        maxWidthClassName="max-w-md"
+        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+        titleClassName="text-xl font-semibold text-[#8FA8FF]"
+        footer={
+          <>
+            <button
+              type="button"
+              className={actionButtonClassName}
+              onClick={() =>
+                setStepActionModalState((current) =>
+                  current?.confirmingDelete ? { ...current, confirmingDelete: false } : null,
+                )
+              }
+            >
+              Return
+            </button>
+            {!stepActionModalState?.confirmingDelete ? (
+              <button type="button" className={actionButtonClassName} onClick={handleCopyStepFromModal}>
+                Copy
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="rounded-lg border border-red-500 bg-red-950 px-3 py-[0.45rem] text-sm text-red-200 transition-colors hover:bg-red-600 hover:text-white"
+              onClick={handleDeleteStepFromModal}
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <div className="text-sm text-slate-200">
+          {stepActionModalState?.confirmingDelete
+            ? `Confirm Delete ${stepActionModalState?.methodName || 'Method'} Action`
+            : `Copy / Delete ${stepActionModalState?.methodName || 'Method'}`}
+        </div>
       </BaseModal>
     </article>
   );

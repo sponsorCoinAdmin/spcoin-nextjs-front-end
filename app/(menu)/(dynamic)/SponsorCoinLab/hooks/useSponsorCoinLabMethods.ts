@@ -559,6 +559,56 @@ export function useSponsorCoinLabMethods({
     },
     [],
   );
+  const normalizeWriteResultForDisplay = useCallback((result: unknown) => {
+    if (result === undefined || result === null) {
+      return {
+        status: 'success',
+        message: 'Completed successfully.',
+      };
+    }
+    if (Array.isArray(result) && result.length === 0) {
+      return {
+        status: 'success',
+        message: 'Completed successfully.',
+      };
+    }
+    if (
+      Array.isArray(result) &&
+      result.every(
+        (entry) =>
+          entry &&
+          typeof entry === 'object' &&
+          !Array.isArray(entry) &&
+          ('txHash' in (entry as Record<string, unknown>) || 'receiptHash' in (entry as Record<string, unknown>)),
+      )
+    ) {
+      const receipts = result as Array<Record<string, unknown>>;
+      if (receipts.length === 1) {
+        const [receipt] = receipts;
+        return {
+          status: String(receipt.status || 'success'),
+          message: 'Completed successfully.',
+          label: String(receipt.label || ''),
+          transactionId: String(receipt.txHash || ''),
+          receiptId: String(receipt.receiptHash || ''),
+          blockNumber: String(receipt.blockNumber || ''),
+        };
+      }
+      return {
+        status: 'success',
+        message: `Completed ${receipts.length} transaction(s).`,
+        transactionCount: String(receipts.length),
+        transactions: receipts.map((receipt) => ({
+          label: String(receipt.label || ''),
+          transactionId: String(receipt.txHash || ''),
+          receiptId: String(receipt.receiptHash || ''),
+          blockNumber: String(receipt.blockNumber || ''),
+          status: String(receipt.status || ''),
+        })),
+      };
+    }
+    return result;
+  }, []);
   const formatFormattedPanelPayload = useCallback(
     (payload: unknown) => {
       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -743,7 +793,7 @@ export function useSponsorCoinLabMethods({
           appendLog,
           setStatus,
         });
-        return { call, result };
+        return { call, result: normalizeWriteResultForDisplay(result) };
       }
 
       if (panel === 'spcoin_rread') {
@@ -919,7 +969,7 @@ export function useSponsorCoinLabMethods({
           appendLog,
           setStatus,
         });
-        return { call, result };
+        return { call, result: normalizeWriteResultForDisplay(result) };
       }
       const shouldUseServerBackedWrite = false;
       const result = shouldUseServerBackedWrite
@@ -943,7 +993,7 @@ export function useSponsorCoinLabMethods({
             spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             setStatus,
           });
-      return { call, result };
+      return { call, result: normalizeWriteResultForDisplay(result) };
     },
     [
       appendLog,
@@ -957,6 +1007,7 @@ export function useSponsorCoinLabMethods({
       mode,
       requireContractAddress,
       runServerBackedSpCoinStep,
+      normalizeWriteResultForDisplay,
       selectedHardhatAddress,
       setStatus,
       spCoinReadMethodDefs,

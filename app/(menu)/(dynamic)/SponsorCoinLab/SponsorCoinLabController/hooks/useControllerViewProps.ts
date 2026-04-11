@@ -99,6 +99,7 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     runRemainingScriptSteps: args.runRemainingScriptSteps,
     isScriptDebugRunning: args.isScriptDebugRunning,
     moveSelectedScriptStep: args.moveSelectedScriptStep,
+    moveScriptStepToPosition: args.moveScriptStepToPosition,
     requestDeleteSelectedScriptStep: args.requestDeleteSelectedScriptStep,
     renderScriptStepRow: args.renderScriptStepRow,
     invalidFieldIds: args.invalidFieldIds,

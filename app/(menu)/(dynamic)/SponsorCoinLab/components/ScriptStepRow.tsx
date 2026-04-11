@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { LabScriptParam, LabScriptStep } from '../scriptBuilder/types';
 
 type Props = {
@@ -46,6 +47,11 @@ export default function ScriptStepRow({
   const rowClassName = isSelected
     ? 'rounded-md bg-[#131A2A] ring-1 ring-[#5981F3]/50'
     : '';
+  const handleStepKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    selectScriptStep(step);
+  };
 
   return (
     <div className={`m-0 flex flex-col p-0 font-mono leading-tight ${rowClassName}`}>
@@ -72,15 +78,17 @@ export default function ScriptStepRow({
               {isExpanded ? '[-]' : '[+]'}
             </button>
           ) : null}
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => selectScriptStep(step)}
             onDoubleClick={() => editScriptStep(step)}
-            className={`min-w-0 text-left ${methodClassName}`}
+            onKeyDown={handleStepKeyDown}
+            className={`min-w-0 cursor-inherit select-none text-left ${methodClassName}`}
             title={`Select ${step.method}`}
           >
             {step.method}
-          </button>
+          </div>
         </div>
       </div>
       {isExpanded && hasExpandableContent ? (
