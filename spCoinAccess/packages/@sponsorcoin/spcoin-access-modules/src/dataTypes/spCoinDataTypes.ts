@@ -21,6 +21,7 @@ export class SponsorCoinHeader {
 export class AccountStruct {
     // Initialize values to maintain output display order
     constructor() {
+        this.TYPE = "--ACCOUNT--";
         this.accountKey = 0;
         this.creationTime = 0;
         this.totalSpCoins = new TotalSpCoinsStruct();
@@ -32,6 +33,7 @@ export class AccountStruct {
 }
 export class TotalSpCoinsStruct {
     constructor() {
+        this.TYPE = "--TOTAL_SP_COINS--";
         this.totalSpCoins = 0;
         this.balanceOf = 0;
         this.stakedBalance = 0;
@@ -40,6 +42,7 @@ export class TotalSpCoinsStruct {
 }
 export class PendingRewardsStruct {
     constructor() {
+        this.TYPE = "--PENDING_REWARDS--";
         this.pendingRewards = 0;
         this.pendingSponsorRewards = 0;
         this.pendingRecipientRewards = 0;
@@ -55,6 +58,7 @@ export class RelationshipRecordStruct {
 export class RecipientStruct extends RelationshipRecordStruct {
     constructor() {
         super();
+        this.TYPE = "--RECIPIENT_RECORD--";
         this.role = "RECIPIENT";
         this.recipientKey;
         this.creationTime;
@@ -80,6 +84,7 @@ export class RecipientRateStruct {
 export class AgentStruct extends RelationshipRecordStruct {
     constructor() {
         super();
+        this.TYPE = "--AGENT_RECORD--";
         this.role = "AGENT";
         this.agentKey;
         this.stakedSPCoins;
@@ -117,6 +122,7 @@ export class RewardsStruct {
 }
 export class PendingRewardsByTypeStruct {
     constructor() {
+        this.TYPE = "--PENDING_REWARDS_BY_TYPE--";
         this.pendingRewardsByType = new RewardsStruct();
     }
 }

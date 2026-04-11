@@ -21,6 +21,7 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
             : buildPendingRewardsRecord();
     const normalizedPendingRewards = String(normalizedPendingRewardsRecord.pendingRewards ?? "0");
     return {
+        TYPE: "--TOTAL_SP_COINS--",
         totalSpCoins: (
             toBigIntValue(normalizedBalanceOf) +
             toBigIntValue(normalizedStakedBalance) +
@@ -38,6 +39,7 @@ function buildPendingRewardsRecord(rewardsByType = undefined) {
     const pendingRecipientRewards = String(rewardsByType?.recipientRewardsList?.stakingRewards ?? "0");
     const pendingAgentRewards = String(rewardsByType?.agentRewardsList?.stakingRewards ?? "0");
     return {
+        TYPE: "--PENDING_REWARDS--",
         pendingRewards:
             (
                 toBigIntValue(pendingSponsorRewards) +
@@ -203,6 +205,7 @@ function createRelationshipBuildDebug(runtime, rootAccountKey) {
 
 function buildAgentParentRelationshipRecord(agentRateKey, stakedAmount) {
     return {
+        TYPE: "--AGENT_RATE--",
         agentRateKey: String(agentRateKey ?? ""),
         stakedAmount: String(stakedAmount ?? "0"),
     };
@@ -210,6 +213,8 @@ function buildAgentParentRelationshipRecord(agentRateKey, stakedAmount) {
 
 function buildAgentRateRelationshipRecord(relationship) {
     return {
+        TYPE: "--AGENT_RATE--",
+        agentRate: String(relationship?.agentRateKey ?? ""),
         stakedAmount: String(relationship?.stakedAmount ?? "0"),
     };
 }
@@ -344,6 +349,8 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
                 );
             }
             recipientRateBranches[String(recipientRateKey ?? "")] = {
+                TYPE: "--RECIPIENT_RATE--",
+                recipientRate: String(recipientRateKey ?? ""),
                 stakedAmount: String(recipientRateRecordFields?.[2] ?? "0"),
                 agentAccountList: Array.from(agentAccountMap.values()),
             };
@@ -365,7 +372,7 @@ function normalizeDisplayAddress(value) {
 async function getShallowAccountRecord(runtime, accountKey) {
     const baseAccountStruct = await getAccountRecordObjectCached(runtime, accountKey);
     const accountStruct = { ...(baseAccountStruct || {}) };
-    delete accountStruct.TYPE;
+    accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     delete accountStruct.verified;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
@@ -395,7 +402,7 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     if (debugState) debugState.accountRecordReads += 1;
     const baseAccountStruct = await getAccountRecordObjectCached(runtime, accountKey);
     const accountStruct = { ...(baseAccountStruct || {}) };
-    delete accountStruct.TYPE;
+    accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     delete accountStruct.verified;
     const sponsorAccountKeys = Array.isArray(accountStruct.sponsorAccountList) ? accountStruct.sponsorAccountList : [];
@@ -451,6 +458,7 @@ async function buildRecipientAccountList(runtime, sponsorAccountKey, recipientAc
     const recipientAccountMap = new Map();
     for (const recipientKey of recipientAccountKeys || []) {
         const recipientAccount = await buildNestedAccountRecord(runtime, recipientKey, depthRemaining, visitedKeys, debugState);
+        recipientAccount.TYPE = "--RECIPIENT_RECORD--";
         recipientAccount.recipientRateBranches = await buildRecipientRateRelationshipList(runtime, sponsorAccountKey, recipientKey, debugState);
         recipientAccount.agentAccountList = [];
         recipientAccountMap.set(
@@ -486,6 +494,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
                 );
                 for (const agentRateKey of Array.from(new Set(Array.isArray(agentRateKeys) ? agentRateKeys.map((value) => String(value ?? "")) : []))) {
                     const agentAccount = await buildNestedAccountRecord(runtime, agentAccountKey, depthRemaining, visitedKeys, debugState);
+                    agentAccount.TYPE = "--AGENT_RECORD--";
                     agentAccount.agentRateBranches = mergeBranchMaps(
                         agentAccount.agentRateBranches,
                         toAgentRateKeysRecord([
