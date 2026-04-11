@@ -118,7 +118,9 @@ type Params = {
     labels: string[],
     message?: string,
     options?: {
+      title?: string;
       confirmLabel?: string;
+      cancelLabel?: string;
       onConfirm?: () => void | Promise<void>;
     },
   ) => void;
@@ -1082,8 +1084,29 @@ export function useSponsorCoinLabScripts({
       setStatus(deleteScriptValidation.message);
       return;
     }
-    deleteSelectedScript(scriptNameMatch?.id || '');
-  }, [deleteScriptValidation.message, deleteScriptValidation.tone, deleteSelectedScript, scriptNameMatch?.id, setStatus]);
+    const targetScriptId = scriptNameMatch?.id || '';
+    const targetScriptName = String(scriptNameMatch?.name || scriptNameInput || '').trim();
+    showValidationPopup(
+      [],
+      [],
+      targetScriptName ? `Delete script "${targetScriptName}"?` : 'Delete selected script?',
+      {
+        title: 'Delete Script Confirm',
+        confirmLabel: 'Delete',
+        cancelLabel: 'Return',
+        onConfirm: () => deleteSelectedScript(targetScriptId),
+      },
+    );
+  }, [
+    deleteScriptValidation.message,
+    deleteScriptValidation.tone,
+    deleteSelectedScript,
+    scriptNameInput,
+    scriptNameMatch?.id,
+    scriptNameMatch?.name,
+    setStatus,
+    showValidationPopup,
+  ]);
   const buildEditorStepDraft = useCallback(
     (hasMissingRequiredParams: boolean): Omit<LabScriptStep, 'step'> | null => {
       const sender =

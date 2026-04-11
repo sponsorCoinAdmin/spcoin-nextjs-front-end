@@ -233,7 +233,17 @@ export default function OutputResultsCard({
     ['todoValues', 'todo markers'],
     ['emptyCollections', 'empty arrays / objects'],
     ['creationDates', 'creationTime / creationDate'],
+    ['structureType', 'Structure Type'],
     ['formattedAmounts', 'Formatted Amounts'],
+  ] as const;
+  const bulkSelectableHiddenRuleKeys = [
+    'zeroValues',
+    'emptyValues',
+    'falseValues',
+    'todoValues',
+    'emptyCollections',
+    'creationDates',
+    'structureType',
   ] as const;
   const [hiddenInspectorRules, setHiddenInspectorRules] = useState({
     zeroValues: true,
@@ -244,6 +254,7 @@ export default function OutputResultsCard({
     creationDates: true,
     formattedAmounts: false,
   });
+  const [showStructureType, setShowStructureType] = useState(true);
   const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
   const showAllMenuRef = useRef<HTMLDivElement | null>(null);
   const actionButtonClassName =
@@ -776,9 +787,11 @@ export default function OutputResultsCard({
     }
   }, [saveScriptNameInput, saveScriptValidation.tone, saveableOutputSteps, scriptActions]);
 
-  const allShownRulesSelected = hiddenRuleOptions.every(
-    ([key]) => !hiddenInspectorRules[key],
-  );
+  const shownBulkRuleCount = bulkSelectableHiddenRuleKeys.filter((key) =>
+    key === 'structureType' ? showStructureType : !hiddenInspectorRules[key],
+  ).length;
+  const noShownRulesSelected = shownBulkRuleCount === 0;
+  const aggregateShownRuleLabel = noShownRulesSelected ? 'All' : 'None';
 
   return (
     <article className={className} style={style}>
@@ -1019,42 +1032,57 @@ export default function OutputResultsCard({
                         <input
                           type="checkbox"
                           className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
-                          checked={allShownRulesSelected}
-                          onChange={(event) =>
-                            setHiddenInspectorRules((prev) => ({
-                              ...prev,
-                              zeroValues: !event.target.checked,
-                              emptyValues: !event.target.checked,
-                              falseValues: !event.target.checked,
-                              todoValues: !event.target.checked,
-                              emptyCollections: !event.target.checked,
-                              creationDates: !event.target.checked,
-                            }))
+                          checked={false}
+                          onChange={() =>
+                            (() => {
+                              setHiddenInspectorRules((prev) => ({
+                                ...prev,
+                                zeroValues: !noShownRulesSelected,
+                                emptyValues: !noShownRulesSelected,
+                                falseValues: !noShownRulesSelected,
+                                todoValues: !noShownRulesSelected,
+                                emptyCollections: !noShownRulesSelected,
+                                creationDates: !noShownRulesSelected,
+                              }));
+                              setShowStructureType(noShownRulesSelected);
+                            })()
                           }
                         />
-                        <span>{allShownRulesSelected ? 'None' : 'All'}</span>
+                        <span>{aggregateShownRuleLabel}</span>
                       </label>
                       {hiddenRuleOptions.map(([key, label]) => {
                         const isFormattedAmountsRule = key === 'formattedAmounts';
+                        const isStructureTypeRule = key === 'structureType';
                         const isChecked = isFormattedAmountsRule
                           ? hiddenInspectorRules.formattedAmounts
-                          : !hiddenInspectorRules[key as keyof typeof hiddenInspectorRules];
+                          : isStructureTypeRule
+                            ? showStructureType
+                            : !hiddenInspectorRules[key as keyof typeof hiddenInspectorRules];
 
                         return (
-                          <label key={key} className="flex items-center gap-2 py-0.5">
-                            <input
-                              type="checkbox"
-                              className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
-                              checked={isChecked}
-                              onChange={(event) =>
-                                setHiddenInspectorRules((prev) => ({
-                                  ...prev,
-                                  [key]: isFormattedAmountsRule ? event.target.checked : !event.target.checked,
-                                }))
-                              }
-                            />
-                            <span>{label}</span>
-                          </label>
+                          <React.Fragment key={key}>
+                            {isFormattedAmountsRule ? (
+                              <div className="my-1 rounded-sm bg-[#E5B94F] px-2 py-0.5 text-center font-semibold text-[#111827]">
+                                --------- UTILS ---------
+                              </div>
+                            ) : null}
+                            <label className="flex items-center gap-2 py-0.5">
+                              <input
+                                type="checkbox"
+                                className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                                checked={isChecked}
+                                onChange={(event) =>
+                                  isStructureTypeRule
+                                    ? setShowStructureType(event.target.checked)
+                                    : setHiddenInspectorRules((prev) => ({
+                                        ...prev,
+                                        [key]: isFormattedAmountsRule ? event.target.checked : !event.target.checked,
+                                      }))
+                                }
+                              />
+                              <span>{label}</span>
+                            </label>
+                          </React.Fragment>
                         );
                       })}
                     </div>
@@ -1114,6 +1142,7 @@ export default function OutputResultsCard({
                     hiddenRules={hiddenInspectorRules}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
+                    showStructureType={showStructureType}
                     label={
                       displayFormattedBlocks.length === 1
                         ? activeInspectorRootLabel
@@ -1164,6 +1193,7 @@ export default function OutputResultsCard({
                     hiddenRules={hiddenInspectorRules}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
+                    showStructureType={showStructureType}
                     onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
                     onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
                     scriptStepDragState={{

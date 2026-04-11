@@ -131,20 +131,25 @@ export default function Erc20ReadController(props: Props) {
           <label htmlFor="erc20-read-method" className="text-sm font-semibold text-[#8FA8FF]">
             JSON Method
           </label>
-          <select
-            id="erc20-read-method"
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={displayedReadMethod}
-            onChange={(e) => setSelectedReadMethod(e.target.value)}
-            disabled={!hasVisibleReadMethods}
-          >
-            {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleReadOptions.map((name) => (
-              <option key={`erc20-read-${name}`} value={name} style={{ color: getMethodOptionColor(name) }}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <div className="relative w-full min-w-0">
+            <select
+              id="erc20-read-method"
+              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              value={displayedReadMethod}
+              onChange={(e) => setSelectedReadMethod(e.target.value)}
+              disabled={!hasVisibleReadMethods}
+            >
+              {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
+              {visibleReadOptions.map((name) => (
+                <option key={`erc20-read-${name}`} value={name} style={{ color: getMethodOptionColor(name) }}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+              v
+            </span>
+          </div>
         </div>
       ) : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">

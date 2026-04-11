@@ -119,23 +119,28 @@ export default function SerializationTestController(props: Props) {
     <div className="grid grid-cols-1 gap-3">
       {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-        <select
-          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={displayedSerializationMethod}
-          onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
-          disabled={!hasVisibleSerializationMethods}
-        >
-          {!hasVisibleSerializationMethods ? <option value="__no_methods__">No methods available</option> : null}
-          {visibleSerializationOptions.map((name) => (
-            <option
-              key={`serialization-test-${name}`}
-              value={name}
-              style={{ color: getMethodOptionColor(name, serializationTestMethodDefs[name].executable) }}
-            >
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="relative w-full min-w-0">
+          <select
+            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            value={displayedSerializationMethod}
+            onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
+            disabled={!hasVisibleSerializationMethods}
+          >
+            {!hasVisibleSerializationMethods ? <option value="__no_methods__">No methods available</option> : null}
+            {visibleSerializationOptions.map((name) => (
+              <option
+                key={`serialization-test-${name}`}
+                value={name}
+                style={{ color: getMethodOptionColor(name, serializationTestMethodDefs[name].executable) }}
+              >
+                {name}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+            v
+          </span>
+        </div>
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}

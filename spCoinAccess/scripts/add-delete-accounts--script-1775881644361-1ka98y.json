@@ -1,0 +1,17 @@
+{
+  "id": "script-1775881644361-1ka98y",
+  "name": "Add Delete Accounts.",
+  "Date Created": "Apr-11-2026, 00:27:24",
+  "network": "Hardhat EC2",
+  "steps": [
+    {
+      "step": 1,
+      "name": "getMasterSponsorList",
+      "panel": "serialization_tests",
+      "method": "getMasterSponsorList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

@@ -164,12 +164,13 @@ export default function SpCoinReadController(props: Props) {
     <div className="grid grid-cols-1 gap-3">
       {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-        <select
-          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={displayedReadMethod}
-          onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
-          disabled={!hasVisibleReadMethods}
-        >
+        <div className="relative w-full min-w-0">
+          <select
+            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            value={displayedReadMethod}
+            onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
+            disabled={!hasVisibleReadMethods}
+          >
           {!hasVisibleReadMethods ? <option value="__no_methods__">No methods available</option> : null}
           <option
             key="sp-read-world-divider"
@@ -256,7 +257,11 @@ export default function SpCoinReadController(props: Props) {
               ))}
             </React.Fragment>
           ) : null}
-        </select>
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+            v
+          </span>
+        </div>
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}

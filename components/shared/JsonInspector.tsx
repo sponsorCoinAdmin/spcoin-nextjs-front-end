@@ -28,6 +28,7 @@ interface JsonInspectorProps {
   hideEntryKeys?: string[];
   formatTokenAmounts?: boolean;
   tokenDecimals?: number | null;
+  showStructureType?: boolean;
   scriptStepDragState?: {
     enabled: boolean;
     draggedStepNumber: number | null;
@@ -130,6 +131,7 @@ function normalizeLegacyDateDisplay(value: any): string | null {
 function hasPopulatedContent(
   value: any,
   hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
+  showStructureType = false,
 ): boolean {
   if (value === null || value === undefined) return !hiddenRules.emptyValues;
   if (typeof value === 'boolean') return value || !hiddenRules.falseValues;
@@ -147,14 +149,14 @@ function hasPopulatedContent(
   }
   if (Array.isArray(value)) {
     if (value.length === 0) return !hiddenRules.emptyCollections;
-    return value.some((entry) => hasPopulatedContent(entry, hiddenRules));
+    return value.some((entry) => hasPopulatedContent(entry, hiddenRules, showStructureType));
   }
   if (typeof value === 'object') {
-    const entries = Object.entries(value).filter(([key]) => key !== 'TYPE');
+    const entries = Object.entries(value).filter(([key]) => showStructureType || key !== 'TYPE');
     if (entries.length === 0) return !hiddenRules.emptyCollections;
     return entries.some(([key, childValue]) => {
-      if (key === 'TYPE') return false;
-      return hasPopulatedContent(childValue, hiddenRules);
+      if (key === 'TYPE') return showStructureType && hasPopulatedContent(childValue, hiddenRules, showStructureType);
+      return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     });
   }
   return true;
@@ -164,10 +166,11 @@ function hasVisibleDescendants(
   value: any,
   showAll: boolean,
   hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
+  showStructureType = false,
 ): boolean {
   if (showAll) return true;
   if (!value || typeof value !== 'object') return true;
-  return hasPopulatedContent(value, hiddenRules);
+  return hasPopulatedContent(value, hiddenRules, showStructureType);
 }
 
 function isTokenAmountKey(key: string): boolean {
@@ -251,6 +254,7 @@ function getVisibleEntries(
   showAll: boolean,
   hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
   hideEntryKeys: string[] = [],
+  showStructureType = false,
 ): Array<[string, any]> {
   if (!value || typeof value !== 'object') return [];
   if (showAll) {
@@ -258,7 +262,7 @@ function getVisibleEntries(
       return value.map((entry, index) => [String(index), entry] as [string, any]);
     }
     return Object.entries(value)
-      .filter(([childKey]) => childKey !== 'address' && !hideEntryKeys.includes(childKey))
+      .filter(([childKey]) => childKey !== 'address' && !hideEntryKeys.includes(childKey) && (showStructureType || childKey !== 'TYPE'))
       .sort(([leftKey], [rightKey]) => {
         const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
         const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
@@ -272,7 +276,7 @@ function getVisibleEntries(
       .map((entry, index) => [String(index), entry] as [string, any])
       .filter(([, entry]) => {
         if (!entry || typeof entry !== 'object') return true;
-        return hasPopulatedContent(entry, hiddenRules);
+        return hasPopulatedContent(entry, hiddenRules, showStructureType);
       });
   }
 
@@ -280,8 +284,9 @@ function getVisibleEntries(
     .filter(([childKey, childValue]) => {
       if (childKey === 'address') return false;
       if (hideEntryKeys.includes(childKey)) return false;
-      if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules);
-      return hasPopulatedContent(childValue, hiddenRules);
+      if (!showStructureType && childKey === 'TYPE') return false;
+      if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules, showStructureType);
+      return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     })
     .sort(([leftKey], [rightKey]) => {
       const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
@@ -316,6 +321,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   hideEntryKeys = [],
   formatTokenAmounts = false,
   tokenDecimals = null,
+  showStructureType = false,
   scriptStepDragState,
 }) => {
   const effectiveHideEntryKeys = [...hideEntryKeys];
@@ -329,7 +335,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   ) {
     effectiveHideEntryKeys.push('accountKey');
   }
-  const visibleEntries = getVisibleEntries(data, showAll, hiddenRules, effectiveHideEntryKeys);
+  const visibleEntries = getVisibleEntries(data, showAll, hiddenRules, effectiveHideEntryKeys, showStructureType);
   const addressNode =
     data && typeof data === 'object' && !Array.isArray(data)
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
@@ -450,7 +456,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     }
 
     if (value && typeof value === 'object') {
-      if (!hasVisibleDescendants(value, showAll, hiddenRules)) return null;
+      if (!hasVisibleDescendants(value, showAll, hiddenRules, showStructureType)) return null;
       return (
         <JsonInspector
           key={nextPath}
@@ -470,6 +476,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           onAddressNodeClick={onAddressNodeClick}
           formatTokenAmounts={formatTokenAmounts}
           tokenDecimals={tokenDecimals}
+          showStructureType={showStructureType}
           scriptStepDragState={scriptStepDragState}
         />
       );

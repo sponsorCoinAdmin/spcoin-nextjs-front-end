@@ -568,12 +568,13 @@ export default function MethodsPanelCard({
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <select
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={hasVisibleAdminUtilsMethods ? adminUtilsSelectedMethod : '__no_methods__'}
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={!hasVisibleAdminUtilsMethods}
-          >
+          <div className="relative w-full min-w-0">
+            <select
+              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              value={hasVisibleAdminUtilsMethods ? adminUtilsSelectedMethod : '__no_methods__'}
+              onChange={(e) => selectMappedJsonMethod(e.target.value)}
+              disabled={!hasVisibleAdminUtilsMethods}
+            >
             {!hasVisibleAdminUtilsMethods ? <option value="__no_methods__">No methods available</option> : null}
             {visibleAdminUtilsReadOptions.length > 0 ? (
               <>
@@ -599,7 +600,11 @@ export default function MethodsPanelCard({
                 ))}
               </>
             ) : null}
-          </select>
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+              v
+            </span>
+          </div>
         </div>
       );
     }
@@ -607,12 +612,13 @@ export default function MethodsPanelCard({
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <select
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={!hasVisibleErc20Methods}
-          >
+          <div className="relative w-full min-w-0">
+            <select
+              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
+              onChange={(e) => selectMappedJsonMethod(e.target.value)}
+              disabled={!hasVisibleErc20Methods}
+            >
             {!hasVisibleErc20Methods ? <option value="__no_methods__">No methods available</option> : null}
             {visibleErc20ReadOptions.length > 0 ? (
               <>
@@ -638,7 +644,11 @@ export default function MethodsPanelCard({
                 ))}
               </>
             ) : null}
-          </select>
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+              v
+            </span>
+          </div>
         </div>
       );
     }
@@ -646,19 +656,24 @@ export default function MethodsPanelCard({
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <select
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={visibleSpCoinReadOptions.length === 0}
-          >
+          <div className="relative w-full min-w-0">
+            <select
+              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
+              onChange={(e) => selectMappedJsonMethod(e.target.value)}
+              disabled={visibleSpCoinReadOptions.length === 0}
+            >
             {visibleSpCoinReadOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
             {visibleSpCoinReadOptions.map((name) => (
               <option key={`sp-read-shared-${name}`} value={name}>
                 {spCoinReadProps.spCoinReadMethodDefs[name]?.title || name}
               </option>
             ))}
-          </select>
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+              v
+            </span>
+          </div>
         </div>
       );
     }
@@ -666,12 +681,13 @@ export default function MethodsPanelCard({
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <select
-            className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-            value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={visibleSpCoinWriteOptions.length === 0}
-          >
+          <div className="relative w-full min-w-0">
+            <select
+              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
+              onChange={(e) => selectMappedJsonMethod(e.target.value)}
+              disabled={visibleSpCoinWriteOptions.length === 0}
+            >
             {visibleSpCoinWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
             {visibleSpCoinAddWriteOptions.length > 0 ? (
               <>
@@ -709,26 +725,35 @@ export default function MethodsPanelCard({
                 ))}
               </>
             ) : null}
-          </select>
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+              v
+            </span>
+          </div>
         </div>
       );
     }
     return (
       <div className={baseClassName}>
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-        <select
-          className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-          value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
-          onChange={(e) => selectMappedJsonMethod(e.target.value)}
-          disabled={visibleSerializationOptions.length === 0}
-        >
+        <div className="relative w-full min-w-0">
+          <select
+            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
+            onChange={(e) => selectMappedJsonMethod(e.target.value)}
+            disabled={visibleSerializationOptions.length === 0}
+          >
           {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
           {visibleSerializationOptions.map((name) => (
             <option key={`serialization-shared-${name}`} value={name}>
               {name}
             </option>
           ))}
-        </select>
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+            v
+          </span>
+        </div>
       </div>
     );
   }, [
