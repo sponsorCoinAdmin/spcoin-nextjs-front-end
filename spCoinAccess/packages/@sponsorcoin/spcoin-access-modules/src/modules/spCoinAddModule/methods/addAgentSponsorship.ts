@@ -340,7 +340,7 @@ export const addAgentSponsorship = async (
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:send");
     const tx = await sendTxWithDiagnostics(
       "addAgentRateBranchAmount",
-      () => context.spCoinContractDeployed.addAgentRateBranchAmount(
+      () => context.spCoinContractDeployed.addAgentRateTransaction(
         sponsorKey,
         _recipientKey,
         _recipientRateKey,

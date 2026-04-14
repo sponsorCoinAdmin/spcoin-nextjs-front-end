@@ -26,7 +26,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addRecipientRateBranchAmount(
+    function addRecipientRateTransaction(
         address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
@@ -49,7 +49,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addAgentRateBranchAmount(
+    function addAgentRateTransaction(
         address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,

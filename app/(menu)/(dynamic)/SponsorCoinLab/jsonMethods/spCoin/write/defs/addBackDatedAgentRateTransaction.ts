@@ -1,8 +1,8 @@
-// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/addBackDatedRecipientAgentRateAmount.ts
+// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/addBackDatedAgentRateTransaction.ts
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'addBackDatedRecipientAgentRateAmount',
+    title: 'addBackDatedAgentRateTransaction',
     params: [
       { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
       { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },

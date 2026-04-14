@@ -42,7 +42,7 @@
         }
       ],
       "breakpoint": true,
-      "hasMissingRequiredParams": true
+      "hasMissingRequiredParams": false
     },
     {
       "step": 3,

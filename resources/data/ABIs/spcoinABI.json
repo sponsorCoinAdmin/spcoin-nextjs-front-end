@@ -153,7 +153,7 @@
         "type": "string"
       }
     ],
-    "name": "addAgentRateBranchAmount",
+    "name": "addAgentRateTransaction",
     "outputs": [
       {
         "internalType": "uint256",
@@ -220,7 +220,7 @@
         "type": "string"
       }
     ],
-    "name": "addRecipientRateBranchAmount",
+    "name": "addRecipientRateTransaction",
     "outputs": [
       {
         "internalType": "uint256",

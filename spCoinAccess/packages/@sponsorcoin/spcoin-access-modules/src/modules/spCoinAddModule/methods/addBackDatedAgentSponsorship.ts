@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { addBackDatedRecipientAgentRateAmount } from "./addBackDatedRecipientAgentRateAmount";
+import { addBackDatedAgentRateTransaction } from "./addBackDatedAgentRateTransaction";
 
 export const addBackDatedAgentSponsorship = async (...args) =>
-    addBackDatedRecipientAgentRateAmount(...args);
+    addBackDatedAgentRateTransaction(...args);
 

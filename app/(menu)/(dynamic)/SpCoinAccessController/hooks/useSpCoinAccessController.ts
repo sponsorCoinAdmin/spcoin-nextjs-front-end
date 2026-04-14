@@ -541,6 +541,11 @@ export function useSpCoinAccessController() {
     deploymentVersion,
     liveSpCoinDeploymentMap,
   ]);
+  const isDeployedState =
+    deployUiState === 'deployed' ||
+    existsInSpCoinDeploymentMap ||
+    deploymentTokenStatus === 'DEPLOYED' ||
+    deploymentTokenStatus === 'SERVER_INSTALLED';
   const deployDisableReason = useMemo(() => {
     if (deploymentSignerSource === 'metamask' && !selectedDeploymentSignerPublicKey) {
       return 'METAMASK_NOT_CONNECTED';
@@ -548,20 +553,28 @@ export function useSpCoinAccessController() {
     if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
     if (deployUiState === 'deployed') return 'DEPLOYED';
     if (existsInSpCoinDeploymentMap) return 'DEPLOYED_IN_MAP';
+    if (deploymentTokenStatus === 'DEPLOYED' || deploymentTokenStatus === 'SERVER_INSTALLED') {
+      return 'DEPLOYED';
+    }
     return 'ENABLED';
-  }, [deployUiState, existsInSpCoinDeploymentMap, deploymentSignerSource, selectedDeploymentSignerPublicKey]);
+  }, [
+    deployUiState,
+    existsInSpCoinDeploymentMap,
+    deploymentSignerSource,
+    deploymentTokenStatus,
+    selectedDeploymentSignerPublicKey,
+  ]);
   const deployButtonLabel =
     deployUiState === 'in_progress'
       ? 'Deployment In Progress'
-      : deployUiState === 'deployed' || existsInSpCoinDeploymentMap
+      : isDeployedState
       ? 'Deployed'
       : 'Deploy';
-  const isDeployedState = deployUiState === 'deployed' || existsInSpCoinDeploymentMap;
   const deployedContractAddressDisplay = isDeployedState ? deployedContractAddress : '';
   const deploymentGuidanceMessage = useMemo(() => {
     const contractAddress = String(deployedContractAddress || '').trim() || '(pending)';
-    const isAlreadyDeployed = deployUiState === 'deployed' || existsInSpCoinDeploymentMap;
-    const statusLine = isAlreadyDeployed ? 'Status: Already deployed' : 'Status: READY';
+    const isAlreadyDeployed = isDeployedState;
+    const statusLine = isAlreadyDeployed ? 'Status: Already deployed.' : 'Status: READY';
     const deploymentLine = isAlreadyDeployed
       ? `Blockchain Deployment: "${deploymentTokenName}" is already deployed.`
       : `Blockchain Deployment: "${deploymentTokenName}" is ready for deployment.`;
@@ -601,6 +614,7 @@ export function useSpCoinAccessController() {
     deployUiState,
     deployDisableReason,
     existsInSpCoinDeploymentMap,
+    isDeployedState,
     selectedDeploymentSignerPublicKey,
   ]);
   const deploymentPathDisplayValue = localSourceDeploymentPath;
@@ -1390,7 +1404,16 @@ export function useSpCoinAccessController() {
   }, [flashTarget]);
 
   useEffect(() => {
-    if (deploymentStatusPinned || deployUiState === 'in_progress' || isGeneratingAbi) {
+    const shouldReplaceStaleReadyStatus =
+      isDeployedState &&
+      /^Status:\s*READY\b[\s\S]*?Blockchain Deployment: "[^"]+" is ready for deployment\./.test(
+        deploymentStatus,
+      );
+    if (
+      (deploymentStatusPinned && !shouldReplaceStaleReadyStatus) ||
+      deployUiState === 'in_progress' ||
+      isGeneratingAbi
+    ) {
       return;
     }
     if (deploymentSignerSource === 'metamask') {
@@ -1413,8 +1436,10 @@ export function useSpCoinAccessController() {
     deploymentStatusPinned,
     deployUiState,
     deploymentAccountPrivateKey,
+    deploymentStatus,
     deploymentGuidanceMessage,
     deploymentSignerSource,
+    isDeployedState,
     isGeneratingAbi,
   ]);
 

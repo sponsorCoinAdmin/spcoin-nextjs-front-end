@@ -28,6 +28,12 @@ export type SpCoinAccessSource = 'local' | 'node_modules';
 export type SpCoinAddAccess = {
   addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
   addSponsorRecipientBranch?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
+  addRecipientRateTransaction: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addRecipientRateBranchAmount: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -35,6 +41,14 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
   addRecipientAgentBranch: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+  addAgentRateTransaction: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addAgentRateBranchAmount: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -51,7 +65,27 @@ export type SpCoinAddAccess = {
     _agentRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
+  addBackDatedAgentRateTransaction: (
+    _adminSigner: Signer,
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+    _transactionBackDate: number,
+  ) => Promise<ContractTransactionResponse>;
   addBackDatedRecipientAgentRateAmount: (
+    _adminSigner: Signer,
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+    _transactionBackDate: number,
+  ) => Promise<ContractTransactionResponse>;
+  addBackDatedAgentRateAmount: (
     _adminSigner: Signer,
     _sponsorKey: string,
     _recipientKey: string,
@@ -76,6 +110,14 @@ export type SpCoinAddAccess = {
     _recipientRateKey: string | number,
     _accountAgentKey: string,
     _agentRateKey: string | number,
+    _transactionQty: string | number,
+    _transactionBackDate: number,
+  ) => Promise<ContractTransactionResponse>;
+  addBackDatedRecipientRateTransaction: (
+    _adminSigner: Signer,
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
     _transactionQty: string | number,
     _transactionBackDate: number,
   ) => Promise<ContractTransactionResponse>;
@@ -181,6 +223,13 @@ export type SpCoinContractAccess = Contract & {
     decimalAmount: string,
     transactionTimestamp: number,
   ) => Promise<ContractTransactionResponse>;
+  addRecipientRateTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
   addRecipientRateBranchAmount?: (
     sponsorKey: string,
     recipientKey: string,
@@ -191,6 +240,15 @@ export type SpCoinContractAccess = Contract & {
   addSponsorRecipientBranch?: (
     sponsorKey: string,
     recipientKey: string,
+  ) => Promise<ContractTransactionResponse>;
+  addAgentRateTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
   addAgentRateBranchAmount?: (
     sponsorKey: string,

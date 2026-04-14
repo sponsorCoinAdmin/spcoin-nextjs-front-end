@@ -17,10 +17,10 @@ import {
 
 export type SpCoinWriteMethod =
   | 'addSponsorRecipientBranch'
-  | 'addRecipientRateBranchAmount'
+  | 'addRecipientRateTransaction'
   | 'addRecipients'
   | 'addRecipientAgentBranch'
-  | 'addAgentRateBranchAmount'
+  | 'addAgentRateTransaction'
   | 'addAgents'
   | 'deleteSponsor'
   | 'deleteSponsorTree'
@@ -35,8 +35,8 @@ export type SpCoinWriteMethod =
   | 'deleteRecipientRateAmount'
   | 'deleteAgent'
   | 'unSponsorAgent'
-  | 'addBackDatedRecipientRateAmount'
-  | 'addBackDatedRecipientAgentRateAmount'
+  | 'addBackDatedRecipientRateTransaction'
+  | 'addBackDatedAgentRateTransaction'
   | 'backDateRecipientTransactionDate'
   | 'backDateAgentTransactionDate'
   | 'deleteRecipientSponsorship'
@@ -58,8 +58,8 @@ export type SpCoinWriteMethod =
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
-  'addBackDatedRecipientRateAmount',
-  'addBackDatedRecipientAgentRateAmount',
+  'addBackDatedRecipientRateTransaction',
+  'addBackDatedAgentRateTransaction',
   'backDateRecipientTransactionDate',
   'backDateAgentTransactionDate',
   'setInflationRate',
@@ -74,9 +74,9 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addSponsorRecipientBranch',
-  'addRecipientRateBranchAmount',
+  'addRecipientRateTransaction',
   'addRecipientAgentBranch',
-  'addAgentRateBranchAmount',
+  'addAgentRateTransaction',
   'updateAccountStakingRewards',
   'deleteSponsorTree',
   'deleteSponsorRecipientBranch',
@@ -159,20 +159,25 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
   addRecipient: 'addSponsorRecipientBranch',
   addAccountRecipient: 'addSponsorRecipientBranch',
-  addRecipientRateAmount: 'addRecipientRateBranchAmount',
-  addSponsorship: 'addRecipientRateBranchAmount',
-  addAccountRecipientRate: 'addRecipientRateBranchAmount',
+  addRecipientRateAmount: 'addRecipientRateTransaction',
+  addRecipientRateBranchAmount: 'addRecipientRateTransaction',
+  addSponsorship: 'addRecipientRateTransaction',
+  addAccountRecipientRate: 'addRecipientRateTransaction',
   addAgent: 'addRecipientAgentBranch',
-  addAgentRateAmount: 'addAgentRateBranchAmount',
-  addAgentSponsorship: 'addAgentRateBranchAmount',
-  addAccountAgentRate: 'addAgentRateBranchAmount',
-  addBackDatedSponsorship: 'addBackDatedRecipientRateAmount',
-  addBackDatedRecipientSponsorship: 'addBackDatedRecipientRateAmount',
-  addBackDatedRecipientRateAmount: 'addBackDatedRecipientRateAmount',
-  addAccountRecipientRateBackdated: 'addBackDatedRecipientRateAmount',
-  addBackDatedAgentSponsorship: 'addBackDatedRecipientAgentRateAmount',
-  addBackDatedRecipientAgentRateAmount: 'addBackDatedRecipientAgentRateAmount',
-  addAccountAgentRateBackdated: 'addBackDatedRecipientAgentRateAmount',
+  addAgentRateAmount: 'addAgentRateTransaction',
+  addAgentRateBranchAmount: 'addAgentRateTransaction',
+  addAgentSponsorship: 'addAgentRateTransaction',
+  addAccountAgentRate: 'addAgentRateTransaction',
+  addBackDatedSponsorship: 'addBackDatedRecipientRateTransaction',
+  addBackDatedRecipientSponsorship: 'addBackDatedRecipientRateTransaction',
+  addBackDatedRecipientRateAmount: 'addBackDatedRecipientRateTransaction',
+  addBackDatedRecipientRateTransaction: 'addBackDatedRecipientRateTransaction',
+  addAccountRecipientRateBackdated: 'addBackDatedRecipientRateTransaction',
+  addBackDatedAgentSponsorship: 'addBackDatedAgentRateTransaction',
+  addBackDatedRecipientAgentRateAmount: 'addBackDatedAgentRateTransaction',
+  addBackDatedAgentRateAmount: 'addBackDatedAgentRateTransaction',
+  addBackDatedAgentRateTransaction: 'addBackDatedAgentRateTransaction',
+  addAccountAgentRateBackdated: 'addBackDatedAgentRateTransaction',
   deleteAccountTree: 'deleteSponsor',
   delAccountTree: 'deleteSponsor',
   deleteRecipient: 'deleteRecipientSponsorship',
@@ -472,10 +477,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'addBackDatedRecipientRateAmount': {
+    case 'addBackDatedRecipientRateTransaction': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addBackDatedRecipientRateAmount(
+        access.add.addBackDatedRecipientRateTransaction(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),
@@ -486,10 +491,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addBackDatedRecipientAgentRateAmount': {
+    case 'addBackDatedAgentRateTransaction': {
       const qty = String(methodArgs[5]);
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addBackDatedRecipientAgentRateAmount(
+        access.add.addBackDatedAgentRateTransaction(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),
@@ -544,10 +549,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'addRecipientRateBranchAmount': {
+    case 'addRecipientRateTransaction': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access) =>
-        access.add.addRecipientRateBranchAmount(
+        access.add.addRecipientRateTransaction(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -567,10 +572,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addAgentRateBranchAmount': {
+    case 'addAgentRateTransaction': {
       const qty = String(methodArgs[5]);
       await submitWriteWithFetchRetry(activeDef.title, (access) =>
-        access.add.addAgentRateBranchAmount(
+        access.add.addAgentRateTransaction(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
