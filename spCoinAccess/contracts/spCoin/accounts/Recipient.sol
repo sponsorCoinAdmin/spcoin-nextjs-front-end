@@ -10,12 +10,14 @@ contract Recipient is Sponsor {
     /// @notice Create Sponsor and Recipient accounts if they do not exist
     /// @notice Relate Sponsor and Recipient accounts for POS sharing
     /// @param _recipientKey new recipient to add to account list
-    function addRecipient(address _recipientKey) 
-    public nonRedundantRecipient (msg.sender, _recipientKey) {
-        AccountStruct storage sponsorRecord = getSponsorAccountRecord(msg.sender);
-        RecipientStruct storage recipientRecord = accountMap[msg.sender].recipientMap[_recipientKey];
+    function addSponsorRecipientBranch(address _sponsorKey, address _recipientKey)
+    public
+    onlyOwnerOrRootAdmin(_sponsorKey)
+    nonRedundantRecipient (_sponsorKey, _recipientKey) {
+        AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsorKey);
+        RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
         bool sponsorHasRecipientLink = accountInList(_recipientKey, sponsorRecord.recipientAccountList);
-        bool recipientHasSponsorLink = accountInList(msg.sender, accountMap[_recipientKey].sponsorAccountList);
+        bool recipientHasSponsorLink = accountInList(_sponsorKey, accountMap[_recipientKey].sponsorAccountList);
 
         if (recipientRecord.inserted) {
             require(sponsorHasRecipientLink && recipientHasSponsorLink, "RECIP_LINK_STALE");
@@ -23,7 +25,7 @@ contract Recipient is Sponsor {
         }
 
         require(!sponsorHasRecipientLink && !recipientHasSponsorLink, "RECIP_LIST_STALE");
-        getRecipientRecord(msg.sender, _recipientKey);
+        getRecipientRecord(_sponsorKey, _recipientKey);
     }
 
     function getRecipientRecord(address _sponsor, address _recipientKey)
@@ -47,7 +49,7 @@ contract Recipient is Sponsor {
             recipientRecord.stakedSPCoins = 0; // Coins not owned but Recipiented
             recipientRecord.inserted = true;
             sponsorRecord.recipientAccountList.push(_recipientKey);
-            accountMap[_recipientKey].sponsorAccountList.push(msg.sender);
+            accountMap[_recipientKey].sponsorAccountList.push(_sponsor);
         }
         return recipientRecord;
     }

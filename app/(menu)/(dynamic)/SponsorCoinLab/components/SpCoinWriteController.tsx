@@ -205,22 +205,26 @@ export default function SpCoinWriteController(props: Props) {
     return Math.min(Math.max(parsed, lower), upper);
   };
   const recipientRateSliderMethods = new Set([
-    'addAgent',
+    'addRecipientAgentBranch',
     'addAgents',
-    'addSponsorship',
-    'addAgentSponsorship',
+    'addRecipientRateBranchAmount',
+    'addAgentRateBranchAmount',
     'deleteRecipientRateSponsorship',
     'deleteRecipientRateAmount',
+    'deleteRecipientRateBranch',
     'deleteAgent',
-    'deleteAgentSponsorship',
-    'addBackDatedSponsorship',
-    'addBackDatedAgentSponsorship',
+    'deleteRecipientAgentBranch',
+    'unSponsorAgent',
+    'deleteAgentRateBranch',
+    'addBackDatedRecipientRateAmount',
+    'addBackDatedRecipientAgentRateAmount',
   ]);
   const agentRateSliderMethods = new Set([
-    'addAgentSponsorship',
-    'deleteAgentSponsorship',
-    'addBackDatedSponsorship',
-    'addBackDatedAgentSponsorship',
+    'addAgentRateBranchAmount',
+    'unSponsorAgent',
+    'deleteAgentRateBranch',
+    'addBackDatedRecipientRateAmount',
+    'addBackDatedRecipientAgentRateAmount',
   ]);
   const getPrivateKeyForAddress = (address: string) =>
     hardhatAccounts.find((account) => account.address.toLowerCase() === String(address || '').trim().toLowerCase())

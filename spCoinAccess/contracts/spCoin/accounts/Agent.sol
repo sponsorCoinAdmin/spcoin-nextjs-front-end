@@ -9,9 +9,11 @@ contract Agent is RecipientRates {
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _agentKey new recipient to add to account list
-    function addAgent(address _recipientKey, uint _recipientRateKey, address _agentKey)
-            public nonRedundantAgent (_recipientKey, _agentKey) {
-        getAgentRecord(msg.sender, _recipientKey, _recipientRateKey, _agentKey);
+    function addRecipientAgentBranch(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
+            public
+            onlyOwnerOrRootAdmin(_sponsorKey)
+            nonRedundantAgent (_sponsorKey, _recipientKey, _agentKey) {
+        getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
     }
 
     /// @notice insert recipients Agent

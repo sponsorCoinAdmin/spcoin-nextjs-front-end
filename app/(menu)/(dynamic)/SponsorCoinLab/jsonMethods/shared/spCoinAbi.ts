@@ -2,6 +2,7 @@ import spCoinAbi from '@/resources/data/ABIs/spcoinABI.json';
 
 export const SPCOIN_ABI_UPDATED_EVENT = 'spcoin:abi-updated';
 export const SPCOIN_ABI_VERSION_STORAGE_KEY = 'spcoin:abi-version';
+export const SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT = 'spcoin:deployment-map-updated';
 
 let currentSpCoinAbi = Array.isArray(spCoinAbi) ? spCoinAbi : [];
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserProvider, JsonRpcProvider, Wallet, getAddress } from 'ethers';
 import type { Contract, Signer } from 'ethers';
 import {
@@ -10,6 +10,7 @@ import {
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import spCoinDeploymentMapRaw from '@/resources/data/networks/spCoinDeployment.json';
 import { createSpCoinContract } from '../jsonMethods/shared';
+import { SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT } from '../jsonMethods/shared/spCoinAbi';
 import type { ConnectionMode, MethodPanelMode } from '../scriptBuilder/types';
 import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
 import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
@@ -172,6 +173,10 @@ export function useSponsorCoinLabNetwork({
   const [connectedChainId, setConnectedChainId] = useState('');
   const [connectedNetworkName, setConnectedNetworkName] = useState('');
   const [showHardhatConnectionInputs, setShowHardhatConnectionInputs] = useState(false);
+  const [liveSpCoinDeploymentMap, setLiveSpCoinDeploymentMap] = useState<SpCoinDeploymentFile>(
+    () => (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {},
+  );
+  const hardhatDeploymentValidationSummaryRef = useRef('');
 
   const loadHardhatAccountsFromNetworkFile = useCallback(async () => {
     try {
@@ -418,12 +423,37 @@ export function useSponsorCoinLabNetwork({
     mode === 'metamask' && String(effectiveConnectedChainId || '') !== String(HARDHAT_CHAIN_ID_DEC);
   const chainIdDisplayValue = effectiveConnectedChainId || '(unknown)';
   const chainIdDisplayWidthCh = Math.max(4, String(chainIdDisplayValue).length + 3);
+  const loadDeploymentMap = useCallback(async () => {
+    try {
+      const response = await fetch('/api/spCoin/access-manager?includeDeploymentMap=true', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        deploymentMap?: SpCoinDeploymentFile;
+      };
+      if (!response.ok || !payload.ok || !payload.deploymentMap) return;
+      setLiveSpCoinDeploymentMap(payload.deploymentMap);
+    } catch {
+      // Keep the bundled map if the live fetch is unavailable.
+    }
+  }, []);
 
-  const spCoinDeploymentMap = useMemo(
-    () => (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {},
-    [],
-  );
-  const sponsorCoinVersionChoices = useMemo(() => {
+  useEffect(() => {
+    void loadDeploymentMap();
+    if (typeof window === 'undefined') return undefined;
+    const handleDeploymentMapUpdated = () => {
+      void loadDeploymentMap();
+    };
+    window.addEventListener(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT, handleDeploymentMapUpdated);
+    return () => {
+      window.removeEventListener(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT, handleDeploymentMapUpdated);
+    };
+  }, [loadDeploymentMap]);
+
+  const spCoinDeploymentMap = liveSpCoinDeploymentMap;
+  const rawSponsorCoinVersionChoices = useMemo(() => {
     const excludedAddressSet = new Set(
       excludedDeploymentAddresses.map((entry) => normalizeAddress(String(entry || ''))).filter(Boolean),
     );
@@ -486,6 +516,92 @@ export function useSponsorCoinLabNetwork({
 
     return rows.filter((entry) => !excludedAddressSet.has(normalizeAddress(entry.address)));
   }, [excludedDeploymentAddresses, spCoinDeploymentMap]);
+  const [sponsorCoinVersionChoices, setSponsorCoinVersionChoices] = useState<SponsorCoinVersionChoice[]>(
+    rawSponsorCoinVersionChoices,
+  );
+
+  useEffect(() => {
+    if (mode !== 'hardhat' || !hardhatProvider) {
+      setSponsorCoinVersionChoices(rawSponsorCoinVersionChoices);
+      hardhatDeploymentValidationSummaryRef.current = '';
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      const hardhatEntries = rawSponsorCoinVersionChoices.filter(
+        (entry) => Number(entry.chainId) === HARDHAT_CHAIN_ID_DEC,
+      );
+      const passthroughEntries = rawSponsorCoinVersionChoices.filter(
+        (entry) => Number(entry.chainId) !== HARDHAT_CHAIN_ID_DEC,
+      );
+
+      if (hardhatEntries.length === 0) {
+        if (!cancelled) {
+          setSponsorCoinVersionChoices(rawSponsorCoinVersionChoices);
+          hardhatDeploymentValidationSummaryRef.current = '';
+        }
+        return;
+      }
+
+      const checks = await Promise.all(
+        hardhatEntries.map(async (entry) => {
+          try {
+            const code = await hardhatProvider.getCode(entry.address);
+            return {
+              entry,
+              hasCode: typeof code === 'string' && code !== '0x',
+            };
+          } catch {
+            return {
+              entry,
+              hasCode: true,
+            };
+          }
+        }),
+      );
+
+      if (cancelled) return;
+
+      const validHardhatEntries = checks.filter((item) => item.hasCode).map((item) => item.entry);
+      const invalidHardhatEntries = checks.filter((item) => !item.hasCode).map((item) => item.entry);
+      const nextChoices = [...validHardhatEntries, ...passthroughEntries];
+
+      setSponsorCoinVersionChoices(nextChoices);
+
+      const invalidSummary = invalidHardhatEntries
+        .map((entry) => `${entry.version}@${normalizeAddress(entry.address)}`)
+        .sort()
+        .join('|');
+      if (invalidSummary !== hardhatDeploymentValidationSummaryRef.current) {
+        hardhatDeploymentValidationSummaryRef.current = invalidSummary;
+        if (invalidHardhatEntries.length > 0) {
+          appendLog(
+            `Hardhat deployment map validation removed ${invalidHardhatEntries.length} stale entr${
+              invalidHardhatEntries.length === 1 ? 'y' : 'ies'
+            } with no bytecode on chain ${HARDHAT_CHAIN_ID_DEC}.`,
+          );
+        }
+      }
+
+      const activeContractKey = normalizeAddress(contractAddress);
+      const activeContractStillValid = nextChoices.some((entry) => normalizeAddress(entry.address) === activeContractKey);
+      if (activeContractKey && !activeContractStillValid) {
+        const fallbackAddress = nextChoices[0]?.address || '';
+        appendLog(
+          fallbackAddress
+            ? `Active Hardhat contract ${contractAddress} has no bytecode after reset; switching to ${fallbackAddress}.`
+            : `Active Hardhat contract ${contractAddress} has no bytecode after reset; clearing the selected contract address.`,
+        );
+        setContractAddress(fallbackAddress);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appendLog, contractAddress, hardhatProvider, mode, rawSponsorCoinVersionChoices, setContractAddress]);
   const {
     selectedSponsorCoinVersion,
     setSelectedSponsorCoinVersion,
@@ -896,11 +1012,23 @@ export function useSponsorCoinLabNetwork({
   }, [appendLog, appendWriteTrace, hardhatProvider, rpcUrl, trimmedRpcUrl]);
 
   const ensureReadRunner = useCallback(async (): Promise<any> => {
-    return executeConnected<any>('ensureReadRunner', {
-      metamask: ensureMetaMaskReadRunner,
-      hardhat: ensureHardhatReadRunner,
-    });
-  }, [ensureHardhatReadRunner, ensureMetaMaskReadRunner, executeConnected]);
+    if (mode === 'hardhat') {
+      return ensureHardhatReadRunner();
+    }
+
+    try {
+      return await ensureMetaMaskReadRunner();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message !== 'MetaMask provider not found.') {
+        throw error;
+      }
+
+      appendLog('MetaMask provider not found for read; using Hardhat read runner.');
+      appendWriteTrace('ensureReadRunner fallback metamask->hardhat; reason=MetaMask provider not found');
+      return ensureHardhatReadRunner();
+    }
+  }, [appendLog, appendWriteTrace, ensureHardhatReadRunner, ensureMetaMaskReadRunner, mode]);
 
   const isConnectionRetryableError = useCallback((error: unknown): boolean => {
     const message = String((error as any)?.message || '').toLowerCase();

@@ -73,7 +73,7 @@ contract UnSubscribe is Transactions {
     /// @param _recipientKey Recipient to be removed from the Recipient relationship
     function unSponsorRecipient(address _recipientKey)  
         // ToDo Replace this Removed for space
-        onlyOwnerOrRootAdmin("unSponsorRecipient", msg.sender)
+        onlyOwnerOrRootAdmin(msg.sender)
         public 
         accountExists(msg.sender)
         accountExists(_recipientKey)
@@ -300,7 +300,7 @@ contract UnSubscribe is Transactions {
     function deleteAccountRecord(address _accountKey) public
         accountExists(_accountKey) 
         // ToDo Replace this Removed for space
-        onlyOwnerOrRootAdmin("deleteAccountRecord", _accountKey)
+        onlyOwnerOrRootAdmin(_accountKey)
         sponsorDoesNotExist(_accountKey)
         parentRecipientDoesNotExist(_accountKey)
         recipientDoesNotExist(_accountKey) returns (bool) {

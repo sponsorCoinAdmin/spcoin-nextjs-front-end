@@ -48,6 +48,8 @@ type DeploymentControllerPanelProps = {
   onToggleExpand: () => void;
   onDeploymentWalletSelectionChange: (next: WalletAccountSelectionValue) => void;
   onDeploymentSignerAddressChange: (value: string) => void;
+  onDeploymentNameChange: (value: string) => void;
+  onDeploymentSymbolChange: (value: string) => void;
   onDeploymentDecimalsChange: (value: string) => void;
   onAdjustDeploymentDecimals: (direction: 1 | -1) => void;
   onDeploymentVersionChange: (value: string) => void;
@@ -92,6 +94,8 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     onToggleExpand,
     onDeploymentWalletSelectionChange,
     onDeploymentSignerAddressChange,
+    onDeploymentNameChange,
+    onDeploymentSymbolChange,
     onDeploymentDecimalsChange,
     onAdjustDeploymentDecimals,
     onDeploymentVersionChange,
@@ -218,18 +222,20 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Name</span>
                   <input
-                    type="text"
-                    value={deploymentName}
-                    readOnly
+                  type="text"
+                  value={deploymentName}
+                    disabled={isDeploymentInProgress}
+                    onChange={(event) => onDeploymentNameChange(event.target.value)}
                     className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                   />
                 </label>
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)] md:justify-self-end md:w-full">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Symbol</span>
                   <input
-                    type="text"
-                    value={deploymentSymbol}
-                    readOnly
+                  type="text"
+                  value={deploymentSymbol}
+                    disabled={isDeploymentInProgress}
+                    onChange={(event) => onDeploymentSymbolChange(event.target.value)}
                     className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
                   />
                 </label>
@@ -269,7 +275,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                 </label>
               </div>
 
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
               <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <span className="text-sm font-semibold text-[#8FA8FF]">Network Name</span>
                 <input
@@ -288,10 +294,47 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                   className="w-[8ch] min-w-[8ch] rounded-xl border border-[#31416F] bg-[#0B1020] px-2 py-2 text-center text-slate-300 outline-none"
                 />
               </label>
+              {isHardhatSelected ? (
+                <label className="flex items-center gap-3 justify-self-end">
+                  <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
+                  <div className="flex items-stretch">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      maxLength={8}
+                      value={deploymentVersion}
+                      disabled={isDeploymentInProgress}
+                      onChange={(event) => onDeploymentVersionChange(event.target.value)}
+                      placeholder="Add optional Version"
+                      className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                    />
+                    <div className="flex w-[26px] flex-col">
+                      <button
+                        type="button"
+                        disabled={isDeploymentInProgress}
+                        onClick={() => onAdjustDeploymentVersion(1)}
+                        className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Increment Contract Version"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isDeploymentInProgress}
+                        onClick={() => onAdjustDeploymentVersion(-1)}
+                        className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
+                        title="Decrement Contract Version"
+                      >
+                        -
+                      </button>
+                    </div>
+                  </div>
+                </label>
+              ) : null}
             </div>
 
             {isHardhatSelected ? (
-              <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)_auto] md:items-end">
+              <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)] md:items-end">
                 <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">Deployment Source</span>
                   <input
@@ -303,43 +346,6 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
                     title="Enter deployment source"
                   />
                 </label>
-                <div className="flex items-start justify-end gap-4">
-                  <label className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-[#8FA8FF]">Version</span>
-                    <div className="flex items-stretch">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        maxLength={8}
-                        value={deploymentVersion}
-                        disabled={isDeploymentInProgress}
-                        onChange={(event) => onDeploymentVersionChange(event.target.value)}
-                        placeholder="Add optional Version"
-                        className="w-[8ch] min-w-[8ch] rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                      />
-                      <div className="flex w-[26px] flex-col">
-                        <button
-                          type="button"
-                          disabled={isDeploymentInProgress}
-                          onClick={() => onAdjustDeploymentVersion(1)}
-                          className="h-1/2 min-h-0 rounded-tr-xl border border-l-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Increment Contract Version"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isDeploymentInProgress}
-                          onClick={() => onAdjustDeploymentVersion(-1)}
-                          className="h-1/2 min-h-0 rounded-br-xl border border-l-0 border-t-0 border-[#31416F] bg-[#0B1020] text-base font-bold leading-none text-[#8FA8FF] transition-colors hover:bg-green-500 hover:text-black"
-                          title="Decrement Contract Version"
-                        >
-                          -
-                        </button>
-                      </div>
-                    </div>
-                  </label>
-                </div>
               </div>
             ) : null}
 

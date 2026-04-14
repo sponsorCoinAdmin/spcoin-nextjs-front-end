@@ -25,8 +25,14 @@ type UtilityMethodSpec = {
     | 'compareSpCoinContractSize'
     | 'getSponsorAccounts'
     | 'getMasterSponsorList'
+    | 'getMasterSponsorList_BAK'
     | 'hhFundAccounts'
     | 'deleteMasterSponsorships'
+    | 'deleteSponsorTree'
+    | 'deleteSponsorRecipientBranch'
+    | 'deleteRecipientRateBranch'
+    | 'deleteRecipientAgentBranch'
+    | 'deleteAgentRateBranch'
     | 'deleteRecipientSponsorships'
     | 'deleteRecipientSponsorshipTree'
     | 'deleteAgentSponsorships';
@@ -178,6 +184,11 @@ const METHOD_SPECS = {
     params: [],
     utilityMethod: 'getMasterSponsorList',
   },
+  getMasterSponsorList_BAK: {
+    title: 'getMasterSponsorList_BAK',
+    params: [],
+    utilityMethod: 'getMasterSponsorList_BAK',
+  },
   hhFundAccounts: {
     title: 'hhFundAccounts',
     params: buildHardhatFundAccountsParams(),
@@ -187,6 +198,34 @@ const METHOD_SPECS = {
     title: 'deleteMasterSponsorships',
     params: [],
     utilityMethod: 'deleteMasterSponsorships',
+  },
+  deleteSponsorTree: {
+    title: 'deleteSponsorTree',
+    params: [{ label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' as const }],
+    utilityMethod: 'deleteSponsorTree',
+  },
+  deleteSponsorRecipientBranch: {
+    title: 'deleteSponsorRecipientBranch',
+    params: buildRecipientScopeParams(),
+    utilityMethod: 'deleteSponsorRecipientBranch',
+  },
+  deleteRecipientRateBranch: {
+    title: 'deleteRecipientRateBranch',
+    params: buildRecipientRateParams(),
+    utilityMethod: 'deleteRecipientRateBranch',
+  },
+  deleteRecipientAgentBranch: {
+    title: 'deleteRecipientAgentBranch',
+    params: buildAgentScopeParams(),
+    utilityMethod: 'deleteRecipientAgentBranch',
+  },
+  deleteAgentRateBranch: {
+    title: 'deleteAgentRateBranch',
+    params: [
+      ...buildAgentScopeParams(),
+      { label: 'Agent Rate Key', placeholder: 'uint256 _agentRateKey', type: 'uint' as const },
+    ],
+    utilityMethod: 'deleteAgentRateBranch',
   },
   deleteRecipientSponsorships: {
     title: 'deleteRecipientSponsorships',
@@ -216,9 +255,21 @@ export function getSerializationTestOptions(): SerializationTestMethod[] {
 }
 
 export function getUtilityMethodOptions(): SerializationTestMethod[] {
+  const hiddenUtilityMethods = new Set<SerializationTestMethod>([
+    'deleteRecipientSponsorships',
+    'deleteRecipientSponsorshipTree',
+    'deleteAgentSponsorships',
+  ]);
   return (Object.keys(SERIALIZATION_TEST_METHOD_DEFS) as SerializationTestMethod[])
     .filter((name) => 'utilityMethod' in SERIALIZATION_TEST_METHOD_DEFS[name])
+    .filter((name) => !hiddenUtilityMethods.has(name))
     .sort((a, b) => a.localeCompare(b));
+}
+
+function attachSerializationDebugTrace(error: unknown, trace: string[]) {
+  if (!error || typeof error !== 'object') return error;
+  (error as { spCoinDebugTrace?: string[] }).spCoinDebugTrace = [...trace];
+  return error;
 }
 
 type RunArgs = {
@@ -234,6 +285,7 @@ type RunArgs = {
     writeCall: (contract: any, signer: any) => Promise<any>,
     accountKey?: string,
   ) => Promise<any>;
+  spCoinAccessSource?: 'local' | 'node_modules';
   selectedHardhatAddress?: string;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
@@ -241,7 +293,7 @@ type RunArgs = {
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
   if (typeof access.read.getAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
-    throw new Error(`getMasterSponsorList requires getAccountList() and getAccountRecipientList() read methods.`);
+    throw new Error(`Sponsor-list utilities require getAccountList() and getAccountRecipientList() read methods.`);
   }
   const accountList = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
   const recipientLists = await Promise.all(
@@ -277,7 +329,12 @@ async function loadRecipientRateKeys(
   if (typeof access.read.getRecipientRateList !== 'function') {
     throw new Error('getRecipientRateList() read method is required.');
   }
-  return Array.from((await access.read.getRecipientRateList(sponsorKey, recipientKey)) as unknown[]).map((value) => String(value));
+  try {
+    return Array.from((await access.read.getRecipientRateList(sponsorKey, recipientKey)) as unknown[]).map((value) => String(value));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`loadRecipientRateKeys(${sponsorKey}, ${recipientKey}) failed: ${message}`);
+  }
 }
 
 async function loadRecipientRateAgents(
@@ -491,80 +548,102 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     mode,
     hardhatAccounts,
     executeWriteConnected,
+    selectedHardhatAddress,
     appendLog,
     setStatus,
   } = args;
   const def = SERIALIZATION_TEST_METHOD_DEFS[selectedMethod];
   const target = requireContractAddress();
-  const runner = await ensureReadRunner();
-  const access = createSpCoinLibraryAccess(target, runner);
-  const methodArgs = def.params.map((param, idx) => coerceParamValue(params[idx], param));
+  const debugTrace: string[] = [];
+  const trace = (line: string) => {
+    debugTrace.push(line);
+  };
+  const cleanupSignerAddress =
+    mode === 'hardhat'
+      ? (selectedHardhatAddress || hardhatAccounts[0]?.address || '').trim()
+      : undefined;
 
-  if ('utilityMethod' in def && def.utilityMethod === 'compareSpCoinContractSize') {
-    const response = await fetch('/api/spCoin/contract-size-comparison', {
-      method: 'POST',
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        previousReleaseDir: String(methodArgs[0] || ''),
-        latestReleaseDir: String(methodArgs[1] || ''),
-      }),
-    });
-    const payload = (await response.json()) as {
-      ok?: boolean;
-      message?: string;
-      report?: unknown;
-      scriptPath?: string;
-      stderr?: string;
-      previousReleaseDir?: string;
-      latestReleaseDir?: string;
-      cached?: boolean;
-    };
-    if (!response.ok || payload?.ok === false) {
-      throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
-    }
-    appendLog(`${selectedMethod} -> contract size comparison complete.`);
-    setStatus(`${def.title} complete.`);
-    return {
-      scriptPath: String(payload?.scriptPath || ''),
-      previousReleaseDir: String(payload?.previousReleaseDir || ''),
-      latestReleaseDir: String(payload?.latestReleaseDir || ''),
-      cached: Boolean(payload?.cached),
-      report: payload?.report ?? {},
-      stderr: String(payload?.stderr || ''),
-    };
-  }
+  try {
+    trace(`start ${selectedMethod}`);
+    trace(`contract ${target}`);
+    const runner = await ensureReadRunner();
+    trace(`ensureReadRunner ok`);
+    const access = createSpCoinLibraryAccess(target, runner);
+    const methodArgs = def.params.map((param, idx) => coerceParamValue(params[idx], param));
 
-  if ('utilityMethod' in def && (def.utilityMethod === 'getSponsorAccounts' || def.utilityMethod === 'getMasterSponsorList')) {
-    const sponsorAccounts = await loadSponsorAccounts(access);
-    appendLog(`${selectedMethod} -> loaded ${sponsorAccounts.length} sponsor account(s).`);
-    setStatus(`${def.title} complete.`);
-    return sponsorAccounts;
-  }
-
-  if ('utilityMethod' in def && def.utilityMethod === 'hhFundAccounts') {
-    if (mode !== 'hardhat') {
-      throw new Error('hhFundAccounts only works when connected to Hardhat.');
-    }
-
-    const senderAccount = hardhatAccounts[0];
-    const senderAddress = toCanonicalAddress(senderAccount?.address, 'Hardhat funding account 0');
-    const recipientAccounts = hardhatAccounts
-      .slice(1, 20)
-      .map((account, idx) => toCanonicalAddress(account.address, `Hardhat account ${idx + 1}`))
-      .filter(Boolean);
-    if (recipientAccounts.length !== 19) {
-      throw new Error('hhFundAccounts requires Hardhat accounts 1 through 19 to be available.');
+    if ('utilityMethod' in def && def.utilityMethod === 'compareSpCoinContractSize') {
+      trace('utility compareSpCoinContractSize');
+      const response = await fetch('/api/spCoin/contract-size-comparison', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          previousReleaseDir: String(methodArgs[0] || ''),
+          latestReleaseDir: String(methodArgs[1] || ''),
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        report?: unknown;
+        scriptPath?: string;
+        stderr?: string;
+        previousReleaseDir?: string;
+        latestReleaseDir?: string;
+        cached?: boolean;
+      };
+      if (!response.ok || payload?.ok === false) {
+        throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
+      }
+      appendLog(`${selectedMethod} -> contract size comparison complete.`);
+      setStatus(`${def.title} complete.`);
+      return {
+        scriptPath: String(payload?.scriptPath || ''),
+        previousReleaseDir: String(payload?.previousReleaseDir || ''),
+        latestReleaseDir: String(payload?.latestReleaseDir || ''),
+        cached: Boolean(payload?.cached),
+        report: payload?.report ?? {},
+        stderr: String(payload?.stderr || ''),
+      };
     }
 
-    const normalizedAmount = String(methodArgs[0] || '').replace(/,/g, '').trim();
-    if (!normalizedAmount) {
-      throw new Error('Total Token Amount is required.');
+    if (
+      'utilityMethod' in def &&
+      (def.utilityMethod === 'getSponsorAccounts' ||
+        def.utilityMethod === 'getMasterSponsorList' ||
+        def.utilityMethod === 'getMasterSponsorList_BAK')
+    ) {
+      trace('loadSponsorAccounts start');
+      const sponsorAccounts = await loadSponsorAccounts(access);
+      trace(`loadSponsorAccounts ok count=${sponsorAccounts.length}`);
+      appendLog(`${selectedMethod} -> loaded ${sponsorAccounts.length} sponsor account(s).`);
+      setStatus(`${def.title} complete.`);
+      return sponsorAccounts;
     }
 
-    const summary = await executeWriteConnected(
-      def.title,
-      async (contract, signer) => {
+    if ('utilityMethod' in def && def.utilityMethod === 'hhFundAccounts') {
+      if (mode !== 'hardhat') {
+        throw new Error('hhFundAccounts only works when connected to Hardhat.');
+      }
+
+      const senderAccount = hardhatAccounts[0];
+      const senderAddress = toCanonicalAddress(senderAccount?.address, 'Hardhat funding account 0');
+      const recipientAccounts = hardhatAccounts
+        .slice(1, 20)
+        .map((account, idx) => toCanonicalAddress(account.address, `Hardhat account ${idx + 1}`))
+        .filter(Boolean);
+      if (recipientAccounts.length !== 19) {
+        throw new Error('hhFundAccounts requires Hardhat accounts 1 through 19 to be available.');
+      }
+
+      const normalizedAmount = String(methodArgs[0] || '').replace(/,/g, '').trim();
+      if (!normalizedAmount) {
+        throw new Error('Total Token Amount is required.');
+      }
+
+      const summary = await executeWriteConnected(
+        def.title,
+        async (contract, signer) => {
         const decimalsValue = typeof contract.decimals === 'function' ? await contract.decimals() : 18;
         const decimals = Number(decimalsValue);
         const totalUnits = parseUnits(normalizedAmount, decimals);
@@ -597,18 +676,58 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
           remainderUnits: remainder.toString(),
         };
       },
-      senderAddress,
-    );
+        senderAddress,
+      );
 
-    appendLog(`${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`);
-    setStatus(`${def.title} complete.`);
-    return summary;
-  }
+      appendLog(`${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`);
+      setStatus(`${def.title} complete.`);
+      return summary;
+    }
 
-  const executeAs = async <T>(label: string, signerAddress: string, writeCall: (contract: any, signer: any) => Promise<T>) =>
-    executeWriteConnected(label, writeCall, signerAddress);
+    const executeAs = async <T>(label: string, signerAddress: string, writeCall: (contract: any, signer: any) => Promise<T>) => {
+      trace(`write start ${label}`);
+      const result = await executeWriteConnected(label, writeCall, signerAddress);
+      trace(`write ok ${label}`);
+      return result;
+    };
 
-  const deleteAgentSponsorshipLeaf = async (
+  const isRetryableDeleteAccountError = (error: unknown) => {
+    const code = String((error as { code?: unknown } | null)?.code || '');
+    const message = String((error as { message?: unknown } | null)?.message ?? error ?? '');
+    return code === 'NONCE_EXPIRED' || /Failed to fetch/i.test(message);
+  };
+
+  const deleteAccountRecordWithRecovery = async (accountKey: string) =>
+    executeAs(`deleteAccountRecord(${accountKey})`, cleanupSignerAddress || accountKey, async (contract) => {
+      const fn = (contract as { deleteAccountRecord?: (...args: unknown[]) => Promise<any> }).deleteAccountRecord;
+      const isAccountInsertedFn = (contract as { isAccountInserted?: (...args: unknown[]) => Promise<any> }).isAccountInserted;
+      if (typeof fn !== 'function') {
+        throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
+      }
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          const tx = await fn(accountKey);
+          await tx.wait();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return tx;
+        } catch (error) {
+          lastError = error;
+          if (!isRetryableDeleteAccountError(error) || typeof isAccountInsertedFn !== 'function') {
+            throw error;
+          }
+          trace(`deleteAccountRecord(${accountKey}) retryable cleanup error attempt ${attempt}: ${String((error as { code?: unknown; message?: unknown })?.code || '')} ${String((error as { message?: unknown })?.message ?? error ?? '')}`);
+          await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+          const stillInserted = await isAccountInsertedFn(accountKey);
+          if (!stillInserted) {
+            return null;
+          }
+        }
+      }
+      throw lastError;
+    });
+
+  const deleteAgentRateBranch = async (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string,
@@ -616,46 +735,46 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     agentRateKey: string,
   ) =>
     executeAs(
-      `deleteAgentSponsorship(${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
+      `deleteAgentRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
       sponsorKey,
       async (contract) => {
-        const fn = (contract as { deleteAgentSponsorship?: (...args: unknown[]) => Promise<any> }).deleteAgentSponsorship;
+        const fn = (contract as { deleteAgentRateBranch?: (...args: unknown[]) => Promise<any> }).deleteAgentRateBranch;
         if (typeof fn !== 'function') {
-          throw new Error('deleteAgentSponsorship is not available on the current SpCoin contract access path.');
+          throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
         }
-        const tx = await fn(recipientKey, recipientRateKey, agentKey, agentRateKey);
+        const tx = await fn(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
         await tx.wait();
         return tx;
       },
     );
 
   const deleteAgentNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string, agentKey: string) =>
-    executeAs(`deleteAgent(${recipientKey}, ${recipientRateKey}, ${agentKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteAgent?: (...args: unknown[]) => Promise<any> }).deleteAgent;
+    executeAs(`deleteRecipientAgentBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteRecipientAgentBranch?: (...args: unknown[]) => Promise<any> }).deleteRecipientAgentBranch;
       if (typeof fn !== 'function') {
-        throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
+        throw new Error('deleteRecipientAgentBranch is not available on the current SpCoin contract access path.');
       }
-      const tx = await fn(recipientKey, recipientRateKey, agentKey);
+      const tx = await fn(sponsorKey, recipientKey, recipientRateKey, agentKey);
       await tx.wait();
       return tx;
     });
 
   const deleteRecipientRateNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string) =>
-    executeAs(`deleteRecipientRate(${recipientKey}, ${recipientRateKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteRecipientRate?: (...args: unknown[]) => Promise<any> }).deleteRecipientRate;
+    executeAs(`deleteRecipientRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteRecipientRateBranch?: (...args: unknown[]) => Promise<any> }).deleteRecipientRateBranch;
       if (typeof fn !== 'function') {
-        throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
+        throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
       }
-      const tx = await fn(recipientKey, recipientRateKey);
+      const tx = await fn(sponsorKey, recipientKey, recipientRateKey);
       await tx.wait();
       return tx;
     });
 
-  const deleteRecipientRelationship = async (sponsorKey: string, recipientKey: string) =>
-    executeAs(`delRecipient(${sponsorKey}, ${recipientKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { delRecipient?: (...args: unknown[]) => Promise<any> }).delRecipient;
+  const deleteRecipientNode = async (sponsorKey: string, recipientKey: string) =>
+    executeAs(`deleteSponsorRecipientBranch(${sponsorKey}, ${recipientKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteSponsorRecipientBranch?: (...args: unknown[]) => Promise<any> }).deleteSponsorRecipientBranch;
       if (typeof fn !== 'function') {
-        throw new Error('delRecipient is not available on the current SpCoin contract access path.');
+        throw new Error('deleteSponsorRecipientBranch is not available on the current SpCoin contract access path.');
       }
       const tx = await fn(sponsorKey, recipientKey);
       await tx.wait();
@@ -673,23 +792,61 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       return tx;
     });
 
-  const deleteAgentSponsorshipsWorkflow = async (
+  const deleteRecipientAgentBranch = async (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string,
     agentKey: string,
   ) => {
     const deletedAgentRateKeys: string[] = [];
+    trace(
+      `deleteRecipientAgentBranch loadAgentRateKeys start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`,
+    );
     let agentRateKeys = await loadAgentRateKeys(access, sponsorKey, recipientKey, recipientRateKey, agentKey);
+    trace(
+      `deleteRecipientAgentBranch loadAgentRateKeys ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} = ${JSON.stringify(
+        agentRateKeys,
+      )}`,
+    );
     while (agentRateKeys.length > 0) {
       const agentRateKey = agentRateKeys[0];
-      await deleteAgentSponsorshipLeaf(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      trace(
+        `deleteRecipientAgentBranch deleteAgentRateTree start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} rate=${agentRateKey}`,
+      );
+      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      trace(
+        `deleteRecipientAgentBranch deleteAgentRateTree ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} rate=${agentRateKey}`,
+      );
       deletedAgentRateKeys.push(agentRateKey);
+      trace(
+        `deleteRecipientAgentBranch reloadAgentRateKeys start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`,
+      );
       agentRateKeys = await loadAgentRateKeys(access, sponsorKey, recipientKey, recipientRateKey, agentKey);
+      trace(
+        `deleteRecipientAgentBranch reloadAgentRateKeys ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} = ${JSON.stringify(
+          agentRateKeys,
+        )}`,
+      );
     }
+    trace(
+      `deleteRecipientAgentBranch loadRemainingAgents start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}`,
+    );
     const remainingAgents = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    trace(
+      `deleteRecipientAgentBranch loadRemainingAgents ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} = ${JSON.stringify(
+        remainingAgents,
+      )}`,
+    );
+    if (agentRateKeys.length === 0 && remainingAgents.includes(normalizeAddress(agentKey))) {
+      throw new Error(
+        `deleteRecipientAgentBranch found a partial agent link with no agent-rate records for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}. ` +
+          'Repair it by rerunning addAgentSponsorship with the original agent rate/quantity, or redeploy/reset to a contract build that includes empty-agent cleanup.',
+      );
+    }
     if (remainingAgents.includes(normalizeAddress(agentKey))) {
+      trace(`deleteRecipientAgentBranch deleteAgentNode start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`);
       await deleteAgentNode(sponsorKey, recipientKey, recipientRateKey, agentKey);
+      trace(`deleteRecipientAgentBranch deleteAgentNode ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`);
     }
     return {
       sponsorKey,
@@ -700,26 +857,48 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     };
   };
 
-  const deleteRecipientSponsorshipWorkflow = async (
+  const deleteRecipientRateTree = async (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string,
     visitedSponsors = new Set<string>(),
   ) => {
+    trace(`deleteRecipientRateTree loadRecipientRateAgents start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}`);
     const agentKeys = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    trace(
+      `deleteRecipientRateTree loadRecipientRateAgents ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} = ${JSON.stringify(
+        agentKeys,
+      )}`,
+    );
     const childResults = [];
     for (const agentKey of agentKeys) {
-      childResults.push(await deleteAgentSponsorshipsWorkflow(sponsorKey, recipientKey, recipientRateKey, agentKey));
+      trace(`deleteRecipientRateTree child agent start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`);
+      childResults.push(await deleteRecipientAgentBranch(sponsorKey, recipientKey, recipientRateKey, agentKey));
+      trace(`deleteRecipientRateTree child agent ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`);
     }
+    trace(`deleteRecipientRateTree reloadRemainingAgentKeys start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}`);
     const remainingAgentKeys = await loadRecipientRateAgents(access, sponsorKey, recipientKey, recipientRateKey);
+    trace(
+      `deleteRecipientRateTree reloadRemainingAgentKeys ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} = ${JSON.stringify(
+        remainingAgentKeys,
+      )}`,
+    );
     if (remainingAgentKeys.length > 0) {
       throw new Error(
         `deleteRecipientSponsorshipTree incomplete: agent accounts remain for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}: ${remainingAgentKeys.join(', ')}`,
       );
     }
+    trace(`deleteRecipientRateTree reloadRemainingRateKeys start ${sponsorKey} -> ${recipientKey}`);
     const remainingRateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+    trace(
+      `deleteRecipientRateTree reloadRemainingRateKeys ok ${sponsorKey} -> ${recipientKey} = ${JSON.stringify(
+        remainingRateKeys,
+      )}`,
+    );
     if (remainingRateKeys.includes(String(recipientRateKey))) {
+      trace(`deleteRecipientRateTree deleteRecipientRateNode start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}`);
       await deleteRecipientRateNode(sponsorKey, recipientKey, recipientRateKey);
+      trace(`deleteRecipientRateTree deleteRecipientRateNode ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}`);
     }
     return {
       sponsorKey,
@@ -731,44 +910,83 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     };
   };
 
-  const deleteSponsorshipWorkflow = async (sponsorKey: string, visitedSponsors = new Set<string>()) => {
+  const deleteSponsorRecipientBranch = async (
+    sponsorKey: string,
+    recipientKey: string,
+    visitedSponsors = new Set<string>(),
+  ) => {
+    trace(`deleteSponsorRecipientBranch loadRecipientRateKeys start ${sponsorKey} -> ${recipientKey}`);
+    let rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+    trace(`deleteSponsorRecipientBranch loadRecipientRateKeys ok ${sponsorKey} -> ${recipientKey} = ${JSON.stringify(rateKeys)}`);
+    const deletedRates = [];
+    while (rateKeys.length > 0) {
+      const rateKey = rateKeys[0];
+      trace(`deleteSponsorRecipientBranch deleteRecipientRateTree start ${sponsorKey} -> ${recipientKey} @ ${rateKey}`);
+      deletedRates.push(await deleteRecipientRateTree(sponsorKey, recipientKey, rateKey, visitedSponsors));
+      trace(`deleteSponsorRecipientBranch deleteRecipientRateTree ok ${sponsorKey} -> ${recipientKey} @ ${rateKey}`);
+      trace(`deleteSponsorRecipientBranch reloadRemainingRateKeys start ${sponsorKey} -> ${recipientKey}`);
+      rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
+      trace(`deleteSponsorRecipientBranch reloadRemainingRateKeys ok ${sponsorKey} -> ${recipientKey} = ${JSON.stringify(rateKeys)}`);
+    }
+    trace(`deleteSponsorRecipientBranch reloadRemainingRecipients start ${sponsorKey}`);
+    const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
+    trace(`deleteSponsorRecipientBranch reloadRemainingRecipients ok ${sponsorKey} = ${JSON.stringify(remainingRecipients)}`);
+    const normalizedRecipientKey = normalizeAddress(recipientKey);
+    if (remainingRecipients.includes(normalizedRecipientKey)) {
+      trace(`deleteSponsorRecipientBranch deleteRecipientNode start ${sponsorKey} -> ${recipientKey}`);
+      await deleteRecipientNode(sponsorKey, recipientKey);
+      trace(`deleteSponsorRecipientBranch deleteRecipientNode ok ${sponsorKey} -> ${recipientKey}`);
+    }
+    return {
+      sponsorKey,
+      recipientKey,
+      deletedRateCount: deletedRates.length,
+      deletedRates,
+      visitedSponsors: Array.from(visitedSponsors),
+    };
+  };
+
+  const deleteSponsorTree = async (sponsorKey: string, visitedSponsors = new Set<string>()) => {
     const normalizedSponsorKey = normalizeAddress(sponsorKey);
     if (visitedSponsors.has(normalizedSponsorKey)) {
+      trace(`deleteSponsorTree skip already_visited ${sponsorKey}`);
       return { sponsorKey, skipped: true, reason: 'already_visited' as const };
     }
     visitedSponsors.add(normalizedSponsorKey);
 
+    trace(`deleteSponsorTree loadSponsorAccounts start ${sponsorKey}`);
     const currentSponsorAccounts = new Set(await loadSponsorAccounts(access));
+    trace(`deleteSponsorTree loadSponsorAccounts ok ${sponsorKey} -> ${JSON.stringify(Array.from(currentSponsorAccounts))}`);
+    trace(`deleteSponsorTree loadRecipientAccounts start ${sponsorKey}`);
     const recipients = await loadRecipientAccounts(access, sponsorKey);
+    trace(`deleteSponsorTree loadRecipientAccounts ok ${sponsorKey} -> ${JSON.stringify(recipients)}`);
     const deletedRecipients = [];
     for (const recipientKey of recipients) {
       const normalizedRecipientKey = normalizeAddress(recipientKey);
+      trace(`deleteSponsorTree recipient start ${sponsorKey} -> ${recipientKey}`);
       if (currentSponsorAccounts.has(normalizedRecipientKey)) {
-        await deleteSponsorshipWorkflow(recipientKey, visitedSponsors);
+        trace(`deleteSponsorTree recurse child sponsor ${recipientKey}`);
+        await deleteSponsorTree(recipientKey, visitedSponsors);
       }
-      const rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
-      const deletedRates = [];
-      for (const rateKey of rateKeys) {
-        deletedRates.push(await deleteRecipientSponsorshipWorkflow(sponsorKey, recipientKey, rateKey, visitedSponsors));
-      }
-      const remainingRecipientRateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
-      if (remainingRecipientRateKeys.length === 0) {
-        const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
-        if (remainingRecipients.includes(normalizedRecipientKey)) {
-          await deleteRecipientRelationship(sponsorKey, recipientKey);
-        }
-      }
-      deletedRecipients.push({ recipientKey, deletedRates });
+      trace(`deleteSponsorTree deleteSponsorRecipientBranch start ${sponsorKey} -> ${recipientKey}`);
+      deletedRecipients.push(await deleteSponsorRecipientBranch(sponsorKey, recipientKey, visitedSponsors));
+      trace(`deleteSponsorTree deleteSponsorRecipientBranch ok ${sponsorKey} -> ${recipientKey}`);
     }
 
+    trace(`deleteSponsorTree final remainingRecipients start ${sponsorKey}`);
     const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
+    trace(`deleteSponsorTree final remainingRecipients ok ${sponsorKey} = ${JSON.stringify(remainingRecipients)}`);
     if (remainingRecipients.length > 0) {
-      throw new Error(`deleteSponsorshipTree incomplete: recipients remain for ${sponsorKey}: ${remainingRecipients.join(', ')}`);
+      throw new Error(`deleteSponsorTree incomplete: recipients remain for ${sponsorKey}: ${remainingRecipients.join(', ')}`);
     }
 
+    trace(`deleteSponsorTree loadAccountList start ${sponsorKey}`);
     const accountList = await loadAccountList(access);
+    trace(`deleteSponsorTree loadAccountList ok ${sponsorKey} = ${JSON.stringify(accountList)}`);
     if (accountList.includes(normalizedSponsorKey)) {
+      trace(`deleteSponsorTree deleteSponsorAccount start ${sponsorKey}`);
       await deleteSponsorAccount(sponsorKey);
+      trace(`deleteSponsorTree deleteSponsorAccount ok ${sponsorKey}`);
     }
 
     return {
@@ -780,21 +998,70 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   };
 
   if ('utilityMethod' in def && def.utilityMethod === 'deleteAgentSponsorships') {
-    const result = await deleteAgentSponsorshipsWorkflow(
+      const result = await deleteRecipientAgentBranch(
+        toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+        toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+        String(methodArgs[2]),
+        toCanonicalAddress(methodArgs[3], 'Agent Key'),
+      );
+      appendLog(
+        `${selectedMethod} -> deleted ${result.deletedAgentRateKeys.length} agent sponsorship leaf/leaves for ${result.agentKey}.`,
+      );
+      setStatus(`${def.title} complete.`);
+      return result;
+    }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientAgentBranch') {
+    const result = await deleteRecipientAgentBranch(
       toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
       toCanonicalAddress(methodArgs[1], 'Recipient Key'),
       String(methodArgs[2]),
       toCanonicalAddress(methodArgs[3], 'Agent Key'),
     );
     appendLog(
-      `${selectedMethod} -> deleted ${result.deletedAgentRateKeys.length} agent sponsorship leaf/leaves for ${result.agentKey}.`,
+      `${selectedMethod} -> unsponsored agent tree ${result.sponsorKey} -> ${result.recipientKey} @ ${result.recipientRateKey} agent=${result.agentKey}.`,
+    );
+    setStatus(`${def.title} complete.`);
+    return result;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteAgentRateBranch') {
+    await deleteAgentRateBranch(
+      toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+      String(methodArgs[2]),
+      toCanonicalAddress(methodArgs[3], 'Agent Key'),
+      String(methodArgs[4]),
+    );
+    const result = {
+      sponsorKey: toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      recipientKey: toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+      recipientRateKey: String(methodArgs[2]),
+      agentKey: toCanonicalAddress(methodArgs[3], 'Agent Key'),
+      agentRateKey: String(methodArgs[4]),
+    };
+    appendLog(
+      `${selectedMethod} -> deleted agent-rate branch ${result.sponsorKey} -> ${result.recipientKey} @ ${result.recipientRateKey} agent=${result.agentKey} rate=${result.agentRateKey}.`,
+    );
+    setStatus(`${def.title} complete.`);
+    return result;
+  }
+
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientRateBranch') {
+    const result = await deleteRecipientRateTree(
+      toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+      String(methodArgs[2]),
+    );
+    appendLog(
+      `${selectedMethod} -> deleted recipient-rate branch ${result.sponsorKey} -> ${result.recipientKey} @ ${result.recipientRateKey}.`,
     );
     setStatus(`${def.title} complete.`);
     return result;
   }
 
   if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientSponsorshipTree') {
-    const result = await deleteRecipientSponsorshipWorkflow(
+    const result = await deleteRecipientRateTree(
       toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
       toCanonicalAddress(methodArgs[1], 'Recipient Key'),
       String(methodArgs[2]),
@@ -806,45 +1073,137 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     return result;
   }
 
+  if ('utilityMethod' in def && def.utilityMethod === 'deleteSponsorRecipientBranch') {
+    const result = await deleteSponsorRecipientBranch(
+      toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
+      toCanonicalAddress(methodArgs[1], 'Recipient Key'),
+    );
+    appendLog(
+      `${selectedMethod} -> unsponsored recipient tree ${result.sponsorKey} -> ${result.recipientKey}.`,
+    );
+    setStatus(`${def.title} complete.`);
+    return result;
+  }
+
   if ('utilityMethod' in def && def.utilityMethod === 'deleteRecipientSponsorships') {
     const sponsorKey = toCanonicalAddress(methodArgs[0], 'Sponsor Key');
     const recipientKey = toCanonicalAddress(methodArgs[1], 'Recipient Key');
     const rateKeys = await loadRecipientRateKeys(access, sponsorKey, recipientKey);
     const results = [];
     for (const rateKey of rateKeys) {
-      results.push(await deleteRecipientSponsorshipWorkflow(sponsorKey, recipientKey, rateKey));
+      results.push(await deleteRecipientRateTree(sponsorKey, recipientKey, rateKey));
     }
     appendLog(`${selectedMethod} -> deleted ${results.length} recipient sponsorship branch(es) for ${recipientKey}.`);
     setStatus(`${def.title} complete.`);
     return { sponsorKey, recipientKey, deletedRecipientSponsorships: results };
   }
 
-  if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorships') {
-    const deletedSponsorships = [];
-    let sponsorAccounts = await loadSponsorAccounts(access);
-    while (sponsorAccounts.length > 0) {
-      deletedSponsorships.push(await deleteSponsorshipWorkflow(sponsorAccounts[0]));
-      sponsorAccounts = await loadSponsorAccounts(access);
+    if ('utilityMethod' in def && def.utilityMethod === 'deleteSponsorTree') {
+      const sponsorKey = toCanonicalAddress(methodArgs[0], 'Sponsor Key');
+      const currentSponsorAccounts = await loadSponsorAccounts(access);
+      if (!currentSponsorAccounts.includes(normalizeAddress(sponsorKey))) {
+        throw new Error(
+          `deleteSponsorTree requires a sponsor-root account with recipient children. ${sponsorKey} is not a sponsor root in the current tree; use deleteSponsorRecipientBranch or deleteRecipientAgentBranch for lower branches.`,
+        );
+      }
+      trace(`deleteSponsorTree method start ${sponsorKey}`);
+      const treeSummary = await deleteSponsorTree(sponsorKey);
+      trace(`deleteSponsorTree method ok ${sponsorKey}`);
+      appendLog(`${selectedMethod} -> unsponsored sponsor tree ${sponsorKey}.`);
+      setStatus(`${def.title} complete.`);
+      return treeSummary;
     }
-    const remainingAccounts = await loadAccountList(access);
-    if (remainingAccounts.length > 0) {
-      throw new Error(`deleteMasterSponsorships incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`);
+
+    if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorships') {
+      const deletedSponsorships = [];
+      let sponsorAccounts: string[];
+      try {
+        trace('loadSponsorAccounts start');
+        sponsorAccounts = await loadSponsorAccounts(access);
+        trace(`loadSponsorAccounts ok ${JSON.stringify(sponsorAccounts)}`);
+        appendLog(`${selectedMethod} -> initial sponsorAccounts=${JSON.stringify(sponsorAccounts)}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        trace(`loadSponsorAccounts failed ${message}`);
+        appendLog(`${selectedMethod} -> loadSponsorAccounts failed: ${message}`);
+        throw error;
+      }
+      while (sponsorAccounts.length > 0) {
+        const sponsorKey = sponsorAccounts[0];
+        trace(`deleteSponsorTree start ${sponsorKey}`);
+        const treeSummary = await deleteSponsorTree(sponsorKey);
+        trace(`deleteSponsorTree ok ${sponsorKey}`);
+        deletedSponsorships.push({ sponsorKey, treeSummary });
+        try {
+          trace(`reload sponsorAccounts start after ${sponsorKey}`);
+          sponsorAccounts = await loadSponsorAccounts(access);
+          trace(`reload sponsorAccounts ok ${JSON.stringify(sponsorAccounts)}`);
+          appendLog(`${selectedMethod} -> sponsorAccounts after ${sponsorKey}=${JSON.stringify(sponsorAccounts)}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          trace(`reload sponsorAccounts failed after ${sponsorKey}: ${message}`);
+          appendLog(`${selectedMethod} -> loadSponsorAccounts after ${sponsorKey} failed: ${message}`);
+          throw error;
+        }
+      }
+      const deletedOrphanAccounts: string[] = [];
+      let remainingAccounts: string[];
+      try {
+        trace('loadAccountList start');
+        remainingAccounts = await loadAccountList(access);
+        trace(`loadAccountList ok ${JSON.stringify(remainingAccounts)}`);
+        trace(`cleanupSignerAddress ${String(cleanupSignerAddress || '(per-account fallback)')}`);
+        appendLog(`${selectedMethod} -> initial remainingAccounts=${JSON.stringify(remainingAccounts)}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        trace(`loadAccountList failed ${message}`);
+        appendLog(`${selectedMethod} -> loadAccountList failed: ${message}`);
+        throw error;
+      }
+      let previousRemainingSnapshot = '';
+      while (remainingAccounts.length > 0) {
+        const snapshot = remainingAccounts.join(',');
+        if (snapshot === previousRemainingSnapshot) {
+          break;
+        }
+        previousRemainingSnapshot = snapshot;
+        for (const accountKey of remainingAccounts) {
+          await deleteAccountRecordWithRecovery(accountKey);
+          deletedOrphanAccounts.push(accountKey);
+        }
+        try {
+          trace('reload remainingAccounts start');
+          remainingAccounts = await loadAccountList(access);
+          trace(`reload remainingAccounts ok ${JSON.stringify(remainingAccounts)}`);
+          appendLog(`${selectedMethod} -> remainingAccounts after orphan cleanup=${JSON.stringify(remainingAccounts)}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          trace(`reload remainingAccounts failed ${message}`);
+          appendLog(`${selectedMethod} -> loadAccountList after orphan cleanup failed: ${message}`);
+          throw error;
+        }
+      }
+      if (remainingAccounts.length > 0) {
+        throw new Error(`deleteMasterSponsorships incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`);
+      }
+      appendLog(`${selectedMethod} -> deleted ${deletedSponsorships.length} sponsorship tree(s).`);
+      setStatus(`${def.title} complete.`);
+      return { deletedSponsorships, deletedOrphanAccounts };
     }
-    appendLog(`${selectedMethod} -> deleted ${deletedSponsorships.length} sponsorship tree(s).`);
-    setStatus(`${def.title} complete.`);
-    return { deletedSponsorships };
-  }
 
-  if (!('baseMethod' in def)) {
-    throw new Error(`Unsupported utility method: ${selectedMethod}`);
-  }
+    if (!('baseMethod' in def)) {
+      throw new Error(`Unsupported utility method: ${selectedMethod}`);
+    }
 
-  const external = await buildExternalSerializerResult(access.contract as any, def.baseMethod, methodArgs);
-  appendLog(
-    external.blocked
-      ? `${selectedMethod} -> external rebuild blocked.`
-      : `${selectedMethod} -> external rebuild complete.`,
-  );
-  setStatus(external.blocked ? `${def.title} blocked.` : `${def.title} complete.`);
-  return external.blocked ? { blocked: true, reason: external.reason } : external.value;
+    const external = await buildExternalSerializerResult(access.contract as any, def.baseMethod, methodArgs);
+    appendLog(
+      external.blocked
+        ? `${selectedMethod} -> external rebuild blocked.`
+        : `${selectedMethod} -> external rebuild complete.`,
+    );
+    setStatus(external.blocked ? `${def.title} blocked.` : `${def.title} complete.`);
+    return external.blocked ? { blocked: true, reason: external.reason } : external.value;
+  } catch (error) {
+    throw attachSerializationDebugTrace(error, debugTrace);
+  }
 }

@@ -32,8 +32,8 @@
           "value": "9999999"
         }
       ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
+      "breakpoint": true,
+      "hasMissingRequiredParams": true
     },
     {
       "step": 2,

@@ -26,16 +26,19 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addRecipientRateAmount(
+    function addRecipientRateBranchAmount(
+        address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
         string memory _strWholeAmount,
         string memory _strDecimalAmount
     )
         public
+        onlyOwnerOrRootAdmin(_sponsorKey)
+        returns (uint256 transactionIndex)
     {
-        _addSponsorshipForSponsor(
-            msg.sender,
+        return _addSponsorshipForSponsor(
+            _sponsorKey,
             _recipientKey,
             _recipientRateKey,
             burnAddress,
@@ -46,7 +49,8 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addAgentRateAmount(
+    function addAgentRateBranchAmount(
+        address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
         address _agentKey,
@@ -55,30 +59,10 @@ contract Transactions is RewardsManager {
         string memory _strDecimalAmount
     )
         public
+        onlyOwnerOrRootAdmin(_sponsorKey)
+        returns (uint256 transactionIndex)
     {
-        _addSponsorshipForSponsor(
-            msg.sender,
-            _recipientKey,
-            _recipientRateKey,
-            _agentKey,
-            _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount,
-            block.timestamp
-        );
-    }
-
-    function addBackDatedSponsorship(address _sponsorKey,
-                                 address _recipientKey, 
-                                 uint _recipientRateKey,
-                                 address _agentKey,
-                                 uint _agentRateKey,
-                                 string memory _strWholeAmount,
-                                 string memory _strDecimalAmount,
-                                  uint _transactionTimeStamp) 
-    onlyRootAdmin
-    public {
-        _addSponsorshipForSponsor(
+        return _addSponsorshipForSponsor(
             _sponsorKey,
             _recipientKey,
             _recipientRateKey,
@@ -86,7 +70,7 @@ contract Transactions is RewardsManager {
             _agentRateKey,
             _strWholeAmount,
             _strDecimalAmount,
-            _transactionTimeStamp
+            block.timestamp
         );
     }
 
@@ -98,7 +82,7 @@ contract Transactions is RewardsManager {
                                  string memory _strWholeAmount,
                                  string memory _strDecimalAmount,
                                  uint _transactionTimeStamp)
-    internal {
+    internal returns (uint256 transactionIndex) {
         // console.log("balanceOf[", msg.sender, "] = ",balanceOf[msg.sender]);
         uint256 sponsorAmount;
         bool result;
@@ -133,6 +117,7 @@ contract Transactions is RewardsManager {
             RecipientRateStruct storage recipientRateRecord = getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _transactionTimeStamp);
             updateRecipientRateRewards( recipientRateRecord, _recipientKey, _transactionTimeStamp);
             updateRecipientRateSponsorship(_sponsorKey, recipientRateRecord, _recipientKey, sponsorAmount, _transactionTimeStamp);
+            transactionIndex = recipientRateRecord.transactionList.length;
             recipientRateRecord.transactionList.push(transRec);
         }
         else {
@@ -140,6 +125,7 @@ contract Transactions is RewardsManager {
             updateAgentRateRewards(agentRateRecord, _agentKey, _recipientKey,  _recipientRateKey, _transactionTimeStamp);
 
             updateAgentRateSponsorship(_sponsorKey, agentRateRecord, _recipientKey, _recipientRateKey, _agentKey, sponsorAmount, _transactionTimeStamp);
+            transactionIndex = agentRateRecord.transactionList.length;
             agentRateRecord.transactionList.push(transRec);
         }
 
@@ -217,6 +203,31 @@ contract Transactions is RewardsManager {
         return sponsorRec;
     }
 
+    function backDateTransactionDate(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        uint256 _transactionIndex,
+        uint256 _transactionTimeStamp
+    )
+        public
+        onlyRootAdmin
+    {
+        if (_agentKey == burnAddress) {
+            RecipientRateStruct storage recipientRateRecord =
+                getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+            require(_transactionIndex < recipientRateRecord.transactionList.length, "RECIP_TX_OOB");
+            recipientRateRecord.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+        } else {
+            AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+            AgentRateStruct storage agentRateRecord = agentRec.agentRateMap[_agentRateKey];
+            require(_transactionIndex < agentRateRecord.transactionList.length, "AGENT_TX_OOB");
+            agentRateRecord.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+        }
+    }
+
     function getAgentRateTransactionCount(
         address _sponsorKey,
         address _recipientKey,
@@ -231,6 +242,20 @@ contract Transactions is RewardsManager {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         AgentRateStruct storage agentRateRecord = agentRec.agentRateMap[_agentRateKey];
         return agentRateRecord.transactionList.length;
+    }
+
+    function getRecipientRateTransactionCount(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey
+    )
+        public
+        view
+        returns (uint256)
+    {
+        RecipientRateStruct storage recipientRateRecord =
+            getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        return recipientRateRecord.transactionList.length;
     }
 
     function getAgentRateTransactionAt(

@@ -106,12 +106,12 @@ export default function SponsorCoinLabPage() {
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
-  const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
-    networkHeader?: { rpcUrl?: string };
-  };
-  const defaultHardhatRpcUrl =
-    String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
-    'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+  networkHeader?: { rpcUrl?: string };
+};
+const defaultHardhatRpcUrl =
+  String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
+  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [rpcUrl, setRpcUrl] = useState(defaultHardhatRpcUrl);
   const [contractAddress, setContractAddress] = useState('');
@@ -160,7 +160,7 @@ export default function SponsorCoinLabPage() {
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
     useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
-    useState<SpCoinWriteMethod>('addAccountRecipient');
+    useState<SpCoinWriteMethod>('addSponsorRecipientBranch');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'admin_utils' | null>(null);
@@ -461,12 +461,17 @@ export default function SponsorCoinLabPage() {
   const serializationTestOptions = getSerializationTestOptions();
   const utilityMethodOptions = getUtilityMethodOptions();
   const adminUtilityReadOptions = utilityMethodOptions.filter((name) =>
-    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
+    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
   );
   const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
     [
       'hhFundAccounts',
       'deleteMasterSponsorships',
+      'deleteSponsorTree',
+      'deleteSponsorRecipientBranch',
+      'deleteRecipientRateBranch',
+      'deleteRecipientAgentBranch',
+      'deleteAgentRateBranch',
     ].includes(name),
   );
   const activeSerializationTestDef =
@@ -654,6 +659,10 @@ export default function SponsorCoinLabPage() {
     activeNetworkName,
     mode,
     methodPanelMode,
+    outputPanelMode,
+    formattedPanelView,
+    formattedJsonViewEnabled,
+    formattedOutputDisplay,
     selectedReadMethod,
     readAddressA,
     readAddressB,
@@ -1513,7 +1522,7 @@ export default function SponsorCoinLabPage() {
     deleteScriptStepByNumber,
     duplicateScriptStepByNumber,
     createScriptFromSteps,
-    existingScriptNames: allScripts.map((script) => script.name),
+    existingScriptNames: allScripts.filter((script) => !script.isSystemScript).map((script) => script.name),
   });
   return <SponsorCoinLabView {...viewProps} />;
 }

@@ -27,7 +27,11 @@ import {
   VERSION_FORMAT_ERROR,
   VERSION_FORMAT_REGEX,
 } from '../helpers';
-import { SPCOIN_ABI_UPDATED_EVENT, SPCOIN_ABI_VERSION_STORAGE_KEY } from '../../SponsorCoinLab/jsonMethods/shared/spCoinAbi';
+import {
+  SPCOIN_ABI_UPDATED_EVENT,
+  SPCOIN_ABI_VERSION_STORAGE_KEY,
+  SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT,
+} from '../../SponsorCoinLab/jsonMethods/shared/spCoinAbi';
 
 type SpCoinDeploymentFile = {
   meta?: {
@@ -210,7 +214,9 @@ type SpCoinAccessStorage = {
   selectedVersion: string;
   localInstallSourceRoot: string;
   deploymentName: string;
+  deploymentNameWasEdited?: boolean;
   deploymentSymbol?: string;
+  deploymentSymbolWasEdited?: boolean;
   deploymentDecimals?: string;
   deploymentVersion: string;
   deploymentSignerSource?: 'ec2-base' | 'metamask';
@@ -241,6 +247,40 @@ function normalizeRateRangeTuple(value: unknown): [number, number] {
   return [0, Number(value ?? 0)];
 }
 
+function formatStatusTimestamp(value: Date = new Date()) {
+  return value.toLocaleString('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+function buildOperationStatus(params: {
+  operation: string;
+  target: string;
+  startedAt: string;
+  completedAt?: string;
+  outcome?: 'success' | 'failed';
+  details?: string;
+}) {
+  const lines = [`${params.operation} of ${params.target} started at ${params.startedAt}`];
+  if (params.completedAt) {
+    lines.push(`Completion Date: ${params.completedAt}`);
+    if (params.outcome === 'failed') {
+      lines.push(`${params.operation} failed.`);
+    }
+  }
+  if (params.details) {
+    lines.push('');
+    lines.push(String(params.details || '').trim());
+  }
+  return lines.join('\n');
+}
+
 export function useSpCoinAccessController() {
   const router = useRouter();
   const { address: connectedWalletAddress, isConnected: isWalletConnected } = useAccount();
@@ -264,6 +304,8 @@ export function useSpCoinAccessController() {
   );
   const [deploymentName, setDeploymentName] = useState('Sponsor Coin');
   const [deploymentSymbol, setDeploymentSymbol] = useState('SPCOIN');
+  const [deploymentNameWasEdited, setDeploymentNameWasEdited] = useState(false);
+  const [deploymentSymbolWasEdited, setDeploymentSymbolWasEdited] = useState(false);
   const [deploymentDecimals, setDeploymentDecimals] = useState('18');
   const [deploymentVersion, setDeploymentVersion] = useState('0.0.1');
   const [deploymentSignerSource, setDeploymentSignerSource] = useState<'ec2-base' | 'metamask'>('ec2-base');
@@ -288,8 +330,12 @@ export function useSpCoinAccessController() {
   const [flashTarget, setFlashTarget] = useState<'download' | 'upload' | null>(null);
   const [deploymentFlashError, setDeploymentFlashError] = useState(false);
   const [deploymentStatusIsError, setDeploymentStatusIsError] = useState(false);
+  const [deploymentStatusPinned, setDeploymentStatusPinned] = useState(false);
   const [activeAction, setActiveAction] = useState<'download' | 'upload' | 'install' | null>(null);
   const [isGeneratingAbi, setIsGeneratingAbi] = useState(false);
+  const [liveSpCoinDeploymentMap, setLiveSpCoinDeploymentMap] = useState<SpCoinDeploymentFile>(
+    () => (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {},
+  );
   const [deploymentContractDirExists, setDeploymentContractDirExists] = useState(false);
   const [deploymentTokenStatus, setDeploymentTokenStatus] = useState<
     'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED'
@@ -364,6 +410,7 @@ export function useSpCoinAccessController() {
     accountNumber: hardhatDeploymentAccountNumber,
   };
   const handleDeploymentWalletSelectionChange = (nextSelection: WalletAccountSelectionValue) => {
+    setDeploymentStatusPinned(false);
     if (nextSelection.source !== deploymentSignerSource) {
       setDeploymentSignerSource(nextSelection.source);
     }
@@ -376,10 +423,24 @@ export function useSpCoinAccessController() {
       );
     }
   };
+  const loadDeploymentMap = async () => {
+    try {
+      const response = await fetch('/api/spCoin/access-manager?includeDeploymentMap=true', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const payload = (await parseManagerResponse(response)) as ManagerResponse & {
+        deploymentMap?: SpCoinDeploymentFile;
+      };
+      if (!response.ok || !payload.ok || !payload.deploymentMap) return;
+      setLiveSpCoinDeploymentMap(payload.deploymentMap);
+    } catch {
+      // Keep the bundled map if the live fetch is unavailable.
+    }
+  };
   const deploymentMapEntries = useMemo(() => {
-    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
-    return getDeploymentEntriesForChainVersion(parsed, deploymentChainId, deploymentVersion);
-  }, [deploymentChainId, deploymentVersion]);
+    return getDeploymentEntriesForChainVersion(liveSpCoinDeploymentMap, deploymentChainId, deploymentVersion);
+  }, [deploymentChainId, deploymentVersion, liveSpCoinDeploymentMap]);
   const selectedHardhatDeploymentAccount = useMemo(
     () =>
       hardhatDeploymentAccountOptions.find(
@@ -435,7 +496,7 @@ export function useSpCoinAccessController() {
     };
   }, [deployedSignerAddress]);
   const existsInSpCoinDeploymentMap = useMemo(() => {
-    const parsed = spCoinDeploymentMapRaw as SpCoinDeploymentFile;
+    const parsed = liveSpCoinDeploymentMap;
     const chainIdKey = String(deploymentChainId || '').trim();
     const versionKey = String(deploymentVersion || '').trim() || '0';
     const contractAddressUpper = String(deployedContractAddress || '').trim().toUpperCase();
@@ -472,7 +533,14 @@ export function useSpCoinAccessController() {
     return Object.keys(versionNode as Record<string, unknown>).some(
       (nodePublicKey) => String(nodePublicKey || '').trim().toUpperCase() === contractAddressUpper,
     );
-  }, [deployedContractAddress, deploymentAccountPrivateKey, deploymentChainId, deploymentSignerSource, deploymentVersion]);
+  }, [
+    deployedContractAddress,
+    deploymentAccountPrivateKey,
+    deploymentChainId,
+    deploymentSignerSource,
+    deploymentVersion,
+    liveSpCoinDeploymentMap,
+  ]);
   const deployDisableReason = useMemo(() => {
     if (deploymentSignerSource === 'metamask' && !selectedDeploymentSignerPublicKey) {
       return 'METAMASK_NOT_CONNECTED';
@@ -492,17 +560,26 @@ export function useSpCoinAccessController() {
   const deployedContractAddressDisplay = isDeployedState ? deployedContractAddress : '';
   const deploymentGuidanceMessage = useMemo(() => {
     const contractAddress = String(deployedContractAddress || '').trim() || '(pending)';
+    const isAlreadyDeployed = deployUiState === 'deployed' || existsInSpCoinDeploymentMap;
+    const statusLine = isAlreadyDeployed ? 'Status: Already deployed' : 'Status: READY';
+    const deploymentLine = isAlreadyDeployed
+      ? `Blockchain Deployment: "${deploymentTokenName}" is already deployed.`
+      : `Blockchain Deployment: "${deploymentTokenName}" is ready for deployment.`;
+    const actionLine = isAlreadyDeployed
+      ? 'Deployment button disabled because this contract is already deployed'
+      : 'Press Deploy to execute blockchain deployment';
     const deployLine =
       deployDisableReason === 'ENABLED'
         ? 'Deploy: ENABLED'
         : `Deploy: DISABLED (${deployDisableReason})`;
     const updateServerLine = 'Update Server: AUTO (runs after successful deploy)';
     return [
-      'Status: READY',
-      `Blockchain Deployment: "${deploymentTokenName}" is ready for deployment.`,
+      statusLine,
+      deploymentLine,
       `Contract Address: ${contractAddress}`,
       `Contract Name: ${deploymentTokenName}`,
       `Network: ${deploymentChainName} (${deploymentChainId})`,
+      `Deployment Source: ${localSourceDeploymentPath}`,
       `Signer Source: ${deploymentSignerSource === 'metamask' ? 'MetaMask' : 'Hardhat EC2'}`,
       `Signer Address: ${selectedDeploymentSignerPublicKey || '(pending)'}`,
       `Token Status: ${deploymentTokenStatus}`,
@@ -510,16 +587,18 @@ export function useSpCoinAccessController() {
       deployLine,
       updateServerLine,
       '',
-      'Press Deploy to execute blockchain deployment',
+      actionLine,
     ].join('\n');
   }, [
     deploymentChainId,
     deploymentChainName,
+    localSourceDeploymentPath,
     deployedContractAddress,
     deployedContractAddressDisplay,
     deploymentSignerSource,
     deploymentTokenStatus,
     deploymentTokenName,
+    deployUiState,
     deployDisableReason,
     existsInSpCoinDeploymentMap,
     selectedDeploymentSignerPublicKey,
@@ -532,11 +611,13 @@ export function useSpCoinAccessController() {
   }, [managerSettings.activeNpmVersion, versionInput]);
 
   const adjustDeploymentDecimals = (direction: 1 | -1) => {
+    setDeploymentStatusPinned(false);
     const current = Number.parseInt(String(deploymentDecimals || '18'), 10);
     const safeCurrent = Number.isFinite(current) ? current : 18;
     setDeploymentDecimals(String(clampDeploymentDecimals(safeCurrent + direction)));
   };
   const handleDeploymentDecimalsInputChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
     const digitsOnly = String(nextValue || '').replace(/[^0-9]/g, '').slice(0, 3);
     if (!digitsOnly) return setDeploymentDecimals('0');
     const parsed = Number.parseInt(digitsOnly, 10);
@@ -545,11 +626,12 @@ export function useSpCoinAccessController() {
 
   const handleDeploy = async () => {
     if (deployDisableReason !== 'ENABLED') return;
-    const normalizedName = deploymentName.trim() || buildDeploymentNameFromVersion(deploymentVersion);
+    const normalizedName = deploymentName.trim() || buildDeploymentNameFromVersion(deploymentVersion, localSourceDeploymentPath);
     const normalizedVersion = deploymentVersion.trim();
-    const normalizedSymbol = deploymentSymbol.trim() || buildDeploymentSymbolFromVersion(deploymentVersion);
+    const normalizedSymbol = deploymentSymbol.trim() || buildDeploymentSymbolFromVersion(deploymentVersion, localSourceDeploymentPath);
     const normalizedDecimals = clampDeploymentDecimals(Number.parseInt(String(deploymentDecimals || '18'), 10) || 18);
     const deploymentContractName = buildDeploymentTokenName(normalizedName);
+    const deployStartedAt = formatStatusTimestamp();
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     const isValidPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(normalizedPrivateKey);
 
@@ -625,9 +707,16 @@ export function useSpCoinAccessController() {
       }
 
       setDeployUiState('in_progress');
+      setDeploymentStatusPinned(true);
       setDeploymentStatusIsError(false);
       setDeploymentFlashError(false);
-      setDeploymentStatus(`Deployment ${deploymentContractName} in Progress.`);
+      setDeploymentStatus(
+        buildOperationStatus({
+          operation: 'Deployment',
+          target: deploymentContractName,
+          startedAt: deployStartedAt,
+        }),
+      );
       try {
         const prepareResponse = await fetch('/api/spCoin/access-manager', {
           method: 'POST',
@@ -636,6 +725,7 @@ export function useSpCoinAccessController() {
             action: 'prepareDeploy',
             deploymentChainId: effectiveDeploymentChainIdNumber,
             deploymentVersion: normalizedVersion,
+            deploymentSourcePath: localSourceDeploymentPath,
           }),
         });
         const prepareData = await parseManagerResponse(prepareResponse);
@@ -654,7 +744,14 @@ export function useSpCoinAccessController() {
           return;
         }
 
-        setDeploymentStatus(`Deployment ${deploymentContractName} in Progress. Awaiting MetaMask approval...`);
+        setDeploymentStatus(
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            details: 'Awaiting MetaMask approval...',
+          }),
+        );
         const factory = new ContractFactory(
           prepareData.deploymentAbi as any[],
           String(prepareData.deploymentBytecode),
@@ -690,7 +787,14 @@ export function useSpCoinAccessController() {
         const registerData = await parseManagerResponse(registerResponse);
         if (!registerResponse.ok || !registerData.ok) {
           setDeploymentStatus(
-            `*Error: Deployment ${deploymentContractName} failed during registration: ${registerData.message || 'Unknown deployment registration failure.'}`,
+            buildOperationStatus({
+              operation: 'Deployment',
+              target: deploymentContractName,
+              startedAt: deployStartedAt,
+              completedAt: formatStatusTimestamp(),
+              outcome: 'failed',
+              details: `*Error: Deployment failed during registration: ${registerData.message || 'Unknown deployment registration failure.'}`,
+            }),
           );
           setDeploymentStatusIsError(true);
           setDeploymentFlashError(true);
@@ -698,7 +802,22 @@ export function useSpCoinAccessController() {
           return;
         }
 
-        setDeploymentStatus(`Deployment ${deploymentContractName} complete. Updating server assets...`);
+        setDeploymentStatus(
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'success',
+            details: [
+              `Status: ${String(receipt?.status ?? 'success')}`,
+              `Deployment: Contract "${deploymentContractName}" deployed via MetaMask.`,
+              String(registerData.message || 'Deployment registered.'),
+              '',
+              'Server update: Updating server assets...',
+            ].join('\n'),
+          }),
+        );
         const updateResponse = await fetch('/api/spCoin/access-manager', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -716,7 +835,14 @@ export function useSpCoinAccessController() {
         const updateData = await parseManagerResponse(updateResponse);
         if (!updateResponse.ok || !updateData.ok) {
           setDeploymentStatus(
-            `*Error: Deployment ${deploymentContractName} succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+            buildOperationStatus({
+              operation: 'Deployment',
+              target: deploymentContractName,
+              startedAt: deployStartedAt,
+              completedAt: formatStatusTimestamp(),
+              outcome: 'failed',
+              details: `*Error: Deployment succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+            }),
           );
           setDeploymentStatusIsError(true);
           setDeploymentFlashError(true);
@@ -725,25 +851,45 @@ export function useSpCoinAccessController() {
         }
 
         setDeploymentStatus(
-          [
-            `Status: ${String(receipt?.status ?? 'success')}`,
-            `Deployment: Contract "${deploymentContractName}" deployed via MetaMask.`,
-            String(registerData.message || 'Deployment registered.'),
-            '',
-            String(updateData.message || 'Server update completed.'),
-            '',
-            `Contract Address: ${contractPublicKey || '(not returned)'}`,
-            `Signer Address: ${selectedDeploymentSignerPublicKey}`,
-            `Network: ${prepareData.deploymentNetworkName || deploymentChainName}`,
-            `Transaction Hash: ${String(receipt?.hash || deploymentTx.hash || '(unknown)')}`,
-          ].join('\n'),
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'success',
+            details: [
+              `Status: ${String(receipt?.status ?? 'success')}`,
+              `Deployment: Contract "${deploymentContractName}" deployed via MetaMask.`,
+              String(registerData.message || 'Deployment registered.'),
+              '',
+              String(updateData.message || 'Server update completed.'),
+              '',
+              `Contract Address: ${contractPublicKey || '(not returned)'}`,
+              `Signer Address: ${selectedDeploymentSignerPublicKey}`,
+              `Network: ${prepareData.deploymentNetworkName || deploymentChainName}`,
+              `Transaction Hash: ${String(receipt?.hash || deploymentTx.hash || '(unknown)')}`,
+            ].join('\n'),
+          }),
         );
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT));
+        }
+        await loadDeploymentMap();
         await refreshDeploymentTokenStatus();
         setDeployUiState('deployed');
         return;
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown MetaMask deployment failure';
-        setDeploymentStatus(`*Error: Deployment ${deploymentContractName} failed: ${message}`);
+        setDeploymentStatus(
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'failed',
+            details: `*Error: Deployment failed: ${message}`,
+          }),
+        );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
         setDeployUiState('idle');
@@ -752,9 +898,16 @@ export function useSpCoinAccessController() {
     }
 
     setDeployUiState('in_progress');
+    setDeploymentStatusPinned(true);
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
-    setDeploymentStatus(`Deployment ${deploymentContractName} in Progress.`);
+    setDeploymentStatus(
+      buildOperationStatus({
+        operation: 'Deployment',
+        target: deploymentContractName,
+        startedAt: deployStartedAt,
+      }),
+    );
     try {
       const response = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
@@ -768,12 +921,20 @@ export function useSpCoinAccessController() {
           deploymentAccountPrivateKey: normalizedPrivateKey,
           hardhatDeploymentAccountNumber,
           deploymentChainId: effectiveDeploymentChainIdNumber,
+          deploymentSourcePath: localSourceDeploymentPath,
         }),
       });
       const data = await parseManagerResponse(response);
       if (!response.ok || !data.ok) {
         setDeploymentStatus(
-          `*Error: Deployment ${deploymentContractName} failed: Status ${response.status}: ${data.message || 'Deployment request failed.'}`,
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'failed',
+            details: `*Error: Deployment failed: Status ${response.status}: ${data.message || 'Deployment request failed.'}`,
+          }),
         );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
@@ -785,7 +946,21 @@ export function useSpCoinAccessController() {
         data.message ||
         `Deployment scaffold prepared for "${deploymentContractName}". Server-side deployment automation is not connected yet.`;
       setDeployedContractAddress(contractPublicKey);
-      setDeploymentStatus(`Deployment ${deploymentContractName} complete. Updating server assets...`);
+      setDeploymentStatus(
+        buildOperationStatus({
+          operation: 'Deployment',
+          target: deploymentContractName,
+          startedAt: deployStartedAt,
+          completedAt: formatStatusTimestamp(),
+          outcome: 'success',
+          details: [
+            `Status: ${response.status}`,
+            `Deployment: ${statusMessage}`,
+            '',
+            'Server update: Updating server assets...',
+          ].join('\n'),
+        }),
+      );
       const updateResponse = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -804,7 +979,14 @@ export function useSpCoinAccessController() {
       const updateData = await parseManagerResponse(updateResponse);
       if (!updateResponse.ok || !updateData.ok) {
         setDeploymentStatus(
-          `*Error: Deployment ${deploymentContractName} succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+          buildOperationStatus({
+            operation: 'Deployment',
+            target: deploymentContractName,
+            startedAt: deployStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'failed',
+            details: `*Error: Deployment succeeded, but update server failed: ${updateData.message || 'Unknown update failure.'}`,
+          }),
         );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
@@ -812,22 +994,42 @@ export function useSpCoinAccessController() {
         return;
       }
       setDeploymentStatus(
-        [
-          `Status: ${response.status}`,
-          `Deployment: ${statusMessage}`,
-          '',
-          String(updateData.message || 'Server update completed.'),
-          '',
-          `Contract Address: ${contractPublicKey || '(not returned)'}`,
-          `Contract Name: ${deploymentContractName}`,
-          `Network: ${deploymentChainName}`,
-        ].join('\n'),
+        buildOperationStatus({
+          operation: 'Deployment',
+          target: deploymentContractName,
+          startedAt: deployStartedAt,
+          completedAt: formatStatusTimestamp(),
+          outcome: 'success',
+          details: [
+            `Status: ${response.status}`,
+            `Deployment: ${statusMessage}`,
+            '',
+            String(updateData.message || 'Server update completed.'),
+            '',
+            `Contract Address: ${contractPublicKey || '(not returned)'}`,
+            `Contract Name: ${deploymentContractName}`,
+            `Network: ${deploymentChainName}`,
+          ].join('\n'),
+        }),
       );
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT));
+      }
+      await loadDeploymentMap();
       await refreshDeploymentTokenStatus();
       setDeployUiState('deployed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown deployment request failure';
-      setDeploymentStatus(`*Error: Deployment ${deploymentContractName} failed: ${message}`);
+      setDeploymentStatus(
+        buildOperationStatus({
+          operation: 'Deployment',
+          target: deploymentContractName,
+          startedAt: deployStartedAt,
+          completedAt: formatStatusTimestamp(),
+          outcome: 'failed',
+          details: `*Error: Deployment failed: ${message}`,
+        }),
+      );
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
       setDeployUiState('idle');
@@ -836,10 +1038,18 @@ export function useSpCoinAccessController() {
 
   const handleGenerateAbi = async () => {
     if (isGeneratingAbi) return;
+    const abiStartedAt = formatStatusTimestamp();
+    setDeploymentStatusPinned(true);
     setIsGeneratingAbi(true);
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
-    setDeploymentStatus('Generating SPCoin ABI...');
+    setDeploymentStatus(
+      buildOperationStatus({
+        operation: 'ABI generation',
+        target: deploymentTokenName,
+        startedAt: abiStartedAt,
+      }),
+    );
     try {
       const response = await fetch('/api/spCoin/access-manager', {
         method: 'POST',
@@ -847,11 +1057,21 @@ export function useSpCoinAccessController() {
         body: JSON.stringify({
           action: 'generateAbi',
           deploymentChainId: effectiveDeploymentChainIdNumber,
+          deploymentSourcePath: localSourceDeploymentPath,
         }),
       });
       const data = await parseManagerResponse(response);
       if (!response.ok || !data.ok) {
-        setDeploymentStatus(`*Error: ${data.message || 'Failed to generate SPCoin ABI.'}`);
+        setDeploymentStatus(
+          buildOperationStatus({
+            operation: 'ABI generation',
+            target: deploymentTokenName,
+            startedAt: abiStartedAt,
+            completedAt: formatStatusTimestamp(),
+            outcome: 'failed',
+            details: `*Error: ${data.message || 'Failed to generate SPCoin ABI.'}`,
+          }),
+        );
         setDeploymentStatusIsError(true);
         setDeploymentFlashError(true);
         return;
@@ -868,10 +1088,28 @@ export function useSpCoinAccessController() {
         );
         window.localStorage.setItem(SPCOIN_ABI_VERSION_STORAGE_KEY, version);
       }
-      setDeploymentStatus(String(data.message || 'SPCoin ABI generated.'));
+      setDeploymentStatus(
+        buildOperationStatus({
+          operation: 'ABI generation',
+          target: deploymentTokenName,
+          startedAt: abiStartedAt,
+          completedAt: formatStatusTimestamp(),
+          outcome: 'success',
+          details: String(data.message || 'SPCoin ABI generated.'),
+        }),
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown ABI generation failure.';
-      setDeploymentStatus(`*Error: ${message}`);
+      setDeploymentStatus(
+        buildOperationStatus({
+          operation: 'ABI generation',
+          target: deploymentTokenName,
+          startedAt: abiStartedAt,
+          completedAt: formatStatusTimestamp(),
+          outcome: 'failed',
+          details: `*Error: ${message}`,
+        }),
+      );
       setDeploymentStatusIsError(true);
       setDeploymentFlashError(true);
     } finally {
@@ -880,6 +1118,7 @@ export function useSpCoinAccessController() {
   };
 
   const adjustDeploymentVersion = (direction: 1 | -1) => {
+    setDeploymentStatusPinned(false);
     const sanitized = sanitizeVersionInput(deploymentVersion).replace(/^\.+|\.+$/g, '');
     const segments = sanitized
       .split('.')
@@ -894,6 +1133,7 @@ export function useSpCoinAccessController() {
   };
 
   const handleDeploymentVersionInputChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
     const sanitized = sanitizeVersionInput(nextValue);
     const trimmed = String(sanitized || '').trim();
     setDeploymentVersion(sanitized);
@@ -907,6 +1147,28 @@ export function useSpCoinAccessController() {
       return;
     }
     setDeploymentStatusIsError(false);
+  };
+
+  const handleDeploymentNameInputChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
+    setDeploymentName(nextValue);
+    setDeploymentNameWasEdited(String(nextValue || '').trim().length > 0);
+  };
+
+  const handleDeploymentSymbolInputChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
+    setDeploymentSymbol(nextValue);
+    setDeploymentSymbolWasEdited(String(nextValue || '').trim().length > 0);
+  };
+
+  const handleLocalSourceDeploymentPathChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
+    const normalizedPath = normalizeProjectRelativePath(nextValue, DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
+    setLocalSourceDeploymentPath(normalizedPath);
+    setDeploymentNameWasEdited(false);
+    setDeploymentSymbolWasEdited(false);
+    setDeploymentName(buildDeploymentNameFromVersion(deploymentVersion, normalizedPath));
+    setDeploymentSymbol(buildDeploymentSymbolFromVersion(deploymentVersion, normalizedPath));
   };
 
   const persistManagerSettings = (next: { source: 'local' | 'node'; activeNpmVersion: string }) => {
@@ -952,8 +1214,8 @@ export function useSpCoinAccessController() {
     validateLocalInstallSourceRoot(localInstallSourceRoot);
   }, []);
   useEffect(() => {
-    const fallbackName = buildDeploymentNameFromVersion(deploymentVersion);
-    const fallbackSymbol = buildDeploymentSymbolFromVersion(deploymentVersion);
+    const fallbackName = buildDeploymentNameFromVersion(deploymentVersion, localSourceDeploymentPath);
+    const fallbackSymbol = buildDeploymentSymbolFromVersion(deploymentVersion, localSourceDeploymentPath);
     const fallbackDecimals = '18';
     const isHardhatChain = Number(deploymentChainId) === HARDHAT_CHAIN_ID;
     const activeEntry = (() => {
@@ -974,8 +1236,8 @@ export function useSpCoinAccessController() {
       return deploymentMapEntries[0];
     })();
 
-    const nextName = String(activeEntry?.name || '').trim() || fallbackName;
-    const nextSymbol = String(activeEntry?.symbol || '').trim() || fallbackSymbol;
+    const nextName = fallbackName;
+    const nextSymbol = fallbackSymbol;
     const nextDecimals =
       Number.isFinite(activeEntry?.decimals) && Number(activeEntry?.decimals) >= 0
         ? String(activeEntry?.decimals)
@@ -985,8 +1247,8 @@ export function useSpCoinAccessController() {
     const fallbackHardhatKey = String(selectedHardhatDeploymentAccount?.privateKey || '').trim();
     const resolvedPrivateKey = isHardhatChain ? nextPrivateKey || fallbackHardhatKey : nextPrivateKey;
 
-    if (deploymentName !== nextName) setDeploymentName(nextName);
-    if (deploymentSymbol !== nextSymbol) setDeploymentSymbol(nextSymbol);
+    if (!deploymentNameWasEdited && deploymentName !== nextName) setDeploymentName(nextName);
+    if (!deploymentSymbolWasEdited && deploymentSymbol !== nextSymbol) setDeploymentSymbol(nextSymbol);
     if (deploymentDecimals !== nextDecimals) setDeploymentDecimals(nextDecimals);
     if (nextPublicKey && deployedContractAddress !== nextPublicKey) setDeployedContractAddress(nextPublicKey);
     if (deploymentSignerSource !== 'metamask' && resolvedPrivateKey && deploymentAccountPrivateKey !== resolvedPrivateKey) {
@@ -998,12 +1260,15 @@ export function useSpCoinAccessController() {
     deploymentDecimals,
     deploymentMapEntries,
     deploymentName,
+    deploymentNameWasEdited,
     deployedContractAddress,
     deploymentSignerSource,
     deploymentSymbol,
+    deploymentSymbolWasEdited,
     deploymentVersion,
     hardhatDeploymentAccountNumber,
     hardhatDeploymentAccountOptions,
+    localSourceDeploymentPath,
     selectedHardhatDeploymentAccount,
   ]);
   useEffect(() => {
@@ -1026,6 +1291,14 @@ export function useSpCoinAccessController() {
       setSelectedPackage(nextSelectedPackage);
       setVersionInput(nextSelectedVersion);
       setLocalInstallSourceRoot(persisted.localInstallSourceRoot || '/spCoinAccess');
+      if (persisted.deploymentNameWasEdited && persisted.deploymentName) {
+        setDeploymentName(persisted.deploymentName);
+        setDeploymentNameWasEdited(true);
+      }
+      if (persisted.deploymentSymbolWasEdited && persisted.deploymentSymbol) {
+        setDeploymentSymbol(persisted.deploymentSymbol);
+        setDeploymentSymbolWasEdited(true);
+      }
       setDeploymentDecimals(persisted.deploymentDecimals || '18');
       setDeploymentVersion(persisted.deploymentVersion || '0.0.1');
       setDeploymentSignerSource(persisted.deploymentSignerSource === 'metamask' ? 'metamask' : 'ec2-base');
@@ -1071,6 +1344,18 @@ export function useSpCoinAccessController() {
   }, []);
 
   useEffect(() => {
+    void loadDeploymentMap();
+    if (typeof window === 'undefined') return undefined;
+    const handleDeploymentMapUpdated = () => {
+      void loadDeploymentMap();
+    };
+    window.addEventListener(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT, handleDeploymentMapUpdated);
+    return () => {
+      window.removeEventListener(SPCOIN_DEPLOYMENT_MAP_UPDATED_EVENT, handleDeploymentMapUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
     let active = true;
     const refreshState = async () => {
       if (!selectedPackage) return;
@@ -1105,6 +1390,9 @@ export function useSpCoinAccessController() {
   }, [flashTarget]);
 
   useEffect(() => {
+    if (deploymentStatusPinned || deployUiState === 'in_progress' || isGeneratingAbi) {
+      return;
+    }
     if (deploymentSignerSource === 'metamask') {
       setDeploymentStatusIsError(false);
       setDeploymentFlashError(false);
@@ -1121,7 +1409,14 @@ export function useSpCoinAccessController() {
     setDeploymentStatusIsError(false);
     setDeploymentFlashError(false);
     setDeploymentStatus(deploymentGuidanceMessage);
-  }, [deploymentAccountPrivateKey, deploymentGuidanceMessage, deploymentSignerSource]);
+  }, [
+    deploymentStatusPinned,
+    deployUiState,
+    deploymentAccountPrivateKey,
+    deploymentGuidanceMessage,
+    deploymentSignerSource,
+    isGeneratingAbi,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -1237,7 +1532,9 @@ export function useSpCoinAccessController() {
       selectedVersion,
       localInstallSourceRoot,
       deploymentName,
+      deploymentNameWasEdited,
       deploymentSymbol,
+      deploymentSymbolWasEdited,
       deploymentDecimals,
       deploymentVersion,
       deploymentSignerSource,
@@ -1251,7 +1548,9 @@ export function useSpCoinAccessController() {
   }, [
     deploymentAccountPrivateKey,
     deploymentName,
+    deploymentNameWasEdited,
     deploymentSymbol,
+    deploymentSymbolWasEdited,
     deploymentDecimals,
     deployedContractAddress,
     deploymentSignerSource,
@@ -1343,12 +1642,15 @@ export function useSpCoinAccessController() {
 
   const handleDeploymentPrivateKeyChange = (nextValue: string) => {
     if (deploymentSignerSource === 'metamask') return;
+    setDeploymentStatusPinned(false);
     setDeploymentAccountPrivateKey(nextValue);
     setDeployedContractAddress('');
     setDeployUiState('idle');
   };
   const handleDeploymentPrivateKeyBlur = () => {
     if (deploymentSignerSource === 'metamask') return;
+    if (deployUiState === 'in_progress' || isGeneratingAbi) return;
+    setDeploymentStatusPinned(false);
     const normalizedPrivateKey = deploymentAccountPrivateKey.trim();
     setDeploymentAccountPrivateKey(normalizedPrivateKey);
     const keyValidationMessage = getDeploymentKeyValidationMessage(normalizedPrivateKey);
@@ -1363,11 +1665,13 @@ export function useSpCoinAccessController() {
     setDeploymentStatus(deploymentGuidanceMessage);
   };
   const adjustHardhatDeploymentAccountNumber = (direction: 1 | -1) => {
+    setDeploymentStatusPinned(false);
     setHardhatDeploymentAccountNumber((previous) =>
       Math.max(0, Math.min(HARDHAT_DEPLOYMENT_ACCOUNT_COUNT - 1, previous + direction)),
     );
   };
   const handleHardhatDeploymentAccountNumberChange = (nextValue: string) => {
+    setDeploymentStatusPinned(false);
     const parsed = Number.parseInt(String(nextValue || '').replace(/[^0-9]/g, ''), 10);
     if (!Number.isFinite(parsed)) {
       setHardhatDeploymentAccountNumber(0);
@@ -1442,6 +1746,8 @@ export function useSpCoinAccessController() {
     runManagerAction,
     setDeploymentSignerSource,
     setDeploymentSignerAddressInput: setDeploymentSignerPublicKeyInput,
+    handleDeploymentNameInputChange,
+    handleDeploymentSymbolInputChange,
     handleDeploymentDecimalsInputChange,
     adjustDeploymentDecimals,
     handleDeploymentVersionInputChange,
@@ -1449,7 +1755,7 @@ export function useSpCoinAccessController() {
     handleHardhatDeploymentAccountNumberChange,
     handleDeploymentWalletSelectionChange,
     adjustHardhatDeploymentAccountNumber,
-    setLocalSourceDeploymentPath,
+    setLocalSourceDeploymentPath: handleLocalSourceDeploymentPathChange,
     handleDeploy,
     handleGenerateAbi,
     handleDeploymentPrivateKeyChange,

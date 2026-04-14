@@ -109,6 +109,8 @@ export default function SpCoinAccessControllerPage() {
                 }
                 onDeploymentWalletSelectionChange={controller.handleDeploymentWalletSelectionChange}
                 onDeploymentSignerAddressChange={controller.setDeploymentSignerAddressInput}
+                onDeploymentNameChange={controller.handleDeploymentNameInputChange}
+                onDeploymentSymbolChange={controller.handleDeploymentSymbolInputChange}
                 onDeploymentDecimalsChange={controller.handleDeploymentDecimalsInputChange}
                 onAdjustDeploymentDecimals={controller.adjustDeploymentDecimals}
                 onDeploymentVersionChange={controller.handleDeploymentVersionInputChange}

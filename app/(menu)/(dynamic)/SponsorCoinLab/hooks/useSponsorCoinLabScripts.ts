@@ -85,6 +85,10 @@ type Params = {
   activeNetworkName: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
+  outputPanelMode: 'execution' | 'formatted' | 'tree' | 'raw_status';
+  formattedPanelView: 'script' | 'output';
+  formattedJsonViewEnabled: boolean;
+  formattedOutputDisplay: string;
   selectedReadMethod: Erc20ReadMethod;
   readAddressA: string;
   readAddressB: string;
@@ -147,10 +151,120 @@ type Params = {
   showOffChainMethods: boolean;
 };
 
+type DragPlacement = 'before' | 'after';
+
+type DisplayedOutputCall = {
+  method: string;
+  parameters: Array<{ label: string; value: string }>;
+};
+
+function parseDisplayedOutputParameters(value: unknown): Array<{ label: string; value: string }> {
+  if (Array.isArray(value)) {
+    return value.map((entry) => ({
+      label: String(entry?.label || '').trim(),
+      value: String(entry?.value || '').trim(),
+    }));
+  }
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value as Record<string, unknown>).map(([label, entryValue]) => ({
+    label: String(label || '').trim(),
+    value: String(entryValue ?? '').trim(),
+  }));
+}
+
+function parseDisplayedOutputCalls(rawDisplay: string): DisplayedOutputCall[] {
+  return String(rawDisplay || '')
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      try {
+        const parsed = JSON.parse(block) as {
+          call?: { method?: unknown; parameters?: unknown };
+        };
+        const method = String(parsed?.call?.method || '').trim();
+        if (!method) return null;
+        const parameters = parseDisplayedOutputParameters(parsed?.call?.parameters);
+        return { method, parameters };
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is DisplayedOutputCall => entry !== null);
+}
+
+function reorderFormattedOutputBlocks(
+  rawDisplay: string,
+  sourceStepNumber: number,
+  targetStepNumber: number,
+  placement: DragPlacement,
+): string | null {
+  const trimmedDisplay = String(rawDisplay || '').trim();
+  if (!trimmedDisplay || trimmedDisplay.startsWith('(no output')) return null;
+
+  const blocks = trimmedDisplay
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  const sourceIndex = sourceStepNumber - 1;
+  const targetIndex = targetStepNumber - 1;
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex >= blocks.length || targetIndex >= blocks.length) {
+    return null;
+  }
+
+  const reorderedBlocks = [...blocks];
+  const [movedBlock] = reorderedBlocks.splice(sourceIndex, 1);
+  if (!movedBlock) return null;
+
+  const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  const insertIndex = placement === 'before' ? adjustedTargetIndex : adjustedTargetIndex + 1;
+  if (insertIndex === sourceIndex) return null;
+
+  reorderedBlocks.splice(insertIndex, 0, movedBlock);
+  return reorderedBlocks.join('\n\n');
+}
+
+function stepsMatchDisplayedOutput(steps: LabScriptStep[], rawDisplay: string) {
+  const displayedCalls = parseDisplayedOutputCalls(rawDisplay);
+  if (steps.length === 0 || displayedCalls.length === 0 || steps.length !== displayedCalls.length) return false;
+
+  return steps.every((step, index) => {
+    const displayed = displayedCalls[index];
+    if (!displayed) return false;
+    if (String(step.method || step.name || '').trim() !== displayed.method) return false;
+
+    const senderValue = String(step['msg.sender'] || '').trim();
+    const displayedSender = displayed.parameters.find((entry) => entry.label === 'msg.sender');
+    if (senderValue !== String(displayedSender?.value || '').trim()) return false;
+
+    const normalizedStepParams = Array.isArray(step.params)
+      ? step.params.map((entry) => ({
+          label: String(entry?.key || '').trim(),
+          value: String(entry?.value ?? '').trim(),
+        }))
+      : [];
+    const normalizedDisplayedParams = displayed.parameters.filter((entry) => entry.label !== 'msg.sender');
+    if (normalizedStepParams.length !== normalizedDisplayedParams.length) return false;
+
+    return normalizedStepParams.every((entry, paramIndex) => {
+      const displayedParam = normalizedDisplayedParams[paramIndex];
+      return (
+        entry.label === String(displayedParam?.label || '').trim() &&
+        entry.value === String(displayedParam?.value || '').trim()
+      );
+    });
+  });
+}
+
 export function useSponsorCoinLabScripts({
   activeNetworkName,
   mode,
   methodPanelMode,
+  outputPanelMode,
+  formattedPanelView,
+  formattedJsonViewEnabled,
+  formattedOutputDisplay,
   selectedReadMethod,
   readAddressA,
   readAddressB,
@@ -730,6 +844,12 @@ export function useSponsorCoinLabScripts({
     [loadScriptStep, selectedScript, selectedScriptStepNumber],
   );
 
+  const shouldMirrorSelectedScriptToOutput = useCallback(() => {
+    if (outputPanelMode !== 'formatted' || formattedPanelView !== 'output' || formattedJsonViewEnabled) return false;
+    if (!selectedScript || selectedScript.isSystemScript) return false;
+    return stepsMatchDisplayedOutput(selectedScript.steps, formattedOutputDisplay);
+  }, [formattedJsonViewEnabled, formattedOutputDisplay, formattedPanelView, outputPanelMode, selectedScript]);
+
   const moveSelectedScriptStep = useCallback(
     (direction: -1 | 1) => {
       if (!selectedScriptId || !selectedScript || selectedScriptStepNumber === null) return;
@@ -741,6 +861,7 @@ export function useSponsorCoinLabScripts({
       if (currentIndex < 0) return;
       const targetIndex = currentIndex + direction;
       if (targetIndex < 0 || targetIndex >= selectedScript.steps.length) return;
+      const shouldMirrorOutput = shouldMirrorSelectedScriptToOutput();
 
       setScripts((prev) =>
         prev.map((script) => {
@@ -760,17 +881,41 @@ export function useSponsorCoinLabScripts({
         return nextExpanded;
       });
       setSelectedScriptStepNumber(targetIndex + 1);
+      if (shouldMirrorOutput) {
+        const reorderedOutputDisplay = reorderFormattedOutputBlocks(
+          formattedOutputDisplay,
+          selectedScriptStepNumber,
+          targetIndex + 1,
+          direction < 0 ? 'before' : 'after',
+        );
+        if (reorderedOutputDisplay) {
+          setFormattedOutputDisplay(reorderedOutputDisplay);
+        }
+      }
     },
-    [selectedScriptId, selectedScript, selectedScriptStepNumber],
+    [
+      formattedOutputDisplay,
+      selectedScriptId,
+      selectedScript,
+      selectedScriptStepNumber,
+      setFormattedOutputDisplay,
+      shouldMirrorSelectedScriptToOutput,
+    ],
   );
 
   const moveScriptStepToPosition = useCallback(
-    (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => {
+    (
+      sourceStepNumber: number,
+      targetStepNumber: number,
+      placement: 'before' | 'after',
+      options?: { origin?: 'script' | 'output' },
+    ) => {
       if (!selectedScriptId || !selectedScript) return;
       if (selectedScript.isSystemScript) {
         setStatus('System Tests are read-only. Copy the script to edit it.');
         return;
       }
+      const shouldMirrorOutput = options?.origin === 'output' || shouldMirrorSelectedScriptToOutput();
 
       const currentSteps = Array.isArray(selectedScript.steps) ? selectedScript.steps : [];
       const sourceIndex = currentSteps.findIndex((step) => step.step === sourceStepNumber);
@@ -807,8 +952,27 @@ export function useSponsorCoinLabScripts({
       }
       const nextSelectedIndex = reorderedSteps.indexOf(selectedStepRef);
       setSelectedScriptStepNumber(nextSelectedIndex >= 0 ? nextSelectedIndex + 1 : null);
+      if (shouldMirrorOutput) {
+        const reorderedOutputDisplay = reorderFormattedOutputBlocks(
+          formattedOutputDisplay,
+          sourceStepNumber,
+          targetStepNumber,
+          placement,
+        );
+        if (reorderedOutputDisplay) {
+          setFormattedOutputDisplay(reorderedOutputDisplay);
+        }
+      }
     },
-    [selectedScript, selectedScriptId, selectedScriptStepNumber, setStatus],
+    [
+      formattedOutputDisplay,
+      selectedScript,
+      selectedScriptId,
+      selectedScriptStepNumber,
+      setFormattedOutputDisplay,
+      setStatus,
+      shouldMirrorSelectedScriptToOutput,
+    ],
   );
 
   const deleteSelectedScriptStep = useCallback(() => {
@@ -971,10 +1135,25 @@ export function useSponsorCoinLabScripts({
       }
 
       const normalizedNextName = normalizeScriptName(nextName);
-      const duplicateExists = allScripts.some((script) => normalizeScriptName(script.name) === normalizedNextName);
-      if (duplicateExists) {
-        setStatus('Duplicate Name');
-        return false;
+      const existingScript = allScripts.find(
+        (script) => !script.isSystemScript && normalizeScriptName(script.name) === normalizedNextName,
+      );
+      const normalizedSteps = Array.isArray(steps) ? steps.map((step, idx) => normalizeScriptStep({ ...step }, idx)) : [];
+      if (existingScript) {
+        const updatedScript: LabScript = {
+          ...existingScript,
+          name: nextName,
+          network: mode === 'hardhat' ? HARDHAT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
+          steps: normalizedSteps,
+        };
+
+        setScripts((prev) => prev.map((script) => (script.id === existingScript.id ? updatedScript : script)));
+        setSelectedScriptId(existingScript.id);
+        setScriptNameInput(nextName);
+        setSelectedScriptStepNumber(null);
+        setExpandedScriptStepIds({});
+        setStatus(`Updated ${updatedScript.name}.`);
+        return true;
       }
 
       const nextId = `script-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -983,7 +1162,7 @@ export function useSponsorCoinLabScripts({
         name: nextName,
         'Date Created': formatScriptCreatedDate(new Date()),
         network: mode === 'hardhat' ? HARDHAT_NETWORK_LABEL : activeNetworkName || 'MetaMask',
-        steps: Array.isArray(steps) ? steps.map((step, idx) => normalizeScriptStep({ ...step }, idx)) : [],
+        steps: normalizedSteps,
       };
 
       setScripts((prev) => [...prev, nextScript]);

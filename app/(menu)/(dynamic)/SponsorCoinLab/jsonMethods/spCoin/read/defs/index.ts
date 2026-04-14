@@ -30,6 +30,9 @@ import getAgentRateRange from './getAgentRateRange';
 import getAgentRateRecord from './getAgentRateRecord';
 import getAgentRateRecordList from './getAgentRateRecordList';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
+import getRecipientRateTransactionCount from './getRecipientRateTransactionCount';
+import getAgentRateTransactionCount from './getAgentRateTransactionCount';
+import getAgentRateTransactionAt from './getAgentRateTransactionAt';
 import getAgentRateTransactionList from './getAgentRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
@@ -78,6 +81,9 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentRateRecord,
   getAgentRateRecordList,
   getAgentTotalRecipient,
+  getRecipientRateTransactionCount,
+  getAgentRateTransactionCount,
+  getAgentRateTransactionAt,
   getAgentRateTransactionList,
   getAgentRecord,
   getAgentRecordList,

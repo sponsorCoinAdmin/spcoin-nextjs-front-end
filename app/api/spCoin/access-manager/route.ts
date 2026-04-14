@@ -14,7 +14,6 @@ const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
 const PACKAGES_ROOT = path.join(WORKSPACE_ROOT, 'packages');
 const BACKUPS_ROOT = path.join(WORKSPACE_ROOT, 'backups');
-const CONTRACTS_ROOT = path.join(WORKSPACE_ROOT, 'contracts', 'spCoin');
 const NETWORKS_REPOSITORY_PATH = path.join(WORKSPACE_ROOT, 'contracts', 'networks.json');
 const SPCOIN_DEPLOYMENT_MAP_PATH = path.join(
   process.cwd(),
@@ -29,6 +28,7 @@ const MANAGER_STATE_PATH = path.join(BACKUPS_ROOT, 'manager-state.json');
 const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
+const EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES = 24576;
 
 type AccessManagerRequest = {
   action?:
@@ -54,6 +54,7 @@ type AccessManagerRequest = {
   deploymentAccountPrivateKey?: string;
   deploymentSignerPublicKey?: string;
   deploymentChainId?: number | string;
+  deploymentSourcePath?: string;
 };
 
 type AccessManagerResponse = {
@@ -85,6 +86,7 @@ type AccessManagerResponse = {
   deploymentChainId?: number;
   deploymentAssetChainId?: number;
   deploymentNetworkName?: string;
+  deploymentSourcePath?: string;
   mapAdded?: boolean;
   spCoinMetaData?: {
     version: string;
@@ -113,6 +115,39 @@ function normalizeSpCoinContractVersion(version: string): string {
   const trimmed = String(version || '').trim();
   if (!trimmed) return '_V001';
   return trimmed.startsWith('_V') ? trimmed : `_V${trimmed}`;
+}
+
+function getSpCoinConstructorArgs(abi: unknown[], deploymentVersion?: string) {
+  const constructorEntry = abi.find(
+    (entry): entry is { type?: string; inputs?: Array<{ type?: string }> } =>
+      Boolean(entry) && typeof entry === 'object' && (entry as { type?: string }).type === 'constructor',
+  );
+  const inputs = Array.isArray(constructorEntry?.inputs) ? constructorEntry.inputs : [];
+  if (inputs.length === 0) return [];
+  if (inputs.length === 1 && inputs[0]?.type === 'string') {
+    return [normalizeSpCoinContractVersion(String(deploymentVersion || '').trim())];
+  }
+  throw new Error(`Unsupported SPCoin constructor ABI with ${inputs.length} input(s).`);
+}
+
+function resolveDeploymentContractsRoot(deploymentSourcePath?: string) {
+  const fallbackPath = '/spCoinAccess/contracts/spCoin';
+  const normalized = normalizeProjectRelativePath(deploymentSourcePath || fallbackPath) || fallbackPath;
+  const relative = normalized.slice(1);
+  if (!relative || relative.includes('..')) {
+    throw new Error(`Invalid deployment source path: ${deploymentSourcePath || '(empty)'}`);
+  }
+
+  const contractsBase = path.resolve(WORKSPACE_ROOT, 'contracts');
+  const contractsRoot = path.resolve(process.cwd(), ...relative.split('/'));
+  if (contractsRoot !== contractsBase && !contractsRoot.startsWith(`${contractsBase}${path.sep}`)) {
+    throw new Error(`Deployment source must be under /spCoinAccess/contracts: ${normalized}`);
+  }
+
+  return {
+    contractsRoot,
+    deploymentSourcePath: normalized,
+  };
 }
 
 type NetworkRepositoryEntry = {
@@ -741,6 +776,7 @@ async function compileSpCoinContract(params?: {
   solcVersion?: string;
   optimizerEnabled?: boolean;
   optimizerRuns?: number;
+  deploymentSourcePath?: string;
 }) {
   const solcVersion = String(params?.solcVersion || '0.8.18').trim() || '0.8.18';
   const optimizerEnabled =
@@ -749,9 +785,13 @@ async function compileSpCoinContract(params?: {
     Number.isFinite(Number(params?.optimizerRuns)) && Number(params?.optimizerRuns) > 0
       ? Number(params?.optimizerRuns)
       : 200;
+  const deploymentSource = resolveDeploymentContractsRoot(params?.deploymentSourcePath);
   const sources: Record<string, { content: string }> = {};
-  const entryPath = path.join(CONTRACTS_ROOT, 'SPCoin.sol');
-  await collectSoliditySourcesFromEntry(entryPath, CONTRACTS_ROOT, sources);
+  const entryPath = path.join(deploymentSource.contractsRoot, 'SPCoin.sol');
+  await fs.access(entryPath).catch(() => {
+    throw new Error(`Deployment source is missing SPCoin.sol: ${deploymentSource.deploymentSourcePath}`);
+  });
+  await collectSoliditySourcesFromEntry(entryPath, deploymentSource.contractsRoot, sources);
 
   // Minimal stub for compatibility with contracts importing hardhat/console.sol.
   sources['hardhat/console.sol'] = {
@@ -773,7 +813,7 @@ library console {
       optimizer: { enabled: optimizerEnabled, runs: optimizerRuns },
       outputSelection: {
         '*': {
-          '*': ['abi', 'evm.bytecode.object'],
+          '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'],
         },
       },
     },
@@ -792,7 +832,7 @@ library console {
   }
 
   const parsed = JSON.parse(jsonPayload) as {
-    contracts?: Record<string, Record<string, { abi?: any[]; evm?: { bytecode?: { object?: string } } }>>;
+    contracts?: Record<string, Record<string, { abi?: any[]; evm?: { bytecode?: { object?: string }; deployedBytecode?: { object?: string } } }>>;
     errors?: Array<{ severity?: string; formattedMessage?: string; message?: string }>;
   };
 
@@ -807,15 +847,22 @@ library console {
   const spCoinContract = parsed.contracts?.['SPCoin.sol']?.SPCoin;
   const abi = spCoinContract?.abi;
   const bytecodeObject = spCoinContract?.evm?.bytecode?.object || '';
+  const deployedBytecodeObject = spCoinContract?.evm?.deployedBytecode?.object || '';
   const bytecode = String(bytecodeObject).startsWith('0x')
     ? String(bytecodeObject)
     : `0x${String(bytecodeObject)}`;
+  const deployedBytecodeBytes = Math.ceil(String(deployedBytecodeObject).replace(/^0x/, '').length / 2);
 
   if (!Array.isArray(abi) || !bytecode || bytecode === '0x') {
     throw new Error('Compiled SPCoin artifact is missing ABI or bytecode.');
   }
+  if (deployedBytecodeBytes > EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES) {
+    throw new Error(
+      `Compiled SPCoin deployed bytecode is ${deployedBytecodeBytes} bytes, which exceeds the EIP-170 limit of ${EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES} bytes by ${deployedBytecodeBytes - EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES} bytes. Reduce contract size before deploying.`,
+    );
+  }
 
-  return { abi, bytecode };
+  return { abi, bytecode, deploymentSourcePath: deploymentSource.deploymentSourcePath };
 }
 
 async function deploySpCoinToChain(params: {
@@ -823,6 +870,7 @@ async function deploySpCoinToChain(params: {
   deploymentName: string;
   deploymentVersion: string;
   deploymentChainId?: number | string;
+  deploymentSourcePath?: string;
 }) {
   const network = await resolveDeployNetwork(params.deploymentChainId);
   const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
@@ -841,10 +889,11 @@ async function deploySpCoinToChain(params: {
     solcVersion: network.solcVersion,
     optimizerEnabled: network.optimizerEnabled,
     optimizerRuns: network.optimizerRuns,
+    deploymentSourcePath: params.deploymentSourcePath,
   });
   const factory = new ContractFactory(compiled.abi, compiled.bytecode, wallet);
   const contract = await factory.deploy(
-    normalizeSpCoinContractVersion(params.deploymentVersion),
+    ...getSpCoinConstructorArgs(compiled.abi, params.deploymentVersion),
   );
   const deploymentTx = contract.deploymentTransaction();
   if (!deploymentTx) {
@@ -856,10 +905,7 @@ async function deploySpCoinToChain(params: {
     throw new Error('Deployment succeeded but no contract address was returned.');
   }
 
-  const deploymentTokenName =
-    params.deploymentVersion.trim().length > 0
-      ? `${params.deploymentName}.${params.deploymentVersion}`
-      : params.deploymentName;
+  const deploymentTokenName = params.deploymentName.trim() || 'Sponsor Coin';
 
   return {
     deploymentTokenName,
@@ -868,6 +914,7 @@ async function deploySpCoinToChain(params: {
     deploymentTxHash: String(receipt?.hash || deploymentTx.hash || ''),
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
+    deploymentSourcePath: compiled.deploymentSourcePath,
   };
 }
 
@@ -876,6 +923,7 @@ async function handleDeploy(
   deploymentVersion: string,
   deploymentAccountPrivateKey: string,
   deploymentChainId?: number | string,
+  deploymentSourcePath?: string,
 ) {
   const normalizedName = String(deploymentName || '').trim() || 'sPCoin';
   const normalizedVersion = String(deploymentVersion || '').trim();
@@ -897,6 +945,7 @@ async function handleDeploy(
     deploymentName: normalizedName,
     deploymentVersion: normalizedVersion,
     deploymentChainId,
+    deploymentSourcePath,
   });
   return {
     ...deployed,
@@ -1038,31 +1087,33 @@ async function handleUpdateServer(params: {
 async function handlePrepareDeployArtifact(
   deploymentChainId?: number | string,
   deploymentVersion?: string,
+  deploymentSourcePath?: string,
 ) {
   const network = await resolveDeployNetwork(deploymentChainId);
   const compiled = await compileSpCoinContract({
     solcVersion: network.solcVersion,
     optimizerEnabled: network.optimizerEnabled,
     optimizerRuns: network.optimizerRuns,
+    deploymentSourcePath,
   });
   return {
     deploymentAbi: compiled.abi,
     deploymentBytecode: compiled.bytecode,
-    deploymentConstructorArgs: [
-      normalizeSpCoinContractVersion(String(deploymentVersion || '').trim()),
-    ],
+    deploymentConstructorArgs: getSpCoinConstructorArgs(compiled.abi, deploymentVersion),
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
     deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
+    deploymentSourcePath: compiled.deploymentSourcePath,
   };
 }
 
-async function handleGenerateAbi(deploymentChainId?: number | string) {
+async function handleGenerateAbi(deploymentChainId?: number | string, deploymentSourcePath?: string) {
   const network = await resolveDeployNetwork(deploymentChainId);
   const compiled = await compileSpCoinContract({
     solcVersion: network.solcVersion,
     optimizerEnabled: network.optimizerEnabled,
     optimizerRuns: network.optimizerRuns,
+    deploymentSourcePath,
   });
   await fs.writeFile(SPCOIN_ABI_PATH, `${JSON.stringify(compiled.abi, null, 2)}\n`, 'utf8');
   return {
@@ -1071,6 +1122,7 @@ async function handleGenerateAbi(deploymentChainId?: number | string) {
     deploymentNetworkName: network.networkName,
     deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
     abiPath: SPCOIN_ABI_PATH,
+    deploymentSourcePath: compiled.deploymentSourcePath,
   };
 }
 
@@ -1616,9 +1668,25 @@ export async function GET(request: Request) {
     const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
     const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
     const includeMetadata = String(searchParams.get('includeMetadata') || '').trim().toLowerCase() === 'true';
+    const includeDeploymentMap =
+      String(searchParams.get('includeDeploymentMap') || '').trim().toLowerCase() === 'true';
     const packageName = String(searchParams.get('packageName') || '').trim();
     const requestedVersion = String(searchParams.get('version') || 'latest').trim() || 'latest';
     const packages = await listSponsorcoinPackages();
+
+    if (includeDeploymentMap) {
+      const raw = await fs
+        .readFile(SPCOIN_DEPLOYMENT_MAP_PATH, 'utf8')
+        .catch(() => '{"meta":{"networkIdToName":{}},"chainId":{}}');
+      const deploymentMap = JSON.parse(raw || '{}');
+      return NextResponse.json({
+        ok: true,
+        message: 'Deployment map loaded.',
+        packages,
+        workspaceRoot: WORKSPACE_ROOT,
+        deploymentMap,
+      });
+    }
 
     if (localPathRaw) {
       const result = await checkLocalDirectoryExists(localPathRaw);
@@ -1748,6 +1816,7 @@ export async function POST(request: Request) {
         const result = await handlePrepareDeployArtifact(
           body.deploymentChainId,
           body.deploymentVersion,
+          body.deploymentSourcePath,
         );
         return NextResponse.json({
           ok: true,
@@ -1759,6 +1828,7 @@ export async function POST(request: Request) {
           deploymentChainId: result.deploymentChainId,
           deploymentAssetChainId: result.deploymentAssetChainId,
           deploymentNetworkName: result.deploymentNetworkName,
+          deploymentSourcePath: result.deploymentSourcePath,
           message: `Prepared deploy artifact for ${String(result.deploymentNetworkName || 'chain')} (${String(result.deploymentChainId || 'unknown')}).`,
         } satisfies AccessManagerResponse);
       } catch (error) {
@@ -1777,7 +1847,7 @@ export async function POST(request: Request) {
 
     if (action === 'generateAbi') {
       try {
-        const result = await handleGenerateAbi(body.deploymentChainId);
+        const result = await handleGenerateAbi(body.deploymentChainId, body.deploymentSourcePath);
         return NextResponse.json({
           ok: true,
           action,
@@ -1786,7 +1856,8 @@ export async function POST(request: Request) {
           deploymentChainId: result.deploymentChainId,
           deploymentAssetChainId: result.deploymentAssetChainId,
           deploymentNetworkName: result.deploymentNetworkName,
-          message: `Generated SPCoin ABI for ${String(result.deploymentNetworkName || 'chain')} (${String(result.deploymentChainId || 'unknown')}) and wrote ${result.abiPath}.`,
+          deploymentSourcePath: result.deploymentSourcePath,
+          message: `Generated SPCoin ABI for ${String(result.deploymentNetworkName || 'chain')} (${String(result.deploymentChainId || 'unknown')}) from ${result.deploymentSourcePath} and wrote ${result.abiPath}.`,
         } satisfies AccessManagerResponse);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown ABI generation failure.';
@@ -1937,6 +2008,7 @@ export async function POST(request: Request) {
           deploymentVersion,
           deploymentAccountPrivateKey,
           deploymentChainId,
+          body.deploymentSourcePath,
         );
         const upsertChainId = Number((result as any).deploymentChainId || 0);
         const upsertMappedChainId = Number(resolveSpCoinDiskChainId(upsertChainId));
@@ -1962,9 +2034,11 @@ export async function POST(request: Request) {
           deploymentChainId: (result as any).deploymentChainId,
           deploymentAssetChainId: (result as any).deploymentAssetChainId,
           deploymentNetworkName: (result as any).deploymentNetworkName,
+          deploymentSourcePath: (result as any).deploymentSourcePath,
           mapAdded: mapUpsert.added,
           message:
             `Contract "${result.deploymentTokenName}" deployed on ${String((result as any).deploymentNetworkName || 'chain')} (${String((result as any).deploymentChainId || 'unknown')}). Tx: ${String((result as any).deploymentTxHash || '(unknown)')}` +
+            `\nDeployment source: ${String((result as any).deploymentSourcePath || '(default)')}` +
             `\nDeployment map: ${mapUpsert.added ? 'added' : 'exists'} (${mapUpsert.chainIdKey}/${mapUpsert.versionKey}/${mapUpsert.publicKeyUpper})`,
         } satisfies AccessManagerResponse);
       } catch (error) {

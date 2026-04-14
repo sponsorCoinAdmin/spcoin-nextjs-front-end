@@ -19,9 +19,10 @@ const spCoinLabScriptsKey = 'spCoinLabScriptsKey';
 const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
   networkHeader?: { rpcUrl?: string };
 };
+const LEGACY_REMOTE_HARDHAT_RPC_URL = 'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
 const DEFAULT_HARDHAT_RPC_URL =
   String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
-  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+  LEGACY_REMOTE_HARDHAT_RPC_URL;
 
 function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
   if (typeof savedRpcUrl !== 'string') return undefined;

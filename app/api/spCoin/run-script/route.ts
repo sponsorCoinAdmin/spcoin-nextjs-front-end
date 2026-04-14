@@ -276,78 +276,98 @@ export async function POST(request: NextRequest) {
           }
         } else if (step.panel === 'spcoin_write') {
           switch (step.method) {
-            case 'addSponsor':
-            case 'addAccountSponsor': {
-              const sponsorKey = findParam('Sponsor Key');
-              const tx = await access.add.addSponsor(sponsorKey);
-              const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountSponsor', tx, receipt);
-              break;
-            }
             case 'addRecipient':
+            case 'addSponsorRecipientBranch':
             case 'addAccountRecipient': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
-              const tx = await access.add.addRecipient(recipientKey);
+              const addSponsorRecipientBranch = (contract as unknown as {
+                addSponsorRecipientBranch?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+              }).addSponsorRecipientBranch;
+              const tx =
+                typeof addSponsorRecipientBranch === 'function'
+                  ? await addSponsorRecipientBranch(sponsorKey, recipientKey)
+                  : await access.add.addRecipient(recipientKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAccountRecipient', tx, receipt);
+              result = formatReceiptResult(
+                'addSponsorRecipientBranch',
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
               break;
             }
+            case 'addRecipientRateBranchAmount':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
             case 'addSponsorship': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await access.add.addRecipientRateAmount(recipientKey, recipientRateKey, transactionQty);
+              const tx = await access.add.addRecipientRateBranchAmount(sponsorKey, recipientKey, recipientRateKey, transactionQty);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addSponsorship', tx, receipt);
+              result = formatReceiptResult('addRecipientRateBranchAmount', tx, receipt);
               break;
             }
+            case 'addRecipientAgentBranch':
+            case 'addAgent': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const tx = await access.add.addRecipientAgentBranch(sponsorKey, recipientKey, recipientRateKey, agentKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addRecipientAgentBranch', tx, receipt);
+              break;
+            }
+            case 'addAgentRateBranchAmount':
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':
             case 'addAgentSponsorship': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await access.add.addAgentRateAmount(
-                recipientKey,
-                recipientRateKey,
-                agentKey,
-                agentRateKey,
-                transactionQty,
-              );
-              const receipt = await tx.wait();
-              result = formatReceiptResult('addAgentSponsorship', tx, receipt);
-              break;
-            }
-            case 'addBackDatedSponsorship':
-            case 'addAccountRecipientRateBackdated': {
-              const sponsorKey = findParam('Sponsor Key');
-              const recipientKey = findParam('Recipient Key');
-              const recipientRateKey = findParam('Recipient Rate Key');
-              const agentKey = findParam('Agent Key');
-              const agentRateKey = findParam('Agent Rate Key');
-              const wholeAmount = findParam('Whole Amount');
-              const decimalAmount = findParam('Decimal Amount');
-              const backDate = findParam('Transaction Back Date');
-              const transactionQty = `${wholeAmount}.${decimalAmount}`;
-              const tx = await access.add.addBackDatedAgentSponsorship(
-                signer,
+              const tx = await access.add.addAgentRateBranchAmount(
                 sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 agentKey,
                 agentRateKey,
                 transactionQty,
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('addAgentRateBranchAmount', tx, receipt);
+              break;
+            }
+            case 'addBackDatedSponsorship':
+            case 'addBackDatedRecipientSponsorship':
+            case 'addBackDatedRecipientRateAmount':
+            case 'addAccountRecipientRateBackdated': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const wholeAmount = findParam('Whole Amount');
+              const decimalAmount = findParam('Decimal Amount');
+              const explicitQty = findParam('Transaction Quantity');
+              const backDate = findParam('Transaction Back Date');
+              const transactionQty = explicitQty || `${wholeAmount}.${decimalAmount}`;
+              const tx = await access.add.addBackDatedRecipientRateAmount(
+                signer,
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                transactionQty,
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedSponsorship', tx, receipt);
+              result = formatReceiptResult('addBackDatedRecipientRateAmount', tx, receipt);
               break;
             }
             case 'addBackDatedAgentSponsorship':
+            case 'addBackDatedRecipientAgentRateAmount':
             case 'addAccountAgentRateBackdated': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
@@ -356,7 +376,7 @@ export async function POST(request: NextRequest) {
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
-              const tx = await access.add.addBackDatedAgentSponsorship(
+              const tx = await access.add.addBackDatedRecipientAgentRateAmount(
                 signer,
                 sponsorKey,
                 recipientKey,
@@ -367,7 +387,47 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedAgentSponsorship', tx, receipt);
+              result = formatReceiptResult('addBackDatedRecipientAgentRateAmount', tx, receipt);
+              break;
+            }
+            case 'backDateRecipientTransactionDate': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const transactionIndex = findParam('Transaction Row Id');
+              const backDate = findParam('Transaction Back Date');
+              const tx = await access.add.backDateRecipientTransactionDate(
+                signer,
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                transactionIndex,
+                Math.floor(new Date(backDate).getTime() / 1000),
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('backDateRecipientTransactionDate', tx, receipt);
+              break;
+            }
+            case 'backDateAgentTransactionDate': {
+              const sponsorKey = findParam('Sponsor Key');
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const agentRateKey = findParam('Agent Rate Key');
+              const transactionIndex = findParam('Transaction Row Id');
+              const backDate = findParam('Transaction Back Date');
+              const tx = await access.add.backDateAgentTransactionDate(
+                signer,
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                agentKey,
+                agentRateKey,
+                transactionIndex,
+                Math.floor(new Date(backDate).getTime() / 1000),
+              );
+              const receipt = await tx.wait();
+              result = formatReceiptResult('backDateAgentTransactionDate', tx, receipt);
               break;
             }
             case 'delRecipient': {
@@ -401,28 +461,31 @@ export async function POST(request: NextRequest) {
               );
               break;
             }
-            case 'delAccountAgentSponsorship': {
+            case 'delAccountAgentSponsorship':
+            case 'deleteAgentRateBranch': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
-              const deleteAgentSponsorship = (
+              const deleteAgentRateBranch = (
                 contract as unknown as {
-                  deleteAgentSponsorship?: (
+                  deleteAgentRateBranch?: (
+                    sponsorKey: string,
                     recipientKey: string,
                     recipientRateKey: string | number,
                     agentKey: string,
                     agentRateKey: string | number,
                   ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
                 }
-              ).deleteAgentSponsorship;
-              if (typeof deleteAgentSponsorship !== 'function') {
-                throw new Error('deleteAgentSponsorship is not available on the current SpCoin contract access path.');
+              ).deleteAgentRateBranch;
+              if (typeof deleteAgentRateBranch !== 'function') {
+                throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
               }
-              const tx = await deleteAgentSponsorship(recipientKey, recipientRateKey, agentKey, agentRateKey);
+              const tx = await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                'delAccountAgentSponsorship',
+                String(step.method),
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );

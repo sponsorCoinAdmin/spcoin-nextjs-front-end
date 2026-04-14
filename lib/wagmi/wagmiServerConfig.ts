@@ -16,7 +16,7 @@ export const wagmiServerConfig = createConfig({
       process.env.NEXT_SERVER_HARDHAT_RPC_URL ??
         process.env.HARDHAT_BASE ??
         process.env.NEXT_SERVER_HARDHAT_RPC_URL ??
-        'http://127.0.0.1:8545',
+        'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a',
     ),
   },
 })

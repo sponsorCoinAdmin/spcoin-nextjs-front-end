@@ -17,14 +17,26 @@ export const getDeploymentVersionTag = (version: string) => {
   return normalizedVersion ? `V${normalizedVersion}` : '';
 };
 
-export const buildDeploymentNameFromVersion = (version: string) => {
-  const tag = getDeploymentVersionTag(version);
-  return `Sponsor Coin ${tag}`.trim();
+export const getDeploymentSourceLabel = (sourcePath: string) => {
+  const normalizedSourcePath = normalizeProjectRelativePath(sourcePath, DEFAULT_LOCAL_SOURCE_DEPLOYMENT_PATH);
+  const segments = normalizedSourcePath.split('/').filter(Boolean);
+  return segments[segments.length - 1] || 'Sponsor Coin';
 };
 
-export const buildDeploymentSymbolFromVersion = (version: string) => {
+export const buildDeploymentNameFromVersion = (version: string, sourcePath = '') => {
   const tag = getDeploymentVersionTag(version);
-  return tag ? `SPCOIN_${tag}` : 'SPCOIN';
+  const sourceLabel = sourcePath ? getDeploymentSourceLabel(sourcePath) : 'Sponsor Coin';
+  return `${sourceLabel} ${tag}`.trim();
+};
+
+export const buildDeploymentSymbolFromVersion = (version: string, sourcePath = '') => {
+  const tag = getDeploymentVersionTag(version);
+  const sourceLabel = sourcePath ? getDeploymentSourceLabel(sourcePath) : 'SPCOIN';
+  const symbolBase = sourceLabel
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase() || 'SPCOIN';
+  return tag ? `${symbolBase}_${tag}` : symbolBase;
 };
 
 export const buildDeploymentTokenName = (name: string) => {

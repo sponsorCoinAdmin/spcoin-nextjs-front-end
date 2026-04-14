@@ -19,10 +19,15 @@ export const addRecipient = async (context, _recipientKey) => {
         throw new Error(label + " did not become visible on the RPC after the transaction receipt confirmed.");
     };
 
-    context.spCoinLogger.logFunctionHeader("addRecipient = async(" + _recipientKey + ")");
+    const sponsorKey =
+        typeof context.spCoinContractDeployed?.runner?.getAddress === "function"
+            ? await context.spCoinContractDeployed.runner.getAddress()
+            : "";
+
+    context.spCoinLogger.logFunctionHeader("addSponsorRecipientBranch = async(" + sponsorKey + ", " + _recipientKey + ")");
     context.spCoinLogger.logDetail("JS => Inserting " + _recipientKey + " Recipient To Blockchain Network");
     context.spCoinLogger.logDetail("JS => Inserting Recipient " + _recipientKey);
-    const tx = await context.spCoinContractDeployed.addRecipient(_recipientKey);
+    const tx = await context.spCoinContractDeployed.addSponsorRecipientBranch(sponsorKey, _recipientKey);
     const receipt = await tx.wait();
     context.spCoinLogger.logDetail(
         "JS => addRecipient receipt status = " + String(receipt?.status ?? "") + " hash = " + String(receipt?.hash || tx?.hash || "")
@@ -40,11 +45,6 @@ export const addRecipient = async (context, _recipientKey) => {
             (value) => value === true
         );
     }
-
-    const sponsorKey =
-        typeof context.spCoinContractDeployed?.runner?.getAddress === "function"
-            ? await context.spCoinContractDeployed.runner.getAddress()
-            : "";
 
     if (sponsorKey && typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
         await waitForVisibility(

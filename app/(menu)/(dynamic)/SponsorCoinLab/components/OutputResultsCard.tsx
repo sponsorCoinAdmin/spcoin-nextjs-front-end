@@ -27,41 +27,18 @@ type DisplayedOutputCall = {
   parameters: Array<{ label: string; value: string }>;
 };
 
-function reorderFormattedOutputBlocks(
-  rawDisplay: string,
-  sourceStepNumber: number,
-  targetStepNumber: number,
-  placement: DragPlacement,
-): string | null {
-  const trimmedDisplay = String(rawDisplay || '').trim();
-  if (!trimmedDisplay || trimmedDisplay.startsWith('(no output')) return null;
-
-  const blocks = trimmedDisplay
-    .split(/\n\s*\n/)
-    .map((block) => block.trim())
-    .filter(Boolean);
-
-  const sourceIndex = sourceStepNumber - 1;
-  const targetIndex = targetStepNumber - 1;
-  if (
-    sourceIndex < 0 ||
-    targetIndex < 0 ||
-    sourceIndex >= blocks.length ||
-    targetIndex >= blocks.length
-  ) {
-    return null;
+function parseDisplayedOutputParameters(value: unknown): Array<{ label: string; value: string }> {
+  if (Array.isArray(value)) {
+    return value.map((entry) => ({
+      label: String(entry?.label || '').trim(),
+      value: String(entry?.value || '').trim(),
+    }));
   }
-
-  const reorderedBlocks = [...blocks];
-  const [movedBlock] = reorderedBlocks.splice(sourceIndex, 1);
-  if (!movedBlock) return null;
-
-  const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-  const insertIndex = placement === 'before' ? adjustedTargetIndex : adjustedTargetIndex + 1;
-  if (insertIndex === sourceIndex) return null;
-
-  reorderedBlocks.splice(insertIndex, 0, movedBlock);
-  return reorderedBlocks.join('\n\n');
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value as Record<string, unknown>).map(([label, entryValue]) => ({
+    label: String(label || '').trim(),
+    value: String(entryValue ?? '').trim(),
+  }));
 }
 
 function removeFormattedOutputBlock(rawDisplay: string, stepNumber: number): string | null {
@@ -101,16 +78,11 @@ function parseDisplayedOutputCalls(rawDisplay: string): DisplayedOutputCall[] {
     .map((block) => {
       try {
         const parsed = JSON.parse(block) as {
-          call?: { method?: unknown; parameters?: Array<{ label?: unknown; value?: unknown }> };
+          call?: { method?: unknown; parameters?: unknown };
         };
         const method = String(parsed?.call?.method || '').trim();
         if (!method) return null;
-        const parameters = Array.isArray(parsed?.call?.parameters)
-          ? parsed.call.parameters.map((entry) => ({
-              label: String(entry?.label || '').trim(),
-              value: String(entry?.value || '').trim(),
-            }))
-          : [];
+        const parameters = parseDisplayedOutputParameters(parsed?.call?.parameters);
         return { method, parameters };
       } catch {
         return null;
@@ -207,7 +179,12 @@ type Props = {
     openAccountFromAddress: (account: string, pathHint?: string) => Promise<void>;
   };
   scriptActions: {
-    moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: DragPlacement) => void;
+    moveScriptStepToPosition: (
+      sourceStepNumber: number,
+      targetStepNumber: number,
+      placement: DragPlacement,
+      options?: { origin?: 'script' | 'output' },
+    ) => void;
     deleteScriptStepByNumber: (stepNumber: number) => void;
     duplicateScriptStepByNumber: (stepNumber: number) => void;
     createScriptFromSteps: (nextNameRaw: string, steps: LabScriptStep[]) => boolean;
@@ -318,15 +295,15 @@ export default function OutputResultsCard({
   );
   const saveScriptValidation = useMemo(() => {
     if (saveableOutputSteps.length === 0) {
-      return { tone: 'invalid' as const, title: 'No Methods Available' };
+      return { tone: 'invalid' as const, title: 'No Methods Available', actionLabel: 'Save' as const };
     }
     if (!String(saveScriptNameInput || '').trim()) {
-      return { tone: 'invalid' as const, title: 'Srript Name Required' };
+      return { tone: 'invalid' as const, title: 'Srript Name Required', actionLabel: 'Save' as const };
     }
     if (saveScriptNameExists) {
-      return { tone: 'invalid' as const, title: 'Duplicate Name' };
+      return { tone: 'update' as const, title: 'Update Script', actionLabel: 'Update' as const };
     }
-    return { tone: 'valid' as const, title: 'Save Script' };
+    return { tone: 'valid' as const, title: 'Save Script', actionLabel: 'Save' as const };
   }, [saveScriptNameExists, saveScriptNameInput, saveableOutputSteps.length]);
   const inspectorNamespace =
     controls.outputPanelMode === 'tree'
@@ -426,12 +403,12 @@ export default function OutputResultsCard({
       const method =
         call && typeof call === 'object' && !Array.isArray(call) ? String((call as Record<string, unknown>).method || '').trim() : '';
 
-      if (method !== 'getMasterSponsorList') return block;
+      if (!['getMasterSponsorList', 'getMasterSponsorList_BAK'].includes(method)) return block;
 
       const result = record.result;
-      if (!result || typeof result !== 'object' || Array.isArray(result) === false) return block;
+      if (!Array.isArray(result)) return block;
 
-      const sponsorEntries = Array.isArray(result) ? result : [];
+      const sponsorEntries = result;
       const topLevelSponsorRewardRate = sponsorEntries.reduce<string | null>((foundRate, entry) => {
         if (foundRate) return foundRate;
         if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return foundRate;
@@ -497,20 +474,9 @@ export default function OutputResultsCard({
         targetStepNumber,
         placement,
       });
-      scriptActions.moveScriptStepToPosition(sourceStepNumber, targetStepNumber, placement);
-      if (controls.formattedPanelView === 'output') {
-        const reorderedOutputDisplay = reorderFormattedOutputBlocks(
-          content.formattedOutputDisplay,
-          sourceStepNumber,
-          targetStepNumber,
-          placement,
-        );
-        if (reorderedOutputDisplay) {
-          controls.setFormattedOutputDisplay(reorderedOutputDisplay);
-        }
-      }
+      scriptActions.moveScriptStepToPosition(sourceStepNumber, targetStepNumber, placement, { origin: 'output' });
     },
-    [content.formattedOutputDisplay, controls, scriptActions],
+    [scriptActions],
   );
 
   const stopInspectorScriptDrag = React.useCallback(() => {
@@ -779,7 +745,7 @@ export default function OutputResultsCard({
   }, [saveableOutputSteps.length]);
 
   const handleConfirmSaveScript = React.useCallback(() => {
-    if (saveScriptValidation.tone !== 'valid') return;
+    if (saveScriptValidation.tone === 'invalid') return;
     if (scriptActions.createScriptFromSteps(String(saveScriptNameInput || '').trim(), saveableOutputSteps)) {
       setIsSaveScriptModalOpen(false);
       setSaveScriptNameInput('');
@@ -1296,6 +1262,8 @@ export default function OutputResultsCard({
               className={`${actionButtonClassName} ${
                 (isSaveConfirmHovered ? saveScriptValidation.tone : 'valid') === 'invalid'
                   ? 'hover:bg-red-600 hover:text-white'
+                  : saveScriptValidation.tone === 'update'
+                    ? 'hover:bg-green-600 hover:text-white'
                   : ''
               }`}
               title={saveScriptValidation.title}
@@ -1303,7 +1271,7 @@ export default function OutputResultsCard({
               onMouseLeave={() => setIsSaveConfirmHovered(false)}
               onClick={handleConfirmSaveScript}
             >
-              Save
+              {saveScriptValidation.actionLabel}
             </button>
           </>
         }

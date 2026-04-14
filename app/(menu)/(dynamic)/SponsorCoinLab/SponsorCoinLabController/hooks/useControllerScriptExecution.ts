@@ -15,6 +15,20 @@ type DisplayedOutputCall = {
   parameters: Array<{ label: string; value: string }>;
 };
 
+function parseDisplayedOutputParameters(value: unknown): Array<{ label: string; value: string }> {
+  if (Array.isArray(value)) {
+    return value.map((entry) => ({
+      label: String(entry?.label || '').trim(),
+      value: String(entry?.value || '').trim(),
+    }));
+  }
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value as Record<string, unknown>).map(([label, entryValue]) => ({
+    label: String(label || '').trim(),
+    value: String(entryValue ?? '').trim(),
+  }));
+}
+
 type Params = {
   formattedOutputDisplay: string;
   outputPanelMode: OutputPanelMode;
@@ -86,6 +100,7 @@ export function useControllerScriptExecution({
   setSelectedScriptStepNumber,
 }: Params) {
   const refreshFormattedOutputSequenceRef = useRef<(() => void) | null>(null);
+  const isRefreshingDisplayedOutputRef = useRef(false);
 
   const displayedOutputCalls = useMemo(() => {
     const blocks = String(formattedOutputDisplay || '')
@@ -98,16 +113,11 @@ export function useControllerScriptExecution({
       .map((block) => {
         try {
           const parsed = JSON.parse(block) as {
-            call?: { method?: unknown; parameters?: Array<{ label?: unknown; value?: unknown }> };
+            call?: { method?: unknown; parameters?: unknown };
           };
           const method = String(parsed?.call?.method || '').trim();
           if (!method) return null;
-          const parameters = Array.isArray(parsed?.call?.parameters)
-            ? parsed.call.parameters.map((entry) => ({
-                label: String(entry?.label || '').trim(),
-                value: String(entry?.value || '').trim(),
-              }))
-            : [];
+          const parameters = parseDisplayedOutputParameters(parsed?.call?.parameters);
           return { method, parameters };
         } catch {
           return null;
@@ -209,7 +219,12 @@ export function useControllerScriptExecution({
       setStatus('No Console Display output steps are available to refresh.');
       return;
     }
+    if (isRefreshingDisplayedOutputRef.current) {
+      setStatus('Console Display refresh already running.');
+      return;
+    }
 
+    isRefreshingDisplayedOutputRef.current = true;
     scriptDebugStopRef.current = true;
     setIsScriptDebugRunning(false);
     setScriptStepExecutionErrors({});
@@ -260,9 +275,11 @@ export function useControllerScriptExecution({
           : `Refreshed ${displayedOutputCalls.length} Console Display output steps.`,
       );
     } finally {
+      isRefreshingDisplayedOutputRef.current = false;
       setIsScriptDebugRunning(false);
     }
   }, [
+    isRefreshingDisplayedOutputRef,
     displayedOutputCalls,
     runScriptStep,
     serializationTestMethodDefs,

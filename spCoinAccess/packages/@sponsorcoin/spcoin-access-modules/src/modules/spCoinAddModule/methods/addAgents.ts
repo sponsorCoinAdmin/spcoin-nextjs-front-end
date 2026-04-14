@@ -1,6 +1,6 @@
 // @ts-nocheck
-export const addAgents = async (context, _recipientKey, _recipientRateKey, _agentAccountList) => {
-    context.spCoinLogger.logFunctionHeader("addAgents = async(" + _recipientKey + ", " + _recipientRateKey + ", " + _agentAccountList + ")");
+export const addAgents = async (context, _sponsorKey, _recipientKey, _recipientRateKey, _agentAccountList) => {
+    context.spCoinLogger.logFunctionHeader("addAgents = async(" + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _agentAccountList + ")");
     context.spCoinLogger.logDetail("JS => For Recipient[" + _recipientKey + "]: " + _recipientKey + ")");
     context.spCoinLogger.logDetail("JS => Inserting " + _agentAccountList.length + " Agent To Blockchain Network");
     context.spCoinLogger.logDetail("JS => _agentAccountList = " + _agentAccountList);
@@ -10,7 +10,7 @@ export const addAgents = async (context, _recipientKey, _recipientRateKey, _agen
     for (agentCount = 0; agentCount < agentSize; agentCount++) {
         const agentKey = _agentAccountList[agentCount];
         context.spCoinLogger.logDetail("JS =>  " + agentCount + ". " + "Inserting Agent[" + agentCount + "]: " + agentKey);
-        await context.addAgent(_recipientKey, _recipientRateKey, agentKey);
+        await context.addRecipientAgentBranch(_sponsorKey, _recipientKey, _recipientRateKey, agentKey);
     }
     context.spCoinLogger.logDetail("JS => " + "Inserted = " + agentSize + " Agent Records");
     context.spCoinLogger.logExitFunction();

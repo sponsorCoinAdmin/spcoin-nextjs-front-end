@@ -1,21 +1,27 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
-import addAccountRecipient from './addRecipient';
-import addSponsorship from './addRecipientRateAmount';
-import addAccountSponsor from './addSponsor';
+import addSponsorRecipientBranch from './addRecipient';
+import addRecipientRateBranchAmount from './addRecipientRateBranchAmount';
 import addRecipients from './addRecipients';
-import addAgent from './addAgent';
-import addAgentSponsorship from './addAgentRateAmount';
+import addRecipientAgentBranch from './addRecipientAgentBranch';
+import addAgentRateBranchAmount from './addAgentRateBranchAmount';
 import addAgents from './addAgents';
 import deleteSponsor from './deleteSponsor';
+import deleteSponsorTree from './deleteSponsorTree';
+import deleteSponsorRecipientBranch from './deleteSponsorRecipientBranch';
+import deleteRecipientRateBranch from './deleteRecipientRateBranch';
+import deleteRecipientAgentBranch from './deleteRecipientAgentBranch';
+import deleteAgentRateBranch from './deleteAgentRateBranch';
 import deleteRecipientSponsorships from './deleteRecipientSponsorships';
 import deleteRecipientSponsorshipTree from './deleteRecipientSponsorshipTree';
 import deleteAgentSponsorships from './deleteAgentSponsorships';
 import deleteRecipientRateSponsorship from './deleteRecipientRate';
 import deleteRecipientRateAmount from './deleteRecipientRateAmount';
 import deleteAgent from './deleteAgent';
-import deleteAgentSponsorship from './deleteAgentSponsorship';
-import addBackDatedSponsorship from './addBackDatedSponsorship';
-import addBackDatedAgentSponsorship from './addBackDatedAgentSponsorship';
+import unSponsorAgent from './deleteAgentSponsorship';
+import addBackDatedRecipientRateAmount from './addBackDatedRecipientRateAmount';
+import addBackDatedRecipientAgentRateAmount from './addBackDatedRecipientAgentRateAmount';
+import backDateRecipientTransactionDate from './backDateRecipientTransactionDate';
+import backDateAgentTransactionDate from './backDateAgentTransactionDate';
 import deleteRecipientSponsorship from './delRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
@@ -34,23 +40,29 @@ import setAgentRateRange from './setAgentRateRange';
 import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
-  addAccountRecipient,
-  addSponsorship,
-  addAccountSponsor,
+  addSponsorRecipientBranch,
+  addRecipientRateBranchAmount,
   addRecipients,
-  addAgent,
-  addAgentSponsorship,
+  addRecipientAgentBranch,
+  addAgentRateBranchAmount,
   addAgents,
   deleteSponsor,
+  deleteSponsorTree,
+  deleteSponsorRecipientBranch,
+  deleteRecipientRateBranch,
+  deleteRecipientAgentBranch,
+  deleteAgentRateBranch,
   deleteRecipientSponsorships,
   deleteRecipientSponsorshipTree,
   deleteAgentSponsorships,
   deleteRecipientRateSponsorship,
   deleteRecipientRateAmount,
   deleteAgent,
-  deleteAgentSponsorship,
-  addBackDatedSponsorship,
-  addBackDatedAgentSponsorship,
+  unSponsorAgent,
+  addBackDatedRecipientRateAmount,
+  addBackDatedRecipientAgentRateAmount,
+  backDateRecipientTransactionDate,
+  backDateAgentTransactionDate,
   deleteRecipientSponsorship,
   deleteAccountRecord,
   deleteAccountRecords,

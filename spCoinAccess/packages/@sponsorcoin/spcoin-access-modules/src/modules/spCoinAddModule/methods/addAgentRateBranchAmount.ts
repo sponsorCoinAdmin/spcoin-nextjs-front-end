@@ -1,6 +1,7 @@
 // @ts-nocheck
-export const addAgentRateAmount = async (
+export const addAgentRateBranchAmount = async (
     context,
+    _sponsorKey,
     _recipientKey,
     _recipientRateKey,
     _accountAgentKey,
@@ -8,7 +9,8 @@ export const addAgentRateAmount = async (
     _transactionQty
 ) => {
     context.spCoinLogger.logFunctionHeader(
-        "addAgentRateAmount = async(" +
+        "addAgentRateBranchAmount = async(" +
+            _sponsorKey + ", " +
             _recipientKey + ", " +
             _recipientRateKey + ", " +
             _accountAgentKey + ", " +
@@ -18,7 +20,8 @@ export const addAgentRateAmount = async (
     const components = String(_transactionQty ?? "").split(".");
     const wholePart = components[0].length > 0 ? components[0] : "0";
     const fractionalPart = components.length > 1 ? components[1] : "0";
-    const tx = await context.spCoinContractDeployed.addAgentRateAmount(
+    const tx = await context.spCoinContractDeployed.addAgentRateBranchAmount(
+        _sponsorKey,
         _recipientKey,
         _recipientRateKey,
         _accountAgentKey,

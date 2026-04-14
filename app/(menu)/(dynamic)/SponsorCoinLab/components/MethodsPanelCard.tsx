@@ -30,13 +30,14 @@ const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 };
 
 const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
-  addAccountRecipient: 'add.ts',
-  addAgent: 'add.ts',
-  addAccountSponsor: 'add.ts',
-  addSponsorship: 'add.ts',
-  addAgentSponsorship: 'add.ts',
-  addBackDatedSponsorship: 'add.ts',
-  addBackDatedAgentSponsorship: 'add.ts',
+  addSponsorRecipientBranch: 'add.ts',
+  addRecipientAgentBranch: 'add.ts',
+  addRecipientRateBranchAmount: 'add.ts',
+  addAgentRateBranchAmount: 'add.ts',
+  addBackDatedRecipientRateAmount: 'add.ts',
+  addBackDatedRecipientAgentRateAmount: 'add.ts',
+  backDateRecipientTransactionDate: 'add.ts',
+  backDateAgentTransactionDate: 'add.ts',
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
   deleteSponsor: 'delete.ts',
@@ -48,7 +49,7 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   deleteAgent: 'delete.ts',
   deleteAccountRecord: 'delete.ts',
   deleteAccountRecords: 'delete.ts',
-  deleteAgentSponsorship: 'delete.ts',
+  unSponsorAgent: 'delete.ts',
   depositSponsorStakingRewards: 'staking.ts',
   depositRecipientStakingRewards: 'staking.ts',
   depositAgentStakingRewards: 'staking.ts',
@@ -74,6 +75,11 @@ const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
   deleteMasterSponsorships: 'delete.ts',
+  deleteSponsorTree: 'delete.ts',
+  deleteSponsorRecipientBranch: 'delete.ts',
+  deleteRecipientRateBranch: 'delete.ts',
+  deleteRecipientAgentBranch: 'delete.ts',
+  deleteAgentRateBranch: 'delete.ts',
   deleteRecipientSponsorships: 'delete.ts',
   deleteAgentSponsorships: 'delete.ts',
 };
@@ -223,7 +229,13 @@ export default function MethodsPanelCard({
             ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
             ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
             ...(spCoinWriteProps.showOffChainMethods
-              ? ['deleteRecipientSponsorships', 'deleteRecipientSponsorshipTree', 'deleteAgentSponsorships']
+              ? [
+                  'deleteSponsorTree',
+                  'deleteSponsorRecipientBranch',
+                  'deleteRecipientRateBranch',
+                  'deleteRecipientAgentBranch',
+                  'deleteAgentRateBranch',
+                ]
               : []),
             ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
           ]),
@@ -267,7 +279,7 @@ export default function MethodsPanelCard({
     () =>
       sortMethodNames(
         adminUtilityMethodNames.filter((name) =>
-          ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
+          ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
         ),
       ),
     [adminUtilityMethodNames],
@@ -279,6 +291,11 @@ export default function MethodsPanelCard({
           [
             'hhFundAccounts',
             'deleteMasterSponsorships',
+            'deleteSponsorTree',
+            'deleteSponsorRecipientBranch',
+            'deleteRecipientRateBranch',
+            'deleteRecipientAgentBranch',
+            'deleteAgentRateBranch',
           ].includes(name),
         ),
       ),

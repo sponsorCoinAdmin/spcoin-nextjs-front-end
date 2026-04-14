@@ -54,6 +54,9 @@ export function DeploymentStatusBlock({
   const deploymentReadyStatusMatch = deploymentStatus.match(
     /^Status: (.+)\r?\nBlockchain Deployment: "([^"]+)" is ready for deployment\.\r?\nContract Address: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n\r?\nPress Deploy to execute blockchain deployment$/,
   );
+  const deploymentAlreadyDeployedStatusMatch = deploymentStatus.match(
+    /^Status: (.+)\r?\nBlockchain Deployment: "([^"]+)" is already deployed\.\r?\nContract Address: (.+)\r?\nContract Name: (.+)\r?\nNetwork: (.+)\r?\n[\s\S]*?\r?\n\r?\nDeployment button disabled because this contract is already deployed$/,
+  );
   const deploymentErrorStatusMatch = deploymentStatus.match(/^(\*Error:)(.*)$/);
   const deploymentEmptyKeyStatusMatch = deploymentStatus.match(
     /^(\*Error:)( Empty Account Private Key for deploymnet token ")([^"]+)(")$/,
@@ -117,6 +120,24 @@ export function DeploymentStatusBlock({
           <br />
           <br />
           <span>Press Deploy to execute blockchain deployment</span>
+        </>
+      ) : !deploymentStatusIsError && deploymentAlreadyDeployedStatusMatch ? (
+        <>
+          <span>Status: </span>
+          <span className="font-semibold text-green-400">{deploymentAlreadyDeployedStatusMatch[1]}</span>
+          <br />
+          <span>Blockchain Deployment: "</span>
+          <span className="font-semibold text-green-400">{deploymentAlreadyDeployedStatusMatch[2]}</span>
+          <span>" is already deployed.</span>
+          <br />
+          <span>{`Contract Address: ${deploymentAlreadyDeployedStatusMatch[3]}`}</span>
+          <br />
+          <span>{`Contract Name: ${deploymentAlreadyDeployedStatusMatch[4]}`}</span>
+          <br />
+          <span>{`Network: ${deploymentAlreadyDeployedStatusMatch[5]}`}</span>
+          <br />
+          <br />
+          <span>Deployment button disabled because this contract is already deployed</span>
         </>
       ) : deploymentStatusIsError && deploymentEmptyKeyStatusMatch ? (
         <>

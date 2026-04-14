@@ -40,8 +40,8 @@ export class SpCoinOffChainProcessor {
     async addRecipients(_accountKey, recipientAccountList) {
         return (0, addRecipients_1.addRecipients).call(this, _accountKey, recipientAccountList);
     }
-    async addAgents(recipientKey, recipientRateKey, agentAccountList) {
-        return (0, addAgents_1.addAgents).call(this, recipientKey, recipientRateKey, agentAccountList);
+    async addAgents(sponsorKey, recipientKey, recipientRateKey, agentAccountList) {
+        return (0, addAgents_1.addAgents).call(this, sponsorKey, recipientKey, recipientRateKey, agentAccountList);
     }
     async addOffChainRecipients(accountKey, recipientAccountList) {
         return (0, addOffChainRecipients_1.addOffChainRecipients).call(this, accountKey, recipientAccountList);

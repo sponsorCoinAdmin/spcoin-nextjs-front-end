@@ -59,6 +59,11 @@ function isBadDataError(error: unknown) {
   return code === 'BAD_DATA' || /could not decode result data/i.test(message);
 }
 
+function getErrorDebugTrace(error: unknown): string[] {
+  const trace = (error as { spCoinDebugTrace?: unknown } | null)?.spCoinDebugTrace;
+  return Array.isArray(trace) ? trace.map((entry) => String(entry)) : [];
+}
+
 async function enrichDirectReadError(params: {
   error: unknown;
   method: string;
@@ -688,7 +693,11 @@ export function useSponsorCoinLabMethods({
         !Array.isArray(nextPayload.call)
           ? String((nextPayload.call as Record<string, unknown>).method || '').trim()
           : '';
-      if (normalizedPayloadMethod === 'getMasterSponsorList' || normalizedPayloadMethod === 'getAccountList') {
+      if (
+        normalizedPayloadMethod === 'getMasterSponsorList' ||
+        normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
+        normalizedPayloadMethod === 'getAccountList'
+      ) {
         const rawResult = nextPayload.result;
         const entryListKey = normalizedPayloadMethod === 'getAccountList' ? 'accounts' : 'sponsors';
         const normalizedEntries = Array.isArray(rawResult)
@@ -900,14 +909,16 @@ export function useSponsorCoinLabMethods({
           mode,
           hardhatAccounts,
           executeWriteConnected,
+          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
           selectedHardhatAddress:
             mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
           appendLog,
           setStatus,
         });
-        if (selectedMethod === 'getMasterSponsorList') {
-          try {
-            const spCoinMetsData = await runSpCoinReadMethod({
+        if (selectedMethod === 'getMasterSponsorList' || selectedMethod === 'getMasterSponsorList_BAK') {
+          const sponsorKeys = Array.isArray(result) ? result : [];
+          const [metadataResult, sponsorResults] = await Promise.allSettled([
+            runSpCoinReadMethod({
               selectedMethod: 'getSpCoinMetaData',
               spReadParams: [],
               coerceParamValue,
@@ -917,17 +928,46 @@ export function useSponsorCoinLabMethods({
               ensureReadRunner,
               appendLog: () => {},
               setStatus: () => {},
-            });
-            return {
-              call,
-              result: {
-                spCoinMetsData,
-                sponsors: Array.isArray(result) ? result : [],
-              },
-            };
-          } catch {
-            return { call, result };
-          }
+            }),
+            Promise.allSettled(
+              sponsorKeys.map(async (accountKey) => loadAccountRecordForAddress(String(accountKey), { force: true })),
+            ),
+          ]);
+          const spCoinMetsData = metadataResult.status === 'fulfilled' ? metadataResult.value : undefined;
+          const sponsors =
+            sponsorResults.status === 'fulfilled'
+              ? sponsorResults.value.map((entry, index) => {
+                  const accountKey = String(sponsorKeys[index] || '');
+                  if (entry.status === 'fulfilled') {
+                    return {
+                      address: accountKey,
+                      ...(entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value)
+                        ? (entry.value as Record<string, unknown>)
+                        : { value: entry.value }),
+                    };
+                  }
+                  return { address: accountKey };
+                })
+              : sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
+          appendLog(
+            `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
+              sponsors.map((entry) => ({
+                type: typeof entry,
+                hasAddress: !!(entry && typeof entry === 'object' && !Array.isArray(entry) && 'address' in entry),
+                keys:
+                  entry && typeof entry === 'object' && !Array.isArray(entry)
+                    ? Object.keys(entry as Record<string, unknown>)
+                    : [],
+              })),
+            )}`,
+          );
+          return {
+            call,
+            result: {
+              ...(spCoinMetsData ? { spCoinMetsData } : {}),
+              sponsors,
+            },
+          };
         }
         return { call, result };
       }
@@ -950,6 +990,11 @@ export function useSponsorCoinLabMethods({
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
       const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
+        deleteSponsorTree: 'deleteSponsorTree',
+        deleteSponsorRecipientBranch: 'deleteSponsorRecipientBranch',
+        deleteRecipientRateBranch: 'deleteRecipientRateBranch',
+        deleteRecipientAgentBranch: 'deleteRecipientAgentBranch',
+        deleteAgentRateBranch: 'deleteAgentRateBranch',
         deleteRecipientSponsorships: 'deleteRecipientSponsorships',
         deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
         deleteAgentSponsorships: 'deleteAgentSponsorships',
@@ -965,6 +1010,7 @@ export function useSponsorCoinLabMethods({
           mode,
           hardhatAccounts,
           executeWriteConnected,
+          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
           selectedHardhatAddress: signer,
           appendLog,
           setStatus,
@@ -1326,7 +1372,7 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getAccountList'].includes(methodName)) continue;
+        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getAccountList'].includes(methodName)) continue;
         const listKey = methodName === 'getAccountList' ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
@@ -1350,6 +1396,17 @@ export function useSponsorCoinLabMethods({
                 const record = resultEntry as Record<string, unknown>;
                 return normalizeAddressValue(String(record.address || record.accountKey || '')) === normalizedAccount;
               });
+        appendLog(
+          `expandMasterSponsorListAccountInline debug -> method=${methodName} path=${String(pathHint || '')} targetIndex=${targetIndex} entryKinds=${JSON.stringify(
+            currentResult.map((resultEntry) =>
+              typeof resultEntry === 'string'
+                ? { type: 'string', value: resultEntry }
+                : resultEntry && typeof resultEntry === 'object' && !Array.isArray(resultEntry)
+                  ? { type: 'object', keys: Object.keys(resultEntry as Record<string, unknown>) }
+                  : { type: typeof resultEntry },
+            ),
+          )}`,
+        );
         if (targetIndex < 0) continue;
         try {
           const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
@@ -1569,7 +1626,7 @@ export function useSponsorCoinLabMethods({
               panel: 'spcoin_rread',
               source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
               method: selectedSpCoinReadMethod,
-              trace: [],
+              trace: getErrorDebugTrace(error),
             },
           },
         }),
@@ -1701,7 +1758,22 @@ export function useSponsorCoinLabMethods({
         descriptor.method,
         descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
       );
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
+      setFormattedOutputDisplay(
+        formatFormattedPanelPayload({
+          call,
+          error: {
+            message,
+            name: error instanceof Error ? error.name : typeof error,
+            stack: error instanceof Error ? error.stack : undefined,
+            debug: {
+              panel: 'serialization_tests',
+              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              method: selectedSerializationTestMethod,
+              trace: getErrorDebugTrace(error),
+            },
+          },
+        }),
+      );
       setStatus(`${activeSerializationTestDef.title} failed: ${message}`);
       appendLog(`${activeSerializationTestDef.title} failed: ${message}`);
     }
@@ -1770,7 +1842,10 @@ export function useSponsorCoinLabMethods({
                 panel: step.panel,
                 source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
                 method: step.method,
-                trace: step.panel === 'spcoin_write' || step.panel === 'erc20_write' ? getRecentWriteTrace() : [],
+                trace:
+                  step.panel === 'spcoin_write' || step.panel === 'erc20_write'
+                    ? getRecentWriteTrace()
+                    : getErrorDebugTrace(error),
               },
             },
           },

@@ -25,8 +25,7 @@ contract Security is SpCoinDataTypes {
     //     _;
     // }
 
-    modifier onlyOwnerOrRootAdmin (string memory callingMethod, address _account) {
-        // console.log(callingMethod, " => onlyOwnerOrRootAdmin (", _account, msg.sender);
+    modifier onlyOwnerOrRootAdmin (address _account) {
         require (msg.sender == contractOwner || msg.sender == _account, "OWNER_OR_ROOT");
         _;
     }
@@ -36,10 +35,10 @@ contract Security is SpCoinDataTypes {
         _;
     }
 
-    modifier nonRedundantAgent (address _recipientKey, address _agentKey) {
-        require (msg.sender != _recipientKey && 
+    modifier nonRedundantAgent (address _sponsorKey, address _recipientKey, address _agentKey) {
+        require (_sponsorKey != _recipientKey &&
                  _recipientKey != _agentKey && 
-                 msg.sender != _agentKey , "AGENT_DUP");
+                 _sponsorKey != _agentKey , "AGENT_DUP");
         _;
     }
 
