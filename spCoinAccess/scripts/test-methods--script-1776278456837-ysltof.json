@@ -1,0 +1,66 @@
+{
+  "id": "script-1776278456837-ysltof",
+  "name": "Test Methods",
+  "Date Created": "Apr-15-2026, 14:40:56",
+  "network": "Hardhat EC2",
+  "steps": [
+    {
+      "step": 1,
+      "name": "balanceOf",
+      "panel": "ecr20_read",
+      "method": "balanceOf",
+      "params": [
+        {
+          "key": "Owner Address",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "addAgentSponsoredTransaction",
+      "panel": "spcoin_write",
+      "method": "addAgentSponsoredTransaction",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "20"
+        },
+        {
+          "key": "Agent Key",
+          "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
+        },
+        {
+          "key": "Agent Rate Key",
+          "value": "2"
+        },
+        {
+          "key": "Transaction Quantity",
+          "value": "1"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getAccountList",
+      "panel": "spcoin_rread",
+      "method": "getAccountList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

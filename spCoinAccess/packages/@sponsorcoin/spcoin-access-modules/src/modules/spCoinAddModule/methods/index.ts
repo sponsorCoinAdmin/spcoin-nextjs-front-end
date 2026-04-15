@@ -1,9 +1,13 @@
 // @ts-nocheck
 export { addRecipient } from "./addRecipient";
 export { addSponsorRecipientBranch } from "./addSponsorRecipientBranch";
+export { addRecipientSponsoredTransaction } from "./addRecipientSponsoredTransaction";
+export { addRecipientRateTransaction } from "./addRecipientRateTransaction";
 export { addRecipientRateBranchAmount } from "./addRecipientRateBranchAmount";
 export { addRecipients } from "./addRecipients";
 export { addRecipientAgentBranch } from "./addRecipientAgentBranch";
+export { addAgentSponsoredTransaction } from "./addAgentSponsoredTransaction";
+export { addAgentRateTransaction } from "./addAgentRateTransaction";
 export { addAgentRateBranchAmount } from "./addAgentRateBranchAmount";
 export { addAgents } from "./addAgents";
 export { addAccountRecord } from "./addAccountRecord";

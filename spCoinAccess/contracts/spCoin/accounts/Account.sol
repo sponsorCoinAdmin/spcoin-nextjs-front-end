@@ -63,8 +63,12 @@ contract Account is StructSerialization {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice retreives array list masterAccountList.
-    function getAccountList() public view returns (address[] memory) {
+    function getMasterAccountList() public view returns (address[] memory) {
         return masterAccountList;
+    }
+
+    function getMasterAccountElement(uint256 index) public view returns (address) {
+        return masterAccountList[index];
     }
 
     function getAccountCore(address _accountKey)

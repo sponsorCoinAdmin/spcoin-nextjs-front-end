@@ -292,10 +292,10 @@ type RunArgs = {
 };
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  if (typeof access.read.getAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
-    throw new Error(`Sponsor-list utilities require getAccountList() and getAccountRecipientList() read methods.`);
+  if (typeof access.read.getMasterAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
+    throw new Error(`Sponsor-list utilities require getMasterAccountList() and getAccountRecipientList() read methods.`);
   }
-  const accountList = Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  const accountList = Array.from((await access.read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
   const recipientLists = await Promise.all(
     accountList.map(async (account) => {
       const recipients = Array.from((await access.read.getAccountRecipientList(account)) as unknown[]).map((value) =>
@@ -308,10 +308,10 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
 }
 
 async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  if (typeof access.read.getAccountList !== 'function') {
-    throw new Error('getAccountList() read method is required.');
+  if (typeof access.read.getMasterAccountList !== 'function') {
+    throw new Error('getMasterAccountList() read method is required.');
   }
-  return Array.from((await access.read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  return Array.from((await access.read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
 }
 
 async function loadRecipientAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>, sponsorKey: string) {

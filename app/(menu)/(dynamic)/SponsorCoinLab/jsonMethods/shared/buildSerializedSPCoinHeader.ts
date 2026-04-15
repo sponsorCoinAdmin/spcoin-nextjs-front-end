@@ -16,6 +16,20 @@ async function readAnnualInflation(contract: any) {
   return 10;
 }
 
+async function readInitialTotalSupply(contract: any) {
+  if (typeof contract?.getInitialTotalSupply === 'function') {
+    try {
+      return await contract.getInitialTotalSupply();
+    } catch {
+      // Fall back for older deployments that still expose initialTotalSupply().
+    }
+  }
+  if (typeof contract?.initialTotalSupply === 'function') {
+    return contract.initialTotalSupply();
+  }
+  throw new Error('SpCoin contract does not expose getInitialTotalSupply().');
+}
+
 export async function buildSerializedSPCoinHeader(contract: any) {
   const versionFn = typeof contract?.getVersion === 'function' ? contract.getVersion.bind(contract) : null;
   if (!versionFn) {
@@ -39,7 +53,7 @@ export async function buildSerializedSPCoinHeader(contract: any) {
     contract.creationTime(),
     contract.decimals(),
     contract.totalSupply(),
-    contract.initialTotalSupply(),
+    readInitialTotalSupply(contract),
     readAnnualInflation(contract),
     contract.totalBalanceOf(),
     contract.totalStakingRewards(),

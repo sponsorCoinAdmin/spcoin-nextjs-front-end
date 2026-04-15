@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const addAgentRateBranchAmount = async (
+export const addAgentSponsoredTransaction = async (
     context,
     _sponsorKey,
     _recipientKey,
@@ -9,7 +9,7 @@ export const addAgentRateBranchAmount = async (
     _transactionQty
 ) => {
     context.spCoinLogger.logFunctionHeader(
-        "addAgentRateBranchAmount = async(" +
+        "addAgentSponsoredTransaction = async(" +
             _sponsorKey + ", " +
             _recipientKey + ", " +
             _recipientRateKey + ", " +

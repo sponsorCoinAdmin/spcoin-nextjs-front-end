@@ -808,10 +808,10 @@ const defaultHardhatRpcUrl =
   }, [formattedOutputDisplay]);
   const erc20ReadOptions = ERC20_READ_OPTIONS;
   const erc20WriteOptions = ERC20_WRITE_OPTIONS;
-  const spCoinWorldReadOptions = getSpCoinWorldReadOptions(false);
-  const spCoinSenderReadOptions = getSpCoinSenderReadOptions(false);
-  const spCoinAdminReadOptions = getSpCoinAdminReadOptions(false);
-  const spCoinCompoundReadOptions = getSpCoinOffChainReadOptions(false);
+  const spCoinWorldReadOptions = getSpCoinWorldReadOptions(true);
+  const spCoinSenderReadOptions = getSpCoinSenderReadOptions(true);
+  const spCoinAdminReadOptions = getSpCoinAdminReadOptions(true);
+  const spCoinCompoundReadOptions = getSpCoinOffChainReadOptions(true);
   const spCoinAllReadOptions = [
     ...spCoinWorldReadOptions,
     ...spCoinSenderReadOptions,

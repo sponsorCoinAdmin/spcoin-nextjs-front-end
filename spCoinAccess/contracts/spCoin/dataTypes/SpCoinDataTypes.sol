@@ -11,7 +11,7 @@ contract SpCoinDataTypes {
     uint256 internal decimalMultiplier    = 10**defaultDecimals;
     uint256 internal defaultTotalSupply   = defaultTSPCoinSupply * decimalMultiplier;
 
-    address[] public masterAccountList;
+    address[] internal masterAccountList;
     address burnAddress = 0x0000000000000000000000000000000000000000;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -22,7 +22,7 @@ contract SpCoinDataTypes {
     string  internal defaultVersion     = "_V001";
     string  internal version;
     uint256 public decimals;
-    uint256 public initialTotalSupply = defaultTSPCoinSupply * (10 ** defaultDecimals);
+    uint256 internal initialTotalSupply = defaultTSPCoinSupply * (10 ** defaultDecimals);
     uint256 public totalSupply;
     uint    internal annualInflation = 10;
     uint256 internal lowerRecipientRate = 20;
@@ -38,6 +38,10 @@ contract SpCoinDataTypes {
     // Events - fire events on state changes etc
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    function getInitialTotalSupply() public view returns (uint256) {
+        return initialTotalSupply;
+    }
 
     // Recipiented Coins
     uint256 stakedSPCoins;

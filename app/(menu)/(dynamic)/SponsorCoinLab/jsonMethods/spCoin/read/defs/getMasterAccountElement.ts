@@ -1,8 +1,8 @@
-// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/masterAccountList.ts
+// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/getMasterAccountElement.ts
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'masterAccountList',
+  title: 'getMasterAccountElement',
   params: [{ label: 'Index', placeholder: 'uint256', type: 'uint' }],
 };
 

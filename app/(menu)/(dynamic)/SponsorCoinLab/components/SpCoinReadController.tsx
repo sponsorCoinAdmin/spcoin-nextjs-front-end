@@ -143,17 +143,20 @@ export default function SpCoinReadController(props: Props) {
     setSelectedSpCoinReadMethod(visibleReadMethods[0]);
   }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, visibleReadMethods]);
   React.useEffect(() => {
-    activeSpCoinReadDef.params.forEach((param, idx) => {
-      if (param.type !== 'contract_address') return;
-      const nextValue = String(activeContractAddress || '').trim();
-      if (String(spReadParams[idx] || '').trim() === nextValue) return;
-      setSpReadParams((prev) => {
-        const next = [...prev];
+    const nextValue = String(activeContractAddress || '').trim();
+    if (!nextValue) return;
+    setSpReadParams((prev) => {
+      let changed = false;
+      const next = [...prev];
+      activeSpCoinReadDef.params.forEach((param, idx) => {
+        if (param.type !== 'contract_address') return;
+        if (String(next[idx] || '').trim()) return;
         next[idx] = nextValue;
-        return next;
+        changed = true;
       });
+      return changed ? next : prev;
     });
-  }, [activeContractAddress, activeSpCoinReadDef.params, setSpReadParams, spReadParams]);
+  }, [activeContractAddress, activeSpCoinReadDef.params, setSpReadParams]);
   const hasVisibleReadMethods = visibleReadMethods.length > 0;
   const displayedReadMethod =
     hasVisibleReadMethods && visibleReadMethods.includes(selectedSpCoinReadMethod)
@@ -299,9 +302,16 @@ export default function SpCoinReadController(props: Props) {
               <input
                 data-field-id={`spcoin-read-param-${idx}`}
                 className={`${inputStyle}${invalidClass(`spcoin-read-param-${idx}`)}`}
-                value={activeContractAddress || spReadParams[idx] || ''}
-                readOnly
-                disabled
+                value={spReadParams[idx] || ''}
+                onChange={(e) => {
+                  markEditorAsUserEdited();
+                  setSpReadParams((prev) => {
+                    clearInvalidField(`spcoin-read-param-${idx}`);
+                    const next = [...prev];
+                    next[idx] = normalizeAccountValue(e.target.value);
+                    return next;
+                  });
+                }}
                 placeholder={param.placeholder}
               />
             </label>

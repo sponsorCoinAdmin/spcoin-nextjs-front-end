@@ -257,8 +257,8 @@ export async function POST(request: NextRequest) {
         let result: unknown;
         if (step.panel === 'spcoin_rread') {
           switch (step.method) {
-            case 'getAccountList':
-              result = await access.read.getAccountList();
+            case 'getMasterAccountList':
+              result = await access.read.getMasterAccountList();
               break;
             case 'getAccountRecord':
               result = await access.read.getAccountRecord(findParam('Account Key'));
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
               if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
                 result = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
               } else {
-                const list = await access.read.getAccountList();
+                const list = await access.read.getMasterAccountList();
                 result = Array.isArray(list) ? list.length : 0;
               }
               break;
@@ -296,6 +296,8 @@ export async function POST(request: NextRequest) {
               );
               break;
             }
+            case 'addRecipientRateTransaction':
+            case 'addRecipientSponsoredTransaction':
             case 'addRecipientRateBranchAmount':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
@@ -304,9 +306,14 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await access.add.addRecipientRateBranchAmount(sponsorKey, recipientKey, recipientRateKey, transactionQty);
+              const tx = await (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
+                sponsorKey,
+                recipientKey,
+                recipientRateKey,
+                transactionQty,
+              );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipientRateBranchAmount', tx, receipt);
+              result = formatReceiptResult('addRecipientRateTransaction', tx, receipt);
               break;
             }
             case 'addRecipientAgentBranch':
@@ -320,6 +327,8 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('addRecipientAgentBranch', tx, receipt);
               break;
             }
+            case 'addAgentSponsoredTransaction':
+            case 'addAgentRateTransaction':
             case 'addAgentRateBranchAmount':
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':
@@ -330,7 +339,9 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await access.add.addAgentRateBranchAmount(
+              const tx = await (access.add.addAgentSponsoredTransaction ??
+                access.add.addAgentRateTransaction ??
+                access.add.addAgentRateBranchAmount)(
                 sponsorKey,
                 recipientKey,
                 recipientRateKey,
@@ -339,7 +350,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAgentRateBranchAmount', tx, receipt);
+              result = formatReceiptResult('addAgentSponsoredTransaction', tx, receipt);
               break;
             }
             case 'addBackDatedSponsorship':

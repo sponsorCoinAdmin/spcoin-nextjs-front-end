@@ -26,14 +26,13 @@
     "types": ["node"],
 
     // Path aliases
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/lib/*": ["lib/*"],
-      "@/resources/*": ["resources/*"],
-      "@ctx/*": ["lib/context/*"],
-      "@ctx/select/*": ["lib/context/AssetSelectPanels/*"],
-      "@lib/context/providers/*": ["lib/context/providers/*"]
+      "@/lib/*": ["./lib/*"],
+      "@/resources/*": ["./resources/*"],
+      "@ctx/*": ["./lib/context/*"],
+      "@ctx/select/*": ["./lib/context/AssetSelectPanels/*"],
+      "@lib/context/providers/*": ["./lib/context/providers/*"]
     },
 
     // Next.js TS plugin

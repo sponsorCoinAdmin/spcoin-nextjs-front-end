@@ -4,6 +4,7 @@ import type { MethodDef } from '../../../shared/types';
 export const methodDef: MethodDef = {
     title: 'getRateTransactionList',
     params: [{ label: 'Reward Rate Row List', placeholder: 'string[] rewardRateRowList (comma/newline separated)', type: 'string_array' }],
+    executable: false,
   }
 
 export default methodDef;

@@ -1,6 +1,6 @@
 const GREEN_HIGHLIGHT_METHODS = new Set([
   'creationTime',
-  'getAccountList',
+  'getMasterAccountList',
   'getSpCoinMetaData',
   'name',
   'symbol',
@@ -11,7 +11,7 @@ const GREEN_HIGHLIGHT_METHODS = new Set([
   'getInflationRate',
   'setUpperAgentRate',
   'getLowerAgentRate',
-  'initialTotalSupply',
+  'getInitialTotalSupply',
   'getVersion',
   'setVersion',
   'setLowerRecipientRate',

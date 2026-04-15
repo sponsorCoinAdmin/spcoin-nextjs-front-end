@@ -50,7 +50,7 @@
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
@@ -59,7 +59,7 @@
       "panel": "spcoin_rread",
       "method": "getAccountList",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {
@@ -77,7 +77,7 @@
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
       "params": [],
-      "breakpoint": false,
+      "breakpoint": true,
       "hasMissingRequiredParams": false
     },
     {

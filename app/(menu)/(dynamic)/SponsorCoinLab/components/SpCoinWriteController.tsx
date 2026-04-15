@@ -207,8 +207,8 @@ export default function SpCoinWriteController(props: Props) {
   const recipientRateSliderMethods = new Set([
     'addRecipientAgentBranch',
     'addAgents',
-    'addRecipientRateBranchAmount',
-    'addAgentRateBranchAmount',
+    'addRecipientRateTransaction',
+    'addAgentSponsoredTransaction',
     'deleteRecipientRateSponsorship',
     'deleteRecipientRateAmount',
     'deleteRecipientRateBranch',
@@ -220,7 +220,7 @@ export default function SpCoinWriteController(props: Props) {
     'addBackDatedRecipientAgentRateAmount',
   ]);
   const agentRateSliderMethods = new Set([
-    'addAgentRateBranchAmount',
+    'addAgentSponsoredTransaction',
     'unSponsorAgent',
     'deleteAgentRateBranch',
     'addBackDatedRecipientRateAmount',

@@ -2,7 +2,7 @@
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
-import getAccountList from './getAccountList';
+import getMasterAccountList from './getMasterAccountList';
 import getAccountListSize from './getAccountListSize';
 import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getSpCoinMetaData from './getSpCoinMetaData';
@@ -36,10 +36,10 @@ import getAgentRateTransactionAt from './getAgentRateTransactionAt';
 import getAgentRateTransactionList from './getAgentRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
-import initialTotalSupply from './initialTotalSupply';
+import getInitialTotalSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
-import masterAccountList from './masterAccountList';
+import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
@@ -53,7 +53,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
   calculateStakingRewards,
   creationTime,
-  getAccountList,
+  getMasterAccountList,
   getAccountListSize,
   getSPCoinHeaderRecord,
   getSpCoinMetaData,
@@ -87,10 +87,10 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentRateTransactionList,
   getAgentRecord,
   getAgentRecordList,
-  initialTotalSupply,
+  getInitialTotalSupply,
   isDeployed,
   isAccountInserted,
-  masterAccountList,
+  getMasterAccountElement,
   getStakingRewards,
   getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,

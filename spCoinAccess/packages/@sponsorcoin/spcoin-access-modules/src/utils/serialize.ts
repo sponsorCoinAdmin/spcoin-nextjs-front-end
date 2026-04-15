@@ -55,6 +55,20 @@ export async function readAnnualInflation(contract) {
     }
     return 10;
 }
+export async function readInitialTotalSupply(contract) {
+    if (typeof (contract === null || contract === void 0 ? void 0 : contract.getInitialTotalSupply) === "function") {
+        try {
+            return await contract.getInitialTotalSupply();
+        }
+        catch (_a) {
+            // Fall back for older deployments that still expose initialTotalSupply().
+        }
+    }
+    if (typeof (contract === null || contract === void 0 ? void 0 : contract.initialTotalSupply) === "function") {
+        return contract.initialTotalSupply();
+    }
+    throw new Error("SpCoin contract does not expose getInitialTotalSupply().");
+}
 export function normalizeAddress(value) {
     return String(value || '').trim().toLowerCase();
 }
@@ -278,7 +292,7 @@ export class SpCoinSerialize {
                 this.spCoinContractDeployed.creationTime(),
                 this.spCoinContractDeployed.decimals(),
                 this.spCoinContractDeployed.totalSupply(),
-                this.spCoinContractDeployed.initialTotalSupply(),
+                readInitialTotalSupply(this.spCoinContractDeployed),
                 readAnnualInflation(this.spCoinContractDeployed),
                 this.spCoinContractDeployed.totalBalanceOf(),
                 this.spCoinContractDeployed.totalStakingRewards(),

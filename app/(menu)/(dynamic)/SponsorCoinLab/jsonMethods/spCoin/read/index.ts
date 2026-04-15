@@ -12,7 +12,7 @@ export type SpCoinReadMethod =
   | 'creationTime'
   | 'getSpCoinMetaData'
   | 'getSPCoinHeaderRecord'
-  | 'getAccountList'
+  | 'getMasterAccountList'
   | 'getAccountListSize'
   | 'getAccountRecipientList'
   | 'getAccountRecipientListSize'
@@ -44,10 +44,10 @@ export type SpCoinReadMethod =
   | 'getAgentRateTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
-  | 'initialTotalSupply'
+  | 'getInitialTotalSupply'
   | 'isDeployed'
   | 'isAccountInserted'
-  | 'masterAccountList'
+  | 'getMasterAccountElement'
   | 'getStakingRewards'
   | 'getTimeMultiplier'
   | 'getAccountTimeInSecondeSinceUpdate'
@@ -61,6 +61,7 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
+  initialTotalSupply: 'getInitialTotalSupply',
   getSerializedSPCoinHeader: 'getSPCoinHeaderRecord',
   getSerializedAccountRecord: 'getAccountRecord',
   getSerializedAccountRewards: 'getAccountStakingRewards',

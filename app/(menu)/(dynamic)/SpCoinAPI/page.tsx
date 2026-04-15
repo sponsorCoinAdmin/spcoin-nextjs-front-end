@@ -791,7 +791,7 @@ export default function WhitePaper() {
 
                       <li>
                         <details>
-                          <summary className="cursor-pointer leading-[1.05] font-bold">2. getAccountList()</summary>
+                          <summary className="cursor-pointer leading-[1.05] font-bold">2. getMasterAccountList()</summary>
                           <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
                             <li className="leading-[1.05]"><b>Description:</b> Get a list of all account keys.</li>
                             <li className="leading-[1.05]"><b>Returns:</b> Promise containing the list of account keys.</li>

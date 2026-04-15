@@ -1,5 +1,5 @@
 // @ts-nocheck
-export { getAccountList } from './getAccountList';
+export { getMasterAccountList } from './getMasterAccountList';
 export { getAccountListSize } from './getAccountListSize';
 export { getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
@@ -13,12 +13,14 @@ export { getRateTransactionList } from './getRateTransactionList';
 export { getSPCoinHeaderRecord } from './getSPCoinHeaderRecord';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
 export { getAgentRateList } from './getAgentRateList';
+export { getAgentRateRange } from './getAgentRateRange';
 export { getAgentRateRecord } from './getAgentRateRecord';
 export { getAgentRateRecordList } from './getAgentRateRecordList';
 export { getAgentRecord } from './getAgentRecord';
 export { getAgentRecordList } from './getAgentRecordList';
 export { getAgentRateTransactionList } from './getAgentRateTransactionList';
 export { getRecipientRateAgentList } from './getRecipientRateAgentList';
+export { getRecipientRateRange } from './getRecipientRateRange';
 export { getRecipientRateRecord } from './getRecipientRateRecord';
 export { getRecipientRateRecordList } from './getRecipientRateRecordList';
 export { getRecipientRecord } from './getRecipientRecord';

@@ -483,7 +483,7 @@ export function useSponsorCoinLabMethods({
         if (value === 'false' || value === '0') return false;
         throw new Error(`${def.label} must be true/false or 1/0.`);
       }
-      if (def.type === 'address') {
+      if (def.type === 'address' || def.type === 'contract_address') {
         const normalized = normalizeAddressValue(value);
         if (!/^0x[0-9a-f]{40}$/.test(normalized)) {
           throw new Error(`${def.label} must be a valid address.`);
@@ -529,9 +529,9 @@ export function useSponsorCoinLabMethods({
           steps: [
             {
               step: 1,
-              name: 'getAccountList',
+              name: 'getMasterAccountList',
               panel: 'spcoin_rread',
-              method: 'getAccountList',
+              method: 'getMasterAccountList',
               mode,
               params: [],
             },
@@ -696,10 +696,10 @@ export function useSponsorCoinLabMethods({
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
         normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
-        normalizedPayloadMethod === 'getAccountList'
+        normalizedPayloadMethod === 'getMasterAccountList'
       ) {
         const rawResult = nextPayload.result;
-        const entryListKey = normalizedPayloadMethod === 'getAccountList' ? 'accounts' : 'sponsors';
+        const entryListKey = normalizedPayloadMethod === 'getMasterAccountList' ? 'accounts' : 'sponsors';
         const normalizedEntries = Array.isArray(rawResult)
           ? rawResult
           : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
@@ -819,7 +819,7 @@ export function useSponsorCoinLabMethods({
         const shouldUseServerBackedRead =
           useLocalSpCoinAccessPackage &&
           mode === 'hardhat' &&
-          ['getAccountRecord', 'getAccountList', 'getAccountListSize'].includes(selectedMethod);
+          ['getAccountRecord', 'getMasterAccountList', 'getAccountListSize'].includes(selectedMethod);
         const result = shouldUseServerBackedRead
           ? await runServerBackedSpCoinStep(
               'spcoin_rread',
@@ -840,7 +840,7 @@ export function useSponsorCoinLabMethods({
               appendLog,
               setStatus,
             });
-        if (selectedMethod === 'getAccountList') {
+        if (selectedMethod === 'getMasterAccountList') {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
             const [metadataResult, accountResults] = await Promise.allSettled([
@@ -1109,14 +1109,14 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const runAccountListRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getAccountList');
+    const call = buildMethodCallEntry('getMasterAccountList');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
       setStatus('Reading account list...');
       const { list } = await loadTreeAccountOptions();
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
-      appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
+      appendLog(`spCoinReadMethods/getMasterAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
@@ -1139,7 +1139,7 @@ export function useSponsorCoinLabMethods({
     const call = {
       method: 'getTreeAccounts',
       parameters: [
-        { label: 'via', value: 'getAccountList' },
+        { label: 'via', value: 'getMasterAccountList' },
         { label: 'expand', value: 'getAccountRecord(each)' },
       ],
     };
@@ -1157,11 +1157,11 @@ export function useSponsorCoinLabMethods({
       );
       let accountKeys: string[];
       try {
-        accountKeys = (await (access.read as SpCoinReadAccess).getAccountList()) as string[];
+        accountKeys = (await (access.read as SpCoinReadAccess).getMasterAccountList()) as string[];
       } catch (error) {
         throw await enrichDirectReadError({
           error,
-          method: 'getAccountList',
+          method: 'getMasterAccountList',
           target,
           runner,
         });
@@ -1260,7 +1260,7 @@ export function useSponsorCoinLabMethods({
   );
 
   const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
-    const listCall = buildMethodCallEntry('getAccountList');
+    const listCall = buildMethodCallEntry('getMasterAccountList');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -1372,8 +1372,8 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getAccountList'].includes(methodName)) continue;
-        const listKey = methodName === 'getAccountList' ? 'accounts' : 'sponsors';
+        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getMasterAccountList'].includes(methodName)) continue;
+        const listKey = methodName === 'getMasterAccountList' ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
           : null;

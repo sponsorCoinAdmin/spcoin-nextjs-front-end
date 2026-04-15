@@ -68,6 +68,10 @@ contract Security is SpCoinDataTypes {
         return upperRecipientRate;
     }
 
+    function getRecipientRateRange() public view returns (uint256, uint256) {
+        return (lowerRecipientRate, upperRecipientRate);
+    }
+
     function setRecipientRateRange(uint256 newLowerRecipientRate, uint256 newUpperRecipientRate) public onlyRootAdmin {
         require(newLowerRecipientRate <= newUpperRecipientRate, "REC_LOW_GT_UP");
         lowerRecipientRate = newLowerRecipientRate;
@@ -80,6 +84,10 @@ contract Security is SpCoinDataTypes {
 
     function getUpperAgentRate() public view returns (uint256) {
         return upperAgentRate;
+    }
+
+    function getAgentRateRange() public view returns (uint256, uint256) {
+        return (lowerAgentRate, upperAgentRate);
     }
 
     function setAgentRateRange(uint256 newLowerAgentRate, uint256 newUpperAgentRate) public onlyRootAdmin {

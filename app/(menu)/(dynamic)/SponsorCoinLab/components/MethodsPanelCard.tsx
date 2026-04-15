@@ -32,8 +32,8 @@ const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addSponsorRecipientBranch: 'add.ts',
   addRecipientAgentBranch: 'add.ts',
-  addRecipientRateBranchAmount: 'add.ts',
-  addAgentRateBranchAmount: 'add.ts',
+  addRecipientRateTransaction: 'add.ts',
+  addAgentSponsoredTransaction: 'add.ts',
   addBackDatedRecipientRateAmount: 'add.ts',
   addBackDatedRecipientAgentRateAmount: 'add.ts',
   backDateRecipientTransactionDate: 'add.ts',

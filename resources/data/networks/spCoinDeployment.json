@@ -62,6 +62,14 @@
             "decimals": 18
           }
         },
+        "6": {
+          "0X3349C16D5F7DDA2CD4AB48FB30E62BCA1FBE42F6": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "spCoin V6",
+            "symbol": "SPCOIN_V6",
+            "decimals": 18
+          }
+        },
         "0.0.0": {
           "0X659521C9DA035B6A9FE21CED9E324859711AD1D5": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",

@@ -4,6 +4,7 @@ import type { MethodDef } from '../../../shared/types';
 export const methodDef: MethodDef = {
     title: 'getAccountRewardTransactionRecord',
     params: [{ label: 'Reward Record String', placeholder: 'string _rewardRecordStr', type: 'string' }],
+    executable: false,
   }
 
 export default methodDef;

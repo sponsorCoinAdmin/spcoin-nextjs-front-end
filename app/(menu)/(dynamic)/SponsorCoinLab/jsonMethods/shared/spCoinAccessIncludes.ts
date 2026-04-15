@@ -28,6 +28,18 @@ export type SpCoinAccessSource = 'local' | 'node_modules';
 export type SpCoinAddAccess = {
   addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
   addSponsorRecipientBranch?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
+  addRecipientRateTransaction?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
+  addRecipientSponsoredTransaction?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addRecipientRateBranchAmount: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -35,6 +47,22 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
   addRecipientAgentBranch: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+  addAgentSponsoredTransaction?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
+  addAgentRateTransaction?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _accountAgentKey: string,
+    _agentRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addAgentRateBranchAmount: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -143,7 +171,7 @@ export type SpCoinOffChainAccess = {
 
 export type SpCoinReadAccess = {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
-  getAccountList: () => Promise<string[]>;
+  getMasterAccountList: () => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
@@ -181,6 +209,20 @@ export type SpCoinContractAccess = Contract & {
     decimalAmount: string,
     transactionTimestamp: number,
   ) => Promise<ContractTransactionResponse>;
+  addRecipientRateTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
+  addRecipientSponsoredTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
   addRecipientRateBranchAmount?: (
     sponsorKey: string,
     recipientKey: string,
@@ -191,6 +233,24 @@ export type SpCoinContractAccess = Contract & {
   addSponsorRecipientBranch?: (
     sponsorKey: string,
     recipientKey: string,
+  ) => Promise<ContractTransactionResponse>;
+  addAgentSponsoredTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
+  ) => Promise<ContractTransactionResponse>;
+  addAgentRateTransaction?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
+    agentRateKey: string | number | bigint,
+    wholeAmount: string,
+    decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
   addAgentRateBranchAmount?: (
     sponsorKey: string,
@@ -477,8 +537,8 @@ function createSpCoinOffChainAccess(
   };
   const logDeleteStructure = async (stageLabel: string, sponsorKey: string) => {
     const snapshot: Record<string, unknown> = { sponsorKey };
-    if (typeof read.getAccountList === 'function') {
-      snapshot.accountList = await read.getAccountList();
+    if (typeof read.getMasterAccountList === 'function') {
+      snapshot.accountList = await read.getMasterAccountList();
     }
     if (typeof typedContract.isAccountInserted === 'function') {
       snapshot.sponsorInserted = await typedContract.isAccountInserted(sponsorKey);
@@ -547,9 +607,9 @@ function createSpCoinOffChainAccess(
       };
       let accountList: string[];
       try {
-        accountList = await read.getAccountList();
+        accountList = await read.getMasterAccountList();
       } catch (error) {
-        throw await buildReadDecodeError(error, 'getAccountList');
+        throw await buildReadDecodeError(error, 'getMasterAccountList');
       }
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
       const targetAccountKey = String((await del.signer?.getAddress?.()) || '').trim();
@@ -666,7 +726,7 @@ function createSpCoinOffChainAccess(
         throw new Error('deleteAccountTree requires an Account Key.');
       }
       if (!accountKeySet.has(targetAccountKey)) {
-        throw new Error(`deleteAccountTree target account not found in masterAccountList: ${targetAccountKey}`);
+        throw new Error(`deleteAccountTree target account not found in getMasterAccountList(): ${targetAccountKey}`);
       }
       if (!processedAccountKeys.has(targetAccountKey)) {
         await walkAccountTree(targetAccountKey);

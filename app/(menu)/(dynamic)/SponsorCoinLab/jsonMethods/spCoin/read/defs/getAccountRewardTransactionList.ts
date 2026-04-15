@@ -10,6 +10,7 @@ export const methodDef: MethodDef = {
         type: 'string_array',
       },
     ],
+    executable: false,
   }
 
 export default methodDef;

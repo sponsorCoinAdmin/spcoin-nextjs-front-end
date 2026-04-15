@@ -1,9 +1,9 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
 import addSponsorRecipientBranch from './addRecipient';
-import addRecipientRateBranchAmount from './addRecipientRateBranchAmount';
+import addRecipientRateTransaction from './addRecipientRateTransaction';
 import addRecipients from './addRecipients';
 import addRecipientAgentBranch from './addRecipientAgentBranch';
-import addAgentRateBranchAmount from './addAgentRateBranchAmount';
+import addAgentSponsoredTransaction from './addAgentSponsoredTransaction';
 import addAgents from './addAgents';
 import deleteSponsor from './deleteSponsor';
 import deleteSponsorTree from './deleteSponsorTree';
@@ -41,10 +41,10 @@ import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addSponsorRecipientBranch,
-  addRecipientRateBranchAmount,
+  addRecipientRateTransaction,
   addRecipients,
   addRecipientAgentBranch,
-  addAgentRateBranchAmount,
+  addAgentSponsoredTransaction,
   addAgents,
   deleteSponsor,
   deleteSponsorTree,

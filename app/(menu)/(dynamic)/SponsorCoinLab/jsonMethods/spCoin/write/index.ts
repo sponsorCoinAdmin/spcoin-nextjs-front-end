@@ -17,10 +17,10 @@ import {
 
 export type SpCoinWriteMethod =
   | 'addSponsorRecipientBranch'
-  | 'addRecipientRateBranchAmount'
+  | 'addRecipientRateTransaction'
   | 'addRecipients'
   | 'addRecipientAgentBranch'
-  | 'addAgentRateBranchAmount'
+  | 'addAgentSponsoredTransaction'
   | 'addAgents'
   | 'deleteSponsor'
   | 'deleteSponsorTree'
@@ -74,9 +74,9 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addSponsorRecipientBranch',
-  'addRecipientRateBranchAmount',
+  'addRecipientRateTransaction',
   'addRecipientAgentBranch',
-  'addAgentRateBranchAmount',
+  'addAgentSponsoredTransaction',
   'updateAccountStakingRewards',
   'deleteSponsorTree',
   'deleteSponsorRecipientBranch',
@@ -159,13 +159,17 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
   addRecipient: 'addSponsorRecipientBranch',
   addAccountRecipient: 'addSponsorRecipientBranch',
-  addRecipientRateAmount: 'addRecipientRateBranchAmount',
-  addSponsorship: 'addRecipientRateBranchAmount',
-  addAccountRecipientRate: 'addRecipientRateBranchAmount',
+  addRecipientRateBranchAmount: 'addRecipientRateTransaction',
+  addRecipientSponsoredTransaction: 'addRecipientRateTransaction',
+  addRecipientRateAmount: 'addRecipientRateTransaction',
+  addSponsorship: 'addRecipientRateTransaction',
+  addAccountRecipientRate: 'addRecipientRateTransaction',
   addAgent: 'addRecipientAgentBranch',
-  addAgentRateAmount: 'addAgentRateBranchAmount',
-  addAgentSponsorship: 'addAgentRateBranchAmount',
-  addAccountAgentRate: 'addAgentRateBranchAmount',
+  addAgentRateBranchAmount: 'addAgentSponsoredTransaction',
+  addAgentRateTransaction: 'addAgentSponsoredTransaction',
+  addAgentRateAmount: 'addAgentSponsoredTransaction',
+  addAgentSponsorship: 'addAgentSponsoredTransaction',
+  addAccountAgentRate: 'addAgentSponsoredTransaction',
   addBackDatedSponsorship: 'addBackDatedRecipientRateAmount',
   addBackDatedRecipientSponsorship: 'addBackDatedRecipientRateAmount',
   addBackDatedRecipientRateAmount: 'addBackDatedRecipientRateAmount',
@@ -237,10 +241,10 @@ function normalizeAddress(value: unknown): string {
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
   const read = access.read as SpCoinReadAccess & Record<string, unknown>;
-  if (typeof read.getAccountList !== 'function' || typeof read.getAccountRecipientList !== 'function') {
-    throw new Error('updateMasterStakingRewards requires getAccountList() and getAccountRecipientList() read methods.');
+  if (typeof read.getMasterAccountList !== 'function' || typeof read.getAccountRecipientList !== 'function') {
+    throw new Error('updateMasterStakingRewards requires getMasterAccountList() and getAccountRecipientList() read methods.');
   }
-  const accountList = Array.from((await read.getAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  const accountList = Array.from((await read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
   const recipientLists = await Promise.all(
     accountList.map(async (account) => {
       const recipients = Array.from((await read.getAccountRecipientList(account)) as unknown[]).map((value) =>
@@ -544,10 +548,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'addRecipientRateBranchAmount': {
+    case 'addRecipientRateTransaction': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access) =>
-        access.add.addRecipientRateBranchAmount(
+        (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -567,10 +571,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addAgentRateBranchAmount': {
+    case 'addAgentSponsoredTransaction': {
       const qty = String(methodArgs[5]);
       await submitWriteWithFetchRetry(activeDef.title, (access) =>
-        access.add.addAgentRateBranchAmount(
+        (access.add.addAgentSponsoredTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
