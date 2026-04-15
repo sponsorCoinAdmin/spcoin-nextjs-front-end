@@ -48,7 +48,6 @@ export type SpCoinReadMethod =
   | 'isAccountInserted'
   | 'getMasterAccountElement'
   | 'getStakingRewards'
-  | 'getTimeMultiplier'
   | 'getAccountTimeInSecondeSinceUpdate'
   | 'totalBalanceOf'
   | 'totalStakedSPCoins'

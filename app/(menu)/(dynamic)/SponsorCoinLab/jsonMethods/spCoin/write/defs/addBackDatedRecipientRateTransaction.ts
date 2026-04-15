@@ -10,6 +10,6 @@ export const methodDef: MethodDef = {
     { label: 'Transaction Quantity', placeholder: 'number _transactionQty (e.g., 12.34)', type: 'string' },
     { label: 'Transaction Back Date', placeholder: 'Select date', type: 'date' },
   ],
-}
+};
 
 export default methodDef;

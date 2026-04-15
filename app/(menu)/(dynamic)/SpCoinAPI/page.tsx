@@ -574,22 +574,7 @@ export default function WhitePaper() {
 
                         <li>
                           <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">4. getTimeMultiplier(_timeRateMultiplier)</summary>
-                            <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                              <li className="leading-[1.05]"><b>Description:</b> Gets the time multiplier based on the provided time rate multiplier.</li>
-                              <li className="leading-[1.05]">
-                                <b>Parameters:</b>
-                                <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                                  <li className="leading-[1.05]">_timeRateMultiplier: The time rate multiplier.</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </details>
-                        </li>
-
-                        <li>
-                          <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">5. getAccountTimeInSecondeSinceUpdate(_tokenLastUpdate)</summary>
+                            <summary className="cursor-pointer leading-[1.05] font-bold">4. getAccountTimeInSecondeSinceUpdate(_tokenLastUpdate)</summary>
                             <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
                               <li className="leading-[1.05]"><b>Description:</b> Retrieves the time elapsed in seconds since the last update for a specified account.</li>
                               <li className="leading-[1.05]">

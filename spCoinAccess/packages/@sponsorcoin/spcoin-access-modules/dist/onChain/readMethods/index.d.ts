@@ -15,7 +15,6 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     isAccountInserted: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getMasterAccountElement: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getTimeMultiplier: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountTimeInSecondeSinceUpdate: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalBalanceOf: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalStakedSPCoins: import("../../readMethodRuntime").ReadMethodHandler<unknown>;

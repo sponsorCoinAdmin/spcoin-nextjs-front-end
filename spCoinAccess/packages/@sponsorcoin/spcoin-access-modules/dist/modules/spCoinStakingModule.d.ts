@@ -5,7 +5,6 @@ export declare class SpCoinStakingModule {
     signer?: Signer;
     testStakingRewards: (lastUpdateTime: string | number | bigint, testUpdateTime: string | number | bigint, interestRate: string | number | bigint, quantity: string | number | bigint) => Promise<bigint>;
     getStakingRewards: (lastUpdateTime: string | number | bigint, interestRate: string | number | bigint, quantity: string | number | bigint) => Promise<bigint>;
-    getTimeMultiplier: (_timeRateMultiplier: string | number | bigint) => Promise<bigint>;
     getAccountTimeInSecondeSinceUpdate: (_tokenLastUpdate: string | number | bigint) => Promise<bigint>;
     depositSponsorStakingRewards: (_sponsorAccount: string, _recipientAccount: string, _recipientRate: string | number, _amount: string | number | bigint) => Promise<ContractTransactionResponse>;
     depositRecipientStakingRewards: (_sponsorAccount: string, _recipientAccount: string, _recipientRate: string | number, _amount: string | number | bigint) => Promise<ContractTransactionResponse>;
