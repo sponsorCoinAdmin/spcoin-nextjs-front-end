@@ -246,6 +246,10 @@ export default function OutputResultsCard({
     logoURL: defaultMissingImage,
   });
   const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
+  const [pendingAccountExpansion, setPendingAccountExpansion] = useState<{
+    address: string;
+    path: string;
+  } | null>(null);
   const [isSaveScriptModalOpen, setIsSaveScriptModalOpen] = useState(false);
   const [saveScriptNameInput, setSaveScriptNameInput] = useState('');
   const [isSaveButtonHovered, setIsSaveButtonHovered] = useState(false);
@@ -347,6 +351,23 @@ export default function OutputResultsCard({
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
   const activeInspectorRootLabel = controls.outputPanelMode === 'tree' ? 'Tree' : controls.formattedPanelView === 'script' ? 'Script' : 'Step';
+  const handleOpenAccountFromInspector = React.useCallback(
+    async (value: string, path: string) => {
+      const address = String(value || '').trim();
+      if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+        await treeActions.openAccountFromAddress(value, path);
+        return;
+      }
+
+      setPendingAccountExpansion({ address, path });
+      try {
+        await treeActions.openAccountFromAddress(address, path);
+      } finally {
+        setPendingAccountExpansion(null);
+      }
+    },
+    [treeActions],
+  );
   const highlightedInspectorPathPrefixes = useMemo(() => {
     if (controls.outputPanelMode !== 'formatted' || controls.formattedPanelView !== 'script') return [];
     if (content.selectedScriptStepNumber === null || content.selectedScriptStepNumber <= 0) return [];
@@ -1119,7 +1140,7 @@ export default function OutputResultsCard({
                         ? activeInspectorRootLabel
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
-                    onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
+                    onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
                     onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
                     scriptStepDragState={{
                       enabled: isScriptInspectorReorderEnabled,
@@ -1160,7 +1181,7 @@ export default function OutputResultsCard({
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
-                    onLeafValueClick={(value, path) => void treeActions.openAccountFromAddress(value, path)}
+                    onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
                     onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
                     scriptStepDragState={{
                       enabled: false,
@@ -1207,6 +1228,21 @@ export default function OutputResultsCard({
           )}
         </div>
       </div>
+      <BaseModal
+        isOpen={Boolean(pendingAccountExpansion)}
+        title="Loading Account Record"
+        maxWidthClassName="max-w-lg"
+        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+        titleClassName="text-xl font-semibold text-[#8FA8FF]"
+      >
+        <div className="space-y-3 text-sm text-slate-200">
+          <div>Reading account details from SponsorCoin.</div>
+          <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1020] p-3 font-mono text-xs text-green-400">
+            {pendingAccountExpansion?.address || ''}
+          </div>
+          <div className="text-xs text-slate-400">Waiting for getAccountRecord to reply...</div>
+        </div>
+      </BaseModal>
       <BaseModal
         isOpen={Boolean(selectedFormattedAccount)}
         title="Account Metadata"

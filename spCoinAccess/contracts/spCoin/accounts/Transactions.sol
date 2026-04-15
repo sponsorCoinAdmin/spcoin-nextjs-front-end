@@ -49,46 +49,6 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addRecipientRateBranchAmount(
-        address _sponsorKey,
-        address _recipientKey,
-        uint _recipientRateKey,
-        string memory _strWholeAmount,
-        string memory _strDecimalAmount
-    )
-        public
-        onlyOwnerOrRootAdmin(_sponsorKey)
-        returns (uint256 transactionIndex)
-    {
-        return addRecipientRateTransaction(
-            _sponsorKey,
-            _recipientKey,
-            _recipientRateKey,
-            _strWholeAmount,
-            _strDecimalAmount
-        );
-    }
-
-    function addRecipientSponsoredTransaction(
-        address _sponsorKey,
-        address _recipientKey,
-        uint _recipientRateKey,
-        string memory _strWholeAmount,
-        string memory _strDecimalAmount
-    )
-        public
-        onlyOwnerOrRootAdmin(_sponsorKey)
-        returns (uint256 transactionIndex)
-    {
-        return addRecipientRateTransaction(
-            _sponsorKey,
-            _recipientKey,
-            _recipientRateKey,
-            _strWholeAmount,
-            _strDecimalAmount
-        );
-    }
-
     function addAgentSponsoredTransaction(
         address _sponsorKey,
         address _recipientKey,
@@ -111,54 +71,6 @@ contract Transactions is RewardsManager {
             _strWholeAmount,
             _strDecimalAmount,
             block.timestamp
-        );
-    }
-
-    function addAgentRateTransaction(
-        address _sponsorKey,
-        address _recipientKey,
-        uint _recipientRateKey,
-        address _agentKey,
-        uint _agentRateKey,
-        string memory _strWholeAmount,
-        string memory _strDecimalAmount
-    )
-        public
-        onlyOwnerOrRootAdmin(_sponsorKey)
-        returns (uint256 transactionIndex)
-    {
-        return addAgentSponsoredTransaction(
-            _sponsorKey,
-            _recipientKey,
-            _recipientRateKey,
-            _agentKey,
-            _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount
-        );
-    }
-
-    function addAgentRateBranchAmount(
-        address _sponsorKey,
-        address _recipientKey,
-        uint _recipientRateKey,
-        address _agentKey,
-        uint _agentRateKey,
-        string memory _strWholeAmount,
-        string memory _strDecimalAmount
-    )
-        public
-        onlyOwnerOrRootAdmin(_sponsorKey)
-        returns (uint256 transactionIndex)
-    {
-        return addAgentSponsoredTransaction(
-            _sponsorKey,
-            _recipientKey,
-            _recipientRateKey,
-            _agentKey,
-            _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount
         );
     }
 

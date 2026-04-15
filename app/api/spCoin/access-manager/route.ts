@@ -30,6 +30,11 @@ const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
 const EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES = 24576;
 
+function resolveSpCoinDeploymentAssetChainId(chainId: unknown): number {
+  const parsed = Number(chainId);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 31337;
+}
+
 type AccessManagerRequest = {
   action?:
     | 'upload'
@@ -949,7 +954,7 @@ async function handleDeploy(
   });
   return {
     ...deployed,
-    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(deployed.deploymentChainId)),
+    deploymentAssetChainId: resolveSpCoinDeploymentAssetChainId(deployed.deploymentChainId),
   };
 }
 
@@ -975,7 +980,7 @@ async function handleUpdateServer(params: {
 }) {
   const chainIdRaw = Number(params.deploymentChainId);
   const requestedChainId = Number.isFinite(chainIdRaw) && chainIdRaw > 0 ? chainIdRaw : 31337;
-  const chainId = Number(resolveSpCoinDiskChainId(requestedChainId));
+  const chainId = resolveSpCoinDeploymentAssetChainId(requestedChainId);
   const address = String(params.deploymentPublicKey || '').trim();
   if (!/^0[xX][a-fA-F0-9]{40}$/.test(address)) {
     throw new Error('Invalid deployment public key. Deploy token first.');
@@ -1102,7 +1107,7 @@ async function handlePrepareDeployArtifact(
     deploymentConstructorArgs: getSpCoinConstructorArgs(compiled.abi, deploymentVersion),
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
-    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
+    deploymentAssetChainId: resolveSpCoinDeploymentAssetChainId(network.chainId),
     deploymentSourcePath: compiled.deploymentSourcePath,
   };
 }
@@ -1120,7 +1125,7 @@ async function handleGenerateAbi(deploymentChainId?: number | string, deployment
     deploymentAbi: compiled.abi,
     deploymentChainId: network.chainId,
     deploymentNetworkName: network.networkName,
-    deploymentAssetChainId: Number(resolveSpCoinDiskChainId(network.chainId)),
+    deploymentAssetChainId: resolveSpCoinDeploymentAssetChainId(network.chainId),
     abiPath: SPCOIN_ABI_PATH,
     deploymentSourcePath: compiled.deploymentSourcePath,
   };
@@ -1448,7 +1453,7 @@ async function removeAddressFromRelevantTokenLists(requestedChainId: number, tar
     });
 
   networkNames.add(mapNetworkNameByChainId(requestedChainId));
-  const assetChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
+  const assetChainId = resolveSpCoinDeploymentAssetChainId(requestedChainId);
   if (Number.isFinite(assetChainId) && assetChainId > 0) {
     networkNames.add(mapNetworkNameByChainId(assetChainId));
   }
@@ -1505,7 +1510,7 @@ async function handleRemoveDeployment(params: {
       : {};
   await fs.writeFile(SPCOIN_DEPLOYMENT_MAP_PATH, JSON.stringify(nextMap, null, 2), 'utf8');
 
-  const assetChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
+  const assetChainId = resolveSpCoinDeploymentAssetChainId(requestedChainId);
   const networkName = mapNetworkNameByChainId(requestedChainId);
   const tokenListResult = await removeAddressFromRelevantTokenLists(requestedChainId, targetAddressUpper);
   const contractDir = path.join(
@@ -1553,7 +1558,7 @@ async function validateTokenStatus(
     Number.isFinite(requestedChainIdParsed) && requestedChainIdParsed > 0
       ? requestedChainIdParsed
       : 31337;
-  const resolvedChainId = Number(resolveSpCoinDiskChainId(requestedChainId));
+  const resolvedChainId = resolveSpCoinDeploymentAssetChainId(requestedChainId);
   const address = String(tokenPublicKey || '').trim();
   const addressFolder = toDiskAddressFolderName(address);
   const contractDir = path.join(

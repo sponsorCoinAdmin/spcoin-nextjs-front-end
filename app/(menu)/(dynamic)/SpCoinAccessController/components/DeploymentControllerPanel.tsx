@@ -108,6 +108,7 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
   const isDeploymentInProgress = deployDisableReason === 'DEPLOYMENT_IN_PROGRESS';
   const isGenerateAbiDisabled = isGeneratingAbi || isDeploymentInProgress;
   const isHardhatSelected = deploymentWalletSelection.source === 'ec2-base';
+  const [copyStatusLabel, setCopyStatusLabel] = React.useState('Copy Status');
   const signerPublicKeyPlaceholder =
     deploymentSignerSource === 'metamask'
       ? 'Connected MetaMask wallet address'
@@ -118,6 +119,19 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
     deploymentSignerSource === 'metamask'
       ? 'Signer address used for deployment'
       : 'Signer Key, Used for Deployment';
+  const handleCopyStatus = React.useCallback(async () => {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+        throw new Error('Clipboard is not available.');
+      }
+      await navigator.clipboard.writeText(deploymentStatus);
+      setCopyStatusLabel('Copied');
+      window.setTimeout(() => setCopyStatusLabel('Copy Status'), 1400);
+    } catch {
+      setCopyStatusLabel('Copy Failed');
+      window.setTimeout(() => setCopyStatusLabel('Copy Status'), 1800);
+    }
+  }, [deploymentStatus]);
   const deployedSignerKeyValue =
     deployedContractAddress
       ? deploymentSignerSource === 'metamask'
@@ -472,7 +486,16 @@ export default function DeploymentControllerPanel(props: DeploymentControllerPan
             </div>
 
             <div>
-              <span className="mb-2 block text-sm font-semibold text-[#8FA8FF]">Status</span>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="block text-sm font-semibold text-[#8FA8FF]">Status</span>
+                <button
+                  type="button"
+                  onClick={handleCopyStatus}
+                  className="rounded-xl bg-[#EBCA6A] px-4 py-[0.45rem] text-sm font-semibold text-black transition-colors hover:bg-green-500"
+                >
+                  {copyStatusLabel}
+                </button>
+              </div>
               <div className="rounded-xl border border-dashed border-[#31416F] bg-[#0B1020] p-4 text-sm text-slate-300">
                 <DeploymentStatusBlock
                   deploymentStatus={deploymentStatus}

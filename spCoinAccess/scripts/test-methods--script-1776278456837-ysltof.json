@@ -20,6 +20,15 @@
     },
     {
       "step": 2,
+      "name": "getMasterAccountList",
+      "panel": "spcoin_rread",
+      "method": "getMasterAccountList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
       "name": "addAgentSponsoredTransaction",
       "panel": "spcoin_write",
       "method": "addAgentSponsoredTransaction",
@@ -54,10 +63,10 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 3,
-      "name": "getAccountList",
+      "step": 4,
+      "name": "getMasterAccountList",
       "panel": "spcoin_rread",
-      "method": "getAccountList",
+      "method": "getMasterAccountList",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false

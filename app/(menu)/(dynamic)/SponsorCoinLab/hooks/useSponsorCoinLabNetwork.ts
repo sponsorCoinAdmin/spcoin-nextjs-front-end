@@ -564,9 +564,8 @@ export function useSponsorCoinLabNetwork({
 
       if (cancelled) return;
 
-      const validHardhatEntries = checks.filter((item) => item.hasCode).map((item) => item.entry);
       const invalidHardhatEntries = checks.filter((item) => !item.hasCode).map((item) => item.entry);
-      const nextChoices = [...validHardhatEntries, ...passthroughEntries];
+      const nextChoices = [...hardhatEntries, ...passthroughEntries];
 
       setSponsorCoinVersionChoices(nextChoices);
 
@@ -578,30 +577,18 @@ export function useSponsorCoinLabNetwork({
         hardhatDeploymentValidationSummaryRef.current = invalidSummary;
         if (invalidHardhatEntries.length > 0) {
           appendLog(
-            `Hardhat deployment map validation removed ${invalidHardhatEntries.length} stale entr${
+            `Hardhat deployment map validation found ${invalidHardhatEntries.length} registered entr${
               invalidHardhatEntries.length === 1 ? 'y' : 'ies'
-            } with no bytecode on chain ${HARDHAT_CHAIN_ID_DEC}.`,
+            } with no bytecode on chain ${HARDHAT_CHAIN_ID_DEC}. Keeping them selectable.`,
           );
         }
-      }
-
-      const activeContractKey = normalizeAddress(contractAddress);
-      const activeContractStillValid = nextChoices.some((entry) => normalizeAddress(entry.address) === activeContractKey);
-      if (activeContractKey && !activeContractStillValid) {
-        const fallbackAddress = nextChoices[0]?.address || '';
-        appendLog(
-          fallbackAddress
-            ? `Active Hardhat contract ${contractAddress} has no bytecode after reset; switching to ${fallbackAddress}.`
-            : `Active Hardhat contract ${contractAddress} has no bytecode after reset; clearing the selected contract address.`,
-        );
-        setContractAddress(fallbackAddress);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [appendLog, contractAddress, hardhatProvider, mode, rawSponsorCoinVersionChoices, setContractAddress]);
+  }, [appendLog, hardhatProvider, mode, rawSponsorCoinVersionChoices]);
   const {
     selectedSponsorCoinVersion,
     setSelectedSponsorCoinVersion,
