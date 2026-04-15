@@ -1,0 +1,52 @@
+{
+  "id": "script-1776205834277-30aaqk",
+  "name": "Accounts test",
+  "Date Created": "Apr-14-2026, 18:30:34",
+  "network": "Hardhat EC2",
+  "steps": [
+    {
+      "step": 1,
+      "name": "getAccountListSize",
+      "panel": "spcoin_read",
+      "method": "getAccountListSize",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 2,
+      "name": "calculateStakingRewards",
+      "panel": "spcoin_read",
+      "method": "calculateStakingRewards",
+      "params": [
+        {
+          "key": "Staked SP Coins",
+          "value": "1000000"
+        },
+        {
+          "key": "Update Timestamp",
+          "value": "2019-04-15"
+        },
+        {
+          "key": "Transaction Timestamp",
+          "value": "2025-04-15"
+        },
+        {
+          "key": "Rate",
+          "value": "10"
+        }
+      ],
+      "breakpoint": true,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getAccountListSize",
+      "panel": "spcoin_read",
+      "method": "getAccountListSize",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

@@ -54,7 +54,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       {
         step: 4,
         name: 'getAgentRateRecord',
-        panel: 'spcoin_rread',
+        panel: 'spcoin_read',
         method: 'getAgentRateRecord',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
@@ -91,7 +91,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       {
         step: 2,
         name: 'getRecipientRecord',
-        panel: 'spcoin_rread',
+        panel: 'spcoin_read',
         method: 'getRecipientRecord',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
@@ -202,7 +202,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       {
         step: 1,
         name: 'getSPCoinHeaderRecord',
-        panel: 'spcoin_rread',
+        panel: 'spcoin_read',
         method: 'getSPCoinHeaderRecord',
         params: [{ key: 'Get Body', value: 'false' }],
         breakpoint: false,
@@ -210,9 +210,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 2,
-        name: 'getAccountList',
-        panel: 'spcoin_rread',
-        method: 'getAccountList',
+        name: 'getMasterAccountList',
+        panel: 'spcoin_read',
+        method: 'getMasterAccountList',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,
@@ -248,9 +248,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 3,
-        name: 'getAccountList',
-        panel: 'spcoin_rread',
-        method: 'getAccountList',
+        name: 'getMasterAccountList',
+        panel: 'spcoin_read',
+        method: 'getMasterAccountList',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,

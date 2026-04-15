@@ -2,6 +2,11 @@
     "files.associations": {
         "*.agent.md": "plaintext"
     },
+    "workbench.editorAssociations": {
+        "*.xlsx": "gc-excelviewer-excel-editor",
+        "resources/docs/DropDownAccessMethods.xlsx": "gc-excelviewer",
+        "*.copilotmd": "vscode.markdown.preview.editor"
+    },
     "cSpell.words": [
         "AAVI",
         "autoforward",

@@ -11,7 +11,7 @@ contract SpCoinDataTypes {
     uint256 internal decimalMultiplier    = 10**defaultDecimals;
     uint256 internal defaultTotalSupply   = defaultTSPCoinSupply * decimalMultiplier;
 
-    address[] public masterAccountList;
+    address[] internal masterAccountList;
     address burnAddress = 0x0000000000000000000000000000000000000000;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;

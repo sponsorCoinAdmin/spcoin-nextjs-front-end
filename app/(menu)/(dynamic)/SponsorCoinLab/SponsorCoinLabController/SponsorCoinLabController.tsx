@@ -576,6 +576,7 @@ const defaultHardhatRpcUrl =
     setTreeOutputDisplay,
     setOutputPanelMode,
     showValidationPopup,
+    clearValidationPopup,
     requireContractAddress,
     ensureReadRunner,
     executeWriteConnected,
@@ -954,7 +955,7 @@ const defaultHardhatRpcUrl =
         return activeReadLabels.title;
       case 'erc20_write':
         return activeWriteLabels.title;
-      case 'spcoin_rread':
+      case 'spcoin_read':
         return activeSpCoinReadDef.title;
       case 'spcoin_write':
         return activeSpCoinWriteDef.title;

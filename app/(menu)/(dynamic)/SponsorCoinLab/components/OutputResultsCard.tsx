@@ -98,7 +98,7 @@ function buildScriptStepsFromOutputCalls(calls: DisplayedOutputCall[]): LabScrip
       : ERC20_WRITE_OPTIONS.includes(call.method as never)
         ? 'erc20_write'
         : Object.prototype.hasOwnProperty.call(SPCOIN_READ_METHOD_DEFS, call.method)
-          ? 'spcoin_rread'
+          ? 'spcoin_read'
           : Object.prototype.hasOwnProperty.call(SERIALIZATION_TEST_METHOD_DEFS, call.method)
             ? 'serialization_tests'
             : Object.prototype.hasOwnProperty.call(SPCOIN_WRITE_METHOD_DEFS, call.method)
@@ -772,7 +772,7 @@ export default function OutputResultsCard({
               {[
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
-                ['raw_status', 'Raw Status'],
+                ['raw_status', 'Status'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input
@@ -810,7 +810,7 @@ export default function OutputResultsCard({
                       : controls.outputPanelMode === 'tree'
                         ? 'Tree'
                         : controls.outputPanelMode === 'raw_status'
-                          ? 'Raw Status'
+                          ? 'Status'
                           : controls.formattedPanelView === 'script'
                             ? 'Current Script'
                             : 'Formatted Output Display',

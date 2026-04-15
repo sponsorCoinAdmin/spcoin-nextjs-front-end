@@ -7,7 +7,6 @@ export declare class SpCoinStakingModule {
     getStakingRewards: (lastUpdateTime: string | number | bigint, interestRate: string | number | bigint, quantity: string | number | bigint) => Promise<bigint>;
     getTimeMultiplier: (_timeRateMultiplier: string | number | bigint) => Promise<bigint>;
     getAccountTimeInSecondeSinceUpdate: (_tokenLastUpdate: string | number | bigint) => Promise<bigint>;
-    getMillenniumTimeIntervalDivisor: (_timeInSeconds: string | number | bigint) => Promise<string>;
     depositSponsorStakingRewards: (_sponsorAccount: string, _recipientAccount: string, _recipientRate: string | number, _amount: string | number | bigint) => Promise<ContractTransactionResponse>;
     depositRecipientStakingRewards: (_sponsorAccount: string, _recipientAccount: string, _recipientRate: string | number, _amount: string | number | bigint) => Promise<ContractTransactionResponse>;
     depositAgentStakingRewards: (_sponsorAccount: string, _recipientAccount: string, _recipientRate: string | number, _agentAccount: string, _agentRate: string | number, _amount: string | number | bigint) => Promise<ContractTransactionResponse>;

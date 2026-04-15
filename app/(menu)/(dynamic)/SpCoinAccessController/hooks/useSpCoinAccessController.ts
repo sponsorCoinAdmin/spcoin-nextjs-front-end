@@ -185,6 +185,7 @@ type ManagerResponse = {
   localPathExists?: boolean;
   contractDirExists?: boolean;
   tokenStatus?: 'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED';
+  hasBytecode?: boolean;
 };
 
 const sanitizeNpmOtpInput = (value: string) => value.replace(/\D/g, '').slice(0, 6);
@@ -336,6 +337,7 @@ export function useSpCoinAccessController() {
   const [liveSpCoinDeploymentMap, setLiveSpCoinDeploymentMap] = useState<SpCoinDeploymentFile>(
     () => (spCoinDeploymentMapRaw as SpCoinDeploymentFile) ?? {},
   );
+  const [hasLoadedDeploymentMap, setHasLoadedDeploymentMap] = useState(false);
   const [deploymentContractDirExists, setDeploymentContractDirExists] = useState(false);
   const [deploymentTokenStatus, setDeploymentTokenStatus] = useState<
     'NOT_FOUND' | 'DEPLOYED' | 'SERVER_INSTALLED'
@@ -434,6 +436,7 @@ export function useSpCoinAccessController() {
       };
       if (!response.ok || !payload.ok || !payload.deploymentMap) return;
       setLiveSpCoinDeploymentMap(payload.deploymentMap);
+      setHasLoadedDeploymentMap(true);
     } catch {
       // Keep the bundled map if the live fetch is unavailable.
     }
@@ -541,27 +544,21 @@ export function useSpCoinAccessController() {
     deploymentVersion,
     liveSpCoinDeploymentMap,
   ]);
-  const isDeployedState =
-    deployUiState === 'deployed' ||
-    existsInSpCoinDeploymentMap ||
-    deploymentTokenStatus === 'DEPLOYED' ||
-    deploymentTokenStatus === 'SERVER_INSTALLED';
+  const isDeployedState = deployUiState === 'deployed' || existsInSpCoinDeploymentMap;
   const deployDisableReason = useMemo(() => {
     if (deploymentSignerSource === 'metamask' && !selectedDeploymentSignerPublicKey) {
       return 'METAMASK_NOT_CONNECTED';
     }
     if (deployUiState === 'in_progress') return 'DEPLOYMENT_IN_PROGRESS';
     if (deployUiState === 'deployed') return 'DEPLOYED';
-    if (existsInSpCoinDeploymentMap) return 'DEPLOYED_IN_MAP';
-    if (deploymentTokenStatus === 'DEPLOYED' || deploymentTokenStatus === 'SERVER_INSTALLED') {
-      return 'DEPLOYED';
+    if (existsInSpCoinDeploymentMap) {
+      return 'DEPLOYED_IN_MAP';
     }
     return 'ENABLED';
   }, [
     deployUiState,
     existsInSpCoinDeploymentMap,
     deploymentSignerSource,
-    deploymentTokenStatus,
     selectedDeploymentSignerPublicKey,
   ]);
   const deployButtonLabel =
@@ -1261,6 +1258,20 @@ export function useSpCoinAccessController() {
     const fallbackHardhatKey = String(selectedHardhatDeploymentAccount?.privateKey || '').trim();
     const resolvedPrivateKey = isHardhatChain ? nextPrivateKey || fallbackHardhatKey : nextPrivateKey;
 
+    const hasStaleDeployedAddress =
+      hasLoadedDeploymentMap &&
+      !activeEntry &&
+      deployUiState !== 'in_progress' &&
+      /^0[xX][a-fA-F0-9]{40}$/.test(String(deployedContractAddress || '').trim());
+
+    if (hasStaleDeployedAddress) {
+      setDeployedContractAddress('');
+      setDeploymentTokenStatus('NOT_FOUND');
+      setDeploymentContractDirExists(false);
+      setDeployUiState('idle');
+      setDeploymentStatusPinned(false);
+    }
+
     if (!deploymentNameWasEdited && deploymentName !== nextName) setDeploymentName(nextName);
     if (!deploymentSymbolWasEdited && deploymentSymbol !== nextSymbol) setDeploymentSymbol(nextSymbol);
     if (deploymentDecimals !== nextDecimals) setDeploymentDecimals(nextDecimals);
@@ -1275,11 +1286,13 @@ export function useSpCoinAccessController() {
     deploymentMapEntries,
     deploymentName,
     deploymentNameWasEdited,
+    deployUiState,
     deployedContractAddress,
     deploymentSignerSource,
     deploymentSymbol,
     deploymentSymbolWasEdited,
     deploymentVersion,
+    hasLoadedDeploymentMap,
     hardhatDeploymentAccountNumber,
     hardhatDeploymentAccountOptions,
     localSourceDeploymentPath,
@@ -1467,6 +1480,17 @@ export function useSpCoinAccessController() {
           response.ok && data.ok && data.tokenStatus ? data.tokenStatus : 'NOT_FOUND';
         setDeploymentTokenStatus(status);
         setDeploymentContractDirExists(status === 'SERVER_INSTALLED');
+        if (
+          hasLoadedDeploymentMap &&
+          Number(chainId) === HARDHAT_CHAIN_ID &&
+          status === 'NOT_FOUND' &&
+          !existsInSpCoinDeploymentMap &&
+          deployUiState !== 'in_progress'
+        ) {
+          setDeployedContractAddress('');
+          setDeployUiState('idle');
+          setDeploymentStatusPinned(false);
+        }
       } catch {
         if (!active) return;
         setDeploymentContractDirExists(false);
@@ -1477,7 +1501,13 @@ export function useSpCoinAccessController() {
     return () => {
       active = false;
     };
-  }, [deployedContractAddress, effectiveDeploymentChainIdNumber]);
+  }, [
+    deployedContractAddress,
+    deployUiState,
+    effectiveDeploymentChainIdNumber,
+    existsInSpCoinDeploymentMap,
+    hasLoadedDeploymentMap,
+  ]);
 
   useEffect(() => {
     let active = true;

@@ -604,20 +604,6 @@ export default function WhitePaper() {
 
                         <li>
                           <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">6. getMillenniumTimeIntervalDivisor(_timeInSeconds)</summary>
-                            <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                              <li className="leading-[1.05]"><b>Description:</b> Gets the annualized percentage for the provided time in seconds.</li>
-                              <li className="leading-[1.05]">
-                                <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                                  <li className="leading-[1.05]">_timeInSeconds: The time interval in seconds.</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </details>
-                        </li>
-
-                        <li>
-                          <details className="my-0">
                             <summary className="cursor-pointer leading-[1.05] font-bold">7. depositSponsorStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</summary>
                             <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
                               <li className="leading-[1.05]"><b>Description:</b> Deposits staking rewards for the sponsor account.</li>
@@ -791,10 +777,10 @@ export default function WhitePaper() {
 
                       <li>
                         <details>
-                          <summary className="cursor-pointer leading-[1.05] font-bold">2. getAccountList()</summary>
+                          <summary className="cursor-pointer leading-[1.05] font-bold">2. getMasterAccountList()</summary>
                           <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                            <li className="leading-[1.05]"><b>Description:</b> Get a list of all account keys.</li>
-                            <li className="leading-[1.05]"><b>Returns:</b> Promise containing the list of account keys.</li>
+                            <li className="leading-[1.05]"><b>Description:</b> Get the master list of all account keys.</li>
+                            <li className="leading-[1.05]"><b>Returns:</b> Promise containing the master account key list.</li>
                           </ul>
                         </details>
                       </li>

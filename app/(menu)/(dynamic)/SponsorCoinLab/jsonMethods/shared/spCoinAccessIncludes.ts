@@ -186,6 +186,7 @@ export type SpCoinOffChainAccess = {
 export type SpCoinReadAccess = {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
   getAccountList: () => Promise<string[]>;
+  getMasterAccountList?: () => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
@@ -535,7 +536,9 @@ function createSpCoinOffChainAccess(
   };
   const logDeleteStructure = async (stageLabel: string, sponsorKey: string) => {
     const snapshot: Record<string, unknown> = { sponsorKey };
-    if (typeof read.getAccountList === 'function') {
+    if (typeof read.getMasterAccountList === 'function') {
+      snapshot.accountList = await read.getMasterAccountList();
+    } else if (typeof read.getAccountList === 'function') {
       snapshot.accountList = await read.getAccountList();
     }
     if (typeof typedContract.isAccountInserted === 'function') {
@@ -605,9 +608,11 @@ function createSpCoinOffChainAccess(
       };
       let accountList: string[];
       try {
-        accountList = await read.getAccountList();
+        accountList = typeof read.getMasterAccountList === 'function'
+          ? await read.getMasterAccountList()
+          : await read.getAccountList();
       } catch (error) {
-        throw await buildReadDecodeError(error, 'getAccountList');
+        throw await buildReadDecodeError(error, 'getMasterAccountList');
       }
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
       const targetAccountKey = String((await del.signer?.getAddress?.()) || '').trim();

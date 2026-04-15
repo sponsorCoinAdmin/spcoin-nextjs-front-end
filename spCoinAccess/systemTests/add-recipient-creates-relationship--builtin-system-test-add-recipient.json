@@ -22,7 +22,7 @@
     {
       "step": 2,
       "name": "getRecipientRecord",
-      "panel": "spcoin_rread",
+      "panel": "spcoin_read",
       "method": "getRecipientRecord",
       "params": [
         {

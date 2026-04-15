@@ -16,13 +16,13 @@
           "value": "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
         }
       ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
+      "breakpoint": true,
+      "hasMissingRequiredParams": true
     },
     {
       "step": 2,
       "name": "getRecipientRecord",
-      "panel": "spcoin_rread",
+      "panel": "spcoin_read",
       "method": "getRecipientRecord",
       "params": [
         {

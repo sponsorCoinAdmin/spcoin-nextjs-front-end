@@ -2,8 +2,15 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import BackdateCalendarPopup from './BackdateCalendarPopup';
 import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
+import {
+  CALENDAR_WEEK_DAYS,
+  formatDateInput,
+  formatDateTimeDisplay,
+  useBackdateCalendar,
+} from '../hooks/useBackdateCalendar';
 
 type Props = {
   invalidFieldIds: string[];
@@ -91,6 +98,60 @@ export default function SpCoinReadController(props: Props) {
       : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
         }`;
+  const isCalculateStakingRewards = selectedSpCoinReadMethod === 'calculateStakingRewards';
+  const calculateRewardsDateParamIndexes = React.useMemo(
+    () =>
+      activeSpCoinReadDef.params
+        .map((param, idx) => (param.type === 'date' ? idx : -1))
+        .filter((idx) => idx >= 0),
+    [activeSpCoinReadDef.params],
+  );
+  const updateSpReadParamAtIndex = React.useCallback(
+    (idx: number, value: string) => {
+      setSpReadParams((prev) => {
+        const next = [...prev];
+        next[idx] = value;
+        clearInvalidField(`spcoin-read-param-${idx}`);
+        return next;
+      });
+    },
+    [clearInvalidField, setSpReadParams],
+  );
+  const backdateCalendar = useBackdateCalendar({
+    activeWriteParams: activeSpCoinReadDef.params,
+    spWriteParams: spReadParams,
+    updateSpWriteParamAtIndex: updateSpReadParamAtIndex,
+  });
+  const normalizeRewardsRateValue = (value: string) => {
+    const parsed = Number(String(value || '').replace(/,/g, '').trim());
+    if (!Number.isFinite(parsed)) return 1;
+    return Math.min(Math.max(Math.trunc(parsed), 1), 100);
+  };
+  React.useEffect(() => {
+    if (!isCalculateStakingRewards) return;
+    setSpReadParams((prev) => {
+      const next = [...prev];
+      let changed = false;
+      const today = formatDateInput(new Date());
+      calculateRewardsDateParamIndexes.forEach((idx) => {
+        if (!next[idx]) {
+          next[idx] = today;
+          changed = true;
+        }
+      });
+      const rateIdx = activeSpCoinReadDef.params.findIndex((param) => param.label === 'Rate');
+      if (rateIdx >= 0 && !next[rateIdx]) {
+        next[rateIdx] = '1';
+        changed = true;
+      }
+      const stakedIdx = activeSpCoinReadDef.params.findIndex((param) => param.label === 'Staked SP Coins');
+      if (stakedIdx >= 0 && !next[stakedIdx]) {
+        next[stakedIdx] = '1';
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [activeSpCoinReadDef.params, calculateRewardsDateParamIndexes, isCalculateStakingRewards, setSpReadParams]);
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -305,6 +366,54 @@ export default function SpCoinReadController(props: Props) {
                 placeholder={param.placeholder}
               />
             </label>
+          ) : param.type === 'date' ? (
+            <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <input
+                type="text"
+                readOnly
+                data-field-id={`spcoin-read-param-${idx}`}
+                className={`${inputStyle} cursor-pointer${invalidClass(`spcoin-read-param-${idx}`)}`}
+                value={formatDateTimeDisplay(
+                  spReadParams[idx] || formatDateInput(new Date()),
+                  backdateCalendar.backdateHours,
+                  backdateCalendar.backdateMinutes,
+                  backdateCalendar.backdateSeconds,
+                )}
+                onClick={() => {
+                  markEditorAsUserEdited();
+                  backdateCalendar.openBackdatePickerAt(idx);
+                }}
+                onFocus={() => {
+                  markEditorAsUserEdited();
+                  backdateCalendar.openBackdatePickerAt(idx);
+                }}
+                placeholder={param.placeholder}
+              />
+            </div>
+          ) : isCalculateStakingRewards && param.label === 'Rate' ? (
+            <div className="grid gap-3">
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                <input
+                  type="range"
+                  data-field-id={`spcoin-read-param-${idx}`}
+                  title="Adjust Rate"
+                  className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={normalizeRewardsRateValue(spReadParams[idx] || '1')}
+                  onChange={(e) => {
+                    markEditorAsUserEdited();
+                    updateSpReadParamAtIndex(idx, e.target.value);
+                  }}
+                />
+                <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
+                  {`Rate: ${normalizeRewardsRateValue(spReadParams[idx] || '1')}%`}
+                </div>
+              </div>
+            </div>
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
@@ -314,12 +423,7 @@ export default function SpCoinReadController(props: Props) {
                 value={spReadParams[idx] || ''}
                 onChange={(e) => {
                   markEditorAsUserEdited();
-                  setSpReadParams((prev) => {
-                    clearInvalidField(`spcoin-read-param-${idx}`);
-                    const next = [...prev];
-                    next[idx] = e.target.value;
-                    return next;
-                  });
+                  updateSpReadParamAtIndex(idx, e.target.value);
                 }}
                 placeholder={param.placeholder}
               />
@@ -328,6 +432,45 @@ export default function SpCoinReadController(props: Props) {
           </div>
         )) : null}
       </div>
+      <BackdateCalendarPopup
+        backdatePopupParamIdx={backdateCalendar.backdatePopupParamIdx}
+        setBackdatePopupParamIdx={backdateCalendar.setBackdatePopupParamIdx}
+        buttonStyle="rounded-lg border border-[#334155] bg-[#0E111B] px-4 py-2 text-sm font-semibold text-white hover:border-[#8FA8FF]"
+        inputStyle={inputStyle}
+        shiftCalendarMonth={backdateCalendar.shiftCalendarMonth}
+        calendarMonthOptions={backdateCalendar.calendarMonthOptions}
+        calendarViewMonth={backdateCalendar.calendarViewMonth}
+        setCalendarViewMonth={backdateCalendar.setCalendarViewMonth}
+        calendarYearOptions={backdateCalendar.calendarYearOptions}
+        calendarViewYear={backdateCalendar.calendarViewYear}
+        setCalendarViewYear={backdateCalendar.setCalendarViewYear}
+        isViewingCurrentMonth={backdateCalendar.isViewingCurrentMonth}
+        setHoverCalendarWarning={backdateCalendar.setHoverCalendarWarning}
+        CALENDAR_WEEK_DAYS={CALENDAR_WEEK_DAYS}
+        calendarDayCells={backdateCalendar.calendarDayCells}
+        isViewingFutureMonth={backdateCalendar.isViewingFutureMonth}
+        today={backdateCalendar.today}
+        selectedBackdateDate={backdateCalendar.selectedBackdateDate}
+        hoverCalendarWarning={backdateCalendar.hoverCalendarWarning}
+        spWriteParams={spReadParams}
+        formatDateInput={formatDateInput}
+        formatDateTimeDisplay={formatDateTimeDisplay}
+        updateSpWriteParamAtIndex={updateSpReadParamAtIndex}
+        backdateHours={backdateCalendar.backdateHours}
+        setBackdateHours={backdateCalendar.setBackdateHours}
+        backdateMinutes={backdateCalendar.backdateMinutes}
+        setBackdateMinutes={backdateCalendar.setBackdateMinutes}
+        backdateSeconds={backdateCalendar.backdateSeconds}
+        setBackdateSeconds={backdateCalendar.setBackdateSeconds}
+        setBackdateYears={backdateCalendar.setBackdateYears}
+        setBackdateMonths={backdateCalendar.setBackdateMonths}
+        setBackdateDays={backdateCalendar.setBackdateDays}
+        maxBackdateYears={backdateCalendar.maxBackdateYears}
+        backdateYears={backdateCalendar.backdateYears}
+        backdateMonths={backdateCalendar.backdateMonths}
+        backdateDays={backdateCalendar.backdateDays}
+        applyBackdateBy={backdateCalendar.applyBackdateBy}
+      />
       {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button
           type="button"

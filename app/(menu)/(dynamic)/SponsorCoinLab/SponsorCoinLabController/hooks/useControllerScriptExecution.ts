@@ -240,7 +240,7 @@ export function useControllerScriptExecution({
           : ERC20_WRITE_OPTIONS.includes(call.method as Erc20WriteMethod)
             ? 'erc20_write'
             : Object.prototype.hasOwnProperty.call(spCoinReadMethodDefs, call.method)
-              ? 'spcoin_rread'
+              ? 'spcoin_read'
               : Object.prototype.hasOwnProperty.call(serializationTestMethodDefs, call.method)
                 ? 'serialization_tests'
                 : Object.prototype.hasOwnProperty.call(spCoinWriteMethodDefs, call.method)
@@ -315,7 +315,7 @@ export function useControllerScriptExecution({
       return;
     }
     if (activeMethodPanelTab === 'admin_utils') {
-      if (methodPanelMode === 'spcoin_rread') {
+      if (methodPanelMode === 'spcoin_read') {
         void runSelectedSpCoinReadMethod();
         return;
       }
@@ -334,7 +334,7 @@ export function useControllerScriptExecution({
       setStatus('Refresh is available for read/test/tree commands only.');
       return;
     }
-    if (activeMethodPanelTab === 'spcoin_rread') {
+    if (activeMethodPanelTab === 'spcoin_read') {
       void runSelectedSpCoinReadMethod();
       return;
     }
@@ -369,7 +369,7 @@ export function useControllerScriptExecution({
         'Run a fresh tree dump for the active account',
       ];
     } else if (activeMethodPanelTab === 'admin_utils') {
-      if (methodPanelMode === 'spcoin_rread') {
+      if (methodPanelMode === 'spcoin_read') {
         refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
       } else if (methodPanelMode === 'serialization_tests') {
         refreshItems = [`Run serialization test: ${activeSerializationTestDef.title}`];
@@ -378,7 +378,7 @@ export function useControllerScriptExecution({
       if (methodPanelMode === 'ecr20_read') {
         refreshItems = [`Run ERC20 read method: ${selectedReadMethod}`];
       }
-    } else if (activeMethodPanelTab === 'spcoin_rread') {
+    } else if (activeMethodPanelTab === 'spcoin_read') {
       refreshItems = [`Run SPCOIN read method: ${activeSpCoinReadDef.title}`];
     }
 

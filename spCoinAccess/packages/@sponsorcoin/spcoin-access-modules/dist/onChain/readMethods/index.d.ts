@@ -1,7 +1,7 @@
 export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getInflationRate: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     calculateStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAccountList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getMasterAccountList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getRecipientRateList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getRecipientRateAgentList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getLowerRecipientRate: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
@@ -13,11 +13,10 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getAgentRateRange: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     initialTotalSupply: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     isAccountInserted: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    masterAccountList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getMasterAccountElement: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getTimeMultiplier: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountTimeInSecondeSinceUpdate: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getMillenniumTimeIntervalDivisor: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalBalanceOf: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalStakedSPCoins: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;

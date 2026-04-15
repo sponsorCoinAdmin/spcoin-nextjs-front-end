@@ -169,6 +169,7 @@ type Params = {
       onConfirm?: () => void | Promise<void>;
     },
   ) => void;
+  clearValidationPopup: () => void;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
   executeWriteConnected: (
@@ -235,6 +236,7 @@ export function useSponsorCoinLabMethods({
   setTreeOutputDisplay,
   setOutputPanelMode,
   showValidationPopup,
+  clearValidationPopup,
   requireContractAddress,
   ensureReadRunner,
   executeWriteConnected,
@@ -260,7 +262,7 @@ export function useSponsorCoinLabMethods({
   const treeAccountRecordCacheRef = useRef<Map<string, unknown>>(new Map());
 
   const runServerBackedSpCoinStep = useCallback(
-    async (panel: 'spcoin_rread' | 'spcoin_write', method: string, params: Array<{ key: string; value: string }>, sender?: string) => {
+    async (panel: 'spcoin_read' | 'spcoin_write', method: string, params: Array<{ key: string; value: string }>, sender?: string) => {
       const target = requireContractAddress();
       const response = await fetch('/api/spCoin/run-script', {
         method: 'POST',
@@ -360,18 +362,33 @@ export function useSponsorCoinLabMethods({
     readAddressB,
   ]);
 
-  const spCoinReadMissingEntries = useMemo(
-    () =>
-      activeSpCoinReadDef.params
+  const spCoinReadMissingEntries = useMemo(() => {
+    const missingEntries = activeSpCoinReadDef.params
         .map((param, idx) => ({
           id: `spcoin-read-param-${idx}`,
           label: param.label,
           value: String(spReadParams[idx] || '').trim(),
         }))
         .filter((entry) => !entry.value)
-        .map(({ id, label }) => ({ id, label })),
-    [activeSpCoinReadDef.params, spReadParams],
-  );
+        .map(({ id, label }) => ({ id, label }));
+
+    if (selectedSpCoinReadMethod === 'calculateStakingRewards') {
+      const updateIdx = activeSpCoinReadDef.params.findIndex((param) => param.label === 'Update Timestamp');
+      const transactionIdx = activeSpCoinReadDef.params.findIndex((param) => param.label === 'Transaction Timestamp');
+      const updateTimestamp = updateIdx >= 0 ? parseDateInput(String(spReadParams[updateIdx] || '').trim()) : null;
+      const transactionTimestamp =
+        transactionIdx >= 0 ? parseDateInput(String(spReadParams[transactionIdx] || '').trim()) : null;
+
+      if (updateTimestamp && transactionTimestamp && updateTimestamp.getTime() < transactionTimestamp.getTime()) {
+        missingEntries.push({
+          id: updateIdx >= 0 ? `spcoin-read-param-${updateIdx}` : 'spcoin-read-param-update-timestamp',
+          label: 'ERROR: "Update Timestamp cannot be before Transaction Timestamp"',
+        });
+      }
+    }
+
+    return missingEntries;
+  }, [activeSpCoinReadDef.params, parseDateInput, selectedSpCoinReadMethod, spReadParams]);
 
   const spCoinWriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
@@ -529,9 +546,9 @@ export function useSponsorCoinLabMethods({
           steps: [
             {
               step: 1,
-              name: 'getAccountList',
-              panel: 'spcoin_rread',
-              method: 'getAccountList',
+              name: 'getMasterAccountList',
+              panel: 'spcoin_read',
+              method: 'getMasterAccountList',
               mode,
               params: [],
             },
@@ -696,10 +713,10 @@ export function useSponsorCoinLabMethods({
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
         normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
-        normalizedPayloadMethod === 'getAccountList'
+        normalizedPayloadMethod === 'getMasterAccountList'
       ) {
         const rawResult = nextPayload.result;
-        const entryListKey = normalizedPayloadMethod === 'getAccountList' ? 'accounts' : 'sponsors';
+        const entryListKey = normalizedPayloadMethod === 'getMasterAccountList' ? 'accounts' : 'sponsors';
         const normalizedEntries = Array.isArray(rawResult)
           ? rawResult
           : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
@@ -805,7 +822,7 @@ export function useSponsorCoinLabMethods({
         return { call, result: normalizeWriteResultForDisplay(result) };
       }
 
-      if (panel === 'spcoin_rread') {
+      if (panel === 'spcoin_read') {
         const selectedMethod = method as SpCoinReadMethod;
         const def = spCoinReadMethodDefs[selectedMethod];
         const localParams = def.params.map((param) => findParamValue(param.label));
@@ -819,10 +836,10 @@ export function useSponsorCoinLabMethods({
         const shouldUseServerBackedRead =
           useLocalSpCoinAccessPackage &&
           mode === 'hardhat' &&
-          ['getAccountRecord', 'getAccountList', 'getAccountListSize'].includes(selectedMethod);
+          ['getAccountRecord', 'getMasterAccountList', 'getAccountListSize'].includes(selectedMethod);
         const result = shouldUseServerBackedRead
           ? await runServerBackedSpCoinStep(
-              'spcoin_rread',
+              'spcoin_read',
               selectedMethod,
               def.params.map((param, idx) => ({
                 key: param.label,
@@ -840,7 +857,7 @@ export function useSponsorCoinLabMethods({
               appendLog,
               setStatus,
             });
-        if (selectedMethod === 'getAccountList') {
+        if (selectedMethod === 'getMasterAccountList') {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
             const [metadataResult, accountResults] = await Promise.allSettled([
@@ -1109,14 +1126,14 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const runAccountListRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getAccountList');
+    const call = buildMethodCallEntry('getMasterAccountList');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
       setStatus('Reading account list...');
       const { list } = await loadTreeAccountOptions();
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
-      appendLog(`spCoinReadMethods/getAccountList -> ${JSON.stringify(list)}`);
+      appendLog(`spCoinReadMethods/getMasterAccountList -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
@@ -1139,7 +1156,7 @@ export function useSponsorCoinLabMethods({
     const call = {
       method: 'getTreeAccounts',
       parameters: [
-        { label: 'via', value: 'getAccountList' },
+        { label: 'via', value: 'getMasterAccountList' },
         { label: 'expand', value: 'getAccountRecord(each)' },
       ],
     };
@@ -1157,11 +1174,12 @@ export function useSponsorCoinLabMethods({
       );
       let accountKeys: string[];
       try {
-        accountKeys = (await (access.read as SpCoinReadAccess).getAccountList()) as string[];
+        accountKeys = (await ((access.read as any).getMasterAccountList?.()
+          ?? (access.read as SpCoinReadAccess).getAccountList())) as string[];
       } catch (error) {
         throw await enrichDirectReadError({
           error,
-          method: 'getAccountList',
+          method: 'getMasterAccountList',
           target,
           runner,
         });
@@ -1215,52 +1233,115 @@ export function useSponsorCoinLabMethods({
       let tree = options?.force ? undefined : treeAccountRecordCacheRef.current.get(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
-        const response = await fetch('/api/spCoin/run-script', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contractAddress: target,
-            rpcUrl,
-            spCoinAccessSource: 'local',
-            script: {
-              id: `expand-account-record-${Date.now()}`,
-              name: 'Expand Account Record',
-              network: mode === 'hardhat' ? 'hardhat' : 'metamask',
-              steps: [
-                {
-                  step: 1,
-                  name: 'getAccountRecord',
-                  panel: 'spcoin_rread',
-                  method: 'getAccountRecord',
-                  mode,
-                  params: [{ key: 'Account Key', value: normalizedAccount }],
-                },
-              ],
-            },
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok?: boolean;
-          message?: string;
-          results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
-        };
-        if (!response.ok) {
-          throw new Error(String(payload?.message || `Unable to load account record (${response.status})`));
+        const scriptName = 'Expand Account Record';
+        const methodName = 'getAccountRecord';
+        const networkName = mode === 'hardhat' ? 'hardhat' : 'metamask';
+        const statusPrefix = [
+          'Status: LOADING_ACCOUNT_DATA',
+          `Action: Loading account data for ${normalizedAccount}.`,
+          `Method: ${methodName}`,
+          `Panel: spcoin_read`,
+          `Network: ${networkName}`,
+          `Contract: ${target}`,
+          `Parameters: Account Key=${normalizedAccount}`,
+        ].join('\n');
+        setStatus(statusPrefix);
+        showValidationPopup(
+          [],
+          [],
+          `Loading account data for ${normalizedAccount}.`,
+          {
+            title: 'Loading Account Data',
+            cancelLabel: '',
+          },
+        );
+        try {
+          const response = await fetch('/api/spCoin/run-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contractAddress: target,
+              rpcUrl,
+              spCoinAccessSource: 'local',
+              script: {
+                id: `expand-account-record-${Date.now()}`,
+                name: scriptName,
+                network: networkName,
+                steps: [
+                  {
+                    step: 1,
+                    name: methodName,
+                    panel: 'spcoin_read',
+                    method: methodName,
+                    mode,
+                    params: [{ key: 'Account Key', value: normalizedAccount }],
+                  },
+                ],
+              },
+            }),
+          });
+          const payload = (await response.json()) as {
+            ok?: boolean;
+            message?: string;
+            results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+          };
+          if (!response.ok) {
+            throw new Error(String(payload?.message || `Unable to load account record (${response.status})`));
+          }
+          const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
+          if (!firstResult?.success) {
+            throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account record.'));
+          }
+          tree = firstResult?.payload?.result;
+          treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
+          setStatus(
+            [
+              'Status: ACCOUNT_DATA_LOADED',
+              `Action: Loaded account data for ${normalizedAccount}.`,
+              `Method: ${methodName}`,
+              `Panel: spcoin_read`,
+              `Network: ${networkName}`,
+              `Contract: ${target}`,
+              `Parameters: Account Key=${normalizedAccount}`,
+              'Result: Account record loaded and cached for inline expansion.',
+            ].join('\n'),
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error || 'Unable to load account record.');
+          setStatus(
+            [
+              'Status: ERROR',
+              `Action: Failed loading account data for ${normalizedAccount}.`,
+              `Method: ${methodName}`,
+              `Panel: spcoin_read`,
+              `Network: ${networkName}`,
+              `Contract: ${target}`,
+              `Parameters: Account Key=${normalizedAccount}`,
+              `Error: ${message}`,
+            ].join('\n'),
+          );
+          setOutputPanelMode('raw_status');
+          throw error;
+        } finally {
+          clearValidationPopup();
         }
-        const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
-        if (!firstResult?.success) {
-          throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account record.'));
-        }
-        tree = firstResult?.payload?.result;
-        treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
       }
       return tree;
     },
-    [mode, normalizeAddressValue, requireContractAddress, rpcUrl],
+    [
+      clearValidationPopup,
+      mode,
+      normalizeAddressValue,
+      requireContractAddress,
+      rpcUrl,
+      setOutputPanelMode,
+      setStatus,
+      showValidationPopup,
+    ],
   );
 
   const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
-    const listCall = buildMethodCallEntry('getAccountList');
+    const listCall = buildMethodCallEntry('getMasterAccountList');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -1372,8 +1453,8 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getAccountList'].includes(methodName)) continue;
-        const listKey = methodName === 'getAccountList' ? 'accounts' : 'sponsors';
+        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getMasterAccountList'].includes(methodName)) continue;
+        const listKey = methodName === 'getMasterAccountList' ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
           : null;
@@ -1433,12 +1514,31 @@ export function useSponsorCoinLabMethods({
           } else {
             setFormattedOutputDisplay(nextPayload);
           }
-          setStatus(`Loaded account record for ${normalizedAccount}.`);
-          appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+          setStatus(
+            [
+              'Status: ACCOUNT_DATA_EXPANDED',
+              `Action: Expanded account record inline for ${normalizedAccount}.`,
+              'Source Method: getMasterAccountList',
+              'Expansion Method: getAccountRecord',
+              `Parameters: Account Key=${normalizedAccount}`,
+              'Result: Account row replaced with detailed account record.',
+            ].join('\n'),
+          );
+          appendLog(`Inline account record loaded for ${normalizedAccount} via getAccountRecord.`);
           return 'expanded';
         } catch (error) {
           const message = String(error instanceof Error ? error.message : error || '').trim() || 'Unable to load account record.';
-          setStatus(`Unable to load account record for ${normalizedAccount}.`);
+          setStatus(
+            [
+              'Status: ERROR',
+              `Action: Unable to expand account record for ${normalizedAccount}.`,
+              'Source Method: getMasterAccountList',
+              'Expansion Method: getAccountRecord',
+              `Parameters: Account Key=${normalizedAccount}`,
+              `Error: ${message}`,
+            ].join('\n'),
+          );
+          setOutputPanelMode('raw_status');
           appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
           return 'handled';
         }
@@ -1452,6 +1552,7 @@ export function useSponsorCoinLabMethods({
       loadAccountRecordForAddress,
       normalizeAddressValue,
       setFormattedOutputDisplay,
+      setOutputPanelMode,
       setStatus,
     ],
   );
@@ -1596,7 +1697,7 @@ export function useSponsorCoinLabMethods({
     }
 
     const descriptor: MethodExecutionDescriptor = {
-      panel: 'spcoin_rread',
+      panel: 'spcoin_read',
       method: selectedSpCoinReadMethod,
       params: activeSpCoinReadDef.params.map((param, idx) => ({
         key: param.label,
@@ -1623,7 +1724,7 @@ export function useSponsorCoinLabMethods({
                 ? String((error as Error & { cause?: unknown }).cause ?? '')
                 : undefined,
             debug: {
-              panel: 'spcoin_rread',
+              panel: 'spcoin_read',
               source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
               method: selectedSpCoinReadMethod,
               trace: getErrorDebugTrace(error),

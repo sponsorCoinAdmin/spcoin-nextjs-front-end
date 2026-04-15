@@ -153,10 +153,13 @@ export const addAgentSponsorship = async (
   };
   const logStructureSnapshot = async (stageLabel) => {
     const snapshot = {};
-    if (typeof context.spCoinContractDeployed.getAccountList === "function") {
+    const getMasterAccountList =
+      context.spCoinContractDeployed.getMasterAccountList ??
+      context.spCoinContractDeployed.getAccountList;
+    if (typeof getMasterAccountList === "function") {
       snapshot.accountList = await safeRead(
         "addAgentSponsorship accountList",
-        () => context.spCoinContractDeployed.getAccountList(),
+        () => getMasterAccountList(),
         []
       );
     }

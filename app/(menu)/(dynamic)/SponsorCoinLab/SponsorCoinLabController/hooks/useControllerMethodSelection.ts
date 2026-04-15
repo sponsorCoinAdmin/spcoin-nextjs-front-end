@@ -19,7 +19,7 @@ import { buildDefaultAccountParams } from '../utils';
 type Props = {
   methodPanelMode: MethodPanelMode;
   setMethodPanelMode: React.Dispatch<React.SetStateAction<MethodPanelMode>>;
-  activeMethodPanelTab: 'erc20' | 'spcoin_rread' | 'spcoin_write' | 'serialization_tests' | 'todos' | 'admin_utils';
+  activeMethodPanelTab: 'erc20' | 'spcoin_read' | 'spcoin_write' | 'serialization_tests' | 'todos' | 'admin_utils';
   auxMethodPanelTab: 'admin_utils' | null;
   setAuxMethodPanelTab: React.Dispatch<React.SetStateAction<'admin_utils' | null>>;
   setIsSpCoinTodoMode: React.Dispatch<React.SetStateAction<boolean>>;
@@ -114,7 +114,7 @@ export function useControllerMethodSelection({
       setAuxMethodPanelTab(
         (
           (step.panel === 'serialization_tests' && utilityMethodOptions.includes(step.method as SerializationTestMethod)) ||
-          (step.panel === 'spcoin_rread' && spCoinAdminReadOptions.includes(step.method as SpCoinReadMethod)) ||
+          (step.panel === 'spcoin_read' && spCoinAdminReadOptions.includes(step.method as SpCoinReadMethod)) ||
           (step.panel === 'spcoin_write' && spCoinAdminWriteOptions.includes(step.method as SpCoinWriteMethod))
         )
           ? 'admin_utils'
@@ -166,7 +166,7 @@ export function useControllerMethodSelection({
         runWithDiscardPrompt(() => {
           setAuxMethodPanelTab('admin_utils');
           setIsSpCoinTodoMode(false);
-          if (methodPanelMode === 'spcoin_rread' && spCoinAdminReadOptions.includes(selectedSpCoinReadMethod)) return;
+          if (methodPanelMode === 'spcoin_read' && spCoinAdminReadOptions.includes(selectedSpCoinReadMethod)) return;
           if (methodPanelMode === 'spcoin_write' && spCoinAdminWriteOptions.includes(selectedSpCoinWriteMethod)) return;
           if (methodPanelMode === 'serialization_tests' && utilityMethodOptions.includes(selectedSerializationTestMethod)) return;
           if (adminUtilityReadOptions[0]) {
@@ -175,7 +175,7 @@ export function useControllerMethodSelection({
             return;
           }
           if (spCoinAdminReadOptions[0]) {
-            setMethodPanelMode('spcoin_rread');
+            setMethodPanelMode('spcoin_read');
             setSelectedSpCoinReadMethod(spCoinAdminReadOptions[0]);
             return;
           }
@@ -395,7 +395,7 @@ export function useControllerMethodSelection({
             resetToDropdownSelection();
             setAuxMethodPanelTab('admin_utils');
             setIsSpCoinTodoMode(false);
-            setMethodPanelMode('spcoin_rread');
+            setMethodPanelMode('spcoin_read');
             setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value as SpCoinReadMethod));
             const nextDef = spCoinReadMethodDefs[value as SpCoinReadMethod];
             if (!nextDef) return;
@@ -484,7 +484,7 @@ export function useControllerMethodSelection({
         }
         return;
       }
-      if (activeMethodPanelTab === 'spcoin_rread') {
+      if (activeMethodPanelTab === 'spcoin_read') {
         selectDropdownSpCoinReadMethod(value as SpCoinReadMethod);
         return;
       }

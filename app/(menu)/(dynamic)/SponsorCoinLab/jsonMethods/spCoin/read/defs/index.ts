@@ -2,7 +2,7 @@
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
-import getAccountList from './getAccountList';
+import getMasterAccountList from './getMasterAccountList';
 import getAccountListSize from './getAccountListSize';
 import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getSpCoinMetaData from './getSpCoinMetaData';
@@ -12,7 +12,6 @@ import getAccountRecord from './getAccountRecord';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
-import getAccountRateRecordList from './getAccountRateRecordList';
 import getRateTransactionList from './getRateTransactionList';
 import getRecipientRateList from './getRecipientRateList';
 import getRecipientRateRecord from './getRecipientRateRecord';
@@ -39,11 +38,10 @@ import getAgentRecordList from './getAgentRecordList';
 import initialTotalSupply from './initialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
-import masterAccountList from './masterAccountList';
+import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
-import getMillenniumTimeIntervalDivisor from './getMillenniumTimeIntervalDivisor';
 import totalBalanceOf from './totalBalanceOf';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
@@ -53,7 +51,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
   calculateStakingRewards,
   creationTime,
-  getAccountList,
+  getMasterAccountList,
   getAccountListSize,
   getSPCoinHeaderRecord,
   getSpCoinMetaData,
@@ -63,7 +61,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountStakingRewards,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,
-  getAccountRateRecordList,
   getRateTransactionList,
   getRecipientRateList,
   getRecipientRateRecord,
@@ -90,11 +87,10 @@ export const SPCOIN_READ_METHOD_DEFS = {
   initialTotalSupply,
   isDeployed,
   isAccountInserted,
-  masterAccountList,
+  getMasterAccountElement,
   getStakingRewards,
   getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,
-  getMillenniumTimeIntervalDivisor,
   totalBalanceOf,
   totalStakedSPCoins,
   totalStakingRewards,

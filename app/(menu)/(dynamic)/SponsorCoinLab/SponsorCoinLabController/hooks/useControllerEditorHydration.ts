@@ -127,7 +127,7 @@ export function useControllerEditorHydration({
         return;
       }
 
-      if (methodPanelMode === 'spcoin_rread') {
+      if (methodPanelMode === 'spcoin_read') {
         setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params));
         try {
           const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinReadDef.params);

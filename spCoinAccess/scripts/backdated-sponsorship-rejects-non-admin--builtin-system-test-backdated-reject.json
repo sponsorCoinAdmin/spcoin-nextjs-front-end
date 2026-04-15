@@ -45,7 +45,7 @@
         }
       ],
       "breakpoint": true,
-      "hasMissingRequiredParams": false
+      "hasMissingRequiredParams": true
     }
   ]
 }

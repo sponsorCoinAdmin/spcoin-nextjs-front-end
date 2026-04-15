@@ -1,7 +1,7 @@
 // @ts-nocheck
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
-import getAccountList from './getAccountList';
+import getMasterAccountList from './getMasterAccountList';
 import getRecipientRateList from './getRecipientRateList';
 import getRecipientRateAgentList from './getRecipientRateAgentList';
 import getLowerRecipientRate from './getLowerRecipientRate';
@@ -14,11 +14,10 @@ import getAgentRateRange from './getAgentRateRange';
 import initialTotalSupply from './initialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
-import masterAccountList from './masterAccountList';
+import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
-import getMillenniumTimeIntervalDivisor from './getMillenniumTimeIntervalDivisor';
 import totalBalanceOf from './totalBalanceOf';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
@@ -50,7 +49,7 @@ import getSerializedRateTransactionList from './getSerializedRateTransactionList
 export const ONCHAIN_READ_METHOD_HANDLERS = {
     getInflationRate,
     calculateStakingRewards,
-    getAccountList,
+    getMasterAccountList,
     getRecipientRateList,
     getRecipientRateAgentList,
     getLowerRecipientRate,
@@ -63,11 +62,10 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     initialTotalSupply,
     isDeployed,
     isAccountInserted,
-    masterAccountList,
+    getMasterAccountElement,
     getStakingRewards,
     getTimeMultiplier,
     getAccountTimeInSecondeSinceUpdate,
-    getMillenniumTimeIntervalDivisor,
     totalBalanceOf,
     totalStakedSPCoins,
     totalStakingRewards,

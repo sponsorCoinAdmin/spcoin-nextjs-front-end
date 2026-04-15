@@ -1,5 +1,6 @@
 // @ts-nocheck
 export { getAccountList } from './getAccountList';
+export { getMasterAccountList } from './getMasterAccountList';
 export { getAccountListSize } from './getAccountListSize';
 export { getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';

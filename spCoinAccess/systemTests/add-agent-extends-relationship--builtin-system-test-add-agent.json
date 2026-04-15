@@ -80,7 +80,7 @@
     {
       "step": 4,
       "name": "getAgentRateRecord",
-      "panel": "spcoin_rread",
+      "panel": "spcoin_read",
       "method": "getAgentRateRecord",
       "params": [
         {

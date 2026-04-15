@@ -1,6 +1,6 @@
 const GREEN_HIGHLIGHT_METHODS = new Set([
   'creationTime',
-  'getAccountList',
+  'getMasterAccountList',
   'getSpCoinMetaData',
   'name',
   'symbol',

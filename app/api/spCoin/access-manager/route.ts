@@ -1603,6 +1603,33 @@ async function validateTokenStatus(
   };
 }
 
+async function validateDeployedBytecode(
+  tokenPublicKey: string,
+  deploymentChainIdRaw: number | string | undefined,
+): Promise<{ hasBytecode: boolean }> {
+  if (!/^0[xX][a-fA-F0-9]{40}$/.test(tokenPublicKey)) {
+    throw new Error('Invalid deployment public key.');
+  }
+  const requestedChainIdParsed = Number(deploymentChainIdRaw);
+  const requestedChainId =
+    Number.isFinite(requestedChainIdParsed) && requestedChainIdParsed > 0
+      ? requestedChainIdParsed
+      : 31337;
+
+  try {
+    const network = await resolveDeployNetwork(requestedChainId);
+    const provider = new JsonRpcProvider(network.rpcUrl, network.chainId);
+    const code = await withTimeout(
+      provider.getCode(String(tokenPublicKey || '').trim()),
+      5000,
+      `bytecode lookup for ${network.networkName} (${network.rpcUrl})`,
+    );
+    return { hasBytecode: typeof code === 'string' && code !== '0x' };
+  } catch {
+    return { hasBytecode: false };
+  }
+}
+
 function normalizeProjectRelativePath(input: string) {
   const trimmed = String(input || '').trim();
   if (!trimmed) return '';
@@ -1668,6 +1695,7 @@ export async function GET(request: Request) {
     const deploymentPublicKey = String(searchParams.get('deploymentPublicKey') || '').trim();
     const deploymentChainIdRaw = String(searchParams.get('deploymentChainId') || '').trim();
     const includeMetadata = String(searchParams.get('includeMetadata') || '').trim().toLowerCase() === 'true';
+    const validateBytecode = String(searchParams.get('validateBytecode') || '').trim().toLowerCase() === 'true';
     const includeDeploymentMap =
       String(searchParams.get('includeDeploymentMap') || '').trim().toLowerCase() === 'true';
     const packageName = String(searchParams.get('packageName') || '').trim();
@@ -1719,6 +1747,18 @@ export async function GET(request: Request) {
           } satisfies AccessManagerResponse,
           { status: 400 },
         );
+      }
+      if (validateBytecode) {
+        const bytecodeStatus = await validateDeployedBytecode(deploymentPublicKey, deploymentChainIdRaw);
+        return NextResponse.json({
+          ok: true,
+          message: bytecodeStatus.hasBytecode
+            ? 'Deployment bytecode found.'
+            : 'Deployment bytecode not found.',
+          packages,
+          workspaceRoot: WORKSPACE_ROOT,
+          hasBytecode: bytecodeStatus.hasBytecode,
+        } satisfies AccessManagerResponse & { hasBytecode: boolean });
       }
       const status = await validateTokenStatus(deploymentPublicKey, deploymentChainIdRaw);
       let spCoinMetaData: AccessManagerResponse['spCoinMetaData'] | undefined;

@@ -630,7 +630,7 @@ export function useSponsorCoinLabScripts({
         return entries.filter((param) => param.value.trim().length > 0);
       }
 
-      if (step.panel === 'spcoin_rread') {
+      if (step.panel === 'spcoin_read') {
         const def = spCoinReadMethodDefs[normalizeSpCoinReadMethod(step.method)];
         return legacyValues
           .map((value, idx) => ({ key: def?.params[idx]?.label || `param${idx + 1}`, value }))
@@ -675,7 +675,7 @@ export function useSponsorCoinLabScripts({
         return false;
       }
 
-      if (step.panel === 'spcoin_rread') {
+      if (step.panel === 'spcoin_read') {
         const def = spCoinReadMethodDefs[normalizeSpCoinReadMethod(step.method)];
         return (def?.params || []).some((param) => !findParamValue(param.label));
       }
@@ -779,7 +779,7 @@ export function useSponsorCoinLabScripts({
         return;
       }
 
-      if (step.panel === 'spcoin_rread') {
+      if (step.panel === 'spcoin_read') {
         const normalizedMethod = normalizeSpCoinReadMethod(step.method);
         setSelectedSpCoinReadMethod(normalizedMethod);
         const def = spCoinReadMethodDefs[normalizedMethod];
@@ -1322,7 +1322,7 @@ export function useSponsorCoinLabScripts({
         };
       }
 
-      if (effectiveScriptPanelMode === 'spcoin_rread') {
+      if (effectiveScriptPanelMode === 'spcoin_read') {
         return {
           name: activeSpCoinReadDef.title,
           panel: effectiveScriptPanelMode,
@@ -1426,7 +1426,7 @@ export function useSponsorCoinLabScripts({
         ? erc20ReadMissingEntries
         : effectiveScriptPanelMode === 'erc20_write'
           ? erc20WriteMissingEntries
-          : effectiveScriptPanelMode === 'spcoin_rread'
+          : effectiveScriptPanelMode === 'spcoin_read'
             ? spCoinReadMissingEntries
             : effectiveScriptPanelMode === 'spcoin_write'
               ? spCoinWriteMissingEntries
@@ -1576,7 +1576,7 @@ export function useSponsorCoinLabScripts({
         ? erc20ReadMissingEntries
         : effectiveScriptPanelMode === 'erc20_write'
           ? erc20WriteMissingEntries
-          : effectiveScriptPanelMode === 'spcoin_rread'
+          : effectiveScriptPanelMode === 'spcoin_read'
             ? spCoinReadMissingEntries
             : effectiveScriptPanelMode === 'spcoin_write'
               ? spCoinWriteMissingEntries
