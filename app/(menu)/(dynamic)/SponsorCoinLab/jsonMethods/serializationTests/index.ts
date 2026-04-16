@@ -1,6 +1,7 @@
 import type { MethodDef, ParamDef } from '../shared/types';
 import { createSpCoinLibraryAccess } from '../shared';
 import { buildSerializedSPCoinHeader } from '../shared/buildSerializedSPCoinHeader';
+import { normalizeStringListResult } from '../shared/normalizeListResult';
 import { Interface, getAddress, parseUnits } from 'ethers';
 
 export type SerializationBaseMethod =
@@ -291,15 +292,51 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  if (typeof access.read.getMasterAccountList !== 'function' || typeof access.read.getAccountRecipientList !== 'function') {
-    throw new Error(`Sponsor-list utilities require getMasterAccountList() and getAccountRecipientList() read methods.`);
+const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
+  ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+};
+const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
+  OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+};
+
+async function runMasterDeleteReadMethod(
+  access: ReturnType<typeof createSpCoinLibraryAccess>,
+  method: 'getMasterAccountList' | 'getAccountRecipientList',
+  methodArgs: unknown[] = [],
+) {
+  const directReadMethod = (access.read as Record<string, unknown>)[method];
+  if (typeof directReadMethod === 'function') {
+    return (directReadMethod as (...args: unknown[]) => Promise<unknown>)(...methodArgs);
   }
-  const accountList = Array.from((await access.read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+
+  const handler = ONCHAIN_READ_METHOD_HANDLERS[method] || OFFCHAIN_READ_METHOD_HANDLERS[method];
+  if (!handler) {
+    throw new Error(`Serialization utility read method ${method} is not wired to a handler.`);
+  }
+
+  return handler.run({
+    canonicalMethod: method,
+    selectedMethod: method,
+    methodArgs,
+    spCoinAccessSource: 'local',
+    read: access.read as Record<string, unknown>,
+    staking: access.staking as Record<string, unknown>,
+    contract: access.contract as Record<string, unknown>,
+    normalizeStringListResult,
+    requireExternalSerializedValue: () => {
+      throw new Error(`Serialization utility read method ${method} does not support external serializer fallback.`);
+    },
+  });
+}
+
+async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
+  const accountList = Array.from((await runMasterDeleteReadMethod(access, 'getMasterAccountList')) as unknown[]).map((value) =>
+    normalizeAddress(value),
+  );
   const recipientLists = await Promise.all(
     accountList.map(async (account) => {
-      const recipients = Array.from((await access.read.getAccountRecipientList(account)) as unknown[]).map((value) =>
-        normalizeAddress(value),
+      const recipients = Array.from((await runMasterDeleteReadMethod(access, 'getAccountRecipientList', [account])) as unknown[]).map(
+        (value) => normalizeAddress(value),
       );
       return { account, recipients };
     }),
@@ -308,17 +345,15 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
 }
 
 async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  if (typeof access.read.getMasterAccountList !== 'function') {
-    throw new Error('getMasterAccountList() read method is required.');
-  }
-  return Array.from((await access.read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  return Array.from((await runMasterDeleteReadMethod(access, 'getMasterAccountList')) as unknown[]).map((value) =>
+    normalizeAddress(value),
+  );
 }
 
 async function loadRecipientAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>, sponsorKey: string) {
-  if (typeof access.read.getAccountRecipientList !== 'function') {
-    throw new Error('getAccountRecipientList() read method is required.');
-  }
-  return Array.from((await access.read.getAccountRecipientList(sponsorKey)) as unknown[]).map((value) => normalizeAddress(value));
+  return Array.from((await runMasterDeleteReadMethod(access, 'getAccountRecipientList', [sponsorKey])) as unknown[]).map((value) =>
+    normalizeAddress(value),
+  );
 }
 
 async function loadRecipientRateKeys(
