@@ -1,9 +1,7 @@
 // @ts-nocheck
-import { createSerializedHandler } from '../../readMethodRuntime';
-const handler = createSerializedHandler({
-    method: 'getSerializedSPCoinHeader',
-    localMethod: 'getSPCoinHeaderRecord',
-    localArgs: () => [false],
-});
+import { buildHandler } from '../../readMethodRuntime';
+const handler = buildHandler('getSerializedSPCoinHeader', async (context) =>
+    context.requireExternalSerializedValue('getSerializedSPCoinHeader', context.methodArgs)
+);
 export default handler;
 

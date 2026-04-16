@@ -160,7 +160,7 @@ const defaultHardhatRpcUrl =
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
     useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
-    useState<SpCoinWriteMethod>('addSponsorRecipientBranch');
+    useState<SpCoinWriteMethod>('addSponsorRecipient');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'admin_utils' | null>(null);
@@ -468,9 +468,9 @@ const defaultHardhatRpcUrl =
       'hhFundAccounts',
       'deleteMasterSponsorships',
       'deleteSponsorTree',
-      'deleteSponsorRecipientBranch',
+      'deleteSponsorRecipient',
       'deleteRecipientRateBranch',
-      'deleteRecipientAgentBranch',
+      'deleteRecipientAgent',
       'deleteAgentRateBranch',
     ].includes(name),
   );

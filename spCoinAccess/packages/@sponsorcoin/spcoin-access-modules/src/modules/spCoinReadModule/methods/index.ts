@@ -10,7 +10,6 @@ export { getAccountRewardTransactionList } from './getAccountRewardTransactionLi
 export { getAccountRewardTransactionRecord } from './getAccountRewardTransactionRecord';
 export { getAccountRateRecordList } from './getAccountRateRecordList';
 export { getRateTransactionList } from './getRateTransactionList';
-export { getSPCoinHeaderRecord } from './getSPCoinHeaderRecord';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
 export { getAgentRateList } from './getAgentRateList';
 export { getAgentRateRange } from './getAgentRateRange';

@@ -1,12 +1,12 @@
 // @ts-nocheck
 export { addRecipient } from "./addRecipient";
-export { addSponsorRecipientBranch } from "./addSponsorRecipientBranch";
-export { addRecipientSponsoredTransaction } from "./addRecipientSponsoredTransaction";
+export { addSponsorRecipient } from "./addSponsorRecipient";
+export { addRecipientTransaction } from "./addRecipientTransaction";
 export { addRecipientRateTransaction } from "./addRecipientRateTransaction";
 export { addRecipientRateBranchAmount } from "./addRecipientRateBranchAmount";
 export { addRecipients } from "./addRecipients";
-export { addRecipientAgentBranch } from "./addRecipientAgentBranch";
-export { addAgentSponsoredTransaction } from "./addAgentSponsoredTransaction";
+export { addRecipientAgent } from "./addRecipientAgent";
+export { addAgentTransaction } from "./addAgentTransaction";
 export { addAgentRateTransaction } from "./addAgentRateTransaction";
 export { addAgentRateBranchAmount } from "./addAgentRateBranchAmount";
 export { addAgents } from "./addAgents";
@@ -15,8 +15,8 @@ export { addAccountRecords } from "./addAccountRecords";
 export { addSponsorship } from "./addSponsorship";
 export { addAgentSponsorship } from "./addAgentSponsorship";
 export { addBackDatedSponsorship } from "./addBackDatedSponsorship";
-export { addBackDatedRecipientRateAmount } from "./addBackDatedRecipientRateAmount";
-export { addBackDatedRecipientAgentRateAmount } from "./addBackDatedRecipientAgentRateAmount";
+export { addBackDatedRecipientTransaction } from "./addBackDatedRecipientTransaction";
+export { addBackDatedAgentTransaction } from "./addBackDatedAgentTransaction";
 export { addBackDatedRecipientSponsorship } from "./addBackDatedRecipientSponsorship";
 export { addBackDatedAgentSponsorship } from "./addBackDatedAgentSponsorship";
 export { backDateRecipientTransactionDate } from "./backDateRecipientTransactionDate";

@@ -31,7 +31,7 @@ contract UnSubscribe is Transactions {
         return deleteAccountRecord(_sponsorKey);
     }
 
-    function deleteSponsorRecipientBranch(address _sponsorKey, address _recipientKey)
+    function deleteSponsorRecipient(address _sponsorKey, address _recipientKey)
         public
         onlyOwnerOrRootAdmin(_sponsorKey)
         accountExists(_sponsorKey)
@@ -66,16 +66,16 @@ contract UnSubscribe is Transactions {
 
         address[] memory agentList = getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
         while (agentList.length > 0) {
-            deleteRecipientAgentBranch(_sponsorKey, _recipientKey, _recipientRateKey, agentList[agentList.length - 1]);
+            deleteRecipientAgent(_sponsorKey, _recipientKey, _recipientRateKey, agentList[agentList.length - 1]);
             agentList = getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
         }
 
         if (recipientRecord.recipientRateMap[_recipientRateKey].inserted) {
-            _deleteRecipientRateAmount(_sponsorKey, _recipientKey, _recipientRateKey);
+            _deleteRecipientTransaction(_sponsorKey, _recipientKey, _recipientRateKey);
         }
     }
 
-    function _deleteRecipientRateAmount(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) internal {
+    function _deleteRecipientTransaction(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) internal {
         AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
         RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
         require(recipientRecord.inserted, "RECIP_NOT_FOUND");
@@ -87,7 +87,7 @@ contract UnSubscribe is Transactions {
         uint256 totalSponsored = recipientRateRecord.stakedSPCoins;
 
         totalStakedSPCoins -= totalSponsored;
-        totalBalanceOf += totalSponsored;
+        totalUnstakedSpCoins += totalSponsored;
         balanceOf[_sponsorKey] += totalSponsored;
         sponsorAccount.stakedSPCoins -= totalSponsored;
         recipientRecord.stakedSPCoins -= totalSponsored;
@@ -101,7 +101,7 @@ contract UnSubscribe is Transactions {
         }
     }
 
-    function deleteRecipientAgentBranch(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey)
+    function deleteRecipientAgent(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey)
         public
         onlyOwnerOrRootAdmin(_sponsorKey)
         accountExists(_sponsorKey)
@@ -168,7 +168,7 @@ contract UnSubscribe is Transactions {
         uint256 totalSponsored = agentRateRecord.stakedSPCoins;
 
         totalStakedSPCoins -= totalSponsored;
-        totalBalanceOf += totalSponsored;
+        totalUnstakedSpCoins += totalSponsored;
         balanceOf[_sponsorKey] += totalSponsored;
         sponsorAccount.stakedSPCoins -= totalSponsored;
         recipientRecord.stakedSPCoins -= totalSponsored;
@@ -278,7 +278,7 @@ contract UnSubscribe is Transactions {
             RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
             uint256 totalSponsored = recipientRecord.stakedSPCoins;
             totalStakedSPCoins -= totalSponsored;
-            totalBalanceOf += totalSponsored;
+            totalUnstakedSpCoins += totalSponsored;
             balanceOf[sponsorAccount.accountKey] += totalSponsored;
             sponsorAccount.stakedSPCoins -= totalSponsored;
 

@@ -82,9 +82,9 @@
     },
     {
       "step": 7,
-      "name": "deleteSponsorRecipientBranch",
+      "name": "deleteSponsorRecipient",
       "panel": "spcoin_write",
-      "method": "deleteSponsorRecipientBranch",
+      "method": "deleteSponsorRecipient",
       "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
       "params": [
         {
@@ -116,9 +116,9 @@
     },
     {
       "step": 9,
-      "name": "deleteRecipientAgentBranch",
+      "name": "deleteRecipientAgent",
       "panel": "serialization_tests",
-      "method": "deleteRecipientAgentBranch",
+      "method": "deleteRecipientAgent",
       "params": [
         {
           "key": "Sponsor Key",

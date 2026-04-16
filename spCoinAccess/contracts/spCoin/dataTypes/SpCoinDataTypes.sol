@@ -32,7 +32,8 @@ contract SpCoinDataTypes {
     uint    public creationTime = block.timestamp;
     uint256 public totalStakedSPCoins = 0; // Coins Owned but steaked to recipients
     uint256 public totalStakingRewards = 0; // Coins not owned but Recipiented
-    uint256 public totalBalanceOf = 0; // Coins not owned but Recipiented
+    uint256 public totalUnstakedSpCoins = 0;
+    // totalUnstakedSpCoins = totalSupply - totalStakedSPCoins;
 
     // Keep track balances and allowances approved
     // Events - fire events on state changes etc

@@ -49,7 +49,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function addAgentSponsoredTransaction(
+    function addAgentTransaction(
         address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
@@ -132,7 +132,7 @@ contract Transactions is RewardsManager {
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
         // console.log("BEFORE _sponsorCoinQty ", sponsorAmount);
         balanceOf[_sponsorKey] -= sponsorAmount;
-        totalBalanceOf -= sponsorAmount;
+        totalUnstakedSpCoins -= sponsorAmount;
         // console.log("AFTER balanceOf     =", balanceOf[msg.sender]);
         // console.log("AFTER _sponsorCoinQty ", sponsorAmount);
     }

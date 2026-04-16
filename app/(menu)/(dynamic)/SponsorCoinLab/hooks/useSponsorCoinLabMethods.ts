@@ -991,9 +991,9 @@ export function useSponsorCoinLabMethods({
       );
       const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
         deleteSponsorTree: 'deleteSponsorTree',
-        deleteSponsorRecipientBranch: 'deleteSponsorRecipientBranch',
+        deleteSponsorRecipient: 'deleteSponsorRecipient',
         deleteRecipientRateBranch: 'deleteRecipientRateBranch',
-        deleteRecipientAgentBranch: 'deleteRecipientAgentBranch',
+        deleteRecipientAgent: 'deleteRecipientAgent',
         deleteAgentRateBranch: 'deleteAgentRateBranch',
         deleteRecipientSponsorships: 'deleteRecipientSponsorships',
         deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
@@ -1065,11 +1065,11 @@ export function useSponsorCoinLabMethods({
   );
 
   const runHeaderRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getSPCoinHeaderRecord');
+    const call = buildMethodCallEntry('getSpCoinMetaData');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
-      setStatus('Reading SponsorCoin header...');
+      setStatus('Reading SponsorCoin metadata...');
       const target = requireContractAddress();
       const runner = await ensureReadRunner();
       const access = createSpCoinLibraryAccess(
@@ -1080,23 +1080,23 @@ export function useSponsorCoinLabMethods({
       );
       let result: unknown;
       try {
-        result = await (access.read as SpCoinReadAccess).getSPCoinHeaderRecord(false);
+        result = await (access.read as SpCoinReadAccess).getSpCoinMetaData();
       } catch (error) {
         throw await enrichDirectReadError({
           error,
-          method: 'getSPCoinHeaderRecord',
+          method: 'getSpCoinMetaData',
           target,
           runner,
         });
       }
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
-      appendLog(`spCoinReadMethods/getSPCoinHeaderRecord -> ${result}`);
-      setStatus('Header read complete.');
+      appendLog(`spCoinReadMethods/getSpCoinMetaData -> ${result}`);
+      setStatus('Metadata read complete.');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown header read error.';
+      const message = error instanceof Error ? error.message : 'Unknown metadata read error.';
       setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message }));
-      setStatus(`Header read failed: ${message}`);
-      appendLog(`Header read failed: ${message}`);
+      setStatus(`Metadata read failed: ${message}`);
+      appendLog(`Metadata read failed: ${message}`);
     }
   }, [
     appendLog,

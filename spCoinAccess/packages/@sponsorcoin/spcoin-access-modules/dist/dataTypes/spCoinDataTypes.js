@@ -12,7 +12,7 @@ export class SponsorCoinHeader {
         this.totalSupply = "ToDo";
         this.decimals = "ToDo";
         this.annualInflation = "ToDo";
-        this.totalBalanceOf = "ToDo";
+        this.totalUnstakedSpCoins = "ToDo";
         this.totalStakedSPCoins = "ToDo";
         this.totalStakingRewards = "ToDo";
         this.accountRecords = [];

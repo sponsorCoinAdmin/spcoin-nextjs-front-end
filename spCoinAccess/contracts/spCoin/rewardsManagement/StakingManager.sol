@@ -98,7 +98,7 @@ contract StakingManager is AgentRates{
         RewardTypeStruct storage rewardsRecord = depositAccount.rewardsMap[getAccountTypeString(_accountType)];
 
         balanceOf[_depositKey] += _amount;
-        totalBalanceOf += _amount;
+        totalUnstakedSpCoins += _amount;
         totalSupply += _amount;
         totalStakingRewards += _amount;
         depositAccount.stakingRewards += _amount;

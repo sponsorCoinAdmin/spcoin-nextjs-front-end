@@ -24,10 +24,10 @@ export const addRecipient = async (context, _recipientKey) => {
             ? await context.spCoinContractDeployed.runner.getAddress()
             : "";
 
-    context.spCoinLogger.logFunctionHeader("addSponsorRecipientBranch = async(" + sponsorKey + ", " + _recipientKey + ")");
+    context.spCoinLogger.logFunctionHeader("addSponsorRecipient = async(" + sponsorKey + ", " + _recipientKey + ")");
     context.spCoinLogger.logDetail("JS => Inserting " + _recipientKey + " Recipient To Blockchain Network");
     context.spCoinLogger.logDetail("JS => Inserting Recipient " + _recipientKey);
-    const tx = await context.spCoinContractDeployed.addSponsorRecipientBranch(sponsorKey, _recipientKey);
+    const tx = await context.spCoinContractDeployed.addSponsorRecipient(sponsorKey, _recipientKey);
     const receipt = await tx.wait();
     context.spCoinLogger.logDetail(
         "JS => addRecipient receipt status = " + String(receipt?.status ?? "") + " hash = " + String(receipt?.hash || tx?.hash || "")

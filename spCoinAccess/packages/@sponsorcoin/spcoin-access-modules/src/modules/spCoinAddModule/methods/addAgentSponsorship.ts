@@ -240,8 +240,8 @@ export const addAgentSponsorship = async (
     } else {
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:send");
       const addRecipientTx = await sendTxWithDiagnostics(
-        "addSponsorRecipientBranch",
-        () => context.spCoinContractDeployed.addSponsorRecipientBranch(sponsorKey, _recipientKey)
+        "addSponsorRecipient",
+        () => context.spCoinContractDeployed.addSponsorRecipient(sponsorKey, _recipientKey)
       );
       context.spCoinLogger.logDetail("JS => addRecipient tx hash = " + String(addRecipientTx?.hash || ""));
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:wait");
@@ -292,19 +292,19 @@ export const addAgentSponsorship = async (
     } else {
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:send");
       const addAgentTx = await sendTxWithDiagnostics(
-        "addRecipientAgentBranch",
-        () => context.spCoinContractDeployed.addRecipientAgentBranch(
+        "addRecipientAgent",
+        () => context.spCoinContractDeployed.addRecipientAgent(
           sponsorKey,
           _recipientKey,
           _recipientRateKey,
           _accountAgentKey
         )
       );
-      context.spCoinLogger.logDetail("JS => addRecipientAgentBranch tx hash = " + String(addAgentTx?.hash || ""));
+      context.spCoinLogger.logDetail("JS => addRecipientAgent tx hash = " + String(addAgentTx?.hash || ""));
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:wait");
       const addAgentReceipt = await addAgentTx.wait();
-      ensureSuccessfulReceipt("addRecipientAgentBranch", addAgentReceipt);
-      context.spCoinLogger.logDetail("JS => addRecipientAgentBranch mined");
+      ensureSuccessfulReceipt("addRecipientAgent", addAgentReceipt);
+      context.spCoinLogger.logDetail("JS => addRecipientAgent mined");
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:settle");
       await sleep(1000);
     }

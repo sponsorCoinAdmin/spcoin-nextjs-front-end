@@ -4,7 +4,6 @@ import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getMasterAccountList from './getMasterAccountList';
 import getAccountListSize from './getAccountListSize';
-import getSPCoinHeaderRecord from './getSPCoinHeaderRecord';
 import getSpCoinMetaData from './getSpCoinMetaData';
 import getAccountRecipientList from './getAccountRecipientList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
@@ -43,8 +42,7 @@ import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
 import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
-import getMillenniumTimeIntervalDivisor from './getMillenniumTimeIntervalDivisor';
-import totalBalanceOf from './totalBalanceOf';
+import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
 import getVersion from './version';
@@ -55,7 +53,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   creationTime,
   getMasterAccountList,
   getAccountListSize,
-  getSPCoinHeaderRecord,
   getSpCoinMetaData,
   getAccountRecipientList,
   getAccountRecipientListSize,
@@ -94,8 +91,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getStakingRewards,
   getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,
-  getMillenniumTimeIntervalDivisor,
-  totalBalanceOf,
+  totalUnstakedSpCoins,
   totalStakedSPCoins,
   totalStakingRewards,
   getVersion,

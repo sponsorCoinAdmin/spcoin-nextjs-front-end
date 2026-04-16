@@ -8,7 +8,7 @@ export const addRecipientRateTransaction = async (context, _sponsorKey, _recipie
     const fractionalPart = components.length > 1 ? components[1] : "0";
     const contractMethod = context.spCoinContractDeployed.addRecipientRateBranchAmount
         ?? context.spCoinContractDeployed.addRecipientRateTransaction
-        ?? context.spCoinContractDeployed.addRecipientSponsoredTransaction;
+        ?? context.spCoinContractDeployed.addRecipientTransaction;
     const tx = await contractMethod(
         _sponsorKey,
         _recipientKey,

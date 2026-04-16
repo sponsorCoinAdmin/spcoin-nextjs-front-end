@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const addBackDatedRecipientRateAmount = async (
+export const addBackDatedRecipientTransaction = async (
     context,
     _adminSigner,
     _sponsorKey,
@@ -8,7 +8,7 @@ export const addBackDatedRecipientRateAmount = async (
     _transactionQty,
     _transactionBackDate
 ) => {
-    context.spCoinLogger.logFunctionHeader("addBackDatedRecipientRateAmount = async(" +
+    context.spCoinLogger.logFunctionHeader("addBackDatedRecipientTransaction = async(" +
         _adminSigner + ", " +
         _sponsorKey + ", " +
         _recipientKey + ", " +

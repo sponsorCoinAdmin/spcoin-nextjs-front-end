@@ -275,14 +275,14 @@ export class SpCoinSerialize {
             const versionReader = typeof this.spCoinContractDeployed.getVersion === "function"
                 ? this.spCoinContractDeployed.getVersion.bind(this.spCoinContractDeployed)
                 : this.spCoinContractDeployed.version.bind(this.spCoinContractDeployed);
-            let [name, creationTime, decimals, totalSupply, initialTotalSupply, annualInflation, totalBalanceOf, totalStakingRewards, totalStakedSPCoins, symbol, version] = await Promise.all([
+            let [name, creationTime, decimals, totalSupply, initialTotalSupply, annualInflation, totalUnstakedSpCoins, totalStakingRewards, totalStakedSPCoins, symbol, version] = await Promise.all([
                 this.spCoinContractDeployed.name(),
                 this.spCoinContractDeployed.creationTime(),
                 this.spCoinContractDeployed.decimals(),
                 this.spCoinContractDeployed.totalSupply(),
                 this.spCoinContractDeployed.initialTotalSupply(),
                 readAnnualInflation(this.spCoinContractDeployed),
-                this.spCoinContractDeployed.totalBalanceOf(),
+                this.spCoinContractDeployed.totalUnstakedSpCoins(),
                 this.spCoinContractDeployed.totalStakingRewards(),
                 this.spCoinContractDeployed.totalStakedSPCoins(),
                 this.spCoinContractDeployed.symbol(),
@@ -295,7 +295,7 @@ export class SpCoinSerialize {
                 "TOTAL_SUPPLY:" + String(totalSupply),
                 "INITIAL_TOTAL_SUPPLY:" + String(initialTotalSupply),
                 "ANNUAL_INFLATION:" + String(annualInflation),
-                "TOTAL_BALANCE_OF:" + String(totalBalanceOf),
+                "TOTAL_UNSTAKED_SP_COINS:" + String(totalUnstakedSpCoins),
                 "TOTAL_STAKED_REWARDS:" + String(totalStakingRewards),
                 "TOTAL_STAKED_SP_COINS:" + String(totalStakedSPCoins),
                 "SYMBOL:" + String(symbol),
@@ -339,8 +339,8 @@ export class SpCoinSerialize {
                 case "TOTAL_SUPPLY":
                     spCoinHeaderRecord.totalSupply = bigIntToDecString(_value);
                     break;
-                case "TOTAL_BALANCE_OF":
-                    spCoinHeaderRecord.totalBalanceOf = bigIntToDecString(_value);
+                case "TOTAL_UNSTAKED_SP_COINS":
+                    spCoinHeaderRecord.totalUnstakedSpCoins = bigIntToDecString(_value);
                     break;
                 case "INITIAL_TOTAL_SUPPLY":
                     spCoinHeaderRecord.initialTotalSupply = bigIntToDecString(_value);

@@ -10,7 +10,7 @@ export const addAgents = async (context, _sponsorKey, _recipientKey, _recipientR
     for (agentCount = 0; agentCount < agentSize; agentCount++) {
         const agentKey = _agentAccountList[agentCount];
         context.spCoinLogger.logDetail("JS =>  " + agentCount + ". " + "Inserting Agent[" + agentCount + "]: " + agentKey);
-        await context.addRecipientAgentBranch(_sponsorKey, _recipientKey, _recipientRateKey, agentKey);
+        await context.addRecipientAgent(_sponsorKey, _recipientKey, _recipientRateKey, agentKey);
     }
     context.spCoinLogger.logDetail("JS => " + "Inserted = " + agentSize + " Agent Records");
     context.spCoinLogger.logExitFunction();

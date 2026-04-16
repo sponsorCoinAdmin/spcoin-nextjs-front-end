@@ -11,7 +11,6 @@ export declare class SpCoinReadModule {
     getAccountRewardTransactionRecord: (_rewardRecordStr: string) => RewardAccountStruct | undefined;
     getAccountRateRecordList: (rateRewardList: string[]) => RewardRateStruct[];
     getRateTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
-    getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
     getSpCoinMetaData: () => Promise<{
         owner: string;
         version: string;

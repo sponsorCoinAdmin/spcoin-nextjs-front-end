@@ -29,13 +29,13 @@ contract UnSubscribe is Transactions {
             // console.log("UnSubscribe:BEFORE balanceOf() msg.sender = ", balanceOf[msg.sender]);
             // console.log("UnSubscribe:BEFORE totalSponsored         = ", totalSponsored);
             totalStakedSPCoins -= totalSponsored;
-            totalBalanceOf += totalSponsored;
+            totalUnstakedSpCoins += totalSponsored;
             balanceOf[sponsorAccount.accountKey] += totalSponsored;
             sponsorAccount.stakedSPCoins -= totalSponsored;
             // ToDo: Robin Here
             // console.log("UnSubscribe:BEFORE balanceOf[",msg.sender,"]", balanceOf[msg.sender]);
             // balanceOf[msg.sender] += totalSponsored;
-            // totalBalanceOf += totalSponsored;
+            // totalUnstakedSpCoins += totalSponsored;
             // console.log("UnSubscribe:AFTER  balanceOf[",msg.sender,"]", balanceOf[msg.sender]);
 
             // Delete Recipient and Clean up Recipient's References
