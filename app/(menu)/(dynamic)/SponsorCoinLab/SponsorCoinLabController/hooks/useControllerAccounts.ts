@@ -376,19 +376,19 @@ export function useControllerAccounts({
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
                 throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addSponsorRecipient or addAgents instead.',
+                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addSponsorRecipientBranch or addAgents instead.',
                 );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
-                if (typeof connectedContract.addSponsorRecipient !== 'function') {
-                  throw new Error('addSponsorRecipient is not available on the current SpCoin contract access path.');
+                if (typeof connectedContract.addSponsorRecipientBranch !== 'function') {
+                  throw new Error('addSponsorRecipientBranch is not available on the current SpCoin contract access path.');
                 }
-                return connectedContract.addSponsorRecipient(hardhatSenderAddress, accountAddress) as Promise<TransactionLike>;
+                return connectedContract.addSponsorRecipientBranch(hardhatSenderAddress, accountAddress) as Promise<TransactionLike>;
               }
-              if (typeof connectedContract.addRecipientAgent !== 'function') {
-                throw new Error('addRecipientAgent is not available on the current SpCoin contract access path.');
+              if (typeof connectedContract.addRecipientAgentBranch !== 'function') {
+                throw new Error('addRecipientAgentBranch is not available on the current SpCoin contract access path.');
               }
-              return connectedContract.addRecipientAgent(
+              return connectedContract.addRecipientAgentBranch(
                 hardhatSenderAddress,
                 recipientKey,
                 recipientRateKey,

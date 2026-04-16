@@ -205,26 +205,26 @@ export default function SpCoinWriteController(props: Props) {
     return Math.min(Math.max(parsed, lower), upper);
   };
   const recipientRateSliderMethods = new Set([
-    'addRecipientAgent',
+    'addRecipientAgentBranch',
     'addAgents',
     'addRecipientRateTransaction',
-    'addAgentTransaction',
-    'deleteRecipientSponsorRate',
-    'deleteRecipientTransaction',
+    'addAgentSponsoredTransaction',
+    'deleteRecipientRateSponsorship',
+    'deleteRecipientRateAmount',
     'deleteRecipientRateBranch',
     'deleteAgent',
-    'deleteRecipientAgent',
+    'deleteRecipientAgentBranch',
     'unSponsorAgent',
     'deleteAgentRateBranch',
-    'addBackDatedRecipientTransaction',
-    'addBackDatedAgentTransaction',
+    'addBackDatedRecipientRateAmount',
+    'addBackDatedRecipientAgentRateAmount',
   ]);
   const agentRateSliderMethods = new Set([
-    'addAgentTransaction',
+    'addAgentSponsoredTransaction',
     'unSponsorAgent',
     'deleteAgentRateBranch',
-    'addBackDatedRecipientTransaction',
-    'addBackDatedAgentTransaction',
+    'addBackDatedRecipientRateAmount',
+    'addBackDatedRecipientAgentRateAmount',
   ]);
   const getPrivateKeyForAddress = (address: string) =>
     hardhatAccounts.find((account) => account.address.toLowerCase() === String(address || '').trim().toLowerCase())
@@ -349,8 +349,6 @@ export default function SpCoinWriteController(props: Props) {
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <div className="relative w-full min-w-0">
           <select
-            aria-label="SpCoin write JSON method"
-            title="SpCoin write JSON method"
             className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={displayedWriteMethod}
             onChange={(e) => setSelectedSpCoinWriteMethod(e.target.value)}
@@ -454,8 +452,6 @@ export default function SpCoinWriteController(props: Props) {
           mode === 'hardhat' ? (
             <AccountDropdownInput
               dataFieldId="spcoin-write-sender"
-              inputAriaLabel="Sender account"
-              inputTitle="Sender account"
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
               value={selectedWriteSenderAddress}
               onChange={(value) => {
@@ -468,8 +464,6 @@ export default function SpCoinWriteController(props: Props) {
             />
           ) : (
             <input
-              aria-label="Connected signer address"
-              title="Connected signer address"
               className={inputStyle}
               readOnly
               value={writeSenderDisplayValue}
@@ -483,8 +477,6 @@ export default function SpCoinWriteController(props: Props) {
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
               <input
-                aria-label="Selected signer private key"
-                title="Selected signer private key"
                 className={inputStyle}
                 readOnly
                 value={writeSenderPrivateKeyDisplay}
@@ -505,8 +497,6 @@ export default function SpCoinWriteController(props: Props) {
               control={
                 <AccountDropdownInput
                   dataFieldId={`spcoin-write-param-${idx}`}
-                  inputAriaLabel={param.label}
-                  inputTitle={param.label}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
                   value={spWriteParams[idx] || ''}
                   onChange={(value) => {
@@ -524,8 +514,6 @@ export default function SpCoinWriteController(props: Props) {
                   <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                     <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
                     <input
-                      aria-label="Selected account private key"
-                      title="Selected account private key"
                       className={inputStyle}
                       readOnly
                       value={getPrivateKeyForAddress(spWriteParams[idx] || '')}
@@ -542,8 +530,6 @@ export default function SpCoinWriteController(props: Props) {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    aria-label={param.label}
-                    title={param.label}
                     readOnly
                     className={`${inputStyle} cursor-pointer`}
                     value={formatDateTimeDisplay(
@@ -567,7 +553,6 @@ export default function SpCoinWriteController(props: Props) {
                   <input
                     type="range"
                     data-field-id={`spcoin-write-param-${idx}`}
-                    aria-label={param.label}
                     title={`Adjust ${param.label}`}
                     className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
                     min={Array.isArray(recipientRateRange) ? recipientRateRange[0] : 0}
@@ -598,7 +583,6 @@ export default function SpCoinWriteController(props: Props) {
                   <input
                     type="range"
                     data-field-id={`spcoin-write-param-${idx}`}
-                    aria-label={param.label}
                     title={`Adjust ${param.label}`}
                     className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
                     min={Array.isArray(agentRateRange) ? agentRateRange[0] : 0}
@@ -627,8 +611,6 @@ export default function SpCoinWriteController(props: Props) {
                   <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
                   <AccountDropdownInput
                     data-field-id={`spcoin-write-param-${idx}`}
-                    inputAriaLabel={param.label}
-                    inputTitle={param.label}
                     className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                     value={spWriteParams[idx] || ''}
                     onChange={(value) => {
@@ -653,8 +635,6 @@ export default function SpCoinWriteController(props: Props) {
                   <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
                   <AccountDropdownInput
                     data-field-id={`spcoin-write-param-${idx}`}
-                    inputAriaLabel={param.label}
-                    inputTitle={param.label}
                     className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                     value={spWriteParams[idx] || ''}
                     onChange={(value) => {
@@ -679,8 +659,6 @@ export default function SpCoinWriteController(props: Props) {
                 <input
                   type="text"
                   data-field-id={`spcoin-write-param-${idx}`}
-                  aria-label={param.label}
-                  title={param.label}
                   className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
                   value={spWriteParams[idx] || ''}
                   onChange={(e) => {

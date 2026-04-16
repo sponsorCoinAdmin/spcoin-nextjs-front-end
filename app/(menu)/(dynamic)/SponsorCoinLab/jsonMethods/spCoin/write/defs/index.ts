@@ -1,28 +1,28 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
-import addSponsorRecipient from './addSponsorRecipient';
+import addSponsorRecipientBranch from './addRecipient';
 import addRecipientRateTransaction from './addRecipientRateTransaction';
 import addRecipients from './addRecipients';
-import addRecipientAgent from './addRecipientAgent';
-import addAgentTransaction from './addAgentTransaction';
+import addRecipientAgentBranch from './addRecipientAgentBranch';
+import addAgentSponsoredTransaction from './addAgentSponsoredTransaction';
 import addAgents from './addAgents';
 import deleteSponsor from './deleteSponsor';
 import deleteSponsorTree from './deleteSponsorTree';
-import deleteSponsorRecipient from './deleteSponsorRecipient';
+import deleteSponsorRecipientBranch from './deleteSponsorRecipientBranch';
 import deleteRecipientRateBranch from './deleteRecipientRateBranch';
-import deleteRecipientAgent from './deleteRecipientAgent';
+import deleteRecipientAgentBranch from './deleteRecipientAgentBranch';
 import deleteAgentRateBranch from './deleteAgentRateBranch';
 import deleteRecipientSponsorships from './deleteRecipientSponsorships';
 import deleteRecipientSponsorshipTree from './deleteRecipientSponsorshipTree';
 import deleteAgentSponsorships from './deleteAgentSponsorships';
-import deleteRecipientSponsorRate from './deleteRecipientSponsorRate';
-import deleteRecipientTransaction from './deleteRecipientTransaction';
+import deleteRecipientRateSponsorship from './deleteRecipientRate';
+import deleteRecipientRateAmount from './deleteRecipientRateAmount';
 import deleteAgent from './deleteAgent';
-import unSponsorAgent from './unSponsorAgent';
-import addBackDatedRecipientTransaction from './addBackDatedRecipientTransaction';
-import addBackDatedAgentTransaction from './addBackDatedAgentTransaction';
+import unSponsorAgent from './deleteAgentSponsorship';
+import addBackDatedRecipientRateAmount from './addBackDatedRecipientRateAmount';
+import addBackDatedRecipientAgentRateAmount from './addBackDatedRecipientAgentRateAmount';
 import backDateRecipientTransactionDate from './backDateRecipientTransactionDate';
 import backDateAgentTransactionDate from './backDateAgentTransactionDate';
-import deleteRecipientSponsorship from './deleteRecipientSponsorship';
+import deleteRecipientSponsorship from './delRecipient';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
@@ -31,36 +31,36 @@ import depositSponsorStakingRewards from './depositSponsorStakingRewards';
 import depositRecipientStakingRewards from './depositRecipientStakingRewards';
 import depositAgentStakingRewards from './depositAgentStakingRewards';
 import setInflationRate from './setInflationRate';
-import setLowerRecipientRate from './setLowerRecipientRate';
-import setUpperRecipientRate from './setUpperRecipientRate';
+import setLowerRecipientRate from './setLowerRecipient';
+import setUpperRecipientRate from './setUpperRecipient';
 import setRecipientRateRange from './setRecipientRateRange';
-import setLowerAgentRate from './setLowerAgentRate';
-import setUpperAgentRate from './setUpperAgentRate';
+import setLowerAgentRate from './setLowerAgent';
+import setUpperAgentRate from './setUpperAgent';
 import setAgentRateRange from './setAgentRateRange';
 import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
-  addSponsorRecipient,
+  addSponsorRecipientBranch,
   addRecipientRateTransaction,
   addRecipients,
-  addRecipientAgent,
-  addAgentTransaction,
+  addRecipientAgentBranch,
+  addAgentSponsoredTransaction,
   addAgents,
   deleteSponsor,
   deleteSponsorTree,
-  deleteSponsorRecipient,
+  deleteSponsorRecipientBranch,
   deleteRecipientRateBranch,
-  deleteRecipientAgent,
+  deleteRecipientAgentBranch,
   deleteAgentRateBranch,
   deleteRecipientSponsorships,
   deleteRecipientSponsorshipTree,
   deleteAgentSponsorships,
-  deleteRecipientSponsorRate,
-  deleteRecipientTransaction,
+  deleteRecipientRateSponsorship,
+  deleteRecipientRateAmount,
   deleteAgent,
   unSponsorAgent,
-  addBackDatedRecipientTransaction,
-  addBackDatedAgentTransaction,
+  addBackDatedRecipientRateAmount,
+  addBackDatedRecipientAgentRateAmount,
   backDateRecipientTransactionDate,
   backDateAgentTransactionDate,
   deleteRecipientSponsorship,

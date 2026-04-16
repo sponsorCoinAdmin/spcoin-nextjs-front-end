@@ -277,27 +277,27 @@ export async function POST(request: NextRequest) {
         } else if (step.panel === 'spcoin_write') {
           switch (step.method) {
             case 'addRecipient':
-            case 'addSponsorRecipient':
+            case 'addSponsorRecipientBranch':
             case 'addAccountRecipient': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
-              const addSponsorRecipient = (contract as unknown as {
-                addSponsorRecipient?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
-              }).addSponsorRecipient;
+              const addSponsorRecipientBranch = (contract as unknown as {
+                addSponsorRecipientBranch?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+              }).addSponsorRecipientBranch;
               const tx =
-                typeof addSponsorRecipient === 'function'
-                  ? await addSponsorRecipient(sponsorKey, recipientKey)
+                typeof addSponsorRecipientBranch === 'function'
+                  ? await addSponsorRecipientBranch(sponsorKey, recipientKey)
                   : await access.add.addRecipient(recipientKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                'addSponsorRecipient',
+                'addSponsorRecipientBranch',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
               break;
             }
             case 'addRecipientRateTransaction':
-            case 'addRecipientTransaction':
+            case 'addRecipientSponsoredTransaction':
             case 'addRecipientRateBranchAmount':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
@@ -316,18 +316,18 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('addRecipientRateTransaction', tx, receipt);
               break;
             }
-            case 'addRecipientAgent':
+            case 'addRecipientAgentBranch':
             case 'addAgent': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
-              const tx = await access.add.addRecipientAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
+              const tx = await access.add.addRecipientAgentBranch(sponsorKey, recipientKey, recipientRateKey, agentKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipientAgent', tx, receipt);
+              result = formatReceiptResult('addRecipientAgentBranch', tx, receipt);
               break;
             }
-            case 'addAgentTransaction':
+            case 'addAgentSponsoredTransaction':
             case 'addAgentRateTransaction':
             case 'addAgentRateBranchAmount':
             case 'addAgentRateAmount':
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await (access.add.addAgentTransaction ??
+              const tx = await (access.add.addAgentSponsoredTransaction ??
                 access.add.addAgentRateTransaction ??
                 access.add.addAgentRateBranchAmount)(
                 sponsorKey,
@@ -350,12 +350,12 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAgentTransaction', tx, receipt);
+              result = formatReceiptResult('addAgentSponsoredTransaction', tx, receipt);
               break;
             }
             case 'addBackDatedSponsorship':
             case 'addBackDatedRecipientSponsorship':
-            case 'addBackDatedRecipientTransaction':
+            case 'addBackDatedRecipientRateAmount':
             case 'addAccountRecipientRateBackdated': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
@@ -365,7 +365,7 @@ export async function POST(request: NextRequest) {
               const explicitQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
               const transactionQty = explicitQty || `${wholeAmount}.${decimalAmount}`;
-              const tx = await access.add.addBackDatedRecipientTransaction(
+              const tx = await access.add.addBackDatedRecipientRateAmount(
                 signer,
                 sponsorKey,
                 recipientKey,
@@ -374,11 +374,11 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt);
+              result = formatReceiptResult('addBackDatedRecipientRateAmount', tx, receipt);
               break;
             }
             case 'addBackDatedAgentSponsorship':
-            case 'addBackDatedAgentTransaction':
+            case 'addBackDatedRecipientAgentRateAmount':
             case 'addAccountAgentRateBackdated': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
@@ -387,7 +387,7 @@ export async function POST(request: NextRequest) {
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
-              const tx = await access.add.addBackDatedAgentTransaction(
+              const tx = await access.add.addBackDatedRecipientAgentRateAmount(
                 signer,
                 sponsorKey,
                 recipientKey,
@@ -398,7 +398,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt);
+              result = formatReceiptResult('addBackDatedRecipientAgentRateAmount', tx, receipt);
               break;
             }
             case 'backDateRecipientTransactionDate': {

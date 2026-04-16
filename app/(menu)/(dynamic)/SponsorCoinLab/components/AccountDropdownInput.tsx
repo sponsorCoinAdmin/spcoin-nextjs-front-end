@@ -10,8 +10,6 @@ type Props = {
   onChange: (value: string) => void;
   className: string;
   placeholder?: string;
-  inputAriaLabel?: string;
-  inputTitle?: string;
   dataFieldId?: string;
   options: AccountOption[];
 };
@@ -21,8 +19,6 @@ export default function AccountDropdownInput({
   onChange,
   className,
   placeholder,
-  inputAriaLabel,
-  inputTitle,
   dataFieldId,
   options,
 }: Props) {
@@ -62,8 +58,6 @@ export default function AccountDropdownInput({
       <input
         type="text"
         data-field-id={dataFieldId}
-        aria-label={inputAriaLabel}
-        title={inputTitle}
         className={`${className} pr-10`}
         value={value}
         onFocus={() => {

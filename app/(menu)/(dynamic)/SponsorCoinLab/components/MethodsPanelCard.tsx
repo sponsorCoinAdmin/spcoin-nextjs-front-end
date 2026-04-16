@@ -30,12 +30,12 @@ const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 };
 
 const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
-  addSponsorRecipient: 'add.ts',
-  addRecipientAgent: 'add.ts',
+  addSponsorRecipientBranch: 'add.ts',
+  addRecipientAgentBranch: 'add.ts',
   addRecipientRateTransaction: 'add.ts',
-  addAgentTransaction: 'add.ts',
-  addBackDatedRecipientTransaction: 'add.ts',
-  addBackDatedAgentTransaction: 'add.ts',
+  addAgentSponsoredTransaction: 'add.ts',
+  addBackDatedRecipientRateAmount: 'add.ts',
+  addBackDatedRecipientAgentRateAmount: 'add.ts',
   backDateRecipientTransactionDate: 'add.ts',
   backDateAgentTransactionDate: 'add.ts',
   addRecipients: 'addRecipients.ts',
@@ -44,8 +44,8 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   deleteRecipientSponsorships: 'delete.ts',
   deleteRecipientSponsorshipTree: 'delete.ts',
   deleteAgentSponsorships: 'delete.ts',
-  deleteRecipientSponsorRate: 'delete.ts',
-  deleteRecipientTransaction: 'delete.ts',
+  deleteRecipientRateSponsorship: 'delete.ts',
+  deleteRecipientRateAmount: 'delete.ts',
   deleteAgent: 'delete.ts',
   deleteAccountRecord: 'delete.ts',
   deleteAccountRecords: 'delete.ts',
@@ -59,10 +59,10 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   setVersion: 'add.ts',
   setRecipientRateRange: 'add.ts',
   setAgentRateRange: 'add.ts',
-  setLowerRecipientRate: 'setLowerRecipientRate.ts',
-  setUpperRecipientRate: 'setUpperRecipientRate.ts',
-  setLowerAgentRate: 'setLowerAgentRate.ts',
-  setUpperAgentRate: 'setUpperAgentRate.ts',
+  setLowerRecipient: 'setLowerRecipientRate.ts',
+  setUpperRecipient: 'setUpperRecipientRate.ts',
+  setLowerAgent: 'setLowerAgentRate.ts',
+  setUpperAgent: 'setUpperAgentRate.ts',
 };
 
 const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
@@ -76,9 +76,9 @@ const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   hhFundAccounts: 'hhFundAccounts.ts',
   deleteMasterSponsorships: 'delete.ts',
   deleteSponsorTree: 'delete.ts',
-  deleteSponsorRecipient: 'delete.ts',
+  deleteSponsorRecipientBranch: 'delete.ts',
   deleteRecipientRateBranch: 'delete.ts',
-  deleteRecipientAgent: 'delete.ts',
+  deleteRecipientAgentBranch: 'delete.ts',
   deleteAgentRateBranch: 'delete.ts',
   deleteRecipientSponsorships: 'delete.ts',
   deleteAgentSponsorships: 'delete.ts',
@@ -231,9 +231,9 @@ export default function MethodsPanelCard({
             ...(spCoinWriteProps.showOffChainMethods
               ? [
                   'deleteSponsorTree',
-                  'deleteSponsorRecipient',
+                  'deleteSponsorRecipientBranch',
                   'deleteRecipientRateBranch',
-                  'deleteRecipientAgent',
+                  'deleteRecipientAgentBranch',
                   'deleteAgentRateBranch',
                 ]
               : []),
@@ -292,9 +292,9 @@ export default function MethodsPanelCard({
             'hhFundAccounts',
             'deleteMasterSponsorships',
             'deleteSponsorTree',
-            'deleteSponsorRecipient',
+            'deleteSponsorRecipientBranch',
             'deleteRecipientRateBranch',
-            'deleteRecipientAgent',
+            'deleteRecipientAgentBranch',
             'deleteAgentRateBranch',
           ].includes(name),
         ),
@@ -587,8 +587,6 @@ export default function MethodsPanelCard({
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
           <div className="relative w-full min-w-0">
             <select
-              aria-label="Admin utilities JSON method"
-              title="Admin utilities JSON method"
               className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
               value={hasVisibleAdminUtilsMethods ? adminUtilsSelectedMethod : '__no_methods__'}
               onChange={(e) => selectMappedJsonMethod(e.target.value)}
@@ -633,8 +631,6 @@ export default function MethodsPanelCard({
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
           <div className="relative w-full min-w-0">
             <select
-              aria-label="ERC20 JSON method"
-              title="ERC20 JSON method"
               className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
               value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
               onChange={(e) => selectMappedJsonMethod(e.target.value)}
@@ -679,8 +675,6 @@ export default function MethodsPanelCard({
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
           <div className="relative w-full min-w-0">
             <select
-              aria-label="SpCoin read JSON method"
-              title="SpCoin read JSON method"
               className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
               value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
               onChange={(e) => selectMappedJsonMethod(e.target.value)}
@@ -706,8 +700,6 @@ export default function MethodsPanelCard({
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
           <div className="relative w-full min-w-0">
             <select
-              aria-label="SpCoin write JSON method"
-              title="SpCoin write JSON method"
               className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
               value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
               onChange={(e) => selectMappedJsonMethod(e.target.value)}
@@ -763,8 +755,6 @@ export default function MethodsPanelCard({
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <div className="relative w-full min-w-0">
           <select
-            aria-label="Serialization test JSON method"
-            title="Serialization test JSON method"
             className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
             onChange={(e) => selectMappedJsonMethod(e.target.value)}
@@ -915,8 +905,6 @@ export default function MethodsPanelCard({
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
                   <select
-                    aria-label="TypeScript file"
-                    title="TypeScript file"
                     className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
                     value={typeScriptMethodOptions.includes(currentJsonMethodName) ? currentJsonMethodName : ''}
                     onChange={(event) => selectMappedJsonMethod(event.target.value)}

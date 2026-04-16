@@ -18,6 +18,7 @@ import type {
   RecipientRateStruct,
   RecipientStruct,
   RewardsStruct,
+  SponsorCoinHeader,
   StakingTransactionStruct,
 } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/dataTypes/spCoinDataTypes';
 
@@ -26,14 +27,14 @@ export type SpCoinAccessSource = 'local' | 'node_modules';
 
 export type SpCoinAddAccess = {
   addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
-  addSponsorRecipient?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
+  addSponsorRecipientBranch?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
   addRecipientRateTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientTransaction?: (
+  addRecipientSponsoredTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
@@ -45,8 +46,8 @@ export type SpCoinAddAccess = {
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientAgent: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
-  addAgentTransaction?: (
+  addRecipientAgentBranch: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+  addAgentSponsoredTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
@@ -78,7 +79,7 @@ export type SpCoinAddAccess = {
     _agentRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addBackDatedAgentTransaction: (
+  addBackDatedRecipientAgentRateAmount: (
     _adminSigner: Signer,
     _sponsorKey: string,
     _recipientKey: string,
@@ -106,7 +107,7 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
     _transactionBackDate: number,
   ) => Promise<ContractTransactionResponse>;
-  addBackDatedRecipientTransaction: (
+  addBackDatedRecipientRateAmount: (
     _adminSigner: Signer,
     _sponsorKey: string,
     _recipientKey: string,
@@ -174,7 +175,7 @@ export type SpCoinReadAccess = {
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
-  getSpCoinMetaData: () => Promise<unknown>;
+  getSPCoinHeaderRecord: (getBody?: boolean) => Promise<SponsorCoinHeader>;
   getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
@@ -215,7 +216,7 @@ export type SpCoinContractAccess = Contract & {
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientTransaction?: (
+  addRecipientSponsoredTransaction?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -229,11 +230,11 @@ export type SpCoinContractAccess = Contract & {
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  addSponsorRecipient?: (
+  addSponsorRecipientBranch?: (
     sponsorKey: string,
     recipientKey: string,
   ) => Promise<ContractTransactionResponse>;
-  addAgentTransaction?: (
+  addAgentSponsoredTransaction?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -294,7 +295,7 @@ export type SpCoinContractAccess = Contract & {
   delRecipient?: (...args: unknown[]) => Promise<unknown>;
   deleteSponsor?: (sponsorKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipient?: (recipientKey: string) => Promise<ContractTransactionResponse>;
-  deleteSponsorRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
+  deleteSponsorRecipientBranch?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -304,7 +305,7 @@ export type SpCoinContractAccess = Contract & {
     recipientKey: string,
     recipientRateKey: string | number | bigint,
   ) => Promise<ContractTransactionResponse>;
-  deleteRecipientTransaction?: (
+  deleteRecipientRateAmount?: (
     recipientKey: string,
     recipientRateKey: string | number | bigint,
   ) => Promise<ContractTransactionResponse>;
@@ -313,7 +314,7 @@ export type SpCoinContractAccess = Contract & {
     recipientRateKey: string | number | bigint,
     agentKey: string,
   ) => Promise<ContractTransactionResponse>;
-  deleteRecipientAgent?: (
+  deleteRecipientAgentBranch?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -577,8 +578,8 @@ function createSpCoinOffChainAccess(
     addRecipients: async (_accountKey: string, recipientAccountList: string[]) => {
       let recipientCount = 0;
       for (const recipientKey of recipientAccountList) {
-        if (typeof add.addSponsorRecipient === 'function') {
-          await add.addSponsorRecipient(String(_accountKey), String(recipientKey));
+        if (typeof add.addSponsorRecipientBranch === 'function') {
+          await add.addSponsorRecipientBranch(String(_accountKey), String(recipientKey));
         } else {
           await add.addRecipient(String(recipientKey));
         }
@@ -589,7 +590,7 @@ function createSpCoinOffChainAccess(
     addAgents: async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]) => {
       let agentCount = 0;
       for (const agentKey of agentAccountList) {
-        await add.addRecipientAgent(String(sponsorKey), String(recipientKey), recipientRateKey, String(agentKey));
+        await add.addRecipientAgentBranch(String(sponsorKey), String(recipientKey), recipientRateKey, String(agentKey));
         agentCount += 1;
       }
       return agentCount;

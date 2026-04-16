@@ -16,27 +16,27 @@ import {
 } from '../../shared';
 
 export type SpCoinWriteMethod =
-  | 'addSponsorRecipient'
+  | 'addSponsorRecipientBranch'
   | 'addRecipientRateTransaction'
   | 'addRecipients'
-  | 'addRecipientAgent'
-  | 'addAgentTransaction'
+  | 'addRecipientAgentBranch'
+  | 'addAgentSponsoredTransaction'
   | 'addAgents'
   | 'deleteSponsor'
   | 'deleteSponsorTree'
-  | 'deleteSponsorRecipient'
+  | 'deleteSponsorRecipientBranch'
   | 'deleteRecipientRateBranch'
-  | 'deleteRecipientAgent'
+  | 'deleteRecipientAgentBranch'
   | 'deleteAgentRateBranch'
   | 'deleteRecipientSponsorships'
   | 'deleteRecipientSponsorshipTree'
   | 'deleteAgentSponsorships'
-  | 'deleteRecipientSponsorRate'
-  | 'deleteRecipientTransaction'
+  | 'deleteRecipientRateSponsorship'
+  | 'deleteRecipientRateAmount'
   | 'deleteAgent'
   | 'unSponsorAgent'
-  | 'addBackDatedRecipientTransaction'
-  | 'addBackDatedAgentTransaction'
+  | 'addBackDatedRecipientRateAmount'
+  | 'addBackDatedRecipientAgentRateAmount'
   | 'backDateRecipientTransactionDate'
   | 'backDateAgentTransactionDate'
   | 'deleteRecipientSponsorship'
@@ -58,8 +58,8 @@ export type SpCoinWriteMethod =
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
-  'addBackDatedRecipientTransaction',
-  'addBackDatedAgentTransaction',
+  'addBackDatedRecipientRateAmount',
+  'addBackDatedRecipientAgentRateAmount',
   'backDateRecipientTransactionDate',
   'backDateAgentTransactionDate',
   'setInflationRate',
@@ -73,22 +73,22 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addSponsorRecipient',
+  'addSponsorRecipientBranch',
   'addRecipientRateTransaction',
-  'addRecipientAgent',
-  'addAgentTransaction',
+  'addRecipientAgentBranch',
+  'addAgentSponsoredTransaction',
   'updateAccountStakingRewards',
   'deleteSponsorTree',
-  'deleteSponsorRecipient',
+  'deleteSponsorRecipientBranch',
   'deleteRecipientRateBranch',
-  'deleteRecipientAgent',
+  'deleteRecipientAgentBranch',
   'deleteAgentRateBranch',
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
   'deleteSponsor',
-  'deleteRecipientSponsorRate',
-  'deleteRecipientTransaction',
+  'deleteRecipientRateSponsorship',
+  'deleteRecipientRateAmount',
   'deleteAgent',
   'unSponsorAgent',
   'deleteRecipientSponsorship',
@@ -105,9 +105,9 @@ export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
   'addAgents',
   'deleteSponsorTree',
-  'deleteSponsorRecipient',
+  'deleteSponsorRecipientBranch',
   'deleteRecipientRateBranch',
-  'deleteRecipientAgent',
+  'deleteRecipientAgentBranch',
   'deleteAgentRateBranch',
 ];
 
@@ -116,8 +116,8 @@ const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
-  'deleteRecipientSponsorRate',
-  'deleteRecipientTransaction',
+  'deleteRecipientRateSponsorship',
+  'deleteRecipientRateAmount',
   'deleteAgent',
   'deleteRecipientSponsorship',
   'unSponsorAgent',
@@ -157,39 +157,39 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 }
 
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
-  addRecipient: 'addSponsorRecipient',
-  addAccountRecipient: 'addSponsorRecipient',
+  addRecipient: 'addSponsorRecipientBranch',
+  addAccountRecipient: 'addSponsorRecipientBranch',
   addRecipientRateBranchAmount: 'addRecipientRateTransaction',
-  addRecipientTransaction: 'addRecipientRateTransaction',
+  addRecipientSponsoredTransaction: 'addRecipientRateTransaction',
   addRecipientRateAmount: 'addRecipientRateTransaction',
   addSponsorship: 'addRecipientRateTransaction',
   addAccountRecipientRate: 'addRecipientRateTransaction',
-  addAgent: 'addRecipientAgent',
-  addAgentRateBranchAmount: 'addAgentTransaction',
-  addAgentRateTransaction: 'addAgentTransaction',
-  addAgentRateAmount: 'addAgentTransaction',
-  addAgentSponsorship: 'addAgentTransaction',
-  addAccountAgentRate: 'addAgentTransaction',
-  addBackDatedSponsorship: 'addBackDatedRecipientTransaction',
-  addBackDatedRecipientSponsorship: 'addBackDatedRecipientTransaction',
-  addBackDatedRecipientTransaction: 'addBackDatedRecipientTransaction',
-  addAccountRecipientRateBackdated: 'addBackDatedRecipientTransaction',
-  addBackDatedAgentSponsorship: 'addBackDatedAgentTransaction',
-  addBackDatedAgentTransaction: 'addBackDatedAgentTransaction',
-  addAccountAgentRateBackdated: 'addBackDatedAgentTransaction',
+  addAgent: 'addRecipientAgentBranch',
+  addAgentRateBranchAmount: 'addAgentSponsoredTransaction',
+  addAgentRateTransaction: 'addAgentSponsoredTransaction',
+  addAgentRateAmount: 'addAgentSponsoredTransaction',
+  addAgentSponsorship: 'addAgentSponsoredTransaction',
+  addAccountAgentRate: 'addAgentSponsoredTransaction',
+  addBackDatedSponsorship: 'addBackDatedRecipientRateAmount',
+  addBackDatedRecipientSponsorship: 'addBackDatedRecipientRateAmount',
+  addBackDatedRecipientRateAmount: 'addBackDatedRecipientRateAmount',
+  addAccountRecipientRateBackdated: 'addBackDatedRecipientRateAmount',
+  addBackDatedAgentSponsorship: 'addBackDatedRecipientAgentRateAmount',
+  addBackDatedRecipientAgentRateAmount: 'addBackDatedRecipientAgentRateAmount',
+  addAccountAgentRateBackdated: 'addBackDatedRecipientAgentRateAmount',
   deleteAccountTree: 'deleteSponsor',
   delAccountTree: 'deleteSponsor',
   deleteRecipient: 'deleteRecipientSponsorship',
   deleteRecipientSponsorship: 'deleteRecipientSponsorship',
-  deleteRecipientRate: 'deleteRecipientSponsorRate',
+  deleteRecipientRate: 'deleteRecipientRateSponsorship',
   delRecipient: 'deleteRecipientSponsorship',
   delAccountRecipientSponsorship: 'deleteRecipientRateBranch',
-  delAccountRecipientRateAmount: 'deleteRecipientTransaction',
-  deleteRecipientTransaction: 'deleteRecipientTransaction',
+  delAccountRecipientRateAmount: 'deleteRecipientRateAmount',
+  deleteRecipientRateAmount: 'deleteRecipientRateAmount',
   deleteRecipientSponsorshipTree: 'deleteRecipientRateBranch',
   delAccountAgent: 'deleteAgent',
   deleteAgent: 'deleteAgent',
-  deleteAgentSponsorships: 'deleteRecipientAgent',
+  deleteAgentSponsorships: 'deleteRecipientAgentBranch',
   deleteAgentRate: 'deleteAgentRateBranch',
   deleteAgentRateAmount: 'deleteAgentRateBranch',
   delAccountAgentSponsorship: 'unSponsorAgent',
@@ -198,7 +198,7 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   deleteAccountRecord: 'deleteAccountRecord',
   delAccountRecords: 'deleteAccountRecords',
   deleteAccountRecords: 'deleteAccountRecords',
-  delAccountRecipientRate: 'deleteRecipientSponsorRate',
+  delAccountRecipientRate: 'deleteRecipientRateSponsorship',
 };
 
 export function normalizeSpCoinWriteMethod(method: string): SpCoinWriteMethod {
@@ -446,7 +446,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'deleteRecipientSponsorRate': {
+    case 'deleteRecipientRateSponsorship': {
       await submitWrite(activeDef.title, (access, signer) => {
         const method = access.contract.deleteRecipientRateBranch;
         if (typeof method !== 'function') {
@@ -456,7 +456,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'deleteRecipientTransaction': {
+    case 'deleteRecipientRateAmount': {
       await submitWrite(activeDef.title, (access, signer) => {
         const method = access.contract.deleteRecipientRateBranch;
         if (typeof method !== 'function') {
@@ -468,18 +468,18 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteAgent': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const method = access.contract.deleteRecipientAgent;
+        const method = access.contract.deleteRecipientAgentBranch;
         if (typeof method !== 'function') {
-          throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+          throw new Error('deleteRecipientAgentBranch is not available on the current SpCoin contract access path.');
         }
         return method(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), asString(methodArgs[2]));
       });
       break;
     }
-    case 'addBackDatedRecipientTransaction': {
+    case 'addBackDatedRecipientRateAmount': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addBackDatedRecipientTransaction(
+        access.add.addBackDatedRecipientRateAmount(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),
@@ -490,10 +490,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addBackDatedAgentTransaction': {
+    case 'addBackDatedRecipientAgentRateAmount': {
       const qty = String(methodArgs[5]);
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.addBackDatedAgentTransaction(
+        access.add.addBackDatedRecipientAgentRateAmount(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),
@@ -534,15 +534,15 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addSponsorRecipient': {
+    case 'addSponsorRecipientBranch': {
       await submitWrite(activeDef.title, (access) => {
-        const method = access.add.addSponsorRecipient;
+        const method = access.add.addSponsorRecipientBranch;
         if (typeof method === 'function') {
           return method(asString(methodArgs[0]), asString(methodArgs[1]));
         }
-        const contractMethod = access.contract.addSponsorRecipient;
+        const contractMethod = access.contract.addSponsorRecipientBranch;
         if (typeof contractMethod !== 'function') {
-          throw new Error('addSponsorRecipient is not available on the current SpCoin contract access path.');
+          throw new Error('addSponsorRecipientBranch is not available on the current SpCoin contract access path.');
         }
         return contractMethod(asString(methodArgs[0]), asString(methodArgs[1]));
       });
@@ -560,9 +560,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addRecipientAgent': {
+    case 'addRecipientAgentBranch': {
       await submitWrite(activeDef.title, (access) =>
-        access.add.addRecipientAgent(
+        access.add.addRecipientAgentBranch(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -571,10 +571,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addAgentTransaction': {
+    case 'addAgentSponsoredTransaction': {
       const qty = String(methodArgs[5]);
       await submitWriteWithFetchRetry(activeDef.title, (access) =>
-        (access.add.addAgentTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
+        (access.add.addAgentSponsoredTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
