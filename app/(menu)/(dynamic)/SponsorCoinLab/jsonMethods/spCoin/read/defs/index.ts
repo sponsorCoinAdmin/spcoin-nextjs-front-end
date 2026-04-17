@@ -6,6 +6,7 @@ import getMasterAccountList from './getMasterAccountList';
 import getAccountListSize from './getAccountListSize';
 import getSpCoinMetaData from './getSpCoinMetaData';
 import getAccountRecipientList from './getAccountRecipientList';
+import getAccountAgentList from './getAccountAgentList';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getAccountRecord from './getAccountRecord';
 import getAccountStakingRewards from './getAccountStakingRewards';
@@ -55,6 +56,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountListSize,
   getSpCoinMetaData,
   getAccountRecipientList,
+  getAccountAgentList,
   getAccountRecipientListSize,
   getAccountRecord,
   getAccountStakingRewards,

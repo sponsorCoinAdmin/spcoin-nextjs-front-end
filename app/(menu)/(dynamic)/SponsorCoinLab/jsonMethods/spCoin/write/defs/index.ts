@@ -1,22 +1,22 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
-import addSponsorRecipient from './addSponsorRecipient';
+import addRecipient from './addRecipient';
 import addRecipientTransaction from './addRecipientRateTransaction';
 import addRecipients from './addRecipients';
-import addRecipientAgent from './addRecipientAgent';
+import addAgent from './addAgent';
 import addAgentTransaction from './addAgentTransaction';
 import addAgents from './addAgents';
 import deleteSponsor from './deleteSponsor';
-import deleteSponsorTree from './deleteSponsorTree';
-import deleteSponsorRecipient from './deleteSponsorRecipient';
-import deleteRecipientRateBranch from './deleteRecipientRateBranch';
-import deleteRecipientAgent from './deleteRecipientAgent';
-import deleteAgentRateBranch from './deleteAgentRateBranch';
+import deleteSponsorNode from './deleteSponsorNode';
+import deleteRecipient from './deleteRecipient';
+import deleteRecipientRate from './deleteRecipientRate';
+import deleteAgent from './deleteAgent';
+import deleteAgentNode from './deleteAgentNode';
+import deleteAgentRate from './deleteAgentRate';
 import deleteRecipientSponsorships from './deleteRecipientSponsorships';
 import deleteRecipientSponsorshipTree from './deleteRecipientSponsorshipTree';
 import deleteAgentSponsorships from './deleteAgentSponsorships';
 import deleteRecipientSponsorRate from './deleteRecipientSponsorRate';
 import deleteRecipientTransaction from './deleteRecipientTransaction';
-import deleteAgent from './deleteAgent';
 import unSponsorAgent from './unSponsorAgent';
 import addBackDatedRecipientTransaction from './addBackDatedRecipientTransaction';
 import addBackDatedAgentTransaction from './addBackDatedAgentTransaction';
@@ -40,24 +40,24 @@ import setAgentRateRange from './setAgentRateRange';
 import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
-  addSponsorRecipient,
+  addRecipient,
   addRecipientTransaction,
   addRecipients,
-  addRecipientAgent,
+  addAgent,
   addAgentTransaction,
   addAgents,
   deleteSponsor,
-  deleteSponsorTree,
-  deleteSponsorRecipient,
-  deleteRecipientRateBranch,
-  deleteRecipientAgent,
-  deleteAgentRateBranch,
+  deleteSponsorNode,
+  deleteRecipient,
+  deleteRecipientRate,
+  deleteAgent,
+  deleteAgentNode,
+  deleteAgentRate,
   deleteRecipientSponsorships,
   deleteRecipientSponsorshipTree,
   deleteAgentSponsorships,
   deleteRecipientSponsorRate,
   deleteRecipientTransaction,
-  deleteAgent,
   unSponsorAgent,
   addBackDatedRecipientTransaction,
   addBackDatedAgentTransaction,

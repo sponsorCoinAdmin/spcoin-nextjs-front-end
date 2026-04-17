@@ -464,7 +464,7 @@ export async function POST(request: NextRequest) {
               );
               break;
             }
-            case 'deleteSponsor': {
+            case 'deleteSponsorNode': {
               const sponsorKey = findParam('Sponsor Key') || findParam('Account Key') || senderAddress;
               const deleteSponsor = (contract as unknown as { deleteSponsor?: (sponsorKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteSponsor;
               if (typeof deleteSponsor !== 'function') {
@@ -473,13 +473,41 @@ export async function POST(request: NextRequest) {
               const tx = await deleteSponsor(sponsorKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                'deleteSponsor',
+                String(step.method),
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
+              break;
+            }
+            case 'deleteAgentNode': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              const recipientKey = findParam('Recipient Key');
+              const recipientRateKey = findParam('Recipient Rate Key');
+              const agentKey = findParam('Agent Key');
+              const deleteRecipientAgent = (
+                contract as unknown as {
+                  deleteRecipientAgent?: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string | number,
+                    agentKey: string,
+                  ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+                }
+              ).deleteRecipientAgent;
+              if (typeof deleteRecipientAgent !== 'function') {
+                throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+              }
+              const tx = await deleteRecipientAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult(
+                String(step.method),
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
               break;
             }
             case 'delAccountAgentSponsorship':
+            case 'deleteAgentRateNode':
             case 'deleteAgentRateBranch': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');

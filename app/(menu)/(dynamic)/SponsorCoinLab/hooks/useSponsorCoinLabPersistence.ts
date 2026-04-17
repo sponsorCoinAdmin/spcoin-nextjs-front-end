@@ -4,7 +4,7 @@ import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
 import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
 import { normalizeSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
-import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import { normalizeSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import type { SerializationTestMethod } from '../jsonMethods/serializationTests';
 import type { ConnectionMode, LabJavaScriptScript, LabScript, MethodPanelMode, ScriptEditorKind } from '../scriptBuilder/types';
 
@@ -43,6 +43,12 @@ function normalizeSerializationTestMethodKey(value: string) {
   if (!trimmed) return trimmed;
   if (trimmed.startsWith('compare_')) return `external_${trimmed.slice('compare_'.length)}`;
   if (trimmed.startsWith('legacy_')) return `external_${trimmed.slice('legacy_'.length)}`;
+  if (trimmed === 'deleteSponsorTree') return 'deleteSponsor';
+  if (trimmed === 'deleteSponsorRecipient') return 'deleteRecipient';
+  if (trimmed === 'deleteRecipientRateBranch') return 'deleteRecipientRate';
+  if (trimmed === 'deleteRecipientAgent') return 'deleteAgent';
+  if (trimmed === 'deleteAgentRateBranch') return 'deleteAgentRate';
+  if (trimmed === 'deleteAgentRateNode') return 'deleteAgentRate';
   return trimmed;
 }
 
@@ -397,7 +403,7 @@ export function useSponsorCoinLabPersistence({
             setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(saved.selectedSpCoinReadMethod));
           }
           if (typeof saved.selectedSpCoinWriteMethod === 'string') {
-            setSelectedSpCoinWriteMethod(saved.selectedSpCoinWriteMethod as SpCoinWriteMethod);
+            setSelectedSpCoinWriteMethod(normalizeSpCoinWriteMethod(saved.selectedSpCoinWriteMethod));
           }
           if (typeof saved.selectedSerializationTestMethod === 'string') {
             setSelectedSerializationTestMethod(

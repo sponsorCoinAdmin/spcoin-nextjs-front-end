@@ -14,6 +14,7 @@ export type SpCoinReadMethod =
   | 'getMasterAccountList'
   | 'getAccountListSize'
   | 'getAccountRecipientList'
+  | 'getAccountAgentList'
   | 'getAccountRecipientListSize'
   | 'getAccountRecord'
   | 'getAccountStakingRewards'

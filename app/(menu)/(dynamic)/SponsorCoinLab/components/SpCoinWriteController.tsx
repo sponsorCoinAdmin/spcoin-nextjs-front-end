@@ -205,24 +205,24 @@ export default function SpCoinWriteController(props: Props) {
     return Math.min(Math.max(parsed, lower), upper);
   };
   const recipientRateSliderMethods = new Set([
-    'addRecipientAgent',
+    'addAgent',
     'addAgents',
     'addRecipientTransaction',
     'addAgentTransaction',
     'deleteRecipientSponsorRate',
     'deleteRecipientTransaction',
-    'deleteRecipientRateBranch',
+    'deleteRecipientRate',
     'deleteAgent',
-    'deleteRecipientAgent',
+    'deleteAgentNode',
     'unSponsorAgent',
-    'deleteAgentRateBranch',
+    'deleteAgentRate',
     'addBackDatedRecipientTransaction',
     'addBackDatedAgentTransaction',
   ]);
   const agentRateSliderMethods = new Set([
     'addAgentTransaction',
     'unSponsorAgent',
-    'deleteAgentRateBranch',
+    'deleteAgentRate',
     'addBackDatedRecipientTransaction',
     'addBackDatedAgentTransaction',
   ]);

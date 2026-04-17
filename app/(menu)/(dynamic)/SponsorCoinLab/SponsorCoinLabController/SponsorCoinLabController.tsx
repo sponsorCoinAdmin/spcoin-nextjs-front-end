@@ -38,6 +38,7 @@ import {
   getSpCoinTodoWriteOptions,
   getSpCoinWorldWriteOptions,
   getSpCoinWriteOptions,
+  normalizeSpCoinWriteMethod,
   type SpCoinWriteMethod,
 } from '../jsonMethods/spCoin/write';
 import {
@@ -160,7 +161,7 @@ const defaultHardhatRpcUrl =
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
     useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
-    useState<SpCoinWriteMethod>('addSponsorRecipient');
+    useState<SpCoinWriteMethod>('addRecipient');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'admin_utils' | null>(null);
@@ -456,8 +457,9 @@ const defaultHardhatRpcUrl =
   const fallbackSpCoinReadMethod = Object.keys(spCoinReadMethodDefs)[0] as SpCoinReadMethod;
   const activeSpCoinReadDef =
     spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod] ?? spCoinReadMethodDefs[fallbackSpCoinReadMethod];
+  const normalizedSelectedSpCoinWriteMethod = normalizeSpCoinWriteMethod(selectedSpCoinWriteMethod);
   const activeSpCoinWriteDef =
-    spCoinWriteMethodDefs[selectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
+    spCoinWriteMethodDefs[normalizedSelectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
   const serializationTestOptions = getSerializationTestOptions();
   const utilityMethodOptions = getUtilityMethodOptions();
   const adminUtilityReadOptions = utilityMethodOptions.filter((name) =>
@@ -467,11 +469,11 @@ const defaultHardhatRpcUrl =
     [
       'hhFundAccounts',
       'deleteMasterSponsorships',
-      'deleteSponsorTree',
-      'deleteSponsorRecipient',
-      'deleteRecipientRateBranch',
-      'deleteRecipientAgent',
-      'deleteAgentRateBranch',
+      'deleteSponsor',
+      'deleteRecipient',
+      'deleteRecipientRate',
+      'deleteAgent',
+      'deleteAgentRate',
     ].includes(name),
   );
   const activeSerializationTestDef =
@@ -868,14 +870,14 @@ const defaultHardhatRpcUrl =
     }
   }, [normalizedSelectedSpCoinReadMethod, selectedSpCoinReadMethod]);
   useEffect(() => {
-    if (!spCoinWriteMethodDefs[selectedSpCoinWriteMethod] && spCoinWriteOptions.length > 0) {
+    if (!spCoinWriteMethodDefs[normalizedSelectedSpCoinWriteMethod] && spCoinWriteOptions.length > 0) {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
       return;
     }
-    if (spCoinWriteMethodDefs[selectedSpCoinWriteMethod].executable === false && spCoinWriteOptions.length > 0) {
+    if (spCoinWriteMethodDefs[normalizedSelectedSpCoinWriteMethod].executable === false && spCoinWriteOptions.length > 0) {
       setSelectedSpCoinWriteMethod(spCoinWriteOptions[0]);
     }
-  }, [selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
+  }, [normalizedSelectedSpCoinWriteMethod, selectedSpCoinWriteMethod, spCoinWriteMethodDefs, spCoinWriteOptions]);
   useEffect(() => {
     if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') return;
     if (!serializationTestMethodDefs[selectedSerializationTestMethod] && serializationTestOptions.length > 0) {

@@ -990,11 +990,11 @@ export function useSponsorCoinLabMethods({
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
       const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
-        deleteSponsorTree: 'deleteSponsorTree',
-        deleteSponsorRecipient: 'deleteSponsorRecipient',
-        deleteRecipientRateBranch: 'deleteRecipientRateBranch',
-        deleteRecipientAgent: 'deleteRecipientAgent',
-        deleteAgentRateBranch: 'deleteAgentRateBranch',
+        deleteSponsor: 'deleteSponsor',
+        deleteRecipient: 'deleteRecipient',
+        deleteRecipientRate: 'deleteRecipientRate',
+        deleteAgent: 'deleteAgent',
+        deleteAgentRate: 'deleteAgentRate',
         deleteRecipientSponsorships: 'deleteRecipientSponsorships',
         deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
         deleteAgentSponsorships: 'deleteAgentSponsorships',
@@ -1252,6 +1252,104 @@ export function useSponsorCoinLabMethods({
           throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account record.'));
         }
         tree = firstResult?.payload?.result;
+        if (
+          tree &&
+          typeof tree === 'object' &&
+          !Array.isArray(tree) &&
+          (!Array.isArray((tree as Record<string, unknown>).recipientAccountList) ||
+            ((tree as Record<string, unknown>).recipientAccountList as unknown[]).length === 0)
+        ) {
+          const recipientListResponse = await fetch('/api/spCoin/run-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contractAddress: target,
+              rpcUrl,
+              spCoinAccessSource: 'local',
+              script: {
+                id: `expand-account-recipient-list-${Date.now()}`,
+                name: 'Expand Account Recipient List',
+                network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+                steps: [
+                  {
+                    step: 1,
+                    name: 'getAccountRecipientList',
+                    panel: 'spcoin_rread',
+                    method: 'getAccountRecipientList',
+                    mode,
+                    params: [{ key: 'Account Key', value: normalizedAccount }],
+                  },
+                ],
+              },
+            }),
+          });
+          const recipientListPayload = (await recipientListResponse.json()) as {
+            ok?: boolean;
+            message?: string;
+            results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+          };
+          if (recipientListResponse.ok) {
+            const recipientListResult = Array.isArray(recipientListPayload?.results) ? recipientListPayload.results[0] : null;
+            const rawRecipientKeys = recipientListResult?.success ? recipientListResult?.payload?.result : [];
+            const recipientKeys = Array.isArray(rawRecipientKeys)
+              ? rawRecipientKeys
+                  .map((value) => String(value || '').trim())
+                  .filter((value) => value.length > 0)
+              : [];
+            if (recipientKeys.length > 0) {
+              (tree as Record<string, unknown>).recipientAccountList = recipientKeys.map((address) => ({ address }));
+            }
+          }
+        }
+        if (
+          tree &&
+          typeof tree === 'object' &&
+          !Array.isArray(tree) &&
+          (!Array.isArray((tree as Record<string, unknown>).agentAccountList) ||
+            ((tree as Record<string, unknown>).agentAccountList as unknown[]).length === 0)
+        ) {
+          const agentListResponse = await fetch('/api/spCoin/run-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contractAddress: target,
+              rpcUrl,
+              spCoinAccessSource: 'local',
+              script: {
+                id: `expand-account-agent-list-${Date.now()}`,
+                name: 'Expand Account Agent List',
+                network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+                steps: [
+                  {
+                    step: 1,
+                    name: 'getAccountAgentList',
+                    panel: 'spcoin_rread',
+                    method: 'getAccountAgentList',
+                    mode,
+                    params: [{ key: 'Account Key', value: normalizedAccount }],
+                  },
+                ],
+              },
+            }),
+          });
+          const agentListPayload = (await agentListResponse.json()) as {
+            ok?: boolean;
+            message?: string;
+            results?: Array<{ success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }>;
+          };
+          if (agentListResponse.ok) {
+            const agentListResult = Array.isArray(agentListPayload?.results) ? agentListPayload.results[0] : null;
+            const rawAgentKeys = agentListResult?.success ? agentListResult?.payload?.result : [];
+            const agentKeys = Array.isArray(rawAgentKeys)
+              ? rawAgentKeys
+                  .map((value) => String(value || '').trim())
+                  .filter((value) => value.length > 0)
+              : [];
+            if (agentKeys.length > 0) {
+              (tree as Record<string, unknown>).agentAccountList = agentKeys.map((address) => ({ address }));
+            }
+          }
+        }
         treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
       }
       return tree;
@@ -1884,7 +1982,7 @@ export function useSponsorCoinLabMethods({
   }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, spCoinReadMethodDefs]);
 
   useEffect(() => {
-    const activeWriteDef = spCoinWriteMethodDefs[selectedSpCoinWriteMethod];
+    const activeWriteDef = spCoinWriteMethodDefs[normalizeSpCoinWriteMethod(selectedSpCoinWriteMethod)];
     if (!activeWriteDef) {
       const next = Object.keys(spCoinWriteMethodDefs).find((key) => spCoinWriteMethodDefs[key as SpCoinWriteMethod].executable !== false);
       if (next) {

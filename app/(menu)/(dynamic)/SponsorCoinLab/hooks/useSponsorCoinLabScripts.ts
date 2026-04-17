@@ -32,6 +32,17 @@ type Tone = 'neutral' | 'invalid' | 'valid';
 
 type Entry = { id: string; label: string };
 
+function normalizeSerializationTestMethodKey(value: string) {
+  const trimmed = String(value || '').trim();
+  if (trimmed === 'deleteSponsorTree') return 'deleteSponsor';
+  if (trimmed === 'deleteSponsorRecipient') return 'deleteRecipient';
+  if (trimmed === 'deleteRecipientRateBranch') return 'deleteRecipientRate';
+  if (trimmed === 'deleteRecipientAgent') return 'deleteAgent';
+  if (trimmed === 'deleteAgentRateBranch') return 'deleteAgentRate';
+  if (trimmed === 'deleteAgentRateNode') return 'deleteAgentRate';
+  return trimmed;
+}
+
 const ACCESS_MODULES_TYPESCRIPT_ROOT = 'spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src';
 const OFFCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/offChain/`;
 const ONCHAIN_TYPESCRIPT_ROOT = `${ACCESS_MODULES_TYPESCRIPT_ROOT}/onChain/`;
@@ -638,7 +649,7 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'serialization_tests') {
-        const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+        const def = serializationTestMethodDefs[normalizeSerializationTestMethodKey(step.method) as SerializationTestMethod];
         return legacyValues
           .map((value, idx) => ({ key: def?.params[idx]?.label || `param${idx + 1}`, value }))
           .filter((param) => param.value.trim().length > 0);
@@ -681,7 +692,7 @@ export function useSponsorCoinLabScripts({
       }
 
       if (step.panel === 'serialization_tests') {
-        const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+        const def = serializationTestMethodDefs[normalizeSerializationTestMethodKey(step.method) as SerializationTestMethod];
         return (def?.params || []).some((param) => !findParamValue(param.label));
       }
 
@@ -796,8 +807,9 @@ export function useSponsorCoinLabScripts({
         return;
       }
 
-      setSelectedSerializationTestMethod(step.method as SerializationTestMethod);
-      const def = serializationTestMethodDefs[step.method as SerializationTestMethod];
+      const normalizedMethod = normalizeSerializationTestMethodKey(step.method) as SerializationTestMethod;
+      setSelectedSerializationTestMethod(normalizedMethod);
+      const def = serializationTestMethodDefs[normalizedMethod];
       setSerializationTestParams(fillParamList(def?.params || []));
     },
     [

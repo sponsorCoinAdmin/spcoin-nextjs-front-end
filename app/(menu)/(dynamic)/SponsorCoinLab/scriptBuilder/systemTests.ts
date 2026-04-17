@@ -10,9 +10,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     steps: [
       {
         step: 1,
-        name: 'addSponsorRecipient',
+        name: 'addRecipient',
         panel: 'spcoin_write',
-        method: 'addSponsorRecipient',
+        method: 'addRecipient',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
@@ -23,9 +23,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 2,
-        name: 'addRecipientAgent',
+        name: 'addAgent',
         panel: 'spcoin_write',
-        method: 'addRecipientAgent',
+        method: 'addAgent',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
@@ -77,9 +77,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     steps: [
       {
         step: 1,
-        name: 'addSponsorRecipient',
+        name: 'addRecipient',
         panel: 'spcoin_write',
-        method: 'addSponsorRecipient',
+        method: 'addRecipient',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },

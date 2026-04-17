@@ -376,7 +376,7 @@ export function useControllerAccounts({
             if (action === 'add') {
               if (selectedSponsorCoinAccountRole === 'sponsor') {
                 throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addSponsorRecipient or addAgents instead.',
+                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addAgents instead.',
                 );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {

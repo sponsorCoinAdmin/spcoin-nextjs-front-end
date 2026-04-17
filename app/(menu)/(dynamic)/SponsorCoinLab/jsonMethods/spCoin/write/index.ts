@@ -16,24 +16,24 @@ import {
 } from '../../shared';
 
 export type SpCoinWriteMethod =
-  | 'addSponsorRecipient'
+  | 'addRecipient'
   | 'addRecipientTransaction'
   | 'addRecipients'
-  | 'addRecipientAgent'
+  | 'addAgent'
   | 'addAgentTransaction'
   | 'addAgents'
   | 'deleteSponsor'
-  | 'deleteSponsorTree'
-  | 'deleteSponsorRecipient'
-  | 'deleteRecipientRateBranch'
-  | 'deleteRecipientAgent'
-  | 'deleteAgentRateBranch'
+  | 'deleteSponsorNode'
+  | 'deleteRecipient'
+  | 'deleteRecipientRate'
+  | 'deleteAgent'
+  | 'deleteAgentNode'
+  | 'deleteAgentRate'
   | 'deleteRecipientSponsorships'
   | 'deleteRecipientSponsorshipTree'
   | 'deleteAgentSponsorships'
   | 'deleteRecipientSponsorRate'
   | 'deleteRecipientTransaction'
-  | 'deleteAgent'
   | 'unSponsorAgent'
   | 'addBackDatedRecipientTransaction'
   | 'addBackDatedAgentTransaction'
@@ -73,23 +73,23 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addSponsorRecipient',
+  'addRecipient',
   'addRecipientTransaction',
-  'addRecipientAgent',
+  'addAgent',
   'addAgentTransaction',
   'updateAccountStakingRewards',
-  'deleteSponsorTree',
-  'deleteSponsorRecipient',
-  'deleteRecipientRateBranch',
-  'deleteRecipientAgent',
-  'deleteAgentRateBranch',
+  'deleteSponsor',
+  'deleteRecipient',
+  'deleteRecipientRate',
+  'deleteAgent',
+  'deleteAgentRate',
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
-  'deleteSponsor',
+  'deleteSponsorNode',
   'deleteRecipientSponsorRate',
   'deleteRecipientTransaction',
-  'deleteAgent',
+  'deleteAgentNode',
   'unSponsorAgent',
   'deleteRecipientSponsorship',
   'deleteAccountRecord',
@@ -104,21 +104,21 @@ export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
   'addAgents',
-  'deleteSponsorTree',
-  'deleteSponsorRecipient',
-  'deleteRecipientRateBranch',
-  'deleteRecipientAgent',
-  'deleteAgentRateBranch',
+  'deleteSponsor',
+  'deleteRecipient',
+  'deleteRecipientRate',
+  'deleteAgent',
+  'deleteAgentRate',
 ];
 
 const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
-  'deleteSponsor',
+  'deleteSponsorNode',
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
   'deleteRecipientSponsorRate',
   'deleteRecipientTransaction',
-  'deleteAgent',
+  'deleteAgentNode',
   'deleteRecipientSponsorship',
   'unSponsorAgent',
 ]);
@@ -157,14 +157,14 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 }
 
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
-  addRecipient: 'addSponsorRecipient',
-  addAccountRecipient: 'addSponsorRecipient',
+  addSponsorRecipient: 'addRecipient',
+  addAccountRecipient: 'addRecipient',
   addRecipientRateTransaction: 'addRecipientTransaction',
   addRecipientRateBranchAmount: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
   addAccountRecipientRate: 'addRecipientTransaction',
-  addAgent: 'addRecipientAgent',
+  addRecipientAgent: 'addAgent',
   addAgentRateBranchAmount: 'addAgentTransaction',
   addAgentRateTransaction: 'addAgentTransaction',
   addAgentRateAmount: 'addAgentTransaction',
@@ -179,19 +179,21 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   addAccountAgentRateBackdated: 'addBackDatedAgentTransaction',
   deleteAccountTree: 'deleteSponsor',
   delAccountTree: 'deleteSponsor',
-  deleteRecipient: 'deleteRecipientSponsorship',
+  deleteSponsorTree: 'deleteSponsor',
+  deleteSponsorRecipient: 'deleteRecipient',
+  deleteRecipientRateBranch: 'deleteRecipientRate',
+  deleteAgentRateBranch: 'deleteAgentRate',
+  deleteAgentRateNode: 'deleteAgentRate',
+  deleteRecipientAgent: 'deleteAgent',
   deleteRecipientSponsorship: 'deleteRecipientSponsorship',
-  deleteRecipientRate: 'deleteRecipientSponsorRate',
   delRecipient: 'deleteRecipientSponsorship',
-  delAccountRecipientSponsorship: 'deleteRecipientRateBranch',
+  delAccountRecipientSponsorship: 'deleteRecipientRate',
   delAccountRecipientRateAmount: 'deleteRecipientTransaction',
   deleteRecipientTransaction: 'deleteRecipientTransaction',
-  deleteRecipientSponsorshipTree: 'deleteRecipientRateBranch',
-  delAccountAgent: 'deleteAgent',
-  deleteAgent: 'deleteAgent',
-  deleteAgentSponsorships: 'deleteRecipientAgent',
-  deleteAgentRate: 'deleteAgentRateBranch',
-  deleteAgentRateAmount: 'deleteAgentRateBranch',
+  deleteRecipientSponsorshipTree: 'deleteRecipientRate',
+  delAccountAgent: 'deleteAgentNode',
+  deleteAgentSponsorships: 'deleteAgent',
+  deleteAgentRateAmount: 'deleteAgentRate',
   delAccountAgentSponsorship: 'unSponsorAgent',
   deleteAgentSponsorship: 'unSponsorAgent',
   delAccountRecord: 'deleteAccountRecord',
@@ -436,7 +438,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'deleteSponsor': {
+    case 'deleteSponsorNode': {
       await submitWrite(activeDef.title, (access) => {
         const method = access.contract.deleteSponsor;
         if (typeof method !== 'function') {
@@ -466,7 +468,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'deleteAgent': {
+    case 'deleteAgentNode': {
       await submitWrite(activeDef.title, (access, signer) => {
         const method = access.contract.deleteRecipientAgent;
         if (typeof method !== 'function') {
@@ -534,7 +536,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addSponsorRecipient': {
+    case 'addRecipient': {
       await submitWrite(activeDef.title, (access) => {
         const method = access.add.addSponsorRecipient;
         if (typeof method === 'function') {
@@ -572,7 +574,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'addRecipientAgent': {
+    case 'addAgent': {
       await submitWrite(activeDef.title, (access) =>
         access.add.addRecipientAgent(
           asString(methodArgs[0]),
