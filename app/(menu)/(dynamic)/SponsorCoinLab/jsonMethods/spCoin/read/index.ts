@@ -211,17 +211,19 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
-  ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
-};
-const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
-  OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
-};
+function getReadMethodHandlers() {
+  const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
+    ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+  };
+  const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
+    OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+  };
 
-const READ_METHOD_HANDLERS = {
-  ...ONCHAIN_READ_METHOD_HANDLERS,
-  ...OFFCHAIN_READ_METHOD_HANDLERS,
-} as const;
+  return {
+    ...ONCHAIN_READ_METHOD_HANDLERS,
+    ...OFFCHAIN_READ_METHOD_HANDLERS,
+  } as const;
+}
 
 export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const {
@@ -248,7 +250,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-  const handler = READ_METHOD_HANDLERS[canonicalMethod];
+  const handler = getReadMethodHandlers()[canonicalMethod];
   if (!handler) {
     throw new Error(`SpCoin read method ${selectedMethod} is not wired to a read-method source file.`);
   }

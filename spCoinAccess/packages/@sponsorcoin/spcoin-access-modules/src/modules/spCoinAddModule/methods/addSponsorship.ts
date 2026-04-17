@@ -6,7 +6,8 @@ export const addSponsorship = async (context, _sponsorSigner, _recipientKey, _re
         _recipientKey + ", " +
         _recipientRateKey + ", " +
         _transactionQty + ")");
-    await context.addAgentSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, BURN_ADDRESS, 0, _transactionQty);
+    const tx = await context.addAgentSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, BURN_ADDRESS, 0, _transactionQty);
     context.spCoinLogger.logExitFunction();
+    return tx;
 };
 

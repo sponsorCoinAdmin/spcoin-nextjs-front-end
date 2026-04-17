@@ -371,7 +371,7 @@ export default function SpCoinWriteController(props: Props) {
               value={name}
               style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
             >
-              {name}
+              {spCoinWriteMethodDefs[name]?.title || name}
             </option>
           ))}
           {visibleSenderWriteOptions.length > 0 ? (
@@ -390,7 +390,7 @@ export default function SpCoinWriteController(props: Props) {
                   value={name}
                   style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
-                  {name}
+                  {spCoinWriteMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>
@@ -411,7 +411,7 @@ export default function SpCoinWriteController(props: Props) {
                   value={name}
                   style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
-                  {name}
+                  {spCoinWriteMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>
@@ -432,7 +432,7 @@ export default function SpCoinWriteController(props: Props) {
                   value={name}
                   style={{ color: getMethodOptionColor(name, spCoinWriteMethodDefs[name].executable) }}
                 >
-                  {name}
+                  {spCoinWriteMethodDefs[name]?.title || name}
                 </option>
               ))}
             </React.Fragment>

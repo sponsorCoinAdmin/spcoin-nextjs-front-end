@@ -550,14 +550,26 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addRecipientRateTransaction': {
       const qty = String(methodArgs[3]);
-      await submitWrite(activeDef.title, (access) =>
-        (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
-          asString(methodArgs[0]),
+      await submitWrite(activeDef.title, (access, signer) => {
+        const sponsorKey = asString(methodArgs[0]);
+        const signerAddress = asString(signer?.address || selectedHardhatAddress || '');
+        const sponsorMatchesSigner =
+          sponsorKey.trim().toLowerCase() === signerAddress.trim().toLowerCase();
+        if (sponsorMatchesSigner && typeof access.add.addSponsorship === 'function') {
+          return access.add.addSponsorship(
+            signer,
+            asString(methodArgs[1]),
+            asStringOrNumber(methodArgs[2]),
+            qty,
+          );
+        }
+        return (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
+          sponsorKey,
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
           qty,
-        ),
-      );
+        );
+      });
       break;
     }
     case 'addRecipientAgent': {
@@ -573,16 +585,30 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addAgentTransaction': {
       const qty = String(methodArgs[5]);
-      await submitWriteWithFetchRetry(activeDef.title, (access) =>
-        (access.add.addAgentTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
-          asString(methodArgs[0]),
+      await submitWriteWithFetchRetry(activeDef.title, (access, signer) => {
+        const sponsorKey = asString(methodArgs[0]);
+        const signerAddress = asString(signer?.address || selectedHardhatAddress || '');
+        const sponsorMatchesSigner =
+          sponsorKey.trim().toLowerCase() === signerAddress.trim().toLowerCase();
+        if (sponsorMatchesSigner && typeof access.add.addAgentSponsorship === 'function') {
+          return access.add.addAgentSponsorship(
+            signer,
+            asString(methodArgs[1]),
+            asStringOrNumber(methodArgs[2]),
+            asString(methodArgs[3]),
+            asStringOrNumber(methodArgs[4]),
+            qty,
+          );
+        }
+        return (access.add.addAgentTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
+          sponsorKey,
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
           asString(methodArgs[3]),
           asStringOrNumber(methodArgs[4]),
           qty,
-        ),
-      );
+        );
+      });
       break;
     }
     case 'deleteAccountRecords': {

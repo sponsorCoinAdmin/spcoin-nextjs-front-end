@@ -27,6 +27,12 @@ export type SpCoinAccessSource = 'local' | 'node_modules';
 export type SpCoinAddAccess = {
   addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
   addSponsorRecipient?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
+  addSponsorship?: (
+    _sponsorSigner: Signer,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _transactionQty: string | number,
+  ) => Promise<ContractTransactionResponse>;
   addRecipientRateTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,

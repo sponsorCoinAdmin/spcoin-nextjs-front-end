@@ -4,6 +4,8 @@ import { JsonRpcProvider, Wallet, Contract } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
+import { CHAIN_ID } from '@/lib/structure';
+import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 
 type LabScriptParam = {
   key: string;
@@ -72,7 +74,12 @@ type StepResult = {
   payload: StepPayload;
 };
 
-const DEFAULT_SERVER_HARDHAT_RPC_URL = 'http://127.0.0.1:8545';
+const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+  networkHeader?: { rpcUrl?: string };
+};
+const DEFAULT_SERVER_HARDHAT_RPC_URL =
+  String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
+  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
 const TEST_ACCOUNTS_PATH = path.join(
   process.cwd(),
   'public',

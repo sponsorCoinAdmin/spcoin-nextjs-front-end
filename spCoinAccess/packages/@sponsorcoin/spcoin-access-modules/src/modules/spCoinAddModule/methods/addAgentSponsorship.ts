@@ -123,6 +123,55 @@ export const addAgentSponsorship = async (
       throw new Error(label + " reverted on-chain with receipt status " + String(receipt?.status ?? "unknown"));
     }
   };
+  const isMissingSelectorError = (error) => {
+    const message = getErrorMessage(error);
+    const code = String(error?.code || error?.error?.code || "");
+    const data = String(error?.data || error?.error?.data || "");
+    const action = String(error?.action || error?.error?.action || "");
+    return (
+      code === "CALL_EXCEPTION" ||
+      data === "0x" ||
+      action === "estimateGas" ||
+      /execution reverted|require\(false\)/i.test(message)
+    );
+  };
+  const resolveContractMethod = (methodNames) => {
+    for (const methodName of methodNames) {
+      const candidate = context.spCoinContractDeployed?.[methodName];
+      if (typeof candidate === "function") {
+        return { methodName, method: candidate.bind(context.spCoinContractDeployed) };
+      }
+    }
+    return null;
+  };
+  const sendWithMethodFallback = async (label, attempts) => {
+    let lastError;
+    for (let index = 0; index < attempts.length; index++) {
+      const attempt = attempts[index];
+      const resolved = resolveContractMethod(attempt.methodNames);
+      if (!resolved) {
+        continue;
+      }
+      try {
+        return await sendTxWithDiagnostics(
+          attempt.logLabel || resolved.methodName,
+          () => resolved.method(...attempt.args),
+        );
+      } catch (error) {
+        lastError = error;
+        if (!isMissingSelectorError(error) || index === attempts.length - 1) {
+          throw error;
+        }
+        context.spCoinLogger.logDetail(
+          "JS => " + label + " fallback after selector failure on " + resolved.methodName
+        );
+      }
+    }
+    if (lastError) {
+      throw lastError;
+    }
+    throw new Error(label + " is not available on the deployed contract.");
+  };
 
   context.spCoinLogger.logFunctionHeader(
     "addAgentSponsorship = async(" +
@@ -225,6 +274,36 @@ export const addAgentSponsorship = async (
   );
 
   try {
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = direct-transaction:send");
+    const directTx = await sendWithMethodFallback("direct addAgent transaction", [
+      {
+        methodNames: ["addAgentRateBranchAmount", "addAgentTransaction", "addAgentRateTransaction"],
+        args: [
+          sponsorKey,
+          _recipientKey,
+          _recipientRateKey,
+          _accountAgentKey,
+          _agentRateKey,
+          wholePart,
+          fractionalPart,
+        ],
+        logLabel: "addAgentRateBranchAmount",
+      },
+      {
+        methodNames: ["addSponsorship"],
+        args: [_recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, wholePart, fractionalPart],
+        logLabel: "addSponsorship",
+      },
+    ]);
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = direct-transaction:complete");
+    context.spCoinLogger.logExitFunction();
+    return directTx;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship direct transaction path failed: " + message);
+  }
+
+  try {
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:start");
     await logStructureSnapshot("before addRecipient");
     const existingRecipientList =
@@ -239,10 +318,18 @@ export const addAgentSponsorship = async (
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:skip-existing");
     } else {
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:send");
-      const addRecipientTx = await sendTxWithDiagnostics(
-        "addSponsorRecipient",
-        () => context.spCoinContractDeployed.addSponsorRecipient(sponsorKey, _recipientKey)
-      );
+      const addRecipientTx = await sendWithMethodFallback("addRecipient", [
+        {
+          methodNames: ["addSponsorRecipient"],
+          args: [sponsorKey, _recipientKey],
+          logLabel: "addSponsorRecipient",
+        },
+        {
+          methodNames: ["addRecipient"],
+          args: [_recipientKey],
+          logLabel: "addRecipient",
+        },
+      ]);
       context.spCoinLogger.logDetail("JS => addRecipient tx hash = " + String(addRecipientTx?.hash || ""));
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:wait");
       const addRecipientReceipt = await addRecipientTx.wait();
@@ -291,15 +378,18 @@ export const addAgentSponsorship = async (
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:skip-existing");
     } else {
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:send");
-      const addAgentTx = await sendTxWithDiagnostics(
-        "addRecipientAgent",
-        () => context.spCoinContractDeployed.addRecipientAgent(
-          sponsorKey,
-          _recipientKey,
-          _recipientRateKey,
-          _accountAgentKey
-        )
-      );
+      const addAgentTx = await sendWithMethodFallback("addAgent", [
+        {
+          methodNames: ["addRecipientAgent"],
+          args: [sponsorKey, _recipientKey, _recipientRateKey, _accountAgentKey],
+          logLabel: "addRecipientAgent",
+        },
+        {
+          methodNames: ["addAgent"],
+          args: [_recipientKey, _recipientRateKey, _accountAgentKey],
+          logLabel: "addAgent",
+        },
+      ]);
       context.spCoinLogger.logDetail("JS => addRecipientAgent tx hash = " + String(addAgentTx?.hash || ""));
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:wait");
       const addAgentReceipt = await addAgentTx.wait();
@@ -340,18 +430,26 @@ export const addAgentSponsorship = async (
 
   try {
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:send");
-    const tx = await sendTxWithDiagnostics(
-      "addAgentRateBranchAmount",
-      () => context.spCoinContractDeployed.addAgentRateBranchAmount(
-        sponsorKey,
-        _recipientKey,
-        _recipientRateKey,
-        _accountAgentKey,
-        _agentRateKey,
-        wholePart,
-        fractionalPart
-      )
-    );
+    const tx = await sendWithMethodFallback("addAgentRateBranchAmount", [
+      {
+        methodNames: ["addAgentRateBranchAmount", "addAgentTransaction", "addAgentRateTransaction"],
+        args: [
+          sponsorKey,
+          _recipientKey,
+          _recipientRateKey,
+          _accountAgentKey,
+          _agentRateKey,
+          wholePart,
+          fractionalPart,
+        ],
+        logLabel: "addAgentRateBranchAmount",
+      },
+      {
+        methodNames: ["addSponsorship"],
+        args: [_recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, wholePart, fractionalPart],
+        logLabel: "addSponsorship",
+      },
+    ]);
     context.spCoinLogger.logDetail("JS => addAgentRateBranchAmount tx hash = " + String(tx?.hash || ""));
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:post-send-snapshot");
     await logStructureSnapshot("after addAgentRateBranchAmount send");

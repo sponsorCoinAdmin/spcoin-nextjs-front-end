@@ -292,12 +292,16 @@ type RunArgs = {
   setStatus: (value: string) => void;
 };
 
-const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
-  ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
-};
-const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
-  OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
-};
+function getReadMethodHandlers() {
+  const { ONCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index') as {
+    ONCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+  };
+  const { OFFCHAIN_READ_METHOD_HANDLERS } = require('../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/offChain/readMethods/index') as {
+    OFFCHAIN_READ_METHOD_HANDLERS: Record<string, { run: (context: unknown) => Promise<unknown> }>;
+  };
+
+  return { ONCHAIN_READ_METHOD_HANDLERS, OFFCHAIN_READ_METHOD_HANDLERS };
+}
 
 async function runMasterDeleteReadMethod(
   access: ReturnType<typeof createSpCoinLibraryAccess>,
@@ -309,6 +313,7 @@ async function runMasterDeleteReadMethod(
     return (directReadMethod as (...args: unknown[]) => Promise<unknown>)(...methodArgs);
   }
 
+  const { ONCHAIN_READ_METHOD_HANDLERS, OFFCHAIN_READ_METHOD_HANDLERS } = getReadMethodHandlers();
   const handler = ONCHAIN_READ_METHOD_HANDLERS[method] || OFFCHAIN_READ_METHOD_HANDLERS[method];
   if (!handler) {
     throw new Error(`Serialization utility read method ${method} is not wired to a handler.`);

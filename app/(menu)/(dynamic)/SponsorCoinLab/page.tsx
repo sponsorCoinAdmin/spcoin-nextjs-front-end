@@ -1,5 +1,11 @@
+'use client';
+
 // File: app/(menu)/(dynamic)/SponsorCoinLab/page.tsx
-import SponsorCoinLabController from './SponsorCoinLabController/index';
+import dynamic from 'next/dynamic';
+
+const SponsorCoinLabController = dynamic(() => import('./SponsorCoinLabController/index'), {
+  ssr: false,
+});
 
 export default function SponsorCoinLabPage() {
   return <SponsorCoinLabController />;
