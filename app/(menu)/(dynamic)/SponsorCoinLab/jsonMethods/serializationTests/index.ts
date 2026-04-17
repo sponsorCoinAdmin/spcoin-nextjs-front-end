@@ -334,15 +334,37 @@ async function runMasterDeleteReadMethod(
   });
 }
 
+function isRetryableReadError(error: unknown) {
+  const code = String((error as { code?: unknown } | null)?.code || '');
+  const message = String((error as { message?: unknown } | null)?.message ?? error ?? '');
+  return code === 'NETWORK_ERROR' || /Failed to fetch|network error|missing response/i.test(message);
+}
+
+async function readWithRetry<T>(loadValue: () => Promise<T>, attempts: number = 3, delayMs: number = 700): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await loadValue();
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableReadError(error) || attempt >= attempts) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+  }
+  throw lastError;
+}
+
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  const accountList = Array.from((await runMasterDeleteReadMethod(access, 'getMasterAccountList')) as unknown[]).map((value) =>
-    normalizeAddress(value),
+  const accountList = Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountList'))) as unknown[]).map(
+    (value) => normalizeAddress(value),
   );
   const recipientLists = await Promise.all(
     accountList.map(async (account) => {
-      const recipients = Array.from((await runMasterDeleteReadMethod(access, 'getAccountRecipientList', [account])) as unknown[]).map(
-        (value) => normalizeAddress(value),
-      );
+      const recipients = Array.from(
+        (await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountRecipientList', [account]))) as unknown[],
+      ).map((value) => normalizeAddress(value));
       return { account, recipients };
     }),
   );
@@ -350,15 +372,15 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
 }
 
 async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  return Array.from((await runMasterDeleteReadMethod(access, 'getMasterAccountList')) as unknown[]).map((value) =>
-    normalizeAddress(value),
+  return Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountList'))) as unknown[]).map(
+    (value) => normalizeAddress(value),
   );
 }
 
 async function loadRecipientAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>, sponsorKey: string) {
-  return Array.from((await runMasterDeleteReadMethod(access, 'getAccountRecipientList', [sponsorKey])) as unknown[]).map((value) =>
-    normalizeAddress(value),
-  );
+  return Array.from(
+    (await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountRecipientList', [sponsorKey]))) as unknown[],
+  ).map((value) => normalizeAddress(value));
 }
 
 async function loadRecipientRateKeys(
@@ -370,7 +392,9 @@ async function loadRecipientRateKeys(
     throw new Error('getRecipientRateList() read method is required.');
   }
   try {
-    return Array.from((await access.read.getRecipientRateList(sponsorKey, recipientKey)) as unknown[]).map((value) => String(value));
+    return Array.from((await readWithRetry(() => access.read.getRecipientRateList(sponsorKey, recipientKey))) as unknown[]).map((value) =>
+      String(value),
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`loadRecipientRateKeys(${sponsorKey}, ${recipientKey}) failed: ${message}`);
@@ -386,9 +410,9 @@ async function loadRecipientRateAgents(
   if (typeof access.read.getRecipientRateAgentList !== 'function') {
     throw new Error('getRecipientRateAgentList() read method is required.');
   }
-  return Array.from((await access.read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey)) as unknown[]).map(
-    (value) => normalizeAddress(value),
-  );
+  return Array.from(
+    (await readWithRetry(() => access.read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey))) as unknown[],
+  ).map((value) => normalizeAddress(value));
 }
 
 async function loadAgentRateKeys(
@@ -402,9 +426,9 @@ async function loadAgentRateKeys(
   if (typeof getAgentRateList !== 'function') {
     throw new Error('getAgentRateList() is not available on the current SpCoin contract access path.');
   }
-  return Array.from((await getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey)) as unknown[]).map((value) =>
-    String(value),
-  );
+  return Array.from(
+    (await readWithRetry(() => getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey))) as unknown[],
+  ).map((value) => String(value));
 }
 
 function buildRecipientScopeParams() {
@@ -824,12 +848,33 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   const deleteSponsorAccount = async (sponsorKey: string) =>
     executeAs(`deleteSponsor(${sponsorKey})`, sponsorKey, async (contract) => {
       const fn = (contract as { deleteSponsor?: (...args: unknown[]) => Promise<any> }).deleteSponsor;
+      const isAccountInsertedFn = (contract as { isAccountInserted?: (...args: unknown[]) => Promise<any> }).isAccountInserted;
       if (typeof fn !== 'function') {
         throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
       }
-      const tx = await fn(sponsorKey);
-      await tx.wait();
-      return tx;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          const tx = await fn(sponsorKey);
+          await tx.wait();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return tx;
+        } catch (error) {
+          lastError = error;
+          if (!isRetryableDeleteAccountError(error) || typeof isAccountInsertedFn !== 'function') {
+            throw error;
+          }
+          trace(
+            `deleteSponsor(${sponsorKey}) retryable cleanup error attempt ${attempt}: ${String((error as { code?: unknown; message?: unknown })?.code || '')} ${String((error as { message?: unknown })?.message ?? error ?? '')}`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+          const stillInserted = await isAccountInsertedFn(sponsorKey);
+          if (!stillInserted) {
+            return null;
+          }
+        }
+      }
+      throw lastError;
     });
 
   const deleteRecipientAgent = async (
