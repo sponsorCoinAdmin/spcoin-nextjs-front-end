@@ -6,24 +6,15 @@
   "steps": [
     {
       "step": 1,
-      "name": "getSpCoinMetaData",
+      "name": "getAccountListSize",
       "panel": "spcoin_rread",
-      "method": "getSpCoinMetaData",
+      "method": "getAccountListSize",
       "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
       "step": 2,
-      "name": "getMasterAccountList",
-      "panel": "spcoin_rread",
-      "method": "getMasterAccountList",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 3,
       "name": "deleteMasterSponsorships",
       "panel": "serialization_tests",
       "method": "deleteMasterSponsorships",
@@ -32,7 +23,52 @@
       "hasMissingRequiredParams": false
     },
     {
+      "step": 3,
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
       "step": 4,
+      "name": "addRecipientTransaction",
+      "panel": "spcoin_write",
+      "method": "addRecipientTransaction",
+      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "params": [
+        {
+          "key": "Sponsor Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        },
+        {
+          "key": "Recipient Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        },
+        {
+          "key": "Recipient Rate Key",
+          "value": "20"
+        },
+        {
+          "key": "Transaction Quantity",
+          "value": "1"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
       "name": "addAgentTransaction",
       "panel": "spcoin_write",
       "method": "addAgentTransaction",
@@ -60,14 +96,14 @@
         },
         {
           "key": "Transaction Quantity",
-          "value": "1"
+          "value": "2"
         }
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 7,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -76,29 +112,20 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
-      "name": "addRecipientRateTransaction",
-      "panel": "spcoin_write",
-      "method": "addRecipientRateTransaction",
-      "msg.sender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-      "params": [
-        {
-          "key": "Sponsor Key",
-          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        },
-        {
-          "key": "Recipient Key",
-          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
-        },
-        {
-          "key": "Recipient Rate Key",
-          "value": "20"
-        },
-        {
-          "key": "Transaction Quantity",
-          "value": "1"
-        }
-      ],
+      "step": 8,
+      "name": "getMasterAccountList",
+      "panel": "spcoin_rread",
+      "method": "getMasterAccountList",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 9,
+      "name": "getAccountListSize",
+      "panel": "spcoin_rread",
+      "method": "getAccountListSize",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

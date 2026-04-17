@@ -17,7 +17,7 @@ import {
 
 export type SpCoinWriteMethod =
   | 'addSponsorRecipient'
-  | 'addRecipientRateTransaction'
+  | 'addRecipientTransaction'
   | 'addRecipients'
   | 'addRecipientAgent'
   | 'addAgentTransaction'
@@ -74,7 +74,7 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addSponsorRecipient',
-  'addRecipientRateTransaction',
+  'addRecipientTransaction',
   'addRecipientAgent',
   'addAgentTransaction',
   'updateAccountStakingRewards',
@@ -159,11 +159,11 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
   addRecipient: 'addSponsorRecipient',
   addAccountRecipient: 'addSponsorRecipient',
-  addRecipientRateBranchAmount: 'addRecipientRateTransaction',
-  addRecipientTransaction: 'addRecipientRateTransaction',
-  addRecipientRateAmount: 'addRecipientRateTransaction',
-  addSponsorship: 'addRecipientRateTransaction',
-  addAccountRecipientRate: 'addRecipientRateTransaction',
+  addRecipientRateTransaction: 'addRecipientTransaction',
+  addRecipientRateBranchAmount: 'addRecipientTransaction',
+  addRecipientRateAmount: 'addRecipientTransaction',
+  addSponsorship: 'addRecipientTransaction',
+  addAccountRecipientRate: 'addRecipientTransaction',
   addAgent: 'addRecipientAgent',
   addAgentRateBranchAmount: 'addAgentTransaction',
   addAgentRateTransaction: 'addAgentTransaction',
@@ -548,7 +548,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
-    case 'addRecipientRateTransaction': {
+    case 'addRecipientTransaction': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access, signer) => {
         const sponsorKey = asString(methodArgs[0]);

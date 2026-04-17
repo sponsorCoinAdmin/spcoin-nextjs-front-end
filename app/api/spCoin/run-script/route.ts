@@ -303,8 +303,8 @@ export async function POST(request: NextRequest) {
               );
               break;
             }
-            case 'addRecipientRateTransaction':
             case 'addRecipientTransaction':
+            case 'addRecipientRateTransaction':
             case 'addRecipientRateBranchAmount':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipientRateTransaction', tx, receipt);
+              result = formatReceiptResult('addRecipientTransaction', tx, receipt);
               break;
             }
             case 'addRecipientAgent':

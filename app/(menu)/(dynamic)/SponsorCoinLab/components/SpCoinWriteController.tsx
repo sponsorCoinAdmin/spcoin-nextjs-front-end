@@ -207,7 +207,7 @@ export default function SpCoinWriteController(props: Props) {
   const recipientRateSliderMethods = new Set([
     'addRecipientAgent',
     'addAgents',
-    'addRecipientRateTransaction',
+    'addRecipientTransaction',
     'addAgentTransaction',
     'deleteRecipientSponsorRate',
     'deleteRecipientTransaction',

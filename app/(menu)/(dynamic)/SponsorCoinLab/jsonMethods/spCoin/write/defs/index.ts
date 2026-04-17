@@ -1,6 +1,6 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
 import addSponsorRecipient from './addSponsorRecipient';
-import addRecipientRateTransaction from './addRecipientRateTransaction';
+import addRecipientTransaction from './addRecipientRateTransaction';
 import addRecipients from './addRecipients';
 import addRecipientAgent from './addRecipientAgent';
 import addAgentTransaction from './addAgentTransaction';
@@ -41,7 +41,7 @@ import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addSponsorRecipient,
-  addRecipientRateTransaction,
+  addRecipientTransaction,
   addRecipients,
   addRecipientAgent,
   addAgentTransaction,
