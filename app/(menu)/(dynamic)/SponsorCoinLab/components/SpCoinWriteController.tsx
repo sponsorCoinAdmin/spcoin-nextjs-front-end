@@ -3,6 +3,7 @@ import React from 'react';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
@@ -196,13 +197,6 @@ export default function SpCoinWriteController(props: Props) {
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
-  };
-  const normalizeSliderValue = (value: string, range?: [number, number]) => {
-    const lower = Array.isArray(range) ? Number(range[0]) : 0;
-    const upper = Array.isArray(range) ? Number(range[1]) : 100;
-    const parsed = Number(String(value || '').replace(/,/g, '').trim());
-    if (!Number.isFinite(parsed)) return lower;
-    return Math.min(Math.max(parsed, lower), upper);
   };
   const recipientRateSliderMethods = new Set([
     'addAgent',
@@ -561,64 +555,44 @@ export default function SpCoinWriteController(props: Props) {
           ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) &&
             recipientRateSliderMethods.has(selectedSpCoinWriteMethod) ? (
             <>
-              <div className="grid gap-3">
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Recipient Rate</span>
-                  <input
-                    type="range"
-                    data-field-id={`spcoin-write-param-${idx}`}
-                    aria-label={param.label}
-                    title={`Adjust ${param.label}`}
-                    className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
-                    min={Array.isArray(recipientRateRange) ? recipientRateRange[0] : 0}
-                    max={Array.isArray(recipientRateRange) ? recipientRateRange[1] : 100}
-                    step={1}
-                    value={normalizeSliderValue(recipientRateValue, recipientRateRange)}
-                    onChange={(e) => {
-                      markEditorAsUserEdited();
-                      clearInvalidField(`spcoin-write-param-${idx}`);
-                      const nextValue = String(e.target.value);
-                      setRecipientRateValue(nextValue);
-                      updateSpWriteParamAtIndex(idx, nextValue);
-                    }}
-                  />
-                  <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
-                    {`Recipient Rate: ${normalizeSliderValue(recipientRateValue, recipientRateRange)}%`}
-                  </div>
-                </div>
-                {recipientRateKeyHelpText ? <span className="text-xs text-slate-300">{recipientRateKeyHelpText}</span> : null}
-              </div>
+              <RateSliderRow
+                label="Recipient Rate"
+                fieldId={`spcoin-write-param-${idx}`}
+                invalid={
+                  invalidFieldIds.includes(`spcoin-write-param-${idx}`) ||
+                  activeHoverInvalidFieldIds.includes(`spcoin-write-param-${idx}`)
+                }
+                range={Array.isArray(recipientRateRange) ? recipientRateRange : [0, 100]}
+                value={recipientRateValue}
+                onChange={(nextValue) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField(`spcoin-write-param-${idx}`);
+                  setRecipientRateValue(nextValue);
+                  updateSpWriteParamAtIndex(idx, nextValue);
+                }}
+                helpText={recipientRateKeyHelpText}
+              />
             </>
           ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) &&
             agentRateSliderMethods.has(selectedSpCoinWriteMethod) ? (
             <>
-              <div className="grid gap-3">
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Agent Rate</span>
-                  <input
-                    type="range"
-                    data-field-id={`spcoin-write-param-${idx}`}
-                    aria-label={param.label}
-                    title={`Adjust ${param.label}`}
-                    className={`h-[1px] w-full cursor-pointer appearance-none rounded-none border-0 bg-white outline-none${invalidClass(`spcoin-write-param-${idx}`)}`}
-                    min={Array.isArray(agentRateRange) ? agentRateRange[0] : 0}
-                    max={Array.isArray(agentRateRange) ? agentRateRange[1] : 100}
-                    step={1}
-                    value={normalizeSliderValue(agentRateValue, agentRateRange)}
-                    onChange={(e) => {
-                      markEditorAsUserEdited();
-                      clearInvalidField(`spcoin-write-param-${idx}`);
-                      const nextValue = String(e.target.value);
-                      setAgentRateValue(nextValue);
-                      updateSpWriteParamAtIndex(idx, nextValue);
-                    }}
-                  />
-                  <div className="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#243056] px-3 py-1 text-sm font-bold text-white">
-                    {`Agent Rate: ${normalizeSliderValue(agentRateValue, agentRateRange)}%`}
-                  </div>
-                </div>
-                {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
-              </div>
+              <RateSliderRow
+                label="Agent Rate"
+                fieldId={`spcoin-write-param-${idx}`}
+                invalid={
+                  invalidFieldIds.includes(`spcoin-write-param-${idx}`) ||
+                  activeHoverInvalidFieldIds.includes(`spcoin-write-param-${idx}`)
+                }
+                range={Array.isArray(agentRateRange) ? agentRateRange : [0, 100]}
+                value={agentRateValue}
+                onChange={(nextValue) => {
+                  markEditorAsUserEdited();
+                  clearInvalidField(`spcoin-write-param-${idx}`);
+                  setAgentRateValue(nextValue);
+                  updateSpWriteParamAtIndex(idx, nextValue);
+                }}
+                helpText={agentRateKeyHelpText}
+              />
             </>
           ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) ? (
             <>

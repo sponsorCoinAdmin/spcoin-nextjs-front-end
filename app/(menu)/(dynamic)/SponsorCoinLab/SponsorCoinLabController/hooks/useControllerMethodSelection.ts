@@ -42,6 +42,8 @@ type Props = {
   defaultSponsorKey: string;
   defaultRecipientKey: string;
   defaultAgentKey: string;
+  defaultRecipientRateKey: string;
+  defaultAgentRateKey: string;
   effectiveRecipientRateRange: [number, number];
   effectiveAgentRateRange: [number, number];
   spCoinReadMethodDefs: MethodDefMap & Record<string, { params: ControllerParamDef[] }>;
@@ -88,6 +90,8 @@ export function useControllerMethodSelection({
   defaultSponsorKey,
   defaultRecipientKey,
   defaultAgentKey,
+  defaultRecipientRateKey,
+  defaultAgentRateKey,
   effectiveRecipientRateRange,
   effectiveAgentRateRange,
   spCoinReadMethodDefs,
@@ -283,8 +287,8 @@ export function useControllerMethodSelection({
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
+            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
           }),
         );
       });
@@ -301,6 +305,8 @@ export function useControllerMethodSelection({
       defaultSponsorKey,
       defaultRecipientKey,
       defaultAgentKey,
+      defaultRecipientRateKey,
+      defaultAgentRateKey,
       effectiveRecipientRateRange,
       effectiveAgentRateRange,
     ],
@@ -323,8 +329,8 @@ export function useControllerMethodSelection({
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
+            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
           }),
         );
       });
@@ -342,6 +348,8 @@ export function useControllerMethodSelection({
       setSpWriteParams,
       defaultRecipientKey,
       defaultAgentKey,
+      defaultRecipientRateKey,
+      defaultAgentRateKey,
       effectiveRecipientRateRange,
       effectiveAgentRateRange,
     ],
@@ -361,8 +369,8 @@ export function useControllerMethodSelection({
             sponsor: defaultSponsorKey,
             recipient: defaultRecipientKey,
             agent: defaultAgentKey,
-            recipientRate: String(effectiveRecipientRateRange[0]),
-            agentRate: String(effectiveAgentRateRange[0]),
+            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
             previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
             latestReleaseDir: 'spCoinAccess/contracts/spCoin',
           }),
@@ -381,6 +389,8 @@ export function useControllerMethodSelection({
       defaultSponsorKey,
       defaultRecipientKey,
       defaultAgentKey,
+      defaultRecipientRateKey,
+      defaultAgentRateKey,
       effectiveRecipientRateRange,
       effectiveAgentRateRange,
     ],
@@ -390,7 +400,10 @@ export function useControllerMethodSelection({
     (value: string) => {
       if (!value) return;
       if (activeMethodPanelTab === 'admin_utils') {
-        if (spCoinAdminReadOptions.includes(value as SpCoinReadMethod)) {
+        if (
+          spCoinAdminReadOptions.includes(value as SpCoinReadMethod) ||
+          value === 'calculateStakingRewards'
+        ) {
           runWithDiscardPrompt(() => {
             resetToDropdownSelection();
             setAuxMethodPanelTab('admin_utils');
@@ -404,8 +417,8 @@ export function useControllerMethodSelection({
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
+                recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+                agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
               }),
             );
           });
@@ -428,8 +441,8 @@ export function useControllerMethodSelection({
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
+                recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+                agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
               }),
             );
           });
@@ -452,8 +465,8 @@ export function useControllerMethodSelection({
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
-                recipientRate: String(effectiveRecipientRateRange[0]),
-                agentRate: String(effectiveAgentRateRange[0]),
+                recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+                agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
                 previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
                 latestReleaseDir: 'spCoinAccess/contracts/spCoin',
               }),
@@ -518,6 +531,8 @@ export function useControllerMethodSelection({
       defaultSponsorKey,
       defaultRecipientKey,
       defaultAgentKey,
+      defaultRecipientRateKey,
+      defaultAgentRateKey,
       effectiveRecipientRateRange,
       effectiveAgentRateRange,
       spCoinAdminWriteOptions,

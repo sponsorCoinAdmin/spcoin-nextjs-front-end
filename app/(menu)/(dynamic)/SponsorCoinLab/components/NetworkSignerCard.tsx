@@ -3,6 +3,7 @@ import type { ConnectionMode } from '../scriptBuilder/types';
 import LabCardHeader from './LabCardHeader';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import RateSliderRow from './RateSliderRow';
 
 type Props = {
   className: string;
@@ -36,6 +37,12 @@ type Props = {
     setDefaultRecipientKey: (value: string) => void;
     defaultAgentKey: string;
     setDefaultAgentKey: (value: string) => void;
+    defaultRecipientRateKey: string;
+    setDefaultRecipientRateKey: (value: string) => void;
+    defaultAgentRateKey: string;
+    setDefaultAgentRateKey: (value: string) => void;
+    effectiveRecipientRateRange: [number, number];
+    effectiveAgentRateRange: [number, number];
     managedRoleAccountAddress: string;
     setManagedRoleAccountAddress: (value: string) => void;
     managedRecipientKey: string;
@@ -215,6 +222,12 @@ export default function NetworkSignerCard({
                 }
                 metadata={getMetadataForAddress(accountManagement.defaultRecipientKey)}
               />
+              <RateSliderRow
+                label="Recipient Rate"
+                value={accountManagement.defaultRecipientRateKey}
+                range={accountManagement.effectiveRecipientRateRange}
+                onChange={accountManagement.setDefaultRecipientRateKey}
+              />
               <AccountSelection
                 label="Agent"
                 title="Toggle Agent metadata"
@@ -240,6 +253,12 @@ export default function NetworkSignerCard({
                   )
                 }
                 metadata={getMetadataForAddress(accountManagement.defaultAgentKey)}
+              />
+              <RateSliderRow
+                label="Agent Rate"
+                value={accountManagement.defaultAgentRateKey}
+                range={accountManagement.effectiveAgentRateRange}
+                onChange={accountManagement.setDefaultAgentRateKey}
               />
             </div>
           </section>
@@ -347,25 +366,14 @@ export default function NetworkSignerCard({
                   }
                   metadata={getMetadataForAddress(accountManagement.managedRecipientKey)}
                 />
-                <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-                  <span className="text-sm font-semibold text-[#8FA8FF]">Recipient Rate Key</span>
-                  <div className="grid gap-2">
-                    <AccountDropdownInput
-                      className={inputStyle}
-                      value={accountManagement.managedRecipientRateKey}
-                      onChange={(value) => accountManagement.setManagedRecipientRateKey(value)}
-                      placeholder="Select or type Recipient Rate Key"
-                      dataFieldId="network-signer-agent-recipient-rate-key"
-                      options={accountManagement.managedRecipientRateKeyOptions.map((value) => ({
-                        value,
-                        label: value,
-                      }))}
-                    />
-                    {accountManagement.managedRecipientRateKeyHelpText ? (
-                      <span className="text-xs text-slate-300">{accountManagement.managedRecipientRateKeyHelpText}</span>
-                    ) : null}
-                  </div>
-                </div>
+                <RateSliderRow
+                  label="Recipient Rate"
+                  fieldId="network-signer-agent-recipient-rate-key"
+                  range={accountManagement.effectiveRecipientRateRange}
+                  value={accountManagement.managedRecipientRateKey || accountManagement.effectiveRecipientRateRange[0]}
+                  onChange={(value) => accountManagement.setManagedRecipientRateKey(value)}
+                  helpText={accountManagement.managedRecipientRateKeyHelpText}
+                />
               </>
             ) : null}
             {activeValidation.message ? (

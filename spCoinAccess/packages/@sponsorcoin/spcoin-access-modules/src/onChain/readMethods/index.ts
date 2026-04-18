@@ -38,7 +38,7 @@ import getAgentRateTransactionCount from './getAgentRateTransactionCount';
 import getAgentRateTransactionAt from './getAgentRateTransactionAt';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
-import creationTime from './creationTime';
+import getCreationTime from './getCreationTime';
 import getSpCoinMetaData from './getSpCoinMetaData';
 import getSerializedSPCoinHeader from './getSerializedSPCoinHeader';
 import getSerializedAccountRecord from './getSerializedAccountRecord';
@@ -87,7 +87,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAgentRateTransactionAt,
     getAgentRecord,
     getAgentRecordList,
-    creationTime,
+    getCreationTime,
     getSpCoinMetaData,
     getSerializedSPCoinHeader,
     getSerializedAccountRecord,

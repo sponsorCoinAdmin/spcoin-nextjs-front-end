@@ -3,6 +3,7 @@ import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import DateTimeCalendarPopup from './DateTimeCalendarPopup';
+import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
@@ -131,6 +132,12 @@ type Props = {
   activeSpCoinReadDef: MethodDef;
   spReadParams: string[];
   setSpReadParams: React.Dispatch<React.SetStateAction<string[]>>;
+  recipientRateKeyOptions: string[];
+  agentRateKeyOptions: string[];
+  recipientRateKeyHelpText: string;
+  agentRateKeyHelpText: string;
+  recipientRateRange?: [number, number];
+  agentRateRange?: [number, number];
   activeContractAddress: string;
   inputStyle: string;
   canRunSelectedSpCoinReadMethod: boolean;
@@ -165,6 +172,12 @@ export default function SpCoinReadController(props: Props) {
     activeSpCoinReadDef,
     spReadParams,
     setSpReadParams,
+    recipientRateKeyOptions,
+    agentRateKeyOptions,
+    recipientRateKeyHelpText,
+    agentRateKeyHelpText,
+    recipientRateRange,
+    agentRateRange,
     activeContractAddress,
     inputStyle,
     canRunSelectedSpCoinReadMethod,
@@ -185,6 +198,14 @@ export default function SpCoinReadController(props: Props) {
   const [popupBackdateYears, setPopupBackdateYears] = React.useState('0');
   const [popupBackdateMonths, setPopupBackdateMonths] = React.useState('0');
   const [popupBackdateDays, setPopupBackdateDays] = React.useState('0');
+  const [recipientRateValue, setRecipientRateValue] = React.useState(() => {
+    const fallback = String(Array.isArray(recipientRateRange) ? Number(recipientRateRange[0]) : 0);
+    return spReadParams.find((value) => String(value || '').trim()) || fallback;
+  });
+  const [agentRateValue, setAgentRateValue] = React.useState(() => {
+    const fallback = String(Array.isArray(agentRateRange) ? Number(agentRateRange[0]) : 0);
+    return spReadParams.find((value) => String(value || '').trim()) || fallback;
+  });
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
@@ -214,6 +235,28 @@ export default function SpCoinReadController(props: Props) {
   }, []);
   const [calendarViewYear, setCalendarViewYear] = React.useState(today.getFullYear());
   const [calendarViewMonth, setCalendarViewMonth] = React.useState(today.getMonth());
+  React.useEffect(() => {
+    const nextRecipientRate = spReadParams.find((value, idx) => {
+      const label = activeSpCoinReadDef.params[idx]?.label;
+      return ['Recipient Rate Key', 'Recipient Rate'].includes(label || '') && String(value || '').trim();
+    });
+    if (nextRecipientRate) {
+      setRecipientRateValue(String(nextRecipientRate));
+      return;
+    }
+    if (Array.isArray(recipientRateRange)) setRecipientRateValue(String(recipientRateRange[0]));
+  }, [activeSpCoinReadDef.params, recipientRateRange, spReadParams]);
+  React.useEffect(() => {
+    const nextAgentRate = spReadParams.find((value, idx) => {
+      const label = activeSpCoinReadDef.params[idx]?.label;
+      return ['Agent Rate Key', 'Agent Rate'].includes(label || '') && String(value || '').trim();
+    });
+    if (nextAgentRate) {
+      setAgentRateValue(String(nextAgentRate));
+      return;
+    }
+    if (Array.isArray(agentRateRange)) setAgentRateValue(String(agentRateRange[0]));
+  }, [activeSpCoinReadDef.params, agentRateRange, spReadParams]);
   const popupSelectedDate = React.useMemo(
     () => (dateTimePopupParamIdx === null ? null : parseDateTimeValue(spReadParams[dateTimePopupParamIdx] || '')),
     [dateTimePopupParamIdx, spReadParams],
@@ -311,7 +354,12 @@ export default function SpCoinReadController(props: Props) {
     [showOnChainMethods, spCoinSenderReadOptions],
   );
   const visibleAdminReadOptions = React.useMemo(
-    () => (showOnChainMethods ? spCoinAdminReadOptions : []),
+    () =>
+      showOnChainMethods
+        ? spCoinAdminReadOptions.filter(
+            (name) => name !== 'calculateStakingRewards' && name !== 'calcDataTimeDiff',
+          )
+        : [],
     [showOnChainMethods, spCoinAdminReadOptions],
   );
   const visibleCompoundReadOptions = React.useMemo(
@@ -598,6 +646,50 @@ export default function SpCoinReadController(props: Props) {
                 placeholder={param.placeholder}
               />
             </label>
+          ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) ? (
+            <RateSliderRow
+              label="Recipient Rate"
+              fieldId={`spcoin-read-param-${idx}`}
+              invalid={
+                invalidFieldIds.includes(`spcoin-read-param-${idx}`) ||
+                activeHoverInvalidFieldIds.includes(`spcoin-read-param-${idx}`)
+              }
+              range={Array.isArray(recipientRateRange) ? recipientRateRange : [0, 100]}
+              value={recipientRateValue}
+              onChange={(nextValue) => {
+                markEditorAsUserEdited();
+                clearInvalidField(`spcoin-read-param-${idx}`);
+                setRecipientRateValue(nextValue);
+                setSpReadParams((prev) => {
+                  const next = [...prev];
+                  next[idx] = nextValue;
+                  return next;
+                });
+              }}
+              helpText={recipientRateKeyHelpText || (recipientRateKeyOptions.length ? `Available keys: ${recipientRateKeyOptions.join(', ')}` : '')}
+            />
+          ) : ['Agent Rate Key', 'Agent Rate'].includes(param.label) ? (
+            <RateSliderRow
+              label="Agent Rate"
+              fieldId={`spcoin-read-param-${idx}`}
+              invalid={
+                invalidFieldIds.includes(`spcoin-read-param-${idx}`) ||
+                activeHoverInvalidFieldIds.includes(`spcoin-read-param-${idx}`)
+              }
+              range={Array.isArray(agentRateRange) ? agentRateRange : [0, 100]}
+              value={agentRateValue}
+              onChange={(nextValue) => {
+                markEditorAsUserEdited();
+                clearInvalidField(`spcoin-read-param-${idx}`);
+                setAgentRateValue(nextValue);
+                setSpReadParams((prev) => {
+                  const next = [...prev];
+                  next[idx] = nextValue;
+                  return next;
+                });
+              }}
+              helpText={agentRateKeyHelpText || (agentRateKeyOptions.length ? `Available keys: ${agentRateKeyOptions.join(', ')}` : '')}
+            />
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>

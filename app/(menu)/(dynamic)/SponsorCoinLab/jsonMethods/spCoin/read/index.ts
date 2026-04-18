@@ -85,7 +85,7 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
 
-export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = ['calcDataTimeDiff'];
+export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = ['calcDataTimeDiff', 'calculateStakingRewards'];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
 

@@ -98,11 +98,8 @@ export function useControllerEditorHydration({
     });
     if (dropdownHydrationKeyRef.current === hydrationKey) return;
     dropdownHydrationKeyRef.current = hydrationKey;
-    let cancelled = false;
-
-    const hydrateEditorFromExchangeContext = async () => {
+    const hydrateEditorFromExchangeContext = () => {
       queueEditorBaselineReset();
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
       if (methodPanelMode === 'ecr20_read') {
         const nextDefaults = buildErc20ReadEditorDefaults(activeReadLabels);
         setReadAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
@@ -127,55 +124,18 @@ export function useControllerEditorHydration({
         return;
       }
 
-      if (methodPanelMode === 'spcoin_rread') {
-        setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinReadDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSpReadParams(buildScriptEditorParamValues(activeSpCoinReadDef.params, nextMeta));
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
+      // SponsorCoin/utility params should only pull from Active Sponsor Coin Accounts
+      // when the user explicitly changes the dropdown selection, not on refresh.
+      if (
+        methodPanelMode === 'spcoin_rread' ||
+        methodPanelMode === 'spcoin_write' ||
+        methodPanelMode === 'serialization_tests'
+      ) {
         return;
-      }
-
-      if (methodPanelMode === 'spcoin_write') {
-        if (senderAddress) {
-          setSelectedWriteSenderAddress(senderAddress);
-        }
-        setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSpCoinWriteDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSpWriteParams(buildScriptEditorParamValues(activeSpCoinWriteDef.params, nextMeta));
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
-        return;
-      }
-
-      if (methodPanelMode === 'serialization_tests') {
-        setSerializationTestParams(buildScriptEditorParamValues(activeSerializationTestDef.params));
-        try {
-          const nextMeta = await resolveScriptEditorContractMetadata(activeSerializationTestDef.params);
-          if (!cancelled) {
-            queueEditorBaselineReset();
-            setSerializationTestParams(buildScriptEditorParamValues(activeSerializationTestDef.params, nextMeta));
-          }
-        } catch {
-          // Keep the ExchangeContext-derived values when contract reads are unavailable.
-        }
       }
     };
 
-    void hydrateEditorFromExchangeContext();
-    return () => {
-      cancelled = true;
-    };
+    hydrateEditorFromExchangeContext();
   }, [
     activeReadLabels,
     activeSerializationTestDef.params,

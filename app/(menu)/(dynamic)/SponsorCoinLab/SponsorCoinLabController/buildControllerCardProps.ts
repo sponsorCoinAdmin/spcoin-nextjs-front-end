@@ -35,6 +35,12 @@ export type BuildControllerCardPropsArgs = {
   setDefaultRecipientKey: SetValue<string>;
   defaultAgentKey: string;
   setDefaultAgentKey: SetValue<string>;
+  defaultRecipientRateKey: string;
+  setDefaultRecipientRateKey: SetValue<string>;
+  defaultAgentRateKey: string;
+  setDefaultAgentRateKey: SetValue<string>;
+  effectiveRecipientRateRange: [number, number];
+  effectiveAgentRateRange: [number, number];
   managedRoleAccountAddress: string;
   setManagedRoleAccountAddress: SetValue<string>;
   managedRecipientKey: string;
@@ -144,6 +150,12 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
       setDefaultRecipientKey: args.setDefaultRecipientKey,
       defaultAgentKey: args.defaultAgentKey,
       setDefaultAgentKey: args.setDefaultAgentKey,
+      defaultRecipientRateKey: args.defaultRecipientRateKey,
+      setDefaultRecipientRateKey: args.setDefaultRecipientRateKey,
+      defaultAgentRateKey: args.defaultAgentRateKey,
+      setDefaultAgentRateKey: args.setDefaultAgentRateKey,
+      effectiveRecipientRateRange: args.effectiveRecipientRateRange,
+      effectiveAgentRateRange: args.effectiveAgentRateRange,
       managedRoleAccountAddress: args.managedRoleAccountAddress,
       setManagedRoleAccountAddress: args.setManagedRoleAccountAddress,
       managedRecipientKey: args.managedRecipientKey,

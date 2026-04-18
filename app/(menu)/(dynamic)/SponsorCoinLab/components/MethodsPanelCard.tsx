@@ -211,12 +211,14 @@ export default function MethodsPanelCard({
     methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
   const visibleSpCoinReadOptions = React.useMemo(
     () =>
-      sortMethodNames([
-        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
-        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
-        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
-        ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
-      ]),
+      sortMethodNames(
+        [
+          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
+          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
+          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
+          ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
+        ].filter((name) => name !== 'calcDataTimeDiff' && name !== 'calculateStakingRewards'),
+      ),
     [
       spCoinReadProps.showOffChainMethods,
       spCoinReadProps.showOnChainMethods,
@@ -471,6 +473,9 @@ export default function MethodsPanelCard({
     }
     if (methodPanelMode === 'spcoin_rread') {
       if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
+        return spCoinReadProps.selectedSpCoinReadMethod;
+      }
+      if (combinedAdminUtilsWriteOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
         return spCoinReadProps.selectedSpCoinReadMethod;
       }
       if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];

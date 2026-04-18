@@ -169,6 +169,7 @@ function parseStructuredErrorMessage(input: string): Record<string, unknown> | n
 }
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
+  const DATE_TIME_KEYS = ['creationTime', 'creationDate', 'lastUpdateTime', 'updateTime', 'insertionTime'];
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = input.trim();
     const normalized = trimmed.replace(/_/g, ' ');
@@ -283,7 +284,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   }
   if (value && typeof value === 'object') {
     const normalizedLegacyDate = normalizeLegacyDateObject(value);
-    if (normalizedLegacyDate && ['creationTime', 'creationDate'].includes(keyPath[keyPath.length - 1] || '')) {
+    if (normalizedLegacyDate && DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
       return normalizedLegacyDate;
     }
     return Object.fromEntries(
@@ -294,7 +295,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath[keyPath.length - 1] === 'formatted') return value;
-    if (keyPath[keyPath.length - 1] === 'creationDate' || keyPath[keyPath.length - 1] === 'creationTime') {
+    if (DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
       return normalizeDisplayDateString(trimmed) ?? value;
     }
     const normalizedDateString = normalizeDisplayDateString(trimmed);

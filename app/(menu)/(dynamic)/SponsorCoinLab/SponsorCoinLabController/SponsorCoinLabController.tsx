@@ -172,6 +172,8 @@ const defaultHardhatRpcUrl =
   const [defaultSponsorKey, setDefaultSponsorKeyState] = useState('');
   const [defaultRecipientKey, setDefaultRecipientKeyState] = useState('');
   const [defaultAgentKey, setDefaultAgentKeyState] = useState('');
+  const [defaultRecipientRateKey, setDefaultRecipientRateKey] = useState('');
+  const [defaultAgentRateKey, setDefaultAgentRateKey] = useState('');
   const [managedRoleAccountAddress, setManagedRoleAccountAddress] = useState('');
   const [managedRecipientKey, setManagedRecipientKey] = useState('');
   const [managedRecipientRateKey, setManagedRecipientRateKey] = useState('');
@@ -420,6 +422,18 @@ const defaultHardhatRpcUrl =
     removedContractAddresses,
     setRemovedContractAddresses,
   });
+  useEffect(() => {
+    setDefaultRecipientRateKey((prev) => {
+      const next = String(effectiveRecipientRateRange[0] ?? '');
+      return String(prev || '').trim() ? prev : next;
+    });
+  }, [effectiveRecipientRateRange]);
+  useEffect(() => {
+    setDefaultAgentRateKey((prev) => {
+      const next = String(effectiveAgentRateRange[0] ?? '');
+      return String(prev || '').trim() ? prev : next;
+    });
+  }, [effectiveAgentRateRange]);
   const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
   const {
@@ -1132,6 +1146,8 @@ const defaultHardhatRpcUrl =
     defaultSponsorKey,
     defaultRecipientKey,
     defaultAgentKey,
+    defaultRecipientRateKey,
+    defaultAgentRateKey,
     effectiveRecipientRateRange,
     effectiveAgentRateRange,
     spCoinReadMethodDefs,
@@ -1448,6 +1464,10 @@ const defaultHardhatRpcUrl =
     setDefaultRecipientKey,
     defaultAgentKey,
     setDefaultAgentKey,
+    defaultRecipientRateKey,
+    setDefaultRecipientRateKey,
+    defaultAgentRateKey,
+    setDefaultAgentRateKey,
     managedRoleAccountAddress,
     setManagedRoleAccountAddress,
     managedRecipientKey,

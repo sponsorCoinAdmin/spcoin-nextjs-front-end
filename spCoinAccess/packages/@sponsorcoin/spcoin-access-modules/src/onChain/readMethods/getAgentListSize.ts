@@ -1,7 +1,24 @@
 // @ts-nocheck
+import { Interface } from 'ethers';
 import { buildHandler } from '../../readMethodRuntime';
 
+const accountLinksInterface = new Interface([
+  'function getAccountLinks(address _accountKey) view returns (address[] sponsorAccountList, address[] recipientAccountList, address[] agentAccountList, address[] agentParentRecipientAccountList)',
+]);
+
+async function callGetAccountLinks(contract, accountKey) {
+  const target = String(contract?.target || (typeof contract?.getAddress === 'function' ? await contract.getAddress() : ''));
+  const runner = contract?.runner;
+  if (!target || !runner || typeof runner.call !== 'function') {
+    throw new Error('SpCoin read method getAgentListSize requires getAgentList() or getAccountAgentList() on access modules or contract.');
+  }
+  const data = accountLinksInterface.encodeFunctionData('getAccountLinks', [accountKey]);
+  const raw = await runner.call({ to: target, data });
+  return accountLinksInterface.decodeFunctionResult('getAccountLinks', raw);
+}
+
 const handler = buildHandler('getAgentListSize', async (context) => {
+  const accountKey = String(context.methodArgs[0] || '');
   const method =
     typeof context.read.getAgentList === 'function'
       ? context.read.getAgentList
@@ -9,9 +26,16 @@ const handler = buildHandler('getAgentListSize', async (context) => {
         ? context.read.getAccountAgentList
         : null;
   if (typeof method !== 'function') {
-    throw new Error('SpCoin read method getAgentListSize requires getAgentList() or getAccountAgentList() on access modules or contract.');
+    if (typeof context.contract.getAccountLinks === 'function') {
+      const links = await context.contract.getAccountLinks(accountKey);
+      const agentList = context.normalizeStringListResult(Array.isArray(links?.[2]) ? links[2] : []);
+      return agentList.length;
+    }
+    const decoded = await callGetAccountLinks(context.contract, accountKey);
+    const agentList = context.normalizeStringListResult(Array.isArray(decoded?.[2]) ? decoded[2] : []);
+    return agentList.length;
   }
-  const agentList = context.normalizeStringListResult(await method(String(context.methodArgs[0])));
+  const agentList = context.normalizeStringListResult(await method(accountKey));
   return agentList.length;
 });
 
