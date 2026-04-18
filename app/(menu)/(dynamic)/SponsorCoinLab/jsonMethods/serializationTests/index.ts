@@ -92,8 +92,23 @@ function buildContractSizeComparisonParams() {
 function buildHardhatFundAccountsParams() {
   return [
     {
+      label: 'HH Funding Account',
+      placeholder: 'address hardhatFundingAccount',
+      type: 'address' as const,
+    },
+    {
+      label: 'Fund All Hardhat Accounts',
+      placeholder: 'true',
+      type: 'bool' as const,
+    },
+    {
+      label: 'Fund HH Account',
+      placeholder: 'address hardhatAccount',
+      type: 'address' as const,
+    },
+    {
       label: 'Total Token Amount',
-      placeholder: 'total amount to divide across Hardhat accounts 1-19',
+      placeholder: 'amount to transfer to the selected account or divide across Hardhat accounts 1-19',
       type: 'string' as const,
     },
   ];
@@ -690,17 +705,20 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
         throw new Error('hhFundAccounts only works when connected to Hardhat.');
       }
 
-      const senderAccount = hardhatAccounts[0];
-      const senderAddress = toCanonicalAddress(senderAccount?.address, 'Hardhat funding account 0');
-      const recipientAccounts = hardhatAccounts
-        .slice(1, 20)
-        .map((account, idx) => toCanonicalAddress(account.address, `Hardhat account ${idx + 1}`))
-        .filter(Boolean);
-      if (recipientAccounts.length !== 19) {
-        throw new Error('hhFundAccounts requires Hardhat accounts 1 through 19 to be available.');
+      const senderAddress = toCanonicalAddress(hardhatAccounts[0]?.address, 'HH Funding Account');
+      const fundAllAccounts = Boolean(methodArgs[1]);
+      const selectedRecipientAddress = fundAllAccounts ? '' : toCanonicalAddress(String(methodArgs[2] || '').trim(), 'Fund HH Account');
+      const recipientAccounts = fundAllAccounts
+        ? hardhatAccounts
+            .map((account, idx) => toCanonicalAddress(account.address, `Hardhat account ${idx}`))
+            .filter((accountAddress) => accountAddress && accountAddress !== senderAddress)
+            .filter(Boolean)
+        : [selectedRecipientAddress];
+      if (fundAllAccounts && recipientAccounts.length === 0) {
+        throw new Error('hhFundAccounts requires at least one recipient Hardhat account other than the funding account.');
       }
 
-      const normalizedAmount = String(methodArgs[0] || '').replace(/,/g, '').trim();
+      const normalizedAmount = String(methodArgs[3] || '').replace(/,/g, '').trim();
       if (!normalizedAmount) {
         throw new Error('Total Token Amount is required.');
       }
@@ -732,6 +750,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
 
         return {
           sender: senderAddress,
+          fundAllHardhatAccounts: fundAllAccounts,
           recipientCount: recipientAccounts.length,
           totalAmount: normalizedAmount,
           recipients: recipientAccounts,
@@ -743,7 +762,11 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
         senderAddress,
       );
 
-      appendLog(`${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`);
+      appendLog(
+        fundAllAccounts
+          ? `${selectedMethod} -> funded ${recipientAccounts.length} Hardhat account(s).`
+          : `${selectedMethod} -> funded ${selectedRecipientAddress}.`,
+      );
       setStatus(`${def.title} complete.`);
       return summary;
     }

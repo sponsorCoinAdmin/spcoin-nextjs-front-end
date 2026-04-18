@@ -16,7 +16,6 @@ import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
-import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
@@ -26,10 +25,11 @@ import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
 import getAccountRateRecordList from './getAccountRateRecordList';
 import getRateTransactionList from './getRateTransactionList';
-import getAccountListSize from './getAccountListSize';
-import getAccountRecipientList from './getAccountRecipientList';
-import getAccountAgentList from './getAccountAgentList';
-import getAccountRecipientListSize from './getAccountRecipientListSize';
+import getMasterAccountListSize from './getAccountListSize';
+import getRecipientList from './getAccountRecipientList';
+import getAgentList from './getAccountAgentList';
+import getRecipientListSize from './getAccountRecipientListSize';
+import getAgentListSize from './getAgentListSize';
 import getRecipientRateRecordList from './getRecipientRateRecordList';
 import getRecipientRecordList from './getRecipientRecordList';
 import getAgentRateRecordList from './getAgentRateRecordList';
@@ -65,7 +65,6 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     isAccountInserted,
     getMasterAccountElement,
     getStakingRewards,
-    getTimeMultiplier,
     getAccountTimeInSecondeSinceUpdate,
     totalUnstakedSpCoins,
     totalStakedSPCoins,
@@ -75,10 +74,11 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountRewardTransactionRecord,
     getAccountRateRecordList,
     getRateTransactionList,
-    getAccountListSize,
-    getAccountRecipientList,
-    getAccountAgentList,
-    getAccountRecipientListSize,
+    getMasterAccountListSize,
+    getRecipientList,
+    getAgentList,
+    getRecipientListSize,
+    getAgentListSize,
     getRecipientRateRecordList,
     getRecipientRecordList,
     getAgentRateRecordList,

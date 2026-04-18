@@ -100,6 +100,11 @@ export default function SerializationTestController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const ownerFundingAccountAddress = normalizeAccountValue(hardhatAccounts[0]?.address || '');
+  const hhFundAccountOptions = React.useMemo(
+    () => accountOptions.filter((option) => option.value !== ownerFundingAccountAddress),
+    [accountOptions, ownerFundingAccountAddress],
+  );
   const visibleSerializationOptions = React.useMemo(
     () => (showOffChainMethods ? serializationTestOptions : []),
     [serializationTestOptions, showOffChainMethods],
@@ -114,6 +119,9 @@ export default function SerializationTestController(props: Props) {
     hasVisibleSerializationMethods && visibleSerializationOptions.includes(selectedSerializationTestMethod)
       ? selectedSerializationTestMethod
       : '__no_methods__';
+  const hhFundAllAccountsEnabled =
+    selectedSerializationTestMethod === 'hhFundAccounts' &&
+    ['true', '1'].includes(String(serializationTestParams[1] || '').trim().toLowerCase());
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -121,6 +129,8 @@ export default function SerializationTestController(props: Props) {
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <div className="relative w-full min-w-0">
           <select
+            aria-label="Serialization test JSON method"
+            title="Serialization test JSON method"
             className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={displayedSerializationMethod}
             onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
@@ -144,9 +154,93 @@ export default function SerializationTestController(props: Props) {
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleSerializationMethods ? <div className="text-sm text-slate-400">(no off-chain serialization methods match the current filter)</div> : null}
-        {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => (
+        {hasVisibleSerializationMethods ? activeSerializationTestDef.params.map((param, idx) => {
+          if (
+            selectedSerializationTestMethod === 'hhFundAccounts' &&
+            param.label === 'Fund HH Account' &&
+            hhFundAllAccountsEnabled
+          ) {
+            return null;
+          }
+          return (
           <div key={`serialization-test-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
-          {param.type === 'address' ? (
+          {param.type === 'bool' ? (
+            selectedSerializationTestMethod === 'hhFundAccounts' && param.label === 'Fund All Hardhat Accounts' ? (
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Fund Hardhat Accounts</span>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-[#8FA8FF]">
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="hhFundAccountsMode"
+                      checked={['true', '1'].includes(String(serializationTestParams[idx] || '').trim().toLowerCase())}
+                      onChange={() => {
+                        markEditorAsUserEdited();
+                        setSerializationTestParams((prev) => {
+                          clearInvalidField(`serialization-test-param-${idx}`);
+                          const next = [...prev];
+                          next[idx] = 'true';
+                          return next;
+                        });
+                      }}
+                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    />
+                    <span>All Accounts</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="hhFundAccountsMode"
+                      checked={!['true', '1'].includes(String(serializationTestParams[idx] || '').trim().toLowerCase())}
+                      onChange={() => {
+                        markEditorAsUserEdited();
+                        setSerializationTestParams((prev) => {
+                          clearInvalidField(`serialization-test-param-${idx}`);
+                          const next = [...prev];
+                          next[idx] = 'false';
+                          return next;
+                        });
+                      }}
+                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    />
+                    <span>Single Account</span>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <label className="inline-flex items-center gap-3 text-sm font-semibold text-[#8FA8FF]">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#334155] bg-[#0E111B]">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#8FA8FF]"
+                    checked={['true', '1'].includes(String(serializationTestParams[idx] || '').trim().toLowerCase())}
+                    onChange={(e) => {
+                      markEditorAsUserEdited();
+                      setSerializationTestParams((prev) => {
+                        clearInvalidField(`serialization-test-param-${idx}`);
+                        const next = [...prev];
+                        next[idx] = e.target.checked ? 'true' : 'false';
+                        return next;
+                      });
+                    }}
+                  />
+                </span>
+                <span>{param.label}</span>
+              </label>
+            )
+          ) : param.type === 'address' ? (
+            selectedSerializationTestMethod === 'hhFundAccounts' && param.label === 'HH Funding Account' ? (
+              <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+                <input
+                  data-field-id={`serialization-test-param-${idx}`}
+                  className="w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-slate-400"
+                  value={ownerFundingAccountAddress}
+                  readOnly
+                  disabled
+                />
+              </label>
+            ) : (
             <AccountSelection
               label={param.label}
               title={`Toggle ${param.label}`}
@@ -167,11 +261,36 @@ export default function SerializationTestController(props: Props) {
                     });
                   }}
                   placeholder="Select account"
-                  options={accountOptions}
+                  options={
+                    selectedSerializationTestMethod === 'hhFundAccounts' && param.label === 'Fund HH Account'
+                      ? hhFundAccountOptions
+                      : accountOptions
+                  }
                 />
               }
               metadata={getMetadataForAddress(serializationTestParams[idx] || '')}
             />
+            )
+          ) : param.type === 'date' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <input
+                type="date"
+                data-field-id={`serialization-test-param-${idx}`}
+                className={`${inputStyle}${invalidClass(`serialization-test-param-${idx}`)}`}
+                value={serializationTestParams[idx] || ''}
+                onChange={(e) => {
+                  markEditorAsUserEdited();
+                  setSerializationTestParams((prev) => {
+                    clearInvalidField(`serialization-test-param-${idx}`);
+                    const next = [...prev];
+                    next[idx] = e.target.value;
+                    return next;
+                  });
+                }}
+                placeholder={param.placeholder}
+              />
+            </label>
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
@@ -193,7 +312,8 @@ export default function SerializationTestController(props: Props) {
             </label>
           )}
           </div>
-        )) : null}
+        );
+        }) : null}
       </div>
       {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button

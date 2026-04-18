@@ -3,11 +3,12 @@ import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getMasterAccountList from './getMasterAccountList';
-import getAccountListSize from './getAccountListSize';
+import getMasterAccountListSize from './getMasterAccountListSize';
 import getSpCoinMetaData from './getSpCoinMetaData';
-import getAccountRecipientList from './getAccountRecipientList';
-import getAccountAgentList from './getAccountAgentList';
-import getAccountRecipientListSize from './getAccountRecipientListSize';
+import getRecipientList from './getRecipientList';
+import getAgentList from './getAgentList';
+import getRecipientListSize from './getRecipientListSize';
+import getAgentListSize from './getAgentListSize';
 import getAccountRecord from './getAccountRecord';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
@@ -41,7 +42,6 @@ import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
-import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
@@ -53,11 +53,12 @@ export const SPCOIN_READ_METHOD_DEFS = {
   calculateStakingRewards,
   creationTime,
   getMasterAccountList,
-  getAccountListSize,
+  getMasterAccountListSize,
   getSpCoinMetaData,
-  getAccountRecipientList,
-  getAccountAgentList,
-  getAccountRecipientListSize,
+  getRecipientList,
+  getAgentList,
+  getRecipientListSize,
+  getAgentListSize,
   getAccountRecord,
   getAccountStakingRewards,
   getAccountRewardTransactionList,
@@ -91,7 +92,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isAccountInserted,
   getMasterAccountElement,
   getStakingRewards,
-  getTimeMultiplier,
   getAccountTimeInSecondeSinceUpdate,
   totalUnstakedSpCoins,
   totalStakedSPCoins,

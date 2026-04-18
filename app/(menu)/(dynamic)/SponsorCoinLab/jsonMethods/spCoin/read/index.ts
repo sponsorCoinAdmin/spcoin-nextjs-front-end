@@ -12,10 +12,11 @@ export type SpCoinReadMethod =
   | 'creationTime'
   | 'getSpCoinMetaData'
   | 'getMasterAccountList'
-  | 'getAccountListSize'
-  | 'getAccountRecipientList'
-  | 'getAccountAgentList'
-  | 'getAccountRecipientListSize'
+  | 'getMasterAccountListSize'
+  | 'getRecipientList'
+  | 'getAgentList'
+  | 'getRecipientListSize'
+  | 'getAgentListSize'
   | 'getAccountRecord'
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
@@ -49,7 +50,6 @@ export type SpCoinReadMethod =
   | 'isAccountInserted'
   | 'getMasterAccountElement'
   | 'getStakingRewards'
-  | 'getTimeMultiplier'
   | 'getAccountTimeInSecondeSinceUpdate'
   | 'totalUnstakedSpCoins'
   | 'totalStakedSPCoins'
@@ -61,6 +61,10 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
   initialTotalSupply: 'getInitialTotalSupply',
+  getAccountListSize: 'getMasterAccountListSize',
+  getAccountRecipientList: 'getRecipientList',
+  getAccountRecipientListSize: 'getRecipientListSize',
+  getAccountAgentList: 'getAgentList',
   getSerializedAccountRecord: 'getAccountRecord',
   getSerializedAccountRewards: 'getAccountStakingRewards',
   getSerializedRecipientRecordList: 'getRecipientRecord',
@@ -200,6 +204,101 @@ function formatCreationTimeResult(value: unknown) {
   };
 }
 
+function parseDateTimeInput(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(String(value || '').trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const hours = Number(match[4]);
+  const minutes = Number(match[5]);
+  const seconds = Number(match[6]);
+  const date = new Date(year, month, day, hours, minutes, seconds, 0);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day ||
+    date.getHours() !== hours ||
+    date.getMinutes() !== minutes ||
+    date.getSeconds() !== seconds
+  ) {
+    return null;
+  }
+  return date;
+}
+
+const DATE_DIFF_UNITS = ['Years', 'Months', 'Weeks', 'Days', 'Hours', 'Minutes', 'Seconds'] as const;
+const DATE_DIFF_DIVISORS: Record<(typeof DATE_DIFF_UNITS)[number], number> = {
+  Years: 365 * 24 * 60 * 60,
+  Months: 30 * 24 * 60 * 60,
+  Weeks: 7 * 24 * 60 * 60,
+  Days: 24 * 60 * 60,
+  Hours: 60 * 60,
+  Minutes: 60,
+  Seconds: 1,
+};
+const DATE_DIFF_UNIT_LABELS: Record<(typeof DATE_DIFF_UNITS)[number], string> = {
+  Years: 'YY',
+  Months: 'MM',
+  Weeks: 'W',
+  Days: 'DD',
+  Hours: 'hh',
+  Minutes: 'mm',
+  Seconds: 'ss',
+};
+
+function formatDecimal(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(6).replace(/\.?0+$/, '');
+}
+
+function parseSelectedDateDiffUnits(unitRaw: string) {
+  const rawUnits = String(unitRaw || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return DATE_DIFF_UNITS.filter((unit) => rawUnits.includes(unit));
+}
+
+function formatSegmentValue(value: number, pad: boolean) {
+  const prefix = value < 0 ? '-' : '';
+  const absolute = Math.abs(value);
+  const formatted = formatDecimal(absolute);
+  if (!pad) return `${prefix}${formatted}`;
+  const [whole, fraction] = formatted.split('.');
+  return `${prefix}${String(whole).padStart(2, '0')}${fraction ? `.${fraction}` : ''}`;
+}
+
+function formatDateDifferenceOutput(diffSeconds: number, unitRaw: string) {
+  const units = parseSelectedDateDiffUnits(unitRaw);
+  if (units.length === 0) {
+    return { units: [], display: '', secondsDifference: String(diffSeconds) };
+  }
+  if (units.length === 1) {
+    const unit = units[0];
+    return {
+      units,
+      display: `${DATE_DIFF_UNIT_LABELS[unit]}: ${formatDecimal(diffSeconds / DATE_DIFF_DIVISORS[unit])}`,
+      secondsDifference: String(diffSeconds),
+    };
+  }
+  let remaining = Math.abs(diffSeconds);
+  const values = units.map((unit, index) => {
+    const divisor = DATE_DIFF_DIVISORS[unit];
+    if (index === units.length - 1) {
+      const value = remaining / divisor;
+      return formatSegmentValue(index === 0 && diffSeconds < 0 ? -value : value, index > 0);
+    }
+    const value = Math.floor(remaining / divisor);
+    remaining -= value * divisor;
+    return formatSegmentValue(index === 0 && diffSeconds < 0 ? -value : value, index > 0);
+  });
+  return {
+    units,
+    display: `${units.map((unit) => DATE_DIFF_UNIT_LABELS[unit]).join(':')}: ${values.join(':')}`,
+    secondsDifference: String(diffSeconds),
+  };
+}
+
 type RunArgs = {
   selectedMethod: SpCoinReadMethod;
   spReadParams: string[];
@@ -243,6 +342,28 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const activeDef = SPCOIN_READ_METHOD_DEFS[canonicalMethod];
   if (!activeDef) {
     throw new Error(`SpCoin read method ${selectedMethod} is not registered.`);
+  }
+  if (canonicalMethod === 'getAccountTimeInSecondeSinceUpdate') {
+    const fromRaw = String(spReadParams[0] || '').trim();
+    const toRaw = String(spReadParams[1] || '').trim();
+    const unitRaw = String(spReadParams[2] || 'Seconds').trim();
+    const fromDate = parseDateTimeInput(fromRaw);
+    const toDate = parseDateTimeInput(toRaw);
+    if (!fromDate) throw new Error('From Date/Time must be a valid date/time.');
+    if (!toDate) throw new Error('To Date/Time must be a valid date/time.');
+    const diffSeconds = (toDate.getTime() - fromDate.getTime()) / 1000;
+    const normalized = formatDateDifferenceOutput(diffSeconds, unitRaw);
+    const result = {
+      fromDateTime: fromRaw,
+      toDateTime: toRaw,
+      selectedUnits: normalized.units,
+      dateDifference: normalized.display,
+      secondsDifference: normalized.secondsDifference,
+    };
+    const out = stringifyResult(result);
+    appendLog(`${activeDef.title}(${[fromRaw, toRaw, unitRaw].join(', ')}) -> ${out}`);
+    setStatus(`${activeDef.title} read complete.`);
+    return result;
   }
   const target = requireContractAddress();
   const runner = await ensureReadRunner();

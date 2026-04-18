@@ -444,16 +444,24 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const serializationTestMissingEntries = useMemo(
-    () =>
-      activeSerializationTestDef.params
+    () => {
+      const fundAllHardhatAccounts =
+        String(selectedSerializationTestMethod || '') === 'hhFundAccounts' &&
+        ['true', '1'].includes(String(serializationTestParams[1] || '').trim().toLowerCase());
+      return activeSerializationTestDef.params
         .map((param, idx) => ({
           id: `serialization-test-param-${idx}`,
           label: param.label,
           value: String(serializationTestParams[idx] || '').trim(),
         }))
-        .filter((entry) => !entry.value)
-        .map(({ id, label }) => ({ id, label })),
-    [activeSerializationTestDef.params, serializationTestParams],
+        .filter((entry) => {
+          if (String(selectedSerializationTestMethod || '') === 'hhFundAccounts' && entry.label === 'HH Funding Account') return false;
+          if (fundAllHardhatAccounts && entry.label === 'Fund HH Account') return false;
+          return !entry.value;
+        })
+        .map(({ id, label }) => ({ id, label }));
+    },
+    [activeSerializationTestDef.params, selectedSerializationTestMethod, serializationTestParams],
   );
 
   const canRunErc20WriteMethod = erc20WriteMissingEntries.length === 0;
@@ -819,7 +827,7 @@ export function useSponsorCoinLabMethods({
         const shouldUseServerBackedRead =
           useLocalSpCoinAccessPackage &&
           mode === 'hardhat' &&
-          ['getAccountRecord', 'getMasterAccountList', 'getAccountListSize'].includes(selectedMethod);
+          ['getAccountRecord', 'getMasterAccountList', 'getMasterAccountListSize'].includes(selectedMethod);
         const result = shouldUseServerBackedRead
           ? await runServerBackedSpCoinStep(
               'spcoin_rread',
@@ -1273,9 +1281,9 @@ export function useSponsorCoinLabMethods({
                 steps: [
                   {
                     step: 1,
-                    name: 'getAccountRecipientList',
+                    name: 'getRecipientList',
                     panel: 'spcoin_rread',
-                    method: 'getAccountRecipientList',
+                    method: 'getRecipientList',
                     mode,
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },
@@ -1322,9 +1330,9 @@ export function useSponsorCoinLabMethods({
                 steps: [
                   {
                     step: 1,
-                    name: 'getAccountAgentList',
+                    name: 'getAgentList',
                     panel: 'spcoin_rread',
-                    method: 'getAccountAgentList',
+                    method: 'getAgentList',
                     mode,
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },

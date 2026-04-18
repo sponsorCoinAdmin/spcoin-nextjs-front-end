@@ -2,8 +2,12 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'getAccountTimeInSecondeSinceUpdate',
-    params: [{ label: 'Token Last Update', placeholder: 'uint256 _tokenLastUpdate', type: 'uint' }],
-  }
+  title: 'getAccountTimeInSecondeSinceUpdate',
+  params: [
+    { label: 'From Date/Time', placeholder: 'yyyy-mm-dd HH:mm:ss', type: 'string' },
+    { label: 'To Date/Time', placeholder: 'yyyy-mm-dd HH:mm:ss', type: 'string' },
+    { label: 'Date Difference Unit', placeholder: 'Seconds', type: 'string' },
+  ],
+};
 
 export default methodDef;

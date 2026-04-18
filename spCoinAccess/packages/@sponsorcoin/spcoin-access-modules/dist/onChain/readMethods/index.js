@@ -15,7 +15,6 @@ import initialTotalSupply from './initialTotalSupply';
 import isAccountInserted from './isAccountInserted';
 import masterAccountList from './masterAccountList';
 import getStakingRewards from './getStakingRewards';
-import getTimeMultiplier from './getTimeMultiplier';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
@@ -58,7 +57,6 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     isAccountInserted,
     masterAccountList,
     getStakingRewards,
-    getTimeMultiplier,
     getAccountTimeInSecondeSinceUpdate,
     totalUnstakedSpCoins,
     totalStakedSPCoins,

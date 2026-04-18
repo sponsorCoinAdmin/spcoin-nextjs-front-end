@@ -71,6 +71,9 @@ export function buildDefaultAccountParams(
 ) {
   return params.map((param) => {
     const label = String(param.label || '').toLowerCase();
+    if (label === 'hhfunding account') return defaults.sponsor;
+    if (label === 'fund all hardhat accounts') return 'true';
+    if (label === 'fund hh account') return defaults.recipient;
     if (label === 'msg.sender') return defaults.sponsor;
     if (label.includes('sponsor')) return defaults.sponsor;
     if (label.includes('recipient rate')) return String(defaults.recipientRate || '');
