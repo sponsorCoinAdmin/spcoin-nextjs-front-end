@@ -50,7 +50,7 @@ export type SpCoinReadMethod =
   | 'isAccountInserted'
   | 'getMasterAccountElement'
   | 'getStakingRewards'
-  | 'getAccountTimeInSecondeSinceUpdate'
+  | 'calcDataTimeDiff'
   | 'totalUnstakedSpCoins'
   | 'totalStakedSPCoins'
   | 'totalStakingRewards'
@@ -71,6 +71,7 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedRecipientRateList: 'getRecipientRateRecord',
   serializeAgentRateRecordStr: 'getAgentRateRecord',
   getSerializedRateTransactionList: 'getAgentRateTransactionList',
+  getAccountTimeInSecondeSinceUpdate: 'calcDataTimeDiff',
 };
 
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
@@ -84,7 +85,7 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
 
-export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [];
+export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = ['calcDataTimeDiff'];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
 
@@ -343,7 +344,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   if (!activeDef) {
     throw new Error(`SpCoin read method ${selectedMethod} is not registered.`);
   }
-  if (canonicalMethod === 'getAccountTimeInSecondeSinceUpdate') {
+  if (canonicalMethod === 'calcDataTimeDiff') {
     const fromRaw = String(spReadParams[0] || '').trim();
     const toRaw = String(spReadParams[1] || '').trim();
     const unitRaw = String(spReadParams[2] || 'Seconds').trim();

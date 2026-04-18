@@ -2,7 +2,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'getAccountTimeInSecondeSinceUpdate',
+  title: 'calcDataTimeDiff',
   params: [
     { label: 'From Date/Time', placeholder: 'yyyy-mm-dd HH:mm:ss', type: 'string' },
     { label: 'To Date/Time', placeholder: 'yyyy-mm-dd HH:mm:ss', type: 'string' },

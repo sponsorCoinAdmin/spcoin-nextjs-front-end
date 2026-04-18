@@ -277,7 +277,7 @@ export default function SpCoinReadController(props: Props) {
   };
   const dateDifferenceValue = React.useMemo(
     () =>
-      selectedSpCoinReadMethod === 'getAccountTimeInSecondeSinceUpdate'
+      selectedSpCoinReadMethod === 'calcDataTimeDiff'
         ? formatDateDifferenceValue(spReadParams[0] || '', spReadParams[1] || '', spReadParams[2] || 'Seconds')
         : '',
     [selectedSpCoinReadMethod, spReadParams],
@@ -348,7 +348,7 @@ export default function SpCoinReadController(props: Props) {
     });
   }, [activeContractAddress, activeSpCoinReadDef.params, setSpReadParams]);
   React.useEffect(() => {
-    if (selectedSpCoinReadMethod !== 'getAccountTimeInSecondeSinceUpdate') return;
+    if (selectedSpCoinReadMethod !== 'calcDataTimeDiff') return;
     setSpReadParams((prev) => {
       const next = [...prev];
       const now = new Date();
@@ -472,7 +472,7 @@ export default function SpCoinReadController(props: Props) {
         {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
         {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
           <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
-          {selectedSpCoinReadMethod === 'getAccountTimeInSecondeSinceUpdate' && (param.label === 'From Date/Time' || param.label === 'To Date/Time') ? (
+          {selectedSpCoinReadMethod === 'calcDataTimeDiff' && (param.label === 'From Date/Time' || param.label === 'To Date/Time') ? (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
               <button
@@ -493,7 +493,7 @@ export default function SpCoinReadController(props: Props) {
                 {spReadParams[idx] || param.placeholder}
               </button>
             </label>
-          ) : selectedSpCoinReadMethod === 'getAccountTimeInSecondeSinceUpdate' && param.label === 'Date Difference Unit' ? (
+          ) : selectedSpCoinReadMethod === 'calcDataTimeDiff' && param.label === 'Date Difference Unit' ? (
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span />
               <div className="grid gap-3 text-sm text-[#8FA8FF]">
@@ -620,7 +620,7 @@ export default function SpCoinReadController(props: Props) {
           )}
           </div>
         )) : null}
-        {hasVisibleReadMethods && selectedSpCoinReadMethod === 'getAccountTimeInSecondeSinceUpdate' ? (
+        {hasVisibleReadMethods && selectedSpCoinReadMethod === 'calcDataTimeDiff' ? (
           <div className="grid grid-cols-1 gap-3">
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Date Difference</span>

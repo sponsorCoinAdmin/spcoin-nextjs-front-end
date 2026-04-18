@@ -42,7 +42,7 @@ import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getMasterAccountElement from './getMasterAccountElement';
 import getStakingRewards from './getStakingRewards';
-import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
+import calcDataTimeDiff from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
@@ -92,7 +92,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isAccountInserted,
   getMasterAccountElement,
   getStakingRewards,
-  getAccountTimeInSecondeSinceUpdate,
+  calcDataTimeDiff,
   totalUnstakedSpCoins,
   totalStakedSPCoins,
   totalStakingRewards,
