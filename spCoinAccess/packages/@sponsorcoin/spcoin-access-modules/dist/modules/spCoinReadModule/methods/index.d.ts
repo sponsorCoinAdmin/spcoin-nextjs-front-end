@@ -11,7 +11,7 @@ export { getAccountRateRecordList } from './getAccountRateRecordList';
 export { getRateTransactionList } from './getRateTransactionList';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
 export { getAgentRateList } from './getAgentRateList';
-export { getAgentRateRecord } from './getAgentRateRecord';
+export { getAgentRateTransaction } from './getAgentRateRecord';
 export { getAgentRateTransactionList } from './getAgentRateRecordList';
 export { getAgentRecord } from './getAgentRecord';
 export { getAgentRecordList } from './getAgentRecordList';

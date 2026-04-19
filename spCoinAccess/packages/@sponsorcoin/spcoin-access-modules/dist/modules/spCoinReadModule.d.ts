@@ -23,7 +23,7 @@ export declare class SpCoinReadModule {
         agentRateRange: [number, number];
     }>;
     getAgentRateList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<(string | number | bigint)[]>;
-    getAgentRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;
+    getAgentRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;
     getAgentRateTransactionList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentRateStruct[]>;
     getAgentRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentStruct>;
     getAgentRecordList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<AgentStruct[]>;

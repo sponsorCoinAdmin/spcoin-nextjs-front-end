@@ -53,9 +53,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 4,
-        name: 'getAgentRateRecord',
+        name: 'getAgentRateTransaction',
         panel: 'spcoin_rread',
-        method: 'getAgentRateRecord',
+        method: 'getAgentRateTransaction',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },

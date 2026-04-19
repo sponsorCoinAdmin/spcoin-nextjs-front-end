@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { AgentRateStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDateTimeString, bigIntToDecString } from "../../../utils/dateTime";
-export async function getAgentRateRecord(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
+export async function getAgentRateTransaction(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
     const runtime = context;
-    runtime.spCoinLogger.logFunctionHeader("getAgentRateRecord(" + _sponsorKey + ", " + _recipientKey + ", " + _agentKey + ", " + _agentRateKey + ")");
+    runtime.spCoinLogger.logFunctionHeader("getAgentRateTransaction(" + _sponsorKey + ", " + _recipientKey + ", " + _agentKey + ", " + _agentRateKey + ")");
     const agentRateRecord = new AgentRateStruct();
     let recordStr = ["0", "0", "0"];
     try {

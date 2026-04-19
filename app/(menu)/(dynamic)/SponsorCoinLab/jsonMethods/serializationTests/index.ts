@@ -495,7 +495,7 @@ export async function buildExternalSerializerResult(contract: any, baseMethod: S
       getSerializedRecipientRecordList: ['getRecipientRecordCore'],
       getSerializedRecipientRateList: ['getRecipientRateRecordCore'],
       serializeAgentRateRecordStr: ['getAgentRateRecordCore'],
-      getSerializedRateTransactionList: ['getAgentRateTransactionCount', 'getAgentRateTransactionAt'],
+      getSerializedRateTransactionList: ['getAgentRateTransactionCount', 'getAgentRateTransaction'],
     };
     const missingGetter = (methodSpecificGetterNames[baseMethod] || []).find((name) => message.includes(name));
     return {

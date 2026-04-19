@@ -13,7 +13,7 @@ export { getRateTransactionList } from './getRateTransactionList';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
 export { getAgentRateKeys, getAgentRateList } from './getAgentRateList';
 export { getAgentRateRange } from './getAgentRateRange';
-export { getAgentRateRecord } from './getAgentRateRecord';
+export { getAgentRateTransaction } from './getAgentRateRecord';
 export { getAgentRateTransactionList } from './getAgentRateRecordList';
 export { getAgentRecord } from './getAgentRecord';
 export { getAgentRecordList } from './getAgentRecordList';

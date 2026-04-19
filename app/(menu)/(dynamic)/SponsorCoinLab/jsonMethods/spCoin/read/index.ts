@@ -47,11 +47,10 @@ export type SpCoinReadMethod =
   | 'getLowerAgentRate'
   | 'getUpperAgentRate'
   | 'getAgentRateRange'
-  | 'getAgentRateRecord'
+  | 'getAgentRateTransaction'
   | 'getAgentTotalRecipient'
   | 'getRecipientRateTransactionCount'
   | 'getAgentRateTransactionCount'
-  | 'getAgentRateTransactionAt'
   | 'getAgentRateTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
@@ -94,7 +93,7 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedAccountRewards: 'getAccountStakingRewards',
   getSerializedRecipientRecordList: 'getRecipientRecord',
   getSerializedRecipientRateList: 'getRecipientRateRecord',
-  serializeAgentRateRecordStr: 'getAgentRateRecord',
+  serializeAgentRateRecordStr: 'getAgentRateTransaction',
   getAccountTimeInSecondeSinceUpdate: 'calcDataTimeDiff',
 };
 
@@ -103,7 +102,7 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountStakingRewards',
   'getRecipientRecord',
   'getRecipientRateRecord',
-  'getAgentRateRecord',
+  'getAgentRateTransaction',
 ];
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;

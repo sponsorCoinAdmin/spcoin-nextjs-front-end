@@ -206,7 +206,7 @@ export type SpCoinReadAccess = {
     _recipientRateKey: string | number,
     _agentKey: string,
   ) => Promise<(string | number | bigint)[]>;
-  getAgentRateRecord: (
+  getAgentRateTransaction: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,

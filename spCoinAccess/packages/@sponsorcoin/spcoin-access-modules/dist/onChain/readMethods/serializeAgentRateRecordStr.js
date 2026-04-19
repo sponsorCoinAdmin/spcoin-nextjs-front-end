@@ -2,7 +2,7 @@
 import { createSerializedHandler } from '../../readMethodRuntime';
 const handler = createSerializedHandler({
     method: 'serializeAgentRateRecordStr',
-    localMethod: 'getAgentRateRecord',
+    localMethod: 'getAgentRateTransaction',
     localArgs: (context) => [
         String(context.methodArgs[0]),
         String(context.methodArgs[1]),
