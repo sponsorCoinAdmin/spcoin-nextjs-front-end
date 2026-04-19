@@ -210,9 +210,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 2,
-        name: 'getAccountKeys',
+        name: 'getMasterAccountKeys',
         panel: 'spcoin_rread',
-        method: 'getAccountKeys',
+        method: 'getMasterAccountKeys',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,
@@ -248,9 +248,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 3,
-        name: 'getAccountKeys',
+        name: 'getMasterAccountKeys',
         panel: 'spcoin_rread',
-        method: 'getAccountKeys',
+        method: 'getMasterAccountKeys',
         params: [],
         breakpoint: false,
         hasMissingRequiredParams: false,

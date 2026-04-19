@@ -32,7 +32,7 @@ import getRecipientKeyCount from './getAccountRecipientListSize';
 import getAgentKeyCount from './getAgentListSize';
 import getRecipientRateRecordList from './getRecipientRateRecordList';
 import getRecipientRecordList from './getRecipientRecordList';
-import getAgentRateRecordList from './getAgentRateRecordList';
+import getAgentRateTransactionList from './getAgentRateRecordList';
 import getRecipientRateTransactionCount from './getRecipientRateTransactionCount';
 import getAgentRateTransactionCount from './getAgentRateTransactionCount';
 import getAgentRateTransactionAt from './getAgentRateTransactionAt';
@@ -50,6 +50,7 @@ import getSerializedRateTransactionList from './getSerializedRateTransactionList
 export const ONCHAIN_READ_METHOD_HANDLERS = {
     getInflationRate,
     calculateStakingRewards,
+    getMasterAccountKeys: getAccountKeys,
     getAccountKeys,
     getRecipientRateKeys,
     getRecipientRateAgentKeys,
@@ -63,6 +64,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getInitialTotalSupply,
     isDeployed,
     isAccountInserted,
+    getMasterAccountElement: getAccountElement,
     getAccountElement,
     getStakingRewards,
     getAccountTimeInSecondeSinceUpdate,
@@ -74,6 +76,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountRewardTransactionRecord,
     getAccountRateRecordList,
     getRateTransactionList,
+    getMasterAccountCount: getAccountKeyCount,
     getAccountKeyCount,
     getRecipientKeys,
     getAgentKeys,
@@ -81,7 +84,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAgentKeyCount,
     getRecipientRateRecordList,
     getRecipientRecordList,
-    getAgentRateRecordList,
+    getAgentRateTransactionList,
     getRecipientRateTransactionCount,
     getAgentRateTransactionCount,
     getAgentRateTransactionAt,
@@ -96,9 +99,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getSerializedRecipientRateList,
     serializeAgentRateRecordStr,
     getSerializedRateTransactionList,
-    getMasterAccountKeys: getAccountKeys,
     getMasterAccountList: getAccountKeys,
-    getMasterAccountElement: getAccountElement,
     getMasterAccountKeyAt: getAccountElement,
     getAccountKeyAt: getAccountElement,
     getMasterAccountListSize: getAccountKeyCount,
@@ -109,5 +110,6 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getRecipientRateList: getRecipientRateKeys,
     getRecipientRateAgentList: getRecipientRateAgentKeys,
     getAgentRateList: getAgentRateKeys,
+    creationTime: getCreationTime,
 };
 

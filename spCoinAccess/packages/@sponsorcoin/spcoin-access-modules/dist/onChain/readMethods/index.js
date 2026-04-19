@@ -28,7 +28,7 @@ import getAccountListSize from './getAccountListSize';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getRecipientRateRecordList from './getRecipientRateRecordList';
 import getRecipientRecordList from './getRecipientRecordList';
-import getAgentRateRecordList from './getAgentRateRecordList';
+import getAgentRateTransactionList from './getAgentRateRecordList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
 import creationTime from './creationTime';
@@ -70,7 +70,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountRecipientListSize,
     getRecipientRateRecordList,
     getRecipientRecordList,
-    getAgentRateRecordList,
+    getAgentRateTransactionList,
     getAgentRecord,
     getAgentRecordList,
     creationTime,

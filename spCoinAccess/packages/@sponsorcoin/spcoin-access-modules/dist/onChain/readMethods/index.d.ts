@@ -28,7 +28,7 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getAccountRecipientListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getRecipientRateRecordList: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getRecipientRecordList: import("../../readMethodRuntime").ReadMethodHandler<any>;
-    getAgentRateRecordList: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAgentRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getAgentRecord: import("../../readMethodRuntime").ReadMethodHandler<{
         agentKey: unknown;
         stakedSPCoins: any;

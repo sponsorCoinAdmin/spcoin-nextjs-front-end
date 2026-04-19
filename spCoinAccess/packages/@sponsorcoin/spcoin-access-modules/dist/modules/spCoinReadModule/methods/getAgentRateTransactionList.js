@@ -1,6 +1,6 @@
 // @ts-nocheck
-export async function getAgentRateTransactionList(context, _sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
-    context.spCoinLogger.logFunctionHeader("getAgentRateTransactionList = async(" + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ", " + _agentRateKey + ")");
+export async function getAgentRateTransactionEntries(context, _sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
+    context.spCoinLogger.logFunctionHeader("getAgentRateTransactionEntries = async(" + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ", " + _agentRateKey + ")");
     let agentRateTransactionList = "";
     try {
         agentRateTransactionList = await context.spCoinContractDeployed.getSerializedRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);

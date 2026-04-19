@@ -13,6 +13,7 @@ export type SpCoinReadMethod =
   | 'getSpCoinMetaData'
   | 'getMasterAccountList'
   | 'getMasterAccountKeys'
+  | 'getMasterAccountCount'
   | 'getMasterAccountListSize'
   | 'getRecipientList'
   | 'getAgentList'
@@ -47,7 +48,6 @@ export type SpCoinReadMethod =
   | 'getUpperAgentRate'
   | 'getAgentRateRange'
   | 'getAgentRateRecord'
-  | 'getAgentRateRecordList'
   | 'getAgentTotalRecipient'
   | 'getRecipientRateTransactionCount'
   | 'getAgentRateTransactionCount'
@@ -73,12 +73,13 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
   initialTotalSupply: 'getInitialTotalSupply',
   getMasterAccountList: 'getMasterAccountKeys',
-  getMasterAccountKeys: 'getAccountKeys',
-  getMasterAccountElement: 'getAccountElement',
-  getMasterAccountKeyAt: 'getAccountElement',
-  getAccountKeyAt: 'getAccountElement',
-  getMasterAccountListSize: 'getAccountKeyCount',
-  getAccountListSize: 'getAccountKeyCount',
+  getAccountKeys: 'getMasterAccountKeys',
+  getAccountElement: 'getMasterAccountElement',
+  getMasterAccountKeyAt: 'getMasterAccountElement',
+  getAccountKeyAt: 'getMasterAccountElement',
+  getAccountKeyCount: 'getMasterAccountCount',
+  getMasterAccountListSize: 'getMasterAccountCount',
+  getAccountListSize: 'getMasterAccountCount',
   getAccountRecipientList: 'getRecipientKeys',
   getAccountRecipientListSize: 'getRecipientKeyCount',
   getAccountAgentList: 'getAgentKeys',
@@ -94,7 +95,6 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedRecipientRecordList: 'getRecipientRecord',
   getSerializedRecipientRateList: 'getRecipientRateRecord',
   serializeAgentRateRecordStr: 'getAgentRateRecord',
-  getSerializedRateTransactionList: 'getAgentRateTransactionList',
   getAccountTimeInSecondeSinceUpdate: 'calcDataTimeDiff',
 };
 
@@ -104,7 +104,6 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getRecipientRecord',
   'getRecipientRateRecord',
   'getAgentRateRecord',
-  'getAgentRateTransactionList',
 ];
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
@@ -397,8 +396,8 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-  if (canonicalMethod === 'getAccountKeyCount') {
-    appendLog(`[debug:getAccountKeyCount] access read=${String(Boolean(access?.read))} contract=${String(Boolean(access?.contract))}`);
+  if (canonicalMethod === 'getMasterAccountCount') {
+    appendLog(`[debug:getMasterAccountCount] access read=${String(Boolean(access?.read))} contract=${String(Boolean(access?.contract))}`);
     if (typeof contract?.getAccountKeyCount === 'function') {
       const rawCount = await contract.getAccountKeyCount();
       const count = Number(rawCount ?? 0);
@@ -412,10 +411,10 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
         ? (read as SpCoinReadAccess & Record<string, unknown>)
         : ({} as SpCoinReadAccess & Record<string, unknown>);
     const rawAccountKeys =
-      typeof readHost.getAccountKeys === 'function'
-        ? await readHost.getAccountKeys()
-        : typeof readHost.getMasterAccountKeys === 'function'
-          ? await readHost.getMasterAccountKeys()
+      typeof readHost.getMasterAccountKeys === 'function'
+        ? await readHost.getMasterAccountKeys()
+        : typeof readHost.getAccountKeys === 'function'
+          ? await readHost.getAccountKeys()
           : typeof readHost.getMasterAccountList === 'function'
             ? await readHost.getMasterAccountList()
             : [];

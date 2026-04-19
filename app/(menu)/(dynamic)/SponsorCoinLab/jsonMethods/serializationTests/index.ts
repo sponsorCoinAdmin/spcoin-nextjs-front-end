@@ -320,7 +320,7 @@ function getReadMethodHandlers() {
 
 async function runMasterDeleteReadMethod(
   access: ReturnType<typeof createSpCoinLibraryAccess>,
-  method: 'getAccountKeys' | 'getAccountRecipientList',
+  method: 'getMasterAccountKeys' | 'getAccountRecipientList',
   methodArgs: unknown[] = [],
 ) {
   const directReadMethod = (access.read as Record<string, unknown>)[method];
@@ -372,7 +372,7 @@ async function readWithRetry<T>(loadValue: () => Promise<T>, attempts: number = 
 }
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  const accountList = Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountKeys'))) as unknown[]).map(
+  const accountList = Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountKeys'))) as unknown[]).map(
     (value) => normalizeAddress(value),
   );
   const recipientLists = await Promise.all(
@@ -387,7 +387,7 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
 }
 
 async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  return Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountKeys'))) as unknown[]).map(
+  return Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountKeys'))) as unknown[]).map(
     (value) => normalizeAddress(value),
   );
 }

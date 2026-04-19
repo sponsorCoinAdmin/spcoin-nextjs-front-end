@@ -17,7 +17,7 @@ export async function getAgentRateRecord(context, _sponsorKey, _recipientKey, _r
     agentRateRecord.lastUpdateTime = bigIntToDateTimeString(recordStr[1]);
     agentRateRecord.stakedSPCoins = bigIntToDecString(recordStr[2]);
     try {
-        agentRateRecord.transactions = await runtime.getAgentRateTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        agentRateRecord.transactions = await runtime.getAgentRateTransactionEntries(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
     }
     catch (_error) {
         agentRateRecord.transactions = [];

@@ -534,15 +534,15 @@ export function useSponsorCoinLabMethods({
           id: `load-account-list-${Date.now()}`,
           name: 'Load Account List',
           network: mode === 'hardhat' ? 'hardhat' : 'metamask',
-          steps: [
-            {
-              step: 1,
-              name: 'getAccountKeys',
-              panel: 'spcoin_rread',
-              method: 'getAccountKeys',
-              mode,
-              params: [],
-            },
+              steps: [
+                {
+                  step: 1,
+                  name: 'getMasterAccountKeys',
+                  panel: 'spcoin_rread',
+                  method: 'getMasterAccountKeys',
+                  mode,
+                  params: [],
+                },
           ],
         },
       }),
@@ -704,10 +704,14 @@ export function useSponsorCoinLabMethods({
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
         normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
+        normalizedPayloadMethod === 'getMasterAccountKeys' ||
         normalizedPayloadMethod === 'getAccountKeys'
       ) {
         const rawResult = nextPayload.result;
-        const entryListKey = normalizedPayloadMethod === 'getAccountKeys' ? 'accounts' : 'sponsors';
+        const entryListKey =
+          normalizedPayloadMethod === 'getMasterAccountKeys' || normalizedPayloadMethod === 'getAccountKeys'
+            ? 'accounts'
+            : 'sponsors';
         const normalizedEntries = Array.isArray(rawResult)
           ? rawResult
           : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
@@ -824,7 +828,7 @@ export function useSponsorCoinLabMethods({
             value: localParams[idx] || '',
           })),
         );
-        if (['getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(selectedMethod)) {
+        if (['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(selectedMethod)) {
           const target = requireContractAddress();
           const runner = await ensureReadRunner();
           const contract = createSpCoinContract(target, runner) as SpCoinContractAccess;
@@ -851,9 +855,10 @@ export function useSponsorCoinLabMethods({
           mode === 'hardhat' &&
           [
             'getAccountRecord',
-            'getAccountKeys',
             'getMasterAccountKeys',
             'getMasterAccountList',
+            'getMasterAccountCount',
+            'getAccountKeys',
             'getAccountKeyCount',
             'getMasterAccountListSize',
             'getAccountListSize',
@@ -878,7 +883,7 @@ export function useSponsorCoinLabMethods({
               appendLog,
               setStatus,
             });
-        if (selectedMethod === 'getAccountKeys') {
+        if (['getMasterAccountKeys', 'getAccountKeys'].includes(selectedMethod)) {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
             const [metadataResult, accountResults] = await Promise.allSettled([
@@ -1147,14 +1152,14 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const runAccountListRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getAccountKeys');
+    const call = buildMethodCallEntry('getMasterAccountKeys');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
       setStatus('Reading account list...');
       const { list } = await loadTreeAccountOptions();
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
-      appendLog(`spCoinReadMethods/getAccountKeys -> ${JSON.stringify(list)}`);
+      appendLog(`spCoinReadMethods/getMasterAccountKeys -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
@@ -1177,7 +1182,7 @@ export function useSponsorCoinLabMethods({
     const call = {
       method: 'getTreeAccounts',
       parameters: [
-        { label: 'via', value: 'getAccountKeys' },
+        { label: 'via', value: 'getMasterAccountKeys' },
         { label: 'expand', value: 'getAccountRecord(each)' },
       ],
     };
@@ -1195,11 +1200,14 @@ export function useSponsorCoinLabMethods({
       );
       let accountKeys: string[];
       try {
-        accountKeys = (await (access.read as SpCoinReadAccess).getAccountKeys()) as string[];
+        accountKeys =
+          typeof (access.read as SpCoinReadAccess).getMasterAccountKeys === 'function'
+            ? ((await (access.read as SpCoinReadAccess).getMasterAccountKeys?.()) as string[])
+            : ((await (access.read as SpCoinReadAccess).getAccountKeys()) as string[]);
       } catch (error) {
         throw await enrichDirectReadError({
           error,
-          method: 'getAccountKeys',
+          method: 'getMasterAccountKeys',
           target,
           runner,
         });
@@ -1396,7 +1404,7 @@ export function useSponsorCoinLabMethods({
   );
 
   const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
-    const listCall = buildMethodCallEntry('getAccountKeys');
+    const listCall = buildMethodCallEntry('getMasterAccountKeys');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -1508,8 +1516,8 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getAccountKeys'].includes(methodName)) continue;
-        const listKey = methodName === 'getAccountKeys' ? 'accounts' : 'sponsors';
+        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getMasterAccountKeys', 'getAccountKeys'].includes(methodName)) continue;
+        const listKey = ['getMasterAccountKeys', 'getAccountKeys'].includes(methodName) ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
           : null;

@@ -268,18 +268,23 @@ export async function POST(request: NextRequest) {
             case 'getMasterAccountKeys':
             case 'getMasterAccountList':
               result =
-                typeof access.read.getAccountKeys === 'function'
-                  ? await access.read.getAccountKeys()
+                typeof access.read.getMasterAccountKeys === 'function'
+                  ? await access.read.getMasterAccountKeys()
+                  : typeof access.read.getAccountKeys === 'function'
+                    ? await access.read.getAccountKeys()
                   : [];
               break;
             case 'getAccountRecord':
               result = await access.read.getAccountRecord(findParam('Account Key'));
               break;
+            case 'getMasterAccountCount':
             case 'getAccountKeyCount':
             case 'getAccountListSize':
             case 'getMasterAccountListSize':
               if (typeof (contract as Record<string, unknown>).getAccountKeyCount === 'function') {
                 result = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
+              } else if (typeof (access.read as Record<string, unknown>).getMasterAccountCount === 'function') {
+                result = await (access.read as unknown as { getMasterAccountCount: () => Promise<unknown> }).getMasterAccountCount();
               } else if (typeof access.read.getAccountKeyCount === 'function') {
                 result = await access.read.getAccountKeyCount();
               } else if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
@@ -288,6 +293,8 @@ export async function POST(request: NextRequest) {
                 const list =
                   typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function'
                     ? await (contract as unknown as { getMasterAccountKeys: () => Promise<unknown> }).getMasterAccountKeys()
+                    : typeof access.read.getMasterAccountKeys === 'function'
+                      ? await access.read.getMasterAccountKeys()
                     : typeof access.read.getAccountKeys === 'function'
                       ? await access.read.getAccountKeys()
                       : [];

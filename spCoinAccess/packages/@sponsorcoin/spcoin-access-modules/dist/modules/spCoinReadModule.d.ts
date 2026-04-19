@@ -24,10 +24,10 @@ export declare class SpCoinReadModule {
     }>;
     getAgentRateList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<(string | number | bigint)[]>;
     getAgentRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;
-    getAgentRateRecordList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentRateStruct[]>;
+    getAgentRateTransactionList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentRateStruct[]>;
     getAgentRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentStruct>;
     getAgentRecordList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<AgentStruct[]>;
-    getAgentRateTransactionList: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<StakingTransactionStruct[]>;
+    getAgentRateTransactionEntries: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<StakingTransactionStruct[]>;
     getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
     getRecipientRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
     getRecipientRateRecordList: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientRateStruct[]>;

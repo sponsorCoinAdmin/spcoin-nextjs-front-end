@@ -179,6 +179,7 @@ export type SpCoinReadAccess = {
   getAccountKeys: () => Promise<string[]>;
   getMasterAccountKeys?: () => Promise<string[]>;
   getMasterAccountList?: () => Promise<string[]>;
+  getMasterAccountCount?: () => Promise<number>;
   getRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getRecipientList?: (_accountKey: string) => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
@@ -213,12 +214,11 @@ export type SpCoinReadAccess = {
     _agentRateKey: string | number,
   ) => Promise<AgentRateStruct>;
   getAgentRateTransactionList: (
-    _sponsorCoin: string,
+    _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
     _agentKey: string,
-    _agentRateKey: string | number,
-  ) => Promise<StakingTransactionStruct[]>;
+  ) => Promise<AgentRateStruct[]>;
 };
 
 export type SpCoinContractAccess = Contract & {
@@ -654,7 +654,7 @@ function createSpCoinOffChainAccess(
               ? await read.getMasterAccountKeys()
               : [];
       } catch (error) {
-        throw await buildReadDecodeError(error, 'getAccountKeys');
+        throw await buildReadDecodeError(error, 'getMasterAccountKeys');
       }
       const accountKeySet = new Set((Array.isArray(accountList) ? accountList : []).map((accountKeyValue) => String(accountKeyValue)));
       const targetAccountKey = String((await del.signer?.getAddress?.()) || '').trim();

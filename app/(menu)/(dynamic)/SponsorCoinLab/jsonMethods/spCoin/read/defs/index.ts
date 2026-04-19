@@ -29,7 +29,6 @@ import getLowerAgentRate from './getLowerAgentRate';
 import getUpperAgentRate from './getUpperAgentRate';
 import getAgentRateRange from './getAgentRateRange';
 import getAgentRateRecord from './getAgentRateRecord';
-import getAgentRateRecordList from './getAgentRateRecordList';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
 import getRecipientRateTransactionCount from './getRecipientRateTransactionCount';
 import getAgentRateTransactionCount from './getAgentRateTransactionCount';
@@ -52,12 +51,13 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
   calculateStakingRewards,
   creationTime,
-  getAccountKeys: getMasterAccountKeys,
   getMasterAccountKeys,
   getMasterAccountList: getMasterAccountKeys,
-  getAccountKeyCount: getMasterAccountKeyCount,
+  getAccountKeys: getMasterAccountKeys,
+  getMasterAccountCount: getMasterAccountKeyCount,
   getMasterAccountListSize: getMasterAccountKeyCount,
   getAccountListSize: getMasterAccountKeyCount,
+  getAccountKeyCount: getMasterAccountKeyCount,
   getSpCoinMetaData,
   getRecipientKeys: getRecipientList,
   getRecipientList,
@@ -90,7 +90,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getUpperAgentRate,
   getAgentRateRange,
   getAgentRateRecord,
-  getAgentRateRecordList,
   getAgentTotalRecipient,
   getRecipientRateTransactionCount,
   getAgentRateTransactionCount,
@@ -101,8 +100,8 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getInitialTotalSupply,
   isDeployed,
   isAccountInserted,
-  getAccountElement,
   getMasterAccountElement: getAccountElement,
+  getAccountElement,
   getMasterAccountKeyAt: getAccountElement,
   getAccountKeyAt: getAccountElement,
   getStakingRewards,
