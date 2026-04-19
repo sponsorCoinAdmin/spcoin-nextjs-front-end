@@ -10,8 +10,8 @@ export async function deleteAccountTree() {
     if (!read || !deleteMethods) {
         throw new Error("deleteAccountTree requires onChain read and delete access.");
     }
-    if (typeof read.getAccountRecipientList !== "function") {
-        throw new Error("deleteAccountTree requires getAccountRecipientList on the onChain read processor.");
+    if (typeof read.getRecipientKeys !== "function" && typeof read.getAccountRecipientList !== "function") {
+        throw new Error("deleteAccountTree requires getRecipientKeys on the onChain read processor.");
     }
     if (typeof deleteMethods.deleteAccountRecord !== "function") {
         throw new Error("deleteAccountTree requires deleteAccountRecord on the onChain delete processor.");
@@ -80,8 +80,8 @@ export async function deleteAccountTree() {
     const getLiveRecipientList = async (sponsorKey) => {
         if (!(await isLiveAccount(sponsorKey))) return [];
         const result = await callWithRetry(
-            `getAccountRecipientList(${sponsorKey})`,
-            () => read.getAccountRecipientList(sponsorKey),
+            `getRecipientKeys(${sponsorKey})`,
+            () => (typeof read.getRecipientKeys === "function" ? read.getRecipientKeys(sponsorKey) : read.getAccountRecipientList(sponsorKey)),
         );
         return Array.isArray(result) ? result.map((value) => String(value)) : [];
     };

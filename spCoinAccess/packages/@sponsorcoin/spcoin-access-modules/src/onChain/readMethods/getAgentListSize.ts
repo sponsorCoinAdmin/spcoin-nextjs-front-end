@@ -3,25 +3,27 @@ import { Interface } from 'ethers';
 import { buildHandler } from '../../readMethodRuntime';
 
 const accountLinksInterface = new Interface([
-  'function getAccountLinks(address _accountKey) view returns (address[] sponsorAccountList, address[] recipientAccountList, address[] agentAccountList, address[] agentParentRecipientAccountList)',
+  'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 
 async function callGetAccountLinks(contract, accountKey) {
   const target = String(contract?.target || (typeof contract?.getAddress === 'function' ? await contract.getAddress() : ''));
   const runner = contract?.runner;
   if (!target || !runner || typeof runner.call !== 'function') {
-    throw new Error('SpCoin read method getAgentListSize requires getAgentList() or getAccountAgentList() on access modules or contract.');
+    throw new Error('SpCoin read method getAgentKeyCount requires getAgentKeys() or getAccountAgentList() on access modules or contract.');
   }
   const data = accountLinksInterface.encodeFunctionData('getAccountLinks', [accountKey]);
   const raw = await runner.call({ to: target, data });
   return accountLinksInterface.decodeFunctionResult('getAccountLinks', raw);
 }
 
-const handler = buildHandler('getAgentListSize', async (context) => {
+const handler = buildHandler('getAgentKeyCount', async (context) => {
   const accountKey = String(context.methodArgs[0] || '');
   const method =
-    typeof context.read.getAgentList === 'function'
-      ? context.read.getAgentList
+    typeof context.read.getAgentKeys === 'function'
+      ? context.read.getAgentKeys
+      : typeof context.read.getAgentList === 'function'
+        ? context.read.getAgentList
       : typeof context.read.getAccountAgentList === 'function'
         ? context.read.getAccountAgentList
         : null;

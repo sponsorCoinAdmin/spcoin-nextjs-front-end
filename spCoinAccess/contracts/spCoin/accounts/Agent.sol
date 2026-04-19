@@ -31,9 +31,9 @@ contract Agent is RecipientRates {
             agentRecord.recipientKey = _recipientKey;
             agentRecord.agentKey = _agentKey;
             agentRecord.inserted = true;
-            accountMap[_recipientKey].agentAccountList.push(_agentKey);
-            accountMap[_agentKey].agentParentRecipientAccountList.push(_recipientKey);
-            recipientRateRecord.agentAccountList.push(_agentKey);
+            accountMap[_recipientKey].agentKeys.push(_agentKey);
+            accountMap[_agentKey].parentRecipientKeys.push(_recipientKey);
+            recipientRateRecord.agentKeys.push(_agentKey);
         }
         return agentRecord;
     }
@@ -50,7 +50,7 @@ contract Agent is RecipientRates {
      }
 
 
-    /// @notice retreives the recipient array records from a specific account address.
+    /// @notice retrieves the agent keys for a specific recipient rate.
     /// @param _recipientKey recipient Key to retrieve the agent list
     function getRecipientRateAgentList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) 
     public view returns (address[] memory) {
@@ -60,11 +60,11 @@ contract Agent is RecipientRates {
         RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys( _sponsorKey, _recipientKey,  _recipientRateKey);
         // console.log("recipientRateRecord.inserted = ", recipientRateRecord.inserted);
     
-        address[] memory agentAccountList = recipientRateRecord.agentAccountList;
-        // console.log("agentAccountList.length = ", agentAccountList.length);
-        // console.log("agentAccountList[0]     = ", agentAccountList[0]);
+        address[] memory agentKeys = recipientRateRecord.agentKeys;
+        // console.log("agentKeys.length = ", agentKeys.length);
+        // console.log("agentKeys[0]     = ", agentKeys[0]);
         // console.log("============================================================================");
-        return agentAccountList;
+        return agentKeys;
     }
 
     /// @notice Total Coin Staked Rates Recipiented
@@ -77,15 +77,15 @@ contract Agent is RecipientRates {
         return agentRec.stakedSPCoins; 
     }
 
-    /// @notice retreives the recipient array records from a specific account address.
+    /// @notice retrieves the agent rate keys for a specific agent record.
     /// @param _recipientKey recipient Key to retrieve the agent list
-    /// @param _agentKey agent Key to retrieve the agentate list
+    /// @param _agentKey agent Key to retrieve the agent rate list
     function getAgentRateList(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey) 
     public view returns (uint[] memory) {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
-        uint[] memory agentRateList = agentRec.agentRateList;
+        uint[] memory agentRateKeys = agentRec.agentRateKeys;
 // console.log("AGENTS.SOL:addAgent:agentRec.agentKey = " , agentRec.agentKey);
-// console.log("AGENTS.SOL:getAgentRateList:agentRateList.length = ",agentRateList.length);
-        return agentRateList;
+// console.log("AGENTS.SOL:getAgentRateList:agentRateKeys.length = ",agentRateKeys.length);
+        return agentRateKeys;
     }
 }

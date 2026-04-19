@@ -46,10 +46,10 @@ export const addRecipient = async (context, _recipientKey) => {
         );
     }
 
-    if (sponsorKey && typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
+    if (sponsorKey && typeof context.spCoinContractDeployed.getRecipientKeys === "function") {
         await waitForVisibility(
             "addRecipient sponsor recipient list",
-            () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+            () => context.spCoinContractDeployed.getRecipientKeys(sponsorKey),
             (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
         );
     }

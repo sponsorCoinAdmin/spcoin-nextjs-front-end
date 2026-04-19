@@ -37,12 +37,12 @@ contract RewardsManager is StakingManager{
     function updateRecipientAccountRewards_OLD( AccountStruct storage accountRec, uint _transactionTimeStamp )
     internal returns (uint256 totalRewards) {
         mapping(address => RecipientStruct) storage recipientMap = accountRec.recipientMap;
-        address[] storage recipientKeys = accountRec.recipientAccountList;             // If Sponsor List of Recipient Accounts
+        address[] storage recipientKeys = accountRec.recipientKeys;             // If Sponsor List of Recipient Accounts
         for (uint idx = 0; idx < recipientKeys.length; idx++) {
             address recipientKey = recipientKeys[idx];
             RecipientStruct storage recipientRec = recipientMap[recipientKey];
             mapping(uint256 => RecipientRateStruct) storage recipientRateMap = recipientRec.recipientRateMap;
-            uint256[] storage recipientRateList = recipientRec.recipientRateList;
+            uint256[] storage recipientRateList = recipientRec.recipientRateKeys;
             for (uint rateIdx = 0; rateIdx < recipientRateList.length; rateIdx++) {
                 uint recipientRate = recipientRateList[rateIdx];
                 RecipientRateStruct storage recipientRateRecord = recipientRateMap[recipientRate];
@@ -141,7 +141,7 @@ contract RewardsManager is StakingManager{
         // console.log("SOL 1.1 updateRecipientAccountRewards(AccountStruct storage accountRec, uint256 _transactionTimeStamp)");
        AccountStruct storage accountRec = accountMap[_sponsorKey];
         mapping(address => RecipientStruct) storage recipientMap = accountRec.recipientMap;
-        address[] storage recipientKeys = accountRec.recipientAccountList;             // If Sponsor List of Recipient Accounts
+        address[] storage recipientKeys = accountRec.recipientKeys;             // If Sponsor List of Recipient Accounts
         for (uint idx = 0; idx < recipientKeys.length; idx++) {
             address recipientKey = recipientKeys[idx];
             RecipientStruct storage recipientRecord = recipientMap[recipientKey];
@@ -164,14 +164,14 @@ contract RewardsManager is StakingManager{
     internal returns (uint256 totalRewards) {
         // console.log("SOL 1.1 updateagentAccountipientRewards(AccountStruct storage agentAccount, uint256 _transactionTimeStamp)");
         AccountStruct storage agentAccount = accountMap[agentKey];
-        address[] storage parentRecipientKeys = agentAccount.agentParentRecipientAccountList;    // If Recipient List of Recipient Accounts
+        address[] storage parentRecipientKeys = agentAccount.parentRecipientKeys;    // If Recipient List of Recipient Accounts
         for (uint idx = 0; idx < parentRecipientKeys.length; idx++) {
             address parentRecipientKey = parentRecipientKeys[idx];
             AccountStruct storage parentRecipientAccount = accountMap[parentRecipientKey];
 
             // have agentKey and parentRecipientKey, ToDo: NEED!!! sponsorAccount to get recipientRecord
             // traverse recipients sponsorships, (sponsorAccountList)
-            address[] storage sponsorKeys = parentRecipientAccount.sponsorAccountList;
+            address[] storage sponsorKeys = parentRecipientAccount.sponsorKeys;
             for (uint keyIdx = 0; keyIdx < sponsorKeys.length; keyIdx++) {
                 address sponsorKey = sponsorKeys[keyIdx];
                 AccountStruct storage sponsorAccount = accountMap[sponsorKey];
@@ -202,7 +202,7 @@ contract RewardsManager is StakingManager{
         AccountStruct storage recipientAccount = accountMap[_recipientKey];
 
             // traverse recipients sponsorships, (sponsorAccountList)
-            address[] storage sponsorKeys = recipientAccount.sponsorAccountList;
+            address[] storage sponsorKeys = recipientAccount.sponsorKeys;
             for (uint keyIdx = 0; keyIdx < sponsorKeys.length; keyIdx++) {
                 address sponsorKey = sponsorKeys[keyIdx];
                 AccountStruct storage sponsorAccount = accountMap[sponsorKey];
@@ -218,7 +218,7 @@ contract RewardsManager is StakingManager{
     function updateRecipientAgentRewards( RecipientStruct storage recipientRecord, uint256 _transactionTimeStamp )
     internal returns ( uint rewards ) {
         // console.log("SOL=>7.0 updateRecipientRateListRewards(recipientRecord)");
-        uint256[] storage recipientRateList = recipientRecord.recipientRateList;
+        uint256[] storage recipientRateList = recipientRecord.recipientRateKeys;
         mapping(uint256 => RecipientRateStruct) storage recipientRateMap = recipientRecord.recipientRateMap;
         // console.log("SOL=>7.1 updateRecipientRateListRewards:recipientRateList.length = ",recipientRateList.length);
         for (uint idx = 0; idx < recipientRateList.length; idx++) {
@@ -234,7 +234,7 @@ contract RewardsManager is StakingManager{
     function updateRecipientRateListRewards( RecipientStruct storage recipientRecord, uint256 _transactionTimeStamp )
     internal returns ( uint rewards ) {
         // console.log("SOL=>7.0 updateRecipientRateListRewards(recipientRecord)");
-        uint256[] storage recipientRateList = recipientRecord.recipientRateList;
+        uint256[] storage recipientRateList = recipientRecord.recipientRateKeys;
         mapping(uint256 => RecipientRateStruct) storage recipientRateMap = recipientRecord.recipientRateMap;
         // console.log("SOL=>7.1 updateRecipientRateListRewards:recipientRateList.length = ",recipientRateList.length);
         for (uint idx = 0; idx < recipientRateList.length; idx++) {
@@ -278,7 +278,7 @@ contract RewardsManager is StakingManager{
     function updateAgentListRewards(RecipientRateStruct storage recipientRateRecord, address _recipientKey,  uint _recipientRate, uint _transactionTimeStamp)
     internal returns (uint totalRewards) {
         mapping(address => AgentStruct) storage agentMap = recipientRateRecord.agentMap;
-        address[] storage agentKeys = recipientRateRecord.agentAccountList;             // If Sponsor List of Recipient Accounts
+        address[] storage agentKeys = recipientRateRecord.agentKeys;             // If Sponsor List of Recipient Accounts
 
         for (uint idx = 0; idx < agentKeys.length; idx++) {
             address agentKey = agentKeys[idx];
@@ -294,7 +294,7 @@ contract RewardsManager is StakingManager{
    function updateAgentRewards(AgentStruct storage agentAccountord, address _recipientKey,  uint _recipientRate, uint _transactionTimeStamp)
     internal returns (uint totalRewards) {
         mapping(uint256 => AgentRateStruct) storage agentRateMap = agentAccountord.agentRateMap;
-        uint256[] storage agentRateKeys = agentAccountord.agentRateList; 
+        uint256[] storage agentRateKeys = agentAccountord.agentRateKeys; 
         address agentKey = agentAccountord.agentKey;            // If Sponsor List of Recipient Accounts
 
         for (uint idx = 0; idx < agentRateKeys.length; idx++) {

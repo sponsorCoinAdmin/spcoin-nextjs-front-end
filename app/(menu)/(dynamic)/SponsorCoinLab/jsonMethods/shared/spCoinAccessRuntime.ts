@@ -12,7 +12,7 @@ export function createSpCoinLibraryAccess(
   address: string,
   runner: any,
   signer?: Signer,
-  source: SpCoinAccessSource = 'node_modules',
+  source: SpCoinAccessSource = 'local',
 ) {
   const contract = createSpCoinContract(address, runner);
   return createSpCoinModuleAccess(contract, signer, source);

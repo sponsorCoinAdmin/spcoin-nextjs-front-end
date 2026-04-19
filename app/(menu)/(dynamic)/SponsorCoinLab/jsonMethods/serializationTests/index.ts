@@ -131,7 +131,7 @@ const accountCoreInterface = new Interface([
   'function getAccountCore(address _accountKey) view returns (address accountKey, uint256 creationTime, bool verified, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards)',
 ]);
 const accountLinksInterface = new Interface([
-  'function getAccountLinks(address _accountKey) view returns (address[] sponsorAccountList, address[] recipientAccountList, address[] agentAccountList, address[] agentParentRecipientAccountList)',
+  'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 const recipientRecordCoreInterface = new Interface([
   'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
@@ -320,7 +320,7 @@ function getReadMethodHandlers() {
 
 async function runMasterDeleteReadMethod(
   access: ReturnType<typeof createSpCoinLibraryAccess>,
-  method: 'getMasterAccountList' | 'getAccountRecipientList',
+  method: 'getAccountKeys' | 'getAccountRecipientList',
   methodArgs: unknown[] = [],
 ) {
   const directReadMethod = (access.read as Record<string, unknown>)[method];
@@ -372,7 +372,7 @@ async function readWithRetry<T>(loadValue: () => Promise<T>, attempts: number = 
 }
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  const accountList = Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountList'))) as unknown[]).map(
+  const accountList = Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountKeys'))) as unknown[]).map(
     (value) => normalizeAddress(value),
   );
   const recipientLists = await Promise.all(
@@ -387,7 +387,7 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinLibrary
 }
 
 async function loadAccountList(access: ReturnType<typeof createSpCoinLibraryAccess>) {
-  return Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getMasterAccountList'))) as unknown[]).map(
+  return Array.from((await readWithRetry(() => runMasterDeleteReadMethod(access, 'getAccountKeys'))) as unknown[]).map(
     (value) => normalizeAddress(value),
   );
 }
@@ -403,13 +403,12 @@ async function loadRecipientRateKeys(
   sponsorKey: string,
   recipientKey: string,
 ) {
-  if (typeof access.read.getRecipientRateList !== 'function') {
-    throw new Error('getRecipientRateList() read method is required.');
+  if (typeof access.read.getRecipientRateKeys !== 'function' && typeof access.read.getRecipientRateList !== 'function') {
+    throw new Error('getRecipientRateKeys() read method is required.');
   }
   try {
-    return Array.from((await readWithRetry(() => access.read.getRecipientRateList(sponsorKey, recipientKey))) as unknown[]).map((value) =>
-      String(value),
-    );
+    const method = typeof access.read.getRecipientRateKeys === 'function' ? access.read.getRecipientRateKeys : access.read.getRecipientRateList;
+    return Array.from((await readWithRetry(() => method(sponsorKey, recipientKey))) as unknown[]).map((value) => String(value));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`loadRecipientRateKeys(${sponsorKey}, ${recipientKey}) failed: ${message}`);
@@ -422,11 +421,15 @@ async function loadRecipientRateAgents(
   recipientKey: string,
   recipientRateKey: string,
 ) {
-  if (typeof access.read.getRecipientRateAgentList !== 'function') {
-    throw new Error('getRecipientRateAgentList() read method is required.');
+  if (typeof access.read.getRecipientRateAgentKeys !== 'function' && typeof access.read.getRecipientRateAgentList !== 'function') {
+    throw new Error('getRecipientRateAgentKeys() read method is required.');
   }
+  const method =
+    typeof access.read.getRecipientRateAgentKeys === 'function'
+      ? access.read.getRecipientRateAgentKeys
+      : access.read.getRecipientRateAgentList;
   return Array.from(
-    (await readWithRetry(() => access.read.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRateKey))) as unknown[],
+    (await readWithRetry(() => method(sponsorKey, recipientKey, recipientRateKey))) as unknown[],
   ).map((value) => normalizeAddress(value));
 }
 
@@ -437,12 +440,16 @@ async function loadAgentRateKeys(
   recipientRateKey: string,
   agentKey: string,
 ) {
-  const getAgentRateList = (access.contract as { getAgentRateList?: (...args: unknown[]) => Promise<unknown> }).getAgentRateList;
-  if (typeof getAgentRateList !== 'function') {
-    throw new Error('getAgentRateList() is not available on the current SpCoin contract access path.');
+  const contractAccess = access.contract as {
+    getAgentRateKeys?: (...args: unknown[]) => Promise<unknown>;
+    getAgentRateList?: (...args: unknown[]) => Promise<unknown>;
+  };
+  const getAgentRateKeys = contractAccess.getAgentRateKeys ?? contractAccess.getAgentRateList;
+  if (typeof getAgentRateKeys !== 'function') {
+    throw new Error('getAgentRateKeys() is not available on the current SpCoin contract access path.');
   }
   return Array.from(
-    (await readWithRetry(() => getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey))) as unknown[],
+    (await readWithRetry(() => getAgentRateKeys(sponsorKey, recipientKey, recipientRateKey, agentKey))) as unknown[],
   ).map((value) => String(value));
 }
 
@@ -534,7 +541,7 @@ function normalizeAddressList(values: unknown[]) {
 async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
   const [accountKey, creationTime, verified, accountBalance, stakedAccountSPCoins, accountStakingRewards] =
     await callViewFunction(contract, accountCoreInterface, 'getAccountCore', [methodArgs[0]]);
-  const [sponsorAccountList, recipientAccountList, agentAccountList, agentParentRecipientAccountList] =
+  const [sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] =
     await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [methodArgs[0]]);
 
   let serialized = `accountKey: ${normalizeAddress(accountKey)}\\,\ncreationTime: ${String(creationTime)}\\,\nverified: ${
@@ -542,10 +549,10 @@ async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
   }`;
   serialized += `\\,balanceOf: ${String(accountBalance)}`;
   serialized += `\\,stakedSPCoins: ${String(stakedAccountSPCoins)}`;
-  serialized += `\\,sponsorAccountList:${normalizeAddressList(Array.from(sponsorAccountList as unknown[]))}`;
-  serialized += `\\,recipientAccountList:${normalizeAddressList(Array.from(recipientAccountList as unknown[]))}`;
-  serialized += `\\,agentAccountList:${normalizeAddressList(Array.from(agentAccountList as unknown[]))}`;
-  serialized += `\\,agentParentRecipientAccountList:${normalizeAddressList(Array.from(agentParentRecipientAccountList as unknown[]))}`;
+  serialized += `\\,sponsorKeys:${normalizeAddressList(Array.from(sponsorKeys as unknown[]))}`;
+  serialized += `\\,recipientKeys:${normalizeAddressList(Array.from(recipientKeys as unknown[]))}`;
+  serialized += `\\,agentKeys:${normalizeAddressList(Array.from(agentKeys as unknown[]))}`;
+  serialized += `\\,parentRecipientKeys:${normalizeAddressList(Array.from(parentRecipientKeys as unknown[]))}`;
   serialized += `\\,stakingRewards: ${String(accountStakingRewards)}`;
   return serialized;
 }

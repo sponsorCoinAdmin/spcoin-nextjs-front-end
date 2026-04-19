@@ -5,8 +5,8 @@ function stringifyBigIntSafe(value) {
     );
 }
 
-export async function getRecipientRateList(context, _sponsorKey, _recipientKey) {
-    context.spCoinLogger.logFunctionHeader("getRecipientRateList = async(" + _sponsorKey + "," + _recipientKey + ")");
+export async function getRecipientRateKeys(context, _sponsorKey, _recipientKey) {
+    context.spCoinLogger.logFunctionHeader("getRecipientRateKeys = async(" + _sponsorKey + "," + _recipientKey + ")");
     try {
         const runner = context?.spCoinContractDeployed?.runner;
         const provider = runner?.provider || runner;
@@ -22,16 +22,16 @@ export async function getRecipientRateList(context, _sponsorKey, _recipientKey) 
             runner?.connection?.url ||
             runner?._connection?.url ||
             "";
-        context.spCoinLogger.logDetail("JS => getRecipientRateList provider = " + String(providerType || "(unknown)"));
-        context.spCoinLogger.logDetail("JS => getRecipientRateList providerUrl = " + String(candidateUrl || "(unavailable)"));
-        context.spCoinLogger.logDetail("JS => getRecipientRateList stage = send");
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys provider = " + String(providerType || "(unknown)"));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys providerUrl = " + String(candidateUrl || "(unavailable)"));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys stage = send");
         const networkRateKeys = await context.spCoinContractDeployed.getRecipientRateList(_sponsorKey, _recipientKey);
-        context.spCoinLogger.logDetail("JS => getRecipientRateList raw = " + stringifyBigIntSafe(networkRateKeys));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys raw = " + stringifyBigIntSafe(networkRateKeys));
         const recipientRateList = [];
         for (const [, netWorkRateKey] of Object.entries(networkRateKeys)) {
             recipientRateList.push(netWorkRateKey);
         }
-        context.spCoinLogger.logDetail("JS => getRecipientRateList normalized = " + stringifyBigIntSafe(recipientRateList));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys normalized = " + stringifyBigIntSafe(recipientRateList));
         context.spCoinLogger.logExitFunction();
         return recipientRateList;
     } catch (error) {
@@ -50,10 +50,12 @@ export async function getRecipientRateList(context, _sponsorKey, _recipientKey) 
             runner?.connection?.url ||
             runner?._connection?.url ||
             "";
-        context.spCoinLogger.logDetail("JS => getRecipientRateList failed provider = " + String(providerType || "(unknown)"));
-        context.spCoinLogger.logDetail("JS => getRecipientRateList failed providerUrl = " + String(candidateUrl || "(unavailable)"));
-        context.spCoinLogger.logDetail("JS => getRecipientRateList failed = " + message);
-        throw new Error("getRecipientRateList(" + _sponsorKey + "," + _recipientKey + ") failed: " + message);
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys failed provider = " + String(providerType || "(unknown)"));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys failed providerUrl = " + String(candidateUrl || "(unavailable)"));
+        context.spCoinLogger.logDetail("JS => getRecipientRateKeys failed = " + message);
+        throw new Error("getRecipientRateKeys(" + _sponsorKey + "," + _recipientKey + ") failed: " + message);
     }
 }
+
+export const getRecipientRateList = getRecipientRateKeys;
 

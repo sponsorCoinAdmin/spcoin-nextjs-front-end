@@ -264,17 +264,33 @@ export async function POST(request: NextRequest) {
         let result: unknown;
         if (step.panel === 'spcoin_rread') {
           switch (step.method) {
+            case 'getAccountKeys':
+            case 'getMasterAccountKeys':
             case 'getMasterAccountList':
-              result = await access.read.getMasterAccountList();
+              result =
+                typeof access.read.getAccountKeys === 'function'
+                  ? await access.read.getAccountKeys()
+                  : [];
               break;
             case 'getAccountRecord':
               result = await access.read.getAccountRecord(findParam('Account Key'));
               break;
+            case 'getAccountKeyCount':
             case 'getAccountListSize':
-              if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
+            case 'getMasterAccountListSize':
+              if (typeof (contract as Record<string, unknown>).getAccountKeyCount === 'function') {
+                result = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
+              } else if (typeof access.read.getAccountKeyCount === 'function') {
+                result = await access.read.getAccountKeyCount();
+              } else if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
                 result = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
               } else {
-                const list = await access.read.getMasterAccountList();
+                const list =
+                  typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function'
+                    ? await (contract as unknown as { getMasterAccountKeys: () => Promise<unknown> }).getMasterAccountKeys()
+                    : typeof access.read.getAccountKeys === 'function'
+                      ? await access.read.getAccountKeys()
+                      : [];
                 result = Array.isArray(list) ? list.length : 0;
               }
               break;

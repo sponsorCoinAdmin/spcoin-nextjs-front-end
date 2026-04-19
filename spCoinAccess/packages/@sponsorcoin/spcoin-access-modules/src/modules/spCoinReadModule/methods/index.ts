@@ -1,7 +1,7 @@
 // @ts-nocheck
-export { getMasterAccountList } from './getMasterAccountList';
-export { getAccountListSize } from './getAccountListSize';
-export { getAccountRecipientList } from './getAccountRecipientList';
+export { getAccountKeys, getMasterAccountKeys, getMasterAccountList } from './getMasterAccountList';
+export { getAccountListSize, getAccountKeyCount, getMasterAccountListSize } from './getAccountListSize';
+export { getRecipientKeys, getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
 export { getAccountRecord } from './getAccountRecord';
 export { getAccountStakingRewards } from './getAccountStakingRewards';
@@ -11,19 +11,19 @@ export { getAccountRewardTransactionRecord } from './getAccountRewardTransaction
 export { getAccountRateRecordList } from './getAccountRateRecordList';
 export { getRateTransactionList } from './getRateTransactionList';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
-export { getAgentRateList } from './getAgentRateList';
+export { getAgentRateKeys, getAgentRateList } from './getAgentRateList';
 export { getAgentRateRange } from './getAgentRateRange';
 export { getAgentRateRecord } from './getAgentRateRecord';
 export { getAgentRateRecordList } from './getAgentRateRecordList';
 export { getAgentRecord } from './getAgentRecord';
 export { getAgentRecordList } from './getAgentRecordList';
 export { getAgentRateTransactionList } from './getAgentRateTransactionList';
-export { getRecipientRateAgentList } from './getRecipientRateAgentList';
+export { getRecipientRateAgentKeys, getRecipientRateAgentList } from './getRecipientRateAgentList';
 export { getRecipientRateRange } from './getRecipientRateRange';
 export { getRecipientRateRecord } from './getRecipientRateRecord';
 export { getRecipientRateRecordList } from './getRecipientRateRecordList';
 export { getRecipientRecord } from './getRecipientRecord';
 export { getRecipientRecordList } from './getRecipientRecordList';
-export { getRecipientRateList } from './getRecipientRateList';
+export { getRecipientRateKeys, getRecipientRateList } from './getRecipientRateList';
 export { getRecipientRateTransactionList } from './getRecipientRateTransactionList';
 

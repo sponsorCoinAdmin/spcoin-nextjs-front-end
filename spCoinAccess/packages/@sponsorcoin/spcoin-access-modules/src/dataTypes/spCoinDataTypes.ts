@@ -25,10 +25,12 @@ export class AccountStruct {
         this.accountKey = 0;
         this.creationTime = 0;
         this.totalSpCoins = new TotalSpCoinsStruct();
-        this.recipientAccountList = [];
+        this.recipientKeys = [];
         this.recipientRateBranches = {};
-        this.agentAccountList = [];
+        this.agentKeys = [];
         this.agentRateBranches = {};
+        this.sponsorKeys = [];
+        this.parentRecipientKeys = [];
     }
 }
 export class TotalSpCoinsStruct {
@@ -66,7 +68,7 @@ export class RecipientStruct extends RelationshipRecordStruct {
         this.stakedSPCoins;
         this.verified;
         this.recipientRateRecordList;
-        this.recipientRateList;
+        this.recipientRateKeys;
     }
 }
 export class RecipientRateStruct {
@@ -77,7 +79,7 @@ export class RecipientRateStruct {
         this.lastUpdateTime;
         this.stakedSPCoins;
         this.transactions;
-        this.agentAccountList;
+        this.agentKeys;
         this.agentRecordList;
     }
 }
@@ -90,7 +92,7 @@ export class AgentStruct extends RelationshipRecordStruct {
         this.stakedSPCoins;
         this.creationTime;
         this.verified;
-        this.agentRateList;
+        this.agentRateKeys;
     }
 }
 export class AgentRateStruct {

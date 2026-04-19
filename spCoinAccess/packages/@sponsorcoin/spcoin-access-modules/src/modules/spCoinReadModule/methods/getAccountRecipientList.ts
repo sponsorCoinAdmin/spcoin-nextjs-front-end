@@ -1,8 +1,10 @@
 // @ts-nocheck
-export async function getAccountRecipientList(context, _accountKey) {
-    context.spCoinLogger.logFunctionHeader("getAccountRecipientList = async(" + _accountKey + ")");
-    const recipientAccountList = await context.spCoinContractDeployed.getAccountRecipientList(_accountKey);
+export async function getRecipientKeys(context, _accountKey) {
+    context.spCoinLogger.logFunctionHeader("getRecipientKeys = async(" + _accountKey + ")");
+    const recipientKeys = await context.spCoinContractDeployed.getRecipientKeys(_accountKey);
     context.spCoinLogger.logExitFunction();
-    return recipientAccountList;
+    return recipientKeys;
 }
+
+export const getAccountRecipientList = getRecipientKeys;
 

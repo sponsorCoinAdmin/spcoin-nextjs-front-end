@@ -709,6 +709,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getAccountKeyCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -720,41 +733,22 @@
     "outputs": [
       {
         "internalType": "address[]",
-        "name": "sponsorAccountList",
+        "name": "sponsorKeys",
         "type": "address[]"
       },
       {
         "internalType": "address[]",
-        "name": "recipientAccountList",
+        "name": "recipientKeys",
         "type": "address[]"
       },
       {
         "internalType": "address[]",
-        "name": "agentAccountList",
+        "name": "agentKeys",
         "type": "address[]"
       },
       {
         "internalType": "address[]",
-        "name": "agentParentRecipientAccountList",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      }
-    ],
-    "name": "getAccountRecipientList",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
+        "name": "parentRecipientKeys",
         "type": "address[]"
       }
     ],
@@ -785,6 +779,44 @@
         "internalType": "uint256",
         "name": "agentRewards",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getAgentKeyCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getAgentKeys",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -1083,7 +1115,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getMasterAccountElement",
+    "name": "getMasterAccountKeyAt",
     "outputs": [
       {
         "internalType": "address",
@@ -1096,7 +1128,45 @@
   },
   {
     "inputs": [],
-    "name": "getMasterAccountList",
+    "name": "getMasterAccountKeys",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getRecipientKeyCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getRecipientKeys",
     "outputs": [
       {
         "internalType": "address[]",

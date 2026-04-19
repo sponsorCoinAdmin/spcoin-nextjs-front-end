@@ -3,7 +3,7 @@ import { Interface } from 'ethers';
 import { buildHandler } from '../../readMethodRuntime';
 
 const accountLinksInterface = new Interface([
-  'function getAccountLinks(address _accountKey) view returns (address[] sponsorAccountList, address[] recipientAccountList, address[] agentAccountList, address[] agentParentRecipientAccountList)',
+  'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 
 async function callGetAccountLinks(contract, accountKey) {
@@ -18,8 +18,14 @@ async function callGetAccountLinks(contract, accountKey) {
   return decoded;
 }
 
-const handler = buildHandler('getAccountAgentList', async (context) => {
+const handler = buildHandler('getAgentKeys', async (context) => {
   const accountKey = String(context.methodArgs[0] || '');
+  if (typeof context.contract.getAgentKeys === 'function') {
+    return context.normalizeStringListResult(await context.contract.getAgentKeys(accountKey));
+  }
+  if (typeof context.read.getAgentKeys === 'function') {
+    return context.normalizeStringListResult(await context.read.getAgentKeys(accountKey));
+  }
   if (typeof context.contract.getAccountLinks === 'function') {
     const links = await context.contract.getAccountLinks(accountKey);
     return context.normalizeStringListResult(Array.isArray(links?.[2]) ? links[2] : []);

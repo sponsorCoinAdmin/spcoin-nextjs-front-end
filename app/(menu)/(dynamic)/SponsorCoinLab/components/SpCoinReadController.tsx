@@ -153,6 +153,16 @@ type Props = {
   hideAddToScript?: boolean;
 };
 
+function dedupeReadMethodNamesByTitle(values: string[], defs: Record<string, MethodDef>) {
+  const seenTitles = new Set<string>();
+  return values.filter((name) => {
+    const title = String(defs[name]?.title || name);
+    if (seenTitles.has(title)) return false;
+    seenTitles.add(title);
+    return true;
+  });
+}
+
 export default function SpCoinReadController(props: Props) {
   const {
     invalidFieldIds,
@@ -346,25 +356,31 @@ export default function SpCoinReadController(props: Props) {
     [hardhatAccounts],
   );
   const visibleWorldReadOptions = React.useMemo(
-    () => (showOnChainMethods ? spCoinWorldReadOptions : []),
-    [showOnChainMethods, spCoinWorldReadOptions],
+    () =>
+      dedupeReadMethodNamesByTitle(showOnChainMethods ? spCoinWorldReadOptions : [], spCoinReadMethodDefs),
+    [showOnChainMethods, spCoinReadMethodDefs, spCoinWorldReadOptions],
   );
   const visibleSenderReadOptions = React.useMemo(
-    () => (showOnChainMethods ? spCoinSenderReadOptions : []),
-    [showOnChainMethods, spCoinSenderReadOptions],
+    () =>
+      dedupeReadMethodNamesByTitle(showOnChainMethods ? spCoinSenderReadOptions : [], spCoinReadMethodDefs),
+    [showOnChainMethods, spCoinReadMethodDefs, spCoinSenderReadOptions],
   );
   const visibleAdminReadOptions = React.useMemo(
     () =>
-      showOnChainMethods
-        ? spCoinAdminReadOptions.filter(
-            (name) => name !== 'calculateStakingRewards' && name !== 'calcDataTimeDiff',
-          )
-        : [],
-    [showOnChainMethods, spCoinAdminReadOptions],
+      dedupeReadMethodNamesByTitle(
+        showOnChainMethods
+          ? spCoinAdminReadOptions.filter(
+              (name) => name !== 'calculateStakingRewards' && name !== 'calcDataTimeDiff',
+            )
+          : [],
+        spCoinReadMethodDefs,
+      ),
+    [showOnChainMethods, spCoinAdminReadOptions, spCoinReadMethodDefs],
   );
   const visibleCompoundReadOptions = React.useMemo(
-    () => (showOffChainMethods ? spCoinCompoundReadOptions : []),
-    [showOffChainMethods, spCoinCompoundReadOptions],
+    () =>
+      dedupeReadMethodNamesByTitle(showOffChainMethods ? spCoinCompoundReadOptions : [], spCoinReadMethodDefs),
+    [showOffChainMethods, spCoinCompoundReadOptions, spCoinReadMethodDefs],
   );
   const visibleReadMethods = React.useMemo(
     () => [

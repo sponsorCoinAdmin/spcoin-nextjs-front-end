@@ -9,7 +9,7 @@ async function callLegacyGetAccountList(contract) {
     const target = String(contract?.target || (typeof contract?.getAddress === "function" ? await contract.getAddress() : ""));
     const runner = contract?.runner;
     if (!target || !runner || typeof runner.call !== "function") {
-        throw new Error("SpCoin contract does not expose getMasterAccountList().");
+        throw new Error("SpCoin contract does not expose getMasterAccountKeys().");
     }
     const data = legacyAccountListInterface.encodeFunctionData("getAccountList", []);
     const raw = await runner.call({ to: target, data });
@@ -17,11 +17,11 @@ async function callLegacyGetAccountList(contract) {
     return decoded[0];
 }
 
-export async function getMasterAccountList(context) {
-    context.spCoinLogger.logFunctionHeader("getMasterAccountList = async()");
-    if (typeof context.spCoinContractDeployed.getMasterAccountList === "function") {
+export async function getAccountKeys(context) {
+    context.spCoinLogger.logFunctionHeader("getAccountKeys = async()");
+    if (typeof context.spCoinContractDeployed.getMasterAccountKeys === "function") {
         try {
-            const insertedAccountList = await context.spCoinContractDeployed.getMasterAccountList();
+            const insertedAccountList = await context.spCoinContractDeployed.getMasterAccountKeys();
             context.spCoinLogger.logExitFunction();
             return insertedAccountList;
         } catch (error) {
@@ -42,3 +42,6 @@ export async function getMasterAccountList(context) {
     context.spCoinLogger.logExitFunction();
     return insertedAccountList;
 }
+
+export const getMasterAccountKeys = getAccountKeys;
+export const getMasterAccountList = getAccountKeys;

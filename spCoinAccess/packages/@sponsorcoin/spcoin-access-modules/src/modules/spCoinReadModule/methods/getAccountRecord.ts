@@ -68,12 +68,12 @@ function mergeAccountNode(existingAccount, incomingAccount) {
         totalSpCoins: incomingAccount.totalSpCoins ?? existingAccount.totalSpCoins,
         recipientRateBranches: mergeBranchMaps(existingAccount.recipientRateBranches, incomingAccount.recipientRateBranches),
         agentRateBranches: mergeBranchMaps(existingAccount.agentRateBranches, incomingAccount.agentRateBranches),
-        recipientAccountList: Array.isArray(incomingAccount.recipientAccountList) && incomingAccount.recipientAccountList.length > 0
-            ? incomingAccount.recipientAccountList
-            : existingAccount.recipientAccountList,
-        agentAccountList: Array.isArray(incomingAccount.agentAccountList) && incomingAccount.agentAccountList.length > 0
-            ? incomingAccount.agentAccountList
-            : existingAccount.agentAccountList,
+        recipientKeys: Array.isArray(incomingAccount.recipientKeys) && incomingAccount.recipientKeys.length > 0
+            ? incomingAccount.recipientKeys
+            : existingAccount.recipientKeys,
+        agentKeys: Array.isArray(incomingAccount.agentKeys) && incomingAccount.agentKeys.length > 0
+            ? incomingAccount.agentKeys
+            : existingAccount.agentKeys,
     };
 }
 
@@ -278,7 +278,7 @@ async function buildAgentParentRelationshipList(runtime, agentAccountKey, parent
     for (const recipientAccountKey of uniqueParentRecipientKeys) {
         if (debugState) debugState.accountRecordReads += 1;
         const recipientAccount = await getAccountRecordObjectCached(runtime, recipientAccountKey);
-        const sponsorAccountKeys = Array.from(new Set(Array.isArray(recipientAccount?.sponsorAccountList) ? recipientAccount.sponsorAccountList.map((value) => String(value ?? "").trim().toLowerCase()) : []));
+        const sponsorAccountKeys = Array.from(new Set(Array.isArray(recipientAccount?.sponsorKeys) ? recipientAccount.sponsorKeys.map((value) => String(value ?? "").trim().toLowerCase()) : []));
         for (const sponsorAccountKey of sponsorAccountKeys) {
             const relationships = await getAgentParentRelationshipsForRecipient(
                 runtime,
@@ -352,7 +352,7 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
                 TYPE: "--RECIPIENT_RATE--",
                 recipientRate: String(recipientRateKey ?? ""),
                 stakedAmount: String(recipientRateRecordFields?.[2] ?? "0"),
-                agentAccountList: Array.from(agentAccountMap.values()),
+                agentKeys: Array.from(agentAccountMap.values()),
             };
         }
         return recipientRateBranches;
@@ -386,11 +386,11 @@ async function getShallowAccountRecord(runtime, accountKey) {
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
     accountStruct.agentRateBranches = {};
-    delete accountStruct.sponsorAccountList;
-    accountStruct.recipientAccountList = [];
+    delete accountStruct.sponsorKeys;
+    accountStruct.recipientKeys = [];
     accountStruct.recipientRateBranches = {};
-    accountStruct.agentAccountList = [];
-    delete accountStruct.agentParentRecipientAccountList;
+    accountStruct.agentKeys = [];
+    delete accountStruct.parentRecipientKeys;
     return accountStruct;
 }
 
@@ -405,10 +405,10 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     delete accountStruct.verified;
-    const sponsorAccountKeys = Array.isArray(accountStruct.sponsorAccountList) ? accountStruct.sponsorAccountList : [];
-    const recipientAccountKeys = Array.isArray(accountStruct.recipientAccountList) ? accountStruct.recipientAccountList : [];
-    const parentRecipientKeys = Array.isArray(accountStruct.agentParentRecipientAccountList)
-        ? accountStruct.agentParentRecipientAccountList
+    const sponsorAccountKeys = Array.isArray(accountStruct.sponsorKeys) ? accountStruct.sponsorKeys : [];
+    const recipientAccountKeys = Array.isArray(accountStruct.recipientKeys) ? accountStruct.recipientKeys : [];
+    const parentRecipientKeys = Array.isArray(accountStruct.parentRecipientKeys)
+        ? accountStruct.parentRecipientKeys
         : [];
     try {
         accountStruct.agentRateBranches = toAgentRateKeysRecord(
@@ -421,13 +421,13 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
             `JS => buildAgentParentRelationshipList soft-failed for ${String(accountKey ?? "")}: ${String(error?.message || error)}`,
         );
     }
-    delete accountStruct.sponsorAccountList;
+    delete accountStruct.sponsorKeys;
     accountStruct.recipientRateBranches = {};
-    accountStruct.recipientAccountList = await buildRecipientAccountList(runtime, accountKey, recipientAccountKeys, depthRemaining, nextVisitedKeys, debugState);
-    accountStruct.agentAccountList = sponsorAccountKeys.length > 0
+    accountStruct.recipientKeys = await buildRecipientAccountList(runtime, accountKey, recipientAccountKeys, depthRemaining, nextVisitedKeys, debugState);
+    accountStruct.agentKeys = sponsorAccountKeys.length > 0
         ? await buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, accountKey, depthRemaining, nextVisitedKeys, debugState)
         : [];
-    delete accountStruct.agentParentRecipientAccountList;
+    delete accountStruct.parentRecipientKeys;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(
@@ -460,7 +460,7 @@ async function buildRecipientAccountList(runtime, sponsorAccountKey, recipientAc
         const recipientAccount = await buildNestedAccountRecord(runtime, recipientKey, depthRemaining, visitedKeys, debugState);
         recipientAccount.TYPE = "--RECIPIENT_RECORD--";
         recipientAccount.recipientRateBranches = await buildRecipientRateRelationshipList(runtime, sponsorAccountKey, recipientKey, debugState);
-        recipientAccount.agentAccountList = [];
+        recipientAccount.agentKeys = [];
         recipientAccountMap.set(
             String(recipientKey ?? "").trim().toLowerCase(),
             mergeAccountNode(recipientAccountMap.get(String(recipientKey ?? "").trim().toLowerCase()), recipientAccount),

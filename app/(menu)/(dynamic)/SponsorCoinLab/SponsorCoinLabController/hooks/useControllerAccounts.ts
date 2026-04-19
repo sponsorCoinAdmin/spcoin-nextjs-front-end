@@ -317,7 +317,8 @@ export function useControllerAccounts({
         const target = requireContractAddress();
         const runner = await ensureReadRunner();
         const access = createSpCoinLibraryAccess(target, runner);
-        const rates = (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
+        const rates =
+          (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
         if (!cancelled) {
           const nextOptions = rates.map((value) => String(value));
           setManagedRecipientRateKeyOptions(nextOptions);

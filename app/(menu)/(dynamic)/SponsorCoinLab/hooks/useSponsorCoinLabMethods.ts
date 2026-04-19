@@ -20,7 +20,7 @@ import {
   runSerializationTestMethod,
   type SerializationTestMethod,
 } from '../jsonMethods/serializationTests';
-import { createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
+import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
@@ -537,9 +537,9 @@ export function useSponsorCoinLabMethods({
           steps: [
             {
               step: 1,
-              name: 'getMasterAccountList',
+              name: 'getAccountKeys',
               panel: 'spcoin_rread',
-              method: 'getMasterAccountList',
+              method: 'getAccountKeys',
               mode,
               params: [],
             },
@@ -704,10 +704,10 @@ export function useSponsorCoinLabMethods({
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
         normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
-        normalizedPayloadMethod === 'getMasterAccountList'
+        normalizedPayloadMethod === 'getAccountKeys'
       ) {
         const rawResult = nextPayload.result;
-        const entryListKey = normalizedPayloadMethod === 'getMasterAccountList' ? 'accounts' : 'sponsors';
+        const entryListKey = normalizedPayloadMethod === 'getAccountKeys' ? 'accounts' : 'sponsors';
         const normalizedEntries = Array.isArray(rawResult)
           ? rawResult
           : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)
@@ -824,10 +824,40 @@ export function useSponsorCoinLabMethods({
             value: localParams[idx] || '',
           })),
         );
+        if (['getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(selectedMethod)) {
+          const target = requireContractAddress();
+          const runner = await ensureReadRunner();
+          const contract = createSpCoinContract(target, runner) as SpCoinContractAccess;
+          if (typeof contract.getAccountKeyCount === 'function') {
+            const raw = await contract.getAccountKeyCount();
+            return { call, result: Number(raw) };
+          }
+          const fallbackAccess = createSpCoinLibraryAccess(
+            target,
+            runner,
+            undefined,
+            useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+          );
+          const accountKeys =
+            typeof contract.getMasterAccountKeys === 'function'
+              ? await contract.getMasterAccountKeys()
+              : typeof fallbackAccess.read.getAccountKeys === 'function'
+                ? await fallbackAccess.read.getAccountKeys()
+                : [];
+          return { call, result: Array.isArray(accountKeys) ? accountKeys.length : 0 };
+        }
         const shouldUseServerBackedRead =
           useLocalSpCoinAccessPackage &&
           mode === 'hardhat' &&
-          ['getAccountRecord', 'getMasterAccountList', 'getMasterAccountListSize'].includes(selectedMethod);
+          [
+            'getAccountRecord',
+            'getAccountKeys',
+            'getMasterAccountKeys',
+            'getMasterAccountList',
+            'getAccountKeyCount',
+            'getMasterAccountListSize',
+            'getAccountListSize',
+          ].includes(selectedMethod);
         const result = shouldUseServerBackedRead
           ? await runServerBackedSpCoinStep(
               'spcoin_rread',
@@ -848,7 +878,7 @@ export function useSponsorCoinLabMethods({
               appendLog,
               setStatus,
             });
-        if (selectedMethod === 'getMasterAccountList') {
+        if (selectedMethod === 'getAccountKeys') {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
             const [metadataResult, accountResults] = await Promise.allSettled([
@@ -1117,14 +1147,14 @@ export function useSponsorCoinLabMethods({
   ]);
 
   const runAccountListRead = useCallback(async () => {
-    const call = buildMethodCallEntry('getMasterAccountList');
+    const call = buildMethodCallEntry('getAccountKeys');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
       setStatus('Reading account list...');
       const { list } = await loadTreeAccountOptions();
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list }));
-      appendLog(`spCoinReadMethods/getMasterAccountList -> ${JSON.stringify(list)}`);
+      appendLog(`spCoinReadMethods/getAccountKeys -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
@@ -1147,7 +1177,7 @@ export function useSponsorCoinLabMethods({
     const call = {
       method: 'getTreeAccounts',
       parameters: [
-        { label: 'via', value: 'getMasterAccountList' },
+        { label: 'via', value: 'getAccountKeys' },
         { label: 'expand', value: 'getAccountRecord(each)' },
       ],
     };
@@ -1165,11 +1195,11 @@ export function useSponsorCoinLabMethods({
       );
       let accountKeys: string[];
       try {
-        accountKeys = (await (access.read as SpCoinReadAccess).getMasterAccountList()) as string[];
+        accountKeys = (await (access.read as SpCoinReadAccess).getAccountKeys()) as string[];
       } catch (error) {
         throw await enrichDirectReadError({
           error,
-          method: 'getMasterAccountList',
+          method: 'getAccountKeys',
           target,
           runner,
         });
@@ -1264,8 +1294,8 @@ export function useSponsorCoinLabMethods({
           tree &&
           typeof tree === 'object' &&
           !Array.isArray(tree) &&
-          (!Array.isArray((tree as Record<string, unknown>).recipientAccountList) ||
-            ((tree as Record<string, unknown>).recipientAccountList as unknown[]).length === 0)
+          (!Array.isArray((tree as Record<string, unknown>).recipientKeys) ||
+            ((tree as Record<string, unknown>).recipientKeys as unknown[]).length === 0)
         ) {
           const recipientListResponse = await fetch('/api/spCoin/run-script', {
             method: 'POST',
@@ -1281,9 +1311,9 @@ export function useSponsorCoinLabMethods({
                 steps: [
                   {
                     step: 1,
-                    name: 'getRecipientList',
+                    name: 'getRecipientKeys',
                     panel: 'spcoin_rread',
-                    method: 'getRecipientList',
+                    method: 'getRecipientKeys',
                     mode,
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },
@@ -1305,7 +1335,7 @@ export function useSponsorCoinLabMethods({
                   .filter((value) => value.length > 0)
               : [];
             if (recipientKeys.length > 0) {
-              (tree as Record<string, unknown>).recipientAccountList = recipientKeys.map((address) => ({ address }));
+              (tree as Record<string, unknown>).recipientKeys = recipientKeys.map((address) => ({ address }));
             }
           }
         }
@@ -1313,8 +1343,8 @@ export function useSponsorCoinLabMethods({
           tree &&
           typeof tree === 'object' &&
           !Array.isArray(tree) &&
-          (!Array.isArray((tree as Record<string, unknown>).agentAccountList) ||
-            ((tree as Record<string, unknown>).agentAccountList as unknown[]).length === 0)
+          (!Array.isArray((tree as Record<string, unknown>).agentKeys) ||
+            ((tree as Record<string, unknown>).agentKeys as unknown[]).length === 0)
         ) {
           const agentListResponse = await fetch('/api/spCoin/run-script', {
             method: 'POST',
@@ -1330,9 +1360,9 @@ export function useSponsorCoinLabMethods({
                 steps: [
                   {
                     step: 1,
-                    name: 'getAgentList',
+                    name: 'getAgentKeys',
                     panel: 'spcoin_rread',
-                    method: 'getAgentList',
+                    method: 'getAgentKeys',
                     mode,
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },
@@ -1354,7 +1384,7 @@ export function useSponsorCoinLabMethods({
                   .filter((value) => value.length > 0)
               : [];
             if (agentKeys.length > 0) {
-              (tree as Record<string, unknown>).agentAccountList = agentKeys.map((address) => ({ address }));
+              (tree as Record<string, unknown>).agentKeys = agentKeys.map((address) => ({ address }));
             }
           }
         }
@@ -1366,7 +1396,7 @@ export function useSponsorCoinLabMethods({
   );
 
   const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
-    const listCall = buildMethodCallEntry('getMasterAccountList');
+    const listCall = buildMethodCallEntry('getAccountKeys');
     try {
       setTreeOutputDisplay('(no tree yet)');
       setOutputPanelMode('tree');
@@ -1478,8 +1508,8 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getMasterAccountList'].includes(methodName)) continue;
-        const listKey = methodName === 'getMasterAccountList' ? 'accounts' : 'sponsors';
+        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getAccountKeys'].includes(methodName)) continue;
+        const listKey = methodName === 'getAccountKeys' ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)
           : null;
@@ -2079,7 +2109,8 @@ export function useSponsorCoinLabMethods({
             undefined,
             useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
           );
-          const rates = (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
+          const rates =
+            (await (access.contract as SpCoinContractAccess).getRecipientRateList?.(sponsorKey, recipientKey)) ?? [];
           if (!cancelled) {
             const normalizedRates = rates.map((value) => String(value));
             setRecipientRateKeyOptions(normalizedRates);

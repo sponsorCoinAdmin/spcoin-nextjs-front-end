@@ -1,13 +1,22 @@
 // @ts-nocheck
 import { buildHandler, getDynamicMethod } from '../../readMethodRuntime';
 
-const handler = buildHandler('getMasterAccountElement', async (context) => {
+const handler = buildHandler('getAccountElement', async (context) => {
     const index = Number(context.methodArgs[0]);
     if (!Number.isInteger(index) || index < 0) {
-        throw new Error('getMasterAccountElement index must be a non-negative integer.');
+        throw new Error('getAccountElement index must be a non-negative integer.');
     }
 
-    const method = getDynamicMethod(context.read, 'getMasterAccountElement')
+    const method = getDynamicMethod(context.read, 'getAccountElement')
+        || getDynamicMethod(context.staking, 'getAccountElement')
+        || getDynamicMethod(context.contract, 'getAccountElement')
+        || getDynamicMethod(context.read, 'getAccountKeyAt')
+        || getDynamicMethod(context.staking, 'getAccountKeyAt')
+        || getDynamicMethod(context.contract, 'getAccountKeyAt')
+        || getDynamicMethod(context.read, 'getMasterAccountKeyAt')
+        || getDynamicMethod(context.staking, 'getMasterAccountKeyAt')
+        || getDynamicMethod(context.contract, 'getMasterAccountKeyAt')
+        || getDynamicMethod(context.read, 'getMasterAccountElement')
         || getDynamicMethod(context.staking, 'getMasterAccountElement')
         || getDynamicMethod(context.contract, 'getMasterAccountElement');
     if (method) {
@@ -31,11 +40,17 @@ const handler = buildHandler('getMasterAccountElement', async (context) => {
         }
     }
 
-    const listMethod = getDynamicMethod(context.read, 'getMasterAccountList')
+    const listMethod = getDynamicMethod(context.read, 'getAccountKeys')
+        || getDynamicMethod(context.staking, 'getAccountKeys')
+        || getDynamicMethod(context.contract, 'getAccountKeys')
+        || getDynamicMethod(context.read, 'getMasterAccountKeys')
+        || getDynamicMethod(context.staking, 'getMasterAccountKeys')
+        || getDynamicMethod(context.contract, 'getMasterAccountKeys')
+        || getDynamicMethod(context.read, 'getMasterAccountList')
         || getDynamicMethod(context.staking, 'getMasterAccountList')
         || getDynamicMethod(context.contract, 'getMasterAccountList');
     if (!listMethod) {
-        throw new Error('getMasterAccountElement requires getMasterAccountElement(uint256) or getMasterAccountList() on the current SpCoin contract.');
+        throw new Error('getAccountElement requires getAccountElement(uint256) or getAccountKeys() on the current SpCoin contract.');
     }
 
     const result = await listMethod();
@@ -46,7 +61,7 @@ const handler = buildHandler('getMasterAccountElement', async (context) => {
           : [];
     const value = accounts[index];
     if (value == null) {
-        throw new Error(`getMasterAccountElement index ${index} is out of range for ${accounts.length} account(s).`);
+        throw new Error(`getAccountElement index ${index} is out of range for ${accounts.length} account(s).`);
     }
 
     return typeof value === 'object' && value !== null && 'address' in value

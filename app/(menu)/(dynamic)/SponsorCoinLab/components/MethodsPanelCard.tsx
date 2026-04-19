@@ -107,7 +107,17 @@ function resolveTypeScriptTargetFile(tab: MethodPanelTab, methodName: string) {
 }
 
 function sortMethodNames(values: string[]) {
-  return [...values].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}
+
+function dedupeMethodNamesByLabel(values: string[], getLabel: (name: string) => string) {
+  const seenLabels = new Set<string>();
+  return values.filter((name) => {
+    const label = getLabel(name);
+    if (seenLabels.has(label)) return false;
+    seenLabels.add(label);
+    return true;
+  });
 }
 
 type Props = {
@@ -211,17 +221,21 @@ export default function MethodsPanelCard({
     methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
   const visibleSpCoinReadOptions = React.useMemo(
     () =>
-      sortMethodNames(
-        [
-          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
-          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
-          ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
-          ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
-        ].filter((name) => name !== 'calcDataTimeDiff' && name !== 'calculateStakingRewards'),
+      dedupeMethodNamesByLabel(
+        sortMethodNames(
+          [
+            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
+            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
+            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
+            ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
+          ].filter((name) => name !== 'calcDataTimeDiff' && name !== 'calculateStakingRewards'),
+        ),
+        (name) => String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
       ),
     [
       spCoinReadProps.showOffChainMethods,
       spCoinReadProps.showOnChainMethods,
+      spCoinReadProps.spCoinReadMethodDefs,
       spCoinReadProps.spCoinAdminReadOptions,
       spCoinReadProps.spCoinCompoundReadOptions,
       spCoinReadProps.spCoinSenderReadOptions,

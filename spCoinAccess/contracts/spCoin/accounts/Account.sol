@@ -32,22 +32,22 @@ contract Account is StructSerialization {
     function sponsorHasRecipient(address _recipientAccount, address _sponsorAccount )
         internal view returns ( bool ) {
         AccountStruct storage recipientAccount = accountMap[_recipientAccount];
-        address[] storage sponsorAccountList = recipientAccount.sponsorAccountList;
-        return accountInList( _sponsorAccount, sponsorAccountList );
+        address[] storage sponsorKeys = recipientAccount.sponsorKeys;
+        return accountInList( _sponsorAccount, sponsorKeys );
     }
 
     function recipientHasSponsor(address _sponsorAccount, address _recipientAccount )
         internal view returns ( bool ) {
         AccountStruct storage recipientAccount = accountMap[_recipientAccount];
-        address[] storage sponsorAccountList = recipientAccount.sponsorAccountList;
-        return accountInList( _sponsorAccount, sponsorAccountList );
+        address[] storage sponsorKeys = recipientAccount.sponsorKeys;
+        return accountInList( _sponsorAccount, sponsorKeys );
     }
 
     function agentHasRecipient(address _recipientAccount, address _agentAccount )
         internal view returns ( bool ) {
         AccountStruct storage recipientAccount = accountMap[_recipientAccount];
-        address[] storage agentAccountList = recipientAccount.agentAccountList;
-        return accountInList( _agentAccount, agentAccountList );
+        address[] storage agentKeys = recipientAccount.agentKeys;
+        return accountInList( _agentAccount, agentKeys );
     }
 
     function accountInList(address _sourceAccount, address[] storage searchList )
@@ -62,13 +62,17 @@ contract Account is StructSerialization {
     }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice retreives array list masterAccountList.
-    function getMasterAccountList() public view returns (address[] memory) {
+    /// @notice retrieves the inserted account keys.
+    function getMasterAccountKeys() public view returns (address[] memory) {
         return masterAccountList;
     }
 
-    function getMasterAccountElement(uint256 index) public view returns (address) {
+    function getMasterAccountKeyAt(uint256 index) public view returns (address) {
         return masterAccountList[index];
+    }
+
+    function getAccountKeyCount() public view returns (uint256) {
+        return masterAccountList.length;
     }
 
     function getAccountCore(address _accountKey)
@@ -98,26 +102,41 @@ contract Account is StructSerialization {
         view
         accountExists(_accountKey)
         returns (
-            address[] memory sponsorAccountList,
-            address[] memory recipientAccountList,
-            address[] memory agentAccountList,
-            address[] memory agentParentRecipientAccountList
+            address[] memory sponsorKeys,
+            address[] memory recipientKeys,
+            address[] memory agentKeys,
+            address[] memory parentRecipientKeys
         )
     {
         AccountStruct storage accountRec = accountMap[_accountKey];
-        sponsorAccountList = accountRec.sponsorAccountList;
-        recipientAccountList = accountRec.recipientAccountList;
-        agentAccountList = accountRec.agentAccountList;
-        agentParentRecipientAccountList = accountRec.agentParentRecipientAccountList;
+        sponsorKeys = accountRec.sponsorKeys;
+        recipientKeys = accountRec.recipientKeys;
+        agentKeys = accountRec.agentKeys;
+        parentRecipientKeys = accountRec.parentRecipientKeys;
     }
 
     /////////////////////////// AGENT REQUESTS //////////////////////////////
  
-    /// @notice retreives the recipients of a specific address.
+    /// @notice retrieves the recipient keys linked to an account.
     /// @param _sponsorKey public account key to set new balance
-    function getAccountRecipientList(address _sponsorKey) 
+    function getRecipientKeys(address _sponsorKey) 
     public view returns (address[] memory) {
-        return accountMap[_sponsorKey].recipientAccountList;
+        return accountMap[_sponsorKey].recipientKeys;
+    }
+
+    /// @notice retrieves the agent keys linked to an account.
+    /// @param _accountKey public account key to query
+    function getAgentKeys(address _accountKey)
+    public view returns (address[] memory) {
+        return accountMap[_accountKey].agentKeys;
+    }
+
+    function getRecipientKeyCount(address _accountKey) public view returns (uint256) {
+        return accountMap[_accountKey].recipientKeys.length;
+    }
+
+    function getAgentKeyCount(address _accountKey) public view returns (uint256) {
+        return accountMap[_accountKey].agentKeys.length;
     }
 
     function getAccountListIndex (address _accountKey, 

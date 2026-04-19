@@ -24,15 +24,6 @@
     },
     {
       "step": 3,
-      "name": "getAccountListSize",
-      "panel": "spcoin_rread",
-      "method": "getAccountListSize",
-      "params": [],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 4,
       "name": "addAgentTransaction",
       "panel": "spcoin_write",
       "method": "addAgentTransaction",
@@ -67,7 +58,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 4,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",
@@ -76,7 +67,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 5,
       "name": "getMasterAccountList",
       "panel": "spcoin_rread",
       "method": "getMasterAccountList",
@@ -85,7 +76,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 6,
       "name": "getAccountListSize",
       "panel": "spcoin_rread",
       "method": "getAccountListSize",

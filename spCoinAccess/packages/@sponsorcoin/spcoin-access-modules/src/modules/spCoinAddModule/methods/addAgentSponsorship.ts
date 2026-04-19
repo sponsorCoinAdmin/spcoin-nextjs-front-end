@@ -202,12 +202,12 @@ export const addAgentSponsorship = async (
   };
   const logStructureSnapshot = async (stageLabel) => {
     const snapshot = {};
-    const getMasterAccountList =
-        context.spCoinContractDeployed.getMasterAccountList ?? context.spCoinContractDeployed.getAccountList;
-    if (typeof getMasterAccountList === "function") {
+    const getMasterAccountKeys =
+        context.spCoinContractDeployed.getMasterAccountKeys ?? context.spCoinContractDeployed.getAccountList;
+    if (typeof getMasterAccountKeys === "function") {
       snapshot.accountList = await safeRead(
         "addAgentSponsorship accountList",
-        () => getMasterAccountList(),
+        () => getMasterAccountKeys(),
         []
       );
     }
@@ -228,10 +228,10 @@ export const addAgentSponsorship = async (
         null
       );
     }
-    if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
+    if (typeof context.spCoinContractDeployed.getRecipientKeys === "function") {
       snapshot.sponsorRecipientList = await safeRead(
         "addAgentSponsorship sponsorRecipientList",
-        () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+        () => context.spCoinContractDeployed.getRecipientKeys(sponsorKey),
         []
       );
     }
@@ -307,10 +307,10 @@ export const addAgentSponsorship = async (
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:start");
     await logStructureSnapshot("before addRecipient");
     const existingRecipientList =
-      typeof context.spCoinContractDeployed.getAccountRecipientList === "function"
+      typeof context.spCoinContractDeployed.getRecipientKeys === "function"
         ? toAddressList(await safeRead(
             "addAgentSponsorship existing sponsor recipient list",
-            () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+            () => context.spCoinContractDeployed.getRecipientKeys(sponsorKey),
             []
           ))
         : [];
@@ -346,11 +346,11 @@ export const addAgentSponsorship = async (
         (value) => value === true
       );
     }
-    if (typeof context.spCoinContractDeployed.getAccountRecipientList === "function") {
+    if (typeof context.spCoinContractDeployed.getRecipientKeys === "function") {
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:check-recipient-list");
       await waitForVisibility(
         "addRecipient sponsor recipient list",
-        () => context.spCoinContractDeployed.getAccountRecipientList(sponsorKey),
+        () => context.spCoinContractDeployed.getRecipientKeys(sponsorKey),
         (value) => toAddressList(value).includes(String(_recipientKey || "").toLowerCase())
       );
     }

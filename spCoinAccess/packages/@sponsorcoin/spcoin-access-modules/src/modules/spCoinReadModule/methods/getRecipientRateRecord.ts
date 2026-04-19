@@ -6,12 +6,12 @@ export async function getRecipientRateRecord(context, _sponsorKey, _recipientKey
     runtime.spCoinLogger.logFunctionHeader("getRecipientRateRecord(" + _sponsorKey + _recipientKey + ", " + _recipientRateKey + ")");
     const recipientRateRecord = new RecipientRateStruct();
     const recordStr = await runtime.spCoinSerialize.getRecipientRateRecordFields(_sponsorKey, _recipientKey, _recipientRateKey);
-    let agentAccountList = [];
+    let agentKeys = [];
     try {
-        agentAccountList = await runtime.getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
+        agentKeys = await runtime.getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
     }
     catch (_error) {
-        agentAccountList = [];
+        agentKeys = [];
     }
     recipientRateRecord.recipientRate = _recipientRateKey;
     recipientRateRecord.creationTime = bigIntToDateTimeString(recordStr[0]);
@@ -24,9 +24,11 @@ export async function getRecipientRateRecord(context, _sponsorKey, _recipientKey
         recipientRateRecord.transactions = [];
     }
     try {
-        recipientRateRecord.agentRecordList = await runtime.getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, agentAccountList);
+        recipientRateRecord.agentKeys = agentKeys;
+        recipientRateRecord.agentRecordList = await runtime.getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, agentKeys);
     }
     catch (_error) {
+        recipientRateRecord.agentKeys = [];
         recipientRateRecord.agentRecordList = [];
     }
     runtime.spCoinLogger.logExitFunction();

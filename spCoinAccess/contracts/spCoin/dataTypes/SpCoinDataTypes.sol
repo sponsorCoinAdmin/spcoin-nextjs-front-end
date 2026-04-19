@@ -62,10 +62,10 @@ contract SpCoinDataTypes {
         uint256 accountTypes;  // Coins Owned but steaked to recipients
         bool inserted;
         bool verified;
-        address[] recipientAccountList;           // If Sponsor List of Recipient Accounts
-        address[] sponsorAccountList;             // If Recipient ? List of Sponsor Accounts
-        address[] agentAccountList;               // If Recipient? List of Agent Accounts
-        address[] agentParentRecipientAccountList; // If Agent? List of Agents Sponsor Accounts
+        address[] recipientKeys;           // If Sponsor List of Recipient Accounts
+        address[] sponsorKeys;             // If Recipient ? List of Sponsor Accounts
+        address[] agentKeys;               // If Recipient? List of Agent Accounts
+        address[] parentRecipientKeys; // If Agent? List of Agents Sponsor Accounts
         mapping(address => RecipientStruct) recipientMap;
         // STAKING REWARDS MAPPINGS
         uint256 stakingRewards; // Coins not owned but Recipiented
@@ -79,7 +79,7 @@ contract SpCoinDataTypes {
         address recipientKey;
         uint256 creationTime;
         uint256 stakedSPCoins; // Coins not owned but Recipiented
-        uint256[] recipientRateList;
+        uint256[] recipientRateKeys;
         mapping(uint256 => RecipientRateStruct) recipientRateMap;
         bool inserted;
         bool verified;
@@ -90,7 +90,7 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 lastUpdateTime;
         uint256 stakedSPCoins; // Coins not owned
-        address[] agentAccountList;
+        address[] agentKeys;
         mapping(address => AgentStruct) agentMap;
         StakingTransactionStruct[] transactionList;
         bool inserted;
@@ -103,7 +103,7 @@ contract SpCoinDataTypes {
         address agentKey;
         uint256 creationTime;
         uint256 stakedSPCoins; // Coins not owned but Recipiented
-        uint256[] agentRateList;
+        uint256[] agentRateKeys;
         mapping(uint256 => AgentRateStruct) agentRateMap;
         bool inserted;
         bool verified;

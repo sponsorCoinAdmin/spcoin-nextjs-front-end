@@ -243,10 +243,19 @@ function normalizeAddress(value: unknown): string {
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
   const read = access.read as SpCoinReadAccess & Record<string, unknown>;
-  if (typeof read.getMasterAccountList !== 'function' || typeof read.getAccountRecipientList !== 'function') {
-    throw new Error('updateMasterStakingRewards requires getMasterAccountList() and getAccountRecipientList() read methods.');
+  if (
+    (typeof read.getAccountKeys !== 'function' && typeof read.getMasterAccountKeys !== 'function') ||
+    typeof read.getAccountRecipientList !== 'function'
+  ) {
+    throw new Error('updateMasterStakingRewards requires getAccountKeys() and getAccountRecipientList() read methods.');
   }
-  const accountList = Array.from((await read.getMasterAccountList()) as unknown[]).map((value) => normalizeAddress(value));
+  const accountList = Array.from(
+    (
+      (typeof read.getAccountKeys === 'function'
+        ? await read.getAccountKeys()
+        : await read.getMasterAccountKeys?.()) || []
+    ) as unknown[],
+  ).map((value) => normalizeAddress(value));
   const recipientLists = await Promise.all(
     accountList.map(async (account) => {
       const recipients = Array.from((await read.getAccountRecipientList(account)) as unknown[]).map((value) =>

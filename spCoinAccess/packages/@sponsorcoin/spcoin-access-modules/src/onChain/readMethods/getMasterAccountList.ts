@@ -10,7 +10,7 @@ async function callLegacyGetAccountList(contract) {
     const target = String(contract?.target || (typeof contract?.getAddress === 'function' ? await contract.getAddress() : ''));
     const runner = contract?.runner;
     if (!target || !runner || typeof runner.call !== 'function') {
-        throw new Error('SpCoin read method getMasterAccountList is not available on access modules or contract.');
+        throw new Error('SpCoin read method getAccountKeys is not available on access modules or contract.');
     }
     const data = legacyAccountListInterface.encodeFunctionData('getAccountList', []);
     const raw = await runner.call({ to: target, data });
@@ -18,8 +18,14 @@ async function callLegacyGetAccountList(contract) {
     return decoded[0];
 }
 
-const handler = buildHandler('getMasterAccountList', async (context) => {
-    const method = getDynamicMethod(context.read, 'getMasterAccountList')
+const handler = buildHandler('getAccountKeys', async (context) => {
+    const method = getDynamicMethod(context.read, 'getAccountKeys')
+        || getDynamicMethod(context.staking, 'getAccountKeys')
+        || getDynamicMethod(context.contract, 'getAccountKeys')
+        || getDynamicMethod(context.read, 'getMasterAccountKeys')
+        || getDynamicMethod(context.staking, 'getMasterAccountKeys')
+        || getDynamicMethod(context.contract, 'getMasterAccountKeys')
+        || getDynamicMethod(context.read, 'getMasterAccountList')
         || getDynamicMethod(context.staking, 'getMasterAccountList')
         || getDynamicMethod(context.contract, 'getMasterAccountList')
         || getDynamicMethod(context.read, 'getAccountList')

@@ -15,7 +15,7 @@ export const accountCoreInterface = new Interface([
     'function getAccountCore(address _accountKey) view returns (address accountKey, uint256 creationTime, bool verified, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards)',
 ]);
 export const accountLinksInterface = new Interface([
-    'function getAccountLinks(address _accountKey) view returns (address[] sponsorAccountList, address[] recipientAccountList, address[] agentAccountList, address[] agentParentRecipientAccountList)',
+    'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 export const recipientRecordCoreInterface = new Interface([
     'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
@@ -77,14 +77,14 @@ export function normalizeAddressList(values) {
 }
 export async function buildSerializedAccountRecordFallback(contract, accountKey) {
     const [normalizedAccountKey, creationTime, verified, accountBalance, stakedAccountSPCoins, accountStakingRewards] = await callViewFunction(contract, accountCoreInterface, 'getAccountCore', [accountKey]);
-    const [sponsorAccountList, recipientAccountList, agentAccountList, agentParentRecipientAccountList] = await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [accountKey]);
+    const [sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [accountKey]);
     let serialized = `accountKey: ${normalizeAddress(normalizedAccountKey)}\\,\ncreationTime: ${String(creationTime)}\\,\nverified: ${Boolean(verified) ? 'true' : 'false'}`;
     serialized += `\\,balanceOf: ${String(accountBalance)}`;
     serialized += `\\,stakedSPCoins: ${String(stakedAccountSPCoins)}`;
-    serialized += `\\,sponsorAccountList:${normalizeAddressList(Array.from(sponsorAccountList || []))}`;
-    serialized += `\\,recipientAccountList:${normalizeAddressList(Array.from(recipientAccountList || []))}`;
-    serialized += `\\,agentAccountList:${normalizeAddressList(Array.from(agentAccountList || []))}`;
-    serialized += `\\,agentParentRecipientAccountList:${normalizeAddressList(Array.from(agentParentRecipientAccountList || []))}`;
+    serialized += `\\,sponsorKeys:${normalizeAddressList(Array.from(sponsorKeys || []))}`;
+    serialized += `\\,recipientKeys:${normalizeAddressList(Array.from(recipientKeys || []))}`;
+    serialized += `\\,agentKeys:${normalizeAddressList(Array.from(agentKeys || []))}`;
+    serialized += `\\,parentRecipientKeys:${normalizeAddressList(Array.from(parentRecipientKeys || []))}`;
     serialized += `\\,stakingRewards: ${String(accountStakingRewards)}`;
     return serialized;
 }
@@ -161,17 +161,21 @@ export class SpCoinSerialize {
                 case "KYC":
                     accountRecord.KYC = _value;
                     break;
+                case "sponsorKeys":
                 case "sponsorAccountList":
-                    accountRecord.sponsorAccountList = this.parseAddressStrRecord(_value);
+                    accountRecord.sponsorKeys = this.parseAddressStrRecord(_value);
                     break;
+                case "recipientKeys":
                 case "recipientAccountList":
-                    accountRecord.recipientAccountList = this.parseAddressStrRecord(_value);
+                    accountRecord.recipientKeys = this.parseAddressStrRecord(_value);
                     break;
+                case "agentKeys":
                 case "agentAccountList":
-                    accountRecord.agentAccountList = this.parseAddressStrRecord(_value);
+                    accountRecord.agentKeys = this.parseAddressStrRecord(_value);
                     break;
+                case "parentRecipientKeys":
                 case "agentParentRecipientAccountList":
-                    accountRecord.agentParentRecipientAccountList = this.parseAddressStrRecord(_value);
+                    accountRecord.parentRecipientKeys = this.parseAddressStrRecord(_value);
                     break;
                 case "recipientRecordList":
                     accountRecord.recipientRecordList = _value;

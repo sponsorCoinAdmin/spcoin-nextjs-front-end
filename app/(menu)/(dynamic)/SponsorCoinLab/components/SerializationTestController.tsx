@@ -123,7 +123,7 @@ export default function SerializationTestController(props: Props) {
     selectedSerializationTestMethod === 'hhFundAccounts' &&
     ['true', '1'].includes(String(serializationTestParams[1] || '').trim().toLowerCase());
 
-  return (
+  return (/*  */
     <div className="grid grid-cols-1 gap-3">
       {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>

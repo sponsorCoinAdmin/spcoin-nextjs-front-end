@@ -16,8 +16,8 @@ contract Recipient is Sponsor {
     nonRedundantRecipient (_sponsorKey, _recipientKey) {
         AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsorKey);
         RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
-        bool sponsorHasRecipientLink = accountInList(_recipientKey, sponsorRecord.recipientAccountList);
-        bool recipientHasSponsorLink = accountInList(_sponsorKey, accountMap[_recipientKey].sponsorAccountList);
+        bool sponsorHasRecipientLink = accountInList(_recipientKey, sponsorRecord.recipientKeys);
+        bool recipientHasSponsorLink = accountInList(_sponsorKey, accountMap[_recipientKey].sponsorKeys);
 
         if (recipientRecord.inserted) {
             require(sponsorHasRecipientLink && recipientHasSponsorLink, "RECIP_LINK_STALE");
@@ -48,8 +48,8 @@ contract Recipient is Sponsor {
             recipientRecord.recipientKey = _recipientKey;
             recipientRecord.stakedSPCoins = 0; // Coins not owned but Recipiented
             recipientRecord.inserted = true;
-            sponsorRecord.recipientAccountList.push(_recipientKey);
-            accountMap[_recipientKey].sponsorAccountList.push(_sponsor);
+            sponsorRecord.recipientKeys.push(_recipientKey);
+            accountMap[_recipientKey].sponsorKeys.push(_sponsor);
         }
         return recipientRecord;
     }
@@ -83,18 +83,18 @@ contract Recipient is Sponsor {
 
     //////////////////// NESTED AGENT METHODS /////////////////////////
 
-    /// @notice retreives the recipient array records from a specific account address.
+    /// @notice retrieves the recipient rate keys for a sponsor-recipient pair.
     /// @param _recipientKey recipient Key to retrieve the recipient list
     function getRecipientRateList(address _sponsorKey, address _recipientKey)
         public view  returns (uint[] memory) {
         // console.log("Recipient.sol:getRecipientRateList (", toString(_sponsorKey), ",", toString(_recipientKey));
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
-        uint[] memory recipientRateList = recipientRecord.recipientRateList;
-        // console.log("Recipient.sol:getRecipientRateList recipientRateList.length = ", recipientRateList.length);
+        uint[] memory recipientRateKeys = recipientRecord.recipientRateKeys;
+        // console.log("Recipient.sol:getRecipientRateList recipientRateKeys.length = ", recipientRateKeys.length);
         // console.log("AGENTS.SOL:addAgent: _sponsorKey, _recipientKey, _recipientRateKey, _recipientKey = " , _sponsorKey, _recipientKey, _recipientRateKey, _recipientKey);
         // console.log("AGENTS.SOL:addAgent:recipientRecord.recipientKey = " , recipientRecord.recipientKey);
-        // console.log("AGENTS.SOL:getAgentRateList:recipientRateList.length = ",recipientRateList.length);
-        return recipientRateList;
+        // console.log("AGENTS.SOL:getAgentRateList:recipientRateKeys.length = ",recipientRateKeys.length);
+        return recipientRateKeys;
     }
 
     /*

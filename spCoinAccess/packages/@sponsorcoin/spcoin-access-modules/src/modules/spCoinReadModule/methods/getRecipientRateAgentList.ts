@@ -1,14 +1,16 @@
 // @ts-nocheck
-export async function getRecipientRateAgentList(context, _sponsorKey, _recipientKey, _recipientRateKey) {
-    context.spCoinLogger.logFunctionHeader("getRecipientRateAgentList = async(" + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ")");
-    let agentAccountList = [];
+export async function getRecipientRateAgentKeys(context, _sponsorKey, _recipientKey, _recipientRateKey) {
+    context.spCoinLogger.logFunctionHeader("getRecipientRateAgentKeys = async(" + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ")");
+    let agentKeys = [];
     try {
-        agentAccountList = await context.spCoinContractDeployed.getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
+        agentKeys = await context.spCoinContractDeployed.getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
     }
     catch (_error) {
-        agentAccountList = [];
+        agentKeys = [];
     }
     context.spCoinLogger.logExitFunction();
-    return agentAccountList;
+    return agentKeys;
 }
+
+export const getRecipientRateAgentList = getRecipientRateAgentKeys;
 

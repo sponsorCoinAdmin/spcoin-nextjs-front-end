@@ -23,7 +23,7 @@ contract AgentRates is Agent {
             agentRateRecord.creationTime = _creationDate;
             agentRateRecord.lastUpdateTime = _creationDate;
             // agentRateRecord.stakedSPCoins = 0;
-            agentRecord.agentRateList.push(_agentRateKey);
+            agentRecord.agentRateKeys.push(_agentRateKey);
         }
         return agentRateRecord;
     }

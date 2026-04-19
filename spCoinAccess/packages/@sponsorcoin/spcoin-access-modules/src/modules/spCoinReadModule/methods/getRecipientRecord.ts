@@ -10,7 +10,7 @@ export async function getRecipientRecord(context, _sponsorKey, _recipientKey) {
     recipientRecord.creationTime = bigIntToDateTimeString(recordStr[0]);
     recipientRecord.location = getLocation();
     recipientRecord.stakedSPCoins = bigIntToDecString(recordStr[1]);
-    recipientRecord.recipientRateList = await runtime.getRecipientRateRecordList(_sponsorKey, _recipientKey);
+    recipientRecord.recipientRateKeys = await runtime.getRecipientRateRecordList(_sponsorKey, _recipientKey);
     runtime.spCoinLogger.logExitFunction();
     return recipientRecord;
 }

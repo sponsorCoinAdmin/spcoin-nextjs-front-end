@@ -21,7 +21,7 @@ contract RecipientRates is Recipient {
             recipientRateRecord.creationTime = _creationDate;
             recipientRateRecord.lastUpdateTime = _creationDate;
             // recipientRateRecord.stakedSPCoins = 0;
-            recipientRecord.recipientRateList.push(_recipientRateKey);
+            recipientRecord.recipientRateKeys.push(_recipientRateKey);
         }
         return recipientRateRecord; 
     }
@@ -39,7 +39,7 @@ contract RecipientRates is Recipient {
             recipientRateRecord.inserted = true;
             recipientRateRecord.creationTime = block.timestamp;
             recipientRateRecord.stakedSPCoins = 0;
-            recipientRecord.recipientRateList.push(_recipientRateKey);
+            recipientRecord.recipientRateKeys.push(_recipientRateKey);
         }
         return recipientRateRecord; 
     }
