@@ -63,20 +63,20 @@ contract Account is StructSerialization {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice retrieves the inserted account keys.
-    function getMasterAccountKeys() public view returns (address[] memory) {
+    function getMasterAccountKeys() external view returns (address[] memory) {
         return masterAccountList;
     }
 
-    function getMasterAccountKeyAt(uint256 index) public view returns (address) {
+    function getMasterAccountKeyAt(uint256 index) external view returns (address) {
         return masterAccountList[index];
     }
 
-    function getAccountKeyCount() public view returns (uint256) {
+    function getAccountKeyCount() external view returns (uint256) {
         return masterAccountList.length;
     }
 
     function getAccountCore(address _accountKey)
-        public
+        external
         view
         accountExists(_accountKey)
         returns (
@@ -98,7 +98,7 @@ contract Account is StructSerialization {
     }
 
     function getAccountLinks(address _accountKey)
-        public
+        external
         view
         accountExists(_accountKey)
         returns (
@@ -127,15 +127,15 @@ contract Account is StructSerialization {
     /// @notice retrieves the agent keys linked to an account.
     /// @param _accountKey public account key to query
     function getAgentKeys(address _accountKey)
-    public view returns (address[] memory) {
+    external view returns (address[] memory) {
         return accountMap[_accountKey].agentKeys;
     }
 
-    function getRecipientKeyCount(address _accountKey) public view returns (uint256) {
+    function getRecipientKeyCount(address _accountKey) external view returns (uint256) {
         return accountMap[_accountKey].recipientKeys.length;
     }
 
-    function getAgentKeyCount(address _accountKey) public view returns (uint256) {
+    function getAgentKeyCount(address _accountKey) external view returns (uint256) {
         return accountMap[_accountKey].agentKeys.length;
     }
 

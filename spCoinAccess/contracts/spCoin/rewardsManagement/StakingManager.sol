@@ -115,16 +115,16 @@ contract StakingManager is AgentRates{
         rewardAccountRecord.stakingRewards += _amount;
 
         uint256[] storage rewardRateList = rewardAccountRecord.rewardRateList;
-        RewardRateStruct storage rewardRateRecord = rewardAccountRecord.rewardRateMap[_rate];
-        if (rewardRateRecord.rate != _rate) {
+        RewardRateStruct storage rewardRateTransaction = rewardAccountRecord.rewardRateMap[_rate];
+        if (rewardRateTransaction.rate != _rate) {
             rewardRateList.push(_rate);
-            rewardRateRecord.rate = _rate;
+            rewardRateTransaction.rate = _rate;
         }
         // console.log("SOL=>2.9 rewardRateList.length = ",rewardRateList.length);
-        // console.log("SOL=>2.10 rewardRateRecord.rate = ",rewardRateRecord.rate);
-        rewardRateRecord.stakingRewards += _amount;
-        // console.log("SOL=>2.11 rewardRateRecord.stakingRewards = ", rewardRateRecord.stakingRewards);
-        RewardsTransactionStruct[] storage rewardTransactionList = rewardRateRecord.rewardTransactionList;
+        // console.log("SOL=>2.10 rewardRateTransaction.rate = ",rewardRateTransaction.rate);
+        rewardRateTransaction.stakingRewards += _amount;
+        // console.log("SOL=>2.11 rewardRateTransaction.stakingRewards = ", rewardRateTransaction.stakingRewards);
+        RewardsTransactionStruct[] storage rewardTransactionList = rewardRateTransaction.rewardTransactionList;
         depositRewardTransaction( rewardTransactionList, _amount );
         // console.log("SOL=>2.12 rewardTransactionList[0].stakingRewards = ", rewardTransactionList[0].stakingRewards);
 
@@ -148,7 +148,7 @@ contract StakingManager is AgentRates{
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function getAccountRewardTotals(address _accountKey)
-        public
+        external
         view
         accountExists(_accountKey)
         returns (

@@ -13,12 +13,13 @@ import getAccountRecord from './getAccountRecord';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
-import getAccountRateRecordList from './getAccountRateRecordList';
+import getAccountRateTransactionList from './getAccountRateTransactionList';
 import getRateTransactionList from './getRateTransactionList';
 import getRecipientRateList from './getRecipientRateList';
-import getRecipientRateRecord from './getRecipientRateRecord';
-import getRecipientRateRecordList from './getRecipientRateRecordList';
+import getRecipientRateTransaction from './getRecipientRateTransaction';
+import getRecipientRateTransactionList from './getRecipientRateTransactionList';
 import getRecipientRateAgentList from './getRecipientRateAgentList';
+import getRecipientRateTransactionAt from './getRecipientRateTransactionAt';
 import getLowerRecipientRate from './getLowerRecipientRate';
 import getUpperRecipientRate from './getUpperRecipientRate';
 import getRecipientRateRange from './getRecipientRateRange';
@@ -28,10 +29,11 @@ import getAgentRateList from './getAgentRateList';
 import getLowerAgentRate from './getLowerAgentRate';
 import getUpperAgentRate from './getUpperAgentRate';
 import getAgentRateRange from './getAgentRateRange';
-import getAgentRateTransaction from './getAgentRateRecord';
+import getAgentRateTransaction from './getAgentRateTransaction';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
 import getRecipientRateTransactionCount from './getRecipientRateTransactionCount';
 import getAgentRateTransactionCount from './getAgentRateTransactionCount';
+import getAgentRateTransactionAt from './getAgentRateTransactionAt';
 import getAgentRateTransactionList from './getAgentRateTransactionList';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
@@ -70,12 +72,12 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountStakingRewards,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,
-  getAccountRateRecordList,
+  getAccountRateTransactionList,
   getRateTransactionList,
   getRecipientRateKeys: getRecipientRateList,
   getRecipientRateList,
-  getRecipientRateRecord,
-  getRecipientRateRecordList,
+  getRecipientRateTransaction,
+  getRecipientRateTransactionList,
   getRecipientRateAgentKeys: getRecipientRateAgentList,
   getRecipientRateAgentList,
   getLowerRecipientRate,
@@ -92,6 +94,8 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentTotalRecipient,
   getRecipientRateTransactionCount,
   getAgentRateTransactionCount,
+  getRecipientRateTransactionAt,
+  getAgentRateTransactionAt,
   getAgentRateTransactionList,
   getAgentRecord,
   getAgentRecordList,

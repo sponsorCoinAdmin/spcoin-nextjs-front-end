@@ -79,9 +79,9 @@
     },
     {
       "step": 4,
-      "name": "getAgentRateRecord",
+      "name": "getAgentRateTransaction",
       "panel": "spcoin_rread",
-      "method": "getAgentRateRecord",
+      "method": "getAgentRateTransaction",
       "params": [
         {
           "key": "Sponsor Key",

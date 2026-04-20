@@ -99,18 +99,18 @@ These come from public state variables:
 - `getRecipientRecordByKeys(address,address)`
 - `getRecipientRecordCore(address,address)`
 - `getRecipientRateList(address,address)`
-- `getRecipientRateRecord(address,address,uint)`
-- `getRecipientRateRecord(address,address,uint,uint)`
-- `getRecipientRateRecordByKeys(address,address,uint)`
-- `getRecipientRateRecordCore(address,address,uint256)`
+- `getRecipientRateTransaction(address,address,uint)`
+- `getRecipientRateTransaction(address,address,uint,uint)`
+- `getRecipientRateTransactionByKeys(address,address,uint)`
+- `getRecipientRateTransactionCore(address,address,uint256)`
 - `getAgentRecord(address,address,uint,address)`
 - `getAgentRecordByKeys(address,address,uint,address)`
 - `getRecipientRateAgentList(address,address,uint256)`
 - `getAgentTotalRecipient(address,address,uint,address)`
 - `getAgentRateList(address,address,uint,address)`
-- `getAgentRateRecord(address,address,uint,address,uint,uint)`
-- `getAgentRateRecordByKeys(address,address,uint,address,uint)`
-- `getAgentRateRecordCore(address,address,uint,address,uint)`
+- `getAgentRateTransaction(address,address,uint,address,uint,uint)`
+- `getAgentRateTransactionByKeys(address,address,uint,address,uint)`
+- `getAgentRateTransactionCore(address,address,uint,address,uint)`
 - `getSponsorAccountRecord(address)`
 
 ### Account / Recipient / Agent Mutators
@@ -161,7 +161,7 @@ These are app/module serializer style methods, not necessarily token-exported me
 - `getSerializedAccountRewards`
 - `getSerializedRecipientRecordList`
 - `getSerializedRecipientRateList`
-- `serializeAgentRateRecordStr`
+- `serializeAgentRateTransactionStr`
 - `getSerializedRateTransactionList`
 
 Reward-related token methods currently include:
@@ -195,8 +195,8 @@ Use `Core` for low-level tuple getters that are meant to be reconstructed by the
 
 - `getAccountCore`
 - `getRecipientRecordCore`
-- `getRecipientRateRecordCore`
-- `getAgentRateRecordCore`
+- `getRecipientRateTransactionCore`
+- `getAgentRateTransactionCore`
 
 Use `List` only for collections and `Count` only for scalar collection sizes.
 
@@ -211,23 +211,23 @@ High priority:
 Reward parser/helper names:
 
 - `getAccountRewardTransactionRecord` -> `getRewardAccountRecord`
-- `getAccountRateRecordList` -> `getRewardRateRecordList` or `getAccountRewardRateList`
+- `getAccountRateTransactionList` -> `getRewardRateTransactionList` or `getAccountRewardRateList`
 - `getRateTransactionList` -> `getRewardRateTransactionList`
 
 Recipient/agent rate names, if the domain should consistently use transaction terminology:
 
-- `getRecipientRateRecord` -> `getRecipientRateTransaction`
-- `getRecipientRateRecordList` -> `getRecipientRateTransactionList`
-- `getAgentRateRecord` -> `getAgentRateTransaction`
-- `getAgentRateRecordList` -> `getAgentRateTransactionList`
+- `getRecipientRateTransaction` -> `getRecipientRateTransaction`
+- `getRecipientRateTransactionList` -> `getRecipientRateTransactionList`
+- `getAgentRateTransaction` -> `getAgentRateTransaction`
+- `getAgentRateTransactionList` -> `getAgentRateTransactionList`
 
 Core getter names can stay as-is for now because they communicate raw tuple access clearly:
 
 - `getAccountCore`
 - `getAccountLinks`
 - `getRecipientRecordCore`
-- `getRecipientRateRecordCore`
-- `getAgentRateRecordCore`
+- `getRecipientRateTransactionCore`
+- `getAgentRateTransactionCore`
 
 ## Rule for the `Record` Suffix
 

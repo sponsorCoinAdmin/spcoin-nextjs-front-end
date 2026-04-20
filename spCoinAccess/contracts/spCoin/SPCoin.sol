@@ -21,11 +21,11 @@ contract SPCoin is Token{
         // console.log("balanceOf[msg.sender] = ", balanceOf[msg.sender]);
     }
 
-    function getVersion() public view returns (string memory) {
+    function getVersion() external view returns (string memory) {
         return version;
     }
 
-    function setVersion(string memory newVersion) public onlyRootAdmin {
+    function setVersion(string memory newVersion) external onlyRootAdmin {
         version = bytes(newVersion).length == 0 ? defaultVersion : newVersion;
         name = concat(defaultName, version);
         symbol = concat(defaultSymbol, version);

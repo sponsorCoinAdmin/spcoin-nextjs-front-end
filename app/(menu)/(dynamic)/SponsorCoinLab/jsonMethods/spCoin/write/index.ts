@@ -184,15 +184,15 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   deleteRecipientRateBranch: 'deleteRecipientRate',
   deleteAgentRateBranch: 'deleteAgentRate',
   deleteAgentRateNode: 'deleteAgentRate',
-  deleteRecipientAgent: 'deleteAgent',
+  deleteRecipientAgent: 'deleteAgentSponsorships',
   deleteRecipientSponsorship: 'deleteRecipientSponsorship',
   delRecipient: 'deleteRecipientSponsorship',
   delAccountRecipientSponsorship: 'deleteRecipientRate',
   delAccountRecipientRateAmount: 'deleteRecipientTransaction',
   deleteRecipientTransaction: 'deleteRecipientTransaction',
-  deleteRecipientSponsorshipTree: 'deleteRecipientRate',
+  deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
   delAccountAgent: 'deleteAgentNode',
-  deleteAgentSponsorships: 'deleteAgent',
+  deleteAgentSponsorships: 'deleteAgentSponsorships',
   deleteAgentRateAmount: 'deleteAgentRate',
   delAccountAgentSponsorship: 'unSponsorAgent',
   deleteAgentSponsorship: 'unSponsorAgent',
@@ -434,6 +434,160 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
   };
 
+  const withAccess = async <T,>(
+    label: string,
+    callback: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<T>,
+  ): Promise<T> =>
+    executeWriteConnected(
+      label,
+      async (contract: Contract, signer: any) =>
+        callback(createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace), signer),
+      selectedHardhatAddress,
+    );
+
+  const toNormalizedList = (value: unknown): string[] =>
+    Array.from(Array.isArray(value) ? value : []).map((entry) => normalizeAddress(entry)).filter(Boolean);
+
+  const callFirstListMethod = async (
+    access: ReturnType<typeof createSpCoinModuleAccess>,
+    methodNames: string[],
+    methodArgsForRead: unknown[],
+  ): Promise<string[]> => {
+    const hosts = [access.read, access.contract] as Array<Record<string, unknown>>;
+    for (const methodName of methodNames) {
+      for (const host of hosts) {
+        const method = getDynamicMethod(host, methodName);
+        if (method) {
+          return toNormalizedList(await method(...methodArgsForRead));
+        }
+      }
+    }
+    throw new Error(`${methodNames[0]} is not available on the current SpCoin contract access path.`);
+  };
+
+  const loadRecipientKeys = async (sponsorKey: string) =>
+    withAccess(`loadRecipientKeys(${sponsorKey})`, (access) =>
+      callFirstListMethod(access, ['getRecipientKeys', 'getAccountRecipientList', 'getRecipientList'], [sponsorKey]),
+    );
+
+  const loadRecipientRateKeys = async (sponsorKey: string, recipientKey: string) =>
+    withAccess(`loadRecipientRateList(${sponsorKey}, ${recipientKey})`, (access) =>
+      callFirstListMethod(access, ['getRecipientRateList', 'getRecipientRateKeys'], [sponsorKey, recipientKey]),
+    );
+
+  const loadRecipientRateAgentKeys = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) =>
+    withAccess(`loadRecipientRateAgentList(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, (access) =>
+      callFirstListMethod(
+        access,
+        ['getRecipientRateAgentList', 'getRecipientRateAgentKeys'],
+        [sponsorKey, recipientKey, recipientRateKey],
+      ),
+    );
+
+  const loadAgentRateKeys = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number,
+    agentKey: string,
+  ) =>
+    withAccess(`loadAgentRateList(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) =>
+      callFirstListMethod(
+        access,
+        ['getAgentRateList', 'getAgentRateKeys'],
+        [sponsorKey, recipientKey, recipientRateKey, agentKey],
+      ),
+    );
+
+  const deleteAgentRateBranch = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number,
+    agentKey: string,
+    agentRateKey: string | number,
+  ) =>
+    submitWrite(
+      `deleteAgentRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
+      (access) => {
+        const method = access.contract.deleteAgentRateBranch;
+        if (typeof method !== 'function') {
+          throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
+        }
+        return method(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      },
+    );
+
+  const deleteRecipientAgentNode = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number,
+    agentKey: string,
+  ) =>
+    submitWrite(`deleteRecipientAgent(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) => {
+      const method = access.contract.deleteRecipientAgent;
+      if (typeof method !== 'function') {
+        throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+      }
+      return method(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    });
+
+  const deleteRecipientRateBranch = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) =>
+    submitWrite(`deleteRecipientRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, (access) => {
+      const method = access.contract.deleteRecipientRateBranch;
+      if (typeof method !== 'function') {
+        throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
+      }
+      return method(sponsorKey, recipientKey, recipientRateKey);
+    });
+
+  const deleteRecipientNode = async (sponsorKey: string, recipientKey: string) =>
+    submitWrite(`deleteRecipient(${sponsorKey}, ${recipientKey})`, (access) => {
+      const method = access.contract.deleteRecipient;
+      if (typeof method !== 'function') {
+        throw new Error('deleteRecipient is not available on the current SpCoin contract access path.');
+      }
+      return method(sponsorKey, recipientKey);
+    });
+
+  const deleteAgentTree = async (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number,
+    agentKey: string,
+  ) => {
+    let agentRateKeys = await loadAgentRateKeys(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    while (agentRateKeys.length > 0) {
+      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKeys[0]);
+      agentRateKeys = await loadAgentRateKeys(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    }
+    const remainingAgents = await loadRecipientRateAgentKeys(sponsorKey, recipientKey, recipientRateKey);
+    if (remainingAgents.includes(normalizeAddress(agentKey))) {
+      await deleteRecipientAgentNode(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    }
+  };
+
+  const deleteRecipientRateTree = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) => {
+    const agentKeys = await loadRecipientRateAgentKeys(sponsorKey, recipientKey, recipientRateKey);
+    for (const agentKey of agentKeys) {
+      await deleteAgentTree(sponsorKey, recipientKey, recipientRateKey, agentKey);
+    }
+    const remainingRateKeys = await loadRecipientRateKeys(sponsorKey, recipientKey);
+    if (remainingRateKeys.includes(normalizeAddress(recipientRateKey))) {
+      await deleteRecipientRateBranch(sponsorKey, recipientKey, recipientRateKey);
+    }
+  };
+
+  const deleteSponsorRecipientTree = async (sponsorKey: string, recipientKey: string) => {
+    let rateKeys = await loadRecipientRateKeys(sponsorKey, recipientKey);
+    while (rateKeys.length > 0) {
+      await deleteRecipientRateTree(sponsorKey, recipientKey, rateKeys[0]);
+      rateKeys = await loadRecipientRateKeys(sponsorKey, recipientKey);
+    }
+    const remainingRecipients = await loadRecipientKeys(sponsorKey);
+    if (remainingRecipients.includes(normalizeAddress(recipientKey))) {
+      await deleteRecipientNode(sponsorKey, recipientKey);
+    }
+  };
+
   switch (canonicalMethod) {
     case 'addRecipients': {
       const recipientList = methodArgs[1] as string[];
@@ -622,6 +776,54 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       });
       break;
     }
+    case 'deleteRecipient': {
+      const sponsorKey = normalizeAddress(methodArgs[0]);
+      const recipientKey = normalizeAddress(methodArgs[1]);
+      await deleteSponsorRecipientTree(sponsorKey, recipientKey);
+      appendLog(`${activeDef.title} -> deleted recipient sponsorship tree ${sponsorKey} -> ${recipientKey}.`);
+      break;
+    }
+    case 'deleteRecipientRate':
+    case 'deleteRecipientSponsorshipTree': {
+      const sponsorKey = normalizeAddress(methodArgs[0]);
+      const recipientKey = normalizeAddress(methodArgs[1]);
+      const recipientRateKey = asStringOrNumber(methodArgs[2]);
+      await deleteRecipientRateTree(sponsorKey, recipientKey, recipientRateKey);
+      appendLog(`${activeDef.title} -> deleted recipient-rate branch ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey}.`);
+      break;
+    }
+    case 'deleteRecipientSponsorships': {
+      const sponsorKey = normalizeAddress(methodArgs[0]);
+      const recipientKey = normalizeAddress(methodArgs[1]);
+      await deleteSponsorRecipientTree(sponsorKey, recipientKey);
+      appendLog(`${activeDef.title} -> deleted all recipient sponsorships ${sponsorKey} -> ${recipientKey}.`);
+      break;
+    }
+    case 'deleteAgent':
+    case 'deleteAgentSponsorships': {
+      const sponsorKey =
+        canonicalMethod === 'deleteAgent'
+          ? normalizeAddress(await withAccess('resolveSignerForDeleteAgent', async (_access, signer) => asString(signer?.address || selectedHardhatAddress || '')))
+          : normalizeAddress(methodArgs[0]);
+      if (!sponsorKey) {
+        throw new Error(`${activeDef.title} requires a connected signer or selected Hardhat sponsor account.`);
+      }
+      const recipientKey = normalizeAddress(canonicalMethod === 'deleteAgent' ? methodArgs[0] : methodArgs[1]);
+      const recipientRateKey = asStringOrNumber(canonicalMethod === 'deleteAgent' ? methodArgs[1] : methodArgs[2]);
+      const agentKey = normalizeAddress(canonicalMethod === 'deleteAgent' ? methodArgs[2] : methodArgs[3]);
+      await deleteAgentTree(sponsorKey, recipientKey, recipientRateKey, agentKey);
+      appendLog(`${activeDef.title} -> deleted agent sponsorship tree ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}.`);
+      break;
+    }
+    case 'deleteAgentRate': {
+      const sponsorKey = normalizeAddress(methodArgs[0]);
+      const recipientKey = normalizeAddress(methodArgs[1]);
+      const recipientRateKey = asStringOrNumber(methodArgs[2]);
+      const agentKey = normalizeAddress(methodArgs[3]);
+      const agentRateKey = asStringOrNumber(methodArgs[4]);
+      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      break;
+    }
     case 'deleteAccountRecords': {
       const accountList = methodArgs[0] as string[];
       for (const accountKey of accountList) {
@@ -631,11 +833,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteRecipientSponsorship': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const delRecipient = access.contract.delRecipient;
-        if (typeof delRecipient !== 'function') {
-          throw new Error('delRecipient is not available on the current SpCoin contract access path.');
+        const deleteRecipient = access.contract.deleteRecipient;
+        if (typeof deleteRecipient !== 'function') {
+          throw new Error('deleteRecipient is not available on the current SpCoin contract access path.');
         }
-        return delRecipient(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]));
+        return deleteRecipient(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]));
       });
       break;
     }

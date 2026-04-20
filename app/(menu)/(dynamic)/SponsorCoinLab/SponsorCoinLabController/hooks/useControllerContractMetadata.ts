@@ -334,11 +334,12 @@ export function useControllerContractMetadata({
       }
 
       if (needsLowerRecipient || needsUpperRecipient) {
+        const recipientRange = (await callNoArgs('getRecipientRateRange')) as Array<unknown>;
         const lower = needsLowerRecipient
-          ? Number(await callNoArgs('getLowerRecipientRate'))
+          ? Number(recipientRange?.[0])
           : Number(currentMeta?.recipientRateRange?.[0]);
         const upper = needsUpperRecipient
-          ? Number(await callNoArgs('getUpperRecipientRate'))
+          ? Number(recipientRange?.[1])
           : Number(currentMeta?.recipientRateRange?.[1]);
         if (Number.isFinite(lower) && Number.isFinite(upper)) {
           nextMeta.recipientRateRange = [lower, upper];
@@ -346,11 +347,12 @@ export function useControllerContractMetadata({
       }
 
       if (needsLowerAgent || needsUpperAgent) {
+        const agentRange = (await callNoArgs('getAgentRateRange')) as Array<unknown>;
         const lower = needsLowerAgent
-          ? Number(await callNoArgs('getLowerAgentRate'))
+          ? Number(agentRange?.[0])
           : Number(currentMeta?.agentRateRange?.[0]);
         const upper = needsUpperAgent
-          ? Number(await callNoArgs('getUpperAgentRate'))
+          ? Number(agentRange?.[1])
           : Number(currentMeta?.agentRateRange?.[1]);
         if (Number.isFinite(lower) && Number.isFinite(upper)) {
           nextMeta.agentRateRange = [lower, upper];

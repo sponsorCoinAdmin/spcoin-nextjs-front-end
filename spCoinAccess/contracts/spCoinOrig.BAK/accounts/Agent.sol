@@ -22,7 +22,7 @@ contract Agent is RecipientRates {
         uint currentTimeStamp = block.timestamp;
         AgentStruct storage  agentRecord = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         if (!agentRecord.inserted) {
-            RecipientRateStruct storage recipientRateRecord = getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, currentTimeStamp);
+            RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransaction(_sponsorKey, _recipientKey, _recipientRateKey, currentTimeStamp);
             addAccountRecord(AGENT, _agentKey);
             agentRecord.creationTime = currentTimeStamp;
             agentRecord.sponsorKey = _sponsorKey;
@@ -31,7 +31,7 @@ contract Agent is RecipientRates {
             agentRecord.inserted = true;
             accountMap[_recipientKey].agentAccountList.push(_agentKey);
             accountMap[_agentKey].agentParentRecipientAccountList.push(_recipientKey);
-            recipientRateRecord.agentAccountList.push(_agentKey);
+            recipientRateTransaction.agentAccountList.push(_agentKey);
         }
         return agentRecord;
     }
@@ -42,8 +42,8 @@ contract Agent is RecipientRates {
     /// @param _agentKey agent record key to be returned
     function getAgentRecordByKeys(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
      internal view returns (AgentStruct storage) {
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        AgentStruct storage agentRecord = recipientRateRecord.agentMap[_agentKey];
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        AgentStruct storage agentRecord = recipientRateTransaction.agentMap[_agentKey];
         return agentRecord;
      }
 
@@ -55,10 +55,10 @@ contract Agent is RecipientRates {
         // console.log("============================================================================");
         // console.log("getRecipientRateAgentList(", _sponsorKey, ", ", _recipientKey);
         // console.log(", ", _recipientRateKey,")");
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys( _sponsorKey, _recipientKey,  _recipientRateKey);
-        // console.log("recipientRateRecord.inserted = ", recipientRateRecord.inserted);
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys( _sponsorKey, _recipientKey,  _recipientRateKey);
+        // console.log("recipientRateTransaction.inserted = ", recipientRateTransaction.inserted);
     
-        address[] memory agentAccountList = recipientRateRecord.agentAccountList;
+        address[] memory agentAccountList = recipientRateTransaction.agentAccountList;
         // console.log("agentAccountList.length = ", agentAccountList.length);
         // console.log("agentAccountList[0]     = ", agentAccountList[0]);
         // console.log("============================================================================");

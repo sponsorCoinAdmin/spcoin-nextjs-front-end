@@ -18,7 +18,6 @@ import type {
   RecipientRateStruct,
   RecipientStruct,
   RewardsStruct,
-  StakingTransactionStruct,
 } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/dist/dataTypes/spCoinDataTypes';
 
 type ModuleCtor = new (...args: any[]) => unknown;
@@ -151,8 +150,7 @@ export type SpCoinAddAccess = {
 export type SpCoinDeleteAccess = {
   signer?: Signer;
   deleteAccountRecord: (_accountKey: string) => Promise<ContractTransactionResponse>;
-  delRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
-  unSponsorRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
+  deleteRecipient?: (_sponsorKey: { accountKey: string }, _recipientKey: string) => Promise<unknown>;
   deleteAgentRecord?: (_accountKey: string, _recipientKey: string, _accountAgentKey: string) => Promise<unknown>;
 };
 
@@ -199,7 +197,7 @@ export type SpCoinReadAccess = {
   getRecipientRateAgentKeys: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
-  getRecipientRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
+  getRecipientRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
   getAgentRateKeys: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -329,10 +327,7 @@ export type SpCoinContractAccess = Contract & {
   ) => Promise<unknown>;
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
-  delRecipient?: (...args: unknown[]) => Promise<unknown>;
-  deleteSponsor?: (sponsorKey: string) => Promise<ContractTransactionResponse>;
-  deleteRecipient?: (recipientKey: string) => Promise<ContractTransactionResponse>;
-  deleteSponsorRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
+  deleteRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -369,7 +364,6 @@ export type SpCoinContractAccess = Contract & {
     agentKey: string,
     agentRateKey: string | number | bigint,
   ) => Promise<ContractTransactionResponse>;
-  unSponsorRecipient?: (...args: unknown[]) => Promise<unknown>;
   unSponsorAgent?: (
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -699,7 +693,7 @@ function createSpCoinOffChainAccess(
               const normalizedRecipientRateKey =
                 typeof recipientRateKey === 'bigint' ? recipientRateKey.toString() : recipientRateKey;
               await logRecipientRateStructure(
-                'before unSponsorRecipient',
+                'before deleteRecipient',
                 sponsorKey,
                 recipientKey,
                 normalizedRecipientRateKey,
@@ -717,37 +711,30 @@ function createSpCoinOffChainAccess(
                 summary.deletedAgentCount += 1;
               }
             }
-            if (typeof del.delRecipient === 'function' || typeof del.unSponsorRecipient === 'function') {
-              logDebug(`JS => deleteAccountTree delRecipient sponsor=${sponsorKey} recipient=${recipientKey}`);
+            if (typeof del.deleteRecipient === 'function') {
+              logDebug(`JS => deleteAccountTree deleteRecipient sponsor=${sponsorKey} recipient=${recipientKey}`);
               let tx: any;
               try {
+                logDebug(`JS => deleteAccountTree deleteRecipient start sponsor=${sponsorKey} recipient=${recipientKey}`);
+                tx = await del.deleteRecipient({ accountKey: sponsorKey }, recipientKey);
                 logDebug(
-                  `JS => deleteAccountTree delRecipient start sponsor=${sponsorKey} recipient=${recipientKey} via=${
-                    typeof del.delRecipient === 'function' ? 'delRecipient' : 'unSponsorRecipient'
-                  }`,
-                );
-                tx =
-                  typeof del.delRecipient === 'function'
-                    ? await del.delRecipient({ accountKey: sponsorKey }, recipientKey)
-                    : await del.unSponsorRecipient!({ accountKey: sponsorKey }, recipientKey);
-                logDebug(
-                  `JS => deleteAccountTree delRecipient sent sponsor=${sponsorKey} recipient=${recipientKey} tx=${String(
+                  `JS => deleteAccountTree deleteRecipient sent sponsor=${sponsorKey} recipient=${recipientKey} tx=${String(
                     tx?.hash || '',
                   )}`,
                 );
               } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 logDebug(
-                  `JS => deleteAccountTree delRecipient failed sponsor=${sponsorKey} recipient=${recipientKey} error=${message}`,
+                  `JS => deleteAccountTree deleteRecipient failed sponsor=${sponsorKey} recipient=${recipientKey} error=${message}`,
                 );
                 throw new Error(
-                  `deleteAccountTree delRecipient failed for sponsor=${sponsorKey} recipient=${recipientKey}: ${message}`,
+                  `deleteAccountTree deleteRecipient failed for sponsor=${sponsorKey} recipient=${recipientKey}: ${message}`,
                 );
               }
-              await waitForReceipt(`deleteAccountTree delRecipient sponsor=${sponsorKey} recipient=${recipientKey}`, tx);
+              await waitForReceipt(`deleteAccountTree deleteRecipient sponsor=${sponsorKey} recipient=${recipientKey}`, tx);
               summary.deletedRecipientCount += 1;
-              await logRecipientStructure('after delRecipient', sponsorKey, recipientKey);
-              await logDeleteStructure('after delRecipient', sponsorKey);
+              await logRecipientStructure('after deleteRecipient', sponsorKey, recipientKey);
+              await logDeleteStructure('after deleteRecipient', sponsorKey);
             }
             if (accountKeySet.has(recipientKey)) {
               await walkAccountTree(recipientKey, false);
@@ -779,31 +766,35 @@ function createSpCoinOffChainAccess(
       return summary;
     },
     setLowerRecipientRate: async (newLowerRecipientRate: string | number) => {
-      if (typeof typedContract.getUpperRecipientRate !== 'function' || typeof typedContract.setRecipientRateRange !== 'function') {
+      if (typeof typedContract.getRecipientRateRange !== 'function' || typeof typedContract.setRecipientRateRange !== 'function') {
         throw new Error('Recipient rate methods are not available on the current SpCoin contract access path.');
       }
-      const upper = normalizeRateValue(await typedContract.getUpperRecipientRate());
+      const range = await typedContract.getRecipientRateRange();
+      const upper = normalizeRateValue(range[1]);
       return typedContract.setRecipientRateRange(normalizeRateValue(newLowerRecipientRate), upper);
     },
     setUpperRecipientRate: async (newUpperRecipientRate: string | number) => {
-      if (typeof typedContract.getLowerRecipientRate !== 'function' || typeof typedContract.setRecipientRateRange !== 'function') {
+      if (typeof typedContract.getRecipientRateRange !== 'function' || typeof typedContract.setRecipientRateRange !== 'function') {
         throw new Error('Recipient rate methods are not available on the current SpCoin contract access path.');
       }
-      const lower = normalizeRateValue(await typedContract.getLowerRecipientRate());
+      const range = await typedContract.getRecipientRateRange();
+      const lower = normalizeRateValue(range[0]);
       return typedContract.setRecipientRateRange(lower, normalizeRateValue(newUpperRecipientRate));
     },
     setLowerAgentRate: async (newLowerAgentRate: string | number) => {
-      if (typeof typedContract.getUpperAgentRate !== 'function' || typeof typedContract.setAgentRateRange !== 'function') {
+      if (typeof typedContract.getAgentRateRange !== 'function' || typeof typedContract.setAgentRateRange !== 'function') {
         throw new Error('Agent rate methods are not available on the current SpCoin contract access path.');
       }
-      const upper = normalizeRateValue(await typedContract.getUpperAgentRate());
+      const range = await typedContract.getAgentRateRange();
+      const upper = normalizeRateValue(range[1]);
       return typedContract.setAgentRateRange(normalizeRateValue(newLowerAgentRate), upper);
     },
     setUpperAgentRate: async (newUpperAgentRate: string | number) => {
-      if (typeof typedContract.getLowerAgentRate !== 'function' || typeof typedContract.setAgentRateRange !== 'function') {
+      if (typeof typedContract.getAgentRateRange !== 'function' || typeof typedContract.setAgentRateRange !== 'function') {
         throw new Error('Agent rate methods are not available on the current SpCoin contract access path.');
       }
-      const lower = normalizeRateValue(await typedContract.getLowerAgentRate());
+      const range = await typedContract.getAgentRateRange();
+      const lower = normalizeRateValue(range[0]);
       return typedContract.setAgentRateRange(lower, normalizeRateValue(newUpperAgentRate));
     },
   };

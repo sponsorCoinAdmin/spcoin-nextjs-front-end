@@ -10,49 +10,49 @@ contract RecipientRates is Recipient {
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
-    function getRecipientRateRecord(address _sponsorKey, address _recipientKey, uint _recipientRateKey, uint _creationDate) 
+    function getRecipientRateTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey, uint _creationDate) 
     internal returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        if (!recipientRateRecord.inserted) {
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        if (!recipientRateTransaction.inserted) {
             validateRecipientRateRange(_recipientRateKey);
-            recipientRateRecord.recipientRate = _recipientRateKey;
-            recipientRateRecord.inserted = true;
-            recipientRateRecord.creationTime = _creationDate;
-            recipientRateRecord.lastUpdateTime = _creationDate;
-            // recipientRateRecord.stakedSPCoins = 0;
+            recipientRateTransaction.recipientRate = _recipientRateKey;
+            recipientRateTransaction.inserted = true;
+            recipientRateTransaction.creationTime = _creationDate;
+            recipientRateTransaction.lastUpdateTime = _creationDate;
+            // recipientRateTransaction.stakedSPCoins = 0;
             recipientRecord.recipientRateKeys.push(_recipientRateKey);
         }
-        return recipientRateRecord; 
+        return recipientRateTransaction; 
     }
 
 /*
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
-    function getRecipientRateRecord(address _sponsorKey, address _recipientKey, uint _recipientRateKey) 
+    function getRecipientRateTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey) 
     internal returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        if (!recipientRateRecord.inserted) {
-            recipientRateRecord.recipientRate = _recipientRateKey;
-            recipientRateRecord.inserted = true;
-            recipientRateRecord.creationTime = block.timestamp;
-            recipientRateRecord.stakedSPCoins = 0;
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        if (!recipientRateTransaction.inserted) {
+            recipientRateTransaction.recipientRate = _recipientRateKey;
+            recipientRateTransaction.inserted = true;
+            recipientRateTransaction.creationTime = block.timestamp;
+            recipientRateTransaction.stakedSPCoins = 0;
             recipientRecord.recipientRateKeys.push(_recipientRateKey);
         }
-        return recipientRateRecord; 
+        return recipientRateTransaction; 
     }
 */
 
-    function getRecipientRateRecordByKeys(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
+    function getRecipientRateTransactionByKeys(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
     internal view  returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey) ;
         return recipientRecord.recipientRateMap[_recipientRateKey];
     }
 
-    function getRecipientRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
-        public
+    function getRecipientRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
+        external
         view
         returns (
             uint256 recipientRate,
@@ -62,11 +62,11 @@ contract RecipientRates is Recipient {
             bool inserted
         )
     {
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        recipientRate = recipientRateRecord.recipientRate;
-        creationTime = recipientRateRecord.creationTime;
-        lastUpdateTime = recipientRateRecord.lastUpdateTime;
-        stakedSPCoins = recipientRateRecord.stakedSPCoins;
-        inserted = recipientRateRecord.inserted;
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        recipientRate = recipientRateTransaction.recipientRate;
+        creationTime = recipientRateTransaction.creationTime;
+        lastUpdateTime = recipientRateTransaction.lastUpdateTime;
+        stakedSPCoins = recipientRateTransaction.stakedSPCoins;
+        inserted = recipientRateTransaction.inserted;
     }
 }

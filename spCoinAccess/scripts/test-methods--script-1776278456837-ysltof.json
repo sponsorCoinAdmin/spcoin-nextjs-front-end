@@ -62,9 +62,9 @@
     },
     {
       "step": 3,
-      "name": "getAccountRateRecordList",
+      "name": "getAccountRateTransactionList",
       "panel": "spcoin_rread",
-      "method": "getAccountRateRecordList",
+      "method": "getAccountRateTransactionList",
       "params": [
         {
           "key": "Rate Reward List",

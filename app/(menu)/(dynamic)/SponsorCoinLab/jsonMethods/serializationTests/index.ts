@@ -10,7 +10,7 @@ export type SerializationBaseMethod =
   | 'getSerializedAccountRewards'
   | 'getSerializedRecipientRecordList'
   | 'getSerializedRecipientRateList'
-  | 'serializeAgentRateRecordStr'
+  | 'serializeAgentRateTransactionStr'
   | 'getSerializedRateTransactionList';
 
 type SerializationMethodSpec = {
@@ -120,7 +120,7 @@ const PARAMS_BY_BASE_METHOD: Record<SerializationBaseMethod, MethodDef['params']
   getSerializedAccountRewards: buildAccountParams(),
   getSerializedRecipientRecordList: buildRecipientParams(),
   getSerializedRecipientRateList: buildRecipientRateParams(),
-  serializeAgentRateRecordStr: buildAgentRateParams(),
+  serializeAgentRateTransactionStr: buildAgentRateParams(),
   getSerializedRateTransactionList: buildAgentRateParams(),
 };
 
@@ -136,11 +136,11 @@ const accountLinksInterface = new Interface([
 const recipientRecordCoreInterface = new Interface([
   'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-const recipientRateRecordCoreInterface = new Interface([
-  'function getRecipientRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+const recipientRateTransactionCoreInterface = new Interface([
+  'function getRecipientRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-const agentRateRecordCoreInterface = new Interface([
-  'function getAgentRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+const agentRateTransactionCoreInterface = new Interface([
+  'function getAgentRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
 const agentRateTransactionCountInterface = new Interface([
   'function getAgentRateTransactionCount(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256)',
@@ -175,10 +175,10 @@ const METHOD_SPECS = {
     params: PARAMS_BY_BASE_METHOD.getSerializedRecipientRateList,
     baseMethod: 'getSerializedRecipientRateList',
   },
-  external_serializeAgentRateRecordStr: {
-    title: 'External serializeAgentRateRecordStr',
-    params: PARAMS_BY_BASE_METHOD.serializeAgentRateRecordStr,
-    baseMethod: 'serializeAgentRateRecordStr',
+  external_serializeAgentRateTransactionStr: {
+    title: 'External serializeAgentRateTransactionStr',
+    params: PARAMS_BY_BASE_METHOD.serializeAgentRateTransactionStr,
+    baseMethod: 'serializeAgentRateTransactionStr',
   },
   external_getSerializedRateTransactionList: {
     title: 'External getSerializedRateTransactionList',
@@ -482,8 +482,8 @@ export async function buildExternalSerializerResult(contract: any, baseMethod: S
         return { blocked: false as const, value: await buildSerializedRecipientRecordList(contract, methodArgs) };
       case 'getSerializedRecipientRateList':
         return { blocked: false as const, value: await buildSerializedRecipientRateList(contract, methodArgs) };
-      case 'serializeAgentRateRecordStr':
-        return { blocked: false as const, value: await buildSerializedAgentRateRecordStr(contract, methodArgs) };
+      case 'serializeAgentRateTransactionStr':
+        return { blocked: false as const, value: await buildSerializedAgentRateTransactionStr(contract, methodArgs) };
       case 'getSerializedRateTransactionList':
         return { blocked: false as const, value: await buildSerializedRateTransactionList(contract, methodArgs) };
     }
@@ -493,8 +493,8 @@ export async function buildExternalSerializerResult(contract: any, baseMethod: S
       getSerializedAccountRecord: ['getAccountCore', 'getAccountLinks'],
       getSerializedAccountRewards: ['getAccountRewardTotals'],
       getSerializedRecipientRecordList: ['getRecipientRecordCore'],
-      getSerializedRecipientRateList: ['getRecipientRateRecordCore'],
-      serializeAgentRateRecordStr: ['getAgentRateRecordCore'],
+      getSerializedRecipientRateList: ['getRecipientRateTransactionCore'],
+      serializeAgentRateTransactionStr: ['getAgentRateTransactionCore'],
       getSerializedRateTransactionList: ['getAgentRateTransactionCount', 'getAgentRateTransaction'],
     };
     const missingGetter = (methodSpecificGetterNames[baseMethod] || []).find((name) => message.includes(name));
@@ -582,19 +582,19 @@ async function buildSerializedRecipientRecordList(contract: any, methodArgs: any
 async function buildSerializedRecipientRateList(contract: any, methodArgs: any[]) {
   const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
     contract,
-    recipientRateRecordCoreInterface,
-    'getRecipientRateRecordCore',
+    recipientRateTransactionCoreInterface,
+    'getRecipientRateTransactionCore',
     [methodArgs[0], methodArgs[1], methodArgs[2]],
   );
 
   return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 
-async function buildSerializedAgentRateRecordStr(contract: any, methodArgs: any[]) {
+async function buildSerializedAgentRateTransactionStr(contract: any, methodArgs: any[]) {
   const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
     contract,
-    agentRateRecordCoreInterface,
-    'getAgentRateRecordCore',
+    agentRateTransactionCoreInterface,
+    'getAgentRateTransactionCore',
     [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]],
   );
 
@@ -865,10 +865,10 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     });
 
   const deleteRecipientNode = async (sponsorKey: string, recipientKey: string) =>
-    executeAs(`deleteSponsorRecipient(${sponsorKey}, ${recipientKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteSponsorRecipient?: (...args: unknown[]) => Promise<any> }).deleteSponsorRecipient;
+    executeAs(`deleteRecipient(${sponsorKey}, ${recipientKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteRecipient?: (...args: unknown[]) => Promise<any> }).deleteRecipient;
       if (typeof fn !== 'function') {
-        throw new Error('deleteSponsorRecipient is not available on the current SpCoin contract access path.');
+        throw new Error('deleteRecipient is not available on the current SpCoin contract access path.');
       }
       const tx = await fn(sponsorKey, recipientKey);
       await tx.wait();
@@ -876,11 +876,11 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     });
 
   const deleteSponsorAccount = async (sponsorKey: string) =>
-    executeAs(`deleteSponsor(${sponsorKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteSponsor?: (...args: unknown[]) => Promise<any> }).deleteSponsor;
+    executeAs(`deleteAccountRecord(${sponsorKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteAccountRecord?: (...args: unknown[]) => Promise<any> }).deleteAccountRecord;
       const isAccountInsertedFn = (contract as { isAccountInserted?: (...args: unknown[]) => Promise<any> }).isAccountInserted;
       if (typeof fn !== 'function') {
-        throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+        throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
       }
       let lastError: unknown;
       for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -895,7 +895,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
             throw error;
           }
           trace(
-            `deleteSponsor(${sponsorKey}) retryable cleanup error attempt ${attempt}: ${String((error as { code?: unknown; message?: unknown })?.code || '')} ${String((error as { message?: unknown })?.message ?? error ?? '')}`,
+            `deleteAccountRecord(${sponsorKey}) retryable cleanup error attempt ${attempt}: ${String((error as { code?: unknown; message?: unknown })?.code || '')} ${String((error as { message?: unknown })?.message ?? error ?? '')}`,
           );
           await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
           const stillInserted = await isAccountInsertedFn(sponsorKey);
@@ -954,7 +954,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     );
     if (agentRateKeys.length === 0 && remainingAgents.includes(normalizeAddress(agentKey))) {
       throw new Error(
-        `deleteAgentRate found a partial agent link with no agent-rate records for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}. ` +
+        `deleteAgentRate found a partial agent link with no agent-Rate Transactions for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}. ` +
           'Repair it by rerunning addAgentSponsorship with the original agent rate/quantity, or redeploy/reset to a contract build that includes empty-agent cleanup.',
       );
     }

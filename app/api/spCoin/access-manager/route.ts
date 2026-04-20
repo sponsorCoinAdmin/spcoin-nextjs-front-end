@@ -1140,10 +1140,8 @@ const SPCOIN_METADATA_ABI = [
   'function decimals() view returns (uint8)',
   'function totalSupply() view returns (uint256)',
   'function creationTime() view returns (uint256)',
-  'function getLowerRecipientRate() view returns (uint256)',
-  'function getUpperRecipientRate() view returns (uint256)',
-  'function getLowerAgentRate() view returns (uint256)',
-  'function getUpperAgentRate() view returns (uint256)',
+  'function getRecipientRateRange() view returns (uint256,uint256)',
+  'function getAgentRateRange() view returns (uint256,uint256)',
 ] as const;
 
 async function handleGetSpCoinMetaData(
@@ -1192,10 +1190,8 @@ async function handleGetSpCoinMetaData(
     decimalsValue,
     totalSupplyValue,
     inflationRateValue,
-    lowerRecipientRateValue,
-    upperRecipientRateValue,
-    lowerAgentRateValue,
-    upperAgentRateValue,
+    recipientRateRangeValue,
+    agentRateRangeValue,
     creationTimeValue,
   ] = await Promise.all([
     readOptionalValue('owner', ''),
@@ -1205,10 +1201,8 @@ async function handleGetSpCoinMetaData(
     readOptionalValue('decimals', 0),
     readOptionalValue('totalSupply', 0),
     readOptionalValue('getInflationRate', 10),
-    readOptionalValue('getLowerRecipientRate', 0),
-    readOptionalValue('getUpperRecipientRate', 0),
-    readOptionalValue('getLowerAgentRate', 0),
-    readOptionalValue('getUpperAgentRate', 0),
+    readOptionalValue('getRecipientRateRange', [0, 0]),
+    readOptionalValue('getAgentRateRange', [0, 0]),
     readOptionalValue('creationTime', 0),
   ]);
   owner = String(ownerValue ?? '').trim();
@@ -1218,8 +1212,8 @@ async function handleGetSpCoinMetaData(
   decimals = Number(decimalsValue ?? 0);
   totalSupply = normalizeBigInt(totalSupplyValue);
   inflationRate = Number(inflationRateValue ?? 0);
-  recipientRateRange = [Number(lowerRecipientRateValue ?? 0), Number(upperRecipientRateValue ?? 0)];
-  agentRateRange = [Number(lowerAgentRateValue ?? 0), Number(upperAgentRateValue ?? 0)];
+  recipientRateRange = [Number(recipientRateRangeValue?.[0] ?? 0), Number(recipientRateRangeValue?.[1] ?? 0)];
+  agentRateRange = [Number(agentRateRangeValue?.[0] ?? 0), Number(agentRateRangeValue?.[1] ?? 0)];
   const creationDateSeconds = Number(creationTimeValue ?? 0);
   const creationDate =
     Number.isFinite(creationDateSeconds) && creationDateSeconds > 0

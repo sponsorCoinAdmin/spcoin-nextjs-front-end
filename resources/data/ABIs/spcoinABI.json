@@ -461,24 +461,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "delRecipient",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_accountKey",
         "type": "address"
       }
@@ -538,6 +520,24 @@
         "internalType": "address",
         "name": "_recipientKey",
         "type": "address"
+      }
+    ],
+    "name": "deleteRecipient",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -574,43 +574,6 @@
       }
     ],
     "name": "deleteRecipientRateBranch",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      }
-    ],
-    "name": "deleteSponsor",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "deleteSponsorRecipient",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -900,34 +863,24 @@
         "internalType": "uint256",
         "name": "_agentRateKey",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionIndex",
+        "type": "uint256"
       }
     ],
-    "name": "getAgentRateRecordCore",
+    "name": "getAgentRateTransactionAt",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "agentRate",
+        "name": "insertionTime",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "creationTime",
+        "name": "stakingRewards",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastUpdateTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stakedSPCoins",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "inserted",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -959,24 +912,34 @@
         "internalType": "uint256",
         "name": "_agentRateKey",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_transactionIndex",
-        "type": "uint256"
       }
     ],
-    "name": "getAgentRateTransactionAt",
+    "name": "getAgentRateTransactionCore",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "insertionTime",
+        "name": "agentRate",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "stakingRewards",
+        "name": "creationTime",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdateTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakedSPCoins",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "inserted",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1071,32 +1034,6 @@
   {
     "inputs": [],
     "name": "getInitialTotalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLowerAgentRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLowerRecipientRate",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1264,9 +1201,48 @@
         "internalType": "uint256",
         "name": "_recipientRateKey",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionIndex",
+        "type": "uint256"
       }
     ],
-    "name": "getRecipientRateRecordCore",
+    "name": "getRecipientRateTransactionAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "insertionTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakingRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientRateTransactionCore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1355,32 +1331,6 @@
         "internalType": "bool",
         "name": "inserted",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getUpperAgentRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getUpperRecipientRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1628,19 +1578,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "unSponsorRecipient",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_sourceKey",
         "type": "address"
       }
@@ -1683,7 +1620,7 @@
         "type": "address"
       }
     ],
-    "name": "updateRecipietAccountRewards",
+    "name": "updateRecipientAccountRewards",
     "outputs": [
       {
         "internalType": "uint256",

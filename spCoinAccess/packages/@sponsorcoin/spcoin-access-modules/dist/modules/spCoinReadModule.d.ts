@@ -9,7 +9,7 @@ export declare class SpCoinReadModule {
     getRewardTypeRecord: (_accountKey: string, _rewardType: number, _reward: string | number | bigint) => Promise<RewardTypeStruct>;
     getAccountRewardTransactionList: (_rewardAccountList: string[]) => RewardAccountStruct[];
     getAccountRewardTransactionRecord: (_rewardRecordStr: string) => RewardAccountStruct | undefined;
-    getAccountRateRecordList: (rateRewardList: string[]) => RewardRateStruct[];
+    getAccountRateTransactionList: (rateRewardList: string[]) => RewardRateStruct[];
     getRateTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
     getSpCoinMetaData: () => Promise<{
         owner: string;
@@ -29,8 +29,8 @@ export declare class SpCoinReadModule {
     getAgentRecordList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<AgentStruct[]>;
     getAgentRateTransactionEntries: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<StakingTransactionStruct[]>;
     getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
-    getRecipientRateRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
-    getRecipientRateRecordList: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientRateStruct[]>;
+    getRecipientRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
+    getRecipientRateTransactionList: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientRateStruct[]>;
     getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
     getRecipientRecordList: (_sponsorKey: string, _recipientAccountList: string[]) => Promise<RecipientStruct[]>;
     getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;

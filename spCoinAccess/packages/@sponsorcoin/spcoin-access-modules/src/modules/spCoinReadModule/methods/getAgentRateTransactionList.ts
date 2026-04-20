@@ -1,14 +1,14 @@
 // @ts-nocheck
-export async function getAgentRateTransactionEntries(context, _sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
-    context.spCoinLogger.logFunctionHeader("getAgentRateTransactionEntries = async(" + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ", " + _agentRateKey + ")");
-    let agentRateTransactionList = "";
-    try {
-        agentRateTransactionList = await context.spCoinContractDeployed.getSerializedRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+export async function getAgentRateTransactionList(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey) {
+    const runtime = context;
+    runtime.spCoinLogger.logFunctionHeader("getAgentRateTransactionList(" + ", " + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ")");
+    const agentRateList = await runtime.getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+    const agentRateTransactionList = [];
+    for (const [, agentRateKey] of Object.entries(agentRateList)) {
+        const agentRateTransaction = await runtime.getAgentRateTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, agentRateKey);
+        agentRateTransactionList.push(agentRateTransaction);
     }
-    catch (_error) {
-        agentRateTransactionList = "";
-    }
-    context.spCoinLogger.logExitFunction();
-    return context.spCoinSerialize.deserializeRateTransactionRecords(agentRateTransactionList);
+    runtime.spCoinLogger.logExitFunction();
+    return agentRateTransactionList;
 }
 

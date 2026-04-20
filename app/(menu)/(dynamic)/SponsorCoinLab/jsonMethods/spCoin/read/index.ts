@@ -29,12 +29,12 @@ export type SpCoinReadMethod =
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
   | 'getAccountRewardTransactionRecord'
-  | 'getAccountRateRecordList'
+  | 'getAccountRateTransactionList'
   | 'getRateTransactionList'
   | 'getRecipientRateList'
   | 'getRecipientRateKeys'
-  | 'getRecipientRateRecord'
-  | 'getRecipientRateRecordList'
+  | 'getRecipientRateTransaction'
+  | 'getRecipientRateTransactionList'
   | 'getRecipientRateAgentList'
   | 'getRecipientRateAgentKeys'
   | 'getLowerRecipientRate'
@@ -51,6 +51,8 @@ export type SpCoinReadMethod =
   | 'getAgentTotalRecipient'
   | 'getRecipientRateTransactionCount'
   | 'getAgentRateTransactionCount'
+  | 'getRecipientRateTransactionAt'
+  | 'getAgentRateTransactionAt'
   | 'getAgentRateTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
@@ -71,6 +73,7 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
   initialTotalSupply: 'getInitialTotalSupply',
+  getAccountRateTransactionList: 'getAccountRateTransactionList',
   getMasterAccountList: 'getMasterAccountKeys',
   getAccountKeys: 'getMasterAccountKeys',
   getAccountElement: 'getMasterAccountElement',
@@ -92,8 +95,8 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedAccountRecord: 'getAccountRecord',
   getSerializedAccountRewards: 'getAccountStakingRewards',
   getSerializedRecipientRecordList: 'getRecipientRecord',
-  getSerializedRecipientRateList: 'getRecipientRateRecord',
-  serializeAgentRateRecordStr: 'getAgentRateTransaction',
+  getSerializedRecipientRateList: 'getRecipientRateTransaction',
+  serializeAgentRateTransactionStr: 'getAgentRateTransaction',
   getAccountTimeInSecondeSinceUpdate: 'calcDataTimeDiff',
 };
 
@@ -101,7 +104,7 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountRecord',
   'getAccountStakingRewards',
   'getRecipientRecord',
-  'getRecipientRateRecord',
+  'getRecipientRateTransaction',
   'getAgentRateTransaction',
 ];
 
