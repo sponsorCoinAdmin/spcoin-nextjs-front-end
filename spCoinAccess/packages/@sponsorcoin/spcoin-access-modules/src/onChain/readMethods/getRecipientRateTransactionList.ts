@@ -1,0 +1,26 @@
+// @ts-nocheck
+import { bigIntToDateTimeString, bigIntToDecString } from '../../utils/dateTime';
+import { buildHandler } from '../../readMethodRuntime';
+const handler = buildHandler('getRecipientRateTransactionList', async (context) => {
+    const rates = (await context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])) ?? [];
+    return Promise.all(rates.map(async (rate) => {
+        const [, creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientRateTransactionCore(context.methodArgs[0], context.methodArgs[1], rate);
+        const serializedRecipientRateTransaction = [
+            String(creationTime ?? '0'),
+            String(lastUpdateTime ?? '0'),
+            String(stakedSPCoins ?? '0'),
+        ].join(',');
+        const recordFields = serializedRecipientRateTransaction.split(',');
+        return {
+            recipientRateKey: String(rate),
+            serializedRecipientRateTransaction: {
+                serializedRecipientRateTransaction,
+                creationTime: bigIntToDateTimeString(recordFields[0] || '0'),
+                lastUpdateTime: bigIntToDateTimeString(recordFields[1] || '0'),
+                stakedSPCoins: bigIntToDecString(recordFields[2] || '0'),
+            },
+        };
+    }));
+});
+export default handler;
+

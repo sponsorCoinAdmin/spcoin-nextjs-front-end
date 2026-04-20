@@ -11,7 +11,7 @@ contract Security is SpCoinDataTypes {
         contractOwner = msg.sender;
     }
 
-    function owner() public view returns (address) {
+    function owner() external view returns (address) {
         return contractOwner;
     }
 
@@ -52,45 +52,29 @@ contract Security is SpCoinDataTypes {
             return false;
     }
 
-    function getInflationRate() public view returns (uint256) {
+    function getInflationRate() external view returns (uint256) {
         return annualInflation;
     }
 
-    function setInflationRate(uint256 newInflationRate) public onlyRootAdmin {
+    function setInflationRate(uint256 newInflationRate) external onlyRootAdmin {
         annualInflation = newInflationRate;
     }
 
-    function getLowerRecipientRate() public view returns (uint256) {
-        return lowerRecipientRate;
-    }
-
-    function getUpperRecipientRate() public view returns (uint256) {
-        return upperRecipientRate;
-    }
-
-    function getRecipientRateRange() public view returns (uint256, uint256) {
+    function getRecipientRateRange() external view returns (uint256, uint256) {
         return (lowerRecipientRate, upperRecipientRate);
     }
 
-    function setRecipientRateRange(uint256 newLowerRecipientRate, uint256 newUpperRecipientRate) public onlyRootAdmin {
+    function setRecipientRateRange(uint256 newLowerRecipientRate, uint256 newUpperRecipientRate) external onlyRootAdmin {
         require(newLowerRecipientRate <= newUpperRecipientRate, "REC_LOW_GT_UP");
         lowerRecipientRate = newLowerRecipientRate;
         upperRecipientRate = newUpperRecipientRate;
     }
 
-    function getLowerAgentRate() public view returns (uint256) {
-        return lowerAgentRate;
-    }
-
-    function getUpperAgentRate() public view returns (uint256) {
-        return upperAgentRate;
-    }
-
-    function getAgentRateRange() public view returns (uint256, uint256) {
+    function getAgentRateRange() external view returns (uint256, uint256) {
         return (lowerAgentRate, upperAgentRate);
     }
 
-    function setAgentRateRange(uint256 newLowerAgentRate, uint256 newUpperAgentRate) public onlyRootAdmin {
+    function setAgentRateRange(uint256 newLowerAgentRate, uint256 newUpperAgentRate) external onlyRootAdmin {
         require(newLowerAgentRate <= newUpperAgentRate, "AG_LOW_GT_UP");
         lowerAgentRate = newLowerAgentRate;
         upperAgentRate = newUpperAgentRate;

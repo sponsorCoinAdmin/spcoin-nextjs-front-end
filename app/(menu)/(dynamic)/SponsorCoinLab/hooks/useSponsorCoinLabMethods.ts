@@ -11,6 +11,7 @@ import {
   type Erc20WriteMethod,
 } from '../jsonMethods/erc20/write';
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import {
   normalizeSpCoinWriteMethod,
   runSpCoinWriteMethod,
@@ -21,6 +22,8 @@ import {
   type SerializationTestMethod,
 } from '../jsonMethods/serializationTests';
 import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
+import { getRateTransactionList as localGetRateTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getRateTransactionList';
+import { getAccountRateTransactionList as localGetAccountRateTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRateTransactionList';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
@@ -62,6 +65,26 @@ function isBadDataError(error: unknown) {
 function getErrorDebugTrace(error: unknown): string[] {
   const trace = (error as { spCoinDebugTrace?: unknown } | null)?.spCoinDebugTrace;
   return Array.isArray(trace) ? trace.map((entry) => String(entry)) : [];
+}
+
+function attachReadDebugTrace(error: unknown, trace: string[]) {
+  if (!error || typeof error !== 'object') return error;
+  (error as { spCoinDebugTrace?: string[] }).spCoinDebugTrace = [...trace];
+  return error;
+}
+
+function isEmptyAccountRateListReadError(error: unknown) {
+  const name = String((error as { name?: unknown } | null)?.name || '');
+  const message = String((error as { message?: unknown } | null)?.message || '');
+  if (name !== 'TypeError') return false;
+  return /Cannot read properties of undefined/i.test(message);
+}
+
+function isMalformedAccountRateListInput(error: unknown) {
+  const name = String((error as { name?: unknown } | null)?.name || '');
+  const message = String((error as { message?: unknown } | null)?.message || '');
+  if (name !== 'TypeError') return false;
+  return /Cannot convert undefined to a BigInt/i.test(message);
 }
 
 async function enrichDirectReadError(params: {
@@ -762,6 +785,66 @@ export function useSponsorCoinLabMethods({
     },
     [formatOutputDisplayValue],
   );
+  const deriveReadWarningPayload = useCallback(
+    (selectedMethod: SpCoinReadMethod, result: unknown) => {
+      const selectedMethodName = String(selectedMethod || '').trim();
+      if (
+        result &&
+        typeof result === 'object' &&
+        !Array.isArray(result) &&
+        String((result as Record<string, unknown>).__spcoinWarningType || '').trim() === 'malformed_rate_reward_list'
+      ) {
+        return {
+          type: 'invalid_input',
+          message: String(
+            (result as Record<string, unknown>).__spcoinWarningMessage ||
+              `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
+          ),
+          debug: {
+            panel: 'spcoin_rread',
+            source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            method: selectedMethodName,
+          },
+        };
+      }
+      if (
+        selectedMethodName === 'getAccountRateTransactionList' &&
+        Array.isArray(result) &&
+        result.length === 0
+      ) {
+        return {
+          type: 'empty_data',
+          message: `${selectedMethodName} returned no rate reward data for the supplied list.`,
+          debug: {
+            panel: 'spcoin_rread',
+            source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            method: selectedMethodName,
+          },
+        };
+      }
+      if (
+        (selectedMethod === 'getAgentRateTransaction' || selectedMethod === 'getRecipientRateTransaction') &&
+        result &&
+        typeof result === 'object' &&
+        !Array.isArray(result)
+      ) {
+        const record = result as Record<string, unknown>;
+        if (record.inserted === false) {
+          return {
+            type: 'not_found',
+            message: `${selectedMethod} returned no onchain branch for the supplied keys.`,
+            debug: {
+              panel: 'spcoin_rread',
+              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              method: selectedMethod,
+            },
+          };
+        }
+      }
+      return undefined;
+    },
+    [useLocalSpCoinAccessPackage],
+  );
   const executeMethodDescriptor = useCallback(
     async (descriptor: MethodExecutionDescriptor) => {
       const { panel, method, params, sender = '' } = descriptor;
@@ -819,7 +902,11 @@ export function useSponsorCoinLabMethods({
 
       if (panel === 'spcoin_rread') {
         const selectedMethod = method as SpCoinReadMethod;
-        const def = spCoinReadMethodDefs[selectedMethod];
+        const normalizedSelectedMethod = normalizeSpCoinReadMethod(String(selectedMethod || ''));
+        const def = spCoinReadMethodDefs[normalizedSelectedMethod] || spCoinReadMethodDefs[selectedMethod];
+        if (!def) {
+          throw new Error(`SpCoin read method ${String(selectedMethod || '')} is not registered.`);
+        }
         const localParams = def.params.map((param) => findParamValue(param.label));
         const call = buildMethodCallEntry(
           selectedMethod,
@@ -828,7 +915,14 @@ export function useSponsorCoinLabMethods({
             value: localParams[idx] || '',
           })),
         );
-        if (['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(selectedMethod)) {
+        const debugTrace = [
+          `spcoin_rread start method=${String(selectedMethod || '')}`,
+          `normalizedMethod=${normalizedSelectedMethod}`,
+          `source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}`,
+          `mode=${mode}`,
+          `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
+        ];
+        if (['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(normalizedSelectedMethod)) {
           const target = requireContractAddress();
           const runner = await ensureReadRunner();
           const contract = createSpCoinContract(target, runner) as SpCoinContractAccess;
@@ -862,28 +956,97 @@ export function useSponsorCoinLabMethods({
             'getAccountKeyCount',
             'getMasterAccountListSize',
             'getAccountListSize',
-          ].includes(selectedMethod);
-        const result = shouldUseServerBackedRead
-          ? await runServerBackedSpCoinStep(
-              'spcoin_rread',
-              selectedMethod,
-              def.params.map((param, idx) => ({
-                key: param.label,
-                value: localParams[idx] || '',
-              })),
-            )
-          : await runSpCoinReadMethod({
-              selectedMethod,
-              spReadParams: localParams,
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog,
-              setStatus,
+          ].includes(normalizedSelectedMethod);
+        let result: unknown;
+        try {
+          if (normalizedSelectedMethod === 'getAccountRateTransactionList') {
+            debugTrace.push('using local account-rate parser fast path');
+            const rateRewardList = parseListParam(localParams[0] || '');
+            const hasMalformedRateRewardRow = rateRewardList.some((row) => {
+              const fields = String(row || '').split(',');
+              return fields.length < 2 || !String(fields[0] || '').trim() || !String(fields[1] || '').trim();
             });
-        if (['getMasterAccountKeys', 'getAccountKeys'].includes(selectedMethod)) {
+            if (hasMalformedRateRewardRow) {
+              debugTrace.push('detected malformed rate reward row; returning empty list with warning');
+              result = {
+                __spcoinWarningType: 'malformed_rate_reward_list',
+                __spcoinWarningMessage:
+                  'getAccountRateTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
+                items: [],
+              };
+            } else {
+              const noopLogger = { logFunctionHeader: () => {}, logExitFunction: () => {} };
+              result = localGetAccountRateTransactionList(
+                {
+                  spCoinLogger: noopLogger,
+                  getRateTransactionList: (rows: string[]) => localGetRateTransactionList({ spCoinLogger: noopLogger }, rows),
+                },
+                rateRewardList,
+              );
+            }
+          } else {
+          result = shouldUseServerBackedRead
+            ? await runServerBackedSpCoinStep(
+                'spcoin_rread',
+                normalizedSelectedMethod,
+                def.params.map((param, idx) => ({
+                  key: param.label,
+                  value: localParams[idx] || '',
+                })),
+              )
+            : await runSpCoinReadMethod({
+                selectedMethod,
+                spReadParams: localParams,
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog,
+                setStatus,
+              });
+          }
+        } catch (error) {
+          const selectedMethodName = String(selectedMethod || '').trim();
+          if (
+            selectedMethodName === 'getAccountRateTransactionList' &&
+            isEmptyAccountRateListReadError(error)
+          ) {
+            result = [];
+            appendLog(
+              `[warn] ${selectedMethodName} received empty or undefined rate reward data; returning an empty list.`,
+            );
+            setStatus(`${selectedMethodName} returned empty data.`);
+          } else if (
+            selectedMethodName === 'getAccountRateTransactionList' &&
+            isMalformedAccountRateListInput(error)
+          ) {
+            result = {
+              __spcoinWarningType: 'malformed_rate_reward_list',
+              __spcoinWarningMessage:
+                `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
+              items: [],
+            };
+            appendLog(
+              `[warn] ${selectedMethodName} received malformed rate reward data; returning an empty list.`,
+            );
+            setStatus(`${selectedMethodName} returned malformed input warning.`);
+          } else {
+            throw attachReadDebugTrace(error, debugTrace);
+          }
+        }
+        const warning = deriveReadWarningPayload(selectedMethod, result);
+        if (
+          result &&
+          typeof result === 'object' &&
+          !Array.isArray(result) &&
+          String((result as Record<string, unknown>).__spcoinWarningType || '').trim() === 'malformed_rate_reward_list'
+        ) {
+          result = Array.isArray((result as Record<string, unknown>).items)
+            ? (result as Record<string, unknown>).items
+            : [];
+        }
+        if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
             const [metadataResult, accountResults] = await Promise.allSettled([
@@ -924,12 +1087,13 @@ export function useSponsorCoinLabMethods({
                 ...(spCoinMetsData ? { spCoinMetsData } : {}),
                 accounts,
               },
+              ...(warning ? { warning } : {}),
             };
           } catch {
-            return { call, result };
+            return { call, result, ...(warning ? { warning } : {}) };
           }
         }
-        return { call, result };
+        return { call, result, ...(warning ? { warning } : {}) };
       }
 
       if (panel === 'serialization_tests') {
@@ -1089,6 +1253,7 @@ export function useSponsorCoinLabMethods({
       appendWriteTrace,
       buildMethodCallEntry,
       coerceParamValue,
+      deriveReadWarningPayload,
       effectiveConnectedAddress,
       ensureReadRunner,
       executeWriteConnected,
@@ -1645,8 +1810,8 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result } = await executeMethodDescriptor(descriptor);
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
+      const { call, result, warning } = await executeMethodDescriptor(descriptor);
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}) }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
       const call = buildMethodCallEntry(descriptor.method, [
@@ -1701,8 +1866,8 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result } = await executeMethodDescriptor(descriptor);
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
+      const { call, result, warning } = await executeMethodDescriptor(descriptor);
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}) }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
       const call = buildMethodCallEntry(descriptor.method, descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })));
@@ -1950,13 +2115,13 @@ export function useSponsorCoinLabMethods({
       };
 
       try {
-        const { call, result } = await executeMethodDescriptor({
+        const { call, result, warning } = await executeMethodDescriptor({
           panel: step.panel,
           method: step.method,
           params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
           sender: stepSender,
         });
-        return commitResult({ call, result }, true);
+        return commitResult({ call, result, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =
           error instanceof Error

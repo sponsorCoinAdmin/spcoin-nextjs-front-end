@@ -471,17 +471,18 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('backDateAgentTransactionDate', tx, receipt);
               break;
             }
-            case 'delRecipient': {
+            case 'delRecipient':
+            case 'deleteRecipient': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
-              const delRecipient = (contract as unknown as { delRecipient?: (sponsor: string, recipient: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).delRecipient;
-              if (typeof delRecipient !== 'function') {
-                throw new Error('delRecipient is not available on the current SpCoin contract access path.');
+              const deleteRecipient = (contract as unknown as { deleteRecipient?: (sponsor: string, recipient: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteRecipient;
+              if (typeof deleteRecipient !== 'function') {
+                throw new Error('deleteRecipient is not available on the current SpCoin contract access path.');
               }
-              const tx = await delRecipient(sponsorKey, recipientKey);
+              const tx = await deleteRecipient(sponsorKey, recipientKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                'delRecipient',
+                'deleteRecipient',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
@@ -489,11 +490,11 @@ export async function POST(request: NextRequest) {
             }
             case 'deleteSponsorNode': {
               const sponsorKey = findParam('Sponsor Key') || findParam('Account Key') || senderAddress;
-              const deleteSponsor = (contract as unknown as { deleteSponsor?: (sponsorKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteSponsor;
-              if (typeof deleteSponsor !== 'function') {
-                throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+              const deleteAccountRecord = (contract as unknown as { deleteAccountRecord?: (sponsorKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteAccountRecord;
+              if (typeof deleteAccountRecord !== 'function') {
+                throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
               }
-              const tx = await deleteSponsor(sponsorKey);
+              const tx = await deleteAccountRecord(sponsorKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
                 String(step.method),

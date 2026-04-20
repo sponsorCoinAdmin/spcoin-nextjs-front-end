@@ -11,7 +11,7 @@ export function getAccountRewardTransactionRecord(context, _rewardRecordStr) {
         if (rateRewardList.length > 0) {
             rewardAccountRecord.sourceKey = rewardRecordFields[0];
             rewardAccountRecord.stakingRewards = bigIntToDecString(rewardRecordFields[1]);
-            rewardAccountRecord.rateList = runtime.getAccountRateRecordList(rateRewardList);
+            rewardAccountRecord.rateList = runtime.getAccountRateTransactionList(rateRewardList);
         }
     }
     runtime.spCoinLogger.logExitFunction();

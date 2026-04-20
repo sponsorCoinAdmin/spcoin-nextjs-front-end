@@ -20,11 +20,11 @@ export const accountLinksInterface = new Interface([
 export const recipientRecordCoreInterface = new Interface([
     'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-export const recipientRateRecordCoreInterface = new Interface([
-    'function getRecipientRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+export const recipientRateTransactionCoreInterface = new Interface([
+    'function getRecipientRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-export const agentRateRecordCoreInterface = new Interface([
-    'function getAgentRateRecordCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+export const agentRateTransactionCoreInterface = new Interface([
+    'function getAgentRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
 export async function callViewFunction(contract, iface, functionName, args) {
     const target = String((contract === null || contract === void 0 ? void 0 : contract.target) || (typeof (contract === null || contract === void 0 ? void 0 : contract.getAddress) === 'function' ? await contract.getAddress() : ''));
@@ -97,11 +97,11 @@ export async function buildSerializedRecipientRecordFallback(contract, sponsorKe
     return `${String(creationTime)},${String(stakedSPCoins)}`;
 }
 export async function buildSerializedRecipientRateFallback(contract, sponsorKey, recipientKey, recipientRateKey) {
-    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, recipientRateRecordCoreInterface, 'getRecipientRateRecordCore', [sponsorKey, recipientKey, recipientRateKey]);
+    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, recipientRateTransactionCoreInterface, 'getRecipientRateTransactionCore', [sponsorKey, recipientKey, recipientRateKey]);
     return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 export async function buildSerializedAgentRateFallback(contract, sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey) {
-    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, agentRateRecordCoreInterface, 'getAgentRateRecordCore', [sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey]);
+    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, agentRateTransactionCoreInterface, 'getAgentRateTransactionCore', [sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey]);
     return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 export class SpCoinSerialize {
@@ -198,17 +198,17 @@ export class SpCoinSerialize {
             }
         };
         //////////////////////////////////////////////////////////////////////////////////////////////////////
-        this.getRecipientRateRecordFields = async (_sponsorKey, _recipientKey, _recipientRateKey) => {
+        this.getRecipientRateTransactionFields = async (_sponsorKey, _recipientKey, _recipientRateKey) => {
             // console.log("==>11 getSerializedRecipientRecordList = async(" + _sponsorKey + ", " + _recipientKey + ", "+ _recipientRateKey + ", " + ")");
             spCoinLogger.logFunctionHeader("getSerializedRecipientRateList = async(" + _sponsorKey + _recipientKey + ", " + _recipientRateKey + ")");
-            let recipientRateRecordStr;
+            let recipientRateTransactionStr;
             try {
-                recipientRateRecordStr = await this.spCoinContractDeployed.getSerializedRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey);
+                recipientRateTransactionStr = await this.spCoinContractDeployed.getSerializedRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey);
             }
             catch (_error) {
-                recipientRateRecordStr = await buildSerializedRecipientRateFallback(this.spCoinContractDeployed, _sponsorKey, _recipientKey, _recipientRateKey);
+                recipientRateTransactionStr = await buildSerializedRecipientRateFallback(this.spCoinContractDeployed, _sponsorKey, _recipientKey, _recipientRateKey);
             }
-            let recipientRateList = recipientRateRecordStr.split(",");
+            let recipientRateList = recipientRateTransactionStr.split(",");
             spCoinLogger.logExitFunction();
             return recipientRateList;
         };
@@ -226,19 +226,14 @@ export class SpCoinSerialize {
             spCoinLogger.logExitFunction();
             return recipientRecordList;
         };
-        this.getAgentRateRecordFields = async (_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) => {
+        this.getAgentRateTransactionFields = async (_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) => {
             // console.log("==>19 getSerializedAgentRateList = async(", _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, ")");
             spCoinLogger.logFunctionHeader("getSerializedAgentRateList = async(" + _sponsorKey + ", " + _recipientKey + ", " + _agentKey + ", " + _agentRateKey + ")");
-            let agentRateRecordStr;
-            try {
-                agentRateRecordStr = await this.spCoinContractDeployed.serializeAgentRateRecordStr(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
-            }
-            catch (_error) {
-                agentRateRecordStr = await buildSerializedAgentRateFallback(this.spCoinContractDeployed, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
-            }
-            let agentRateRecordStrList = agentRateRecordStr.split(",");
+            let agentRateTransactionStr;
+            agentRateTransactionStr = await buildSerializedAgentRateFallback(this.spCoinContractDeployed, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+            let agentRateTransactionStrList = agentRateTransactionStr.split(",");
             spCoinLogger.logExitFunction();
-            return agentRateRecordStrList;
+            return agentRateTransactionStrList;
         };
         this.getAccountRecordObject = async (_accountKey) => {
             // console.log("==>3 getSerializedAccountRecord = async(" + _accountKey + ")");
@@ -333,9 +328,9 @@ export class SpCoinSerialize {
             }
             return sponsorCoinHeader;
         };
-        this.getSerializedRecipientRateList = async (_sponsorKey, _recipientKey, _recipientRateKey) => this.getRecipientRateRecordFields(_sponsorKey, _recipientKey, _recipientRateKey);
+        this.getSerializedRecipientRateList = async (_sponsorKey, _recipientKey, _recipientRateKey) => this.getRecipientRateTransactionFields(_sponsorKey, _recipientKey, _recipientRateKey);
         this.getSerializedRecipientRecordList = async (_sponsorKey, _recipientKey) => this.getRecipientRecordFields(_sponsorKey, _recipientKey);
-        this.getSerializedAgentRateList = async (_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) => this.getAgentRateRecordFields(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        this.getSerializedAgentRateList = async (_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) => this.getAgentRateTransactionFields(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
         this.getSerializedAccountRecord = async (_accountKey) => this.getAccountRecordObject(_accountKey);
         this.getSerializedAccountRewards = async (_accountKey) => this.getAccountRewardsValue(_accountKey);
         this.deserializedSPCoinHeader = async () => this.getSPCoinHeaderObject();

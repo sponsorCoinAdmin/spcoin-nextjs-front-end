@@ -101,9 +101,7 @@ export async function deleteAccountTree() {
                 const refreshedRecipientList = await getLiveRecipientList(sponsorKey);
                 const relationshipStillExists = refreshedRecipientList.some((value) => value.toLowerCase() === recipientKey.toLowerCase());
                 if (relationshipStillExists) {
-                    await callWithRetry("delRecipient(" + sponsorKey + "," + recipientKey + ")", () => typeof deleteMethods.delRecipient === "function"
-                        ? deleteMethods.delRecipient({ accountKey: sponsorKey }, recipientKey)
-                        : deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey));
+                    await callWithRetry("deleteRecipient(" + sponsorKey + "," + recipientKey + ")", () => deleteMethods.deleteRecipient({ accountKey: sponsorKey }, recipientKey));
                     summary.deletedRecipientCount += 1;
                     await sleep(200);
                 }

@@ -9,7 +9,7 @@ export async function getRecipientRecord(context, _sponsorKey, _recipientKey) {
     const recordStr = await runtime.spCoinSerialize.getRecipientRecordFields(_sponsorKey, _recipientKey);
     recipientRecord.creationTime = bigIntToDateTimeString(recordStr[0]);
     recipientRecord.stakedSPCoins = bigIntToDecString(recordStr[1]);
-    recipientRecord.recipientRateList = await runtime.getRecipientRateRecordList(_sponsorKey, _recipientKey);
+    recipientRecord.recipientRateList = await runtime.getRecipientRateTransactionList(_sponsorKey, _recipientKey);
     runtime.spCoinLogger.logExitFunction();
     return recipientRecord;
 }

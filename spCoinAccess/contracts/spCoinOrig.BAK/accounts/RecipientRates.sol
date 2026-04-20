@@ -10,40 +10,40 @@ contract RecipientRates is Recipient {
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
-    function getRecipientRateRecord(address _sponsorKey, address _recipientKey, uint _recipientRateKey, uint _creationDate) 
+    function getRecipientRateTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey, uint _creationDate) 
     internal returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        if (!recipientRateRecord.inserted) {
-            recipientRateRecord.recipientRate = _recipientRateKey;
-            recipientRateRecord.inserted = true;
-            recipientRateRecord.creationTime = _creationDate;
-            // recipientRateRecord.stakedSPCoins = 0;
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        if (!recipientRateTransaction.inserted) {
+            recipientRateTransaction.recipientRate = _recipientRateKey;
+            recipientRateTransaction.inserted = true;
+            recipientRateTransaction.creationTime = _creationDate;
+            // recipientRateTransaction.stakedSPCoins = 0;
             recipientRecord.recipientRateList.push(_recipientRateKey);
         }
-        return recipientRateRecord; 
+        return recipientRateTransaction; 
     }
 
 /*
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
-    function getRecipientRateRecord(address _sponsorKey, address _recipientKey, uint _recipientRateKey) 
+    function getRecipientRateTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey) 
     internal returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
-        RecipientRateStruct storage recipientRateRecord = getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        if (!recipientRateRecord.inserted) {
-            recipientRateRecord.recipientRate = _recipientRateKey;
-            recipientRateRecord.inserted = true;
-            recipientRateRecord.creationTime = block.timestamp;
-            recipientRateRecord.stakedSPCoins = 0;
+        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        if (!recipientRateTransaction.inserted) {
+            recipientRateTransaction.recipientRate = _recipientRateKey;
+            recipientRateTransaction.inserted = true;
+            recipientRateTransaction.creationTime = block.timestamp;
+            recipientRateTransaction.stakedSPCoins = 0;
             recipientRecord.recipientRateList.push(_recipientRateKey);
         }
-        return recipientRateRecord; 
+        return recipientRateTransaction; 
     }
 */
 
-    function getRecipientRateRecordByKeys(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
+    function getRecipientRateTransactionByKeys(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
     internal view  returns (RecipientRateStruct storage) {
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey) ;
         return recipientRecord.recipientRateMap[_recipientRateKey];
@@ -52,12 +52,12 @@ contract RecipientRates is Recipient {
     function getSerializedRecipientRateList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) public view returns (string memory) {
         // console.log("ZZZZ RecipientRates.sol:getSerializedRecipientRateList ", ",", _sponsorKey,", "); 
         // console.log("ZZZZ", _recipientKey, ", ",  _recipientRateKey);
-        RecipientRateStruct storage recipientRateRecord =  getRecipientRateRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        string memory recipientRateRecordStr = toString(recipientRateRecord.creationTime);
-        string memory lastUpdateTimeStr = toString(recipientRateRecord.lastUpdateTime);
-        string memory stakedSPCoinsStr = toString(recipientRateRecord.stakedSPCoins);
-        recipientRateRecordStr = concat(recipientRateRecordStr, ",", lastUpdateTimeStr, ",", stakedSPCoinsStr);
-        // console.log("ZZZZ getSerializedRecipientRateList recipientRateRecordStr ", recipientRateRecordStr);
-        return recipientRateRecordStr;
+        RecipientRateStruct storage recipientRateTransaction =  getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        string memory recipientRateTransactionStr = toString(recipientRateTransaction.creationTime);
+        string memory lastUpdateTimeStr = toString(recipientRateTransaction.lastUpdateTime);
+        string memory stakedSPCoinsStr = toString(recipientRateTransaction.stakedSPCoins);
+        recipientRateTransactionStr = concat(recipientRateTransactionStr, ",", lastUpdateTimeStr, ",", stakedSPCoinsStr);
+        // console.log("ZZZZ getSerializedRecipientRateList recipientRateTransactionStr ", recipientRateTransactionStr);
+        return recipientRateTransactionStr;
     }
 }

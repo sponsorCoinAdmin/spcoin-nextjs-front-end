@@ -116,11 +116,8 @@ export async function deleteAccountTree() {
                 );
                 if (relationshipStillExists) {
                     await callWithRetry(
-                        `delRecipient(${sponsorKey},${recipientKey})`,
-                        () =>
-                            typeof deleteMethods.delRecipient === "function"
-                                ? deleteMethods.delRecipient({ accountKey: sponsorKey }, recipientKey)
-                                : deleteMethods.unSponsorRecipient({ accountKey: sponsorKey }, recipientKey),
+                        `deleteRecipient(${sponsorKey},${recipientKey})`,
+                        () => deleteMethods.deleteRecipient({ accountKey: sponsorKey }, recipientKey),
                     );
                     summary.deletedRecipientCount += 1;
                     await sleep(200);

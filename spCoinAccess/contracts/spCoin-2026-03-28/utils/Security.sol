@@ -61,14 +61,6 @@ contract Security is SpCoinDataTypes {
         annualInflation = newInflationRate;
     }
 
-    function getLowerRecipientRate() public view returns (uint256) {
-        return lowerRecipientRate;
-    }
-
-    function getUpperRecipientRate() public view returns (uint256) {
-        return upperRecipientRate;
-    }
-
     function getRecipientRateRange() public view returns (uint256 lowerRate, uint256 upperRate) {
         return (lowerRecipientRate, upperRecipientRate);
     }
@@ -77,14 +69,6 @@ contract Security is SpCoinDataTypes {
         require(newLowerRecipientRate <= newUpperRecipientRate, "REC_LOW_GT_UP");
         lowerRecipientRate = newLowerRecipientRate;
         upperRecipientRate = newUpperRecipientRate;
-    }
-
-    function getLowerAgentRate() public view returns (uint256) {
-        return lowerAgentRate;
-    }
-
-    function getUpperAgentRate() public view returns (uint256) {
-        return upperAgentRate;
     }
 
     function getAgentRateRange() public view returns (uint256 lowerRate, uint256 upperRate) {

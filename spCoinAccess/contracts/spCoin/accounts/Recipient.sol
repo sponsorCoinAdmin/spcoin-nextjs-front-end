@@ -11,7 +11,7 @@ contract Recipient is Sponsor {
     /// @notice Relate Sponsor and Recipient accounts for POS sharing
     /// @param _recipientKey new recipient to add to account list
     function addSponsorRecipient(address _sponsorKey, address _recipientKey)
-    public
+    external
     onlyOwnerOrRootAdmin(_sponsorKey)
     nonRedundantRecipient (_sponsorKey, _recipientKey) {
         AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsorKey);
@@ -67,7 +67,7 @@ contract Recipient is Sponsor {
     }
 
     function getRecipientRecordCore(address _sponsorKey, address _recipientKey)
-        public
+        external
         view
         returns (
             uint256 creationTime,
