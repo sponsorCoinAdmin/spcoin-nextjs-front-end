@@ -57,7 +57,7 @@ export async function getSpCoinMetaData(context) {
     };
     const [owner, version, name, symbol, decimals, totalSupply, inflationRate, recipientRateRange, agentRateRange, creationDate] = await Promise.all([
         readOptionalValue(["owner", "getRootAdmin"], ""),
-        readOptionalValue(["getVersion"], ""),
+        readOptionalValue(["version", "getVersion"], ""),
         readOptionalValue(["name"], ""),
         readOptionalValue(["symbol"], ""),
         readOptionalValue(["decimals"], 0),

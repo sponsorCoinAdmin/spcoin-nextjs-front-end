@@ -26,7 +26,10 @@ const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 
 const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   creationTime: 'creationTime.ts',
-  getVersion: 'getVersion.ts',
+  getMasterAccountElement: 'getMasterAccountElement.ts',
+  getMasterAccountList: 'getMasterAccountList.ts',
+  getMasterAccountCount: 'getMasterAccountListSize.ts',
+  version: 'getVersion.ts',
 };
 
 const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
@@ -57,7 +60,6 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   updateAccountStakingRewards: 'rewards.ts',
   updateMasterStakingRewards: 'rewards.ts',
   setInflationRate: 'add.ts',
-  setVersion: 'add.ts',
   setRecipientRateRange: 'add.ts',
   setAgentRateRange: 'add.ts',
   setLowerRecipientRate: 'setLowerRecipientRate.ts',
@@ -74,6 +76,10 @@ const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 
 const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
+  creationTime: 'creationTime.ts',
+  getMasterAccountElement: 'getMasterAccountElement.ts',
+  getMasterAccountList: 'getMasterAccountList.ts',
+  getMasterAccountCount: 'getMasterAccountListSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
   deleteMasterSponsorships: 'delete.ts',
   deleteAccountTree: 'delete.ts',
@@ -115,6 +121,14 @@ function dedupeMethodNamesByLabel(values: string[], getLabel: (name: string) => 
     return true;
   });
 }
+
+const BLOCKED_SPCOIN_READ_TITLES = new Set([
+  'creationTime',
+  'version',
+  'getMasterAccountElement',
+  'getMasterAccountCount',
+  'getMasterAccountKeys',
+]);
 
 type Props = {
   articleClassName: string;
@@ -216,23 +230,35 @@ export default function MethodsPanelCard({
   const combinedErc20MethodValue =
     methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
   const visibleSpCoinReadOptions = React.useMemo(
-    () =>
-      dedupeMethodNamesByLabel(
+    () => {
+      const excludedAdminReadNames = new Set(spCoinReadProps.spCoinAdminReadOptions);
+      const excludedAdminReadTitles = new Set(
+        spCoinReadProps.spCoinAdminReadOptions.map((name) =>
+          String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
+        ),
+      );
+      return dedupeMethodNamesByLabel(
         sortMethodNames(
           [
             ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
             ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
-            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinAdminReadOptions : []),
             ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
-          ].filter((name) => name !== 'calcDataTimeDiff' && name !== 'calculateStakingRewards'),
+          ].filter((name) => {
+            if (name === 'calcDataTimeDiff' || name === 'calculateStakingRewards') return false;
+            if (excludedAdminReadNames.has(name)) return false;
+            const title = String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name);
+            if (BLOCKED_SPCOIN_READ_TITLES.has(title)) return false;
+            return !excludedAdminReadTitles.has(title);
+          }),
         ),
         (name) => String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
-      ),
+      );
+    },
     [
       spCoinReadProps.showOffChainMethods,
       spCoinReadProps.showOnChainMethods,
-      spCoinReadProps.spCoinReadMethodDefs,
       spCoinReadProps.spCoinAdminReadOptions,
+      spCoinReadProps.spCoinReadMethodDefs,
       spCoinReadProps.spCoinCompoundReadOptions,
       spCoinReadProps.spCoinSenderReadOptions,
       spCoinReadProps.spCoinWorldReadOptions,

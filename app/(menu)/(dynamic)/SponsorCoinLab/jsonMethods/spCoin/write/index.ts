@@ -85,8 +85,7 @@ export type SpCoinWriteMethod =
   | 'setRecipientRateRange'
   | 'setLowerAgentRate'
   | 'setUpperAgentRate'
-  | 'setAgentRateRange'
-  | 'setVersion';
+  | 'setAgentRateRange';
 
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
@@ -101,7 +100,6 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'setLowerAgentRate',
   'setUpperAgentRate',
   'setAgentRateRange',
-  'setVersion',
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [

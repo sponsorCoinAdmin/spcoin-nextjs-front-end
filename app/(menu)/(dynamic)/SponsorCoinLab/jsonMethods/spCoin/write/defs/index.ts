@@ -33,7 +33,6 @@ import setRecipientRateRange from './setRecipientRateRange';
 import setLowerAgentRate from './setLowerAgentRate';
 import setUpperAgentRate from './setUpperAgentRate';
 import setAgentRateRange from './setAgentRateRange';
-import setVersion from './setVersion';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipient,
@@ -70,5 +69,4 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   setLowerAgentRate,
   setUpperAgentRate,
   setAgentRateRange,
-  setVersion,
 };

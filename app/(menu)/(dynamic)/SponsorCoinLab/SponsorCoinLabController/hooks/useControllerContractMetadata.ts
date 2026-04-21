@@ -322,7 +322,7 @@ export function useControllerContractMetadata({
     const nextMeta: ControllerContractMetadata = {};
 
       if (needsVersion) {
-        const version = await callNoArgs('getVersion', 'version');
+        const version = await callNoArgs('version', 'version');
         const normalized = String(version ?? '').trim();
         if (normalized) nextMeta.version = normalized;
       }

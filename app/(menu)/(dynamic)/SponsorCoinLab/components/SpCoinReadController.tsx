@@ -163,6 +163,14 @@ function dedupeReadMethodNamesByTitle(values: string[], defs: Record<string, Met
   });
 }
 
+const BLOCKED_SPCOIN_READ_TITLES = new Set([
+  'creationTime',
+  'version',
+  'getMasterAccountElement',
+  'getMasterAccountCount',
+  'getMasterAccountKeys',
+]);
+
 export default function SpCoinReadController(props: Props) {
   const {
     invalidFieldIds,
@@ -377,19 +385,35 @@ export default function SpCoinReadController(props: Props) {
       ),
     [showOnChainMethods, spCoinAdminReadOptions, spCoinReadMethodDefs],
   );
+  const visibleAdminReadTitles = React.useMemo(
+    () => new Set(visibleAdminReadOptions.map((name) => String(spCoinReadMethodDefs[name]?.title || name))),
+    [spCoinReadMethodDefs, visibleAdminReadOptions],
+  );
   const visibleCompoundReadOptions = React.useMemo(
     () =>
-      dedupeReadMethodNamesByTitle(showOffChainMethods ? spCoinCompoundReadOptions : [], spCoinReadMethodDefs),
-    [showOffChainMethods, spCoinCompoundReadOptions, spCoinReadMethodDefs],
+      dedupeReadMethodNamesByTitle(showOffChainMethods ? spCoinCompoundReadOptions : [], spCoinReadMethodDefs).filter(
+        (name) => {
+          const title = String(spCoinReadMethodDefs[name]?.title || name);
+          return !visibleAdminReadTitles.has(title) && !BLOCKED_SPCOIN_READ_TITLES.has(title);
+        },
+      ),
+    [showOffChainMethods, spCoinCompoundReadOptions, spCoinReadMethodDefs, visibleAdminReadTitles],
   );
   const visibleReadMethods = React.useMemo(
-    () => [
-      ...visibleWorldReadOptions,
-      ...visibleSenderReadOptions,
-      ...visibleAdminReadOptions,
-      ...visibleCompoundReadOptions,
+    () =>
+      [...visibleWorldReadOptions, ...visibleSenderReadOptions, ...visibleCompoundReadOptions].filter(
+        (name) => {
+          const title = String(spCoinReadMethodDefs[name]?.title || name);
+          return !visibleAdminReadTitles.has(title) && !BLOCKED_SPCOIN_READ_TITLES.has(title);
+        },
+      ),
+    [
+      spCoinReadMethodDefs,
+      visibleAdminReadTitles,
+      visibleCompoundReadOptions,
+      visibleSenderReadOptions,
+      visibleWorldReadOptions,
     ],
-    [visibleAdminReadOptions, visibleCompoundReadOptions, visibleSenderReadOptions, visibleWorldReadOptions],
   );
   React.useEffect(() => {
     if (visibleReadMethods.length === 0) return;

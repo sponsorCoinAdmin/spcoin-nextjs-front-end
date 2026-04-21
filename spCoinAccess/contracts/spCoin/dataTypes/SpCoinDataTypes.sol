@@ -20,7 +20,7 @@ contract SpCoinDataTypes {
     string  public name;
     string  public symbol;
     string  internal defaultVersion     = "_V001";
-    string  internal version;
+    string  public version;
     uint256 public decimals;
     uint256 internal initialTotalSupply = defaultTSPCoinSupply * (10 ** defaultDecimals);
     uint256 public totalSupply;

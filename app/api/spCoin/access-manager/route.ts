@@ -1134,7 +1134,7 @@ async function handleGenerateAbi(deploymentChainId?: number | string, deployment
 const SPCOIN_METADATA_ABI = [
   'function getInflationRate() view returns (uint256)',
   'function owner() view returns (address)',
-  'function getVersion() view returns (string)',
+  'function version() view returns (string)',
   'function name() view returns (string)',
   'function symbol() view returns (string)',
   'function decimals() view returns (uint8)',
@@ -1195,7 +1195,7 @@ async function handleGetSpCoinMetaData(
     creationTimeValue,
   ] = await Promise.all([
     readOptionalValue('owner', ''),
-    readOptionalValue('getVersion', ''),
+    readOptionalValue('version', ''),
     readOptionalValue('name', ''),
     readOptionalValue('symbol', ''),
     readOptionalValue('decimals', 0),

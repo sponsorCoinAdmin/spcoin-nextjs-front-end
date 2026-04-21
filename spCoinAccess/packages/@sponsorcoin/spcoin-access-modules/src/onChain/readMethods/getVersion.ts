@@ -1,5 +1,5 @@
 // @ts-nocheck
 import { createDynamicHandler } from '../../readMethodRuntime';
-const handler = createDynamicHandler('getVersion');
+const handler = createDynamicHandler('version');
 export default handler;
 

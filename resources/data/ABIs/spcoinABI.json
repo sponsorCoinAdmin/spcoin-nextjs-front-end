@@ -1300,7 +1300,7 @@
   },
   {
     "inputs": [],
-    "name": "getVersion",
+    "name": "version",
     "outputs": [
       {
         "internalType": "string",
@@ -1401,19 +1401,6 @@
       }
     ],
     "name": "setRecipientRateRange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "newVersion",
-        "type": "string"
-      }
-    ],
-    "name": "setVersion",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

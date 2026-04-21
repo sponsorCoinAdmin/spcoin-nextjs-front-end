@@ -283,7 +283,9 @@ export class SpCoinSerialize {
             // console.log("JS==>1 deserializedSPCoinHeader()");
             spCoinLogger.logFunctionHeader("getSPCoinHeaderObject()");
             let sponsorCoinHeader = new SponsorCoinHeader();
-            const versionReader = typeof this.spCoinContractDeployed.getVersion === "function"
+            const versionReader = typeof this.spCoinContractDeployed.version === "function"
+                ? this.spCoinContractDeployed.version.bind(this.spCoinContractDeployed)
+                : typeof this.spCoinContractDeployed.getVersion === "function"
                 ? this.spCoinContractDeployed.getVersion.bind(this.spCoinContractDeployed)
                 : this.spCoinContractDeployed.version.bind(this.spCoinContractDeployed);
             let [name, creationTime, decimals, totalSupply, initialTotalSupply, annualInflation, totalUnstakedSpCoins, totalStakingRewards, totalStakedSPCoins, symbol, version] = await Promise.all([

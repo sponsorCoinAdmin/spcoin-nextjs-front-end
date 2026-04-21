@@ -66,12 +66,13 @@ export type SpCoinReadMethod =
   | 'totalUnstakedSpCoins'
   | 'totalStakedSPCoins'
   | 'totalStakingRewards'
-  | 'getVersion';
+  | 'version';
 
 export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
-  version: 'getVersion',
+  getVersion: 'version',
+  version: 'version',
   initialTotalSupply: 'getInitialTotalSupply',
   getAccountTransactionList: 'getAccountTransactionList',
   getMasterAccountList: 'getMasterAccountKeys',
@@ -110,7 +111,26 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
 
-export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = ['calcDataTimeDiff', 'calculateStakingRewards'];
+export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
+  'calcDataTimeDiff',
+  'calculateStakingRewards',
+  'creationTime',
+  'version',
+  'getInflationRate',
+  'isDeployed',
+  'isAccountInserted',
+  'getMasterAccountKeys',
+  'getMasterAccountElement',
+  'getAccountElement',
+  'getMasterAccountList',
+  'getMasterAccountCount',
+  'getMasterAccountListSize',
+  'getAccountKeyCount',
+  'getAccountKeys',
+  'totalUnstakedSpCoins',
+  'totalStakedSPCoins',
+  'totalStakingRewards',
+];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
 

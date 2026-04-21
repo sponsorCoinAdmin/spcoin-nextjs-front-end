@@ -46,7 +46,7 @@ import calcDataTimeDiff from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
-import getVersion from './version';
+import version from './version';
 
 export const SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
@@ -111,5 +111,5 @@ export const SPCOIN_READ_METHOD_DEFS = {
   totalUnstakedSpCoins,
   totalStakedSPCoins,
   totalStakingRewards,
-  getVersion,
+  version,
 };

@@ -74,6 +74,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     totalUnstakedSpCoins,
     totalStakedSPCoins,
     totalStakingRewards,
+    version: getVersion,
     getVersion,
     getAccountRewardTransactionList,
     getAccountRewardTransactionRecord,

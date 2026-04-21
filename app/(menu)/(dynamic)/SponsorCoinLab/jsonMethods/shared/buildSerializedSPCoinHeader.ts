@@ -31,9 +31,14 @@ async function readInitialTotalSupply(contract: any) {
 }
 
 export async function buildSerializedSPCoinHeader(contract: any) {
-  const versionFn = typeof contract?.getVersion === 'function' ? contract.getVersion.bind(contract) : null;
+  const versionFn =
+    typeof contract?.version === 'function'
+      ? contract.version.bind(contract)
+      : typeof contract?.getVersion === 'function'
+        ? contract.getVersion.bind(contract)
+        : null;
   if (!versionFn) {
-    throw new Error('SpCoin contract does not expose getVersion().');
+    throw new Error('SpCoin contract does not expose version().');
   }
 
   const [
