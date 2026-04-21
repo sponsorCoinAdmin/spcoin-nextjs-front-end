@@ -6,6 +6,13 @@ import "hardhat/console.sol";
 
 contract Security is SpCoinDataTypes {
     address private contractOwner;
+    error SpCoinError(uint8 code);
+
+    uint8 internal constant RECIP_RATE_NOT_FOUND = 0;
+    uint8 internal constant AGENT_RATE_NOT_FOUND = 1;
+    uint8 internal constant RECIP_RATE_HAS_AGENT = 2;
+    uint8 internal constant AGENT_NOT_FOUND = 3;
+    uint8 internal constant OWNER_OR_ROOT = 4;
  
     constructor()  {
         contractOwner = msg.sender;
@@ -26,7 +33,9 @@ contract Security is SpCoinDataTypes {
     // }
 
     modifier onlyOwnerOrRootAdmin (address _account) {
-        require (msg.sender == contractOwner || msg.sender == _account, "OWNER_OR_ROOT");
+        if (msg.sender != contractOwner && msg.sender != _account) {
+            revert SpCoinError(OWNER_OR_ROOT);
+        }
         _;
     }
 
@@ -45,7 +54,7 @@ contract Security is SpCoinDataTypes {
     /// @notice determines if address Record is inserted in accountKey array
     /// @param _accountKey public accountKey validate Insertion
     function isAccountInserted(address _accountKey)
-        public view returns (bool) {
+        external view returns (bool) {
         if (accountMap[_accountKey].inserted) 
             return true;
         else

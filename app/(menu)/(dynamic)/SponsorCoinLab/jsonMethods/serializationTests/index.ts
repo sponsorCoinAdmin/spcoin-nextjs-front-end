@@ -29,7 +29,7 @@ type UtilityMethodSpec = {
     | 'getMasterSponsorList_BAK'
     | 'hhFundAccounts'
     | 'deleteMasterSponsorships'
-    | 'deleteSponsor'
+    | 'deleteAccountTree'
     | 'deleteRecipient'
     | 'deleteRecipientRate'
     | 'deleteAgent'
@@ -215,10 +215,10 @@ const METHOD_SPECS = {
     params: [],
     utilityMethod: 'deleteMasterSponsorships',
   },
-  deleteSponsor: {
-    title: 'deleteSponsor',
-    params: [{ label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' as const }],
-    utilityMethod: 'deleteSponsor',
+  deleteAccountTree: {
+    title: 'deleteAccountTree',
+    params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' as const }],
+    utilityMethod: 'deleteAccountTree',
   },
   deleteRecipient: {
     title: 'deleteRecipient',
@@ -821,7 +821,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       throw lastError;
     });
 
-  const deleteAgentRateBranch = async (
+  const deleteAgentRateNode = async (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string,
@@ -829,12 +829,12 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     agentRateKey: string,
   ) =>
     executeAs(
-      `deleteAgentRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
+      `deleteAgentRate(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
       sponsorKey,
       async (contract) => {
-        const fn = (contract as { deleteAgentRateBranch?: (...args: unknown[]) => Promise<any> }).deleteAgentRateBranch;
+        const fn = (contract as { deleteAgentRate?: (...args: unknown[]) => Promise<any> }).deleteAgentRate;
         if (typeof fn !== 'function') {
-          throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
+          throw new Error('deleteAgentRate is not available on the current SpCoin contract access path.');
         }
         const tx = await fn(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
         await tx.wait();
@@ -854,10 +854,10 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     });
 
   const deleteRecipientRateNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string) =>
-    executeAs(`deleteRecipientRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteRecipientRateBranch?: (...args: unknown[]) => Promise<any> }).deleteRecipientRateBranch;
+    executeAs(`deleteRecipientRate(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, sponsorKey, async (contract) => {
+      const fn = (contract as { deleteRecipientRate?: (...args: unknown[]) => Promise<any> }).deleteRecipientRate;
       if (typeof fn !== 'function') {
-        throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
+        throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
       }
       const tx = await fn(sponsorKey, recipientKey, recipientRateKey);
       await tx.wait();
@@ -928,7 +928,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       trace(
         `deleteAgentRate deleteAgentRateTree start ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} rate=${agentRateKey}`,
       );
-      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      await deleteAgentRateNode(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
       trace(
         `deleteAgentRate deleteAgentRateTree ok ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey} rate=${agentRateKey}`,
       );
@@ -1061,47 +1061,47 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     };
   };
 
-  const deleteSponsorTree = async (sponsorKey: string, visitedSponsors = new Set<string>()) => {
+  const deleteAccountTree = async (sponsorKey: string, visitedSponsors = new Set<string>()) => {
     const normalizedSponsorKey = normalizeAddress(sponsorKey);
     if (visitedSponsors.has(normalizedSponsorKey)) {
-      trace(`deleteSponsorTree skip already_visited ${sponsorKey}`);
+      trace(`deleteAccountTree skip already_visited ${sponsorKey}`);
       return { sponsorKey, skipped: true, reason: 'already_visited' as const };
     }
     visitedSponsors.add(normalizedSponsorKey);
 
-    trace(`deleteSponsorTree loadSponsorAccounts start ${sponsorKey}`);
+    trace(`deleteAccountTree loadSponsorAccounts start ${sponsorKey}`);
     const currentSponsorAccounts = new Set(await loadSponsorAccounts(access));
-    trace(`deleteSponsorTree loadSponsorAccounts ok ${sponsorKey} -> ${JSON.stringify(Array.from(currentSponsorAccounts))}`);
-    trace(`deleteSponsorTree loadRecipientAccounts start ${sponsorKey}`);
+    trace(`deleteAccountTree loadSponsorAccounts ok ${sponsorKey} -> ${JSON.stringify(Array.from(currentSponsorAccounts))}`);
+    trace(`deleteAccountTree loadRecipientAccounts start ${sponsorKey}`);
     const recipients = await loadRecipientAccounts(access, sponsorKey);
-    trace(`deleteSponsorTree loadRecipientAccounts ok ${sponsorKey} -> ${JSON.stringify(recipients)}`);
+    trace(`deleteAccountTree loadRecipientAccounts ok ${sponsorKey} -> ${JSON.stringify(recipients)}`);
     const deletedRecipients = [];
     for (const recipientKey of recipients) {
       const normalizedRecipientKey = normalizeAddress(recipientKey);
-      trace(`deleteSponsorTree recipient start ${sponsorKey} -> ${recipientKey}`);
+      trace(`deleteAccountTree recipient start ${sponsorKey} -> ${recipientKey}`);
       if (currentSponsorAccounts.has(normalizedRecipientKey)) {
-        trace(`deleteSponsorTree recurse child sponsor ${recipientKey}`);
-        await deleteSponsorTree(recipientKey, visitedSponsors);
+        trace(`deleteAccountTree recurse child account ${recipientKey}`);
+        await deleteAccountTree(recipientKey, visitedSponsors);
       }
-      trace(`deleteSponsorTree deleteSponsorRecipient start ${sponsorKey} -> ${recipientKey}`);
+      trace(`deleteAccountTree deleteRecipient start ${sponsorKey} -> ${recipientKey}`);
       deletedRecipients.push(await deleteSponsorRecipient(sponsorKey, recipientKey, visitedSponsors));
-      trace(`deleteSponsorTree deleteSponsorRecipient ok ${sponsorKey} -> ${recipientKey}`);
+      trace(`deleteAccountTree deleteRecipient ok ${sponsorKey} -> ${recipientKey}`);
     }
 
-    trace(`deleteSponsorTree final remainingRecipients start ${sponsorKey}`);
+    trace(`deleteAccountTree final remainingRecipients start ${sponsorKey}`);
     const remainingRecipients = await loadRecipientAccounts(access, sponsorKey);
-    trace(`deleteSponsorTree final remainingRecipients ok ${sponsorKey} = ${JSON.stringify(remainingRecipients)}`);
+    trace(`deleteAccountTree final remainingRecipients ok ${sponsorKey} = ${JSON.stringify(remainingRecipients)}`);
     if (remainingRecipients.length > 0) {
-      throw new Error(`deleteSponsorTree incomplete: recipients remain for ${sponsorKey}: ${remainingRecipients.join(', ')}`);
+      throw new Error(`deleteAccountTree incomplete: recipients remain for ${sponsorKey}: ${remainingRecipients.join(', ')}`);
     }
 
-    trace(`deleteSponsorTree loadAccountList start ${sponsorKey}`);
+    trace(`deleteAccountTree loadAccountList start ${sponsorKey}`);
     const accountList = await loadAccountList(access);
-    trace(`deleteSponsorTree loadAccountList ok ${sponsorKey} = ${JSON.stringify(accountList)}`);
+    trace(`deleteAccountTree loadAccountList ok ${sponsorKey} = ${JSON.stringify(accountList)}`);
     if (accountList.includes(normalizedSponsorKey)) {
-      trace(`deleteSponsorTree deleteSponsorAccount start ${sponsorKey}`);
+      trace(`deleteAccountTree deleteAccountRecord start ${sponsorKey}`);
       await deleteSponsorAccount(sponsorKey);
-      trace(`deleteSponsorTree deleteSponsorAccount ok ${sponsorKey}`);
+      trace(`deleteAccountTree deleteAccountRecord ok ${sponsorKey}`);
     }
 
     return {
@@ -1141,7 +1141,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   }
 
   if ('utilityMethod' in def && def.utilityMethod === 'deleteAgentRate') {
-    await deleteAgentRateBranch(
+    await deleteAgentRateNode(
       toCanonicalAddress(methodArgs[0], 'Sponsor Key'),
       toCanonicalAddress(methodArgs[1], 'Recipient Key'),
       String(methodArgs[2]),
@@ -1213,17 +1213,17 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     return { sponsorKey, recipientKey, deletedRecipientSponsorships: results };
   }
 
-    if ('utilityMethod' in def && def.utilityMethod === 'deleteSponsor') {
-      const sponsorKey = toCanonicalAddress(methodArgs[0], 'Sponsor Key');
+    if ('utilityMethod' in def && def.utilityMethod === 'deleteAccountTree') {
+      const sponsorKey = toCanonicalAddress(methodArgs[0], 'Account Key');
       const currentSponsorAccounts = await loadSponsorAccounts(access);
       if (!currentSponsorAccounts.includes(normalizeAddress(sponsorKey))) {
         throw new Error(
-          `deleteSponsor requires a sponsor-root account with recipient children. ${sponsorKey} is not a sponsor root in the current tree; use deleteRecipient or deleteAgent for lower branches.`,
+          `deleteAccountTree requires a sponsor-root account with recipient children. ${sponsorKey} is not a sponsor root in the current tree; use deleteRecipient or deleteAgent for lower branches.`,
         );
       }
-      trace(`deleteSponsorTree method start ${sponsorKey}`);
-      const treeSummary = await deleteSponsorTree(sponsorKey);
-      trace(`deleteSponsorTree method ok ${sponsorKey}`);
+      trace(`deleteAccountTree method start ${sponsorKey}`);
+      const treeSummary = await deleteAccountTree(sponsorKey);
+      trace(`deleteAccountTree method ok ${sponsorKey}`);
       appendLog(`${selectedMethod} -> unsponsored sponsor tree ${sponsorKey}.`);
       setStatus(`${def.title} complete.`);
       return treeSummary;
@@ -1245,9 +1245,9 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       }
       while (sponsorAccounts.length > 0) {
         const sponsorKey = sponsorAccounts[0];
-        trace(`deleteSponsorTree start ${sponsorKey}`);
-        const treeSummary = await deleteSponsorTree(sponsorKey);
-        trace(`deleteSponsorTree ok ${sponsorKey}`);
+        trace(`deleteAccountTree start ${sponsorKey}`);
+        const treeSummary = await deleteAccountTree(sponsorKey);
+        trace(`deleteAccountTree ok ${sponsorKey}`);
         deletedSponsorships.push({ sponsorKey, treeSummary });
         try {
           trace(`reload sponsorAccounts start after ${sponsorKey}`);

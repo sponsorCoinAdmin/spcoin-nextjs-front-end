@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { JsonRpcProvider, Wallet, Contract } from 'ethers';
+import { JsonRpcProvider, Wallet, Contract, Interface } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
@@ -89,6 +89,42 @@ const TEST_ACCOUNTS_PATH = path.join(
   '31337',
   'testAccounts.json',
 );
+
+const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
+  0: 'RECIP_RATE_NOT_FOUND',
+  1: 'AGENT_RATE_NOT_FOUND',
+  2: 'RECIP_RATE_HAS_AGENT',
+  3: 'AGENT_NOT_FOUND',
+  4: 'OWNER_OR_ROOT',
+};
+const SP_COIN_ERROR_INTERFACE = new Interface(['error SpCoinError(uint8 code)']);
+
+function decodeSpCoinError(error: unknown): string | null {
+  const revert = (error as any)?.revert;
+  const revertCode = revert?.name === 'SpCoinError' ? Number(revert?.args?.[0]) : NaN;
+  if (Number.isFinite(revertCode)) {
+    return `${SP_COIN_ERROR_MESSAGES[revertCode] || 'UNKNOWN_SP_COIN_ERROR'} (${revertCode})`;
+  }
+
+  const candidates = [
+    (error as any)?.data,
+    (error as any)?.error?.data,
+    (error as any)?.info?.error?.data,
+  ].filter((value): value is string => typeof value === 'string' && value.startsWith('0x'));
+
+  for (const data of candidates) {
+    try {
+      const parsed = SP_COIN_ERROR_INTERFACE.parseError(data);
+      if (parsed?.name === 'SpCoinError') {
+        const code = Number(parsed.args?.[0]);
+        return `${SP_COIN_ERROR_MESSAGES[code] || 'UNKNOWN_SP_COIN_ERROR'} (${code})`;
+      }
+    } catch {
+      // Keep looking through nested provider error payloads.
+    }
+  }
+  return null;
+}
 
 function classifyScriptError(error: unknown, trace: string[]): 'token_state' | 'token_revert' | 'transport' | 'server' {
   const message = String((error as { message?: unknown } | null)?.message || error || '').toLowerCase();
@@ -328,7 +364,6 @@ export async function POST(request: NextRequest) {
             }
             case 'addRecipientTransaction':
             case 'addRecipientRateTransaction':
-            case 'addRecipientRateBranchAmount':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
             case 'addSponsorship': {
@@ -336,7 +371,11 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
+              const addRecipientRateTransaction = access.add.addRecipientRateTransaction ?? access.add.addRecipientTransaction;
+              if (typeof addRecipientRateTransaction !== 'function') {
+                throw new Error('addRecipientRateTransaction is not available on the current SpCoin access path.');
+              }
+              const tx = await addRecipientRateTransaction(
                 sponsorKey,
                 recipientKey,
                 recipientRateKey,
@@ -359,7 +398,6 @@ export async function POST(request: NextRequest) {
             }
             case 'addAgentTransaction':
             case 'addAgentRateTransaction':
-            case 'addAgentRateBranchAmount':
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':
             case 'addAgentSponsorship': {
@@ -369,9 +407,11 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const tx = await (access.add.addAgentTransaction ??
-                access.add.addAgentRateTransaction ??
-                access.add.addAgentRateBranchAmount)(
+              const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentRateTransaction;
+              if (typeof addAgentTransaction !== 'function') {
+                throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
+              }
+              const tx = await addAgentTransaction(
                 sponsorKey,
                 recipientKey,
                 recipientRateKey,
@@ -471,7 +511,6 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('backDateAgentTransactionDate', tx, receipt);
               break;
             }
-            case 'delRecipient':
             case 'deleteRecipient': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
@@ -483,21 +522,6 @@ export async function POST(request: NextRequest) {
               const receipt = await tx.wait();
               result = formatReceiptResult(
                 'deleteRecipient',
-                tx,
-                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
-              );
-              break;
-            }
-            case 'deleteSponsorNode': {
-              const sponsorKey = findParam('Sponsor Key') || findParam('Account Key') || senderAddress;
-              const deleteAccountRecord = (contract as unknown as { deleteAccountRecord?: (sponsorKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteAccountRecord;
-              if (typeof deleteAccountRecord !== 'function') {
-                throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
-              }
-              const tx = await deleteAccountRecord(sponsorKey);
-              const receipt = await tx.wait();
-              result = formatReceiptResult(
-                String(step.method),
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
@@ -532,15 +556,15 @@ export async function POST(request: NextRequest) {
             }
             case 'delAccountAgentSponsorship':
             case 'deleteAgentRateNode':
-            case 'deleteAgentRateBranch': {
+            case 'deleteAgentRate': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
-              const deleteAgentRateBranch = (
+              const deleteAgentRate = (
                 contract as unknown as {
-                  deleteAgentRateBranch?: (
+                  deleteAgentRate?: (
                     sponsorKey: string,
                     recipientKey: string,
                     recipientRateKey: string | number,
@@ -548,11 +572,11 @@ export async function POST(request: NextRequest) {
                     agentRateKey: string | number,
                   ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
                 }
-              ).deleteAgentRateBranch;
-              if (typeof deleteAgentRateBranch !== 'function') {
-                throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
+              ).deleteAgentRate;
+              if (typeof deleteAgentRate !== 'function') {
+                throw new Error('deleteAgentRate is not available on the current SpCoin contract access path.');
               }
-              const tx = await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+              const tx = await deleteAgentRate(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
                 String(step.method),
@@ -590,13 +614,14 @@ export async function POST(request: NextRequest) {
         }
       } catch (error) {
         const classification = classifyScriptError(error, stepTrace);
+        const spCoinError = decodeSpCoinError(error);
         results.push({
           step: step.step,
           success: false,
           payload: {
             call: buildCall(step, explicitSender, paramEntries),
             error: {
-              message: error instanceof Error ? error.message : String(error),
+              message: spCoinError || (error instanceof Error ? error.message : String(error)),
               name: error instanceof Error ? error.name : typeof error,
               classification,
               ...(error instanceof Error && error.stack ? { stack: { message: error.stack } } : {}),

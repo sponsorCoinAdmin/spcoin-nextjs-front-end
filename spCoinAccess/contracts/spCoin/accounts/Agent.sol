@@ -53,7 +53,7 @@ contract Agent is RecipientRates {
     /// @notice retrieves the agent keys for a specific recipient rate.
     /// @param _recipientKey recipient Key to retrieve the agent list
     function getRecipientRateAgentList(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) 
-    public view returns (address[] memory) {
+    external view returns (address[] memory) {
         // console.log("============================================================================");
         // console.log("getRecipientRateAgentList(", _sponsorKey, ", ", _recipientKey);
         // console.log(", ", _recipientRateKey,")");
@@ -72,7 +72,7 @@ contract Agent is RecipientRates {
     /// @param _recipientRateKey recipient rate
     /// @param _agentKey agent record key to be returned
     function getAgentTotalRecipient(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey) 
-    public view returns (uint) {
+    external view returns (uint) {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         return agentRec.stakedSPCoins; 
     }
@@ -81,7 +81,7 @@ contract Agent is RecipientRates {
     /// @param _recipientKey recipient Key to retrieve the agent list
     /// @param _agentKey agent Key to retrieve the agent rate list
     function getAgentRateList(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey) 
-    public view returns (uint[] memory) {
+    external view returns (uint[] memory) {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         uint[] memory agentRateKeys = agentRec.agentRateKeys;
 // console.log("AGENTS.SOL:addAgent:agentRec.agentKey = " , agentRec.agentKey);

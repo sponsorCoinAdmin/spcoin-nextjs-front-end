@@ -34,11 +34,8 @@ type Entry = { id: string; label: string };
 
 function normalizeSerializationTestMethodKey(value: string) {
   const trimmed = String(value || '').trim();
-  if (trimmed === 'deleteSponsorTree') return 'deleteSponsor';
   if (trimmed === 'deleteSponsorRecipient') return 'deleteRecipient';
-  if (trimmed === 'deleteRecipientRateBranch') return 'deleteRecipientRate';
   if (trimmed === 'deleteRecipientAgent') return 'deleteAgent';
-  if (trimmed === 'deleteAgentRateBranch') return 'deleteAgentRate';
   if (trimmed === 'deleteAgentRateNode') return 'deleteAgentRate';
   return trimmed;
 }

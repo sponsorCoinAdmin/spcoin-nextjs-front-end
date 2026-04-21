@@ -7,11 +7,11 @@ import "hardhat/console.sol";
 contract dynamicStringArray {
    string [] private strings;
  
-   function addString (string memory str) public {
+   function addString (string memory str) external {
      strings.push (str);
    }
  
-   function getStrings () public view returns (string [] memory) {
+   function getStrings () external view returns (string [] memory) {
      return strings;
    }
  }

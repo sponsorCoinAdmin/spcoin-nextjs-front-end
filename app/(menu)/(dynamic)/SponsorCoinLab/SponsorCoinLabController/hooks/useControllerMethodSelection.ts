@@ -38,7 +38,7 @@ type Props = {
   setSelectedSpCoinWriteMethod: React.Dispatch<React.SetStateAction<SpCoinWriteMethod>>;
   selectedSerializationTestMethod: SerializationTestMethod;
   setSelectedSerializationTestMethod: React.Dispatch<React.SetStateAction<SerializationTestMethod>>;
-  setSelectedWriteSenderAddress: React.Dispatch<React.SetStateAction<string>>;
+  selectedWriteSenderAddress: string;
   defaultSponsorKey: string;
   defaultRecipientKey: string;
   defaultAgentKey: string;
@@ -49,6 +49,7 @@ type Props = {
   spCoinReadMethodDefs: MethodDefMap & Record<string, { params: ControllerParamDef[] }>;
   spCoinWriteMethodDefs: MethodDefMap & Record<string, { params: ControllerParamDef[] }>;
   serializationTestMethodDefs: MethodDefMap & Record<string, { params: ControllerParamDef[] }>;
+  populateMethodParamsFromActiveAccounts: (params: ControllerParamDef[]) => string[];
   setSpReadParams: React.Dispatch<React.SetStateAction<string[]>>;
   setSpWriteParams: React.Dispatch<React.SetStateAction<string[]>>;
   setSerializationTestParams: React.Dispatch<React.SetStateAction<string[]>>;
@@ -86,7 +87,7 @@ export function useControllerMethodSelection({
   setSelectedSpCoinWriteMethod,
   selectedSerializationTestMethod,
   setSelectedSerializationTestMethod,
-  setSelectedWriteSenderAddress,
+  selectedWriteSenderAddress,
   defaultSponsorKey,
   defaultRecipientKey,
   defaultAgentKey,
@@ -97,6 +98,7 @@ export function useControllerMethodSelection({
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
   serializationTestMethodDefs,
+  populateMethodParamsFromActiveAccounts,
   setSpReadParams,
   setSpWriteParams,
   setSerializationTestParams,
@@ -282,15 +284,7 @@ export function useControllerMethodSelection({
         if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
         const nextDef = spCoinReadMethodDefs[value];
         if (!nextDef) return;
-        setSpReadParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
-            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
-          }),
-        );
+        setSpReadParams(populateMethodParamsFromActiveAccounts(nextDef.params));
       });
     },
     [
@@ -301,14 +295,8 @@ export function useControllerMethodSelection({
       methodSelectionSource,
       editingScriptStepNumber,
       spCoinReadMethodDefs,
+      populateMethodParamsFromActiveAccounts,
       setSpReadParams,
-      defaultSponsorKey,
-      defaultRecipientKey,
-      defaultAgentKey,
-      defaultRecipientRateKey,
-      defaultAgentRateKey,
-      effectiveRecipientRateRange,
-      effectiveAgentRateRange,
     ],
   );
 
@@ -321,18 +309,7 @@ export function useControllerMethodSelection({
         if (methodSelectionSource === 'script' && editingScriptStepNumber !== null) return;
         const nextDef = spCoinWriteMethodDefs[value];
         if (!nextDef) return;
-        if (defaultSponsorKey) {
-          setSelectedWriteSenderAddress(defaultSponsorKey);
-        }
-        setSpWriteParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
-            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
-          }),
-        );
+        setSpWriteParams(populateMethodParamsFromActiveAccounts(nextDef.params));
       });
     },
     [
@@ -343,15 +320,8 @@ export function useControllerMethodSelection({
       methodSelectionSource,
       editingScriptStepNumber,
       spCoinWriteMethodDefs,
-      defaultSponsorKey,
-      setSelectedWriteSenderAddress,
+      populateMethodParamsFromActiveAccounts,
       setSpWriteParams,
-      defaultRecipientKey,
-      defaultAgentKey,
-      defaultRecipientRateKey,
-      defaultAgentRateKey,
-      effectiveRecipientRateRange,
-      effectiveAgentRateRange,
     ],
   );
 
@@ -365,15 +335,24 @@ export function useControllerMethodSelection({
         const nextDef = serializationTestMethodDefs[value];
         if (!nextDef) return;
         setSerializationTestParams(
-          buildDefaultAccountParams(nextDef.params, {
-            sponsor: defaultSponsorKey,
-            recipient: defaultRecipientKey,
-            agent: defaultAgentKey,
-            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
-            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
-            previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
-            latestReleaseDir: 'spCoinAccess/contracts/spCoin',
-          }),
+          nextDef.params.some((param) => {
+            const label = String(param.label || '').trim().toLowerCase();
+            return (
+              label === 'previous release directory' ||
+              label === 'latest release directory'
+            );
+          })
+            ? buildDefaultAccountParams(nextDef.params, {
+                sender: selectedWriteSenderAddress,
+                sponsor: defaultSponsorKey,
+                recipient: defaultRecipientKey,
+                agent: defaultAgentKey,
+                recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+                agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
+                previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
+                latestReleaseDir: 'spCoinAccess/contracts/spCoin',
+              })
+            : populateMethodParamsFromActiveAccounts(nextDef.params),
         );
       });
     },
@@ -385,7 +364,9 @@ export function useControllerMethodSelection({
       methodSelectionSource,
       editingScriptStepNumber,
       serializationTestMethodDefs,
+      populateMethodParamsFromActiveAccounts,
       setSerializationTestParams,
+      selectedWriteSenderAddress,
       defaultSponsorKey,
       defaultRecipientKey,
       defaultAgentKey,
@@ -414,6 +395,7 @@ export function useControllerMethodSelection({
             if (!nextDef) return;
             setSpReadParams(
               buildDefaultAccountParams(nextDef.params, {
+                sender: selectedWriteSenderAddress,
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
@@ -425,19 +407,17 @@ export function useControllerMethodSelection({
           return;
         }
         if (spCoinAdminWriteOptions.includes(value as SpCoinWriteMethod)) {
-          runWithDiscardPrompt(() => {
-            resetToDropdownSelection();
-            setAuxMethodPanelTab('admin_utils');
-            setIsSpCoinTodoMode(false);
-            setMethodPanelMode('spcoin_write');
-            setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
-            if (defaultSponsorKey) {
-              setSelectedWriteSenderAddress(defaultSponsorKey);
-            }
-            const nextDef = spCoinWriteMethodDefs[value as SpCoinWriteMethod];
-            if (!nextDef) return;
-            setSpWriteParams(
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setAuxMethodPanelTab('admin_utils');
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('spcoin_write');
+          setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
+          const nextDef = spCoinWriteMethodDefs[value as SpCoinWriteMethod];
+          if (!nextDef) return;
+          setSpWriteParams(
               buildDefaultAccountParams(nextDef.params, {
+                sender: selectedWriteSenderAddress,
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
@@ -462,6 +442,7 @@ export function useControllerMethodSelection({
             if (!nextDef) return;
             setSerializationTestParams(
               buildDefaultAccountParams(nextDef.params, {
+                sender: selectedWriteSenderAddress,
                 sponsor: defaultSponsorKey,
                 recipient: defaultRecipientKey,
                 agent: defaultAgentKey,
@@ -502,12 +483,7 @@ export function useControllerMethodSelection({
         return;
       }
       if (activeMethodPanelTab === 'spcoin_write') {
-        runWithDiscardPrompt(() => {
-          resetToDropdownSelection();
-          setIsSpCoinTodoMode(false);
-          setMethodPanelMode('spcoin_write');
-          setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
-        });
+        selectDropdownSpCoinWriteMethod(value as SpCoinWriteMethod);
         return;
       }
       runWithDiscardPrompt(() => {
@@ -528,6 +504,7 @@ export function useControllerMethodSelection({
       setSelectedSpCoinReadMethod,
       spCoinReadMethodDefs,
       setSpReadParams,
+      selectedWriteSenderAddress,
       defaultSponsorKey,
       defaultRecipientKey,
       defaultAgentKey,
@@ -537,7 +514,6 @@ export function useControllerMethodSelection({
       effectiveAgentRateRange,
       spCoinAdminWriteOptions,
       setSelectedSpCoinWriteMethod,
-      setSelectedWriteSenderAddress,
       spCoinWriteMethodDefs,
       setSpWriteParams,
       adminUtilityReadOptions,

@@ -28,7 +28,7 @@ export const addBackDatedRecipientTransaction = async (
         _recipientKey,
         _recipientRateKey
     );
-    const addTx = await context.addRecipientRateBranchAmount(_sponsorKey, _recipientKey, _recipientRateKey, _transactionQty);
+    const addTx = await context.addRecipientRateTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _transactionQty);
     if (addTx && typeof addTx.wait === "function") {
         await addTx.wait();
     }

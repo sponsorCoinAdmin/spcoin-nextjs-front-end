@@ -6,10 +6,8 @@ export const addRecipientTransaction = async (context, _sponsorKey, _recipientKe
     const components = String(_transactionQty ?? "").split(".");
     const wholePart = components[0].length > 0 ? components[0] : "0";
     const fractionalPart = components.length > 1 ? components[1] : "0";
-    const contractMethod = context.spCoinContractDeployed.addRecipientRateBranchAmount
-        ?? context.spCoinContractDeployed.addRecipientTransaction
-        ?? context.spCoinContractDeployed.addRecipientRateTransaction
-        ;
+    const contractMethod = context.spCoinContractDeployed.addRecipientRateTransaction
+        ?? context.spCoinContractDeployed.addRecipientTransaction;
     const tx = await contractMethod(
         _sponsorKey,
         _recipientKey,

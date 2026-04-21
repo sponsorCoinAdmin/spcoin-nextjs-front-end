@@ -43,11 +43,8 @@ function normalizeSerializationTestMethodKey(value: string) {
   if (!trimmed) return trimmed;
   if (trimmed.startsWith('compare_')) return `external_${trimmed.slice('compare_'.length)}`;
   if (trimmed.startsWith('legacy_')) return `external_${trimmed.slice('legacy_'.length)}`;
-  if (trimmed === 'deleteSponsorTree') return 'deleteSponsor';
   if (trimmed === 'deleteSponsorRecipient') return 'deleteRecipient';
-  if (trimmed === 'deleteRecipientRateBranch') return 'deleteRecipientRate';
   if (trimmed === 'deleteRecipientAgent') return 'deleteAgent';
-  if (trimmed === 'deleteAgentRateBranch') return 'deleteAgentRate';
   if (trimmed === 'deleteAgentRateNode') return 'deleteAgentRate';
   return trimmed;
 }

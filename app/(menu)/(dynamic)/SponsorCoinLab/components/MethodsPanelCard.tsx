@@ -40,8 +40,7 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   backDateAgentTransactionDate: 'add.ts',
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
-  deleteSponsor: 'delete.ts',
-  deleteSponsorNode: 'delete.ts',
+  deleteAccountTree: 'delete.ts',
   deleteRecipient: 'delete.ts',
   deleteRecipientRate: 'delete.ts',
   deleteAgent: 'delete.ts',
@@ -55,9 +54,6 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   deleteAccountRecord: 'delete.ts',
   deleteAccountRecords: 'delete.ts',
   unSponsorAgent: 'delete.ts',
-  depositSponsorStakingRewards: 'staking.ts',
-  depositRecipientStakingRewards: 'staking.ts',
-  depositAgentStakingRewards: 'staking.ts',
   updateAccountStakingRewards: 'rewards.ts',
   updateMasterStakingRewards: 'rewards.ts',
   setInflationRate: 'add.ts',
@@ -73,14 +69,14 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
-  deleteSponsor: 'delete.ts',
+  deleteAccountTree: 'delete.ts',
 };
 
 const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
   deleteMasterSponsorships: 'delete.ts',
-  deleteSponsor: 'delete.ts',
+  deleteAccountTree: 'delete.ts',
   deleteRecipient: 'delete.ts',
   deleteRecipientRate: 'delete.ts',
   deleteAgent: 'delete.ts',
@@ -251,7 +247,7 @@ export default function MethodsPanelCard({
             ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
             ...(spCoinWriteProps.showOffChainMethods
               ? [
-                  'deleteSponsor',
+                  'deleteAccountTree',
                   'deleteRecipient',
                   'deleteRecipientRate',
                   'deleteAgent',
@@ -312,7 +308,7 @@ export default function MethodsPanelCard({
           [
             'hhFundAccounts',
             'deleteMasterSponsorships',
-            'deleteSponsor',
+            'deleteAccountTree',
             'deleteRecipient',
             'deleteRecipientRate',
             'deleteAgent',

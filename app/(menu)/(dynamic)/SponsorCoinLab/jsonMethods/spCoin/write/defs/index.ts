@@ -5,8 +5,7 @@ import addRecipients from './addRecipients';
 import addAgent from './addAgent';
 import addAgentTransaction from './addAgentTransaction';
 import addAgents from './addAgents';
-import deleteSponsor from './deleteSponsor';
-import deleteSponsorNode from './deleteSponsorNode';
+import deleteAccountTree from './deleteAccountTree';
 import deleteRecipient from './deleteRecipient';
 import deleteRecipientRate from './deleteRecipientRate';
 import deleteAgent from './deleteAgent';
@@ -27,9 +26,6 @@ import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
 import updateMasterStakingRewards from './updateMasterStakingRewards';
-import depositSponsorStakingRewards from './depositSponsorStakingRewards';
-import depositRecipientStakingRewards from './depositRecipientStakingRewards';
-import depositAgentStakingRewards from './depositAgentStakingRewards';
 import setInflationRate from './setInflationRate';
 import setLowerRecipientRate from './setLowerRecipientRate';
 import setUpperRecipientRate from './setUpperRecipientRate';
@@ -46,8 +42,7 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addAgent,
   addAgentTransaction,
   addAgents,
-  deleteSponsor,
-  deleteSponsorNode,
+  deleteAccountTree,
   deleteRecipient,
   deleteRecipientRate,
   deleteAgent,
@@ -68,9 +63,6 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   deleteAccountRecords,
   updateAccountStakingRewards,
   updateMasterStakingRewards,
-  depositSponsorStakingRewards,
-  depositRecipientStakingRewards,
-  depositAgentStakingRewards,
   setInflationRate,
   setLowerRecipientRate,
   setUpperRecipientRate,

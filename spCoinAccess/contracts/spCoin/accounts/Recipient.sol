@@ -86,7 +86,7 @@ contract Recipient is Sponsor {
     /// @notice retrieves the recipient rate keys for a sponsor-recipient pair.
     /// @param _recipientKey recipient Key to retrieve the recipient list
     function getRecipientRateList(address _sponsorKey, address _recipientKey)
-        public view  returns (uint[] memory) {
+        external view  returns (uint[] memory) {
         // console.log("Recipient.sol:getRecipientRateList (", toString(_sponsorKey), ",", toString(_recipientKey));
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
         uint[] memory recipientRateKeys = recipientRecord.recipientRateKeys;

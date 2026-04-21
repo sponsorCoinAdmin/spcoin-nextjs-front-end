@@ -46,7 +46,7 @@ async function getRecipientRateTransactionFieldsCached(runtime, sponsorAccountKe
 async function getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
     return await runtime.spCoinSerialize.getAgentRateTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
 }
-function mergeBranchMaps(existingValue, incomingValue) {
+function mergeRateMaps(existingValue, incomingValue) {
     return {
         ...(existingValue && typeof existingValue === "object" ? existingValue : {}),
         ...(incomingValue && typeof incomingValue === "object" ? incomingValue : {}),
@@ -61,8 +61,8 @@ function mergeAccountNode(existingAccount, incomingAccount) {
         ...existingAccount,
         ...incomingAccount,
         totalSpCoins: incomingAccount.totalSpCoins ?? existingAccount.totalSpCoins,
-        recipientRateKeys: mergeBranchMaps(existingAccount.recipientRateKeys, incomingAccount.recipientRateKeys),
-        agentRateKeys: mergeBranchMaps(existingAccount.agentRateKeys, incomingAccount.agentRateKeys),
+        recipientRateKeys: mergeRateMaps(existingAccount.recipientRateKeys, incomingAccount.recipientRateKeys),
+        agentRateKeys: mergeRateMaps(existingAccount.agentRateKeys, incomingAccount.agentRateKeys),
         recipientAccountList: Array.isArray(incomingAccount.recipientAccountList) && incomingAccount.recipientAccountList.length > 0
             ? incomingAccount.recipientAccountList
             : existingAccount.recipientAccountList,
@@ -115,14 +115,14 @@ function buildAgentRateRelationshipRecord(relationship) {
     };
 }
 function toAgentRateKeysRecord(relationships) {
-    const agentRateBranches = {};
+    const agentRates = {};
     for (const relationship of Array.isArray(relationships) ? relationships : []) {
         const agentRateKey = String(relationship?.agentRateKey ?? "");
         if (!agentRateKey)
             continue;
-        agentRateBranches[agentRateKey] = buildAgentRateRelationshipRecord(relationship);
+        agentRates[agentRateKey] = buildAgentRateRelationshipRecord(relationship);
     }
-    return agentRateBranches;
+    return agentRates;
 }
 async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKey, recipientAccountKey, agentAccountKey, debugState) {
     const relationships = [];

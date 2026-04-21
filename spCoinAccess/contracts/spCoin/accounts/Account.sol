@@ -120,7 +120,7 @@ contract Account is StructSerialization {
     /// @notice retrieves the recipient keys linked to an account.
     /// @param _sponsorKey public account key to set new balance
     function getRecipientKeys(address _sponsorKey) 
-    public view returns (address[] memory) {
+    external view returns (address[] memory) {
         return accountMap[_sponsorKey].recipientKeys;
     }
 
@@ -151,7 +151,7 @@ contract Account is StructSerialization {
     }
 
     modifier accountExists (address _accountKey) {
-        require (isAccountInserted(_accountKey) , "ACCOUNT_NOT_FOUND");
+        require (accountMap[_accountKey].inserted , "ACCOUNT_NOT_FOUND");
         _;
     }
 }

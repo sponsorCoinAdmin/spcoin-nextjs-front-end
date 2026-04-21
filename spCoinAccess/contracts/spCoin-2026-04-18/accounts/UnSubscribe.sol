@@ -35,7 +35,7 @@ contract UnSubscribe is Transactions {
 
         uint256[] memory recipientRateList = getRecipientRateList(_sponsorKey, _recipientKey);
         while (recipientRateList.length > 0) {
-            deleteRecipientRateBranch(_sponsorKey, _recipientKey, recipientRateList[recipientRateList.length - 1]);
+            deleteRecipientRate(_sponsorKey, _recipientKey, recipientRateList[recipientRateList.length - 1]);
             recipientRateList = getRecipientRateList(_sponsorKey, _recipientKey);
         }
 
@@ -44,7 +44,7 @@ contract UnSubscribe is Transactions {
         }
     }
 
-    function deleteRecipientRateBranch(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
+    function deleteRecipientRate(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
         public
         onlyOwnerOrRootAdmin(_sponsorKey)
         accountExists(_sponsorKey)
@@ -54,7 +54,7 @@ contract UnSubscribe is Transactions {
         RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
         require(recipientRecord.inserted, "RECIP_NOT_FOUND");
         RecipientRateStruct storage recipientRateTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
-        require(recipientRateTransaction.inserted, "RECIP_RATE_NOT_FOUND");
+        if (!recipientRateTransaction.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
 
         address[] memory agentList = getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
         while (agentList.length > 0) {
@@ -73,8 +73,8 @@ contract UnSubscribe is Transactions {
         require(recipientRecord.inserted, "RECIP_NOT_FOUND");
 
         RecipientRateStruct storage recipientRateTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
-        require(recipientRateTransaction.inserted, "RECIP_RATE_NOT_FOUND");
-        require(recipientRateTransaction.agentAccountList.length == 0, "RECIP_RATE_HAS_AGENT");
+        if (!recipientRateTransaction.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
+        if (recipientRateTransaction.agentAccountList.length != 0) revert SpCoinError(RECIP_RATE_HAS_AGENT);
 
         uint256 totalSponsored = recipientRateTransaction.stakedSPCoins;
 
@@ -102,7 +102,7 @@ contract UnSubscribe is Transactions {
     {
         RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
         AgentStruct storage agentRecord = recipientRateTransaction.agentMap[_agentKey];
-        require(agentRecord.inserted, "AGENT_NOT_FOUND");
+        if (!agentRecord.inserted) revert SpCoinError(AGENT_NOT_FOUND);
 
         uint256[] memory agentRateList = getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         if (agentRateList.length == 0) {
@@ -116,12 +116,12 @@ contract UnSubscribe is Transactions {
             return;
         }
         while (agentRateList.length > 0) {
-            deleteAgentRateBranch(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, agentRateList[agentRateList.length - 1]);
+            deleteAgentRate(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, agentRateList[agentRateList.length - 1]);
             agentRateList = getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         }
     }
 
-    function deleteAgentRateBranch(
+    function deleteAgentRate(
         address _sponsorKey,
         address _recipientKey,
         uint256 _recipientRateKey,
@@ -139,13 +139,13 @@ contract UnSubscribe is Transactions {
         require(recipientRecord.inserted, "RECIP_NOT_FOUND");
 
         RecipientRateStruct storage recipientRateTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
-        require(recipientRateTransaction.inserted, "RECIP_RATE_NOT_FOUND");
+        if (!recipientRateTransaction.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
 
         AgentStruct storage agentRecord = recipientRateTransaction.agentMap[_agentKey];
-        require(agentRecord.inserted, "AGENT_NOT_FOUND");
+        if (!agentRecord.inserted) revert SpCoinError(AGENT_NOT_FOUND);
 
         AgentRateStruct storage agentRateTransaction = agentRecord.agentRateMap[_agentRateKey];
-        require(agentRateTransaction.inserted, "AGENT_RATE_NOT_FOUND");
+        if (!agentRateTransaction.inserted) revert SpCoinError(AGENT_RATE_NOT_FOUND);
         emit DebugUnSponsorAgent(
             DEBUG_BEFORE_DELETE,
             _sponsorKey,

@@ -44,12 +44,6 @@ export type SpCoinAddAccess = {
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientRateBranchAmount: (
-    _sponsorKey: string,
-    _recipientKey: string,
-    _recipientRateKey: string | number,
-    _transactionQty: string | number,
-  ) => Promise<ContractTransactionResponse>;
   addRecipientAgent: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
   addAgentTransaction?: (
     _sponsorKey: string,
@@ -60,14 +54,6 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
   addAgentRateTransaction?: (
-    _sponsorKey: string,
-    _recipientKey: string,
-    _recipientRateKey: string | number,
-    _accountAgentKey: string,
-    _agentRateKey: string | number,
-    _transactionQty: string | number,
-  ) => Promise<ContractTransactionResponse>;
-  addAgentRateBranchAmount: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
@@ -246,13 +232,6 @@ export type SpCoinContractAccess = Contract & {
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientRateBranchAmount?: (
-    sponsorKey: string,
-    recipientKey: string,
-    recipientRateKey: string | number | bigint,
-    wholeAmount: string,
-    decimalAmount: string,
-  ) => Promise<ContractTransactionResponse>;
   addSponsorRecipient?: (
     sponsorKey: string,
     recipientKey: string,
@@ -267,15 +246,6 @@ export type SpCoinContractAccess = Contract & {
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
   addAgentRateTransaction?: (
-    sponsorKey: string,
-    recipientKey: string,
-    recipientRateKey: string | number | bigint,
-    agentKey: string,
-    agentRateKey: string | number | bigint,
-    wholeAmount: string,
-    decimalAmount: string,
-  ) => Promise<ContractTransactionResponse>;
-  addAgentRateBranchAmount?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -329,10 +299,6 @@ export type SpCoinContractAccess = Contract & {
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   deleteRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
-    recipientKey: string,
-    recipientRateKey: string | number | bigint,
-  ) => Promise<ContractTransactionResponse>;
-  deleteRecipientRateBranch?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
@@ -353,6 +319,7 @@ export type SpCoinContractAccess = Contract & {
     agentKey: string,
   ) => Promise<ContractTransactionResponse>;
   deleteAgentRate?: (
+    sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
     agentKey: string,
@@ -370,41 +337,13 @@ export type SpCoinContractAccess = Contract & {
     agentKey: string,
     agentRateKey: string | number | bigint,
   ) => Promise<ContractTransactionResponse>;
-  deleteAgentRateBranch?: (
-    sponsorKey: string,
-    recipientKey: string,
-    recipientRateKey: string | number | bigint,
-    agentKey: string,
-    agentRateKey: string | number | bigint,
-  ) => Promise<ContractTransactionResponse>;
 };
 
 export type SpCoinRewardsAccess = {
   updateAccountStakingRewards: (accountKey: string) => Promise<ContractTransactionResponse>;
 };
 
-export type SpCoinStakingAccess = {
-  depositSponsorStakingRewards: (
-    _sponsorAccount: string,
-    _recipientAccount: string,
-    _recipientRate: string | number,
-    _amount: string | number | bigint,
-  ) => Promise<ContractTransactionResponse>;
-  depositRecipientStakingRewards: (
-    _sponsorAccount: string,
-    _recipientAccount: string,
-    _recipientRate: string | number,
-    _amount: string | number | bigint,
-  ) => Promise<ContractTransactionResponse>;
-  depositAgentStakingRewards: (
-    _sponsorAccount: string,
-    _recipientAccount: string,
-    _recipientRate: string | number,
-    _agentAccount: string,
-    _agentRate: string | number,
-    _amount: string | number | bigint,
-  ) => Promise<ContractTransactionResponse>;
-};
+export type SpCoinStakingAccess = Record<string, never>;
 
 export type SpCoinAccessIncludes = {
   SpCoinAddModule: ModuleCtor;

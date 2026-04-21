@@ -24,7 +24,7 @@ export const addBackDatedAgentTransaction = async (context, _adminSigner, _spons
         _accountAgentKey,
         _agentRateKey
     );
-    const addTx = await context.addAgentRateBranchAmount(
+    const addTx = await context.addAgentTransaction(
         _sponsorKey,
         _recipientKey,
         _recipientRateKey,

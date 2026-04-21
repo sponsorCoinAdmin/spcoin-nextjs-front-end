@@ -1,5 +1,5 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/index.ts
-import type { Contract } from 'ethers';
+import { Interface, type Contract } from 'ethers';
 import { SPCOIN_WRITE_METHOD_DEFS } from './defs';
 export { SPCOIN_WRITE_METHOD_DEFS };
 import type { ParamDef } from '../../shared/types';
@@ -15,6 +15,42 @@ import {
   type SpCoinContractAccess,
 } from '../../shared';
 
+const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
+  0: 'RECIP_RATE_NOT_FOUND',
+  1: 'AGENT_RATE_NOT_FOUND',
+  2: 'RECIP_RATE_HAS_AGENT',
+  3: 'AGENT_NOT_FOUND',
+  4: 'OWNER_OR_ROOT',
+};
+const SP_COIN_ERROR_INTERFACE = new Interface(['error SpCoinError(uint8 code)']);
+
+function decodeSpCoinError(error: unknown): string | null {
+  const revert = (error as any)?.revert;
+  const revertCode = revert?.name === 'SpCoinError' ? Number(revert?.args?.[0]) : NaN;
+  if (Number.isFinite(revertCode)) {
+    return `${SP_COIN_ERROR_MESSAGES[revertCode] || 'UNKNOWN_SP_COIN_ERROR'} (${revertCode})`;
+  }
+
+  const candidates = [
+    (error as any)?.data,
+    (error as any)?.error?.data,
+    (error as any)?.info?.error?.data,
+  ].filter((value): value is string => typeof value === 'string' && value.startsWith('0x'));
+
+  for (const data of candidates) {
+    try {
+      const parsed = SP_COIN_ERROR_INTERFACE.parseError(data);
+      if (parsed?.name === 'SpCoinError') {
+        const code = Number(parsed.args?.[0]);
+        return `${SP_COIN_ERROR_MESSAGES[code] || 'UNKNOWN_SP_COIN_ERROR'} (${code})`;
+      }
+    } catch {
+      // Try the next nested error payload.
+    }
+  }
+  return null;
+}
+
 export type SpCoinWriteMethod =
   | 'addRecipient'
   | 'addRecipientTransaction'
@@ -22,8 +58,7 @@ export type SpCoinWriteMethod =
   | 'addAgent'
   | 'addAgentTransaction'
   | 'addAgents'
-  | 'deleteSponsor'
-  | 'deleteSponsorNode'
+  | 'deleteAccountTree'
   | 'deleteRecipient'
   | 'deleteRecipientRate'
   | 'deleteAgent'
@@ -44,9 +79,6 @@ export type SpCoinWriteMethod =
   | 'deleteAccountRecords'
   | 'updateAccountStakingRewards'
   | 'updateMasterStakingRewards'
-  | 'depositSponsorStakingRewards'
-  | 'depositRecipientStakingRewards'
-  | 'depositAgentStakingRewards'
   | 'setInflationRate'
   | 'setLowerRecipientRate'
   | 'setUpperRecipientRate'
@@ -78,7 +110,7 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgent',
   'addAgentTransaction',
   'updateAccountStakingRewards',
-  'deleteSponsor',
+  'deleteAccountTree',
   'deleteRecipient',
   'deleteRecipientRate',
   'deleteAgent',
@@ -86,7 +118,6 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
-  'deleteSponsorNode',
   'deleteRecipientSponsorRate',
   'deleteRecipientTransaction',
   'deleteAgentNode',
@@ -104,7 +135,7 @@ export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipients',
   'addAgents',
-  'deleteSponsor',
+  'deleteAccountTree',
   'deleteRecipient',
   'deleteRecipientRate',
   'deleteAgent',
@@ -112,7 +143,6 @@ export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
-  'deleteSponsorNode',
   'deleteRecipientSponsorships',
   'deleteRecipientSponsorshipTree',
   'deleteAgentSponsorships',
@@ -160,12 +190,10 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   addSponsorRecipient: 'addRecipient',
   addAccountRecipient: 'addRecipient',
   addRecipientRateTransaction: 'addRecipientTransaction',
-  addRecipientRateBranchAmount: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
   addAccountRecipientRate: 'addRecipientTransaction',
   addRecipientAgent: 'addAgent',
-  addAgentRateBranchAmount: 'addAgentTransaction',
   addAgentRateTransaction: 'addAgentTransaction',
   addAgentRateAmount: 'addAgentTransaction',
   addAgentSponsorship: 'addAgentTransaction',
@@ -177,12 +205,9 @@ const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = 
   addBackDatedAgentSponsorship: 'addBackDatedAgentTransaction',
   addBackDatedAgentTransaction: 'addBackDatedAgentTransaction',
   addAccountAgentRateBackdated: 'addBackDatedAgentTransaction',
-  deleteAccountTree: 'deleteSponsor',
-  delAccountTree: 'deleteSponsor',
-  deleteSponsorTree: 'deleteSponsor',
+  deleteAccountTree: 'deleteAccountTree',
+  delAccountTree: 'deleteAccountTree',
   deleteSponsorRecipient: 'deleteRecipient',
-  deleteRecipientRateBranch: 'deleteRecipientRate',
-  deleteAgentRateBranch: 'deleteAgentRate',
   deleteAgentRateNode: 'deleteAgentRate',
   deleteRecipientAgent: 'deleteAgentSponsorships',
   deleteRecipientSponsorship: 'deleteRecipientSponsorship',
@@ -302,6 +327,12 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     throw new Error(`Unsupported SpCoin write method: ${String(selectedMethod)}`);
   }
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spWriteParams[idx], def));
+  const findParamValue = (label: string) => {
+    const index = activeDef.params.findIndex(
+      (def) => String(def.label || '').trim().toLowerCase() === String(label || '').trim().toLowerCase(),
+    );
+    return index >= 0 ? String(spWriteParams[index] || '').trim() : '';
+  };
   const receipts: Array<{
     label: string;
     txHash: string;
@@ -363,6 +394,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       const errorCode = String((error as any)?.code || '');
       const errorReason = String((error as any)?.reason || '');
       const errorMessage = String((error as any)?.message || '');
+      const spCoinError = decodeSpCoinError(error);
       if (
         errorCode === 'CALL_EXCEPTION' &&
         /INSUFFICIENT_BAL/i.test(`${errorReason} ${errorMessage}`) &&
@@ -371,7 +403,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         typeof (activeContract as any).balanceOf === 'function'
       ) {
         try {
-          const sponsorKey = String(activeSigner?.address || selectedHardhatAddress || '').trim();
+          const sponsorKey =
+            findParamValue('Sponsor Key') ||
+            findParamValue('Sponsor Account') ||
+            String(activeSigner?.address || selectedHardhatAddress || '').trim();
           const balanceRaw = await (activeContract as any).balanceOf(sponsorKey);
           const enrichedMessage = `INSUFFICIENT_BAL: sponsor ${sponsorKey} balanceOf=${String(balanceRaw)}`;
           appendWriteTrace?.(`submitWrite(${label}) insufficient balance detail=${enrichedMessage}`);
@@ -390,6 +425,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       const detail = error && typeof error === 'object'
         ? JSON.stringify(
             {
+              spCoinError,
               message: (error as any)?.message,
               reason: (error as any)?.reason,
               code: (error as any)?.code,
@@ -402,7 +438,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
             null,
             2,
           )
-        : String(error);
+        : spCoinError || String(error);
       appendWriteTrace?.(`submitWrite(${label}) failed detail=${detail}`);
       appendLog(`${label} failed: ${detail}`);
       throw error;
@@ -498,7 +534,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       ),
     );
 
-  const deleteAgentRateBranch = async (
+  const deleteAgentRate = async (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number,
@@ -506,11 +542,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     agentRateKey: string | number,
   ) =>
     submitWrite(
-      `deleteAgentRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
+      `deleteAgentRate(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey}, ${agentRateKey})`,
       (access) => {
-        const method = access.contract.deleteAgentRateBranch;
+        const method = access.contract.deleteAgentRate;
         if (typeof method !== 'function') {
-          throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
+          throw new Error('deleteAgentRate is not available on the current SpCoin contract access path.');
         }
         return method(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
       },
@@ -530,11 +566,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       return method(sponsorKey, recipientKey, recipientRateKey, agentKey);
     });
 
-  const deleteRecipientRateBranch = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) =>
-    submitWrite(`deleteRecipientRateBranch(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, (access) => {
-      const method = access.contract.deleteRecipientRateBranch;
+  const deleteRecipientRate = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) =>
+    submitWrite(`deleteRecipientRate(${sponsorKey}, ${recipientKey}, ${recipientRateKey})`, (access) => {
+      const method = access.contract.deleteRecipientRate;
       if (typeof method !== 'function') {
-        throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
+        throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
       }
       return method(sponsorKey, recipientKey, recipientRateKey);
     });
@@ -556,7 +592,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   ) => {
     let agentRateKeys = await loadAgentRateKeys(sponsorKey, recipientKey, recipientRateKey, agentKey);
     while (agentRateKeys.length > 0) {
-      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKeys[0]);
+      await deleteAgentRate(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKeys[0]);
       agentRateKeys = await loadAgentRateKeys(sponsorKey, recipientKey, recipientRateKey, agentKey);
     }
     const remainingAgents = await loadRecipientRateAgentKeys(sponsorKey, recipientKey, recipientRateKey);
@@ -572,7 +608,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     const remainingRateKeys = await loadRecipientRateKeys(sponsorKey, recipientKey);
     if (remainingRateKeys.includes(normalizeAddress(recipientRateKey))) {
-      await deleteRecipientRateBranch(sponsorKey, recipientKey, recipientRateKey);
+      await deleteRecipientRate(sponsorKey, recipientKey, recipientRateKey);
     }
   };
 
@@ -601,21 +637,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'deleteSponsorNode': {
-      await submitWrite(activeDef.title, (access) => {
-        const method = access.contract.deleteSponsor;
-        if (typeof method !== 'function') {
-          throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
-        }
-        return method(asString(methodArgs[0]));
-      });
-      break;
-    }
     case 'deleteRecipientSponsorRate': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const method = access.contract.deleteRecipientRateBranch;
+        const method = access.contract.deleteRecipientRate;
         if (typeof method !== 'function') {
-          throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
+          throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
         }
         return method(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]), asStringOrNumber(methodArgs[1]));
       });
@@ -623,9 +649,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteRecipientTransaction': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const method = access.contract.deleteRecipientRateBranch;
+        const method = access.contract.deleteRecipientRate;
         if (typeof method !== 'function') {
-          throw new Error('deleteRecipientRateBranch is not available on the current SpCoin contract access path.');
+          throw new Error('deleteRecipientRate is not available on the current SpCoin contract access path.');
         }
         return method(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]), asStringOrNumber(methodArgs[1]));
       });
@@ -728,7 +754,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
             qty,
           );
         }
-        return (access.add.addRecipientRateTransaction ?? access.add.addRecipientRateBranchAmount)(
+        const addRecipientRateTransaction = access.add.addRecipientRateTransaction ?? access.add.addRecipientTransaction;
+        if (typeof addRecipientRateTransaction !== 'function') {
+          throw new Error('addRecipientRateTransaction is not available on the current SpCoin access path.');
+        }
+        return addRecipientRateTransaction(
           sponsorKey,
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -765,7 +795,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
             qty,
           );
         }
-        return (access.add.addAgentTransaction ?? access.add.addAgentRateTransaction ?? access.add.addAgentRateBranchAmount)(
+        const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentRateTransaction;
+        if (typeof addAgentTransaction !== 'function') {
+          throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
+        }
+        return addAgentTransaction(
           sponsorKey,
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -821,7 +855,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       const recipientRateKey = asStringOrNumber(methodArgs[2]);
       const agentKey = normalizeAddress(methodArgs[3]);
       const agentRateKey = asStringOrNumber(methodArgs[4]);
-      await deleteAgentRateBranch(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
+      await deleteAgentRate(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
       break;
     }
     case 'deleteAccountRecords': {
@@ -850,11 +884,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'unSponsorAgent': {
       await submitWrite(`${activeDef.title}(${methodArgs.join(', ')})`, (access, signer) => {
-        const deleteAgentRateBranch = access.contract.deleteAgentRateBranch;
-        if (typeof deleteAgentRateBranch !== 'function') {
-          throw new Error('deleteAgentRateBranch is not available on the current SpCoin contract access path.');
+        const deleteAgentRate = access.contract.deleteAgentRate;
+        if (typeof deleteAgentRate !== 'function') {
+          throw new Error('deleteAgentRate is not available on the current SpCoin contract access path.');
         }
-        return deleteAgentRateBranch(
+        return deleteAgentRate(
           asString(signer?.address || selectedHardhatAddress || ''),
           asString(methodArgs[0]),
           asStringOrNumber(methodArgs[1]),
@@ -892,41 +926,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         );
       }
       appendLog(`${activeDef.title} -> updated ${normalizedSponsorAccounts.length} sponsor account(s).`);
-      break;
-    }
-    case 'depositSponsorStakingRewards': {
-      await submitWrite(activeDef.title, (access) =>
-        access.staking.depositSponsorStakingRewards(
-          asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          methodArgs[3] as string | number | bigint,
-        ),
-      );
-      break;
-    }
-    case 'depositRecipientStakingRewards': {
-      await submitWrite(activeDef.title, (access) =>
-        access.staking.depositRecipientStakingRewards(
-          asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          methodArgs[3] as string | number | bigint,
-        ),
-      );
-      break;
-    }
-    case 'depositAgentStakingRewards': {
-      await submitWrite(activeDef.title, (access) =>
-        access.staking.depositAgentStakingRewards(
-          asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          asString(methodArgs[3]),
-          asStringOrNumber(methodArgs[4]),
-          methodArgs[5] as string | number | bigint,
-        ),
-      );
       break;
     }
     case 'setLowerRecipientRate': {

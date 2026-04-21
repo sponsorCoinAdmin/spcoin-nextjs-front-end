@@ -94,6 +94,7 @@ import { useControllerLayout } from './hooks/useControllerLayout';
 import { useControllerContractMetadata } from './hooks/useControllerContractMetadata';
 import { useControllerAccounts } from './hooks/useControllerAccounts';
 import { useControllerEditorSync } from './hooks/useControllerEditorSync';
+import { useControllerMethodAccountSync } from './hooks/useControllerMethodAccountSync';
 import { useControllerScriptExecution } from './hooks/useControllerScriptExecution';
 import SponsorCoinLabView from './SponsorCoinLabView';
 import { useControllerTypeScriptEditor } from './hooks/useControllerTypeScriptEditor';
@@ -422,6 +423,25 @@ const defaultHardhatRpcUrl =
     removedContractAddresses,
     setRemovedContractAddresses,
   });
+  const {
+    populateMethodParamsFromActiveAccounts,
+    populateActiveAccountsFromMethodParams,
+  } = useControllerMethodAccountSync({
+    selectedWriteSenderAddress,
+    sponsorAccountAddress,
+    recipientAccountAddress,
+    agentAccountAddress,
+    defaultRecipientRateKey,
+    defaultAgentRateKey,
+    effectiveRecipientRateRange,
+    effectiveAgentRateRange,
+    setSelectedWriteSenderAddress,
+    setDefaultSponsorKey,
+    setDefaultRecipientKey,
+    setDefaultAgentKey,
+    setDefaultRecipientRateKey,
+    setDefaultAgentRateKey,
+  });
   useEffect(() => {
     setDefaultRecipientRateKey((prev) => {
       const next = String(effectiveRecipientRateRange[0] ?? '');
@@ -436,6 +456,35 @@ const defaultHardhatRpcUrl =
   }, [effectiveAgentRateRange]);
   const activeWriteLabels = useMemo(() => getErc20WriteLabels(selectedWriteMethod), [selectedWriteMethod]);
   const activeReadLabels = useMemo(() => getErc20ReadLabels(selectedReadMethod), [selectedReadMethod]);
+  const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
+  const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
+  const serializationTestMethodDefs = SERIALIZATION_TEST_METHOD_DEFS;
+  const normalizedSelectedSpCoinReadMethod = normalizeSpCoinReadMethod(selectedSpCoinReadMethod);
+  const fallbackSpCoinReadMethod = Object.keys(spCoinReadMethodDefs)[0] as SpCoinReadMethod;
+  const activeSpCoinReadDef =
+    spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod] ?? spCoinReadMethodDefs[fallbackSpCoinReadMethod];
+  const normalizedSelectedSpCoinWriteMethod = normalizeSpCoinWriteMethod(selectedSpCoinWriteMethod);
+  const activeSpCoinWriteDef =
+    spCoinWriteMethodDefs[normalizedSelectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
+  const serializationTestOptions = getSerializationTestOptions();
+  const utilityMethodOptions = getUtilityMethodOptions();
+  const adminUtilityReadOptions = utilityMethodOptions.filter((name) =>
+    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
+  );
+  const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
+    [
+      'hhFundAccounts',
+      'deleteMasterSponsorships',
+      'deleteAccountTree',
+      'deleteRecipient',
+      'deleteRecipientRate',
+      'deleteAgent',
+      'deleteAgentRate',
+    ].includes(name),
+  );
+  const activeSerializationTestDef =
+    serializationTestMethodDefs[selectedSerializationTestMethod] ??
+    serializationTestMethodDefs[serializationTestOptions[0]];
   const {
     buildScriptEditorParamValues,
     buildErc20ReadEditorDefaults,
@@ -443,7 +492,6 @@ const defaultHardhatRpcUrl =
   } = useControllerEditorSync({
     exchangeContext,
     contractAddress,
-    defaultSponsorKey,
     sponsorAccountAddress,
     recipientAccountAddress,
     agentAccountAddress,
@@ -464,35 +512,6 @@ const defaultHardhatRpcUrl =
     syncRoleAccountToExchangeContext,
     syncEditorAddressFieldToExchangeContext,
   });
-  const spCoinReadMethodDefs = SPCOIN_READ_METHOD_DEFS;
-  const spCoinWriteMethodDefs = SPCOIN_WRITE_METHOD_DEFS;
-  const serializationTestMethodDefs = SERIALIZATION_TEST_METHOD_DEFS;
-  const normalizedSelectedSpCoinReadMethod = normalizeSpCoinReadMethod(selectedSpCoinReadMethod);
-  const fallbackSpCoinReadMethod = Object.keys(spCoinReadMethodDefs)[0] as SpCoinReadMethod;
-  const activeSpCoinReadDef =
-    spCoinReadMethodDefs[normalizedSelectedSpCoinReadMethod] ?? spCoinReadMethodDefs[fallbackSpCoinReadMethod];
-  const normalizedSelectedSpCoinWriteMethod = normalizeSpCoinWriteMethod(selectedSpCoinWriteMethod);
-  const activeSpCoinWriteDef =
-    spCoinWriteMethodDefs[normalizedSelectedSpCoinWriteMethod] ?? spCoinWriteMethodDefs[getSpCoinWriteOptions(false)[0]];
-  const serializationTestOptions = getSerializationTestOptions();
-  const utilityMethodOptions = getUtilityMethodOptions();
-  const adminUtilityReadOptions = utilityMethodOptions.filter((name) =>
-    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
-  );
-  const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
-    [
-      'hhFundAccounts',
-      'deleteMasterSponsorships',
-      'deleteSponsor',
-      'deleteRecipient',
-      'deleteRecipientRate',
-      'deleteAgent',
-      'deleteAgentRate',
-    ].includes(name),
-  );
-  const activeSerializationTestDef =
-    serializationTestMethodDefs[selectedSerializationTestMethod] ??
-    serializationTestMethodDefs[serializationTestOptions[0]];
   const activeMethodPanelTab =
     auxMethodPanelTab === 'admin_utils'
       ? 'admin_utils'
@@ -541,7 +560,7 @@ const defaultHardhatRpcUrl =
     runSelectedWriteMethod,
     runSelectedReadMethod,
     runSelectedSpCoinReadMethod,
-    runSelectedSpCoinWriteMethod,
+    runSelectedSpCoinWriteMethod: runSelectedSpCoinWriteMethodBase,
     runSelectedSerializationTestMethod,
     runScriptStep,
   } = useSponsorCoinLabMethods({
@@ -920,6 +939,7 @@ const defaultHardhatRpcUrl =
     if (!nextDef) return;
     setSerializationTestParams(
       buildDefaultAccountParams(nextDef.params, {
+        sender: selectedWriteSenderAddress,
         sponsor: defaultSponsorKey,
         recipient: defaultRecipientKey,
         agent: defaultAgentKey,
@@ -1142,7 +1162,7 @@ const defaultHardhatRpcUrl =
     setSelectedSpCoinWriteMethod,
     selectedSerializationTestMethod,
     setSelectedSerializationTestMethod,
-    setSelectedWriteSenderAddress,
+    selectedWriteSenderAddress,
     defaultSponsorKey,
     defaultRecipientKey,
     defaultAgentKey,
@@ -1153,6 +1173,7 @@ const defaultHardhatRpcUrl =
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
     serializationTestMethodDefs,
+    populateMethodParamsFromActiveAccounts,
     setSpReadParams,
     setSpWriteParams,
     setSerializationTestParams,
@@ -1168,13 +1189,50 @@ const defaultHardhatRpcUrl =
     setScriptEditorKind,
   });
   const handleAddCurrentMethodToScript = useCallback(() => {
+    if (
+      methodPanelMode === 'spcoin_write' &&
+      ['addRecipient', 'addRecipientTransaction', 'addAgent', 'addAgentTransaction'].includes(
+        String(selectedSpCoinWriteMethod || '').trim(),
+      )
+    ) {
+      populateActiveAccountsFromMethodParams(activeSpCoinWriteDef.params, spWriteParams);
+    }
+
     const savedStepNumber = addCurrentMethodToScript();
     if (!savedStepNumber) return;
     setMethodSelectionSource('script');
     setEditingScriptStepNumber(savedStepNumber);
     setSelectedScriptStepNumber(savedStepNumber);
     queueEditorBaselineReset();
-  }, [addCurrentMethodToScript, queueEditorBaselineReset, setSelectedScriptStepNumber]);
+  }, [
+    activeSpCoinWriteDef.params,
+    addCurrentMethodToScript,
+    methodPanelMode,
+    populateActiveAccountsFromMethodParams,
+    queueEditorBaselineReset,
+    selectedSpCoinWriteMethod,
+    setSelectedScriptStepNumber,
+    spWriteParams,
+  ]);
+  const runSelectedSpCoinWriteMethod = useCallback(async () => {
+    if (
+      methodPanelMode === 'spcoin_write' &&
+      ['addRecipient', 'addRecipientTransaction', 'addAgent', 'addAgentTransaction'].includes(
+        String(selectedSpCoinWriteMethod || '').trim(),
+      )
+    ) {
+      populateActiveAccountsFromMethodParams(activeSpCoinWriteDef.params, spWriteParams);
+    }
+
+    await runSelectedSpCoinWriteMethodBase();
+  }, [
+    activeSpCoinWriteDef.params,
+    methodPanelMode,
+    populateActiveAccountsFromMethodParams,
+    runSelectedSpCoinWriteMethodBase,
+    selectedSpCoinWriteMethod,
+    spWriteParams,
+  ]);
   useControllerEditorHydration({
     methodSelectionSource,
     editingScriptStepNumber,

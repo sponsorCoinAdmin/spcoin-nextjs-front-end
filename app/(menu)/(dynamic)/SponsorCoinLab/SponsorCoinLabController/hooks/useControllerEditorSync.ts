@@ -11,7 +11,6 @@ import { hasNonZeroRateRangeTuple, isDefinedNumber, isIntegerString, normalizePa
 type Params = {
   exchangeContext: ControllerExchangeContext;
   contractAddress: string;
-  defaultSponsorKey: string;
   sponsorAccountAddress: string;
   recipientAccountAddress: string;
   agentAccountAddress: string;
@@ -36,7 +35,6 @@ type Params = {
 export function useControllerEditorSync({
   exchangeContext,
   contractAddress,
-  defaultSponsorKey,
   sponsorAccountAddress,
   recipientAccountAddress,
   agentAccountAddress,
@@ -77,7 +75,7 @@ export function useControllerEditorSync({
             ? currentMeta.agentRateRange
             : undefined),
       };
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      const senderAddress = String(selectedWriteSenderAddress || activeAccountAddress || '').trim();
 
       return params.map((param) => {
         const label = normalizeParamLabel(param.label);
@@ -116,16 +114,16 @@ export function useControllerEditorSync({
       activeAccountAddress,
       agentAccountAddress,
       contractAddress,
-      defaultSponsorKey,
       exchangeContext?.settings?.spCoinContract,
       recipientAccountAddress,
+      selectedWriteSenderAddress,
       sponsorAccountAddress,
     ],
   );
 
   const buildErc20ReadEditorDefaults = useCallback(
     (labels: AddressFieldLabels) => {
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      const senderAddress = String(selectedWriteSenderAddress || activeAccountAddress || '').trim();
       const resolveByLabel = (label: string) => {
         const normalized = normalizeParamLabel(label);
         if (normalized === 'owner address' || normalized === 'from address') return senderAddress;
@@ -143,15 +141,15 @@ export function useControllerEditorSync({
     [
       activeAccountAddress,
       agentAccountAddress,
-      defaultSponsorKey,
       recipientAccountAddress,
+      selectedWriteSenderAddress,
       sponsorAccountAddress,
     ],
   );
 
   const buildErc20WriteEditorDefaults = useCallback(
     (labels: AddressFieldLabels) => {
-      const senderAddress = defaultSponsorKey || sponsorAccountAddress || activeAccountAddress;
+      const senderAddress = String(selectedWriteSenderAddress || activeAccountAddress || '').trim();
       const resolveByLabel = (label: string) => {
         const normalized = normalizeParamLabel(label);
         if (normalized === 'from address' || normalized === 'owner address') return senderAddress;
@@ -173,9 +171,9 @@ export function useControllerEditorSync({
       activeAccountAddress,
       agentAccountAddress,
       buyTokenAmountRaw,
-      defaultSponsorKey,
       previewTokenAmountRaw,
       recipientAccountAddress,
+      selectedWriteSenderAddress,
       sellTokenAmountRaw,
       sponsorAccountAddress,
     ],

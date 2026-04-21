@@ -60,6 +60,7 @@ function formatDecimalString(value: string) {
 export function buildDefaultAccountParams(
   params: Array<{ label: string }>,
   defaults: {
+    sender?: string;
     sponsor: string;
     recipient: string;
     agent: string;
@@ -71,10 +72,11 @@ export function buildDefaultAccountParams(
 ) {
   return params.map((param) => {
     const label = String(param.label || '').toLowerCase();
+    const sender = String(defaults.sender || defaults.sponsor || '').trim();
     if (label === 'hhfunding account') return defaults.sponsor;
     if (label === 'fund all hardhat accounts') return 'true';
     if (label === 'fund hh account') return defaults.recipient;
-    if (label === 'msg.sender') return defaults.sponsor;
+    if (label === 'msg.sender') return sender;
     if (label.includes('sponsor')) return defaults.sponsor;
     if (label.includes('recipient rate')) return String(defaults.recipientRate || '');
     if (label.includes('recipient') && !label.includes('rate')) return defaults.recipient;
@@ -294,7 +296,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
-    if (keyPath[keyPath.length - 1] === 'formatted') return value;
+    if (keyPath.includes('formatted')) return value;
     if (DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
       return normalizeDisplayDateString(trimmed) ?? value;
     }

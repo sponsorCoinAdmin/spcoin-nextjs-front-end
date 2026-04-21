@@ -25,9 +25,9 @@ export class AccountStruct {
         this.creationTime = 0;
         this.totalSpCoins = new TotalSpCoinsStruct();
         this.recipientAccountList = [];
-        this.recipientRateBranches = {};
+        this.recipientRates = {};
         this.agentAccountList = [];
-        this.agentRateBranches = {};
+        this.agentRates = {};
         this.recipientRecordList = [];
         this.stakingRewards = [];
         this.stakingRewardList = [];

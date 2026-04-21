@@ -1,4 +1,4 @@
 // @ts-nocheck
-import { addAgentRateBranchAmount } from "./addAgentRateBranchAmount";
+import { addAgentTransaction } from "./addAgentTransaction";
 
-export const addAgentRateTransaction = addAgentRateBranchAmount;
+export const addAgentRateTransaction = addAgentTransaction;

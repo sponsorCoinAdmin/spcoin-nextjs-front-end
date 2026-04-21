@@ -1197,7 +1197,7 @@ export function useSponsorCoinLabMethods({
         `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
       );
       const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
-        deleteSponsor: 'deleteSponsor',
+        deleteAccountTree: 'deleteAccountTree',
         deleteRecipient: 'deleteRecipient',
         deleteRecipientRate: 'deleteRecipientRate',
         deleteAgent: 'deleteAgent',

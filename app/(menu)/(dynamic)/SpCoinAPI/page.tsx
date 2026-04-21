@@ -426,10 +426,10 @@ export default function WhitePaper() {
                       <li>
                         <details className="my-0">
                           <summary className="cursor-pointer leading-[1.05] font-bold">
-                            unSponsorRecipient(_sponsorKey, _recipientKey)
+                            deleteRecipient(_sponsorKey, _recipientKey)
                           </summary>
                           <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                            <li className="leading-[1.05]"><b>Description:</b> Un-sponsors a recipient from the SpCoin contract.</li>
+                            <li className="leading-[1.05]"><b>Description:</b> Deletes a recipient sponsorship from the SpCoin contract.</li>
                             <li className="leading-[1.05]">
                               <b>Parameters:</b>
                               <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
@@ -587,41 +587,6 @@ export default function WhitePaper() {
                           </details>
                         </li>
 
-                        <li>
-                          <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">6. depositSponsorStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</summary>
-                            <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                              <li className="leading-[1.05]"><b>Description:</b> Deposits staking rewards for the sponsor account.</li>
-                              <li className="leading-[1.05]">
-                                <b>Parameters:</b>
-                                <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                                  <li className="leading-[1.05]">_sponsorAccount: The sponsor account.</li>
-                                  <li className="leading-[1.05]">_recipientAccount: The recipient account.</li>
-                                  <li className="leading-[1.05]">_recipientRate: The recipient rate.</li>
-                                  <li className="leading-[1.05]">_amount: The amount to be staked.</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </details>
-                        </li>
-
-                        <li>
-                          <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">7. depositRecipientStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</summary>
-                            <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                              <li className="leading-[1.05]"><b>Description:</b> Deposits staking rewards for the recipient account.</li>
-                              <li className="leading-[1.05]">
-                                <b>Parameters:</b>
-                                <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
-                                  <li className="leading-[1.05]">_sponsorAccount: The sponsor account.</li>
-                                  <li className="leading-[1.05]">_recipientAccount: The recipient account.</li>
-                                  <li className="leading-[1.05]">_recipientRate: The recipient rate.</li>
-                                  <li className="leading-[1.05]">_amount: The amount to be staked.</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </details>
-                        </li>
                       </ol>
                     </div>
                   )}

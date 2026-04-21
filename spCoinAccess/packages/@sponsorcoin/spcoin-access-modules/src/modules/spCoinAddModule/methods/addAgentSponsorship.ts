@@ -277,7 +277,7 @@ export const addAgentSponsorship = async (
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = direct-transaction:send");
     const directTx = await sendWithMethodFallback("direct addAgent transaction", [
       {
-        methodNames: ["addAgentRateBranchAmount", "addAgentTransaction", "addAgentRateTransaction"],
+        methodNames: ["addAgentTransaction", "addAgentRateTransaction"],
         args: [
           sponsorKey,
           _recipientKey,
@@ -287,7 +287,7 @@ export const addAgentSponsorship = async (
           wholePart,
           fractionalPart,
         ],
-        logLabel: "addAgentRateBranchAmount",
+        logLabel: "addAgentTransaction",
       },
       {
         methodNames: ["addSponsorship"],
@@ -421,18 +421,18 @@ export const addAgentSponsorship = async (
   }
 
   try {
-    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:pre-snapshot");
-    await logStructureSnapshot("pre-addAgentRateBranchAmount");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentTransaction:pre-snapshot");
+    await logStructureSnapshot("pre-addAgentTransaction");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.spCoinLogger.logDetail("JS => post-addAgent diagnostics failed: " + message);
   }
 
   try {
-    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:send");
-    const tx = await sendWithMethodFallback("addAgentRateBranchAmount", [
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentTransaction:send");
+    const tx = await sendWithMethodFallback("addAgentTransaction", [
       {
-        methodNames: ["addAgentRateBranchAmount", "addAgentTransaction", "addAgentRateTransaction"],
+        methodNames: ["addAgentTransaction", "addAgentRateTransaction"],
         args: [
           sponsorKey,
           _recipientKey,
@@ -442,7 +442,7 @@ export const addAgentSponsorship = async (
           wholePart,
           fractionalPart,
         ],
-        logLabel: "addAgentRateBranchAmount",
+        logLabel: "addAgentTransaction",
       },
       {
         methodNames: ["addSponsorship"],
@@ -450,15 +450,15 @@ export const addAgentSponsorship = async (
         logLabel: "addSponsorship",
       },
     ]);
-    context.spCoinLogger.logDetail("JS => addAgentRateBranchAmount tx hash = " + String(tx?.hash || ""));
-    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:post-send-snapshot");
-    await logStructureSnapshot("after addAgentRateBranchAmount send");
-    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentRateBranchAmount:complete");
+    context.spCoinLogger.logDetail("JS => addAgentTransaction tx hash = " + String(tx?.hash || ""));
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentTransaction:post-send-snapshot");
+    await logStructureSnapshot("after addAgentTransaction send");
+    context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentTransaction:complete");
     context.spCoinLogger.logExitFunction();
     return tx;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    context.spCoinLogger.logDetail("JS => addAgentRateBranchAmount failed: " + message);
+    context.spCoinLogger.logDetail("JS => addAgentTransaction failed: " + message);
     throw error;
   }
 };

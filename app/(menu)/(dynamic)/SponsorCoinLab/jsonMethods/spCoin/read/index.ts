@@ -220,13 +220,39 @@ function formatCreationTimeResult(value: unknown) {
   const timestamp = new Date(seconds * 1000);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const pad2 = (input: number) => String(input).padStart(2, '0');
-  const pad3 = (input: number) => String(input).padStart(3, '0');
   const month = months[timestamp.getUTCMonth()] || 'Jan';
-  const formatted = `${month}-${pad2(timestamp.getUTCDate())}-${timestamp.getUTCFullYear()},.${pad2(timestamp.getUTCHours())}:${pad2(timestamp.getUTCMinutes())}:${pad2(timestamp.getUTCSeconds())}:${pad3(timestamp.getUTCMilliseconds())}`;
+  const hours24 = timestamp.getUTCHours();
+  const meridiem = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 || 12;
+  const formatted = `${month}-${pad2(timestamp.getUTCDate())}-${timestamp.getUTCFullYear()} ${pad2(hours12)}:${pad2(timestamp.getUTCMinutes())}:${pad2(timestamp.getUTCSeconds())} ${meridiem} UTC`;
+  const localFormatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
+  });
+  const localParts = localFormatter.formatToParts(timestamp);
+  const localMonth = localParts.find((part) => part.type === 'month')?.value || month;
+  const localDay = localParts.find((part) => part.type === 'day')?.value || pad2(timestamp.getDate());
+  const localYear = localParts.find((part) => part.type === 'year')?.value || String(timestamp.getFullYear());
+  const localHour = localParts.find((part) => part.type === 'hour')?.value || pad2(((timestamp.getHours() % 12) || 12));
+  const localMinute = localParts.find((part) => part.type === 'minute')?.value || pad2(timestamp.getMinutes());
+  const localSecond = localParts.find((part) => part.type === 'second')?.value || pad2(timestamp.getSeconds());
+  const localMeridiem = localParts.find((part) => part.type === 'dayPeriod')?.value || (timestamp.getHours() >= 12 ? 'PM' : 'AM');
+  const localZone = localParts.find((part) => part.type === 'timeZoneName')?.value || 'Local';
+  const localTime = `${localMonth}-${localDay}-${localYear} ${localHour}:${localMinute}:${localSecond} ${localMeridiem} ${localZone}`;
 
   return {
-    ms_offset: seconds.toLocaleString('en-US'),
-    formatted,
+    source: 'StartDateTime',
+    offset_seconds: seconds.toLocaleString('en-US'),
+    formatted: {
+      universalTime: formatted,
+      localTime,
+    },
   };
 }
 

@@ -1,8 +1,8 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'deleteSponsor',
-  params: [{ label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' }],
+  title: 'deleteAccountTree',
+  params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
 };
 
 export default methodDef;
