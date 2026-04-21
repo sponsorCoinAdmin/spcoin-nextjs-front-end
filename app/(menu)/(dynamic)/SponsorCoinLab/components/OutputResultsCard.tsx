@@ -424,7 +424,7 @@ export default function OutputResultsCard({
       const method =
         call && typeof call === 'object' && !Array.isArray(call) ? String((call as Record<string, unknown>).method || '').trim() : '';
 
-      if (!['getMasterSponsorList', 'getMasterSponsorList_BAK'].includes(method)) return block;
+      if (!['getMasterSponsorList'].includes(method)) return block;
 
       const result = record.result;
       if (!Array.isArray(result)) return block;

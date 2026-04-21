@@ -113,7 +113,7 @@ export type SpCoinAddAccess = {
     _transactionQty: string | number,
     _transactionBackDate: number,
   ) => Promise<ContractTransactionResponse>;
-  backDateRecipientTransactionDate: (
+  backDateRecipientTransaction: (
     _adminSigner: Signer,
     _sponsorKey: string,
     _recipientKey: string,
@@ -121,7 +121,7 @@ export type SpCoinAddAccess = {
     _transactionIndex: string | number,
     _transactionBackDate: number,
   ) => Promise<ContractTransactionResponse>;
-  backDateAgentTransactionDate: (
+  backDateAgentTransaction: (
     _adminSigner: Signer,
     _sponsorKey: string,
     _recipientKey: string,
@@ -254,7 +254,7 @@ export type SpCoinContractAccess = Contract & {
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  backDateTransactionDate?: (
+  backDateTransaction?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,

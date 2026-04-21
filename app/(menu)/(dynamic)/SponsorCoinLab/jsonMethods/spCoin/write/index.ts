@@ -72,8 +72,8 @@ export type SpCoinWriteMethod =
   | 'unSponsorAgent'
   | 'addBackDatedRecipientTransaction'
   | 'addBackDatedAgentTransaction'
-  | 'backDateRecipientTransactionDate'
-  | 'backDateAgentTransactionDate'
+  | 'backDateRecipientTransaction'
+  | 'backDateAgentTransaction'
   | 'deleteRecipientSponsorship'
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
@@ -92,8 +92,8 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
   'addBackDatedRecipientTransaction',
   'addBackDatedAgentTransaction',
-  'backDateRecipientTransactionDate',
-  'backDateAgentTransactionDate',
+  'backDateRecipientTransaction',
+  'backDateAgentTransaction',
   'setInflationRate',
   'setLowerRecipientRate',
   'setUpperRecipientRate',
@@ -697,9 +697,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'backDateRecipientTransactionDate': {
+    case 'backDateRecipientTransaction': {
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.backDateRecipientTransactionDate(
+        access.add.backDateRecipientTransaction(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),
@@ -710,9 +710,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'backDateAgentTransactionDate': {
+    case 'backDateAgentTransaction': {
       await submitWrite(activeDef.title, (access, signer) =>
-        access.add.backDateAgentTransactionDate(
+        access.add.backDateAgentTransaction(
           signer,
           asString(methodArgs[0]),
           asString(methodArgs[1]),

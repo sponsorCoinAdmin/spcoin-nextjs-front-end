@@ -28,7 +28,6 @@ type UtilityMethodSpec = {
     | 'compareSpCoinContractSize'
     | 'getSponsorAccounts'
     | 'getMasterSponsorList'
-    | 'getMasterSponsorList_BAK'
     | 'hhFundAccounts'
     | 'deleteMasterSponsorships'
     | 'deleteAccountTree'
@@ -213,11 +212,6 @@ const METHOD_SPECS = {
     title: 'getMasterSponsorList',
     params: [],
     utilityMethod: 'getMasterSponsorList',
-  },
-  getMasterSponsorList_BAK: {
-    title: 'getMasterSponsorList_BAK',
-    params: [],
-    utilityMethod: 'getMasterSponsorList_BAK',
   },
   hhFundAccounts: {
     title: 'hhFundAccounts',
@@ -713,9 +707,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
 
     if (
       'utilityMethod' in def &&
-      (def.utilityMethod === 'getSponsorAccounts' ||
-        def.utilityMethod === 'getMasterSponsorList' ||
-        def.utilityMethod === 'getMasterSponsorList_BAK')
+      (def.utilityMethod === 'getSponsorAccounts' || def.utilityMethod === 'getMasterSponsorList')
     ) {
       trace('loadSponsorAccounts start');
       const sponsorAccounts = await loadSponsorAccounts(access);

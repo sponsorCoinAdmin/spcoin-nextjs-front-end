@@ -17,5 +17,5 @@ export { addBackDatedRecipientTransaction } from "./addBackDatedRecipientTransac
 export { addBackDatedAgentTransaction } from "./addBackDatedAgentTransaction";
 export { addBackDatedRecipientSponsorship } from "./addBackDatedRecipientSponsorship";
 export { addBackDatedAgentSponsorship } from "./addBackDatedAgentSponsorship";
-export { backDateRecipientTransactionDate } from "./backDateRecipientTransactionDate";
-export { backDateAgentTransactionDate } from "./backDateAgentTransactionDate";
+export { backDateRecipientTransaction } from "./backDateRecipientTransaction";
+export { backDateAgentTransaction } from "./backDateAgentTransaction";

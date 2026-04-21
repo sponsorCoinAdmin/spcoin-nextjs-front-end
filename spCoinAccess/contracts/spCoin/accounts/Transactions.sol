@@ -203,7 +203,7 @@ contract Transactions is RewardsManager {
         return sponsorRec;
     }
 
-    function backDateTransactionDate(
+    function backDateTransaction(
         address _sponsorKey,
         address _recipientKey,
         uint256 _recipientRateKey,

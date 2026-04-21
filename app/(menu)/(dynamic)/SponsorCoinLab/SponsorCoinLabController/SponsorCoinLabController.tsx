@@ -469,7 +469,7 @@ const defaultHardhatRpcUrl =
   const serializationTestOptions = getSerializationTestOptions();
   const utilityMethodOptions = getUtilityMethodOptions();
   const adminUtilityReadOptions = utilityMethodOptions.filter((name) =>
-    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
+    ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
   );
   const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
     [

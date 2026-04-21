@@ -134,7 +134,7 @@ There are also internal reward calculation/update helpers in `RewardsManager`, b
 - `addSponsorship(address,uint,address,uint,string,string)`
 - `addRecipientTransaction(address,address,uint,string,string)`
 - `addAgentTransaction(address,address,uint,address,uint,string,string)`
-- `backDateTransactionDate(address,address,uint256,address,uint256,uint256,uint256)`
+- `backDateTransaction(address,address,uint256,address,uint256,uint256,uint256)`
 - `getAgentTransactionCount(address,address,uint256,address,uint256)`
 - `getRecipientTransactionCount(address,address,uint256)`
 - `getAgentTransactionAt(address,address,uint256,address,uint256,uint256)`

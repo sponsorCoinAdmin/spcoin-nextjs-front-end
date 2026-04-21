@@ -471,13 +471,13 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt);
               break;
             }
-            case 'backDateRecipientTransactionDate': {
+            case 'backDateRecipientTransaction': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
-              const tx = await access.add.backDateRecipientTransactionDate(
+              const tx = await access.add.backDateRecipientTransaction(
                 signer,
                 sponsorKey,
                 recipientKey,
@@ -486,10 +486,10 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('backDateRecipientTransactionDate', tx, receipt);
+              result = formatReceiptResult('backDateRecipientTransaction', tx, receipt);
               break;
             }
-            case 'backDateAgentTransactionDate': {
+            case 'backDateAgentTransaction': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
@@ -497,7 +497,7 @@ export async function POST(request: NextRequest) {
               const agentRateKey = findParam('Agent Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
-              const tx = await access.add.backDateAgentTransactionDate(
+              const tx = await access.add.backDateAgentTransaction(
                 signer,
                 sponsorKey,
                 recipientKey,
@@ -508,7 +508,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('backDateAgentTransactionDate', tx, receipt);
+              result = formatReceiptResult('backDateAgentTransaction', tx, receipt);
               break;
             }
             case 'deleteRecipient': {

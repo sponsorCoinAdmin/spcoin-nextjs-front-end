@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const backDateAgentTransactionDate = async (
+export const backDateAgentTransaction = async (
     context,
     _adminSigner,
     _sponsorKey,
@@ -11,7 +11,7 @@ export const backDateAgentTransactionDate = async (
     _transactionBackDate
 ) => {
     context.spCoinLogger.logFunctionHeader(
-        "backDateAgentTransactionDate = async(" +
+        "backDateAgentTransaction = async(" +
             _sponsorKey + ", " +
             _recipientKey + ", " +
             _recipientRateKey + ", " +
@@ -27,7 +27,7 @@ export const backDateAgentTransactionDate = async (
     if (!signerAddress || String(signerAddress).toLowerCase() !== String(ownerAddress).toLowerCase()) {
         throw new Error("backdating transaction dates requires the owner signer.");
     }
-    const tx = await context.spCoinContractDeployed.backDateTransactionDate(
+    const tx = await context.spCoinContractDeployed.backDateTransaction(
         _sponsorKey,
         _recipientKey,
         _recipientRateKey,

@@ -726,7 +726,6 @@ export function useSponsorCoinLabMethods({
           : '';
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
-        normalizedPayloadMethod === 'getMasterSponsorList_BAK' ||
         normalizedPayloadMethod === 'getMasterAccountKeys' ||
         normalizedPayloadMethod === 'getAccountKeys'
       ) {
@@ -1122,7 +1121,7 @@ export function useSponsorCoinLabMethods({
           appendLog,
           setStatus,
         });
-        if (selectedMethod === 'getMasterSponsorList' || selectedMethod === 'getMasterSponsorList_BAK') {
+        if (selectedMethod === 'getMasterSponsorList') {
           const sponsorKeys = Array.isArray(result) ? result : [];
           const [metadataResult, sponsorResults] = await Promise.allSettled([
             runSpCoinReadMethod({
@@ -1681,7 +1680,7 @@ export function useSponsorCoinLabMethods({
         if (!payload) continue;
         const call = payload.call as Record<string, unknown> | undefined;
         const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterSponsorList_BAK', 'getMasterAccountKeys', 'getAccountKeys'].includes(methodName)) continue;
+        if (!['getMasterSponsorList', 'getMasterAccountKeys', 'getAccountKeys'].includes(methodName)) continue;
         const listKey = ['getMasterAccountKeys', 'getAccountKeys'].includes(methodName) ? 'accounts' : 'sponsors';
         const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
           ? (payload.result as Record<string, unknown>)

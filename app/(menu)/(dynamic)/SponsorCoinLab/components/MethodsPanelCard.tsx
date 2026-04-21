@@ -36,8 +36,8 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   addAgentTransaction: 'add.ts',
   addBackDatedRecipientTransaction: 'add.ts',
   addBackDatedAgentTransaction: 'add.ts',
-  backDateRecipientTransactionDate: 'add.ts',
-  backDateAgentTransactionDate: 'add.ts',
+  backDateRecipientTransaction: 'add.ts',
+  backDateAgentTransaction: 'add.ts',
   addRecipients: 'addRecipients.ts',
   addAgents: 'addAgents.ts',
   deleteAccountTree: 'delete.ts',
@@ -296,7 +296,7 @@ export default function MethodsPanelCard({
     () =>
       sortMethodNames(
         adminUtilityMethodNames.filter((name) =>
-          ['compareSpCoinContractSize', 'getMasterSponsorList', 'getMasterSponsorList_BAK', 'getSponsorAccounts'].includes(name),
+          ['compareSpCoinContractSize', 'getMasterSponsorList', 'getSponsorAccounts'].includes(name),
         ),
       ),
     [adminUtilityMethodNames],

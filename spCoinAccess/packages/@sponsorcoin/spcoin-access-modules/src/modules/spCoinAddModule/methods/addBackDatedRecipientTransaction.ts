@@ -32,7 +32,7 @@ export const addBackDatedRecipientTransaction = async (
     if (addTx && typeof addTx.wait === "function") {
         await addTx.wait();
     }
-    const tx = await context.backDateRecipientTransactionDate(
+    const tx = await context.backDateRecipientTransaction(
         _adminSigner,
         _sponsorKey,
         _recipientKey,
