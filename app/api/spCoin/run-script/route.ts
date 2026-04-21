@@ -363,7 +363,7 @@ export async function POST(request: NextRequest) {
               break;
             }
             case 'addRecipientTransaction':
-            case 'addRecipientRateTransaction':
+            case 'addRecipientTransaction':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
             case 'addSponsorship': {
@@ -371,11 +371,11 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const addRecipientRateTransaction = access.add.addRecipientRateTransaction ?? access.add.addRecipientTransaction;
-              if (typeof addRecipientRateTransaction !== 'function') {
-                throw new Error('addRecipientRateTransaction is not available on the current SpCoin access path.');
+              const addRecipientTransaction = access.add.addRecipientTransaction ?? access.add.addRecipientTransaction;
+              if (typeof addRecipientTransaction !== 'function') {
+                throw new Error('addRecipientTransaction is not available on the current SpCoin access path.');
               }
-              const tx = await addRecipientRateTransaction(
+              const tx = await addRecipientTransaction(
                 sponsorKey,
                 recipientKey,
                 recipientRateKey,
@@ -397,7 +397,7 @@ export async function POST(request: NextRequest) {
               break;
             }
             case 'addAgentTransaction':
-            case 'addAgentRateTransaction':
+            case 'addAgentTransaction':
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':
             case 'addAgentSponsorship': {
@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentRateTransaction;
+              const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentTransaction;
               if (typeof addAgentTransaction !== 'function') {
                 throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
               }

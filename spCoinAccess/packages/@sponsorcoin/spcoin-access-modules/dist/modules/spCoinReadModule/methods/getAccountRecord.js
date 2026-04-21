@@ -40,11 +40,11 @@ function buildPendingRewardsRecord(rewardsByType = undefined) {
         pendingAgentRewards,
     };
 }
-async function getRecipientRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
-    return await runtime.spCoinSerialize.getRecipientRateTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey);
+async function getRecipientTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
+    return await runtime.spCoinSerialize.getRecipientTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey);
 }
-async function getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
-    return await runtime.spCoinSerialize.getAgentRateTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
+async function getAgentTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
+    return await runtime.spCoinSerialize.getAgentTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
 }
 function mergeRateMaps(existingValue, incomingValue) {
     return {
@@ -140,8 +140,8 @@ async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKe
                 debugState.agentRateReads += 1;
             const agentRateKeys = await runtime.getAgentRateList(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey);
             for (const agentRateKey of Array.isArray(agentRateKeys) ? agentRateKeys : []) {
-                const agentRateTransactionFields = await getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
-                relationships.push(buildAgentParentRelationshipRecord(sponsorAccountKey, agentRateTransactionFields?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey));
+                const agentTransactionFields = await getAgentTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
+                relationships.push(buildAgentParentRelationshipRecord(sponsorAccountKey, agentTransactionFields?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey));
             }
         }
     }
@@ -171,7 +171,7 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
         const recipientRateKeys = await runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey);
         const recipientRateKeysRecord = {};
         for (const recipientRateKey of Array.isArray(recipientRateKeys) ? recipientRateKeys : []) {
-            const recipientRateTransactionFields = await getRecipientRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey);
+            const recipientTransactionFields = await getRecipientTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey);
             if (debugState)
                 debugState.recipientAgentReads += 1;
             const agentAccountKeys = await runtime.getRecipientRateAgentList(sponsorAccountKey, recipientAccountKey, recipientRateKey);
@@ -183,14 +183,14 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
                 const agentAccount = await getShallowAccountRecord(runtime, agentAccountKey);
                 const agentRelationships = [];
                 for (const agentRateKey of Array.isArray(agentRateKeys) ? agentRateKeys : []) {
-                    const agentRateTransactionFields = await getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
-                    agentRelationships.push(buildAgentParentRelationshipRecord(sponsorAccountKey, agentRateTransactionFields?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey));
+                    const agentTransactionFields = await getAgentTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
+                    agentRelationships.push(buildAgentParentRelationshipRecord(sponsorAccountKey, agentTransactionFields?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey));
                 }
                 agentAccount.agentRateKeys = toAgentRateKeysRecord(agentRelationships);
                 agentAccountList.push(agentAccount);
             }
             recipientRateKeysRecord[String(recipientRateKey ?? "")] = {
-                stakedAmount: String(recipientRateTransactionFields?.[2] ?? "0"),
+                stakedAmount: String(recipientTransactionFields?.[2] ?? "0"),
                 agentAccountList,
             };
         }
@@ -296,7 +296,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
                 for (const agentRateKey of Array.isArray(agentRateKeys) ? agentRateKeys : []) {
                     const agentAccount = await buildNestedAccountRecord(runtime, agentAccountKey, depthRemaining, visitedKeys, debugState);
                     agentAccount.agentRateKeys = toAgentRateKeysRecord([
-                        buildAgentParentRelationshipRecord(sponsorAccountKey, (await getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey))?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey),
+                        buildAgentParentRelationshipRecord(sponsorAccountKey, (await getAgentTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey))?.[2] ?? "0", recipientRateKey, agentAccountKey, agentRateKey),
                     ]);
                     agentAccountList.push(agentAccount);
                 }

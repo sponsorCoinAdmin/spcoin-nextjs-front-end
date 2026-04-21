@@ -22,15 +22,15 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getVersion: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountRewardTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountRewardTransactionRecord: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAccountRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getAccountTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getAccountRecipientListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
-    getRecipientRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getRecipientTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getRecipientRecordList: import("../../readMethodRuntime").ReadMethodHandler<any>;
-    getAgentRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
-    getRecipientRateTransactionAt: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAgentRateTransactionAt: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getAgentTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getRecipientTransactionAt: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getAgentTransactionAt: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAgentRecord: import("../../readMethodRuntime").ReadMethodHandler<{
         agentKey: unknown;
         stakedSPCoins: any;
@@ -44,6 +44,6 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getSerializedAccountRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getSerializedRecipientRecordList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getSerializedRecipientRateList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    serializeAgentRateTransactionStr: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getSerializedRateTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    serializedAgentTransactionStr: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
+    getSerializedTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
 };

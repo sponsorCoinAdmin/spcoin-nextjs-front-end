@@ -21,7 +21,7 @@ export const addAgentTransaction = async (
     const wholePart = components[0].length > 0 ? components[0] : "0";
     const fractionalPart = components.length > 1 ? components[1] : "0";
     const contractMethod = context.spCoinContractDeployed.addAgentTransaction
-        ?? context.spCoinContractDeployed.addAgentRateTransaction;
+        ?? context.spCoinContractDeployed.addAgentTransaction;
     const tx = await contractMethod(
         _sponsorKey,
         _recipientKey,

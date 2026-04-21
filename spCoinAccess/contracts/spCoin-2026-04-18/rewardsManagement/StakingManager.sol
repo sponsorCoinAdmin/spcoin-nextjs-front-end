@@ -115,16 +115,16 @@ contract StakingManager is AgentRates{
         rewardAccountRecord.stakingRewards += _amount;
 
         uint256[] storage rewardRateList = rewardAccountRecord.rewardRateList;
-        RewardRateStruct storage rewardRateTransaction = rewardAccountRecord.rewardRateMap[_rate];
-        if (rewardRateTransaction.rate != _rate) {
+        RewardRateStruct storage rewardTransaction = rewardAccountRecord.rewardRateMap[_rate];
+        if (rewardTransaction.rate != _rate) {
             rewardRateList.push(_rate);
-            rewardRateTransaction.rate = _rate;
+            rewardTransaction.rate = _rate;
         }
         // console.log("SOL=>2.9 rewardRateList.length = ",rewardRateList.length);
-        // console.log("SOL=>2.10 rewardRateTransaction.rate = ",rewardRateTransaction.rate);
-        rewardRateTransaction.stakingRewards += _amount;
-        // console.log("SOL=>2.11 rewardRateTransaction.stakingRewards = ", rewardRateTransaction.stakingRewards);
-        RewardsTransactionStruct[] storage rewardTransactionList = rewardRateTransaction.rewardTransactionList;
+        // console.log("SOL=>2.10 rewardTransaction.rate = ",rewardTransaction.rate);
+        rewardTransaction.stakingRewards += _amount;
+        // console.log("SOL=>2.11 rewardTransaction.stakingRewards = ", rewardTransaction.stakingRewards);
+        RewardsTransactionStruct[] storage rewardTransactionList = rewardTransaction.rewardTransactionList;
         depositRewardTransaction( rewardTransactionList, _amount );
         // console.log("SOL=>2.12 rewardTransactionList[0].stakingRewards = ", rewardTransactionList[0].stakingRewards);
 

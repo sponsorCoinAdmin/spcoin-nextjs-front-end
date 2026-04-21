@@ -9,7 +9,7 @@ contract StructSerialization is Utils {
 
     string constant delimiter = "\\,";
 
-    function serializeAccount(AccountStruct storage _accountRec)
+    function serializedAccount(AccountStruct storage _accountRec)
         internal view returns (string memory)
     {
         string memory addr = concat(
@@ -73,7 +73,7 @@ contract StructSerialization is Utils {
         return seralized;
     }
 
-    function serializeRewards(AccountStruct storage _accountRec)
+    function serializedRewards(AccountStruct storage _accountRec)
         internal view returns (string memory seralized)
     {
         mapping(string  => RewardTypeStruct) storage rewardsMap = _accountRec.rewardsMap;
@@ -82,7 +82,7 @@ contract StructSerialization is Utils {
         RewardTypeStruct storage agentRewards = rewardsMap[getAccountTypeString(AGENT)];
 
 // console.log("==============================================================================================");
-// console.log("SOL=>0 serializeAccount(", toString(_accountRec.accountKey),")"); 
+// console.log("SOL=>0 serializedAccount(", toString(_accountRec.accountKey),")"); 
 // console.log("SOL=>0 toString(sponsorRewards.stakingRewards)", toString(sponsorRewards.stakingRewards)); 
 // console.log("SOL=>1 toString(recipientRewards.stakingRewards)", toString(recipientRewards.stakingRewards)); 
 // console.log("SOL=>2 toString(agentRewards.stakingRewards)", toString(agentRewards.stakingRewards)); 
@@ -110,7 +110,7 @@ contract StructSerialization is Utils {
         return seralized;
     }
 
-        function serializeRewardsTransactionList(RewardsTransactionStruct[] storage _rewardTransactionList)
+        function serializedRewardsTransactionList(RewardsTransactionStruct[] storage _rewardTransactionList)
         internal  view returns (string memory memoryRewards) {
         for (uint idx = 0; idx < _rewardTransactionList.length; idx++) {
             RewardsTransactionStruct storage rewardTransaction = _rewardTransactionList[idx];
@@ -132,11 +132,11 @@ contract StructSerialization is Utils {
     function getSerializedAccountRewards(address _accountKey)
         public view returns (string memory) {
         require(isAccountInserted(_accountKey));
-        return serializeRewards(accountMap[_accountKey]);
+        return serializedRewards(accountMap[_accountKey]);
     }
 
 /*
-    function serializeRewards(AccountStruct storage _accountRec)
+    function serializedRewards(AccountStruct storage _accountRec)
         internal view returns (string memory)
     {
         mapping(string  => RewardTypeStruct) storage rewardsMap = _accountRec.rewardsMap;

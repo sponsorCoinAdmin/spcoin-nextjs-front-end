@@ -65,17 +65,17 @@ contract Transactions is RewardsManager {
 
         // console.log( "**** Transaction.sol:ADDING RATE REC = ", _agentRateKey, "ADDING TRANSACTION = ", sponsorAmount);
         if(_agentKey == burnAddress) {
-            RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransaction(msg.sender, _recipientKey, _recipientRateKey, _transactionTimeStamp);
-            updateRecipientRateRewards( recipientRateTransaction, _recipientKey, _transactionTimeStamp);
-            updateRecipientRateSponsorship(recipientRateTransaction, _recipientKey, sponsorAmount, _transactionTimeStamp);
-            recipientRateTransaction.transactionList.push(transRec);
+            RecipientRateStruct storage recipientTransaction = getRecipientTransaction(msg.sender, _recipientKey, _recipientRateKey, _transactionTimeStamp);
+            updateRecipientRateRewards( recipientTransaction, _recipientKey, _transactionTimeStamp);
+            updateRecipientRateSponsorship(recipientTransaction, _recipientKey, sponsorAmount, _transactionTimeStamp);
+            recipientTransaction.transactionList.push(transRec);
         }
         else {
-            AgentRateStruct storage agentRateTransaction = getAgentRateTransaction(msg.sender, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, _transactionTimeStamp);
-            updateAgentRateRewards(agentRateTransaction, _agentKey, _recipientKey,  _recipientRateKey, _transactionTimeStamp);
+            AgentRateStruct storage agentTransaction = getAgentTransaction(msg.sender, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, _transactionTimeStamp);
+            updateAgentRateRewards(agentTransaction, _agentKey, _recipientKey,  _recipientRateKey, _transactionTimeStamp);
 
-            updateAgentRateSponsorship(agentRateTransaction, _recipientKey, _recipientRateKey, _agentKey, sponsorAmount, _transactionTimeStamp);
-            agentRateTransaction.transactionList.push(transRec);
+            updateAgentRateSponsorship(agentTransaction, _recipientKey, _recipientRateKey, _agentKey, sponsorAmount, _transactionTimeStamp);
+            agentTransaction.transactionList.push(transRec);
         }
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
@@ -86,48 +86,48 @@ contract Transactions is RewardsManager {
         // console.log("AFTER _sponsorCoinQty ", sponsorAmount);
     }
 
-    function updateRecipientRateSponsorship(RecipientRateStruct storage recipientRateTransaction, address _recipientKey, 
+    function updateRecipientRateSponsorship(RecipientRateStruct storage recipientTransaction, address _recipientKey, 
     uint256 _sponsorCoinQty , uint _transactionTimeStamp)
         internal returns (RecipientRateStruct storage) {
         // console.log("updateRecipientRateSponsorship:_sponsorCoinQty = ", _sponsorCoinQty, _transactionTimeStamp);
         updateRecipientSponsorship(_recipientKey, _sponsorCoinQty);
-        uint lastUpdateTime = recipientRateTransaction.lastUpdateTime;
+        uint lastUpdateTime = recipientTransaction.lastUpdateTime;
         if ( lastUpdateTime != _transactionTimeStamp) {
-            recipientRateTransaction.lastUpdateTime = _transactionTimeStamp;
+            recipientTransaction.lastUpdateTime = _transactionTimeStamp;
             // uint agentRewards = calculateStakingRewards( _sponsorCoinQty, lastUpdateTime, _transactionTimeStamp, _recipientRateKey );
             // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR _sponsorCoinQty                = ", _sponsorCoinQty);
-            // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR agentRateTransaction.lastUpdateTime = ", lastUpdateTime);
+            // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR agentTransaction.lastUpdateTime = ", lastUpdateTime);
             // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR _transactionTimeStamp          = ", _transactionTimeStamp);
             // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR _recipientRateKey              = ", _recipientRateKey);
             // console.log("RRRRRRRRRRRRRRRRRRRRRRRRRRR Agent Calculated Rewards       = ", agentRewards);
         }
-        recipientRateTransaction.stakedSPCoins += _sponsorCoinQty;
-        return recipientRateTransaction;
+        recipientTransaction.stakedSPCoins += _sponsorCoinQty;
+        return recipientTransaction;
     }
 
-    function updateAgentRateSponsorship(AgentRateStruct storage agentRateTransaction, address _recipientKey,
+    function updateAgentRateSponsorship(AgentRateStruct storage agentTransaction, address _recipientKey,
     uint _recipientRateKey, address _agentKey, uint256 _sponsorCoinQty, uint _transactionTimeStamp)
        internal returns (AgentRateStruct storage) {
        updateAgentSponsorship(_recipientKey, _recipientRateKey, _agentKey, _sponsorCoinQty, _transactionTimeStamp);
-        uint lastUpdateTime = agentRateTransaction.lastUpdateTime;
+        uint lastUpdateTime = agentTransaction.lastUpdateTime;
         if ( lastUpdateTime != _transactionTimeStamp) {
-            agentRateTransaction.lastUpdateTime = _transactionTimeStamp;
+            agentTransaction.lastUpdateTime = _transactionTimeStamp;
             // uint agentRewards = calculateStakingRewards( _sponsorCoinQty, lastUpdateTime, _transactionTimeStamp, _recipientRateKey );
             // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA _sponsorCoinQty                = ", _sponsorCoinQty);
-            // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA agentRateTransaction.lastUpdateTime = ", lastUpdateTime);
+            // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA agentTransaction.lastUpdateTime = ", lastUpdateTime);
             // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA _transactionTimeStamp          = ", _transactionTimeStamp);
             // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA _recipientRateKey              = ", _recipientRateKey);
             // console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA Agent Calculated Rewards       = ", agentRewards);
         }
-        agentRateTransaction.stakedSPCoins += _sponsorCoinQty;
-        return agentRateTransaction;
+        agentTransaction.stakedSPCoins += _sponsorCoinQty;
+        return agentTransaction;
     }
 
     function updateAgentSponsorship(address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 _sponsorCoinQty, uint _transactionTimeStamp)
        internal returns (AgentStruct storage) {
-        RecipientRateStruct storage recipientRateTransaction = getRecipientRateTransaction(msg.sender, _recipientKey, _recipientRateKey, block.timestamp);
-        updateRecipientRateSponsorship(recipientRateTransaction, _recipientKey, _sponsorCoinQty, _transactionTimeStamp);
-        AgentStruct storage agentRecord = recipientRateTransaction.agentMap[_agentKey];
+        RecipientRateStruct storage recipientTransaction = getRecipientTransaction(msg.sender, _recipientKey, _recipientRateKey, block.timestamp);
+        updateRecipientRateSponsorship(recipientTransaction, _recipientKey, _sponsorCoinQty, _transactionTimeStamp);
+        AgentStruct storage agentRecord = recipientTransaction.agentMap[_agentKey];
         agentRecord.stakedSPCoins += _sponsorCoinQty;
         return agentRecord;
     }
@@ -152,31 +152,31 @@ contract Transactions is RewardsManager {
         return sponsorRec;
     }
 
-    function getRecipientRateTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
+    function getRecipientTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey)
     public view returns (string memory) {
         RecipientStruct storage recipientRec = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
         string memory strTransactionList = "";
-        RecipientRateStruct storage recipientRateTransaction = recipientRec.recipientRateMap[_recipientRateKey];
-        // console.log ("recipientRateTransaction.transactionList[0].quantity = ", recipientRateTransaction.transactionList[0].quantity);
-        StakingTransactionStruct[] memory transactionList = recipientRateTransaction.transactionList;
-        strTransactionList = concat(strTransactionList, getRateTransactionStr(transactionList)); 
+        RecipientRateStruct storage recipientTransaction = recipientRec.recipientRateMap[_recipientRateKey];
+        // console.log ("recipientTransaction.transactionList[0].quantity = ", recipientTransaction.transactionList[0].quantity);
+        StakingTransactionStruct[] memory transactionList = recipientTransaction.transactionList;
+        strTransactionList = concat(strTransactionList, getTransactionStr(transactionList)); 
         // console.log("RRRR strTransactionList = ", strTransactionList); 
         return strTransactionList;
     }
 
-    function getSerializedRateTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 _agentRateKey)
+    function getSerializedTransactionList(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 _agentRateKey)
     public view returns (string memory) {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         string memory strTransactionList = "";
-        AgentRateStruct storage agentRateTransaction= agentRec.agentRateMap[_agentRateKey];
-        // console.log ("agentRateTransaction.transactionList[0].quantity = ", agentRateTransaction.transactionList[0].quantity);
-        StakingTransactionStruct[] memory transactionList = agentRateTransaction.transactionList;
-        strTransactionList = concat(strTransactionList, getRateTransactionStr(transactionList)); 
+        AgentRateStruct storage agentTransaction= agentRec.agentRateMap[_agentRateKey];
+        // console.log ("agentTransaction.transactionList[0].quantity = ", agentTransaction.transactionList[0].quantity);
+        StakingTransactionStruct[] memory transactionList = agentTransaction.transactionList;
+        strTransactionList = concat(strTransactionList, getTransactionStr(transactionList)); 
         // console.log("RRRR strTransactionList = ", strTransactionList); 
         return strTransactionList;
     }
 
-    function getRateTransactionStr(StakingTransactionStruct[] memory transactionList)
+    function getTransactionStr(StakingTransactionStruct[] memory transactionList)
     public pure returns (string memory) {
         string memory strTransactionList = "";
         for (uint idx; idx < transactionList.length; idx++) {

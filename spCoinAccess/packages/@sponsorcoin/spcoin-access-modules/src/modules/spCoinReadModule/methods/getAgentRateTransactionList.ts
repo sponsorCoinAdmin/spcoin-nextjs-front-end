@@ -1,14 +1,14 @@
 // @ts-nocheck
-export async function getAgentRateTransactionList(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey) {
+export async function getAgentTransactionList(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey) {
     const runtime = context;
-    runtime.spCoinLogger.logFunctionHeader("getAgentRateTransactionList(" + ", " + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ")");
+    runtime.spCoinLogger.logFunctionHeader("getAgentTransactionList(" + ", " + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _agentKey + ")");
     const agentRateList = await runtime.getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
-    const agentRateTransactionList = [];
+    const agentTransactionList = [];
     for (const [, agentRateKey] of Object.entries(agentRateList)) {
-        const agentRateTransaction = await runtime.getAgentRateTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, agentRateKey);
-        agentRateTransactionList.push(agentRateTransaction);
+        const agentTransaction = await runtime.getAgentTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, agentRateKey);
+        agentTransactionList.push(agentTransaction);
     }
     runtime.spCoinLogger.logExitFunction();
-    return agentRateTransactionList;
+    return agentTransactionList;
 }
 

@@ -1,12 +1,12 @@
 // @ts-nocheck
 export const addRecipientRateTransaction = async (context, _sponsorKey, _recipientKey, _recipientRateKey, _transactionQty) => {
     context.spCoinLogger.logFunctionHeader(
-        "addRecipientRateTransaction = async(" + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _transactionQty + ")"
+        "addRecipientTransaction = async(" + _sponsorKey + ", " + _recipientKey + ", " + _recipientRateKey + ", " + _transactionQty + ")"
     );
     const components = String(_transactionQty ?? "").split(".");
     const wholePart = components[0].length > 0 ? components[0] : "0";
     const fractionalPart = components.length > 1 ? components[1] : "0";
-    const contractMethod = context.spCoinContractDeployed.addRecipientRateTransaction
+    const contractMethod = context.spCoinContractDeployed.addRecipientTransaction
         ?? context.spCoinContractDeployed.addRecipientTransaction;
     const tx = await contractMethod(
         _sponsorKey,

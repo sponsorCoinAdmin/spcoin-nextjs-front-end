@@ -1,1 +1,1 @@
-export declare function getRateTransactionList(context: any, rewardRateRowList: any): any[];
+export declare function getTransactionList(context: any, rewardRateRowList: any): any[];

@@ -10,8 +10,10 @@ export type SerializationBaseMethod =
   | 'getSerializedAccountRewards'
   | 'getSerializedRecipientRecordList'
   | 'getSerializedRecipientRateList'
-  | 'serializeAgentRateTransactionStr'
-  | 'getSerializedRateTransactionList';
+  | 'serializedRecipientRateTransactionStr'
+  | 'serializedAgentTransactionStr'
+  | 'serializedAgentRateTransactionStr'
+  | 'getSerializedTransactionList';
 
 type SerializationMethodSpec = {
   title: string;
@@ -120,8 +122,10 @@ const PARAMS_BY_BASE_METHOD: Record<SerializationBaseMethod, MethodDef['params']
   getSerializedAccountRewards: buildAccountParams(),
   getSerializedRecipientRecordList: buildRecipientParams(),
   getSerializedRecipientRateList: buildRecipientRateParams(),
-  serializeAgentRateTransactionStr: buildAgentRateParams(),
-  getSerializedRateTransactionList: buildAgentRateParams(),
+  serializedRecipientRateTransactionStr: buildRecipientRateParams(),
+  serializedAgentTransactionStr: buildAgentRateParams(),
+  serializedAgentRateTransactionStr: buildAgentRateParams(),
+  getSerializedTransactionList: buildAgentRateParams(),
 };
 
 const accountRewardTotalsInterface = new Interface([
@@ -136,17 +140,17 @@ const accountLinksInterface = new Interface([
 const recipientRecordCoreInterface = new Interface([
   'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-const recipientRateTransactionCoreInterface = new Interface([
-  'function getRecipientRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+const recipientTransactionCoreInterface = new Interface([
+  'function getRecipientTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-const agentRateTransactionCoreInterface = new Interface([
-  'function getAgentRateTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+const agentTransactionCoreInterface = new Interface([
+  'function getAgentTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-const agentRateTransactionCountInterface = new Interface([
-  'function getAgentRateTransactionCount(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256)',
+const agentTransactionCountInterface = new Interface([
+  'function getAgentTransactionCount(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256)',
 ]);
-const agentRateTransactionAtInterface = new Interface([
-  'function getAgentRateTransactionAt(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey, uint256 _transactionIndex) view returns (uint256 insertionTime, uint256 stakingRewards)',
+const agentTransactionAtInterface = new Interface([
+  'function getAgentTransactionAt(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey, uint256 _transactionIndex) view returns (uint256 insertionTime, uint256 stakingRewards)',
 ]);
 
 const METHOD_SPECS = {
@@ -175,15 +179,25 @@ const METHOD_SPECS = {
     params: PARAMS_BY_BASE_METHOD.getSerializedRecipientRateList,
     baseMethod: 'getSerializedRecipientRateList',
   },
-  external_serializeAgentRateTransactionStr: {
-    title: 'External serializeAgentRateTransactionStr',
-    params: PARAMS_BY_BASE_METHOD.serializeAgentRateTransactionStr,
-    baseMethod: 'serializeAgentRateTransactionStr',
+  external_serializedRecipientRateTransactionStr: {
+    title: 'External serializedRecipientRateTransactionStr',
+    params: PARAMS_BY_BASE_METHOD.serializedRecipientRateTransactionStr,
+    baseMethod: 'serializedRecipientRateTransactionStr',
   },
-  external_getSerializedRateTransactionList: {
-    title: 'External getSerializedRateTransactionList',
-    params: PARAMS_BY_BASE_METHOD.getSerializedRateTransactionList,
-    baseMethod: 'getSerializedRateTransactionList',
+  external_serializedAgentTransactionStr: {
+    title: 'External serializedAgentTransactionStr',
+    params: PARAMS_BY_BASE_METHOD.serializedAgentTransactionStr,
+    baseMethod: 'serializedAgentTransactionStr',
+  },
+  external_serializedAgentRateTransactionStr: {
+    title: 'External serializedAgentRateTransactionStr',
+    params: PARAMS_BY_BASE_METHOD.serializedAgentRateTransactionStr,
+    baseMethod: 'serializedAgentRateTransactionStr',
+  },
+  external_getSerializedTransactionList: {
+    title: 'External getSerializedTransactionList',
+    params: PARAMS_BY_BASE_METHOD.getSerializedTransactionList,
+    baseMethod: 'getSerializedTransactionList',
   },
   compareSpCoinContractSize: {
     title: 'compareSpCoinContractSize',
@@ -344,7 +358,7 @@ async function runMasterDeleteReadMethod(
     contract: access.contract as Record<string, unknown>,
     normalizeStringListResult,
     requireExternalSerializedValue: () => {
-      throw new Error(`Serialization utility read method ${method} does not support external serializer fallback.`);
+      throw new Error(`Serialization utility read method ${method} does not support external serializedR fallback.`);
     },
   });
 }
@@ -469,7 +483,7 @@ function buildAgentScopeParams() {
   ];
 }
 
-export async function buildExternalSerializerResult(contract: any, baseMethod: SerializationBaseMethod, methodArgs: any[]) {
+export async function buildExternalserializedRResult(contract: any, baseMethod: SerializationBaseMethod, methodArgs: any[]) {
   try {
     switch (baseMethod) {
       case 'getSerializedSPCoinHeader':
@@ -481,11 +495,13 @@ export async function buildExternalSerializerResult(contract: any, baseMethod: S
       case 'getSerializedRecipientRecordList':
         return { blocked: false as const, value: await buildSerializedRecipientRecordList(contract, methodArgs) };
       case 'getSerializedRecipientRateList':
+      case 'serializedRecipientRateTransactionStr':
         return { blocked: false as const, value: await buildSerializedRecipientRateList(contract, methodArgs) };
-      case 'serializeAgentRateTransactionStr':
-        return { blocked: false as const, value: await buildSerializedAgentRateTransactionStr(contract, methodArgs) };
-      case 'getSerializedRateTransactionList':
-        return { blocked: false as const, value: await buildSerializedRateTransactionList(contract, methodArgs) };
+      case 'serializedAgentTransactionStr':
+      case 'serializedAgentRateTransactionStr':
+        return { blocked: false as const, value: await buildSerializedAgentTransactionStr(contract, methodArgs) };
+      case 'getSerializedTransactionList':
+        return { blocked: false as const, value: await buildSerializedTransactionList(contract, methodArgs) };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -493,20 +509,22 @@ export async function buildExternalSerializerResult(contract: any, baseMethod: S
       getSerializedAccountRecord: ['getAccountCore', 'getAccountLinks'],
       getSerializedAccountRewards: ['getAccountRewardTotals'],
       getSerializedRecipientRecordList: ['getRecipientRecordCore'],
-      getSerializedRecipientRateList: ['getRecipientRateTransactionCore'],
-      serializeAgentRateTransactionStr: ['getAgentRateTransactionCore'],
-      getSerializedRateTransactionList: ['getAgentRateTransactionCount', 'getAgentRateTransaction'],
+      getSerializedRecipientRateList: ['getRecipientTransactionCore'],
+      serializedRecipientRateTransactionStr: ['getRecipientTransactionCore'],
+      serializedAgentTransactionStr: ['getAgentTransactionCore'],
+      serializedAgentRateTransactionStr: ['getAgentTransactionCore'],
+      getSerializedTransactionList: ['getAgentTransactionCount', 'getAgentTransaction'],
     };
     const missingGetter = (methodSpecificGetterNames[baseMethod] || []).find((name) => message.includes(name));
     return {
       blocked: true as const,
       reason: missingGetter
-        ? `Blocked: deployed contract does not yet expose ${missingGetter}. Redeploy with the new raw getter set to compare this serializer externally.`
+        ? `Blocked: deployed contract does not yet expose ${missingGetter}. Redeploy with the new raw getter set to compare this serializedR externally.`
         : `Blocked: unable to rebuild ${baseMethod} externally. ${message}`,
     };
   }
 
-  throw new Error(`External serializer builder missing for ${baseMethod}.`);
+  throw new Error(`External serializedR builder missing for ${baseMethod}.`);
 }
 
 async function callViewFunction(contract: any, iface: Interface, functionName: string, args: unknown[]) {
@@ -582,30 +600,30 @@ async function buildSerializedRecipientRecordList(contract: any, methodArgs: any
 async function buildSerializedRecipientRateList(contract: any, methodArgs: any[]) {
   const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
     contract,
-    recipientRateTransactionCoreInterface,
-    'getRecipientRateTransactionCore',
+    recipientTransactionCoreInterface,
+    'getRecipientTransactionCore',
     [methodArgs[0], methodArgs[1], methodArgs[2]],
   );
 
   return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 
-async function buildSerializedAgentRateTransactionStr(contract: any, methodArgs: any[]) {
+async function buildSerializedAgentTransactionStr(contract: any, methodArgs: any[]) {
   const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
     contract,
-    agentRateTransactionCoreInterface,
-    'getAgentRateTransactionCore',
+    agentTransactionCoreInterface,
+    'getAgentTransactionCore',
     [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]],
   );
 
   return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 
-async function buildSerializedRateTransactionList(contract: any, methodArgs: any[]) {
+async function buildSerializedTransactionList(contract: any, methodArgs: any[]) {
   const [transactionCountRaw] = await callViewFunction(
     contract,
-    agentRateTransactionCountInterface,
-    'getAgentRateTransactionCount',
+    agentTransactionCountInterface,
+    'getAgentTransactionCount',
     [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]],
   );
   const transactionCount = Number(transactionCountRaw);
@@ -614,8 +632,8 @@ async function buildSerializedRateTransactionList(contract: any, methodArgs: any
   for (let idx = 0; idx < transactionCount; idx += 1) {
     const [insertionTime, stakingRewards] = await callViewFunction(
       contract,
-      agentRateTransactionAtInterface,
-      'getAgentRateTransactionAt',
+      agentTransactionAtInterface,
+      'getAgentTransactionAt',
       [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4], idx],
     );
     rows.push(`${String(insertionTime)},${String(stakingRewards)}`);
@@ -1310,7 +1328,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       throw new Error(`Unsupported utility method: ${selectedMethod}`);
     }
 
-    const external = await buildExternalSerializerResult(access.contract as any, def.baseMethod, methodArgs);
+    const external = await buildExternalserializedRResult(access.contract as any, def.baseMethod, methodArgs);
     appendLog(
       external.blocked
         ? `${selectedMethod} -> external rebuild blocked.`

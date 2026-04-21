@@ -9,8 +9,8 @@ export declare class SpCoinReadModule {
     getRewardTypeRecord: (_accountKey: string, _rewardType: number, _reward: string | number | bigint) => Promise<RewardTypeStruct>;
     getAccountRewardTransactionList: (_rewardAccountList: string[]) => RewardAccountStruct[];
     getAccountRewardTransactionRecord: (_rewardRecordStr: string) => RewardAccountStruct | undefined;
-    getAccountRateTransactionList: (rateRewardList: string[]) => RewardRateStruct[];
-    getRateTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
+    getAccountTransactionList: (rateRewardList: string[]) => RewardRateStruct[];
+    getTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
     getSpCoinMetaData: () => Promise<{
         owner: string;
         version: string;
@@ -23,17 +23,17 @@ export declare class SpCoinReadModule {
         agentRateRange: [number, number];
     }>;
     getAgentRateList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<(string | number | bigint)[]>;
-    getAgentRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;
-    getAgentRateTransactionList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentRateStruct[]>;
+    getAgentTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<AgentRateStruct>;
+    getAgentTransactionList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentRateStruct[]>;
     getAgentRecord: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string) => Promise<AgentStruct>;
     getAgentRecordList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentAccountList: string[]) => Promise<AgentStruct[]>;
-    getAgentRateTransactionEntries: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<StakingTransactionStruct[]>;
+    getAgentTransactionEntries: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number) => Promise<StakingTransactionStruct[]>;
     getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
-    getRecipientRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
-    getRecipientRateTransactionList: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientRateStruct[]>;
+    getRecipientTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
+    getRecipientTransactionList: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientRateStruct[]>;
     getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
     getRecipientRecordList: (_sponsorKey: string, _recipientAccountList: string[]) => Promise<RecipientStruct[]>;
     getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
-    getRecipientRateTransactionList: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<StakingTransactionStruct[]>;
+    getRecipientTransactionList: (_sponsorCoin: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<StakingTransactionStruct[]>;
     constructor(_spCoinContractDeployed: any);
 }

@@ -1,27 +1,27 @@
 // @ts-nocheck
 import { AgentRateStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDateTimeString, bigIntToDecString } from "../../../utils/dateTime";
-export async function getAgentRateTransaction(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
+export async function getAgentTransaction(context, _sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey) {
     const runtime = context;
-    runtime.spCoinLogger.logFunctionHeader("getAgentRateTransaction(" + _sponsorKey + ", " + _recipientKey + ", " + _agentKey + ", " + _agentRateKey + ")");
-    const agentRateTransaction = new AgentRateStruct();
+    runtime.spCoinLogger.logFunctionHeader("getAgentTransaction(" + _sponsorKey + ", " + _recipientKey + ", " + _agentKey + ", " + _agentRateKey + ")");
+    const agentTransaction = new AgentRateStruct();
     let recordStr = ["0", "0", "0"];
     try {
-        recordStr = await runtime.spCoinSerialize.getAgentRateTransactionFields(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        recordStr = await runtime.spCoinSerialize.getAgentTransactionFields(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
     }
     catch (_error) {
         recordStr = ["0", "0", "0"];
     }
-    agentRateTransaction.agentRate = _agentRateKey;
-    agentRateTransaction.creationTime = bigIntToDateTimeString(recordStr[0]);
-    agentRateTransaction.lastUpdateTime = bigIntToDateTimeString(recordStr[1]);
-    agentRateTransaction.stakedSPCoins = bigIntToDecString(recordStr[2]);
+    agentTransaction.agentRate = _agentRateKey;
+    agentTransaction.creationTime = bigIntToDateTimeString(recordStr[0]);
+    agentTransaction.lastUpdateTime = bigIntToDateTimeString(recordStr[1]);
+    agentTransaction.stakedSPCoins = bigIntToDecString(recordStr[2]);
     try {
-        agentRateTransaction.transactions = await runtime.getAgentRateTransactionEntries(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        agentTransaction.transactions = await runtime.getAgentTransactionEntries(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
     }
     catch (_error) {
-        agentRateTransaction.transactions = [];
+        agentTransaction.transactions = [];
     }
     runtime.spCoinLogger.logExitFunction();
-    return agentRateTransaction;
+    return agentTransaction;
 }

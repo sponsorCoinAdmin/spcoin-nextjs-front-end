@@ -1,20 +1,20 @@
 // @ts-nocheck
 import { bigIntToDateTimeString, bigIntToDecString } from '../../utils/dateTime';
 import { buildHandler } from '../../readMethodRuntime';
-const handler = buildHandler('getRecipientRateTransactionList', async (context) => {
+const handler = buildHandler('getRecipientTransactionList', async (context) => {
     const rates = (await context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])) ?? [];
     return Promise.all(rates.map(async (rate) => {
-        const [, creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientRateTransactionCore(context.methodArgs[0], context.methodArgs[1], rate);
-        const serializedRecipientRateTransaction = [
+        const [, creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientTransactionCore(context.methodArgs[0], context.methodArgs[1], rate);
+        const serializedRecipientTransaction = [
             String(creationTime ?? '0'),
             String(lastUpdateTime ?? '0'),
             String(stakedSPCoins ?? '0'),
         ].join(',');
-        const recordFields = serializedRecipientRateTransaction.split(',');
+        const recordFields = serializedRecipientTransaction.split(',');
         return {
             recipientRateKey: String(rate),
-            serializedRecipientRateTransaction: {
-                serializedRecipientRateTransaction,
+            serializedRecipientTransaction: {
+                serializedRecipientTransaction,
                 creationTime: bigIntToDateTimeString(recordFields[0] || '0'),
                 lastUpdateTime: bigIntToDateTimeString(recordFields[1] || '0'),
                 stakedSPCoins: bigIntToDecString(recordFields[2] || '0'),

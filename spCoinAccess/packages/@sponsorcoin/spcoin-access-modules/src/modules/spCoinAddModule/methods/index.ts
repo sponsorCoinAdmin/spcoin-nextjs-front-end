@@ -2,11 +2,11 @@
 export { addRecipient } from "./addRecipient";
 export { addSponsorRecipient } from "./addSponsorRecipient";
 export { addRecipientTransaction } from "./addRecipientTransaction";
-export { addRecipientRateTransaction } from "./addRecipientRateTransaction";
+export { addRecipientTransaction as addRecipientRateTransaction } from "./addRecipientRateTransaction";
 export { addRecipients } from "./addRecipients";
 export { addRecipientAgent } from "./addRecipientAgent";
 export { addAgentTransaction } from "./addAgentTransaction";
-export { addAgentRateTransaction } from "./addAgentRateTransaction";
+export { addAgentTransaction as addAgentRateTransaction } from "./addAgentRateTransaction";
 export { addAgents } from "./addAgents";
 export { addAccountRecord } from "./addAccountRecord";
 export { addAccountRecords } from "./addAccountRecords";

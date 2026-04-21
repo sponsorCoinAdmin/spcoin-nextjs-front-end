@@ -17,7 +17,7 @@ export const addBackDatedAgentTransaction = async (context, _adminSigner, _spons
     if (!signerAddress || String(signerAddress).toLowerCase() !== String(ownerAddress).toLowerCase()) {
         throw new Error("backdated sponsorship methods require the owner signer.");
     }
-    const transactionIndex = await context.spCoinContractDeployed.getAgentRateTransactionCount(
+    const transactionIndex = await context.spCoinContractDeployed.getAgentTransactionCount(
         _sponsorKey,
         _recipientKey,
         _recipientRateKey,

@@ -98,6 +98,6 @@ contract Account is StructSerialization {
     function getSerializedAccountRecord(address _accountKey)
         public view returns (string memory) {
         require(isAccountInserted(_accountKey));
-        return serializeAccount(accountMap[_accountKey]);
+        return serializedAccount(accountMap[_accountKey]);
     }
 }

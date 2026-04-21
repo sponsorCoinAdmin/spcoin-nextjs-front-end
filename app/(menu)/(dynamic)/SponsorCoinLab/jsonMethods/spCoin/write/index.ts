@@ -189,12 +189,12 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
   addSponsorRecipient: 'addRecipient',
   addAccountRecipient: 'addRecipient',
-  addRecipientRateTransaction: 'addRecipientTransaction',
+  addRecipientTransaction: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
   addAccountRecipientRate: 'addRecipientTransaction',
   addRecipientAgent: 'addAgent',
-  addAgentRateTransaction: 'addAgentTransaction',
+  addAgentTransaction: 'addAgentTransaction',
   addAgentRateAmount: 'addAgentTransaction',
   addAgentSponsorship: 'addAgentTransaction',
   addAccountAgentRate: 'addAgentTransaction',
@@ -754,11 +754,11 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
             qty,
           );
         }
-        const addRecipientRateTransaction = access.add.addRecipientRateTransaction ?? access.add.addRecipientTransaction;
-        if (typeof addRecipientRateTransaction !== 'function') {
-          throw new Error('addRecipientRateTransaction is not available on the current SpCoin access path.');
+        const addRecipientTransaction = access.add.addRecipientTransaction ?? access.add.addRecipientTransaction;
+        if (typeof addRecipientTransaction !== 'function') {
+          throw new Error('addRecipientTransaction is not available on the current SpCoin access path.');
         }
-        return addRecipientRateTransaction(
+        return addRecipientTransaction(
           sponsorKey,
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -795,7 +795,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
             qty,
           );
         }
-        const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentRateTransaction;
+        const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentTransaction;
         if (typeof addAgentTransaction !== 'function') {
           throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
         }

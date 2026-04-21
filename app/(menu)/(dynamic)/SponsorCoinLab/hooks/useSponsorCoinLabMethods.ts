@@ -22,8 +22,8 @@ import {
   type SerializationTestMethod,
 } from '../jsonMethods/serializationTests';
 import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
-import { getRateTransactionList as localGetRateTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getRateTransactionList';
-import { getAccountRateTransactionList as localGetAccountRateTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRateTransactionList';
+import { getTransactionList as localGetTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getTransactionList';
+import { getAccountTransactionList as localGetAccountTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountTransactionList';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 
@@ -808,7 +808,7 @@ export function useSponsorCoinLabMethods({
         };
       }
       if (
-        selectedMethodName === 'getAccountRateTransactionList' &&
+        selectedMethodName === 'getAccountTransactionList' &&
         Array.isArray(result) &&
         result.length === 0
       ) {
@@ -823,7 +823,7 @@ export function useSponsorCoinLabMethods({
         };
       }
       if (
-        (selectedMethod === 'getAgentRateTransaction' || selectedMethod === 'getRecipientRateTransaction') &&
+        (selectedMethod === 'getAgentTransaction' || selectedMethod === 'getRecipientTransaction') &&
         result &&
         typeof result === 'object' &&
         !Array.isArray(result)
@@ -959,7 +959,7 @@ export function useSponsorCoinLabMethods({
           ].includes(normalizedSelectedMethod);
         let result: unknown;
         try {
-          if (normalizedSelectedMethod === 'getAccountRateTransactionList') {
+          if (normalizedSelectedMethod === 'getAccountTransactionList') {
             debugTrace.push('using local account-rate parser fast path');
             const rateRewardList = parseListParam(localParams[0] || '');
             const hasMalformedRateRewardRow = rateRewardList.some((row) => {
@@ -971,15 +971,15 @@ export function useSponsorCoinLabMethods({
               result = {
                 __spcoinWarningType: 'malformed_rate_reward_list',
                 __spcoinWarningMessage:
-                  'getAccountRateTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
+                  'getAccountTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
                 items: [],
               };
             } else {
               const noopLogger = { logFunctionHeader: () => {}, logExitFunction: () => {} };
-              result = localGetAccountRateTransactionList(
+              result = localGetAccountTransactionList(
                 {
                   spCoinLogger: noopLogger,
-                  getRateTransactionList: (rows: string[]) => localGetRateTransactionList({ spCoinLogger: noopLogger }, rows),
+                  getTransactionList: (rows: string[]) => localGetTransactionList({ spCoinLogger: noopLogger }, rows),
                 },
                 rateRewardList,
               );
@@ -1009,7 +1009,7 @@ export function useSponsorCoinLabMethods({
         } catch (error) {
           const selectedMethodName = String(selectedMethod || '').trim();
           if (
-            selectedMethodName === 'getAccountRateTransactionList' &&
+            selectedMethodName === 'getAccountTransactionList' &&
             isEmptyAccountRateListReadError(error)
           ) {
             result = [];
@@ -1018,7 +1018,7 @@ export function useSponsorCoinLabMethods({
             );
             setStatus(`${selectedMethodName} returned empty data.`);
           } else if (
-            selectedMethodName === 'getAccountRateTransactionList' &&
+            selectedMethodName === 'getAccountTransactionList' &&
             isMalformedAccountRateListInput(error)
           ) {
             result = {

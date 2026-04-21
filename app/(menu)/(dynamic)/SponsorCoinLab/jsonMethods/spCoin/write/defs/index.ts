@@ -1,6 +1,6 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/defs/index.ts
 import addRecipient from './addRecipient';
-import addRecipientTransaction from './addRecipientRateTransaction';
+import addRecipientTransaction from './addRecipientTransaction';
 import addRecipients from './addRecipients';
 import addAgent from './addAgent';
 import addAgentTransaction from './addAgentTransaction';

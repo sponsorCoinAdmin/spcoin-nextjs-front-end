@@ -6,9 +6,9 @@
   "steps": [
     {
       "step": 1,
-      "name": "getAgentRateTransaction",
+      "name": "getAgentTransaction",
       "panel": "spcoin_rread",
-      "method": "getAgentRateTransaction",
+      "method": "getAgentTransaction",
       "params": [
         {
           "key": "Sponsor Key",
@@ -36,9 +36,9 @@
     },
     {
       "step": 2,
-      "name": "getAgentRateTransactionList",
+      "name": "getAgentTransactionList",
       "panel": "spcoin_rread",
-      "method": "getAgentRateTransactionList",
+      "method": "getAgentTransactionList",
       "params": [
         {
           "key": "Sponsor Key",
@@ -62,9 +62,9 @@
     },
     {
       "step": 3,
-      "name": "getAccountRateTransactionList",
+      "name": "getAccountTransactionList",
       "panel": "spcoin_rread",
-      "method": "getAccountRateTransactionList",
+      "method": "getAccountTransactionList",
       "params": [
         {
           "key": "Rate Reward List",

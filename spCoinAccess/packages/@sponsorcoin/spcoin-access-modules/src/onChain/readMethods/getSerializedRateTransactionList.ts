@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { createSerializedHandler } from '../../readMethodRuntime';
 const handler = createSerializedHandler({
-    method: 'getSerializedRateTransactionList',
-    localMethod: 'getAgentRateTransactionEntries',
+    method: 'getSerializedTransactionList',
+    localMethod: 'getAgentTransactionEntries',
     localArgs: (context) => [
         String(context.methodArgs[0]),
         String(context.methodArgs[1]),

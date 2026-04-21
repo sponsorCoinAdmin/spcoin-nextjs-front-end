@@ -277,7 +277,7 @@ export const addAgentSponsorship = async (
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = direct-transaction:send");
     const directTx = await sendWithMethodFallback("direct addAgent transaction", [
       {
-        methodNames: ["addAgentTransaction", "addAgentRateTransaction"],
+        methodNames: ["addAgentTransaction", "addAgentTransaction"],
         args: [
           sponsorKey,
           _recipientKey,
@@ -432,7 +432,7 @@ export const addAgentSponsorship = async (
     context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgentTransaction:send");
     const tx = await sendWithMethodFallback("addAgentTransaction", [
       {
-        methodNames: ["addAgentTransaction", "addAgentRateTransaction"],
+        methodNames: ["addAgentTransaction", "addAgentTransaction"],
         args: [
           sponsorKey,
           _recipientKey,

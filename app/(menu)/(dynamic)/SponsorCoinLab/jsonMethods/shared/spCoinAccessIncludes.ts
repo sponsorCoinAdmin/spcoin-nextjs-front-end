@@ -32,13 +32,13 @@ export type SpCoinAddAccess = {
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientRateTransaction?: (
+  addRecipientTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientTransaction?: (
+  addRecipientRateTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
@@ -183,21 +183,21 @@ export type SpCoinReadAccess = {
   getRecipientRateAgentKeys: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
-  getRecipientRateTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
+  getRecipientTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
   getAgentRateKeys: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
     _agentKey: string,
   ) => Promise<(string | number | bigint)[]>;
-  getAgentRateTransaction: (
+  getAgentTransaction: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
     _agentKey: string,
     _agentRateKey: string | number,
   ) => Promise<AgentRateStruct>;
-  getAgentRateTransactionList: (
+  getAgentTransactionList: (
     _sponsorKey: string,
     _recipientKey: string,
     _recipientRateKey: string | number,
@@ -218,14 +218,14 @@ export type SpCoinContractAccess = Contract & {
     decimalAmount: string,
     transactionTimestamp: number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientRateTransaction?: (
+  addRecipientTransaction?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientTransaction?: (
+  addRecipientRateTransaction?: (
     sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,

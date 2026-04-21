@@ -1,13 +1,13 @@
 // @ts-nocheck
-export async function getRecipientRateTransactionList(context, _sponsorCoin, _recipientKey, _recipientRateKey) {
-    context.spCoinLogger.logFunctionHeader("getRecipientRateTransactionList = async(" + _recipientKey + ", " + _recipientRateKey + ")");
-    let agentRateTransactionList = "";
+export async function getRecipientTransactionList(context, _sponsorCoin, _recipientKey, _recipientRateKey) {
+    context.spCoinLogger.logFunctionHeader("getRecipientTransactionList = async(" + _recipientKey + ", " + _recipientRateKey + ")");
+    let agentTransactionList = "";
     try {
-        agentRateTransactionList = await context.spCoinContractDeployed.getRecipientRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey);
+        agentTransactionList = await context.spCoinContractDeployed.getRecipientTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey);
     }
     catch (_error) {
-        agentRateTransactionList = "";
+        agentTransactionList = "";
     }
     context.spCoinLogger.logExitFunction();
-    return context.spCoinSerialize.deserializeRateTransactionRecords(agentRateTransactionList);
+    return context.spCoinSerialize.deserializeTransactionRecords(agentTransactionList);
 }

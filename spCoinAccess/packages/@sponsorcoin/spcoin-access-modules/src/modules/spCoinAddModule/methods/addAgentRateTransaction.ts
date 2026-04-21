@@ -1,4 +1,4 @@
 // @ts-nocheck
-import { addAgentTransaction } from "./addAgentTransaction";
+import { addAgentTransaction as addAgentTransactionImpl } from "./addAgentTransaction";
 
-export const addAgentRateTransaction = addAgentTransaction;
+export const addAgentRateTransaction = addAgentTransactionImpl;

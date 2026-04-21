@@ -22,15 +22,15 @@ import totalStakingRewards from './totalStakingRewards';
 import getVersion from './getVersion';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
-import getAccountRateTransactionList from './getAccountRateTransactionList';
-import getRateTransactionList from './getRateTransactionList';
+import getAccountTransactionList from './getAccountTransactionList';
+import getTransactionList from './getTransactionList';
 import getAccountListSize from './getAccountListSize';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
-import getRecipientRateTransactionList from './getRecipientRateTransactionList';
+import getRecipientTransactionList from './getRecipientTransactionList';
 import getRecipientRecordList from './getRecipientRecordList';
-import getAgentRateTransactionList from './getAgentRateTransactionList';
-import getRecipientRateTransactionAt from './getRecipientRateTransactionAt';
-import getAgentRateTransactionAt from './getAgentRateTransactionAt';
+import getAgentTransactionList from './getAgentTransactionList';
+import getRecipientTransactionAt from './getRecipientTransactionAt';
+import getAgentTransactionAt from './getAgentTransactionAt';
 import getAgentRecord from './getAgentRecord';
 import getAgentRecordList from './getAgentRecordList';
 import creationTime from './creationTime';
@@ -40,8 +40,8 @@ import getSerializedAccountRecord from './getSerializedAccountRecord';
 import getSerializedAccountRewards from './getSerializedAccountRewards';
 import getSerializedRecipientRecordList from './getSerializedRecipientRecordList';
 import getSerializedRecipientRateList from './getSerializedRecipientRateList';
-import serializeAgentRateTransactionStr from './serializeAgentRateTransactionStr';
-import getSerializedRateTransactionList from './getSerializedRateTransactionList';
+import serializedAgentTransactionStr from './serializedAgentTransactionStr';
+import getSerializedTransactionList from './getSerializedTransactionList';
 export const ONCHAIN_READ_METHOD_HANDLERS = {
     getInflationRate,
     calculateStakingRewards,
@@ -66,15 +66,15 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getVersion,
     getAccountRewardTransactionList,
     getAccountRewardTransactionRecord,
-    getAccountRateTransactionList,
-    getRateTransactionList,
+    getAccountTransactionList,
+    getTransactionList,
     getAccountListSize,
     getAccountRecipientListSize,
-    getRecipientRateTransactionList,
+    getRecipientTransactionList,
     getRecipientRecordList,
-    getAgentRateTransactionList,
-    getRecipientRateTransactionAt,
-    getAgentRateTransactionAt,
+    getAgentTransactionList,
+    getRecipientTransactionAt,
+    getAgentTransactionAt,
     getAgentRecord,
     getAgentRecordList,
     creationTime,
@@ -84,6 +84,6 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getSerializedAccountRewards,
     getSerializedRecipientRecordList,
     getSerializedRecipientRateList,
-    serializeAgentRateTransactionStr,
-    getSerializedRateTransactionList,
+    serializedAgentTransactionStr,
+    getSerializedTransactionList,
 };

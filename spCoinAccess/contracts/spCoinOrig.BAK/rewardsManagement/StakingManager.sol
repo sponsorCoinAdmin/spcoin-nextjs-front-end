@@ -115,16 +115,16 @@ contract StakingManager is AgentRates{
         rewardAccountRecord.stakingRewards += _amount;
 
         uint256[] storage rewardRateList = rewardAccountRecord.rewardRateList;
-        RewardRateStruct storage rewardRateTransaction = rewardAccountRecord.rewardRateMap[_rate];
-        if (rewardRateTransaction.rate != _rate) {
+        RewardRateStruct storage rewardTransaction = rewardAccountRecord.rewardRateMap[_rate];
+        if (rewardTransaction.rate != _rate) {
             rewardRateList.push(_rate);
-            rewardRateTransaction.rate = _rate;
+            rewardTransaction.rate = _rate;
         }
         // console.log("SOL=>2.9 rewardRateList.length = ",rewardRateList.length);
-        // console.log("SOL=>2.10 rewardRateTransaction.rate = ",rewardRateTransaction.rate);
-        rewardRateTransaction.stakingRewards += _amount;
-        // console.log("SOL=>2.11 rewardRateTransaction.stakingRewards = ", rewardRateTransaction.stakingRewards);
-        RewardsTransactionStruct[] storage rewardTransactionList = rewardRateTransaction.rewardTransactionList;
+        // console.log("SOL=>2.10 rewardTransaction.rate = ",rewardTransaction.rate);
+        rewardTransaction.stakingRewards += _amount;
+        // console.log("SOL=>2.11 rewardTransaction.stakingRewards = ", rewardTransaction.stakingRewards);
+        RewardsTransactionStruct[] storage rewardTransactionList = rewardTransaction.rewardTransactionList;
         depositRewardTransaction( rewardTransactionList, _amount );
         // console.log("SOL=>2.12 rewardTransactionList[0].stakingRewards = ", rewardTransactionList[0].stakingRewards);
 
@@ -182,7 +182,7 @@ contract StakingManager is AgentRates{
             RewardTypeStruct storage rewardsRecord = depositAccount.rewardsMap[getAccountTypeString(_rewardType)];
             RewardAccountStruct storage accountReward;
             accountReward = rewardsRecord.rewardsMap[accountKey];
-            memoryRewards = concat(memoryRewards, getRewardRateTransactions(accountReward));
+            memoryRewards = concat(memoryRewards, getRewardTransactions(accountReward));
 
             // console.log("SOL=>17 accountKey[", idx,"] = ", accountSearchList[idx]);
             // console.log("SOL=>17.4 memoryRewards =", accountKey);
@@ -191,9 +191,9 @@ contract StakingManager is AgentRates{
         return memoryRewards;
     }
 
-    function getRewardRateTransactions(RewardAccountStruct storage _rewardAccountRecord)
+    function getRewardTransactions(RewardAccountStruct storage _rewardAccountRecord)
         internal  view returns (string memory memoryRewards) {
-// console.log("SOL=>18 getRewardRateTransactions(RewardAccountStruct storage _rewardAccountRecord)");
+// console.log("SOL=>18 getRewardTransactions(RewardAccountStruct storage _rewardAccountRecord)");
 
         uint256[] storage rewardRateList = _rewardAccountRecord.rewardRateList;
 // console.log("SOL=>18.1 BEFORE memoryRewards", memoryRewards);
@@ -203,18 +203,18 @@ contract StakingManager is AgentRates{
             uint rate = rewardRateList[rateIdx];
 // console.log("SOL=>18.3 rate", rate);
 
-            RewardRateStruct storage rewardRateTransaction = _rewardAccountRecord.rewardRateMap[rate];
-            RewardsTransactionStruct[] storage rewardTransactionList = rewardRateTransaction.rewardTransactionList;
+            RewardRateStruct storage rewardTransaction = _rewardAccountRecord.rewardRateMap[rate];
+            RewardsTransactionStruct[] storage rewardTransactionList = rewardTransaction.rewardTransactionList;
 
             memoryRewards = concat(memoryRewards, ",", toString(_rewardAccountRecord.stakingRewards));
             // console.log("SOL=> _rewardAccountRecord.rewardTransactionList.length         = ", _rewardAccountRecord.rewardTransactionList.length);
             // console.log("SOL=> _rewardAccountRecord.rewardTransactionList.stakingRewards = ", _rewardAccountRecord.stakingRewards);
             memoryRewards = concat(memoryRewards, "\nRATE:", toString(rate));
-            memoryRewards = concat(memoryRewards, ",", toString(rewardRateTransaction.stakingRewards));
+            memoryRewards = concat(memoryRewards, ",", toString(rewardTransaction.stakingRewards));
 
 // console.log("SOL=>18.4 rewardTransactionList.length", rewardTransactionList.length);
             if (rewardTransactionList.length != 0) {
-                string memory stringRewards = serializeRewardsTransactionList(rewardTransactionList);
+                string memory stringRewards = serializedRewardsTransactionList(rewardTransactionList);
 // console.log("SOL=>18.5 stringRewards", stringRewards);
                 memoryRewards = concat(memoryRewards, "\n" , stringRewards);
             }

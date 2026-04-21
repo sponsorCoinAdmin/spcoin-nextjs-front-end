@@ -1,8 +1,8 @@
-// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/getRecipientRateTransaction.ts
+// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/getRecipientTransaction.ts
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-    title: 'getRecipientRateTransaction',
+    title: 'getRecipientTransaction',
     params: [
       { label: 'Sponsor Key', placeholder: 'address _sponsorKey', type: 'address' },
       { label: 'Recipient Key', placeholder: 'address _recipientKey', type: 'address' },

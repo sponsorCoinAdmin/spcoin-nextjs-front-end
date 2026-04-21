@@ -99,18 +99,18 @@ These come from public state variables:
 - `getRecipientRecordByKeys(address,address)`
 - `getRecipientRecordCore(address,address)`
 - `getRecipientRateList(address,address)`
-- `getRecipientRateTransaction(address,address,uint)`
-- `getRecipientRateTransaction(address,address,uint,uint)`
-- `getRecipientRateTransactionByKeys(address,address,uint)`
-- `getRecipientRateTransactionCore(address,address,uint256)`
+- `getRecipientTransaction(address,address,uint)`
+- `getRecipientTransaction(address,address,uint,uint)`
+- `getRecipientTransactionByKeys(address,address,uint)`
+- `getRecipientTransactionCore(address,address,uint256)`
 - `getAgentRecord(address,address,uint,address)`
 - `getAgentRecordByKeys(address,address,uint,address)`
 - `getRecipientRateAgentList(address,address,uint256)`
 - `getAgentTotalRecipient(address,address,uint,address)`
 - `getAgentRateList(address,address,uint,address)`
-- `getAgentRateTransaction(address,address,uint,address,uint,uint)`
-- `getAgentRateTransactionByKeys(address,address,uint,address,uint)`
-- `getAgentRateTransactionCore(address,address,uint,address,uint)`
+- `getAgentTransaction(address,address,uint,address,uint,uint)`
+- `getAgentTransactionByKeys(address,address,uint,address,uint)`
+- `getAgentTransactionCore(address,address,uint,address,uint)`
 - `getSponsorAccountRecord(address)`
 
 ### Account / Recipient / Agent Mutators
@@ -132,12 +132,12 @@ There are also internal reward calculation/update helpers in `RewardsManager`, b
 ### Transaction Methods
 
 - `addSponsorship(address,uint,address,uint,string,string)`
-- `addRecipientRateTransaction(address,address,uint,string,string)`
+- `addRecipientTransaction(address,address,uint,string,string)`
 - `addAgentTransaction(address,address,uint,address,uint,string,string)`
 - `backDateTransactionDate(address,address,uint256,address,uint256,uint256,uint256)`
-- `getAgentRateTransactionCount(address,address,uint256,address,uint256)`
-- `getRecipientRateTransactionCount(address,address,uint256)`
-- `getAgentRateTransactionAt(address,address,uint256,address,uint256,uint256)`
+- `getAgentTransactionCount(address,address,uint256,address,uint256)`
+- `getRecipientTransactionCount(address,address,uint256)`
+- `getAgentTransactionAt(address,address,uint256,address,uint256,uint256)`
 
 ### Delete / Unsubscribe
 
@@ -152,17 +152,17 @@ There are also internal reward calculation/update helpers in `RewardsManager`, b
 
 ## Important Correction From Discussion
 
-Earlier discussion mixed token-exposed methods with app/module serializer methods.
+Earlier discussion mixed token-exposed methods with app/module serializedR methods.
 
-These are app/module serializer style methods, not necessarily token-exported methods:
+These are app/module serializedR style methods, not necessarily token-exported methods:
 
 - `getSerializedSPCoinHeader`
 - `getSerializedAccountRecord`
 - `getSerializedAccountRewards`
 - `getSerializedRecipientRecordList`
 - `getSerializedRecipientRateList`
-- `serializeAgentRateTransactionStr`
-- `getSerializedRateTransactionList`
+- `serializedAgentTransactionStr`
+- `getSerializedTransactionList`
 
 Reward-related token methods currently include:
 
@@ -195,8 +195,8 @@ Use `Core` for low-level tuple getters that are meant to be reconstructed by the
 
 - `getAccountCore`
 - `getRecipientRecordCore`
-- `getRecipientRateTransactionCore`
-- `getAgentRateTransactionCore`
+- `getRecipientTransactionCore`
+- `getAgentTransactionCore`
 
 Use `List` only for collections and `Count` only for scalar collection sizes.
 
@@ -211,23 +211,23 @@ High priority:
 Reward parser/helper names:
 
 - `getAccountRewardTransactionRecord` -> `getRewardAccountRecord`
-- `getAccountRateTransactionList` -> `getRewardRateTransactionList` or `getAccountRewardRateList`
-- `getRateTransactionList` -> `getRewardRateTransactionList`
+- `getAccountTransactionList` -> `getRewardTransactionList` or `getAccountRewardRateList`
+- `getTransactionList` -> `getRewardTransactionList`
 
 Recipient/agent rate names, if the domain should consistently use transaction terminology:
 
-- `getRecipientRateTransaction` -> `getRecipientRateTransaction`
-- `getRecipientRateTransactionList` -> `getRecipientRateTransactionList`
-- `getAgentRateTransaction` -> `getAgentRateTransaction`
-- `getAgentRateTransactionList` -> `getAgentRateTransactionList`
+- `getRecipientTransaction` -> `getRecipientTransaction`
+- `getRecipientTransactionList` -> `getRecipientTransactionList`
+- `getAgentTransaction` -> `getAgentTransaction`
+- `getAgentTransactionList` -> `getAgentTransactionList`
 
 Core getter names can stay as-is for now because they communicate raw tuple access clearly:
 
 - `getAccountCore`
 - `getAccountLinks`
 - `getRecipientRecordCore`
-- `getRecipientRateTransactionCore`
-- `getAgentRateTransactionCore`
+- `getRecipientTransactionCore`
+- `getAgentTransactionCore`
 
 ## Rule for the `Record` Suffix
 

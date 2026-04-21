@@ -4,7 +4,7 @@ export { SPCOIN_READ_METHOD_DEFS };
 import { createSpCoinLibraryAccess, type SpCoinAccessSource, type SpCoinContractAccess, type SpCoinReadAccess, type SpCoinStakingAccess } from '../../shared';
 import type { ParamDef } from '../../shared/types';
 import { normalizeStringListResult } from '../../shared/normalizeListResult';
-import { buildExternalSerializerResult, type SerializationBaseMethod } from '../../serializationTests';
+import { buildExternalserializedRResult, type SerializationBaseMethod } from '../../serializationTests';
 
 export type SpCoinReadMethod =
   | 'getInflationRate'
@@ -29,12 +29,12 @@ export type SpCoinReadMethod =
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
   | 'getAccountRewardTransactionRecord'
-  | 'getAccountRateTransactionList'
-  | 'getRateTransactionList'
+  | 'getAccountTransactionList'
+  | 'getTransactionList'
   | 'getRecipientRateList'
   | 'getRecipientRateKeys'
-  | 'getRecipientRateTransaction'
-  | 'getRecipientRateTransactionList'
+  | 'getRecipientTransaction'
+  | 'getRecipientTransactionList'
   | 'getRecipientRateAgentList'
   | 'getRecipientRateAgentKeys'
   | 'getLowerRecipientRate'
@@ -47,13 +47,13 @@ export type SpCoinReadMethod =
   | 'getLowerAgentRate'
   | 'getUpperAgentRate'
   | 'getAgentRateRange'
-  | 'getAgentRateTransaction'
+  | 'getAgentTransaction'
   | 'getAgentTotalRecipient'
-  | 'getRecipientRateTransactionCount'
-  | 'getAgentRateTransactionCount'
-  | 'getRecipientRateTransactionAt'
-  | 'getAgentRateTransactionAt'
-  | 'getAgentRateTransactionList'
+  | 'getRecipientTransactionCount'
+  | 'getAgentTransactionCount'
+  | 'getRecipientTransactionAt'
+  | 'getAgentTransactionAt'
+  | 'getAgentTransactionList'
   | 'getAgentRecord'
   | 'getAgentRecordList'
   | 'getInitialTotalSupply'
@@ -73,7 +73,7 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   version: 'getVersion',
   initialTotalSupply: 'getInitialTotalSupply',
-  getAccountRateTransactionList: 'getAccountRateTransactionList',
+  getAccountTransactionList: 'getAccountTransactionList',
   getMasterAccountList: 'getMasterAccountKeys',
   getAccountKeys: 'getMasterAccountKeys',
   getAccountElement: 'getMasterAccountElement',
@@ -95,8 +95,8 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getSerializedAccountRecord: 'getAccountRecord',
   getSerializedAccountRewards: 'getAccountStakingRewards',
   getSerializedRecipientRecordList: 'getRecipientRecord',
-  getSerializedRecipientRateList: 'getRecipientRateTransaction',
-  serializeAgentRateTransactionStr: 'getAgentRateTransaction',
+  getSerializedRecipientRateList: 'getRecipientTransaction',
+  serializedAgentTransactionStr: 'getAgentTransaction',
   getAccountTimeInSecondeSinceUpdate: 'calcDataTimeDiff',
 };
 
@@ -104,8 +104,8 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountRecord',
   'getAccountStakingRewards',
   'getRecipientRecord',
-  'getRecipientRateTransaction',
-  'getAgentRateTransaction',
+  'getRecipientTransaction',
+  'getAgentTransaction',
 ];
 
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
@@ -164,7 +164,7 @@ async function requireExternalSerializedValue(
   method: SerializationBaseMethod,
   methodArgs: unknown[],
 ): Promise<string> {
-  const external = await buildExternalSerializerResult(contract, method, methodArgs);
+  const external = await buildExternalserializedRResult(contract, method, methodArgs);
   if (external.blocked) {
     throw new Error(external.reason);
   }

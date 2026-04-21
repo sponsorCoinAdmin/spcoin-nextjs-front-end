@@ -9,7 +9,7 @@ contract StructSerialization is Utils {
 
     string constant delimiter = "\\,";
 
-        function serializeRewardsTransactionList(RewardsTransactionStruct[] storage _rewardTransactionList)
+        function serializedRewardsTransactionList(RewardsTransactionStruct[] storage _rewardTransactionList)
         internal  view returns (string memory memoryRewards) {
         for (uint idx = 0; idx < _rewardTransactionList.length; idx++) {
             RewardsTransactionStruct storage rewardTransaction = _rewardTransactionList[idx];

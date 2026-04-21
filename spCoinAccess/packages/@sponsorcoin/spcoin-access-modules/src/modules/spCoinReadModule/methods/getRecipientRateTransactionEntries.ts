@@ -1,19 +1,19 @@
 // @ts-nocheck
-export async function getRecipientRateTransactionEntries(context, _sponsorCoin, _recipientKey, _recipientRateKey) {
-    context.spCoinLogger.logFunctionHeader("getRecipientRateTransactionEntries = async(" + _recipientKey + ", " + _recipientRateKey + ")");
-    let agentRateTransactionList = "";
+export async function getRecipientTransactionEntries(context, _sponsorCoin, _recipientKey, _recipientRateKey) {
+    context.spCoinLogger.logFunctionHeader("getRecipientTransactionEntries = async(" + _recipientKey + ", " + _recipientRateKey + ")");
+    let agentTransactionList = "";
     try {
-        const transactionCount = await context.spCoinContractDeployed.getRecipientRateTransactionCount(_sponsorCoin, _recipientKey, _recipientRateKey);
+        const transactionCount = await context.spCoinContractDeployed.getRecipientTransactionCount(_sponsorCoin, _recipientKey, _recipientRateKey);
         const transactionRows = [];
         for (let transactionIndex = 0; transactionIndex < Number(transactionCount || 0); transactionIndex++) {
-            const [insertionTime, stakingRewards] = await context.spCoinContractDeployed.getRecipientRateTransactionAt(_sponsorCoin, _recipientKey, _recipientRateKey, transactionIndex);
+            const [insertionTime, stakingRewards] = await context.spCoinContractDeployed.getRecipientTransactionAt(_sponsorCoin, _recipientKey, _recipientRateKey, transactionIndex);
             transactionRows.push(String(insertionTime) + "," + String(stakingRewards));
         }
-        agentRateTransactionList = transactionRows.join("\n");
+        agentTransactionList = transactionRows.join("\n");
     }
     catch (_error) {
-        agentRateTransactionList = "";
+        agentTransactionList = "";
     }
     context.spCoinLogger.logExitFunction();
-    return context.spCoinSerialize.deserializeRateTransactionRecords(agentRateTransactionList);
+    return context.spCoinSerialize.deserializeTransactionRecords(agentTransactionList);
 }

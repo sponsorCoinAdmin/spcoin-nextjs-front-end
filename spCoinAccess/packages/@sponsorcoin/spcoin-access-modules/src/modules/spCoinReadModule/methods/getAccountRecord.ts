@@ -84,8 +84,8 @@ function getRelationshipReadCache(runtime) {
             recipientRateList: new Map(),
             recipientRateAgentList: new Map(),
             agentRateList: new Map(),
-            recipientRateTransactionFields: new Map(),
-            agentRateTransactionFields: new Map(),
+            recipientTransactionFields: new Map(),
+            agentTransactionFields: new Map(),
             pendingRewardsSummary: new Map(),
             spCoinMetaData: undefined,
         };
@@ -143,28 +143,28 @@ async function getAgentRateListCached(runtime, sponsorAccountKey, recipientAccou
     return await cache.agentRateList.get(key);
 }
 
-async function getRecipientRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
+async function getRecipientTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}`;
-    if (!cache.recipientRateTransactionFields.has(key)) {
-        cache.recipientRateTransactionFields.set(
+    if (!cache.recipientTransactionFields.has(key)) {
+        cache.recipientTransactionFields.set(
             key,
-            runtime.spCoinSerialize.getRecipientRateTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey),
+            runtime.spCoinSerialize.getRecipientTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey),
         );
     }
-    return await cache.recipientRateTransactionFields.get(key);
+    return await cache.recipientTransactionFields.get(key);
 }
 
-async function getAgentRateTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
+async function getAgentTransactionFieldsCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}|${String(agentAccountKey ?? "").trim().toLowerCase()}|${String(agentRateKey ?? "")}`;
-    if (!cache.agentRateTransactionFields.has(key)) {
-        cache.agentRateTransactionFields.set(
+    if (!cache.agentTransactionFields.has(key)) {
+        cache.agentTransactionFields.set(
             key,
-            runtime.spCoinSerialize.getAgentRateTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey),
+            runtime.spCoinSerialize.getAgentTransactionFields(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey),
         );
     }
-    return await cache.agentRateTransactionFields.get(key);
+    return await cache.agentTransactionFields.get(key);
 }
 
 async function getPendingRewardsSummary(runtime, accountKey) {
@@ -252,7 +252,7 @@ async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKe
                 agentAccountKey,
             );
             for (const agentRateKey of Array.isArray(agentRateKeys) ? agentRateKeys : []) {
-                const agentRateTransactionFields = await getAgentRateTransactionFieldsCached(
+                const agentTransactionFields = await getAgentTransactionFieldsCached(
                     runtime,
                     sponsorAccountKey,
                     recipientAccountKey,
@@ -263,7 +263,7 @@ async function getAgentParentRelationshipsForRecipient(runtime, sponsorAccountKe
                 relationships.push(
                     buildAgentParentRelationshipRecord(
                         agentRateKey,
-                        agentRateTransactionFields?.[2] ?? "0",
+                        agentTransactionFields?.[2] ?? "0",
                     ),
                 );
             }
@@ -302,7 +302,7 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
         const recipientRateList = await getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey);
         const recipientRates = {};
         for (const recipientRateKey of Array.from(new Set(Array.isArray(recipientRateList) ? recipientRateList.map((value) => String(value ?? "")) : []))) {
-            const recipientRateTransactionFields = await getRecipientRateTransactionFieldsCached(
+            const recipientTransactionFields = await getRecipientTransactionFieldsCached(
                 runtime,
                 sponsorAccountKey,
                 recipientAccountKey,
@@ -331,7 +331,7 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
                 for (const relationship of agentRelationships) {
                     relationship.stakedAmount = String(
                         (
-                            await getAgentRateTransactionFieldsCached(
+                            await getAgentTransactionFieldsCached(
                                 runtime,
                                 sponsorAccountKey,
                                 recipientAccountKey,
@@ -351,7 +351,7 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
             recipientRates[String(recipientRateKey ?? "")] = {
                 TYPE: "--RECIPIENT_RATE--",
                 recipientRate: String(recipientRateKey ?? ""),
-                stakedAmount: String(recipientRateTransactionFields?.[2] ?? "0"),
+                stakedAmount: String(recipientTransactionFields?.[2] ?? "0"),
                 agentKeys: Array.from(agentAccountMap.values()),
             };
         }
@@ -501,7 +501,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
                             buildAgentParentRelationshipRecord(
                                 agentRateKey,
                                 (
-                                    await getAgentRateTransactionFieldsCached(
+                                    await getAgentTransactionFieldsCached(
                                         runtime,
                                         sponsorAccountKey,
                                         recipientAccountKey,
