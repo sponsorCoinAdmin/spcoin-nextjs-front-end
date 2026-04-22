@@ -276,6 +276,14 @@ function formatCreationTimeResult(value: unknown) {
   };
 }
 
+function formatMethodRunTime(elapsedMs: number) {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function parseDateTimeInput(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(String(value || '').trim());
   if (!match) return null;
@@ -493,6 +501,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       requireExternalSerializedValue: (method: string, args: unknown[]) =>
         requireExternalSerializedValue(contract, method as SerializationBaseMethod, args),
       compareSpCoinContractSize: async (previousReleaseDir: string, latestReleaseDir: string) => {
+        const startedAt = Date.now();
         const response = await fetch('/api/spCoin/contract-size-comparison', {
           method: 'POST',
           cache: 'no-store',
@@ -507,20 +516,60 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
           message?: string;
           report?: unknown;
           scriptPath?: string;
+          compilerBackend?: string;
           stderr?: string;
           previousReleaseDir?: string;
           latestReleaseDir?: string;
+          previousFingerprint?: string;
+          latestFingerprint?: string;
           cached?: boolean;
         };
         if (!response.ok || payload?.ok === false) {
           throw new Error(payload?.message || `Unable to compare SPCoin contract size (${response.status})`);
         }
+        const reportRecord =
+          payload?.report && typeof payload.report === 'object' && !Array.isArray(payload.report)
+            ? (payload.report as Record<string, unknown>)
+            : {};
+        const variants = Array.isArray(reportRecord.variants) ? (reportRecord.variants as Array<Record<string, unknown>>) : [];
+        const latestVariant = variants.find((entry) => String(entry?.label || '') === 'latest') || null;
+        const previousVariant = variants.find((entry) => String(entry?.label || '') === 'previous') || null;
+        const elapsedMs = Date.now() - startedAt;
+        const latestBytesVsLimit = Number(latestVariant?.deployedMarginBytes ?? NaN);
+        const previousBytesVsLimit = Number(previousVariant?.deployedMarginBytes ?? NaN);
+        const deltaRecord =
+          reportRecord.delta && typeof reportRecord.delta === 'object' && !Array.isArray(reportRecord.delta)
+            ? (reportRecord.delta as Record<string, unknown>)
+            : {};
         return {
-          scriptPath: String(payload?.scriptPath || ''),
-          previousReleaseDir: String(payload?.previousReleaseDir || ''),
-          latestReleaseDir: String(payload?.latestReleaseDir || ''),
-          cached: Boolean(payload?.cached),
-          report: payload?.report ?? {},
+          delta: {
+            ...deltaRecord,
+            methodRunTime: formatMethodRunTime(elapsedMs),
+          },
+          latestSizeStatus: latestVariant
+            ? {
+                deployedBytes: latestVariant.deployedBytes ?? null,
+                bytesVsLimit: latestVariant.deployedMarginBytes ?? null,
+                limitStatus: latestVariant.deployedMarginLabel ?? '',
+              }
+            : null,
+          previousSizeStatus: previousVariant
+            ? {
+                deployedBytes: previousVariant.deployedBytes ?? null,
+                bytesVsLimit: previousVariant.deployedMarginBytes ?? null,
+                limitStatus: previousVariant.deployedMarginLabel ?? '',
+              }
+            : null,
+          latestLimitSummary: Number.isFinite(latestBytesVsLimit)
+            ? latestBytesVsLimit >= 0
+              ? `Latest build is not oversized yet. It is ${latestBytesVsLimit.toLocaleString()} bytes under the EIP-170 limit.`
+              : `Latest build is oversized by ${Math.abs(latestBytesVsLimit).toLocaleString()} bytes vs the EIP-170 limit.`
+            : '',
+          previousLimitSummary: Number.isFinite(previousBytesVsLimit)
+            ? previousBytesVsLimit >= 0
+              ? `Previous build was ${previousBytesVsLimit.toLocaleString()} bytes under the EIP-170 limit.`
+              : `Previous build was oversized by ${Math.abs(previousBytesVsLimit).toLocaleString()} bytes vs the EIP-170 limit.`
+            : '',
           stderr: String(payload?.stderr || ''),
         };
       },

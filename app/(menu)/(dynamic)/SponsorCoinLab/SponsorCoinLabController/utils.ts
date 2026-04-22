@@ -172,6 +172,7 @@ function parseStructuredErrorMessage(input: string): Record<string, unknown> | n
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   const DATE_TIME_KEYS = ['creationTime', 'creationDate', 'lastUpdateTime', 'updateTime', 'insertionTime'];
+  const DURATION_KEYS = ['methodRunTime', 'runtime', 'duration'];
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = input.trim();
     const normalized = trimmed.replace(/_/g, ' ');
@@ -297,6 +298,9 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath.includes('formatted')) return value;
+    if (DURATION_KEYS.includes(keyPath[keyPath.length - 1] || '') && /^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
     if (DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
       return normalizeDisplayDateString(trimmed) ?? value;
     }

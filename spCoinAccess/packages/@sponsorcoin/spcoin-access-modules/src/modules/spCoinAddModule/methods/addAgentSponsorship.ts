@@ -320,9 +320,9 @@ export const addAgentSponsorship = async (
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addRecipient:send");
       const addRecipientTx = await sendWithMethodFallback("addRecipient", [
         {
-          methodNames: ["addSponsorRecipient"],
+          methodNames: ["addRecipient"],
           args: [sponsorKey, _recipientKey],
-          logLabel: "addSponsorRecipient",
+          logLabel: "addRecipient",
         },
         {
           methodNames: ["addRecipient"],
@@ -380,9 +380,9 @@ export const addAgentSponsorship = async (
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:send");
       const addAgentTx = await sendWithMethodFallback("addAgent", [
         {
-          methodNames: ["addRecipientAgent"],
+          methodNames: ["addAgent"],
           args: [sponsorKey, _recipientKey, _recipientRateKey, _accountAgentKey],
-          logLabel: "addRecipientAgent",
+          logLabel: "addAgent",
         },
         {
           methodNames: ["addAgent"],
@@ -390,11 +390,11 @@ export const addAgentSponsorship = async (
           logLabel: "addAgent",
         },
       ]);
-      context.spCoinLogger.logDetail("JS => addRecipientAgent tx hash = " + String(addAgentTx?.hash || ""));
+      context.spCoinLogger.logDetail("JS => addAgent tx hash = " + String(addAgentTx?.hash || ""));
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:wait");
       const addAgentReceipt = await addAgentTx.wait();
-      ensureSuccessfulReceipt("addRecipientAgent", addAgentReceipt);
-      context.spCoinLogger.logDetail("JS => addRecipientAgent mined");
+      ensureSuccessfulReceipt("addAgent", addAgentReceipt);
+      context.spCoinLogger.logDetail("JS => addAgent mined");
       context.spCoinLogger.logDetail("JS => addAgentSponsorship stage = addAgent:settle");
       await sleep(1000);
     }

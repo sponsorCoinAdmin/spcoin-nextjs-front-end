@@ -8,6 +8,7 @@ import DiscardChangesPopup from '../components/DiscardChangesPopup';
 import MethodsPanelCard from '../components/MethodsPanelCard';
 import NetworkSignerCard from '../components/NetworkSignerCard';
 import OutputResultsCard from '../components/OutputResultsCard';
+import RunningMethodPopup from '../components/RunningMethodPopup';
 import ValidationPopup from '../components/ValidationPopup';
 import type { LabCardId } from './types';
 
@@ -40,6 +41,14 @@ type Props = {
   discardChangesMessage: string;
   clearDiscardChangesPopup: () => void;
   handleDiscardConfirm: () => void;
+  runningMethodPopup: {
+    isOpen: boolean;
+    methodName: string;
+    startedAt: number;
+    isCancelling: boolean;
+    onCancel: () => void;
+    onAcknowledge: () => void;
+  };
 };
 
 export default function SponsorCoinLabView({
@@ -71,6 +80,7 @@ export default function SponsorCoinLabView({
   discardChangesMessage,
   clearDiscardChangesPopup,
   handleDiscardConfirm,
+  runningMethodPopup,
 }: Props) {
   return (
     <main id="sponsorcoin-sandbox-root" className="min-h-screen bg-[#090C16] p-6 text-white">
@@ -160,6 +170,8 @@ export default function SponsorCoinLabView({
         onCancel={clearDiscardChangesPopup}
         onConfirm={handleDiscardConfirm}
       />
+
+      <RunningMethodPopup {...runningMethodPopup} />
     </main>
   );
 }

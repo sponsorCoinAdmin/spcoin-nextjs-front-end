@@ -381,15 +381,15 @@ export function useControllerAccounts({
                 );
               }
               if (selectedSponsorCoinAccountRole === 'recipient') {
-                if (typeof connectedContract.addSponsorRecipient !== 'function') {
-                  throw new Error('addSponsorRecipient is not available on the current SpCoin contract access path.');
+                if (typeof connectedContract.addRecipient !== 'function') {
+                  throw new Error('addRecipient is not available on the current SpCoin contract access path.');
                 }
-                return connectedContract.addSponsorRecipient(hardhatSenderAddress, accountAddress) as Promise<TransactionLike>;
+                return connectedContract.addRecipient(hardhatSenderAddress, accountAddress) as Promise<TransactionLike>;
               }
-              if (typeof connectedContract.addRecipientAgent !== 'function') {
-                throw new Error('addRecipientAgent is not available on the current SpCoin contract access path.');
+              if (typeof connectedContract.addAgent !== 'function') {
+                throw new Error('addAgent is not available on the current SpCoin contract access path.');
               }
-              return connectedContract.addRecipientAgent(
+              return connectedContract.addAgent(
                 hardhatSenderAddress,
                 recipientKey,
                 recipientRateKey,

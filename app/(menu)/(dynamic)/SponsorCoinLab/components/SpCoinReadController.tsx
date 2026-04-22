@@ -151,6 +151,7 @@ type Props = {
   hideMethodSelect?: boolean;
   hideActionButtons?: boolean;
   hideAddToScript?: boolean;
+  allowAdminReadMethods?: boolean;
 };
 
 function dedupeReadMethodNamesByTitle(values: string[], defs: Record<string, MethodDef>) {
@@ -209,6 +210,7 @@ export default function SpCoinReadController(props: Props) {
     hideMethodSelect = false,
     hideActionButtons = false,
     hideAddToScript = false,
+    allowAdminReadMethods = false,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [dateTimePopupParamIdx, setDateTimePopupParamIdx] = React.useState<number | null>(null);
@@ -246,6 +248,7 @@ export default function SpCoinReadController(props: Props) {
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
+  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<Array<{ value: string; label: string }>>([]);
   const today = React.useMemo(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -385,6 +388,45 @@ export default function SpCoinReadController(props: Props) {
       ),
     [showOnChainMethods, spCoinAdminReadOptions, spCoinReadMethodDefs],
   );
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadContractDirectoryOptions = async () => {
+      try {
+        const response = await fetch('/api/spCoin/contract-directories', { cache: 'no-store' });
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          directories?: Array<{ value?: string; label?: string }>;
+        };
+        if (!response.ok || payload?.ok === false) return;
+        if (cancelled) return;
+        setContractDirectoryOptions(
+          Array.isArray(payload?.directories)
+            ? payload.directories
+                .map((entry) => ({
+                  value: String(entry?.value || '').trim(),
+                  label: String(entry?.label || '').trim() || String(entry?.value || '').trim(),
+                }))
+                .filter((entry) => entry.value.length > 0)
+            : [],
+        );
+      } catch {
+        if (!cancelled) setContractDirectoryOptions([]);
+      }
+    };
+
+    void loadContractDirectoryOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const rawAdminReadOptions = React.useMemo(
+    () =>
+      showOnChainMethods
+        ? spCoinAdminReadOptions.filter((name) => name !== 'calculateStakingRewards' && name !== 'calcDataTimeDiff')
+        : [],
+    [showOnChainMethods, spCoinAdminReadOptions],
+  );
   const visibleAdminReadTitles = React.useMemo(
     () => new Set(visibleAdminReadOptions.map((name) => String(spCoinReadMethodDefs[name]?.title || name))),
     [spCoinReadMethodDefs, visibleAdminReadOptions],
@@ -415,11 +457,17 @@ export default function SpCoinReadController(props: Props) {
       visibleWorldReadOptions,
     ],
   );
+  const selectableReadMethods = React.useMemo(() => {
+    if (!allowAdminReadMethods) return visibleReadMethods;
+    const selectedMethod =
+      selectedSpCoinReadMethod && spCoinReadMethodDefs[selectedSpCoinReadMethod] ? [selectedSpCoinReadMethod] : [];
+    return Array.from(new Set([...selectedMethod, ...rawAdminReadOptions, ...visibleReadMethods]));
+  }, [allowAdminReadMethods, rawAdminReadOptions, selectedSpCoinReadMethod, spCoinReadMethodDefs, visibleReadMethods]);
   React.useEffect(() => {
-    if (visibleReadMethods.length === 0) return;
-    if (visibleReadMethods.includes(selectedSpCoinReadMethod)) return;
-    setSelectedSpCoinReadMethod(visibleReadMethods[0]);
-  }, [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod, visibleReadMethods]);
+    if (selectableReadMethods.length === 0) return;
+    if (selectableReadMethods.includes(selectedSpCoinReadMethod)) return;
+    setSelectedSpCoinReadMethod(selectableReadMethods[0]);
+  }, [selectableReadMethods, selectedSpCoinReadMethod, setSelectedSpCoinReadMethod]);
   React.useEffect(() => {
     const nextValue = String(activeContractAddress || '').trim();
     if (!nextValue) return;
@@ -447,9 +495,9 @@ export default function SpCoinReadController(props: Props) {
       return next;
     });
   }, [selectedSpCoinReadMethod, setSpReadParams]);
-  const hasVisibleReadMethods = visibleReadMethods.length > 0;
+  const hasVisibleReadMethods = selectableReadMethods.length > 0;
   const displayedReadMethod =
-    hasVisibleReadMethods && visibleReadMethods.includes(selectedSpCoinReadMethod)
+    hasVisibleReadMethods && selectableReadMethods.includes(selectedSpCoinReadMethod)
       ? selectedSpCoinReadMethod
       : '__no_methods__';
 
@@ -730,6 +778,39 @@ export default function SpCoinReadController(props: Props) {
               }}
               helpText={agentRateKeyHelpText || (agentRateKeyOptions.length ? `Available keys: ${agentRateKeyOptions.join(', ')}` : '')}
             />
+          ) : selectedSpCoinReadMethod === 'compareSpCoinContractSize' &&
+            ['Previous Release Directory', 'Latest Release Directory'].includes(param.label) ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="relative w-full min-w-0">
+                <select
+                  data-field-id={`spcoin-read-param-${idx}`}
+                  className={`${inputStyle} appearance-none pr-10${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  value={spReadParams[idx] || ''}
+                  onChange={(e) => {
+                    markEditorAsUserEdited();
+                    setSpReadParams((prev) => {
+                      clearInvalidField(`spcoin-read-param-${idx}`);
+                      const next = [...prev];
+                      next[idx] = e.target.value;
+                      return next;
+                    });
+                  }}
+                >
+                  <option value="" disabled>
+                    Select contract directory
+                  </option>
+                  {contractDirectoryOptions.map((option) => (
+                    <option key={`spcoin-contract-dir-${param.label}-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+                  v
+                </span>
+              </div>
+            </label>
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>

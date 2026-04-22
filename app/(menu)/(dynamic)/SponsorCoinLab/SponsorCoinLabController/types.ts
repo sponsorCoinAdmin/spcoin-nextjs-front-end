@@ -9,8 +9,8 @@ export type MethodSelectionSource = 'dropdown' | 'script';
 export type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
 
 export type SponsorCoinManageContract = SpCoinContractAccess & {
-  addSponsorRecipient?: (sponsorKey: string, recipientKey: string) => Promise<unknown>;
-  addRecipientAgent?: (sponsorKey: string, recipientKey: string, recipientRateKey: string, accountAddress: string) => Promise<unknown>;
+  addRecipient?: (sponsorKey: string, recipientKey: string) => Promise<unknown>;
+  addAgent?: (sponsorKey: string, recipientKey: string, recipientRateKey: string, accountAddress: string) => Promise<unknown>;
   deleteAccountRecord?: (accountAddress: string) => Promise<unknown>;
 };
 

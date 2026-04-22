@@ -7,6 +7,45 @@ const ENTRY_FILE = 'SPCoin.sol';
 const ENTRY_CONTRACT = 'SPCoin';
 const SOLC_VERSION = '0.8.18';
 const EIP170_LIMIT_BYTES = 24576;
+const SOLC_TIMEOUT_MS = Number(process.env.SOLC_TIMEOUT_MS || 5 * 60 * 1000);
+const CACHE_DIR = path.join(REPO_ROOT, 'tools', '.cache');
+const CACHE_PATH = path.join(CACHE_DIR, 'compareSpCoinContractSize.json');
+
+function getSolcCommand() {
+  const explicit = String(process.env.SOLC_BIN || '').trim();
+  if (explicit) {
+    return process.platform === 'win32'
+      ? { command: explicit, args: ['--standard-json'] }
+      : { command: explicit, args: ['--standard-json'] };
+  }
+
+  const localBinCandidates =
+    process.platform === 'win32'
+      ? [
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solc.cmd'),
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solcjs.cmd'),
+        ]
+      : [
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solc'),
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solcjs'),
+        ];
+
+  for (const candidate of localBinCandidates) {
+    if (fs.existsSync(candidate)) {
+      return { command: candidate, args: ['--standard-json'] };
+    }
+  }
+
+  return process.platform === 'win32'
+    ? {
+        command: 'cmd.exe',
+        args: ['/d', '/s', '/c', `npx.cmd --yes --prefer-offline solc@${SOLC_VERSION} --standard-json`],
+      }
+    : {
+        command: 'npx',
+        args: ['--yes', '--prefer-offline', `solc@${SOLC_VERSION}`, '--standard-json'],
+      };
+}
 
 function resolveVariantRoot(inputPath, fallbackPath) {
   const raw = String(inputPath || '').trim();
@@ -54,6 +93,39 @@ function readUtf8(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
+function loadCache() {
+  try {
+    return JSON.parse(readUtf8(CACHE_PATH));
+  } catch (_error) {
+    return { variants: {} };
+  }
+}
+
+function saveCache(cache) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+  fs.writeFileSync(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`);
+}
+
+function createVariantFingerprint(sourceRoot, sourcePaths) {
+  return JSON.stringify({
+    sourceRoot,
+    entry: `${ENTRY_FILE}:${ENTRY_CONTRACT}`,
+    compiler: SOLC_VERSION,
+    optimizerRuns: 200,
+    viaIR: true,
+    files: [...sourcePaths]
+      .sort()
+      .map((absolutePath) => {
+        const stat = fs.statSync(absolutePath);
+        return {
+          relativePath: toPosix(path.relative(sourceRoot, absolutePath)),
+          size: stat.size,
+          mtimeMs: stat.mtimeMs,
+        };
+      }),
+  });
+}
+
 function collectSoliditySourcesFromEntry(entryPath, sourceRoot, sources, visited = new Set()) {
   const resolvedEntryPath = path.resolve(entryPath);
   if (visited.has(resolvedEntryPath)) return;
@@ -78,7 +150,18 @@ function collectSoliditySourcesFromEntry(entryPath, sourceRoot, sources, visited
 function compileVariant(variantRoot) {
   const sources = {};
   const entryPath = path.join(variantRoot, ENTRY_FILE);
-  collectSoliditySourcesFromEntry(entryPath, variantRoot, sources);
+  const visitedSourcePaths = new Set();
+  collectSoliditySourcesFromEntry(entryPath, variantRoot, sources, visitedSourcePaths);
+  const variantFingerprint = createVariantFingerprint(variantRoot, visitedSourcePaths);
+  const cache = loadCache();
+  const cachedVariant = cache?.variants?.[variantRoot];
+  if (cachedVariant?.fingerprint === variantFingerprint && cachedVariant?.result) {
+    return {
+      ...cachedVariant.result,
+      cacheHit: true,
+      fingerprint: variantFingerprint,
+    };
+  }
 
   sources['hardhat/console.sol'] = {
     content: `// SPDX-License-Identifier: MIT
@@ -99,30 +182,20 @@ library console {
       viaIR: true,
       outputSelection: {
         '*': {
-          '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'],
+          '*': ['evm.bytecode.object', 'evm.deployedBytecode.object'],
         },
       },
     },
   };
 
-  const result =
-    process.platform === 'win32'
-      ? spawnSync(
-          'cmd.exe',
-          ['/d', '/s', '/c', `npx.cmd --yes solc@${SOLC_VERSION} --standard-json`],
-          {
-            cwd: REPO_ROOT,
-            input: JSON.stringify(standardInput),
-            encoding: 'utf8',
-            maxBuffer: 50 * 1024 * 1024,
-          },
-        )
-      : spawnSync('npx', ['--yes', `solc@${SOLC_VERSION}`, '--standard-json'], {
-          cwd: REPO_ROOT,
-          input: JSON.stringify(standardInput),
-          encoding: 'utf8',
-          maxBuffer: 50 * 1024 * 1024,
-        });
+  const solcCommand = getSolcCommand();
+  const result = spawnSync(solcCommand.command, solcCommand.args, {
+    cwd: REPO_ROOT,
+    input: JSON.stringify(standardInput),
+    encoding: 'utf8',
+    maxBuffer: 50 * 1024 * 1024,
+    timeout: SOLC_TIMEOUT_MS,
+  });
 
   if (result.error) {
     throw result.error;
@@ -158,6 +231,8 @@ library console {
     creationBytes: Math.ceil(bytecodeObject.replace(/^0x/, '').length / 2),
     deployedBytes: Math.ceil(deployedBytecodeObject.replace(/^0x/, '').length / 2),
     sourceCount: Object.keys(sources).length,
+    cacheHit: false,
+    fingerprint: variantFingerprint,
   };
 }
 
@@ -180,11 +255,35 @@ function formatPercentChange(currentValue, backupValue) {
 
 function main() {
   const contractVariants = getContractVariants();
-  const results = contractVariants.map((variant) => ({
-    label: variant.label,
-    root: variant.root,
-    ...compileVariant(variant.root),
-  }));
+  console.error(
+    `[compare:spcoin:size] compiling ${contractVariants.length} variant(s) with solc ${SOLC_VERSION} (timeout ${SOLC_TIMEOUT_MS}ms)`,
+  );
+  const results = contractVariants.map((variant) => {
+    console.error(`[compare:spcoin:size] compiling ${variant.label} from ${variant.root}`);
+    const compiled = compileVariant(variant.root);
+    console.error(
+      `[compare:spcoin:size] ${variant.label} ${compiled.cacheHit ? 'cache hit' : 'compiled fresh'} (${compiled.sourceCount} sources)`,
+    );
+    return {
+      label: variant.label,
+      root: variant.root,
+      ...compiled,
+    };
+  });
+  const cache = loadCache();
+  cache.variants = cache.variants || {};
+  for (const result of results) {
+    cache.variants[result.root] = {
+      fingerprint: result.fingerprint,
+      result: {
+        abiLength: result.abiLength,
+        creationBytes: result.creationBytes,
+        deployedBytes: result.deployedBytes,
+        sourceCount: result.sourceCount,
+      },
+    };
+  }
+  saveCache(cache);
 
   const latest = results.find((entry) => entry.label === 'latest');
   const previous = results.find((entry) => entry.label === 'previous');

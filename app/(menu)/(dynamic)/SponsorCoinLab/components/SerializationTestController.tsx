@@ -63,6 +63,7 @@ export default function SerializationTestController(props: Props) {
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
+  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<Array<{ value: string; label: string }>>([]);
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
@@ -122,6 +123,38 @@ export default function SerializationTestController(props: Props) {
   const hhFundAllAccountsEnabled =
     selectedSerializationTestMethod === 'hhFundAccounts' &&
     ['true', '1'].includes(String(serializationTestParams[1] || '').trim().toLowerCase());
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadContractDirectoryOptions = async () => {
+      try {
+        const response = await fetch('/api/spCoin/contract-directories', { cache: 'no-store' });
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          directories?: Array<{ value?: string; label?: string }>;
+        };
+        if (!response.ok || payload?.ok === false) return;
+        if (cancelled) return;
+        setContractDirectoryOptions(
+          Array.isArray(payload?.directories)
+            ? payload.directories
+                .map((entry) => ({
+                  value: String(entry?.value || '').trim(),
+                  label: String(entry?.label || '').trim() || String(entry?.value || '').trim(),
+                }))
+                .filter((entry) => entry.value.length > 0)
+            : [],
+        );
+      } catch {
+        if (!cancelled) setContractDirectoryOptions([]);
+      }
+    };
+
+    void loadContractDirectoryOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (/*  */
     <div className="grid grid-cols-1 gap-3">
@@ -290,6 +323,39 @@ export default function SerializationTestController(props: Props) {
                 }}
                 placeholder={param.placeholder}
               />
+            </label>
+          ) : selectedSerializationTestMethod === 'compareSpCoinContractSize' &&
+            ['Previous Release Directory', 'Latest Release Directory'].includes(param.label) ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="relative w-full min-w-0">
+                <select
+                  data-field-id={`serialization-test-param-${idx}`}
+                  className={`${inputStyle} appearance-none pr-10${invalidClass(`serialization-test-param-${idx}`)}`}
+                  value={serializationTestParams[idx] || ''}
+                  onChange={(e) => {
+                    markEditorAsUserEdited();
+                    setSerializationTestParams((prev) => {
+                      clearInvalidField(`serialization-test-param-${idx}`);
+                      const next = [...prev];
+                      next[idx] = e.target.value;
+                      return next;
+                    });
+                  }}
+                >
+                  <option value="" disabled>
+                    Select contract directory
+                  </option>
+                  {contractDirectoryOptions.map((option) => (
+                    <option key={`serialization-contract-dir-${param.label}-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
+                  v
+                </span>
+              </div>
             </label>
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">

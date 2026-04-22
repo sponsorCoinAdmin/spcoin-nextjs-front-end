@@ -115,6 +115,14 @@ function buildHardhatFundAccountsParams() {
   ];
 }
 
+function formatMethodRunTime(elapsedMs: number) {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 const PARAMS_BY_BASE_METHOD: Record<SerializationBaseMethod, MethodDef['params']> = {
   getSerializedSPCoinHeader: buildHeaderParams(),
   getSerializedAccountRecord: buildAccountParams(),
@@ -671,6 +679,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
 
     if ('utilityMethod' in def && def.utilityMethod === 'compareSpCoinContractSize') {
       trace('utility compareSpCoinContractSize');
+      const startedAt = Date.now();
       const response = await fetch('/api/spCoin/contract-size-comparison', {
         method: 'POST',
         cache: 'no-store',
@@ -685,9 +694,12 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
         message?: string;
         report?: unknown;
         scriptPath?: string;
+        compilerBackend?: string;
         stderr?: string;
         previousReleaseDir?: string;
         latestReleaseDir?: string;
+        previousFingerprint?: string;
+        latestFingerprint?: string;
         cached?: boolean;
       };
       if (!response.ok || payload?.ok === false) {
@@ -695,12 +707,49 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       }
       appendLog(`${selectedMethod} -> contract size comparison complete.`);
       setStatus(`${def.title} complete.`);
+      const reportRecord =
+        payload?.report && typeof payload.report === 'object' && !Array.isArray(payload.report)
+          ? (payload.report as Record<string, unknown>)
+          : {};
+      const variants = Array.isArray(reportRecord.variants) ? (reportRecord.variants as Array<Record<string, unknown>>) : [];
+      const latestVariant = variants.find((entry) => String(entry?.label || '') === 'latest') || null;
+      const previousVariant = variants.find((entry) => String(entry?.label || '') === 'previous') || null;
+      const elapsedMs = Date.now() - startedAt;
+      const latestBytesVsLimit = Number(latestVariant?.deployedMarginBytes ?? NaN);
+      const previousBytesVsLimit = Number(previousVariant?.deployedMarginBytes ?? NaN);
+      const deltaRecord =
+        reportRecord.delta && typeof reportRecord.delta === 'object' && !Array.isArray(reportRecord.delta)
+          ? (reportRecord.delta as Record<string, unknown>)
+          : {};
       return {
-        scriptPath: String(payload?.scriptPath || ''),
-        previousReleaseDir: String(payload?.previousReleaseDir || ''),
-        latestReleaseDir: String(payload?.latestReleaseDir || ''),
-        cached: Boolean(payload?.cached),
-        report: payload?.report ?? {},
+        delta: {
+          ...deltaRecord,
+          methodRunTime: formatMethodRunTime(elapsedMs),
+        },
+        latestSizeStatus: latestVariant
+          ? {
+              deployedBytes: latestVariant.deployedBytes ?? null,
+              bytesVsLimit: latestVariant.deployedMarginBytes ?? null,
+              limitStatus: latestVariant.deployedMarginLabel ?? '',
+            }
+          : null,
+        previousSizeStatus: previousVariant
+          ? {
+              deployedBytes: previousVariant.deployedBytes ?? null,
+              bytesVsLimit: previousVariant.deployedMarginBytes ?? null,
+              limitStatus: previousVariant.deployedMarginLabel ?? '',
+            }
+          : null,
+        latestLimitSummary: Number.isFinite(latestBytesVsLimit)
+          ? latestBytesVsLimit >= 0
+            ? `Latest build is not oversized yet. It is ${latestBytesVsLimit.toLocaleString()} bytes under the EIP-170 limit.`
+            : `Latest build is oversized by ${Math.abs(latestBytesVsLimit).toLocaleString()} bytes vs the EIP-170 limit.`
+          : '',
+        previousLimitSummary: Number.isFinite(previousBytesVsLimit)
+          ? previousBytesVsLimit >= 0
+            ? `Previous build was ${previousBytesVsLimit.toLocaleString()} bytes under the EIP-170 limit.`
+            : `Previous build was oversized by ${Math.abs(previousBytesVsLimit).toLocaleString()} bytes vs the EIP-170 limit.`
+          : '',
         stderr: String(payload?.stderr || ''),
       };
     }
@@ -788,11 +837,35 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       return summary;
     }
 
+    const isRetryableTreeWriteError = (error: unknown) => {
+      const code = String((error as { code?: unknown } | null)?.code || '');
+      const message = String((error as { message?: unknown } | null)?.message ?? error ?? '');
+      return (
+        code === 'NONCE_EXPIRED' ||
+        code === 'NETWORK_ERROR' ||
+        /Failed to fetch|network error|missing response|FetchRequest\.getUrl/i.test(message)
+      );
+    };
+
     const executeAs = async <T>(label: string, signerAddress: string, writeCall: (contract: any, signer: any) => Promise<T>) => {
-      trace(`write start ${label}`);
-      const result = await executeWriteConnected(label, writeCall, signerAddress);
-      trace(`write ok ${label}`);
-      return result;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        trace(`write start ${label}${attempt > 1 ? ` attempt=${attempt}` : ''}`);
+        try {
+          const result = await executeWriteConnected(label, writeCall, signerAddress);
+          trace(`write ok ${label}${attempt > 1 ? ` attempt=${attempt}` : ''}`);
+          return result;
+        } catch (error) {
+          lastError = error;
+          const message = String((error as { message?: unknown } | null)?.message ?? error ?? '');
+          trace(`write failed ${label} attempt=${attempt} ${message}`);
+          if (!isRetryableTreeWriteError(error) || attempt >= 3) {
+            throw error;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+        }
+      }
+      throw lastError;
     };
 
   const isRetryableDeleteAccountError = (error: unknown) => {
@@ -854,9 +927,17 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
 
   const deleteAgentNode = async (sponsorKey: string, recipientKey: string, recipientRateKey: string, agentKey: string) =>
     executeAs(`deleteAgentRate(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, sponsorKey, async (contract) => {
-      const fn = (contract as { deleteRecipientAgent?: (...args: unknown[]) => Promise<any> }).deleteRecipientAgent;
+      const fn =
+        (contract as {
+          deleteAgent?: (...args: unknown[]) => Promise<any>;
+          deleteRecipientAgent?: (...args: unknown[]) => Promise<any>;
+        }).deleteAgent ??
+        (contract as {
+          deleteAgent?: (...args: unknown[]) => Promise<any>;
+          deleteRecipientAgent?: (...args: unknown[]) => Promise<any>;
+        }).deleteRecipientAgent;
       if (typeof fn !== 'function') {
-        throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+        throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
       }
       const tx = await fn(sponsorKey, recipientKey, recipientRateKey, agentKey);
       await tx.wait();
@@ -963,9 +1044,8 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       )}`,
     );
     if (agentRateKeys.length === 0 && remainingAgents.includes(normalizeAddress(agentKey))) {
-      throw new Error(
-        `deleteAgentRate found a partial agent link with no agent-Rate Transactions for ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}. ` +
-          'Repair it by rerunning addAgentSponsorship with the original agent rate/quantity, or redeploy/reset to a contract build that includes empty-agent cleanup.',
+      trace(
+        `deleteAgentRate orphaned agent link cleanup ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}`,
       );
     }
     if (remainingAgents.includes(normalizeAddress(agentKey))) {
@@ -1226,17 +1306,28 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     if ('utilityMethod' in def && def.utilityMethod === 'deleteAccountTree') {
       const sponsorKey = toCanonicalAddress(methodArgs[0], 'Account Key');
       const currentSponsorAccounts = await loadSponsorAccounts(access);
-      if (!currentSponsorAccounts.includes(normalizeAddress(sponsorKey))) {
+      const currentAccounts = await loadAccountList(access);
+      if (!currentAccounts.includes(normalizeAddress(sponsorKey))) {
         throw new Error(
-          `deleteAccountTree requires a sponsor-root account with recipient children. ${sponsorKey} is not a sponsor root in the current tree; use deleteRecipient or deleteAgent for lower branches.`,
+          `deleteAccountTree could not find ${sponsorKey} in the current account list.`,
         );
+      }
+      const warning =
+        !currentSponsorAccounts.includes(normalizeAddress(sponsorKey))
+          ? {
+              type: 'non_root_cleanup',
+              message: `${sponsorKey} is no longer a sponsor root in the current tree. deleteAccountTree continued as a final account cleanup pass.`,
+            }
+          : undefined;
+      if (!currentSponsorAccounts.includes(normalizeAddress(sponsorKey))) {
+        trace(`deleteAccountTree continuing non-root cleanup ${sponsorKey}`);
       }
       trace(`deleteAccountTree method start ${sponsorKey}`);
       const treeSummary = await deleteAccountTree(sponsorKey);
       trace(`deleteAccountTree method ok ${sponsorKey}`);
       appendLog(`${selectedMethod} -> unsponsored sponsor tree ${sponsorKey}.`);
       setStatus(`${def.title} complete.`);
-      return treeSummary;
+      return warning ? { ...treeSummary, __warning: warning } : treeSummary;
     }
 
     if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorships') {

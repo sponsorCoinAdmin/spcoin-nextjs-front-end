@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "scriptPath": "shared:lib/spCoin/contractCompiler.ts",
+  "compilerBackend": "lib/spCoin/contractCompiler.ts",
+  "previousReleaseDir": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoinOrig.BAK",
+  "latestReleaseDir": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoin",
+  "previousFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoinOrig.BAK\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1190},{\"key\":\"Token.sol\",\"size\":2668},{\"key\":\"accounts/Account.sol\",\"size\":4342},{\"key\":\"accounts/Agent.sol\",\"size\":5048},{\"key\":\"accounts/AgentRates.sol\",\"size\":2445},{\"key\":\"accounts/Recipient.sol\",\"size\":4787},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3644},{\"key\":\"accounts/Sponsor.sol\",\"size\":543},{\"key\":\"accounts/Transactions.sol\",\"size\":11587},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":13988},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":8289},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":22259},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":12909},{\"key\":\"utils/Security.sol\",\"size\":1962},{\"key\":\"utils/StringUtils.sol\",\"size\":5505},{\"key\":\"utils/StructSerialization.sol\",\"size\":7713},{\"key\":\"utils/TimeUtils.sol\",\"size\":1209},{\"key\":\"utils/Utils.sol\",\"size\":408}]}",
+  "latestFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoin\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1382},{\"key\":\"Token.sol\",\"size\":2761},{\"key\":\"accounts/Account.sol\",\"size\":6012},{\"key\":\"accounts/Agent.sol\",\"size\":5050},{\"key\":\"accounts/AgentRates.sol\",\"size\":2680},{\"key\":\"accounts/Recipient.sol\",\"size\":5392},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3539},{\"key\":\"accounts/Sponsor.sol\",\"size\":351},{\"key\":\"accounts/Transactions.sol\",\"size\":14545},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":23649},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":10724},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":22229},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":9203},{\"key\":\"utils/Security.sol\",\"size\":3742},{\"key\":\"utils/StringUtils.sol\",\"size\":5511},{\"key\":\"utils/StructSerialization.sol\",\"size\":1412},{\"key\":\"utils/TimeUtils.sol\",\"size\":1209},{\"key\":\"utils/Utils.sol\",\"size\":308}]}",
+  "report": {
+    "timestamp": "2026-04-22 03:22:31 -04:00",
+    "title": "SPCoin contract size comparison",
+    "compiler": "solc 0.8.18",
+    "entry": "SPCoin.sol:SPCoin",
+    "eip170LimitBytes": 24576,
+    "variants": [
+      {
+        "label": "latest",
+        "root": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoin",
+        "sourceCount": 19,
+        "abiEntries": 0,
+        "creationBytes": 24040,
+        "deployedBytes": 21511,
+        "deployedMarginBytes": 3065,
+        "deployedMarginLabel": "+3065 bytes vs EIP-170",
+        "sourceFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoin\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1382},{\"key\":\"Token.sol\",\"size\":2761},{\"key\":\"accounts/Account.sol\",\"size\":6012},{\"key\":\"accounts/Agent.sol\",\"size\":5050},{\"key\":\"accounts/AgentRates.sol\",\"size\":2680},{\"key\":\"accounts/Recipient.sol\",\"size\":5392},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3539},{\"key\":\"accounts/Sponsor.sol\",\"size\":351},{\"key\":\"accounts/Transactions.sol\",\"size\":14545},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":23649},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":10724},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":22229},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":9203},{\"key\":\"utils/Security.sol\",\"size\":3742},{\"key\":\"utils/StringUtils.sol\",\"size\":5511},{\"key\":\"utils/StructSerialization.sol\",\"size\":1412},{\"key\":\"utils/TimeUtils.sol\",\"size\":1209},{\"key\":\"utils/Utils.sol\",\"size\":308}]}"
+      },
+      {
+        "label": "previous",
+        "root": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoinOrig.BAK",
+        "sourceCount": 19,
+        "abiEntries": 0,
+        "creationBytes": 20128,
+        "deployedBytes": 18226,
+        "deployedMarginBytes": 6350,
+        "deployedMarginLabel": "+6350 bytes vs EIP-170",
+        "sourceFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoinOrig.BAK\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1190},{\"key\":\"Token.sol\",\"size\":2668},{\"key\":\"accounts/Account.sol\",\"size\":4342},{\"key\":\"accounts/Agent.sol\",\"size\":5048},{\"key\":\"accounts/AgentRates.sol\",\"size\":2445},{\"key\":\"accounts/Recipient.sol\",\"size\":4787},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3644},{\"key\":\"accounts/Sponsor.sol\",\"size\":543},{\"key\":\"accounts/Transactions.sol\",\"size\":11587},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":13988},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":8289},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":22259},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":12909},{\"key\":\"utils/Security.sol\",\"size\":1962},{\"key\":\"utils/StringUtils.sol\",\"size\":5505},{\"key\":\"utils/StructSerialization.sol\",\"size\":7713},{\"key\":\"utils/TimeUtils.sol\",\"size\":1209},{\"key\":\"utils/Utils.sol\",\"size\":408}]}"
+      }
+    ],
+    "delta": {
+      "label": "latest-vs-previous",
+      "creationBytes": 3912,
+      "deployedBytes": 3285,
+      "creationPercentChange": "19.44% larger",
+      "deployedPercentChange": "18.02% larger"
+    }
+  },
+  "cached": false
+}

@@ -10,7 +10,7 @@ contract Recipient is Sponsor {
     /// @notice Create Sponsor and Recipient accounts if they do not exist
     /// @notice Relate Sponsor and Recipient accounts for POS sharing
     /// @param _recipientKey new recipient to add to account list
-    function addSponsorRecipient(address _sponsorKey, address _recipientKey)
+    function addRecipient(address _sponsorKey, address _recipientKey)
     public
     onlyOwnerOrRootAdmin(_sponsorKey)
     nonRedundantRecipient (_sponsorKey, _recipientKey) {

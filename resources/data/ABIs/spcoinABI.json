@@ -147,6 +147,34 @@
         "internalType": "address",
         "name": "_agentKey",
         "type": "address"
+      }
+    ],
+    "name": "addAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -186,19 +214,9 @@
         "internalType": "address",
         "name": "_recipientKey",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
       }
     ],
-    "name": "addRecipientAgent",
+    "name": "addRecipient",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -239,24 +257,6 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "addSponsorRecipient",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -508,6 +508,34 @@
         "internalType": "address",
         "name": "_agentKey",
         "type": "address"
+      }
+    ],
+    "name": "deleteAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -534,34 +562,6 @@
       }
     ],
     "name": "deleteRecipient",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
-      }
-    ],
-    "name": "deleteRecipientAgent",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1299,19 +1299,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "version",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -1597,6 +1584,19 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

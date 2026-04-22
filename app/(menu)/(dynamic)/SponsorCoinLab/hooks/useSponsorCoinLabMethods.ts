@@ -40,6 +40,12 @@ type MethodExecutionDescriptor = {
   sender?: string;
 };
 
+type MethodExecutionOptions = {
+  executionLabel?: string;
+  executionSignal?: AbortSignal;
+  skipValidation?: boolean;
+};
+
 type MethodDefMap = Record<string, MethodDef>;
 
 function normalizeUnsignedIntegerInput(value: string) {
@@ -60,6 +66,14 @@ function isBadDataError(error: unknown) {
   const code = String((error as { code?: unknown } | null)?.code || '');
   const message = String((error as { message?: unknown } | null)?.message || '');
   return code === 'BAD_DATA' || /could not decode result data/i.test(message);
+}
+
+function isAbortError(error: unknown) {
+  if (!error) return false;
+  const name = String((error as { name?: unknown } | null)?.name || '');
+  const code = String((error as { code?: unknown } | null)?.code || '');
+  const message = String((error as { message?: unknown } | null)?.message || '');
+  return name === 'AbortError' || code === 'ABORT_ERR' || /aborted|cancelled by user/i.test(message);
 }
 
 function getErrorDebugTrace(error: unknown): string[] {
@@ -283,11 +297,18 @@ export function useSponsorCoinLabMethods({
   const treeAccountRecordCacheRef = useRef<Map<string, unknown>>(new Map());
 
   const runServerBackedSpCoinStep = useCallback(
-    async (panel: 'spcoin_rread' | 'spcoin_write', method: string, params: Array<{ key: string; value: string }>, sender?: string) => {
+    async (
+      panel: 'spcoin_rread' | 'spcoin_write',
+      method: string,
+      params: Array<{ key: string; value: string }>,
+      sender?: string,
+      executionSignal?: AbortSignal,
+    ) => {
       const target = requireContractAddress();
       const response = await fetch('/api/spCoin/run-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: executionSignal,
         body: JSON.stringify({
           contractAddress: target,
           rpcUrl,
@@ -845,8 +866,9 @@ export function useSponsorCoinLabMethods({
     [useLocalSpCoinAccessPackage],
   );
   const executeMethodDescriptor = useCallback(
-    async (descriptor: MethodExecutionDescriptor) => {
+    async (descriptor: MethodExecutionDescriptor, options?: Pick<MethodExecutionOptions, 'executionSignal'>) => {
       const { panel, method, params, sender = '' } = descriptor;
+      const executionSignal = options?.executionSignal;
       const findParamValue = (label: string) =>
         String(params.find((entry) => String(entry?.key || '') === label)?.value || '').trim();
 
@@ -992,6 +1014,8 @@ export function useSponsorCoinLabMethods({
                   key: param.label,
                   value: localParams[idx] || '',
                 })),
+                undefined,
+                executionSignal,
               )
             : await runSpCoinReadMethod({
                 selectedMethod,
@@ -1048,42 +1072,24 @@ export function useSponsorCoinLabMethods({
         if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
-            const [metadataResult, accountResults] = await Promise.allSettled([
-              runSpCoinReadMethod({
-                selectedMethod: 'getSpCoinMetaData',
-                spReadParams: [],
-                coerceParamValue,
-                stringifyResult,
-                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-                requireContractAddress,
-                ensureReadRunner,
-                appendLog: () => {},
-                setStatus: () => {},
-              }),
-              Promise.allSettled(
-                accountKeys.map(async (accountKey) => loadAccountRecordForAddress(String(accountKey), { force: true })),
-              ),
-            ]);
-            const spCoinMetsData = metadataResult.status === 'fulfilled' ? metadataResult.value : undefined;
-            const accounts =
-              accountResults.status === 'fulfilled'
-                ? accountResults.value.map((entry, index) => {
-                    const accountKey = String(accountKeys[index] || '');
-                    if (entry.status === 'fulfilled') {
-                      return {
-                        address: accountKey,
-                        ...(entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value)
-                          ? (entry.value as Record<string, unknown>)
-                          : { value: entry.value }),
-                      };
-                    }
-                    return accountKey;
-                  })
-                : accountKeys;
+            const metadataResult = await runSpCoinReadMethod({
+              selectedMethod: 'getSpCoinMetaData',
+              spReadParams: [],
+              coerceParamValue,
+              stringifyResult,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              requireContractAddress,
+              ensureReadRunner,
+              appendLog: () => {},
+              setStatus: () => {},
+            }).catch(() => undefined);
+            const accounts = accountKeys.map((accountKey) => ({
+              address: String(accountKey || ''),
+            }));
             return {
               call,
               result: {
-                ...(spCoinMetsData ? { spCoinMetsData } : {}),
+                ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
                 accounts,
               },
               ...(warning ? { warning } : {}),
@@ -1121,40 +1127,42 @@ export function useSponsorCoinLabMethods({
           appendLog,
           setStatus,
         });
-        if (selectedMethod === 'getMasterSponsorList') {
-          const sponsorKeys = Array.isArray(result) ? result : [];
-          const [metadataResult, sponsorResults] = await Promise.allSettled([
-            runSpCoinReadMethod({
-              selectedMethod: 'getSpCoinMetaData',
-              spReadParams: [],
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog: () => {},
-              setStatus: () => {},
-            }),
-            Promise.allSettled(
-              sponsorKeys.map(async (accountKey) => loadAccountRecordForAddress(String(accountKey), { force: true })),
-            ),
-          ]);
-          const spCoinMetsData = metadataResult.status === 'fulfilled' ? metadataResult.value : undefined;
-          const sponsors =
-            sponsorResults.status === 'fulfilled'
-              ? sponsorResults.value.map((entry, index) => {
-                  const accountKey = String(sponsorKeys[index] || '');
-                  if (entry.status === 'fulfilled') {
-                    return {
-                      address: accountKey,
-                      ...(entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value)
-                        ? (entry.value as Record<string, unknown>)
-                        : { value: entry.value }),
-                    };
-                  }
-                  return { address: accountKey };
-                })
-              : sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
+        const extractedWarning =
+          result &&
+          typeof result === 'object' &&
+          !Array.isArray(result) &&
+          '__warning' in (result as Record<string, unknown>) &&
+          (result as Record<string, unknown>).__warning &&
+          typeof (result as Record<string, unknown>).__warning === 'object' &&
+          !Array.isArray((result as Record<string, unknown>).__warning)
+            ? ((result as Record<string, unknown>).__warning as Record<string, unknown>)
+            : undefined;
+        const sanitizedSerializationResult =
+          extractedWarning &&
+          result &&
+          typeof result === 'object' &&
+          !Array.isArray(result)
+            ? Object.fromEntries(
+                Object.entries(result as Record<string, unknown>).filter(([key]) => key !== '__warning'),
+              )
+            : result;
+        if (
+          String(selectedMethod) === 'getMasterSponsorList' ||
+          String(selectedMethod) === 'getMasterSponsorList_BAK'
+        ) {
+          const sponsorKeys = Array.isArray(sanitizedSerializationResult) ? sanitizedSerializationResult : [];
+          const metadataResult = await runSpCoinReadMethod({
+            selectedMethod: 'getSpCoinMetaData',
+            spReadParams: [],
+            coerceParamValue,
+            stringifyResult,
+            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            requireContractAddress,
+            ensureReadRunner,
+            appendLog: () => {},
+            setStatus: () => {},
+          }).catch(() => undefined);
+          const sponsors = sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
           appendLog(
             `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
               sponsors.map((entry) => ({
@@ -1170,12 +1178,17 @@ export function useSponsorCoinLabMethods({
           return {
             call,
             result: {
-              ...(spCoinMetsData ? { spCoinMetsData } : {}),
+              ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
               sponsors,
             },
+            ...(extractedWarning ? { warning: extractedWarning } : {}),
           };
         }
-        return { call, result };
+        return {
+          call,
+          result: sanitizedSerializationResult,
+          ...(extractedWarning ? { warning: extractedWarning } : {}),
+        };
       }
 
       const selectedMethod = normalizeSpCoinWriteMethod(method);
@@ -1233,6 +1246,7 @@ export function useSponsorCoinLabMethods({
               value: localParams[idx] || '',
             })),
             signer,
+            executionSignal,
           )
         : await runSpCoinWriteMethod({
             selectedMethod,
@@ -1347,7 +1361,7 @@ export function useSponsorCoinLabMethods({
       method: 'getTreeAccounts',
       parameters: [
         { label: 'via', value: 'getMasterAccountKeys' },
-        { label: 'expand', value: 'getAccountRecord(each)' },
+        { label: 'expand', value: 'lazy getAccountRecord(on open)' },
       ],
     };
     try {
@@ -1376,12 +1390,12 @@ export function useSponsorCoinLabMethods({
           runner,
         });
       }
-      const result = await Promise.all(
-        (accountKeys ?? []).map(async (accountKey) => (access.read as SpCoinReadAccess).getAccountRecord(String(accountKey))),
-      );
+      const result = (accountKeys ?? []).map((accountKey) => ({
+        address: String(accountKey || ''),
+      }));
       setTreeOutputDisplay(formatOutputDisplayValue({ call, result }));
       appendLog(`spCoinReadMethods/getTreeAccounts -> ${JSON.stringify(result)}`);
-      setStatus(`Tree accounts read complete (${result.length} account record(s)).`);
+      setStatus(`Tree accounts read complete (${result.length} account stub(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree accounts read error.';
       setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message }));
@@ -1648,6 +1662,11 @@ export function useSponsorCoinLabMethods({
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
       const trimmedDisplay = String(formattedOutputDisplay || '').trim();
       if (!trimmedDisplay) return 'unhandled';
+      const normalizedPathHint = String(pathHint || '').trim();
+      const isInlineAccountListPath =
+        /(?:^|\.)(?:result\.)?(?:accounts|sponsors)\.\d+(?:\.|$)/i.test(normalizedPathHint) ||
+        /^(?:step|output)-\d+\.result\.(?:accounts|sponsors)\.\d+(?:\.|$)/i.test(normalizedPathHint);
+      if (!isInlineAccountListPath) return 'unhandled';
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {
@@ -1668,7 +1687,7 @@ export function useSponsorCoinLabMethods({
         blocks.length > 1
           ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
           : [{ raw: trimmedDisplay, index: 0, payload: parsePayload(trimmedDisplay) }];
-      const rootPathMatch = String(pathHint || '').match(/^(?:step|output)-(\d+)(?:\.|$)/i);
+      const rootPathMatch = normalizedPathHint.match(/^(?:step|output)-(\d+)(?:\.|$)/i);
       const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
       const candidateEntries =
         Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
@@ -1691,7 +1710,7 @@ export function useSponsorCoinLabMethods({
             ? [...(resultRecord[listKey] as unknown[])]
             : null;
         if (!currentResult) continue;
-        const pathMatch = String(pathHint || '').match(/(?:^|\.)result(?:\.(?:sponsors|accounts))?\.(\d+)(?:\.|$)/);
+        const pathMatch = normalizedPathHint.match(/(?:^|\.)result(?:\.(?:sponsors|accounts))?\.(\d+)(?:\.|$)/);
         const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
         const targetIndex =
           Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
@@ -1782,7 +1801,7 @@ export function useSponsorCoinLabMethods({
     [expandMasterSponsorListAccountInline, normalizeAddressValue, runTreeDump, setOutputPanelMode],
   );
 
-  const runSelectedWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+  const runSelectedWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {
       showValidationPopup(
         erc20WriteMissingEntries.map((entry) => entry.id),
@@ -1809,9 +1828,17 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result, warning } = await executeMethodDescriptor(descriptor);
+      const { call, result, warning } = await executeMethodDescriptor(descriptor, {
+        executionSignal: options?.executionSignal,
+      });
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}) }));
     } catch (error) {
+      if (isAbortError(error)) {
+        const message = `${options?.executionLabel || activeWriteLabels.title} cancelled.`;
+        setStatus(message);
+        appendLog(message);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Unknown write method error.';
       const call = buildMethodCallEntry(descriptor.method, [
         ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
@@ -1840,7 +1867,7 @@ export function useSponsorCoinLabMethods({
     writeAmountRaw,
   ]);
 
-  const runSelectedReadMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+  const runSelectedReadMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && erc20ReadMissingEntries.length > 0) {
       showValidationPopup(
         erc20ReadMissingEntries.map((entry) => entry.id),
@@ -1865,9 +1892,17 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result, warning } = await executeMethodDescriptor(descriptor);
+      const { call, result, warning } = await executeMethodDescriptor(descriptor, {
+        executionSignal: options?.executionSignal,
+      });
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}) }));
     } catch (error) {
+      if (isAbortError(error)) {
+        const message = `${options?.executionLabel || activeReadLabels.title} cancelled.`;
+        setStatus(message);
+        appendLog(message);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Unknown read method error.';
       const call = buildMethodCallEntry(descriptor.method, descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })));
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, error: message }));
@@ -1889,7 +1924,7 @@ export function useSponsorCoinLabMethods({
     showValidationPopup,
   ]);
 
-  const runSelectedSpCoinReadMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+  const runSelectedSpCoinReadMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && spCoinReadMissingEntries.length > 0) {
       showValidationPopup(
         spCoinReadMissingEntries.map((entry) => entry.id),
@@ -1914,9 +1949,17 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result } = await executeMethodDescriptor(descriptor);
+      const { call, result } = await executeMethodDescriptor(descriptor, {
+        executionSignal: options?.executionSignal,
+      });
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
+      if (isAbortError(error)) {
+        const message = `${options?.executionLabel || activeSpCoinReadDef.title} cancelled.`;
+        setStatus(message);
+        appendLog(message);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Unknown SpCoin read error.';
       const call = buildMethodCallEntry(descriptor.method, descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })));
       setFormattedOutputDisplay(
@@ -1958,7 +2001,7 @@ export function useSponsorCoinLabMethods({
     useLocalSpCoinAccessPackage,
   ]);
 
-  const runSelectedSpCoinWriteMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+  const runSelectedSpCoinWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && spCoinWriteMissingEntries.length > 0) {
       showValidationPopup(
         spCoinWriteMissingEntries.map((entry) => entry.id),
@@ -1984,9 +2027,17 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result } = await executeMethodDescriptor(descriptor);
+      const { call, result } = await executeMethodDescriptor(descriptor, {
+        executionSignal: options?.executionSignal,
+      });
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
+      if (isAbortError(error)) {
+        const message = `${options?.executionLabel || activeSpCoinWriteDef.title} cancelled.`;
+        setStatus(message);
+        appendLog(message);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
       const call = buildMethodCallEntry(descriptor.method, [
         ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
@@ -2033,7 +2084,7 @@ export function useSponsorCoinLabMethods({
     spCoinWriteMissingEntries,
     spWriteParams,
   ]);
-  const runSelectedSerializationTestMethod = useCallback(async (options?: { skipValidation?: boolean }) => {
+  const runSelectedSerializationTestMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && serializationTestMissingEntries.length > 0) {
       showValidationPopup(
         serializationTestMissingEntries.map((entry) => entry.id),
@@ -2058,9 +2109,17 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result } = await executeMethodDescriptor(descriptor);
+      const { call, result } = await executeMethodDescriptor(descriptor, {
+        executionSignal: options?.executionSignal,
+      });
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result }));
     } catch (error) {
+      if (isAbortError(error)) {
+        const message = `${options?.executionLabel || activeSerializationTestDef.title} cancelled.`;
+        setStatus(message);
+        appendLog(message);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Unknown serialization test error.';
       const call = buildMethodCallEntry(
         descriptor.method,

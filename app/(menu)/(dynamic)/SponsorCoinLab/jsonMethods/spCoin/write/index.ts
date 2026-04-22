@@ -185,13 +185,11 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 }
 
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
-  addSponsorRecipient: 'addRecipient',
   addAccountRecipient: 'addRecipient',
   addRecipientTransaction: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
   addAccountRecipientRate: 'addRecipientTransaction',
-  addRecipientAgent: 'addAgent',
   addAgentTransaction: 'addAgentTransaction',
   addAgentRateAmount: 'addAgentTransaction',
   addAgentSponsorship: 'addAgentTransaction',
@@ -556,10 +554,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     recipientRateKey: string | number,
     agentKey: string,
   ) =>
-    submitWrite(`deleteRecipientAgent(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) => {
-      const method = access.contract.deleteRecipientAgent;
+    submitWrite(`deleteAgent(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) => {
+      const method = access.contract.deleteAgent ?? access.contract.deleteRecipientAgent;
       if (typeof method !== 'function') {
-        throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+        throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
       }
       return method(sponsorKey, recipientKey, recipientRateKey, agentKey);
     });
@@ -657,9 +655,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteAgentNode': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const method = access.contract.deleteRecipientAgent;
+        const method = access.contract.deleteAgent ?? access.contract.deleteRecipientAgent;
         if (typeof method !== 'function') {
-          throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+          throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
         }
         return method(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), asString(methodArgs[2]));
       });
@@ -725,13 +723,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addRecipient': {
       await submitWrite(activeDef.title, (access) => {
-        const method = access.add.addSponsorRecipient;
-        if (typeof method === 'function') {
-          return method(asString(methodArgs[0]), asString(methodArgs[1]));
-        }
-        const contractMethod = access.contract.addSponsorRecipient;
+        const contractMethod = access.contract.addRecipient;
         if (typeof contractMethod !== 'function') {
-          throw new Error('addSponsorRecipient is not available on the current SpCoin contract access path.');
+          throw new Error('addRecipient is not available on the current SpCoin contract access path.');
         }
         return contractMethod(asString(methodArgs[0]), asString(methodArgs[1]));
       });
@@ -767,7 +761,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addAgent': {
       await submitWrite(activeDef.title, (access) =>
-        access.add.addRecipientAgent(
+        access.add.addAgent(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),

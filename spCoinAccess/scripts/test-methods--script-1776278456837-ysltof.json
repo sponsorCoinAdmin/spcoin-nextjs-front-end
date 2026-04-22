@@ -139,6 +139,20 @@
       ],
       "breakpoint": true,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "deleteAccountTree",
+      "panel": "serialization_tests",
+      "method": "deleteAccountTree",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     }
   ]
 }

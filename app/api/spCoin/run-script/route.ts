@@ -343,20 +343,19 @@ export async function POST(request: NextRequest) {
         } else if (step.panel === 'spcoin_write') {
           switch (step.method) {
             case 'addRecipient':
-            case 'addSponsorRecipient':
             case 'addAccountRecipient': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
-              const addSponsorRecipient = (contract as unknown as {
-                addSponsorRecipient?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
-              }).addSponsorRecipient;
+              const addRecipient = (contract as unknown as {
+                addRecipient?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+              }).addRecipient;
               const tx =
-                typeof addSponsorRecipient === 'function'
-                  ? await addSponsorRecipient(sponsorKey, recipientKey)
-                  : await access.add.addRecipient(recipientKey);
+                typeof addRecipient === 'function'
+                  ? await addRecipient(sponsorKey, recipientKey)
+                  : await access.add.addRecipient(sponsorKey, recipientKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                'addSponsorRecipient',
+                'addRecipient',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
@@ -385,15 +384,14 @@ export async function POST(request: NextRequest) {
               result = formatReceiptResult('addRecipientTransaction', tx, receipt);
               break;
             }
-            case 'addRecipientAgent':
             case 'addAgent': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
-              const tx = await access.add.addRecipientAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
+              const tx = await access.add.addAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipientAgent', tx, receipt);
+              result = formatReceiptResult('addAgent', tx, receipt);
               break;
             }
             case 'addAgentTransaction':
@@ -532,6 +530,16 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
+              const deleteAgent = (
+                contract as unknown as {
+                  deleteAgent?: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string | number,
+                    agentKey: string,
+                  ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+                }
+              ).deleteAgent;
               const deleteRecipientAgent = (
                 contract as unknown as {
                   deleteRecipientAgent?: (
@@ -542,13 +550,16 @@ export async function POST(request: NextRequest) {
                   ) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
                 }
               ).deleteRecipientAgent;
-              if (typeof deleteRecipientAgent !== 'function') {
-                throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+              if (typeof deleteAgent !== 'function' && typeof deleteRecipientAgent !== 'function') {
+                throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
               }
-              const tx = await deleteRecipientAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
+              const tx =
+                typeof deleteAgent === 'function'
+                  ? await deleteAgent(sponsorKey, recipientKey, recipientRateKey, agentKey)
+                  : await deleteRecipientAgent!(sponsorKey, recipientKey, recipientRateKey, agentKey);
               const receipt = await tx.wait();
               result = formatReceiptResult(
-                String(step.method),
+                'deleteAgent',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );
