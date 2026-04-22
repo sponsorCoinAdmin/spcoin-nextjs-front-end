@@ -6,6 +6,141 @@ import "../rewardsManagement/RewardsManager.sol";
 contract Transactions is RewardsManager {
     constructor() { }
 
+    function _copySourceListToTransactionRecord(
+        TransactionRecordStruct storage _record,
+        address[] memory _sourceList
+    )
+        internal
+    {
+        for (uint256 idx = 0; idx < _sourceList.length; idx++) {
+            _record.sourceList.push(_sourceList[idx]);
+        }
+    }
+
+    function _registerRecipientRateTransaction(
+        RecipientRateStruct storage _recipientTransaction,
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        StakingTransactionStruct memory _transRec
+    )
+        internal
+        returns (uint256 transactionId)
+    {
+        bytes32 directoryHashKey = _recipientTransaction.transactionDirectoryHashKey;
+        if (directoryHashKey == bytes32(0)) {
+            directoryHashKey = buildRecipientRateTransactionHashKey(_sponsorKey, _recipientKey, _recipientRateKey);
+            _recipientTransaction.transactionDirectoryHashKey = directoryHashKey;
+        }
+
+        transactionId = reserveTransactionId();
+        _recipientTransaction.transactionIdDirectory.push(transactionId);
+        masterTransactionDirectoryMap[directoryHashKey].push(transactionId);
+
+        TransactionDirectoryStruct storage directoryInfo = masterTransactionDirectoryInfoMap[directoryHashKey];
+        if (!directoryInfo.inserted) {
+            directoryInfo.directoryHashKey = directoryHashKey;
+            directoryInfo.inserted = true;
+        }
+        directoryInfo.transactionIds.push(transactionId);
+
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        transactionRecord.transactionId = transactionId;
+        transactionRecord.directoryHashKey = directoryHashKey;
+        transactionRecord.insertionTime = _transRec.insertionTime;
+        transactionRecord.stakingRewards = _transRec.stakingRewards;
+        transactionRecord.sponsorKey = _sponsorKey;
+        transactionRecord.recipientKey = _recipientKey;
+        transactionRecord.recipientRateKey = _recipientRateKey;
+        transactionRecord.agentKey = burnAddress;
+        transactionRecord.agentRateKey = 0;
+        transactionRecord.inserted = true;
+        _copySourceListToTransactionRecord(transactionRecord, _transRec.sourceList);
+
+        masterTransactionHashById[transactionId] = directoryHashKey;
+    }
+
+    function _registerAgentRateTransaction(
+        AgentRateStruct storage _agentTransaction,
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        StakingTransactionStruct memory _transRec
+    )
+        internal
+        returns (uint256 transactionId)
+    {
+        bytes32 directoryHashKey = _agentTransaction.transactionDirectoryHashKey;
+        if (directoryHashKey == bytes32(0)) {
+            directoryHashKey = buildAgentRateTransactionHashKey(
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                _agentKey,
+                _agentRateKey
+            );
+            _agentTransaction.transactionDirectoryHashKey = directoryHashKey;
+        }
+
+        transactionId = reserveTransactionId();
+        _agentTransaction.transactionIdDirectory.push(transactionId);
+        masterTransactionDirectoryMap[directoryHashKey].push(transactionId);
+
+        TransactionDirectoryStruct storage directoryInfo = masterTransactionDirectoryInfoMap[directoryHashKey];
+        if (!directoryInfo.inserted) {
+            directoryInfo.directoryHashKey = directoryHashKey;
+            directoryInfo.inserted = true;
+        }
+        directoryInfo.transactionIds.push(transactionId);
+
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        transactionRecord.transactionId = transactionId;
+        transactionRecord.directoryHashKey = directoryHashKey;
+        transactionRecord.insertionTime = _transRec.insertionTime;
+        transactionRecord.stakingRewards = _transRec.stakingRewards;
+        transactionRecord.sponsorKey = _sponsorKey;
+        transactionRecord.recipientKey = _recipientKey;
+        transactionRecord.recipientRateKey = _recipientRateKey;
+        transactionRecord.agentKey = _agentKey;
+        transactionRecord.agentRateKey = _agentRateKey;
+        transactionRecord.inserted = true;
+        _copySourceListToTransactionRecord(transactionRecord, _transRec.sourceList);
+
+        masterTransactionHashById[transactionId] = directoryHashKey;
+    }
+
+    function _syncRecipientRateTransactionTimestamp(
+        RecipientRateStruct storage _recipientTransaction,
+        uint256 _transactionIndex,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        if (_transactionIndex >= _recipientTransaction.transactionIdDirectory.length) return;
+        uint256 transactionId = _recipientTransaction.transactionIdDirectory[_transactionIndex];
+        if (transactionId == 0) return;
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        if (!transactionRecord.inserted) return;
+        transactionRecord.insertionTime = _transactionTimeStamp;
+    }
+
+    function _syncAgentRateTransactionTimestamp(
+        AgentRateStruct storage _agentTransaction,
+        uint256 _transactionIndex,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        if (_transactionIndex >= _agentTransaction.transactionIdDirectory.length) return;
+        uint256 transactionId = _agentTransaction.transactionIdDirectory[_transactionIndex];
+        if (transactionId == 0) return;
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        if (!transactionRecord.inserted) return;
+        transactionRecord.insertionTime = _transactionTimeStamp;
+    }
+
     function addSponsorship(address _recipientKey,
                                  uint _recipientRateKey,
                                  address _agentKey,
@@ -119,6 +254,13 @@ contract Transactions is RewardsManager {
             updateRecipientRateSponsorship(_sponsorKey, recipientTransaction, _recipientKey, sponsorAmount, _transactionTimeStamp);
             transactionIndex = recipientTransaction.transactionList.length;
             recipientTransaction.transactionList.push(transRec);
+            _registerRecipientRateTransaction(
+                recipientTransaction,
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                transRec
+            );
         }
         else {
             AgentRateStruct storage agentTransaction = getAgentTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, _transactionTimeStamp);
@@ -127,6 +269,15 @@ contract Transactions is RewardsManager {
             updateAgentRateSponsorship(_sponsorKey, agentTransaction, _recipientKey, _recipientRateKey, _agentKey, sponsorAmount, _transactionTimeStamp);
             transactionIndex = agentTransaction.transactionList.length;
             agentTransaction.transactionList.push(transRec);
+            _registerAgentRateTransaction(
+                agentTransaction,
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                _agentKey,
+                _agentRateKey,
+                transRec
+            );
         }
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
@@ -220,11 +371,13 @@ contract Transactions is RewardsManager {
                 getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
             require(_transactionIndex < recipientTransaction.transactionList.length, "RECIP_TX_OOB");
             recipientTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+            _syncRecipientRateTransactionTimestamp(recipientTransaction, _transactionIndex, _transactionTimeStamp);
         } else {
             AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
             AgentRateStruct storage agentTransaction = agentRec.agentRateMap[_agentRateKey];
             require(_transactionIndex < agentTransaction.transactionList.length, "AGENT_TX_OOB");
             agentTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+            _syncAgentRateTransactionTimestamp(agentTransaction, _transactionIndex, _transactionTimeStamp);
         }
     }
 
