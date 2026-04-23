@@ -9,6 +9,7 @@ import { method as symbol } from './methods/symbol';
 import { method as totalSupply } from './methods/totalSupply';
 
 export type Erc20ReadMethod = 'name' | 'symbol' | 'decimals' | 'totalSupply' | 'balanceOf' | 'allowance';
+export type Erc20ReadAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 
 export type Erc20ReadLabels = {
   title: string;
@@ -30,6 +31,35 @@ const METHODS = {
 } as const;
 
 export const ERC20_READ_OPTIONS = (Object.keys(METHODS) as Erc20ReadMethod[]).sort((a, b) => a.localeCompare(b));
+
+const ALL_ERC20_READ_METHODS = Object.keys(METHODS) as Erc20ReadMethod[];
+const ERC20_PARAMETERIZED_READ_METHODS: Erc20ReadMethod[] = ['balanceOf', 'allowance'];
+
+function buildErc20ReadMemberList(
+  predicate: (name: Erc20ReadMethod) => boolean,
+): Record<Erc20ReadMethod, boolean> {
+  return Object.fromEntries(
+    ALL_ERC20_READ_METHODS.map((name) => [name, predicate(name)]),
+  ) as Record<Erc20ReadMethod, boolean>;
+}
+
+export const ERC20_READ_METHOD_MEMBER_LISTS: Record<
+  Erc20ReadAlterMode,
+  Record<Erc20ReadMethod, boolean>
+> = {
+  Standard: buildErc20ReadMemberList(() => true),
+  All: buildErc20ReadMemberList(() => true),
+  Test: buildErc20ReadMemberList((name) => ERC20_PARAMETERIZED_READ_METHODS.includes(name)),
+  Todo: buildErc20ReadMemberList(() => false),
+};
+
+export function filterErc20ReadMethodsByAlterMode(
+  methods: Erc20ReadMethod[],
+  mode: Erc20ReadAlterMode,
+): Erc20ReadMethod[] {
+  const memberList = ERC20_READ_METHOD_MEMBER_LISTS[mode];
+  return methods.filter((name) => Boolean(memberList?.[name]));
+}
 
 export function getErc20ReadLabels(selectedReadMethod: Erc20ReadMethod): Erc20ReadLabels {
   return METHODS[selectedReadMethod].labels;

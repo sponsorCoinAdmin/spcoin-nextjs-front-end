@@ -8,8 +8,18 @@ import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
+import {
+  SERIALIZATION_TEST_METHOD_MEMBER_LISTS,
+} from '../jsonMethods/serializationTests';
+import { SPCOIN_READ_METHOD_MEMBER_LISTS } from '../jsonMethods/spCoin/read';
+import { SPCOIN_WRITE_METHOD_MEMBER_LISTS } from '../jsonMethods/spCoin/write';
+import { ERC20_READ_METHOD_MEMBER_LISTS } from '../jsonMethods/erc20/read';
+import { ERC20_WRITE_METHOD_MEMBER_LISTS } from '../jsonMethods/erc20/write';
 
 type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'admin_utils';
+type StoredAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
+type AlterModeOption = StoredAlterMode | 'Tested';
+type EditableMemberLists = Record<StoredAlterMode, Record<string, boolean>>;
 
 const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   allowance: 'erc20.ts',
@@ -122,6 +132,37 @@ function dedupeMethodNamesByLabel(values: string[], getLabel: (name: string) => 
   });
 }
 
+function cloneMemberLists(source: EditableMemberLists): EditableMemberLists {
+  return Object.fromEntries(
+    Object.entries(source).map(([mode, members]) => [mode, { ...members }]),
+  ) as EditableMemberLists;
+}
+
+function filterMethodsByAlterMode(
+  methods: string[],
+  memberLists: EditableMemberLists,
+  mode: AlterModeOption,
+) {
+  if (mode === 'Tested') {
+    const testMemberList = memberLists.Test || {};
+    return methods.filter((name) => !Boolean(testMemberList[name]));
+  }
+  const memberList = memberLists[mode] || {};
+  return methods.filter((name) => Boolean(memberList[name]));
+}
+
+function isMethodInAlterMode(
+  methodName: string,
+  memberLists: EditableMemberLists,
+  mode: AlterModeOption,
+) {
+  if (!methodName || methodName === '__no_methods__') return false;
+  if (mode === 'Tested') {
+    return !Boolean(memberLists.Test?.[methodName]);
+  }
+  return Boolean(memberLists[mode]?.[methodName]);
+}
+
 const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'creationTime',
   'version',
@@ -202,12 +243,33 @@ export default function MethodsPanelCard({
   spCoinWriteProps,
   serializationTestProps,
 }: Props) {
+  const ALTER_MODE_OPTIONS: AlterModeOption[] = ['Standard', 'All', 'Test', 'Tested', 'Todo'];
   const showAllCardSectionsForVisualTest = false;
   const showAllMethodPanelsForVisualTest = false;
   const methodPanelGroupName = React.useId();
+  const alterModeGroupName = React.useId();
   const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
   const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
   const [isMethodPanelLoading, setIsMethodPanelLoading] = React.useState(false);
+  const [selectedAlterMode, setSelectedAlterMode] =
+    React.useState<AlterModeOption>('Standard');
+  const [alterModeDropdownValue, setAlterModeDropdownValue] = React.useState('__alter_mode_placeholder__');
+  const [serializationMemberLists, setSerializationMemberLists] = React.useState<EditableMemberLists>(() =>
+    cloneMemberLists(SERIALIZATION_TEST_METHOD_MEMBER_LISTS as EditableMemberLists),
+  );
+  const [spCoinReadMemberLists, setSpCoinReadMemberLists] = React.useState<EditableMemberLists>(() =>
+    cloneMemberLists(SPCOIN_READ_METHOD_MEMBER_LISTS as EditableMemberLists),
+  );
+  const [spCoinWriteMemberLists, setSpCoinWriteMemberLists] = React.useState<EditableMemberLists>(() =>
+    cloneMemberLists(SPCOIN_WRITE_METHOD_MEMBER_LISTS as EditableMemberLists),
+  );
+  const [erc20ReadMemberLists, setErc20ReadMemberLists] = React.useState<EditableMemberLists>(() =>
+    cloneMemberLists(ERC20_READ_METHOD_MEMBER_LISTS as EditableMemberLists),
+  );
+  const [erc20WriteMemberLists, setErc20WriteMemberLists] = React.useState<EditableMemberLists>(() =>
+    cloneMemberLists(ERC20_WRITE_METHOD_MEMBER_LISTS as EditableMemberLists),
+  );
+  const [isManageEnabled, setIsManageEnabled] = React.useState(false);
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
   const isErc20Mode = methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write';
@@ -219,12 +281,26 @@ export default function MethodsPanelCard({
     ['todos', 'ToDos'],
   ];
   const visibleErc20ReadOptions = React.useMemo(
-    () => sortMethodNames(erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : []),
-    [erc20ReadProps.erc20ReadOptions, erc20ReadProps.showOnChainMethods],
+    () =>
+      sortMethodNames(
+        filterMethodsByAlterMode(
+          erc20ReadProps.showOnChainMethods ? erc20ReadProps.erc20ReadOptions : [],
+          erc20ReadMemberLists,
+          selectedAlterMode,
+        ),
+      ),
+    [erc20ReadMemberLists, erc20ReadProps.erc20ReadOptions, erc20ReadProps.showOnChainMethods, selectedAlterMode],
   );
   const visibleErc20WriteOptions = React.useMemo(
-    () => sortMethodNames(erc20WriteProps.showOnChainMethods ? erc20WriteProps.erc20WriteOptions : []),
-    [erc20WriteProps.erc20WriteOptions, erc20WriteProps.showOnChainMethods],
+    () =>
+      sortMethodNames(
+        filterMethodsByAlterMode(
+          erc20WriteProps.showOnChainMethods ? erc20WriteProps.erc20WriteOptions : [],
+          erc20WriteMemberLists,
+          selectedAlterMode,
+        ),
+      ),
+    [erc20WriteMemberLists, erc20WriteProps.erc20WriteOptions, erc20WriteProps.showOnChainMethods, selectedAlterMode],
   );
   const hasVisibleErc20Methods = visibleErc20ReadOptions.length > 0 || visibleErc20WriteOptions.length > 0;
   const combinedErc20MethodValue =
@@ -237,24 +313,31 @@ export default function MethodsPanelCard({
           String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
         ),
       );
+      const baseOptions = [
+        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
+        ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
+        ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
+      ].filter((name) => {
+        if (name === 'calcDataTimeDiff' || name === 'calculateStakingRewards') return false;
+        if (excludedAdminReadNames.has(name)) return false;
+        const title = String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name);
+        if (BLOCKED_SPCOIN_READ_TITLES.has(title)) return false;
+        return !excludedAdminReadTitles.has(title);
+      });
       return dedupeMethodNamesByLabel(
         sortMethodNames(
-          [
-            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinWorldReadOptions : []),
-            ...(spCoinReadProps.showOnChainMethods ? spCoinReadProps.spCoinSenderReadOptions : []),
-            ...(spCoinReadProps.showOffChainMethods ? spCoinReadProps.spCoinCompoundReadOptions : []),
-          ].filter((name) => {
-            if (name === 'calcDataTimeDiff' || name === 'calculateStakingRewards') return false;
-            if (excludedAdminReadNames.has(name)) return false;
-            const title = String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name);
-            if (BLOCKED_SPCOIN_READ_TITLES.has(title)) return false;
-            return !excludedAdminReadTitles.has(title);
-          }),
+          filterMethodsByAlterMode(
+            baseOptions,
+            spCoinReadMemberLists,
+            selectedAlterMode,
+          ),
         ),
         (name) => String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
       );
     },
     [
+      selectedAlterMode,
+      spCoinReadMemberLists,
       spCoinReadProps.showOffChainMethods,
       spCoinReadProps.showOnChainMethods,
       spCoinReadProps.spCoinAdminReadOptions,
@@ -267,30 +350,47 @@ export default function MethodsPanelCard({
   const visibleSpCoinWriteOptions = React.useMemo(
     () =>
       sortMethodNames(
-        Array.from(
-          new Set([
-            ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
-            ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
-            ...(spCoinWriteProps.showOffChainMethods
-              ? [
-                  'deleteAccountTree',
-                  'deleteRecipient',
-                  'deleteRecipientRate',
-                  'deleteAgent',
-                  'deleteAgentRate',
-                ]
-              : []),
-            ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
-          ]),
+        filterMethodsByAlterMode(
+          Array.from(
+            new Set([
+              ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinWorldWriteOptions : []),
+              ...(spCoinWriteProps.showOnChainMethods ? spCoinWriteProps.spCoinSenderWriteOptions : []),
+              ...(spCoinWriteProps.showOffChainMethods
+                ? [
+                    'deleteAccountTree',
+                    'deleteRecipient',
+                    'deleteRecipientRate',
+                    'deleteAgent',
+                    'deleteAgentRate',
+                  ]
+                : []),
+              ...(spCoinWriteProps.showOffChainMethods ? spCoinWriteProps.spCoinTodoWriteOptions : []),
+            ]),
+          ),
+          spCoinWriteMemberLists,
+          selectedAlterMode,
         ),
       ),
     [
+      selectedAlterMode,
+      spCoinWriteMemberLists,
       spCoinWriteProps.showOffChainMethods,
       spCoinWriteProps.showOnChainMethods,
       spCoinWriteProps.spCoinSenderWriteOptions,
       spCoinWriteProps.spCoinTodoWriteOptions,
       spCoinWriteProps.spCoinWorldWriteOptions,
     ],
+  );
+  const visibleTodoWriteOptions = React.useMemo(
+    () =>
+      sortMethodNames(
+        filterMethodsByAlterMode(
+          spCoinWriteProps.spCoinTodoWriteOptions,
+          spCoinWriteMemberLists,
+          selectedAlterMode,
+        ),
+      ),
+    [selectedAlterMode, spCoinWriteMemberLists, spCoinWriteProps.spCoinTodoWriteOptions],
   );
   const visibleSpCoinAddWriteOptions = React.useMemo(
     () => visibleSpCoinWriteOptions.filter((name) => name.startsWith('add')),
@@ -310,13 +410,27 @@ export default function MethodsPanelCard({
   const visibleSerializationOptions = React.useMemo(
     () =>
       sortMethodNames(
-        serializationTestProps.showOffChainMethods ? serializationTestProps.serializationTestOptions : [],
+      filterMethodsByAlterMode(
+          serializationTestProps.showOffChainMethods ? serializationTestProps.serializationTestOptions : [],
+          serializationMemberLists,
+          selectedAlterMode,
+        ),
       ),
-    [serializationTestProps.serializationTestOptions, serializationTestProps.showOffChainMethods],
+    [
+      serializationMemberLists,
+      selectedAlterMode,
+      serializationTestProps.serializationTestOptions,
+      serializationTestProps.showOffChainMethods,
+    ],
   );
   const adminUtilityMethodNames = React.useMemo(
-    () => Object.keys(serializationTestProps.serializationTestMethodDefs),
-    [serializationTestProps.serializationTestMethodDefs],
+    () =>
+      filterMethodsByAlterMode(
+        Object.keys(serializationTestProps.serializationTestMethodDefs),
+        serializationMemberLists,
+        selectedAlterMode,
+      ),
+    [selectedAlterMode, serializationMemberLists, serializationTestProps.serializationTestMethodDefs],
   );
   const adminUtilityReadOptions = React.useMemo(
     () =>
@@ -350,24 +464,36 @@ export default function MethodsPanelCard({
         Array.from(
           new Set([
             ...adminUtilityReadOptions,
-            ...spCoinReadProps.spCoinAdminReadOptions,
-            ...(spCoinReadProps.selectedSpCoinReadMethod &&
-            spCoinReadProps.spCoinReadMethodDefs[spCoinReadProps.selectedSpCoinReadMethod]
-              ? [spCoinReadProps.selectedSpCoinReadMethod]
-              : []),
+            ...filterMethodsByAlterMode(
+              spCoinReadProps.spCoinAdminReadOptions,
+              spCoinReadMemberLists,
+              selectedAlterMode,
+            ),
           ]),
         ),
       ),
     [
       adminUtilityReadOptions,
-      spCoinReadProps.selectedSpCoinReadMethod,
       spCoinReadProps.spCoinAdminReadOptions,
-      spCoinReadProps.spCoinReadMethodDefs,
+      spCoinReadMemberLists,
+      selectedAlterMode,
     ],
   );
   const visibleAdminUtilsOwnerOptions = React.useMemo(
-    () => sortMethodNames([...adminUtilityOwnerOptions, ...spCoinWriteProps.spCoinAdminWriteOptions]),
-    [adminUtilityOwnerOptions, spCoinWriteProps.spCoinAdminWriteOptions],
+    () =>
+      sortMethodNames([
+        ...adminUtilityOwnerOptions,
+        ...filterMethodsByAlterMode(
+          spCoinWriteProps.spCoinAdminWriteOptions,
+          spCoinWriteMemberLists,
+          selectedAlterMode,
+        ),
+      ]),
+    [adminUtilityOwnerOptions, spCoinWriteMemberLists, spCoinWriteProps.spCoinAdminWriteOptions, selectedAlterMode],
+  );
+  const visibleAdminUtilitySerializationOptions = React.useMemo(
+    () => sortMethodNames([...adminUtilityReadOptions, ...adminUtilityOwnerOptions]),
+    [adminUtilityOwnerOptions, adminUtilityReadOptions],
   );
   const hasVisibleAdminUtilsMethods =
     visibleAdminUtilsReadOptions.length > 0 || visibleAdminUtilsOwnerOptions.length > 0;
@@ -516,6 +642,80 @@ export default function MethodsPanelCard({
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinWriteProps.selectedSpCoinWriteMethod,
   ]);
+  const activeAlterMemberLists = React.useMemo<EditableMemberLists>(() => {
+    if (activeMethodPanelTab === 'erc20') {
+      return methodPanelMode === 'erc20_write' ? erc20WriteMemberLists : erc20ReadMemberLists;
+    }
+    if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') return spCoinReadMemberLists;
+      if (methodPanelMode === 'spcoin_write') return spCoinWriteMemberLists;
+      return serializationMemberLists;
+    }
+    if (activeMethodPanelTab === 'todos') return spCoinWriteMemberLists;
+    if (methodPanelMode === 'spcoin_rread') return spCoinReadMemberLists;
+    if (methodPanelMode === 'spcoin_write') return spCoinWriteMemberLists;
+    return serializationMemberLists;
+  }, [
+    activeMethodPanelTab,
+    erc20ReadMemberLists,
+    erc20WriteMemberLists,
+    methodPanelMode,
+    serializationMemberLists,
+    spCoinReadMemberLists,
+    spCoinWriteMemberLists,
+  ]);
+  const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterModeOption) => {
+    if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return;
+    const toggleMember =
+      (setter: React.Dispatch<React.SetStateAction<EditableMemberLists>>) => {
+        const targetMode: StoredAlterMode = mode === 'Tested' ? 'Test' : mode;
+        setter((prev) => ({
+          ...prev,
+          [targetMode]: {
+            ...prev[targetMode],
+            [currentJsonMethodName]:
+              mode === 'Tested'
+                ? Boolean(prev.Test?.[currentJsonMethodName])
+                : !prev[targetMode]?.[currentJsonMethodName],
+          },
+        }));
+      };
+    if (activeMethodPanelTab === 'erc20') {
+      if (methodPanelMode === 'erc20_write') {
+        toggleMember(setErc20WriteMemberLists);
+      } else {
+        toggleMember(setErc20ReadMemberLists);
+      }
+      return;
+    }
+    if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') {
+        toggleMember(setSpCoinReadMemberLists);
+      } else if (methodPanelMode === 'spcoin_write') {
+        toggleMember(setSpCoinWriteMemberLists);
+      } else {
+        toggleMember(setSerializationMemberLists);
+      }
+      return;
+    }
+    if (activeMethodPanelTab === 'todos') {
+      toggleMember(setSpCoinWriteMemberLists);
+      return;
+    }
+    if (methodPanelMode === 'spcoin_rread') {
+      toggleMember(setSpCoinReadMemberLists);
+      return;
+    }
+    if (methodPanelMode === 'spcoin_write') {
+      toggleMember(setSpCoinWriteMemberLists);
+      return;
+    }
+    toggleMember(setSerializationMemberLists);
+  }, [
+    activeMethodPanelTab,
+    currentJsonMethodName,
+    methodPanelMode,
+  ]);
   const adminUtilsSelectedMethod = React.useMemo(() => {
     const combinedAdminUtilsWriteOptions = sortMethodNames([...visibleAdminUtilsOwnerOptions]);
     if (methodPanelMode === 'spcoin_write') {
@@ -525,18 +725,12 @@ export default function MethodsPanelCard({
       if (combinedAdminUtilsWriteOptions.length > 0) return combinedAdminUtilsWriteOptions[0];
     }
     if (methodPanelMode === 'spcoin_rread') {
-      if (spCoinReadProps.spCoinReadMethodDefs[spCoinReadProps.selectedSpCoinReadMethod]) {
-        return spCoinReadProps.selectedSpCoinReadMethod;
-      }
       if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
-        return spCoinReadProps.selectedSpCoinReadMethod;
-      }
-      if (combinedAdminUtilsWriteOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
         return spCoinReadProps.selectedSpCoinReadMethod;
       }
       if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
     }
-    if (visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) {
+    if (visibleAdminUtilitySerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) {
       return serializationTestProps.selectedSerializationTestMethod;
     }
     if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
@@ -547,9 +741,9 @@ export default function MethodsPanelCard({
     serializationTestProps.selectedSerializationTestMethod,
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinWriteProps.selectedSpCoinWriteMethod,
+    visibleAdminUtilitySerializationOptions,
     visibleAdminUtilsReadOptions,
     visibleAdminUtilsOwnerOptions,
-    visibleSerializationOptions,
   ]);
   const typeScriptMethodOptions = React.useMemo(() => {
     if (activeMethodPanelTab === 'erc20') return sortMethodNames([...visibleErc20ReadOptions, ...visibleErc20WriteOptions]);
@@ -561,14 +755,12 @@ export default function MethodsPanelCard({
         ...visibleAdminUtilsOwnerOptions,
       ]);
     }
-    return sortMethodNames(
-      spCoinWriteProps.spCoinTodoWriteOptions.filter((method) => showOffChainMethods || showOnChainMethods || Boolean(method)),
-    );
+    return visibleTodoWriteOptions;
   }, [
     activeMethodPanelTab,
-    showOffChainMethods,
-    showOnChainMethods,
-    spCoinWriteProps.spCoinTodoWriteOptions,
+    visibleAdminUtilsOwnerOptions,
+    visibleAdminUtilsReadOptions,
+    visibleTodoWriteOptions,
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
     visibleSpCoinReadOptions,
@@ -638,6 +830,110 @@ export default function MethodsPanelCard({
     const timer = window.setTimeout(() => setIsMethodPanelLoading(false), 180);
     return () => window.clearTimeout(timer);
   }, [activePanelKey]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab === 'admin_utils') return;
+    if (methodPanelMode !== 'serialization_tests') return;
+    if (visibleSerializationOptions.length === 0) return;
+    if (visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) return;
+    serializationTestProps.setSelectedSerializationTestMethod(visibleSerializationOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    serializationTestProps.selectedSerializationTestMethod,
+    serializationTestProps.setSelectedSerializationTestMethod,
+    visibleSerializationOptions,
+  ]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'serialization_tests') return;
+    if (visibleAdminUtilitySerializationOptions.length === 0) return;
+    if (visibleAdminUtilitySerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) return;
+    serializationTestProps.setSelectedSerializationTestMethod(visibleAdminUtilitySerializationOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    serializationTestProps.selectedSerializationTestMethod,
+    serializationTestProps.setSelectedSerializationTestMethod,
+    visibleAdminUtilitySerializationOptions,
+  ]);
+  React.useEffect(() => {
+    if (methodPanelMode !== 'ecr20_read') return;
+    if (visibleErc20ReadOptions.length === 0) return;
+    if (visibleErc20ReadOptions.includes(erc20ReadProps.selectedReadMethod)) return;
+    erc20ReadProps.setSelectedReadMethod(visibleErc20ReadOptions[0]);
+  }, [
+    erc20ReadProps.selectedReadMethod,
+    erc20ReadProps.setSelectedReadMethod,
+    methodPanelMode,
+    visibleErc20ReadOptions,
+  ]);
+  React.useEffect(() => {
+    if (methodPanelMode !== 'erc20_write') return;
+    if (visibleErc20WriteOptions.length === 0) return;
+    if (visibleErc20WriteOptions.includes(erc20WriteProps.selectedWriteMethod)) return;
+    erc20WriteProps.setSelectedWriteMethod(visibleErc20WriteOptions[0]);
+  }, [
+    erc20WriteProps.selectedWriteMethod,
+    erc20WriteProps.setSelectedWriteMethod,
+    methodPanelMode,
+    visibleErc20WriteOptions,
+  ]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab === 'admin_utils') return;
+    if (methodPanelMode !== 'spcoin_rread') return;
+    if (visibleSpCoinReadOptions.length === 0) return;
+    if (visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) return;
+    spCoinReadProps.setSelectedSpCoinReadMethod(visibleSpCoinReadOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinReadProps.setSelectedSpCoinReadMethod,
+    visibleSpCoinReadOptions,
+  ]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab === 'admin_utils') return;
+    if (activeMethodPanelTab === 'todos') {
+      if (visibleTodoWriteOptions.length === 0) return;
+      if (visibleTodoWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) return;
+      spCoinWriteProps.setSelectedSpCoinWriteMethod(visibleTodoWriteOptions[0]);
+      return;
+    }
+    if (methodPanelMode !== 'spcoin_write') return;
+    if (visibleSpCoinWriteOptions.length === 0) return;
+    if (visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) return;
+    spCoinWriteProps.setSelectedSpCoinWriteMethod(visibleSpCoinWriteOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+    spCoinWriteProps.setSelectedSpCoinWriteMethod,
+    visibleSpCoinWriteOptions,
+    visibleTodoWriteOptions,
+  ]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'spcoin_rread') return;
+    if (visibleAdminUtilsReadOptions.length === 0) return;
+    if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) return;
+    spCoinReadProps.setSelectedSpCoinReadMethod(visibleAdminUtilsReadOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinReadProps.setSelectedSpCoinReadMethod,
+    visibleAdminUtilsReadOptions,
+  ]);
+  React.useEffect(() => {
+    if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'spcoin_write') return;
+    if (visibleAdminUtilsOwnerOptions.length === 0) return;
+    if (visibleAdminUtilsOwnerOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) return;
+    spCoinWriteProps.setSelectedSpCoinWriteMethod(visibleAdminUtilsOwnerOptions[0]);
+  }, [
+    activeMethodPanelTab,
+    methodPanelMode,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+    spCoinWriteProps.setSelectedSpCoinWriteMethod,
+    visibleAdminUtilsOwnerOptions,
+  ]);
   const showLoadingPanel = isMethodPanelLoading || (isJavaScriptScriptMode && javaScriptEditorProps.isJavaScriptFileLoading);
   const loadingPanel = (
     <div className="rounded-lg border border-[#31416F] bg-[#0E111B] px-4 py-6 text-sm text-slate-400">
@@ -767,6 +1063,19 @@ export default function MethodsPanelCard({
       );
     }
     if (methodPanelMode === 'spcoin_write') {
+      const activeWriteOptions = activeMethodPanelTab === 'todos' ? visibleTodoWriteOptions : visibleSpCoinWriteOptions;
+      const activeAddOptions =
+        activeMethodPanelTab === 'todos'
+          ? visibleTodoWriteOptions.filter((name) => name.startsWith('add'))
+          : visibleSpCoinAddWriteOptions;
+      const activeDeleteOptions =
+        activeMethodPanelTab === 'todos'
+          ? visibleTodoWriteOptions.filter((name) => name.startsWith('delete'))
+          : visibleSpCoinDeleteWriteOptions;
+      const activeUtilityOptions =
+        activeMethodPanelTab === 'todos'
+          ? visibleTodoWriteOptions.filter((name) => !name.startsWith('add') && !name.startsWith('delete'))
+          : visibleSpCoinUtilityWriteOptions;
       return (
         <div className={baseClassName}>
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
@@ -775,41 +1084,41 @@ export default function MethodsPanelCard({
               aria-label="SpCoin write JSON method"
               title="SpCoin write JSON method"
               className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={visibleSpCoinWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
+              value={activeWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
               onChange={(e) => selectMappedJsonMethod(e.target.value)}
-              disabled={visibleSpCoinWriteOptions.length === 0}
+              disabled={activeWriteOptions.length === 0}
             >
-            {visibleSpCoinWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleSpCoinAddWriteOptions.length > 0 ? (
+            {activeWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+            {activeAddOptions.length > 0 ? (
               <>
                 <option value="__sp-write-add-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
                   ---- Add Methods ----
                 </option>
-                {visibleSpCoinAddWriteOptions.map((name) => (
+                {activeAddOptions.map((name) => (
                   <option key={`sp-write-add-${name}`} value={name}>
                     {name}
                   </option>
                 ))}
               </>
             ) : null}
-            {visibleSpCoinDeleteWriteOptions.length > 0 ? (
+            {activeDeleteOptions.length > 0 ? (
               <>
                 <option value="__sp-write-delete-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
                   ---- Delete Methods ----
                 </option>
-                {visibleSpCoinDeleteWriteOptions.map((name) => (
+                {activeDeleteOptions.map((name) => (
                   <option key={`sp-write-delete-${name}`} value={name}>
                     {name}
                   </option>
                 ))}
               </>
             ) : null}
-            {visibleSpCoinUtilityWriteOptions.length > 0 ? (
+            {activeUtilityOptions.length > 0 ? (
               <>
                 <option value="__sp-write-utils-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
                   ---- Utils ----
                 </option>
-                {visibleSpCoinUtilityWriteOptions.map((name) => (
+                {activeUtilityOptions.map((name) => (
                   <option key={`sp-write-utils-${name}`} value={name}>
                     {name}
                   </option>
@@ -924,8 +1233,19 @@ export default function MethodsPanelCard({
               />
               <span className="text-[#8FA8FF]">Off-Chain</span>
               </label>
+              <div className="ml-auto flex items-start gap-4">
+                <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#5981F3]"
+                    checked={isManageEnabled}
+                    onChange={(event) => setIsManageEnabled(event.target.checked)}
+                  />
+                  <span>Manage Selection</span>
+                </label>
+              </div>
               {isJavaScriptScriptMode ? (
-                <div className="ml-auto flex items-start gap-4">
+                <div className="flex items-start gap-4">
                   <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
                     <input
                       type="checkbox"
@@ -937,19 +1257,7 @@ export default function MethodsPanelCard({
                     <span>Edit</span>
                   </label>
                 </div>
-              ) : (
-                <div className="ml-auto flex items-start gap-4">
-                  <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-[#E5B94F]"
-                      checked={writeTraceEnabled}
-                      onChange={toggleWriteTrace}
-                    />
-                    <span>Trace</span>
-                  </label>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -975,6 +1283,65 @@ export default function MethodsPanelCard({
               ))}
             </div>
           </div>
+          {isJsonScriptMode && isManageEnabled ? (
+            <div className="mb-3 -mx-4 flex flex-wrap items-center justify-between gap-3 border-y border-[#31416F] bg-[#0E111B] px-4 py-2">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-[#8FA8FF]">
+                {ALTER_MODE_OPTIONS.map((option) => (
+                  <label key={option} className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name={alterModeGroupName}
+                      value={option}
+                      checked={selectedAlterMode === option}
+                      onChange={() => setSelectedAlterMode(option)}
+                      className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    />
+                    <span className={isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, option) ? 'text-green-400' : 'text-red-400'}>
+                      {option}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
+                  <span>Alter Mode</span>
+                  <select
+                    className="rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-xs text-white"
+                    value={alterModeDropdownValue}
+                    onChange={(event) => {
+                      const nextMode = event.target.value as AlterModeOption | '__alter_mode_placeholder__';
+                      if (nextMode === '__alter_mode_placeholder__') return;
+                      toggleCurrentMethodAlterMembership(nextMode);
+                      setAlterModeDropdownValue('__alter_mode_placeholder__');
+                    }}
+                  >
+                    <option value="__alter_mode_placeholder__">Toggle List Membership</option>
+                    {ALTER_MODE_OPTIONS.map((option) => (
+                      <option
+                        key={`alter-mode-${option}`}
+                        value={option}
+                        style={{
+                          color: isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, option) ? '#22c55e' : '#ef4444',
+                          fontWeight: '700',
+                        }}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#E5B94F]"
+                    checked={writeTraceEnabled}
+                    onChange={toggleWriteTrace}
+                  />
+                  <span>Trace</span>
+                </label>
+              </div>
+            </div>
+          ) : null}
           <>
             {isJavaScriptScriptMode || (showAllCardSectionsForVisualTest && !isJsonScriptMode) ? (
               <div className="mb-3 grid grid-cols-1 gap-3">
@@ -1028,7 +1395,7 @@ export default function MethodsPanelCard({
                     {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || (activeMethodPanelTab !== 'admin_utils' && methodPanelMode === 'erc20_write')) ? <Erc20WriteController {...erc20WriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
                     {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_rread') ? <SpCoinReadController {...spCoinReadProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} allowAdminReadMethods={activeMethodPanelTab === 'admin_utils'} /> : null : null}
                     {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'spcoin_write') ? <SpCoinWriteController {...spCoinWriteProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
-                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
+                    {!isJavaScriptScriptMode || showAllCardSectionsForVisualTest ? (showAllMethodPanelsForVisualTest || methodPanelMode === 'serialization_tests') ? <SerializationTestController {...serializationTestProps} serializationTestOptions={visibleSerializationOptions} hideMethodSelect hideActionButtons hideAddToScript={isJavaScriptScriptMode} /> : null : null}
                   </div>
                 )}
                 <div className="flex gap-2">

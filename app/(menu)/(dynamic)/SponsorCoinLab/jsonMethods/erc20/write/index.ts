@@ -5,6 +5,7 @@ import { method as transfer } from './methods/transfer';
 import { method as transferFrom } from './methods/transferFrom';
 
 export type Erc20WriteMethod = 'transfer' | 'approve' | 'transferFrom';
+export type Erc20WriteAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 
 export type Erc20WriteLabels = {
   title: string;
@@ -22,6 +23,35 @@ const METHODS = {
 } as const;
 
 export const ERC20_WRITE_OPTIONS = (Object.keys(METHODS) as Erc20WriteMethod[]).sort((a, b) => a.localeCompare(b));
+
+const ALL_ERC20_WRITE_METHODS = Object.keys(METHODS) as Erc20WriteMethod[];
+const ERC20_TEST_WRITE_METHODS: Erc20WriteMethod[] = ['transferFrom'];
+
+function buildErc20WriteMemberList(
+  predicate: (name: Erc20WriteMethod) => boolean,
+): Record<Erc20WriteMethod, boolean> {
+  return Object.fromEntries(
+    ALL_ERC20_WRITE_METHODS.map((name) => [name, predicate(name)]),
+  ) as Record<Erc20WriteMethod, boolean>;
+}
+
+export const ERC20_WRITE_METHOD_MEMBER_LISTS: Record<
+  Erc20WriteAlterMode,
+  Record<Erc20WriteMethod, boolean>
+> = {
+  Standard: buildErc20WriteMemberList(() => true),
+  All: buildErc20WriteMemberList(() => true),
+  Test: buildErc20WriteMemberList((name) => ERC20_TEST_WRITE_METHODS.includes(name)),
+  Todo: buildErc20WriteMemberList(() => false),
+};
+
+export function filterErc20WriteMethodsByAlterMode(
+  methods: Erc20WriteMethod[],
+  mode: Erc20WriteAlterMode,
+): Erc20WriteMethod[] {
+  const memberList = ERC20_WRITE_METHOD_MEMBER_LISTS[mode];
+  return methods.filter((name) => Boolean(memberList?.[name]));
+}
 
 export function getErc20WriteLabels(selectedWriteMethod: Erc20WriteMethod): Erc20WriteLabels {
   return METHODS[selectedWriteMethod].labels;

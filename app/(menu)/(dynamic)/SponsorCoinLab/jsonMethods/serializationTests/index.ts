@@ -277,8 +277,40 @@ const METHOD_SPECS = {
 } as const satisfies Record<string, MethodSpec>;
 
 export type SerializationTestMethod = Extract<keyof typeof METHOD_SPECS, string>;
+export type SerializationTestAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 export const SERIALIZATION_TEST_METHOD_DEFS: Record<SerializationTestMethod, MethodDef & MethodSpec> =
   METHOD_SPECS as Record<SerializationTestMethod, MethodDef & MethodSpec>;
+
+const ALL_SERIALIZATION_TEST_METHODS = Object.keys(METHOD_SPECS) as SerializationTestMethod[];
+const BASE_SERIALIZATION_TEST_METHODS = ALL_SERIALIZATION_TEST_METHODS.filter(
+  (name) => 'baseMethod' in SERIALIZATION_TEST_METHOD_DEFS[name],
+);
+
+function buildSerializationTestMemberList(
+  predicate: (name: SerializationTestMethod) => boolean,
+): Record<SerializationTestMethod, boolean> {
+  return Object.fromEntries(
+    ALL_SERIALIZATION_TEST_METHODS.map((name) => [name, predicate(name)]),
+  ) as Record<SerializationTestMethod, boolean>;
+}
+
+export const SERIALIZATION_TEST_METHOD_MEMBER_LISTS: Record<
+  SerializationTestAlterMode,
+  Record<SerializationTestMethod, boolean>
+> = {
+  Standard: buildSerializationTestMemberList((name) => BASE_SERIALIZATION_TEST_METHODS.includes(name)),
+  All: buildSerializationTestMemberList(() => true),
+  Test: buildSerializationTestMemberList((name) => BASE_SERIALIZATION_TEST_METHODS.includes(name)),
+  Todo: buildSerializationTestMemberList(() => false),
+};
+
+export function filterSerializationTestMethodsByAlterMode(
+  methods: SerializationTestMethod[],
+  mode: SerializationTestAlterMode,
+): SerializationTestMethod[] {
+  const memberList = SERIALIZATION_TEST_METHOD_MEMBER_LISTS[mode];
+  return methods.filter((name) => Boolean(memberList?.[name]));
+}
 
 export function getSerializationTestOptions(): SerializationTestMethod[] {
   return (Object.keys(SERIALIZATION_TEST_METHOD_DEFS) as SerializationTestMethod[])

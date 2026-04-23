@@ -68,6 +68,8 @@ export type SpCoinReadMethod =
   | 'totalStakingRewards'
   | 'version';
 
+export type SpCoinReadAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
+
 export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
@@ -133,6 +135,36 @@ export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
 ];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
+
+const ALL_SPCOIN_READ_METHODS = Object.keys(SPCOIN_READ_METHOD_DEFS) as SpCoinReadMethod[];
+
+function buildSpCoinReadMemberList(
+  predicate: (name: SpCoinReadMethod) => boolean,
+): Record<SpCoinReadMethod, boolean> {
+  return Object.fromEntries(
+    ALL_SPCOIN_READ_METHODS.map((name) => [name, predicate(name)]),
+  ) as Record<SpCoinReadMethod, boolean>;
+}
+
+export const SPCOIN_READ_METHOD_MEMBER_LISTS: Record<
+  SpCoinReadAlterMode,
+  Record<SpCoinReadMethod, boolean>
+> = {
+  Standard: buildSpCoinReadMemberList(
+    (name) => !SPCOIN_OFFCHAIN_READ_METHODS.includes(name) && !SPCOIN_ADMIN_READ_METHODS.includes(name),
+  ),
+  All: buildSpCoinReadMemberList(() => true),
+  Test: buildSpCoinReadMemberList((name) => SPCOIN_OFFCHAIN_READ_METHODS.includes(name)),
+  Todo: buildSpCoinReadMemberList(() => false),
+};
+
+export function filterSpCoinReadMethodsByAlterMode(
+  methods: SpCoinReadMethod[],
+  mode: SpCoinReadAlterMode,
+): SpCoinReadMethod[] {
+  const memberList = SPCOIN_READ_METHOD_MEMBER_LISTS[mode];
+  return methods.filter((name) => Boolean(memberList?.[name]));
+}
 
 export function getSpCoinWorldReadOptions(hideUnexecutables: boolean): SpCoinReadMethod[] {
   return getSpCoinReadOptions(hideUnexecutables).filter(

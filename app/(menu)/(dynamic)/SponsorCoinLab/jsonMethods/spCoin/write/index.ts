@@ -120,6 +120,8 @@ export type SpCoinWriteMethod =
   | 'setUpperAgentRate'
   | 'setAgentRateRange';
 
+export type SpCoinWriteAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
+
 export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
   'addBackDatedRecipientTransaction',
@@ -188,6 +190,41 @@ const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
 export const SPCOIN_ONCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = (
   Object.keys(SPCOIN_WRITE_METHOD_DEFS) as SpCoinWriteMethod[]
 ).filter((name) => !SPCOIN_OFFCHAIN_WRITE_METHODS.includes(name));
+
+const ALL_SPCOIN_WRITE_METHODS = Object.keys(SPCOIN_WRITE_METHOD_DEFS) as SpCoinWriteMethod[];
+
+function buildSpCoinWriteMemberList(
+  predicate: (name: SpCoinWriteMethod) => boolean,
+): Record<SpCoinWriteMethod, boolean> {
+  return Object.fromEntries(
+    ALL_SPCOIN_WRITE_METHODS.map((name) => [name, predicate(name)]),
+  ) as Record<SpCoinWriteMethod, boolean>;
+}
+
+export const SPCOIN_WRITE_METHOD_MEMBER_LISTS: Record<
+  SpCoinWriteAlterMode,
+  Record<SpCoinWriteMethod, boolean>
+> = {
+  Standard: buildSpCoinWriteMemberList(
+    (name) =>
+      !SPCOIN_ADMIN_WRITE_METHODS.includes(name) &&
+      !SPCOIN_OFFCHAIN_WRITE_METHODS.includes(name) &&
+      !SPCOIN_TODO_WRITE_METHODS.includes(name),
+  ),
+  All: buildSpCoinWriteMemberList(() => true),
+  Test: buildSpCoinWriteMemberList(
+    (name) => SPCOIN_OFFCHAIN_WRITE_METHODS.includes(name) || SPCOIN_TODO_WRITE_METHODS.includes(name),
+  ),
+  Todo: buildSpCoinWriteMemberList((name) => SPCOIN_TODO_WRITE_METHODS.includes(name)),
+};
+
+export function filterSpCoinWriteMethodsByAlterMode(
+  methods: SpCoinWriteMethod[],
+  mode: SpCoinWriteAlterMode,
+): SpCoinWriteMethod[] {
+  const memberList = SPCOIN_WRITE_METHOD_MEMBER_LISTS[mode];
+  return methods.filter((name) => Boolean(memberList?.[name]));
+}
 
 export function getSpCoinWorldWriteOptions(hideUnexecutables: boolean): SpCoinWriteMethod[] {
   return getSpCoinWriteOptions(hideUnexecutables).filter(
