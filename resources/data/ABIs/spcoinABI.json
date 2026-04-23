@@ -50,61 +50,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "step",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sponsor",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "agent",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "agentRateKey",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "valueA",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "valueB",
-        "type": "uint256"
-      }
-    ],
-    "name": "DebugUnSponsorAgent",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "from",
@@ -125,6 +70,34 @@
     ],
     "name": "Transfer",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      }
+    ],
+    "name": "addAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -186,19 +159,9 @@
         "internalType": "address",
         "name": "_recipientKey",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
       }
     ],
-    "name": "addRecipientAgent",
+    "name": "addRecipient",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -239,24 +202,6 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "addSponsorRecipient",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -508,6 +453,34 @@
         "internalType": "address",
         "name": "_agentKey",
         "type": "address"
+      }
+    ],
+    "name": "deleteAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -554,14 +527,9 @@
         "internalType": "uint256",
         "name": "_recipientRateKey",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
       }
     ],
-    "name": "deleteRecipientAgent",
+    "name": "deleteRecipientRate",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -572,19 +540,9 @@
         "internalType": "address",
         "name": "_sponsorKey",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
       }
     ],
-    "name": "deleteRecipientRate",
+    "name": "deleteSponsor",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1299,19 +1257,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "version",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -1597,6 +1542,19 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

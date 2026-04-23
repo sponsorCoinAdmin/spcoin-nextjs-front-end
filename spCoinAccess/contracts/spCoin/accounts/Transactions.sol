@@ -6,6 +6,111 @@ import "../rewardsManagement/RewardsManager.sol";
 contract Transactions is RewardsManager {
     constructor() { }
 
+    function _registerRecipientRateTransaction(
+        RecipientRateStruct storage _recipientTransaction,
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        StakingTransactionStruct memory _transRec
+    )
+        internal
+        returns (uint256 transactionId)
+    {
+        transactionId = reserveTransactionId();
+        _recipientTransaction.recipientTransactionIdKeys.push(transactionId);
+        _recipientTransaction.recipientTransactionSet.transactionCount =
+            _recipientTransaction.recipientTransactionIdKeys.length;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate =
+            _recipientTransaction.lastUpdateTime;
+        _recipientTransaction.recipientTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
+
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        transactionRecord.transactionId = transactionId;
+        transactionRecord.insertionTime = _transRec.insertionTime;
+        transactionRecord.stakingRewards = _transRec.stakingRewards;
+        transactionRecord.sponsorKey = _sponsorKey;
+        transactionRecord.recipientKey = _recipientKey;
+        transactionRecord.recipientRateKey = _recipientRateKey;
+        transactionRecord.agentKey = burnAddress;
+        transactionRecord.agentRateKey = 0;
+        transactionRecord.inserted = true;
+    }
+
+    function _registerAgentRateTransaction(
+        RecipientRateStruct storage _recipientTransaction,
+        AgentRateStruct storage _agentTransaction,
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        StakingTransactionStruct memory _transRec
+    )
+        internal
+        returns (uint256 transactionId)
+    {
+        transactionId = reserveTransactionId();
+        _recipientTransaction.recipientTransactionIdKeys.push(transactionId);
+        _recipientTransaction.recipientTransactionSet.transactionCount =
+            _recipientTransaction.recipientTransactionIdKeys.length;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate =
+            _recipientTransaction.lastUpdateTime;
+        _recipientTransaction.recipientTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
+
+        _agentTransaction.agentTransactionIdKeys.push(transactionId);
+        _agentTransaction.agentTransactionSet.transactionCount =
+            _agentTransaction.agentTransactionIdKeys.length;
+        _agentTransaction.agentTransactionSet.lastUpdateTransactionDate =
+            _agentTransaction.lastUpdateTime;
+        _agentTransaction.agentTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
+
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        transactionRecord.transactionId = transactionId;
+        transactionRecord.insertionTime = _transRec.insertionTime;
+        transactionRecord.stakingRewards = _transRec.stakingRewards;
+        transactionRecord.sponsorKey = _sponsorKey;
+        transactionRecord.recipientKey = _recipientKey;
+        transactionRecord.recipientRateKey = _recipientRateKey;
+        transactionRecord.agentKey = _agentKey;
+        transactionRecord.agentRateKey = _agentRateKey;
+        transactionRecord.inserted = true;
+    }
+
+    function _syncRecipientRateTransactionTimestamp(
+        RecipientRateStruct storage _recipientTransaction,
+        uint256 _transactionIndex,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        if (_transactionIndex >= _recipientTransaction.recipientTransactionIdKeys.length) return;
+        uint256 transactionId = _recipientTransaction.recipientTransactionIdKeys[_transactionIndex];
+        if (transactionId == 0) return;
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        if (!transactionRecord.inserted) return;
+        transactionRecord.insertionTime = _transactionTimeStamp;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
+    }
+
+    function _syncAgentRateTransactionTimestamp(
+        AgentRateStruct storage _agentTransaction,
+        uint256 _transactionIndex,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        if (_transactionIndex >= _agentTransaction.agentTransactionIdKeys.length) return;
+        uint256 transactionId = _agentTransaction.agentTransactionIdKeys[_transactionIndex];
+        if (transactionId == 0) return;
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
+        if (!transactionRecord.inserted) return;
+        transactionRecord.insertionTime = _transactionTimeStamp;
+        _agentTransaction.agentTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
+    }
+
     function addSponsorship(address _recipientKey,
                                  uint _recipientRateKey,
                                  address _agentKey,
@@ -119,14 +224,32 @@ contract Transactions is RewardsManager {
             updateRecipientRateSponsorship(_sponsorKey, recipientTransaction, _recipientKey, sponsorAmount, _transactionTimeStamp);
             transactionIndex = recipientTransaction.transactionList.length;
             recipientTransaction.transactionList.push(transRec);
+            _registerRecipientRateTransaction(
+                recipientTransaction,
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                transRec
+            );
         }
         else {
+            RecipientRateStruct storage recipientTransaction = getRecipientTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _transactionTimeStamp);
             AgentRateStruct storage agentTransaction = getAgentTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, _transactionTimeStamp);
             updateAgentRateRewards(agentTransaction, _agentKey, _recipientKey,  _recipientRateKey, _transactionTimeStamp);
 
             updateAgentRateSponsorship(_sponsorKey, agentTransaction, _recipientKey, _recipientRateKey, _agentKey, sponsorAmount, _transactionTimeStamp);
             transactionIndex = agentTransaction.transactionList.length;
             agentTransaction.transactionList.push(transRec);
+            _registerAgentRateTransaction(
+                recipientTransaction,
+                agentTransaction,
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                _agentKey,
+                _agentRateKey,
+                transRec
+            );
         }
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
@@ -220,11 +343,13 @@ contract Transactions is RewardsManager {
                 getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
             require(_transactionIndex < recipientTransaction.transactionList.length, "RECIP_TX_OOB");
             recipientTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+            _syncRecipientRateTransactionTimestamp(recipientTransaction, _transactionIndex, _transactionTimeStamp);
         } else {
             AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
             AgentRateStruct storage agentTransaction = agentRec.agentRateMap[_agentRateKey];
             require(_transactionIndex < agentTransaction.transactionList.length, "AGENT_TX_OOB");
             agentTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
+            _syncAgentRateTransactionTimestamp(agentTransaction, _transactionIndex, _transactionTimeStamp);
         }
     }
 

@@ -90,6 +90,8 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 lastUpdateTime;
         uint256 stakedSPCoins; // Coins not owned
+        RecipientTransactionSetStruct recipientTransactionSet;
+        uint256[] recipientTransactionIdKeys;
         address[] agentKeys;
         mapping(address => AgentStruct) agentMap;
         StakingTransactionStruct[] transactionList;
@@ -114,6 +116,8 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 lastUpdateTime;
         uint256 stakedSPCoins; // Coins not owned but Recipiented
+        AgentTransactionSetStruct agentTransactionSet;
+        uint256[] agentTransactionIdKeys;
         StakingTransactionStruct[] transactionList;
         bool inserted;
     }
@@ -124,8 +128,38 @@ contract SpCoinDataTypes {
     struct StakingTransactionStruct {
         uint256 insertionTime;
         uint256 stakingRewards;
-        address[] sourceList;
     }
+
+    // New transaction-set storage scaffolding.
+    // This is intentionally additive for now so the existing transactionList-based
+    // behavior keeps working while we prepare the contract for the new design.
+    uint256 internal nextTransactionId = 1;
+
+    struct RecipientTransactionSetStruct {
+        uint256 lastUpdateTransactionDate;
+        uint256 totalStaked;
+        uint256 transactionCount;
+    }
+
+    struct AgentTransactionSetStruct {
+        uint256 lastUpdateTransactionDate;
+        uint256 totalStaked;
+        uint256 transactionCount;
+    }
+
+    struct TransactionRecordStruct {
+        uint256 transactionId;
+        uint256 insertionTime;
+        uint256 stakingRewards;
+        address sponsorKey;
+        address recipientKey;
+        uint256 recipientRateKey;
+        address agentKey;
+        uint256 agentRateKey;
+        bool inserted;
+    }
+
+    mapping(uint256 => TransactionRecordStruct) internal masterTransactionIdMap;
 
     /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
 
@@ -153,6 +187,11 @@ contract SpCoinDataTypes {
     }
 
    /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
+
+    function reserveTransactionId() internal returns (uint256 transactionId) {
+        transactionId = nextTransactionId;
+        nextTransactionId += 1;
+    }
         
     function getAccountTypeString(uint _accountType) internal view returns (string memory strAccountType) {
         if (_accountType == SPONSOR)

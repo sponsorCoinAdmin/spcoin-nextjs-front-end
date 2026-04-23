@@ -104,6 +104,8 @@ import { useControllerScriptPresentation } from './hooks/useControllerScriptPres
 import { useControllerViewProps } from './hooks/useControllerViewProps';
 
 export default function SponsorCoinLabPage() {
+  const nextMethodRunIdRef = useRef(1);
+  const activeMethodRunAbortControllerRef = useRef<AbortController | null>(null);
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
@@ -185,10 +187,27 @@ const defaultHardhatRpcUrl =
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
+  const [runningMethodPopupState, setRunningMethodPopupState] = useState<{
+    runId: number;
+    methodName: string;
+    startedAt: number;
+    isOpen: boolean;
+    isCancelling: boolean;
+  } | null>(null);
 
   const appendLog = useCallback((line: string) => {
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
+  }, []);
+  const dismissRunningMethodPopup = useCallback(() => {
+    setRunningMethodPopupState((current) => (current ? { ...current, isOpen: false } : current));
+  }, []);
+  const reopenRunningMethodPopup = useCallback(() => {
+    setRunningMethodPopupState((current) => (current ? { ...current, isOpen: true } : current));
+  }, []);
+  const cancelRunningMethodPopup = useCallback(() => {
+    activeMethodRunAbortControllerRef.current?.abort();
+    setRunningMethodPopupState((current) => (current ? { ...current, isCancelling: true } : current));
   }, []);
   useEffect(() => {
     const applyLatestAbi = async () => {
@@ -1214,7 +1233,8 @@ const defaultHardhatRpcUrl =
     setSelectedScriptStepNumber,
     spWriteParams,
   ]);
-  const runSelectedSpCoinWriteMethod = useCallback(async () => {
+  const runSelectedSpCoinWriteMethod = useCallback(
+    async (options?: { executionSignal?: AbortSignal; executionLabel?: string; skipValidation?: boolean }) => {
     if (
       methodPanelMode === 'spcoin_write' &&
       ['addRecipient', 'addRecipientTransaction', 'addAgent', 'addAgentTransaction'].includes(
@@ -1224,15 +1244,82 @@ const defaultHardhatRpcUrl =
       populateActiveAccountsFromMethodParams(activeSpCoinWriteDef.params, spWriteParams);
     }
 
-    await runSelectedSpCoinWriteMethodBase();
-  }, [
-    activeSpCoinWriteDef.params,
-    methodPanelMode,
-    populateActiveAccountsFromMethodParams,
-    runSelectedSpCoinWriteMethodBase,
-    selectedSpCoinWriteMethod,
-    spWriteParams,
-  ]);
+      await runSelectedSpCoinWriteMethodBase(options);
+    },
+    [
+      activeSpCoinWriteDef.params,
+      methodPanelMode,
+      populateActiveAccountsFromMethodParams,
+      runSelectedSpCoinWriteMethodBase,
+      selectedSpCoinWriteMethod,
+      spWriteParams,
+    ],
+  );
+  const trackMethodExecution = useCallback(
+    async (
+      methodName: string,
+      runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<unknown> | unknown,
+    ) => {
+      if (activeMethodRunAbortControllerRef.current) {
+        reopenRunningMethodPopup();
+        return;
+      }
+      const controller = new AbortController();
+      const runId = nextMethodRunIdRef.current++;
+      activeMethodRunAbortControllerRef.current = controller;
+      setRunningMethodPopupState({
+        runId,
+        methodName,
+        startedAt: Date.now(),
+        isOpen: true,
+        isCancelling: false,
+      });
+      try {
+        await runner({ executionSignal: controller.signal, executionLabel: methodName });
+      } finally {
+        if (activeMethodRunAbortControllerRef.current === controller) {
+          activeMethodRunAbortControllerRef.current = null;
+        }
+        setRunningMethodPopupState(null);
+      }
+    },
+    [reopenRunningMethodPopup],
+  );
+  const runSelectedReadMethodWithPopup = useCallback(
+    async () =>
+      trackMethodExecution(activeReadLabels.title, ({ executionSignal, executionLabel }) =>
+        runSelectedReadMethod({ executionSignal, executionLabel }),
+      ),
+    [activeReadLabels.title, runSelectedReadMethod, trackMethodExecution],
+  );
+  const runSelectedWriteMethodWithPopup = useCallback(
+    async () =>
+      trackMethodExecution(activeWriteLabels.title, ({ executionSignal, executionLabel }) =>
+        runSelectedWriteMethod({ executionSignal, executionLabel }),
+      ),
+    [activeWriteLabels.title, runSelectedWriteMethod, trackMethodExecution],
+  );
+  const runSelectedSpCoinReadMethodWithPopup = useCallback(
+    async () =>
+      trackMethodExecution(activeSpCoinReadDef.title, ({ executionSignal, executionLabel }) =>
+        runSelectedSpCoinReadMethod({ executionSignal, executionLabel }),
+      ),
+    [activeSpCoinReadDef.title, runSelectedSpCoinReadMethod, trackMethodExecution],
+  );
+  const runSelectedSpCoinWriteMethodWithPopup = useCallback(
+    async () =>
+      trackMethodExecution(activeSpCoinWriteDef.title, ({ executionSignal, executionLabel }) =>
+        runSelectedSpCoinWriteMethod({ executionSignal, executionLabel }),
+      ),
+    [activeSpCoinWriteDef.title, runSelectedSpCoinWriteMethod, trackMethodExecution],
+  );
+  const runSelectedSerializationTestMethodWithPopup = useCallback(
+    async () =>
+      trackMethodExecution(activeSerializationTestDef.title, ({ executionSignal, executionLabel }) =>
+        runSelectedSerializationTestMethod({ executionSignal, executionLabel }),
+      ),
+    [activeSerializationTestDef.title, runSelectedSerializationTestMethod, trackMethodExecution],
+  );
   useControllerEditorHydration({
     methodSelectionSource,
     editingScriptStepNumber,
@@ -1353,6 +1440,14 @@ const defaultHardhatRpcUrl =
     discardChangesMessage,
     clearDiscardChangesPopup,
     handleDiscardConfirm,
+    runningMethodPopup: {
+      isOpen: Boolean(runningMethodPopupState?.isOpen),
+      methodName: runningMethodPopupState?.methodName || '',
+      startedAt: runningMethodPopupState?.startedAt || Date.now(),
+      isCancelling: Boolean(runningMethodPopupState?.isCancelling),
+      onCancel: cancelRunningMethodPopup,
+      onAcknowledge: dismissRunningMethodPopup,
+    },
     methodPanelTitle,
     scriptEditorKind,
     setScriptEditorKind,
@@ -1433,7 +1528,7 @@ const defaultHardhatRpcUrl =
     isUpdateBlockedByNoChanges,
     addToScriptButtonLabel,
     erc20ReadMissingEntries,
-    runSelectedReadMethod,
+    runSelectedReadMethod: runSelectedReadMethodWithPopup,
     handleAddCurrentMethodToScript,
     selectedWriteSenderAccount,
     writeSenderPrivateKeyDisplay,
@@ -1451,7 +1546,7 @@ const defaultHardhatRpcUrl =
     setWriteAmountRaw,
     canRunErc20WriteMethod,
     erc20WriteMissingEntries,
-    runSelectedWriteMethod,
+    runSelectedWriteMethod: runSelectedWriteMethodWithPopup,
     normalizedSelectedSpCoinReadMethod,
     selectDropdownSpCoinReadMethod,
     spCoinWorldReadOptions,
@@ -1464,7 +1559,7 @@ const defaultHardhatRpcUrl =
     setSpReadParams,
     canRunSpCoinReadMethod,
     spCoinReadMissingEntries,
-    runSelectedSpCoinReadMethod,
+    runSelectedSpCoinReadMethod: runSelectedSpCoinReadMethodWithPopup,
     recipientRateKeyOptions,
     agentRateKeyOptions,
     recipientRateKeyHelpText,
@@ -1486,7 +1581,7 @@ const defaultHardhatRpcUrl =
     updateSpWriteParamAtIndex,
     canRunSpCoinWriteMethod,
     spCoinWriteMissingEntries,
-    runSelectedSpCoinWriteMethod,
+    runSelectedSpCoinWriteMethod: runSelectedSpCoinWriteMethodWithPopup,
     formatDateTimeDisplay,
     formatDateInput,
     backdateCalendar,
@@ -1500,7 +1595,7 @@ const defaultHardhatRpcUrl =
     setSerializationTestParams,
     canRunSerializationTestMethod,
     serializationTestMissingEntries,
-    runSelectedSerializationTestMethod,
+    runSelectedSerializationTestMethod: runSelectedSerializationTestMethodWithPopup,
     inputStyle,
     showSignerAccountDetails,
     setShowSignerAccountDetails,

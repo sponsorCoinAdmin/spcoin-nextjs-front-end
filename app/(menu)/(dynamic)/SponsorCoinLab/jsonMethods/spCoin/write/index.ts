@@ -21,10 +21,42 @@ const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   2: 'RECIP_RATE_HAS_AGENT',
   3: 'AGENT_NOT_FOUND',
   4: 'OWNER_OR_ROOT',
+  5: 'Transaction Row Id is out of range for this agent-rate transaction list.',
+  6: 'Transaction Row Id does not resolve to an inserted master transaction record.',
+  7: 'Transaction Row Id does not match the supplied agent-rate branch keys.',
 };
 const SP_COIN_ERROR_INTERFACE = new Interface(['error SpCoinError(uint8 code)']);
 
+function getNestedErrorText(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value !== 'object') return String(value);
+  const source = value as Record<string, unknown>;
+  return [
+    source.message,
+    source.reason,
+    source.shortMessage,
+    source.code,
+    source.action,
+    source.data,
+    source.error,
+    source.info,
+    source.cause,
+  ]
+    .map(getNestedErrorText)
+    .filter(Boolean)
+    .join(' ');
+}
+
 function decodeSpCoinError(error: unknown): string | null {
+  const errorText = getNestedErrorText(error);
+  if (/\b(AGENT_TX_OOB|AGENT_TXID_OOB|TX_OOB)\b/i.test(errorText)) {
+    return 'Transaction Row Id is out of range for this agent-rate transaction list.';
+  }
+  if (/\bAGENT_TX_NOT_FOUND\b/i.test(errorText)) {
+    return 'Transaction Row Id does not resolve to an inserted master transaction record.';
+  }
+
   const revert = (error as any)?.revert;
   const revertCode = revert?.name === 'SpCoinError' ? Number(revert?.args?.[0]) : NaN;
   if (Number.isFinite(revertCode)) {
@@ -59,6 +91,7 @@ export type SpCoinWriteMethod =
   | 'addAgentTransaction'
   | 'addAgents'
   | 'deleteAccountTree'
+  | 'deleteSponsor'
   | 'deleteRecipient'
   | 'deleteRecipientRate'
   | 'deleteAgent'
@@ -109,6 +142,7 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addAgentTransaction',
   'updateAccountStakingRewards',
   'deleteAccountTree',
+  'deleteSponsor',
   'deleteRecipient',
   'deleteRecipientRate',
   'deleteAgent',
@@ -185,13 +219,11 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 }
 
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
-  addSponsorRecipient: 'addRecipient',
   addAccountRecipient: 'addRecipient',
   addRecipientTransaction: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
   addAccountRecipientRate: 'addRecipientTransaction',
-  addRecipientAgent: 'addAgent',
   addAgentTransaction: 'addAgentTransaction',
   addAgentRateAmount: 'addAgentTransaction',
   addAgentSponsorship: 'addAgentTransaction',
@@ -556,10 +588,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     recipientRateKey: string | number,
     agentKey: string,
   ) =>
-    submitWrite(`deleteRecipientAgent(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) => {
-      const method = access.contract.deleteRecipientAgent;
+    submitWrite(`deleteAgent(${sponsorKey}, ${recipientKey}, ${recipientRateKey}, ${agentKey})`, (access) => {
+      const method = access.contract.deleteAgent ?? access.contract.deleteRecipientAgent;
       if (typeof method !== 'function') {
-        throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+        throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
       }
       return method(sponsorKey, recipientKey, recipientRateKey, agentKey);
     });
@@ -622,6 +654,15 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
   };
 
+  const deleteSponsorTree = async (sponsorKey: string) =>
+    submitWrite(`deleteSponsor(${sponsorKey})`, (access) => {
+      const method = access.contract.deleteSponsor;
+      if (typeof method !== 'function') {
+        throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+      }
+      return method(sponsorKey);
+    });
+
   switch (canonicalMethod) {
     case 'addRecipients': {
       const recipientList = methodArgs[1] as string[];
@@ -657,9 +698,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteAgentNode': {
       await submitWrite(activeDef.title, (access, signer) => {
-        const method = access.contract.deleteRecipientAgent;
+        const method = access.contract.deleteAgent ?? access.contract.deleteRecipientAgent;
         if (typeof method !== 'function') {
-          throw new Error('deleteRecipientAgent is not available on the current SpCoin contract access path.');
+          throw new Error('deleteAgent is not available on the current SpCoin contract access path.');
         }
         return method(asString(signer?.address || selectedHardhatAddress || ''), asString(methodArgs[0]), asStringOrNumber(methodArgs[1]), asString(methodArgs[2]));
       });
@@ -725,13 +766,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addRecipient': {
       await submitWrite(activeDef.title, (access) => {
-        const method = access.add.addSponsorRecipient;
-        if (typeof method === 'function') {
-          return method(asString(methodArgs[0]), asString(methodArgs[1]));
-        }
-        const contractMethod = access.contract.addSponsorRecipient;
+        const contractMethod = access.contract.addRecipient;
         if (typeof contractMethod !== 'function') {
-          throw new Error('addSponsorRecipient is not available on the current SpCoin contract access path.');
+          throw new Error('addRecipient is not available on the current SpCoin contract access path.');
         }
         return contractMethod(asString(methodArgs[0]), asString(methodArgs[1]));
       });
@@ -767,7 +804,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'addAgent': {
       await submitWrite(activeDef.title, (access) =>
-        access.add.addRecipientAgent(
+        access.add.addAgent(
           asString(methodArgs[0]),
           asString(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
@@ -815,6 +852,12 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       appendLog(`${activeDef.title} -> deleted recipient sponsorship tree ${sponsorKey} -> ${recipientKey}.`);
       break;
     }
+    case 'deleteSponsor': {
+      const sponsorKey = normalizeAddress(methodArgs[0]);
+      await deleteSponsorTree(sponsorKey);
+      appendLog(`${activeDef.title} -> deleted sponsor tree ${sponsorKey}.`);
+      break;
+    }
     case 'deleteRecipientRate':
     case 'deleteRecipientSponsorshipTree': {
       const sponsorKey = normalizeAddress(methodArgs[0]);
@@ -833,16 +876,13 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     }
     case 'deleteAgent':
     case 'deleteAgentSponsorships': {
-      const sponsorKey =
-        canonicalMethod === 'deleteAgent'
-          ? normalizeAddress(await withAccess('resolveSignerForDeleteAgent', async (_access, signer) => asString(signer?.address || selectedHardhatAddress || '')))
-          : normalizeAddress(methodArgs[0]);
+      const sponsorKey = normalizeAddress(methodArgs[0]);
       if (!sponsorKey) {
-        throw new Error(`${activeDef.title} requires a connected signer or selected Hardhat sponsor account.`);
+        throw new Error(`${activeDef.title} requires Sponsor Key.`);
       }
-      const recipientKey = normalizeAddress(canonicalMethod === 'deleteAgent' ? methodArgs[0] : methodArgs[1]);
-      const recipientRateKey = asStringOrNumber(canonicalMethod === 'deleteAgent' ? methodArgs[1] : methodArgs[2]);
-      const agentKey = normalizeAddress(canonicalMethod === 'deleteAgent' ? methodArgs[2] : methodArgs[3]);
+      const recipientKey = normalizeAddress(methodArgs[1]);
+      const recipientRateKey = asStringOrNumber(methodArgs[2]);
+      const agentKey = normalizeAddress(methodArgs[3]);
       await deleteAgentTree(sponsorKey, recipientKey, recipientRateKey, agentKey);
       appendLog(`${activeDef.title} -> deleted agent sponsorship tree ${sponsorKey} -> ${recipientKey} @ ${recipientRateKey} agent=${agentKey}.`);
       break;

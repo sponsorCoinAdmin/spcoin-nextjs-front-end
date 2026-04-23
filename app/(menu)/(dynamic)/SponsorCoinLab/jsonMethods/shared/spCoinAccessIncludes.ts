@@ -24,8 +24,7 @@ type ModuleCtor = new (...args: any[]) => unknown;
 export type SpCoinAccessSource = 'local' | 'node_modules';
 
 export type SpCoinAddAccess = {
-  addRecipient: (_recipientKey: string) => Promise<ContractTransactionResponse>;
-  addSponsorRecipient?: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
+  addRecipient: (_sponsorKey: string, _recipientKey: string) => Promise<ContractTransactionResponse>;
   addSponsorship?: (
     _sponsorSigner: Signer,
     _recipientKey: string,
@@ -44,7 +43,7 @@ export type SpCoinAddAccess = {
     _recipientRateKey: string | number,
     _transactionQty: string | number,
   ) => Promise<ContractTransactionResponse>;
-  addRecipientAgent: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
+  addAgent: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _accountAgentKey: string) => Promise<ContractTransactionResponse>;
   addAgentTransaction?: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -232,9 +231,15 @@ export type SpCoinContractAccess = Contract & {
     wholeAmount: string,
     decimalAmount: string,
   ) => Promise<ContractTransactionResponse>;
-  addSponsorRecipient?: (
+  addRecipient?: (
     sponsorKey: string,
     recipientKey: string,
+  ) => Promise<ContractTransactionResponse>;
+  addAgent?: (
+    sponsorKey: string,
+    recipientKey: string,
+    recipientRateKey: string | number | bigint,
+    agentKey: string,
   ) => Promise<ContractTransactionResponse>;
   addAgentTransaction?: (
     sponsorKey: string,
@@ -297,6 +302,7 @@ export type SpCoinContractAccess = Contract & {
   ) => Promise<unknown>;
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
+  deleteSponsor?: (sponsorKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
     sponsorKey: string,
@@ -308,6 +314,7 @@ export type SpCoinContractAccess = Contract & {
     recipientRateKey: string | number | bigint,
   ) => Promise<ContractTransactionResponse>;
   deleteAgent?: (
+    sponsorKey: string,
     recipientKey: string,
     recipientRateKey: string | number | bigint,
     agentKey: string,
@@ -551,11 +558,7 @@ function createSpCoinOffChainAccess(
     addRecipients: async (_accountKey: string, recipientAccountList: string[]) => {
       let recipientCount = 0;
       for (const recipientKey of recipientAccountList) {
-        if (typeof add.addSponsorRecipient === 'function') {
-          await add.addSponsorRecipient(String(_accountKey), String(recipientKey));
-        } else {
-          await add.addRecipient(String(recipientKey));
-        }
+        await add.addRecipient(String(_accountKey), String(recipientKey));
         recipientCount += 1;
       }
       return recipientCount;
@@ -563,7 +566,7 @@ function createSpCoinOffChainAccess(
     addAgents: async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number, agentAccountList: string[]) => {
       let agentCount = 0;
       for (const agentKey of agentAccountList) {
-        await add.addRecipientAgent(String(sponsorKey), String(recipientKey), recipientRateKey, String(agentKey));
+        await add.addAgent(String(sponsorKey), String(recipientKey), recipientRateKey, String(agentKey));
         agentCount += 1;
       }
       return agentCount;

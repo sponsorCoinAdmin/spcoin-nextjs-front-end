@@ -1,14 +1,18 @@
 // File: app/api/spCoin/access-manager/route.ts
 import { promises as fs } from 'fs';
 import path from 'path';
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
-import { Contract, ContractFactory, JsonRpcProvider, Wallet } from 'ethers';
+import { Contract, ContractFactory, JsonRpcProvider, Wallet, type InterfaceAbi } from 'ethers';
 import {
   resolveSpCoinDiskChainId,
   toDiskAddressFolderName,
 } from '@/lib/spCoin/diskPathResolver';
+import {
+  compileSpCoinContractSource,
+  EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES,
+} from '@/lib/spCoin/contractCompiler';
 
 const execAsync = promisify(exec);
 const WORKSPACE_ROOT = path.join(process.cwd(), 'spCoinAccess');
@@ -26,9 +30,9 @@ const SPCOIN_ABI_PATH = path.join(process.cwd(), 'resources', 'data', 'ABIs', 's
 const SPONSORCOIN_SCOPE_DIR = path.join(process.cwd(), 'node_modules', '@sponsorcoin');
 const MANAGER_STATE_PATH = path.join(BACKUPS_ROOT, 'manager-state.json');
 const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const NPX_CMD = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
-const EIP170_DEPLOYED_BYTECODE_LIMIT_BYTES = 24576;
+const DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS || 30_000);
+const DEPLOYMENT_TX_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_TX_TIMEOUT_MS || 30 * 60 * 1000);
 
 function resolveSpCoinDeploymentAssetChainId(chainId: unknown): number {
   const parsed = Number(chainId);
@@ -241,55 +245,6 @@ async function runCommand(command: string, args: string[], cwd: string) {
   };
 }
 
-async function runCommandWithInput(command: string, args: string[], cwd: string, input: string) {
-  const execute = async (useShell: boolean) =>
-    await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-      let child: ReturnType<typeof spawn>;
-      try {
-        child = spawn(command, args, {
-          cwd,
-          windowsHide: true,
-          shell: useShell,
-          stdio: ['pipe', 'pipe', 'pipe'],
-        });
-      } catch (error) {
-        reject(error);
-        return;
-      }
-
-      let stdout = '';
-      let stderr = '';
-      child.stdout?.on('data', (chunk) => {
-        stdout += String(chunk);
-      });
-      child.stderr?.on('data', (chunk) => {
-        stderr += String(chunk);
-      });
-
-      child.on('error', (error) => reject(error));
-      child.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Command failed (${command} ${args.join(' ')}): ${stderr || stdout}`));
-          return;
-        }
-        resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
-      });
-
-      child.stdin?.write(input);
-      child.stdin?.end();
-    });
-
-  try {
-    return await execute(false);
-  } catch (error) {
-    // Windows can throw EINVAL for .cmd spawn; retry through shell.
-    if ((error as any)?.code === 'EINVAL' && process.platform === 'win32') {
-      return await execute(true);
-    }
-    throw error;
-  }
-}
-
 function ensureHttpUrl(rawUrl: string) {
   const trimmed = String(rawUrl || '').trim();
   if (!trimmed) return '';
@@ -384,47 +339,6 @@ async function resolveDeployNetwork(targetChainIdRaw: number | string | undefine
         ? Number(network.optimizerRuns)
         : 200,
   };
-}
-
-function tryExtractJsonDocument(rawText: string) {
-  const text = String(rawText || '').trim();
-  if (!text) return '';
-  const first = text.indexOf('{');
-  const last = text.lastIndexOf('}');
-  if (first < 0 || last < 0 || last <= first) return '';
-  return text.slice(first, last + 1);
-}
-
-function parseImports(sourceText: string): string[] {
-  const imports: string[] = [];
-  const importRegex = /^\s*import\s+[^'"]*['"]([^'"]+)['"]\s*;/gm;
-  let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(sourceText)) !== null) {
-    const importPath = String(match[1] || '').trim();
-    if (importPath) imports.push(importPath);
-  }
-  return imports;
-}
-
-async function collectSoliditySourcesFromEntry(
-  absoluteEntryPath: string,
-  rootDir: string,
-  out: Record<string, { content: string }>,
-) {
-  const normalizedEntry = path.normalize(absoluteEntryPath);
-  const relativeKey = path.relative(rootDir, normalizedEntry).split(path.sep).join('/');
-  if (out[relativeKey]) return;
-
-  const sourceText = await fs.readFile(normalizedEntry, 'utf8');
-  out[relativeKey] = { content: sourceText };
-
-  const imports = parseImports(sourceText);
-  for (const importPath of imports) {
-    if (importPath === 'hardhat/console.sol') continue;
-    if (!importPath.startsWith('.')) continue;
-    const resolvedImportPath = path.resolve(path.dirname(normalizedEntry), importPath);
-    await collectSoliditySourcesFromEntry(resolvedImportPath, rootDir, out);
-  }
 }
 
 async function ensureWorkspace() {
@@ -791,72 +705,18 @@ async function compileSpCoinContract(params?: {
       ? Number(params?.optimizerRuns)
       : 200;
   const deploymentSource = resolveDeploymentContractsRoot(params?.deploymentSourcePath);
-  const sources: Record<string, { content: string }> = {};
-  const entryPath = path.join(deploymentSource.contractsRoot, 'SPCoin.sol');
-  await fs.access(entryPath).catch(() => {
-    throw new Error(`Deployment source is missing SPCoin.sol: ${deploymentSource.deploymentSourcePath}`);
+  const compiled = await compileSpCoinContractSource({
+    sourceRoot: deploymentSource.contractsRoot,
+    solcVersion,
+    optimizerEnabled,
+    optimizerRuns,
+    includeAbi: true,
+    includeCreationBytecode: true,
+    includeDeployedBytecode: true,
   });
-  await collectSoliditySourcesFromEntry(entryPath, deploymentSource.contractsRoot, sources);
-
-  // Minimal stub for compatibility with contracts importing hardhat/console.sol.
-  sources['hardhat/console.sol'] = {
-    content: `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
-library console {
-  function log(string memory) internal pure {}
-  function log(string memory, uint256) internal pure {}
-  function log(string memory, address) internal pure {}
-  function log(string memory, string memory) internal pure {}
-}`,
-  };
-
-  const standardInput = {
-    language: 'Solidity',
-    sources,
-    settings: {
-      viaIR: true,
-      optimizer: { enabled: optimizerEnabled, runs: optimizerRuns },
-      outputSelection: {
-        '*': {
-          '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'],
-        },
-      },
-    },
-  };
-
-  const compileResult = await runCommandWithInput(
-    NPX_CMD,
-    ['--yes', `solc@${solcVersion}`, '--standard-json'],
-    process.cwd(),
-    JSON.stringify(standardInput),
-  );
-
-  const jsonPayload = tryExtractJsonDocument(compileResult.stdout);
-  if (!jsonPayload) {
-    throw new Error(`Unable to parse compiler output: ${compileResult.stdout || compileResult.stderr}`);
-  }
-
-  const parsed = JSON.parse(jsonPayload) as {
-    contracts?: Record<string, Record<string, { abi?: any[]; evm?: { bytecode?: { object?: string }; deployedBytecode?: { object?: string } } }>>;
-    errors?: Array<{ severity?: string; formattedMessage?: string; message?: string }>;
-  };
-
-  const compileErrors = (parsed.errors || []).filter((item) => item?.severity === 'error');
-  if (compileErrors.length > 0) {
-    const details = compileErrors
-      .map((error) => error.formattedMessage || error.message || 'Unknown compiler error')
-      .join('\n');
-    throw new Error(`Solidity compile failed:\n${details}`);
-  }
-
-  const spCoinContract = parsed.contracts?.['SPCoin.sol']?.SPCoin;
-  const abi = spCoinContract?.abi;
-  const bytecodeObject = spCoinContract?.evm?.bytecode?.object || '';
-  const deployedBytecodeObject = spCoinContract?.evm?.deployedBytecode?.object || '';
-  const bytecode = String(bytecodeObject).startsWith('0x')
-    ? String(bytecodeObject)
-    : `0x${String(bytecodeObject)}`;
-  const deployedBytecodeBytes = Math.ceil(String(deployedBytecodeObject).replace(/^0x/, '').length / 2);
+  const abi = compiled.abi;
+  const bytecode = compiled.bytecode;
+  const deployedBytecodeBytes = compiled.deployedBytes;
 
   if (!Array.isArray(abi) || !bytecode || bytecode === '0x') {
     throw new Error('Compiled SPCoin artifact is missing ABI or bytecode.');
@@ -882,7 +742,7 @@ async function deploySpCoinToChain(params: {
   try {
     await withTimeout(
       provider.getBlockNumber(),
-      10000,
+      DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS,
       `RPC health check for ${network.networkName} (${network.rpcUrl})`,
     );
   } catch (error) {
@@ -896,7 +756,7 @@ async function deploySpCoinToChain(params: {
     optimizerRuns: network.optimizerRuns,
     deploymentSourcePath: params.deploymentSourcePath,
   });
-  const factory = new ContractFactory(compiled.abi, compiled.bytecode, wallet);
+  const factory = new ContractFactory(compiled.abi as InterfaceAbi, compiled.bytecode, wallet);
   const contract = await factory.deploy(
     ...getSpCoinConstructorArgs(compiled.abi, params.deploymentVersion),
   );
@@ -904,7 +764,11 @@ async function deploySpCoinToChain(params: {
   if (!deploymentTx) {
     throw new Error('Deployment transaction was not created.');
   }
-  const receipt = await deploymentTx.wait();
+  const receipt = await withTimeout(
+    deploymentTx.wait(),
+    DEPLOYMENT_TX_TIMEOUT_MS,
+    `SPCoin deployment transaction ${deploymentTx.hash}`,
+  );
   const contractAddress = await contract.getAddress();
   if (!contractAddress) {
     throw new Error('Deployment succeeded but no contract address was returned.');

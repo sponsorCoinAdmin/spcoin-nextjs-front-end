@@ -7,6 +7,46 @@ const ENTRY_FILE = 'SPCoin.sol';
 const ENTRY_CONTRACT = 'SPCoin';
 const SOLC_VERSION = '0.8.18';
 const EIP170_LIMIT_BYTES = 24576;
+const SOLC_TIMEOUT_MS = Number(process.env.SOLC_TIMEOUT_MS || 30 * 60 * 1000);
+const CACHE_DIR = path.join(REPO_ROOT, 'tools', '.cache');
+const CACHE_PATH = path.join(CACHE_DIR, 'compareSpCoinContractSize.json');
+const SIZE_CACHE_FILE = 'size.json';
+
+function getSolcCommand() {
+  const explicit = String(process.env.SOLC_BIN || '').trim();
+  if (explicit) {
+    return process.platform === 'win32'
+      ? { command: explicit, args: ['--standard-json'] }
+      : { command: explicit, args: ['--standard-json'] };
+  }
+
+  const localBinCandidates =
+    process.platform === 'win32'
+      ? [
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solc.cmd'),
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solcjs.cmd'),
+        ]
+      : [
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solc'),
+          path.join(REPO_ROOT, 'node_modules', '.bin', 'solcjs'),
+        ];
+
+  for (const candidate of localBinCandidates) {
+    if (fs.existsSync(candidate)) {
+      return { command: candidate, args: ['--standard-json'] };
+    }
+  }
+
+  return process.platform === 'win32'
+    ? {
+        command: 'cmd.exe',
+        args: ['/d', '/s', '/c', `npx.cmd --yes --prefer-offline solc@${SOLC_VERSION} --standard-json`],
+      }
+    : {
+        command: 'npx',
+        args: ['--yes', '--prefer-offline', `solc@${SOLC_VERSION}`, '--standard-json'],
+      };
+}
 
 function resolveVariantRoot(inputPath, fallbackPath) {
   const raw = String(inputPath || '').trim();
@@ -54,6 +94,104 @@ function readUtf8(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
+function loadCache() {
+  try {
+    return JSON.parse(readUtf8(CACHE_PATH));
+  } catch (_error) {
+    return { variants: {} };
+  }
+}
+
+function saveCache(cache) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+  fs.writeFileSync(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`);
+}
+
+function getSizeCachePath(sourceRoot) {
+  return path.join(sourceRoot, SIZE_CACHE_FILE);
+}
+
+function getSourceFileMetadata(sourceRoot, sourcePaths) {
+  return [...sourcePaths]
+    .sort()
+    .map((absolutePath) => {
+      const stat = fs.statSync(absolutePath);
+      return {
+        key: toPosix(path.relative(sourceRoot, absolutePath)),
+        size: stat.size,
+        mtimeMs: stat.mtimeMs,
+      };
+    });
+}
+
+function readValidSizeCache(sourceRoot, fingerprint, sourceFiles) {
+  const cachePath = getSizeCachePath(sourceRoot);
+  try {
+    const cacheStat = fs.statSync(cachePath);
+    const parsed = JSON.parse(readUtf8(cachePath));
+    const sourceChangedAfterCache = sourceFiles.some((file) => file.mtimeMs > cacheStat.mtimeMs);
+    if (sourceChangedAfterCache) return null;
+    if (parsed?.schemaVersion !== 1) return null;
+    if (path.resolve(String(parsed?.sourceRoot || '')) !== sourceRoot) return null;
+    if (parsed?.entryFile !== ENTRY_FILE) return null;
+    if (parsed?.contractName !== ENTRY_CONTRACT) return null;
+    if (parsed?.solcVersion !== SOLC_VERSION) return null;
+    if (parsed?.optimizerEnabled !== true) return null;
+    if (parsed?.optimizerRuns !== 200) return null;
+    if (parsed?.viaIR !== true) return null;
+    if (parsed?.sourceFingerprint !== fingerprint) return null;
+    if (!Number.isFinite(Number(parsed?.creationBytes))) return null;
+    if (!Number.isFinite(Number(parsed?.deployedBytes))) return null;
+    return parsed;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function writeSizeCache(sourceRoot, result, sourceFiles, fingerprint) {
+  const payload = {
+    schemaVersion: 1,
+    createdAt: formatTimestamp(),
+    sourceRoot,
+    entryFile: ENTRY_FILE,
+    contractName: ENTRY_CONTRACT,
+    solcVersion: SOLC_VERSION,
+    optimizerEnabled: true,
+    optimizerRuns: 200,
+    viaIR: true,
+    sourceCount: result.sourceCount,
+    sourceFingerprint: result.fingerprint || fingerprint,
+    creationBytes: result.creationBytes,
+    deployedBytes: result.deployedBytes,
+    abiLength: result.abiLength,
+    eip170LimitBytes: EIP170_LIMIT_BYTES,
+    deployedMarginBytes: getMarginBytes(result.deployedBytes),
+    deployedMarginLabel: `${formatSignedDelta(getMarginBytes(result.deployedBytes))} bytes vs EIP-170`,
+    sourceFiles,
+  };
+  fs.writeFileSync(getSizeCachePath(sourceRoot), `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function createVariantFingerprint(sourceRoot, sourcePaths) {
+  return JSON.stringify({
+    sourceRoot,
+    entry: `${ENTRY_FILE}:${ENTRY_CONTRACT}`,
+    compiler: SOLC_VERSION,
+    optimizerRuns: 200,
+    viaIR: true,
+    files: [...sourcePaths]
+      .sort()
+      .map((absolutePath) => {
+        const stat = fs.statSync(absolutePath);
+        return {
+          relativePath: toPosix(path.relative(sourceRoot, absolutePath)),
+          size: stat.size,
+          mtimeMs: stat.mtimeMs,
+        };
+      }),
+  });
+}
+
 function collectSoliditySourcesFromEntry(entryPath, sourceRoot, sources, visited = new Set()) {
   const resolvedEntryPath = path.resolve(entryPath);
   if (visited.has(resolvedEntryPath)) return;
@@ -78,7 +216,34 @@ function collectSoliditySourcesFromEntry(entryPath, sourceRoot, sources, visited
 function compileVariant(variantRoot) {
   const sources = {};
   const entryPath = path.join(variantRoot, ENTRY_FILE);
-  collectSoliditySourcesFromEntry(entryPath, variantRoot, sources);
+  const visitedSourcePaths = new Set();
+  collectSoliditySourcesFromEntry(entryPath, variantRoot, sources, visitedSourcePaths);
+  const variantFingerprint = createVariantFingerprint(variantRoot, visitedSourcePaths);
+  const sourceFiles = getSourceFileMetadata(variantRoot, visitedSourcePaths);
+  const sizeCachedVariant = readValidSizeCache(variantRoot, variantFingerprint, sourceFiles);
+  if (sizeCachedVariant) {
+    return {
+      abiLength: Number(sizeCachedVariant.abiLength || 0),
+      creationBytes: Number(sizeCachedVariant.creationBytes),
+      deployedBytes: Number(sizeCachedVariant.deployedBytes),
+      sourceCount: Number(sizeCachedVariant.sourceCount || sourceFiles.length),
+      cacheHit: true,
+      sizeCacheHit: true,
+      fingerprint: variantFingerprint,
+    };
+  }
+
+  const cache = loadCache();
+  const cachedVariant = cache?.variants?.[variantRoot];
+  if (cachedVariant?.fingerprint === variantFingerprint && cachedVariant?.result) {
+    writeSizeCache(variantRoot, cachedVariant.result, sourceFiles, variantFingerprint);
+    return {
+      ...cachedVariant.result,
+      cacheHit: true,
+      sizeCacheHit: false,
+      fingerprint: variantFingerprint,
+    };
+  }
 
   sources['hardhat/console.sol'] = {
     content: `// SPDX-License-Identifier: MIT
@@ -99,30 +264,20 @@ library console {
       viaIR: true,
       outputSelection: {
         '*': {
-          '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'],
+          '*': ['evm.bytecode.object', 'evm.deployedBytecode.object'],
         },
       },
     },
   };
 
-  const result =
-    process.platform === 'win32'
-      ? spawnSync(
-          'cmd.exe',
-          ['/d', '/s', '/c', `npx.cmd --yes solc@${SOLC_VERSION} --standard-json`],
-          {
-            cwd: REPO_ROOT,
-            input: JSON.stringify(standardInput),
-            encoding: 'utf8',
-            maxBuffer: 50 * 1024 * 1024,
-          },
-        )
-      : spawnSync('npx', ['--yes', `solc@${SOLC_VERSION}`, '--standard-json'], {
-          cwd: REPO_ROOT,
-          input: JSON.stringify(standardInput),
-          encoding: 'utf8',
-          maxBuffer: 50 * 1024 * 1024,
-        });
+  const solcCommand = getSolcCommand();
+  const result = spawnSync(solcCommand.command, solcCommand.args, {
+    cwd: REPO_ROOT,
+    input: JSON.stringify(standardInput),
+    encoding: 'utf8',
+    maxBuffer: 50 * 1024 * 1024,
+    timeout: SOLC_TIMEOUT_MS,
+  });
 
   if (result.error) {
     throw result.error;
@@ -153,12 +308,17 @@ library console {
     throw new Error(`Compiled artifact missing bytecode for ${ENTRY_CONTRACT}.`);
   }
 
-  return {
+  const compiledResult = {
     abiLength: Array.isArray(compiledContract?.abi) ? compiledContract.abi.length : 0,
     creationBytes: Math.ceil(bytecodeObject.replace(/^0x/, '').length / 2),
     deployedBytes: Math.ceil(deployedBytecodeObject.replace(/^0x/, '').length / 2),
     sourceCount: Object.keys(sources).length,
+    cacheHit: false,
+    sizeCacheHit: false,
+    fingerprint: variantFingerprint,
   };
+  writeSizeCache(variantRoot, compiledResult, sourceFiles, variantFingerprint);
+  return compiledResult;
 }
 
 function formatSignedDelta(value) {
@@ -180,11 +340,36 @@ function formatPercentChange(currentValue, backupValue) {
 
 function main() {
   const contractVariants = getContractVariants();
-  const results = contractVariants.map((variant) => ({
-    label: variant.label,
-    root: variant.root,
-    ...compileVariant(variant.root),
-  }));
+  console.error(
+    `[compare:spcoin:size] compiling ${contractVariants.length} variant(s) with solc ${SOLC_VERSION} (timeout ${SOLC_TIMEOUT_MS}ms)`,
+  );
+  const results = contractVariants.map((variant) => {
+    console.error(`[compare:spcoin:size] compiling ${variant.label} from ${variant.root}`);
+    const compiled = compileVariant(variant.root);
+    const cacheLabel = compiled.sizeCacheHit ? 'size.json cache hit' : compiled.cacheHit ? 'cache hit' : 'compiled fresh';
+    console.error(
+      `[compare:spcoin:size] ${variant.label} ${cacheLabel} (${compiled.sourceCount} sources)`,
+    );
+    return {
+      label: variant.label,
+      root: variant.root,
+      ...compiled,
+    };
+  });
+  const cache = loadCache();
+  cache.variants = cache.variants || {};
+  for (const result of results) {
+    cache.variants[result.root] = {
+      fingerprint: result.fingerprint,
+      result: {
+        abiLength: result.abiLength,
+        creationBytes: result.creationBytes,
+        deployedBytes: result.deployedBytes,
+        sourceCount: result.sourceCount,
+      },
+    };
+  }
+  saveCache(cache);
 
   const latest = results.find((entry) => entry.label === 'latest');
   const previous = results.find((entry) => entry.label === 'previous');

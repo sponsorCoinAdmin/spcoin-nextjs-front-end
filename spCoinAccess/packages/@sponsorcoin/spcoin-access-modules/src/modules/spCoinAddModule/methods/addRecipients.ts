@@ -6,7 +6,7 @@ export const addRecipients = async (context, _accountKey, _recipientAccountList)
     let recipientCount = 0;
     for (recipientCount; recipientCount < _recipientAccountList.length; recipientCount++) {
         const _recipientKey = _recipientAccountList[recipientCount];
-        await context.addRecipient(_recipientKey);
+        await context.addRecipient(_accountKey, _recipientKey);
     }
     context.spCoinLogger.logDetail("JS => Inserted = " + recipientCount + " Recipient Records");
     context.spCoinLogger.logExitFunction();

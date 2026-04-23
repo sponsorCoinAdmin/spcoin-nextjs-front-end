@@ -34,6 +34,14 @@ type UseControllerViewPropsArgs = BuildMethodsPanelCardPropsArgs &
     discardChangesMessage: string;
     clearDiscardChangesPopup: () => void;
     handleDiscardConfirm: () => void;
+    runningMethodPopup: {
+      isOpen: boolean;
+      methodName: string;
+      startedAt: number;
+      isCancelling: boolean;
+      onCancel: () => void;
+      onAcknowledge: () => void;
+    };
   };
 
 export function useControllerViewProps(args: UseControllerViewPropsArgs) {
@@ -232,5 +240,6 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     discardChangesMessage: args.discardChangesMessage,
     clearDiscardChangesPopup: args.clearDiscardChangesPopup,
     handleDiscardConfirm: args.handleDiscardConfirm,
+    runningMethodPopup: args.runningMethodPopup,
   };
 }

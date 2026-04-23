@@ -58,7 +58,7 @@ contract UnSubscribe is Transactions {
 
         address[] memory agentList = getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
         while (agentList.length > 0) {
-            deleteRecipientAgent(_sponsorKey, _recipientKey, _recipientRateKey, agentList[agentList.length - 1]);
+            deleteAgent(_sponsorKey, _recipientKey, _recipientRateKey, agentList[agentList.length - 1]);
             agentList = getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
         }
 
@@ -93,7 +93,7 @@ contract UnSubscribe is Transactions {
         }
     }
 
-    function deleteRecipientAgent(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey)
+    function deleteAgent(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey)
         public
         onlyOwnerOrRootAdmin(_sponsorKey)
         accountExists(_sponsorKey)
