@@ -420,6 +420,24 @@ export default function SpCoinReadController(props: Props) {
       cancelled = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (selectedSpCoinReadMethod !== 'compareSpCoinContractSize') return;
+    if (contractDirectoryOptions.length === 0) return;
+    const validValues = new Set(contractDirectoryOptions.map((option) => option.value));
+    setSpReadParams((prev) => {
+      let changed = false;
+      const next = [...prev];
+      for (const idx of [0, 1]) {
+        const current = String(next[idx] || '').trim();
+        if (current && !validValues.has(current)) {
+          next[idx] = '';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [contractDirectoryOptions, selectedSpCoinReadMethod, setSpReadParams]);
   const rawAdminReadOptions = React.useMemo(
     () =>
       showOnChainMethods
@@ -786,7 +804,11 @@ export default function SpCoinReadController(props: Props) {
                 <select
                   data-field-id={`spcoin-read-param-${idx}`}
                   className={`${inputStyle} appearance-none pr-10${invalidClass(`spcoin-read-param-${idx}`)}`}
-                  value={spReadParams[idx] || ''}
+                  value={
+                    contractDirectoryOptions.some((option) => option.value === String(spReadParams[idx] || '').trim())
+                      ? spReadParams[idx] || ''
+                      : ''
+                  }
                   onChange={(e) => {
                     markEditorAsUserEdited();
                     setSpReadParams((prev) => {

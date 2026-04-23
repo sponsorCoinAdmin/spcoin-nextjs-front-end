@@ -2,233 +2,106 @@
 
 ## Purpose
 
-This document records the current design direction for SponsorCoin transaction storage and cleanup.
+This document records the current SponsorCoin transaction-storage design direction.
 
-It is written for two audiences:
+The goals are:
 
-- developers who will implement the change
-- non-developers who need to understand the idea at a high level
-
-The goal is to preserve this discussion so it can be reused in future sessions without having to rediscover the reasoning.
+- preserve the reasoning from recent design discussions
+- keep the explanation readable for non-developers
+- give future implementation sessions a stable reference
 
 ## Short Summary
 
-We plan to change SponsorCoin so that transactions become the main source of truth for sponsorship relationships.
+We are moving toward a hybrid model:
 
-Today, the system mostly relies on traversing the account tree.
+- keep the old runnable transaction flow working exactly as it does today
+- add a new global transaction map as parallel storage
+- store one transaction record per transaction in that master map
+- store transaction id key arrays under each rate branch
+- store shared update metadata at the set level under each rate branch
+- store shared aggregate stake totals at the set level under each rate branch
 
-More accurately, the structure behaves like this:
+The most important correction is:
+
+- `lastUpdateTransactionDate` belongs to the transaction set
+- `totalStaked` belongs to the transaction set
+- it does **not** belong on each individual transaction record
+
+That matters because reward updates act on the totality of the set, not on each transaction independently.
+
+## Current Tree Model
+
+Today the contract behaves roughly like this:
 
 - Sponsor
 - Recipient
 - Recipient Rate
-  - Transaction list
+  - `transactionList`
 - Agent
 - Agent Rate
-  - Transaction list
+  - `transactionList`
 
-That structure works for simple cases, but it becomes hard to manage when:
+This works, but it creates problems:
 
-- the tree gets large
-- rewards must be updated correctly
-- deletion must fully clean up all child records
-- partial or orphaned links appear
+- deletion logic must walk the tree carefully
+- reward logic depends on rediscovering the right branch
+- cleanup can leave partial or orphaned links
+- the model becomes harder to reason about as the tree grows
 
-The new direction is:
+## Current Preferred Design
 
-- keep the tree for navigation and display
-- store transactions more directly under each rate node
-- use a hashed directory key for fast lookup
-- use transaction records as the basis for reward settlement and deletion
+The current preferred design is:
 
-This should make the system more scalable, more correct, and easier to clean up.
+- keep one master transaction record per transaction
+- keep branch-local transaction id key arrays
+- keep branch-local transaction set metadata
+- keep old `transactionList` storage alive during the migration
 
-## The Problem We Are Solving
-
-### Current weakness
-
-The current architecture depends heavily on relationship traversal.
-
-For example, to work with an agent branch, the code may need to walk through:
-
-- sponsor account
-- recipient account
-- recipient rate
-  - recipient-rate transaction list
-- agent account
-- agent rate
-  - agent-rate transaction list
-
-This causes several problems:
-
-- deletion logic becomes complex and fragile
-- reward logic depends on finding the right branch at the right time
-- orphaned links can appear if one part of the tree is cleaned but another is not
-- performance gets worse as the tree becomes larger
-- large blockchain deployments may become too expensive or too difficult to reason about
-
-### Why this matters
-
-For a small local test tree, traversal can be tolerated.
-
-For a larger or more realistic blockchain implementation, this approach is risky because:
-
-- gas cost grows with tree depth and branch count
-- write operations become harder to keep deterministic
-- cleanup becomes more likely to fail part-way
-- reward accounting becomes harder to trust
-
-## Core Design Decision
-
-### New rule
-
-Transactions should become the practical source of truth.
-
-The account tree should remain useful, but mostly as:
-
-- a read model
-- a navigation model
-- a display model
-- a secondary index
-
-The important business state should live in transactions that are attached directly to the correct rate node.
-
-## Proposed Structure
-
-### High-level idea
-
-Each rate node gets its own transaction directory.
-
-That means:
-
-- each `RecipientRate` has a transaction directory
-- each `AgentRate` has a transaction directory
-
-Instead of searching the whole tree to find transactions, the system can go directly to the correct rate bucket and work there.
-
-### Human model
-
-Think of it like this:
+So the structure becomes:
 
 - Sponsor
   - Recipient
     - RecipientRate
-      - transaction directory
+      - `recipientTransactionSet`
+      - `recipientTransactionIdKeys`
       - Agent
         - AgentRate
-          - transaction directory
+          - `agentTransactionSet`
+          - `agentTransactionIdKeys`
 
-The transaction directory under each rate contains the transactions for that exact rate scope.
+and globally:
 
-There are effectively two transaction scopes today:
+- `masterTransactionIdMap`
 
-- transactions attached to a recipient rate
-- transactions attached to an agent rate
+## Why This Is Better
 
-However, a cleaner new design may be:
+This gives us the best balance we have found so far:
 
-- keep one global transaction map as the main storage
-- let each hashed directory key act as an index into that map
+- writes stay much cheaper than rewriting one large grouped bucket
+- each rate still has direct access to its transaction ids
+- reward updates can use shared set metadata
+- future cleanup can still load the branch transaction ids and process them
+- we do not need an extra global transaction directory object
 
-This means:
+## What We Rejected
 
-- if a branch has no agent, then there is no agent-side transaction entry for that branch
-- recipient-side transactions can still exist on their own
-- agent-side transactions only exist when an actual agent relationship exists
+We considered storing one grouped master bucket per branch and rewriting that bucket on every new transaction.
 
-In other words, we do not need to force separate physical transaction storage under both rate types if one side is empty.
+That was rejected as the primary design because:
 
-## Possible Unified Transaction Storage Model
+- the bucket gets more expensive to rewrite as it grows
+- hot branches with many transactions would become increasingly costly
+- every add would eventually pay for prior history again
 
-One strong version of the design is:
+So the preferred model is:
 
-```solidity
-mapping(uint256 => StakingTransactionStruct) transactionById;
-mapping(bytes32 => uint256[]) transactionIdsByHash;
-mapping(uint256 => bytes32) transactionHashById;
-```
-
-In that model:
-
-- `transactionById` is the real transaction storage
-- `transactionIdsByHash` is the directory index for a branch
-- `transactionHashById` is an optional reverse lookup
-
-This may be better than storing full transaction records separately under each branch directory because:
-
-- it avoids duplicate storage patterns
-- it gives one clear place where a transaction record lives
-- it still preserves fast branch lookup through the hashed directory
-- it makes it easier to support branches with no agent
-
-This is now considered a strong candidate for the final design.
-
-## Hashed Directory Key
-
-### Why use a hash key
-
-Rather than using very long branch names, each transaction directory should be identified by a deterministic `hashKey`.
-
-Benefits:
-
-- shorter naming
-- consistent lookup
-- fast access
-- less need to repeatedly pass long relationship paths around
-
-### Recipient rate hash
-
-For a recipient rate, the directory key should be based on:
-
-- sponsor key
-- recipient key
-- recipient rate key
-
-Conceptually:
-
-```solidity
-bytes32 recipientRateHash = keccak256(
-    abi.encode(
-        sponsorKey,
-        recipientKey,
-        recipientRateKey
-    )
-);
-```
-
-### Agent rate hash
-
-For an agent rate, the directory key should be based on:
-
-- sponsor key
-- recipient key
-- recipient rate key
-- agent key
-- agent rate key
-
-Conceptually:
-
-```solidity
-bytes32 agentRateHash = keccak256(
-    abi.encode(
-        sponsorKey,
-        recipientKey,
-        recipientRateKey,
-        agentKey,
-        agentRateKey
-    )
-);
-```
+- one master entry per transaction
+- one id-array entry per transaction at the branch
+- one shared metadata record per transaction set
 
 ## Transaction ID
 
-### Important clarification
-
-The `transactionId` itself does not need to be a long path string.
-
-Because the transaction already lives inside a hashed directory, the `transactionId` can stay simple.
-
-Recommended form:
+The transaction id should stay simple:
 
 ```solidity
 uint256 transactionId;
@@ -237,7 +110,7 @@ uint256 transactionId;
 Generated by:
 
 ```solidity
-uint256 public nextTransactionId = 1;
+uint256 nextTransactionId = 1;
 ```
 
 Then:
@@ -247,273 +120,278 @@ uint256 txId = nextTransactionId;
 nextTransactionId += 1;
 ```
 
-### Why a simple numeric ID is enough
+## Master Transaction Map
 
-The hashed directory already tells us the branch.
-
-The numeric transaction ID only needs to identify one transaction inside that branch.
-
-This gives us:
-
-- simple IDs
-- clean lookup
-- easier debugging
-- no need to encode all branch meaning into the ID itself
-
-## Proposed Storage Shape
-
-### Main concept
-
-The current preferred direction is:
-
-- store all transactions in one global transaction map
-- use the hashed branch key as a directory index
-
-Conceptually:
+The master map is the real storage for transaction records:
 
 ```solidity
-mapping(uint256 => StakingTransactionStruct) transactionById;
-mapping(bytes32 => uint256[]) transactionIdsByHash;
-mapping(uint256 => bytes32) transactionHashById;
+mapping(uint256 => TransactionRecordStruct) masterTransactionIdMap;
 ```
 
-This would allow:
+This means:
 
-- transaction ID -> exact transaction record
-- hash key -> transaction directory
-- transaction ID -> hash key
+- one transaction = one master map entry
+- direct recipient transactions have one recipient branch array entry
+- agent transactions use the same master id in both the recipient-rate branch array and the agent-rate branch array
+
+## Branch-Level Transaction Id Arrays
+
+The branch arrays store keys into the master map.
+
+Preferred naming:
+
+- `recipientTransactionIdKeys`
+- `agentTransactionIdKeys`
+
+Each array holds:
+
+- one entry for every transaction on that exact branch
+
+For an agent transaction, the same `transactionId` is intentionally stored in both places:
+
+- `recipientTransactionIdKeys`
+- `agentTransactionIdKeys`
+
+The recipient-rate side owns the master record lifetime. Agent-side deletes remove the id from the agent branch, but they should not delete `masterTransactionIdMap[transactionId]` while the recipient-rate list still references it.
+
+Example:
+
+```solidity
+recipientTransactionIdKeys = [101, 102, 103];
+```
+
+means:
+
+- this recipient-rate branch has three transactions
+- the real records live in:
+  - `masterTransactionIdMap[101]`
+  - `masterTransactionIdMap[102]`
+  - `masterTransactionIdMap[103]`
+
+## Transaction Set Metadata
+
+This is the most important part of the new design.
+
+The set metadata lives on the rate branch, not on each transaction record.
+
+Recommended concept:
+
+```solidity
+struct RecipientTransactionSetStruct {
+    uint256 lastUpdateTransactionDate;
+    uint256 totalStaked;
+    uint256 transactionCount;
+}
+
+struct AgentTransactionSetStruct {
+    uint256 lastUpdateTransactionDate;
+    uint256 totalStaked;
+    uint256 transactionCount;
+}
+```
+
+These set records are useful because:
+
+- reward calculation acts on the complete transaction set
+- a new transaction joins that set
+- the shared update timestamp should be written once at the set level
+- the shared current staked total should be written once at the set level
+- we avoid rewriting every transaction record during a reward update
+
+## Important Rule About Update Time
+
+The authoritative shared update time should be:
+
+- `lastUpdateTransactionDate` on the set
+- `totalStaked` on the set for the branch aggregate
+
+It should **not** be stored as the authoritative shared value on each transaction record.
+
+Each transaction record should keep things like:
+
+- `transactionId`
+- `insertionTime`
+- `stakingRewards`
+- sponsor / recipient / rate / agent identity
+
+But the set carries the shared reward update state.
+
+## Important Rule About Total Staked
+
+The authoritative branch aggregate should be:
+
+- `totalStaked` on the transaction set
+
+This field represents the live total stake for that exact rate branch.
+
+That means:
+
+- when a new transaction is added, increment `totalStaked`
+- when stake is reduced or a transaction is removed later, decrement `totalStaked`
+- reward calculations can read the set total directly instead of adding every transaction again
+
+This is one of the main performance improvements in the new design.
 
 ## Example Transaction Record
 
-The transaction record should be practical and easy to understand.
-
 Conceptually:
 
 ```solidity
-struct StakingTransactionStruct {
+struct TransactionRecordStruct {
     uint256 transactionId;
+    uint256 insertionTime;
+    uint256 stakingRewards;
     address sponsorKey;
     address recipientKey;
     uint256 recipientRateKey;
     address agentKey;
     uint256 agentRateKey;
-    uint256 principal;
-    uint256 creationTime;
-    uint256 lastUpdateTime;
-    bool active;
+    address[] sourceList;
+    bool inserted;
 }
 ```
 
-This record should tell us:
+Notice:
 
-- who the transaction belongs to
-- what branch it belongs to
-- how much is staked
-- when it started
-- when rewards were last updated
-- whether it is still active
+- no `lastUpdateTime` field on the individual transaction record
+
+That field belongs to the set, not the individual record.
 
 ## Reward Design Direction
 
-### Current issue
+When a new transaction is added:
 
-Reward calculation currently depends too much on walking the tree.
+1. rewards are recalculated using the current transaction set
+2. the set receives a new `lastUpdateTransactionDate`
+3. the set increments `totalStaked`
+4. the new transaction joins the set
+5. future updates continue working against the shared set metadata
 
-This makes it harder to guarantee that:
+This is important because:
 
-- all rewards are calculated
-- rewards are updated before deletion
-- no branch is missed
+- the new entry becomes part of the existing reward context
+- the whole set moves forward together
+- the branch aggregate stake stays available without a full transaction scan
+- the contract does not need to rewrite every individual transaction record
 
-### New direction
+## Cleanup Tradeoff
 
-Rewards should be calculated from the transactions stored under the correct rate directory.
+This design means:
 
-That means:
+- writes are cheaper than grouped bucket rewrites
+- cleanups are more expensive than deleting one grouped bucket
 
-- rate nodes own their transaction history
-- deletions can settle transactions before removing structure
-- reward logic can work on concrete transaction records instead of rediscovering them
+That tradeoff is currently acceptable because:
 
-### Practical result
+- normal transaction adds happen more often than branch cleanup
+- growing write cost is usually the more dangerous long-term scaling problem
 
-Before deleting:
+So we prefer:
 
-- load transaction directory by hash
-- settle rewards for those transactions
-- mark or remove transactions
-- then remove empty rate, agent, recipient, or sponsor links
+- cheap normal writes
+- more expensive but manageable cleanup
 
-This is much more reliable than broad traversal.
+instead of:
 
-## Delete Method Direction
+- progressively heavier writes for active branches
 
-We discussed updating the delete methods so that they become more direct and trustworthy.
+## Transitional Implementation Strategy
 
-Likely target methods:
+To reduce risk, the migration path should be:
 
-- `deleteAgent`
-- `deleteRecipient`
-- `deleteSponsor`
+1. keep all old runnable behavior unchanged
+2. keep old `transactionList` storage untouched
+3. dual-write all new transactions into the new structures
+4. dual-write the set-level metadata in parallel
+5. compare old and new representations
+6. switch delete cleanup to the new branch structure in layers
+7. only later switch runtime reads and rewards to the new source of truth
 
-Even if some of these names are wrappers around current methods, the design intent is:
+## What “Do Not Change Old Runnable Functionality” Means
 
-- the delete methods should act against transaction records first
-- the tree should be cleaned only after transactions are settled and removed
+During this phase:
 
-This would make the delete methods much closer to a single source of truth model.
+- old transaction add methods must still run as before
+- old reward logic must still run as before
+- old `transactionList` arrays must still be populated
 
-## Storage Size Concerns
+The new structures are parallel scaffolding for reads/rewards, but delete cleanup is now being migrated to the new layered branch model.
 
-### Will storage get larger?
+They are being filled now so that later phases can safely switch over once we trust the new model.
 
-Probably yes, at least somewhat.
+## Current Delete Method Model
 
-Why:
+The exported token delete methods should represent tree levels:
 
-- we will store explicit transaction records
-- we will store transaction IDs in directories
-- we may store reverse lookups or small helper indexes
+- `deleteSponsor(address sponsorKey)`
+- `deleteRecipient(address sponsorKey, address recipientKey)`
+- `deleteRecipientRate(address sponsorKey, address recipientKey, uint256 recipientRateKey)`
+- `deleteAgent(address sponsorKey, address recipientKey, uint256 recipientRateKey, address agentKey)`
+- `deleteAgentRate(address sponsorKey, address recipientKey, uint256 recipientRateKey, address agentKey, uint256 agentRateKey)`
+- `deleteAccountRecord(address accountKey)`
 
-### Is that a problem?
+Each exported method should delegate downward instead of reimplementing lower-level cleanup.
 
-Probably not for our main concern.
+The intended call shape is:
 
-The bigger issue today is not raw storage size.
+```text
+deleteSponsor
+  -> deleteSponsorRecipients
+      -> deleteRecipientTree
+          -> deleteRecipientRates
+              -> deleteRecipientRate
+                  -> deleteAgent
+                      -> deleteAgentRates
+                          -> deleteAgentRate
+                              -> deleteAgentTransactions
+                  -> deleteRecipientTransactions
+```
 
-The bigger issues are:
+## Delete Responsibility Rules
 
-- traversal complexity
-- cleanup correctness
-- reward consistency
-- scalability on larger deployments
+The delete method names should mean exactly what they say:
 
-In other words:
+- `deleteSponsor` deletes the sponsor branch.
+- `deleteRecipient` deletes one recipient branch under a sponsor.
+- `deleteRecipientRate` deletes one recipient-rate branch.
+- `deleteAgent` deletes one agent branch under a recipient-rate.
+- `deleteAgentRate` deletes one agent-rate branch.
+- `deleteRecipientTransactions` deletes transaction ids and metadata for one recipient-rate branch.
+- `deleteAgentTransactions` deletes transaction ids and metadata for one agent-rate branch.
 
-- slightly larger storage is acceptable
-- incorrect or fragile cleanup is not acceptable
+Transaction cleanup helpers should not remove parent branch nodes. Branch delete methods should call transaction cleanup first, then remove the branch node.
 
-### Main warning
+The recipient-rate side owns `masterTransactionIdMap` cleanup. This matters because agent transactions are indexed in both `recipientTransactionIdKeys` and `agentTransactionIdKeys`. Agent cleanup removes the agent-side reference only; recipient-rate cleanup removes the master transaction records.
 
-The new model should not create two competing sources of truth.
+## Current Naming Preference
 
-Bad outcome:
+The naming currently preferred is:
 
-- old tree remains fully authoritative
-- new transaction model is also treated as authoritative
-- both must always match
+- `masterTransactionIdMap`
+- `recipientTransactionSet`
+- `agentTransactionSet`
+- each transaction set should hold:
+- `lastUpdateTransactionDate`
+- `totalStaked`
+- `transactionCount`
+- `recipientTransactionIdKeys`
+- `agentTransactionIdKeys`
 
-Good outcome:
+This keeps the model simple:
 
-- transactions become authoritative
-- tree data becomes an index, navigation layer, or view layer
+- branch holds shared metadata
+- branch holds transaction id keys
+- master map holds actual transaction records
 
-## Benefits of the New Design
+## Summary
 
-If implemented carefully, this architecture should provide:
+The design we now prefer is:
 
-- more reliable deletion
-- easier reward settlement
-- fewer orphaned links
-- better scalability
-- simpler reasoning about correctness
-- clearer debugging
-- cleaner future API design
+- one master transaction record per transaction
+- one branch transaction id array entry per transaction
+- one set-level metadata record per rate branch
+- shared update time on the set
+- no shared update time on the individual transaction record
+- old runnable behavior unchanged during migration
 
-## Tradeoffs
-
-This is not free.
-
-Costs include:
-
-- a structural refactor
-- some increase in storage
-- transition work while old and new logic coexist
-- additional testing needs
-
-Still, we believe this is the correct long-term direction.
-
-## Implementation Plan
-
-### Phase 1: Structure change
-
-Start with the structural change first.
-
-This means:
-
-- add hashed transaction directories under each rate
-- add transaction IDs
-- add transaction records
-- keep the current tree readable while introducing the new structure
-
-### Phase 2: Test with deletions
-
-After the structure exists, begin testing deletion flows against it.
-
-Primary focus:
-
-- `deleteAgent`
-- `deleteRecipient`
-- sponsor-level cleanup
-
-The first goal is to prove that deletions become simpler and more correct with the new structure.
-
-### Phase 3: Extend reward integration
-
-Once deletion works reliably:
-
-- move reward settlement to transaction-based logic
-- reduce tree traversal where possible
-- make delete methods settle transactions before removing structure
-
-### Phase 4: Reduce old traversal dependence
-
-Later, once the new model is proven:
-
-- remove unnecessary traversal-heavy logic
-- reduce duplicate representations
-- simplify the cleanup path
-
-## Layman Explanation
-
-If we explain this in plain English:
-
-Today, the system behaves like a filing cabinet where the only way to find a document is to open many nested folders and hope every folder is still organized correctly.
-
-The new plan is to keep the folder system, but add a proper transaction filing index inside each important folder.
-
-That means:
-
-- every important rate section has its own transaction drawer
-- each drawer has a short key
-- each transaction has its own ID
-- deletes and reward updates can work directly on the transaction drawer instead of searching through the whole cabinet
-
-This makes the system:
-
-- faster to access
-- easier to clean up
-- safer to maintain
-
-## Current Working Decision
-
-We have agreed on this starting direction:
-
-- create transaction directories under each rate
-- use hashed keys for the directory names
-- use simple numeric transaction IDs
-- begin with structure changes
-- then test deletion behavior
-
-This is the working plan unless a better design appears during implementation.
-
-## Notes for Future Sessions
-
-If this document is used in a future session, the key context is:
-
-- the current tree-first design is considered too fragile for large-scale use
-- transaction-based storage is considered the correct long-term direction
-- the chosen shape is local transaction directories under each rate node
-- hashed directory keys are preferred for lookup
-- simple numeric transaction IDs are preferred inside those directories
-- implementation should begin with structure changes, then deletion testing
+This is the design that should guide the next implementation steps.

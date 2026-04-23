@@ -202,6 +202,9 @@ const defaultHardhatRpcUrl =
   const dismissRunningMethodPopup = useCallback(() => {
     setRunningMethodPopupState((current) => (current ? { ...current, isOpen: false } : current));
   }, []);
+  const reopenRunningMethodPopup = useCallback(() => {
+    setRunningMethodPopupState((current) => (current ? { ...current, isOpen: true } : current));
+  }, []);
   const cancelRunningMethodPopup = useCallback(() => {
     activeMethodRunAbortControllerRef.current?.abort();
     setRunningMethodPopupState((current) => (current ? { ...current, isCancelling: true } : current));
@@ -1257,6 +1260,10 @@ const defaultHardhatRpcUrl =
       methodName: string,
       runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<unknown> | unknown,
     ) => {
+      if (activeMethodRunAbortControllerRef.current) {
+        reopenRunningMethodPopup();
+        return;
+      }
       const controller = new AbortController();
       const runId = nextMethodRunIdRef.current++;
       activeMethodRunAbortControllerRef.current = controller;
@@ -1276,7 +1283,7 @@ const defaultHardhatRpcUrl =
         setRunningMethodPopupState(null);
       }
     },
-    [],
+    [reopenRunningMethodPopup],
   );
   const runSelectedReadMethodWithPopup = useCallback(
     async () =>

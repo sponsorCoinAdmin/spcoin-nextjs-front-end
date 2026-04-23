@@ -6,6 +6,7 @@ import addAgent from './addAgent';
 import addAgentTransaction from './addAgentTransaction';
 import addAgents from './addAgents';
 import deleteAccountTree from './deleteAccountTree';
+import deleteSponsor from './deleteSponsor';
 import deleteRecipient from './deleteRecipient';
 import deleteRecipientRate from './deleteRecipientRate';
 import deleteAgent from './deleteAgent';
@@ -42,6 +43,7 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addAgentTransaction,
   addAgents,
   deleteAccountTree,
+  deleteSponsor,
   deleteRecipient,
   deleteRecipientRate,
   deleteAgent,

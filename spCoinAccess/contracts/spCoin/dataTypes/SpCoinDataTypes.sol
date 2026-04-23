@@ -90,8 +90,8 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 lastUpdateTime;
         uint256 stakedSPCoins; // Coins not owned
-        bytes32 transactionDirectoryHashKey;
-        uint256[] transactionIdDirectory;
+        RecipientTransactionSetStruct recipientTransactionSet;
+        uint256[] recipientTransactionIdKeys;
         address[] agentKeys;
         mapping(address => AgentStruct) agentMap;
         StakingTransactionStruct[] transactionList;
@@ -116,8 +116,8 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 lastUpdateTime;
         uint256 stakedSPCoins; // Coins not owned but Recipiented
-        bytes32 transactionDirectoryHashKey;
-        uint256[] transactionIdDirectory;
+        AgentTransactionSetStruct agentTransactionSet;
+        uint256[] agentTransactionIdKeys;
         StakingTransactionStruct[] transactionList;
         bool inserted;
     }
@@ -128,17 +128,27 @@ contract SpCoinDataTypes {
     struct StakingTransactionStruct {
         uint256 insertionTime;
         uint256 stakingRewards;
-        address[] sourceList;
     }
 
-    // New transaction-directory storage scaffolding.
+    // New transaction-set storage scaffolding.
     // This is intentionally additive for now so the existing transactionList-based
     // behavior keeps working while we prepare the contract for the new design.
     uint256 internal nextTransactionId = 1;
 
+    struct RecipientTransactionSetStruct {
+        uint256 lastUpdateTransactionDate;
+        uint256 totalStaked;
+        uint256 transactionCount;
+    }
+
+    struct AgentTransactionSetStruct {
+        uint256 lastUpdateTransactionDate;
+        uint256 totalStaked;
+        uint256 transactionCount;
+    }
+
     struct TransactionRecordStruct {
         uint256 transactionId;
-        bytes32 directoryHashKey;
         uint256 insertionTime;
         uint256 stakingRewards;
         address sponsorKey;
@@ -146,20 +156,10 @@ contract SpCoinDataTypes {
         uint256 recipientRateKey;
         address agentKey;
         uint256 agentRateKey;
-        address[] sourceList;
-        bool inserted;
-    }
-
-    struct TransactionDirectoryStruct {
-        bytes32 directoryHashKey;
-        uint256[] transactionIds;
         bool inserted;
     }
 
     mapping(uint256 => TransactionRecordStruct) internal masterTransactionIdMap;
-    mapping(bytes32 => uint256[]) internal masterTransactionDirectoryMap;
-    mapping(bytes32 => TransactionDirectoryStruct) internal masterTransactionDirectoryInfoMap;
-    mapping(uint256 => bytes32) internal masterTransactionHashById;
 
     /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
 
@@ -187,32 +187,6 @@ contract SpCoinDataTypes {
     }
 
    /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
-
-    function buildRecipientRateTransactionHashKey(
-        address _sponsorKey,
-        address _recipientKey,
-        uint256 _recipientRateKey
-    )
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(_sponsorKey, _recipientKey, _recipientRateKey));
-    }
-
-    function buildAgentRateTransactionHashKey(
-        address _sponsorKey,
-        address _recipientKey,
-        uint256 _recipientRateKey,
-        address _agentKey,
-        uint256 _agentRateKey
-    )
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey));
-    }
 
     function reserveTransactionId() internal returns (uint256 transactionId) {
         transactionId = nextTransactionId;

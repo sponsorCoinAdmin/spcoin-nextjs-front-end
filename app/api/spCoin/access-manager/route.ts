@@ -31,6 +31,8 @@ const SPONSORCOIN_SCOPE_DIR = path.join(process.cwd(), 'node_modules', '@sponsor
 const MANAGER_STATE_PATH = path.join(BACKUPS_ROOT, 'manager-state.json');
 const NPM_CMD = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const TAR_CMD = process.platform === 'win32' ? 'tar.exe' : 'tar';
+const DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS || 30_000);
+const DEPLOYMENT_TX_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_TX_TIMEOUT_MS || 30 * 60 * 1000);
 
 function resolveSpCoinDeploymentAssetChainId(chainId: unknown): number {
   const parsed = Number(chainId);
@@ -740,7 +742,7 @@ async function deploySpCoinToChain(params: {
   try {
     await withTimeout(
       provider.getBlockNumber(),
-      10000,
+      DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS,
       `RPC health check for ${network.networkName} (${network.rpcUrl})`,
     );
   } catch (error) {
@@ -762,7 +764,11 @@ async function deploySpCoinToChain(params: {
   if (!deploymentTx) {
     throw new Error('Deployment transaction was not created.');
   }
-  const receipt = await deploymentTx.wait();
+  const receipt = await withTimeout(
+    deploymentTx.wait(),
+    DEPLOYMENT_TX_TIMEOUT_MS,
+    `SPCoin deployment transaction ${deploymentTx.hash}`,
+  );
   const contractAddress = await contract.getAddress();
   if (!contractAddress) {
     throw new Error('Deployment succeeded but no contract address was returned.');

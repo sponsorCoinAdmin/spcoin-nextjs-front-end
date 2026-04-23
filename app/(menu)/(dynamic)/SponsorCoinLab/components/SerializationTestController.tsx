@@ -156,6 +156,24 @@ export default function SerializationTestController(props: Props) {
     };
   }, []);
 
+  React.useEffect(() => {
+    if (selectedSerializationTestMethod !== 'compareSpCoinContractSize') return;
+    if (contractDirectoryOptions.length === 0) return;
+    const validValues = new Set(contractDirectoryOptions.map((option) => option.value));
+    setSerializationTestParams((prev) => {
+      let changed = false;
+      const next = [...prev];
+      for (const idx of [0, 1]) {
+        const current = String(next[idx] || '').trim();
+        if (current && !validValues.has(current)) {
+          next[idx] = '';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [contractDirectoryOptions, selectedSerializationTestMethod, setSerializationTestParams]);
+
   return (/*  */
     <div className="grid grid-cols-1 gap-3">
       {!hideMethodSelect ? <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -332,7 +350,11 @@ export default function SerializationTestController(props: Props) {
                 <select
                   data-field-id={`serialization-test-param-${idx}`}
                   className={`${inputStyle} appearance-none pr-10${invalidClass(`serialization-test-param-${idx}`)}`}
-                  value={serializationTestParams[idx] || ''}
+                  value={
+                    contractDirectoryOptions.some((option) => option.value === String(serializationTestParams[idx] || '').trim())
+                      ? serializationTestParams[idx] || ''
+                      : ''
+                  }
                   onChange={(e) => {
                     markEditorAsUserEdited();
                     setSerializationTestParams((prev) => {

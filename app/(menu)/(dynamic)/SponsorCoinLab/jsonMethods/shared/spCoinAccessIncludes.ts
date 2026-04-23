@@ -302,6 +302,7 @@ export type SpCoinContractAccess = Contract & {
   ) => Promise<unknown>;
   setRecipientRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
   setAgentRateRange?: (lower: string | number | bigint, upper: string | number | bigint) => Promise<ContractTransactionResponse>;
+  deleteSponsor?: (sponsorKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipient?: (sponsorKey: string, recipientKey: string) => Promise<ContractTransactionResponse>;
   deleteRecipientRate?: (
     sponsorKey: string,

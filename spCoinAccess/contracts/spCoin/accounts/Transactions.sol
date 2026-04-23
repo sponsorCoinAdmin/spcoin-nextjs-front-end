@@ -6,17 +6,6 @@ import "../rewardsManagement/RewardsManager.sol";
 contract Transactions is RewardsManager {
     constructor() { }
 
-    function _copySourceListToTransactionRecord(
-        TransactionRecordStruct storage _record,
-        address[] memory _sourceList
-    )
-        internal
-    {
-        for (uint256 idx = 0; idx < _sourceList.length; idx++) {
-            _record.sourceList.push(_sourceList[idx]);
-        }
-    }
-
     function _registerRecipientRateTransaction(
         RecipientRateStruct storage _recipientTransaction,
         address _sponsorKey,
@@ -27,26 +16,17 @@ contract Transactions is RewardsManager {
         internal
         returns (uint256 transactionId)
     {
-        bytes32 directoryHashKey = _recipientTransaction.transactionDirectoryHashKey;
-        if (directoryHashKey == bytes32(0)) {
-            directoryHashKey = buildRecipientRateTransactionHashKey(_sponsorKey, _recipientKey, _recipientRateKey);
-            _recipientTransaction.transactionDirectoryHashKey = directoryHashKey;
-        }
-
         transactionId = reserveTransactionId();
-        _recipientTransaction.transactionIdDirectory.push(transactionId);
-        masterTransactionDirectoryMap[directoryHashKey].push(transactionId);
-
-        TransactionDirectoryStruct storage directoryInfo = masterTransactionDirectoryInfoMap[directoryHashKey];
-        if (!directoryInfo.inserted) {
-            directoryInfo.directoryHashKey = directoryHashKey;
-            directoryInfo.inserted = true;
-        }
-        directoryInfo.transactionIds.push(transactionId);
+        _recipientTransaction.recipientTransactionIdKeys.push(transactionId);
+        _recipientTransaction.recipientTransactionSet.transactionCount =
+            _recipientTransaction.recipientTransactionIdKeys.length;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate =
+            _recipientTransaction.lastUpdateTime;
+        _recipientTransaction.recipientTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
 
         TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
         transactionRecord.transactionId = transactionId;
-        transactionRecord.directoryHashKey = directoryHashKey;
         transactionRecord.insertionTime = _transRec.insertionTime;
         transactionRecord.stakingRewards = _transRec.stakingRewards;
         transactionRecord.sponsorKey = _sponsorKey;
@@ -55,12 +35,10 @@ contract Transactions is RewardsManager {
         transactionRecord.agentKey = burnAddress;
         transactionRecord.agentRateKey = 0;
         transactionRecord.inserted = true;
-        _copySourceListToTransactionRecord(transactionRecord, _transRec.sourceList);
-
-        masterTransactionHashById[transactionId] = directoryHashKey;
     }
 
     function _registerAgentRateTransaction(
+        RecipientRateStruct storage _recipientTransaction,
         AgentRateStruct storage _agentTransaction,
         address _sponsorKey,
         address _recipientKey,
@@ -72,32 +50,25 @@ contract Transactions is RewardsManager {
         internal
         returns (uint256 transactionId)
     {
-        bytes32 directoryHashKey = _agentTransaction.transactionDirectoryHashKey;
-        if (directoryHashKey == bytes32(0)) {
-            directoryHashKey = buildAgentRateTransactionHashKey(
-                _sponsorKey,
-                _recipientKey,
-                _recipientRateKey,
-                _agentKey,
-                _agentRateKey
-            );
-            _agentTransaction.transactionDirectoryHashKey = directoryHashKey;
-        }
-
         transactionId = reserveTransactionId();
-        _agentTransaction.transactionIdDirectory.push(transactionId);
-        masterTransactionDirectoryMap[directoryHashKey].push(transactionId);
+        _recipientTransaction.recipientTransactionIdKeys.push(transactionId);
+        _recipientTransaction.recipientTransactionSet.transactionCount =
+            _recipientTransaction.recipientTransactionIdKeys.length;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate =
+            _recipientTransaction.lastUpdateTime;
+        _recipientTransaction.recipientTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
 
-        TransactionDirectoryStruct storage directoryInfo = masterTransactionDirectoryInfoMap[directoryHashKey];
-        if (!directoryInfo.inserted) {
-            directoryInfo.directoryHashKey = directoryHashKey;
-            directoryInfo.inserted = true;
-        }
-        directoryInfo.transactionIds.push(transactionId);
+        _agentTransaction.agentTransactionIdKeys.push(transactionId);
+        _agentTransaction.agentTransactionSet.transactionCount =
+            _agentTransaction.agentTransactionIdKeys.length;
+        _agentTransaction.agentTransactionSet.lastUpdateTransactionDate =
+            _agentTransaction.lastUpdateTime;
+        _agentTransaction.agentTransactionSet.totalStaked +=
+            _transRec.stakingRewards;
 
         TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
         transactionRecord.transactionId = transactionId;
-        transactionRecord.directoryHashKey = directoryHashKey;
         transactionRecord.insertionTime = _transRec.insertionTime;
         transactionRecord.stakingRewards = _transRec.stakingRewards;
         transactionRecord.sponsorKey = _sponsorKey;
@@ -106,9 +77,6 @@ contract Transactions is RewardsManager {
         transactionRecord.agentKey = _agentKey;
         transactionRecord.agentRateKey = _agentRateKey;
         transactionRecord.inserted = true;
-        _copySourceListToTransactionRecord(transactionRecord, _transRec.sourceList);
-
-        masterTransactionHashById[transactionId] = directoryHashKey;
     }
 
     function _syncRecipientRateTransactionTimestamp(
@@ -118,12 +86,13 @@ contract Transactions is RewardsManager {
     )
         internal
     {
-        if (_transactionIndex >= _recipientTransaction.transactionIdDirectory.length) return;
-        uint256 transactionId = _recipientTransaction.transactionIdDirectory[_transactionIndex];
+        if (_transactionIndex >= _recipientTransaction.recipientTransactionIdKeys.length) return;
+        uint256 transactionId = _recipientTransaction.recipientTransactionIdKeys[_transactionIndex];
         if (transactionId == 0) return;
         TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
         if (!transactionRecord.inserted) return;
         transactionRecord.insertionTime = _transactionTimeStamp;
+        _recipientTransaction.recipientTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
     }
 
     function _syncAgentRateTransactionTimestamp(
@@ -133,12 +102,13 @@ contract Transactions is RewardsManager {
     )
         internal
     {
-        if (_transactionIndex >= _agentTransaction.transactionIdDirectory.length) return;
-        uint256 transactionId = _agentTransaction.transactionIdDirectory[_transactionIndex];
+        if (_transactionIndex >= _agentTransaction.agentTransactionIdKeys.length) return;
+        uint256 transactionId = _agentTransaction.agentTransactionIdKeys[_transactionIndex];
         if (transactionId == 0) return;
         TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
         if (!transactionRecord.inserted) return;
         transactionRecord.insertionTime = _transactionTimeStamp;
+        _agentTransaction.agentTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
     }
 
     function addSponsorship(address _recipientKey,
@@ -263,6 +233,7 @@ contract Transactions is RewardsManager {
             );
         }
         else {
+            RecipientRateStruct storage recipientTransaction = getRecipientTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _transactionTimeStamp);
             AgentRateStruct storage agentTransaction = getAgentTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, _transactionTimeStamp);
             updateAgentRateRewards(agentTransaction, _agentKey, _recipientKey,  _recipientRateKey, _transactionTimeStamp);
 
@@ -270,6 +241,7 @@ contract Transactions is RewardsManager {
             transactionIndex = agentTransaction.transactionList.length;
             agentTransaction.transactionList.push(transRec);
             _registerAgentRateTransaction(
+                recipientTransaction,
                 agentTransaction,
                 _sponsorKey,
                 _recipientKey,

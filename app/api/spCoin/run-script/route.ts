@@ -96,10 +96,42 @@ const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   2: 'RECIP_RATE_HAS_AGENT',
   3: 'AGENT_NOT_FOUND',
   4: 'OWNER_OR_ROOT',
+  5: 'Transaction Row Id is out of range for this agent-rate transaction list.',
+  6: 'Transaction Row Id does not resolve to an inserted master transaction record.',
+  7: 'Transaction Row Id does not match the supplied agent-rate branch keys.',
 };
 const SP_COIN_ERROR_INTERFACE = new Interface(['error SpCoinError(uint8 code)']);
 
+function getNestedErrorText(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value !== 'object') return String(value);
+  const source = value as Record<string, unknown>;
+  return [
+    source.message,
+    source.reason,
+    source.shortMessage,
+    source.code,
+    source.action,
+    source.data,
+    source.error,
+    source.info,
+    source.cause,
+  ]
+    .map(getNestedErrorText)
+    .filter(Boolean)
+    .join(' ');
+}
+
 function decodeSpCoinError(error: unknown): string | null {
+  const errorText = getNestedErrorText(error);
+  if (/\b(AGENT_TX_OOB|AGENT_TXID_OOB|TX_OOB)\b/i.test(errorText)) {
+    return 'Transaction Row Id is out of range for this agent-rate transaction list.';
+  }
+  if (/\bAGENT_TX_NOT_FOUND\b/i.test(errorText)) {
+    return 'Transaction Row Id does not resolve to an inserted master transaction record.';
+  }
+
   const revert = (error as any)?.revert;
   const revertCode = revert?.name === 'SpCoinError' ? Number(revert?.args?.[0]) : NaN;
   if (Number.isFinite(revertCode)) {
@@ -520,6 +552,25 @@ export async function POST(request: NextRequest) {
               const receipt = await tx.wait();
               result = formatReceiptResult(
                 'deleteRecipient',
+                tx,
+                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+              );
+              break;
+            }
+            case 'deleteSponsor': {
+              const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              const deleteSponsor = (
+                contract as unknown as {
+                  deleteSponsor?: (sponsor: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
+                }
+              ).deleteSponsor;
+              if (typeof deleteSponsor !== 'function') {
+                throw new Error('deleteSponsor is not available on the current SpCoin contract access path.');
+              }
+              const tx = await deleteSponsor(sponsorKey);
+              const receipt = await tx.wait();
+              result = formatReceiptResult(
+                'deleteSponsor',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
               );

@@ -1,46 +1,9 @@
-import { promises as fs } from 'fs';
-import crypto from 'crypto';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { compareSpCoinContractSizes, getSpCoinSourceFingerprint } from '@/lib/spCoin/contractCompiler';
 
 export const runtime = 'nodejs';
-
-const CACHE_DIR = path.join(process.cwd(), 'tools', '.cache', 'spcoin-size-comparisons');
-
-function getCacheFilePath(previousReleaseDir: string, latestReleaseDir: string, fingerprints: { previous: string; latest: string }) {
-  const cacheKey = crypto
-    .createHash('sha1')
-    .update(`${previousReleaseDir}\n${latestReleaseDir}\n${fingerprints.previous}\n${fingerprints.latest}`)
-    .digest('hex');
-  return path.join(CACHE_DIR, `${cacheKey}.json`);
-}
-
-async function readCachedComparison(
-  previousReleaseDir: string,
-  latestReleaseDir: string,
-  fingerprints: { previous: string; latest: string },
-) {
-  try {
-    const cachePath = getCacheFilePath(previousReleaseDir, latestReleaseDir, fingerprints);
-    const content = await fs.readFile(cachePath, 'utf8');
-    return JSON.parse(content) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-async function writeCachedComparison(
-  previousReleaseDir: string,
-  latestReleaseDir: string,
-  fingerprints: { previous: string; latest: string },
-  payload: Record<string, unknown>,
-) {
-  await fs.mkdir(CACHE_DIR, { recursive: true });
-  const cachePath = getCacheFilePath(previousReleaseDir, latestReleaseDir, fingerprints);
-  await fs.writeFile(cachePath, JSON.stringify(payload, null, 2), 'utf8');
-}
 
 async function runComparison(previousReleaseDir: string, latestReleaseDir: string) {
   try {
@@ -52,17 +15,6 @@ async function runComparison(previousReleaseDir: string, latestReleaseDir: strin
       previous: previousSource.sourceFingerprint,
       latest: latestSource.sourceFingerprint,
     };
-    const cached = await readCachedComparison(
-      path.resolve(previousReleaseDir),
-      path.resolve(latestReleaseDir),
-      fingerprints,
-    );
-    if (cached) {
-      return NextResponse.json({
-        ...cached,
-        cached: true,
-      });
-    }
 
     const comparison = await compareSpCoinContractSizes({
       previousReleaseDir,
@@ -80,12 +32,6 @@ async function runComparison(previousReleaseDir: string, latestReleaseDir: strin
       report: comparison.report,
       cached: false,
     };
-    await writeCachedComparison(
-      comparison.previousReleaseDir,
-      comparison.latestReleaseDir,
-      comparison.variantFingerprints,
-      payload,
-    );
     return NextResponse.json(payload);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to compare SPCoin contract sizes.';

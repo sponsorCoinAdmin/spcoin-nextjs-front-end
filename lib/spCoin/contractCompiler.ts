@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 
 const REPO_ROOT = process.cwd();
 const DEFAULT_SOLC_VERSION = '0.8.18';
-const DEFAULT_SOLC_TIMEOUT_MS = Number(process.env.SOLC_TIMEOUT_MS || 10 * 60 * 1000);
+const DEFAULT_SOLC_TIMEOUT_MS = Number(process.env.SOLC_TIMEOUT_MS || 30 * 60 * 1000);
 const EIP170_LIMIT_BYTES = 24576;
 
 export type CompileSpCoinParams = {
@@ -33,6 +33,31 @@ export type CompiledSpCoinContract = {
   creationBytes: number;
   deployedBytecode?: string;
   deployedBytes: number;
+};
+
+type SpCoinSizeCacheFile = {
+  schemaVersion: 1;
+  createdAt: string;
+  sourceRoot: string;
+  entryFile: string;
+  contractName: string;
+  solcVersion: string;
+  optimizerEnabled: boolean;
+  optimizerRuns: number;
+  viaIR: boolean;
+  sourceCount: number;
+  sourceFingerprint: string;
+  creationBytes: number;
+  deployedBytes: number;
+  abiLength: number;
+  eip170LimitBytes: number;
+  deployedMarginBytes: number;
+  deployedMarginLabel: string;
+  sourceFiles: Array<{
+    key: string;
+    size: number;
+    mtimeMs: number;
+  }>;
 };
 
 export type CompareSpCoinContractSizeParams = {
@@ -230,6 +255,98 @@ function createSourceFingerprint(sourceRoot: string, sourceKeys: string[], sourc
   });
 }
 
+function getSizeCachePath(sourceRoot: string) {
+  return path.join(sourceRoot, 'size.json');
+}
+
+async function getSourceFileMetadata(sourceRoot: string, sourceKeys: string[]) {
+  return await Promise.all(
+    [...sourceKeys].sort().map(async (key) => {
+      const absolutePath = path.join(sourceRoot, key);
+      const stat = await fs.stat(absolutePath);
+      return {
+        key,
+        size: stat.size,
+        mtimeMs: stat.mtimeMs,
+      };
+    }),
+  );
+}
+
+async function readValidSizeCache(params: {
+  sourceRoot: string;
+  entryFile: string;
+  contractName: string;
+  solcVersion: string;
+  optimizerEnabled: boolean;
+  optimizerRuns: number;
+  viaIR: boolean;
+  sourceFingerprint: string;
+  sourceFiles: Array<{ key: string; size: number; mtimeMs: number }>;
+}) {
+  const cachePath = getSizeCachePath(params.sourceRoot);
+  try {
+    const [cacheStat, raw] = await Promise.all([
+      fs.stat(cachePath),
+      fs.readFile(cachePath, 'utf8'),
+    ]);
+    const parsed = JSON.parse(raw) as Partial<SpCoinSizeCacheFile>;
+    const sourceChangedAfterCache = params.sourceFiles.some((file) => file.mtimeMs > cacheStat.mtimeMs);
+    if (sourceChangedAfterCache) return null;
+    if (parsed.schemaVersion !== 1) return null;
+    if (path.resolve(String(parsed.sourceRoot || '')) !== params.sourceRoot) return null;
+    if (parsed.entryFile !== params.entryFile) return null;
+    if (parsed.contractName !== params.contractName) return null;
+    if (parsed.solcVersion !== params.solcVersion) return null;
+    if (parsed.optimizerEnabled !== params.optimizerEnabled) return null;
+    if (parsed.optimizerRuns !== params.optimizerRuns) return null;
+    if (parsed.viaIR !== params.viaIR) return null;
+    const cachedSourceFiles = Array.isArray(parsed.sourceFiles) ? parsed.sourceFiles : [];
+    const cachedSourceFileMap = new Map(
+      cachedSourceFiles.map((file) => [String(file?.key || ''), Number(file?.size)]),
+    );
+    const sourceListMatches = params.sourceFiles.every(
+      (file) => cachedSourceFileMap.get(file.key) === file.size,
+    );
+    if (!sourceListMatches || cachedSourceFileMap.size !== params.sourceFiles.length) return null;
+    if (!Number.isFinite(Number(parsed.creationBytes))) return null;
+    if (!Number.isFinite(Number(parsed.deployedBytes))) return null;
+    return parsed as SpCoinSizeCacheFile;
+  } catch {
+    return null;
+  }
+}
+
+async function writeSizeCache(params: {
+  compiled: CompiledSpCoinContract;
+  optimizerEnabled: boolean;
+  optimizerRuns: number;
+  viaIR: boolean;
+  sourceFiles: Array<{ key: string; size: number; mtimeMs: number }>;
+}) {
+  const payload: SpCoinSizeCacheFile = {
+    schemaVersion: 1,
+    createdAt: formatTimestamp(),
+    sourceRoot: params.compiled.sourceRoot,
+    entryFile: params.compiled.entryFile,
+    contractName: params.compiled.contractName,
+    solcVersion: params.compiled.solcVersion,
+    optimizerEnabled: params.optimizerEnabled,
+    optimizerRuns: params.optimizerRuns,
+    viaIR: params.viaIR,
+    sourceCount: params.compiled.sourceCount,
+    sourceFingerprint: params.compiled.sourceFingerprint,
+    creationBytes: params.compiled.creationBytes,
+    deployedBytes: params.compiled.deployedBytes,
+    abiLength: params.compiled.abiLength,
+    eip170LimitBytes: EIP170_LIMIT_BYTES,
+    deployedMarginBytes: getMarginBytes(params.compiled.deployedBytes),
+    deployedMarginLabel: `${formatSignedDelta(getMarginBytes(params.compiled.deployedBytes))} bytes vs EIP-170`,
+    sourceFiles: params.sourceFiles,
+  };
+  await fs.writeFile(getSizeCachePath(params.compiled.sourceRoot), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+}
+
 export async function getSpCoinSourceFingerprint(params: {
   sourceRoot: string;
   entryFile?: string;
@@ -273,6 +390,40 @@ export async function compileSpCoinContractSource(params: CompileSpCoinParams): 
 
   const sources: Record<string, { content: string }> = {};
   await collectSoliditySourcesFromEntry(entryPath, sourceRoot, sources);
+  const sourceKeys = Object.keys(sources).filter((key) => key !== 'hardhat/console.sol');
+  const sourceFingerprint = createSourceFingerprint(sourceRoot, sourceKeys, sources);
+  const sourceFiles = await getSourceFileMetadata(sourceRoot, sourceKeys);
+  const canUseSizeCache =
+    !includeAbi &&
+    includeCreationBytecode &&
+    includeDeployedBytecode;
+  if (canUseSizeCache) {
+    const cached = await readValidSizeCache({
+      sourceRoot,
+      entryFile,
+      contractName,
+      solcVersion,
+      optimizerEnabled,
+      optimizerRuns,
+      viaIR,
+      sourceFingerprint,
+      sourceFiles,
+    });
+    if (cached) {
+      return {
+        sourceRoot,
+        entryFile,
+        contractName,
+        solcVersion,
+        sourceCount: cached.sourceCount,
+        sourceFingerprint: cached.sourceFingerprint,
+        abiLength: cached.abiLength,
+        creationBytes: cached.creationBytes,
+        deployedBytes: cached.deployedBytes,
+      };
+    }
+  }
+
   sources['hardhat/console.sol'] = {
     content: `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
@@ -352,14 +503,13 @@ library console {
     throw new Error(`Compiled ${contractName} artifact is missing deployed bytecode.`);
   }
 
-  const sourceKeys = Object.keys(sources).filter((key) => key !== 'hardhat/console.sol');
-  return {
+  const compiled: CompiledSpCoinContract = {
     sourceRoot,
     entryFile,
     contractName,
     solcVersion,
     sourceCount: sourceKeys.length,
-    sourceFingerprint: createSourceFingerprint(sourceRoot, sourceKeys, sources),
+    sourceFingerprint,
     abi: Array.isArray(abi) ? abi : undefined,
     abiLength: Array.isArray(abi) ? abi.length : 0,
     bytecode,
@@ -367,6 +517,16 @@ library console {
     deployedBytecode,
     deployedBytes: deployedBytecode ? Math.ceil(deployedBytecode.replace(/^0x/, '').length / 2) : 0,
   };
+  if (canUseSizeCache) {
+    await writeSizeCache({
+      compiled,
+      optimizerEnabled,
+      optimizerRuns,
+      viaIR,
+      sourceFiles,
+    });
+  }
+  return compiled;
 }
 
 export async function compareSpCoinContractSizes(
