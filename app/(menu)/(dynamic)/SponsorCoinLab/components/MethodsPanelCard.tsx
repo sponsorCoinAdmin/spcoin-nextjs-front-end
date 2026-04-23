@@ -9,17 +9,16 @@ import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
 import {
-  SERIALIZATION_TEST_METHOD_MEMBER_LISTS,
-} from '../jsonMethods/serializationTests';
-import { SPCOIN_READ_METHOD_MEMBER_LISTS } from '../jsonMethods/spCoin/read';
-import { SPCOIN_WRITE_METHOD_MEMBER_LISTS } from '../jsonMethods/spCoin/write';
-import { ERC20_READ_METHOD_MEMBER_LISTS } from '../jsonMethods/erc20/read';
-import { ERC20_WRITE_METHOD_MEMBER_LISTS } from '../jsonMethods/erc20/write';
+  DEFAULT_METHOD_MEMBER_LIST_PAYLOAD,
+  cloneAlterMemberLists,
+  type AlterMemberLists,
+  type MethodMemberListPayload,
+  type StoredAlterMode,
+} from '@/lib/spCoinLab/methodMemberLists';
 
 type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'admin_utils';
-type StoredAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 type AlterModeOption = StoredAlterMode | 'Tested';
-type EditableMemberLists = Record<StoredAlterMode, Record<string, boolean>>;
+type EditableMemberLists = AlterMemberLists;
 
 const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   allowance: 'erc20.ts',
@@ -130,12 +129,6 @@ function dedupeMethodNamesByLabel(values: string[], getLabel: (name: string) => 
     seenLabels.add(label);
     return true;
   });
-}
-
-function cloneMemberLists(source: EditableMemberLists): EditableMemberLists {
-  return Object.fromEntries(
-    Object.entries(source).map(([mode, members]) => [mode, { ...members }]),
-  ) as EditableMemberLists;
 }
 
 function filterMethodsByAlterMode(
@@ -255,24 +248,46 @@ export default function MethodsPanelCard({
     React.useState<AlterModeOption>('Standard');
   const [alterModeDropdownValue, setAlterModeDropdownValue] = React.useState('__alter_mode_placeholder__');
   const [serializationMemberLists, setSerializationMemberLists] = React.useState<EditableMemberLists>(() =>
-    cloneMemberLists(SERIALIZATION_TEST_METHOD_MEMBER_LISTS as EditableMemberLists),
+    cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.serialization),
   );
   const [spCoinReadMemberLists, setSpCoinReadMemberLists] = React.useState<EditableMemberLists>(() =>
-    cloneMemberLists(SPCOIN_READ_METHOD_MEMBER_LISTS as EditableMemberLists),
+    cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.spCoinRead),
   );
   const [spCoinWriteMemberLists, setSpCoinWriteMemberLists] = React.useState<EditableMemberLists>(() =>
-    cloneMemberLists(SPCOIN_WRITE_METHOD_MEMBER_LISTS as EditableMemberLists),
+    cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.spCoinWrite),
   );
   const [erc20ReadMemberLists, setErc20ReadMemberLists] = React.useState<EditableMemberLists>(() =>
-    cloneMemberLists(ERC20_READ_METHOD_MEMBER_LISTS as EditableMemberLists),
+    cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.erc20Read),
   );
   const [erc20WriteMemberLists, setErc20WriteMemberLists] = React.useState<EditableMemberLists>(() =>
-    cloneMemberLists(ERC20_WRITE_METHOD_MEMBER_LISTS as EditableMemberLists),
+    cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.erc20Write),
   );
   const [isManageEnabled, setIsManageEnabled] = React.useState(false);
+  const [memberListPersistenceHydrated, setMemberListPersistenceHydrated] = React.useState(false);
+  const [changeGroupDropdownValue, setChangeGroupDropdownValue] = React.useState('__change_group_placeholder__');
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
-  const isErc20Mode = methodPanelMode === 'ecr20_read' || methodPanelMode === 'erc20_write';
+  const persistedMemberListPayload = React.useMemo<MethodMemberListPayload>(
+    () => ({
+      version: 1,
+      updatedAt: '',
+      lists: {
+        serialization: serializationMemberLists,
+        spCoinRead: spCoinReadMemberLists,
+        spCoinWrite: spCoinWriteMemberLists,
+        erc20Read: erc20ReadMemberLists,
+        erc20Write: erc20WriteMemberLists,
+      },
+      displayGroups: DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.displayGroups,
+    }),
+    [
+      erc20ReadMemberLists,
+      erc20WriteMemberLists,
+      serializationMemberLists,
+      spCoinReadMemberLists,
+      spCoinWriteMemberLists,
+    ],
+  );
   const methodPanelOptions: Array<[MethodPanelTab, string]> = [
     ['erc20', 'ERC20'],
     ['spcoin_rread', 'SpCoin Read'],
@@ -302,9 +317,6 @@ export default function MethodsPanelCard({
       ),
     [erc20WriteMemberLists, erc20WriteProps.erc20WriteOptions, erc20WriteProps.showOnChainMethods, selectedAlterMode],
   );
-  const hasVisibleErc20Methods = visibleErc20ReadOptions.length > 0 || visibleErc20WriteOptions.length > 0;
-  const combinedErc20MethodValue =
-    methodPanelMode === 'erc20_write' ? erc20WriteProps.selectedWriteMethod : erc20ReadProps.selectedReadMethod;
   const visibleSpCoinReadOptions = React.useMemo(
     () => {
       const excludedAdminReadNames = new Set(spCoinReadProps.spCoinAdminReadOptions);
@@ -391,21 +403,6 @@ export default function MethodsPanelCard({
         ),
       ),
     [selectedAlterMode, spCoinWriteMemberLists, spCoinWriteProps.spCoinTodoWriteOptions],
-  );
-  const visibleSpCoinAddWriteOptions = React.useMemo(
-    () => visibleSpCoinWriteOptions.filter((name) => name.startsWith('add')),
-    [visibleSpCoinWriteOptions],
-  );
-  const visibleSpCoinDeleteWriteOptions = React.useMemo(
-    () => visibleSpCoinWriteOptions.filter((name) => name.startsWith('delete')),
-    [visibleSpCoinWriteOptions],
-  );
-  const visibleSpCoinUtilityWriteOptions = React.useMemo(
-    () =>
-      visibleSpCoinWriteOptions.filter(
-        (name) => !name.startsWith('add') && !name.startsWith('delete'),
-      ),
-    [visibleSpCoinWriteOptions],
   );
   const visibleSerializationOptions = React.useMemo(
     () =>
@@ -495,8 +492,6 @@ export default function MethodsPanelCard({
     () => sortMethodNames([...adminUtilityReadOptions, ...adminUtilityOwnerOptions]),
     [adminUtilityOwnerOptions, adminUtilityReadOptions],
   );
-  const hasVisibleAdminUtilsMethods =
-    visibleAdminUtilsReadOptions.length > 0 || visibleAdminUtilsOwnerOptions.length > 0;
   const activeRunControl = React.useMemo(() => {
     if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
       return {
@@ -664,6 +659,43 @@ export default function MethodsPanelCard({
     spCoinReadMemberLists,
     spCoinWriteMemberLists,
   ]);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let cancelled = false;
+
+    const hydrateMethodMemberLists = async () => {
+      try {
+        const response = await fetch('/api/spCoin/lab/method-member-lists', { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = (await response.json()) as MethodMemberListPayload;
+        if (cancelled || !payload?.lists) return;
+        setSerializationMemberLists(cloneAlterMemberLists(payload.lists.serialization));
+        setSpCoinReadMemberLists(cloneAlterMemberLists(payload.lists.spCoinRead));
+        setSpCoinWriteMemberLists(cloneAlterMemberLists(payload.lists.spCoinWrite));
+        setErc20ReadMemberLists(cloneAlterMemberLists(payload.lists.erc20Read));
+        setErc20WriteMemberLists(cloneAlterMemberLists(payload.lists.erc20Write));
+      } catch {
+        // Fall back to the in-memory defaults if file hydration fails.
+      } finally {
+        if (!cancelled) setMemberListPersistenceHydrated(true);
+      }
+    };
+
+    void hydrateMethodMemberLists();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  React.useEffect(() => {
+    if (!memberListPersistenceHydrated) return;
+    void fetch('/api/spCoin/lab/method-member-lists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(persistedMemberListPayload),
+    }).catch(() => {
+      // Ignore transient persistence failures in the UI layer.
+    });
+  }, [memberListPersistenceHydrated, persistedMemberListPayload]);
   const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterModeOption) => {
     if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return;
     const toggleMember =
@@ -716,55 +748,31 @@ export default function MethodsPanelCard({
     currentJsonMethodName,
     methodPanelMode,
   ]);
-  const adminUtilsSelectedMethod = React.useMemo(() => {
-    const combinedAdminUtilsWriteOptions = sortMethodNames([...visibleAdminUtilsOwnerOptions]);
-    if (methodPanelMode === 'spcoin_write') {
-      if (combinedAdminUtilsWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) {
-        return spCoinWriteProps.selectedSpCoinWriteMethod;
-      }
-      if (combinedAdminUtilsWriteOptions.length > 0) return combinedAdminUtilsWriteOptions[0];
-    }
-    if (methodPanelMode === 'spcoin_rread') {
-      if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) {
-        return spCoinReadProps.selectedSpCoinReadMethod;
-      }
-      if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
-    }
-    if (visibleAdminUtilitySerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) {
-      return serializationTestProps.selectedSerializationTestMethod;
-    }
-    if (visibleAdminUtilsReadOptions.length > 0) return visibleAdminUtilsReadOptions[0];
-    if (combinedAdminUtilsWriteOptions.length > 0) return combinedAdminUtilsWriteOptions[0];
-    return '__no_methods__';
-  }, [
-    methodPanelMode,
-    serializationTestProps.selectedSerializationTestMethod,
-    spCoinReadProps.selectedSpCoinReadMethod,
-    spCoinWriteProps.selectedSpCoinWriteMethod,
-    visibleAdminUtilitySerializationOptions,
-    visibleAdminUtilsReadOptions,
-    visibleAdminUtilsOwnerOptions,
-  ]);
   const typeScriptMethodOptions = React.useMemo(() => {
-    if (activeMethodPanelTab === 'erc20') return sortMethodNames([...visibleErc20ReadOptions, ...visibleErc20WriteOptions]);
-    if (activeMethodPanelTab === 'spcoin_rread') return visibleSpCoinReadOptions;
-    if (activeMethodPanelTab === 'spcoin_write') return visibleSpCoinWriteOptions;
-    if (activeMethodPanelTab === 'admin_utils') {
-      return sortMethodNames([
-        ...visibleAdminUtilsReadOptions,
-        ...visibleAdminUtilsOwnerOptions,
-      ]);
+    if (activeMethodPanelTab === 'erc20') {
+      return sortMethodNames(methodPanelMode === 'erc20_write' ? visibleErc20WriteOptions : visibleErc20ReadOptions);
     }
-    return visibleTodoWriteOptions;
+    if (activeMethodPanelTab === 'admin_utils') {
+      if (methodPanelMode === 'spcoin_rread') return visibleAdminUtilsReadOptions;
+      if (methodPanelMode === 'spcoin_write') return visibleAdminUtilsOwnerOptions;
+      return visibleAdminUtilitySerializationOptions;
+    }
+    if (activeMethodPanelTab === 'todos') return visibleTodoWriteOptions;
+    if (methodPanelMode === 'spcoin_rread') return visibleSpCoinReadOptions;
+    if (methodPanelMode === 'spcoin_write') return visibleSpCoinWriteOptions;
+    return visibleSerializationOptions;
   }, [
     activeMethodPanelTab,
+    methodPanelMode,
+    visibleAdminUtilitySerializationOptions,
     visibleAdminUtilsOwnerOptions,
     visibleAdminUtilsReadOptions,
-    visibleTodoWriteOptions,
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
+    visibleSerializationOptions,
     visibleSpCoinReadOptions,
     visibleSpCoinWriteOptions,
+    visibleTodoWriteOptions,
   ]);
   const mappedTypeScriptScriptId = React.useMemo(() => {
     const targetFile = resolveTypeScriptTargetFile(activeMethodPanelTab, currentJsonMethodName);
@@ -943,212 +951,70 @@ export default function MethodsPanelCard({
   const sharedMethodSelect = React.useMemo(() => {
     if (isJavaScriptScriptMode && !showAllCardSectionsForVisualTest) return null;
     const baseClassName = 'grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]';
-    if (activeMethodPanelTab === 'admin_utils') {
-      return (
-        <div className={baseClassName}>
-          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <div className="relative w-full min-w-0">
-            <select
-              aria-label="Admin utilities JSON method"
-              title="Admin utilities JSON method"
-              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={hasVisibleAdminUtilsMethods ? adminUtilsSelectedMethod : '__no_methods__'}
-              onChange={(e) => selectMappedJsonMethod(e.target.value)}
-              disabled={!hasVisibleAdminUtilsMethods}
-            >
-            {!hasVisibleAdminUtilsMethods ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleAdminUtilsReadOptions.length > 0 ? (
-              <>
-                <option value="__admin-utils-read-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- Read Admin ----
-                </option>
-                {visibleAdminUtilsReadOptions.map((name) => (
-                  <option key={`admin-utils-read-${name}`} value={name}>
-                    {spCoinReadProps.spCoinReadMethodDefs[name]?.title || serializationTestProps.serializationTestMethodDefs[name]?.title || name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            {visibleAdminUtilsOwnerOptions.length > 0 ? (
-              <>
-                <option value="__admin-utils-write-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- Owner Admin ----
-                </option>
-                {visibleAdminUtilsOwnerOptions.map((name) => (
-                  <option key={`admin-utils-write-${name}`} value={name}>
-                    {spCoinWriteProps.spCoinWriteMethodDefs[name]?.title || serializationTestProps.serializationTestMethodDefs[name]?.title || name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-              v
-            </span>
-          </div>
-        </div>
-      );
-    }
-    if (isErc20Mode) {
-      return (
-        <div className={baseClassName}>
-          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <div className="relative w-full min-w-0">
-            <select
-              aria-label="ERC20 JSON method"
-              title="ERC20 JSON method"
-              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={hasVisibleErc20Methods ? combinedErc20MethodValue : '__no_methods__'}
-              onChange={(e) => selectMappedJsonMethod(e.target.value)}
-              disabled={!hasVisibleErc20Methods}
-            >
-            {!hasVisibleErc20Methods ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleErc20ReadOptions.length > 0 ? (
-              <>
-                <option value="__erc20-read-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- ERC Read ----
-                </option>
-                {visibleErc20ReadOptions.map((name) => (
-                  <option key={`erc20-read-${name}`} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            {visibleErc20WriteOptions.length > 0 ? (
-              <>
-                <option value="__erc20-write-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- ERC Write ----
-                </option>
-                {visibleErc20WriteOptions.map((name) => (
-                  <option key={`erc20-write-${name}`} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-              v
-            </span>
-          </div>
-        </div>
-      );
-    }
-    if (methodPanelMode === 'spcoin_rread') {
-      return (
-        <div className={baseClassName}>
-          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <div className="relative w-full min-w-0">
-            <select
-              aria-label="SpCoin read JSON method"
-              title="SpCoin read JSON method"
-              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod) ? spCoinReadProps.selectedSpCoinReadMethod : '__no_methods__'}
-              onChange={(e) => selectMappedJsonMethod(e.target.value)}
-              disabled={visibleSpCoinReadOptions.length === 0}
-            >
-            {visibleSpCoinReadOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {visibleSpCoinReadOptions.map((name) => (
-              <option key={`sp-read-shared-${name}`} value={name}>
-                {spCoinReadProps.spCoinReadMethodDefs[name]?.title || name}
-              </option>
-            ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-              v
-            </span>
-          </div>
-        </div>
-      );
-    }
-    if (methodPanelMode === 'spcoin_write') {
-      const activeWriteOptions = activeMethodPanelTab === 'todos' ? visibleTodoWriteOptions : visibleSpCoinWriteOptions;
-      const activeAddOptions =
-        activeMethodPanelTab === 'todos'
-          ? visibleTodoWriteOptions.filter((name) => name.startsWith('add'))
-          : visibleSpCoinAddWriteOptions;
-      const activeDeleteOptions =
-        activeMethodPanelTab === 'todos'
-          ? visibleTodoWriteOptions.filter((name) => name.startsWith('delete'))
-          : visibleSpCoinDeleteWriteOptions;
-      const activeUtilityOptions =
-        activeMethodPanelTab === 'todos'
-          ? visibleTodoWriteOptions.filter((name) => !name.startsWith('add') && !name.startsWith('delete'))
-          : visibleSpCoinUtilityWriteOptions;
-      return (
-        <div className={baseClassName}>
-          <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <div className="relative w-full min-w-0">
-            <select
-              aria-label="SpCoin write JSON method"
-              title="SpCoin write JSON method"
-              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={activeWriteOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod) ? spCoinWriteProps.selectedSpCoinWriteMethod : '__no_methods__'}
-              onChange={(e) => selectMappedJsonMethod(e.target.value)}
-              disabled={activeWriteOptions.length === 0}
-            >
-            {activeWriteOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-            {activeAddOptions.length > 0 ? (
-              <>
-                <option value="__sp-write-add-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- Add Methods ----
-                </option>
-                {activeAddOptions.map((name) => (
-                  <option key={`sp-write-add-${name}`} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            {activeDeleteOptions.length > 0 ? (
-              <>
-                <option value="__sp-write-delete-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- Delete Methods ----
-                </option>
-                {activeDeleteOptions.map((name) => (
-                  <option key={`sp-write-delete-${name}`} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            {activeUtilityOptions.length > 0 ? (
-              <>
-                <option value="__sp-write-utils-divider__" disabled style={{ backgroundColor: '#E5B94F', color: '#111827', fontWeight: '700', textAlign: 'center' }}>
-                  ---- Utils ----
-                </option>
-                {activeUtilityOptions.map((name) => (
-                  <option key={`sp-write-utils-${name}`} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </>
-            ) : null}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-              v
-            </span>
-          </div>
-        </div>
-      );
-    }
+    const currentValue =
+      activeMethodPanelTab === 'admin_utils'
+        ? methodPanelMode === 'spcoin_rread'
+          ? spCoinReadProps.selectedSpCoinReadMethod
+          : methodPanelMode === 'spcoin_write'
+            ? spCoinWriteProps.selectedSpCoinWriteMethod
+            : serializationTestProps.selectedSerializationTestMethod
+        : methodPanelMode === 'ecr20_read'
+          ? erc20ReadProps.selectedReadMethod
+          : methodPanelMode === 'erc20_write'
+            ? erc20WriteProps.selectedWriteMethod
+            : activeMethodPanelTab === 'todos'
+              ? spCoinWriteProps.selectedSpCoinWriteMethod
+              : methodPanelMode === 'spcoin_rread'
+                ? spCoinReadProps.selectedSpCoinReadMethod
+                : methodPanelMode === 'spcoin_write'
+                  ? spCoinWriteProps.selectedSpCoinWriteMethod
+                  : serializationTestProps.selectedSerializationTestMethod;
+    const currentOptions =
+      activeMethodPanelTab === 'admin_utils'
+        ? methodPanelMode === 'spcoin_rread'
+          ? visibleAdminUtilsReadOptions
+          : methodPanelMode === 'spcoin_write'
+            ? visibleAdminUtilsOwnerOptions
+            : visibleAdminUtilitySerializationOptions
+        : methodPanelMode === 'ecr20_read'
+          ? visibleErc20ReadOptions
+          : methodPanelMode === 'erc20_write'
+            ? visibleErc20WriteOptions
+            : activeMethodPanelTab === 'todos'
+              ? visibleTodoWriteOptions
+              : methodPanelMode === 'spcoin_rread'
+                ? visibleSpCoinReadOptions
+                : methodPanelMode === 'spcoin_write'
+                  ? visibleSpCoinWriteOptions
+                  : visibleSerializationOptions;
     return (
       <div className={baseClassName}>
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <div className="relative w-full min-w-0">
           <select
-            aria-label="Serialization test JSON method"
-            title="Serialization test JSON method"
+            aria-label="JSON method"
+            title="JSON method"
             className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-            value={visibleSerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod) ? serializationTestProps.selectedSerializationTestMethod : '__no_methods__'}
-            onChange={(e) => selectMappedJsonMethod(e.target.value)}
-            disabled={visibleSerializationOptions.length === 0}
+            value={currentOptions.includes(currentValue) ? currentValue : '__no_methods__'}
+            onChange={(event) => selectMappedJsonMethod(event.target.value)}
+            disabled={currentOptions.length === 0}
           >
-          {visibleSerializationOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
-          {visibleSerializationOptions.map((name) => (
-            <option key={`serialization-shared-${name}`} value={name}>
-              {name}
+          {currentOptions.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
+          {currentOptions.map((name) => (
+            <option key={name} value={name}>
+              {activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'spcoin_rread'
+                ? String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name)
+                : activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'spcoin_write'
+                  ? String(spCoinWriteProps.spCoinWriteMethodDefs[name]?.title || name)
+                  : activeMethodPanelTab === 'admin_utils'
+                    ? String(serializationTestProps.serializationTestMethodDefs[name]?.title || name)
+                    : methodPanelMode === 'spcoin_rread'
+                      ? String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name)
+                      : methodPanelMode === 'spcoin_write' || activeMethodPanelTab === 'todos'
+                        ? String(spCoinWriteProps.spCoinWriteMethodDefs[name]?.title || name)
+                        : methodPanelMode === 'serialization_tests'
+                          ? String(serializationTestProps.serializationTestMethodDefs[name]?.title || name)
+                          : name}
             </option>
           ))}
           </select>
@@ -1159,32 +1025,28 @@ export default function MethodsPanelCard({
       </div>
     );
   }, [
-    adminUtilsSelectedMethod,
-    combinedErc20MethodValue,
-    erc20ReadProps,
-    erc20WriteProps,
-    hasVisibleAdminUtilsMethods,
-    hasVisibleErc20Methods,
-    isErc20Mode,
+    activeMethodPanelTab,
+    erc20ReadProps.selectedReadMethod,
+    erc20WriteProps.selectedWriteMethod,
     isJavaScriptScriptMode,
     methodPanelMode,
-    selectMethodPanelTab,
-    showAllCardSectionsForVisualTest,
-    activeMethodPanelTab,
-    serializationTestProps,
-    spCoinReadProps,
-    spCoinWriteProps,
     selectMappedJsonMethod,
+    serializationTestProps.selectedSerializationTestMethod,
+    serializationTestProps.serializationTestMethodDefs,
+    showAllCardSectionsForVisualTest,
+    spCoinReadProps.selectedSpCoinReadMethod,
+    spCoinReadProps.spCoinReadMethodDefs,
+    spCoinWriteProps.selectedSpCoinWriteMethod,
+    spCoinWriteProps.spCoinWriteMethodDefs,
+    visibleAdminUtilitySerializationOptions,
+    visibleAdminUtilsOwnerOptions,
+    visibleAdminUtilsReadOptions,
     visibleErc20ReadOptions,
     visibleErc20WriteOptions,
-    visibleAdminUtilsReadOptions,
-    visibleAdminUtilsOwnerOptions,
     visibleSerializationOptions,
-    visibleSpCoinAddWriteOptions,
-    visibleSpCoinDeleteWriteOptions,
     visibleSpCoinReadOptions,
-    visibleSpCoinUtilityWriteOptions,
     visibleSpCoinWriteOptions,
+    visibleTodoWriteOptions,
   ]);
 
   return (
@@ -1326,6 +1188,22 @@ export default function MethodsPanelCard({
                         }}
                       >
                         {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
+                  <span>Change Group</span>
+                  <select
+                    className="rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-xs text-white"
+                    value={changeGroupDropdownValue}
+                    onChange={(event) => setChangeGroupDropdownValue(event.target.value)}
+                    disabled
+                  >
+                    <option value="__change_group_placeholder__">Select Group</option>
+                    {methodPanelOptions.map(([value, label]) => (
+                      <option key={`change-group-${value}`} value={value}>
+                        {label}
                       </option>
                     ))}
                   </select>
