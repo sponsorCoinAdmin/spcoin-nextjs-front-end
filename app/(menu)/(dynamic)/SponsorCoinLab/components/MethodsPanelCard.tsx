@@ -264,7 +264,6 @@ export default function MethodsPanelCard({
   );
   const [isManageEnabled, setIsManageEnabled] = React.useState(false);
   const [memberListPersistenceHydrated, setMemberListPersistenceHydrated] = React.useState(false);
-  const [changeGroupDropdownValue, setChangeGroupDropdownValue] = React.useState('__change_group_placeholder__');
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
   const persistedMemberListPayload = React.useMemo<MethodMemberListPayload>(
@@ -1196,11 +1195,13 @@ export default function MethodsPanelCard({
                   <span>Change Group</span>
                   <select
                     className="rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-xs text-white"
-                    value={changeGroupDropdownValue}
-                    onChange={(event) => setChangeGroupDropdownValue(event.target.value)}
-                    disabled
+                    value={activeMethodPanelTab}
+                    onChange={(event) => {
+                      const nextTab = event.target.value as MethodPanelTab;
+                      if (activeMethodPanelTab === nextTab) return;
+                      selectMethodPanelTab(nextTab);
+                    }}
                   >
-                    <option value="__change_group_placeholder__">Select Group</option>
                     {methodPanelOptions.map(([value, label]) => (
                       <option key={`change-group-${value}`} value={value}>
                         {label}
