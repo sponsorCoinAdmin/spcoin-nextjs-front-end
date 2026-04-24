@@ -181,6 +181,69 @@ const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'getMasterAccountKeys',
 ]);
 
+const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Tested', 'Todo'];
+const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
+
+type StoredMethodsPanelUiState = {
+  scriptEditorKind?: ScriptEditorKind;
+  isManageEnabled?: boolean;
+  selectedAlterMode?: AlterModeOption;
+  selectedDisplayGroup?: MethodDisplayGroup;
+  writeTraceEnabled?: boolean;
+  showOnChainMethods?: boolean;
+  showOffChainMethods?: boolean;
+  selectedMethodId?: string;
+};
+
+function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(METHODS_PANEL_UI_STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Record<string, unknown>;
+    const next: StoredMethodsPanelUiState = {};
+    if (saved.scriptEditorKind === 'json' || saved.scriptEditorKind === 'javascript') {
+      next.scriptEditorKind = saved.scriptEditorKind;
+    }
+    if (typeof saved.isManageEnabled === 'boolean') {
+      next.isManageEnabled = saved.isManageEnabled;
+    }
+    if (
+      saved.selectedAlterMode === 'All' ||
+      saved.selectedAlterMode === 'Standard' ||
+      saved.selectedAlterMode === 'Test' ||
+      saved.selectedAlterMode === 'Tested' ||
+      saved.selectedAlterMode === 'Todo'
+    ) {
+      next.selectedAlterMode = saved.selectedAlterMode;
+    }
+    if (
+      saved.selectedDisplayGroup === 'erc20' ||
+      saved.selectedDisplayGroup === 'spcoin_rread' ||
+      saved.selectedDisplayGroup === 'spcoin_write' ||
+      saved.selectedDisplayGroup === 'admin_utils' ||
+      saved.selectedDisplayGroup === 'todos'
+    ) {
+      next.selectedDisplayGroup = saved.selectedDisplayGroup;
+    }
+    if (typeof saved.writeTraceEnabled === 'boolean') {
+      next.writeTraceEnabled = saved.writeTraceEnabled;
+    }
+    if (typeof saved.showOnChainMethods === 'boolean') {
+      next.showOnChainMethods = saved.showOnChainMethods;
+    }
+    if (typeof saved.showOffChainMethods === 'boolean') {
+      next.showOffChainMethods = saved.showOffChainMethods;
+    }
+    if (typeof saved.selectedMethodId === 'string') {
+      next.selectedMethodId = saved.selectedMethodId;
+    }
+    return next;
+  } catch {
+    return null;
+  }
+}
+
 type Props = {
   articleClassName: string;
   methodsCardRef: MutableRefObject<HTMLElement | null>;
@@ -253,16 +316,16 @@ export default function MethodsPanelCard({
   spCoinWriteProps,
   serializationTestProps,
 }: Props) {
-const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Tested', 'Todo'];
   const showAllCardSectionsForVisualTest = false;
   const showAllMethodPanelsForVisualTest = false;
+  const storedMethodsPanelUiState = React.useMemo(() => readStoredMethodsPanelUiState(), []);
   const methodPanelGroupName = React.useId();
   const alterModeGroupName = React.useId();
   const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
   const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
   const [isMethodPanelLoading, setIsMethodPanelLoading] = React.useState(false);
   const [selectedAlterMode, setSelectedAlterMode] =
-    React.useState<AlterModeOption>('Standard');
+    React.useState<AlterModeOption>(storedMethodsPanelUiState?.selectedAlterMode || 'Standard');
   const [alterModeDropdownValue, setAlterModeDropdownValue] = React.useState('__alter_mode_placeholder__');
   const [serializationMemberLists, setSerializationMemberLists] = React.useState<EditableMemberLists>(() =>
     cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.serialization),
@@ -279,20 +342,58 @@ const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Teste
   const [erc20WriteMemberLists, setErc20WriteMemberLists] = React.useState<EditableMemberLists>(() =>
     cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.erc20Write),
   );
-  const [isManageEnabled, setIsManageEnabled] = React.useState(false);
+  const [isManageEnabled, setIsManageEnabled] = React.useState(Boolean(storedMethodsPanelUiState?.isManageEnabled));
   const [memberListPersistenceHydrated, setMemberListPersistenceHydrated] = React.useState(false);
   const [methodDisplayGroups, setMethodDisplayGroups] = React.useState<Record<string, MethodDisplayGroup>>(
     () => ({ ...DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.displayGroups }),
   );
   const [selectedDisplayGroup, setSelectedDisplayGroup] = React.useState<MethodDisplayGroup>(
-    activeMethodPanelTab === 'ecr20_read' || activeMethodPanelTab === 'erc20_write'
-      ? 'erc20'
-      : activeMethodPanelTab === 'serialization_tests'
-        ? 'admin_utils'
-        : activeMethodPanelTab,
+    storedMethodsPanelUiState?.selectedDisplayGroup ||
+      (activeMethodPanelTab === 'ecr20_read' || activeMethodPanelTab === 'erc20_write'
+        ? 'erc20'
+        : activeMethodPanelTab === 'serialization_tests'
+          ? 'admin_utils'
+          : activeMethodPanelTab),
   );
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
+  const didHydratePanelUiRef = React.useRef(false);
+  const didRestoreSelectedMethodRef = React.useRef(false);
+  React.useEffect(() => {
+    if (didHydratePanelUiRef.current) return;
+    if (storedMethodsPanelUiState?.scriptEditorKind && storedMethodsPanelUiState.scriptEditorKind !== scriptEditorKind) {
+      setScriptEditorKind(storedMethodsPanelUiState.scriptEditorKind);
+    }
+    if (
+      typeof storedMethodsPanelUiState?.showOnChainMethods === 'boolean' &&
+      storedMethodsPanelUiState.showOnChainMethods !== showOnChainMethods
+    ) {
+      setShowOnChainMethods(storedMethodsPanelUiState.showOnChainMethods);
+    }
+    if (
+      typeof storedMethodsPanelUiState?.showOffChainMethods === 'boolean' &&
+      storedMethodsPanelUiState.showOffChainMethods !== showOffChainMethods
+    ) {
+      setShowOffChainMethods(storedMethodsPanelUiState.showOffChainMethods);
+    }
+    if (
+      typeof storedMethodsPanelUiState?.writeTraceEnabled === 'boolean' &&
+      storedMethodsPanelUiState.writeTraceEnabled !== writeTraceEnabled
+    ) {
+      toggleWriteTrace();
+    }
+    didHydratePanelUiRef.current = true;
+  }, [
+    scriptEditorKind,
+    setScriptEditorKind,
+    setShowOffChainMethods,
+    setShowOnChainMethods,
+    showOffChainMethods,
+    showOnChainMethods,
+    storedMethodsPanelUiState,
+    toggleWriteTrace,
+    writeTraceEnabled,
+  ]);
   const persistedMemberListPayload = React.useMemo<MethodMemberListPayload>(
     () => ({
       version: 1,
@@ -785,6 +886,53 @@ const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Teste
     spCoinReadProps.spCoinReadMethodDefs,
     spCoinWriteProps.selectedSpCoinWriteMethod,
     spCoinWriteProps.spCoinWriteMethodDefs,
+  ]);
+  React.useEffect(() => {
+    if (didRestoreSelectedMethodRef.current) return;
+    if (!didHydratePanelUiRef.current) return;
+    const storedMethodId = storedMethodsPanelUiState?.selectedMethodId;
+    if (!storedMethodId) {
+      didRestoreSelectedMethodRef.current = true;
+      return;
+    }
+    const match = groupedMethodEntries.find((entry) => entry.id === storedMethodId);
+    if (!match) return;
+    if (currentMethodIdentity?.id === storedMethodId) {
+      didRestoreSelectedMethodRef.current = true;
+      return;
+    }
+    didRestoreSelectedMethodRef.current = true;
+    selectMethodByIdentity(match);
+  }, [
+    currentMethodIdentity,
+    groupedMethodEntries,
+    selectMethodByIdentity,
+    storedMethodsPanelUiState,
+  ]);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(
+      METHODS_PANEL_UI_STORAGE_KEY,
+      JSON.stringify({
+        scriptEditorKind,
+        isManageEnabled,
+        selectedAlterMode,
+        selectedDisplayGroup,
+        writeTraceEnabled,
+        showOnChainMethods,
+        showOffChainMethods,
+        selectedMethodId: currentMethodIdentity?.id || '',
+      } satisfies StoredMethodsPanelUiState),
+    );
+  }, [
+    currentMethodIdentity,
+    isManageEnabled,
+    scriptEditorKind,
+    selectedAlterMode,
+    selectedDisplayGroup,
+    showOffChainMethods,
+    showOnChainMethods,
+    writeTraceEnabled,
   ]);
   const activeAlterMemberLists = React.useMemo<EditableMemberLists>(() => {
     if (activeMethodPanelTab === 'erc20') {
