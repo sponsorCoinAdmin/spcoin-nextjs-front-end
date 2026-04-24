@@ -181,7 +181,7 @@ export type SpCoinReadAccess = {
   getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateAgentKeys: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
-  getRecipientRecord: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
+  getRecipient: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
   getRecipientTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
   getAgentRateKeys: (
     _sponsorKey: string,
@@ -202,6 +202,12 @@ export type SpCoinReadAccess = {
     _recipientRateKey: string | number,
     _agentKey: string,
   ) => Promise<AgentRateStruct[]>;
+  getAgent: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _agentKey: string,
+  ) => Promise<unknown>;
 };
 
 export type SpCoinContractAccess = Contract & {

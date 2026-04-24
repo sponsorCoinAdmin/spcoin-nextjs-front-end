@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { RecipientStruct } from "../../../dataTypes/spCoinDataTypes";
 import { bigIntToDateTimeString, bigIntToDecString, getLocation } from "../../../utils/dateTime";
-export async function getRecipientRecord(context, _sponsorKey, _recipientKey) {
+export async function getRecipient(context, _sponsorKey, _recipientKey) {
     const runtime = context;
-    runtime.spCoinLogger.logFunctionHeader("getRecipientRecord = async(" + _sponsorKey + "," + _recipientKey + ")");
+    runtime.spCoinLogger.logFunctionHeader("getRecipient = async(" + _sponsorKey + "," + _recipientKey + ")");
     const recipientRecord = new RecipientStruct();
     recipientRecord.recipientKey = _recipientKey;
     const recordStr = await runtime.spCoinSerialize.getRecipientRecordFields(_sponsorKey, _recipientKey);

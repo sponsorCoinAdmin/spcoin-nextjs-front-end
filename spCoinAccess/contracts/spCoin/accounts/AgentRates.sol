@@ -14,7 +14,7 @@ contract AgentRates is Agent {
     function getAgentTransaction(address _sponsor, address _recipientKey, uint _recipientRateKey, address _agentKey, uint _agentRateKey, uint _creationDate)
      internal returns (AgentRateStruct storage) 
     {
-        AgentStruct storage agentRecord = getAgentRecord(_sponsor, _recipientKey, _recipientRateKey, _agentKey);
+        AgentStruct storage agentRecord = getAgent(_sponsor, _recipientKey, _recipientRateKey, _agentKey);
         AgentRateStruct storage agentTransaction = getAgentTransactionByKeys(_sponsor, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
         if (!agentTransaction.inserted) {
             validateAgentRateRange(_agentRateKey);

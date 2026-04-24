@@ -12,7 +12,7 @@ contract RecipientRates is Recipient {
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
     function getRecipientTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey, uint _creationDate) 
     internal returns (RecipientRateStruct storage) {
-        RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
+        RecipientStruct storage recipientRecord = getRecipient(_sponsorKey, _recipientKey);
         RecipientRateStruct storage recipientTransaction = getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
         if (!recipientTransaction.inserted) {
             validateRecipientRateRange(_recipientRateKey);
@@ -32,7 +32,7 @@ contract RecipientRates is Recipient {
     /// @param _recipientRateKey public account key to get recipient Rate for a given recipient
     function getRecipientTransaction(address _sponsorKey, address _recipientKey, uint _recipientRateKey) 
     internal returns (RecipientRateStruct storage) {
-        RecipientStruct storage recipientRecord = getRecipientRecord(_sponsorKey, _recipientKey);
+        RecipientStruct storage recipientRecord = getRecipient(_sponsorKey, _recipientKey);
         RecipientRateStruct storage recipientTransaction = getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
         if (!recipientTransaction.inserted) {
             recipientTransaction.recipientRate = _recipientRateKey;

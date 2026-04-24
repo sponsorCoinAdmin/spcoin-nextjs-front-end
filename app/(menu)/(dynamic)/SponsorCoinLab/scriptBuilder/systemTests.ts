@@ -90,9 +90,9 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
       },
       {
         step: 2,
-        name: 'getRecipientRecord',
+        name: 'getRecipient',
         panel: 'spcoin_rread',
-        method: 'getRecipientRecord',
+        method: 'getRecipient',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x90f79bf6eb2c4f870365e785982e1f101e93b906' },

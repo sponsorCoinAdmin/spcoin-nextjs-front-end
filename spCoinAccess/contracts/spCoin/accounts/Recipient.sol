@@ -25,10 +25,10 @@ contract Recipient is Sponsor {
         }
 
         require(!sponsorHasRecipientLink && !recipientHasSponsorLink, "RECIP_LIST_STALE");
-        getRecipientRecord(_sponsorKey, _recipientKey);
+        getRecipient(_sponsorKey, _recipientKey);
     }
 
-    function getRecipientRecord(address _sponsor, address _recipientKey)
+    function getRecipient(address _sponsor, address _recipientKey)
     internal returns (RecipientStruct storage) {
         AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsor);
         // console.log("getRecipientRecord(", _sponsor, ", ", _recipientKey);

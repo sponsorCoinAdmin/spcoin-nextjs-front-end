@@ -23,7 +23,7 @@ import getRecipientTransactionAt from './getRecipientTransactionAt';
 import getLowerRecipientRate from './getLowerRecipientRate';
 import getUpperRecipientRate from './getUpperRecipientRate';
 import getRecipientRateRange from './getRecipientRateRange';
-import getRecipientRecord from './getRecipientRecord';
+import getRecipient from './getRecipient';
 import getRecipientRecordList from './getRecipientRecordList';
 import getAgentRateList from './getAgentRateList';
 import getLowerAgentRate from './getLowerAgentRate';
@@ -35,7 +35,7 @@ import getRecipientTransactionCount from './getRecipientTransactionCount';
 import getAgentTransactionCount from './getAgentTransactionCount';
 import getAgentTransactionAt from './getAgentTransactionAt';
 import getAgentTransactionList from './getAgentTransactionList';
-import getAgentRecord from './getAgentRecord';
+import getAgent from './getAgent';
 import getAgentRecordList from './getAgentRecordList';
 import getInitialTotalSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
@@ -83,7 +83,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getLowerRecipientRate,
   getUpperRecipientRate,
   getRecipientRateRange,
-  getRecipientRecord,
+  getRecipient,
   getRecipientRecordList,
   getAgentRateKeys: getAgentRateList,
   getAgentRateList,
@@ -97,7 +97,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientTransactionAt,
   getAgentTransactionAt,
   getAgentTransactionList,
-  getAgentRecord,
+  getAgent,
   getAgentRecordList,
   getInitialTotalSupply,
   isDeployed,

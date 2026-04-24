@@ -2,14 +2,14 @@
 import compareSpCoinContractSize from './compareSpCoinContractSize';
 import getAccountRecord from './getAccountRecord';
 import getAccountStakingRewards from './getAccountStakingRewards';
-import getRecipientRecord from './getRecipientRecord';
+import getRecipient from './getRecipient';
 import getRecipientTransaction from './getRecipientTransaction';
 import getAgentTransaction from './getAgentTransaction';
 export const OFFCHAIN_READ_METHOD_HANDLERS = {
     compareSpCoinContractSize,
     getAccountRecord,
     getAccountStakingRewards,
-    getRecipientRecord,
+    getRecipient,
     getRecipientTransaction,
     getAgentTransaction,
 };

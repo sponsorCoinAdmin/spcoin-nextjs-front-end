@@ -13,13 +13,13 @@ contract Agent is RecipientRates {
             external
             onlyOwnerOrRootAdmin(_sponsorKey)
             nonRedundantAgent (_sponsorKey, _recipientKey, _agentKey) {
-        getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        getAgent(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
     }
 
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _agentKey new recipient to add to account list
-    function getAgentRecord(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
+    function getAgent(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
         internal returns (AgentStruct storage) {
         uint currentTimeStamp = block.timestamp;
         AgentStruct storage  agentRecord = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);

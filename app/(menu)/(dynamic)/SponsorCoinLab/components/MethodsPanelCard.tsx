@@ -359,6 +359,7 @@ export default function MethodsPanelCard({
   const isJsonScriptMode = scriptEditorKind === 'json';
   const didHydratePanelUiRef = React.useRef(false);
   const didRestoreSelectedMethodRef = React.useRef(false);
+  const [isPanelUiPersistenceReady, setIsPanelUiPersistenceReady] = React.useState(false);
   React.useEffect(() => {
     if (didHydratePanelUiRef.current) return;
     if (storedMethodsPanelUiState?.scriptEditorKind && storedMethodsPanelUiState.scriptEditorKind !== scriptEditorKind) {
@@ -383,6 +384,7 @@ export default function MethodsPanelCard({
       toggleWriteTrace();
     }
     didHydratePanelUiRef.current = true;
+    setIsPanelUiPersistenceReady(true);
   }, [
     scriptEditorKind,
     setScriptEditorKind,
@@ -911,6 +913,7 @@ export default function MethodsPanelCard({
   ]);
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!isPanelUiPersistenceReady) return;
     window.localStorage.setItem(
       METHODS_PANEL_UI_STORAGE_KEY,
       JSON.stringify({
@@ -927,6 +930,7 @@ export default function MethodsPanelCard({
   }, [
     currentMethodIdentity,
     isManageEnabled,
+    isPanelUiPersistenceReady,
     scriptEditorKind,
     selectedAlterMode,
     selectedDisplayGroup,
