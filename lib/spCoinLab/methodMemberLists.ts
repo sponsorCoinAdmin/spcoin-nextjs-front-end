@@ -52,6 +52,19 @@ export function cloneMethodMemberListCollection(
   };
 }
 
+function addQualifiedAliases(prefix: string, lists: AlterMemberLists): AlterMemberLists {
+  const withAliases = cloneAlterMemberLists(lists);
+  for (const mode of ['Standard', 'All', 'Test', 'Todo'] as const) {
+    const nextEntries = { ...withAliases[mode] };
+    for (const [methodName, isMember] of Object.entries(withAliases[mode])) {
+      if (methodName.includes(':')) continue;
+      nextEntries[`${prefix}:${methodName}`] = isMember;
+    }
+    withAliases[mode] = nextEntries;
+  }
+  return withAliases;
+}
+
 export const DEFAULT_METHOD_MEMBER_LIST_PAYLOAD: MethodMemberListPayload = {
   version: 1,
   updatedAt: '',
@@ -123,11 +136,26 @@ export function normalizeMethodMemberListPayload(input: unknown): MethodMemberLi
     version: 1,
     updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
     lists: {
-      serialization: normalizeAlterMemberLists(sourceLists?.serialization, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization),
-      spCoinRead: normalizeAlterMemberLists(sourceLists?.spCoinRead, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead),
-      spCoinWrite: normalizeAlterMemberLists(sourceLists?.spCoinWrite, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite),
-      erc20Read: normalizeAlterMemberLists(sourceLists?.erc20Read, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read),
-      erc20Write: normalizeAlterMemberLists(sourceLists?.erc20Write, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write),
+      serialization: addQualifiedAliases(
+        'serialization',
+        normalizeAlterMemberLists(sourceLists?.serialization, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization),
+      ),
+      spCoinRead: addQualifiedAliases(
+        'spCoinRead',
+        normalizeAlterMemberLists(sourceLists?.spCoinRead, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead),
+      ),
+      spCoinWrite: addQualifiedAliases(
+        'spCoinWrite',
+        normalizeAlterMemberLists(sourceLists?.spCoinWrite, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite),
+      ),
+      erc20Read: addQualifiedAliases(
+        'erc20Read',
+        normalizeAlterMemberLists(sourceLists?.erc20Read, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read),
+      ),
+      erc20Write: addQualifiedAliases(
+        'erc20Write',
+        normalizeAlterMemberLists(sourceLists?.erc20Write, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write),
+      ),
     },
     displayGroups: Object.fromEntries(
       Object.entries(DEFAULT_DISPLAY_GROUPS).map(([methodId, defaultGroup]) => {

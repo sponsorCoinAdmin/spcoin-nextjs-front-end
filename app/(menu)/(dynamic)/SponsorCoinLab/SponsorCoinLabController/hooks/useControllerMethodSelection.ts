@@ -113,6 +113,131 @@ export function useControllerMethodSelection({
   loadScriptStep,
   setScriptEditorKind,
 }: Props) {
+  const resetToDropdownSelection = useCallback(() => {
+    setMethodSelectionSource('dropdown');
+    setEditingScriptStepNumber(null);
+    setSelectedScriptStepNumber(null);
+  }, [setMethodSelectionSource, setEditingScriptStepNumber, setSelectedScriptStepNumber]);
+
+  const selectMethodByKind = useCallback(
+    (kind: 'erc20Read' | 'erc20Write' | 'spCoinRead' | 'spCoinWrite' | 'serialization', value: string) => {
+      if (!value) return;
+      if (kind === 'erc20Read') {
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setAuxMethodPanelTab(null);
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('ecr20_read');
+          setSelectedReadMethod(value as Erc20ReadMethod);
+        });
+        return;
+      }
+      if (kind === 'erc20Write') {
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setAuxMethodPanelTab(null);
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('erc20_write');
+          setSelectedWriteMethod(value as Erc20WriteMethod);
+        });
+        return;
+      }
+      if (kind === 'spCoinRead') {
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setAuxMethodPanelTab(spCoinAdminReadOptions.includes(value as SpCoinReadMethod) ? 'admin_utils' : null);
+          setIsSpCoinTodoMode(false);
+          setMethodPanelMode('spcoin_rread');
+          setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value as SpCoinReadMethod));
+          const nextDef = spCoinReadMethodDefs[value as SpCoinReadMethod];
+          if (!nextDef) return;
+          setSpReadParams(
+            buildDefaultAccountParams(nextDef.params, {
+              sender: selectedWriteSenderAddress,
+              sponsor: defaultSponsorKey,
+              recipient: defaultRecipientKey,
+              agent: defaultAgentKey,
+              recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+              agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
+            }),
+          );
+        });
+        return;
+      }
+      if (kind === 'spCoinWrite') {
+        runWithDiscardPrompt(() => {
+          resetToDropdownSelection();
+          setAuxMethodPanelTab(spCoinAdminWriteOptions.includes(value as SpCoinWriteMethod) ? 'admin_utils' : null);
+          setIsSpCoinTodoMode(spCoinTodoWriteOptions.includes(value as SpCoinWriteMethod));
+          setMethodPanelMode('spcoin_write');
+          setSelectedSpCoinWriteMethod(value as SpCoinWriteMethod);
+          const nextDef = spCoinWriteMethodDefs[value as SpCoinWriteMethod];
+          if (!nextDef) return;
+          setSpWriteParams(
+            buildDefaultAccountParams(nextDef.params, {
+              sender: selectedWriteSenderAddress,
+              sponsor: defaultSponsorKey,
+              recipient: defaultRecipientKey,
+              agent: defaultAgentKey,
+              recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+              agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
+            }),
+          );
+        });
+        return;
+      }
+      runWithDiscardPrompt(() => {
+        resetToDropdownSelection();
+        setAuxMethodPanelTab('admin_utils');
+        setIsSpCoinTodoMode(false);
+        setMethodPanelMode('serialization_tests');
+        setSelectedSerializationTestMethod(value as SerializationTestMethod);
+        const nextDef = serializationTestMethodDefs[value as SerializationTestMethod];
+        if (!nextDef) return;
+        setSerializationTestParams(
+          buildDefaultAccountParams(nextDef.params, {
+            sender: selectedWriteSenderAddress,
+            sponsor: defaultSponsorKey,
+            recipient: defaultRecipientKey,
+            agent: defaultAgentKey,
+            recipientRate: String(defaultRecipientRateKey || effectiveRecipientRateRange[0]),
+            agentRate: String(defaultAgentRateKey || effectiveAgentRateRange[0]),
+            previousReleaseDir: 'spCoinAccess/contracts/spCoinOrig.BAK',
+            latestReleaseDir: 'spCoinAccess/contracts/spCoin',
+          }),
+        );
+      });
+    },
+    [
+      defaultAgentKey,
+      defaultAgentRateKey,
+      defaultRecipientKey,
+      defaultRecipientRateKey,
+      defaultSponsorKey,
+      effectiveAgentRateRange,
+      effectiveRecipientRateRange,
+      runWithDiscardPrompt,
+      selectedWriteSenderAddress,
+      serializationTestMethodDefs,
+      setAuxMethodPanelTab,
+      setIsSpCoinTodoMode,
+      setMethodPanelMode,
+      setSelectedReadMethod,
+      setSelectedSerializationTestMethod,
+      setSelectedSpCoinReadMethod,
+      setSelectedSpCoinWriteMethod,
+      setSelectedWriteMethod,
+      setSerializationTestParams,
+      setSpReadParams,
+      setSpWriteParams,
+      spCoinAdminReadOptions,
+      spCoinAdminWriteOptions,
+      spCoinReadMethodDefs,
+      spCoinTodoWriteOptions,
+      spCoinWriteMethodDefs,
+      resetToDropdownSelection,
+    ],
+  );
   const editScriptStepFromBuilder = useCallback(
     (step: LabScriptStep) => {
       queueEditorBaselineReset();
@@ -147,12 +272,6 @@ export function useControllerMethodSelection({
       setEditingScriptStepNumber,
     ],
   );
-
-  const resetToDropdownSelection = useCallback(() => {
-    setMethodSelectionSource('dropdown');
-    setEditingScriptStepNumber(null);
-    setSelectedScriptStepNumber(null);
-  }, [setMethodSelectionSource, setEditingScriptStepNumber, setSelectedScriptStepNumber]);
 
   const selectDropdownMethodPanelMode = useCallback(
     (value: MethodPanelMode) => {
@@ -533,6 +652,7 @@ export function useControllerMethodSelection({
     resetToDropdownSelection,
     selectDropdownMethodPanelMode,
     selectMethodPanelTab,
+    selectMethodByKind,
     selectDropdownReadMethod,
     selectDropdownWriteMethod,
     selectDropdownSpCoinReadMethod,

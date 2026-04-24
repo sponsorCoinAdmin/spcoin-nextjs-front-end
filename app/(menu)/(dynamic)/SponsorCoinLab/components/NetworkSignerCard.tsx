@@ -5,6 +5,27 @@ import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import RateSliderRow from './RateSliderRow';
 
+const NETWORK_SIGNER_UI_STORAGE_KEY = 'spCoinLabNetworkSignerUiKey';
+
+function readStoredNetworkSignerUiState() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(NETWORK_SIGNER_UI_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      selectedAccountAction?: 'add' | 'delete';
+      showManagedRoleMetadata?: boolean;
+      showManagedRecipientMetadata?: boolean;
+      showWriteSenderDetails?: boolean;
+      showDefaultSponsorDetails?: boolean;
+      showDefaultRecipientDetails?: boolean;
+      showDefaultAgentDetails?: boolean;
+    };
+  } catch {
+    return null;
+  }
+}
+
 type Props = {
   className: string;
   isExpanded: boolean;
@@ -65,13 +86,16 @@ export default function NetworkSignerCard({
   details,
   accountManagement,
 }: Props) {
-  const [selectedAccountAction, setSelectedAccountAction] = React.useState<'add' | 'delete'>('add');
-  const [showManagedRoleMetadata, setShowManagedRoleMetadata] = React.useState(false);
-  const [showManagedRecipientMetadata, setShowManagedRecipientMetadata] = React.useState(false);
-  const [showWriteSenderDetails, setShowWriteSenderDetails] = React.useState(false);
-  const [showDefaultSponsorDetails, setShowDefaultSponsorDetails] = React.useState(false);
-  const [showDefaultRecipientDetails, setShowDefaultRecipientDetails] = React.useState(false);
-  const [showDefaultAgentDetails, setShowDefaultAgentDetails] = React.useState(false);
+  const storedUiState = React.useMemo(() => readStoredNetworkSignerUiState(), []);
+  const [selectedAccountAction, setSelectedAccountAction] = React.useState<'add' | 'delete'>(
+    storedUiState?.selectedAccountAction === 'delete' ? 'delete' : 'add',
+  );
+  const [showManagedRoleMetadata, setShowManagedRoleMetadata] = React.useState(Boolean(storedUiState?.showManagedRoleMetadata));
+  const [showManagedRecipientMetadata, setShowManagedRecipientMetadata] = React.useState(Boolean(storedUiState?.showManagedRecipientMetadata));
+  const [showWriteSenderDetails, setShowWriteSenderDetails] = React.useState(Boolean(storedUiState?.showWriteSenderDetails));
+  const [showDefaultSponsorDetails, setShowDefaultSponsorDetails] = React.useState(Boolean(storedUiState?.showDefaultSponsorDetails));
+  const [showDefaultRecipientDetails, setShowDefaultRecipientDetails] = React.useState(Boolean(storedUiState?.showDefaultRecipientDetails));
+  const [showDefaultAgentDetails, setShowDefaultAgentDetails] = React.useState(Boolean(storedUiState?.showDefaultAgentDetails));
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -103,6 +127,31 @@ export default function NetworkSignerCard({
       : accountManagement.selectedSponsorCoinAccountRole === 'recipient'
       ? 'Recipient'
       : 'Agent';
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(
+      NETWORK_SIGNER_UI_STORAGE_KEY,
+      JSON.stringify({
+        selectedAccountAction,
+        showManagedRoleMetadata,
+        showManagedRecipientMetadata,
+        showWriteSenderDetails,
+        showDefaultSponsorDetails,
+        showDefaultRecipientDetails,
+        showDefaultAgentDetails,
+      }),
+    );
+  }, [
+    selectedAccountAction,
+    showManagedRoleMetadata,
+    showManagedRecipientMetadata,
+    showWriteSenderDetails,
+    showDefaultSponsorDetails,
+    showDefaultRecipientDetails,
+    showDefaultAgentDetails,
+  ]);
+
   return (
     <article className={className}>
       <LabCardHeader

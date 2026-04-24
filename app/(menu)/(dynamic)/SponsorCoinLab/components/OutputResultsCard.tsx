@@ -22,6 +22,31 @@ type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
 type FormattedPanelView = 'script' | 'output';
 type DragPlacement = 'before' | 'after';
 
+const OUTPUT_RESULTS_UI_STORAGE_KEY = 'spCoinLabOutputResultsUiKey';
+
+function readStoredOutputResultsUiState() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(OUTPUT_RESULTS_UI_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      hiddenInspectorRules?: Partial<{
+        zeroValues: boolean;
+        emptyValues: boolean;
+        falseValues: boolean;
+        todoValues: boolean;
+        emptyCollections: boolean;
+        creationDates: boolean;
+        formattedAmounts: boolean;
+      }>;
+      showStructureType?: boolean;
+      selectedFormattedAccount?: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
 type DisplayedOutputCall = {
   method: string;
   parameters: Array<{ label: string; value: string }>;
@@ -203,6 +228,7 @@ export default function OutputResultsCard({
   treeActions,
   scriptActions,
 }: Props) {
+  const storedOutputUiState = useMemo(() => readStoredOutputResultsUiState(), []);
   const hiddenRuleOptions = [
     ['zeroValues', '0 values'],
     ['emptyValues', 'empty / null'],
@@ -230,8 +256,11 @@ export default function OutputResultsCard({
     emptyCollections: true,
     creationDates: true,
     formattedAmounts: false,
+    ...storedOutputUiState?.hiddenInspectorRules,
   });
-  const [showStructureType, setShowStructureType] = useState(true);
+  const [showStructureType, setShowStructureType] = useState(
+    typeof storedOutputUiState?.showStructureType === 'boolean' ? storedOutputUiState.showStructureType : true,
+  );
   const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
   const showAllMenuRef = useRef<HTMLDivElement | null>(null);
   const actionButtonClassName =
@@ -245,7 +274,9 @@ export default function OutputResultsCard({
   }>({
     logoURL: defaultMissingImage,
   });
-  const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
+  const [selectedFormattedAccount, setSelectedFormattedAccount] = useState(
+    String(storedOutputUiState?.selectedFormattedAccount || ''),
+  );
   const [pendingAccountExpansion, setPendingAccountExpansion] = useState<{
     address: string;
     path: string;
@@ -284,6 +315,17 @@ export default function OutputResultsCard({
   const lastMetadataRefreshTokenRef = useRef(treeActions.treeAccountRefreshToken);
   const currentFormattedDisplay =
     controls.formattedPanelView === 'script' ? content.scriptDisplay : content.formattedOutputDisplay;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(
+      OUTPUT_RESULTS_UI_STORAGE_KEY,
+      JSON.stringify({
+        hiddenInspectorRules,
+        showStructureType,
+        selectedFormattedAccount,
+      }),
+    );
+  }, [hiddenInspectorRules, selectedFormattedAccount, showStructureType]);
   const displayedOutputCalls = useMemo(
     () => parseDisplayedOutputCalls(content.formattedOutputDisplay),
     [content.formattedOutputDisplay],

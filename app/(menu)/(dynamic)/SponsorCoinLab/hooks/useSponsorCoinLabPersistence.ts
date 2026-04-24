@@ -84,6 +84,12 @@ type Params = {
   connectedNetworkName: string;
   selectedWriteSenderAddress: string;
   setSelectedWriteSenderAddress: (value: string) => void;
+  showWriteSenderPrivateKey: boolean;
+  setShowWriteSenderPrivateKey: (value: boolean) => void;
+  showSignerAccountDetails: boolean;
+  setShowSignerAccountDetails: (value: boolean) => void;
+  showHardhatConnectionInputs: boolean;
+  setShowHardhatConnectionInputs: (value: boolean) => void;
   status: string;
   setStatus: (value: string) => void;
   logs: string[];
@@ -140,6 +146,16 @@ type Params = {
   setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   selectedSponsorCoinAccountRole: SponsorCoinAccountRole;
   setSelectedSponsorCoinAccountRole: (value: SponsorCoinAccountRole) => void;
+  defaultSponsorKey: string;
+  setDefaultSponsorKey: (value: string) => void;
+  defaultRecipientKey: string;
+  setDefaultRecipientKey: (value: string) => void;
+  defaultAgentKey: string;
+  setDefaultAgentKey: (value: string) => void;
+  defaultRecipientRateKey: string;
+  setDefaultRecipientRateKey: (value: string) => void;
+  defaultAgentRateKey: string;
+  setDefaultAgentRateKey: (value: string) => void;
   managedRoleAccountAddress: string;
   setManagedRoleAccountAddress: (value: string) => void;
   managedRecipientKey: string;
@@ -209,6 +225,12 @@ export function useSponsorCoinLabPersistence({
   connectedNetworkName,
   selectedWriteSenderAddress,
   setSelectedWriteSenderAddress,
+  showWriteSenderPrivateKey,
+  setShowWriteSenderPrivateKey,
+  showSignerAccountDetails,
+  setShowSignerAccountDetails,
+  showHardhatConnectionInputs,
+  setShowHardhatConnectionInputs,
   status,
   setStatus,
   logs,
@@ -265,6 +287,16 @@ export function useSponsorCoinLabPersistence({
   setSelectedSerializationTestMethod,
   selectedSponsorCoinAccountRole,
   setSelectedSponsorCoinAccountRole,
+  defaultSponsorKey,
+  setDefaultSponsorKey,
+  defaultRecipientKey,
+  setDefaultRecipientKey,
+  defaultAgentKey,
+  setDefaultAgentKey,
+  defaultRecipientRateKey,
+  setDefaultRecipientRateKey,
+  defaultAgentRateKey,
+  setDefaultAgentRateKey,
   managedRoleAccountAddress,
   setManagedRoleAccountAddress,
   managedRecipientKey,
@@ -388,6 +420,15 @@ export function useSponsorCoinLabPersistence({
           if (typeof saved.selectedWriteSenderAddress === 'string') {
             setSelectedWriteSenderAddress(normalizeAddressValue(saved.selectedWriteSenderAddress));
           }
+          if (typeof saved.showWriteSenderPrivateKey === 'boolean') {
+            setShowWriteSenderPrivateKey(saved.showWriteSenderPrivateKey);
+          }
+          if (typeof saved.showSignerAccountDetails === 'boolean') {
+            setShowSignerAccountDetails(saved.showSignerAccountDetails);
+          }
+          if (typeof saved.showHardhatConnectionInputs === 'boolean') {
+            setShowHardhatConnectionInputs(saved.showHardhatConnectionInputs);
+          }
           if (typeof saved.selectedWriteMethod === 'string') setSelectedWriteMethod(saved.selectedWriteMethod as Erc20WriteMethod);
           if (typeof saved.writeAddressA === 'string') setWriteAddressA(normalizeAddressValue(saved.writeAddressA));
           if (typeof saved.writeAddressB === 'string') setWriteAddressB(normalizeAddressValue(saved.writeAddressB));
@@ -471,6 +512,21 @@ export function useSponsorCoinLabPersistence({
           ) {
             setSelectedSponsorCoinAccountRole(saved.selectedSponsorCoinAccountRole);
           }
+          if (typeof saved.defaultSponsorKey === 'string') {
+            setDefaultSponsorKey(normalizeAddressValue(saved.defaultSponsorKey));
+          }
+          if (typeof saved.defaultRecipientKey === 'string') {
+            setDefaultRecipientKey(normalizeAddressValue(saved.defaultRecipientKey));
+          }
+          if (typeof saved.defaultAgentKey === 'string') {
+            setDefaultAgentKey(normalizeAddressValue(saved.defaultAgentKey));
+          }
+          if (typeof saved.defaultRecipientRateKey === 'string') {
+            setDefaultRecipientRateKey(saved.defaultRecipientRateKey);
+          }
+          if (typeof saved.defaultAgentRateKey === 'string') {
+            setDefaultAgentRateKey(saved.defaultAgentRateKey);
+          }
           if (typeof saved.managedRoleAccountAddress === 'string') {
             setManagedRoleAccountAddress(normalizeAddressValue(saved.managedRoleAccountAddress));
           }
@@ -550,6 +606,9 @@ export function useSponsorCoinLabPersistence({
       connectedChainId,
       connectedNetworkName,
       selectedWriteSenderAddress,
+      showWriteSenderPrivateKey,
+      showSignerAccountDetails,
+      showHardhatConnectionInputs,
       status,
       logs,
       formattedOutputDisplay,
@@ -578,6 +637,11 @@ export function useSponsorCoinLabPersistence({
       selectedSpCoinWriteMethod,
       selectedSerializationTestMethod,
       selectedSponsorCoinAccountRole,
+      defaultSponsorKey,
+      defaultRecipientKey,
+      defaultAgentKey,
+      defaultRecipientRateKey,
+      defaultAgentRateKey,
       managedRoleAccountAddress,
       managedRecipientKey,
       managedRecipientRateKey,
@@ -613,6 +677,9 @@ export function useSponsorCoinLabPersistence({
     connectedChainId,
     connectedNetworkName,
     selectedWriteSenderAddress,
+    showWriteSenderPrivateKey,
+    showSignerAccountDetails,
+    showHardhatConnectionInputs,
     status,
     logs,
     formattedOutputDisplay,
@@ -641,6 +708,11 @@ export function useSponsorCoinLabPersistence({
     selectedSpCoinWriteMethod,
     selectedSerializationTestMethod,
     selectedSponsorCoinAccountRole,
+    defaultSponsorKey,
+    defaultRecipientKey,
+    defaultAgentKey,
+    defaultRecipientRateKey,
+    defaultAgentRateKey,
     managedRoleAccountAddress,
     managedRecipientKey,
     managedRecipientRateKey,
