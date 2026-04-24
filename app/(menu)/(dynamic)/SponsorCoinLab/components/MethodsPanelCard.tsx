@@ -253,7 +253,7 @@ export default function MethodsPanelCard({
   spCoinWriteProps,
   serializationTestProps,
 }: Props) {
-  const ALTER_MODE_OPTIONS: AlterModeOption[] = ['Standard', 'All', 'Test', 'Tested', 'Todo'];
+const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Tested', 'Todo'];
   const showAllCardSectionsForVisualTest = false;
   const showAllMethodPanelsForVisualTest = false;
   const methodPanelGroupName = React.useId();
