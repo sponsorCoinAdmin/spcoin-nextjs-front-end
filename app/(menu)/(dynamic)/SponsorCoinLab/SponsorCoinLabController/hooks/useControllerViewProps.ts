@@ -53,6 +53,7 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     activeMethodPanelTab: args.activeMethodPanelTab,
     selectMethodPanelTab: args.selectMethodPanelTab,
     selectMappedJsonMethod: args.selectMappedJsonMethod,
+    selectMethodByKind: args.selectMethodByKind,
     writeTraceEnabled: args.writeTraceEnabled,
     setWriteTraceEnabled: args.setWriteTraceEnabled,
     showOnChainMethods: args.showOnChainMethods,

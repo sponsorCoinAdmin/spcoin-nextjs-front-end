@@ -75,6 +75,7 @@ export type BuildMethodsPanelCardPropsArgs = {
   activeMethodPanelTab: MethodPanelMode | 'erc20' | 'admin_utils' | 'todos';
   selectMethodPanelTab: (tab: MethodPanelMode | 'erc20' | 'admin_utils' | 'todos') => void;
   selectMappedJsonMethod: (value: string) => void;
+  selectMethodByKind: (kind: 'erc20Read' | 'erc20Write' | 'spCoinRead' | 'spCoinWrite' | 'serialization', value: string) => void;
   writeTraceEnabled: boolean;
   setWriteTraceEnabled: StateSetter<boolean>;
   showOnChainMethods: boolean;
@@ -236,6 +237,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
     activeMethodPanelTab: args.activeMethodPanelTab,
     selectMethodPanelTab: args.selectMethodPanelTab,
     selectMappedJsonMethod: args.selectMappedJsonMethod,
+    selectMethodByKind: args.selectMethodByKind,
     writeTraceEnabled: args.writeTraceEnabled,
     toggleWriteTrace: () => args.setWriteTraceEnabled((prev: boolean) => !prev),
     showOnChainMethods: args.showOnChainMethods,

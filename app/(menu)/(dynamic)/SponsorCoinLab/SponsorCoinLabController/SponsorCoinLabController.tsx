@@ -1153,6 +1153,7 @@ const defaultHardhatRpcUrl =
   const {
     editScriptStepFromBuilder,
     selectMethodPanelTab,
+    selectMethodByKind,
     selectDropdownReadMethod,
     selectDropdownWriteMethod,
     selectDropdownSpCoinReadMethod,
@@ -1455,6 +1456,7 @@ const defaultHardhatRpcUrl =
     activeMethodPanelTab,
     selectMethodPanelTab,
     selectMappedJsonMethod,
+    selectMethodByKind,
     writeTraceEnabled,
     setWriteTraceEnabled,
     showOnChainMethods,

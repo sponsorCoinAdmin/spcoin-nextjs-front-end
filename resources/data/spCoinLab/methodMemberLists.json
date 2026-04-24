@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-24T00:30:36.915Z",
+  "updatedAt": "2026-04-24T03:37:16.860Z",
   "lists": {
     "serialization": {
       "Standard": {
@@ -575,7 +575,7 @@
     "erc20Read:decimals": "erc20",
     "erc20Read:totalSupply": "erc20",
     "erc20Read:balanceOf": "erc20",
-    "erc20Read:allowance": "erc20",
+    "erc20Read:allowance": "todos",
     "erc20Write:transfer": "erc20",
     "erc20Write:approve": "erc20",
     "erc20Write:transferFrom": "erc20",
