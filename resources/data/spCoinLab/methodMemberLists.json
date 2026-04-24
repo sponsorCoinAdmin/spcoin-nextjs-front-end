@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-24T08:03:50.114Z",
+  "updatedAt": "2026-04-24T17:34:32.447Z",
   "lists": {
     "serialization": {
       "Standard": {
@@ -600,7 +600,7 @@
     "spCoinRead:getAgentListSize": "spcoin_rread",
     "spCoinRead:getAccountRecord": "spcoin_rread",
     "spCoinRead:getAccountStakingRewards": "spcoin_rread",
-    "spCoinRead:getAccountRewardTransactionList": "spcoin_rread",
+    "spCoinRead:getAccountRewardTransactionList": "todos",
     "spCoinRead:getAccountRewardTransactionRecord": "spcoin_rread",
     "spCoinRead:getAccountTransactionList": "spcoin_rread",
     "spCoinRead:getTransactionList": "spcoin_rread",
