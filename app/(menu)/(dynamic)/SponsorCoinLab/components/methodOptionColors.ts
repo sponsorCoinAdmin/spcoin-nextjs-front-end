@@ -13,7 +13,7 @@ const GREEN_HIGHLIGHT_METHODS = new Set([
   'getInflationRate',
   'setUpperAgentRate',
   'getLowerAgentRate',
-  'getInitialTotalSupply',
+  'totalInitialSupply',
   'version',
   'setLowerRecipientRate',
   'getLowerRecipientRate',

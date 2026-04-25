@@ -646,6 +646,70 @@
         "type": "address"
       }
     ],
+    "name": "getAccountRecord",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "accountKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "verified",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "accountBalance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakedAccountSPCoins",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "accountStakingRewards",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "sponsorKeys",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "recipientKeys",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "agentKeys",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "parentRecipientKeys",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
     "name": "getAccountRewardTotals",
     "outputs": [
       {
@@ -941,19 +1005,6 @@
   {
     "inputs": [],
     "name": "getInflationRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getInitialTotalSupply",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1358,6 +1409,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalInitialSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

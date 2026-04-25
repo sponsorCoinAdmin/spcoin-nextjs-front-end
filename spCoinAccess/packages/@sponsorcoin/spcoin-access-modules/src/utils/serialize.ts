@@ -7,6 +7,7 @@ import { SpCoinLogger } from "./logging";
 import { formatTimeSeconds } from "./dateTime";
 import { bigIntToDateTimeString, bigIntToDecString, bigIntToHexString, bigIntToString, getLocation } from "./dateTime";
 import { SponsorCoinHeader, AccountStruct, RecipientStruct, AgentStruct, AgentRateStruct, StakingTransactionStruct, } from "../dataTypes/spCoinDataTypes";
+import { timeOnChainCall } from "./methodTiming";
 let spCoinLogger;
 export const accountRewardTotalsInterface = new Interface([
     'function getAccountRewardTotals(address _accountKey) view returns (uint256 sponsorRewards, uint256 recipientRewards, uint256 agentRewards)',
@@ -33,7 +34,7 @@ export async function callViewFunction(contract, iface, functionName, args) {
         throw new Error(`${functionName} runner unavailable.`);
     }
     const data = iface.encodeFunctionData(functionName, args);
-    const raw = await runner.call({ to: target, data });
+    const raw = await timeOnChainCall(functionName, () => runner.call({ to: target, data }));
     return iface.decodeFunctionResult(functionName, raw);
 }
 export async function readAnnualInflation(contract) {
@@ -56,24 +57,55 @@ export async function readAnnualInflation(contract) {
     return 10;
 }
 export async function readInitialTotalSupply(contract) {
+    if (typeof (contract === null || contract === void 0 ? void 0 : contract.totalInitialSupply) === "function") {
+        try {
+            return await contract.totalInitialSupply();
+        }
+        catch (_a) {
+            // Fall back for older deployments that still expose the previous getter names.
+        }
+    }
     if (typeof (contract === null || contract === void 0 ? void 0 : contract.getInitialTotalSupply) === "function") {
         try {
             return await contract.getInitialTotalSupply();
         }
-        catch (_a) {
+        catch (_b) {
             // Fall back for older deployments that still expose initialTotalSupply().
         }
     }
     if (typeof (contract === null || contract === void 0 ? void 0 : contract.initialTotalSupply) === "function") {
         return contract.initialTotalSupply();
     }
-    throw new Error("SpCoin contract does not expose getInitialTotalSupply().");
+    throw new Error("SpCoin contract does not expose totalInitialSupply().");
 }
 export function normalizeAddress(value) {
     return String(value || '').trim().toLowerCase();
 }
 export function normalizeAddressList(values) {
     return values.map((value) => normalizeAddress(value)).join(',');
+}
+function isAccountNotFoundError(error) {
+    const code = String(error?.code || '');
+    const reason = String(error?.reason || error?.message?.reason || '');
+    const message = String(error?.message || '');
+    const revertArgs = Array.isArray(error?.revert?.args) ? error.revert.args.map((value) => String(value || '')) : [];
+    return code === 'CALL_EXCEPTION' &&
+        (reason === 'ACCOUNT_NOT_FOUND' ||
+            message.includes('ACCOUNT_NOT_FOUND') ||
+            revertArgs.includes('ACCOUNT_NOT_FOUND'));
+}
+function buildEmptyAccountRecord(accountKey) {
+    const accountRecord = new AccountStruct();
+    accountRecord.accountKey = normalizeAddress(accountKey);
+    accountRecord.creationTime = '0';
+    accountRecord.verified = false;
+    accountRecord.balanceOf = '0';
+    accountRecord.stakedBalance = '0';
+    accountRecord.sponsorKeys = [];
+    accountRecord.recipientKeys = [];
+    accountRecord.agentKeys = [];
+    accountRecord.parentRecipientKeys = [];
+    return accountRecord;
 }
 export async function buildSerializedAccountRecordFallback(contract, accountKey) {
     const [normalizedAccountKey, creationTime, verified, accountBalance, stakedAccountSPCoins, accountStakingRewards] = await callViewFunction(contract, accountCoreInterface, 'getAccountCore', [accountKey]);
@@ -150,7 +182,9 @@ export class SpCoinSerialize {
                     accountRecord.stakedBalance = bigIntToDecString(_value);
                     break;
                 case "creationTime":
-                    accountRecord.creationTime = bigIntToDateTimeString(_value);
+                    accountRecord.creationTime = String(_value).trim() === "0"
+                        ? ""
+                        : bigIntToDateTimeString(_value);
                     break;
                 case "inserted":
                     accountRecord.inserted = _value;
@@ -238,7 +272,17 @@ export class SpCoinSerialize {
         this.getAccountRecordObject = async (_accountKey) => {
             // console.log("==>3 getSerializedAccountRecord = async(" + _accountKey + ")");
             spCoinLogger.logFunctionHeader("getSerializedAccountRecord = async(" + _accountKey + ")");
-            const serializedAccountRec = await buildSerializedAccountRecordFallback(this.spCoinContractDeployed, _accountKey);
+            let serializedAccountRec;
+            try {
+                serializedAccountRec = await buildSerializedAccountRecordFallback(this.spCoinContractDeployed, _accountKey);
+            }
+            catch (_error) {
+                if (!isAccountNotFoundError(_error)) {
+                    throw _error;
+                }
+                spCoinLogger.logExitFunction();
+                return buildEmptyAccountRecord(_accountKey);
+            }
             spCoinLogger.logExitFunction();
             return this.deSerializedAccountRec(serializedAccountRec);
         };
@@ -250,7 +294,15 @@ export class SpCoinSerialize {
                 serializedAccountRec = await this.spCoinContractDeployed.getSerializedAccountRewards(_accountKey);
             }
             catch (_error) {
-                serializedAccountRec = await buildSerializedAccountRewardsFallback(this.spCoinContractDeployed, _accountKey);
+                try {
+                    serializedAccountRec = await buildSerializedAccountRewardsFallback(this.spCoinContractDeployed, _accountKey);
+                }
+                catch (_fallbackError) {
+                    if (!isAccountNotFoundError(_fallbackError) && !isAccountNotFoundError(_error)) {
+                        throw _fallbackError;
+                    }
+                    serializedAccountRec = "0,0,0";
+                }
             }
             spCoinLogger.logExitFunction();
             if (typeof serializedAccountRec === 'string' && !serializedAccountRec.includes(':')) {

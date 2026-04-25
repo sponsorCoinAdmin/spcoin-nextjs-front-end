@@ -56,7 +56,7 @@ export type SpCoinReadMethod =
   | 'getAgentTransactionList'
   | 'getAgent'
   | 'getAgentRecordList'
-  | 'getInitialTotalSupply'
+  | 'totalInitialSupply'
   | 'isDeployed'
   | 'isAccountInserted'
   | 'getMasterAccountElement'
@@ -75,7 +75,9 @@ export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getVersion: 'version',
   version: 'version',
-  initialTotalSupply: 'getInitialTotalSupply',
+  getInitialTotalSupply: 'totalInitialSupply',
+  initialTotalSupply: 'totalInitialSupply',
+  totalInitialSupply: 'totalInitialSupply',
   getAccountTransactionList: 'getAccountTransactionList',
   getMasterAccountList: 'getMasterAccountKeys',
   getAccountKeys: 'getMasterAccountKeys',
@@ -310,14 +312,6 @@ function formatCreationTimeResult(value: unknown) {
   };
 }
 
-function formatMethodRunTime(elapsedMs: number) {
-  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
 function parseDateTimeInput(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(String(value || '').trim());
   if (!match) return null;
@@ -410,6 +404,54 @@ function formatDateDifferenceOutput(diffSeconds: number, unitRaw: string) {
     units,
     display: `${units.map((unit) => DATE_DIFF_UNIT_LABELS[unit]).join(':')}: ${values.join(':')}`,
     secondsDifference: String(diffSeconds),
+  };
+}
+
+function normalizeAddressDisplay(value: unknown) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
+  if (!Array.isArray(result) || result.length < 10) return result;
+  const [
+    accountKey,
+    creationTime,
+    _verified,
+    accountBalance,
+    stakedAccountSPCoins,
+    _accountStakingRewards,
+    _sponsorKeys,
+    recipientKeys,
+    agentKeys,
+    _parentRecipientKeys,
+  ] = result;
+  const normalizedCreationTime = String(creationTime ?? '0').trim();
+  const normalizedBalance = String(accountBalance ?? '0').trim();
+  const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
+  const normalizedRecipientKeys = normalizeStringListResult(recipientKeys ?? []);
+  const normalizedAgentKeys = normalizeStringListResult(agentKeys ?? []);
+  return {
+    TYPE: '--ACCOUNT--',
+    accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
+    creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
+    totalSpCoins: {
+      TYPE: '--TOTAL_SP_COINS--',
+      totalSpCoins: String((BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString()),
+      balanceOf: normalizedBalance,
+      stakedBalance: normalizedStaked,
+      sponsorRewardRate: '0%',
+      pendingRewards: {
+        TYPE: '--PENDING_REWARDS--',
+        pendingRewards: '0',
+        pendingSponsorRewards: '0',
+        pendingRecipientRewards: '0',
+        pendingAgentRewards: '0',
+      },
+    },
+    recipientKeys: normalizedRecipientKeys,
+    recipientRates: {},
+    agentKeys: normalizedAgentKeys,
+    agentRates: {},
   };
 }
 
@@ -520,6 +562,16 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   }
   let result: unknown;
   try {
+    if (canonicalMethod === 'getAccountRecord' && typeof contract.getAccountRecord === 'function') {
+      result = normalizeOnChainAccountRecordResult(
+        await contract.getAccountRecord(String(methodArgs[0] ?? '')),
+        methodArgs[0],
+      );
+      const out = stringifyResult(result);
+      appendLog(`${activeDef.title}(${String(methodArgs[0] ?? '')}) -> ${out}`);
+      setStatus(`${activeDef.title} read complete.`);
+      return result;
+    }
     result = await handler.run({
       canonicalMethod,
       selectedMethod,
@@ -535,7 +587,6 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       requireExternalSerializedValue: (method: string, args: unknown[]) =>
         requireExternalSerializedValue(contract, method as SerializationBaseMethod, args),
       compareSpCoinContractSize: async (previousReleaseDir: string, latestReleaseDir: string) => {
-        const startedAt = Date.now();
         const response = await fetch('/api/spCoin/contract-size-comparison', {
           method: 'POST',
           cache: 'no-store',
@@ -568,7 +619,6 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
         const variants = Array.isArray(reportRecord.variants) ? (reportRecord.variants as Array<Record<string, unknown>>) : [];
         const latestVariant = variants.find((entry) => String(entry?.label || '') === 'latest') || null;
         const previousVariant = variants.find((entry) => String(entry?.label || '') === 'previous') || null;
-        const elapsedMs = Date.now() - startedAt;
         const latestBytesVsLimit = Number(latestVariant?.deployedMarginBytes ?? NaN);
         const previousBytesVsLimit = Number(previousVariant?.deployedMarginBytes ?? NaN);
         const deltaRecord =
@@ -576,10 +626,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
             ? (reportRecord.delta as Record<string, unknown>)
             : {};
         return {
-          delta: {
-            ...deltaRecord,
-            methodRunTime: formatMethodRunTime(elapsedMs),
-          },
+          delta: deltaRecord,
           latestSizeStatus: latestVariant
             ? {
                 deployedBytes: latestVariant.deployedBytes ?? null,

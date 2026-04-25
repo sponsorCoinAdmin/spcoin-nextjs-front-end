@@ -624,6 +624,7 @@ const defaultHardhatRpcUrl =
     appendLog,
     appendWriteTrace,
     getRecentWriteTrace,
+    traceEnabled: writeTraceEnabled,
     setStatus,
     formattedOutputDisplay,
     setFormattedOutputDisplay,

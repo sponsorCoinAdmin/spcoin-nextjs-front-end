@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Interface } from 'ethers';
 import { buildHandler } from '../../readMethodRuntime';
+import { timeOnChainCall } from '../../utils/methodTiming';
 
 const accountLinksInterface = new Interface([
   'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
@@ -13,7 +14,7 @@ async function callGetAccountLinks(contract, accountKey) {
     throw new Error('SpCoin read method getAgentKeyCount requires getAgentKeys() or getAccountAgentList() on access modules or contract.');
   }
   const data = accountLinksInterface.encodeFunctionData('getAccountLinks', [accountKey]);
-  const raw = await runner.call({ to: target, data });
+  const raw = await timeOnChainCall('getAccountLinks', () => runner.call({ to: target, data }));
   return accountLinksInterface.decodeFunctionResult('getAccountLinks', raw);
 }
 

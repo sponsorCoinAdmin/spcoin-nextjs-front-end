@@ -29,6 +29,15 @@ contract Account is StructSerialization {
             return accountMap[account];
     }
 
+    function getInternalAccount(address _accountKey)
+        internal
+        view
+        returns (bool inserted, AccountStruct storage accountRecord)
+    {
+        accountRecord = accountMap[_accountKey];
+        inserted = accountRecord.inserted;
+    }
+
     function sponsorHasRecipient(address _recipientAccount, address _sponsorAccount )
         internal view returns ( bool ) {
         AccountStruct storage recipientAccount = accountMap[_recipientAccount];
@@ -78,7 +87,6 @@ contract Account is StructSerialization {
     function getAccountCore(address _accountKey)
         external
         view
-        accountExists(_accountKey)
         returns (
             address accountKey,
             uint256 creationTime,
@@ -88,7 +96,18 @@ contract Account is StructSerialization {
             uint256 accountStakingRewards
         )
     {
-        AccountStruct storage accountRec = accountMap[_accountKey];
+        (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
+        accountKey = _accountKey;
+        if (!inserted) {
+            return (
+                accountKey,
+                creationTime,
+                verified,
+                accountBalance,
+                stakedAccountSPCoins,
+                accountStakingRewards
+            );
+        }
         accountKey = accountRec.accountKey;
         creationTime = accountRec.creationTime;
         verified = accountRec.verified;
@@ -97,10 +116,57 @@ contract Account is StructSerialization {
         accountStakingRewards = accountRec.stakingRewards;
     }
 
+    function getAccountRecord(address _accountKey)
+        external
+        view
+        returns (
+            address accountKey,
+            uint256 creationTime,
+            bool verified,
+            uint256 accountBalance,
+            uint256 stakedAccountSPCoins,
+            uint256 accountStakingRewards,
+            address[] memory sponsorKeys,
+            address[] memory recipientKeys,
+            address[] memory agentKeys,
+            address[] memory parentRecipientKeys
+        )
+    {
+        (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
+        accountKey = _accountKey;
+        if (!inserted) {
+            sponsorKeys = new address[](0);
+            recipientKeys = new address[](0);
+            agentKeys = new address[](0);
+            parentRecipientKeys = new address[](0);
+            return (
+                accountKey,
+                creationTime,
+                verified,
+                accountBalance,
+                stakedAccountSPCoins,
+                accountStakingRewards,
+                sponsorKeys,
+                recipientKeys,
+                agentKeys,
+                parentRecipientKeys
+            );
+        }
+        accountKey = accountRec.accountKey;
+        creationTime = accountRec.creationTime;
+        verified = accountRec.verified;
+        accountBalance = balanceOf[_accountKey];
+        stakedAccountSPCoins = accountRec.stakedSPCoins;
+        accountStakingRewards = accountRec.stakingRewards;
+        sponsorKeys = accountRec.sponsorKeys;
+        recipientKeys = accountRec.recipientKeys;
+        agentKeys = accountRec.agentKeys;
+        parentRecipientKeys = accountRec.parentRecipientKeys;
+    }
+
     function getAccountLinks(address _accountKey)
         external
         view
-        accountExists(_accountKey)
         returns (
             address[] memory sponsorKeys,
             address[] memory recipientKeys,
@@ -108,7 +174,14 @@ contract Account is StructSerialization {
             address[] memory parentRecipientKeys
         )
     {
-        AccountStruct storage accountRec = accountMap[_accountKey];
+        (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
+        if (!inserted) {
+            sponsorKeys = new address[](0);
+            recipientKeys = new address[](0);
+            agentKeys = new address[](0);
+            parentRecipientKeys = new address[](0);
+            return (sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys);
+        }
         sponsorKeys = accountRec.sponsorKeys;
         recipientKeys = accountRec.recipientKeys;
         agentKeys = accountRec.agentKeys;

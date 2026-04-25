@@ -37,7 +37,7 @@ import getAgentTransactionAt from './getAgentTransactionAt';
 import getAgentTransactionList from './getAgentTransactionList';
 import getAgent from './getAgent';
 import getAgentRecordList from './getAgentRecordList';
-import getInitialTotalSupply from './getInitialTotalSupply';
+import totalInitialSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getAccountElement from './getMasterAccountElement';
@@ -99,7 +99,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentTransactionList,
   getAgent,
   getAgentRecordList,
-  getInitialTotalSupply,
+  totalInitialSupply,
   isDeployed,
   isAccountInserted,
   getMasterAccountElement: getAccountElement,

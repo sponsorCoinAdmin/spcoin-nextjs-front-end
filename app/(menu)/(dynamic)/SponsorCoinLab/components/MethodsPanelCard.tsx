@@ -691,6 +691,22 @@ export default function MethodsPanelCard({
   const selectMethodByIdentity = React.useCallback((entry: MethodCatalogEntry) => {
     selectMethodByKind(entry.kind, entry.name);
   }, [selectMethodByKind]);
+  const getMethodEntryMemberLists = React.useCallback(
+    (entry: MethodCatalogEntry): EditableMemberLists => {
+      if (entry.kind === 'erc20Read') return erc20ReadMemberLists;
+      if (entry.kind === 'erc20Write') return erc20WriteMemberLists;
+      if (entry.kind === 'spCoinRead') return spCoinReadMemberLists;
+      if (entry.kind === 'spCoinWrite') return spCoinWriteMemberLists;
+      return serializationMemberLists;
+    },
+    [
+      erc20ReadMemberLists,
+      erc20WriteMemberLists,
+      serializationMemberLists,
+      spCoinReadMemberLists,
+      spCoinWriteMemberLists,
+    ],
+  );
   const activeRunControl = React.useMemo(() => {
     if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
       return {
@@ -1266,7 +1282,13 @@ export default function MethodsPanelCard({
           >
           {visibleGroupedMethods.length === 0 ? <option value="__no_methods__">No methods available</option> : null}
           {visibleGroupedMethods.map((entry) => (
-            <option key={entry.id} value={entry.id}>
+            <option
+              key={entry.id}
+              value={entry.id}
+              style={{
+                color: isMethodInAlterMode(entry.name, getMethodEntryMemberLists(entry), 'Test') ? '#22c55e' : undefined,
+              }}
+            >
               {entry.label}
             </option>
           ))}
@@ -1279,6 +1301,7 @@ export default function MethodsPanelCard({
     );
   }, [
     currentMethodIdentity,
+    getMethodEntryMemberLists,
     isJavaScriptScriptMode,
     selectMethodByIdentity,
     showAllCardSectionsForVisualTest,
@@ -1401,15 +1424,6 @@ export default function MethodsPanelCard({
                     </label>
                   ))}
                 </div>
-                <label className="inline-flex shrink-0 items-center justify-end gap-2 text-xs text-slate-200">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-[#E5B94F]"
-                    checked={writeTraceEnabled}
-                    onChange={toggleWriteTrace}
-                  />
-                  <span>Trace</span>
-                </label>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <label className="inline-flex items-center gap-2 text-xs text-[#8FA8FF]">

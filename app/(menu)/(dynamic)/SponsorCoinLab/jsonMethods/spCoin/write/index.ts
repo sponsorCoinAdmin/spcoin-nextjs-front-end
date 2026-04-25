@@ -1,8 +1,13 @@
-// File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/write/index.ts
 import { Interface, type Contract } from 'ethers';
 import { SPCOIN_WRITE_METHOD_DEFS } from './defs';
 export { SPCOIN_WRITE_METHOD_DEFS };
 import type { ParamDef } from '../../shared/types';
+import {
+  buildMethodTimingMeta,
+  runWithMethodTimingCollector,
+  type MethodTimingCollector,
+  type MethodTimingMeta,
+} from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import {
   createSpCoinModuleAccess,
   type SpCoinAccessSource,
@@ -313,6 +318,7 @@ type RunArgs = {
   appendLog: (line: string) => void;
   appendWriteTrace?: (line: string) => void;
   setStatus: (value: string) => void;
+  timingCollector?: MethodTimingCollector | null;
 };
 
 function getDynamicMethod(target: Record<string, unknown>, method: string) {
@@ -331,6 +337,20 @@ function asStringOrNumber(value: unknown): string | number {
 function normalizeAddress(value: unknown): string {
   const trimmed = String(value ?? '').trim();
   return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
+}
+
+function getErrorText(error: unknown): string {
+  return getNestedErrorText(error) || String(error ?? '');
+}
+
+function isTransientFetchError(error: unknown): boolean {
+  const text = getErrorText(error);
+  const code = String((error as { code?: unknown } | null)?.code || '');
+  return code === 'NETWORK_ERROR' || /failed to fetch|network error|missing response|FetchRequest\.getUrl/i.test(text);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
@@ -360,13 +380,16 @@ async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleA
 }
 
 export async function runSpCoinWriteMethod(args: RunArgs): Promise<
-  Array<{
-    label: string;
-    txHash: string;
-    receiptHash: string;
-    blockNumber: string;
-    status: string;
-  }>
+  {
+    receipts: Array<{
+      label: string;
+      txHash: string;
+      receiptHash: string;
+      blockNumber: string;
+      status: string;
+    }>;
+    meta?: MethodTimingMeta;
+  }
 > {
   const {
     selectedMethod,
@@ -378,6 +401,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     appendLog,
     appendWriteTrace,
     setStatus,
+    timingCollector,
   } = args;
   if (
     selectedMethod === ('addAccountRecord' as string) ||
@@ -400,117 +424,112 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     );
     return index >= 0 ? String(spWriteParams[index] || '').trim() : '';
   };
-  const receipts: Array<{
-    label: string;
-    txHash: string;
-    receiptHash: string;
-    blockNumber: string;
-    status: string;
-  }> = [];
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-  const getErrorText = (error: unknown): string => {
-    const parts = [
-      (error as { message?: unknown } | null)?.message,
-      (error as { shortMessage?: unknown } | null)?.shortMessage,
-      (error as { reason?: unknown } | null)?.reason,
-      (error as { info?: { error?: { message?: unknown } } } | null)?.info?.error?.message,
-      (error as { error?: { message?: unknown } } | null)?.error?.message,
-      error,
-    ];
-    return parts.map((part) => String(part || '')).join(' ');
-  };
-  const isTransientFetchError = (error: unknown) => /failed to fetch/i.test(getErrorText(error));
-  const submitWrite = async (
-    label: string,
-    writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
-  ) => {
-    setStatus(`Submitting ${label}...`);
-    appendWriteTrace?.(`submitWrite(${label}) start`);
-    let activeContract: Contract | null = null;
-    let activeSigner: any = null;
-    try {
-      const tx = await executeWriteConnected(
-        label,
-        (contract: Contract, signer: any) => {
-          activeContract = contract;
-          activeSigner = signer;
-          const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
-          appendWriteTrace?.(
-            `submitWrite(${label}) contract target=${String((contract as any)?.target || (contract as any)?.address || '')} signer=${String(signer?.address || '')}`,
-          );
-          return writeCall(access, signer);
-        },
-        selectedHardhatAddress,
-      );
-      appendWriteTrace?.(`submitWrite(${label}) tx returned=${tx ? 'yes' : 'no'} hash=${String(tx?.hash || '')}`);
-      appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
-      if (!tx || typeof tx.wait !== 'function') {
-        throw new Error(`${label} did not return a transaction response.`);
-      }
-      const receipt = await tx.wait();
-      appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
-      appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
-      receipts.push({
-        label,
-        txHash: String(tx?.hash || ''),
-        receiptHash: String(receipt?.hash || tx?.hash || ''),
-        blockNumber: String(receipt?.blockNumber ?? ''),
-        status: String(receipt?.status ?? ''),
-      });
-    } catch (error) {
-      const errorCode = String((error as any)?.code || '');
-      const errorReason = String((error as any)?.reason || '');
-      const errorMessage = String((error as any)?.message || '');
-      const spCoinError = decodeSpCoinError(error);
-      if (
-        errorCode === 'CALL_EXCEPTION' &&
-        /INSUFFICIENT_BAL/i.test(`${errorReason} ${errorMessage}`) &&
-        activeContract &&
-        activeSigner &&
-        typeof (activeContract as any).balanceOf === 'function'
-      ) {
-        try {
-          const sponsorKey =
-            findParamValue('Sponsor Key') ||
-            findParamValue('Sponsor Account') ||
-            String(activeSigner?.address || selectedHardhatAddress || '').trim();
-          const balanceRaw = await (activeContract as any).balanceOf(sponsorKey);
-          const enrichedMessage = `INSUFFICIENT_BAL: sponsor ${sponsorKey} balanceOf=${String(balanceRaw)}`;
-          appendWriteTrace?.(`submitWrite(${label}) insufficient balance detail=${enrichedMessage}`);
-          appendLog(`${label} failed: ${enrichedMessage}`);
-          const enrichedError = new Error(enrichedMessage);
-          (enrichedError as any).code = errorCode;
-          (enrichedError as any).reason = errorReason || 'INSUFFICIENT_BAL';
-          (enrichedError as any).cause = error;
-          throw enrichedError;
-        } catch (balanceLookupError) {
-          appendWriteTrace?.(
-            `submitWrite(${label}) insufficient balance lookup failed=${String((balanceLookupError as any)?.message || balanceLookupError)}`,
-          );
+  const result = timingCollector
+    ? await runWithMethodTimingCollector(timingCollector, async () => executeMethod())
+    : await executeMethod();
+
+  const meta = timingCollector ? buildMethodTimingMeta(timingCollector) : undefined;
+  return { receipts: result, meta };
+
+  async function executeMethod() {
+    const receipts: Array<{
+      label: string;
+      txHash: string;
+      receiptHash: string;
+      blockNumber: string;
+      status: string;
+    }> = [];
+    const submitWrite = async (
+      label: string,
+      writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
+    ) => {
+      setStatus(`Submitting ${label}...`);
+      appendWriteTrace?.(`submitWrite(${label}) start`);
+      let activeContract: Contract | null = null;
+      let activeSigner: any = null;
+      try {
+        const tx = await executeWriteConnected(
+          label,
+          (contract: Contract, signer: any) => {
+            activeContract = contract;
+            activeSigner = signer;
+            const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
+            appendWriteTrace?.(
+              `submitWrite(${label}) contract target=${String((contract as any)?.target || (contract as any)?.address || '')} signer=${String(signer?.address || '')}`,
+            );
+            return writeCall(access, signer);
+          },
+          selectedHardhatAddress,
+        );
+        appendWriteTrace?.(`submitWrite(${label}) tx returned=${tx ? 'yes' : 'no'} hash=${String(tx?.hash || '')}`);
+        appendLog(`${label} tx sent: ${String(tx?.hash || '(no hash)')}`);
+        if (!tx || typeof tx.wait !== 'function') {
+          throw new Error(`${label} did not return a transaction response.`);
         }
+        const receipt = await tx.wait();
+        appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
+        appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
+        receipts.push({
+          label,
+          txHash: String(tx?.hash || ''),
+          receiptHash: String(receipt?.hash || tx?.hash || ''),
+          blockNumber: String(receipt?.blockNumber ?? ''),
+          status: String(receipt?.status ?? ''),
+        });
+      } catch (error) {
+        const errorCode = String((error as any)?.code || '');
+        const errorReason = String((error as any)?.reason || '');
+        const errorMessage = String((error as any)?.message || '');
+        const spCoinError = decodeSpCoinError(error);
+        if (
+          errorCode === 'CALL_EXCEPTION' &&
+          /INSUFFICIENT_BAL/i.test(`${errorReason} ${errorMessage}`) &&
+          activeContract &&
+          activeSigner &&
+          typeof (activeContract as any).balanceOf === 'function'
+        ) {
+          try {
+            const sponsorKey =
+              findParamValue('Sponsor Key') ||
+              findParamValue('Sponsor Account') ||
+              String(activeSigner?.address || selectedHardhatAddress || '').trim();
+            const balanceRaw = await (activeContract as any).balanceOf(sponsorKey);
+            const enrichedMessage = `INSUFFICIENT_BAL: sponsor ${sponsorKey} balanceOf=${String(balanceRaw)}`;
+            appendWriteTrace?.(`submitWrite(${label}) insufficient balance detail=${enrichedMessage}`);
+            appendLog(`${label} failed: ${enrichedMessage}`);
+            const enrichedError = new Error(enrichedMessage);
+            (enrichedError as any).code = errorCode;
+            (enrichedError as any).reason = errorReason || 'INSUFFICIENT_BAL';
+            (enrichedError as any).cause = error;
+            throw enrichedError;
+          } catch (balanceLookupError) {
+            appendWriteTrace?.(
+              `submitWrite(${label}) insufficient balance lookup failed=${String((balanceLookupError as any)?.message || balanceLookupError)}`,
+            );
+          }
+        }
+        const detail = error && typeof error === 'object'
+          ? JSON.stringify(
+              {
+                spCoinError,
+                message: (error as any)?.message,
+                reason: (error as any)?.reason,
+                code: (error as any)?.code,
+                action: (error as any)?.action,
+                data: (error as any)?.data,
+                shortMessage: (error as any)?.shortMessage,
+                info: (error as any)?.info,
+                error: (error as any)?.error,
+              },
+              null,
+              2,
+            )
+          : spCoinError || String(error);
+        appendWriteTrace?.(`submitWrite(${label}) failed detail=${detail}`);
+        appendLog(`${label} failed: ${detail}`);
+        throw error;
       }
-      const detail = error && typeof error === 'object'
-        ? JSON.stringify(
-            {
-              spCoinError,
-              message: (error as any)?.message,
-              reason: (error as any)?.reason,
-              code: (error as any)?.code,
-              action: (error as any)?.action,
-              data: (error as any)?.data,
-              shortMessage: (error as any)?.shortMessage,
-              info: (error as any)?.info,
-              error: (error as any)?.error,
-            },
-            null,
-            2,
-          )
-        : spCoinError || String(error);
-      appendWriteTrace?.(`submitWrite(${label}) failed detail=${detail}`);
-      appendLog(`${label} failed: ${detail}`);
-      throw error;
-    }
-  };
+    };
   const submitWriteWithFetchRetry = async (
     label: string,
     writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
@@ -1044,5 +1063,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
 
   setStatus(`${activeDef.title} complete.`);
   return receipts;
+}
+
 }
 

@@ -369,12 +369,41 @@ function normalizeDisplayAddress(value) {
     return String(value ?? "").trim().toLowerCase();
 }
 
+function isEmptyBaseAccountRecord(accountStruct) {
+    if (!accountStruct || typeof accountStruct !== "object") return true;
+    const normalizedAccountKey = normalizeDisplayAddress(accountStruct.accountKey);
+    const normalizedCreationTime = String(accountStruct.creationTime ?? "").trim();
+    const normalizedBalanceOf = String(accountStruct.balanceOf ?? "0").replace(/,/g, "").trim() || "0";
+    const normalizedStakedBalance = String(accountStruct.stakedBalance ?? "0").replace(/,/g, "").trim() || "0";
+    return (
+        !!normalizedAccountKey &&
+        normalizedCreationTime === "0" &&
+        normalizedBalanceOf === "0" &&
+        normalizedStakedBalance === "0" &&
+        (!Array.isArray(accountStruct.sponsorKeys) || accountStruct.sponsorKeys.length === 0) &&
+        (!Array.isArray(accountStruct.recipientKeys) || accountStruct.recipientKeys.length === 0) &&
+        (!Array.isArray(accountStruct.agentKeys) || accountStruct.agentKeys.length === 0) &&
+        (!Array.isArray(accountStruct.parentRecipientKeys) || accountStruct.parentRecipientKeys.length === 0)
+    );
+}
+
 async function getShallowAccountRecord(runtime, accountKey) {
     const baseAccountStruct = await getAccountRecordObjectCached(runtime, accountKey);
     const accountStruct = { ...(baseAccountStruct || {}) };
     accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
     delete accountStruct.verified;
+    if (isEmptyBaseAccountRecord(accountStruct)) {
+        accountStruct.creationTime = "";
+        accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(), "0%");
+        accountStruct.agentRates = {};
+        delete accountStruct.sponsorKeys;
+        accountStruct.recipientKeys = [];
+        accountStruct.recipientRates = {};
+        accountStruct.agentKeys = [];
+        delete accountStruct.parentRecipientKeys;
+        return accountStruct;
+    }
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(
@@ -527,7 +556,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
 export async function getAccountRecord(context, _accountKey) {
     const runtime = context;
     const debugState = createRelationshipBuildDebug(runtime, _accountKey);
-    const accountStruct = await buildAccountRecord(runtime, _accountKey, 1, new Set(), debugState);
+    const accountStruct = await getShallowAccountRecord(runtime, _accountKey);
     debugState.logSummary("getAccountRecord");
     runtime.spCoinLogger.logExitFunction();
     return accountStruct;

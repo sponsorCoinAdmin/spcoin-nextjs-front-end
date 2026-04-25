@@ -3,9 +3,10 @@ import { Contract } from 'ethers';
 import type { Signer } from 'ethers';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from './spCoinAccessIncludes';
 import { getSpCoinLabAbi } from './spCoinAbi';
+import { wrapContractWithTiming } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 
 export function createSpCoinContract(address: string, runner: any) {
-  return new Contract(address, getSpCoinLabAbi(), runner);
+  return wrapContractWithTiming(new Contract(address, getSpCoinLabAbi(), runner));
 }
 
 export function createSpCoinLibraryAccess(

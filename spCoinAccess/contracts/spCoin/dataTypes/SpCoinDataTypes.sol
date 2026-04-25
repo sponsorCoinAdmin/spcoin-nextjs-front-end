@@ -40,7 +40,7 @@ contract SpCoinDataTypes {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    function getInitialTotalSupply() external view returns (uint256) {
+    function totalInitialSupply() external view returns (uint256) {
         return initialTotalSupply;
     }
 

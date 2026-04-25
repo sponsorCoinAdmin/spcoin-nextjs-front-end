@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Interface } from 'ethers';
 import { buildHandler, getDynamicMethod } from '../../readMethodRuntime';
+import { timeOnChainCall } from '../../utils/methodTiming';
 
 const legacyAccountListInterface = new Interface([
     'function getAccountList() view returns (address[])',
@@ -13,7 +14,7 @@ async function callLegacyGetAccountList(contract) {
         throw new Error('SpCoin read method getMasterAccountKeys is not available on access modules or contract.');
     }
     const data = legacyAccountListInterface.encodeFunctionData('getAccountList', []);
-    const raw = await runner.call({ to: target, data });
+    const raw = await timeOnChainCall('getAccountList', () => runner.call({ to: target, data }));
     const decoded = legacyAccountListInterface.decodeFunctionResult('getAccountList', raw);
     return decoded[0];
 }

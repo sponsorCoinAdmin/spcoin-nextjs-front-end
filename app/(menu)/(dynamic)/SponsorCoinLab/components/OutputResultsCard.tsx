@@ -144,6 +144,8 @@ type Props = {
     setFormattedPanelView: (value: FormattedPanelView) => void;
     formattedJsonViewEnabled: boolean;
     setFormattedJsonViewEnabled: (value: boolean) => void;
+    writeTraceEnabled: boolean;
+    toggleWriteTrace: () => void;
     showTreeAccountDetails: boolean;
     setShowTreeAccountDetails: (value: boolean) => void;
     showAllTreeRecords: boolean;
@@ -1084,6 +1086,15 @@ export default function OutputResultsCard({
                   onChange={(e) => controls.setFormattedJsonViewEnabled(e.target.checked)}
                 />
                 <span>Json</span>
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-[#E5B94F]"
+                  checked={controls.writeTraceEnabled}
+                  onChange={controls.toggleWriteTrace}
+                />
+                <span>Trace</span>
               </label>
               {controls.outputPanelMode === 'formatted'
                 ? ([

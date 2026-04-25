@@ -92,6 +92,8 @@ export type BuildControllerCardPropsArgs = {
   setFormattedPanelView: StateSetter<FormattedPanelView>;
   formattedJsonViewEnabled: boolean;
   setFormattedJsonViewEnabled: StateSetter<boolean>;
+  writeTraceEnabled: boolean;
+  setWriteTraceEnabled: StateSetter<boolean>;
   showTreeAccountDetails: boolean;
   setShowTreeAccountDetails: StateSetter<boolean>;
   showAllTreeRecords: boolean;
@@ -228,6 +230,8 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
       setFormattedPanelView: args.setFormattedPanelView,
       formattedJsonViewEnabled: args.formattedJsonViewEnabled,
       setFormattedJsonViewEnabled: args.setFormattedJsonViewEnabled,
+      writeTraceEnabled: args.writeTraceEnabled,
+      toggleWriteTrace: () => args.setWriteTraceEnabled((prev) => !prev),
       showTreeAccountDetails: args.showTreeAccountDetails,
       setShowTreeAccountDetails: args.setShowTreeAccountDetails,
       showAllTreeRecords: args.showAllTreeRecords,

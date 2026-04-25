@@ -115,14 +115,6 @@ function buildHardhatFundAccountsParams() {
   ];
 }
 
-function formatMethodRunTime(elapsedMs: number) {
-  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
 const PARAMS_BY_BASE_METHOD: Record<SerializationBaseMethod, MethodDef['params']> = {
   getSerializedSPCoinHeader: buildHeaderParams(),
   getSerializedAccountRecord: buildAccountParams(),
@@ -711,7 +703,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
 
     if ('utilityMethod' in def && def.utilityMethod === 'compareSpCoinContractSize') {
       trace('utility compareSpCoinContractSize');
-      const startedAt = Date.now();
       const response = await fetch('/api/spCoin/contract-size-comparison', {
         method: 'POST',
         cache: 'no-store',
@@ -746,7 +737,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       const variants = Array.isArray(reportRecord.variants) ? (reportRecord.variants as Array<Record<string, unknown>>) : [];
       const latestVariant = variants.find((entry) => String(entry?.label || '') === 'latest') || null;
       const previousVariant = variants.find((entry) => String(entry?.label || '') === 'previous') || null;
-      const elapsedMs = Date.now() - startedAt;
       const latestBytesVsLimit = Number(latestVariant?.deployedMarginBytes ?? NaN);
       const previousBytesVsLimit = Number(previousVariant?.deployedMarginBytes ?? NaN);
       const deltaRecord =
@@ -754,10 +744,7 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
           ? (reportRecord.delta as Record<string, unknown>)
           : {};
       return {
-        delta: {
-          ...deltaRecord,
-          methodRunTime: formatMethodRunTime(elapsedMs),
-        },
+        delta: deltaRecord,
         latestSizeStatus: latestVariant
           ? {
               deployedBytes: latestVariant.deployedBytes ?? null,

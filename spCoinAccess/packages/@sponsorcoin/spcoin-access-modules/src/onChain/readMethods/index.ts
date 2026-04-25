@@ -11,7 +11,7 @@ import getAgentRateKeys from './getAgentRateList';
 import getLowerAgentRate from './getLowerAgentRate';
 import getUpperAgentRate from './getUpperAgentRate';
 import getAgentRateRange from './getAgentRateRange';
-import getInitialTotalSupply from './getInitialTotalSupply';
+import totalInitialSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getAccountElement from './getMasterAccountElement';
@@ -64,7 +64,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getLowerAgentRate,
     getUpperAgentRate,
     getAgentRateRange,
-    getInitialTotalSupply,
+    totalInitialSupply,
     isDeployed,
     isAccountInserted,
     getMasterAccountElement: getAccountElement,

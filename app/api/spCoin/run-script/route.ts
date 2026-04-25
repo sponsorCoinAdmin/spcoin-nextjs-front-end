@@ -4,6 +4,13 @@ import { JsonRpcProvider, Wallet, Contract, Interface } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
+import {
+  buildMethodTimingMeta,
+  createMethodTimingCollector,
+  runWithMethodTimingCollector,
+  wrapContractWithTiming,
+  type MethodTimingMeta,
+} from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import { CHAIN_ID } from '@/lib/structure';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 
@@ -48,6 +55,8 @@ type StepPayload =
         parameters: Record<string, string> | [];
       };
       result: unknown;
+      warning?: unknown;
+      meta?: MethodTimingMeta;
     }
   | {
       call: {
@@ -66,6 +75,7 @@ type StepPayload =
           trace: string[];
         };
       };
+      meta?: MethodTimingMeta;
     };
 
 type StepResult = {
@@ -220,6 +230,88 @@ function normalizeParams(params: LabScriptStep['params']): Array<{ key: string; 
   return [];
 }
 
+function sanitizeJsonValue(value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return value.toString();
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeJsonValue(entry));
+  }
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+  const entries = Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
+    key,
+    sanitizeJsonValue(entryValue),
+  ]);
+  return Object.fromEntries(entries);
+}
+
+function normalizeAddressDisplay(value: unknown) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
+  if (!Array.isArray(result) || result.length < 10) return result;
+  const [
+    accountKey,
+    creationTime,
+    _verified,
+    accountBalance,
+    stakedAccountSPCoins,
+    _accountStakingRewards,
+    _sponsorKeys,
+    recipientKeys,
+    agentKeys,
+    _parentRecipientKeys,
+  ] = result;
+  const normalizedCreationTime = String(creationTime ?? '0').trim();
+  const normalizedBalance = String(accountBalance ?? '0').trim();
+  const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
+  const normalizeList = (value: unknown) =>
+    Array.isArray(value) ? value.map((entry) => normalizeAddressDisplay(entry)).filter(Boolean) : [];
+  return {
+    TYPE: '--ACCOUNT--',
+    accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
+    creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
+    totalSpCoins: {
+      TYPE: '--TOTAL_SP_COINS--',
+      totalSpCoins: (BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString(),
+      balanceOf: normalizedBalance,
+      stakedBalance: normalizedStaked,
+      sponsorRewardRate: '0%',
+      pendingRewards: {
+        TYPE: '--PENDING_REWARDS--',
+        pendingRewards: '0',
+        pendingSponsorRewards: '0',
+        pendingRecipientRewards: '0',
+        pendingAgentRewards: '0',
+      },
+    },
+    recipientKeys: normalizeList(recipientKeys),
+    recipientRates: {},
+    agentKeys: normalizeList(agentKeys),
+    agentRates: {},
+  };
+}
+
+function isEmptyNormalizedAccountRecord(result: unknown) {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return false;
+  const record = result as Record<string, unknown>;
+  const totalSpCoins =
+    record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
+      ? (record.totalSpCoins as Record<string, unknown>)
+      : null;
+  const recipientKeys = Array.isArray(record.recipientKeys) ? record.recipientKeys : [];
+  const agentKeys = Array.isArray(record.agentKeys) ? record.agentKeys : [];
+  return (
+    String(record.creationTime ?? '').trim() === '' &&
+    String(totalSpCoins?.totalSpCoins ?? '0').trim() === '0' &&
+    recipientKeys.length === 0 &&
+    agentKeys.length === 0
+  );
+}
+
 function buildCall(step: LabScriptStep, sender: string, paramEntries: Array<{ key: string; value: string }>) {
   const parameters: Record<string, string> = {};
   if (sender) {
@@ -305,6 +397,7 @@ export async function POST(request: NextRequest) {
       const explicitSender = String(step['msg.sender'] || '').trim();
       const stepMode = resolveStepMode(step, script);
       const stepTrace: string[] = [...traceBase, `step=${String(step.step)}`, `panel=${String(step.panel || '')}`, `method=${String(step.method || '')}`];
+      const timingCollector = createMethodTimingCollector();
 
       try {
         if (stepMode !== 'hardhat') {
@@ -319,7 +412,7 @@ export async function POST(request: NextRequest) {
 
         const signer = new Wallet(senderEntry.privateKey, provider);
         const senderAddress = explicitSender || signer.address;
-        const contract = new Contract(contractAddress, abi, signer);
+        const contract = wrapContractWithTiming(new Contract(contractAddress, abi, signer));
         const appendTrace = (line: string) => {
           const text = String(line || '').trim();
           if (text) stepTrace.push(text);
@@ -329,13 +422,14 @@ export async function POST(request: NextRequest) {
           String(paramEntries.find((entry) => entry.key === label)?.value || '').trim();
         const call = buildCall(step, senderAddress, paramEntries);
 
-        let result: unknown;
-        if (step.panel === 'spcoin_rread') {
-          switch (step.method) {
+        const result = await runWithMethodTimingCollector(timingCollector, async () => {
+          let stepResult: unknown;
+          if (step.panel === 'spcoin_rread') {
+            switch (step.method) {
             case 'getAccountKeys':
             case 'getMasterAccountKeys':
             case 'getMasterAccountList':
-              result =
+              stepResult =
                 typeof access.read.getMasterAccountKeys === 'function'
                   ? await access.read.getMasterAccountKeys()
                   : typeof access.read.getAccountKeys === 'function'
@@ -343,20 +437,26 @@ export async function POST(request: NextRequest) {
                   : [];
               break;
             case 'getAccountRecord':
-              result = await access.read.getAccountRecord(findParam('Account Key'));
+              if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
+                stepResult = normalizeOnChainAccountRecordResult(await (
+                  contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
+              } else {
+                stepResult = await access.read.getAccountRecord(findParam('Account Key'));
+              }
               break;
             case 'getMasterAccountCount':
             case 'getAccountKeyCount':
             case 'getAccountListSize':
             case 'getMasterAccountListSize':
               if (typeof (contract as Record<string, unknown>).getAccountKeyCount === 'function') {
-                result = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
+                stepResult = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
               } else if (typeof (access.read as Record<string, unknown>).getMasterAccountCount === 'function') {
-                result = await (access.read as unknown as { getMasterAccountCount: () => Promise<unknown> }).getMasterAccountCount();
+                stepResult = await (access.read as unknown as { getMasterAccountCount: () => Promise<unknown> }).getMasterAccountCount();
               } else if (typeof access.read.getAccountKeyCount === 'function') {
-                result = await access.read.getAccountKeyCount();
+                stepResult = await access.read.getAccountKeyCount();
               } else if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
-                result = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
+                stepResult = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
               } else {
                 const list =
                   typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function'
@@ -366,14 +466,14 @@ export async function POST(request: NextRequest) {
                     : typeof access.read.getAccountKeys === 'function'
                       ? await access.read.getAccountKeys()
                       : [];
-                result = Array.isArray(list) ? list.length : 0;
+                stepResult = Array.isArray(list) ? list.length : 0;
               }
               break;
             default:
               throw new Error(`Server runner does not support read method ${String(step.method)} yet.`);
-          }
-        } else if (step.panel === 'spcoin_write') {
-          switch (step.method) {
+            }
+          } else if (step.panel === 'spcoin_write') {
+            switch (step.method) {
             case 'addRecipient':
             case 'addAccountRecipient': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
@@ -386,7 +486,7 @@ export async function POST(request: NextRequest) {
                   ? await addRecipient(sponsorKey, recipientKey)
                   : await access.add.addRecipient(sponsorKey, recipientKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult(
+              stepResult = formatReceiptResult(
                 'addRecipient',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
@@ -413,7 +513,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt);
               break;
             }
             case 'addAgent': {
@@ -423,7 +523,7 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const tx = await access.add.addAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAgent', tx, receipt);
+              stepResult = formatReceiptResult('addAgent', tx, receipt);
               break;
             }
             case 'addAgentTransaction':
@@ -450,7 +550,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addAgentTransaction', tx, receipt);
               break;
             }
             case 'addBackDatedSponsorship':
@@ -474,7 +574,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt);
               break;
             }
             case 'addBackDatedAgentSponsorship':
@@ -498,7 +598,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt);
               break;
             }
             case 'backDateRecipientTransaction': {
@@ -516,7 +616,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('backDateRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('backDateRecipientTransaction', tx, receipt);
               break;
             }
             case 'backDateAgentTransaction': {
@@ -538,7 +638,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              result = formatReceiptResult('backDateAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('backDateAgentTransaction', tx, receipt);
               break;
             }
             case 'deleteRecipient': {
@@ -550,7 +650,7 @@ export async function POST(request: NextRequest) {
               }
               const tx = await deleteRecipient(sponsorKey, recipientKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult(
+              stepResult = formatReceiptResult(
                 'deleteRecipient',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
@@ -569,7 +669,7 @@ export async function POST(request: NextRequest) {
               }
               const tx = await deleteSponsor(sponsorKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult(
+              stepResult = formatReceiptResult(
                 'deleteSponsor',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
@@ -609,7 +709,7 @@ export async function POST(request: NextRequest) {
                   ? await deleteAgent(sponsorKey, recipientKey, recipientRateKey, agentKey)
                   : await deleteRecipientAgent!(sponsorKey, recipientKey, recipientRateKey, agentKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult(
+              stepResult = formatReceiptResult(
                 'deleteAgent',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
@@ -640,7 +740,7 @@ export async function POST(request: NextRequest) {
               }
               const tx = await deleteAgentRate(sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey);
               const receipt = await tx.wait();
-              result = formatReceiptResult(
+              stepResult = formatReceiptResult(
                 String(step.method),
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
@@ -649,17 +749,36 @@ export async function POST(request: NextRequest) {
             }
             default:
               throw new Error(`Server runner does not support write method ${String(step.method)} yet.`);
+            }
+          } else {
+            throw new Error(`Server runner does not support panel ${String(step.panel)} yet.`);
           }
-        } else {
-          throw new Error(`Server runner does not support panel ${String(step.panel)} yet.`);
-        }
+          return stepResult;
+        });
+
+        const warning =
+          step.method === 'getAccountRecord' &&
+          step.panel === 'spcoin_rread' &&
+          isEmptyNormalizedAccountRecord(result)
+            ? {
+                type: 'not_found',
+                message: `${String(step.method || '')} returned no account record for the supplied account key.`,
+                debug: {
+                  panel: 'spcoin_rread',
+                  source,
+                  method: String(step.method || ''),
+                },
+              }
+            : undefined;
 
         results.push({
           step: step.step,
           success: true,
           payload: {
             call,
-            result,
+            result: sanitizeJsonValue(result),
+            ...(warning ? { warning } : {}),
+            meta: buildMethodTimingMeta(timingCollector),
           },
         });
 
@@ -694,6 +813,7 @@ export async function POST(request: NextRequest) {
                 trace: stepTrace,
               },
             },
+            meta: buildMethodTimingMeta(timingCollector),
           },
         });
         haltedReason = 'error';
