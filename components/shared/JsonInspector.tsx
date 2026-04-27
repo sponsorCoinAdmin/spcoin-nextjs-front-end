@@ -84,6 +84,28 @@ function hasInlineAccountRecord(data: any): boolean {
   return typeof record.accountKey === 'string' || typeof record.TYPE === 'string';
 }
 
+function isLazySpCoinMetaDataNode(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__lazySpCoinMetaData === true,
+  );
+}
+
+function shouldShowEmptyChildren(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__showEmptyFields === true,
+  );
+}
+
+function getExpandedPathKey(path: string) {
+  return `__expanded__:${path}`;
+}
+
 function normalizeLegacyDateDisplay(value: any): string | null {
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = String(input || '').trim();
@@ -256,19 +278,31 @@ function getVisibleEntries(
   hideEntryKeys: string[] = [],
   showStructureType = false,
 ): Array<[string, any]> {
+  const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
+    if (leftKey === 'meta' && rightKey !== 'meta') return -1;
+    if (rightKey === 'meta' && leftKey !== 'meta') return 1;
+    const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
+    const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
+    if (leftIsNumericIndex === rightIsNumericIndex) return 0;
+    return leftIsNumericIndex ? 1 : -1;
+  };
+
   if (!value || typeof value !== 'object') return [];
-  if (showAll) {
+  const forceShowChildren = shouldShowEmptyChildren(value);
+  if (showAll || forceShowChildren) {
     if (Array.isArray(value)) {
       return value.map((entry, index) => [String(index), entry] as [string, any]);
     }
     return Object.entries(value)
-      .filter(([childKey]) => childKey !== 'address' && !hideEntryKeys.includes(childKey) && (showStructureType || childKey !== 'TYPE'))
-      .sort(([leftKey], [rightKey]) => {
-        const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
-        const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
-        if (leftIsNumericIndex === rightIsNumericIndex) return 0;
-        return leftIsNumericIndex ? 1 : -1;
-      });
+      .filter(
+        ([childKey]) =>
+          childKey !== 'address' &&
+          childKey !== '__lazySpCoinMetaData' &&
+          childKey !== '__showEmptyFields' &&
+          !hideEntryKeys.includes(childKey) &&
+          (showStructureType || childKey !== 'TYPE'),
+      )
+      .sort(sortEntries);
   }
 
   if (Array.isArray(value)) {
@@ -283,17 +317,14 @@ function getVisibleEntries(
   return Object.entries(value)
     .filter(([childKey, childValue]) => {
       if (childKey === 'address') return false;
+      if (childKey === '__lazySpCoinMetaData') return false;
+      if (childKey === '__showEmptyFields') return false;
       if (hideEntryKeys.includes(childKey)) return false;
       if (!showStructureType && childKey === 'TYPE') return false;
       if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules, showStructureType);
       return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     })
-    .sort(([leftKey], [rightKey]) => {
-      const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
-      const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
-      if (leftIsNumericIndex === rightIsNumericIndex) return 0;
-      return leftIsNumericIndex ? 1 : -1;
-    });
+    .sort(sortEntries);
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -343,20 +374,47 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
   const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
-  const isCollapsed = collapsedKeys.includes(path ?? '') || isLazyAddressStub;
+  const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
+  const currentPath = path ?? '';
+  const expandedPathKey = getExpandedPathKey(currentPath);
+  const isExplicitlyExpanded = collapsedKeys.includes(expandedPathKey);
+  const isDefaultCollapsed = level > 0 && !isExplicitlyExpanded;
+  const isCollapsed = collapsedKeys.includes(currentPath) || isDefaultCollapsed || isLazyAddressStub || isLazySpCoinMetaData;
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
   );
   const toggle = useCallback(() => {
+    const nextOpenKeys = [
+      ...collapsedKeys.filter((key) => key !== currentPath),
+      expandedPathKey,
+    ];
+    if (isCollapsed && isLazySpCoinMetaData) {
+      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+      onLeafValueClick?.('__load_spcoin_metadata__', currentPath, 'spCoinMetaData');
+      return;
+    }
     if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
-      onLeafValueClick?.(addressNode, path ?? '', 'address');
+      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+      onLeafValueClick?.(addressNode, currentPath, 'address');
+      return;
     }
     updateCollapsedKeys(
       isCollapsed
-        ? collapsedKeys.filter((key) => key !== path)
-        : [...new Set([...collapsedKeys, path!])],
+        ? [...new Set(nextOpenKeys)]
+        : [...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath])],
     );
-  }, [addressNode, collapsedKeys, hasLoadedAccountRecord, isAddressNode, isCollapsed, onLeafValueClick, path, updateCollapsedKeys]);
+  }, [
+    addressNode,
+    collapsedKeys,
+    currentPath,
+    expandedPathKey,
+    hasLoadedAccountRecord,
+    isAddressNode,
+    isCollapsed,
+    isLazySpCoinMetaData,
+    onLeafValueClick,
+    updateCollapsedKeys,
+  ]);
 
   const getValueColor = (value: any): string => {
     if (value === false || value === undefined || value === null) return 'text-red-500';
@@ -487,33 +545,68 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     );
     const displayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
     const rawStringValue = typeof value === 'string' ? value.trim() : '';
-    const isClickableAddress =
-      typeof onLeafValueClick === 'function' &&
-      /^0x[0-9a-fA-F]{40}$/.test(rawStringValue);
+    const isClickableAddress = /^0x[0-9a-fA-F]{40}$/.test(rawStringValue);
+    const isArrayIndexAddress = isClickableAddress && /^\d+$/.test(String(key || ''));
     return (
       <div key={nextPath} className="ml-4 whitespace-nowrap">
-        <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>:{' '}
         {isClickableAddress ? (
           <span
-            role="button"
-            tabIndex={0}
-            className={`cursor-pointer font-mono underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${valueHighlighted ? highlightColorClass : getValueColor(value)}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onLeafValueClick?.(rawStringValue, nextPath, key);
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter' && event.key !== ' ') return;
-              event.preventDefault();
-              event.stopPropagation();
-              onLeafValueClick?.(rawStringValue, nextPath, key);
-            }}
-            title={`Open account ${rawStringValue}`}
+            className={
+              isArrayIndexAddress
+                ? 'inline-grid grid-cols-[1.55rem_1.2rem_auto] items-baseline whitespace-nowrap gap-x-1'
+                : 'inline-grid grid-cols-[auto_auto] items-baseline whitespace-nowrap gap-x-1'
+            }
           >
-            {displayValue}
+            {isArrayIndexAddress && typeof onLeafValueClick === 'function' ? (
+              <button
+                type="button"
+                className={`w-full bg-transparent p-0 text-left font-mono ${valueHighlighted ? highlightColorClass : 'text-green-400'}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  updateCollapsedKeys([
+                    ...new Set([
+                      ...collapsedKeys.filter((collapsedKey) => collapsedKey !== nextPath),
+                      getExpandedPathKey(nextPath),
+                    ]),
+                  ]);
+                  onLeafValueClick(rawStringValue, nextPath, key);
+                }}
+                title={`Open account record ${rawStringValue}`}
+              >
+                [+]
+              </button>
+            ) : null}
+            <span className={`${isArrayIndexAddress ? 'text-right' : ''} ${valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}`}>
+              {key}:
+            </span>
+            <span
+              role={typeof onAddressNodeClick === 'function' ? 'button' : undefined}
+              tabIndex={typeof onAddressNodeClick === 'function' ? 0 : undefined}
+              className={`font-mono underline decoration-dotted underline-offset-2 transition-colors ${
+                typeof onAddressNodeClick === 'function' ? 'cursor-pointer hover:text-white focus:outline-none' : ''
+              } ${valueHighlighted ? highlightColorClass : getValueColor(value)}`}
+              onClick={(event) => {
+                if (typeof onAddressNodeClick !== 'function') return;
+                event.stopPropagation();
+                onAddressNodeClick(rawStringValue, nextPath, key);
+              }}
+              onKeyDown={(event) => {
+                if (typeof onAddressNodeClick !== 'function') return;
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                event.stopPropagation();
+                onAddressNodeClick(rawStringValue, nextPath, key);
+              }}
+              title={`Show metadata for ${rawStringValue}`}
+            >
+              {displayValue}
+            </span>
           </span>
         ) : (
-          <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{displayValue}</span>
+          <>
+            <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>:{' '}
+            <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{displayValue}</span>
+          </>
         )}
       </div>
     );

@@ -6,6 +6,7 @@ import DateTimeCalendarPopup from './DateTimeCalendarPopup';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
 import type { MethodDef } from '../jsonMethods/shared/types';
+import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
 
 const DATE_DIFF_UNITS = ['Years', 'Months', 'Weeks', 'Days', 'Hours', 'Minutes', 'Seconds'] as const;
 const DATE_DIFF_DIVISORS: Record<(typeof DATE_DIFF_UNITS)[number], number> = {
@@ -162,6 +163,16 @@ function dedupeReadMethodNamesByTitle(values: string[], defs: Record<string, Met
     seenTitles.add(title);
     return true;
   });
+}
+
+function hasEquivalentReadMethod(values: string[], methodName: string) {
+  const normalizedMethod = normalizeSpCoinReadMethod(methodName);
+  return values.some((value) => normalizeSpCoinReadMethod(value) === normalizedMethod);
+}
+
+function getVisibleReadMethodValue(values: string[], methodName: string) {
+  const normalizedMethod = normalizeSpCoinReadMethod(methodName);
+  return values.find((value) => normalizeSpCoinReadMethod(value) === normalizedMethod) || '';
 }
 
 const BLOCKED_SPCOIN_READ_TITLES = new Set([
@@ -483,7 +494,7 @@ export default function SpCoinReadController(props: Props) {
   }, [allowAdminReadMethods, rawAdminReadOptions, selectedSpCoinReadMethod, spCoinReadMethodDefs, visibleReadMethods]);
   React.useEffect(() => {
     if (selectableReadMethods.length === 0) return;
-    if (selectableReadMethods.includes(selectedSpCoinReadMethod)) return;
+    if (hasEquivalentReadMethod(selectableReadMethods, selectedSpCoinReadMethod)) return;
     setSelectedSpCoinReadMethod(selectableReadMethods[0]);
   }, [selectableReadMethods, selectedSpCoinReadMethod, setSelectedSpCoinReadMethod]);
   React.useEffect(() => {
@@ -515,8 +526,8 @@ export default function SpCoinReadController(props: Props) {
   }, [selectedSpCoinReadMethod, setSpReadParams]);
   const hasVisibleReadMethods = selectableReadMethods.length > 0;
   const displayedReadMethod =
-    hasVisibleReadMethods && selectableReadMethods.includes(selectedSpCoinReadMethod)
-      ? selectedSpCoinReadMethod
+    hasVisibleReadMethods
+      ? getVisibleReadMethodValue(selectableReadMethods, selectedSpCoinReadMethod) || '__no_methods__'
       : '__no_methods__';
 
   return (

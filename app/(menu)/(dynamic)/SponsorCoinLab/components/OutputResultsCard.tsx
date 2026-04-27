@@ -248,10 +248,6 @@ export default function OutputResultsCard({
     logoURL: defaultMissingImage,
   });
   const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
-  const [pendingAccountExpansion, setPendingAccountExpansion] = useState<{
-    address: string;
-    path: string;
-  } | null>(null);
   const [isSaveScriptModalOpen, setIsSaveScriptModalOpen] = useState(false);
   const [saveScriptNameInput, setSaveScriptNameInput] = useState('');
   const [isSaveButtonHovered, setIsSaveButtonHovered] = useState(false);
@@ -353,6 +349,41 @@ export default function OutputResultsCard({
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
   const activeInspectorRootLabel = controls.outputPanelMode === 'tree' ? 'Tree' : controls.formattedPanelView === 'script' ? 'Script' : 'Step';
+  const seededDefaultCollapseSignatureRef = React.useRef('');
+  React.useEffect(() => {
+    if (controls.formattedJsonViewEnabled) return;
+    const blocks = controls.outputPanelMode === 'tree' ? collapsibleTreeBlocks : collapsibleFormattedBlocks;
+    if (!blocks?.length) return;
+    const signature = `${controls.outputPanelMode}:${controls.outputPanelMode === 'tree' ? content.treeOutputDisplay : currentFormattedDisplay}`;
+    if (seededDefaultCollapseSignatureRef.current === signature) return;
+    const rootLabel = controls.outputPanelMode === 'tree' ? 'tree' : activeInspectorRootLabel.toLowerCase();
+    const collectDefaultCollapsedPaths = (value: unknown, basePath: string): string[] => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+      const record = value as Record<string, unknown>;
+      return Object.entries(record).flatMap(([key, childValue]) => {
+        const childPath = `${basePath}.${key}`;
+        return [
+          ...(key === 'meta' ? [childPath] : []),
+          ...collectDefaultCollapsedPaths(childValue, childPath),
+        ];
+      });
+    };
+    const collapsePaths = blocks.flatMap((block, index) => collectDefaultCollapsedPaths(block, `${rootLabel}-${index}`));
+    if (collapsePaths.length === 0) return;
+    seededDefaultCollapseSignatureRef.current = signature;
+    if (collapsePaths.every((path) => collapsedKeys.includes(path))) return;
+    updateCollapsedKeys([...new Set([...collapsedKeys, ...collapsePaths])]);
+  }, [
+    activeInspectorRootLabel,
+    collapsedKeys,
+    collapsibleFormattedBlocks,
+    collapsibleTreeBlocks,
+    content.treeOutputDisplay,
+    controls.formattedJsonViewEnabled,
+    controls.outputPanelMode,
+    currentFormattedDisplay,
+    updateCollapsedKeys,
+  ]);
   const handleOpenAccountFromInspector = React.useCallback(
     async (value: string, path: string) => {
       const address = String(value || '').trim();
@@ -361,12 +392,7 @@ export default function OutputResultsCard({
         return;
       }
 
-      setPendingAccountExpansion({ address, path });
-      try {
-        await treeActions.openAccountFromAddress(address, path);
-      } finally {
-        setPendingAccountExpansion(null);
-      }
+      await treeActions.openAccountFromAddress(address, path);
     },
     [treeActions],
   );
@@ -1239,21 +1265,6 @@ export default function OutputResultsCard({
           )}
         </div>
       </div>
-      <BaseModal
-        isOpen={Boolean(pendingAccountExpansion)}
-        title="Loading Account Record"
-        maxWidthClassName="max-w-lg"
-        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
-        titleClassName="text-xl font-semibold text-[#8FA8FF]"
-      >
-        <div className="space-y-3 text-sm text-slate-200">
-          <div>Reading account details from SponsorCoin.</div>
-          <div className="break-all rounded-lg border border-[#31416F] bg-[#0B1020] p-3 font-mono text-xs text-green-400">
-            {pendingAccountExpansion?.address || ''}
-          </div>
-          <div className="text-xs text-slate-400">Waiting for getAccountRecord to reply...</div>
-        </div>
-      </BaseModal>
       <BaseModal
         isOpen={Boolean(selectedFormattedAccount)}
         title="Account Metadata"

@@ -297,6 +297,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
+    if (keyPath.includes('meta')) return value;
     if (keyPath.includes('formatted')) return value;
     if (DURATION_KEYS.includes(keyPath[keyPath.length - 1] || '') && /^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
       return trimmed;

@@ -8,6 +8,7 @@ import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
+import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import {
   DEFAULT_METHOD_MEMBER_LIST_PAYLOAD,
   cloneAlterMemberLists,
@@ -154,11 +155,11 @@ function filterMethodsByAlterMode(
   mode: AlterModeOption,
 ) {
   if (mode === 'Tested') {
-    const testMemberList = memberLists.Test || {};
-    return methods.filter((name) => !Boolean(testMemberList[name]));
+    const testMemberList = memberLists.Test ?? {};
+    return methods.filter((name) => testMemberList[name] !== true);
   }
-  const memberList = memberLists[mode] || {};
-  return methods.filter((name) => Boolean(memberList[name]));
+  const memberList = memberLists[mode] ?? {};
+  return methods.filter((name) => memberList[name] === true);
 }
 
 function isMethodInAlterMode(
@@ -168,9 +169,22 @@ function isMethodInAlterMode(
 ) {
   if (!methodName || methodName === '__no_methods__') return false;
   if (mode === 'Tested') {
-    return !Boolean(memberLists.Test?.[methodName]);
+    return memberLists.Test?.[methodName] !== true;
   }
-  return Boolean(memberLists[mode]?.[methodName]);
+  return memberLists[mode]?.[methodName] === true;
+}
+
+function getEquivalentMemberListMethodNames(
+  kind: MethodIdentityKind,
+  methodName: string,
+  memberLists: EditableMemberLists,
+) {
+  if (kind !== 'spCoinRead') return [methodName];
+  const normalizedMethod = normalizeSpCoinReadMethod(methodName);
+  const equivalentNames = Object.keys(memberLists.All ?? {}).filter(
+    (name) => normalizeSpCoinReadMethod(name) === normalizedMethod,
+  );
+  return equivalentNames.length > 0 ? equivalentNames : [methodName];
 }
 
 const BLOCKED_SPCOIN_READ_TITLES = new Set([
@@ -181,7 +195,7 @@ const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'getMasterAccountKeys',
 ]);
 
-const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Basic', 'Standard', 'Test', 'Tested', 'Todo'];
+const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Basic', 'Standard', 'Test', 'Tested', 'Todo', 'Complete'];
 const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
 
 type StoredMethodsPanelUiState = {
@@ -214,7 +228,8 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
       saved.selectedAlterMode === 'Standard' ||
       saved.selectedAlterMode === 'Test' ||
       saved.selectedAlterMode === 'Tested' ||
-      saved.selectedAlterMode === 'Todo'
+      saved.selectedAlterMode === 'Todo' ||
+      saved.selectedAlterMode === 'Complete'
     ) {
       next.selectedAlterMode = saved.selectedAlterMode;
     }
@@ -243,6 +258,24 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
   } catch {
     return null;
   }
+}
+
+function areEquivalentMethodEntries(a: MethodCatalogEntry | null, b: MethodCatalogEntry | null) {
+  if (!a || !b || a.kind !== b.kind) return false;
+  if (a.id === b.id || a.name === b.name) return true;
+  if (a.kind === 'spCoinRead') {
+    return normalizeSpCoinReadMethod(a.name) === normalizeSpCoinReadMethod(b.name);
+  }
+  return false;
+}
+
+function hasEquivalentSpCoinReadMethod(values: string[], methodName: string) {
+  const normalizedMethod = normalizeSpCoinReadMethod(methodName);
+  return values.some((value) => normalizeSpCoinReadMethod(value) === normalizedMethod);
+}
+
+function getAlterModeLabel(option: AlterModeOption) {
+  return option === 'Todo' ? 'Depreciated' : option;
 }
 
 type Props = {
@@ -712,7 +745,10 @@ export default function MethodsPanelCard({
   );
   const methodEntryNeedsTesting = React.useCallback(
     (entry: MethodCatalogEntry) => {
-      return isMethodInAlterMode(entry.name, getMethodEntryMemberLists(entry), 'Test');
+      const memberLists = getMethodEntryMemberLists(entry);
+      return getEquivalentMemberListMethodNames(entry.kind, entry.name, memberLists).some((methodName) =>
+        isMethodInAlterMode(methodName, memberLists, 'Test'),
+      );
     },
     [getMethodEntryMemberLists],
   );
@@ -914,6 +950,13 @@ export default function MethodsPanelCard({
     spCoinWriteProps.selectedSpCoinWriteMethod,
     spCoinWriteProps.spCoinWriteMethodDefs,
   ]);
+  const visibleCurrentMethodIdentity = React.useMemo(
+    () =>
+      currentMethodIdentity
+        ? visibleGroupedMethods.find((entry) => areEquivalentMethodEntries(entry, currentMethodIdentity)) || null
+        : null,
+    [currentMethodIdentity, visibleGroupedMethods],
+  );
   React.useEffect(() => {
     if (didRestoreSelectedMethodRef.current) return;
     if (!didHydratePanelUiRef.current) return;
@@ -1026,52 +1069,56 @@ export default function MethodsPanelCard({
   const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterModeOption) => {
     if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return;
     const toggleMember =
-      (setter: React.Dispatch<React.SetStateAction<EditableMemberLists>>) => {
+      (setter: React.Dispatch<React.SetStateAction<EditableMemberLists>>, kind: MethodIdentityKind) => {
         const targetMode: StoredAlterMode = mode === 'Tested' ? 'Test' : mode;
-        setter((prev) => ({
-          ...prev,
-          [targetMode]: {
-            ...prev[targetMode],
-            [currentJsonMethodName]:
+        setter((prev) => {
+          const targetNames = getEquivalentMemberListMethodNames(kind, currentJsonMethodName, prev);
+          const nextTargetList = { ...prev[targetMode] };
+          for (const methodName of targetNames) {
+            nextTargetList[methodName] =
               mode === 'Tested'
                 ? false
                 : mode === 'Test'
                   ? true
-                : !prev[targetMode]?.[currentJsonMethodName],
-          },
-        }));
+                  : !prev[targetMode]?.[methodName];
+          }
+          return {
+            ...prev,
+            [targetMode]: nextTargetList,
+          };
+        });
       };
     if (activeMethodPanelTab === 'erc20') {
       if (methodPanelMode === 'erc20_write') {
-        toggleMember(setErc20WriteMemberLists);
+        toggleMember(setErc20WriteMemberLists, 'erc20Write');
       } else {
-        toggleMember(setErc20ReadMemberLists);
+        toggleMember(setErc20ReadMemberLists, 'erc20Read');
       }
       return;
     }
     if (activeMethodPanelTab === 'admin_utils') {
       if (methodPanelMode === 'spcoin_rread') {
-        toggleMember(setSpCoinReadMemberLists);
+        toggleMember(setSpCoinReadMemberLists, 'spCoinRead');
       } else if (methodPanelMode === 'spcoin_write') {
-        toggleMember(setSpCoinWriteMemberLists);
+        toggleMember(setSpCoinWriteMemberLists, 'spCoinWrite');
       } else {
-        toggleMember(setSerializationMemberLists);
+        toggleMember(setSerializationMemberLists, 'serialization');
       }
       return;
     }
     if (activeMethodPanelTab === 'todos') {
-      toggleMember(setSpCoinWriteMemberLists);
+      toggleMember(setSpCoinWriteMemberLists, 'spCoinWrite');
       return;
     }
     if (methodPanelMode === 'spcoin_rread') {
-      toggleMember(setSpCoinReadMemberLists);
+      toggleMember(setSpCoinReadMemberLists, 'spCoinRead');
       return;
     }
     if (methodPanelMode === 'spcoin_write') {
-      toggleMember(setSpCoinWriteMemberLists);
+      toggleMember(setSpCoinWriteMemberLists, 'spCoinWrite');
       return;
     }
-    toggleMember(setSerializationMemberLists);
+    toggleMember(setSerializationMemberLists, 'serialization');
   }, [
     activeMethodPanelTab,
     currentJsonMethodName,
@@ -1159,9 +1206,9 @@ export default function MethodsPanelCard({
   }, [activePanelKey]);
   React.useEffect(() => {
     if (!visibleGroupedMethods.length) return;
-    if (currentMethodIdentity && visibleGroupedMethods.some((entry) => entry.id === currentMethodIdentity.id)) return;
+    if (visibleCurrentMethodIdentity) return;
     selectMethodByIdentity(visibleGroupedMethods[0]);
-  }, [currentMethodIdentity, selectMethodByIdentity, visibleGroupedMethods]);
+  }, [selectMethodByIdentity, visibleCurrentMethodIdentity, visibleGroupedMethods]);
   React.useEffect(() => {
     if (activeMethodPanelTab === 'admin_utils') return;
     if (methodPanelMode !== 'serialization_tests') return;
@@ -1213,7 +1260,7 @@ export default function MethodsPanelCard({
     if (activeMethodPanelTab === 'admin_utils') return;
     if (methodPanelMode !== 'spcoin_rread') return;
     if (visibleSpCoinReadOptions.length === 0) return;
-    if (visibleSpCoinReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) return;
+    if (hasEquivalentSpCoinReadMethod(visibleSpCoinReadOptions, spCoinReadProps.selectedSpCoinReadMethod)) return;
     spCoinReadProps.setSelectedSpCoinReadMethod(visibleSpCoinReadOptions[0]);
   }, [
     activeMethodPanelTab,
@@ -1245,7 +1292,7 @@ export default function MethodsPanelCard({
   React.useEffect(() => {
     if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'spcoin_rread') return;
     if (visibleAdminUtilsReadOptions.length === 0) return;
-    if (visibleAdminUtilsReadOptions.includes(spCoinReadProps.selectedSpCoinReadMethod)) return;
+    if (hasEquivalentSpCoinReadMethod(visibleAdminUtilsReadOptions, spCoinReadProps.selectedSpCoinReadMethod)) return;
     spCoinReadProps.setSelectedSpCoinReadMethod(visibleAdminUtilsReadOptions[0]);
   }, [
     activeMethodPanelTab,
@@ -1283,7 +1330,13 @@ export default function MethodsPanelCard({
             aria-label="JSON method"
             title="JSON method"
             className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-            value={currentMethodIdentity && visibleGroupedMethods.some((entry) => entry.id === currentMethodIdentity.id) ? currentMethodIdentity.id : '__no_methods__'}
+            style={{
+              color:
+                visibleCurrentMethodIdentity && !methodEntryNeedsTesting(visibleCurrentMethodIdentity)
+                  ? '#22c55e'
+                  : undefined,
+            }}
+            value={visibleCurrentMethodIdentity?.id ?? '__no_methods__'}
             onChange={(event) => {
               const next = visibleGroupedMethods.find((entry) => entry.id === event.target.value);
               if (!next) return;
@@ -1297,7 +1350,7 @@ export default function MethodsPanelCard({
               key={entry.id}
               value={entry.id}
               style={{
-                color: methodEntryNeedsTesting(entry) ? undefined : '#22c55e',
+                color: methodEntryNeedsTesting(entry) ? '#ffffff' : '#22c55e',
               }}
             >
               {entry.label}
@@ -1311,11 +1364,11 @@ export default function MethodsPanelCard({
       </div>
     );
   }, [
-    currentMethodIdentity,
-    getMethodEntryMemberLists,
     isJavaScriptScriptMode,
+    methodEntryNeedsTesting,
     selectMethodByIdentity,
     showAllCardSectionsForVisualTest,
+    visibleCurrentMethodIdentity,
     visibleGroupedMethods,
   ]);
 
@@ -1373,7 +1426,7 @@ export default function MethodsPanelCard({
                     checked={isManageEnabled}
                     onChange={(event) => setIsManageEnabled(event.target.checked)}
                   />
-                  <span>manage Method</span>
+                  <span>Manage Method</span>
                 </label>
               </div>
               {isJavaScriptScriptMode ? (
@@ -1430,7 +1483,7 @@ export default function MethodsPanelCard({
                         className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                       />
                       <span className={isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, option) ? 'text-green-400' : 'text-red-400'}>
-                        {option}
+                        {getAlterModeLabel(option)}
                       </span>
                     </label>
                   ))}
@@ -1459,7 +1512,7 @@ export default function MethodsPanelCard({
                           fontWeight: '700',
                         }}
                       >
-                        {option}
+                        {getAlterModeLabel(option)}
                       </option>
                     ))}
                   </select>

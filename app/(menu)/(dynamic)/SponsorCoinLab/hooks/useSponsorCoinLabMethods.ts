@@ -744,9 +744,9 @@ export function useSponsorCoinLabMethods({
         }
         return nextRecord;
       };
-      const normalizeMasterSponsorEntry = (entry: unknown) => {
+      const normalizeMasterSponsorEntry = (entry: unknown, preserveAddressStrings = false) => {
         if (typeof entry === 'string') {
-          return { address: entry };
+          return preserveAddressStrings ? entry : { address: entry };
         }
         if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
           return entry;
@@ -811,29 +811,28 @@ export function useSponsorCoinLabMethods({
               : []
             : [];
         const rawMetadata =
-          nextPayload.spCoinMetsData && typeof nextPayload.spCoinMetsData === 'object' && !Array.isArray(nextPayload.spCoinMetsData)
-            ? (nextPayload.spCoinMetsData as Record<string, unknown>)
-            : nextPayload.spCoinMetaData && typeof nextPayload.spCoinMetaData === 'object' && !Array.isArray(nextPayload.spCoinMetaData)
-              ? (nextPayload.spCoinMetaData as Record<string, unknown>)
-              : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult) &&
-                  (rawResult as Record<string, unknown>).spCoinMetsData &&
-                  typeof (rawResult as Record<string, unknown>).spCoinMetsData === 'object' &&
-                  !Array.isArray((rawResult as Record<string, unknown>).spCoinMetsData)
-                ? ((rawResult as Record<string, unknown>).spCoinMetsData as Record<string, unknown>)
-                : null;
-        const normalizedMetadata = rawMetadata
+          nextPayload.spCoinMetaData && typeof nextPayload.spCoinMetaData === 'object' && !Array.isArray(nextPayload.spCoinMetaData)
+            ? (nextPayload.spCoinMetaData as Record<string, unknown>)
+            : rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult) &&
+                (rawResult as Record<string, unknown>).spCoinMetaData &&
+                typeof (rawResult as Record<string, unknown>).spCoinMetaData === 'object' &&
+                !Array.isArray((rawResult as Record<string, unknown>).spCoinMetaData)
+              ? ((rawResult as Record<string, unknown>).spCoinMetaData as Record<string, unknown>)
+              : null;
+        const isLazyMetadata = rawMetadata?.__lazySpCoinMetaData === true;
+        const normalizedMetadata = rawMetadata && !isLazyMetadata
           ? {
               ...rawMetadata,
               inflationRate: normalizeInflationRateDisplay(rawMetadata.inflationRate),
             }
           : null;
+        const isAccountListPayload = normalizedPayloadMethod === 'getMasterAccountKeys' || normalizedPayloadMethod === 'getAccountKeys';
 
         nextPayload.result = {
-          ...(normalizedMetadata ? { spCoinMetsData: normalizedMetadata } : {}),
-          [entryListKey]: normalizedEntries.map((entry) => normalizeMasterSponsorEntry(entry)),
+          spCoinMetaData: normalizedMetadata || { __lazySpCoinMetaData: true },
+          [entryListKey]: normalizedEntries.map((entry) => normalizeMasterSponsorEntry(entry, isAccountListPayload)),
         };
         delete nextPayload.spCoinMetaData;
-        delete nextPayload.spCoinMetsData;
       }
       if (
         nextPayload.call &&
@@ -844,10 +843,13 @@ export function useSponsorCoinLabMethods({
         typeof nextPayload.result === 'object' &&
         !Array.isArray(nextPayload.result)
       ) {
-        nextPayload.result = {
-          ...(nextPayload.result as Record<string, unknown>),
-          inflationRate: normalizeInflationRateDisplay((nextPayload.result as Record<string, unknown>).inflationRate),
-        };
+        const resultRecord = nextPayload.result as Record<string, unknown>;
+        if (resultRecord.inflationRate !== undefined) {
+          nextPayload.result = {
+            ...resultRecord,
+            inflationRate: normalizeInflationRateDisplay(resultRecord.inflationRate),
+          };
+        }
       }
       return formatOutputDisplayValue(nextPayload);
     },
@@ -1166,24 +1168,11 @@ export function useSponsorCoinLabMethods({
         if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
-            const metadataResult = await runSpCoinReadMethod({
-              selectedMethod: 'getSpCoinMetaData',
-              spReadParams: [],
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog: () => {},
-              setStatus: () => {},
-            }).catch(() => undefined);
-            const accounts = accountKeys.map((accountKey) => ({
-              address: String(accountKey || ''),
-            }));
+            const accounts = accountKeys.map((accountKey) => String(accountKey || ''));
             return {
               call,
               result: {
-                ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
+                spCoinMetaData: { __lazySpCoinMetaData: true },
                 accounts,
               },
               ...(warning ? { warning } : {}),
@@ -1246,17 +1235,6 @@ export function useSponsorCoinLabMethods({
           String(selectedMethod) === 'getMasterSponsorList_BAK'
         ) {
           const sponsorKeys = Array.isArray(sanitizedSerializationResult) ? sanitizedSerializationResult : [];
-          const metadataResult = await runSpCoinReadMethod({
-            selectedMethod: 'getSpCoinMetaData',
-            spReadParams: [],
-            coerceParamValue,
-            stringifyResult,
-            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            requireContractAddress,
-            ensureReadRunner,
-            appendLog: () => {},
-            setStatus: () => {},
-          }).catch(() => undefined);
           const sponsors = sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
           appendLog(
             `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
@@ -1273,7 +1251,7 @@ export function useSponsorCoinLabMethods({
           return {
             call,
             result: {
-              ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
+              spCoinMetaData: { __lazySpCoinMetaData: true },
               sponsors,
             },
             ...(extractedWarning ? { warning: extractedWarning } : {}),
@@ -1567,24 +1545,11 @@ export function useSponsorCoinLabMethods({
         if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
           try {
             const accountKeys = Array.isArray(result) ? result : [];
-            const metadataResult = await runSpCoinReadMethod({
-              selectedMethod: 'getSpCoinMetaData',
-              spReadParams: [],
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog: () => {},
-              setStatus: () => {},
-            }).catch(() => undefined);
-            const accounts = accountKeys.map((accountKey) => ({
-              address: String(accountKey || ''),
-            }));
+            const accounts = accountKeys.map((accountKey) => String(accountKey || ''));
             return {
               call,
               result: {
-                ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
+                spCoinMetaData: { __lazySpCoinMetaData: true },
                 accounts,
               },
               ...(warning ? { warning } : {}),
@@ -1647,17 +1612,6 @@ export function useSponsorCoinLabMethods({
           String(selectedMethod) === 'getMasterSponsorList_BAK'
         ) {
           const sponsorKeys = Array.isArray(sanitizedSerializationResult) ? sanitizedSerializationResult : [];
-          const metadataResult = await runSpCoinReadMethod({
-            selectedMethod: 'getSpCoinMetaData',
-            spReadParams: [],
-            coerceParamValue,
-            stringifyResult,
-            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            requireContractAddress,
-            ensureReadRunner,
-            appendLog: () => {},
-            setStatus: () => {},
-          }).catch(() => undefined);
           const sponsors = sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
           appendLog(
             `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
@@ -1674,7 +1628,7 @@ export function useSponsorCoinLabMethods({
           return {
             call,
             result: {
-              ...(metadataResult ? { spCoinMetsData: metadataResult } : {}),
+              spCoinMetaData: { __lazySpCoinMetaData: true },
               sponsors,
             },
             ...(extractedWarning ? { warning: extractedWarning } : {}),
@@ -2044,7 +1998,12 @@ export function useSponsorCoinLabMethods({
           message?: string;
           results?: Array<{
             success?: boolean;
-            payload?: { result?: unknown; warning?: Record<string, unknown>; error?: { message?: string } };
+            payload?: {
+              result?: unknown;
+              warning?: Record<string, unknown>;
+              error?: { message?: string };
+              meta?: MethodExecutionMeta;
+            };
           }>;
         };
         if (!response.ok) {
@@ -2056,8 +2015,21 @@ export function useSponsorCoinLabMethods({
           throw new Error(String(firstResult?.payload?.error?.message || 'Unable to load account record.'));
         }
         tree = firstResult?.payload?.result;
-        if (warning && tree && typeof tree === 'object' && !Array.isArray(tree)) {
-          (tree as Record<string, unknown>).__warning = warning;
+        if (!tree || typeof tree !== 'object' || Array.isArray(tree)) {
+          tree = { value: tree ?? null };
+        }
+        if (tree && typeof tree === 'object' && !Array.isArray(tree)) {
+          const treeRecord = tree as Record<string, unknown>;
+          if (!String(treeRecord.accountKey || '').trim()) {
+            treeRecord.accountKey = normalizedAccount;
+          }
+          treeRecord.__showEmptyFields = true;
+          if (warning) {
+            treeRecord.warning = warning;
+          }
+          if (firstResult?.payload?.meta) {
+            treeRecord.meta = firstResult.payload.meta;
+          }
         }
         if (
           tree &&
@@ -2254,6 +2226,108 @@ export function useSponsorCoinLabMethods({
     });
   }, [refreshSelectedTreeAccount, showValidationPopup]);
 
+  const expandSpCoinMetaDataInline = useCallback(
+    async (pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
+      const normalizedPathHint = String(pathHint || '').trim();
+      if (!normalizedPathHint.includes('.result.spCoinMetaData')) return 'unhandled';
+      const trimmedDisplay = String(formattedOutputDisplay || '').trim();
+      if (!trimmedDisplay || trimmedDisplay === '(no output yet)') return 'unhandled';
+
+      const parsePayload = (raw: string) => {
+        try {
+          return JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          return null;
+        }
+      };
+      const blocks = trimmedDisplay
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      const blockEntries =
+        blocks.length > 1
+          ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
+          : [{ raw: trimmedDisplay, index: 0, payload: parsePayload(trimmedDisplay) }];
+      const rootPathMatch = normalizedPathHint.match(/^(?:step|output)-(\d+)(?:\.|$)/i);
+      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
+      const candidateEntries =
+        Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
+          ? [blockEntries[hintedBlockIndex]]
+          : blockEntries;
+
+      for (const entry of candidateEntries) {
+        const payload = entry.payload;
+        if (!payload || !payload.result || typeof payload.result !== 'object' || Array.isArray(payload.result)) continue;
+        const resultRecord = payload.result as Record<string, unknown>;
+        if (!resultRecord.spCoinMetaData || typeof resultRecord.spCoinMetaData !== 'object' || Array.isArray(resultRecord.spCoinMetaData)) continue;
+
+        try {
+          setStatus('Loading spCoin metadata...');
+          const metadataTimingCollector = createMethodTimingCollector();
+          const metadataResult = await runWithMethodTimingCollector(metadataTimingCollector, async () =>
+            runSpCoinReadMethod({
+              selectedMethod: 'getSpCoinMetaData',
+              spReadParams: [],
+              coerceParamValue,
+              stringifyResult,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              requireContractAddress,
+              ensureReadRunner,
+              appendLog: () => {},
+              setStatus: () => {},
+            }),
+          );
+          const metadataMeta = buildExecutionMeta(metadataTimingCollector);
+          const metadataRecord =
+            metadataResult && typeof metadataResult === 'object' && !Array.isArray(metadataResult)
+              ? {
+                  ...(metadataResult as Record<string, unknown>),
+                  meta: metadataMeta,
+                }
+              : {
+                  value: metadataResult,
+                  meta: metadataMeta,
+                };
+          const nextPayload = formatFormattedPanelPayload({
+            ...payload,
+            result: {
+              ...resultRecord,
+              spCoinMetaData: metadataRecord,
+            },
+          });
+          if (blocks.length > 1) {
+            const nextBlocks = [...blocks];
+            nextBlocks[entry.index] = nextPayload;
+            setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+          } else {
+            setFormattedOutputDisplay(nextPayload);
+          }
+          setStatus('Loaded spCoin metadata.');
+          appendLog('Lazy-loaded spCoinMetaData.');
+          return 'expanded';
+        } catch (error) {
+          const message = String(error instanceof Error ? error.message : error || '').trim() || 'Unable to load spCoin metadata.';
+          setStatus('Unable to load spCoin metadata.');
+          appendLog(`Lazy spCoinMetaData load failed: ${message}`);
+          return 'handled';
+        }
+      }
+      return 'unhandled';
+    },
+    [
+      appendLog,
+      coerceParamValue,
+      ensureReadRunner,
+      formatFormattedPanelPayload,
+      formattedOutputDisplay,
+      requireContractAddress,
+      setFormattedOutputDisplay,
+      setStatus,
+      stringifyResult,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
+
   const expandMasterSponsorListAccountInline = useCallback(
     async (account: string, pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedAccount = normalizeAddressValue(account);
@@ -2261,10 +2335,13 @@ export function useSponsorCoinLabMethods({
       const trimmedDisplay = String(formattedOutputDisplay || '').trim();
       if (!trimmedDisplay) return 'unhandled';
       const normalizedPathHint = String(pathHint || '').trim();
-      const isInlineAccountListPath =
-        /(?:^|\.)(?:result\.)?(?:accounts|sponsors)\.\d+(?:\.|$)/i.test(normalizedPathHint) ||
-        /^(?:step|output)-\d+\.result\.(?:accounts|sponsors)\.\d+(?:\.|$)/i.test(normalizedPathHint);
-      if (!isInlineAccountListPath) return 'unhandled';
+      const pathRootMatch = normalizedPathHint.match(/^(?:step|output)-(\d+)(?:\.|$)/i);
+      if (!pathRootMatch) return 'unhandled';
+      const pathSegments = normalizedPathHint.split('.').filter(Boolean);
+      if (pathSegments.length < 2) return 'unhandled';
+      const payloadPath = pathSegments.slice(1);
+      const targetKey = payloadPath[payloadPath.length - 1] || '';
+      if (!/^\d+$/.test(targetKey)) return 'unhandled';
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {
@@ -2275,6 +2352,33 @@ export function useSponsorCoinLabMethods({
         } catch {
           return null;
         }
+      };
+      const readPathValue = (source: unknown, segments: string[]): unknown => {
+        return segments.reduce<unknown>((currentValue, segment) => {
+          if (currentValue == null) return undefined;
+          if (Array.isArray(currentValue)) {
+            const index = Number(segment);
+            return Number.isInteger(index) ? currentValue[index] : undefined;
+          }
+          if (typeof currentValue !== 'object') return undefined;
+          return (currentValue as Record<string, unknown>)[segment];
+        }, source);
+      };
+      const writePathValue = (source: unknown, segments: string[], nextValue: unknown): unknown => {
+        if (segments.length === 0) return nextValue;
+        const [head, ...tail] = segments;
+        if (Array.isArray(source)) {
+          const index = Number(head);
+          if (!Number.isInteger(index) || index < 0 || index >= source.length) return source;
+          const nextArray = [...source];
+          nextArray[index] = writePathValue(nextArray[index], tail, nextValue);
+          return nextArray;
+        }
+        if (!source || typeof source !== 'object') return source;
+        return {
+          ...(source as Record<string, unknown>),
+          [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
+        };
       };
 
       const blocks = trimmedDisplay
@@ -2295,61 +2399,31 @@ export function useSponsorCoinLabMethods({
       for (const entry of candidateEntries) {
         const payload = entry.payload;
         if (!payload) continue;
-        const call = payload.call as Record<string, unknown> | undefined;
-        const methodName = String(call?.method || '').trim();
-        if (!['getMasterSponsorList', 'getMasterAccountKeys', 'getAccountKeys'].includes(methodName)) continue;
-        const listKey = ['getMasterAccountKeys', 'getAccountKeys'].includes(methodName) ? 'accounts' : 'sponsors';
-        const resultRecord = payload.result && typeof payload.result === 'object' && !Array.isArray(payload.result)
-          ? (payload.result as Record<string, unknown>)
-          : null;
-        const currentResult = Array.isArray(payload.result)
-          ? [...payload.result]
-          : resultRecord && Array.isArray(resultRecord[listKey])
-            ? [...(resultRecord[listKey] as unknown[])]
-            : null;
-        if (!currentResult) continue;
-        const pathMatch = normalizedPathHint.match(/(?:^|\.)result(?:\.(?:sponsors|accounts))?\.(\d+)(?:\.|$)/);
-        const hintedIndex = pathMatch ? Number(pathMatch[1]) : Number.NaN;
-        const targetIndex =
-          Number.isInteger(hintedIndex) && hintedIndex >= 0 && hintedIndex < currentResult.length
-            ? hintedIndex
-            : currentResult.findIndex((resultEntry) => {
-                if (typeof resultEntry === 'string') {
-                  return normalizeAddressValue(resultEntry) === normalizedAccount;
-                }
-                if (!resultEntry || typeof resultEntry !== 'object' || Array.isArray(resultEntry)) return false;
-                const record = resultEntry as Record<string, unknown>;
-                return normalizeAddressValue(String(record.address || record.accountKey || '')) === normalizedAccount;
-              });
+        const targetEntry = readPathValue(payload, payloadPath);
+        const targetAddress =
+          typeof targetEntry === 'string'
+            ? normalizeAddressValue(targetEntry)
+            : targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
+              ? normalizeAddressValue(String((targetEntry as Record<string, unknown>).address || (targetEntry as Record<string, unknown>).accountKey || ''))
+              : '';
+        if (targetAddress !== normalizedAccount) continue;
         appendLog(
-          `expandMasterSponsorListAccountInline debug -> method=${methodName} path=${String(pathHint || '')} targetIndex=${targetIndex} entryKinds=${JSON.stringify(
-            currentResult.map((resultEntry) =>
-              typeof resultEntry === 'string'
-                ? { type: 'string', value: resultEntry }
-                : resultEntry && typeof resultEntry === 'object' && !Array.isArray(resultEntry)
-                  ? { type: 'object', keys: Object.keys(resultEntry as Record<string, unknown>) }
-                  : { type: typeof resultEntry },
-            ),
-          )}`,
+          `expandAccountInline debug -> path=${String(pathHint || '')} account=${normalizedAccount} targetKind=${typeof targetEntry}`,
         );
-        if (targetIndex < 0) continue;
         try {
           const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
-          currentResult[targetIndex] = {
+          const nextAccountEntry = {
             address: normalizedAccount,
+            ...(targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
+              ? (targetEntry as Record<string, unknown>)
+              : {}),
             ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
               ? (accountRecord as Record<string, unknown>)
               : { value: accountRecord }),
           };
+          const nextRootPayload = writePathValue(payload, payloadPath, nextAccountEntry) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload({
-            ...payload,
-            result:
-              resultRecord && Array.isArray(resultRecord[listKey])
-                ? {
-                    ...resultRecord,
-                    [listKey]: currentResult,
-                  }
-                : currentResult,
+            ...nextRootPayload,
           });
           if (blocks.length > 1) {
             const nextBlocks = [...blocks];
@@ -2383,6 +2457,13 @@ export function useSponsorCoinLabMethods({
 
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string) => {
+      if (String(account || '').trim() === '__load_spcoin_metadata__') {
+        const metadataResult = await expandSpCoinMetaDataInline(pathHint);
+        if (metadataResult === 'expanded' || metadataResult === 'handled') {
+          setOutputPanelMode('formatted');
+        }
+        return;
+      }
       const inTreePanel = /^tree-/i.test(String(pathHint || '').trim());
       const inlineResult = await expandMasterSponsorListAccountInline(account, pathHint);
       if (inlineResult === 'expanded' || inlineResult === 'handled') {
@@ -2396,7 +2477,7 @@ export function useSponsorCoinLabMethods({
       setOutputPanelMode('tree');
       await runTreeDump(normalizedAccount);
     },
-    [expandMasterSponsorListAccountInline, normalizeAddressValue, runTreeDump, setOutputPanelMode],
+    [expandMasterSponsorListAccountInline, expandSpCoinMetaDataInline, normalizeAddressValue, runTreeDump, setOutputPanelMode],
   );
 
   const runSelectedWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {

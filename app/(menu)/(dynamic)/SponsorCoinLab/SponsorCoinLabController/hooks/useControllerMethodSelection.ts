@@ -65,6 +65,11 @@ type Props = {
   setScriptEditorKind: React.Dispatch<React.SetStateAction<'json' | 'javascript'>>;
 };
 
+function hasEquivalentSpCoinReadMethod(values: SpCoinReadMethod[], methodName: SpCoinReadMethod) {
+  const normalizedMethod = normalizeSpCoinReadMethod(methodName);
+  return values.some((value) => normalizeSpCoinReadMethod(value) === normalizedMethod);
+}
+
 export function useControllerMethodSelection({
   methodPanelMode,
   setMethodPanelMode,
@@ -124,6 +129,7 @@ export function useControllerMethodSelection({
       if (!value) return;
       if (kind === 'erc20Read') {
         runWithDiscardPrompt(() => {
+          setScriptEditorKind('json');
           resetToDropdownSelection();
           setAuxMethodPanelTab(null);
           setIsSpCoinTodoMode(false);
@@ -134,6 +140,7 @@ export function useControllerMethodSelection({
       }
       if (kind === 'erc20Write') {
         runWithDiscardPrompt(() => {
+          setScriptEditorKind('json');
           resetToDropdownSelection();
           setAuxMethodPanelTab(null);
           setIsSpCoinTodoMode(false);
@@ -144,8 +151,9 @@ export function useControllerMethodSelection({
       }
       if (kind === 'spCoinRead') {
         runWithDiscardPrompt(() => {
+          setScriptEditorKind('json');
           resetToDropdownSelection();
-          setAuxMethodPanelTab(spCoinAdminReadOptions.includes(value as SpCoinReadMethod) ? 'admin_utils' : null);
+          setAuxMethodPanelTab(hasEquivalentSpCoinReadMethod(spCoinAdminReadOptions, value as SpCoinReadMethod) ? 'admin_utils' : null);
           setIsSpCoinTodoMode(false);
           setMethodPanelMode('spcoin_rread');
           setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value as SpCoinReadMethod));
@@ -166,6 +174,7 @@ export function useControllerMethodSelection({
       }
       if (kind === 'spCoinWrite') {
         runWithDiscardPrompt(() => {
+          setScriptEditorKind('json');
           resetToDropdownSelection();
           setAuxMethodPanelTab(spCoinAdminWriteOptions.includes(value as SpCoinWriteMethod) ? 'admin_utils' : null);
           setIsSpCoinTodoMode(spCoinTodoWriteOptions.includes(value as SpCoinWriteMethod));
@@ -187,6 +196,7 @@ export function useControllerMethodSelection({
         return;
       }
       runWithDiscardPrompt(() => {
+        setScriptEditorKind('json');
         resetToDropdownSelection();
         setAuxMethodPanelTab('admin_utils');
         setIsSpCoinTodoMode(false);
@@ -236,6 +246,7 @@ export function useControllerMethodSelection({
       spCoinTodoWriteOptions,
       spCoinWriteMethodDefs,
       resetToDropdownSelection,
+      setScriptEditorKind,
     ],
   );
   const editScriptStepFromBuilder = useCallback(
@@ -245,7 +256,7 @@ export function useControllerMethodSelection({
       setAuxMethodPanelTab(
         (
           (step.panel === 'serialization_tests' && utilityMethodOptions.includes(step.method as SerializationTestMethod)) ||
-          (step.panel === 'spcoin_rread' && spCoinAdminReadOptions.includes(step.method as SpCoinReadMethod)) ||
+          (step.panel === 'spcoin_rread' && hasEquivalentSpCoinReadMethod(spCoinAdminReadOptions, step.method as SpCoinReadMethod)) ||
           (step.panel === 'spcoin_write' && spCoinAdminWriteOptions.includes(step.method as SpCoinWriteMethod))
         )
           ? 'admin_utils'
@@ -291,7 +302,7 @@ export function useControllerMethodSelection({
         runWithDiscardPrompt(() => {
           setAuxMethodPanelTab('admin_utils');
           setIsSpCoinTodoMode(false);
-          if (methodPanelMode === 'spcoin_rread' && spCoinAdminReadOptions.includes(selectedSpCoinReadMethod)) return;
+          if (methodPanelMode === 'spcoin_rread' && hasEquivalentSpCoinReadMethod(spCoinAdminReadOptions, selectedSpCoinReadMethod)) return;
           if (methodPanelMode === 'spcoin_write' && spCoinAdminWriteOptions.includes(selectedSpCoinWriteMethod)) return;
           if (methodPanelMode === 'serialization_tests' && utilityMethodOptions.includes(selectedSerializationTestMethod)) return;
           if (adminUtilityReadOptions[0]) {
@@ -396,7 +407,7 @@ export function useControllerMethodSelection({
 
   const selectDropdownSpCoinReadMethod = useCallback(
     (value: SpCoinReadMethod) => {
-      if (selectedSpCoinReadMethod === value) return;
+      if (normalizeSpCoinReadMethod(selectedSpCoinReadMethod) === normalizeSpCoinReadMethod(value)) return;
       runWithDiscardPrompt(() => {
         resetToDropdownSelection();
         setSelectedSpCoinReadMethod(normalizeSpCoinReadMethod(value));
@@ -501,7 +512,7 @@ export function useControllerMethodSelection({
       if (!value) return;
       if (activeMethodPanelTab === 'admin_utils') {
         if (
-          spCoinAdminReadOptions.includes(value as SpCoinReadMethod) ||
+          hasEquivalentSpCoinReadMethod(spCoinAdminReadOptions, value as SpCoinReadMethod) ||
           value === 'calculateStakingRewards'
         ) {
           runWithDiscardPrompt(() => {

@@ -4,7 +4,7 @@ import { SPCOIN_ADMIN_WRITE_METHODS, SPCOIN_TODO_WRITE_METHODS, SPCOIN_WRITE_MET
 import { ERC20_READ_METHOD_MEMBER_LISTS } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/erc20/read';
 import { ERC20_WRITE_METHOD_MEMBER_LISTS } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/erc20/write';
 
-export type StoredAlterMode = 'Basic' | 'Standard' | 'All' | 'Test' | 'Todo';
+export type StoredAlterMode = 'Basic' | 'Standard' | 'All' | 'Test' | 'Todo' | 'Complete';
 export type AlterMemberLists = Record<StoredAlterMode, Record<string, boolean>>;
 export type MethodDisplayGroup = 'erc20' | 'spcoin_rread' | 'spcoin_write' | 'admin_utils' | 'todos';
 
@@ -38,6 +38,7 @@ export function cloneAlterMemberLists(source: AlterMemberLists): AlterMemberList
     All: { ...source.All },
     Test: { ...source.Test },
     Todo: { ...source.Todo },
+    Complete: { ...(source.Complete || {}) },
   };
 }
 
@@ -75,7 +76,7 @@ const DEFAULT_DISPLAY_GROUPS: Record<string, MethodDisplayGroup> = {
   ...Object.fromEntries(Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization.All).map((name) => [`serialization:${name}`, 'admin_utils'] as const)),
 };
 
-function markAdminUtilsAsTested(
+function markAdminUtilsAsTest(
   lists: MethodMemberListCollection,
   displayGroups: Record<string, MethodDisplayGroup>,
 ): MethodMemberListCollection {
@@ -105,7 +106,7 @@ function markAdminUtilsAsTested(
 export const DEFAULT_METHOD_MEMBER_LIST_PAYLOAD: MethodMemberListPayload = {
   version: 1,
   updatedAt: '',
-  lists: markAdminUtilsAsTested(cloneMethodMemberListCollection(), DEFAULT_DISPLAY_GROUPS),
+  lists: markAdminUtilsAsTest(cloneMethodMemberListCollection(), DEFAULT_DISPLAY_GROUPS),
   displayGroups: DEFAULT_DISPLAY_GROUPS,
 };
 
@@ -135,6 +136,10 @@ function normalizeAlterMemberLists(
       typeof source.Todo?.[methodName] === 'boolean'
         ? Boolean(source.Todo?.[methodName])
         : Boolean(defaults.Todo?.[methodName]);
+    normalized.Complete[methodName] =
+      typeof source.Complete?.[methodName] === 'boolean'
+        ? Boolean(source.Complete?.[methodName])
+        : Boolean(defaults.Complete?.[methodName]);
   }
 
   return normalized;
@@ -166,16 +171,13 @@ export function normalizeMethodMemberListPayload(input: unknown): MethodMemberLi
       ];
     }),
   );
-  const lists = markAdminUtilsAsTested(
-    {
-      serialization: normalizeAlterMemberLists(sourceLists?.serialization, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization),
-      spCoinRead: normalizeAlterMemberLists(sourceLists?.spCoinRead, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead),
-      spCoinWrite: normalizeAlterMemberLists(sourceLists?.spCoinWrite, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite),
-      erc20Read: normalizeAlterMemberLists(sourceLists?.erc20Read, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read),
-      erc20Write: normalizeAlterMemberLists(sourceLists?.erc20Write, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write),
-    },
-    displayGroups,
-  );
+  const lists = {
+    serialization: normalizeAlterMemberLists(sourceLists?.serialization, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization),
+    spCoinRead: normalizeAlterMemberLists(sourceLists?.spCoinRead, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead),
+    spCoinWrite: normalizeAlterMemberLists(sourceLists?.spCoinWrite, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite),
+    erc20Read: normalizeAlterMemberLists(sourceLists?.erc20Read, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read),
+    erc20Write: normalizeAlterMemberLists(sourceLists?.erc20Write, DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write),
+  };
 
   return {
     version: 1,
