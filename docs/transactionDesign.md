@@ -99,6 +99,137 @@ So the preferred model is:
 - one id-array entry per transaction at the branch
 - one shared metadata record per transaction set
 
+## Deletion Strategy: Unlink, Don't Delete
+
+The simplest and most robust approach is to never delete data—only unlink it:
+
+- **Master records are immutable**: `masterTransactionIdMap` entries are append-only history
+- **Deletes are link removals**: Removing an agent or recipient just removes their ID from the relevant `transactionIdKeys` arrays
+- **Orphaned data is intentional**: "Orphaned" master records remain for auditability and recovery
+- **Active accounts list**: Maintain a separate active account registry to track current participants
+
+This eliminates expensive cascading deletes and tree walks. The trade-off of minimal extra storage buys massive simplicity, auditability, and performance benefits.
+
+## Account List Strategy
+
+The account-list model should use two account indexes with different meanings:
+
+- `masterAccountList`
+- `activeAccountList`
+
+The intended meaning is:
+
+- `masterAccountList` is the complete append-only list of every account ever registered
+- `activeAccountList` is the current list of accounts that are still connected to active branches
+
+This is preferred over moving accounts from `masterAccountList` to an archive list.
+
+The reason is:
+
+- `masterAccountList` stays complete for audit, recovery, and historical display
+- branch deletes do not rewrite the historical master list
+- the active list can shrink and grow as branches are unlinked or re-linked
+- no separate `archiveAccountList` is needed unless the UI later needs a direct archive enumeration
+
+Conceptually:
+
+```solidity
+address[] masterAccountList;
+address[] activeAccountList;
+
+mapping(address => AccountStruct) accountMap;
+mapping(address => bool) isKnownAccount;
+mapping(address => bool) isActiveAccount;
+```
+
+First registration should:
+
+1. add the account to `masterAccountList` once
+2. mark the account known
+3. add the account to `activeAccountList` when it receives an active role or link
+
+Branch deletion should:
+
+1. remove the relevant branch links
+2. check each affected account for remaining active links
+3. remove the account from `activeAccountList` only if it has no remaining active links
+4. keep the account in `masterAccountList`
+5. keep enough account record data for audit and recovery
+
+Reactivation should:
+
+1. avoid adding the account to `masterAccountList` again
+2. add the account back to `activeAccountList`
+3. mark it active again
+
+The active-link test should distinguish parent links from child links.
+
+In the current account structure:
+
+- `sponsorKeys` are parent links for an account acting as a recipient
+- `parentRecipientKeys` are parent links for an account acting as an agent
+- `recipientKeys` are child links for an account acting as a sponsor
+- `agentKeys` are child links for an account acting as a recipient
+
+So an account should remain active if any of these lists still has active entries:
+
+```solidity
+function hasActiveLinks(address accountKey) internal view returns (bool) {
+    AccountStruct storage account = accountMap[accountKey];
+
+    return account.sponsorKeys.length > 0
+        || account.parentRecipientKeys.length > 0
+        || account.recipientKeys.length > 0
+        || account.agentKeys.length > 0;
+}
+```
+
+That means:
+
+- a recipient is active while it still has sponsor parents
+- an agent is active while it still has recipient parents
+- a sponsor is active while it still has recipient children
+- a recipient is also active while it still has agent children
+- an account with no active parent or child links can be removed from `activeAccountList`
+
+The array membership checks should eventually be backed by mappings or index maps so the contract does not need repeated sequential scans just to know whether an account is known or active.
+
+## Online Delete Policy
+
+The on-chain delete methods should be shallow unlink methods.
+
+That means:
+
+- do not recursively traverse descendant branches during a delete call
+- do not physically delete master account records
+- do not physically delete master transaction records
+- do not clear transaction history as part of normal online deletion
+- unlink only the directly addressed branch or account relationship
+- update active account bookkeeping for the accounts directly touched by that unlink
+
+The current implementation direction uses active link counters:
+
+```solidity
+uint256 activeParentLinkCount;
+uint256 activeChildLinkCount;
+```
+
+These counters let the contract decide whether an account still belongs in `activeAccountList` without scanning every relationship array.
+
+For direct unlink calls:
+
+- unlinking a recipient decrements the sponsor child count and recipient parent count
+- unlinking an agent decrements the recipient child count and agent parent count
+- unlinking a sponsor clears that sponsor's active child count without walking every recipient
+
+The tradeoff is intentional:
+
+- online deletes stay bounded and gas-predictable
+- descendant records may still contain historical references to now-inactive branches
+- deeper cleanup, reconciliation, or audit views can be handled by later explicit calls or off-chain tooling
+
+So "delete" means "remove from active reachability," not "erase all historical storage."
+
 ## Transaction ID
 
 The transaction id should stay simple:
@@ -383,6 +514,93 @@ This keeps the model simple:
 - branch holds transaction id keys
 - master map holds actual transaction records
 
+## Longer-Term Map-First Access Goal
+
+The longer-term goal is:
+
+- maps are for access
+- tree/index arrays are for display
+
+The contract should not need to walk the sponsor -> recipient -> rate -> agent -> rate tree in order to find a record. Each real branch component should have a stable direct map key.
+
+The current logical layout is:
+
+```text
+sponsorKey
+recipientKey
+recipientRateKey
+agentKey
+agentRateKey
+transactionIndex or transactionId
+```
+
+The gas-efficient version should use fixed `bytes32` ids, not string concatenation.
+
+Recommended key chain:
+
+```solidity
+// Sponsor access can stay address-based.
+// mapping(address => SponsorNode) sponsors;
+
+bytes32 recipientId = keccak256(
+    abi.encode(sponsorKey, recipientKey)
+);
+
+bytes32 recipientRateId = keccak256(
+    abi.encode(recipientId, recipientRateKey)
+);
+
+bytes32 agentId = keccak256(
+    abi.encode(recipientRateId, agentKey)
+);
+
+bytes32 agentRateId = keccak256(
+    abi.encode(agentId, agentRateKey)
+);
+
+bytes32 transactionEntryId = keccak256(
+    abi.encode(agentRateId, transactionId)
+);
+```
+
+This gives direct access without tree walking:
+
+```solidity
+mapping(address => SponsorNode) sponsors;
+mapping(bytes32 => RecipientNode) recipients;
+mapping(bytes32 => RecipientRateNode) recipientRates;
+mapping(bytes32 => AgentNode) agents;
+mapping(bytes32 => AgentRateNode) agentRates;
+mapping(uint256 => TransactionRecordStruct) masterTransactionIdMap;
+```
+
+For display, keep child-id arrays:
+
+```solidity
+mapping(address => bytes32[]) sponsorRecipientIds;
+mapping(bytes32 => bytes32[]) recipientRateIds;
+mapping(bytes32 => bytes32[]) recipientRateAgentIds;
+mapping(bytes32 => bytes32[]) agentRateIds;
+mapping(bytes32 => uint256[]) branchTransactionIds;
+```
+
+So:
+
+- direct contract access uses maps
+- UI/tree display uses id arrays
+- transaction records still live once in `masterTransactionIdMap`
+- branch records hold ids and set-level metadata
+
+Important gas notes:
+
+- use `bytes32` ids
+- use `abi.encode(...)` for unambiguous hashing
+- avoid dynamic string keys
+- avoid storing duplicate data unless it saves meaningful lookup or recomputation
+- keep arrays only where enumeration/display is required
+
+This map-first model is the eventual direction. The current migration should still be incremental: add maps and ids in parallel, dual-write them, compare against the old tree, and only then move reads/deletes/rewards to the map-first source of truth.
+
 ## Summary
 
 The design we now prefer is:
@@ -392,6 +610,8 @@ The design we now prefer is:
 - one set-level metadata record per rate branch
 - shared update time on the set
 - no shared update time on the individual transaction record
+- `masterAccountList` as the append-only complete account registry
+- `activeAccountList` as the current active/reachable account registry
 - old runnable behavior unchanged during migration
 
 This is the design that should guide the next implementation steps.

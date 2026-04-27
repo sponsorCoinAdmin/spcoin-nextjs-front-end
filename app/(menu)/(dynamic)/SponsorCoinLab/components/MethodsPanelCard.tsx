@@ -181,7 +181,7 @@ const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'getMasterAccountKeys',
 ]);
 
-const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Standard', 'Test', 'Tested', 'Todo'];
+const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Basic', 'Standard', 'Test', 'Tested', 'Todo'];
 const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
 
 type StoredMethodsPanelUiState = {
@@ -210,6 +210,7 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     }
     if (
       saved.selectedAlterMode === 'All' ||
+      saved.selectedAlterMode === 'Basic' ||
       saved.selectedAlterMode === 'Standard' ||
       saved.selectedAlterMode === 'Test' ||
       saved.selectedAlterMode === 'Tested' ||
@@ -587,20 +588,18 @@ export default function MethodsPanelCard({
   );
   const visibleAdminUtilsReadOptions = React.useMemo(
     () =>
-      sortMethodNames(
-        Array.from(
-          new Set([
-            ...adminUtilityReadOptions,
-            ...filterMethodsByAlterMode(
-              spCoinReadProps.spCoinAdminReadOptions,
-              spCoinReadMemberLists,
-              selectedAlterMode,
-            ),
-          ]),
+      dedupeMethodNamesByLabel(
+        sortMethodNames(
+          filterMethodsByAlterMode(
+            spCoinReadProps.spCoinAdminReadOptions,
+            spCoinReadMemberLists,
+            selectedAlterMode,
+          ),
         ),
+        (name) => String(spCoinReadProps.spCoinReadMethodDefs[name]?.title || name),
       ),
     [
-      adminUtilityReadOptions,
+      spCoinReadProps.spCoinReadMethodDefs,
       spCoinReadProps.spCoinAdminReadOptions,
       spCoinReadMemberLists,
       selectedAlterMode,
@@ -608,19 +607,23 @@ export default function MethodsPanelCard({
   );
   const visibleAdminUtilsOwnerOptions = React.useMemo(
     () =>
-      sortMethodNames([
-        ...adminUtilityOwnerOptions,
-        ...filterMethodsByAlterMode(
+      sortMethodNames(
+        filterMethodsByAlterMode(
           spCoinWriteProps.spCoinAdminWriteOptions,
           spCoinWriteMemberLists,
           selectedAlterMode,
         ),
-      ]),
-    [adminUtilityOwnerOptions, spCoinWriteMemberLists, spCoinWriteProps.spCoinAdminWriteOptions, selectedAlterMode],
+      ),
+    [spCoinWriteMemberLists, spCoinWriteProps.spCoinAdminWriteOptions, selectedAlterMode],
   );
   const visibleAdminUtilitySerializationOptions = React.useMemo(
-    () => sortMethodNames([...adminUtilityReadOptions, ...adminUtilityOwnerOptions]),
-    [adminUtilityOwnerOptions, adminUtilityReadOptions],
+    () =>
+      sortMethodNames(
+        [...adminUtilityReadOptions, ...adminUtilityOwnerOptions].filter(
+          (name) => Boolean(serializationTestProps.serializationTestMethodDefs[name]),
+        ),
+      ),
+    [adminUtilityOwnerOptions, adminUtilityReadOptions, serializationTestProps.serializationTestMethodDefs],
   );
   const groupedMethodEntries = React.useMemo(() => {
     const entries: MethodCatalogEntry[] = [
@@ -706,6 +709,12 @@ export default function MethodsPanelCard({
       spCoinReadMemberLists,
       spCoinWriteMemberLists,
     ],
+  );
+  const methodEntryNeedsTesting = React.useCallback(
+    (entry: MethodCatalogEntry) => {
+      return isMethodInAlterMode(entry.name, getMethodEntryMemberLists(entry), 'Test');
+    },
+    [getMethodEntryMemberLists],
   );
   const activeRunControl = React.useMemo(() => {
     if (activeMethodPanelTab === 'admin_utils' && methodPanelMode === 'serialization_tests') {
@@ -1025,7 +1034,9 @@ export default function MethodsPanelCard({
             ...prev[targetMode],
             [currentJsonMethodName]:
               mode === 'Tested'
-                ? Boolean(prev.Test?.[currentJsonMethodName])
+                ? false
+                : mode === 'Test'
+                  ? true
                 : !prev[targetMode]?.[currentJsonMethodName],
           },
         }));
@@ -1286,7 +1297,7 @@ export default function MethodsPanelCard({
               key={entry.id}
               value={entry.id}
               style={{
-                color: isMethodInAlterMode(entry.name, getMethodEntryMemberLists(entry), 'Test') ? '#22c55e' : undefined,
+                color: methodEntryNeedsTesting(entry) ? undefined : '#22c55e',
               }}
             >
               {entry.label}

@@ -436,6 +436,27 @@ export async function POST(request: NextRequest) {
                     ? await access.read.getAccountKeys()
                   : [];
               break;
+            case 'getActiveAccountKeys':
+            case 'getActiveAccountList':
+              stepResult =
+                typeof (contract as Record<string, unknown>).getActiveAccountKeys === 'function'
+                  ? await (contract as unknown as { getActiveAccountKeys: () => Promise<unknown> }).getActiveAccountKeys()
+                  : typeof (access.read as Record<string, unknown>).getActiveAccountKeys === 'function'
+                    ? await (access.read as unknown as { getActiveAccountKeys: () => Promise<unknown> }).getActiveAccountKeys()
+                    : typeof (access.read as Record<string, unknown>).getActiveAccountList === 'function'
+                      ? await (access.read as unknown as { getActiveAccountList: () => Promise<unknown> }).getActiveAccountList()
+                      : [];
+              break;
+            case 'getActiveAccountKeyAt':
+            case 'getActiveAccountElement':
+              if (typeof (contract as Record<string, unknown>).getActiveAccountKeyAt === 'function') {
+                stepResult = await (contract as unknown as { getActiveAccountKeyAt: (index: string) => Promise<unknown> }).getActiveAccountKeyAt(findParam('Index'));
+              } else if (typeof (access.read as Record<string, unknown>).getActiveAccountKeyAt === 'function') {
+                stepResult = await (access.read as unknown as { getActiveAccountKeyAt: (index: string) => Promise<unknown> }).getActiveAccountKeyAt(findParam('Index'));
+              } else {
+                throw new Error('getActiveAccountKeyAt is not available on the current SpCoin contract.');
+              }
+              break;
             case 'getAccountRecord':
               if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                 stepResult = normalizeOnChainAccountRecordResult(await (
@@ -443,6 +464,67 @@ export async function POST(request: NextRequest) {
                 ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
               } else {
                 stepResult = await access.read.getAccountRecord(findParam('Account Key'));
+              }
+              break;
+            case 'getTransactionRecord':
+              if (typeof (contract as Record<string, unknown>).getTransactionRecord === 'function') {
+                stepResult = await (contract as unknown as { getTransactionRecord: (transactionId: string) => Promise<unknown> })
+                  .getTransactionRecord(findParam('Transaction Id'));
+              } else if (typeof (access.read as Record<string, unknown>).getTransactionRecord === 'function') {
+                stepResult = await (access.read as unknown as { getTransactionRecord: (transactionId: string) => Promise<unknown> })
+                  .getTransactionRecord(findParam('Transaction Id'));
+              } else {
+                throw new Error('getTransactionRecord is not available on the current SpCoin contract.');
+              }
+              break;
+            case 'getRecipientTransactionIdKeys':
+              if (typeof (contract as Record<string, unknown>).getRecipientTransactionIdKeys === 'function') {
+                stepResult = await (contract as unknown as {
+                  getRecipientTransactionIdKeys: (sponsorKey: string, recipientKey: string, recipientRateKey: string) => Promise<unknown>;
+                }).getRecipientTransactionIdKeys(findParam('Sponsor Key'), findParam('Recipient Key'), findParam('Recipient Rate Key'));
+              } else if (typeof (access.read as Record<string, unknown>).getRecipientTransactionIdKeys === 'function') {
+                stepResult = await (access.read as unknown as {
+                  getRecipientTransactionIdKeys: (sponsorKey: string, recipientKey: string, recipientRateKey: string) => Promise<unknown>;
+                }).getRecipientTransactionIdKeys(findParam('Sponsor Key'), findParam('Recipient Key'), findParam('Recipient Rate Key'));
+              } else {
+                throw new Error('getRecipientTransactionIdKeys is not available on the current SpCoin contract.');
+              }
+              break;
+            case 'getAgentTransactionIdKeys':
+              if (typeof (contract as Record<string, unknown>).getAgentTransactionIdKeys === 'function') {
+                stepResult = await (contract as unknown as {
+                  getAgentTransactionIdKeys: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string,
+                    agentKey: string,
+                    agentRateKey: string,
+                  ) => Promise<unknown>;
+                }).getAgentTransactionIdKeys(
+                  findParam('Sponsor Key'),
+                  findParam('Recipient Key'),
+                  findParam('Recipient Rate Key'),
+                  findParam('Agent Key'),
+                  findParam('Agent Rate Key'),
+                );
+              } else if (typeof (access.read as Record<string, unknown>).getAgentTransactionIdKeys === 'function') {
+                stepResult = await (access.read as unknown as {
+                  getAgentTransactionIdKeys: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string,
+                    agentKey: string,
+                    agentRateKey: string,
+                  ) => Promise<unknown>;
+                }).getAgentTransactionIdKeys(
+                  findParam('Sponsor Key'),
+                  findParam('Recipient Key'),
+                  findParam('Recipient Rate Key'),
+                  findParam('Agent Key'),
+                  findParam('Agent Rate Key'),
+                );
+              } else {
+                throw new Error('getAgentTransactionIdKeys is not available on the current SpCoin contract.');
               }
               break;
             case 'getMasterAccountCount':
@@ -465,6 +547,22 @@ export async function POST(request: NextRequest) {
                       ? await access.read.getMasterAccountKeys()
                     : typeof access.read.getAccountKeys === 'function'
                       ? await access.read.getAccountKeys()
+                      : [];
+                stepResult = Array.isArray(list) ? list.length : 0;
+              }
+              break;
+            case 'getActiveAccountCount':
+            case 'getActiveAccountListSize':
+              if (typeof (contract as Record<string, unknown>).getActiveAccountCount === 'function') {
+                stepResult = Number(await (contract as unknown as { getActiveAccountCount: () => Promise<unknown> }).getActiveAccountCount());
+              } else if (typeof (access.read as Record<string, unknown>).getActiveAccountCount === 'function') {
+                stepResult = await (access.read as unknown as { getActiveAccountCount: () => Promise<unknown> }).getActiveAccountCount();
+              } else {
+                const list =
+                  typeof (contract as Record<string, unknown>).getActiveAccountKeys === 'function'
+                    ? await (contract as unknown as { getActiveAccountKeys: () => Promise<unknown> }).getActiveAccountKeys()
+                    : typeof (access.read as Record<string, unknown>).getActiveAccountKeys === 'function'
+                      ? await (access.read as unknown as { getActiveAccountKeys: () => Promise<unknown> }).getActiveAccountKeys()
                       : [];
                 stepResult = Array.isArray(list) ? list.length : 0;
               }

@@ -427,4 +427,61 @@ contract Transactions is RewardsManager {
         stakingRewards = transactionRecord.stakingRewards;
     }
 
+    function getTransactionRecord(uint256 _transactionId)
+        external
+        view
+        returns (
+            uint256 transactionId,
+            uint256 insertionTime,
+            uint256 stakingRewards,
+            address sponsorKey,
+            address recipientKey,
+            uint256 recipientRateKey,
+            address agentKey,
+            uint256 agentRateKey,
+            bool inserted
+        )
+    {
+        TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[_transactionId];
+        transactionId = transactionRecord.transactionId;
+        insertionTime = transactionRecord.insertionTime;
+        stakingRewards = transactionRecord.stakingRewards;
+        sponsorKey = transactionRecord.sponsorKey;
+        recipientKey = transactionRecord.recipientKey;
+        recipientRateKey = transactionRecord.recipientRateKey;
+        agentKey = transactionRecord.agentKey;
+        agentRateKey = transactionRecord.agentRateKey;
+        inserted = transactionRecord.inserted;
+    }
+
+    function getRecipientTransactionIdKeys(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey
+    )
+        external
+        view
+        returns (uint256[] memory)
+    {
+        RecipientRateStruct storage recipientTransaction =
+            getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        return recipientTransaction.recipientTransactionIdKeys;
+    }
+
+    function getAgentTransactionIdKeys(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey
+    )
+        external
+        view
+        returns (uint256[] memory)
+    {
+        AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        AgentRateStruct storage agentTransaction = agentRec.agentRateMap[_agentRateKey];
+        return agentTransaction.agentTransactionIdKeys;
+    }
+
 }

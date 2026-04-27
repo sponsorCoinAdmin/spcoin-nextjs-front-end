@@ -50,6 +50,8 @@ contract Recipient is Sponsor {
             recipientRecord.inserted = true;
             sponsorRecord.recipientKeys.push(_recipientKey);
             accountMap[_recipientKey].sponsorKeys.push(_sponsor);
+            incrementActiveChildLink(_sponsor);
+            incrementActiveParentLink(_recipientKey);
         }
         return recipientRecord;
     }

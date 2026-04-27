@@ -12,6 +12,7 @@ contract SpCoinDataTypes {
     uint256 internal defaultTotalSupply   = defaultTSPCoinSupply * decimalMultiplier;
 
     address[] internal masterAccountList;
+    mapping(address => bool) internal isActiveAccount;
     address burnAddress = 0x0000000000000000000000000000000000000000;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -60,6 +61,8 @@ contract SpCoinDataTypes {
         uint256 creationTime;
         uint256 stakedSPCoins; // Coins Owned but steaked to recipients
         uint256 accountTypes;  // Coins Owned but steaked to recipients
+        uint256 activeParentLinkCount;
+        uint256 activeChildLinkCount;
         bool inserted;
         bool verified;
         address[] recipientKeys;           // If Sponsor List of Recipient Accounts

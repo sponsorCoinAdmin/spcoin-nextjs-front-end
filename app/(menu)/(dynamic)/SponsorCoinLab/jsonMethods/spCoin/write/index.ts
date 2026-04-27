@@ -4,7 +4,6 @@ export { SPCOIN_WRITE_METHOD_DEFS };
 import type { ParamDef } from '../../shared/types';
 import {
   buildMethodTimingMeta,
-  runWithMethodTimingCollector,
   type MethodTimingCollector,
   type MethodTimingMeta,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
@@ -339,20 +338,6 @@ function normalizeAddress(value: unknown): string {
   return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
 }
 
-function getErrorText(error: unknown): string {
-  return getNestedErrorText(error) || String(error ?? '');
-}
-
-function isTransientFetchError(error: unknown): boolean {
-  const text = getErrorText(error);
-  const code = String((error as { code?: unknown } | null)?.code || '');
-  return code === 'NETWORK_ERROR' || /failed to fetch|network error|missing response|FetchRequest\.getUrl/i.test(text);
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
   const read = access.read as SpCoinReadAccess & Record<string, unknown>;
   if (
@@ -424,21 +409,26 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     );
     return index >= 0 ? String(spWriteParams[index] || '').trim() : '';
   };
-  const result = timingCollector
-    ? await runWithMethodTimingCollector(timingCollector, async () => executeMethod())
-    : await executeMethod();
-
-  const meta = timingCollector ? buildMethodTimingMeta(timingCollector) : undefined;
-  return { receipts: result, meta };
-
-  async function executeMethod() {
-    const receipts: Array<{
-      label: string;
-      txHash: string;
-      receiptHash: string;
-      blockNumber: string;
-      status: string;
-    }> = [];
+  const receipts: Array<{
+    label: string;
+    txHash: string;
+    receiptHash: string;
+    blockNumber: string;
+    status: string;
+  }> = [];
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const getErrorText = (error: unknown): string => {
+    const parts = [
+      (error as { message?: unknown } | null)?.message,
+      (error as { shortMessage?: unknown } | null)?.shortMessage,
+      (error as { reason?: unknown } | null)?.reason,
+      (error as { info?: { error?: { message?: unknown } } } | null)?.info?.error?.message,
+      (error as { error?: { message?: unknown } } | null)?.error?.message,
+      error,
+    ];
+    return parts.map((part) => String(part || '')).join(' ');
+  };
+  const isTransientFetchError = (error: unknown) => /failed to fetch/i.test(getErrorText(error));
     const submitWrite = async (
       label: string,
       writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
@@ -1062,8 +1052,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
   }
 
   setStatus(`${activeDef.title} complete.`);
-  return receipts;
-}
-
+  return {
+    receipts,
+    meta: timingCollector ? buildMethodTimingMeta(timingCollector) : undefined,
+  };
 }
 

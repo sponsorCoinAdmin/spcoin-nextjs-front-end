@@ -75,6 +75,25 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "accountHasActiveLinks",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_sponsorKey",
         "type": "address"
       },
@@ -586,6 +605,16 @@
         "internalType": "uint256",
         "name": "accountStakingRewards",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "activeParentLinkCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "activeChildLinkCount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1003,6 +1032,45 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_agentRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAgentTransactionIdKeys",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getInflationRate",
     "outputs": [
@@ -1302,6 +1370,113 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientTransactionIdKeys",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_transactionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTransactionRecord",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "transactionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "insertionTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakingRewards",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "agentRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "inserted",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "isAccountActive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

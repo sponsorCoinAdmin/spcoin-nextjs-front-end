@@ -2,6 +2,7 @@
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import getAccountKeys from './getMasterAccountList';
+import getActiveAccountKeys from './getActiveAccountList';
 import getRecipientRateKeys from './getRecipientRateList';
 import getRecipientRateAgentKeys from './getRecipientRateAgentList';
 import getLowerRecipientRate from './getLowerRecipientRate';
@@ -15,6 +16,7 @@ import totalInitialSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getAccountElement from './getMasterAccountElement';
+import getActiveAccountElement from './getActiveAccountElement';
 import getStakingRewards from './getStakingRewards';
 import getAccountTimeInSecondeSinceUpdate from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
@@ -25,7 +27,11 @@ import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
 import getAccountTransactionList from './getAccountTransactionList';
 import getTransactionList from './getTransactionList';
+import getTransactionRecord from './getTransactionRecord';
+import getRecipientTransactionIdKeys from './getRecipientTransactionIdKeys';
+import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
 import getAccountKeyCount from './getAccountListSize';
+import getActiveAccountCount from './getActiveAccountListSize';
 import getRecipientKeys from './getAccountRecipientList';
 import getAgentKeys from './getAccountAgentList';
 import getRecipientKeyCount from './getAccountRecipientListSize';
@@ -55,6 +61,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     calculateStakingRewards,
     getMasterAccountKeys: getAccountKeys,
     getAccountKeys,
+    getActiveAccountKeys,
     getRecipientRateKeys,
     getRecipientRateAgentKeys,
     getLowerRecipientRate,
@@ -69,6 +76,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     isAccountInserted,
     getMasterAccountElement: getAccountElement,
     getAccountElement,
+    getActiveAccountKeyAt: getActiveAccountElement,
     getStakingRewards,
     getAccountTimeInSecondeSinceUpdate,
     totalUnstakedSpCoins,
@@ -80,8 +88,12 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountRewardTransactionRecord,
     getAccountTransactionList,
     getTransactionList,
+    getTransactionRecord,
+    getRecipientTransactionIdKeys,
+    getAgentTransactionIdKeys,
     getMasterAccountCount: getAccountKeyCount,
     getAccountKeyCount,
+    getActiveAccountCount,
     getRecipientKeys,
     getAgentKeys,
     getRecipientKeyCount,
@@ -107,9 +119,12 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     serializedAgentRateTransactionStr,
     getSerializedTransactionList,
     getMasterAccountList: getAccountKeys,
+    getActiveAccountList: getActiveAccountKeys,
     getMasterAccountKeyAt: getAccountElement,
     getAccountKeyAt: getAccountElement,
+    getActiveAccountElement,
     getMasterAccountListSize: getAccountKeyCount,
+    getActiveAccountListSize: getActiveAccountCount,
     getRecipientList: getRecipientKeys,
     getAgentList: getAgentKeys,
     getRecipientListSize: getRecipientKeyCount,

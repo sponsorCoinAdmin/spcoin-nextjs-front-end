@@ -1333,7 +1333,7 @@ export function useSponsorCoinLabMethods({
         });
         return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
       }
-      const shouldUseServerBackedWrite = false;
+      const shouldUseServerBackedWrite = true;
       const result = shouldUseServerBackedWrite
         ? await runServerBackedSpCoinStep(
             'spcoin_write',
@@ -1355,16 +1355,9 @@ export function useSponsorCoinLabMethods({
             appendWriteTrace,
             spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             setStatus,
-            timingCollector: executionTimingCollector,
           });
-      if (shouldUseServerBackedWrite) {
-        const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodTimingMeta | undefined };
-        return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
-      } else {
-        const writeResult = result as { receipts: Array<{ label: string; txHash: string; receiptHash: string; blockNumber: string; status: string }>; meta: MethodTimingMeta | undefined };
-        const normalized = normalizeWriteResultForDisplay(writeResult.receipts);
-        return { call, result: normalized, meta: writeResult.meta || finalizeMeta() };
-      }
+      const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodTimingMeta | undefined };
+      return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
       })
         : await (async () => {
       if (panel === 'ecr20_read') {

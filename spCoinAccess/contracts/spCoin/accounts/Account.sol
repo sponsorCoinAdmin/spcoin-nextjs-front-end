@@ -21,6 +21,57 @@ contract Account is StructSerialization {
             masterAccountList.push(_accountKey);
         }
         accountRec.accountTypes |= accountType;
+        if (accountType != UNDEFINED) {
+            setAccountActive(_accountKey);
+        }
+    }
+
+    function setAccountActive(address _accountKey) internal {
+        isActiveAccount[_accountKey] = true;
+    }
+
+    function hasActiveLinks(address _accountKey) internal view returns (bool) {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        return accountRec.activeParentLinkCount > 0 || accountRec.activeChildLinkCount > 0;
+    }
+
+    function deactivateAccountIfUnlinked(address _accountKey) internal returns (bool) {
+        if (!accountMap[_accountKey].inserted || hasActiveLinks(_accountKey)) {
+            return false;
+        }
+        isActiveAccount[_accountKey] = false;
+        return true;
+    }
+
+    function incrementActiveParentLink(address _accountKey) internal {
+        accountMap[_accountKey].activeParentLinkCount += 1;
+        setAccountActive(_accountKey);
+    }
+
+    function incrementActiveChildLink(address _accountKey) internal {
+        accountMap[_accountKey].activeChildLinkCount += 1;
+        setAccountActive(_accountKey);
+    }
+
+    function decrementActiveParentLink(address _accountKey) internal {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        if (accountRec.activeParentLinkCount > 0) {
+            accountRec.activeParentLinkCount -= 1;
+        }
+        deactivateAccountIfUnlinked(_accountKey);
+    }
+
+    function decrementActiveChildLink(address _accountKey) internal {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        if (accountRec.activeChildLinkCount > 0) {
+            accountRec.activeChildLinkCount -= 1;
+        }
+        deactivateAccountIfUnlinked(_accountKey);
+    }
+
+    function clearActiveChildLinks(address _accountKey) internal {
+        accountMap[_accountKey].activeChildLinkCount = 0;
+        deactivateAccountIfUnlinked(_accountKey);
     }
 
     function getAccountRecord(uint accountType, address account)
@@ -84,6 +135,14 @@ contract Account is StructSerialization {
         return masterAccountList.length;
     }
 
+    function isAccountActive(address _accountKey) external view returns (bool) {
+        return isActiveAccount[_accountKey];
+    }
+
+    function accountHasActiveLinks(address _accountKey) external view returns (bool) {
+        return hasActiveLinks(_accountKey);
+    }
+
     function getAccountCore(address _accountKey)
         external
         view
@@ -93,7 +152,9 @@ contract Account is StructSerialization {
             bool verified,
             uint256 accountBalance,
             uint256 stakedAccountSPCoins,
-            uint256 accountStakingRewards
+            uint256 accountStakingRewards,
+            uint256 activeParentLinkCount,
+            uint256 activeChildLinkCount
         )
     {
         (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
@@ -105,7 +166,9 @@ contract Account is StructSerialization {
                 verified,
                 accountBalance,
                 stakedAccountSPCoins,
-                accountStakingRewards
+                accountStakingRewards,
+                activeParentLinkCount,
+                activeChildLinkCount
             );
         }
         accountKey = accountRec.accountKey;
@@ -114,6 +177,8 @@ contract Account is StructSerialization {
         accountBalance = balanceOf[_accountKey];
         stakedAccountSPCoins = accountRec.stakedSPCoins;
         accountStakingRewards = accountRec.stakingRewards;
+        activeParentLinkCount = accountRec.activeParentLinkCount;
+        activeChildLinkCount = accountRec.activeChildLinkCount;
     }
 
     function getAccountRecord(address _accountKey)

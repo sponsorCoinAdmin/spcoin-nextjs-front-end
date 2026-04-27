@@ -163,6 +163,12 @@ export type SpCoinReadAccess = {
   getMasterAccountKeys?: () => Promise<string[]>;
   getMasterAccountList?: () => Promise<string[]>;
   getMasterAccountCount?: () => Promise<number>;
+  getActiveAccountKeys?: () => Promise<string[]>;
+  getActiveAccountList?: () => Promise<string[]>;
+  getActiveAccountCount?: () => Promise<number>;
+  getActiveAccountListSize?: () => Promise<number>;
+  getActiveAccountKeyAt?: (index: string | number) => Promise<string>;
+  getActiveAccountElement?: (index: string | number) => Promise<string>;
   getRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getRecipientList?: (_accountKey: string) => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
@@ -183,6 +189,19 @@ export type SpCoinReadAccess = {
   getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
   getRecipient: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
   getRecipientTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
+  getTransactionRecord?: (_transactionId: string | number) => Promise<unknown>;
+  getRecipientTransactionIdKeys?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+  ) => Promise<(string | number | bigint)[]>;
+  getAgentTransactionIdKeys?: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _agentKey: string,
+    _agentRateKey: string | number,
+  ) => Promise<(string | number | bigint)[]>;
   getAgentRateKeys: (
     _sponsorKey: string,
     _recipientKey: string,

@@ -15,6 +15,12 @@ export type SpCoinReadMethod =
   | 'getMasterAccountKeys'
   | 'getMasterAccountCount'
   | 'getMasterAccountListSize'
+  | 'getActiveAccountKeys'
+  | 'getActiveAccountList'
+  | 'getActiveAccountCount'
+  | 'getActiveAccountListSize'
+  | 'getActiveAccountElement'
+  | 'getActiveAccountKeyAt'
   | 'getRecipientList'
   | 'getAgentList'
   | 'getRecipientListSize'
@@ -31,6 +37,9 @@ export type SpCoinReadMethod =
   | 'getAccountRewardTransactionRecord'
   | 'getAccountTransactionList'
   | 'getTransactionList'
+  | 'getTransactionRecord'
+  | 'getRecipientTransactionIdKeys'
+  | 'getAgentTransactionIdKeys'
   | 'getRecipientRateList'
   | 'getRecipientRateKeys'
   | 'getRecipientTransaction'
@@ -131,6 +140,12 @@ export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
   'getMasterAccountList',
   'getMasterAccountCount',
   'getMasterAccountListSize',
+  'getActiveAccountKeys',
+  'getActiveAccountList',
+  'getActiveAccountCount',
+  'getActiveAccountListSize',
+  'getActiveAccountElement',
+  'getActiveAccountKeyAt',
   'getAccountKeyCount',
   'getAccountKeys',
   'totalUnstakedSpCoins',

@@ -34,6 +34,8 @@ contract Agent is RecipientRates {
             accountMap[_recipientKey].agentKeys.push(_agentKey);
             accountMap[_agentKey].parentRecipientKeys.push(_recipientKey);
             recipientTransaction.agentKeys.push(_agentKey);
+            incrementActiveChildLink(_recipientKey);
+            incrementActiveParentLink(_agentKey);
         }
         return agentRecord;
     }
