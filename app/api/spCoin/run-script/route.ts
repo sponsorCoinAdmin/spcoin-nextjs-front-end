@@ -572,29 +572,10 @@ export async function POST(request: NextRequest) {
             }
           } else if (step.panel === 'spcoin_write') {
             switch (step.method) {
-            case 'addRecipient':
-            case 'addAccountRecipient': {
-              const sponsorKey = findParam('Sponsor Key') || senderAddress;
-              const recipientKey = findParam('Recipient Key');
-              const addRecipient = (contract as unknown as {
-                addRecipient?: (sponsorKey: string, recipientKey: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
-              }).addRecipient;
-              const tx =
-                typeof addRecipient === 'function'
-                  ? await addRecipient(sponsorKey, recipientKey)
-                  : await access.add.addRecipient(sponsorKey, recipientKey);
-              const receipt = await tx.wait();
-              stepResult = formatReceiptResult(
-                'addRecipient',
-                tx,
-                receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
-              );
-              break;
-            }
-            case 'addRecipientTransaction':
             case 'addRecipientTransaction':
             case 'addRecipientRateAmount':
             case 'addAccountRecipientRate':
+            case 'addAccountRecipient':
             case 'addSponsorship': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
               const recipientKey = findParam('Recipient Key');
@@ -614,17 +595,6 @@ export async function POST(request: NextRequest) {
               stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt);
               break;
             }
-            case 'addAgent': {
-              const sponsorKey = findParam('Sponsor Key') || senderAddress;
-              const recipientKey = findParam('Recipient Key');
-              const recipientRateKey = findParam('Recipient Rate Key');
-              const agentKey = findParam('Agent Key');
-              const tx = await access.add.addAgent(sponsorKey, recipientKey, recipientRateKey, agentKey);
-              const receipt = await tx.wait();
-              stepResult = formatReceiptResult('addAgent', tx, receipt);
-              break;
-            }
-            case 'addAgentTransaction':
             case 'addAgentTransaction':
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':

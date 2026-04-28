@@ -166,34 +166,6 @@
         "internalType": "address",
         "name": "_agentKey",
         "type": "address"
-      }
-    ],
-    "name": "addAgent",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_agentKey",
-        "type": "address"
       },
       {
         "internalType": "uint256",
@@ -219,24 +191,6 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      }
-    ],
-    "name": "addRecipient",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

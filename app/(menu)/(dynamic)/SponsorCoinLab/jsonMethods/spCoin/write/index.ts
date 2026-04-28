@@ -88,12 +88,8 @@ function decodeSpCoinError(error: unknown): string | null {
 }
 
 export type SpCoinWriteMethod =
-  | 'addRecipient'
   | 'addRecipientTransaction'
-  | 'addRecipients'
-  | 'addAgent'
   | 'addAgentTransaction'
-  | 'addAgents'
   | 'deleteAccountTree'
   | 'deleteSponsor'
   | 'deleteRecipient'
@@ -142,9 +138,7 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addRecipient',
   'addRecipientTransaction',
-  'addAgent',
   'addAgentTransaction',
   'updateAccountStakingRewards',
   'deleteAccountTree',
@@ -165,14 +159,10 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 export const SPCOIN_TODO_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addRecipients',
-  'addAgents',
   'deleteAccountRecords',
 ];
 
 export const SPCOIN_OFFCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = [
-  'addRecipients',
-  'addAgents',
   'deleteAccountTree',
   'deleteRecipient',
   'deleteRecipientRate',
@@ -260,7 +250,7 @@ export function getSpCoinWriteOptions(hideUnexecutables: boolean): SpCoinWriteMe
 }
 
 const LEGACY_WRITE_METHOD_RENAMES: Partial<Record<string, SpCoinWriteMethod>> = {
-  addAccountRecipient: 'addRecipient',
+  addAccountRecipient: 'addRecipientTransaction',
   addRecipientTransaction: 'addRecipientTransaction',
   addRecipientRateAmount: 'addRecipientTransaction',
   addSponsorship: 'addRecipientTransaction',
@@ -710,18 +700,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     });
 
   switch (canonicalMethod) {
-    case 'addRecipients': {
-      const recipientList = methodArgs[1] as string[];
-      await submitWrite(activeDef.title, (access) => access.offChain.addRecipients(asString(methodArgs[0]), recipientList));
-      break;
-    }
-    case 'addAgents': {
-      const agentList = methodArgs[3] as string[];
-      await submitWrite(activeDef.title, (access) =>
-        access.offChain.addAgents(asString(methodArgs[0]), asString(methodArgs[1]), asStringOrNumber(methodArgs[2]), agentList),
-      );
-      break;
-    }
     case 'deleteRecipientSponsorRate': {
       await submitWrite(activeDef.title, (access, signer) => {
         const method = access.contract.deleteRecipientRate;
@@ -810,16 +788,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       );
       break;
     }
-    case 'addRecipient': {
-      await submitWrite(activeDef.title, (access) => {
-        const contractMethod = access.contract.addRecipient;
-        if (typeof contractMethod !== 'function') {
-          throw new Error('addRecipient is not available on the current SpCoin contract access path.');
-        }
-        return contractMethod(asString(methodArgs[0]), asString(methodArgs[1]));
-      });
-      break;
-    }
     case 'addRecipientTransaction': {
       const qty = String(methodArgs[3]);
       await submitWrite(activeDef.title, (access, signer) => {
@@ -846,17 +814,6 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           qty,
         );
       });
-      break;
-    }
-    case 'addAgent': {
-      await submitWrite(activeDef.title, (access) =>
-        access.add.addAgent(
-          asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          asString(methodArgs[3]),
-        ),
-      );
       break;
     }
     case 'addAgentTransaction': {

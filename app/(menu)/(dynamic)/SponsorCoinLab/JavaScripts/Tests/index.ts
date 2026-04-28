@@ -36,18 +36,6 @@ export const BUILTIN_JAVASCRIPT_TEST_SCRIPTS: LabJavaScriptScript[] = [
     isSystemScript: true,
   },
   {
-    id: 'builtin-typescript-offchain-add-recipients',
-    name: 'addRecipients.ts',
-    filePath: `${OFFCHAIN_TYPESCRIPT_ROOT}/addRecipients.ts`,
-    isSystemScript: true,
-  },
-  {
-    id: 'builtin-typescript-offchain-add-agents',
-    name: 'addAgents.ts',
-    filePath: `${OFFCHAIN_TYPESCRIPT_ROOT}/addAgents.ts`,
-    isSystemScript: true,
-  },
-  {
     id: 'builtin-typescript-offchain-set-lower-recipient-rate',
     name: 'setLowerRecipientRate.ts',
     filePath: `${OFFCHAIN_TYPESCRIPT_ROOT}/setLowerRecipientRate.ts`,

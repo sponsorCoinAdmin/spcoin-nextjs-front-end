@@ -60,6 +60,7 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     setShowOnChainMethods: args.setShowOnChainMethods,
     showOffChainMethods: args.showOffChainMethods,
     setShowOffChainMethods: args.setShowOffChainMethods,
+    initialContractDirectoryOptions: args.initialContractDirectoryOptions,
     hiddenScrollbarClass: args.hiddenScrollbarClass,
     visibleJavaScriptScripts: args.visibleJavaScriptScripts,
     selectedJavaScriptScriptId: args.selectedJavaScriptScriptId,

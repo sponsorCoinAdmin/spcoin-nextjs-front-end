@@ -358,8 +358,6 @@ export function useControllerAccounts({
       }
 
       const accountAddress = normalizeAddressValue(managedRoleAccountAddress);
-      const recipientKey = normalizeAddressValue(managedRecipientKey);
-      const recipientRateKey = String(managedRecipientRateKey || '').trim();
       const hardhatSenderAddress = selectedWriteSenderAccount?.address || selectedWriteSenderAddress;
       const accessSource = useLocalSpCoinAccessPackage ? 'local' : 'node_modules';
       const label = `${action}:${selectedSponsorCoinAccountRole}:${accountAddress}`;
@@ -375,26 +373,11 @@ export function useControllerAccounts({
               : baseContract) as SponsorCoinManageContract;
 
             if (action === 'add') {
-              if (selectedSponsorCoinAccountRole === 'sponsor') {
-                throw new Error(
-                  'Sponsors are created through sponsor-recipient or sponsor-recipient-agent relationships. Use addRecipient or addAgents instead.',
-                );
-              }
-              if (selectedSponsorCoinAccountRole === 'recipient') {
-                if (typeof connectedContract.addRecipient !== 'function') {
-                  throw new Error('addRecipient is not available on the current SpCoin contract access path.');
-                }
-                return connectedContract.addRecipient(hardhatSenderAddress, accountAddress) as Promise<TransactionLike>;
-              }
-              if (typeof connectedContract.addAgent !== 'function') {
-                throw new Error('addAgent is not available on the current SpCoin contract access path.');
-              }
-              return connectedContract.addAgent(
-                hardhatSenderAddress,
-                recipientKey,
-                recipientRateKey,
-                accountAddress,
-              ) as Promise<TransactionLike>;
+              throw new Error(
+                selectedSponsorCoinAccountRole === 'agent'
+                  ? 'Create agent relationships through the agent transaction write method.'
+                  : 'Create sponsor-recipient relationships through the recipient transaction write method.',
+              );
             }
 
             if (typeof connectedContract.deleteAccountRecord !== 'function') {

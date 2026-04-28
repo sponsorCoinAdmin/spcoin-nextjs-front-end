@@ -10,6 +10,7 @@ import type { SerializationTestMethod } from '../jsonMethods/serializationTests'
 import type { SpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import type { ConnectionMode, LabScript, LabScriptStep, MethodPanelMode, ScriptEditorKind } from '../scriptBuilder/types';
+import type { ContractDirectoryOption } from '../components/contractDirectoryOptions';
 
 type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
 type SetValue<T> = (value: T) => void;
@@ -226,6 +227,7 @@ export type BuildMethodsPanelCardPropsArgs = {
   canRunSerializationTestMethod: boolean;
   serializationTestMissingEntries: MissingFieldEntry[];
   runSelectedSerializationTestMethod: () => void | Promise<void>;
+  initialContractDirectoryOptions: ContractDirectoryOption[];
 };
 
 export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs) {
@@ -391,6 +393,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       recipientRateRange: args.effectiveRecipientRateRange,
       agentRateRange: args.effectiveAgentRateRange,
       activeContractAddress: args.contractAddress,
+      initialContractDirectoryOptions: args.initialContractDirectoryOptions,
       inputStyle: args.inputStyle,
       writeTraceEnabled: args.writeTraceEnabled,
       toggleWriteTrace: () => args.setWriteTraceEnabled((prev: boolean) => !prev),
@@ -499,6 +502,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       activeSerializationTestDef: args.effectiveSerializationTestDef,
       serializationTestParams: args.serializationTestParams,
       setSerializationTestParams: args.setSerializationTestParams,
+      initialContractDirectoryOptions: args.initialContractDirectoryOptions,
       inputStyle: args.inputStyle,
       canRunSelectedSerializationTestMethod: args.canRunSerializationTestMethod,
       canAddCurrentMethodToScript: args.hasEditorScriptSelected && args.canRunSerializationTestMethod,

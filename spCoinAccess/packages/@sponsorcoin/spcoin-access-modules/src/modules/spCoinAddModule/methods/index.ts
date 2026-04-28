@@ -1,12 +1,7 @@
-// @ts-nocheck
-export { addRecipient } from "./addRecipient";
 export { addRecipientTransaction } from "./addRecipientTransaction";
-export { addRecipientTransaction as addRecipientRateTransaction } from "./addRecipientRateTransaction";
-export { addRecipients } from "./addRecipients";
-export { addAgent } from "./addAgent";
+export { addRecipientRateTransaction } from "./addRecipientRateTransaction";
 export { addAgentTransaction } from "./addAgentTransaction";
-export { addAgentTransaction as addAgentRateTransaction } from "./addAgentRateTransaction";
-export { addAgents } from "./addAgents";
+export { addAgentRateTransaction } from "./addAgentRateTransaction";
 export { addAccountRecord } from "./addAccountRecord";
 export { addAccountRecords } from "./addAccountRecords";
 export { addSponsorship } from "./addSponsorship";

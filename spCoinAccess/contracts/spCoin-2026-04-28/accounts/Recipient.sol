@@ -7,6 +7,27 @@ contract Recipient is Sponsor {
 
     constructor() { }
 
+    /// @notice Create Sponsor and Recipient accounts if they do not exist
+    /// @notice Relate Sponsor and Recipient accounts for POS sharing
+    /// @param _recipientKey new recipient to add to account list
+    function addRecipient(address _sponsorKey, address _recipientKey)
+    external
+    onlyOwnerOrRootAdmin(_sponsorKey)
+    nonRedundantRecipient (_sponsorKey, _recipientKey) {
+        AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsorKey);
+        RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
+        bool sponsorHasRecipientLink = accountInList(_recipientKey, sponsorRecord.recipientKeys);
+        bool recipientHasSponsorLink = accountInList(_sponsorKey, accountMap[_recipientKey].sponsorKeys);
+
+        if (recipientRecord.inserted) {
+            require(sponsorHasRecipientLink && recipientHasSponsorLink, "RECIP_LINK_STALE");
+            revert("RECIP_LINK_EXISTS");
+        }
+
+        require(!sponsorHasRecipientLink && !recipientHasSponsorLink, "RECIP_LIST_STALE");
+        getRecipient(_sponsorKey, _recipientKey);
+    }
+
     function getRecipient(address _sponsor, address _recipientKey)
     internal returns (RecipientStruct storage) {
         AccountStruct storage sponsorRecord = getSponsorAccountRecord(_sponsor);
@@ -72,7 +93,8 @@ contract Recipient is Sponsor {
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
         uint[] memory recipientRateKeys = recipientRecord.recipientRateKeys;
         // console.log("Recipient.sol:getRecipientRateList recipientRateKeys.length = ", recipientRateKeys.length);
-        // console.log("AGENTS.SOL:recipientRecord.recipientKey = " , recipientRecord.recipientKey);
+        // console.log("AGENTS.SOL:addAgent: _sponsorKey, _recipientKey, _recipientRateKey, _recipientKey = " , _sponsorKey, _recipientKey, _recipientRateKey, _recipientKey);
+        // console.log("AGENTS.SOL:addAgent:recipientRecord.recipientKey = " , recipientRecord.recipientKey);
         // console.log("AGENTS.SOL:getAgentRateList:recipientRateKeys.length = ",recipientRateKeys.length);
         return recipientRateKeys;
     }

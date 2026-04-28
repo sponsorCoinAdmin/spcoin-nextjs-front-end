@@ -1,23 +1,20 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import { NextResponse } from 'next/server';
+import {
+  listSpCoinContractDirectories,
+  SPCOIN_CONTRACTS_BASE_DIRECTORY,
+} from '@/lib/spCoinLab/contractDirectories';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
-  const baseDir = path.join(process.cwd(), 'spCoinAccess', 'contracts');
-
   try {
-    const entries = await fs.readdir(baseDir, { withFileTypes: true });
-    const directories = entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => ({
-        label: entry.name,
-        value: path.posix.join('spCoinAccess', 'contracts', entry.name).replace(/\\/g, '/'),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+    const directories = await listSpCoinContractDirectories();
 
     return NextResponse.json({
       ok: true,
-      baseDirectory: 'spCoinAccess/contracts',
+      baseDirectory: SPCOIN_CONTRACTS_BASE_DIRECTORY,
       directories,
     });
   } catch (error) {
@@ -25,7 +22,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        baseDirectory: 'spCoinAccess/contracts',
+        baseDirectory: SPCOIN_CONTRACTS_BASE_DIRECTORY,
         message,
       },
       { status: 500 },

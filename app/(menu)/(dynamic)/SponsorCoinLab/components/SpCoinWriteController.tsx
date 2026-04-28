@@ -200,8 +200,6 @@ export default function SpCoinWriteController(props: Props) {
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
   const recipientRateSliderMethods = new Set([
-    'addAgent',
-    'addAgents',
     'addRecipientTransaction',
     'addAgentTransaction',
     'deleteRecipientSponsorRate',

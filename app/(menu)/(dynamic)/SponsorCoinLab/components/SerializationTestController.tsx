@@ -1,6 +1,14 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import {
+  FALLBACK_CONTRACT_DIRECTORY_OPTIONS,
+  getInitialContractDirectoryOptions,
+  loadContractDirectoryOptions,
+  normalizeContractDirectoryOptions,
+  reconcileContractDirectoryParams,
+  type ContractDirectoryOption,
+} from './contractDirectoryOptions';
 import { getMethodOptionColor } from './methodOptionColors';
 import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
@@ -20,6 +28,7 @@ type Props = {
   activeSerializationTestDef: MethodDef;
   serializationTestParams: string[];
   setSerializationTestParams: React.Dispatch<React.SetStateAction<string[]>>;
+  initialContractDirectoryOptions?: ContractDirectoryOption[];
   inputStyle: string;
   canRunSelectedSerializationTestMethod: boolean;
   canAddCurrentMethodToScript: boolean;
@@ -49,6 +58,7 @@ export default function SerializationTestController(props: Props) {
     activeSerializationTestDef,
     serializationTestParams,
     setSerializationTestParams,
+    initialContractDirectoryOptions = [],
     inputStyle,
     canRunSelectedSerializationTestMethod,
     canAddCurrentMethodToScript,
@@ -64,7 +74,14 @@ export default function SerializationTestController(props: Props) {
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
-  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<Array<{ value: string; label: string }>>([]);
+  const normalizedInitialContractDirectoryOptions = normalizeContractDirectoryOptions(initialContractDirectoryOptions);
+  const hasInitialContractDirectoryOptions = normalizedInitialContractDirectoryOptions.length > 0;
+  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<ContractDirectoryOption[]>(
+    () =>
+      hasInitialContractDirectoryOptions
+        ? normalizedInitialContractDirectoryOptions
+        : getInitialContractDirectoryOptions(FALLBACK_CONTRACT_DIRECTORY_OPTIONS),
+  );
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
@@ -125,52 +142,21 @@ export default function SerializationTestController(props: Props) {
     selectedSerializationTestMethod === 'hhFundAccounts' &&
     ['true', '1'].includes(String(serializationTestParams[1] || '').trim().toLowerCase());
   React.useEffect(() => {
+    if (hasInitialContractDirectoryOptions) return;
     let cancelled = false;
 
-    const loadContractDirectoryOptions = async () => {
-      try {
-        const response = await fetch('/api/spCoin/contract-directories', { cache: 'no-store' });
-        const payload = (await response.json()) as {
-          ok?: boolean;
-          directories?: Array<{ value?: string; label?: string }>;
-        };
-        if (!response.ok || payload?.ok === false) return;
-        if (cancelled) return;
-        setContractDirectoryOptions(
-          Array.isArray(payload?.directories)
-            ? payload.directories
-                .map((entry) => ({
-                  value: String(entry?.value || '').trim(),
-                  label: String(entry?.label || '').trim() || String(entry?.value || '').trim(),
-                }))
-                .filter((entry) => entry.value.length > 0)
-            : [],
-        );
-      } catch {
-        if (!cancelled) setContractDirectoryOptions([]);
-      }
-    };
-
-    void loadContractDirectoryOptions();
+    void loadContractDirectoryOptions().then((nextOptions) => {
+      if (!cancelled && nextOptions.length > 0) setContractDirectoryOptions(nextOptions);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasInitialContractDirectoryOptions]);
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (selectedSerializationTestMethod !== 'compareSpCoinContractSize') return;
-    if (contractDirectoryOptions.length === 0) return;
-    const validValues = new Set(contractDirectoryOptions.map((option) => option.value));
     setSerializationTestParams((prev) => {
-      let changed = false;
-      const next = [...prev];
-      for (const idx of [0, 1]) {
-        const current = String(next[idx] || '').trim();
-        if (current && !validValues.has(current)) {
-          next[idx] = '';
-          changed = true;
-        }
-      }
+      const { changed, next } = reconcileContractDirectoryParams(prev, contractDirectoryOptions);
       return changed ? next : prev;
     });
   }, [contractDirectoryOptions, selectedSerializationTestMethod, setSerializationTestParams]);

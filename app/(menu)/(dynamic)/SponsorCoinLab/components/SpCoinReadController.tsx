@@ -2,6 +2,14 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import {
+  FALLBACK_CONTRACT_DIRECTORY_OPTIONS,
+  getInitialContractDirectoryOptions,
+  loadContractDirectoryOptions,
+  normalizeContractDirectoryOptions,
+  reconcileContractDirectoryParams,
+  type ContractDirectoryOption,
+} from './contractDirectoryOptions';
 import DateTimeCalendarPopup from './DateTimeCalendarPopup';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
@@ -134,6 +142,7 @@ type Props = {
   activeSpCoinReadDef: MethodDef;
   spReadParams: string[];
   setSpReadParams: React.Dispatch<React.SetStateAction<string[]>>;
+  initialContractDirectoryOptions?: ContractDirectoryOption[];
   recipientRateKeyOptions: string[];
   agentRateKeyOptions: string[];
   recipientRateKeyHelpText: string;
@@ -203,6 +212,7 @@ export default function SpCoinReadController(props: Props) {
     activeSpCoinReadDef,
     spReadParams,
     setSpReadParams,
+    initialContractDirectoryOptions = [],
     recipientRateKeyOptions,
     agentRateKeyOptions,
     recipientRateKeyHelpText,
@@ -260,7 +270,14 @@ export default function SpCoinReadController(props: Props) {
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
-  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<Array<{ value: string; label: string }>>([]);
+  const normalizedInitialContractDirectoryOptions = normalizeContractDirectoryOptions(initialContractDirectoryOptions);
+  const hasInitialContractDirectoryOptions = normalizedInitialContractDirectoryOptions.length > 0;
+  const [contractDirectoryOptions, setContractDirectoryOptions] = React.useState<ContractDirectoryOption[]>(
+    () =>
+      hasInitialContractDirectoryOptions
+        ? normalizedInitialContractDirectoryOptions
+        : getInitialContractDirectoryOptions(FALLBACK_CONTRACT_DIRECTORY_OPTIONS),
+  );
   const today = React.useMemo(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -401,52 +418,21 @@ export default function SpCoinReadController(props: Props) {
     [showOnChainMethods, spCoinAdminReadOptions, spCoinReadMethodDefs],
   );
   React.useEffect(() => {
+    if (hasInitialContractDirectoryOptions) return;
     let cancelled = false;
 
-    const loadContractDirectoryOptions = async () => {
-      try {
-        const response = await fetch('/api/spCoin/contract-directories', { cache: 'no-store' });
-        const payload = (await response.json()) as {
-          ok?: boolean;
-          directories?: Array<{ value?: string; label?: string }>;
-        };
-        if (!response.ok || payload?.ok === false) return;
-        if (cancelled) return;
-        setContractDirectoryOptions(
-          Array.isArray(payload?.directories)
-            ? payload.directories
-                .map((entry) => ({
-                  value: String(entry?.value || '').trim(),
-                  label: String(entry?.label || '').trim() || String(entry?.value || '').trim(),
-                }))
-                .filter((entry) => entry.value.length > 0)
-            : [],
-        );
-      } catch {
-        if (!cancelled) setContractDirectoryOptions([]);
-      }
-    };
-
-    void loadContractDirectoryOptions();
+    void loadContractDirectoryOptions().then((nextOptions) => {
+      if (!cancelled && nextOptions.length > 0) setContractDirectoryOptions(nextOptions);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasInitialContractDirectoryOptions]);
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (selectedSpCoinReadMethod !== 'compareSpCoinContractSize') return;
-    if (contractDirectoryOptions.length === 0) return;
-    const validValues = new Set(contractDirectoryOptions.map((option) => option.value));
     setSpReadParams((prev) => {
-      let changed = false;
-      const next = [...prev];
-      for (const idx of [0, 1]) {
-        const current = String(next[idx] || '').trim();
-        if (current && !validValues.has(current)) {
-          next[idx] = '';
-          changed = true;
-        }
-      }
+      const { changed, next } = reconcileContractDirectoryParams(prev, contractDirectoryOptions);
       return changed ? next : prev;
     });
   }, [contractDirectoryOptions, selectedSpCoinReadMethod, setSpReadParams]);

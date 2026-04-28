@@ -9,10 +9,6 @@ import * as serialize_1 from "../utils/serialize";
 import * as dateTime from "../utils/dateTime";
 import * as dataTypes from "../dataTypes/spCoinDataTypes";
 import * as printTreeStructures from "../utils/printTreeStructures";
-import * as addRecipients_1 from "./addRecipients";
-import * as addAgents_1 from "./addAgents";
-import * as addOffChainRecipients_1 from "./addOffChainRecipients";
-import * as addOffChainAgents_1 from "./addOffChainAgents";
 import * as deleteAccountTree_1 from "./deleteAccountTree";
 import * as setLowerRecipientRate_1 from "./setLowerRecipientRate";
 import * as setUpperRecipientRate_1 from "./setUpperRecipientRate";
@@ -37,18 +33,6 @@ export class SpCoinOffChainProcessor {
         this.dataTypes = dataTypes;
         this.printTreeStructures = printTreeStructures;
     }
-    async addRecipients(_accountKey, recipientAccountList) {
-        return (0, addRecipients_1.addRecipients).call(this, _accountKey, recipientAccountList);
-    }
-    async addAgents(sponsorKey, recipientKey, recipientRateKey, agentAccountList) {
-        return (0, addAgents_1.addAgents).call(this, sponsorKey, recipientKey, recipientRateKey, agentAccountList);
-    }
-    async addOffChainRecipients(accountKey, recipientAccountList) {
-        return (0, addOffChainRecipients_1.addOffChainRecipients).call(this, accountKey, recipientAccountList);
-    }
-    async addOffChainAgents(recipientKey, recipientRateKey, agentAccountList) {
-        return (0, addOffChainAgents_1.addOffChainAgents).call(this, recipientKey, recipientRateKey, agentAccountList);
-    }
     async deleteAccountTree() {
         return (0, deleteAccountTree_1.deleteAccountTree).call(this);
     }
@@ -68,10 +52,6 @@ export class SpCoinOffChainProcessor {
         return {
             contract: this.contract,
             onChain: this.onChain,
-            addRecipients: this.addRecipients.bind(this),
-            addAgents: this.addAgents.bind(this),
-            addOffChainRecipients: this.addOffChainRecipients.bind(this),
-            addOffChainAgents: this.addOffChainAgents.bind(this),
             deleteAccountTree: this.deleteAccountTree.bind(this),
             setLowerRecipientRate: this.setLowerRecipientRate.bind(this),
             setUpperRecipientRate: this.setUpperRecipientRate.bind(this),

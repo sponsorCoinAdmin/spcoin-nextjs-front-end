@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-28T18:32:23.899Z",
+  "updatedAt": "2026-04-28T22:03:09.795Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -498,12 +498,8 @@
     },
     "spCoinWrite": {
       "Basic": {
-        "addRecipient": true,
         "addRecipientTransaction": true,
-        "addRecipients": false,
-        "addAgent": true,
         "addAgentTransaction": true,
-        "addAgents": false,
         "deleteAccountTree": false,
         "deleteSponsor": true,
         "deleteRecipient": false,
@@ -517,10 +513,10 @@
         "deleteRecipientSponsorRate": true,
         "deleteRecipientTransaction": true,
         "unSponsorAgent": true,
-        "addBackDatedRecipientTransaction": false,
+        "addBackDatedRecipientTransaction": true,
         "addBackDatedAgentTransaction": false,
-        "backDateRecipientTransaction": false,
-        "backDateAgentTransaction": false,
+        "backDateRecipientTransaction": true,
+        "backDateAgentTransaction": true,
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
@@ -535,12 +531,8 @@
         "setAgentRateRange": false
       },
       "Standard": {
-        "addRecipient": true,
         "addRecipientTransaction": true,
-        "addRecipients": false,
-        "addAgent": true,
         "addAgentTransaction": true,
-        "addAgents": false,
         "deleteAccountTree": false,
         "deleteSponsor": true,
         "deleteRecipient": false,
@@ -572,14 +564,10 @@
         "setAgentRateRange": false
       },
       "Test": {
-        "addRecipient": false,
-        "addRecipientTransaction": false,
-        "addRecipients": true,
-        "addAgent": true,
-        "addAgentTransaction": false,
-        "addAgents": true,
+        "addRecipientTransaction": true,
+        "addAgentTransaction": true,
         "deleteAccountTree": true,
-        "deleteSponsor": false,
+        "deleteSponsor": true,
         "deleteRecipient": true,
         "deleteRecipientRate": true,
         "deleteAgent": true,
@@ -596,9 +584,9 @@
         "backDateRecipientTransaction": true,
         "backDateAgentTransaction": true,
         "deleteRecipientSponsorship": false,
-        "deleteAccountRecord": false,
+        "deleteAccountRecord": true,
         "deleteAccountRecords": true,
-        "updateAccountStakingRewards": false,
+        "updateAccountStakingRewards": true,
         "updateMasterStakingRewards": true,
         "setInflationRate": true,
         "setLowerRecipientRate": true,
@@ -609,12 +597,8 @@
         "setAgentRateRange": true
       },
       "Todo": {
-        "addRecipient": false,
         "addRecipientTransaction": false,
-        "addRecipients": true,
-        "addAgent": false,
         "addAgentTransaction": false,
-        "addAgents": true,
         "deleteAccountTree": false,
         "deleteSponsor": false,
         "deleteRecipient": false,
@@ -646,12 +630,8 @@
         "setAgentRateRange": false
       },
       "Complete": {
-        "addRecipient": false,
         "addRecipientTransaction": false,
-        "addRecipients": false,
-        "addAgent": false,
         "addAgentTransaction": false,
-        "addAgents": false,
         "deleteAccountTree": false,
         "deleteSponsor": false,
         "deleteRecipient": false,
@@ -705,7 +685,7 @@
         "symbol": false,
         "decimals": false,
         "totalSupply": false,
-        "balanceOf": true,
+        "balanceOf": false,
         "allowance": true
       },
       "Todo": {
@@ -738,7 +718,7 @@
       },
       "Test": {
         "transfer": false,
-        "approve": false,
+        "approve": true,
         "transferFrom": true
       },
       "Todo": {
@@ -835,12 +815,8 @@
     "spCoinRead:totalStakedSPCoins": "admin_utils",
     "spCoinRead:totalStakingRewards": "admin_utils",
     "spCoinRead:version": "admin_utils",
-    "spCoinWrite:addRecipient": "spcoin_write",
     "spCoinWrite:addRecipientTransaction": "spcoin_write",
-    "spCoinWrite:addRecipients": "todos",
-    "spCoinWrite:addAgent": "spcoin_write",
     "spCoinWrite:addAgentTransaction": "spcoin_write",
-    "spCoinWrite:addAgents": "todos",
     "spCoinWrite:deleteAccountTree": "spcoin_write",
     "spCoinWrite:deleteSponsor": "spcoin_write",
     "spCoinWrite:deleteRecipient": "spcoin_write",

@@ -9,6 +9,16 @@ contract Agent is RecipientRates {
     /// @notice insert recipients Agent
     /// @param _recipientKey public account key to get recipient array
     /// @param _agentKey new recipient to add to account list
+    function addAgent(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
+            external
+            onlyOwnerOrRootAdmin(_sponsorKey)
+            nonRedundantAgent (_sponsorKey, _recipientKey, _agentKey) {
+        getAgent(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+    }
+
+    /// @notice insert recipients Agent
+    /// @param _recipientKey public account key to get recipient array
+    /// @param _agentKey new recipient to add to account list
     function getAgent(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey)
         internal returns (AgentStruct storage) {
         uint currentTimeStamp = block.timestamp;
@@ -76,7 +86,7 @@ contract Agent is RecipientRates {
     external view returns (uint[] memory) {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         uint[] memory agentRateKeys = agentRec.agentRateKeys;
-// console.log("AGENTS.SOL:agentRec.agentKey = " , agentRec.agentKey);
+// console.log("AGENTS.SOL:addAgent:agentRec.agentKey = " , agentRec.agentKey);
 // console.log("AGENTS.SOL:getAgentRateList:agentRateKeys.length = ",agentRateKeys.length);
         return agentRateKeys;
     }

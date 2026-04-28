@@ -102,8 +102,15 @@ import { useControllerEditorHydration } from './hooks/useControllerEditorHydrati
 import { useControllerMethodSelection } from './hooks/useControllerMethodSelection';
 import { useControllerScriptPresentation } from './hooks/useControllerScriptPresentation';
 import { useControllerViewProps } from './hooks/useControllerViewProps';
+import type { ContractDirectoryOption } from '../components/contractDirectoryOptions';
 
-export default function SponsorCoinLabPage() {
+type SponsorCoinLabControllerProps = {
+  initialContractDirectoryOptions?: ContractDirectoryOption[];
+};
+
+export default function SponsorCoinLabPage({
+  initialContractDirectoryOptions = [],
+}: SponsorCoinLabControllerProps) {
   const nextMethodRunIdRef = useRef(1);
   const activeMethodRunAbortControllerRef = useRef<AbortController | null>(null);
   const { exchangeContext, setExchangeContext } = useExchangeContext();
@@ -164,7 +171,7 @@ const defaultHardhatRpcUrl =
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
     useState<SpCoinReadMethod>('getSpCoinMetaData');
   const [selectedSpCoinWriteMethod, setSelectedSpCoinWriteMethod] =
-    useState<SpCoinWriteMethod>('addRecipient');
+    useState<SpCoinWriteMethod>('addRecipientTransaction');
   const [showOnChainMethods, setShowOnChainMethods] = useState(true);
   const [showOffChainMethods, setShowOffChainMethods] = useState(true);
   const [auxMethodPanelTab, setAuxMethodPanelTab] = useState<'admin_utils' | null>(null);
@@ -1212,7 +1219,7 @@ const defaultHardhatRpcUrl =
   const handleAddCurrentMethodToScript = useCallback(() => {
     if (
       methodPanelMode === 'spcoin_write' &&
-      ['addRecipient', 'addRecipientTransaction', 'addAgent', 'addAgentTransaction'].includes(
+      ['addRecipientTransaction', 'addAgentTransaction'].includes(
         String(selectedSpCoinWriteMethod || '').trim(),
       )
     ) {
@@ -1239,7 +1246,7 @@ const defaultHardhatRpcUrl =
     async (options?: { executionSignal?: AbortSignal; executionLabel?: string; skipValidation?: boolean }) => {
     if (
       methodPanelMode === 'spcoin_write' &&
-      ['addRecipient', 'addRecipientTransaction', 'addAgent', 'addAgentTransaction'].includes(
+      ['addRecipientTransaction', 'addAgentTransaction'].includes(
         String(selectedSpCoinWriteMethod || '').trim(),
       )
     ) {
@@ -1599,6 +1606,7 @@ const defaultHardhatRpcUrl =
     canRunSerializationTestMethod,
     serializationTestMissingEntries,
     runSelectedSerializationTestMethod: runSelectedSerializationTestMethodWithPopup,
+    initialContractDirectoryOptions,
     inputStyle,
     showSignerAccountDetails,
     setShowSignerAccountDetails,

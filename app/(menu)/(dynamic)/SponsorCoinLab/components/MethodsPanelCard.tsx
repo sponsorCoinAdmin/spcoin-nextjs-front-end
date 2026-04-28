@@ -20,6 +20,7 @@ import {
 } from '@/lib/spCoinLab/methodMemberLists';
 
 type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'admin_utils';
+type MethodDisplayFilter = MethodDisplayGroup | 'all';
 type AlterModeOption = StoredAlterMode | 'All' | 'Tested';
 type AlterMembershipOption = StoredAlterMode | 'Tested';
 type EditableMemberLists = AlterMemberLists;
@@ -31,6 +32,43 @@ type MethodCatalogEntry = {
   label: string;
   kind: MethodIdentityKind;
 };
+
+const METHOD_DISPLAY_GROUP_OPTIONS: Array<[MethodDisplayGroup, string]> = [
+  ['erc20', 'ERC20'],
+  ['spcoin_rread', 'SpCoin Read'],
+  ['spcoin_write', 'SpCoin Write'],
+  ['admin_utils', 'Admin Utils'],
+  ['todos', 'ToDos'],
+];
+const METHOD_DISPLAY_FILTER_OPTIONS: Array<[MethodDisplayFilter, string]> = [
+  ['all', 'All'],
+  ...METHOD_DISPLAY_GROUP_OPTIONS,
+];
+
+function isMethodDisplayGroup(value: unknown): value is MethodDisplayGroup {
+  return (
+    value === 'erc20' ||
+    value === 'spcoin_rread' ||
+    value === 'spcoin_write' ||
+    value === 'admin_utils' ||
+    value === 'todos'
+  );
+}
+
+function isMethodDisplayFilter(value: unknown): value is MethodDisplayFilter {
+  return value === 'all' || isMethodDisplayGroup(value);
+}
+
+function getMethodDisplayGroupLabel(value: MethodDisplayGroup) {
+  return METHOD_DISPLAY_GROUP_OPTIONS.find(([group]) => group === value)?.[1] || value;
+}
+
+function getDisplayGroupForPanelTab(tab: MethodPanelTab): MethodDisplayGroup {
+  if (tab === 'ecr20_read' || tab === 'erc20_write' || tab === 'erc20') return 'erc20';
+  if (tab === 'serialization_tests') return 'admin_utils';
+  if (isMethodDisplayGroup(tab)) return tab;
+  return 'admin_utils';
+}
 
 const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   allowance: 'erc20.ts',
@@ -54,16 +92,12 @@ const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 };
 
 const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
-  addRecipient: 'add.ts',
-  addAgent: 'add.ts',
   addRecipientTransaction: 'add.ts',
   addAgentTransaction: 'add.ts',
   addBackDatedRecipientTransaction: 'add.ts',
   addBackDatedAgentTransaction: 'add.ts',
   backDateRecipientTransaction: 'add.ts',
   backDateAgentTransaction: 'add.ts',
-  addRecipients: 'addRecipients.ts',
-  addAgents: 'addAgents.ts',
   deleteAccountTree: 'delete.ts',
   deleteRecipient: 'delete.ts',
   deleteRecipientRate: 'delete.ts',
@@ -90,8 +124,6 @@ const SPCOIN_WRITE_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 };
 
 const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
-  addRecipients: 'addRecipients.ts',
-  addAgents: 'addAgents.ts',
   deleteAccountTree: 'delete.ts',
 };
 
@@ -149,6 +181,34 @@ function dedupeMethodNamesByLabel(values: string[], getLabel: (name: string) => 
     seenLabels.add(label);
     return true;
   });
+}
+
+function getMethodEntryDisplayKey(entry: MethodCatalogEntry) {
+  return String(entry.label || entry.name || '').trim().toLowerCase();
+}
+
+function getMethodEntryPriority(entry: MethodCatalogEntry) {
+  if (entry.kind === 'erc20Write' || entry.kind === 'spCoinWrite') return 3;
+  if (entry.kind === 'erc20Read' || entry.kind === 'spCoinRead') return 2;
+  return 1;
+}
+
+function dedupeMethodCatalogEntries(entries: MethodCatalogEntry[]) {
+  const uniqueById = new Map<string, MethodCatalogEntry>();
+  for (const entry of entries) {
+    if (!uniqueById.has(entry.id)) uniqueById.set(entry.id, entry);
+  }
+
+  const uniqueByLabel = new Map<string, MethodCatalogEntry>();
+  for (const entry of uniqueById.values()) {
+    const key = getMethodEntryDisplayKey(entry);
+    const existing = uniqueByLabel.get(key);
+    if (!existing || getMethodEntryPriority(entry) > getMethodEntryPriority(existing)) {
+      uniqueByLabel.set(key, entry);
+    }
+  }
+
+  return Array.from(uniqueByLabel.values());
 }
 
 function filterMethodsByAlterMode(
@@ -220,6 +280,8 @@ const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Basic', 'Standard', 'Test
 const ALTER_MEMBERSHIP_OPTIONS: AlterMembershipOption[] = ['Basic', 'Standard', 'Test', 'Tested', 'Todo', 'Complete'];
 const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
 const METHOD_MEMBER_LISTS_API_PATH = '/api/spCoin/lab/method-member-lists';
+const refreshIconButtonClassName =
+  'h-[30px] w-[30px] min-w-[30px] shrink-0 rounded-full flex items-center justify-center text-base leading-none text-[#5981F3] bg-[#243056] border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60';
 
 function saveMethodMemberListPayload(payload: MethodMemberListPayload, keepalive = false) {
   return fetch(METHOD_MEMBER_LISTS_API_PATH, {
@@ -254,7 +316,7 @@ function flushMethodMemberListPayload(payload: MethodMemberListPayload) {
 type StoredMethodsPanelUiState = {
   scriptEditorKind?: ScriptEditorKind;
   isManageEnabled?: boolean;
-  selectedDisplayGroup?: MethodDisplayGroup;
+  selectedDisplayGroup?: MethodDisplayFilter;
   writeTraceEnabled?: boolean;
   showOnChainMethods?: boolean;
   showOffChainMethods?: boolean;
@@ -274,13 +336,7 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     if (typeof saved.isManageEnabled === 'boolean') {
       next.isManageEnabled = saved.isManageEnabled;
     }
-    if (
-      saved.selectedDisplayGroup === 'erc20' ||
-      saved.selectedDisplayGroup === 'spcoin_rread' ||
-      saved.selectedDisplayGroup === 'spcoin_write' ||
-      saved.selectedDisplayGroup === 'admin_utils' ||
-      saved.selectedDisplayGroup === 'todos'
-    ) {
+    if (isMethodDisplayFilter(saved.selectedDisplayGroup)) {
       next.selectedDisplayGroup = saved.selectedDisplayGroup;
     }
     if (typeof saved.writeTraceEnabled === 'boolean') {
@@ -402,6 +458,7 @@ export default function MethodsPanelCard({
   const [selectedAlterMode, setSelectedAlterMode] = React.useState<AlterModeOption>('Standard');
   const [isAlterMembershipMenuOpen, setIsAlterMembershipMenuOpen] = React.useState(false);
   const [isChangeGroupMenuOpen, setIsChangeGroupMenuOpen] = React.useState(false);
+  const [isReloadingMemberLists, setIsReloadingMemberLists] = React.useState(false);
   const [serializationMemberLists, setSerializationMemberLists] = React.useState<EditableMemberLists>(() =>
     cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.serialization),
   );
@@ -422,13 +479,8 @@ export default function MethodsPanelCard({
   const [methodDisplayGroups, setMethodDisplayGroups] = React.useState<Record<string, MethodDisplayGroup>>(
     () => ({ ...DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.displayGroups }),
   );
-  const [selectedDisplayGroup, setSelectedDisplayGroup] = React.useState<MethodDisplayGroup>(
-    storedMethodsPanelUiState?.selectedDisplayGroup ||
-      (activeMethodPanelTab === 'ecr20_read' || activeMethodPanelTab === 'erc20_write'
-        ? 'erc20'
-        : activeMethodPanelTab === 'serialization_tests'
-          ? 'admin_utils'
-          : activeMethodPanelTab),
+  const [selectedDisplayGroup, setSelectedDisplayGroup] = React.useState<MethodDisplayFilter>(
+    storedMethodsPanelUiState?.selectedDisplayGroup || getDisplayGroupForPanelTab(activeMethodPanelTab),
   );
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
@@ -520,15 +572,8 @@ export default function MethodsPanelCard({
     queuedMemberListPayloadRef.current = payload;
     void runQueuedMemberListPayloadSave();
   }, [runQueuedMemberListPayloadSave]);
-  const methodPanelOptions: Array<[MethodPanelTab, string]> = [
-    ['erc20', 'ERC20'],
-    ['spcoin_rread', 'SpCoin Read'],
-    ['spcoin_write', 'SpCoin Write'],
-    ['admin_utils', 'Admin Utils'],
-    ['todos', 'ToDos'],
-  ];
-  const selectedDisplayGroupLabel =
-    methodPanelOptions.find(([value]) => value === selectedDisplayGroup)?.[1] || selectedDisplayGroup;
+  const methodPanelOptions = METHOD_DISPLAY_FILTER_OPTIONS;
+  const methodGroupOptions = METHOD_DISPLAY_GROUP_OPTIONS;
   const visibleErc20ReadOptions = React.useMemo(
     () =>
       sortMethodNames(
@@ -769,11 +814,7 @@ export default function MethodsPanelCard({
         kind: 'spCoinWrite' as const,
       })),
     ];
-    const unique = new Map<string, MethodCatalogEntry>();
-    for (const entry of entries) {
-      if (!unique.has(entry.id)) unique.set(entry.id, entry);
-    }
-    return Array.from(unique.values());
+    return dedupeMethodCatalogEntries(entries);
   }, [
     serializationTestProps.serializationTestMethodDefs,
     spCoinReadProps.spCoinReadMethodDefs,
@@ -790,7 +831,7 @@ export default function MethodsPanelCard({
   const visibleGroupedMethods = React.useMemo(
     () =>
       groupedMethodEntries
-        .filter((entry) => (methodDisplayGroups[entry.id] || 'admin_utils') === selectedDisplayGroup)
+        .filter((entry) => selectedDisplayGroup === 'all' || (methodDisplayGroups[entry.id] || 'admin_utils') === selectedDisplayGroup)
         .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })),
     [groupedMethodEntries, methodDisplayGroups, selectedDisplayGroup],
   );
@@ -1018,6 +1059,13 @@ export default function MethodsPanelCard({
     spCoinWriteProps.selectedSpCoinWriteMethod,
     spCoinWriteProps.spCoinWriteMethodDefs,
   ]);
+  const currentMethodDisplayGroup = React.useMemo<MethodDisplayGroup>(() => {
+    if (!currentMethodIdentity) {
+      return selectedDisplayGroup === 'all' ? 'spcoin_rread' : selectedDisplayGroup;
+    }
+    return methodDisplayGroups[currentMethodIdentity.id] || 'admin_utils';
+  }, [currentMethodIdentity, methodDisplayGroups, selectedDisplayGroup]);
+  const selectedDisplayGroupLabel = getMethodDisplayGroupLabel(currentMethodDisplayGroup);
   const visibleCurrentMethodIdentity = React.useMemo(
     () =>
       currentMethodIdentity
@@ -1126,22 +1174,43 @@ export default function MethodsPanelCard({
     setIsAlterMembershipMenuOpen(false);
     setIsChangeGroupMenuOpen(false);
   }, [currentJsonMethodName]);
+  const applyMethodMemberListPayload = React.useCallback((payload: MethodMemberListPayload) => {
+    setSerializationMemberLists(cloneAlterMemberLists(payload.lists.serialization));
+    setSpCoinReadMemberLists(cloneAlterMemberLists(payload.lists.spCoinRead));
+    setSpCoinWriteMemberLists(cloneAlterMemberLists(payload.lists.spCoinWrite));
+    setErc20ReadMemberLists(cloneAlterMemberLists(payload.lists.erc20Read));
+    setErc20WriteMemberLists(cloneAlterMemberLists(payload.lists.erc20Write));
+    setMethodDisplayGroups({ ...(payload.displayGroups || {}) });
+  }, []);
+  const loadMethodMemberListPayload = React.useCallback(async () => {
+    const response = await fetch(METHOD_MEMBER_LISTS_API_PATH, { cache: 'no-store' });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as MethodMemberListPayload;
+    return payload?.lists ? payload : null;
+  }, []);
+  const reloadMethodMemberLists = React.useCallback(async () => {
+    setIsReloadingMemberLists(true);
+    queuedMemberListPayloadRef.current = null;
+    try {
+      const payload = await loadMethodMemberListPayload();
+      if (!payload) return;
+      applyMethodMemberListPayload(payload);
+      setMemberListPersistenceHydrated(true);
+    } catch {
+      // Keep the current editable lists if the disk reload fails.
+    } finally {
+      setIsReloadingMemberLists(false);
+    }
+  }, [applyMethodMemberListPayload, loadMethodMemberListPayload]);
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
 
     const hydrateMethodMemberLists = async () => {
       try {
-        const response = await fetch(METHOD_MEMBER_LISTS_API_PATH, { cache: 'no-store' });
-        if (!response.ok) return;
-        const payload = (await response.json()) as MethodMemberListPayload;
-        if (cancelled || !payload?.lists) return;
-        setSerializationMemberLists(cloneAlterMemberLists(payload.lists.serialization));
-        setSpCoinReadMemberLists(cloneAlterMemberLists(payload.lists.spCoinRead));
-        setSpCoinWriteMemberLists(cloneAlterMemberLists(payload.lists.spCoinWrite));
-        setErc20ReadMemberLists(cloneAlterMemberLists(payload.lists.erc20Read));
-        setErc20WriteMemberLists(cloneAlterMemberLists(payload.lists.erc20Write));
-        setMethodDisplayGroups({ ...(payload.displayGroups || {}) });
+        const payload = await loadMethodMemberListPayload();
+        if (cancelled || !payload) return;
+        applyMethodMemberListPayload(payload);
         setMemberListPersistenceHydrated(true);
       } catch {
         // Do not save in-memory defaults over the JSON file if hydration fails.
@@ -1152,7 +1221,7 @@ export default function MethodsPanelCard({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyMethodMemberListPayload, loadMethodMemberListPayload]);
   React.useEffect(() => {
     if (!memberListPersistenceHydrated) return;
     queueMemberListPayloadSave(persistedMemberListPayload);
@@ -1560,7 +1629,7 @@ export default function MethodsPanelCard({
                     }}
                     onChange={(e) => {
                       if (selectedDisplayGroup === value) return;
-                      setSelectedDisplayGroup(e.target.value as MethodDisplayGroup);
+                      setSelectedDisplayGroup(e.target.value as MethodDisplayFilter);
                     }}
                   />
                   <span className={selectedDisplayGroup === value ? 'text-green-400' : 'text-[#8FA8FF]'}>
@@ -1572,26 +1641,7 @@ export default function MethodsPanelCard({
           </div>
           {isJsonScriptMode && isManageEnabled ? (
             <div className="mb-3 -mx-4 border-y border-[#31416F] bg-[#0E111B] px-4 py-2">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs text-[#8FA8FF]">
-                  {ALTER_MODE_OPTIONS.map((option) => (
-                    <label key={option} className="inline-flex flex-row items-center gap-2">
-                      <input
-                        type="radio"
-                        name={alterModeGroupName}
-                        value={option}
-                        checked={selectedAlterMode === option}
-                        onChange={() => setSelectedAlterMode(option)}
-                        className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                      />
-                      <span className={selectedAlterMode === option ? 'text-green-400' : 'text-[#8FA8FF]'}>
-                        {getAlterModeLabel(option)}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div ref={alterMembershipMenuRef} className="relative inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
                   <span>Group Members</span>
                   <div className="relative">
@@ -1662,8 +1712,8 @@ export default function MethodsPanelCard({
                         aria-label="Change Group"
                         className="absolute left-0 top-full z-30 mt-1 w-[132px] overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220] shadow-xl shadow-black/40"
                       >
-                        {methodPanelOptions.map(([value, label]) => {
-                          const isSelected = selectedDisplayGroup === value;
+                        {methodGroupOptions.map(([value, label]) => {
+                          const isSelected = currentMethodDisplayGroup === value;
                           return (
                             <button
                               key={`change-group-${value}`}
@@ -1674,7 +1724,7 @@ export default function MethodsPanelCard({
                                 isSelected ? 'text-green-400' : 'text-[#8FA8FF]'
                               }`}
                               onClick={() => {
-                                if (!isSelected) changeCurrentMethodGroup(value as MethodDisplayGroup);
+                                if (!isSelected) changeCurrentMethodGroup(value);
                                 setIsChangeGroupMenuOpen(false);
                               }}
                             >
@@ -1685,6 +1735,39 @@ export default function MethodsPanelCard({
                       </div>
                     ) : null}
                   </div>
+                </div>
+                <div className="ml-auto inline-flex items-center justify-end pl-3">
+                  <button
+                    type="button"
+                    className={refreshIconButtonClassName}
+                    onClick={() => void reloadMethodMemberLists()}
+                    title="Reload method member lists"
+                    aria-label="Reload method member lists"
+                    disabled={isReloadingMemberLists}
+                  >
+                    <span aria-hidden="true" className={isReloadingMemberLists ? 'animate-spin' : undefined}>
+                      {'\u21BB'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs text-[#8FA8FF]">
+                  {ALTER_MODE_OPTIONS.map((option) => (
+                    <label key={option} className="inline-flex flex-row items-center gap-2">
+                      <input
+                        type="radio"
+                        name={alterModeGroupName}
+                        value={option}
+                        checked={selectedAlterMode === option}
+                        onChange={() => setSelectedAlterMode(option)}
+                        className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span className={selectedAlterMode === option ? 'text-green-400' : 'text-[#8FA8FF]'}>
+                        {getAlterModeLabel(option)}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>

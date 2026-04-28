@@ -10,38 +10,27 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     steps: [
       {
         step: 1,
-        name: 'addRecipient',
+        name: 'addRecipientTransaction',
         panel: 'spcoin_write',
-        method: 'addRecipient',
+        method: 'addRecipientTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
+          { key: 'Recipient Rate Key', value: '10' },
+          { key: 'Transaction Quantity', value: '1.25' },
         ],
         breakpoint: false,
         hasMissingRequiredParams: false,
       },
       {
         step: 2,
-        name: 'addAgent',
-        panel: 'spcoin_write',
-        method: 'addAgent',
-        'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
-        params: [
-          { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
-          { key: 'Recipient Rate Key', value: '10' },
-          { key: 'Agent Key', value: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc' },
-        ],
-        breakpoint: false,
-        hasMissingRequiredParams: false,
-      },
-      {
-        step: 3,
         name: 'addAgentTransaction',
         panel: 'spcoin_write',
         method: 'addAgentTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
+          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Agent Key', value: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc' },
@@ -52,7 +41,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         hasMissingRequiredParams: false,
       },
       {
-        step: 4,
+        step: 3,
         name: 'getAgentTransaction',
         panel: 'spcoin_rread',
         method: 'getAgentTransaction',
@@ -77,13 +66,15 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
     steps: [
       {
         step: 1,
-        name: 'addRecipient',
+        name: 'addRecipientTransaction',
         panel: 'spcoin_write',
-        method: 'addRecipient',
+        method: 'addRecipientTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
           { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x90f79bf6eb2c4f870365e785982e1f101e93b906' },
+          { key: 'Recipient Rate Key', value: '10' },
+          { key: 'Transaction Quantity', value: '1.25' },
         ],
         breakpoint: false,
         hasMissingRequiredParams: false,
