@@ -110,6 +110,18 @@ footer {
   display: none; /* Chrome, Safari, Opera */
 }
 
+.native-select-chevron-up {
+  display: none !important;
+}
+
+select:open ~ .native-select-chevron-down {
+  display: none !important;
+}
+
+select:open ~ .native-select-chevron-up {
+  display: inline-flex !important;
+}
+
 button[class*="hover:bg-green-500"]:active {
   background: #e5b94f !important;
   color: #000000 !important;

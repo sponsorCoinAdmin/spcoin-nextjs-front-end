@@ -749,6 +749,12 @@ export default function OutputResultsCard({
     return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [isShowAllMenuOpen]);
 
+  useEffect(() => {
+    if (controls.formattedJsonViewEnabled || (controls.outputPanelMode !== 'formatted' && controls.outputPanelMode !== 'tree')) {
+      setIsShowAllMenuOpen(false);
+    }
+  }, [controls.formattedJsonViewEnabled, controls.outputPanelMode]);
+
   useEffect(() => () => stopInspectorScriptDrag(), [stopInspectorScriptDrag]);
 
   const handleStepDoubleClick = React.useCallback((stepNumber: number, methodName: string) => {

@@ -496,9 +496,30 @@ export default function MethodsPanelCard({
     ],
   );
   const latestPersistedMemberListPayloadRef = React.useRef(persistedMemberListPayload);
-  React.useEffect(() => {
-    latestPersistedMemberListPayloadRef.current = persistedMemberListPayload;
-  }, [persistedMemberListPayload]);
+  latestPersistedMemberListPayloadRef.current = persistedMemberListPayload;
+  const queuedMemberListPayloadRef = React.useRef<MethodMemberListPayload | null>(null);
+  const isSavingMemberListPayloadRef = React.useRef(false);
+  const runQueuedMemberListPayloadSave = React.useCallback(async () => {
+    if (isSavingMemberListPayloadRef.current) return;
+    isSavingMemberListPayloadRef.current = true;
+    try {
+      while (queuedMemberListPayloadRef.current) {
+        const payload = queuedMemberListPayloadRef.current;
+        queuedMemberListPayloadRef.current = null;
+        try {
+          await saveMethodMemberListPayload(payload);
+        } catch {
+          // Ignore transient persistence failures in the UI layer.
+        }
+      }
+    } finally {
+      isSavingMemberListPayloadRef.current = false;
+    }
+  }, []);
+  const queueMemberListPayloadSave = React.useCallback((payload: MethodMemberListPayload) => {
+    queuedMemberListPayloadRef.current = payload;
+    void runQueuedMemberListPayloadSave();
+  }, [runQueuedMemberListPayloadSave]);
   const methodPanelOptions: Array<[MethodPanelTab, string]> = [
     ['erc20', 'ERC20'],
     ['spcoin_rread', 'SpCoin Read'],
@@ -1101,6 +1122,11 @@ export default function MethodsPanelCard({
     };
   }, [isAlterMembershipMenuOpen, isChangeGroupMenuOpen]);
   React.useEffect(() => {
+    if (currentJsonMethodName && currentJsonMethodName !== '__no_methods__') return;
+    setIsAlterMembershipMenuOpen(false);
+    setIsChangeGroupMenuOpen(false);
+  }, [currentJsonMethodName]);
+  React.useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
 
@@ -1129,10 +1155,8 @@ export default function MethodsPanelCard({
   }, []);
   React.useEffect(() => {
     if (!memberListPersistenceHydrated) return;
-    void saveMethodMemberListPayload(persistedMemberListPayload, true).catch(() => {
-      // Ignore transient persistence failures in the UI layer.
-    });
-  }, [memberListPersistenceHydrated, persistedMemberListPayload]);
+    queueMemberListPayloadSave(persistedMemberListPayload);
+  }, [memberListPersistenceHydrated, persistedMemberListPayload, queueMemberListPayloadSave]);
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!memberListPersistenceHydrated) return;
@@ -1589,7 +1613,7 @@ export default function MethodsPanelCard({
                       <div
                         role="menu"
                         aria-label="Group Members"
-                        className="absolute left-0 top-full z-30 mt-1 w-[128px] overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220] shadow-xl shadow-black/40"
+                        className="absolute bottom-full left-0 z-30 mb-1 w-[128px] overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220] shadow-xl shadow-black/40"
                       >
                         {ALTER_MEMBERSHIP_OPTIONS.map((option) => {
                           const isMember = currentMethodInAlterMode(option);

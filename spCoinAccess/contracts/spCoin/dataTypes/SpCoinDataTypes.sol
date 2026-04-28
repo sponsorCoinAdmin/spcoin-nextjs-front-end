@@ -40,6 +40,16 @@ contract SpCoinDataTypes {
     // Events - fire events on state changes etc
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+    event TransactionAdded(
+        uint256 indexed transactionId,
+        address indexed sponsorKey,
+        address indexed recipientKey,
+        address agentKey,
+        bytes32 rateTransactionSetKey,
+        uint256 recipientRateKey,
+        uint256 agentRateKey,
+        uint256 stakingRewards
+    );
 
     function totalInitialSupply() external view returns (uint256) {
         return initialTotalSupply;
@@ -49,11 +59,15 @@ contract SpCoinDataTypes {
     uint256 stakedSPCoins;
 
     mapping(address => AccountStruct) accountMap;
+    mapping(address => mapping(bytes32 => bool)) internal accountHasRecipientRateTransactionSetKey;
+    mapping(address => mapping(bytes32 => bool)) internal accountHasAgentRateTransactionSetKey;
 
     uint UNDEFINED = 0;
     uint SPONSOR = 2;
     uint RECIPIENT = 3;
     uint AGENT = 4;
+    bytes32 internal constant RECIPIENT_RATE_TRANSACTION_SET_DOMAIN = keccak256("RECIPIENT_RATE");
+    bytes32 internal constant AGENT_RATE_TRANSACTION_SET_DOMAIN = keccak256("AGENT_RATE");
 
     struct AccountStruct {
         address accountKey;
@@ -69,6 +83,8 @@ contract SpCoinDataTypes {
         address[] sponsorKeys;             // If Recipient ? List of Sponsor Accounts
         address[] agentKeys;               // If Recipient? List of Agent Accounts
         address[] parentRecipientKeys; // If Agent? List of Agents Sponsor Accounts
+        bytes32[] recipientRateTransactionSetKeys;
+        bytes32[] agentRateTransactionSetKeys;
         mapping(address => RecipientStruct) recipientMap;
         // STAKING REWARDS MAPPINGS
         uint256 stakingRewards; // Coins not owned but Recipiented
@@ -150,6 +166,16 @@ contract SpCoinDataTypes {
         uint256 transactionCount;
     }
 
+    struct RateTransactionSetStruct {
+        bytes32 setKey;
+        uint256 rate;
+        uint256 lastUpdateTransactionDate;
+        uint256 totalStaked;
+        uint256 transactionCount;
+        uint256[] transactionIds;
+        bool inserted;
+    }
+
     struct TransactionRecordStruct {
         uint256 transactionId;
         uint256 insertionTime;
@@ -163,6 +189,7 @@ contract SpCoinDataTypes {
     }
 
     mapping(uint256 => TransactionRecordStruct) internal masterTransactionIdMap;
+    mapping(bytes32 => RateTransactionSetStruct) internal rateTransactionSetMap;
 
     /// STAKING REWARDS SECTION ////////////////////////////////////////////////////////////////////
 

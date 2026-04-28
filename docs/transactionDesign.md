@@ -4,235 +4,48 @@
 
 This document records the current SponsorCoin transaction-storage design direction.
 
-The goals are:
+Transactions are saved for four reasons:
 
-- preserve the reasoning from recent design discussions
-- keep the explanation readable for non-developers
-- give future implementation sessions a stable reference
+- preserve an append-only audit trail
+- support reward calculations
+- let accounts find the rate groups they participate in
+- let the UI/off-chain tooling build history, trees, dashboards, and diagnostics
 
-## Short Summary
+The main storage goal is:
 
-We are moving toward a hybrid model:
-
-- keep the old runnable transaction flow working exactly as it does today
-- add a new global transaction map as parallel storage
-- store one transaction record per transaction in that master map
-- store transaction id key arrays under each rate branch
-- store shared update metadata at the set level under each rate branch
-- store shared aggregate stake totals at the set level under each rate branch
-
-The most important correction is:
-
-- `lastUpdateTransactionDate` belongs to the transaction set
-- `totalStaked` belongs to the transaction set
-- it does **not** belong on each individual transaction record
-
-That matters because reward updates act on the totality of the set, not on each transaction independently.
-
-## Current Tree Model
-
-Today the contract behaves roughly like this:
-
-- Sponsor
-- Recipient
-- Recipient Rate
-  - `transactionList`
-- Agent
-- Agent Rate
-  - `transactionList`
-
-This works, but it creates problems:
-
-- deletion logic must walk the tree carefully
-- reward logic depends on rediscovering the right branch
-- cleanup can leave partial or orphaned links
-- the model becomes harder to reason about as the tree grows
+```text
+Store each transaction once, but keep rate-grouped transaction indexes on-chain when reward math needs them.
+```
 
 ## Current Preferred Design
 
-The current preferred design is:
+The preferred design is a hybrid of the older tree design and the newer flat ledger design.
 
-- keep one master transaction record per transaction
-- keep branch-local transaction id key arrays
-- keep branch-local transaction set metadata
-- keep old `transactionList` storage alive during the migration
+Core rules:
 
-So the structure becomes:
-
-- Sponsor
-  - Recipient
-    - RecipientRate
-      - `recipientTransactionSet`
-      - `recipientTransactionIdKeys`
-      - Agent
-        - AgentRate
-          - `agentTransactionSet`
-          - `agentTransactionIdKeys`
-
-and globally:
-
-- `masterTransactionIdMap`
-
-## Why This Is Better
-
-This gives us the best balance we have found so far:
-
-- writes stay much cheaper than rewriting one large grouped bucket
-- each rate still has direct access to its transaction ids
-- reward updates can use shared set metadata
-- future cleanup can still load the branch transaction ids and process them
-- we do not need an extra global transaction directory object
-
-## What We Rejected
-
-We considered storing one grouped master bucket per branch and rewriting that bucket on every new transaction.
-
-That was rejected as the primary design because:
-
-- the bucket gets more expensive to rewrite as it grows
-- hot branches with many transactions would become increasingly costly
-- every add would eventually pay for prior history again
-
-So the preferred model is:
-
-- one master entry per transaction
-- one id-array entry per transaction at the branch
-- one shared metadata record per transaction set
-
-## Deletion Strategy: Unlink, Don't Delete
-
-The simplest and most robust approach is to never delete data—only unlink it:
-
-- **Master records are immutable**: `masterTransactionIdMap` entries are append-only history
-- **Deletes are link removals**: Removing an agent or recipient just removes their ID from the relevant `transactionIdKeys` arrays
-- **Orphaned data is intentional**: "Orphaned" master records remain for auditability and recovery
-- **Active accounts list**: Maintain a separate active account registry to track current participants
-
-This eliminates expensive cascading deletes and tree walks. The trade-off of minimal extra storage buys massive simplicity, auditability, and performance benefits.
-
-## Account List Strategy
-
-The account-list model should use two account indexes with different meanings:
-
-- `masterAccountList`
-- `activeAccountList`
-
-The intended meaning is:
-
-- `masterAccountList` is the complete append-only list of every account ever registered
-- `activeAccountList` is the current list of accounts that are still connected to active branches
-
-This is preferred over moving accounts from `masterAccountList` to an archive list.
-
-The reason is:
-
-- `masterAccountList` stays complete for audit, recovery, and historical display
-- branch deletes do not rewrite the historical master list
-- the active list can shrink and grow as branches are unlinked or re-linked
-- no separate `archiveAccountList` is needed unless the UI later needs a direct archive enumeration
+- `masterTransactionIdMap` is the source of truth for full transaction details.
+- Full transaction records are not copied into sponsor, recipient, or agent accounts.
+- Rate buckets are first-class on-chain indexes because rewards need efficient same-rate totals.
+- Accounts keep lists of rate-bucket keys, not lists of every transaction ID.
+- The rate bucket stores the transaction IDs and aggregate totals for that rate/context.
+- The sponsor does not need a sponsor transaction list unless a future on-chain read requires it.
 
 Conceptually:
 
-```solidity
-address[] masterAccountList;
-address[] activeAccountList;
+```text
+masterTransactionIdMap[transactionId] -> full immutable transaction
 
-mapping(address => AccountStruct) accountMap;
-mapping(address => bool) isKnownAccount;
-mapping(address => bool) isActiveAccount;
+accountMap[recipientKey].recipientRateTransactionSetKeys -> rate bucket keys
+accountMap[agentKey].agentRateTransactionSetKeys -> rate bucket keys
+
+rateTransactionSetMap[setKey] -> totals and transaction IDs for one rate bucket
 ```
 
-First registration should:
-
-1. add the account to `masterAccountList` once
-2. mark the account known
-3. add the account to `activeAccountList` when it receives an active role or link
-
-Branch deletion should:
-
-1. remove the relevant branch links
-2. check each affected account for remaining active links
-3. remove the account from `activeAccountList` only if it has no remaining active links
-4. keep the account in `masterAccountList`
-5. keep enough account record data for audit and recovery
-
-Reactivation should:
-
-1. avoid adding the account to `masterAccountList` again
-2. add the account back to `activeAccountList`
-3. mark it active again
-
-The active-link test should distinguish parent links from child links.
-
-In the current account structure:
-
-- `sponsorKeys` are parent links for an account acting as a recipient
-- `parentRecipientKeys` are parent links for an account acting as an agent
-- `recipientKeys` are child links for an account acting as a sponsor
-- `agentKeys` are child links for an account acting as a recipient
-
-So an account should remain active if any of these lists still has active entries:
-
-```solidity
-function hasActiveLinks(address accountKey) internal view returns (bool) {
-    AccountStruct storage account = accountMap[accountKey];
-
-    return account.sponsorKeys.length > 0
-        || account.parentRecipientKeys.length > 0
-        || account.recipientKeys.length > 0
-        || account.agentKeys.length > 0;
-}
-```
-
-That means:
-
-- a recipient is active while it still has sponsor parents
-- an agent is active while it still has recipient parents
-- a sponsor is active while it still has recipient children
-- a recipient is also active while it still has agent children
-- an account with no active parent or child links can be removed from `activeAccountList`
-
-The array membership checks should eventually be backed by mappings or index maps so the contract does not need repeated sequential scans just to know whether an account is known or active.
-
-## Online Delete Policy
-
-The on-chain delete methods should be shallow unlink methods.
-
-That means:
-
-- do not recursively traverse descendant branches during a delete call
-- do not physically delete master account records
-- do not physically delete master transaction records
-- do not clear transaction history as part of normal online deletion
-- unlink only the directly addressed branch or account relationship
-- update active account bookkeeping for the accounts directly touched by that unlink
-
-The current implementation direction uses active link counters:
-
-```solidity
-uint256 activeParentLinkCount;
-uint256 activeChildLinkCount;
-```
-
-These counters let the contract decide whether an account still belongs in `activeAccountList` without scanning every relationship array.
-
-For direct unlink calls:
-
-- unlinking a recipient decrements the sponsor child count and recipient parent count
-- unlinking an agent decrements the recipient child count and agent parent count
-- unlinking a sponsor clears that sponsor's active child count without walking every recipient
-
-The tradeoff is intentional:
-
-- online deletes stay bounded and gas-predictable
-- descendant records may still contain historical references to now-inactive branches
-- deeper cleanup, reconciliation, or audit views can be handled by later explicit calls or off-chain tooling
-
-So "delete" means "remove from active reachability," not "erase all historical storage."
+This keeps the best part of the older design, which was efficient rate grouping, while removing the worst part, which was duplicated transaction copies or duplicate transaction IDs across multiple account paths.
 
 ## Transaction ID
 
-The transaction id should stay simple:
+The transaction id stays simple:
 
 ```solidity
 uint256 transactionId;
@@ -251,367 +64,668 @@ uint256 txId = nextTransactionId;
 nextTransactionId += 1;
 ```
 
+The full sponsor/recipient/rate/agent path is transaction context, not the transaction id itself.
+
 ## Master Transaction Map
 
-The master map is the real storage for transaction records:
+The master transaction map stores the real transaction record.
 
 ```solidity
 mapping(uint256 => TransactionRecordStruct) masterTransactionIdMap;
 ```
 
-This means:
+There should be one master record per transaction.
 
-- one transaction = one master map entry
-- direct recipient transactions have one recipient branch array entry
-- agent transactions use the same master id in both the recipient-rate branch array and the agent-rate branch array
-
-## Branch-Level Transaction Id Arrays
-
-The branch arrays store keys into the master map.
-
-Preferred naming:
-
-- `recipientTransactionIdKeys`
-- `agentTransactionIdKeys`
-
-Each array holds:
-
-- one entry for every transaction on that exact branch
-
-For an agent transaction, the same `transactionId` is intentionally stored in both places:
-
-- `recipientTransactionIdKeys`
-- `agentTransactionIdKeys`
-
-The recipient-rate side owns the master record lifetime. Agent-side deletes remove the id from the agent branch, but they should not delete `masterTransactionIdMap[transactionId]` while the recipient-rate list still references it.
-
-Example:
-
-```solidity
-recipientTransactionIdKeys = [101, 102, 103];
-```
-
-means:
-
-- this recipient-rate branch has three transactions
-- the real records live in:
-  - `masterTransactionIdMap[101]`
-  - `masterTransactionIdMap[102]`
-  - `masterTransactionIdMap[103]`
-
-## Transaction Set Metadata
-
-This is the most important part of the new design.
-
-The set metadata lives on the rate branch, not on each transaction record.
-
-Recommended concept:
-
-```solidity
-struct RecipientTransactionSetStruct {
-    uint256 lastUpdateTransactionDate;
-    uint256 totalStaked;
-    uint256 transactionCount;
-}
-
-struct AgentTransactionSetStruct {
-    uint256 lastUpdateTransactionDate;
-    uint256 totalStaked;
-    uint256 transactionCount;
-}
-```
-
-These set records are useful because:
-
-- reward calculation acts on the complete transaction set
-- a new transaction joins that set
-- the shared update timestamp should be written once at the set level
-- the shared current staked total should be written once at the set level
-- we avoid rewriting every transaction record during a reward update
-
-## Important Rule About Update Time
-
-The authoritative shared update time should be:
-
-- `lastUpdateTransactionDate` on the set
-- `totalStaked` on the set for the branch aggregate
-
-It should **not** be stored as the authoritative shared value on each transaction record.
-
-Each transaction record should keep things like:
-
-- `transactionId`
-- `insertionTime`
-- `stakingRewards`
-- sponsor / recipient / rate / agent identity
-
-But the set carries the shared reward update state.
-
-## Important Rule About Total Staked
-
-The authoritative branch aggregate should be:
-
-- `totalStaked` on the transaction set
-
-This field represents the live total stake for that exact rate branch.
-
-That means:
-
-- when a new transaction is added, increment `totalStaked`
-- when stake is reduced or a transaction is removed later, decrement `totalStaked`
-- reward calculations can read the set total directly instead of adding every transaction again
-
-This is one of the main performance improvements in the new design.
-
-## Example Transaction Record
-
-Conceptually:
+Recommended transaction record:
 
 ```solidity
 struct TransactionRecordStruct {
     uint256 transactionId;
-    uint256 insertionTime;
-    uint256 stakingRewards;
     address sponsorKey;
     address recipientKey;
-    uint256 recipientRateKey;
-    address agentKey;
-    uint256 agentRateKey;
-    address[] sourceList;
+    uint256 recipientRate;
+    address agentKey;      // address(0) when no agent is involved
+    uint256 agentRate;     // 0 when no agent is involved
+    uint256 stakingRewards;
+    uint256 insertionTime;
     bool inserted;
 }
 ```
 
-Notice:
+Notes:
 
-- no `lastUpdateTime` field on the individual transaction record
+- `sponsorKey` is always stored on the transaction, even though the sponsor account does not keep a transaction-id list.
+- `recipientRate` and `agentRate` stay on the transaction record.
+- `agentKey == address(0)` means this is a direct sponsor-to-recipient transaction.
+- `agentRate == 0` means no agent rate applies.
 
-That field belongs to the set, not the individual record.
+## Rate Transaction Sets
 
-## Reward Design Direction
+A rate transaction set is the on-chain bucket for transactions that share the same reward context.
 
-When a new transaction is added:
+Recommended set:
 
-1. rewards are recalculated using the current transaction set
-2. the set receives a new `lastUpdateTransactionDate`
-3. the set increments `totalStaked`
-4. the new transaction joins the set
-5. future updates continue working against the shared set metadata
-
-This is important because:
-
-- the new entry becomes part of the existing reward context
-- the whole set moves forward together
-- the branch aggregate stake stays available without a full transaction scan
-- the contract does not need to rewrite every individual transaction record
-
-## Cleanup Tradeoff
-
-This design means:
-
-- writes are cheaper than grouped bucket rewrites
-- cleanups are more expensive than deleting one grouped bucket
-
-That tradeoff is currently acceptable because:
-
-- normal transaction adds happen more often than branch cleanup
-- growing write cost is usually the more dangerous long-term scaling problem
-
-So we prefer:
-
-- cheap normal writes
-- more expensive but manageable cleanup
-
-instead of:
-
-- progressively heavier writes for active branches
-
-## Transitional Implementation Strategy
-
-To reduce risk, the migration path should be:
-
-1. keep all old runnable behavior unchanged
-2. keep old `transactionList` storage untouched
-3. dual-write all new transactions into the new structures
-4. dual-write the set-level metadata in parallel
-5. compare old and new representations
-6. switch delete cleanup to the new branch structure in layers
-7. only later switch runtime reads and rewards to the new source of truth
-
-## What “Do Not Change Old Runnable Functionality” Means
-
-During this phase:
-
-- old transaction add methods must still run as before
-- old reward logic must still run as before
-- old `transactionList` arrays must still be populated
-
-The new structures are parallel scaffolding for reads/rewards, but delete cleanup is now being migrated to the new layered branch model.
-
-They are being filled now so that later phases can safely switch over once we trust the new model.
-
-## Current Delete Method Model
-
-The exported token delete methods should represent tree levels:
-
-- `deleteSponsor(address sponsorKey)`
-- `deleteRecipient(address sponsorKey, address recipientKey)`
-- `deleteRecipientRate(address sponsorKey, address recipientKey, uint256 recipientRateKey)`
-- `deleteAgent(address sponsorKey, address recipientKey, uint256 recipientRateKey, address agentKey)`
-- `deleteAgentRate(address sponsorKey, address recipientKey, uint256 recipientRateKey, address agentKey, uint256 agentRateKey)`
-- `deleteAccountRecord(address accountKey)`
-
-Each exported method should delegate downward instead of reimplementing lower-level cleanup.
-
-The intended call shape is:
-
-```text
-deleteSponsor
-  -> deleteSponsorRecipients
-      -> deleteRecipientTree
-          -> deleteRecipientRates
-              -> deleteRecipientRate
-                  -> deleteAgent
-                      -> deleteAgentRates
-                          -> deleteAgentRate
-                              -> deleteAgentTransactions
-                  -> deleteRecipientTransactions
+```solidity
+struct RateTransactionSetStruct {
+    bytes32 setKey;
+    uint256 rate;
+    uint256 lastUpdateTransactionDate;
+    uint256 totalStaked;
+    uint256 transactionCount;
+    uint256[] transactionIds;
+    bool inserted;
+}
 ```
 
-## Delete Responsibility Rules
+Shared map:
 
-The delete method names should mean exactly what they say:
+```solidity
+mapping(bytes32 => RateTransactionSetStruct) rateTransactionSetMap;
+```
 
-- `deleteSponsor` deletes the sponsor branch.
-- `deleteRecipient` deletes one recipient branch under a sponsor.
-- `deleteRecipientRate` deletes one recipient-rate branch.
-- `deleteAgent` deletes one agent branch under a recipient-rate.
-- `deleteAgentRate` deletes one agent-rate branch.
-- `deleteRecipientTransactions` deletes transaction ids and metadata for one recipient-rate branch.
-- `deleteAgentTransactions` deletes transaction ids and metadata for one agent-rate branch.
+The set is where same-rate reward math should read totals from:
 
-Transaction cleanup helpers should not remove parent branch nodes. Branch delete methods should call transaction cleanup first, then remove the branch node.
+```solidity
+rateTransactionSetMap[setKey].totalStaked;
+rateTransactionSetMap[setKey].transactionCount;
+```
 
-The recipient-rate side owns `masterTransactionIdMap` cleanup. This matters because agent transactions are indexed in both `recipientTransactionIdKeys` and `agentTransactionIdKeys`. Agent cleanup removes the agent-side reference only; recipient-rate cleanup removes the master transaction records.
+The set also keeps transaction IDs for auditing and detailed reads:
 
-## Current Naming Preference
+```solidity
+rateTransactionSetMap[setKey].transactionIds;
+```
 
-The naming currently preferred is:
+Bucket key arrays should remain unsorted on-chain.
+
+```text
+Append each new bucket key once.
+Do not reorder bucket keys in contract storage.
+Sort buckets in the UI or off-chain indexer.
+```
+
+On-chain sorting is not worth the gas cost unless a future reward algorithm proves that it needs ordered bucket traversal. Current reward math needs grouped totals, not sorted order.
+
+## Rate Set Keys
+
+Use `bytes32` keys generated from the full rate context.
+
+Use fixed domain constants derived from readable names:
+
+```solidity
+bytes32 internal constant RECIPIENT_RATE_TRANSACTION_SET_DOMAIN =
+    keccak256("RECIPIENT_RATE");
+
+bytes32 internal constant AGENT_RATE_TRANSACTION_SET_DOMAIN =
+    keccak256("AGENT_RATE");
+```
+
+Direct recipient/no-agent key:
+
+```solidity
+bytes32 recipientRateSetKey = keccak256(
+    abi.encode(
+        RECIPIENT_RATE_TRANSACTION_SET_DOMAIN,
+        sponsorKey,
+        recipientKey,
+        recipientRate
+    )
+);
+```
+
+Agent key:
+
+```solidity
+bytes32 agentRateSetKey = keccak256(
+    abi.encode(
+        AGENT_RATE_TRANSACTION_SET_DOMAIN,
+        sponsorKey,
+        recipientKey,
+        recipientRate,
+        agentKey,
+        agentRate
+    )
+);
+```
+
+Why the agent key includes `recipientRate`:
+
+- it preserves the full business path
+- it separates agent rewards for different sponsor/recipient/recipient-rate contexts
+- it lets the UI reconstruct the sponsor -> recipient -> recipientRate -> agent -> agentRate tree
+
+Use separate domains for recipient and agent buckets so the two bucket types cannot collide even if the addresses and rates happen to encode similarly.
+
+## Account Structure
+
+Accounts are role-neutral. The same address may act as sponsor, recipient, and agent in different relationships.
+
+The account keeps relationship links and rate-bucket key lists.
+
+Recommended account shape:
+
+```solidity
+struct AccountStruct {
+    address accountKey;
+    uint256 balanceOf;
+    uint256 creationTime;
+    uint256 stakedSPCoins;
+    uint256 accountTypes;
+    uint256 activeParentLinkCount;
+    uint256 activeChildLinkCount;
+    bool inserted;
+    bool verified;
+
+    // Relationship navigation.
+    address[] recipientKeys;          // this account as sponsor -> recipients
+    address[] sponsorKeys;            // this account as recipient -> sponsors
+    address[] agentKeys;              // this account as recipient -> agents
+    address[] parentRecipientKeys;    // this account as agent -> parent recipients
+
+    // Rate bucket references.
+    bytes32[] recipientRateTransactionSetKeys;
+    bytes32[] agentRateTransactionSetKeys;
+}
+```
+
+Meanings:
+
+- `recipientRateTransactionSetKeys` contains direct no-agent recipient rate buckets for this account.
+- `agentRateTransactionSetKeys` contains agent rate buckets for this account.
+- There is intentionally no `sponsorTransactionIdList`.
+- There is intentionally no full transaction map inside the account.
+
+The sponsor can still be found from each transaction record:
+
+```solidity
+masterTransactionIdMap[txId].sponsorKey
+```
+
+Sponsor history should be derived off-chain from events or by filtering transaction records.
+
+## Set Membership Tracking
+
+Avoid pushing the same rate set key into an account array more than once.
+
+Use a membership map.
+
+Option A, global membership:
+
+```solidity
+mapping(address => mapping(bytes32 => bool)) accountHasRateTransactionSetKey;
+```
+
+Option B, separated role membership:
+
+```solidity
+mapping(address => mapping(bytes32 => bool)) accountHasRecipientRateTransactionSetKey;
+mapping(address => mapping(bytes32 => bool)) accountHasAgentRateTransactionSetKey;
+```
+
+Separated role membership is clearer and avoids ambiguity if a key is ever reused across roles.
+
+Recommended helper:
+
+```solidity
+function _addRecipientRateTransactionSetKey(address recipientKey, bytes32 setKey) internal {
+    if (!accountHasRecipientRateTransactionSetKey[recipientKey][setKey]) {
+        accountHasRecipientRateTransactionSetKey[recipientKey][setKey] = true;
+        accountMap[recipientKey].recipientRateTransactionSetKeys.push(setKey);
+    }
+}
+
+function _addAgentRateTransactionSetKey(address agentKey, bytes32 setKey) internal {
+    if (!accountHasAgentRateTransactionSetKey[agentKey][setKey]) {
+        accountHasAgentRateTransactionSetKey[agentKey][setKey] = true;
+        accountMap[agentKey].agentRateTransactionSetKeys.push(setKey);
+    }
+}
+```
+
+This means a transaction only grows the account key list when it creates a new rate bucket for that account.
+
+## Write Rules
+
+### Direct Recipient Transaction
+
+When no agent is involved:
+
+```solidity
+uint256 txId = reserveTransactionId();
+bytes32 setKey = getRecipientRateTransactionSetKey(sponsorKey, recipientKey, recipientRate);
+
+masterTransactionIdMap[txId] = TransactionRecordStruct({
+    transactionId: txId,
+    sponsorKey: sponsorKey,
+    recipientKey: recipientKey,
+    recipientRate: recipientRate,
+    agentKey: address(0),
+    agentRate: 0,
+    stakingRewards: stakingRewards,
+    insertionTime: block.timestamp,
+    inserted: true
+});
+
+_addRecipientRateTransactionSetKey(recipientKey, setKey);
+
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+if (!set.inserted) {
+    set.setKey = setKey;
+    set.rate = recipientRate;
+    set.inserted = true;
+}
+
+set.transactionIds.push(txId);
+set.totalStaked += stakingRewards;
+set.transactionCount += 1;
+set.lastUpdateTransactionDate = block.timestamp;
+```
+
+Storage intent:
+
+```text
+1 master transaction record
+1 rate bucket update
+1 transaction-id append inside the rate bucket
+0 account key-list append unless this is a new recipient rate bucket
+```
+
+### Agent Transaction
+
+When an agent is involved:
+
+```solidity
+uint256 txId = reserveTransactionId();
+bytes32 setKey = getAgentRateTransactionSetKey(
+    sponsorKey,
+    recipientKey,
+    recipientRate,
+    agentKey,
+    agentRate
+);
+
+masterTransactionIdMap[txId] = TransactionRecordStruct({
+    transactionId: txId,
+    sponsorKey: sponsorKey,
+    recipientKey: recipientKey,
+    recipientRate: recipientRate,
+    agentKey: agentKey,
+    agentRate: agentRate,
+    stakingRewards: stakingRewards,
+    insertionTime: block.timestamp,
+    inserted: true
+});
+
+_addAgentRateTransactionSetKey(agentKey, setKey);
+
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+if (!set.inserted) {
+    set.setKey = setKey;
+    set.rate = agentRate;
+    set.inserted = true;
+}
+
+set.transactionIds.push(txId);
+set.totalStaked += stakingRewards;
+set.transactionCount += 1;
+set.lastUpdateTransactionDate = block.timestamp;
+```
+
+Storage intent:
+
+```text
+1 master transaction record
+1 rate bucket update
+1 transaction-id append inside the rate bucket
+0 account key-list append unless this is a new agent rate bucket
+```
+
+The recipient context is still present on the transaction record and encoded into the agent set key, so the transaction can be grouped under the recipient off-chain without writing it into a recipient transaction list.
+
+## Reward Calculation
+
+Reward calculation should use rate transaction sets rather than scanning raw transactions.
+
+For a direct recipient reward:
+
+```solidity
+bytes32 setKey = getRecipientRateTransactionSetKey(sponsorKey, recipientKey, recipientRate);
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+```
+
+For an agent reward:
+
+```solidity
+bytes32 setKey = getAgentRateTransactionSetKey(
+    sponsorKey,
+    recipientKey,
+    recipientRate,
+    agentKey,
+    agentRate
+);
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+```
+
+The aggregate values are already grouped by rate:
+
+```solidity
+set.rate;
+set.totalStaked;
+set.transactionCount;
+set.lastUpdateTransactionDate;
+```
+
+This is the main reason rate buckets belong on-chain.
+
+## Events
+
+Emit one event for every transaction.
+
+```solidity
+event TransactionAdded(
+    uint256 indexed transactionId,
+    address indexed sponsorKey,
+    address indexed recipientKey,
+    address agentKey,
+    bytes32 rateTransactionSetKey,
+    uint256 recipientRate,
+    uint256 agentRate,
+    uint256 stakingRewards
+);
+```
+
+Events are the preferred way for UI/history tooling to build:
+
+- sponsor transaction history
+- recipient transaction history including agent-mediated transactions
+- agent transaction history
+- complete sponsor -> recipient -> rate -> agent -> rate trees
+- aggregate dashboards
+
+Contracts cannot read historical events, so only use event-derived views for UI/off-chain needs.
+
+## Relationship Links
+
+Keep lightweight account relationship links for navigation and active-account bookkeeping.
+
+These links should not be treated as transaction ownership.
+
+Current meanings:
+
+- `recipientKeys`: this account is a sponsor; these are its recipient children
+- `sponsorKeys`: this account is a recipient; these are its sponsor parents
+- `agentKeys`: this account is a recipient; these are its agent children
+- `parentRecipientKeys`: this account is an agent; these are its parent recipient accounts
+
+`parentRecipientKeys` is still useful because it lets the contract answer:
+
+```text
+Which recipients is this agent connected to?
+```
+
+without scanning every transaction.
+
+If the UI/off-chain event index eventually replaces relationship discovery, `parentRecipientKeys` can be reconsidered later. For now, keep it.
+
+## Account Lists
+
+Keep two account lists with different meanings:
+
+- `masterAccountList`
+- `activeAccountList`
+
+Meaning:
+
+- `masterAccountList` is append-only and contains every account ever registered.
+- `activeAccountList` contains accounts that currently have active relationships.
+
+Conceptually:
+
+```solidity
+address[] masterAccountList;
+address[] activeAccountList;
+
+mapping(address => AccountStruct) accountMap;
+mapping(address => bool) isKnownAccount;
+mapping(address => bool) isActiveAccount;
+```
+
+First registration should:
+
+1. add the account to `masterAccountList` once
+2. mark the account known
+3. add the account to `activeAccountList` when it receives an active role or link
+
+Reactivation should:
+
+1. avoid adding the account to `masterAccountList` again
+2. add the account back to `activeAccountList`
+3. mark it active again
+
+## Active Link Counts
+
+Use counters so active-account status does not require scanning arrays.
+
+```solidity
+uint256 activeParentLinkCount;
+uint256 activeChildLinkCount;
+```
+
+Direct relationship changes update these counters:
+
+- adding a recipient increments sponsor child count and recipient parent count
+- adding an agent increments recipient child count and agent parent count
+- unlinking a recipient decrements sponsor child count and recipient parent count
+- unlinking an agent decrements recipient child count and agent parent count
+
+An account remains active while either count is greater than zero.
+
+```solidity
+function hasActiveLinks(address accountKey) internal view returns (bool) {
+    AccountStruct storage account = accountMap[accountKey];
+    return account.activeParentLinkCount > 0 || account.activeChildLinkCount > 0;
+}
+```
+
+The relationship arrays can remain for enumeration/display, but active status should rely on counters.
+
+## Reads
+
+### Direct Recipient Rate Buckets
+
+For an account acting as recipient with no agent involved:
+
+```solidity
+accountMap[recipientKey].recipientRateTransactionSetKeys
+```
+
+Then load each set:
+
+```solidity
+rateTransactionSetMap[setKey]
+```
+
+Then load transaction records only when details are needed:
+
+```solidity
+masterTransactionIdMap[txId]
+```
+
+### Agent Rate Buckets
+
+For an account acting as agent:
+
+```solidity
+accountMap[agentKey].agentRateTransactionSetKeys
+```
+
+Then load each set:
+
+```solidity
+rateTransactionSetMap[setKey]
+```
+
+Then load transaction records only when details are needed:
+
+```solidity
+masterTransactionIdMap[txId]
+```
+
+### Sponsor History
+
+There is no sponsor transaction list on-chain.
+
+Sponsor history is derived off-chain from:
+
+```solidity
+TransactionAdded(transactionId, sponsorKey, recipientKey, ...)
+```
+
+or by filtering transaction records where:
+
+```solidity
+transaction.sponsorKey == sponsorKey
+```
+
+### Recipient Total History
+
+Recipient total history is a derived view:
+
+- direct recipient rate buckets from `recipientRateTransactionSetKeys`
+- agent-mediated transactions where transaction records contain the same `recipientKey`
+
+This should be assembled off-chain unless the contract needs an on-chain recipient-wide total.
+
+## Deletes And Unlinking
+
+Normal deletes should remain unlink operations, not history erasure.
+
+Rules:
+
+- do not physically delete `masterTransactionIdMap` records during normal relationship deletes
+- do not rewrite historical transaction records
+- do not clear transaction history as part of normal online deletion
+- unlink active relationships
+- update active link counts
+- update `activeAccountList` only when an account has no remaining active links
+- keep historical rate transaction sets intact for auditability
+
+This means historical transactions may reference inactive relationships. That is intentional for auditability.
+
+If the contract later needs to mark a transaction as voided or reversed, add explicit status fields rather than deleting history.
+
+Example:
+
+```solidity
+enum TransactionStatus {
+    Active,
+    Voided,
+    Reversed
+}
+```
+
+But do not add this until the workflow needs it.
+
+## What We Are Avoiding
+
+Avoid full transaction copies in multiple accounts.
+
+Bad:
+
+```text
+sponsorAccount.transactionMap[txId] = full transaction
+recipientAccount.transactionMap[txId] = full transaction
+agentAccount.transactionMap[txId] = full transaction
+```
+
+This creates:
+
+- higher gas cost
+- duplicated data
+- consistency risks
+- harder cleanup
+
+Also avoid writing the same `transactionId` to multiple account transaction lists unless a contract read requirement proves it is necessary.
+
+Current rule:
+
+```text
+No-agent transaction -> recipient rate set only
+Agent transaction -> agent rate set only
+```
+
+## What Is Derived Off-Chain
+
+The following should be built by UI/off-chain tooling from transaction records and events:
+
+- sponsor transaction history
+- recipient full history
+- agent full history dashboards
+- complete sponsor/recipient/rate/agent/rate tree
+- analytics and audit views
+
+The following are on-chain because reward math needs them efficiently:
+
+- rate bucket transaction IDs
+- rate bucket transaction counts
+- rate bucket total staked amounts
+- rate bucket last update dates
+
+## Migration Strategy
+
+To reduce risk:
+
+1. Keep old runnable transaction behavior working while the new design is introduced.
+2. Add `masterTransactionIdMap`.
+3. Add `RateTransactionSetStruct`.
+4. Add `rateTransactionSetMap`.
+5. Add `recipientRateTransactionSetKeys` and `agentRateTransactionSetKeys` to accounts.
+6. Add membership maps so rate set keys are only pushed once per account role.
+7. Emit `TransactionAdded` events with the `rateTransactionSetKey`.
+8. Dual-write new transaction records and rate sets beside old `transactionList` behavior during migration.
+9. Build UI/debug views that compare old and new representations.
+10. Move reads to the new ledger once the comparisons are trusted.
+11. Remove or deprecate old rate-branch transaction lists later, after the new ledger is stable.
+
+## Naming Preference
+
+Preferred names:
 
 - `masterTransactionIdMap`
-- `recipientTransactionSet`
-- `agentTransactionSet`
-- each transaction set should hold:
-- `lastUpdateTransactionDate`
-- `totalStaked`
-- `transactionCount`
-- `recipientTransactionIdKeys`
-- `agentTransactionIdKeys`
+- `nextTransactionId`
+- `TransactionRecordStruct`
+- `RateTransactionSetStruct`
+- `rateTransactionSetMap`
+- `recipientRateTransactionSetKeys`
+- `agentRateTransactionSetKeys`
+- `recipientRateTransactionSetKey`
+- `agentRateTransactionSetKey`
+- `getRecipientRateTransactionSetKey`
+- `getAgentRateTransactionSetKey`
+- `TransactionAdded`
+- `activeParentLinkCount`
+- `activeChildLinkCount`
 
-This keeps the model simple:
+Avoid ambiguous names:
 
-- branch holds shared metadata
-- branch holds transaction id keys
-- master map holds actual transaction records
-
-## Longer-Term Map-First Access Goal
-
-The longer-term goal is:
-
-- maps are for access
-- tree/index arrays are for display
-
-The contract should not need to walk the sponsor -> recipient -> rate -> agent -> rate tree in order to find a record. Each real branch component should have a stable direct map key.
-
-The current logical layout is:
-
-```text
-sponsorKey
-recipientKey
-recipientRateKey
-agentKey
-agentRateKey
-transactionIndex or transactionId
-```
-
-The gas-efficient version should use fixed `bytes32` ids, not string concatenation.
-
-Recommended key chain:
-
-```solidity
-// Sponsor access can stay address-based.
-// mapping(address => SponsorNode) sponsors;
-
-bytes32 recipientId = keccak256(
-    abi.encode(sponsorKey, recipientKey)
-);
-
-bytes32 recipientRateId = keccak256(
-    abi.encode(recipientId, recipientRateKey)
-);
-
-bytes32 agentId = keccak256(
-    abi.encode(recipientRateId, agentKey)
-);
-
-bytes32 agentRateId = keccak256(
-    abi.encode(agentId, agentRateKey)
-);
-
-bytes32 transactionEntryId = keccak256(
-    abi.encode(agentRateId, transactionId)
-);
-```
-
-This gives direct access without tree walking:
-
-```solidity
-mapping(address => SponsorNode) sponsors;
-mapping(bytes32 => RecipientNode) recipients;
-mapping(bytes32 => RecipientRateNode) recipientRates;
-mapping(bytes32 => AgentNode) agents;
-mapping(bytes32 => AgentRateNode) agentRates;
-mapping(uint256 => TransactionRecordStruct) masterTransactionIdMap;
-```
-
-For display, keep child-id arrays:
-
-```solidity
-mapping(address => bytes32[]) sponsorRecipientIds;
-mapping(bytes32 => bytes32[]) recipientRateIds;
-mapping(bytes32 => bytes32[]) recipientRateAgentIds;
-mapping(bytes32 => bytes32[]) agentRateIds;
-mapping(bytes32 => uint256[]) branchTransactionIds;
-```
-
-So:
-
-- direct contract access uses maps
-- UI/tree display uses id arrays
-- transaction records still live once in `masterTransactionIdMap`
-- branch records hold ids and set-level metadata
-
-Important gas notes:
-
-- use `bytes32` ids
-- use `abi.encode(...)` for unambiguous hashing
-- avoid dynamic string keys
-- avoid storing duplicate data unless it saves meaningful lookup or recomputation
-- keep arrays only where enumeration/display is required
-
-This map-first model is the eventual direction. The current migration should still be incremental: add maps and ids in parallel, dual-write them, compare against the old tree, and only then move reads/deletes/rewards to the map-first source of truth.
+- avoid `keysRateTransactionIds`; use `recipientRateTransactionSetKeys` or `agentRateTransactionSetKeys`
+- avoid `recipientTransactionIdList` if it does not include agent-mediated recipient transactions
+- avoid `sponsorTransactionIdList` unless a real on-chain sponsor-history read requirement appears
+- avoid storing full transaction records inside account structs
 
 ## Summary
 
-The design we now prefer is:
+The current preferred design is:
 
-- one master transaction record per transaction
-- one branch transaction id array entry per transaction
-- one set-level metadata record per rate branch
-- shared update time on the set
-- no shared update time on the individual transaction record
-- `masterAccountList` as the append-only complete account registry
-- `activeAccountList` as the current active/reachable account registry
-- old runnable behavior unchanged during migration
+- one immutable master transaction record per transaction
+- one rate bucket update per transaction
+- no full transaction copies in accounts
+- no sponsor transaction-id list
+- recipient accounts store direct recipient rate-set keys
+- agent accounts store agent rate-set keys
+- rate buckets store transaction IDs, counts, totals, and last update dates
+- relationship links stay for navigation and active-account logic
+- transaction history stays append-only for auditability
+- sponsor, recipient-full, and tree history views are derived off-chain from transactions and events
 
 This is the design that should guide the next implementation steps.

@@ -1,6 +1,7 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/components/NpmAccessPanel.tsx
 import React from 'react';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
+import { NativeSelectChevron } from '@/components/views/SelectChevron';
 import { NpmStatusBlock } from './StatusBlocks';
 import { normalizeProjectRelativePath } from '../helpers';
 
@@ -105,23 +106,26 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
           <div className="mt-4 grid gap-4">
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">NPM Package</span>
-              <select
-                id="npm-package-select"
-                aria-label="NPM Package"
-                value={selectedPackage}
-                onChange={(event) => onPackagePersist(event.target.value)}
-                className="w-full rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF]"
-              >
-                {availablePackages.length > 0 ? (
-                  availablePackages.map((packageName) => (
-                    <option key={packageName} value={packageName}>
-                      {packageName}
-                    </option>
-                  ))
-                ) : (
-                  <option value={selectedPackage}>{selectedPackage}</option>
-                )}
-              </select>
+              <div className="relative min-w-0">
+                <select
+                  id="npm-package-select"
+                  aria-label="NPM Package"
+                  value={selectedPackage}
+                  onChange={(event) => onPackagePersist(event.target.value)}
+                  className="peer w-full appearance-none rounded-xl border border-[#31416F] bg-[#0B1020] px-4 py-2 pr-8 text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                >
+                  {availablePackages.length > 0 ? (
+                    availablePackages.map((packageName) => (
+                      <option key={packageName} value={packageName}>
+                        {packageName}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={selectedPackage}>{selectedPackage}</option>
+                  )}
+                </select>
+                <NativeSelectChevron />
+              </div>
             </label>
 
             <div className="grid gap-4 md:grid-cols-[minmax(260px,1fr)_auto] md:items-end">

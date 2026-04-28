@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { NativeSelectChevron } from '@/components/views/SelectChevron';
 
 export type WalletAccountSelectionValue = {
   source: 'ec2-base' | 'metamask';
@@ -33,25 +34,28 @@ export default function WalletAccountSelection({
           <label className="flex min-w-[12rem] justify-start text-[#8FA8FF]">
             <div className="flex items-center justify-start gap-2">
               <span className="text-sm font-semibold text-[#8FA8FF]">Account #</span>
-              <select
-                aria-label="Account #"
-                title="Hardhat Deployment Account Number"
-                value={value.accountNumber}
-                disabled={disabled}
-                onChange={(event) => {
-                  void onChange({
-                    ...value,
-                    accountNumber: Number(event.target.value),
-                  });
-                }}
-                className="h-[1.55rem] rounded border border-[#5981F3] bg-[#11162A] px-3 py-0 text-sm font-semibold leading-none text-white focus:outline-none"
-              >
-                {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
-                  <option key={index} value={index}>
-                    {index}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  aria-label="Account #"
+                  title="Hardhat Deployment Account Number"
+                  value={value.accountNumber}
+                  disabled={disabled}
+                  onChange={(event) => {
+                    void onChange({
+                      ...value,
+                      accountNumber: Number(event.target.value),
+                    });
+                  }}
+                  className="peer h-[1.55rem] appearance-none rounded border border-[#5981F3] bg-[#11162A] py-0 pl-3 pr-8 text-sm font-semibold leading-none text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                >
+                  {Array.from({ length: hardhatDeploymentAccountCount }, (_, index) => (
+                    <option key={index} value={index}>
+                      {index}
+                    </option>
+                  ))}
+                </select>
+                <NativeSelectChevron />
+              </div>
             </div>
           </label>
         ) : (
