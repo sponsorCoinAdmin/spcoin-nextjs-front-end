@@ -8,6 +8,7 @@ import SpCoinReadController from './SpCoinReadController';
 import SpCoinWriteController from './SpCoinWriteController';
 import SerializationTestController from './SerializationTestController';
 import ValidationPopup from './ValidationPopup';
+import { NativeSelectChevron, SelectChevron } from './SelectChevron';
 import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import {
   DEFAULT_METHOD_MEMBER_LIST_PAYLOAD,
@@ -19,7 +20,8 @@ import {
 } from '@/lib/spCoinLab/methodMemberLists';
 
 type MethodPanelTab = MethodPanelMode | 'todos' | 'erc20' | 'admin_utils';
-type AlterModeOption = StoredAlterMode | 'Tested';
+type AlterModeOption = StoredAlterMode | 'All' | 'Tested';
+type AlterMembershipOption = StoredAlterMode | 'Tested';
 type EditableMemberLists = AlterMemberLists;
 type MethodIdentityKind = 'erc20Read' | 'erc20Write' | 'spCoinRead' | 'spCoinWrite' | 'serialization';
 
@@ -154,6 +156,7 @@ function filterMethodsByAlterMode(
   memberLists: EditableMemberLists,
   mode: AlterModeOption,
 ) {
+  if (mode === 'All') return methods;
   if (mode === 'Tested') {
     const testMemberList = memberLists.Test ?? {};
     return methods.filter((name) => testMemberList[name] !== true);
@@ -168,10 +171,24 @@ function isMethodInAlterMode(
   mode: AlterModeOption,
 ) {
   if (!methodName || methodName === '__no_methods__') return false;
+  if (mode === 'All') return true;
   if (mode === 'Tested') {
     return memberLists.Test?.[methodName] !== true;
   }
   return memberLists[mode]?.[methodName] === true;
+}
+
+function isMethodIdentityInAlterMode(
+  kind: MethodIdentityKind,
+  methodName: string,
+  memberLists: EditableMemberLists,
+  mode: AlterModeOption,
+) {
+  const methodNames = getEquivalentMemberListMethodNames(kind, methodName, memberLists);
+  if (mode === 'Tested') {
+    return methodNames.every((name) => isMethodInAlterMode(name, memberLists, mode));
+  }
+  return methodNames.some((name) => isMethodInAlterMode(name, memberLists, mode));
 }
 
 function getEquivalentMemberListMethodNames(
@@ -181,7 +198,11 @@ function getEquivalentMemberListMethodNames(
 ) {
   if (kind !== 'spCoinRead') return [methodName];
   const normalizedMethod = normalizeSpCoinReadMethod(methodName);
-  const equivalentNames = Object.keys(memberLists.All ?? {}).filter(
+  const allKnownNames = new Set<string>();
+  for (const memberList of Object.values(memberLists)) {
+    for (const name of Object.keys(memberList ?? {})) allKnownNames.add(name);
+  }
+  const equivalentNames = Array.from(allKnownNames).filter(
     (name) => normalizeSpCoinReadMethod(name) === normalizedMethod,
   );
   return equivalentNames.length > 0 ? equivalentNames : [methodName];
@@ -196,12 +217,43 @@ const BLOCKED_SPCOIN_READ_TITLES = new Set([
 ]);
 
 const ALTER_MODE_OPTIONS: AlterModeOption[] = ['All', 'Basic', 'Standard', 'Test', 'Tested', 'Todo', 'Complete'];
+const ALTER_MEMBERSHIP_OPTIONS: AlterMembershipOption[] = ['Basic', 'Standard', 'Test', 'Tested', 'Todo', 'Complete'];
 const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
+const METHOD_MEMBER_LISTS_API_PATH = '/api/spCoin/lab/method-member-lists';
+
+function saveMethodMemberListPayload(payload: MethodMemberListPayload, keepalive = false) {
+  return fetch(METHOD_MEMBER_LISTS_API_PATH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+    keepalive,
+  });
+}
+
+function flushMethodMemberListPayload(payload: MethodMemberListPayload) {
+  const body = JSON.stringify(payload);
+  if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+    const sent = navigator.sendBeacon(
+      METHOD_MEMBER_LISTS_API_PATH,
+      new Blob([body], { type: 'application/json' }),
+    );
+    if (sent) return;
+  }
+  void fetch(METHOD_MEMBER_LISTS_API_PATH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    cache: 'no-store',
+    keepalive: true,
+  }).catch(() => {
+    // Ignore unload-time persistence failures.
+  });
+}
 
 type StoredMethodsPanelUiState = {
   scriptEditorKind?: ScriptEditorKind;
   isManageEnabled?: boolean;
-  selectedAlterMode?: AlterModeOption;
   selectedDisplayGroup?: MethodDisplayGroup;
   writeTraceEnabled?: boolean;
   showOnChainMethods?: boolean;
@@ -221,17 +273,6 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     }
     if (typeof saved.isManageEnabled === 'boolean') {
       next.isManageEnabled = saved.isManageEnabled;
-    }
-    if (
-      saved.selectedAlterMode === 'All' ||
-      saved.selectedAlterMode === 'Basic' ||
-      saved.selectedAlterMode === 'Standard' ||
-      saved.selectedAlterMode === 'Test' ||
-      saved.selectedAlterMode === 'Tested' ||
-      saved.selectedAlterMode === 'Todo' ||
-      saved.selectedAlterMode === 'Complete'
-    ) {
-      next.selectedAlterMode = saved.selectedAlterMode;
     }
     if (
       saved.selectedDisplayGroup === 'erc20' ||
@@ -358,9 +399,9 @@ export default function MethodsPanelCard({
   const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
   const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
   const [isMethodPanelLoading, setIsMethodPanelLoading] = React.useState(false);
-  const [selectedAlterMode, setSelectedAlterMode] =
-    React.useState<AlterModeOption>(storedMethodsPanelUiState?.selectedAlterMode || 'Standard');
-  const [alterModeDropdownValue, setAlterModeDropdownValue] = React.useState('__alter_mode_placeholder__');
+  const [selectedAlterMode, setSelectedAlterMode] = React.useState<AlterModeOption>('Standard');
+  const [isAlterMembershipMenuOpen, setIsAlterMembershipMenuOpen] = React.useState(false);
+  const [isChangeGroupMenuOpen, setIsChangeGroupMenuOpen] = React.useState(false);
   const [serializationMemberLists, setSerializationMemberLists] = React.useState<EditableMemberLists>(() =>
     cloneAlterMemberLists(DEFAULT_METHOD_MEMBER_LIST_PAYLOAD.lists.serialization),
   );
@@ -393,6 +434,8 @@ export default function MethodsPanelCard({
   const isJsonScriptMode = scriptEditorKind === 'json';
   const didHydratePanelUiRef = React.useRef(false);
   const didRestoreSelectedMethodRef = React.useRef(false);
+  const alterMembershipMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const changeGroupMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isPanelUiPersistenceReady, setIsPanelUiPersistenceReady] = React.useState(false);
   React.useEffect(() => {
     if (didHydratePanelUiRef.current) return;
@@ -452,6 +495,10 @@ export default function MethodsPanelCard({
       spCoinWriteMemberLists,
     ],
   );
+  const latestPersistedMemberListPayloadRef = React.useRef(persistedMemberListPayload);
+  React.useEffect(() => {
+    latestPersistedMemberListPayloadRef.current = persistedMemberListPayload;
+  }, [persistedMemberListPayload]);
   const methodPanelOptions: Array<[MethodPanelTab, string]> = [
     ['erc20', 'ERC20'],
     ['spcoin_rread', 'SpCoin Read'],
@@ -459,6 +506,8 @@ export default function MethodsPanelCard({
     ['admin_utils', 'Admin Utils'],
     ['todos', 'ToDos'],
   ];
+  const selectedDisplayGroupLabel =
+    methodPanelOptions.find(([value]) => value === selectedDisplayGroup)?.[1] || selectedDisplayGroup;
   const visibleErc20ReadOptions = React.useMemo(
     () =>
       sortMethodNames(
@@ -746,9 +795,7 @@ export default function MethodsPanelCard({
   const methodEntryNeedsTesting = React.useCallback(
     (entry: MethodCatalogEntry) => {
       const memberLists = getMethodEntryMemberLists(entry);
-      return getEquivalentMemberListMethodNames(entry.kind, entry.name, memberLists).some((methodName) =>
-        isMethodInAlterMode(methodName, memberLists, 'Test'),
-      );
+      return isMethodIdentityInAlterMode(entry.kind, entry.name, memberLists, 'Test');
     },
     [getMethodEntryMemberLists],
   );
@@ -987,7 +1034,6 @@ export default function MethodsPanelCard({
       JSON.stringify({
         scriptEditorKind,
         isManageEnabled,
-        selectedAlterMode,
         selectedDisplayGroup,
         writeTraceEnabled,
         showOnChainMethods,
@@ -1000,7 +1046,6 @@ export default function MethodsPanelCard({
     isManageEnabled,
     isPanelUiPersistenceReady,
     scriptEditorKind,
-    selectedAlterMode,
     selectedDisplayGroup,
     showOffChainMethods,
     showOnChainMethods,
@@ -1028,13 +1073,40 @@ export default function MethodsPanelCard({
     spCoinReadMemberLists,
     spCoinWriteMemberLists,
   ]);
+  const currentMethodInAlterMode = React.useCallback(
+    (mode: AlterModeOption) => {
+      if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return false;
+      if (!currentMethodIdentity) return isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, mode);
+      return isMethodIdentityInAlterMode(
+        currentMethodIdentity.kind,
+        currentJsonMethodName,
+        activeAlterMemberLists,
+        mode,
+      );
+    },
+    [activeAlterMemberLists, currentJsonMethodName, currentMethodIdentity],
+  );
+  React.useEffect(() => {
+    if (!isAlterMembershipMenuOpen && !isChangeGroupMenuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (!alterMembershipMenuRef.current?.contains(target)) setIsAlterMembershipMenuOpen(false);
+      if (!changeGroupMenuRef.current?.contains(target)) setIsChangeGroupMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+    };
+  }, [isAlterMembershipMenuOpen, isChangeGroupMenuOpen]);
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     let cancelled = false;
 
     const hydrateMethodMemberLists = async () => {
       try {
-        const response = await fetch('/api/spCoin/lab/method-member-lists', { cache: 'no-store' });
+        const response = await fetch(METHOD_MEMBER_LISTS_API_PATH, { cache: 'no-store' });
         if (!response.ok) return;
         const payload = (await response.json()) as MethodMemberListPayload;
         if (cancelled || !payload?.lists) return;
@@ -1044,10 +1116,9 @@ export default function MethodsPanelCard({
         setErc20ReadMemberLists(cloneAlterMemberLists(payload.lists.erc20Read));
         setErc20WriteMemberLists(cloneAlterMemberLists(payload.lists.erc20Write));
         setMethodDisplayGroups({ ...(payload.displayGroups || {}) });
+        setMemberListPersistenceHydrated(true);
       } catch {
-        // Fall back to the in-memory defaults if file hydration fails.
-      } finally {
-        if (!cancelled) setMemberListPersistenceHydrated(true);
+        // Do not save in-memory defaults over the JSON file if hydration fails.
       }
     };
 
@@ -1058,15 +1129,22 @@ export default function MethodsPanelCard({
   }, []);
   React.useEffect(() => {
     if (!memberListPersistenceHydrated) return;
-    void fetch('/api/spCoin/lab/method-member-lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(persistedMemberListPayload),
-    }).catch(() => {
+    void saveMethodMemberListPayload(persistedMemberListPayload, true).catch(() => {
       // Ignore transient persistence failures in the UI layer.
     });
   }, [memberListPersistenceHydrated, persistedMemberListPayload]);
-  const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterModeOption) => {
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!memberListPersistenceHydrated) return;
+    const flushLatestPayload = () => {
+      flushMethodMemberListPayload(latestPersistedMemberListPayloadRef.current);
+    };
+    window.addEventListener('pagehide', flushLatestPayload);
+    return () => {
+      window.removeEventListener('pagehide', flushLatestPayload);
+    };
+  }, [memberListPersistenceHydrated]);
+  const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterMembershipOption) => {
     if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return;
     const toggleMember =
       (setter: React.Dispatch<React.SetStateAction<EditableMemberLists>>, kind: MethodIdentityKind) => {
@@ -1329,7 +1407,7 @@ export default function MethodsPanelCard({
           <select
             aria-label="JSON method"
             title="JSON method"
-            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             style={{
               color:
                 visibleCurrentMethodIdentity && !methodEntryNeedsTesting(visibleCurrentMethodIdentity)
@@ -1357,9 +1435,7 @@ export default function MethodsPanelCard({
             </option>
           ))}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-            v
-          </span>
+          <NativeSelectChevron />
         </div>
       </div>
     );
@@ -1389,7 +1465,7 @@ export default function MethodsPanelCard({
                   onChange={() => setScriptEditorKind('json')}
                   className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                 />
-                <span>JSON</span>
+                <span className={scriptEditorKind === 'json' ? 'text-green-400' : 'text-[#8FA8FF]'}>JSON</span>
               </label>
               <label className="inline-flex items-center gap-2">
                 <input
@@ -1398,7 +1474,7 @@ export default function MethodsPanelCard({
                   onChange={() => setScriptEditorKind('javascript')}
                   className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                 />
-                <span>Typescript</span>
+                <span className={scriptEditorKind === 'javascript' ? 'text-green-400' : 'text-[#8FA8FF]'}>Typescript</span>
               </label>
               <label className="inline-flex items-center justify-end gap-2 text-right">
               <input
@@ -1407,7 +1483,7 @@ export default function MethodsPanelCard({
                 checked={showOnChainMethods}
                 onChange={(event) => setShowOnChainMethods(event.target.checked)}
               />
-              <span className="text-green-400">On-Chain</span>
+              <span className={showOnChainMethods ? 'text-green-400' : 'text-[#8FA8FF]'}>On-Chain</span>
               </label>
               <label className="inline-flex items-center justify-end gap-2 text-right">
               <input
@@ -1416,17 +1492,17 @@ export default function MethodsPanelCard({
                 checked={showOffChainMethods}
                 onChange={(event) => setShowOffChainMethods(event.target.checked)}
               />
-              <span className="text-[#8FA8FF]">Off-Chain</span>
+              <span className={showOffChainMethods ? 'text-green-400' : 'text-[#8FA8FF]'}>Off-Chain</span>
               </label>
               <div className="ml-auto flex items-start gap-4">
-                <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
+                <label className="inline-flex items-center justify-end gap-2 text-xs text-[#8FA8FF]">
                   <input
                     type="checkbox"
                     className="h-4 w-4 accent-[#5981F3]"
                     checked={isManageEnabled}
                     onChange={(event) => setIsManageEnabled(event.target.checked)}
                   />
-                  <span>Manage Method</span>
+                  <span className={isManageEnabled ? 'text-green-400' : 'text-[#8FA8FF]'}>Manage Method</span>
                 </label>
               </div>
               {isJavaScriptScriptMode ? (
@@ -1446,12 +1522,12 @@ export default function MethodsPanelCard({
             </div>
           </div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-200">
+            <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-[#8FA8FF]">
               {methodPanelOptions.map(([value, label]) => (
-                <label key={value} className="inline-flex items-center gap-1">
+                <label key={value} className="inline-flex flex-row items-center gap-1">
                   <input
                     type="radio"
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                    className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                     name={methodPanelGroupName}
                     value={value}
                     checked={selectedDisplayGroup === value}
@@ -1463,7 +1539,9 @@ export default function MethodsPanelCard({
                       setSelectedDisplayGroup(e.target.value as MethodDisplayGroup);
                     }}
                   />
-                  <span>{label}</span>
+                  <span className={selectedDisplayGroup === value ? 'text-green-400' : 'text-[#8FA8FF]'}>
+                    {label}
+                  </span>
                 </label>
               ))}
             </div>
@@ -1473,16 +1551,16 @@ export default function MethodsPanelCard({
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs text-[#8FA8FF]">
                   {ALTER_MODE_OPTIONS.map((option) => (
-                    <label key={option} className="inline-flex items-center gap-2">
+                    <label key={option} className="inline-flex flex-row items-center gap-2">
                       <input
                         type="radio"
                         name={alterModeGroupName}
                         value={option}
                         checked={selectedAlterMode === option}
                         onChange={() => setSelectedAlterMode(option)}
-                        className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                        className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                       />
-                      <span className={isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, option) ? 'text-green-400' : 'text-red-400'}>
+                      <span className={selectedAlterMode === option ? 'text-green-400' : 'text-[#8FA8FF]'}>
                         {getAlterModeLabel(option)}
                       </span>
                     </label>
@@ -1490,51 +1568,100 @@ export default function MethodsPanelCard({
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <label className="inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
+                <div ref={alterMembershipMenuRef} className="relative inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
                   <span>Group Members</span>
-                  <select
-                    className="rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-xs text-white"
-                    value={alterModeDropdownValue}
-                    onChange={(event) => {
-                      const nextMode = event.target.value as AlterModeOption | '__alter_mode_placeholder__';
-                      if (nextMode === '__alter_mode_placeholder__') return;
-                      toggleCurrentMethodAlterMembership(nextMode);
-                      setAlterModeDropdownValue('__alter_mode_placeholder__');
-                    }}
-                  >
-                    <option value="__alter_mode_placeholder__">Toggle List Membership</option>
-                    {ALTER_MODE_OPTIONS.map((option) => (
-                      <option
-                        key={`alter-mode-${option}`}
-                        value={option}
-                        style={{
-                          color: isMethodInAlterMode(currentJsonMethodName, activeAlterMemberLists, option) ? '#22c55e' : '#ef4444',
-                          fontWeight: '700',
-                        }}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="inline-flex w-[128px] items-center justify-between gap-2 rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-left text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-haspopup="menu"
+                      aria-expanded={isAlterMembershipMenuOpen}
+                      disabled={!currentJsonMethodName || currentJsonMethodName === '__no_methods__'}
+                      onClick={() => {
+                        setIsAlterMembershipMenuOpen((open) => !open);
+                        setIsChangeGroupMenuOpen(false);
+                      }}
+                    >
+                      <span>Select Group</span>
+                      <SelectChevron open={isAlterMembershipMenuOpen} />
+                    </button>
+                    {isAlterMembershipMenuOpen ? (
+                      <div
+                        role="menu"
+                        aria-label="Group Members"
+                        className="absolute left-0 top-full z-30 mt-1 w-[128px] overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220] shadow-xl shadow-black/40"
                       >
-                        {getAlterModeLabel(option)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
+                        {ALTER_MEMBERSHIP_OPTIONS.map((option) => {
+                          const isMember = currentMethodInAlterMode(option);
+                          return (
+                            <button
+                              key={`alter-mode-${option}`}
+                              type="button"
+                              role="menuitemcheckbox"
+                              aria-checked={isMember}
+                              className={`flex w-full items-center gap-3 px-3 py-2 text-left text-xs font-bold hover:bg-[#162033] ${
+                                isMember ? 'text-green-400' : 'text-[#8FA8FF]'
+                              }`}
+                              onClick={() => toggleCurrentMethodAlterMembership(option)}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`order-first h-2 w-2 shrink-0 rounded-full ${isMember ? 'bg-green-400' : 'bg-red-400'}`}
+                              />
+                              <span>{getAlterModeLabel(option)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <div ref={changeGroupMenuRef} className="relative inline-flex items-center gap-2 text-xs text-[#8FA8FF]">
                   <span>Change Group</span>
-                  <select
-                    className="rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-xs text-white"
-                    value={selectedDisplayGroup}
-                    onChange={(event) => {
-                      const nextTab = event.target.value as MethodDisplayGroup;
-                      if (selectedDisplayGroup === nextTab) return;
-                      changeCurrentMethodGroup(nextTab);
-                    }}
-                  >
-                    {methodPanelOptions.map(([value, label]) => (
-                      <option key={`change-group-${value}`} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="inline-flex w-[132px] items-center justify-between gap-2 rounded-lg border border-[#334155] bg-[#0B1220] px-3 py-2 text-left text-xs font-semibold text-white"
+                      aria-haspopup="menu"
+                      aria-expanded={isChangeGroupMenuOpen}
+                      onClick={() => {
+                        setIsChangeGroupMenuOpen((open) => !open);
+                        setIsAlterMembershipMenuOpen(false);
+                      }}
+                    >
+                      <span>{selectedDisplayGroupLabel}</span>
+                      <SelectChevron open={isChangeGroupMenuOpen} />
+                    </button>
+                    {isChangeGroupMenuOpen ? (
+                      <div
+                        role="menu"
+                        aria-label="Change Group"
+                        className="absolute left-0 top-full z-30 mt-1 w-[132px] overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220] shadow-xl shadow-black/40"
+                      >
+                        {methodPanelOptions.map(([value, label]) => {
+                          const isSelected = selectedDisplayGroup === value;
+                          return (
+                            <button
+                              key={`change-group-${value}`}
+                              type="button"
+                              role="menuitemradio"
+                              aria-checked={isSelected}
+                              className={`flex w-full items-center px-3 py-2 text-left text-xs font-bold hover:bg-[#162033] ${
+                                isSelected ? 'text-green-400' : 'text-[#8FA8FF]'
+                              }`}
+                              onClick={() => {
+                                if (!isSelected) changeCurrentMethodGroup(value as MethodDisplayGroup);
+                                setIsChangeGroupMenuOpen(false);
+                              }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
@@ -1543,22 +1670,25 @@ export default function MethodsPanelCard({
               <div className="mb-3 grid grid-cols-1 gap-3">
                 <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                   <span className="text-sm font-semibold text-[#8FA8FF]">TypeScript File</span>
-                  <select
-                    aria-label="TypeScript file"
-                    title="TypeScript file"
-                    className="w-full min-w-0 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
-                    value={typeScriptMethodOptions.includes(currentJsonMethodName) ? currentJsonMethodName : ''}
-                    onChange={(event) => selectMappedJsonMethod(event.target.value)}
-                  >
-                    {typeScriptMethodOptions.length === 0 ? (
-                      <option value="">No TypeScript Methods</option>
-                    ) : null}
-                    {typeScriptMethodOptions.map((methodName) => (
-                      <option key={methodName} value={methodName}>
-                        {methodName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative w-full min-w-0">
+                    <select
+                      aria-label="TypeScript file"
+                      title="TypeScript file"
+                      className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+                      value={typeScriptMethodOptions.includes(currentJsonMethodName) ? currentJsonMethodName : ''}
+                      onChange={(event) => selectMappedJsonMethod(event.target.value)}
+                    >
+                      {typeScriptMethodOptions.length === 0 ? (
+                        <option value="">No TypeScript Methods</option>
+                      ) : null}
+                      {typeScriptMethodOptions.map((methodName) => (
+                        <option key={methodName} value={methodName}>
+                          {methodName}
+                        </option>
+                      ))}
+                    </select>
+                    <NativeSelectChevron />
+                  </div>
                 </div>
                 {showLoadingPanel ? (
                   loadingPanel

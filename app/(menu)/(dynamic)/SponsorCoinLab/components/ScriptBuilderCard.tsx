@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import type { LabScript, LabScriptStep } from '../scriptBuilder/types';
+import { SelectChevron } from './SelectChevron';
 
 type ValidationTone = 'neutral' | 'invalid' | 'valid';
 
@@ -230,7 +231,7 @@ export default function ScriptBuilderCard({
               title="Show scripts"
               aria-label="Show scripts"
             >
-              v
+              <SelectChevron open={isScriptOptionsOpen} />
             </button>
             {isScriptOptionsOpen && visibleScriptOptions.length > 0 ? (
               <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-56 overflow-y-auto rounded-lg border border-[#334155] bg-[#0E111B] shadow-lg">
@@ -458,6 +459,8 @@ export default function ScriptBuilderCard({
         <div className={`min-h-0 flex-1 overflow-auto pr-24 ${hiddenScrollbarClass}`}>
           {!activeSelectedScript ? (
             <div className="text-slate-400">(no script selected)</div>
+          ) : activeSelectedScript.isLazy ? (
+            <div className="text-slate-400">(loading script JSON...)</div>
           ) : activeSelectedScript.steps.length === 0 ? (
             <div className="text-slate-400">(script has no steps yet)</div>
           ) : (

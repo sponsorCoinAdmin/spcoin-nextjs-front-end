@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { RotateCcw } from 'lucide-react';
 import LabCardHeader from './LabCardHeader';
 import AccountSelection from './AccountSelection';
+import { NativeSelectChevron, SelectChevron } from './SelectChevron';
 import JsonInspector from '@/components/shared/JsonInspector';
 import { BaseModal } from '@/components/modals';
 import { ERC20_READ_OPTIONS } from '../jsonMethods/erc20/read';
@@ -953,24 +954,27 @@ export default function OutputResultsCard({
                   Active Account
                 </button>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                  <select
-                    className={inputStyle}
-                    value={treeActions.selectedTreeAccount}
-                    onChange={(e) => {
-                      const nextAccount = e.target.value;
-                      treeActions.setSelectedTreeAccount(nextAccount);
-                      void treeActions.runTreeDump(nextAccount);
-                    }}
-                  >
-                    {treeActions.treeAccountOptions.length === 0 ? (
-                      <option value="">No accounts available</option>
-                    ) : null}
-                    {treeActions.treeAccountOptions.map((account) => (
-                      <option key={account} value={account}>
-                        {account}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative min-w-0">
+                    <select
+                      className={`${inputStyle} peer appearance-none pr-10`}
+                      value={treeActions.selectedTreeAccount}
+                      onChange={(e) => {
+                        const nextAccount = e.target.value;
+                        treeActions.setSelectedTreeAccount(nextAccount);
+                        void treeActions.runTreeDump(nextAccount);
+                      }}
+                    >
+                      {treeActions.treeAccountOptions.length === 0 ? (
+                        <option value="">No accounts available</option>
+                      ) : null}
+                      {treeActions.treeAccountOptions.map((account) => (
+                        <option key={account} value={account}>
+                          {account}
+                        </option>
+                      ))}
+                    </select>
+                    <NativeSelectChevron />
+                  </div>
                   <button
                     type="button"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#334155] bg-[#1E2340] text-[#8FA8FF] transition-colors hover:bg-[#2B335A] hover:text-white"
@@ -1038,7 +1042,7 @@ export default function OutputResultsCard({
                     aria-label="Toggle Show All filters"
                     aria-expanded={isShowAllMenuOpen}
                   >
-                    v
+                    <SelectChevron open={isShowAllMenuOpen} />
                   </button>
                   {isShowAllMenuOpen ? (
                     <div className="absolute left-0 top-6 z-20 w-56 rounded-md border border-[#334155] bg-[#0B1220] p-2 text-[10px] leading-4 text-slate-300 shadow-lg">

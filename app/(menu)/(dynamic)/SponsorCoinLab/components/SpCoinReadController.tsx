@@ -5,6 +5,7 @@ import AccountSelection from './AccountSelection';
 import DateTimeCalendarPopup from './DateTimeCalendarPopup';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
+import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
 
@@ -536,7 +537,7 @@ export default function SpCoinReadController(props: Props) {
         <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
         <div className="relative w-full min-w-0">
           <select
-            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={displayedReadMethod}
             onChange={(e) => setSelectedSpCoinReadMethod(e.target.value)}
             disabled={!hasVisibleReadMethods}
@@ -628,9 +629,7 @@ export default function SpCoinReadController(props: Props) {
             </React.Fragment>
           ) : null}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-            v
-          </span>
+          <NativeSelectChevron />
         </div>
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
@@ -814,7 +813,7 @@ export default function SpCoinReadController(props: Props) {
               <div className="relative w-full min-w-0">
                 <select
                   data-field-id={`spcoin-read-param-${idx}`}
-                  className={`${inputStyle} appearance-none pr-10${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  className={`${inputStyle} peer appearance-none pr-10${invalidClass(`spcoin-read-param-${idx}`)}`}
                   value={
                     contractDirectoryOptions.some((option) => option.value === String(spReadParams[idx] || '').trim())
                       ? spReadParams[idx] || ''
@@ -839,9 +838,7 @@ export default function SpCoinReadController(props: Props) {
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-                  v
-                </span>
+                <NativeSelectChevron />
               </div>
             </label>
           ) : (

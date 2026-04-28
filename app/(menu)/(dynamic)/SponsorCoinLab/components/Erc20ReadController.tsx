@@ -3,6 +3,7 @@ import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import { getMethodOptionColor } from './methodOptionColors';
+import { NativeSelectChevron } from './SelectChevron';
 
 type ActiveReadLabels = {
   title: string;
@@ -134,7 +135,7 @@ export default function Erc20ReadController(props: Props) {
           <div className="relative w-full min-w-0">
             <select
               id="erc20-read-method"
-              className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+              className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
               value={displayedReadMethod}
               onChange={(e) => setSelectedReadMethod(e.target.value)}
               disabled={!hasVisibleReadMethods}
@@ -146,9 +147,7 @@ export default function Erc20ReadController(props: Props) {
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-              v
-            </span>
+            <NativeSelectChevron />
           </div>
         </div>
       ) : null}

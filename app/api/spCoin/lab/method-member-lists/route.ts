@@ -23,6 +23,10 @@ function buildPersistedPayload(input: unknown): MethodMemberListPayload {
   };
 }
 
+function buildReadPayload(input: unknown): MethodMemberListPayload {
+  return normalizeMethodMemberListPayload(input);
+}
+
 async function writePayload(payload: MethodMemberListPayload) {
   await ensureMethodMemberListsDir();
   await fs.writeFile(METHOD_MEMBER_LISTS_PATH, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
@@ -32,7 +36,7 @@ async function readPayload(): Promise<{ payload: MethodMemberListPayload; wroteF
   try {
     const raw = await fs.readFile(METHOD_MEMBER_LISTS_PATH, 'utf8');
     const parsed = JSON.parse(raw) as unknown;
-    const normalized = buildPersistedPayload(parsed);
+    const normalized = buildReadPayload(parsed);
     const normalizedText = `${JSON.stringify(normalized, null, 2)}\n`;
     if (raw !== normalizedText) {
       await writePayload(normalized);

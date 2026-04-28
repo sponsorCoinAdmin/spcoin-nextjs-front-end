@@ -287,7 +287,7 @@ export function useSponsorCoinLabPersistence({
 
   async function fetchFileBackedScripts(): Promise<ScriptApiPayload | null> {
     try {
-      const response = await fetch('/api/spCoin/scripts', { cache: 'no-store' });
+      const response = await fetch('/api/spCoin/scripts?lazy=true', { cache: 'no-store' });
       if (!response.ok) return null;
       return (await response.json()) as ScriptApiPayload;
     } catch {

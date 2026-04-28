@@ -2,6 +2,7 @@ import React, { type Dispatch, type SetStateAction } from 'react';
 import Image from 'next/image';
 import type { ConnectionMode } from '../scriptBuilder/types';
 import LabCardHeader from './LabCardHeader';
+import { NativeSelectChevron } from './SelectChevron';
 
 type Props = {
   className: string;
@@ -112,20 +113,23 @@ export default function ContractNetworkCard({
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <span className="shrink-0 text-sm font-semibold text-[#8FA8FF]">SponsorCoin Version</span>
                 <div className="flex min-w-0 flex-1 items-stretch">
-                  <select
-                    className="w-full min-w-0 rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
-                    value={version.selectedSponsorCoinVersion}
-                    onChange={(e) => version.setSelectedSponsorCoinVersion(e.target.value)}
-                    aria-label="SponsorCoin Version (Hardhat row)"
-                    title="SponsorCoin Version"
-                  >
-                    {version.sponsorCoinVersionChoices.length === 0 ? <option value="">(no deployment map entries)</option> : null}
-                    {version.sponsorCoinVersionChoices.map((entry) => (
-                      <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
-                        {entry.version}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative min-w-0 flex-1">
+                    <select
+                      className="peer w-full min-w-0 appearance-none rounded-l-xl rounded-r-none border border-[#31416F] bg-[#0B1020] px-2 py-2 pr-8 text-sm text-white outline-none transition-colors focus:border-[#8FA8FF]"
+                      value={version.selectedSponsorCoinVersion}
+                      onChange={(e) => version.setSelectedSponsorCoinVersion(e.target.value)}
+                      aria-label="SponsorCoin Version (Hardhat row)"
+                      title="SponsorCoin Version"
+                    >
+                      {version.sponsorCoinVersionChoices.length === 0 ? <option value="">(no deployment map entries)</option> : null}
+                      {version.sponsorCoinVersionChoices.map((entry) => (
+                        <option key={`spcoin-version-row-${entry.id}`} value={entry.id}>
+                          {entry.version}
+                        </option>
+                      ))}
+                    </select>
+                    <NativeSelectChevron />
+                  </div>
                   <div className="flex w-[23px] flex-col">
                     <button
                       type="button"

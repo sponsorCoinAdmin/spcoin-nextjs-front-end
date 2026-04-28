@@ -4,8 +4,10 @@ import { SPCOIN_ADMIN_WRITE_METHODS, SPCOIN_TODO_WRITE_METHODS, SPCOIN_WRITE_MET
 import { ERC20_READ_METHOD_MEMBER_LISTS } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/erc20/read';
 import { ERC20_WRITE_METHOD_MEMBER_LISTS } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/erc20/write';
 
-export type StoredAlterMode = 'Basic' | 'Standard' | 'All' | 'Test' | 'Todo' | 'Complete';
+export type StoredAlterMode = 'Basic' | 'Standard' | 'Test' | 'Todo' | 'Complete';
+type SourceAlterMode = StoredAlterMode | 'All';
 export type AlterMemberLists = Record<StoredAlterMode, Record<string, boolean>>;
+type SourceAlterMemberLists = Record<SourceAlterMode, Record<string, boolean>>;
 export type MethodDisplayGroup = 'erc20' | 'spcoin_rread' | 'spcoin_write' | 'admin_utils' | 'todos';
 
 export type MethodMemberListCollection = {
@@ -23,27 +25,36 @@ export type MethodMemberListPayload = {
   displayGroups: Record<string, MethodDisplayGroup>;
 };
 
-const DEFAULT_METHOD_MEMBER_LIST_COLLECTION: MethodMemberListCollection = {
-  serialization: SERIALIZATION_TEST_METHOD_MEMBER_LISTS as AlterMemberLists,
-  spCoinRead: SPCOIN_READ_METHOD_MEMBER_LISTS as AlterMemberLists,
-  spCoinWrite: SPCOIN_WRITE_METHOD_MEMBER_LISTS as AlterMemberLists,
-  erc20Read: ERC20_READ_METHOD_MEMBER_LISTS as AlterMemberLists,
-  erc20Write: ERC20_WRITE_METHOD_MEMBER_LISTS as AlterMemberLists,
+type SourceMethodMemberListCollection = {
+  serialization: SourceAlterMemberLists;
+  spCoinRead: SourceAlterMemberLists;
+  spCoinWrite: SourceAlterMemberLists;
+  erc20Read: SourceAlterMemberLists;
+  erc20Write: SourceAlterMemberLists;
 };
 
-export function cloneAlterMemberLists(source: AlterMemberLists): AlterMemberLists {
+const DEFAULT_METHOD_MEMBER_LIST_COLLECTION: SourceMethodMemberListCollection = {
+  serialization: SERIALIZATION_TEST_METHOD_MEMBER_LISTS as SourceAlterMemberLists,
+  spCoinRead: SPCOIN_READ_METHOD_MEMBER_LISTS as SourceAlterMemberLists,
+  spCoinWrite: SPCOIN_WRITE_METHOD_MEMBER_LISTS as SourceAlterMemberLists,
+  erc20Read: ERC20_READ_METHOD_MEMBER_LISTS as SourceAlterMemberLists,
+  erc20Write: ERC20_WRITE_METHOD_MEMBER_LISTS as SourceAlterMemberLists,
+};
+
+export function cloneAlterMemberLists(
+  source: Partial<Record<SourceAlterMode, Record<string, boolean>>>,
+): AlterMemberLists {
   return {
-    Basic: { ...(source.Basic || source.Standard) },
-    Standard: { ...source.Standard },
-    All: { ...source.All },
-    Test: { ...source.Test },
-    Todo: { ...source.Todo },
+    Basic: { ...(source.Basic || source.Standard || {}) },
+    Standard: { ...(source.Standard || {}) },
+    Test: { ...(source.Test || {}) },
+    Todo: { ...(source.Todo || {}) },
     Complete: { ...(source.Complete || {}) },
   };
 }
 
 export function cloneMethodMemberListCollection(
-  source: MethodMemberListCollection = DEFAULT_METHOD_MEMBER_LIST_COLLECTION,
+  source: SourceMethodMemberListCollection | MethodMemberListCollection = DEFAULT_METHOD_MEMBER_LIST_COLLECTION,
 ): MethodMemberListCollection {
   return {
     serialization: cloneAlterMemberLists(source.serialization),
@@ -54,17 +65,30 @@ export function cloneMethodMemberListCollection(
   };
 }
 
+function getSourceMethodNames(source: Partial<Record<SourceAlterMode, Record<string, boolean>>>): string[] {
+  return Array.from(
+    new Set([
+      ...Object.keys(source.All ?? {}),
+      ...Object.keys(source.Basic ?? {}),
+      ...Object.keys(source.Standard ?? {}),
+      ...Object.keys(source.Test ?? {}),
+      ...Object.keys(source.Todo ?? {}),
+      ...Object.keys(source.Complete ?? {}),
+    ]),
+  );
+}
+
 const DEFAULT_DISPLAY_GROUPS: Record<string, MethodDisplayGroup> = {
-  ...Object.fromEntries(Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read.All).map((name) => [`erc20Read:${name}`, 'erc20'] as const)),
-  ...Object.fromEntries(Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write.All).map((name) => [`erc20Write:${name}`, 'erc20'] as const)),
+  ...Object.fromEntries(getSourceMethodNames(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Read).map((name) => [`erc20Read:${name}`, 'erc20'] as const)),
+  ...Object.fromEntries(getSourceMethodNames(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.erc20Write).map((name) => [`erc20Write:${name}`, 'erc20'] as const)),
   ...Object.fromEntries(
-    Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead.All).map((name) => [
+    getSourceMethodNames(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinRead).map((name) => [
       `spCoinRead:${name}`,
       SPCOIN_ADMIN_READ_METHODS.includes(name as never) ? 'admin_utils' : 'spcoin_rread',
     ] as const),
   ),
   ...Object.fromEntries(
-    Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite.All).map((name) => [
+    getSourceMethodNames(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.spCoinWrite).map((name) => [
       `spCoinWrite:${name}`,
       SPCOIN_TODO_WRITE_METHODS.includes(name as never)
         ? 'todos'
@@ -73,7 +97,7 @@ const DEFAULT_DISPLAY_GROUPS: Record<string, MethodDisplayGroup> = {
           : 'spcoin_write',
     ] as const),
   ),
-  ...Object.fromEntries(Object.keys(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization.All).map((name) => [`serialization:${name}`, 'admin_utils'] as const)),
+  ...Object.fromEntries(getSourceMethodNames(DEFAULT_METHOD_MEMBER_LIST_COLLECTION.serialization).map((name) => [`serialization:${name}`, 'admin_utils'] as const)),
 };
 
 function markAdminUtilsAsTest(
@@ -112,14 +136,18 @@ export const DEFAULT_METHOD_MEMBER_LIST_PAYLOAD: MethodMemberListPayload = {
 
 function normalizeAlterMemberLists(
   input: unknown,
-  defaults: AlterMemberLists,
+  defaults: SourceAlterMemberLists,
 ): AlterMemberLists {
-  const source = input && typeof input === 'object' ? (input as Partial<AlterMemberLists>) : {};
+  const source = input && typeof input === 'object' ? (input as Partial<Record<SourceAlterMode, Record<string, boolean>>>) : {};
   const normalized = cloneAlterMemberLists(defaults);
-  const knownMethods = Object.keys(defaults.All);
+  const knownMethods = Array.from(
+    new Set([
+      ...getSourceMethodNames(defaults),
+      ...getSourceMethodNames(source),
+    ]),
+  );
 
   for (const methodName of knownMethods) {
-    normalized.All[methodName] = true;
     normalized.Basic[methodName] =
       typeof source.Basic?.[methodName] === 'boolean'
         ? Boolean(source.Basic?.[methodName])

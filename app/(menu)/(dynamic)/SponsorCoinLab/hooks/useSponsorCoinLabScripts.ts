@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   getErc20ReadLabels,
   type Erc20ReadMethod,
@@ -341,6 +341,7 @@ export function useSponsorCoinLabScripts({
   const [showJavaScriptUtilScriptsOnly, setShowJavaScriptUtilScriptsOnly] = useState(false);
   const [javaScriptScripts, setJavaScriptScripts] = useState<LabJavaScriptScript[]>([]);
   const [selectedJavaScriptScriptId, setSelectedJavaScriptScriptId] = useState('');
+  const lazyScriptLoadIdsRef = useRef<Set<string>>(new Set());
   const [javaScriptScriptNameInput, setJavaScriptScriptNameInput] = useState('');
   const [isJavaScriptScriptOptionsOpen, setIsJavaScriptScriptOptionsOpen] = useState(false);
   const availableJavaScriptScripts = useMemo(
@@ -734,6 +735,9 @@ export function useSponsorCoinLabScripts({
         'Date Created': inferScriptCreatedDate(script),
         network: getScriptNetwork(script),
         steps: normalizedSteps,
+        isSystemScript: script.isSystemScript || undefined,
+        isLazy: script.isLazy || undefined,
+        storageFileName: typeof script.storageFileName === 'string' ? script.storageFileName : undefined,
       };
     },
     [getScriptNetwork, normalizeScriptStep],
@@ -747,6 +751,29 @@ export function useSponsorCoinLabScripts({
     },
     [normalizeScript],
   );
+
+  useEffect(() => {
+    if (!selectedScript?.isLazy || selectedScript.isSystemScript || !selectedScript.id) return;
+    const scriptId = selectedScript.id;
+    if (lazyScriptLoadIdsRef.current.has(scriptId)) return;
+    lazyScriptLoadIdsRef.current.add(scriptId);
+
+    const loadSelectedScript = async () => {
+      try {
+        const response = await fetch(`/api/spCoin/scripts?scriptId=${encodeURIComponent(scriptId)}`, { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = (await response.json()) as { script?: LabScript };
+        if (!payload.script || payload.script.id !== scriptId) return;
+        setScripts((prev) => prev.map((script) => (script.id === scriptId ? payload.script as LabScript : script)));
+      } catch {
+        // Keep the lazy summary in place if a script body cannot be loaded yet.
+      } finally {
+        lazyScriptLoadIdsRef.current.delete(scriptId);
+      }
+    };
+
+    void loadSelectedScript();
+  }, [selectedScript?.id, selectedScript?.isLazy, selectedScript?.isSystemScript, setScripts]);
 
   useEffect(() => {
     if (!selectedScript) {
@@ -1191,6 +1218,10 @@ export function useSponsorCoinLabScripts({
         setStatus('Select a script to copy.');
         return false;
       }
+      if (selectedScript.isLazy) {
+        setStatus(`Loading ${selectedScript.name}.`);
+        return false;
+      }
 
       const nextName = String(nextNameRaw || '').trim();
       if (!nextName) {
@@ -1426,6 +1457,11 @@ export function useSponsorCoinLabScripts({
     }
     if (selectedScript?.isSystemScript) {
       setStatus('System Tests are read-only. Copy the script to edit it.');
+      setOutputPanelMode('raw_status');
+      return false;
+    }
+    if (selectedScript?.isLazy) {
+      setStatus(`Loading ${selectedScript.name}.`);
       setOutputPanelMode('raw_status');
       return false;
     }

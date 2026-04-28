@@ -5,6 +5,7 @@ import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
+import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
@@ -345,7 +346,7 @@ export default function SpCoinWriteController(props: Props) {
           <select
             aria-label="SpCoin write JSON method"
             title="SpCoin write JSON method"
-            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={displayedWriteMethod}
             onChange={(e) => setSelectedSpCoinWriteMethod(e.target.value)}
             disabled={!hasVisibleWriteMethods}
@@ -432,9 +433,7 @@ export default function SpCoinWriteController(props: Props) {
             </React.Fragment>
           ) : null}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-            v
-          </span>
+          <NativeSelectChevron />
         </div>
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">

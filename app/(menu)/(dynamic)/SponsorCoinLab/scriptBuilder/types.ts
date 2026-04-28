@@ -28,6 +28,8 @@ export type LabScript = {
   network: string;
   steps: LabScriptStep[];
   isSystemScript?: boolean;
+  isLazy?: boolean;
+  storageFileName?: string;
 };
 
 export type LabJavaScriptScript = {

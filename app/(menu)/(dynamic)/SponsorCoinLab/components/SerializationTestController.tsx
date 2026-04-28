@@ -2,6 +2,7 @@ import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import { getMethodOptionColor } from './methodOptionColors';
+import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 type Props = {
@@ -182,7 +183,7 @@ export default function SerializationTestController(props: Props) {
           <select
             aria-label="Serialization test JSON method"
             title="Serialization test JSON method"
-            className="w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
+            className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
             value={displayedSerializationMethod}
             onChange={(e) => setSelectedSerializationTestMethod(e.target.value)}
             disabled={!hasVisibleSerializationMethods}
@@ -198,9 +199,7 @@ export default function SerializationTestController(props: Props) {
               </option>
             ))}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-            v
-          </span>
+          <NativeSelectChevron />
         </div>
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
@@ -349,7 +348,7 @@ export default function SerializationTestController(props: Props) {
               <div className="relative w-full min-w-0">
                 <select
                   data-field-id={`serialization-test-param-${idx}`}
-                  className={`${inputStyle} appearance-none pr-10${invalidClass(`serialization-test-param-${idx}`)}`}
+                  className={`${inputStyle} peer appearance-none pr-10${invalidClass(`serialization-test-param-${idx}`)}`}
                   value={
                     contractDirectoryOptions.some((option) => option.value === String(serializationTestParams[idx] || '').trim())
                       ? serializationTestParams[idx] || ''
@@ -374,9 +373,7 @@ export default function SerializationTestController(props: Props) {
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[#8FA8FF]">
-                  v
-                </span>
+                <NativeSelectChevron />
               </div>
             </label>
           ) : (

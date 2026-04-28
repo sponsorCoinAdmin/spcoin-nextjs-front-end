@@ -1,4 +1,5 @@
 import React from 'react';
+import { SelectChevron } from './SelectChevron';
 
 type AccountOption = {
   value: string;
@@ -94,7 +95,7 @@ export default function AccountDropdownInput({
         title="Show all accounts"
         aria-label="Show all accounts"
       >
-        v
+        <SelectChevron open={isOpen} />
       </button>
       {isOpen && visibleOptions.length > 0 ? (
         <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-56 overflow-y-auto rounded-lg border border-[#334155] bg-[#0E111B] shadow-lg">

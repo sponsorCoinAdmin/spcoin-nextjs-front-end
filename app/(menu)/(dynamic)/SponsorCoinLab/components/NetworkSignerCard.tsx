@@ -4,6 +4,7 @@ import LabCardHeader from './LabCardHeader';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import RateSliderRow from './RateSliderRow';
+import { NativeSelectChevron } from './SelectChevron';
 
 type Props = {
   className: string;
@@ -289,20 +290,23 @@ export default function NetworkSignerCard({
             </div>
             <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Account Type</span>
-              <select
-                value={accountManagement.selectedSponsorCoinAccountRole}
-                onChange={(event) =>
-                  accountManagement.setSelectedSponsorCoinAccountRole(
-                    event.target.value as 'sponsor' | 'recipient' | 'agent',
-                  )
-                }
-                className={inputStyle}
-                aria-label="SponsorCoin account type"
-              >
-                <option value="sponsor">Sponsor</option>
-                <option value="recipient">Recipient</option>
-                <option value="agent">Agent</option>
-              </select>
+              <div className="relative min-w-0">
+                <select
+                  value={accountManagement.selectedSponsorCoinAccountRole}
+                  onChange={(event) =>
+                    accountManagement.setSelectedSponsorCoinAccountRole(
+                      event.target.value as 'sponsor' | 'recipient' | 'agent',
+                    )
+                  }
+                  className={`${inputStyle} peer appearance-none pr-10`}
+                  aria-label="SponsorCoin account type"
+                >
+                  <option value="sponsor">Sponsor</option>
+                  <option value="recipient">Recipient</option>
+                  <option value="agent">Agent</option>
+                </select>
+                <NativeSelectChevron />
+              </div>
               <button
                 type="button"
                 onClick={() => void accountManagement.onExecuteAccountAction(isAddAction ? 'add' : 'delete')}
