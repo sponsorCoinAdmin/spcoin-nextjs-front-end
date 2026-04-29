@@ -70,6 +70,7 @@ type BackdateCalendarArgs = {
 
 export type BuildMethodsPanelCardPropsArgs = {
   methodPanelTitle: string;
+  isEditingScriptMethod: boolean;
   scriptEditorKind: ScriptEditorKind;
   setScriptEditorKind: StateSetter<ScriptEditorKind>;
   methodPanelMode: MethodPanelMode;
@@ -233,6 +234,7 @@ export type BuildMethodsPanelCardPropsArgs = {
 export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs) {
   return {
     methodPanelTitle: args.methodPanelTitle,
+    isEditingScriptMethod: args.isEditingScriptMethod,
     scriptEditorKind: args.scriptEditorKind,
     setScriptEditorKind: args.setScriptEditorKind,
     methodPanelMode: args.methodPanelMode,

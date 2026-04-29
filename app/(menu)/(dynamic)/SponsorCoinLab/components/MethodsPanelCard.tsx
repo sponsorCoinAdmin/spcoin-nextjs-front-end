@@ -389,6 +389,7 @@ type Props = {
   isExpanded: boolean;
   onToggleExpand: () => void;
   methodPanelTitle: string;
+  isEditingScriptMethod: boolean;
   scriptEditorKind: ScriptEditorKind;
   setScriptEditorKind: React.Dispatch<React.SetStateAction<ScriptEditorKind>>;
   methodPanelMode: MethodPanelMode;
@@ -435,6 +436,7 @@ export default function MethodsPanelCard({
   isExpanded,
   onToggleExpand,
   methodPanelTitle,
+  isEditingScriptMethod,
   scriptEditorKind,
   setScriptEditorKind,
   methodPanelMode,
@@ -1075,6 +1077,38 @@ export default function MethodsPanelCard({
     }
     return methodDisplayGroups[currentMethodIdentity.id] || 'admin_utils';
   }, [currentMethodIdentity, methodDisplayGroups, selectedDisplayGroup]);
+  const currentMethodMemberLists = React.useMemo(
+    () => (currentMethodIdentity ? getMethodEntryMemberLists(currentMethodIdentity) : null),
+    [currentMethodIdentity, getMethodEntryMemberLists],
+  );
+  const isCurrentMethodInSelectedAlterMode = React.useMemo(
+    () =>
+      currentMethodIdentity && currentMethodMemberLists
+        ? isMethodIdentityInAlterMode(
+            currentMethodIdentity.kind,
+            currentMethodIdentity.name,
+            currentMethodMemberLists,
+            selectedAlterMode,
+          )
+        : true,
+    [currentMethodIdentity, currentMethodMemberLists, selectedAlterMode],
+  );
+  React.useEffect(() => {
+    if (!isEditingScriptMethod || !currentMethodIdentity) return;
+    if (selectedDisplayGroup !== currentMethodDisplayGroup) {
+      setSelectedDisplayGroup(currentMethodDisplayGroup);
+    }
+    if (!isCurrentMethodInSelectedAlterMode && selectedAlterMode !== 'All') {
+      setSelectedAlterMode('All');
+    }
+  }, [
+    currentMethodDisplayGroup,
+    currentMethodIdentity,
+    isCurrentMethodInSelectedAlterMode,
+    isEditingScriptMethod,
+    selectedAlterMode,
+    selectedDisplayGroup,
+  ]);
   const selectedDisplayGroupLabel = getMethodDisplayGroupLabel(currentMethodDisplayGroup);
   const visibleCurrentMethodIdentity = React.useMemo(
     () =>
@@ -1388,11 +1422,13 @@ export default function MethodsPanelCard({
     return () => window.clearTimeout(timer);
   }, [activePanelKey]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (!visibleGroupedMethods.length) return;
     if (visibleCurrentMethodIdentity) return;
     selectMethodByIdentity(visibleGroupedMethods[0]);
-  }, [selectMethodByIdentity, visibleCurrentMethodIdentity, visibleGroupedMethods]);
+  }, [isEditingScriptMethod, selectMethodByIdentity, visibleCurrentMethodIdentity, visibleGroupedMethods]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab === 'admin_utils') return;
     if (methodPanelMode !== 'serialization_tests') return;
     if (visibleSerializationOptions.length === 0) return;
@@ -1400,24 +1436,28 @@ export default function MethodsPanelCard({
     serializationTestProps.setSelectedSerializationTestMethod(visibleSerializationOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     serializationTestProps.selectedSerializationTestMethod,
     serializationTestProps.setSelectedSerializationTestMethod,
     visibleSerializationOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'serialization_tests') return;
     if (visibleAdminUtilitySerializationOptions.length === 0) return;
     if (visibleAdminUtilitySerializationOptions.includes(serializationTestProps.selectedSerializationTestMethod)) return;
     serializationTestProps.setSelectedSerializationTestMethod(visibleAdminUtilitySerializationOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     serializationTestProps.selectedSerializationTestMethod,
     serializationTestProps.setSelectedSerializationTestMethod,
     visibleAdminUtilitySerializationOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (methodPanelMode !== 'ecr20_read') return;
     if (visibleErc20ReadOptions.length === 0) return;
     if (visibleErc20ReadOptions.includes(erc20ReadProps.selectedReadMethod)) return;
@@ -1425,10 +1465,12 @@ export default function MethodsPanelCard({
   }, [
     erc20ReadProps.selectedReadMethod,
     erc20ReadProps.setSelectedReadMethod,
+    isEditingScriptMethod,
     methodPanelMode,
     visibleErc20ReadOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (methodPanelMode !== 'erc20_write') return;
     if (visibleErc20WriteOptions.length === 0) return;
     if (visibleErc20WriteOptions.includes(erc20WriteProps.selectedWriteMethod)) return;
@@ -1436,10 +1478,12 @@ export default function MethodsPanelCard({
   }, [
     erc20WriteProps.selectedWriteMethod,
     erc20WriteProps.setSelectedWriteMethod,
+    isEditingScriptMethod,
     methodPanelMode,
     visibleErc20WriteOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab === 'admin_utils') return;
     if (methodPanelMode !== 'spcoin_rread') return;
     if (visibleSpCoinReadOptions.length === 0) return;
@@ -1447,12 +1491,14 @@ export default function MethodsPanelCard({
     spCoinReadProps.setSelectedSpCoinReadMethod(visibleSpCoinReadOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinReadProps.setSelectedSpCoinReadMethod,
     visibleSpCoinReadOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab === 'admin_utils') return;
     if (activeMethodPanelTab === 'todos') {
       if (visibleTodoWriteOptions.length === 0) return;
@@ -1466,6 +1512,7 @@ export default function MethodsPanelCard({
     spCoinWriteProps.setSelectedSpCoinWriteMethod(visibleSpCoinWriteOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     spCoinWriteProps.selectedSpCoinWriteMethod,
     spCoinWriteProps.setSelectedSpCoinWriteMethod,
@@ -1473,24 +1520,28 @@ export default function MethodsPanelCard({
     visibleTodoWriteOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'spcoin_rread') return;
     if (visibleAdminUtilsReadOptions.length === 0) return;
     if (hasEquivalentSpCoinReadMethod(visibleAdminUtilsReadOptions, spCoinReadProps.selectedSpCoinReadMethod)) return;
     spCoinReadProps.setSelectedSpCoinReadMethod(visibleAdminUtilsReadOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     spCoinReadProps.selectedSpCoinReadMethod,
     spCoinReadProps.setSelectedSpCoinReadMethod,
     visibleAdminUtilsReadOptions,
   ]);
   React.useEffect(() => {
+    if (isEditingScriptMethod) return;
     if (activeMethodPanelTab !== 'admin_utils' || methodPanelMode !== 'spcoin_write') return;
     if (visibleAdminUtilsOwnerOptions.length === 0) return;
     if (visibleAdminUtilsOwnerOptions.includes(spCoinWriteProps.selectedSpCoinWriteMethod)) return;
     spCoinWriteProps.setSelectedSpCoinWriteMethod(visibleAdminUtilsOwnerOptions[0]);
   }, [
     activeMethodPanelTab,
+    isEditingScriptMethod,
     methodPanelMode,
     spCoinWriteProps.selectedSpCoinWriteMethod,
     spCoinWriteProps.setSelectedSpCoinWriteMethod,
