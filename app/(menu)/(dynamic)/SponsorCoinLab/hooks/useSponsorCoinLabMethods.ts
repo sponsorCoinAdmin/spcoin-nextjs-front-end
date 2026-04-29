@@ -1,79 +1,39 @@
 import { useCallback, useEffect, useMemo, type Dispatch, type SetStateAction } from 'react';
 import type { MethodDef, ParamDef } from '../jsonMethods/shared/types';
-import {
-  getErc20ReadLabels,
-  runErc20ReadMethod,
-  type Erc20ReadMethod,
-} from '../jsonMethods/erc20/read';
-import {
-  getErc20WriteLabels,
-  runErc20WriteMethod,
-  type Erc20WriteMethod,
-} from '../jsonMethods/erc20/write';
-import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
-import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
-import {
-  normalizeSpCoinWriteMethod,
-  runSpCoinWriteMethod,
-  type SpCoinWriteMethod,
-} from '../jsonMethods/spCoin/write';
-import {
-  runSerializationTestMethod,
-  type SerializationTestMethod,
-} from '../jsonMethods/serializationTests';
-import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAccess } from '../jsonMethods/shared';
-import { getTransactionList as localGetTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getTransactionList';
-import { getAccountTransactionList as localGetAccountTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountTransactionList';
-import {
-  createMethodTimingCollector,
-  runWithMethodTimingCollector,
-} from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
+import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
+import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
+import type { SpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import { normalizeSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
+import type { SerializationTestMethod } from '../jsonMethods/serializationTests';
 import type { ConnectionMode, MethodPanelMode } from '../scriptBuilder/types';
 import {
-  attachExecutionMeta,
-  attachReadDebugTrace,
-  buildExecutionMeta,
   getErrorDebugTrace,
   getExecutionMetaFromError,
   isAbortError,
-  isEmptyAccountRateListReadError,
-  isMalformedAccountRateListInput,
   parseComparableUint,
-  type MethodExecutionMeta,
 } from './methodExecutionHelpers';
-import {
-  deriveReadWarningPayload,
-  normalizeWriteResultForDisplay,
-} from './methodOutputFormatting';
+import { useSponsorCoinLabMethodExecution, type MethodExecutionDescriptor } from './useSponsorCoinLabMethodExecution';
 import { useSponsorCoinLabRateKeyOptions } from './useSponsorCoinLabRateKeyOptions';
 import { useSponsorCoinLabScriptRunner } from './useSponsorCoinLabScriptRunner';
 import { useSponsorCoinLabTreeMethods } from './useSponsorCoinLabTreeMethods';
 
-type Entry = { id: string; label: string };
-type MethodParamEntry = { key: string; value: string };
-type MethodExecutionDescriptor = {
-  panel: MethodPanelMode;
-  method: string;
-  params: MethodParamEntry[];
-  sender?: string;
-};
-
-type MethodExecutionResult = {
-  call: { method: string; parameters: { label: string; value: unknown }[] };
-  result: unknown;
-  warning?: any;
-  meta?: MethodExecutionMeta;
-};
-
-type MethodExecutionOptions = {
+interface Entry { id: string; label: string }
+interface MethodExecutionOptions {
   executionLabel?: string;
   executionSignal?: AbortSignal;
   skipValidation?: boolean;
-};
+}
 
 type MethodDefMap = Record<string, MethodDef>;
 
-type Params = {
+function toDisplayString(value: unknown, fallback = '') {
+  if (value == null) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
+interface Params {
   activeContractAddress: string;
   rpcUrl?: string;
   mode: ConnectionMode;
@@ -119,7 +79,7 @@ type Params = {
   activeSpCoinReadDef: MethodDef;
   activeSpCoinWriteDef: MethodDef;
   activeSerializationTestDef: MethodDef;
-  hardhatAccounts: Array<{ address: string; privateKey?: string }>;
+  hardhatAccounts: { address: string; privateKey?: string }[];
   selectedHardhatAddress?: string;
   effectiveConnectedAddress: string;
   ownerAddress?: string;
@@ -159,12 +119,12 @@ type Params = {
   backdateSeconds: string;
   buildMethodCallEntry: (
     method: string,
-    params?: Array<{ label: string; value: unknown }>,
-  ) => { method: string; parameters: Array<{ label: string; value: unknown }> };
+    params?: { label: string; value: unknown }[],
+  ) => { method: string; parameters: { label: string; value: unknown }[] };
   formatOutputDisplayValue: (value: unknown) => string;
   recipientRateRange?: [number, number];
   agentRateRange?: [number, number];
-};
+}
 
 export function useSponsorCoinLabMethods({
   activeContractAddress,
@@ -225,72 +185,6 @@ export function useSponsorCoinLabMethods({
   recipientRateRange,
   agentRateRange,
 }: Params) {
-  const runServerBackedSpCoinStep = useCallback(
-    async (
-      panel: 'spcoin_rread' | 'spcoin_write',
-      method: string,
-      params: Array<{ key: string; value: string }>,
-      sender?: string,
-      executionSignal?: AbortSignal,
-    ) => {
-      const target = requireContractAddress();
-      const response = await fetch('/api/spCoin/run-script', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: executionSignal,
-        body: JSON.stringify({
-          contractAddress: target,
-          rpcUrl,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          script: {
-            id: `spcoin-rread-${method}-${Date.now()}`,
-            name: method,
-            network: mode === 'hardhat' ? 'hardhat' : 'metamask',
-            steps: [
-              {
-                step: 1,
-                name: method,
-                panel,
-                method,
-                mode,
-                ...(sender ? { 'msg.sender': sender } : {}),
-                params,
-              },
-            ],
-          },
-        }),
-      });
-      const payload = (await response.json()) as {
-        ok?: boolean;
-        message?: string;
-        results?: Array<{
-          success?: boolean;
-          payload?: {
-            result?: unknown;
-            warning?: Record<string, unknown> | undefined;
-            error?: { message?: string };
-            meta?: MethodExecutionMeta;
-          };
-        }>;
-      };
-      if (!response.ok) {
-        throw new Error(String(payload?.message || `Unable to run ${method} (${response.status})`));
-      }
-      const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
-      if (!firstResult?.success) {
-        const nextError = new Error(String(firstResult?.payload?.error?.message || `Unable to run ${method}.`));
-        attachExecutionMeta(nextError, firstResult?.payload?.meta);
-        throw nextError;
-      }
-      return {
-        result: firstResult?.payload?.result,
-        warning: firstResult?.payload?.warning as Record<string, unknown> | undefined,
-        meta: firstResult?.payload?.meta,
-      };
-    },
-    [mode, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
-  );
-
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
     if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
@@ -481,7 +375,8 @@ export function useSponsorCoinLabMethods({
 
   const stringifyResult = useCallback((result: unknown) => {
     if (typeof result === 'string') return result;
-    return JSON.stringify(result, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)) ?? '';
+    return JSON.stringify(result, (_key: string, value: unknown) =>
+      (typeof value === 'bigint' ? value.toString() : value)) ?? '';
   }, []);
   const formatFormattedPanelPayload = useCallback(
     (payload: unknown) => {
@@ -490,7 +385,7 @@ export function useSponsorCoinLabMethods({
       }
       const nextPayload = { ...(payload as Record<string, unknown>) };
       const normalizeInflationRateDisplay = (value: unknown) => {
-        const trimmed = String(value ?? '').trim();
+        const trimmed = toDisplayString(value).trim();
         if (!trimmed) return '';
         return trimmed.endsWith('%') ? trimmed : `${trimmed}%`;
       };
@@ -560,7 +455,7 @@ export function useSponsorCoinLabMethods({
         nextPayload.call &&
         typeof nextPayload.call === 'object' &&
         !Array.isArray(nextPayload.call)
-          ? String((nextPayload.call as Record<string, unknown>).method || '').trim()
+          ? toDisplayString((nextPayload.call as Record<string, unknown>).method).trim()
           : '';
       if (
         normalizedPayloadMethod === 'getMasterSponsorList' ||
@@ -598,7 +493,7 @@ export function useSponsorCoinLabMethods({
         const isAccountListPayload = normalizedPayloadMethod === 'getMasterAccountKeys' || normalizedPayloadMethod === 'getAccountKeys';
 
         nextPayload.result = {
-          spCoinMetaData: normalizedMetadata || { __lazySpCoinMetaData: true },
+          spCoinMetaData: normalizedMetadata ?? { __lazySpCoinMetaData: true },
           [entryListKey]: normalizedEntries.map((entry) => normalizeMasterSponsorEntry(entry, isAccountListPayload)),
         };
         delete nextPayload.spCoinMetaData;
@@ -607,7 +502,7 @@ export function useSponsorCoinLabMethods({
         nextPayload.call &&
         typeof nextPayload.call === 'object' &&
         !Array.isArray(nextPayload.call) &&
-        String((nextPayload.call as Record<string, unknown>).method || '').trim() === 'getSpCoinMetaData' &&
+        toDisplayString((nextPayload.call as Record<string, unknown>).method).trim() === 'getSpCoinMetaData' &&
         nextPayload.result &&
         typeof nextPayload.result === 'object' &&
         !Array.isArray(nextPayload.result)
@@ -624,807 +519,28 @@ export function useSponsorCoinLabMethods({
     },
     [formatOutputDisplayValue],
   );
-  const executeMethodDescriptor = useCallback(
-    async (
-      descriptor: MethodExecutionDescriptor,
-      options?: Pick<MethodExecutionOptions, 'executionSignal'>,
-    ): Promise<MethodExecutionResult> => {
-      const executionStartedAtMs = Date.now();
-      const executionTimingCollector = traceEnabled ? createMethodTimingCollector(executionStartedAtMs) : null;
-      const { panel, method, params, sender = '' } = descriptor;
-      const executionSignal = options?.executionSignal;
-      const finalizeMeta = () => (executionTimingCollector ? buildExecutionMeta(executionTimingCollector) : undefined);
-      const findParamValue = (label: string) =>
-        String(params.find((entry) => String(entry?.key || '') === label)?.value || '').trim();
-
-      try {
-      return executionTimingCollector
-        ? await runWithMethodTimingCollector(executionTimingCollector, async () => {
-      if (panel === 'ecr20_read') {
-        const selectedMethod = method as Erc20ReadMethod;
-        const labels = getErc20ReadLabels(selectedMethod);
-        const readAddressA = labels.requiresAddressA ? findParamValue(labels.addressALabel) : '';
-        const readAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-        const call = buildMethodCallEntry(selectedMethod, [
-          ...(labels.requiresAddressA ? [{ label: labels.addressALabel, value: readAddressA }] : []),
-          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: readAddressB }] : []),
-        ]);
-        const result = await runErc20ReadMethod({
-          selectedReadMethod: selectedMethod,
-          activeReadLabels: labels,
-          readAddressA,
-          readAddressB,
-          requireContractAddress,
-          ensureReadRunner,
-          appendLog,
-          setStatus,
-        });
-        return { call, result, meta: finalizeMeta() };
-      }
-
-      if (panel === 'erc20_write') {
-        const selectedMethod = method as Erc20WriteMethod;
-        const labels = getErc20WriteLabels(selectedMethod);
-        const writeAddressA = findParamValue(labels.addressALabel);
-        const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-        const amount = findParamValue('Amount');
-        const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-        const call = buildMethodCallEntry(selectedMethod, [
-          ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
-          { label: labels.addressALabel, value: writeAddressA },
-          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: writeAddressB }] : []),
-          { label: 'Amount', value: amount },
-        ]);
-        const result = await runErc20WriteMethod({
-          selectedWriteMethod: selectedMethod,
-          activeWriteLabels: labels,
-          writeAddressA,
-          writeAddressB,
-          writeAmountRaw: amount,
-          selectedHardhatAddress: signer,
-          executeWriteConnected,
-          appendLog,
-          setStatus,
-        });
-        return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
-      }
-
-      if (panel === 'spcoin_rread') {
-        const selectedMethod = method as SpCoinReadMethod;
-        const normalizedSelectedMethod = normalizeSpCoinReadMethod(String(selectedMethod || ''));
-        const def = spCoinReadMethodDefs[normalizedSelectedMethod] || spCoinReadMethodDefs[selectedMethod];
-        if (!def) {
-          throw new Error(`SpCoin read method ${String(selectedMethod || '')} is not registered.`);
-        }
-        const localParams = def.params.map((param) => findParamValue(param.label));
-        const call = buildMethodCallEntry(
-          selectedMethod,
-          def.params.map((param, idx) => ({
-            label: param.label,
-            value: localParams[idx] || '',
-          })),
-        );
-        const debugTrace = [
-          `spcoin_rread start method=${String(selectedMethod || '')}`,
-          `normalizedMethod=${normalizedSelectedMethod}`,
-          `source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}`,
-          `mode=${mode}`,
-          `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
-        ];
-        let serverBackedMeta: MethodExecutionMeta | undefined;
-        let warning: unknown;
-        if (['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(normalizedSelectedMethod)) {
-          const target = requireContractAddress();
-          const runner = await ensureReadRunner();
-          const contract = createSpCoinContract(target, runner) as SpCoinContractAccess;
-          if (typeof contract.getAccountKeyCount === 'function') {
-            const raw = await contract.getAccountKeyCount();
-            return { call, result: Number(raw), meta: finalizeMeta() };
-          }
-          const fallbackAccess = createSpCoinLibraryAccess(
-            target,
-            runner,
-            undefined,
-            useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          );
-          const accountKeys =
-            typeof contract.getMasterAccountKeys === 'function'
-              ? await contract.getMasterAccountKeys()
-              : typeof fallbackAccess.read.getAccountKeys === 'function'
-                ? await fallbackAccess.read.getAccountKeys()
-                : [];
-          return { call, result: Array.isArray(accountKeys) ? accountKeys.length : 0, meta: finalizeMeta() };
-        }
-        const shouldUseServerBackedRead =
-          useLocalSpCoinAccessPackage &&
-          mode === 'hardhat' &&
-          [
-            'getAccountRecord',
-            'getMasterAccountKeys',
-            'getMasterAccountList',
-            'getMasterAccountCount',
-            'getAccountKeys',
-            'getAccountKeyCount',
-            'getMasterAccountListSize',
-            'getAccountListSize',
-          ].includes(normalizedSelectedMethod);
-        let result: unknown;
-        try {
-          if (normalizedSelectedMethod === 'getAccountTransactionList') {
-            debugTrace.push('using local account-rate parser fast path');
-            const rateRewardList = parseListParam(localParams[0] || '');
-            const hasMalformedRateRewardRow = rateRewardList.some((row) => {
-              const fields = String(row || '').split(',');
-              return fields.length < 2 || !String(fields[0] || '').trim() || !String(fields[1] || '').trim();
-            });
-            if (hasMalformedRateRewardRow) {
-              debugTrace.push('detected malformed rate reward row; returning empty list with warning');
-              result = {
-                __spcoinWarningType: 'malformed_rate_reward_list',
-                __spcoinWarningMessage:
-                  'getAccountTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
-                items: [],
-              };
-            } else {
-              const noopLogger = { logFunctionHeader: () => {}, logExitFunction: () => {} };
-              result = localGetAccountTransactionList(
-                {
-                  spCoinLogger: noopLogger,
-                  getTransactionList: (rows: string[]) => localGetTransactionList({ spCoinLogger: noopLogger }, rows),
-                },
-                rateRewardList,
-              );
-            }
-          } else {
-          if (shouldUseServerBackedRead) {
-            const serverResult = await runServerBackedSpCoinStep(
-              'spcoin_rread',
-              normalizedSelectedMethod,
-              def.params.map((param, idx) => ({
-                key: param.label,
-                value: localParams[idx] || '',
-              })),
-              undefined,
-              executionSignal,
-            );
-            result = serverResult.result;
-            warning = serverResult.warning;
-            serverBackedMeta = serverResult.meta;
-          } else {
-            result = await runSpCoinReadMethod({
-              selectedMethod,
-              spReadParams: localParams,
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog,
-              setStatus,
-            });
-          }
-          }
-        } catch (error) {
-          const selectedMethodName = String(selectedMethod || '').trim();
-          if (
-            selectedMethodName === 'getAccountTransactionList' &&
-            isEmptyAccountRateListReadError(error)
-          ) {
-            result = [];
-            appendLog(
-              `[warn] ${selectedMethodName} received empty or undefined rate reward data; returning an empty list.`,
-            );
-            setStatus(`${selectedMethodName} returned empty data.`);
-          } else if (
-            selectedMethodName === 'getAccountTransactionList' &&
-            isMalformedAccountRateListInput(error)
-          ) {
-            result = {
-              __spcoinWarningType: 'malformed_rate_reward_list',
-              __spcoinWarningMessage:
-                `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
-              items: [],
-            };
-            appendLog(
-              `[warn] ${selectedMethodName} received malformed rate reward data; returning an empty list.`,
-            );
-            setStatus(`${selectedMethodName} returned malformed input warning.`);
-          } else {
-            throw attachReadDebugTrace(error, debugTrace);
-          }
-        }
-        warning = warning ?? deriveReadWarningPayload(selectedMethod, result, useLocalSpCoinAccessPackage);
-        if (
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result) &&
-          String((result as Record<string, unknown>).__spcoinWarningType || '').trim() === 'malformed_rate_reward_list'
-        ) {
-          result = Array.isArray((result as Record<string, unknown>).items)
-            ? (result as Record<string, unknown>).items
-            : [];
-        }
-        if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
-          try {
-            const accountKeys = Array.isArray(result) ? result : [];
-            const accounts = accountKeys.map((accountKey) => String(accountKey || ''));
-            return {
-              call,
-              result: {
-                spCoinMetaData: { __lazySpCoinMetaData: true },
-                accounts,
-              },
-              ...(warning ? { warning } : {}),
-              meta: serverBackedMeta || finalizeMeta(),
-            };
-          } catch {
-            return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta || finalizeMeta() };
-          }
-        }
-        return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta || finalizeMeta() };
-      }
-
-      if (panel === 'serialization_tests') {
-        const selectedMethod = method as SerializationTestMethod;
-        const def = serializationTestMethodDefs[selectedMethod];
-        const localParams = def.params.map((param) => findParamValue(param.label));
-        const call = buildMethodCallEntry(
-          selectedMethod,
-          def.params.map((param, idx) => ({
-            label: param.label,
-            value: localParams[idx] || '',
-          })),
-        );
-        const result = await runSerializationTestMethod({
-          selectedMethod,
-          params: localParams,
-          coerceParamValue,
-          requireContractAddress,
-          ensureReadRunner,
-          mode,
-          hardhatAccounts,
-          executeWriteConnected,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          selectedHardhatAddress:
-            mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
-          appendLog,
-          setStatus,
-        });
-        const extractedWarning =
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result) &&
-          '__warning' in (result as Record<string, unknown>) &&
-          (result as Record<string, unknown>).__warning &&
-          typeof (result as Record<string, unknown>).__warning === 'object' &&
-          !Array.isArray((result as Record<string, unknown>).__warning)
-            ? ((result as Record<string, unknown>).__warning as Record<string, unknown>)
-            : undefined;
-        const sanitizedSerializationResult =
-          extractedWarning &&
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result)
-            ? Object.fromEntries(
-                Object.entries(result as Record<string, unknown>).filter(([key]) => key !== '__warning'),
-              )
-            : result;
-        if (
-          String(selectedMethod) === 'getMasterSponsorList' ||
-          String(selectedMethod) === 'getMasterSponsorList_BAK'
-        ) {
-          const sponsorKeys = Array.isArray(sanitizedSerializationResult) ? sanitizedSerializationResult : [];
-          const sponsors = sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
-          appendLog(
-            `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
-              sponsors.map((entry) => ({
-                type: typeof entry,
-                hasAddress: !!(entry && typeof entry === 'object' && !Array.isArray(entry) && 'address' in entry),
-                keys:
-                  entry && typeof entry === 'object' && !Array.isArray(entry)
-                    ? Object.keys(entry as Record<string, unknown>)
-                    : [],
-              })),
-            )}`,
-          );
-          return {
-            call,
-            result: {
-              spCoinMetaData: { __lazySpCoinMetaData: true },
-              sponsors,
-            },
-            ...(extractedWarning ? { warning: extractedWarning } : {}),
-            meta: finalizeMeta(),
-          };
-        }
-        return {
-          call,
-          result: sanitizedSerializationResult,
-          ...(extractedWarning ? { warning: extractedWarning } : {}),
-          meta: finalizeMeta(),
-        };
-      }
-
-      const selectedMethod = normalizeSpCoinWriteMethod(method);
-      const def = spCoinWriteMethodDefs[selectedMethod];
-      if (!def) {
-        throw new Error(`Unsupported SpCoin write method: ${String(method)}`);
-      }
-      const localParams = def.params.map((param) => findParamValue(param.label));
-      const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-      const call = buildMethodCallEntry(selectedMethod, [
-        ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
-        ...def.params.map((param, idx) => ({
-          label: param.label,
-          value: localParams[idx] || '',
-        })),
-      ]);
-      appendWriteTrace(
-        `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
-      );
-      const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
-        deleteAccountTree: 'deleteAccountTree',
-        deleteRecipient: 'deleteRecipient',
-        deleteRecipientRate: 'deleteRecipientRate',
-        deleteAgent: 'deleteAgent',
-        deleteAgentRate: 'deleteAgentRate',
-        deleteRecipientSponsorships: 'deleteRecipientSponsorships',
-        deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
-        deleteAgentSponsorships: 'deleteAgentSponsorships',
-      };
-      const utilityWorkflowMethod = workflowWriteToUtilityMethod[selectedMethod];
-      if (utilityWorkflowMethod) {
-        const result = await runSerializationTestMethod({
-          selectedMethod: utilityWorkflowMethod,
-          params: localParams,
-          coerceParamValue,
-          requireContractAddress,
-          ensureReadRunner,
-          mode,
-          hardhatAccounts,
-          executeWriteConnected,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          selectedHardhatAddress: signer,
-          appendLog,
-          setStatus,
-        });
-        return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
-      }
-      const shouldUseServerBackedWrite = true;
-      const result = shouldUseServerBackedWrite
-        ? await runServerBackedSpCoinStep(
-            'spcoin_write',
-            selectedMethod,
-            def.params.map((param, idx) => ({
-              key: param.label,
-              value: localParams[idx] || '',
-            })),
-            signer,
-            executionSignal,
-          )
-        : await runSpCoinWriteMethod({
-            selectedMethod,
-            spWriteParams: localParams,
-            coerceParamValue,
-            executeWriteConnected,
-            selectedHardhatAddress: signer,
-            appendLog,
-            appendWriteTrace,
-            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            setStatus,
-          });
-      const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodExecutionMeta | undefined };
-      return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
-      })
-        : await (async () => {
-      if (panel === 'ecr20_read') {
-        const selectedMethod = method as Erc20ReadMethod;
-        const labels = getErc20ReadLabels(selectedMethod);
-        const readAddressA = labels.requiresAddressA ? findParamValue(labels.addressALabel) : '';
-        const readAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-        const call = buildMethodCallEntry(selectedMethod, [
-          ...(labels.requiresAddressA ? [{ label: labels.addressALabel, value: readAddressA }] : []),
-          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: readAddressB }] : []),
-        ]);
-        const result = await runErc20ReadMethod({
-          selectedReadMethod: selectedMethod,
-          activeReadLabels: labels,
-          readAddressA,
-          readAddressB,
-          requireContractAddress,
-          ensureReadRunner,
-          appendLog,
-          setStatus,
-        });
-        return { call, result, meta: finalizeMeta() };
-      }
-
-      if (panel === 'erc20_write') {
-        const selectedMethod = method as Erc20WriteMethod;
-        const labels = getErc20WriteLabels(selectedMethod);
-        const writeAddressA = findParamValue(labels.addressALabel);
-        const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
-        const amount = findParamValue('Amount');
-        const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-        const call = buildMethodCallEntry(selectedMethod, [
-          ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
-          { label: labels.addressALabel, value: writeAddressA },
-          ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: writeAddressB }] : []),
-          { label: 'Amount', value: amount },
-        ]);
-        const result = await runErc20WriteMethod({
-          selectedWriteMethod: selectedMethod,
-          activeWriteLabels: labels,
-          writeAddressA,
-          writeAddressB,
-          writeAmountRaw: amount,
-          selectedHardhatAddress: signer,
-          executeWriteConnected,
-          appendLog,
-          setStatus,
-        });
-        return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
-      }
-
-      if (panel === 'spcoin_rread') {
-        const selectedMethod = method as SpCoinReadMethod;
-        const normalizedSelectedMethod = normalizeSpCoinReadMethod(String(selectedMethod || ''));
-        const def = spCoinReadMethodDefs[normalizedSelectedMethod] || spCoinReadMethodDefs[selectedMethod];
-        if (!def) {
-          throw new Error(`SpCoin read method ${String(selectedMethod || '')} is not registered.`);
-        }
-        const localParams = def.params.map((param) => findParamValue(param.label));
-        const call = buildMethodCallEntry(
-          selectedMethod,
-          def.params.map((param, idx) => ({
-            label: param.label,
-            value: localParams[idx] || '',
-          })),
-        );
-        const debugTrace = [
-          `spcoin_rread start method=${String(selectedMethod || '')}`,
-          `normalizedMethod=${normalizedSelectedMethod}`,
-          `source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}`,
-          `mode=${mode}`,
-          `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
-        ];
-        let serverBackedMeta: MethodExecutionMeta | undefined;
-        let warning: unknown;
-        if (['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(normalizedSelectedMethod)) {
-          const target = requireContractAddress();
-          const runner = await ensureReadRunner();
-          const contract = createSpCoinContract(target, runner) as SpCoinContractAccess;
-          if (typeof contract.getAccountKeyCount === 'function') {
-            const raw = await contract.getAccountKeyCount();
-            return { call, result: Number(raw), meta: finalizeMeta() };
-          }
-          const fallbackAccess = createSpCoinLibraryAccess(
-            target,
-            runner,
-            undefined,
-            useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          );
-          const accountKeys =
-            typeof contract.getMasterAccountKeys === 'function'
-              ? await contract.getMasterAccountKeys()
-              : typeof fallbackAccess.read.getAccountKeys === 'function'
-                ? await fallbackAccess.read.getAccountKeys()
-                : [];
-          return { call, result: Array.isArray(accountKeys) ? accountKeys.length : 0, meta: finalizeMeta() };
-        }
-        const shouldUseServerBackedRead =
-          useLocalSpCoinAccessPackage &&
-          mode === 'hardhat' &&
-          [
-            'getAccountRecord',
-            'getMasterAccountKeys',
-            'getMasterAccountList',
-            'getMasterAccountCount',
-            'getAccountKeys',
-            'getAccountKeyCount',
-            'getMasterAccountListSize',
-            'getAccountListSize',
-          ].includes(normalizedSelectedMethod);
-        let result: unknown;
-        try {
-          if (normalizedSelectedMethod === 'getAccountTransactionList') {
-            debugTrace.push('using local account-rate parser fast path');
-            const rateRewardList = parseListParam(localParams[0] || '');
-            const hasMalformedRateRewardRow = rateRewardList.some((row) => {
-              const fields = String(row || '').split(',');
-              return fields.length < 2 || !String(fields[0] || '').trim() || !String(fields[1] || '').trim();
-            });
-            if (hasMalformedRateRewardRow) {
-              debugTrace.push('detected malformed rate reward row; returning empty list with warning');
-              result = {
-                __spcoinWarningType: 'malformed_rate_reward_list',
-                __spcoinWarningMessage:
-                  'getAccountTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
-                items: [],
-              };
-            } else {
-              const noopLogger = { logFunctionHeader: () => {}, logExitFunction: () => {} };
-              result = localGetAccountTransactionList(
-                {
-                  spCoinLogger: noopLogger,
-                  getTransactionList: (rows: string[]) => localGetTransactionList({ spCoinLogger: noopLogger }, rows),
-                },
-                rateRewardList,
-              );
-            }
-          } else {
-            if (shouldUseServerBackedRead) {
-              const serverResult = await runServerBackedSpCoinStep(
-                'spcoin_rread',
-                normalizedSelectedMethod,
-                def.params.map((param, idx) => ({
-                  key: param.label,
-                  value: localParams[idx] || '',
-                })),
-                undefined,
-                executionSignal,
-              );
-              result = serverResult.result;
-              warning = serverResult.warning;
-              serverBackedMeta = serverResult.meta;
-            } else {
-              result = await runSpCoinReadMethod({
-                selectedMethod,
-                spReadParams: localParams,
-                coerceParamValue,
-                stringifyResult,
-                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-                requireContractAddress,
-                ensureReadRunner,
-                appendLog,
-                setStatus,
-              });
-            }
-          }
-        } catch (error) {
-          const selectedMethodName = String(selectedMethod || '').trim();
-          if (
-            selectedMethodName === 'getAccountTransactionList' &&
-            isEmptyAccountRateListReadError(error)
-          ) {
-            result = [];
-            appendLog(
-              `[warn] ${selectedMethodName} received empty or undefined rate reward data; returning an empty list.`,
-            );
-            setStatus(`${selectedMethodName} returned empty data.`);
-          } else if (
-            selectedMethodName === 'getAccountTransactionList' &&
-            isMalformedAccountRateListInput(error)
-          ) {
-            result = {
-              __spcoinWarningType: 'malformed_rate_reward_list',
-              __spcoinWarningMessage:
-                `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
-              items: [],
-            };
-            appendLog(
-              `[warn] ${selectedMethodName} received malformed rate reward data; returning an empty list.`,
-            );
-            setStatus(`${selectedMethodName} returned malformed input warning.`);
-          } else {
-            throw attachReadDebugTrace(error, debugTrace);
-          }
-        }
-        warning = warning ?? deriveReadWarningPayload(selectedMethod, result, useLocalSpCoinAccessPackage);
-        if (
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result) &&
-          String((result as Record<string, unknown>).__spcoinWarningType || '').trim() === 'malformed_rate_reward_list'
-        ) {
-          result = Array.isArray((result as Record<string, unknown>).items)
-            ? (result as Record<string, unknown>).items
-            : [];
-        }
-        if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
-          try {
-            const accountKeys = Array.isArray(result) ? result : [];
-            const accounts = accountKeys.map((accountKey) => String(accountKey || ''));
-            return {
-              call,
-              result: {
-                spCoinMetaData: { __lazySpCoinMetaData: true },
-                accounts,
-              },
-              ...(warning ? { warning } : {}),
-              meta: serverBackedMeta || finalizeMeta(),
-            };
-          } catch {
-            return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta || finalizeMeta() };
-          }
-        }
-        return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta || finalizeMeta() };
-      }
-
-      if (panel === 'serialization_tests') {
-        const selectedMethod = method as SerializationTestMethod;
-        const def = serializationTestMethodDefs[selectedMethod];
-        const localParams = def.params.map((param) => findParamValue(param.label));
-        const call = buildMethodCallEntry(
-          selectedMethod,
-          def.params.map((param, idx) => ({
-            label: param.label,
-            value: localParams[idx] || '',
-          })),
-        );
-        const result = await runSerializationTestMethod({
-          selectedMethod,
-          params: localParams,
-          coerceParamValue,
-          requireContractAddress,
-          ensureReadRunner,
-          mode,
-          hardhatAccounts,
-          executeWriteConnected,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          selectedHardhatAddress:
-            mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
-          appendLog,
-          setStatus,
-        });
-        const extractedWarning =
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result) &&
-          '__warning' in (result as Record<string, unknown>) &&
-          (result as Record<string, unknown>).__warning &&
-          typeof (result as Record<string, unknown>).__warning === 'object' &&
-          !Array.isArray((result as Record<string, unknown>).__warning)
-            ? ((result as Record<string, unknown>).__warning as Record<string, unknown>)
-            : undefined;
-        const sanitizedSerializationResult =
-          extractedWarning &&
-          result &&
-          typeof result === 'object' &&
-          !Array.isArray(result)
-            ? Object.fromEntries(
-                Object.entries(result as Record<string, unknown>).filter(([key]) => key !== '__warning'),
-              )
-            : result;
-        if (
-          String(selectedMethod) === 'getMasterSponsorList' ||
-          String(selectedMethod) === 'getMasterSponsorList_BAK'
-        ) {
-          const sponsorKeys = Array.isArray(sanitizedSerializationResult) ? sanitizedSerializationResult : [];
-          const sponsors = sponsorKeys.map((accountKey) => ({ address: String(accountKey || '') }));
-          appendLog(
-            `${selectedMethod} debug -> sponsorKeys=${JSON.stringify(sponsorKeys)} sponsorEntryKinds=${JSON.stringify(
-              sponsors.map((entry) => ({
-                type: typeof entry,
-                hasAddress: !!(entry && typeof entry === 'object' && !Array.isArray(entry) && 'address' in entry),
-                keys:
-                  entry && typeof entry === 'object' && !Array.isArray(entry)
-                    ? Object.keys(entry as Record<string, unknown>)
-                    : [],
-              })),
-            )}`,
-          );
-          return {
-            call,
-            result: {
-              spCoinMetaData: { __lazySpCoinMetaData: true },
-              sponsors,
-            },
-            ...(extractedWarning ? { warning: extractedWarning } : {}),
-            meta: finalizeMeta(),
-          };
-        }
-        return {
-          call,
-          result: sanitizedSerializationResult,
-          ...(extractedWarning ? { warning: extractedWarning } : {}),
-          meta: finalizeMeta(),
-        };
-      }
-
-      const selectedMethod = normalizeSpCoinWriteMethod(method);
-      const def = spCoinWriteMethodDefs[selectedMethod];
-      if (!def) {
-        throw new Error(`Unsupported SpCoin write method: ${String(method)}`);
-      }
-      const localParams = def.params.map((param) => findParamValue(param.label));
-      const signer = sender || (mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress);
-      const call = buildMethodCallEntry(selectedMethod, [
-        ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
-        ...def.params.map((param, idx) => ({
-          label: param.label,
-          value: localParams[idx] || '',
-        })),
-      ]);
-      appendWriteTrace(
-        `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
-      );
-      const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
-        deleteAccountTree: 'deleteAccountTree',
-        deleteRecipient: 'deleteRecipient',
-        deleteRecipientRate: 'deleteRecipientRate',
-        deleteAgent: 'deleteAgent',
-        deleteAgentRate: 'deleteAgentRate',
-        deleteRecipientSponsorships: 'deleteRecipientSponsorships',
-        deleteRecipientSponsorshipTree: 'deleteRecipientSponsorshipTree',
-        deleteAgentSponsorships: 'deleteAgentSponsorships',
-      };
-      const utilityWorkflowMethod = workflowWriteToUtilityMethod[selectedMethod];
-      if (utilityWorkflowMethod) {
-        const result = await runSerializationTestMethod({
-          selectedMethod: utilityWorkflowMethod,
-          params: localParams,
-          coerceParamValue,
-          requireContractAddress,
-          ensureReadRunner,
-          mode,
-          hardhatAccounts,
-          executeWriteConnected,
-          spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          selectedHardhatAddress: signer,
-          appendLog,
-          setStatus,
-        });
-        return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
-      }
-      const shouldUseServerBackedWrite = false;
-      const result = shouldUseServerBackedWrite
-        ? await runServerBackedSpCoinStep(
-            'spcoin_write',
-            selectedMethod,
-            def.params.map((param, idx) => ({
-              key: param.label,
-              value: localParams[idx] || '',
-            })),
-            signer,
-            executionSignal,
-          )
-        : await runSpCoinWriteMethod({
-            selectedMethod,
-            spWriteParams: localParams,
-            coerceParamValue,
-            executeWriteConnected,
-            selectedHardhatAddress: signer,
-            appendLog,
-            appendWriteTrace,
-            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            setStatus,
-            timingCollector: executionTimingCollector,
-          });
-      if (shouldUseServerBackedWrite) {
-        const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodExecutionMeta | undefined };
-        return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
-      } else {
-        const writeResult = result as { receipts: Array<{ label: string; txHash: string; receiptHash: string; blockNumber: string; status: string }>; meta: MethodExecutionMeta | undefined };
-        return { call, result: normalizeWriteResultForDisplay(writeResult.receipts), meta: writeResult.meta || finalizeMeta() };
-      }
-      })();
-      } catch (error) {
-        throw attachExecutionMeta(error, finalizeMeta());
-      }
-    },
-    [
-      appendLog,
-      appendWriteTrace,
-      buildMethodCallEntry,
-      coerceParamValue,
-      effectiveConnectedAddress,
-      ensureReadRunner,
-      executeWriteConnected,
-      hardhatAccounts,
-      mode,
-      requireContractAddress,
-      runServerBackedSpCoinStep,
-      selectedHardhatAddress,
-      setStatus,
-      spCoinReadMethodDefs,
-      serializationTestMethodDefs,
-      spCoinWriteMethodDefs,
-      stringifyResult,
-      traceEnabled,
-      useLocalSpCoinAccessPackage,
-    ],
-  );
+  const { executeMethodDescriptor } = useSponsorCoinLabMethodExecution({
+    rpcUrl,
+    mode,
+    selectedHardhatAddress,
+    effectiveConnectedAddress,
+    hardhatAccounts,
+    useLocalSpCoinAccessPackage,
+    traceEnabled,
+    appendLog,
+    appendWriteTrace,
+    setStatus,
+    requireContractAddress,
+    ensureReadRunner,
+    executeWriteConnected,
+    coerceParamValue,
+    stringifyResult,
+    parseListParam,
+    buildMethodCallEntry,
+    spCoinReadMethodDefs,
+    spCoinWriteMethodDefs,
+    serializationTestMethodDefs,
+  });
 
   const {
     treeAccountOptions,
@@ -1476,7 +592,7 @@ export function useSponsorCoinLabMethods({
     const descriptor: MethodExecutionDescriptor = {
       panel: 'erc20_write',
       method: selectedWriteMethod,
-      sender: mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
+      sender: mode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress,
       params: [
         { key: activeWriteLabels.addressALabel, value: writeAddressA },
         ...(activeWriteLabels.requiresAddressB ? [{ key: activeWriteLabels.addressBLabel, value: writeAddressB }] : []),
@@ -1492,7 +608,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}), meta }));
     } catch (error) {
       if (isAbortError(error)) {
-        const message = `${options?.executionLabel || activeWriteLabels.title} cancelled.`;
+        const message = `${options?.executionLabel ?? activeWriteLabels.title} cancelled.`;
         setStatus(message);
         appendLog(message);
         return;
@@ -1556,7 +672,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, ...(warning ? { warning } : {}), meta }));
     } catch (error) {
       if (isAbortError(error)) {
-        const message = `${options?.executionLabel || activeReadLabels.title} cancelled.`;
+        const message = `${options?.executionLabel ?? activeReadLabels.title} cancelled.`;
         setStatus(message);
         appendLog(message);
         return;
@@ -1613,7 +729,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta }));
     } catch (error) {
       if (isAbortError(error)) {
-        const message = `${options?.executionLabel || activeSpCoinReadDef.title} cancelled.`;
+        const message = `${options?.executionLabel ?? activeSpCoinReadDef.title} cancelled.`;
         setStatus(message);
         appendLog(message);
         return;
@@ -1630,7 +746,7 @@ export function useSponsorCoinLabMethods({
             stack: error instanceof Error ? error.stack : undefined,
             cause:
               error instanceof Error && 'cause' in error
-                ? String((error as Error & { cause?: unknown }).cause ?? '')
+                ? toDisplayString((error as Error & { cause?: unknown }).cause)
                 : undefined,
             debug: {
               panel: 'spcoin_rread',
@@ -1677,7 +793,7 @@ export function useSponsorCoinLabMethods({
     const descriptor: MethodExecutionDescriptor = {
       panel: 'spcoin_write',
       method: selectedSpCoinWriteMethod,
-      sender: mode === 'hardhat' ? selectedHardhatAddress || effectiveConnectedAddress : effectiveConnectedAddress,
+      sender: mode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress,
       params: activeSpCoinWriteDef.params.map((param, idx) => ({
         key: param.label,
         value: spWriteParams[idx] || '',
@@ -1692,7 +808,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta }));
     } catch (error) {
       if (isAbortError(error)) {
-        const message = `${options?.executionLabel || activeSpCoinWriteDef.title} cancelled.`;
+        const message = `${options?.executionLabel ?? activeSpCoinWriteDef.title} cancelled.`;
         setStatus(message);
         appendLog(message);
         return;
@@ -1712,7 +828,7 @@ export function useSponsorCoinLabMethods({
             stack: error instanceof Error ? error.stack : undefined,
             cause:
               error instanceof Error && 'cause' in error
-                ? String((error as Error & { cause?: unknown }).cause ?? '')
+                ? toDisplayString((error as Error & { cause?: unknown }).cause)
                 : undefined,
             debug: {
               panel: 'spcoin_write',
@@ -1775,7 +891,7 @@ export function useSponsorCoinLabMethods({
       setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta }));
     } catch (error) {
       if (isAbortError(error)) {
-        const message = `${options?.executionLabel || activeSerializationTestDef.title} cancelled.`;
+        const message = `${options?.executionLabel ?? activeSerializationTestDef.title} cancelled.`;
         setStatus(message);
         appendLog(message);
         return;
