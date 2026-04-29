@@ -70,6 +70,7 @@ type BackdateCalendarArgs = {
 
 export type BuildMethodsPanelCardPropsArgs = {
   methodPanelTitle: string;
+  isEditingScriptMethod: boolean;
   scriptEditorKind: ScriptEditorKind;
   setScriptEditorKind: StateSetter<ScriptEditorKind>;
   methodPanelMode: MethodPanelMode;
@@ -342,6 +343,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       hardhatAccountMetadata: args.hardhatAccountMetadata,
       selectedWriteSenderAddress: args.selectedWriteSenderAccount?.address || args.selectedWriteSenderAddress,
       setSelectedWriteSenderAddress: args.setSelectedWriteSenderAddress,
+      useWriteSenderDropdown: args.isEditingScriptMethod,
       writeSenderDisplayValue: args.writeSenderDisplayValue,
       writeSenderPrivateKeyDisplay: args.writeSenderPrivateKeyDisplay,
       showWriteSenderPrivateKey: args.showWriteSenderPrivateKey,
@@ -415,6 +417,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       hardhatAccountMetadata: args.hardhatAccountMetadata,
       selectedWriteSenderAddress: args.selectedWriteSenderAccount?.address || args.selectedWriteSenderAddress,
       setSelectedWriteSenderAddress: args.setSelectedWriteSenderAddress,
+      useWriteSenderDropdown: args.isEditingScriptMethod,
       writeSenderDisplayValue: args.writeSenderDisplayValue,
       writeSenderPrivateKeyDisplay: args.writeSenderPrivateKeyDisplay,
       showWriteSenderPrivateKey: args.showWriteSenderPrivateKey,

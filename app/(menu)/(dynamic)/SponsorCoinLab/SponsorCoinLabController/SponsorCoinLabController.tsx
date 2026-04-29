@@ -1461,6 +1461,7 @@ export default function SponsorCoinLabPage({
       onAcknowledge: dismissRunningMethodPopup,
     },
     methodPanelTitle,
+    isEditingScriptMethod,
     scriptEditorKind,
     setScriptEditorKind,
     methodPanelMode,
