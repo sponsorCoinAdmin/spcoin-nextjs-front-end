@@ -1,7 +1,7 @@
 import type React from 'react';
 import type { LabScriptParam, LabScriptStep } from '../scriptBuilder/types';
 
-type Props = {
+interface Props {
   step: LabScriptStep;
   isExpanded: boolean;
   isSelected: boolean;
@@ -13,7 +13,7 @@ type Props = {
   editScriptStep: (step: LabScriptStep) => void;
   toggleScriptStepExpanded: (stepNumber: number) => void;
   toggleScriptStepBreakpoint: (stepNumber: number) => void;
-};
+}
 
 export default function ScriptStepRow({
   step,
@@ -51,6 +51,7 @@ export default function ScriptStepRow({
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     selectScriptStep(step);
+    if (!hasExpandableContent) editScriptStep(step);
   };
 
   return (
@@ -81,7 +82,10 @@ export default function ScriptStepRow({
           <div
             role="button"
             tabIndex={0}
-            onClick={() => selectScriptStep(step)}
+            onClick={() => {
+              selectScriptStep(step);
+              if (!hasExpandableContent) editScriptStep(step);
+            }}
             onDoubleClick={() => editScriptStep(step)}
             onKeyDown={handleStepKeyDown}
             className={`min-w-0 cursor-inherit select-none text-left ${methodClassName}`}
