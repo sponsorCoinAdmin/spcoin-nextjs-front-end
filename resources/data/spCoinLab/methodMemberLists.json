@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-29T02:39:20.076Z",
+  "updatedAt": "2026-04-29T06:44:02.893Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -13,7 +13,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": true,
+        "compareSpCoinContractSize": false,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -37,7 +37,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": true,
+        "compareSpCoinContractSize": false,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -61,7 +61,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": false,
+        "compareSpCoinContractSize": true,
         "getSponsorAccounts": true,
         "getMasterSponsorList": true,
         "hhFundAccounts": true,
@@ -109,7 +109,7 @@
         "external_serializedAgentTransactionStr": false,
         "external_serializedAgentRateTransactionStr": false,
         "external_getSerializedTransactionList": false,
-        "compareSpCoinContractSize": true,
+        "compareSpCoinContractSize": false,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -565,7 +565,7 @@
       },
       "Test": {
         "addRecipientTransaction": true,
-        "addAgentTransaction": true,
+        "addAgentTransaction": false,
         "deleteAccountTree": true,
         "deleteSponsor": true,
         "deleteRecipient": true,
@@ -631,7 +631,7 @@
       },
       "Complete": {
         "addRecipientTransaction": false,
-        "addAgentTransaction": false,
+        "addAgentTransaction": true,
         "deleteAccountTree": false,
         "deleteSponsor": false,
         "deleteRecipient": false,
@@ -697,11 +697,11 @@
         "allowance": false
       },
       "Complete": {
-        "name": true,
-        "symbol": true,
-        "decimals": true,
-        "totalSupply": true,
-        "balanceOf": true,
+        "name": false,
+        "symbol": false,
+        "decimals": false,
+        "totalSupply": false,
+        "balanceOf": false,
         "allowance": false
       }
     },
@@ -727,7 +727,7 @@
         "transferFrom": false
       },
       "Complete": {
-        "transfer": true,
+        "transfer": false,
         "approve": false,
         "transferFrom": false
       }
