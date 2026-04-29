@@ -17,7 +17,6 @@ type Props = {
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedWriteSenderAddress: string;
   setSelectedWriteSenderAddress: (value: string) => void;
-  useWriteSenderDropdown?: boolean;
   writeSenderDisplayValue: string;
   writeSenderPrivateKeyDisplay: string;
   showWriteSenderPrivateKey: boolean;
@@ -103,7 +102,6 @@ export default function SpCoinWriteController(props: Props) {
     hardhatAccountMetadata,
     selectedWriteSenderAddress,
     setSelectedWriteSenderAddress,
-    useWriteSenderDropdown = false,
     writeSenderDisplayValue,
     writeSenderPrivateKeyDisplay,
     showWriteSenderPrivateKey,
@@ -226,7 +224,6 @@ export default function SpCoinWriteController(props: Props) {
       ?.privateKey || '';
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
-  const shouldUseSenderDropdown = mode === 'hardhat' || useWriteSenderDropdown;
   const formatAccountOptionLabel = (address: string, index: number) => {
     const metadata = getMetadataForAddress(address);
     const name = String(metadata?.name || '').trim() || 'Unnamed account';
@@ -445,7 +442,7 @@ export default function SpCoinWriteController(props: Props) {
         isOpen={showWriteSenderPrivateKey}
         onToggle={toggleShowWriteSenderPrivateKey}
         control={
-          shouldUseSenderDropdown ? (
+          mode === 'hardhat' ? (
             <AccountDropdownInput
               dataFieldId="spcoin-write-sender"
               inputAriaLabel="Sender account"

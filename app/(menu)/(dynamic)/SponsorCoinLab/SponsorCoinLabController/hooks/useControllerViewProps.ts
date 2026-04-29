@@ -47,7 +47,6 @@ type UseControllerViewPropsArgs = BuildMethodsPanelCardPropsArgs &
 export function useControllerViewProps(args: UseControllerViewPropsArgs) {
   const methodsPanelCardProps = buildMethodsPanelCardProps({
     methodPanelTitle: args.methodPanelTitle,
-    isEditingScriptMethod: args.isEditingScriptMethod,
     scriptEditorKind: args.scriptEditorKind,
     setScriptEditorKind: args.setScriptEditorKind,
     methodPanelMode: args.methodPanelMode,

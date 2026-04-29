@@ -26,7 +26,6 @@ type Props = {
   hardhatAccountMetadata: Record<string, { name?: string; symbol?: string; logoURL: string }>;
   selectedWriteSenderAddress: string;
   setSelectedWriteSenderAddress: (value: string) => void;
-  useWriteSenderDropdown?: boolean;
   writeSenderDisplayValue: string;
   writeSenderPrivateKeyDisplay: string;
   showWriteSenderPrivateKey: boolean;
@@ -66,7 +65,6 @@ export default function Erc20WriteController(props: Props) {
     hardhatAccountMetadata,
     selectedWriteSenderAddress,
     setSelectedWriteSenderAddress,
-    useWriteSenderDropdown = false,
     writeSenderDisplayValue,
     writeSenderPrivateKeyDisplay,
     showWriteSenderPrivateKey,
@@ -117,8 +115,7 @@ export default function Erc20WriteController(props: Props) {
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<string, boolean>>({});
-  const shouldUseSenderDropdown = mode === 'hardhat' || useWriteSenderDropdown;
-  const senderAddressForMetadata = shouldUseSenderDropdown ? selectedWriteSenderAddress : writeSenderDisplayValue;
+  const senderAddressForMetadata = mode === 'hardhat' ? selectedWriteSenderAddress : writeSenderDisplayValue;
   const senderMetadata = hardhatAccountMetadata[String(senderAddressForMetadata || '').trim().toLowerCase()];
   const getMetadataForAddress = (address: string) =>
     hardhatAccountMetadata[String(address || '').trim().toLowerCase()];
@@ -179,11 +176,9 @@ export default function Erc20WriteController(props: Props) {
           isOpen={showWriteSenderPrivateKey}
           onToggle={toggleShowWriteSenderPrivateKey}
           control={
-            shouldUseSenderDropdown ? (
+            mode === 'hardhat' ? (
               <AccountDropdownInput
                 dataFieldId="erc20-write-sender"
-                inputAriaLabel="Sender account"
-                inputTitle="Sender account"
                 className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-write-sender')}`}
                 value={selectedWriteSenderAddress}
                 onChange={(value) => {
