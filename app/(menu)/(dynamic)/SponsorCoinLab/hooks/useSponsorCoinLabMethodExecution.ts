@@ -85,6 +85,27 @@ type AccountKeyCountContract = SpCoinContractAccess & {
   getMasterAccountKeys?: () => Promise<unknown>;
 };
 
+function addSpCoinWriteResultDetail(
+  result: unknown,
+  selectedMethod: SpCoinWriteMethod,
+  def: MethodDef,
+  localParams: string[],
+) {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
+  if (selectedMethod !== 'addAgentTransaction') return result;
+
+  const sponsorParamIndex = def.params.findIndex((param) => param.label === 'Sponsor Key');
+  const sponsor = sponsorParamIndex >= 0 ? toDisplayString(localParams[sponsorParamIndex]).trim() : '';
+  if (!sponsor) return result;
+
+  return {
+    ...(result as Record<string, unknown>),
+    addAgentTransaction: {
+      sponsor,
+    },
+  };
+}
+
 interface Params {
   rpcUrl?: string;
   mode: ConnectionMode;
@@ -603,10 +624,22 @@ export function useSponsorCoinLabMethodExecution({
             });
         if (shouldUseServerBackedWrite) {
           const serverResult = result as ServerBackedStepResult;
-          return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta ?? finalizeMeta() };
+          const displayResult = addSpCoinWriteResultDetail(
+            normalizeWriteResultForDisplay(serverResult.result),
+            selectedMethod,
+            def,
+            localParams,
+          );
+          return { call, result: displayResult, meta: serverResult.meta ?? finalizeMeta() };
         }
         const writeResult = result as { receipts: WriteReceipt[]; meta: MethodExecutionMeta | undefined };
-        return { call, result: normalizeWriteResultForDisplay(writeResult.receipts), meta: writeResult.meta ?? finalizeMeta() };
+        const displayResult = addSpCoinWriteResultDetail(
+          normalizeWriteResultForDisplay(writeResult.receipts),
+          selectedMethod,
+          def,
+          localParams,
+        );
+        return { call, result: displayResult, meta: writeResult.meta ?? finalizeMeta() };
       };
 
       try {
