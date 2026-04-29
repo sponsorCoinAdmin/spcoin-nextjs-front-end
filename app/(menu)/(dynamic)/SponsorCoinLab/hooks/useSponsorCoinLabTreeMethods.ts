@@ -30,6 +30,28 @@ function getErrorMessage(error: unknown, fallback: string) {
   return toDisplayString(error, fallback).trim() || fallback;
 }
 
+function isAccountAddressPathKey(key: string): boolean {
+  const normalized = String(key || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return (
+    /^\d+$/.test(normalized) ||
+    [
+      'account',
+      'accountkey',
+      'address',
+      'agent',
+      'agentkey',
+      'msgsender',
+      'owner',
+      'owneraddress',
+      'recipient',
+      'recipientkey',
+      'sender',
+      'sponsor',
+      'sponsorkey',
+    ].includes(normalized)
+  );
+}
+
 interface MethodCallEntry {
   method: string;
   parameters: { label: string; value: unknown }[];
@@ -763,7 +785,7 @@ export function useSponsorCoinLabTreeMethods({
       if (pathSegments.length < 2) return 'unhandled';
       const payloadPath = pathSegments.slice(1);
       const targetKey = payloadPath[payloadPath.length - 1] || '';
-      if (!/^\d+$/.test(targetKey)) return 'unhandled';
+      if (!isAccountAddressPathKey(targetKey)) return 'unhandled';
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {

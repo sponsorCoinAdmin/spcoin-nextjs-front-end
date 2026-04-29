@@ -101,7 +101,9 @@ function addSpCoinWriteResultDetail(
   return {
     ...(result as Record<string, unknown>),
     addAgentTransaction: {
-      sponsor,
+      sponsor: {
+        address: sponsor,
+      },
     },
   };
 }
