@@ -99,10 +99,11 @@ export function useSponsorCoinLabScriptRunner({
           error instanceof Error
             ? error.message
             : `Unknown ${step.panel === 'erc20_write' || step.panel === 'spcoin_write' ? 'write' : 'read'} method error.`;
+        const actualSigner = toDisplayString((error as { spCoinActualSigner?: unknown } | null)?.spCoinActualSigner).trim();
         const call = buildMethodCallEntry(
           step.method,
           [
-            ...(stepSender ? [{ label: 'msg.sender', value: stepSender }] : []),
+            ...(actualSigner || stepSender ? [{ label: 'msg.sender', value: actualSigner || stepSender }] : []),
             ...paramEntries.map((entry) => ({ label: entry.key, value: entry.value })),
           ],
         );

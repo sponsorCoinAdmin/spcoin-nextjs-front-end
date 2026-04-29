@@ -126,15 +126,17 @@ export function useControllerContractMetadata({
     }
   }, []);
 
+  const selectedContractChainId = Number(selectedSponsorCoinVersionEntry?.chainId || 0);
   const modeSelectionChainId = Number(exchangeContext?.network?.chainId || connectedChainId || 0);
-  const allowContractNetworkModeSelection = modeSelectionChainId === 31337;
+  const isHardhatContractSelected = selectedContractChainId === 31337;
+  const isHardhatNetworkSelected = modeSelectionChainId === 31337;
+  const allowContractNetworkModeSelection = isHardhatContractSelected || isHardhatNetworkSelected;
 
   useEffect(() => {
     if (hasPersistedNetworkMode !== false) return;
-    setMode(modeSelectionChainId === 31337 ? 'hardhat' : 'metamask');
-  }, [hasPersistedNetworkMode, modeSelectionChainId, setMode]);
+    setMode(isHardhatContractSelected || isHardhatNetworkSelected ? 'hardhat' : 'metamask');
+  }, [hasPersistedNetworkMode, isHardhatContractSelected, isHardhatNetworkSelected, setMode]);
 
-  const selectedContractChainId = Number(selectedSponsorCoinVersionEntry?.chainId || 0);
   const activeContractChainIdDisplayValue =
     Number.isFinite(selectedContractChainId) && selectedContractChainId > 0
       ? String(selectedContractChainId)

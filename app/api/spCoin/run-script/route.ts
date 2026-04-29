@@ -212,6 +212,19 @@ function normalizeAddress(value: string) {
   return String(value || '').trim().toLowerCase();
 }
 
+function toComparableString(value: unknown) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
+  return '';
+}
+
+function isSameAddress(left: unknown, right: unknown) {
+  const normalizedLeft = normalizeAddress(toComparableString(left));
+  const normalizedRight = normalizeAddress(toComparableString(right));
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+}
+
 function normalizeParams(params: LabScriptStep['params']): Array<{ key: string; value: string }> {
   if (Array.isArray(params)) {
     return params.map((entry) => ({
@@ -398,20 +411,23 @@ export async function POST(request: NextRequest) {
       const stepMode = resolveStepMode(step, script);
       const stepTrace: string[] = [...traceBase, `step=${String(step.step)}`, `panel=${String(step.panel || '')}`, `method=${String(step.method || '')}`];
       const timingCollector = createMethodTimingCollector();
+      let resolvedSenderAddress = explicitSender;
 
       try {
         if (stepMode !== 'hardhat') {
           throw new Error(`Server runner only supports hardhat steps right now. Step ${String(step.step)} is ${stepMode}.`);
         }
 
-        const senderEntry =
-          hardhatAccounts.find((entry) => normalizeAddress(entry.address) === normalizeAddress(explicitSender)) || hardhatAccounts[0];
+        const senderEntry = explicitSender
+          ? hardhatAccounts.find((entry) => normalizeAddress(entry.address) === normalizeAddress(explicitSender))
+          : hardhatAccounts[0];
         if (!senderEntry?.privateKey) {
           throw new Error(`Unable to resolve a hardhat signer for ${explicitSender || 'the requested step'}.`);
         }
 
         const signer = new Wallet(senderEntry.privateKey, provider);
-        const senderAddress = explicitSender || signer.address;
+        const senderAddress = signer.address;
+        resolvedSenderAddress = senderAddress;
         const contract = wrapContractWithTiming(new Contract(contractAddress, abi, signer));
         const appendTrace = (line: string) => {
           const text = String(line || '').trim();
@@ -421,6 +437,39 @@ export async function POST(request: NextRequest) {
         const findParam = (label: string) =>
           String(paramEntries.find((entry) => entry.key === label)?.value || '').trim();
         const call = buildCall(step, senderAddress, paramEntries);
+        let contractOwnerAddress: string | null | undefined;
+        const getContractOwnerAddress = async () => {
+          if (contractOwnerAddress !== undefined) return contractOwnerAddress;
+          const owner = (contract as unknown as { owner?: () => Promise<unknown> }).owner;
+          if (typeof owner !== 'function') {
+            contractOwnerAddress = null;
+            return contractOwnerAddress;
+          }
+          try {
+            contractOwnerAddress = normalizeAddress(String(await owner()));
+          } catch {
+            contractOwnerAddress = null;
+          }
+          return contractOwnerAddress;
+        };
+        const assertOwnerOrRootSigner = async (methodName: string, accountLabel: string, accountKey: string) => {
+          if (!accountKey || isSameAddress(senderAddress, accountKey)) return;
+          const ownerAddress = await getContractOwnerAddress();
+          if (ownerAddress && isSameAddress(senderAddress, ownerAddress)) return;
+          throw new Error(
+            `${methodName} requires msg.sender to be ${accountLabel} or the contract owner. ` +
+              `Actual signer is ${senderAddress}; ${accountLabel} is ${accountKey}.` +
+              (ownerAddress ? ` Contract owner is ${ownerAddress}.` : ''),
+          );
+        };
+        const assertRootSigner = async (methodName: string) => {
+          const ownerAddress = await getContractOwnerAddress();
+          if (!ownerAddress || isSameAddress(senderAddress, ownerAddress)) return;
+          throw new Error(
+            `${methodName} requires the contract owner signer. ` +
+              `Actual signer is ${senderAddress}; contract owner is ${ownerAddress}.`,
+          );
+        };
 
         const result = await runWithMethodTimingCollector(timingCollector, async () => {
           let stepResult: unknown;
@@ -581,6 +630,7 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const addRecipientTransaction = access.add.addRecipientTransaction ?? access.add.addRecipientTransaction;
               if (typeof addRecipientTransaction !== 'function') {
                 throw new Error('addRecipientTransaction is not available on the current SpCoin access path.');
@@ -605,6 +655,7 @@ export async function POST(request: NextRequest) {
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentTransaction;
               if (typeof addAgentTransaction !== 'function') {
                 throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
@@ -633,6 +684,7 @@ export async function POST(request: NextRequest) {
               const explicitQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
               const transactionQty = explicitQty || `${wholeAmount}.${decimalAmount}`;
+              await assertRootSigner(String(step.method));
               const tx = await access.add.addBackDatedRecipientTransaction(
                 signer,
                 sponsorKey,
@@ -655,6 +707,7 @@ export async function POST(request: NextRequest) {
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
+              await assertRootSigner(String(step.method));
               const tx = await access.add.addBackDatedAgentTransaction(
                 signer,
                 sponsorKey,
@@ -675,6 +728,7 @@ export async function POST(request: NextRequest) {
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
+              await assertRootSigner(String(step.method));
               const tx = await access.add.backDateRecipientTransaction(
                 signer,
                 sponsorKey,
@@ -695,6 +749,7 @@ export async function POST(request: NextRequest) {
               const agentRateKey = findParam('Agent Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
+              await assertRootSigner(String(step.method));
               const tx = await access.add.backDateAgentTransaction(
                 signer,
                 sponsorKey,
@@ -712,6 +767,7 @@ export async function POST(request: NextRequest) {
             case 'deleteRecipient': {
               const sponsorKey = findParam('Sponsor Key');
               const recipientKey = findParam('Recipient Key');
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const deleteRecipient = (contract as unknown as { deleteRecipient?: (sponsor: string, recipient: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }> }).deleteRecipient;
               if (typeof deleteRecipient !== 'function') {
                 throw new Error('deleteRecipient is not available on the current SpCoin contract access path.');
@@ -727,6 +783,7 @@ export async function POST(request: NextRequest) {
             }
             case 'deleteSponsor': {
               const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const deleteSponsor = (
                 contract as unknown as {
                   deleteSponsor?: (sponsor: string) => Promise<{ wait: () => Promise<unknown>; hash?: string }>;
@@ -749,6 +806,7 @@ export async function POST(request: NextRequest) {
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const deleteAgent = (
                 contract as unknown as {
                   deleteAgent?: (
@@ -792,6 +850,7 @@ export async function POST(request: NextRequest) {
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
+              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const deleteAgentRate = (
                 contract as unknown as {
                   deleteAgentRate?: (
@@ -868,7 +927,7 @@ export async function POST(request: NextRequest) {
           step: step.step,
           success: false,
           payload: {
-            call: buildCall(step, explicitSender, paramEntries),
+            call: buildCall(step, resolvedSenderAddress, paramEntries),
             error: {
               message: spCoinError || (error instanceof Error ? error.message : String(error)),
               name: error instanceof Error ? error.name : typeof error,

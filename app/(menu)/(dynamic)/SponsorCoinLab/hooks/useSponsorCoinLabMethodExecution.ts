@@ -85,6 +85,56 @@ type AccountKeyCountContract = SpCoinContractAccess & {
   getMasterAccountKeys?: () => Promise<unknown>;
 };
 
+const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<string>([
+  'addRecipientTransaction',
+  'addAgentTransaction',
+  'deleteSponsor',
+  'deleteRecipient',
+  'deleteRecipientRate',
+  'deleteAgent',
+  'deleteAgentNode',
+  'deleteAgentRate',
+  'deleteRecipientSponsorships',
+  'deleteRecipientSponsorshipTree',
+  'deleteAgentSponsorships',
+]);
+
+const OWNER_ONLY_WRITE_METHODS = new Set<string>([
+  'addBackDatedRecipientTransaction',
+  'addBackDatedAgentTransaction',
+  'backDateRecipientTransaction',
+  'backDateAgentTransaction',
+  'setInflationRate',
+  'setLowerRecipientRate',
+  'setUpperRecipientRate',
+  'setRecipientRateRange',
+  'setLowerAgentRate',
+  'setUpperAgentRate',
+  'setAgentRateRange',
+]);
+
+const OWNER_OR_ACCOUNT_WRITE_METHODS = new Set<string>([
+  'deleteAccountRecord',
+]);
+
+function normalizeAddressForCompare(value: unknown) {
+  const trimmed = toDisplayString(value).trim();
+  return /^0x[0-9a-f]{40}$/i.test(trimmed) ? trimmed.toLowerCase() : '';
+}
+
+function isSameAddress(left: unknown, right: unknown) {
+  const normalizedLeft = normalizeAddressForCompare(left);
+  const normalizedRight = normalizeAddressForCompare(right);
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+}
+
+function findLocalParamValue(def: MethodDef, localParams: string[], label: string) {
+  const index = def.params.findIndex(
+    (param) => String(param.label || '').trim().toLowerCase() === String(label || '').trim().toLowerCase(),
+  );
+  return index >= 0 ? toDisplayString(localParams[index]).trim() : '';
+}
+
 function addSpCoinWriteResultDetail(
   result: unknown,
   selectedMethod: SpCoinWriteMethod,
@@ -92,15 +142,14 @@ function addSpCoinWriteResultDetail(
   localParams: string[],
 ) {
   if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
-  if (selectedMethod !== 'addAgentTransaction') return result;
+  if (selectedMethod !== 'addAgentTransaction' && selectedMethod !== 'addRecipientTransaction') return result;
 
-  const sponsorParamIndex = def.params.findIndex((param) => param.label === 'Sponsor Key');
-  const sponsor = sponsorParamIndex >= 0 ? toDisplayString(localParams[sponsorParamIndex]).trim() : '';
+  const sponsor = findLocalParamValue(def, localParams, 'Sponsor Key');
   if (!sponsor) return result;
 
   return {
     ...(result as Record<string, unknown>),
-    addAgentTransaction: {
+    [selectedMethod]: {
       sponsor: {
         address: sponsor,
       },
@@ -113,6 +162,7 @@ interface Params {
   mode: ConnectionMode;
   selectedHardhatAddress?: string;
   effectiveConnectedAddress: string;
+  ownerAddress?: string;
   hardhatAccounts: { address: string; privateKey?: string }[];
   useLocalSpCoinAccessPackage: boolean;
   traceEnabled: boolean;
@@ -150,6 +200,7 @@ export function useSponsorCoinLabMethodExecution({
   mode,
   selectedHardhatAddress,
   effectiveConnectedAddress,
+  ownerAddress,
   hardhatAccounts,
   useLocalSpCoinAccessPackage,
   traceEnabled,
@@ -247,6 +298,65 @@ export function useSponsorCoinLabMethodExecution({
         mode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress;
       const findParamValue = (label: string) =>
         String(params.find((entry) => String(entry?.key ?? '') === label)?.value ?? '').trim();
+      const resolveOwnerAddress = async () => {
+        const fallbackOwnerAddress = normalizeAddressForCompare(ownerAddress);
+        try {
+          const target = requireContractAddress();
+          const runner = await ensureReadRunner();
+          const contract = createSpCoinContract(target, runner) as SpCoinContractAccess & {
+            owner?: () => Promise<unknown>;
+          };
+          if (typeof contract.owner === 'function') {
+            return normalizeAddressForCompare(await contract.owner()) || fallbackOwnerAddress;
+          }
+        } catch {
+          // The write call will surface the underlying network/contract issue if owner() cannot be read.
+        }
+        return fallbackOwnerAddress;
+      };
+      const assertSpCoinWriteAuthorization = async (
+        selectedMethod: SpCoinWriteMethod,
+        def: MethodDef,
+        localParams: string[],
+        signer: string,
+      ) => {
+        const signerAddress = normalizeAddressForCompare(signer);
+        if (!signerAddress) return;
+
+        const ownerOnly = OWNER_ONLY_WRITE_METHODS.has(selectedMethod);
+        const guardedAccountLabel = OWNER_OR_SPONSOR_WRITE_METHODS.has(selectedMethod)
+          ? 'Sponsor Key'
+          : OWNER_OR_ACCOUNT_WRITE_METHODS.has(selectedMethod)
+            ? 'Account Key'
+            : '';
+        if (!ownerOnly && !guardedAccountLabel) return;
+
+        const contractOwner = await resolveOwnerAddress();
+        if (contractOwner && signerAddress === contractOwner) return;
+        const buildAuthorizationError = (message: string) => {
+          const error = new Error(message);
+          (error as { spCoinActualSigner?: string }).spCoinActualSigner = signer;
+          return error;
+        };
+
+        if (ownerOnly) {
+          throw buildAuthorizationError(
+            `${selectedMethod} requires the contract owner signer. Current signer is ${signer}.` +
+              (contractOwner ? ` Contract owner is ${contractOwner}.` : ''),
+          );
+        }
+
+        const guardedAccount = findLocalParamValue(def, localParams, guardedAccountLabel);
+        if (!guardedAccount || isSameAddress(signerAddress, guardedAccount)) return;
+
+        throw buildAuthorizationError(
+          `${selectedMethod} requires msg.sender to be ${guardedAccountLabel} or the contract owner. ` +
+            `Current signer is ${signer}; ${guardedAccountLabel} is ${guardedAccount}.` +
+            (mode === 'metamask'
+              ? ' In MetaMask mode, switch the connected wallet to the sponsor/owner account or run the script in Hardhat mode with that sender.'
+              : ' Select the sponsor/owner account as msg.sender.'),
+        );
+      };
 
       const executeBody = async (allowServerBackedWrite: boolean): Promise<MethodExecutionResult> => {
         if (panel === 'ecr20_read') {
@@ -277,7 +387,7 @@ export function useSponsorCoinLabMethodExecution({
           const writeAddressA = findParamValue(labels.addressALabel);
           const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
           const amount = findParamValue('Amount');
-          const signer = sender ? sender : defaultSender;
+          const signer = mode === 'hardhat' ? (sender || defaultSender) : defaultSender;
           const call = buildMethodCallEntry(selectedMethod, [
             ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
             { label: labels.addressALabel, value: writeAddressA },
@@ -561,7 +671,7 @@ export function useSponsorCoinLabMethodExecution({
           throw new Error(`Unsupported SpCoin write method: ${String(method)}`);
         }
         const localParams = def.params.map((param) => findParamValue(param.label));
-        const signer = sender ? sender : defaultSender;
+        const signer = mode === 'hardhat' ? (sender || defaultSender) : defaultSender;
         const call = buildMethodCallEntry(selectedMethod, [
           ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
           ...def.params.map((param, idx) => ({
@@ -572,6 +682,7 @@ export function useSponsorCoinLabMethodExecution({
         appendWriteTrace(
           `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
         );
+        await assertSpCoinWriteAuthorization(selectedMethod, def, localParams, signer);
         const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
           deleteAccountTree: 'deleteAccountTree',
           deleteRecipient: 'deleteRecipient',
@@ -663,6 +774,7 @@ export function useSponsorCoinLabMethodExecution({
       executeWriteConnected,
       hardhatAccounts,
       mode,
+      ownerAddress,
       parseListParam,
       requireContractAddress,
       runServerBackedSpCoinStep,

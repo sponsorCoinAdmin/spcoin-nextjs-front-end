@@ -160,6 +160,7 @@ export function useSponsorCoinLabMethods({
   hardhatAccounts,
   selectedHardhatAddress,
   effectiveConnectedAddress,
+  ownerAddress,
   useLocalSpCoinAccessPackage,
   appendLog,
   appendWriteTrace,
@@ -524,6 +525,7 @@ export function useSponsorCoinLabMethods({
     mode,
     selectedHardhatAddress,
     effectiveConnectedAddress,
+    ownerAddress,
     hardhatAccounts,
     useLocalSpCoinAccessPackage,
     traceEnabled,
@@ -814,8 +816,9 @@ export function useSponsorCoinLabMethods({
         return;
       }
       const message = error instanceof Error ? error.message : 'Unknown SpCoin write error.';
+      const actualSigner = toDisplayString((error as { spCoinActualSigner?: unknown } | null)?.spCoinActualSigner).trim();
       const call = buildMethodCallEntry(descriptor.method, [
-        ...(descriptor.sender ? [{ label: 'msg.sender', value: descriptor.sender }] : []),
+        ...(actualSigner || descriptor.sender ? [{ label: 'msg.sender', value: actualSigner || descriptor.sender }] : []),
         ...descriptor.params.map((entry) => ({ label: entry.key, value: entry.value })),
       ]);
       setFormattedOutputDisplay(

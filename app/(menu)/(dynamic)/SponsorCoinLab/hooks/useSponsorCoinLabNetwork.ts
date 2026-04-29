@@ -1104,6 +1104,7 @@ export function useSponsorCoinLabNetwork({
       const runWithSigner = async (signer: Signer) => {
         const signerAddress = await signer.getAddress();
         appendWriteTrace(`executeMetaMaskConnected using signer=${signerAddress}`);
+        setConnectedAddress(signerAddress);
         const contract = createSpCoinContract(target, signer);
         return writeCall(contract, signer);
       };

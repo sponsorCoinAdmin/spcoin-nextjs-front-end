@@ -181,6 +181,38 @@ const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
   'unSponsorAgent',
 ]);
 
+const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<SpCoinWriteMethod>([
+  'addRecipientTransaction',
+  'addAgentTransaction',
+  'deleteSponsor',
+  'deleteRecipient',
+  'deleteRecipientRate',
+  'deleteAgent',
+  'deleteAgentNode',
+  'deleteAgentRate',
+  'deleteRecipientSponsorships',
+  'deleteRecipientSponsorshipTree',
+  'deleteAgentSponsorships',
+]);
+
+const OWNER_ONLY_WRITE_METHODS = new Set<SpCoinWriteMethod>([
+  'addBackDatedRecipientTransaction',
+  'addBackDatedAgentTransaction',
+  'backDateRecipientTransaction',
+  'backDateAgentTransaction',
+  'setInflationRate',
+  'setLowerRecipientRate',
+  'setUpperRecipientRate',
+  'setRecipientRateRange',
+  'setLowerAgentRate',
+  'setUpperAgentRate',
+  'setAgentRateRange',
+]);
+
+const OWNER_OR_ACCOUNT_WRITE_METHODS = new Set<SpCoinWriteMethod>([
+  'deleteAccountRecord',
+]);
+
 export const SPCOIN_ONCHAIN_WRITE_METHODS: SpCoinWriteMethod[] = (
   Object.keys(SPCOIN_WRITE_METHOD_DEFS) as SpCoinWriteMethod[]
 ).filter((name) => !SPCOIN_OFFCHAIN_WRITE_METHODS.includes(name));
@@ -328,6 +360,17 @@ function normalizeAddress(value: unknown): string {
   return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
 }
 
+function isSameAddress(left: unknown, right: unknown) {
+  const normalizedLeft = normalizeAddress(left).toLowerCase();
+  const normalizedRight = normalizeAddress(right).toLowerCase();
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+}
+
+function attachActualSigner<T extends Error>(error: T, signerAddress: string) {
+  (error as T & { spCoinActualSigner?: string }).spCoinActualSigner = signerAddress;
+  return error;
+}
+
 async function loadSponsorAccounts(access: ReturnType<typeof createSpCoinModuleAccess>) {
   const read = access.read as SpCoinReadAccess & Record<string, unknown>;
   if (
@@ -419,6 +462,59 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
     return parts.map((part) => String(part || '')).join(' ');
   };
   const isTransientFetchError = (error: unknown) => /failed to fetch/i.test(getErrorText(error));
+  const getSignerAddress = async (signer: unknown) => {
+    const directAddress = String((signer as { address?: unknown } | null)?.address || '').trim();
+    if (directAddress) return directAddress;
+    const getAddress = (signer as { getAddress?: unknown } | null)?.getAddress;
+    if (typeof getAddress !== 'function') return '';
+    return String(await (getAddress as () => Promise<unknown>)()).trim();
+  };
+  const resolveContractOwner = async (contract: Contract | null) => {
+    const owner = (contract as unknown as { owner?: unknown } | null)?.owner;
+    if (typeof owner !== 'function') return '';
+    try {
+      return String(await (owner as () => Promise<unknown>)()).trim();
+    } catch {
+      return '';
+    }
+  };
+  const assertActualWriteAuthorization = async (contract: Contract | null, signer: unknown) => {
+    const signerAddress = await getSignerAddress(signer);
+    if (!signerAddress) return;
+
+    const ownerOnly = OWNER_ONLY_WRITE_METHODS.has(canonicalMethod);
+    const guardedAccountLabel = OWNER_OR_SPONSOR_WRITE_METHODS.has(canonicalMethod)
+      ? 'Sponsor Key'
+      : OWNER_OR_ACCOUNT_WRITE_METHODS.has(canonicalMethod)
+        ? 'Account Key'
+        : '';
+    if (!ownerOnly && !guardedAccountLabel) return;
+
+    const contractOwner = await resolveContractOwner(contract);
+    if (contractOwner && isSameAddress(signerAddress, contractOwner)) return;
+
+    if (ownerOnly) {
+      throw attachActualSigner(
+        new Error(
+          `${canonicalMethod} requires the contract owner signer. Actual signer is ${signerAddress}.` +
+            (contractOwner ? ` Contract owner is ${contractOwner}.` : ''),
+        ),
+        signerAddress,
+      );
+    }
+
+    const guardedAccount = findParamValue(guardedAccountLabel);
+    if (!guardedAccount || isSameAddress(signerAddress, guardedAccount)) return;
+
+    throw attachActualSigner(
+      new Error(
+        `${canonicalMethod} requires msg.sender to be ${guardedAccountLabel} or the contract owner. ` +
+          `Actual signer is ${signerAddress}; ${guardedAccountLabel} is ${guardedAccount}.` +
+          (contractOwner ? ` Contract owner is ${contractOwner}.` : ''),
+      ),
+      signerAddress,
+    );
+  };
     const submitWrite = async (
       label: string,
       writeCall: (access: ReturnType<typeof createSpCoinModuleAccess>, signer: any) => Promise<any>,
@@ -430,13 +526,14 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       try {
         const tx = await executeWriteConnected(
           label,
-          (contract: Contract, signer: any) => {
+          async (contract: Contract, signer: any) => {
             activeContract = contract;
             activeSigner = signer;
             const access = createSpCoinModuleAccess(contract, signer, spCoinAccessSource, appendWriteTrace);
             appendWriteTrace?.(
               `submitWrite(${label}) contract target=${String((contract as any)?.target || (contract as any)?.address || '')} signer=${String(signer?.address || '')}`,
             );
+            await assertActualWriteAuthorization(contract, signer);
             return writeCall(access, signer);
           },
           selectedHardhatAddress,
@@ -517,6 +614,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
               ? `${spCoinError} signer=${signerAddress ? signerAddress : '(unknown)'} sponsor=${sponsorKey ? sponsorKey : '(unknown)'}`
               : spCoinError;
           const enrichedError = new Error(contextMessage);
+          if (signerAddress) {
+            (enrichedError as { spCoinActualSigner?: string }).spCoinActualSigner = signerAddress;
+          }
           (enrichedError as { code?: unknown }).code = errorCode ? errorCode : 'CALL_EXCEPTION';
           (enrichedError as { reason?: unknown }).reason = spCoinError;
           (enrichedError as { cause?: unknown }).cause = error;
