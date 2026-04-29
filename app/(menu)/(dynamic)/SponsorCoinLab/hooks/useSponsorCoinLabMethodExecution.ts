@@ -246,7 +246,7 @@ export function useSponsorCoinLabMethodExecution({
       const findParamValue = (label: string) =>
         String(params.find((entry) => String(entry?.key ?? '') === label)?.value ?? '').trim();
 
-      const executeBody = async (shouldUseServerBackedWrite: boolean): Promise<MethodExecutionResult> => {
+      const executeBody = async (allowServerBackedWrite: boolean): Promise<MethodExecutionResult> => {
         if (panel === 'ecr20_read') {
           const selectedMethod = method as Erc20ReadMethod;
           const labels = getErc20ReadLabels(selectedMethod);
@@ -599,6 +599,7 @@ export function useSponsorCoinLabMethodExecution({
           return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
         }
 
+        const shouldUseServerBackedWrite = allowServerBackedWrite && mode === 'hardhat';
         const result = shouldUseServerBackedWrite
           ? await runServerBackedSpCoinStep(
               'spcoin_write',
