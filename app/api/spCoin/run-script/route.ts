@@ -105,7 +105,7 @@ const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   1: 'AGENT_RATE_NOT_FOUND',
   2: 'RECIP_RATE_HAS_AGENT',
   3: 'AGENT_NOT_FOUND',
-  4: 'OWNER_OR_ROOT',
+  4: 'OWNER_OR_ROOT: msg.sender must be the Sponsor Key or the contract owner/root admin.',
   5: 'Transaction Row Id is out of range for this agent-rate transaction list.',
   6: 'Transaction Row Id does not resolve to an inserted master transaction record.',
   7: 'Transaction Row Id does not match the supplied agent-rate branch keys.',

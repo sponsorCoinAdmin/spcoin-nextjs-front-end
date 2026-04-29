@@ -24,7 +24,7 @@ const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   1: 'AGENT_RATE_NOT_FOUND',
   2: 'RECIP_RATE_HAS_AGENT',
   3: 'AGENT_NOT_FOUND',
-  4: 'OWNER_OR_ROOT',
+  4: 'OWNER_OR_ROOT: msg.sender must be the Sponsor Key or the contract owner/root admin.',
   5: 'Transaction Row Id is out of range for this agent-rate transaction list.',
   6: 'Transaction Row Id does not resolve to an inserted master transaction record.',
   7: 'Transaction Row Id does not match the supplied agent-rate branch keys.',
@@ -507,6 +507,21 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           : spCoinError || String(error);
         appendWriteTrace?.(`submitWrite(${label}) failed detail=${detail}`);
         appendLog(`${label} failed: ${detail}`);
+        if (spCoinError) {
+          const sponsorKeyParam = findParamValue('Sponsor Key');
+          const sponsorKeyAccount = findParamValue('Sponsor Account');
+          const sponsorKey = sponsorKeyParam ? sponsorKeyParam : sponsorKeyAccount;
+          const signerAddress = String(activeSigner?.address ?? selectedHardhatAddress ?? '').trim();
+          const contextMessage =
+            spCoinError.startsWith('OWNER_OR_ROOT')
+              ? `${spCoinError} signer=${signerAddress ? signerAddress : '(unknown)'} sponsor=${sponsorKey ? sponsorKey : '(unknown)'}`
+              : spCoinError;
+          const enrichedError = new Error(contextMessage);
+          (enrichedError as { code?: unknown }).code = errorCode ? errorCode : 'CALL_EXCEPTION';
+          (enrichedError as { reason?: unknown }).reason = spCoinError;
+          (enrichedError as { cause?: unknown }).cause = error;
+          throw enrichedError;
+        }
         throw error;
       }
     };
