@@ -31,13 +31,22 @@ interface ScriptRunResult {
   formattedOutput: string;
 }
 
+interface ScriptRunOptions {
+  formattedOutputBase?: string;
+  executionSignal?: AbortSignal;
+  executionLabel?: string;
+}
+
 interface Params {
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
   setFormattedOutputDisplay: (value: string) => void;
   useLocalSpCoinAccessPackage: boolean;
   getRecentWriteTrace: () => string[];
-  executeMethodDescriptor: (descriptor: MethodExecutionDescriptor) => Promise<MethodExecutionResult>;
+  executeMethodDescriptor: (
+    descriptor: MethodExecutionDescriptor,
+    options?: { executionSignal?: AbortSignal },
+  ) => Promise<MethodExecutionResult>;
   buildMethodCallEntry: (
     method: string,
     params?: { label: string; value: unknown }[],
@@ -63,7 +72,7 @@ export function useSponsorCoinLabScriptRunner({
   formatFormattedPanelPayload,
 }: Params) {
   const runScriptStep = useCallback(
-    async (step: LabScriptStep, options?: { formattedOutputBase?: string }): Promise<ScriptRunResult> => {
+    async (step: LabScriptStep, options?: ScriptRunOptions): Promise<ScriptRunResult> => {
       const formattedOutputBase = options?.formattedOutputBase;
       const paramEntries = Array.isArray(step.params) ? step.params : [];
       const stepSender = String(step['msg.sender'] ?? '').trim();
@@ -83,7 +92,7 @@ export function useSponsorCoinLabScriptRunner({
           method: step.method,
           params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
           sender: stepSender,
-        });
+        }, { executionSignal: options?.executionSignal });
         return commitResult({ call, result, ...(warning ? { warning } : {}), meta }, true);
       } catch (error) {
         const message =

@@ -10,26 +10,52 @@ import {
 import type { LabScriptStep, MethodPanelMode } from '../../scriptBuilder/types';
 import type { FormattedPanelView, OutputPanelMode } from '../types';
 
-type DisplayedOutputCall = {
+interface DisplayedOutputCall {
   method: string;
-  parameters: Array<{ label: string; value: string }>;
-};
+  parameters: { label: string; value: string }[];
+}
 
-function parseDisplayedOutputParameters(value: unknown): Array<{ label: string; value: string }> {
+interface ScriptRunResult {
+  success: boolean;
+  formattedOutput: string;
+}
+interface ScriptRunOptions {
+  formattedOutputBase: string;
+  executionSignal?: AbortSignal;
+  executionLabel?: string;
+}
+type MethodExecutionTracker = <T>(
+  methodName: string,
+  runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<T> | T,
+) => Promise<T | undefined>;
+
+function toDisplayString(value: unknown, fallback = '') {
+  if (value == null) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
+function parseDisplayedOutputParameters(value: unknown): { label: string; value: string }[] {
   if (Array.isArray(value)) {
-    return value.map((entry) => ({
-      label: String(entry?.label || '').trim(),
-      value: String(entry?.value || '').trim(),
-    }));
+    return value.map((entry) => {
+      const record = entry && typeof entry === 'object' && !Array.isArray(entry)
+        ? (entry as Record<string, unknown>)
+        : {};
+      return {
+        label: toDisplayString(record.label).trim(),
+        value: toDisplayString(record.value).trim(),
+      };
+    });
   }
   if (!value || typeof value !== 'object') return [];
   return Object.entries(value as Record<string, unknown>).map(([label, entryValue]) => ({
-    label: String(label || '').trim(),
-    value: String(entryValue ?? '').trim(),
+    label: label.trim(),
+    value: toDisplayString(entryValue).trim(),
   }));
 }
 
-type Params = {
+interface Params {
   formattedOutputDisplay: string;
   outputPanelMode: OutputPanelMode;
   formattedPanelView: FormattedPanelView;
@@ -62,14 +88,15 @@ type Params = {
   selectedScriptStepNumber: number | null;
   runScriptStep: (
     step: LabScriptStep,
-    options: { formattedOutputBase: string },
-  ) => Promise<{ success: boolean; formattedOutput: string }>;
+    options: ScriptRunOptions,
+  ) => Promise<ScriptRunResult>;
+  trackMethodExecution: MethodExecutionTracker;
   focusScriptStep: (step: LabScriptStep) => void;
   spCoinReadMethodDefs: Record<string, unknown>;
   spCoinWriteMethodDefs: Record<string, unknown>;
   serializationTestMethodDefs: Record<string, unknown>;
   setSelectedScriptStepNumber: (value: number | null) => void;
-};
+}
 
 export function useControllerScriptExecution({
   formattedOutputDisplay,
@@ -93,6 +120,7 @@ export function useControllerScriptExecution({
   selectedScript,
   selectedScriptStepNumber,
   runScriptStep,
+  trackMethodExecution,
   focusScriptStep,
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
@@ -101,6 +129,18 @@ export function useControllerScriptExecution({
 }: Params) {
   const refreshFormattedOutputSequenceRef = useRef<(() => void) | null>(null);
   const isRefreshingDisplayedOutputRef = useRef(false);
+
+  const runScriptStepWithPopup = useCallback(
+    async (step: LabScriptStep, options: { formattedOutputBase: string }) =>
+      trackMethodExecution(step.name || step.method, ({ executionSignal, executionLabel }) =>
+        runScriptStep(step, {
+          ...options,
+          executionSignal,
+          executionLabel,
+        }),
+      ),
+    [runScriptStep, trackMethodExecution],
+  );
 
   const displayedOutputCalls = useMemo(() => {
     const blocks = String(formattedOutputDisplay || '')
@@ -115,7 +155,7 @@ export function useControllerScriptExecution({
           const parsed = JSON.parse(block) as {
             call?: { method?: unknown; parameters?: unknown };
           };
-          const method = String(parsed?.call?.method || '').trim();
+          const method = toDisplayString(parsed?.call?.method).trim();
           if (!method) return null;
           const parameters = parseDisplayedOutputParameters(parsed?.call?.parameters);
           return { method, parameters };
@@ -161,7 +201,8 @@ export function useControllerScriptExecution({
           const step = selectedScript.steps[idx];
           focusScriptStep(step);
 
-          const result = await runScriptStep(step, { formattedOutputBase: accumulatedOutput });
+          const result = await runScriptStepWithPopup(step, { formattedOutputBase: accumulatedOutput });
+          if (!result) return;
           setScriptStepExecutionErrors((prev) => {
             const nextHasError = !result.success;
             if (prev[step.step] === nextHasError) return prev;
@@ -203,7 +244,7 @@ export function useControllerScriptExecution({
     },
     [
       focusScriptStep,
-      runScriptStep,
+      runScriptStepWithPopup,
       scriptDebugStopRef,
       selectedScript,
       setFormattedOutputDisplay,
@@ -250,17 +291,19 @@ export function useControllerScriptExecution({
           setStatus(`Unable to refresh Console Display output for ${call.method}.`);
           return;
         }
+        const syntheticStepSender = call.parameters.find((entry) => entry.label === 'msg.sender')?.value;
         const syntheticStep: LabScriptStep = {
           step: index + 1,
           name: call.method,
           panel,
           method: call.method,
-          'msg.sender': call.parameters.find((entry) => entry.label === 'msg.sender')?.value || undefined,
+          'msg.sender': syntheticStepSender ?? undefined,
           params: call.parameters
             .filter((entry) => entry.label !== 'msg.sender' && entry.label)
             .map((entry) => ({ key: entry.label, value: entry.value })),
         };
-        const result = await runScriptStep(syntheticStep, { formattedOutputBase: accumulatedOutput });
+        const result = await runScriptStepWithPopup(syntheticStep, { formattedOutputBase: accumulatedOutput });
+        if (!result) return;
         setScriptStepExecutionErrors((prev) => ({
           ...prev,
           [syntheticStep.step]: !result.success,
@@ -281,7 +324,7 @@ export function useControllerScriptExecution({
   }, [
     isRefreshingDisplayedOutputRef,
     displayedOutputCalls,
-    runScriptStep,
+    runScriptStepWithPopup,
     serializationTestMethodDefs,
     setFormattedOutputDisplay,
     setIsScriptDebugRunning,

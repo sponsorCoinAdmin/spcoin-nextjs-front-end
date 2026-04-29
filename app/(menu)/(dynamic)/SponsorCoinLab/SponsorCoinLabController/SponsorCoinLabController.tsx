@@ -104,9 +104,9 @@ import { useControllerScriptPresentation } from './hooks/useControllerScriptPres
 import { useControllerViewProps } from './hooks/useControllerViewProps';
 import type { ContractDirectoryOption } from '../components/contractDirectoryOptions';
 
-type SponsorCoinLabControllerProps = {
+interface SponsorCoinLabControllerProps {
   initialContractDirectoryOptions?: ContractDirectoryOption[];
-};
+}
 
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
@@ -117,12 +117,13 @@ export default function SponsorCoinLabPage({
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
     exchangeContext?.settings?.spCoinAccessManager?.source !== 'node';
-const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
-  networkHeader?: { rpcUrl?: string };
-};
-const defaultHardhatRpcUrl =
-  String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
-  'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+  const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) as {
+    networkHeader?: { rpcUrl?: string };
+  };
+  const configuredHardhatRpcUrl = String(hardhatDefaultSettings?.networkHeader?.rpcUrl ?? '').trim();
+  const defaultHardhatRpcUrl = configuredHardhatRpcUrl
+    ? configuredHardhatRpcUrl
+    : 'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [rpcUrl, setRpcUrl] = useState(defaultHardhatRpcUrl);
   const [contractAddress, setContractAddress] = useState('');
@@ -623,7 +624,7 @@ const defaultHardhatRpcUrl =
     hardhatAccounts,
     selectedHardhatAddress:
       mode === 'hardhat'
-        ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || selectedHardhatAccount?.address
+        ? selectedWriteSenderAccount?.address ?? selectedWriteSenderAddress ?? selectedHardhatAccount?.address
         : undefined,
     effectiveConnectedAddress,
     ownerAddress: displayedSpCoinOwnerAddress,
@@ -1265,13 +1266,13 @@ const defaultHardhatRpcUrl =
     ],
   );
   const trackMethodExecution = useCallback(
-    async (
+    async <T,>(
       methodName: string,
-      runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<unknown> | unknown,
+      runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<T> | T,
     ) => {
       if (activeMethodRunAbortControllerRef.current) {
         reopenRunningMethodPopup();
-        return;
+        return undefined;
       }
       const controller = new AbortController();
       const runId = nextMethodRunIdRef.current++;
@@ -1284,7 +1285,7 @@ const defaultHardhatRpcUrl =
         isCancelling: false,
       });
       try {
-        await runner({ executionSignal: controller.signal, executionLabel: methodName });
+        return await runner({ executionSignal: controller.signal, executionLabel: methodName });
       } finally {
         if (activeMethodRunAbortControllerRef.current === controller) {
           activeMethodRunAbortControllerRef.current = null;
@@ -1391,6 +1392,7 @@ const defaultHardhatRpcUrl =
     selectedScript,
     selectedScriptStepNumber,
     runScriptStep,
+    trackMethodExecution,
     focusScriptStep,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
@@ -1451,8 +1453,8 @@ const defaultHardhatRpcUrl =
     handleDiscardConfirm,
     runningMethodPopup: {
       isOpen: Boolean(runningMethodPopupState?.isOpen),
-      methodName: runningMethodPopupState?.methodName || '',
-      startedAt: runningMethodPopupState?.startedAt || Date.now(),
+      methodName: runningMethodPopupState?.methodName ?? '',
+      startedAt: runningMethodPopupState?.startedAt ?? Date.now(),
       isCancelling: Boolean(runningMethodPopupState?.isCancelling),
       onCancel: cancelRunningMethodPopup,
       onAcknowledge: dismissRunningMethodPopup,
