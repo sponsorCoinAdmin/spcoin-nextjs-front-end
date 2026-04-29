@@ -355,6 +355,7 @@ export default function SponsorCoinLabPage({
     exchangeContext,
     useLocalSpCoinAccessPackage,
     mode,
+    preserveScriptEditorSender: methodSelectionSource === 'script' && editingScriptStepNumber !== null,
     rpcUrl,
     excludedDeploymentAddresses: removedContractAddresses,
     setContractAddress,

@@ -63,6 +63,7 @@ type Params = {
   exchangeContext: any;
   useLocalSpCoinAccessPackage: boolean;
   mode: ConnectionMode;
+  preserveScriptEditorSender?: boolean;
   rpcUrl: string;
   excludedDeploymentAddresses?: string[];
   setContractAddress: (value: string) => void;
@@ -136,6 +137,7 @@ export function useSponsorCoinLabNetwork({
   exchangeContext,
   useLocalSpCoinAccessPackage,
   mode,
+  preserveScriptEditorSender = false,
   rpcUrl,
   excludedDeploymentAddresses = [],
   setContractAddress,
@@ -643,7 +645,9 @@ export function useSponsorCoinLabNetwork({
   const writeSenderDisplayValue =
     mode === 'hardhat'
       ? selectedWriteSenderAccount?.address || selectedWriteSenderAddress || ''
-      : effectiveConnectedAddress || '';
+      : preserveScriptEditorSender
+        ? selectedWriteSenderAddress ?? ''
+        : effectiveConnectedAddress ?? '';
   const writeSenderPrivateKeyDisplay =
     mode === 'hardhat' ? String(selectedWriteSenderAccount?.privateKey || '').trim() : '';
 
@@ -680,6 +684,7 @@ export function useSponsorCoinLabNetwork({
 
   useEffect(() => {
     if (mode !== 'hardhat') {
+      if (preserveScriptEditorSender) return;
       if (selectedWriteSenderAddress !== effectiveConnectedAddress) {
         setSelectedWriteSenderAddress(effectiveConnectedAddress);
       }
@@ -701,6 +706,7 @@ export function useSponsorCoinLabNetwork({
     effectiveConnectedAddress,
     hardhatAccounts,
     mode,
+    preserveScriptEditorSender,
     selectedHardhatAccount?.address,
     selectedWriteSenderAddress,
   ]);
