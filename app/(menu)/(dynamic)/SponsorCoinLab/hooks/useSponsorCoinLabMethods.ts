@@ -25,14 +25,29 @@ import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAcc
 import { getTransactionList as localGetTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getTransactionList';
 import { getAccountTransactionList as localGetAccountTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountTransactionList';
 import {
-  buildMethodTimingMeta,
   createMethodTimingCollector,
   runWithMethodTimingCollector,
-  type MethodTimingCollector,
-  type MethodTimingMeta,
 } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
+import {
+  attachExecutionMeta,
+  attachReadDebugTrace,
+  buildExecutionMeta,
+  enrichDirectReadError,
+  getErrorDebugTrace,
+  getExecutionMetaFromError,
+  isAbortError,
+  isEmptyAccountRateListReadError,
+  isMalformedAccountRateListInput,
+  parseComparableUint,
+  type MethodExecutionMeta,
+} from './methodExecutionHelpers';
+import {
+  deriveReadWarningPayload,
+  mergeFormattedOutput,
+  normalizeWriteResultForDisplay,
+} from './methodOutputFormatting';
 
 type Entry = { id: string; label: string };
 type ScriptRunResult = {
@@ -60,113 +75,7 @@ type MethodExecutionOptions = {
   skipValidation?: boolean;
 };
 
-type MethodExecutionMeta = MethodTimingMeta;
-
 type MethodDefMap = Record<string, MethodDef>;
-
-function normalizeUnsignedIntegerInput(value: string) {
-  return String(value || '').trim().replace(/,/g, '');
-}
-
-function parseComparableUint(value: string): bigint | null {
-  const normalized = normalizeUnsignedIntegerInput(value);
-  if (!/^\d+$/.test(normalized)) return null;
-  try {
-    return BigInt(normalized);
-  } catch {
-    return null;
-  }
-}
-
-function isBadDataError(error: unknown) {
-  const code = String((error as { code?: unknown } | null)?.code || '');
-  const message = String((error as { message?: unknown } | null)?.message || '');
-  return code === 'BAD_DATA' || /could not decode result data/i.test(message);
-}
-
-function isAbortError(error: unknown) {
-  if (!error) return false;
-  const name = String((error as { name?: unknown } | null)?.name || '');
-  const code = String((error as { code?: unknown } | null)?.code || '');
-  const message = String((error as { message?: unknown } | null)?.message || '');
-  return name === 'AbortError' || code === 'ABORT_ERR' || /aborted|cancelled by user/i.test(message);
-}
-
-function getErrorDebugTrace(error: unknown): string[] {
-  const trace = (error as { spCoinDebugTrace?: unknown } | null)?.spCoinDebugTrace;
-  return Array.isArray(trace) ? trace.map((entry) => String(entry)) : [];
-}
-
-function attachReadDebugTrace(error: unknown, trace: string[]) {
-  if (!error || typeof error !== 'object') return error;
-  (error as { spCoinDebugTrace?: string[] }).spCoinDebugTrace = [...trace];
-  return error;
-}
-
-function buildExecutionMeta(collector: MethodTimingCollector, completedAtMs = Date.now()): MethodExecutionMeta {
-  return buildMethodTimingMeta(collector, completedAtMs);
-}
-
-function attachExecutionMeta(error: unknown, meta?: MethodExecutionMeta) {
-  if (!error || typeof error !== 'object' || !meta) return error;
-  (error as { spCoinExecutionMeta?: MethodExecutionMeta }).spCoinExecutionMeta = meta;
-  return error;
-}
-
-function getExecutionMetaFromError(error: unknown): MethodExecutionMeta | undefined {
-  const meta = (error as { spCoinExecutionMeta?: unknown } | null)?.spCoinExecutionMeta;
-  if (!meta || typeof meta !== 'object') return undefined;
-  return meta as MethodExecutionMeta;
-}
-
-function isEmptyAccountRateListReadError(error: unknown) {
-  const name = String((error as { name?: unknown } | null)?.name || '');
-  const message = String((error as { message?: unknown } | null)?.message || '');
-  if (name !== 'TypeError') return false;
-  return /Cannot read properties of undefined/i.test(message);
-}
-
-function isMalformedAccountRateListInput(error: unknown) {
-  const name = String((error as { name?: unknown } | null)?.name || '');
-  const message = String((error as { message?: unknown } | null)?.message || '');
-  if (name !== 'TypeError') return false;
-  return /Cannot convert undefined to a BigInt/i.test(message);
-}
-
-async function enrichDirectReadError(params: {
-  error: unknown;
-  method: string;
-  target: string;
-  runner: any;
-}) {
-  const { error, method, target, runner } = params;
-  if (!isBadDataError(error)) return error;
-
-  const provider = runner?.provider ?? runner;
-  if (!provider || typeof provider.getCode !== 'function') {
-    return error;
-  }
-
-  try {
-    const [code, network] = await Promise.all([
-      provider.getCode(target),
-      typeof provider.getNetwork === 'function' ? provider.getNetwork() : Promise.resolve(null),
-    ]);
-    const chainId = network?.chainId != null ? String(network.chainId) : 'unknown';
-    const hasCode = typeof code === 'string' && code !== '0x';
-    const nextError = new Error(
-      hasCode
-        ? `SpCoin read method ${method} failed at ${target} on chain ${chainId}: the contract returned undecodable data. This usually means the deployed bytecode does not match the current SPCoin ABI or does not implement ${method}().`
-        : `SpCoin read method ${method} failed at ${target} on chain ${chainId}: no contract code was found at that address.`,
-    );
-    (nextError as Error & { cause?: unknown; code?: unknown }).cause = error;
-    (nextError as Error & { cause?: unknown; code?: unknown }).code =
-      (error as { code?: unknown } | null)?.code || 'BAD_DATA';
-    return nextError;
-  } catch {
-    return error;
-  }
-}
 
 type Params = {
   activeContractAddress: string;
@@ -656,64 +565,6 @@ export function useSponsorCoinLabMethods({
     syncTreeAccountOptions(list);
     return { list };
   }, [mode, normalizeStringListResult, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
-  const mergeFormattedOutput = useCallback(
-    (nextBlock: string, baseOutput?: string) => {
-      const current = String(baseOutput || '').trim();
-      if (!current || current === '(no output yet)') return nextBlock;
-      return `${current}\n\n${nextBlock}`;
-    },
-    [],
-  );
-  const normalizeWriteResultForDisplay = useCallback((result: unknown) => {
-    if (result === undefined || result === null) {
-      return {
-        status: 'success',
-        message: 'Completed successfully.',
-      };
-    }
-    if (Array.isArray(result) && result.length === 0) {
-      return {
-        status: 'success',
-        message: 'Completed successfully.',
-      };
-    }
-    if (
-      Array.isArray(result) &&
-      result.every(
-        (entry) =>
-          entry &&
-          typeof entry === 'object' &&
-          !Array.isArray(entry) &&
-          ('txHash' in (entry as Record<string, unknown>) || 'receiptHash' in (entry as Record<string, unknown>)),
-      )
-    ) {
-      const receipts = result as Array<Record<string, unknown>>;
-      if (receipts.length === 1) {
-        const [receipt] = receipts;
-        return {
-          status: String(receipt.status || 'success'),
-          message: 'Completed successfully.',
-          label: String(receipt.label || ''),
-          transactionId: String(receipt.txHash || ''),
-          receiptId: String(receipt.receiptHash || ''),
-          blockNumber: String(receipt.blockNumber || ''),
-        };
-      }
-      return {
-        status: 'success',
-        message: `Completed ${receipts.length} transaction(s).`,
-        transactionCount: String(receipts.length),
-        transactions: receipts.map((receipt) => ({
-          label: String(receipt.label || ''),
-          transactionId: String(receipt.txHash || ''),
-          receiptId: String(receipt.receiptHash || ''),
-          blockNumber: String(receipt.blockNumber || ''),
-          status: String(receipt.status || ''),
-        })),
-      };
-    }
-    return result;
-  }, []);
   const formatFormattedPanelPayload = useCallback(
     (payload: unknown) => {
       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -854,96 +705,6 @@ export function useSponsorCoinLabMethods({
       return formatOutputDisplayValue(nextPayload);
     },
     [formatOutputDisplayValue],
-  );
-  const deriveReadWarningPayload = useCallback(
-    (selectedMethod: SpCoinReadMethod, result: unknown) => {
-      const selectedMethodName = String(selectedMethod || '').trim();
-      if (
-        result &&
-        typeof result === 'object' &&
-        !Array.isArray(result) &&
-        String((result as Record<string, unknown>).__spcoinWarningType || '').trim() === 'malformed_rate_reward_list'
-      ) {
-        return {
-          type: 'invalid_input',
-          message: String(
-            (result as Record<string, unknown>).__spcoinWarningMessage ||
-              `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
-          ),
-          debug: {
-            panel: 'spcoin_rread',
-            source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            method: selectedMethodName,
-          },
-        };
-      }
-      if (
-        selectedMethodName === 'getAccountTransactionList' &&
-        Array.isArray(result) &&
-        result.length === 0
-      ) {
-        return {
-          type: 'empty_data',
-          message: `${selectedMethodName} returned no rate reward data for the supplied list.`,
-          debug: {
-            panel: 'spcoin_rread',
-            source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-            method: selectedMethodName,
-          },
-        };
-      }
-      if (
-        (selectedMethod === 'getAgentTransaction' || selectedMethod === 'getRecipientTransaction') &&
-        result &&
-        typeof result === 'object' &&
-        !Array.isArray(result)
-      ) {
-        const record = result as Record<string, unknown>;
-        if (record.inserted === false) {
-          return {
-            type: 'not_found',
-            message: `${selectedMethod} returned no onchain branch for the supplied keys.`,
-            debug: {
-              panel: 'spcoin_rread',
-              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              method: selectedMethod,
-            },
-          };
-        }
-      }
-      if (
-        selectedMethodName === 'getAccountRecord' &&
-        result &&
-        typeof result === 'object' &&
-        !Array.isArray(result)
-      ) {
-        const record = result as Record<string, unknown>;
-        const totalSpCoins =
-          record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
-            ? (record.totalSpCoins as Record<string, unknown>)
-            : null;
-        const recipientKeys = Array.isArray(record.recipientKeys) ? record.recipientKeys : [];
-        const agentKeys = Array.isArray(record.agentKeys) ? record.agentKeys : [];
-        const isEmptyAccountRecord =
-          String(record.creationTime ?? '').trim() === '' &&
-          String(totalSpCoins?.totalSpCoins ?? '0').trim() === '0' &&
-          recipientKeys.length === 0 &&
-          agentKeys.length === 0;
-        if (isEmptyAccountRecord) {
-          return {
-            type: 'not_found',
-            message: `${selectedMethodName} returned no account record for the supplied account key.`,
-            debug: {
-              panel: 'spcoin_rread',
-              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              method: selectedMethodName,
-            },
-          };
-        }
-      }
-      return undefined;
-    },
-    [useLocalSpCoinAccessPackage],
   );
   const executeMethodDescriptor = useCallback(
     async (
@@ -1154,7 +915,7 @@ export function useSponsorCoinLabMethods({
             throw attachReadDebugTrace(error, debugTrace);
           }
         }
-        warning = warning ?? deriveReadWarningPayload(selectedMethod, result);
+        warning = warning ?? deriveReadWarningPayload(selectedMethod, result, useLocalSpCoinAccessPackage);
         if (
           result &&
           typeof result === 'object' &&
@@ -1334,7 +1095,7 @@ export function useSponsorCoinLabMethods({
             spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             setStatus,
           });
-      const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodTimingMeta | undefined };
+      const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodExecutionMeta | undefined };
       return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
       })
         : await (async () => {
@@ -1531,7 +1292,7 @@ export function useSponsorCoinLabMethods({
             throw attachReadDebugTrace(error, debugTrace);
           }
         }
-        warning = warning ?? deriveReadWarningPayload(selectedMethod, result);
+        warning = warning ?? deriveReadWarningPayload(selectedMethod, result, useLocalSpCoinAccessPackage);
         if (
           result &&
           typeof result === 'object' &&
@@ -1713,10 +1474,10 @@ export function useSponsorCoinLabMethods({
             timingCollector: executionTimingCollector,
           });
       if (shouldUseServerBackedWrite) {
-        const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodTimingMeta | undefined };
+        const serverResult = result as { result: unknown; warning: Record<string, unknown> | undefined; meta: MethodExecutionMeta | undefined };
         return { call, result: normalizeWriteResultForDisplay(serverResult.result), meta: serverResult.meta || finalizeMeta() };
       } else {
-        const writeResult = result as { receipts: Array<{ label: string; txHash: string; receiptHash: string; blockNumber: string; status: string }>; meta: MethodTimingMeta | undefined };
+        const writeResult = result as { receipts: Array<{ label: string; txHash: string; receiptHash: string; blockNumber: string; status: string }>; meta: MethodExecutionMeta | undefined };
         return { call, result: normalizeWriteResultForDisplay(writeResult.receipts), meta: writeResult.meta || finalizeMeta() };
       }
       })();
@@ -1729,7 +1490,6 @@ export function useSponsorCoinLabMethods({
       appendWriteTrace,
       buildMethodCallEntry,
       coerceParamValue,
-      deriveReadWarningPayload,
       effectiveConnectedAddress,
       ensureReadRunner,
       executeWriteConnected,
@@ -1737,7 +1497,6 @@ export function useSponsorCoinLabMethods({
       mode,
       requireContractAddress,
       runServerBackedSpCoinStep,
-      normalizeWriteResultForDisplay,
       selectedHardhatAddress,
       setStatus,
       spCoinReadMethodDefs,
@@ -2908,7 +2667,6 @@ export function useSponsorCoinLabMethods({
       buildMethodCallEntry,
       executeMethodDescriptor,
       formatFormattedPanelPayload,
-      mergeFormattedOutput,
       setFormattedOutputDisplay,
       setStatus,
       useLocalSpCoinAccessPackage,
