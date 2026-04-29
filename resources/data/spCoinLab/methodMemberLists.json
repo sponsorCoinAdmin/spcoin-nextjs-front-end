@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-28T22:17:22.482Z",
+  "updatedAt": "2026-04-29T00:58:03.174Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -13,7 +13,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": false,
+        "compareSpCoinContractSize": true,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -37,7 +37,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": false,
+        "compareSpCoinContractSize": true,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -61,7 +61,7 @@
         "external_serializedAgentTransactionStr": true,
         "external_serializedAgentRateTransactionStr": true,
         "external_getSerializedTransactionList": true,
-        "compareSpCoinContractSize": true,
+        "compareSpCoinContractSize": false,
         "getSponsorAccounts": true,
         "getMasterSponsorList": true,
         "hhFundAccounts": true,
@@ -109,7 +109,7 @@
         "external_serializedAgentTransactionStr": false,
         "external_serializedAgentRateTransactionStr": false,
         "external_getSerializedTransactionList": false,
-        "compareSpCoinContractSize": false,
+        "compareSpCoinContractSize": true,
         "getSponsorAccounts": false,
         "getMasterSponsorList": false,
         "hhFundAccounts": false,
@@ -697,11 +697,11 @@
         "allowance": false
       },
       "Complete": {
-        "name": false,
-        "symbol": false,
-        "decimals": false,
-        "totalSupply": false,
-        "balanceOf": false,
+        "name": true,
+        "symbol": true,
+        "decimals": true,
+        "totalSupply": true,
+        "balanceOf": true,
         "allowance": false
       }
     },
@@ -727,7 +727,7 @@
         "transferFrom": false
       },
       "Complete": {
-        "transfer": false,
+        "transfer": true,
         "approve": false,
         "transferFrom": false
       }

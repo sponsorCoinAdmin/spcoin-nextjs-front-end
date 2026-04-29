@@ -283,6 +283,10 @@ const METHOD_MEMBER_LISTS_API_PATH = '/api/spCoin/lab/method-member-lists';
 const refreshIconButtonClassName =
   'h-[30px] w-[30px] min-w-[30px] shrink-0 rounded-full flex items-center justify-center text-base leading-none text-[#5981F3] bg-[#243056] border-0 outline-none ring-0 transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60';
 
+function isAlterModeOption(value: unknown): value is AlterModeOption {
+  return ALTER_MODE_OPTIONS.includes(value as AlterModeOption);
+}
+
 function saveMethodMemberListPayload(payload: MethodMemberListPayload, keepalive = false) {
   return fetch(METHOD_MEMBER_LISTS_API_PATH, {
     method: 'POST',
@@ -317,6 +321,7 @@ type StoredMethodsPanelUiState = {
   scriptEditorKind?: ScriptEditorKind;
   isManageEnabled?: boolean;
   selectedDisplayGroup?: MethodDisplayFilter;
+  selectedAlterMode?: AlterModeOption;
   writeTraceEnabled?: boolean;
   showOnChainMethods?: boolean;
   showOffChainMethods?: boolean;
@@ -338,6 +343,9 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     }
     if (isMethodDisplayFilter(saved.selectedDisplayGroup)) {
       next.selectedDisplayGroup = saved.selectedDisplayGroup;
+    }
+    if (isAlterModeOption(saved.selectedAlterMode)) {
+      next.selectedAlterMode = saved.selectedAlterMode;
     }
     if (typeof saved.writeTraceEnabled === 'boolean') {
       next.writeTraceEnabled = saved.writeTraceEnabled;
@@ -455,7 +463,9 @@ export default function MethodsPanelCard({
   const [isHoveringTypeScriptSaveBlocked, setIsHoveringTypeScriptSaveBlocked] = React.useState(false);
   const [isTypeScriptSavePopupOpen, setIsTypeScriptSavePopupOpen] = React.useState(false);
   const [isMethodPanelLoading, setIsMethodPanelLoading] = React.useState(false);
-  const [selectedAlterMode, setSelectedAlterMode] = React.useState<AlterModeOption>('Standard');
+  const [selectedAlterMode, setSelectedAlterMode] = React.useState<AlterModeOption>(
+    storedMethodsPanelUiState?.selectedAlterMode || 'Standard',
+  );
   const [isAlterMembershipMenuOpen, setIsAlterMembershipMenuOpen] = React.useState(false);
   const [isChangeGroupMenuOpen, setIsChangeGroupMenuOpen] = React.useState(false);
   const [isReloadingMemberLists, setIsReloadingMemberLists] = React.useState(false);
@@ -1104,6 +1114,7 @@ export default function MethodsPanelCard({
         scriptEditorKind,
         isManageEnabled,
         selectedDisplayGroup,
+        selectedAlterMode,
         writeTraceEnabled,
         showOnChainMethods,
         showOffChainMethods,
@@ -1115,6 +1126,7 @@ export default function MethodsPanelCard({
     isManageEnabled,
     isPanelUiPersistenceReady,
     scriptEditorKind,
+    selectedAlterMode,
     selectedDisplayGroup,
     showOffChainMethods,
     showOnChainMethods,
