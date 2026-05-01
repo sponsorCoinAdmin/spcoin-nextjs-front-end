@@ -11,7 +11,94 @@ contract UnSubscribe is Transactions {
         onlyOwnerOrRootAdmin(_sponsorKey)
         accountExists(_sponsorKey)
     {
-        delete accountMap[_sponsorKey].recipientKeys;
+        uint256 deleteTimeStamp = block.timestamp;
+        _settleSponsorRateBuckets(_sponsorKey, deleteTimeStamp);
+        _unlinkSponsorRelationships(_sponsorKey);
+    }
+
+    function _settleSponsorRateBuckets(address _sponsorKey, uint256 _deleteTimeStamp)
+        internal
+        returns (uint256 totalRewards)
+    {
+        AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
+        mapping(address => RecipientStruct) storage recipientMap = sponsorAccount.recipientMap;
+        address[] storage recipientKeys = sponsorAccount.recipientKeys;
+        for (uint256 idx = 0; idx < recipientKeys.length; idx++) {
+            address recipientKey = recipientKeys[idx];
+            RecipientStruct storage recipientRecord = recipientMap[recipientKey];
+            if (!recipientRecord.inserted) continue;
+            totalRewards += updateRecipientRateListRewards(
+                _sponsorKey,
+                recipientRecord,
+                _deleteTimeStamp
+            );
+        }
+    }
+
+    function _unlinkSponsorRelationships(address _sponsorKey) internal {
+        AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
+        while (sponsorAccount.recipientKeys.length > 0) {
+            uint256 recipientIndex = sponsorAccount.recipientKeys.length - 1;
+            address recipientKey = sponsorAccount.recipientKeys[recipientIndex];
+            RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[recipientKey];
+            if (recipientRecord.inserted) {
+                _unlinkRecipientRateRelationships(recipientKey, recipientRecord);
+                recipientRecord.inserted = false;
+            }
+            deleteAccountRecordFromSearchKeys(_sponsorKey, accountMap[recipientKey].sponsorKeys);
+            sponsorAccount.recipientKeys.pop();
+        }
+    }
+
+    function _unlinkRecipientRateRelationships(
+        address _recipientKey,
+        RecipientStruct storage _recipientRecord
+    )
+        internal
+    {
+        while (_recipientRecord.recipientRateKeys.length > 0) {
+            uint256 rateIndex = _recipientRecord.recipientRateKeys.length - 1;
+            uint256 recipientRateKey = _recipientRecord.recipientRateKeys[rateIndex];
+            RecipientRateStruct storage recipientTransaction =
+                _recipientRecord.recipientRateMap[recipientRateKey];
+            if (recipientTransaction.inserted) {
+                _unlinkAgentRelationships(_recipientKey, recipientTransaction);
+                recipientTransaction.inserted = false;
+            }
+            _recipientRecord.recipientRateKeys.pop();
+        }
+    }
+
+    function _unlinkAgentRelationships(
+        address _recipientKey,
+        RecipientRateStruct storage _recipientTransaction
+    )
+        internal
+    {
+        while (_recipientTransaction.agentKeys.length > 0) {
+            uint256 agentIndex = _recipientTransaction.agentKeys.length - 1;
+            address agentKey = _recipientTransaction.agentKeys[agentIndex];
+            AgentStruct storage agentRecord = _recipientTransaction.agentMap[agentKey];
+            if (agentRecord.inserted) {
+                _unlinkAgentRateRelationships(agentRecord);
+                agentRecord.inserted = false;
+            }
+            deleteAccountRecordFromSearchKeys(agentKey, accountMap[_recipientKey].agentKeys);
+            deleteAccountRecordFromSearchKeys(_recipientKey, accountMap[agentKey].parentRecipientKeys);
+            _recipientTransaction.agentKeys.pop();
+        }
+    }
+
+    function _unlinkAgentRateRelationships(AgentStruct storage _agentRecord) internal {
+        while (_agentRecord.agentRateKeys.length > 0) {
+            uint256 rateIndex = _agentRecord.agentRateKeys.length - 1;
+            uint256 agentRateKey = _agentRecord.agentRateKeys[rateIndex];
+            AgentRateStruct storage agentTransaction = _agentRecord.agentRateMap[agentRateKey];
+            if (agentTransaction.inserted) {
+                agentTransaction.inserted = false;
+            }
+            _agentRecord.agentRateKeys.pop();
+        }
     }
 
     function deleteRecipient(address _sponsorKey, address _recipientKey)

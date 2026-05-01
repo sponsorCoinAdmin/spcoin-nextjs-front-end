@@ -125,9 +125,11 @@ const OWNER_ONLY_WRITE_METHODS = new Set<string>([
   'setLowerRecipientRate',
   'setUpperRecipientRate',
   'setRecipientRateRange',
+  'setRecipientRateIncrement',
   'setLowerAgentRate',
   'setUpperAgentRate',
   'setAgentRateRange',
+  'setAgentRateIncrement',
 ]);
 
 const OWNER_OR_ACCOUNT_WRITE_METHODS = new Set<string>([

@@ -117,9 +117,11 @@ export type SpCoinWriteMethod =
   | 'setLowerRecipientRate'
   | 'setUpperRecipientRate'
   | 'setRecipientRateRange'
+  | 'setRecipientRateIncrement'
   | 'setLowerAgentRate'
   | 'setUpperAgentRate'
-  | 'setAgentRateRange';
+  | 'setAgentRateRange'
+  | 'setAgentRateIncrement';
 
 export type SpCoinWriteAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 
@@ -133,9 +135,11 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'setLowerRecipientRate',
   'setUpperRecipientRate',
   'setRecipientRateRange',
+  'setRecipientRateIncrement',
   'setLowerAgentRate',
   'setUpperAgentRate',
   'setAgentRateRange',
+  'setAgentRateIncrement',
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
@@ -205,9 +209,11 @@ const OWNER_ONLY_WRITE_METHODS = new Set<SpCoinWriteMethod>([
   'setLowerRecipientRate',
   'setUpperRecipientRate',
   'setRecipientRateRange',
+  'setRecipientRateIncrement',
   'setLowerAgentRate',
   'setUpperAgentRate',
   'setAgentRateRange',
+  'setAgentRateIncrement',
 ]);
 
 const OWNER_OR_ACCOUNT_WRITE_METHODS = new Set<SpCoinWriteMethod>([

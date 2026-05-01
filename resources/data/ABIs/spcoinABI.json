@@ -781,6 +781,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getAgentRateIncrement",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -885,6 +898,40 @@
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAgentRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1240,7 +1287,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "lastUpdateTransactionDate",
+        "name": "creationTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdateTimeStamp",
         "type": "uint256"
       },
       {
@@ -1276,6 +1328,40 @@
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_setKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRateTransactionSetTransactionIdsPage",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "page",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1324,6 +1410,19 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getRecipientRateIncrement",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1414,6 +1513,40 @@
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1622,6 +1755,344 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorAgentRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorAgentRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorContainerRecipientKeys",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorContainerRecipientKeysPage",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "page",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "recipientRateTransactionSetKeys",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "agentRateTransactionSetKeys",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorRecipientBoxAgentRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorRecipientBoxAgentRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorRecipientBoxRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "recipientRateTransactionSetKeys",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "agentRateTransactionSetKeys",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorRecipientBoxRecipientRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorRecipientBoxRecipientRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorRecipientRateTransactionSetKeys",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorRecipientRateTransactionSetKeysPage",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "page",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_transactionId",
         "type": "uint256"
@@ -1746,6 +2217,19 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "newAgentRateIncrement",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAgentRateIncrement",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "newLowerAgentRate",
         "type": "uint256"
       },
@@ -1769,6 +2253,19 @@
       }
     ],
     "name": "setInflationRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newRecipientRateIncrement",
+        "type": "uint256"
+      }
+    ],
+    "name": "setRecipientRateIncrement",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

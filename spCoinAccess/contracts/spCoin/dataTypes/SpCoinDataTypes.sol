@@ -27,8 +27,10 @@ contract SpCoinDataTypes {
     uint    internal annualInflation = 10;
     uint256 internal lowerRecipientRate = 20;
     uint256 internal upperRecipientRate = 100;
+    uint256 internal recipientRateIncrement = 1;
     uint256 internal lowerAgentRate = 2;
     uint256 internal upperAgentRate = 10;
+    uint256 internal agentRateIncrement = 1;
     uint    public creationTime = block.timestamp;
     uint256 public totalStakedSPCoins = 0; // Coins Owned but steaked to recipients
     uint256 public totalStakingRewards = 0; // Coins not owned but Recipiented
@@ -60,6 +62,9 @@ contract SpCoinDataTypes {
     mapping(address => AccountStruct) accountMap;
     mapping(address => mapping(bytes32 => bool)) internal accountHasRecipientRateTransactionSetKey;
     mapping(address => mapping(bytes32 => bool)) internal accountHasAgentRateTransactionSetKey;
+    mapping(address => SponsorContainerStruct) internal sponsorContainerMap;
+    mapping(address => mapping(bytes32 => bool)) internal sponsorHasRecipientRateTransactionSetKey;
+    mapping(address => mapping(bytes32 => bool)) internal sponsorHasAgentRateTransactionSetKey;
 
     uint UNDEFINED = 0;
     uint SPONSOR = 2;
@@ -85,6 +90,22 @@ contract SpCoinDataTypes {
         // STAKING REWARDS MAPPINGS
         uint256 stakingRewards; // Coins not owned but Recipiented
         mapping(string  => RewardTypeStruct) rewardsMap;
+    }
+
+    struct SponsorRecipientBoxStruct {
+        address recipientKey;
+        bytes32[] recipientRateTransactionSetKeys;
+        bytes32[] agentRateTransactionSetKeys;
+        bool inserted;
+    }
+
+    struct SponsorContainerStruct {
+        address sponsorKey;
+        address[] recipientKeys;
+        mapping(address => SponsorRecipientBoxStruct) recipientBoxMap;
+        bytes32[] recipientRateTransactionSetKeys;
+        bytes32[] agentRateTransactionSetKeys;
+        bool inserted;
     }
 
     /// STRUCTURE DESIGN SECTION SECTION ////////////////////////////////////////////////////////////////////
@@ -163,7 +184,8 @@ contract SpCoinDataTypes {
     struct RateTransactionSetStruct {
         bytes32 setKey;
         uint256 rate;
-        uint256 lastUpdateTransactionDate;
+        uint256 creationTimeStamp;
+        uint256 lastUpdateTimeStamp;
         uint256 totalStaked;
         uint256 transactionCount;
         uint256[] transactionIds;

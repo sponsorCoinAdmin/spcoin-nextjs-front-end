@@ -27,9 +27,11 @@ import setInflationRate from './setInflationRate';
 import setLowerRecipientRate from './setLowerRecipientRate';
 import setUpperRecipientRate from './setUpperRecipientRate';
 import setRecipientRateRange from './setRecipientRateRange';
+import setRecipientRateIncrement from './setRecipientRateIncrement';
 import setLowerAgentRate from './setLowerAgentRate';
 import setUpperAgentRate from './setUpperAgentRate';
 import setAgentRateRange from './setAgentRateRange';
+import setAgentRateIncrement from './setAgentRateIncrement';
 
 export const SPCOIN_WRITE_METHOD_DEFS = {
   addRecipientTransaction,
@@ -60,7 +62,9 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   setLowerRecipientRate,
   setUpperRecipientRate,
   setRecipientRateRange,
+  setRecipientRateIncrement,
   setLowerAgentRate,
   setUpperAgentRate,
   setAgentRateRange,
+  setAgentRateIncrement,
 };

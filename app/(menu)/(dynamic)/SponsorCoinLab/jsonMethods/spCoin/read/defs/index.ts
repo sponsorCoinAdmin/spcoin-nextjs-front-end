@@ -22,9 +22,16 @@ import getAccountRewardTransactionRecord from './getAccountRewardTransactionReco
 import getAccountTransactionList from './getAccountTransactionList';
 import getTransactionList from './getTransactionList';
 import getTransactionRecord from './getTransactionRecord';
+import getRateTransactionSetTransactionIdsPage from './getRateTransactionSetTransactionIdsPage';
+import getSponsorContainerRecipientKeysPage from './getSponsorContainerRecipientKeysPage';
+import getSponsorRecipientRateTransactionSetKeysPage from './getSponsorRecipientRateTransactionSetKeysPage';
+import getSponsorAgentRateTransactionSetKeysPage from './getSponsorAgentRateTransactionSetKeysPage';
+import getSponsorRecipientBoxRecipientRateTransactionSetKeysPage from './getSponsorRecipientBoxRecipientRateTransactionSetKeysPage';
+import getSponsorRecipientBoxAgentRateTransactionSetKeysPage from './getSponsorRecipientBoxAgentRateTransactionSetKeysPage';
 import getRecipientTransactionIdKeys from './getRecipientTransactionIdKeys';
 import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
 import getRecipientRateList from './getRecipientRateList';
+import getRecipientRateTransactionSetKeysPage from './getRecipientRateTransactionSetKeysPage';
 import getRecipientTransaction from './getRecipientTransaction';
 import getRecipientTransactionList from './getRecipientTransactionList';
 import getRecipientRateAgentList from './getRecipientRateAgentList';
@@ -32,12 +39,15 @@ import getRecipientTransactionAt from './getRecipientTransactionAt';
 import getLowerRecipientRate from './getLowerRecipientRate';
 import getUpperRecipientRate from './getUpperRecipientRate';
 import getRecipientRateRange from './getRecipientRateRange';
+import getRecipientRateIncrement from './getRecipientRateIncrement';
 import getRecipient from './getRecipient';
 import getRecipientRecordList from './getRecipientRecordList';
 import getAgentRateList from './getAgentRateList';
+import getAgentRateTransactionSetKeysPage from './getAgentRateTransactionSetKeysPage';
 import getLowerAgentRate from './getLowerAgentRate';
 import getUpperAgentRate from './getUpperAgentRate';
 import getAgentRateRange from './getAgentRateRange';
+import getAgentRateIncrement from './getAgentRateIncrement';
 import getAgentTransaction from './getAgentTransaction';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
 import getRecipientTransactionCount from './getRecipientTransactionCount';
@@ -99,10 +109,17 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountTransactionList,
   getTransactionList,
   getTransactionRecord,
+  getRateTransactionSetTransactionIdsPage,
+  getSponsorContainerRecipientKeysPage,
+  getSponsorRecipientRateTransactionSetKeysPage,
+  getSponsorAgentRateTransactionSetKeysPage,
+  getSponsorRecipientBoxRecipientRateTransactionSetKeysPage,
+  getSponsorRecipientBoxAgentRateTransactionSetKeysPage,
   getRecipientTransactionIdKeys,
   getAgentTransactionIdKeys,
   getRecipientRateKeys: getRecipientRateList,
   getRecipientRateList,
+  getRecipientRateTransactionSetKeysPage,
   getRecipientTransaction,
   getRecipientTransactionList,
   getRecipientRateAgentKeys: getRecipientRateAgentList,
@@ -110,13 +127,16 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getLowerRecipientRate,
   getUpperRecipientRate,
   getRecipientRateRange,
+  getRecipientRateIncrement,
   getRecipient,
   getRecipientRecordList,
   getAgentRateKeys: getAgentRateList,
   getAgentRateList,
+  getAgentRateTransactionSetKeysPage,
   getLowerAgentRate,
   getUpperAgentRate,
   getAgentRateRange,
+  getAgentRateIncrement,
   getAgentTransaction,
   getAgentTotalRecipient,
   getRecipientTransactionCount,

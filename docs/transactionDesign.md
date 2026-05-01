@@ -27,6 +27,7 @@ Core rules:
 - Full transaction records are not copied into sponsor, recipient, or agent accounts.
 - Rate buckets are first-class on-chain indexes because rewards need efficient same-rate totals.
 - Accounts keep lists of rate-bucket keys, not lists of every transaction ID.
+- Sponsor containers keep sponsor-owned rate-bucket keys for sponsor-specific reads without duplicating transactions.
 - The rate bucket stores the transaction IDs and aggregate totals for that rate/context.
 - The sponsor does not need a sponsor transaction list unless a future on-chain read requires it.
 
@@ -37,6 +38,7 @@ masterTransactionIdMap[transactionId] -> full immutable transaction
 
 accountMap[recipientKey].recipientRateTransactionSetKeys -> rate bucket keys
 accountMap[agentKey].agentRateTransactionSetKeys -> rate bucket keys
+sponsorContainerMap[sponsorKey] -> sponsor-owned rate bucket keys
 
 rateTransactionSetMap[setKey] -> totals and transaction IDs for one rate bucket
 ```
@@ -109,7 +111,8 @@ Recommended set:
 struct RateTransactionSetStruct {
     bytes32 setKey;
     uint256 rate;
-    uint256 lastUpdateTransactionDate;
+    uint256 creationTimeStamp;
+    uint256 lastUpdateTimeStamp;
     uint256 totalStaked;
     uint256 transactionCount;
     uint256[] transactionIds;
@@ -123,12 +126,24 @@ Shared map:
 mapping(bytes32 => RateTransactionSetStruct) rateTransactionSetMap;
 ```
 
+There are two rate transaction set types:
+
+- recipient rate sets, where `rate` is the `recipientRate`
+- agent rate sets, where `rate` is the `agentRate`
+
+Both types use the same storage shape. The set key domain and settlement helper decide which reward path applies.
+
 The set is where same-rate reward math should read totals from:
 
 ```solidity
 rateTransactionSetMap[setKey].totalStaked;
 rateTransactionSetMap[setKey].transactionCount;
+rateTransactionSetMap[setKey].lastUpdateTimeStamp;
 ```
+
+`creationTimeStamp` is the timestamp when the bucket was first created.
+
+`lastUpdateTimeStamp` is the timestamp through which rewards have been settled for the bucket. It is not just the latest transaction date. Before a new transaction amount is added to an existing bucket, rewards should be calculated from `lastUpdateTimeStamp` to the current transaction timestamp, then `lastUpdateTimeStamp` should move forward.
 
 The set also keeps transaction IDs for auditing and detailed reads:
 
@@ -196,6 +211,60 @@ Why the agent key includes `recipientRate`:
 
 Use separate domains for recipient and agent buckets so the two bucket types cannot collide even if the addresses and rates happen to encode similarly.
 
+## Rate Limits And Increments
+
+The owner should be able to limit valid rate values so rate buckets do not explode across every integer in the configured range.
+
+Current rate controls:
+
+```solidity
+uint256 internal lowerRecipientRate = 20;
+uint256 internal upperRecipientRate = 100;
+uint256 internal recipientRateIncrement = 1;
+
+uint256 internal lowerAgentRate = 2;
+uint256 internal upperAgentRate = 10;
+uint256 internal agentRateIncrement = 1;
+```
+
+Validation rule:
+
+```text
+rate >= lowerRate
+rate <= upperRate
+(rate - lowerRate) % rateIncrement == 0
+```
+
+`recipientRateIncrement` and `agentRateIncrement` default to `1`, which preserves the existing behavior where every integer rate in range is valid.
+
+The contract owner can tighten the allowed rate spacing with owner-only setters:
+
+```text
+setRecipientRateIncrement(newRecipientRateIncrement)
+setAgentRateIncrement(newAgentRateIncrement)
+```
+
+Zero is rejected because the increment is used in modulo validation.
+
+Example:
+
+```text
+lowerRecipientRate = 20
+upperRecipientRate = 100
+recipientRateIncrement = 5
+```
+
+Allowed recipient rates become `20, 25, 30, ... 100`. This reduces the maximum number of possible recipient buckets for a sponsor/recipient branch from every integer rate in the range to the configured step count.
+
+Recipient rate increments are the bigger gas lever because recipient rates have the wider default range. Agent rate increments are still useful for symmetry and future configuration.
+
+Implementation status:
+
+- completed in `spCoinAccess/contracts/spCoin/dataTypes/SpCoinDataTypes.sol`
+- completed in `spCoinAccess/contracts/spCoin/utils/Security.sol`
+- rate increment setters are owner-only through `onlyRootAdmin`
+- transaction creation validates rate range and rate increment before writing rate buckets
+
 ## Account Structure
 
 Accounts are role-neutral. The same address may act as sponsor, recipient, and agent in different relationships.
@@ -238,7 +307,251 @@ The sponsor can still be found from each transaction record:
 masterTransactionIdMap[txId].sponsorKey
 ```
 
-Sponsor history should be derived off-chain from events or by filtering transaction records.
+Sponsor full transaction history can be derived off-chain from events or by filtering transaction records. Sponsor-specific on-chain reads can start from the sponsor container's rate-set keys, then load bucket transaction IDs only when details are needed.
+
+## Sponsor Containers
+
+Sponsor containers are lightweight indexes for sponsor-specific reads. They store rate set keys, not transaction IDs or full transaction records.
+
+Recommended container:
+
+```solidity
+struct SponsorRecipientBoxStruct {
+    address recipientKey;
+    bytes32[] recipientRateTransactionSetKeys;
+    bytes32[] agentRateTransactionSetKeys;
+    bool inserted;
+}
+
+struct SponsorContainerStruct {
+    address sponsorKey;
+    address[] recipientKeys;
+    mapping(address => SponsorRecipientBoxStruct) recipientBoxMap;
+    bytes32[] recipientRateTransactionSetKeys;
+    bytes32[] agentRateTransactionSetKeys;
+    bool inserted;
+}
+```
+
+Shared map:
+
+```solidity
+mapping(address => SponsorContainerStruct) sponsorContainerMap;
+```
+
+Meaning:
+
+- `recipientKeys` contains each recipient with at least one sponsor-owned rate bucket.
+- `recipientBoxMap[recipientKey].recipientRateTransactionSetKeys` contains direct recipient buckets for that sponsor -> recipient branch.
+- `recipientBoxMap[recipientKey].agentRateTransactionSetKeys` contains agent-mediated buckets for that sponsor -> recipient branch.
+- `recipientRateTransactionSetKeys` contains direct recipient rate buckets owned by the sponsor.
+- `agentRateTransactionSetKeys` contains agent rate buckets owned by the sponsor.
+- The full transaction details still live once in `masterTransactionIdMap`.
+- The bucket details and transaction IDs still live once in `rateTransactionSetMap`.
+
+Use membership maps so each sponsor container appends a rate set key once:
+
+```solidity
+mapping(address => mapping(bytes32 => bool)) sponsorHasRecipientRateTransactionSetKey;
+mapping(address => mapping(bytes32 => bool)) sponsorHasAgentRateTransactionSetKey;
+```
+
+Recommended helpers:
+
+```solidity
+function _getSponsorRecipientBox(address sponsorKey, address recipientKey)
+    internal
+    returns (SponsorRecipientBoxStruct storage box)
+{
+    SponsorContainerStruct storage container = sponsorContainerMap[sponsorKey];
+    if (!container.inserted) {
+        container.sponsorKey = sponsorKey;
+        container.inserted = true;
+    }
+
+    box = container.recipientBoxMap[recipientKey];
+    if (!box.inserted) {
+        box.recipientKey = recipientKey;
+        box.inserted = true;
+        container.recipientKeys.push(recipientKey);
+    }
+}
+
+function _addSponsorRecipientRateTransactionSetKey(
+    address sponsorKey,
+    address recipientKey,
+    bytes32 setKey
+) internal {
+    if (!sponsorHasRecipientRateTransactionSetKey[sponsorKey][setKey]) {
+        sponsorHasRecipientRateTransactionSetKey[sponsorKey][setKey] = true;
+        sponsorContainerMap[sponsorKey].recipientRateTransactionSetKeys.push(setKey);
+        _getSponsorRecipientBox(sponsorKey, recipientKey)
+            .recipientRateTransactionSetKeys.push(setKey);
+    }
+}
+
+function _addSponsorAgentRateTransactionSetKey(
+    address sponsorKey,
+    address recipientKey,
+    bytes32 setKey
+) internal {
+    if (!sponsorHasAgentRateTransactionSetKey[sponsorKey][setKey]) {
+        sponsorHasAgentRateTransactionSetKey[sponsorKey][setKey] = true;
+        sponsorContainerMap[sponsorKey].agentRateTransactionSetKeys.push(setKey);
+        _getSponsorRecipientBox(sponsorKey, recipientKey)
+            .agentRateTransactionSetKeys.push(setKey);
+    }
+}
+```
+
+Gas rule:
+
+```text
+Only append sponsor-container rate set keys when a new rate bucket is created.
+Existing-bucket transactions should settle and update the bucket without adding another sponsor-container key.
+```
+
+This keeps sponsor-specific reads efficient without creating a sponsor transaction ledger.
+
+Implemented read helpers:
+
+```text
+getSponsorRecipientRateTransactionSetKeys(sponsorKey)
+getSponsorAgentRateTransactionSetKeys(sponsorKey)
+getSponsorRateTransactionSetKeys(sponsorKey)
+getSponsorContainerRecipientKeys(sponsorKey)
+getSponsorRecipientBoxRecipientRateTransactionSetKeys(sponsorKey, recipientKey)
+getSponsorRecipientBoxAgentRateTransactionSetKeys(sponsorKey, recipientKey)
+getSponsorRecipientBoxRateTransactionSetKeys(sponsorKey, recipientKey)
+```
+
+Implementation status:
+
+- completed in `spCoinAccess/contracts/spCoin/dataTypes/SpCoinDataTypes.sol`
+- completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- sponsor containers append only when a new rate bucket is created
+- sponsor recipient boxes append only when a new sponsor-owned branch bucket is created
+
+## Raw Transaction Storage Paths
+
+Raw/full transaction records are stored once in `masterTransactionIdMap`.
+
+Direct recipient transaction path:
+
+```text
+sponsor container -> recipientRateTransactionSetKeys
+sponsor container -> recipientBoxMap[recipientKey].recipientRateTransactionSetKeys
+recipient account -> recipientRateTransactionSetKeys
+rateTransactionSetMap[setKey] -> transactionIds
+masterTransactionIdMap[transactionId] -> full transaction record
+```
+
+Agent transaction path:
+
+```text
+sponsor container -> agentRateTransactionSetKeys
+sponsor container -> recipientBoxMap[recipientKey].agentRateTransactionSetKeys
+agent account -> agentRateTransactionSetKeys
+rateTransactionSetMap[setKey] -> transactionIds
+masterTransactionIdMap[transactionId] -> full transaction record
+```
+
+The sponsor container, recipient account, and agent account do not store raw transactions. They store rate-set keys only. The rate set stores transaction IDs and aggregate reward state. The master transaction map stores the raw transaction details.
+
+Implementation status:
+
+- agent transactions write the full record once to `masterTransactionIdMap`
+- agent rate buckets append the transaction ID to `rateTransactionSetMap[setKey].transactionIds`
+- agent accounts append the agent rate set key once through `_addAgentRateTransactionSetKey`
+- sponsor containers append the sponsor-owned agent rate set key once through `_addSponsorAgentRateTransactionSetKey`
+
+## Pagination Requirement
+
+Pagination should be added for read traversal before any paginated cleanup/delete workflow is attempted.
+
+Pagination rule:
+
+```text
+Page IDs and keys first.
+Do not page full transaction records unless a UI requirement proves it is needed.
+```
+
+This keeps read calls small and lets the caller load detailed records only for the visible page.
+
+Preferred return shape:
+
+```solidity
+returns (
+    T[] memory page,
+    uint256 total
+)
+```
+
+Where `T` is `uint256`, `bytes32`, or `address` depending on the list being paged.
+
+Page behavior:
+
+```text
+offset >= total -> empty page, total
+limit == 0 -> empty page, total
+offset + limit past total -> truncated page, total
+```
+
+First public read to add later:
+
+```solidity
+getRateTransactionSetTransactionIdsPage(
+    bytes32 setKey,
+    uint256 offset,
+    uint256 limit
+)
+    external
+    view
+    returns (uint256[] memory page, uint256 total);
+```
+
+Top-level sponsor traversal reads:
+
+```solidity
+getSponsorContainerRecipientKeysPage(sponsorKey, offset, limit)
+getSponsorRecipientRateTransactionSetKeysPage(sponsorKey, offset, limit)
+getSponsorAgentRateTransactionSetKeysPage(sponsorKey, offset, limit)
+```
+
+Nested sponsor recipient-box reads:
+
+```solidity
+getSponsorRecipientBoxRecipientRateTransactionSetKeysPage(sponsorKey, recipientKey, offset, limit)
+getSponsorRecipientBoxAgentRateTransactionSetKeysPage(sponsorKey, recipientKey, offset, limit)
+```
+
+Account-facing traversal reads:
+
+```solidity
+getRecipientRateTransactionSetKeysPage(recipientKey, offset, limit)
+getAgentRateTransactionSetKeysPage(agentKey, offset, limit)
+```
+
+Reusable internal helpers:
+
+```solidity
+_sliceUint256Array(uint256[] storage source, uint256 offset, uint256 limit)
+_sliceBytes32Array(bytes32[] storage source, uint256 offset, uint256 limit)
+_sliceAddressArray(address[] storage source, uint256 offset, uint256 limit)
+```
+
+Implementation status:
+
+- internal slice helpers completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- `getRateTransactionSetTransactionIdsPage` completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- `getRateTransactionSetTransactionIdsPage` ABI and SponsorCoinLab read wiring completed
+- top-level sponsor-container paginated read methods completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- top-level sponsor-container paginated read methods ABI and SponsorCoinLab read wiring completed
+- nested sponsor recipient-box public paginated read methods completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- nested sponsor recipient-box public paginated read methods ABI and SponsorCoinLab read wiring completed
+- account-facing public paginated read methods completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- account-facing public paginated read methods ABI and SponsorCoinLab read wiring completed
+- paginated cleanup/delete flows are intentionally deferred
 
 ## Set Membership Tracking
 
@@ -283,13 +596,37 @@ This means a transaction only grows the account key list when it creates a new r
 
 ## Write Rules
 
+All transaction writes should settle the existing bucket before the new transaction amount is added.
+
+```text
+Existing stake earns from lastUpdateTimeStamp to the new transaction timestamp.
+The new transaction amount starts earning only after that timestamp.
+```
+
 ### Direct Recipient Transaction
 
 When no agent is involved:
 
 ```solidity
+uint256 transactionTimeStamp = block.timestamp;
 uint256 txId = reserveTransactionId();
 bytes32 setKey = getRecipientRateTransactionSetKey(sponsorKey, recipientKey, recipientRate);
+
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+if (!set.inserted) {
+    set.setKey = setKey;
+    set.rate = recipientRate;
+    set.creationTimeStamp = transactionTimeStamp;
+    set.lastUpdateTimeStamp = transactionTimeStamp;
+    set.inserted = true;
+} else {
+    _settleRecipientRateTransactionSet(
+        sponsorKey,
+        recipientKey,
+        recipientRate,
+        transactionTimeStamp
+    );
+}
 
 masterTransactionIdMap[txId] = TransactionRecordStruct({
     transactionId: txId,
@@ -299,23 +636,16 @@ masterTransactionIdMap[txId] = TransactionRecordStruct({
     agentKey: address(0),
     agentRate: 0,
     stakingRewards: stakingRewards,
-    insertionTime: block.timestamp,
+    insertionTime: transactionTimeStamp,
     inserted: true
 });
 
 _addRecipientRateTransactionSetKey(recipientKey, setKey);
-
-RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
-if (!set.inserted) {
-    set.setKey = setKey;
-    set.rate = recipientRate;
-    set.inserted = true;
-}
+_addSponsorRecipientRateTransactionSetKey(sponsorKey, recipientKey, setKey);
 
 set.transactionIds.push(txId);
 set.totalStaked += stakingRewards;
 set.transactionCount += 1;
-set.lastUpdateTransactionDate = block.timestamp;
 ```
 
 Storage intent:
@@ -323,8 +653,10 @@ Storage intent:
 ```text
 1 master transaction record
 1 rate bucket update
+1 reward settlement when the recipient rate bucket already exists
 1 transaction-id append inside the rate bucket
 0 account key-list append unless this is a new recipient rate bucket
+0 sponsor-container append unless this is a new sponsor recipient rate bucket
 ```
 
 ### Agent Transaction
@@ -332,6 +664,7 @@ Storage intent:
 When an agent is involved:
 
 ```solidity
+uint256 transactionTimeStamp = block.timestamp;
 uint256 txId = reserveTransactionId();
 bytes32 setKey = getAgentRateTransactionSetKey(
     sponsorKey,
@@ -341,6 +674,24 @@ bytes32 setKey = getAgentRateTransactionSetKey(
     agentRate
 );
 
+RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+if (!set.inserted) {
+    set.setKey = setKey;
+    set.rate = agentRate;
+    set.creationTimeStamp = transactionTimeStamp;
+    set.lastUpdateTimeStamp = transactionTimeStamp;
+    set.inserted = true;
+} else {
+    _settleAgentRateTransactionSet(
+        sponsorKey,
+        recipientKey,
+        recipientRate,
+        agentKey,
+        agentRate,
+        transactionTimeStamp
+    );
+}
+
 masterTransactionIdMap[txId] = TransactionRecordStruct({
     transactionId: txId,
     sponsorKey: sponsorKey,
@@ -349,23 +700,16 @@ masterTransactionIdMap[txId] = TransactionRecordStruct({
     agentKey: agentKey,
     agentRate: agentRate,
     stakingRewards: stakingRewards,
-    insertionTime: block.timestamp,
+    insertionTime: transactionTimeStamp,
     inserted: true
 });
 
 _addAgentRateTransactionSetKey(agentKey, setKey);
-
-RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
-if (!set.inserted) {
-    set.setKey = setKey;
-    set.rate = agentRate;
-    set.inserted = true;
-}
+_addSponsorAgentRateTransactionSetKey(sponsorKey, recipientKey, setKey);
 
 set.transactionIds.push(txId);
 set.totalStaked += stakingRewards;
 set.transactionCount += 1;
-set.lastUpdateTransactionDate = block.timestamp;
 ```
 
 Storage intent:
@@ -373,8 +717,10 @@ Storage intent:
 ```text
 1 master transaction record
 1 rate bucket update
+1 reward settlement when the agent rate bucket already exists
 1 transaction-id append inside the rate bucket
 0 account key-list append unless this is a new agent rate bucket
+0 sponsor-container append unless this is a new sponsor agent rate bucket
 ```
 
 The recipient context is still present on the transaction record and encoded into the agent set key, so the transaction can be grouped under the recipient off-chain without writing it into a recipient transaction list.
@@ -409,10 +755,108 @@ The aggregate values are already grouped by rate:
 set.rate;
 set.totalStaked;
 set.transactionCount;
-set.lastUpdateTransactionDate;
+set.creationTimeStamp;
+set.lastUpdateTimeStamp;
 ```
 
 This is the main reason rate buckets belong on-chain.
+
+Reward settlement should use separate helpers for the two rate paths. The storage shape is shared, but the reward cascade is different.
+
+Recipient settlement:
+
+```solidity
+function _settleRecipientRateTransactionSet(
+    address sponsorKey,
+    address recipientKey,
+    uint256 recipientRate,
+    uint256 updateTimeStamp
+) internal returns (uint256 rewards) {
+    bytes32 setKey = getRecipientRateTransactionSetKey(
+        sponsorKey,
+        recipientKey,
+        recipientRate
+    );
+    RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+
+    if (!set.inserted || set.lastUpdateTimeStamp >= updateTimeStamp) return 0;
+
+    rewards = calculateStakingRewards(
+        set.totalStaked,
+        set.lastUpdateTimeStamp,
+        updateTimeStamp,
+        recipientRate
+    );
+
+    if (rewards > 0) {
+        depositStakingRewards(
+            RECIPIENT,
+            sponsorKey,
+            recipientKey,
+            recipientRate,
+            address(0),
+            0,
+            rewards
+        );
+    }
+
+    set.lastUpdateTimeStamp = updateTimeStamp;
+}
+```
+
+Agent settlement:
+
+```solidity
+function _settleAgentRateTransactionSet(
+    address sponsorKey,
+    address recipientKey,
+    uint256 recipientRate,
+    address agentKey,
+    uint256 agentRate,
+    uint256 updateTimeStamp
+) internal returns (uint256 rewards) {
+    bytes32 setKey = getAgentRateTransactionSetKey(
+        sponsorKey,
+        recipientKey,
+        recipientRate,
+        agentKey,
+        agentRate
+    );
+    RateTransactionSetStruct storage set = rateTransactionSetMap[setKey];
+
+    if (!set.inserted || set.lastUpdateTimeStamp >= updateTimeStamp) return 0;
+
+    rewards = calculateStakingRewards(
+        set.totalStaked,
+        set.lastUpdateTimeStamp,
+        updateTimeStamp,
+        agentRate
+    );
+
+    if (rewards > 0) {
+        depositStakingRewards(
+            AGENT,
+            sponsorKey,
+            recipientKey,
+            recipientRate,
+            agentKey,
+            agentRate,
+            rewards
+        );
+    }
+
+    set.lastUpdateTimeStamp = updateTimeStamp;
+}
+```
+
+Both helpers must receive the actual `sponsorKey`. They should not infer the sponsor from `msg.sender`, because admin or delete workflows may settle rewards on behalf of another sponsor.
+
+Implementation status:
+
+- completed in `spCoinAccess/contracts/spCoin/dataTypes/SpCoinDataTypes.sol`
+- completed in `spCoinAccess/contracts/spCoin/rewardsManagement/RewardsManager.sol`
+- completed in `spCoinAccess/contracts/spCoin/accounts/Transactions.sol`
+- verified with `npm run compare:spcoin:size` and `npm run -s typecheck`
 
 ## Events
 
@@ -645,6 +1089,51 @@ enum TransactionStatus {
 
 But do not add this until the workflow needs it.
 
+### deleteSponsor
+
+`deleteSponsor(sponsorKey)` removes the sponsor role relationships for an account. It must not erase the account or its historical transaction records.
+
+Before unlinking any sponsor relationships, `deleteSponsor` must settle every active rate bucket under that sponsor at one delete timestamp.
+
+Conceptually:
+
+```text
+uint256 deleteTimeStamp = block.timestamp;
+
+for each active recipient under sponsorKey:
+    settle each active recipient rate bucket for sponsorKey -> recipient
+    settle each active agent rate bucket for sponsorKey -> recipient -> agent
+    unlink reciprocal sponsor/recipient/agent navigation links as needed
+```
+
+The settlement step uses the aggregate bucket state:
+
+```solidity
+calculateStakingRewards(
+    set.totalStaked,
+    set.lastUpdateTimeStamp,
+    deleteTimeStamp,
+    set.rate
+);
+```
+
+Then it moves the bucket forward:
+
+```solidity
+set.lastUpdateTimeStamp = deleteTimeStamp;
+```
+
+`deleteSponsor` does not need a sponsor transaction-id list. It needs an active way to enumerate the sponsor's current rate buckets before unlinking. That can come from the existing sponsor -> recipient -> rate relationship path during migration, or from a future sponsor active-rate-set-key index if the tree storage is fully replaced by `rateTransactionSetMap`.
+
+If root/admin calls `deleteSponsor`, reward settlement must still use the explicit `sponsorKey`, not `msg.sender`.
+
+Implementation status:
+
+- completed in `spCoinAccess/contracts/spCoin/accounts/UnSubscribe.sol`
+- settlement uses active sponsor -> recipient -> recipient-rate -> agent -> agent-rate navigation before unlinking
+- historical `masterTransactionIdMap`, `rateTransactionSetMap`, and rate bucket transaction ID arrays are preserved
+- verified with `npm run compare:spcoin:size` and `npm run -s typecheck`
+
 ## What We Are Avoiding
 
 Avoid full transaction copies in multiple accounts.
@@ -666,12 +1155,14 @@ This creates:
 
 Also avoid writing the same `transactionId` to multiple account transaction lists unless a contract read requirement proves it is necessary.
 
-Current rule:
+Current transaction ID storage rule:
 
 ```text
 No-agent transaction -> recipient rate set only
 Agent transaction -> agent rate set only
 ```
+
+Sponsor containers may also reference those same rate sets by key, but they do not store transaction IDs directly.
 
 ## What Is Derived Off-Chain
 
@@ -688,11 +1179,55 @@ The following are on-chain because reward math needs them efficiently:
 - rate bucket transaction IDs
 - rate bucket transaction counts
 - rate bucket total staked amounts
-- rate bucket last update dates
+- rate bucket creation timestamps
+- rate bucket last reward update timestamps
+- sponsor-owned recipient and agent rate bucket keys
 
 ## ToDo: Requirements Going Forward
 
 This section holds open design and implementation requirements. As each requirement is completed and verified, move it out of this section and into the relevant completed design section above.
+
+### Agent Requirements
+
+Define the agent-facing lifecycle and read requirements.
+
+Implementation requirements:
+
+- delete record
+- cleanup
+- claim rewards
+- getAgents
+- getSponsors
+- getRecipients
+- getPendingRewards
+
+### Recipient Requirements
+
+Define the recipient-facing lifecycle and read requirements.
+
+Implementation requirements:
+
+- delete record
+- cleanup
+- claim rewards
+- getAgents
+- getSponsors
+- getRecipients
+- getPendingRewards
+
+### Sponsor Requirements
+
+Define the sponsor-facing lifecycle and read requirements.
+
+Implementation requirements:
+
+- delete record
+- cleanup
+- claim rewards
+- getAgents
+- getSponsors
+- getRecipients
+- getPendingRewards
 
 ### Account Role History Versus Active Role Predicates
 
@@ -742,6 +1277,14 @@ Preferred names:
 - `agentRateTransactionSetKey`
 - `getRecipientRateTransactionSetKey`
 - `getAgentRateTransactionSetKey`
+- `recipientRateIncrement`
+- `agentRateIncrement`
+- `getRecipientRateIncrement`
+- `setRecipientRateIncrement`
+- `getAgentRateIncrement`
+- `setAgentRateIncrement`
+- `creationTimeStamp`
+- `lastUpdateTimeStamp`
 - `TransactionAdded`
 
 Avoid ambiguous names:
@@ -759,9 +1302,11 @@ The current preferred design is:
 - one rate bucket update per transaction
 - no full transaction copies in accounts
 - no sponsor transaction-id list
+- sponsor containers store sponsor-owned recipient and agent rate-set keys
 - recipient accounts store direct recipient rate-set keys
 - agent accounts store agent rate-set keys
-- rate buckets store transaction IDs, counts, totals, and last update dates
+- rate buckets store transaction IDs, counts, totals, creation timestamps, and last reward update timestamps
+- owner-set rate increments limit the number of valid recipient and agent rate buckets
 - relationship links stay for navigation and active-account logic
 - transaction history stays append-only for auditability
 - sponsor, recipient-full, and tree history views are derived off-chain from transactions and events

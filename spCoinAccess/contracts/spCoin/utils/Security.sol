@@ -79,6 +79,15 @@ contract Security is SpCoinDataTypes {
         upperRecipientRate = newUpperRecipientRate;
     }
 
+    function getRecipientRateIncrement() external view returns (uint256) {
+        return recipientRateIncrement;
+    }
+
+    function setRecipientRateIncrement(uint256 newRecipientRateIncrement) external onlyRootAdmin {
+        require(newRecipientRateIncrement > 0, "REC_INC_ZERO");
+        recipientRateIncrement = newRecipientRateIncrement;
+    }
+
     function getAgentRateRange() external view returns (uint256, uint256) {
         return (lowerAgentRate, upperAgentRate);
     }
@@ -89,10 +98,27 @@ contract Security is SpCoinDataTypes {
         upperAgentRate = newUpperAgentRate;
     }
 
+    function getAgentRateIncrement() external view returns (uint256) {
+        return agentRateIncrement;
+    }
+
+    function setAgentRateIncrement(uint256 newAgentRateIncrement) external onlyRootAdmin {
+        require(newAgentRateIncrement > 0, "AG_INC_ZERO");
+        agentRateIncrement = newAgentRateIncrement;
+    }
+
+    function rateMatchesIncrement(uint256 rate, uint256 lowerRate, uint256 increment) internal pure returns (bool) {
+        return ((rate - lowerRate) % increment) == 0;
+    }
+
     function validateRecipientRateRange(uint256 _recipientRateKey) internal view {
         require(
             _recipientRateKey >= lowerRecipientRate && _recipientRateKey <= upperRecipientRate,
             "REC_RATE_OOR"
+        );
+        require(
+            rateMatchesIncrement(_recipientRateKey, lowerRecipientRate, recipientRateIncrement),
+            "REC_RATE_INC"
         );
     }
 
@@ -100,6 +126,10 @@ contract Security is SpCoinDataTypes {
         require(
             _agentRateKey >= lowerAgentRate && _agentRateKey <= upperAgentRate,
             "AG_RATE_OOR"
+        );
+        require(
+            rateMatchesIncrement(_agentRateKey, lowerAgentRate, agentRateIncrement),
+            "AG_RATE_INC"
         );
     }
 
