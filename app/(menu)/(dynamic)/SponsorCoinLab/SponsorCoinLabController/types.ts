@@ -3,7 +3,7 @@ import type { SpCoinContractAccess } from '../jsonMethods/shared';
 import type { MethodDef } from '../jsonMethods/shared/types';
 
 export type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
-export type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+export type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 export type FormattedPanelView = 'script' | 'output';
 export type MethodSelectionSource = 'dropdown' | 'script';
 export type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';

@@ -13,8 +13,9 @@ import {
   enrichDirectReadError,
   type MethodExecutionMeta,
 } from './methodExecutionHelpers';
+import type { AccessMethodCaller } from './useAccessMethodCaller';
 
-type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 
 const noop = () => undefined;
 
@@ -91,6 +92,7 @@ interface Params {
   ) => MethodCallEntry;
   formatOutputDisplayValue: (value: unknown) => string;
   formatFormattedPanelPayload: (payload: unknown) => string;
+  callAccessMethod?: AccessMethodCaller;
 }
 
 export function useSponsorCoinLabTreeMethods({
@@ -114,6 +116,7 @@ export function useSponsorCoinLabTreeMethods({
   buildMethodCallEntry,
   formatOutputDisplayValue,
   formatFormattedPanelPayload,
+  callAccessMethod,
 }: Params) {
   const [treeAccountOptions, setTreeAccountOptions] = useState<string[]>([]);
   const [selectedTreeAccount, setSelectedTreeAccount] = useState('');
@@ -187,7 +190,17 @@ export function useSponsorCoinLabTreeMethods({
     return { list };
   }, [mode, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
 
-  const runHeaderRead = useCallback(async () => {
+  const callTreeAccessMethod = useCallback(
+    async <T,>(methodName: string, runner: () => Promise<T> | T) => {
+      if (callAccessMethod) {
+        return callAccessMethod(methodName, () => runner());
+      }
+      return runner();
+    },
+    [callAccessMethod],
+  );
+
+  const runHeaderReadBase = useCallback(async () => {
     const startedAtMs = Date.now();
     const executionTimingCollector = traceEnabled ? createMethodTimingCollector(startedAtMs) : null;
     const call = buildMethodCallEntry('getSpCoinMetaData');
@@ -261,7 +274,12 @@ export function useSponsorCoinLabTreeMethods({
     useLocalSpCoinAccessPackage,
   ]);
 
-  const runAccountListRead = useCallback(async () => {
+  const runHeaderRead = useCallback(
+    () => callTreeAccessMethod('getSpCoinMetaData', runHeaderReadBase),
+    [callTreeAccessMethod, runHeaderReadBase],
+  );
+
+  const runAccountListReadBase = useCallback(async () => {
     const startedAtMs = Date.now();
     const executionTimingCollector = traceEnabled ? createMethodTimingCollector(startedAtMs) : null;
     const call = buildMethodCallEntry('getMasterAccountKeys');
@@ -299,7 +317,12 @@ export function useSponsorCoinLabTreeMethods({
     traceEnabled,
   ]);
 
-  const runTreeAccountsRead = useCallback(async () => {
+  const runAccountListRead = useCallback(
+    () => callTreeAccessMethod('getMasterAccountKeys', runAccountListReadBase),
+    [callTreeAccessMethod, runAccountListReadBase],
+  );
+
+  const runTreeAccountsReadBase = useCallback(async () => {
     const startedAtMs = Date.now();
     const executionTimingCollector = traceEnabled ? createMethodTimingCollector(startedAtMs) : null;
     const call = {
@@ -385,6 +408,11 @@ export function useSponsorCoinLabTreeMethods({
     useLocalSpCoinAccessPackage,
   ]);
 
+  const runTreeAccountsRead = useCallback(
+    () => callTreeAccessMethod('getTreeAccounts', runTreeAccountsReadBase),
+    [callTreeAccessMethod, runTreeAccountsReadBase],
+  );
+
   useEffect(() => {
     let cancelled = false;
 
@@ -407,13 +435,14 @@ export function useSponsorCoinLabTreeMethods({
   }, [loadTreeAccountOptions, syncTreeAccountOptions]);
 
   const loadAccountRecordForAddress = useCallback(
-    async (account: string, options?: { force?: boolean }) => {
+    async (account: string, options?: { force?: boolean; signal?: AbortSignal }) => {
       const normalizedAccount = normalizeAddressValue(account);
       let tree = options?.force ? undefined : treeAccountRecordCacheRef.current.get(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
         const response = await fetch('/api/spCoin/run-script', {
           method: 'POST',
+          signal: options?.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contractAddress: target,
@@ -483,6 +512,7 @@ export function useSponsorCoinLabTreeMethods({
         ) {
           const recipientListResponse = await fetch('/api/spCoin/run-script', {
             method: 'POST',
+            signal: options?.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contractAddress: target,
@@ -532,6 +562,7 @@ export function useSponsorCoinLabTreeMethods({
         ) {
           const agentListResponse = await fetch('/api/spCoin/run-script', {
             method: 'POST',
+            signal: options?.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contractAddress: target,
@@ -579,7 +610,7 @@ export function useSponsorCoinLabTreeMethods({
     [mode, normalizeAddressValue, requireContractAddress, rpcUrl],
   );
 
-  const runTreeDump = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
+  const runTreeDumpBase = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
     const startedAtMs = Date.now();
     const executionTimingCollector = traceEnabled ? createMethodTimingCollector(startedAtMs) : null;
     const listCall = buildMethodCallEntry('getMasterAccountKeys');
@@ -647,6 +678,12 @@ export function useSponsorCoinLabTreeMethods({
     traceEnabled,
   ]);
 
+  const runTreeDump = useCallback(
+    (accountOverride?: string, options?: { force?: boolean }) =>
+      callTreeAccessMethod('getAccountRecord', () => runTreeDumpBase(accountOverride, options)),
+    [callTreeAccessMethod, runTreeDumpBase],
+  );
+
   const refreshSelectedTreeAccount = useCallback(async () => {
     const activeAccount = String(selectedTreeAccount || '').trim();
     if (!activeAccount) {
@@ -707,21 +744,31 @@ export function useSponsorCoinLabTreeMethods({
 
         try {
           setStatus('Loading spCoin metadata...');
-          const metadataTimingCollector = createMethodTimingCollector();
-          const metadataResult = await runWithMethodTimingCollector(metadataTimingCollector, async () =>
-            runSpCoinReadMethod({
-              selectedMethod: 'getSpCoinMetaData',
-              spReadParams: [],
-              coerceParamValue,
-              stringifyResult,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              requireContractAddress,
-              ensureReadRunner,
-              appendLog: noop,
-              setStatus: noop,
-            }),
-          );
-          const metadataMeta = buildExecutionMeta(metadataTimingCollector);
+          const loadMetadata = async () => {
+            const metadataTimingCollector = createMethodTimingCollector();
+            const metadataResult = await runWithMethodTimingCollector(metadataTimingCollector, async () =>
+              runSpCoinReadMethod({
+                selectedMethod: 'getSpCoinMetaData',
+                spReadParams: [],
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog: noop,
+                setStatus: noop,
+              }),
+            );
+            return {
+              metadataResult,
+              metadataMeta: buildExecutionMeta(metadataTimingCollector),
+            };
+          };
+          const loadedMetadata = callAccessMethod
+            ? await callAccessMethod('getSpCoinMetaData', () => loadMetadata())
+            : await loadMetadata();
+          if (!loadedMetadata) return 'handled';
+          const { metadataResult, metadataMeta } = loadedMetadata;
           const metadataRecord =
             metadataResult && typeof metadataResult === 'object' && !Array.isArray(metadataResult)
               ? {
@@ -768,6 +815,109 @@ export function useSponsorCoinLabTreeMethods({
       setFormattedOutputDisplay,
       setStatus,
       stringifyResult,
+      callAccessMethod,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
+
+  const expandMasterAccountKeysInline = useCallback(
+    async (pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
+      const normalizedPathHint = String(pathHint ?? '').trim();
+      if (!normalizedPathHint.includes('.result.masterAccountKeys')) return 'unhandled';
+      const trimmedDisplay = String(formattedOutputDisplay ?? '').trim();
+      if (trimmedDisplay.length === 0 || trimmedDisplay === '(no output yet)') return 'unhandled';
+
+      const parsePayload = (raw: string) => {
+        try {
+          return JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          return null;
+        }
+      };
+      const blocks = trimmedDisplay
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      const blockEntries =
+        blocks.length > 1
+          ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
+          : [{ raw: trimmedDisplay, index: 0, payload: parsePayload(trimmedDisplay) }];
+      const rootPathMatch = /^(?:step|output)-(\d+)(?:\.|$)/i.exec(normalizedPathHint);
+      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
+      const candidateEntries =
+        Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
+          ? [blockEntries[hintedBlockIndex]]
+          : blockEntries;
+
+      for (const entry of candidateEntries) {
+        const payload = entry.payload;
+        if (!payload?.result || typeof payload.result !== 'object' || Array.isArray(payload.result)) continue;
+        const resultRecord = payload.result as Record<string, unknown>;
+        const masterAccountKeys = resultRecord.masterAccountKeys;
+        if (
+          !masterAccountKeys ||
+          typeof masterAccountKeys !== 'object' ||
+          Array.isArray(masterAccountKeys) ||
+          (masterAccountKeys as Record<string, unknown>).__lazyMasterAccountKeys !== true
+        ) {
+          continue;
+        }
+
+        try {
+          setStatus('Loading master account keys...');
+          const loadMasterAccountKeys = () =>
+            runSpCoinReadMethod({
+              selectedMethod: 'getMasterAccountKeys',
+              spReadParams: [],
+              coerceParamValue,
+              stringifyResult,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              requireContractAddress,
+              ensureReadRunner,
+              appendLog: noop,
+              setStatus: noop,
+            });
+          const accountKeysResult = callAccessMethod
+            ? await callAccessMethod('getMasterAccountKeys', () => loadMasterAccountKeys())
+            : await loadMasterAccountKeys();
+          if (accountKeysResult === undefined) return 'handled';
+          const nextPayload = formatFormattedPanelPayload({
+            ...payload,
+            result: {
+              ...resultRecord,
+              masterAccountKeys: normalizeStringListResult(accountKeysResult ?? []),
+            },
+          });
+          if (blocks.length > 1) {
+            const nextBlocks = [...blocks];
+            nextBlocks[entry.index] = nextPayload;
+            setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+          } else {
+            setFormattedOutputDisplay(nextPayload);
+          }
+          setStatus('Loaded master account keys.');
+          appendLog('Lazy-loaded masterAccountKeys via getMasterAccountKeys.');
+          return 'expanded';
+        } catch (error) {
+          const message = getErrorMessage(error, 'Unable to load master account keys.');
+          setStatus('Unable to load master account keys.');
+          appendLog(`Lazy masterAccountKeys load failed: ${message}`);
+          return 'handled';
+        }
+      }
+      return 'unhandled';
+    },
+    [
+      appendLog,
+      coerceParamValue,
+      ensureReadRunner,
+      formatFormattedPanelPayload,
+      formattedOutputDisplay,
+      requireContractAddress,
+      setFormattedOutputDisplay,
+      setStatus,
+      stringifyResult,
+      callAccessMethod,
       useLocalSpCoinAccessPackage,
     ],
   );
@@ -779,13 +929,28 @@ export function useSponsorCoinLabTreeMethods({
       const trimmedDisplay = String(formattedOutputDisplay ?? '').trim();
       if (!trimmedDisplay) return 'unhandled';
       const normalizedPathHint = String(pathHint ?? '').trim();
-      const pathRootMatch = /^(?:step|output)-(\d+)(?:\.|$)/i.exec(normalizedPathHint);
-      if (!pathRootMatch) return 'unhandled';
+      appendLog(`[EXPAND] click account=${normalizedAccount} path=${normalizedPathHint || '(none)'}`);
       const pathSegments = normalizedPathHint.split('.').filter(Boolean);
-      if (pathSegments.length < 2) return 'unhandled';
-      const payloadPath = pathSegments.slice(1);
-      const targetKey = payloadPath[payloadPath.length - 1] || '';
-      if (!isAccountAddressPathKey(targetKey)) return 'unhandled';
+      if (pathSegments.length < 2) {
+        appendLog(`[EXPAND] no payload path segments for account=${normalizedAccount}`);
+        return 'unhandled';
+      }
+      const rootSegment = pathSegments[0] || '';
+      const pathRootMatch = /^(?:step|output|script|tree)-(\d+)$/i.exec(rootSegment);
+      const hintedBlockIndex = pathRootMatch ? Number(pathRootMatch[1]) : Number.NaN;
+      const payloadPathCandidates = [
+        pathRootMatch ? pathSegments.slice(1) : pathSegments,
+        pathSegments.slice(1),
+      ].filter((segments, index, allSegments) => {
+        if (segments.length === 0) return false;
+        const targetKey = segments[segments.length - 1] || '';
+        if (!isAccountAddressPathKey(targetKey)) return false;
+        return allSegments.findIndex((candidate) => candidate.join('.') === segments.join('.')) === index;
+      });
+      appendLog(
+        `[EXPAND] path candidates=${payloadPathCandidates.map((segments) => segments.join('.')).join(' | ') || '(none)'}`,
+      );
+      if (payloadPathCandidates.length === 0) return 'unhandled';
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {
@@ -824,6 +989,93 @@ export function useSponsorCoinLabTreeMethods({
           [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
         };
       };
+      const getAccountAddressFromEntry = (entry: unknown) => {
+        if (typeof entry === 'string') return normalizeAddressValue(entry);
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return '';
+        return normalizeAddressValue(
+          toDisplayString((entry as Record<string, unknown>).address ?? (entry as Record<string, unknown>).accountKey),
+        );
+      };
+      const hasLoadedAccountRecordEntry = (entry: unknown) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+        const record = entry as Record<string, unknown>;
+        return Boolean(record.TYPE ?? record.totalSpCoins ?? record.accountRecord);
+      };
+      const buildExpandedAccountEntry = (targetEntry: unknown, accountRecord: unknown) => ({
+        address: normalizedAccount,
+        __forceExpanded: true,
+        __showEmptyFields: true,
+        ...(targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
+          ? (targetEntry as Record<string, unknown>)
+          : {}),
+        ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+          ? (accountRecord as Record<string, unknown>)
+          : { value: accountRecord }),
+      });
+      interface InlineAccountTarget {
+        targetEntry: unknown;
+        path: string[];
+        sourcePath?: string[];
+        matchKind?: string;
+      }
+      const findInlineAccountTarget = (
+        source: unknown,
+        segments: string[] = [],
+      ): InlineAccountTarget | null => {
+        if (!source || typeof source !== 'object') return null;
+        if (!Array.isArray(source)) {
+          const record = source as Record<string, unknown>;
+          if (getAccountAddressFromEntry(record) === normalizedAccount && !hasLoadedAccountRecordEntry(record)) {
+            return { targetEntry: record, path: segments, matchKind: 'object-address' };
+          }
+          for (const [key, value] of Object.entries(record)) {
+            if (
+              isAccountAddressPathKey(key) &&
+              typeof value === 'string' &&
+              normalizeAddressValue(value) === normalizedAccount
+            ) {
+              return { targetEntry: value, path: [...segments, key], matchKind: 'leaf-address' };
+            }
+            const nested = findInlineAccountTarget(value, [...segments, key]);
+            if (nested) return nested;
+          }
+          return null;
+        }
+        for (let index = 0; index < source.length; index += 1) {
+          const nested = findInlineAccountTarget(source[index], [...segments, String(index)]);
+          if (nested) return nested;
+        }
+        return null;
+      };
+      const normalizeExactTargetPath = (payload: Record<string, unknown>, payloadPath: string[]): InlineAccountTarget | null => {
+        const targetEntry = readPathValue(payload, payloadPath);
+        if (getAccountAddressFromEntry(targetEntry) !== normalizedAccount) return null;
+        const lastSegment = payloadPath[payloadPath.length - 1] ?? '';
+        if (isAccountAddressPathKey(lastSegment) && payloadPath.length > 0) {
+          const parentPath = payloadPath.slice(0, -1);
+          const parentEntry = readPathValue(payload, parentPath);
+          if (
+            parentEntry &&
+            typeof parentEntry === 'object' &&
+            !Array.isArray(parentEntry) &&
+            getAccountAddressFromEntry(parentEntry) === normalizedAccount &&
+            !hasLoadedAccountRecordEntry(parentEntry)
+          ) {
+            return {
+              targetEntry: parentEntry,
+              path: parentPath,
+              sourcePath: payloadPath,
+              matchKind: 'parent-from-address-leaf',
+            };
+          }
+        }
+        return {
+          targetEntry,
+          path: payloadPath,
+          sourcePath: payloadPath,
+          matchKind: 'exact-leaf',
+        };
+      };
 
       const blocks = trimmedDisplay
         .split(/\n\s*\n/)
@@ -833,68 +1085,86 @@ export function useSponsorCoinLabTreeMethods({
         blocks.length > 1
           ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
           : [{ raw: trimmedDisplay, index: 0, payload: parsePayload(trimmedDisplay) }];
-      const rootPathMatch = /^(?:step|output)-(\d+)(?:\.|$)/i.exec(normalizedPathHint);
-      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
       const candidateEntries =
         Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
           ? [blockEntries[hintedBlockIndex]]
           : blockEntries;
+      appendLog(
+        `[EXPAND] blocks=${blockEntries.length} hintedBlock=${Number.isInteger(hintedBlockIndex) ? hintedBlockIndex : 'none'} candidates=${candidateEntries.length}`,
+      );
 
       for (const entry of candidateEntries) {
         const payload = entry.payload;
         if (!payload) continue;
-        const targetEntry = readPathValue(payload, payloadPath);
-        const targetAddress =
-          typeof targetEntry === 'string'
-            ? normalizeAddressValue(targetEntry)
-            : targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
-              ? normalizeAddressValue(
-                  toDisplayString(
-                    (targetEntry as Record<string, unknown>).address ??
-                      (targetEntry as Record<string, unknown>).accountKey,
-                  ),
-                )
-              : '';
-        if (targetAddress !== normalizedAccount) continue;
+        const exactTargets = payloadPathCandidates
+          .map((payloadPath) => normalizeExactTargetPath(payload, payloadPath))
+          .filter((target): target is InlineAccountTarget => Boolean(target));
+        const fallbackTarget = exactTargets.length > 0 ? null : findInlineAccountTarget(payload);
+        const targets = fallbackTarget ? [...exactTargets, fallbackTarget] : exactTargets;
+        const targetPathSummary =
+          targets.length > 0
+            ? targets.map((target) => `${target.path.join('.')}(${target.matchKind ?? 'unknown'})`).join('|')
+            : 'none';
         appendLog(
-          `expandAccountInline debug -> path=${String(pathHint ?? '')} account=${normalizedAccount} targetKind=${typeof targetEntry}`,
+          `[EXPAND] target search block=${entry.index} exact=${exactTargets.length} fallback=${fallbackTarget ? fallbackTarget.path.join('.') : 'none'} targetPaths=${
+            targetPathSummary
+          }`,
         );
-        try {
-          const accountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
-          const nextAccountEntry = {
-            address: normalizedAccount,
-            ...(targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
-              ? (targetEntry as Record<string, unknown>)
-              : {}),
-            ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
-              ? (accountRecord as Record<string, unknown>)
-              : { value: accountRecord }),
-          };
-          const nextRootPayload = writePathValue(payload, payloadPath, nextAccountEntry) as Record<string, unknown>;
-          const nextPayload = formatFormattedPanelPayload({
-            ...nextRootPayload,
-          });
-          if (blocks.length > 1) {
-            const nextBlocks = [...blocks];
-            nextBlocks[entry.index] = nextPayload;
-            setFormattedOutputDisplay(nextBlocks.join('\n\n'));
-          } else {
-            setFormattedOutputDisplay(nextPayload);
+
+        for (const target of targets) {
+          appendLog(
+            `[EXPAND] loading target path=${target.path.join('.')} source=${target.sourcePath?.join('.') ?? target.path.join('.')} match=${target.matchKind ?? 'unknown'} kind=${typeof target.targetEntry}`,
+          );
+          try {
+            setStatus(`Loading account record for ${normalizedAccount}...`);
+            const loadInlineAccountRecord = (signal?: AbortSignal) =>
+              loadAccountRecordForAddress(normalizedAccount, { force: true, signal });
+            const accountRecord = callAccessMethod
+              ? await callAccessMethod('getAccountRecord', ({ executionSignal }) =>
+                  loadInlineAccountRecord(executionSignal),
+                )
+              : await loadInlineAccountRecord();
+            if (accountRecord === undefined) return 'handled';
+            const accountRecordKeys =
+              accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+                ? Object.keys(accountRecord as Record<string, unknown>)
+                : [];
+            appendLog(`[EXPAND] loaded record keys=${accountRecordKeys.join(',') || '(scalar)'}`);
+            const nextAccountEntry = buildExpandedAccountEntry(target.targetEntry, accountRecord);
+            const nextRootPayload = writePathValue(payload, target.path, nextAccountEntry) as Record<string, unknown>;
+            const nextPayload = formatFormattedPanelPayload({
+              ...nextRootPayload,
+            });
+            appendLog(
+              `[EXPAND] rewrite containsForce=${nextPayload.includes('__forceExpanded')} containsAccountKey=${nextPayload.includes('"accountKey"')}`,
+            );
+            if (blocks.length > 1) {
+              const nextBlocks = [...blocks];
+              nextBlocks[entry.index] = nextPayload;
+              setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+            } else {
+              setFormattedOutputDisplay(nextPayload);
+            }
+            appendLog(
+              `[ACCOUNT_EXPAND_TRACE] wrote account record block=${entry.index} path=${target.path.join('.')} source=${target.sourcePath?.join('.') ?? target.path.join('.')} match=${target.matchKind ?? 'unknown'} payloadLength=${nextPayload.length}`,
+            );
+            setStatus(`Loaded account record for ${normalizedAccount}.`);
+            appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+            return 'expanded';
+          } catch (error) {
+            const message = getErrorMessage(error, 'Unable to load account record.');
+            setStatus(`Unable to load account record for ${normalizedAccount}.`);
+            appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
+            return 'handled';
           }
-          setStatus(`Loaded account record for ${normalizedAccount}.`);
-          appendLog(`Inline account record loaded for ${normalizedAccount}.`);
-          return 'expanded';
-        } catch (error) {
-          const message = getErrorMessage(error, 'Unable to load account record.');
-          setStatus(`Unable to load account record for ${normalizedAccount}.`);
-          appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
-          return 'handled';
         }
       }
+      appendLog(`[EXPAND] no matching displayed account node for ${normalizedAccount}`);
       return 'unhandled';
     },
     [
       appendLog,
+      callAccessMethod,
       formatFormattedPanelPayload,
       formattedOutputDisplay,
       loadAccountRecordForAddress,
@@ -906,9 +1176,17 @@ export function useSponsorCoinLabTreeMethods({
 
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string) => {
+      appendLog(`[EXPAND] open request value=${String(account ?? '')} path=${String(pathHint ?? '')}`);
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {
         const metadataResult = await expandSpCoinMetaDataInline(pathHint);
         if (metadataResult === 'expanded' || metadataResult === 'handled') {
+          setOutputPanelMode('formatted');
+        }
+        return;
+      }
+      if (String(account ?? '').trim() === '__load_master_account_keys__') {
+        const keysResult = await expandMasterAccountKeysInline(pathHint);
+        if (keysResult === 'expanded' || keysResult === 'handled') {
           setOutputPanelMode('formatted');
         }
         return;
@@ -926,7 +1204,15 @@ export function useSponsorCoinLabTreeMethods({
       setOutputPanelMode('tree');
       await runTreeDump(normalizedAccount);
     },
-    [expandMasterSponsorListAccountInline, expandSpCoinMetaDataInline, normalizeAddressValue, runTreeDump, setOutputPanelMode],
+    [
+      appendLog,
+      expandMasterAccountKeysInline,
+      expandMasterSponsorListAccountInline,
+      expandSpCoinMetaDataInline,
+      normalizeAddressValue,
+      runTreeDump,
+      setOutputPanelMode,
+    ],
   );
 
   return {

@@ -40,7 +40,6 @@ type UseControllerViewPropsArgs = BuildMethodsPanelCardPropsArgs &
       startedAt: number;
       isCancelling: boolean;
       onCancel: () => void;
-      onAcknowledge: () => void;
     };
   };
 
@@ -55,8 +54,10 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     selectMethodPanelTab: args.selectMethodPanelTab,
     selectMappedJsonMethod: args.selectMappedJsonMethod,
     selectMethodByKind: args.selectMethodByKind,
+    beginNewMethodDraft: args.beginNewMethodDraft,
     writeTraceEnabled: args.writeTraceEnabled,
     setWriteTraceEnabled: args.setWriteTraceEnabled,
+    appendLog: args.appendLog,
     showOnChainMethods: args.showOnChainMethods,
     setShowOnChainMethods: args.setShowOnChainMethods,
     showOffChainMethods: args.showOffChainMethods,

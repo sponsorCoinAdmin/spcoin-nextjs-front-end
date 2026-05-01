@@ -93,7 +93,7 @@ type Params = {
   activeNetworkName: string;
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
-  outputPanelMode: 'execution' | 'formatted' | 'tree' | 'raw_status';
+  outputPanelMode: 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
   formattedPanelView: 'script' | 'output';
   formattedJsonViewEnabled: boolean;
   formattedOutputDisplay: string;
@@ -137,7 +137,7 @@ type Params = {
     },
   ) => void;
   setStatus: (value: string) => void;
-  setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status') => void;
+  setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug') => void;
   setFormattedOutputDisplay: (value: string) => void;
   setMode: (value: ConnectionMode) => void;
   setMethodPanelMode: (value: MethodPanelMode) => void;

@@ -40,18 +40,11 @@ contract StructSerialization is Utils {
             "stakedSPCoins: ",
             toString(_accountRec.stakedSPCoins)
         );
-        string memory verified = concat(
-            "verified: ",
-            toString(_accountRec.verified)
-        );
-
         string memory seralized = string(
             abi.encodePacked(
                 addr,
                 "\\,\n",
-                creationTime,
-                "\\,\n",
-                verified
+                creationTime
             )
         );
         seralized = concat(seralized, delimiter, balanceOf);

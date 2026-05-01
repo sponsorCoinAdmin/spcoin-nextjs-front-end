@@ -34,7 +34,7 @@ function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
   return trimmed;
 }
 
-type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 type SponsorCoinAccountRole = 'sponsor' | 'recipient' | 'agent';
 type LabCardId = 'network' | 'contract' | 'methods' | 'log' | 'output';
 
@@ -423,7 +423,8 @@ export function useSponsorCoinLabPersistence({
             saved.outputPanelMode === 'execution' ||
             saved.outputPanelMode === 'formatted' ||
             saved.outputPanelMode === 'tree' ||
-            saved.outputPanelMode === 'raw_status'
+            saved.outputPanelMode === 'raw_status' ||
+            saved.outputPanelMode === 'debug'
           ) {
             setOutputPanelMode(saved.outputPanelMode);
           }

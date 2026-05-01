@@ -51,25 +51,29 @@ interface MethodCallEntry {
   method: string;
   parameters: { label: string; value: unknown }[];
 }
+type MethodExecutionPayloadMeta = Partial<MethodExecutionMeta> & Record<string, unknown>;
 
 export interface MethodExecutionDescriptor {
   panel: MethodPanelMode;
   method: string;
   params: MethodParamEntry[];
   sender?: string;
+  mode?: ConnectionMode;
 }
 
 export interface MethodExecutionResult {
   call: MethodCallEntry;
-  result: unknown;
+  result?: unknown;
   warning?: unknown;
-  meta?: MethodExecutionMeta;
+  meta?: MethodExecutionPayloadMeta;
+  onChainCalls?: MethodExecutionMeta['onChainCalls'];
 }
 
 interface ServerBackedStepResult {
-  result: unknown;
+  result?: unknown;
   warning?: Record<string, unknown>;
-  meta?: MethodExecutionMeta;
+  meta?: MethodExecutionPayloadMeta;
+  onChainCalls?: MethodExecutionMeta['onChainCalls'];
 }
 
 interface WriteReceipt {
@@ -81,9 +85,22 @@ interface WriteReceipt {
 }
 
 type AccountKeyCountContract = SpCoinContractAccess & {
+  getMasterAccountKeyCount?: () => Promise<unknown>;
   getAccountKeyCount?: () => Promise<unknown>;
   getMasterAccountKeys?: () => Promise<unknown>;
+  getMasterAccountMetaData?: () => Promise<unknown>;
 };
+
+function isMissingContractReadError(error: unknown) {
+  const source = (error && typeof error === 'object' ? error : {}) as Record<string, unknown>;
+  const nested = ((source.error || source.info || source.cause) && typeof (source.error || source.info || source.cause) === 'object'
+    ? (source.error || source.info || source.cause)
+    : {}) as Record<string, unknown>;
+  const code = String(source.code || nested.code || '');
+  const data = String(source.data || nested.data || '');
+  const message = String(source.message || nested.message || '');
+  return code === 'CALL_EXCEPTION' || data === '0x' || /execution reverted|require\(false\)|no matching fragment/i.test(message);
+}
 
 const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<string>([
   'addRecipientTransaction',
@@ -147,13 +164,15 @@ function addSpCoinWriteResultDetail(
   const sponsor = findLocalParamValue(def, localParams, 'Sponsor Key');
   if (!sponsor) return result;
 
+  const methodDetail: Record<string, unknown> = {
+    sponsor: {
+      address: sponsor,
+    },
+  };
+
   return {
     ...(result as Record<string, unknown>),
-    [selectedMethod]: {
-      sponsor: {
-        address: sponsor,
-      },
-    },
+    [selectedMethod]: methodDetail,
   };
 }
 
@@ -170,11 +189,12 @@ interface Params {
   appendWriteTrace: (line: string) => void;
   setStatus: (value: string) => void;
   requireContractAddress: () => string;
-  ensureReadRunner: () => Promise<unknown>;
+  ensureReadRunner: (modeOverride?: ConnectionMode) => Promise<unknown>;
   executeWriteConnected: (
     label: string,
     writeCall: (contract: any, signer: any) => Promise<any>,
     accountKey?: string,
+    modeOverride?: ConnectionMode,
   ) => Promise<any>;
   coerceParamValue: (raw: string, def: ParamDef) => unknown;
   stringifyResult: (result: unknown) => string;
@@ -193,6 +213,42 @@ function toDisplayString(value: unknown, fallback = '') {
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
   return fallback;
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function buildExecutionResultPayload(
+  call: MethodCallEntry,
+  result: unknown,
+  warning: unknown,
+  meta: MethodExecutionPayloadMeta | undefined,
+): MethodExecutionResult {
+  if (toDisplayString(call.method).trim() === 'getMasterAccountMetaData') {
+    const metadata = isObjectRecord(result) ? result : {};
+    return {
+      call,
+      ...(warning ? { warning } : {}),
+      meta: {
+        startedAt: meta?.startedAt,
+        completedAt: meta?.completedAt,
+        runTimeMs: meta?.runTimeMs,
+        onChainRunTimeMs: meta?.onChainRunTimeMs,
+        offChainRunTimeMs: meta?.offChainRunTimeMs,
+        onChainCallCount: meta?.onChainCallCount,
+        activeAccountCount: metadata.activeAccountCount,
+        inactiveAccountCount: metadata.inactiveAccountCount,
+        masterAccountSize: metadata.masterAccountSize ?? metadata.numberOfAccounts,
+      },
+      result: {
+        masterAccountKeys: { __lazyMasterAccountKeys: true },
+      },
+      onChainCalls: Array.isArray(meta?.onChainCalls) ? meta.onChainCalls : [],
+    };
+  }
+
+  return { call, result, ...(warning ? { warning } : {}), meta };
 }
 
 export function useSponsorCoinLabMethodExecution({
@@ -224,6 +280,7 @@ export function useSponsorCoinLabMethodExecution({
       method: string,
       params: MethodParamEntry[],
       sender?: string,
+      modeOverride: ConnectionMode = mode,
       executionSignal?: AbortSignal,
     ): Promise<ServerBackedStepResult> => {
       const target = requireContractAddress();
@@ -238,14 +295,14 @@ export function useSponsorCoinLabMethodExecution({
           script: {
             id: `spcoin-rread-${method}-${Date.now()}`,
             name: method,
-            network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+            network: modeOverride === 'hardhat' ? 'hardhat' : 'metamask',
             steps: [
               {
                 step: 1,
                 name: method,
                 panel,
                 method,
-                mode,
+                mode: modeOverride,
                 ...(sender ? { 'msg.sender': sender } : {}),
                 params,
               },
@@ -262,7 +319,8 @@ export function useSponsorCoinLabMethodExecution({
             result?: unknown;
             warning?: Record<string, unknown> | undefined;
             error?: { message?: string };
-            meta?: MethodExecutionMeta;
+            meta?: MethodExecutionPayloadMeta;
+            onChainCalls?: MethodExecutionMeta['onChainCalls'];
           };
         }[];
       };
@@ -272,13 +330,14 @@ export function useSponsorCoinLabMethodExecution({
       const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
       if (!firstResult?.success) {
         const nextError = new Error(firstResult?.payload?.error?.message ?? `Unable to run ${method}.`);
-        attachExecutionMeta(nextError, firstResult?.payload?.meta);
+        attachExecutionMeta(nextError, firstResult?.payload?.meta as MethodExecutionMeta | undefined);
         throw nextError;
       }
       return {
         result: firstResult?.payload?.result,
         warning: firstResult?.payload?.warning,
         meta: firstResult?.payload?.meta,
+        onChainCalls: firstResult?.payload?.onChainCalls,
       };
     },
     [mode, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
@@ -292,17 +351,18 @@ export function useSponsorCoinLabMethodExecution({
       const executionStartedAtMs = Date.now();
       const executionTimingCollector = traceEnabled ? createMethodTimingCollector(executionStartedAtMs) : null;
       const { panel, method, params, sender = '' } = descriptor;
+      const effectiveMode = descriptor.mode ?? mode;
       const executionSignal = options?.executionSignal;
       const finalizeMeta = () => (executionTimingCollector ? buildExecutionMeta(executionTimingCollector) : undefined);
       const defaultSender =
-        mode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress;
+        effectiveMode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress;
       const findParamValue = (label: string) =>
         String(params.find((entry) => String(entry?.key ?? '') === label)?.value ?? '').trim();
       const resolveOwnerAddress = async () => {
         const fallbackOwnerAddress = normalizeAddressForCompare(ownerAddress);
         try {
           const target = requireContractAddress();
-          const runner = await ensureReadRunner();
+          const runner = await ensureReadRunner(effectiveMode);
           const contract = createSpCoinContract(target, runner) as SpCoinContractAccess & {
             owner?: () => Promise<unknown>;
           };
@@ -352,7 +412,7 @@ export function useSponsorCoinLabMethodExecution({
         throw buildAuthorizationError(
           `${selectedMethod} requires msg.sender to be ${guardedAccountLabel} or the contract owner. ` +
             `Current signer is ${signer}; ${guardedAccountLabel} is ${guardedAccount}.` +
-            (mode === 'metamask'
+            (effectiveMode === 'metamask'
               ? ' In MetaMask mode, switch the connected wallet to the sponsor/owner account or run the script in Hardhat mode with that sender.'
               : ' Select the sponsor/owner account as msg.sender.'),
         );
@@ -374,7 +434,7 @@ export function useSponsorCoinLabMethodExecution({
             readAddressA,
             readAddressB,
             requireContractAddress,
-            ensureReadRunner,
+            ensureReadRunner: () => ensureReadRunner(effectiveMode),
             appendLog,
             setStatus,
           });
@@ -387,9 +447,9 @@ export function useSponsorCoinLabMethodExecution({
           const writeAddressA = findParamValue(labels.addressALabel);
           const writeAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
           const amount = findParamValue('Amount');
-          const signer = mode === 'hardhat' ? (sender || defaultSender) : defaultSender;
+          const signer = effectiveMode === 'hardhat' ? (sender || defaultSender) : defaultSender;
           const call = buildMethodCallEntry(selectedMethod, [
-            ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
+            ...(effectiveMode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
             { label: labels.addressALabel, value: writeAddressA },
             ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: writeAddressB }] : []),
             { label: 'Amount', value: amount },
@@ -401,7 +461,8 @@ export function useSponsorCoinLabMethodExecution({
             writeAddressB,
             writeAmountRaw: amount,
             selectedHardhatAddress: signer,
-            executeWriteConnected,
+            executeWriteConnected: (label, writeCall, accountKey) =>
+              executeWriteConnected(label, writeCall, accountKey, effectiveMode),
             appendLog,
             setStatus,
           });
@@ -427,44 +488,79 @@ export function useSponsorCoinLabMethodExecution({
             `spcoin_rread start method=${String(selectedMethod || '')}`,
             `normalizedMethod=${normalizedSelectedMethod}`,
             `source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}`,
-            `mode=${mode}`,
+            `mode=${effectiveMode}`,
             `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
           ];
-          let serverBackedMeta: MethodExecutionMeta | undefined;
+          let serverBackedMeta: MethodExecutionPayloadMeta | undefined;
           let warning: unknown;
           if (
-            ['getMasterAccountCount', 'getAccountKeyCount', 'getMasterAccountListSize', 'getAccountListSize'].includes(
-              normalizedSelectedMethod,
-            )
+            [
+              'getMasterAccountKeyCount',
+              'getMasterAccountCount',
+              'getAccountKeyCount',
+              'getMasterAccountListSize',
+              'getAccountListSize',
+            ].includes(normalizedSelectedMethod)
           ) {
             const target = requireContractAddress();
-            const runner = await ensureReadRunner();
-            const contract = createSpCoinContract(target, runner) as AccountKeyCountContract;
-            if (typeof contract.getAccountKeyCount === 'function') {
-              const raw = await contract.getAccountKeyCount();
-              return { call, result: Number(raw), meta: finalizeMeta() };
-            }
+            const runner = await ensureReadRunner(effectiveMode);
             const fallbackAccess = createSpCoinLibraryAccess(
               target,
               runner,
               undefined,
               useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             );
-            const accountKeys: unknown =
-              typeof contract.getMasterAccountKeys === 'function'
-                ? await contract.getMasterAccountKeys()
-                : typeof fallbackAccess.read.getAccountKeys === 'function'
-                  ? await fallbackAccess.read.getAccountKeys()
-                  : [];
+            if (typeof fallbackAccess.read.getMasterAccountKeyCount === 'function') {
+              const raw = await fallbackAccess.read.getMasterAccountKeyCount();
+              return { call, result: Number(raw), meta: finalizeMeta() };
+            }
+            const contract = createSpCoinContract(target, runner) as AccountKeyCountContract;
+            if (typeof fallbackAccess.read.getMasterAccountMetaData === 'function') {
+              const metaData = (await fallbackAccess.read.getMasterAccountMetaData()) as Record<string, unknown>;
+              return {
+                call,
+                result: Number(metaData?.masterAccountSize ?? metaData?.numberOfAccounts ?? (Array.isArray(metaData) ? metaData[0] : 0)),
+                meta: finalizeMeta(),
+              };
+            }
+            if (typeof contract.getMasterAccountKeyCount === 'function') {
+              try {
+                const raw = await contract.getMasterAccountKeyCount();
+                return { call, result: Number(raw), meta: finalizeMeta() };
+              } catch (error) {
+                if (!isMissingContractReadError(error)) throw error;
+              }
+            }
+            if (typeof contract.getAccountKeyCount === 'function') {
+              try {
+                const raw = await contract.getAccountKeyCount();
+                return { call, result: Number(raw), meta: finalizeMeta() };
+              } catch (error) {
+                if (!isMissingContractReadError(error)) throw error;
+              }
+            }
+            let accountKeys: unknown = [];
+            if (typeof fallbackAccess.read.getAccountKeys === 'function') {
+              accountKeys = await fallbackAccess.read.getAccountKeys();
+            } else if (typeof fallbackAccess.read.getMasterAccountKeys === 'function') {
+              accountKeys = await fallbackAccess.read.getMasterAccountKeys();
+            } else if (typeof contract.getMasterAccountKeys === 'function') {
+              try {
+                accountKeys = await contract.getMasterAccountKeys();
+              } catch (error) {
+                if (!isMissingContractReadError(error)) throw error;
+              }
+            }
             return { call, result: Array.isArray(accountKeys) ? accountKeys.length : 0, meta: finalizeMeta() };
           }
           const shouldUseServerBackedRead =
             useLocalSpCoinAccessPackage &&
-            mode === 'hardhat' &&
+            effectiveMode === 'hardhat' &&
             [
               'getAccountRecord',
               'getMasterAccountKeys',
               'getMasterAccountList',
+              'getMasterAccountKeyCount',
               'getMasterAccountCount',
               'getAccountKeys',
               'getAccountKeyCount',
@@ -507,6 +603,7 @@ export function useSponsorCoinLabMethodExecution({
                   value: localParams[idx] || '',
                 })),
                 undefined,
+                effectiveMode,
                 executionSignal,
               );
               result = serverResult.result;
@@ -520,7 +617,7 @@ export function useSponsorCoinLabMethodExecution({
                 stringifyResult,
                 spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
                 requireContractAddress,
-                ensureReadRunner,
+                ensureReadRunner: () => ensureReadRunner(effectiveMode),
                 appendLog,
                 setStatus,
               });
@@ -582,7 +679,7 @@ export function useSponsorCoinLabMethodExecution({
               return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta ?? finalizeMeta() };
             }
           }
-          return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta ?? finalizeMeta() };
+          return buildExecutionResultPayload(call, result, warning, serverBackedMeta ?? finalizeMeta());
         }
 
         if (panel === 'serialization_tests') {
@@ -601,10 +698,11 @@ export function useSponsorCoinLabMethodExecution({
             params: localParams,
             coerceParamValue,
             requireContractAddress,
-            ensureReadRunner,
-            mode,
+            ensureReadRunner: () => ensureReadRunner(effectiveMode),
+            mode: effectiveMode,
             hardhatAccounts,
-            executeWriteConnected,
+            executeWriteConnected: (label, writeCall, accountKey) =>
+              executeWriteConnected(label, writeCall, accountKey, effectiveMode),
             spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             selectedHardhatAddress: defaultSender,
             appendLog,
@@ -671,16 +769,16 @@ export function useSponsorCoinLabMethodExecution({
           throw new Error(`Unsupported SpCoin write method: ${String(method)}`);
         }
         const localParams = def.params.map((param) => findParamValue(param.label));
-        const signer = mode === 'hardhat' ? (sender || defaultSender) : defaultSender;
+        const signer = effectiveMode === 'hardhat' ? (sender || defaultSender) : defaultSender;
         const call = buildMethodCallEntry(selectedMethod, [
-          ...(mode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
+          ...(effectiveMode === 'hardhat' || signer ? [{ label: 'msg.sender', value: signer }] : []),
           ...def.params.map((param, idx) => ({
             label: param.label,
             value: localParams[idx] || '',
           })),
         ]);
         appendWriteTrace(
-          `runMethod start; mode=${mode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
+          `runMethod start; mode=${effectiveMode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
         );
         await assertSpCoinWriteAuthorization(selectedMethod, def, localParams, signer);
         const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
@@ -700,10 +798,11 @@ export function useSponsorCoinLabMethodExecution({
             params: localParams,
             coerceParamValue,
             requireContractAddress,
-            ensureReadRunner,
-            mode,
+            ensureReadRunner: () => ensureReadRunner(effectiveMode),
+            mode: effectiveMode,
             hardhatAccounts,
-            executeWriteConnected,
+            executeWriteConnected: (label, writeCall, accountKey) =>
+              executeWriteConnected(label, writeCall, accountKey, effectiveMode),
             spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
             selectedHardhatAddress: signer,
             appendLog,
@@ -712,7 +811,7 @@ export function useSponsorCoinLabMethodExecution({
           return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
         }
 
-        const shouldUseServerBackedWrite = allowServerBackedWrite && mode === 'hardhat';
+        const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat';
         const result = shouldUseServerBackedWrite
           ? await runServerBackedSpCoinStep(
               'spcoin_write',
@@ -722,13 +821,15 @@ export function useSponsorCoinLabMethodExecution({
                 value: localParams[idx] || '',
               })),
               signer,
+              effectiveMode,
               executionSignal,
             )
           : await runSpCoinWriteMethod({
               selectedMethod,
               spWriteParams: localParams,
               coerceParamValue,
-              executeWriteConnected,
+              executeWriteConnected: (label, writeCall, accountKey) =>
+                executeWriteConnected(label, writeCall, accountKey, effectiveMode),
               selectedHardhatAddress: signer,
               appendLog,
               appendWriteTrace,

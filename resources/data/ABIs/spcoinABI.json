@@ -596,11 +596,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "bool",
-        "name": "verified",
-        "type": "bool"
-      },
-      {
         "internalType": "uint256",
         "name": "accountBalance",
         "type": "uint256"
@@ -617,26 +612,28 @@
       },
       {
         "internalType": "uint256",
-        "name": "activeParentLinkCount",
+        "name": "sponsorCount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "activeChildLinkCount",
+        "name": "recipientCount",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAccountKeyCount",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "agentCount",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "parentRecipientCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -695,11 +692,6 @@
         "internalType": "uint256",
         "name": "creationTime",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "verified",
-        "type": "bool"
       },
       {
         "internalType": "uint256",
@@ -763,25 +755,6 @@
       {
         "internalType": "uint256",
         "name": "agentRewards",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_accountKey",
-        "type": "address"
-      }
-    ],
-    "name": "getAgentKeyCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
         "type": "uint256"
       }
     ],
@@ -977,24 +950,54 @@
         "internalType": "uint256",
         "name": "_agentRateKey",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_transactionIndex",
-        "type": "uint256"
       }
     ],
-    "name": "getAgentTransactionAt",
+    "name": "getAgentTransaction",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipientKey",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "insertionTime",
+        "name": "recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "agentKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "agentRateKey",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "stakingRewards",
+        "name": "creationTime",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdateTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakedSPCoins",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "inserted",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1026,34 +1029,24 @@
         "internalType": "uint256",
         "name": "_agentRateKey",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionIndex",
+        "type": "uint256"
       }
     ],
-    "name": "getAgentTransactionCore",
+    "name": "getAgentTransactionAt",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "agentRate",
+        "name": "insertionTime",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "creationTime",
+        "name": "stakingRewards",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastUpdateTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stakedSPCoins",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "inserted",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1183,6 +1176,49 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getMasterAccountMetaData",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "masterAccountSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "activeAccountCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inactiveAccountCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalSponsorLinks",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalRecipientLinks",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalAgentLinks",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalParentRecipientLinks",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -1240,25 +1276,6 @@
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_accountKey",
-        "type": "address"
-      }
-    ],
-    "name": "getRecipientKeyCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1415,11 +1432,80 @@
         "type": "address"
       }
     ],
-    "name": "getRecipientRecordCore",
+    "name": "getRecipientRecord",
     "outputs": [
+      {
+        "internalType": "address",
+        "name": "sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipientKey",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "creationTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stakedSPCoins",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "inserted",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recipientRateKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecipientTransaction",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "sponsorKey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipientKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "recipientRateKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdateTime",
         "type": "uint256"
       },
       {
@@ -1470,55 +1556,6 @@
         "internalType": "uint256",
         "name": "stakingRewards",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipientKey",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_recipientRateKey",
-        "type": "uint256"
-      }
-    ],
-    "name": "getRecipientTransactionCore",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "recipientRate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "creationTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastUpdateTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stakedSPCoins",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "inserted",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

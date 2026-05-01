@@ -11,10 +11,13 @@ export type SpCoinReadMethod =
   | 'calculateStakingRewards'
   | 'creationTime'
   | 'getSpCoinMetaData'
+  | 'getMasterAccountMetaData'
   | 'getMasterAccountList'
   | 'getMasterAccountKeys'
+  | 'getMasterAccountKeyCount'
   | 'getMasterAccountCount'
   | 'getMasterAccountListSize'
+  | 'getAccountListSize'
   | 'getActiveAccountKeys'
   | 'getActiveAccountList'
   | 'getActiveAccountCount'
@@ -26,12 +29,17 @@ export type SpCoinReadMethod =
   | 'getRecipientListSize'
   | 'getAgentListSize'
   | 'getAccountKeys'
-  | 'getAccountKeyCount'
   | 'getRecipientKeys'
   | 'getAgentKeys'
   | 'getRecipientKeyCount'
   | 'getAgentKeyCount'
+  | 'getAccountCore'
   | 'getAccountRecord'
+  | 'getAccountRoleSummary'
+  | 'getAccountRoles'
+  | 'isSponsor'
+  | 'isRecipient'
+  | 'isAgent'
   | 'getAccountStakingRewards'
   | 'getAccountRewardTransactionList'
   | 'getAccountRewardTransactionRecord'
@@ -79,8 +87,6 @@ export type SpCoinReadMethod =
 
 export type SpCoinReadAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
 
-export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [];
-
 const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getVersion: 'version',
   version: 'version',
@@ -88,14 +94,16 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   initialTotalSupply: 'totalInitialSupply',
   totalInitialSupply: 'totalInitialSupply',
   getAccountTransactionList: 'getAccountTransactionList',
+  getMasterMetaData: 'getMasterAccountMetaData',
   getMasterAccountList: 'getMasterAccountKeys',
   getAccountKeys: 'getMasterAccountKeys',
   getAccountElement: 'getMasterAccountElement',
   getMasterAccountKeyAt: 'getMasterAccountElement',
   getAccountKeyAt: 'getMasterAccountElement',
-  getAccountKeyCount: 'getMasterAccountCount',
-  getMasterAccountListSize: 'getMasterAccountCount',
-  getAccountListSize: 'getMasterAccountCount',
+  getAccountKeyCount: 'getMasterAccountKeyCount',
+  getMasterAccountCount: 'getMasterAccountKeyCount',
+  getMasterAccountListSize: 'getMasterAccountKeyCount',
+  getAccountListSize: 'getMasterAccountKeyCount',
   getAccountRecipientList: 'getRecipientKeys',
   getAccountRecipientListSize: 'getRecipientKeyCount',
   getAccountAgentList: 'getAgentKeys',
@@ -134,19 +142,17 @@ export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
   'getInflationRate',
   'isDeployed',
   'isAccountInserted',
+  'getMasterAccountMetaData',
   'getMasterAccountKeys',
   'getMasterAccountElement',
   'getAccountElement',
   'getMasterAccountList',
-  'getMasterAccountCount',
-  'getMasterAccountListSize',
   'getActiveAccountKeys',
   'getActiveAccountList',
   'getActiveAccountCount',
   'getActiveAccountListSize',
   'getActiveAccountElement',
   'getActiveAccountKeyAt',
-  'getAccountKeyCount',
   'getAccountKeys',
   'totalUnstakedSpCoins',
   'totalStakedSPCoins',
@@ -154,6 +160,13 @@ export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
 ];
 
 export const SPCOIN_SENDER_READ_METHODS: SpCoinReadMethod[] = [];
+
+export const SPCOIN_LEGACY_READ_METHODS: SpCoinReadMethod[] = [
+  'getMasterAccountKeyCount',
+  'getMasterAccountCount',
+  'getMasterAccountListSize',
+  'getAccountListSize',
+];
 
 const ALL_SPCOIN_READ_METHODS = Object.keys(SPCOIN_READ_METHOD_DEFS) as SpCoinReadMethod[];
 
@@ -170,7 +183,10 @@ export const SPCOIN_READ_METHOD_MEMBER_LISTS: Record<
   Record<SpCoinReadMethod, boolean>
 > = {
   Standard: buildSpCoinReadMemberList(
-    (name) => !SPCOIN_OFFCHAIN_READ_METHODS.includes(name) && !SPCOIN_ADMIN_READ_METHODS.includes(name),
+    (name) =>
+      !SPCOIN_OFFCHAIN_READ_METHODS.includes(name) &&
+      !SPCOIN_ADMIN_READ_METHODS.includes(name) &&
+      !SPCOIN_LEGACY_READ_METHODS.includes(name),
   ),
   All: buildSpCoinReadMemberList(() => true),
   Test: buildSpCoinReadMemberList((name) => SPCOIN_OFFCHAIN_READ_METHODS.includes(name)),
@@ -426,29 +442,43 @@ function normalizeAddressDisplay(value: unknown) {
   return String(value ?? '').trim().toLowerCase();
 }
 
+function isMissingContractReadError(error: unknown) {
+  const source = (error && typeof error === 'object' ? error : {}) as Record<string, unknown>;
+  const nested = ((source.error || source.info || source.cause) && typeof (source.error || source.info || source.cause) === 'object'
+    ? (source.error || source.info || source.cause)
+    : {}) as Record<string, unknown>;
+  const code = String(source.code || nested.code || '');
+  const data = String(source.data || nested.data || '');
+  const message = String(source.message || nested.message || '');
+  return code === 'CALL_EXCEPTION' || data === '0x' || /execution reverted|require\(false\)|no matching fragment/i.test(message);
+}
+
 function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
-  if (!Array.isArray(result) || result.length < 10) return result;
+  if (!Array.isArray(result) || result.length < 9) return result;
   const [
     accountKey,
     creationTime,
-    _verified,
     accountBalance,
     stakedAccountSPCoins,
-    _accountStakingRewards,
-    _sponsorKeys,
+    accountStakingRewards,
+    sponsorKeys,
     recipientKeys,
     agentKeys,
-    _parentRecipientKeys,
+    parentRecipientKeys,
   ] = result;
   const normalizedCreationTime = String(creationTime ?? '0').trim();
   const normalizedBalance = String(accountBalance ?? '0').trim();
   const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
+  const normalizedStakingRewards = String(accountStakingRewards ?? '0').trim();
+  const normalizedSponsorKeys = normalizeStringListResult(sponsorKeys ?? []);
   const normalizedRecipientKeys = normalizeStringListResult(recipientKeys ?? []);
   const normalizedAgentKeys = normalizeStringListResult(agentKeys ?? []);
+  const normalizedParentRecipientKeys = normalizeStringListResult(parentRecipientKeys ?? []);
   return {
     TYPE: '--ACCOUNT--',
     accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
     creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
+    accountStakingRewards: normalizedStakingRewards,
     totalSpCoins: {
       TYPE: '--TOTAL_SP_COINS--',
       totalSpCoins: String((BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString()),
@@ -463,10 +493,12 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
         pendingAgentRewards: '0',
       },
     },
+    sponsorKeys: normalizedSponsorKeys,
     recipientKeys: normalizedRecipientKeys,
     recipientRates: {},
     agentKeys: normalizedAgentKeys,
     agentRates: {},
+    parentRecipientKeys: normalizedParentRecipientKeys,
   };
 }
 
@@ -543,28 +575,67 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-  if (canonicalMethod === 'getMasterAccountCount') {
-    appendLog(`[debug:getMasterAccountCount] access read=${String(Boolean(access?.read))} contract=${String(Boolean(access?.contract))}`);
-    if (typeof contract?.getAccountKeyCount === 'function') {
-      const rawCount = await contract.getAccountKeyCount();
-      const count = Number(rawCount ?? 0);
+  if (canonicalMethod === 'getMasterAccountKeyCount') {
+    appendLog(
+      `[debug:getMasterAccountKeyCount] access read=${String(Boolean(access?.read))} contract=${String(Boolean(access?.contract))}`,
+    );
+    const readHost =
+      read && typeof read === 'object'
+        ? (read as SpCoinReadAccess & Record<string, unknown>)
+        : ({} as SpCoinReadAccess & Record<string, unknown>);
+    if (typeof readHost.getMasterAccountKeyCount === 'function') {
+      const count = Number(await readHost.getMasterAccountKeyCount());
       const out = stringifyResult(count);
       appendLog(`${activeDef.title}() -> ${out}`);
       setStatus(`${activeDef.title} read complete.`);
       return count;
     }
-    const readHost =
-      read && typeof read === 'object'
-        ? (read as SpCoinReadAccess & Record<string, unknown>)
-        : ({} as SpCoinReadAccess & Record<string, unknown>);
-    const rawAccountKeys =
-      typeof readHost.getMasterAccountKeys === 'function'
-        ? await readHost.getMasterAccountKeys()
-        : typeof readHost.getAccountKeys === 'function'
-          ? await readHost.getAccountKeys()
-          : typeof readHost.getMasterAccountList === 'function'
-            ? await readHost.getMasterAccountList()
-            : [];
+    if (typeof readHost.getMasterAccountMetaData === 'function') {
+      const metaData = (await readHost.getMasterAccountMetaData()) as Record<string, unknown>;
+      const count = Number(metaData?.masterAccountSize ?? metaData?.numberOfAccounts ?? (Array.isArray(metaData) ? metaData[0] : 0));
+      const out = stringifyResult(count);
+      appendLog(`${activeDef.title}() -> ${out}`);
+      setStatus(`${activeDef.title} read complete.`);
+      return count;
+    }
+    if (typeof contract?.getMasterAccountKeyCount === 'function') {
+      try {
+        const rawCount = await contract.getMasterAccountKeyCount();
+        const count = Number(rawCount ?? 0);
+        const out = stringifyResult(count);
+        appendLog(`${activeDef.title}() -> ${out}`);
+        setStatus(`${activeDef.title} read complete.`);
+        return count;
+      } catch (error) {
+        if (!isMissingContractReadError(error)) throw error;
+      }
+    }
+    if (typeof contract?.getAccountKeyCount === 'function') {
+      try {
+        const rawCount = await contract.getAccountKeyCount();
+        const count = Number(rawCount ?? 0);
+        const out = stringifyResult(count);
+        appendLog(`${activeDef.title}() -> ${out}`);
+        setStatus(`${activeDef.title} read complete.`);
+        return count;
+      } catch (error) {
+        if (!isMissingContractReadError(error)) throw error;
+      }
+    }
+    let rawAccountKeys: unknown = [];
+    if (typeof readHost.getMasterAccountKeys === 'function') {
+      rawAccountKeys = await readHost.getMasterAccountKeys();
+    } else if (typeof readHost.getAccountKeys === 'function') {
+      rawAccountKeys = await readHost.getAccountKeys();
+    } else if (typeof readHost.getMasterAccountList === 'function') {
+      rawAccountKeys = await readHost.getMasterAccountList();
+    } else if (typeof contract?.getMasterAccountKeys === 'function') {
+      try {
+        rawAccountKeys = await contract.getMasterAccountKeys();
+      } catch (error) {
+        if (!isMissingContractReadError(error)) throw error;
+      }
+    }
     const accountKeys = normalizeStringListResult(rawAccountKeys ?? []);
     const out = stringifyResult(accountKeys.length || 0);
     appendLog(`${activeDef.title}() -> ${out}`);

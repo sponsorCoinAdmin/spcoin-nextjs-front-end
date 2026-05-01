@@ -2,6 +2,10 @@ export declare class SpCoinReadModule {
     spCoinContractDeployed: any;
     getAccountList: () => Promise<string[]>;
     getAccountListSize: () => Promise<number>;
+    getMasterAccountKeyCount: () => Promise<number>;
+    getMasterAccountCount: () => Promise<number>;
+    getAccountKeyCount: () => Promise<number>;
+    getMasterAccountListSize: () => Promise<number>;
     getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
     getAccountRecipientListSize: (_accountKey: string) => Promise<number>;
     getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;

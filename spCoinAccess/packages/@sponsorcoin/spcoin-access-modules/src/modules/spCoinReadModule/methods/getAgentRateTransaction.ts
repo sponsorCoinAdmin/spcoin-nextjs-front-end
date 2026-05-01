@@ -8,13 +8,13 @@ export async function getAgentTransaction(context, _sponsorKey, _recipientKey, _
     let inserted = false;
     let recordStr = ["0", "0", "0"];
     try {
-        const core = await runtime.spCoinContractDeployed.getAgentTransactionCore(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
-        inserted = Boolean(core?.[4]);
+        const core = await runtime.spCoinContractDeployed.getAgentTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
+        inserted = Boolean(core?.[8]);
         if (inserted) {
             recordStr = [
-                String(core?.[1] ?? "0"),
-                String(core?.[2] ?? "0"),
-                String(core?.[3] ?? "0"),
+                String(core?.[5] ?? "0"),
+                String(core?.[6] ?? "0"),
+                String(core?.[7] ?? "0"),
             ];
         }
     }

@@ -7,6 +7,8 @@ export { SpCoinAddModule as SpCoinAddModule } from "./modules/spCoinAddModule/in
 export { SpCoinReadModule as SpCoinReadModule } from "./modules/spCoinReadModule/index";
 export { SpCoinRewardsModule as SpCoinRewardsModule } from "./modules/spCoinRewardsModule/index";
 export { SpCoinStakingModule as SpCoinStakingModule } from "./modules/spCoinStakingModule/index";
+export { callAccessMethod } from "./utils/callAccessMethod";
+export type { AccessMethodCaller, AccessMethodCallOptions, AccessMethodLifecycle, AccessMethodRunner, AccessMethodRunState } from "./utils/callAccessMethod";
 export declare class SpCoinAccessModules {
     constructor(spCoinABI: any, spCoinAddress: any, signer: any);
 }

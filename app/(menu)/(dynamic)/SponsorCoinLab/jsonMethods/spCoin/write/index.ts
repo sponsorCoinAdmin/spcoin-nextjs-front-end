@@ -3,6 +3,7 @@ import { SPCOIN_WRITE_METHOD_DEFS } from './defs';
 export { SPCOIN_WRITE_METHOD_DEFS };
 import type { ParamDef } from '../../shared/types';
 import {
+  attachReceiptGasToOnChainCall,
   buildMethodTimingMeta,
   type MethodTimingCollector,
   type MethodTimingMeta,
@@ -544,6 +545,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           throw new Error(`${label} did not return a transaction response.`);
         }
         const receipt = await tx.wait();
+        attachReceiptGasToOnChainCall(timingCollector, canonicalMethod, tx, receipt);
         appendWriteTrace?.(`submitWrite(${label}) receipt status=${String(receipt?.status ?? '')} hash=${String(receipt?.hash || tx?.hash || '')}`);
         appendLog(`${label} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
         receipts.push({

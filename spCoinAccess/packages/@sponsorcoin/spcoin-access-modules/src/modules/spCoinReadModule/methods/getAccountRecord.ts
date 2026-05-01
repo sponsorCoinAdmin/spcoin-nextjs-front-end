@@ -77,10 +77,11 @@ function mergeAccountNode(existingAccount, incomingAccount) {
     };
 }
 
-function getRelationshipReadCache(runtime) {
+export function getRelationshipReadCache(runtime) {
     if (!runtime.__relationshipReadCache) {
         runtime.__relationshipReadCache = {
             accountRecordObject: new Map(),
+            accountRoleSummary: new Map(),
             recipientRateList: new Map(),
             recipientRateAgentList: new Map(),
             agentRateList: new Map(),
@@ -90,7 +91,13 @@ function getRelationshipReadCache(runtime) {
             spCoinMetaData: undefined,
         };
     }
+    runtime.__relationshipReadCache.accountRecordObject ||= new Map();
+    runtime.__relationshipReadCache.accountRoleSummary ||= new Map();
     return runtime.__relationshipReadCache;
+}
+
+export function normalizeAccountRecordCacheKey(accountKey) {
+    return String(accountKey ?? "").trim().toLowerCase();
 }
 
 async function getSpCoinMetaDataCached(runtime) {
@@ -101,9 +108,9 @@ async function getSpCoinMetaDataCached(runtime) {
     return await cache.spCoinMetaData;
 }
 
-async function getAccountRecordObjectCached(runtime, accountKey) {
+export async function getAccountRecordObjectCached(runtime, accountKey) {
     const cache = getRelationshipReadCache(runtime);
-    const key = String(accountKey ?? "").trim().toLowerCase();
+    const key = normalizeAccountRecordCacheKey(accountKey);
     if (!cache.accountRecordObject.has(key)) {
         cache.accountRecordObject.set(key, runtime.spCoinSerialize.getAccountRecordObject(accountKey));
     }
@@ -369,6 +376,19 @@ function normalizeDisplayAddress(value) {
     return String(value ?? "").trim().toLowerCase();
 }
 
+function normalizeDisplayAddressList(value) {
+    return Array.isArray(value)
+        ? value.map((entry) => normalizeDisplayAddress(entry)).filter(Boolean)
+        : [];
+}
+
+function normalizeAccountRelationshipKeys(accountStruct) {
+    accountStruct.sponsorKeys = normalizeDisplayAddressList(accountStruct.sponsorKeys);
+    accountStruct.recipientKeys = normalizeDisplayAddressList(accountStruct.recipientKeys);
+    accountStruct.agentKeys = normalizeDisplayAddressList(accountStruct.agentKeys);
+    accountStruct.parentRecipientKeys = normalizeDisplayAddressList(accountStruct.parentRecipientKeys);
+}
+
 function isEmptyBaseAccountRecord(accountStruct) {
     if (!accountStruct || typeof accountStruct !== "object") return true;
     const normalizedAccountKey = normalizeDisplayAddress(accountStruct.accountKey);
@@ -392,16 +412,12 @@ async function getShallowAccountRecord(runtime, accountKey) {
     const accountStruct = { ...(baseAccountStruct || {}) };
     accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
-    delete accountStruct.verified;
+    normalizeAccountRelationshipKeys(accountStruct);
     if (isEmptyBaseAccountRecord(accountStruct)) {
         accountStruct.creationTime = "";
         accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(), "0%");
         accountStruct.agentRates = {};
-        delete accountStruct.sponsorKeys;
-        accountStruct.recipientKeys = [];
         accountStruct.recipientRates = {};
-        accountStruct.agentKeys = [];
-        delete accountStruct.parentRecipientKeys;
         return accountStruct;
     }
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
@@ -415,11 +431,7 @@ async function getShallowAccountRecord(runtime, accountKey) {
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
     accountStruct.agentRates = {};
-    delete accountStruct.sponsorKeys;
-    accountStruct.recipientKeys = [];
     accountStruct.recipientRates = {};
-    accountStruct.agentKeys = [];
-    delete accountStruct.parentRecipientKeys;
     return accountStruct;
 }
 
@@ -433,7 +445,7 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     const accountStruct = { ...(baseAccountStruct || {}) };
     accountStruct.TYPE = String(accountStruct.TYPE || "--ACCOUNT--");
     accountStruct.accountKey = normalizeDisplayAddress(accountKey);
-    delete accountStruct.verified;
+    normalizeAccountRelationshipKeys(accountStruct);
     const sponsorAccountKeys = Array.isArray(accountStruct.sponsorKeys) ? accountStruct.sponsorKeys : [];
     const recipientAccountKeys = Array.isArray(accountStruct.recipientKeys) ? accountStruct.recipientKeys : [];
     const parentRecipientKeys = Array.isArray(accountStruct.parentRecipientKeys)
@@ -450,13 +462,11 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
             `JS => buildAgentParentRelationshipList soft-failed for ${String(accountKey ?? "")}: ${String(error?.message || error)}`,
         );
     }
-    delete accountStruct.sponsorKeys;
     accountStruct.recipientRates = {};
     accountStruct.recipientKeys = await buildRecipientAccountList(runtime, accountKey, recipientAccountKeys, depthRemaining, nextVisitedKeys, debugState);
     accountStruct.agentKeys = sponsorAccountKeys.length > 0
         ? await buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, accountKey, depthRemaining, nextVisitedKeys, debugState)
         : [];
-    delete accountStruct.parentRecipientKeys;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(

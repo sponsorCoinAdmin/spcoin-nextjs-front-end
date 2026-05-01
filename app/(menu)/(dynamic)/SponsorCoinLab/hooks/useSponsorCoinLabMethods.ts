@@ -16,6 +16,7 @@ import { useSponsorCoinLabMethodExecution, type MethodExecutionDescriptor } from
 import { useSponsorCoinLabRateKeyOptions } from './useSponsorCoinLabRateKeyOptions';
 import { useSponsorCoinLabScriptRunner } from './useSponsorCoinLabScriptRunner';
 import { useSponsorCoinLabTreeMethods } from './useSponsorCoinLabTreeMethods';
+import type { AccessMethodCaller } from './useAccessMethodCaller';
 
 interface Entry { id: string; label: string }
 interface MethodExecutionOptions {
@@ -92,7 +93,7 @@ interface Params {
   formattedOutputDisplay: string;
   setFormattedOutputDisplay: (value: string) => void;
   setTreeOutputDisplay: (value: string) => void;
-  setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status') => void;
+  setOutputPanelMode: (value: 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug') => void;
   showValidationPopup: (
     fieldIds: string[],
     labels: string[],
@@ -124,6 +125,7 @@ interface Params {
   formatOutputDisplayValue: (value: unknown) => string;
   recipientRateRange?: [number, number];
   agentRateRange?: [number, number];
+  callAccessMethod?: AccessMethodCaller;
 }
 
 export function useSponsorCoinLabMethods({
@@ -185,6 +187,7 @@ export function useSponsorCoinLabMethods({
   formatOutputDisplayValue,
   recipientRateRange,
   agentRateRange,
+  callAccessMethod,
 }: Params) {
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
@@ -576,6 +579,7 @@ export function useSponsorCoinLabMethods({
     buildMethodCallEntry,
     formatOutputDisplayValue,
     formatFormattedPanelPayload,
+    callAccessMethod,
   });
   const runSelectedWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {
@@ -725,10 +729,10 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result, meta } = await executeMethodDescriptor(descriptor, {
+      const { call, result, meta, onChainCalls } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
       });
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, meta, ...(onChainCalls ? { onChainCalls } : {}), result }));
     } catch (error) {
       if (isAbortError(error)) {
         const message = `${options?.executionLabel ?? activeSpCoinReadDef.title} cancelled.`;

@@ -22,7 +22,7 @@ type Props = {
   editScriptStepFromBuilder: (step: LabScriptStep) => void;
   toggleScriptStepExpanded: (stepNumber: number) => void;
   toggleScriptStepBreakpoint: (stepNumber: number) => void;
-  outputPanelMode: 'execution' | 'formatted' | 'tree' | 'raw_status';
+  outputPanelMode: 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
   formattedPanelView: 'script' | 'output';
   selectedScriptDisplay: string;
   formattedOutputDisplay: string;

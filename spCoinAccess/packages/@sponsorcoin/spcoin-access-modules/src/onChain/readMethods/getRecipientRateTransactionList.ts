@@ -4,7 +4,7 @@ import { buildHandler } from '../../readMethodRuntime';
 const handler = buildHandler('getRecipientTransactionList', async (context) => {
     const rates = (await context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])) ?? [];
     return Promise.all(rates.map(async (rate) => {
-        const [, creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientTransactionCore(context.methodArgs[0], context.methodArgs[1], rate);
+        const [, , , creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientTransaction(context.methodArgs[0], context.methodArgs[1], rate);
         const serializedRecipientTransaction = [
             String(creationTime ?? '0'),
             String(lastUpdateTime ?? '0'),

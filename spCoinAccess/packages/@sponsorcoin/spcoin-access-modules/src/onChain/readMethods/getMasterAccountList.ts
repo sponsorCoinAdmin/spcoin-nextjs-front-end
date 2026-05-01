@@ -7,6 +7,12 @@ const legacyAccountListInterface = new Interface([
     'function getAccountList() view returns (address[])',
 ]);
 
+function normalizeAccountKeysResult(result) {
+    if (result?.accountKeys) return result.accountKeys;
+    if (Array.isArray(result) && result.length === 2 && Array.isArray(result[1])) return result[1];
+    return result;
+}
+
 async function callLegacyGetAccountList(contract) {
     const target = String(contract?.target || (typeof contract?.getAddress === 'function' ? await contract.getAddress() : ''));
     const runner = contract?.runner;
@@ -37,7 +43,11 @@ const handler = buildHandler('getMasterAccountKeys', async (context) => {
     }
 
     try {
-        return await method();
+        const result = await method();
+        const accountKeys = normalizeAccountKeysResult(result);
+        return context.normalizeStringListResult
+            ? context.normalizeStringListResult(accountKeys ?? [])
+            : accountKeys;
     } catch (error) {
         const code = String(error?.code || '');
         const data = String(error?.data || '');

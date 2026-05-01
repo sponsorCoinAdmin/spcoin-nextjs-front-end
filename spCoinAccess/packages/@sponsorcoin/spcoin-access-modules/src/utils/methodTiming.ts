@@ -1,6 +1,10 @@
 export type OnChainCallTiming = {
     method: string;
     runTimeMs: number;
+    gasUsed?: string;
+    gasPriceWei?: string;
+    feePaidWei?: string;
+    feePaidEth?: string;
 };
 export type MethodTimingMeta = {
     startedAt: string;
@@ -90,6 +94,79 @@ export async function timeOnChainCall<T>(method: string, callback: () => Promise
         }
     }
 }
+
+function normalizeMethodName(method: unknown) {
+    return String(method ?? "").trim().replace(/\(.*/, "") || "unknown";
+}
+
+function toBigIntOrUndefined(value: unknown): bigint | undefined {
+    if (value == null || value === "") return undefined;
+    if (typeof value === "bigint") return value;
+    if (typeof value === "number" && Number.isFinite(value)) return BigInt(Math.trunc(value));
+    const normalized = String(value).replace(/,/g, "").trim();
+    if (!/^\d+$/.test(normalized)) return undefined;
+    try {
+        return BigInt(normalized);
+    }
+    catch {
+        return undefined;
+    }
+}
+
+function formatWeiAsEther(wei: bigint) {
+    const divisor = 10n ** 18n;
+    const whole = wei / divisor;
+    const fraction = wei % divisor;
+    if (fraction === 0n) return whole.toString();
+    return `${whole.toString()}.${fraction.toString().padStart(18, "0").replace(/0+$/, "")}`;
+}
+
+export function buildReceiptGasTimingFields(tx: unknown, receipt: unknown): Partial<OnChainCallTiming> {
+    const txRecord = (tx && typeof tx === "object" ? tx : {}) as Record<string, unknown>;
+    const receiptRecord = (receipt && typeof receipt === "object" ? receipt : {}) as Record<string, unknown>;
+    const gasUsed = toBigIntOrUndefined(receiptRecord.gasUsed);
+    const gasPrice =
+        toBigIntOrUndefined(receiptRecord.effectiveGasPrice) ??
+        toBigIntOrUndefined(receiptRecord.gasPrice) ??
+        toBigIntOrUndefined(txRecord.gasPrice);
+    const feePaid = toBigIntOrUndefined(receiptRecord.fee) ?? (gasUsed != null && gasPrice != null ? gasUsed * gasPrice : undefined);
+    return {
+        ...(gasUsed != null ? { gasUsed: gasUsed.toString() } : {}),
+        ...(gasPrice != null ? { gasPriceWei: gasPrice.toString() } : {}),
+        ...(feePaid != null
+            ? {
+                feePaidWei: feePaid.toString(),
+                feePaidEth: formatWeiAsEther(feePaid),
+            }
+            : {}),
+    };
+}
+
+export function attachReceiptGasToOnChainCall(
+    collector: MethodTimingCollector | undefined | null,
+    method: string,
+    tx: unknown,
+    receipt: unknown,
+) {
+    const gasFields = buildReceiptGasTimingFields(tx, receipt);
+    if (Object.keys(gasFields).length === 0 || !collector) return;
+    const normalizedMethod = normalizeMethodName(method);
+    const calls = Array.isArray(collector.onChainCalls) ? collector.onChainCalls : [];
+    const matchingIndex = [...calls]
+        .reverse()
+        .findIndex((entry) => normalizeMethodName(entry?.method) === normalizedMethod);
+    const targetIndex = matchingIndex >= 0 ? calls.length - 1 - matchingIndex : calls.length - 1;
+    if (targetIndex >= 0) {
+        Object.assign(calls[targetIndex], gasFields);
+        return;
+    }
+    calls.push({
+        method: normalizedMethod,
+        runTimeMs: 0,
+        ...gasFields,
+    });
+}
+
 export function buildMethodTimingMeta(
     collector: MethodTimingCollector,
     completedAtMs = Date.now(),
@@ -98,6 +175,10 @@ export function buildMethodTimingMeta(
     const onChainCalls = Array.isArray(collector?.onChainCalls) ? collector.onChainCalls.map((entry) => ({
         method: String(entry?.method || "").trim() || "unknown",
         runTimeMs: Math.max(0, Number(entry?.runTimeMs || 0)),
+        ...(entry?.gasUsed != null ? { gasUsed: String(entry.gasUsed) } : {}),
+        ...(entry?.gasPriceWei != null ? { gasPriceWei: String(entry.gasPriceWei) } : {}),
+        ...(entry?.feePaidWei != null ? { feePaidWei: String(entry.feePaidWei) } : {}),
+        ...(entry?.feePaidEth != null ? { feePaidEth: String(entry.feePaidEth) } : {}),
     })) : [];
     const onChainRunTimeMs = onChainCalls.reduce((total, entry) => total + entry.runTimeMs, 0);
     return {

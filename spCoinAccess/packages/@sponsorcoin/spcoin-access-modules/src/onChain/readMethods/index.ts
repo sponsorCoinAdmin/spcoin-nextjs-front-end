@@ -2,7 +2,9 @@
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import getAccountKeys from './getMasterAccountList';
+import getMasterAccountMetaData from './getMasterAccountMetaData';
 import getActiveAccountKeys from './getActiveAccountList';
+import getAccountCore from './getAccountCore';
 import getRecipientRateKeys from './getRecipientRateList';
 import getRecipientRateAgentKeys from './getRecipientRateAgentList';
 import getLowerRecipientRate from './getLowerRecipientRate';
@@ -30,7 +32,7 @@ import getTransactionList from './getTransactionList';
 import getTransactionRecord from './getTransactionRecord';
 import getRecipientTransactionIdKeys from './getRecipientTransactionIdKeys';
 import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
-import getAccountKeyCount from './getAccountListSize';
+import getMasterAccountKeyCount from './getAccountListSize';
 import getActiveAccountCount from './getActiveAccountListSize';
 import getRecipientKeys from './getAccountRecipientList';
 import getAgentKeys from './getAccountAgentList';
@@ -59,8 +61,10 @@ import getSerializedTransactionList from './getSerializedTransactionList';
 export const ONCHAIN_READ_METHOD_HANDLERS = {
     getInflationRate,
     calculateStakingRewards,
+    getMasterAccountMetaData,
     getMasterAccountKeys: getAccountKeys,
     getAccountKeys,
+    getAccountCore,
     getActiveAccountKeys,
     getRecipientRateKeys,
     getRecipientRateAgentKeys,
@@ -91,8 +95,9 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getTransactionRecord,
     getRecipientTransactionIdKeys,
     getAgentTransactionIdKeys,
-    getMasterAccountCount: getAccountKeyCount,
-    getAccountKeyCount,
+    getMasterAccountKeyCount,
+    getMasterAccountCount: getMasterAccountKeyCount,
+    getAccountKeyCount: getMasterAccountKeyCount,
     getActiveAccountCount,
     getRecipientKeys,
     getAgentKeys,
@@ -123,7 +128,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getMasterAccountKeyAt: getAccountElement,
     getAccountKeyAt: getAccountElement,
     getActiveAccountElement,
-    getMasterAccountListSize: getAccountKeyCount,
+    getMasterAccountListSize: getMasterAccountKeyCount,
     getActiveAccountListSize: getActiveAccountCount,
     getRecipientList: getRecipientKeys,
     getAgentList: getAgentKeys,

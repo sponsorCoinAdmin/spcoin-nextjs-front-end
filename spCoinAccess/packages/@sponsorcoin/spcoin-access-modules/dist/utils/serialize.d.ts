@@ -1,10 +1,9 @@
 import { Interface } from "ethers";
 export declare const accountRewardTotalsInterface: Interface;
-export declare const accountCoreInterface: Interface;
-export declare const accountLinksInterface: Interface;
-export declare const recipientRecordCoreInterface: Interface;
-export declare const recipientTransactionCoreInterface: Interface;
-export declare const agentTransactionCoreInterface: Interface;
+export declare const accountRecordInterface: Interface;
+export declare const recipientRecordInterface: Interface;
+export declare const recipientTransactionInterface: Interface;
+export declare const agentTransactionInterface: Interface;
 export declare function callViewFunction(contract: any, iface: any, functionName: any, args: any): Promise<any>;
 export declare function readAnnualInflation(contract: any): Promise<any>;
 export declare function normalizeAddress(value: any): string;

@@ -66,7 +66,6 @@ export class RecipientStruct extends RelationshipRecordStruct {
         this.creationTime;
         this.location;
         this.stakedSPCoins;
-        this.verified;
         this.recipientTransactionList;
         this.recipientRateKeys;
     }
@@ -92,7 +91,6 @@ export class AgentStruct extends RelationshipRecordStruct {
         this.agentKey;
         this.stakedSPCoins;
         this.creationTime;
-        this.verified;
         this.agentRateKeys;
     }
 }

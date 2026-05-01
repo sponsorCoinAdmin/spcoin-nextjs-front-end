@@ -1,12 +1,26 @@
 // @ts-nocheck
+export { getMasterAccountMetaData } from './getMasterAccountMetaData';
 export { getAccountKeys, getMasterAccountKeys, getMasterAccountList } from './getMasterAccountList';
-export { getAccountListSize, getAccountKeyCount, getMasterAccountCount, getMasterAccountListSize } from './getAccountListSize';
+export {
+    getAccountListSize,
+    getAccountKeyCount,
+    getMasterAccountKeyCount,
+    getMasterAccountCount,
+    getMasterAccountListSize,
+} from './getAccountListSize';
 export { getActiveAccountKeys, getActiveAccountList } from './getActiveAccountList';
 export { getActiveAccountCount, getActiveAccountListSize } from './getActiveAccountListSize';
 export { getActiveAccountKeyAt, getActiveAccountElement } from './getActiveAccountElement';
 export { getRecipientKeys, getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
 export { getAccountRecord } from './getAccountRecord';
+export {
+    getAccountRoleSummary,
+    getAccountRoles,
+    isSponsor,
+    isRecipient,
+    isAgent,
+} from './getAccountRoleSummary';
 export { getAccountStakingRewards } from './getAccountStakingRewards';
 export { getRewardTypeRecord } from './getRewardTypeRecord';
 export { getAccountRewardTransactionList } from './getAccountRewardTransactionList';

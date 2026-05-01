@@ -51,19 +51,24 @@ contract RecipientRates is Recipient {
         return recipientRecord.recipientRateMap[_recipientRateKey];
     }
 
-    function getRecipientTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
+    function getRecipientTransaction(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
         external
         view
         returns (
-            uint256 recipientRate,
+            address sponsorKey,
+            address recipientKey,
+            uint256 recipientRateKey,
             uint256 creationTime,
             uint256 lastUpdateTime,
             uint256 stakedSPCoins,
             bool inserted
         )
     {
-        RecipientRateStruct storage recipientTransaction = getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        recipientRate = recipientTransaction.recipientRate;
+        RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
+        RecipientRateStruct storage recipientTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
+        sponsorKey = recipientRecord.sponsorKey == address(0) ? _sponsorKey : recipientRecord.sponsorKey;
+        recipientKey = recipientRecord.recipientKey == address(0) ? _recipientKey : recipientRecord.recipientKey;
+        recipientRateKey = recipientTransaction.inserted ? recipientTransaction.recipientRate : _recipientRateKey;
         creationTime = recipientTransaction.creationTime;
         lastUpdateTime = recipientTransaction.lastUpdateTime;
         stakedSPCoins = recipientTransaction.stakedSPCoins;

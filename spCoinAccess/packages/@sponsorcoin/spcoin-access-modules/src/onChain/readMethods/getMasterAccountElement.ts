@@ -44,13 +44,13 @@ const handler = buildHandler('getMasterAccountElement', async (context) => {
     }
 
     const listMethod = getDynamicMethod(context.read, 'getMasterAccountKeys')
-        || getDynamicMethod(context.staking, 'getMasterAccountKeys')
-        || getDynamicMethod(context.contract, 'getMasterAccountKeys')
         || getDynamicMethod(context.read, 'getAccountKeys')
-        || getDynamicMethod(context.staking, 'getAccountKeys')
-        || getDynamicMethod(context.contract, 'getAccountKeys')
         || getDynamicMethod(context.read, 'getMasterAccountList')
+        || getDynamicMethod(context.staking, 'getMasterAccountKeys')
+        || getDynamicMethod(context.staking, 'getAccountKeys')
         || getDynamicMethod(context.staking, 'getMasterAccountList')
+        || getDynamicMethod(context.contract, 'getMasterAccountKeys')
+        || getDynamicMethod(context.contract, 'getAccountKeys')
         || getDynamicMethod(context.contract, 'getMasterAccountList');
     if (!listMethod) {
         throw new Error('getMasterAccountElement requires getMasterAccountElement(uint256) or getMasterAccountKeys() on the current SpCoin contract.');

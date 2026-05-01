@@ -211,10 +211,7 @@ struct AccountStruct {
     uint256 creationTime;
     uint256 stakedSPCoins;
     uint256 accountTypes;
-    uint256 activeParentLinkCount;
-    uint256 activeChildLinkCount;
     bool inserted;
-    bool verified;
 
     // Relationship navigation.
     address[] recipientKeys;          // this account as sponsor -> recipients
@@ -467,67 +464,89 @@ without scanning every transaction.
 
 If the UI/off-chain event index eventually replaces relationship discovery, `parentRecipientKeys` can be reconsidered later. For now, keep it.
 
+## Account Role Inference
+
+Accounts are not created as one fixed role. An account's roles are inferred from its relationship links and rate-bucket participation.
+
+Current role predicates:
+
+```text
+isSponsor(account) =
+    account.recipientKeys.length > 0
+
+isRecipient(account) =
+    account.sponsorKeys.length > 0 ||
+    account.agentKeys.length > 0 ||
+    account.recipientRateTransactionSetKeys.length > 0
+
+isAgent(account) =
+    account.parentRecipientKeys.length > 0 ||
+    account.agentRateTransactionSetKeys.length > 0
+```
+
+The distinction matters because a recipient can have sponsors and recipient-rate buckets without having any agents. Therefore `agentKeys.length > 0` is not sufficient to identify a recipient account.
+
+Implemented local access helpers:
+
+```text
+getAccountRoleSummary(account)
+getAccountRoles(account)
+isSponsor(account)
+isRecipient(account)
+isAgent(account)
+```
+
+These helpers are read-access methods. They use the current runtime account-record cache first. If the account record is not already cached, they call the on-chain account-record reader through `getAccountRecordObject(account)` and store that promise in `__relationshipReadCache.accountRecordObject`.
+
+`getAccountRoleSummary(account)` also caches the derived summary in `__relationshipReadCache.accountRoleSummary`. The read module instance is already scoped to the active contract and runner, so the in-memory cache key is the normalized account address inside that scoped runtime.
+
 ## Account Lists
 
 Keep two account lists with different meanings:
 
 - `masterAccountList`
-- `activeAccountList`
+- active account status from relationship links
 
 Meaning:
 
 - `masterAccountList` is append-only and contains every account ever registered.
-- `activeAccountList` contains accounts that currently have active relationships.
+- an account is active when it has at least one sponsor, recipient, agent, or parent-recipient link.
 
 Conceptually:
 
 ```solidity
 address[] masterAccountList;
-address[] activeAccountList;
 
 mapping(address => AccountStruct) accountMap;
 mapping(address => bool) isKnownAccount;
-mapping(address => bool) isActiveAccount;
 ```
 
 First registration should:
 
 1. add the account to `masterAccountList` once
 2. mark the account known
-3. add the account to `activeAccountList` when it receives an active role or link
+3. derive active status from account links
 
 Reactivation should:
 
 1. avoid adding the account to `masterAccountList` again
-2. add the account back to `activeAccountList`
-3. mark it active again
+2. derive active status from account links
 
-## Active Link Counts
+## Active Links
 
-Use counters so active-account status does not require scanning arrays.
-
-```solidity
-uint256 activeParentLinkCount;
-uint256 activeChildLinkCount;
-```
-
-Direct relationship changes update these counters:
-
-- adding a recipient increments sponsor child count and recipient parent count
-- adding an agent increments recipient child count and agent parent count
-- unlinking a recipient decrements sponsor child count and recipient parent count
-- unlinking an agent decrements recipient child count and agent parent count
-
-An account remains active while either count is greater than zero.
+Active-account status is derived from the account relationship arrays.
 
 ```solidity
 function hasActiveLinks(address accountKey) internal view returns (bool) {
     AccountStruct storage account = accountMap[accountKey];
-    return account.activeParentLinkCount > 0 || account.activeChildLinkCount > 0;
+    return account.sponsorKeys.length > 0 ||
+        account.recipientKeys.length > 0 ||
+        account.agentKeys.length > 0 ||
+        account.parentRecipientKeys.length > 0;
 }
 ```
 
-The relationship arrays can remain for enumeration/display, but active status should rely on counters.
+The relationship arrays are the source of truth for enumeration, display, and active/inactive status.
 
 ## Reads
 
@@ -671,6 +690,27 @@ The following are on-chain because reward math needs them efficiently:
 - rate bucket total staked amounts
 - rate bucket last update dates
 
+## ToDo: Requirements Going Forward
+
+This section holds open design and implementation requirements. As each requirement is completed and verified, move it out of this section and into the relevant completed design section above.
+
+### Account Role History Versus Active Role Predicates
+
+If relationship arrays become historical discovery lists instead of active-only lists, expose separate predicates:
+
+```text
+hasSponsorHistory(account)
+isActiveSponsor(account)
+
+hasRecipientHistory(account)
+isActiveRecipient(account)
+
+hasAgentHistory(account)
+isActiveAgent(account)
+```
+
+The `has*History` predicates can use historical/discovery arrays and rate-set keys. The `isActive*` predicates should use active flags, active counts, or active branch/set state.
+
 ## Migration Strategy
 
 To reduce risk:
@@ -703,8 +743,6 @@ Preferred names:
 - `getRecipientRateTransactionSetKey`
 - `getAgentRateTransactionSetKey`
 - `TransactionAdded`
-- `activeParentLinkCount`
-- `activeChildLinkCount`
 
 Avoid ambiguous names:
 

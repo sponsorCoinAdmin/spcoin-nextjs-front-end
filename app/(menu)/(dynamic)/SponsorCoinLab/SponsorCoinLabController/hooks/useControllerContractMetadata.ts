@@ -53,6 +53,7 @@ type Params = {
   exchangeContext: ControllerExchangeContext;
   setExchangeContext: ControllerSetExchangeContext;
   setSettings: ControllerSetSettings;
+  mode: ConnectionMode;
   setMode: Dispatch<SetStateAction<ConnectionMode>>;
   connectedChainId: string;
   activeNetworkName: string;
@@ -85,6 +86,7 @@ export function useControllerContractMetadata({
   exchangeContext,
   setExchangeContext,
   setSettings,
+  mode,
   setMode,
   connectedChainId,
   activeNetworkName,
@@ -136,6 +138,24 @@ export function useControllerContractMetadata({
     if (hasPersistedNetworkMode !== false) return;
     setMode(isHardhatContractSelected || isHardhatNetworkSelected ? 'hardhat' : 'metamask');
   }, [hasPersistedNetworkMode, isHardhatContractSelected, isHardhatNetworkSelected, setMode]);
+
+  useEffect(() => {
+    if (!allowContractNetworkModeSelection || mode !== 'metamask') return;
+    const connectedChainIdNumber = Number(connectedChainId || 0);
+    if (
+      (isHardhatContractSelected || isHardhatNetworkSelected) &&
+      connectedChainIdNumber !== 31337
+    ) {
+      setMode('hardhat');
+    }
+  }, [
+    allowContractNetworkModeSelection,
+    connectedChainId,
+    isHardhatContractSelected,
+    isHardhatNetworkSelected,
+    mode,
+    setMode,
+  ]);
 
   const activeContractChainIdDisplayValue =
     Number.isFinite(selectedContractChainId) && selectedContractChainId > 0

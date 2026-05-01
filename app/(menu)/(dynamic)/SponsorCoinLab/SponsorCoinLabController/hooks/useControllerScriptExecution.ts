@@ -9,6 +9,7 @@ import {
 } from '../../jsonMethods/erc20/write';
 import type { LabScriptStep, MethodPanelMode } from '../../scriptBuilder/types';
 import type { FormattedPanelView, OutputPanelMode } from '../types';
+import type { AccessMethodCaller } from '../../hooks/useAccessMethodCaller';
 
 interface DisplayedOutputCall {
   method: string;
@@ -23,12 +24,8 @@ interface ScriptRunOptions {
   formattedOutputBase: string;
   executionSignal?: AbortSignal;
   executionLabel?: string;
+  scriptNetwork?: string;
 }
-type MethodExecutionTracker = <T>(
-  methodName: string,
-  runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<T> | T,
-) => Promise<T | undefined>;
-
 function toDisplayString(value: unknown, fallback = '') {
   if (value == null) return fallback;
   if (typeof value === 'string') return value;
@@ -84,13 +81,13 @@ interface Params {
   setIsScriptDebugRunning: (value: boolean) => void;
   setScriptStepExecutionErrors: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
   scriptDebugStopRef: React.MutableRefObject<boolean>;
-  selectedScript?: { id?: string; name: string; steps: LabScriptStep[] } | null;
+  selectedScript?: { id?: string; name: string; network?: string; steps: LabScriptStep[] } | null;
   selectedScriptStepNumber: number | null;
   runScriptStep: (
     step: LabScriptStep,
     options: ScriptRunOptions,
   ) => Promise<ScriptRunResult>;
-  trackMethodExecution: MethodExecutionTracker;
+  callAccessMethod: AccessMethodCaller;
   focusScriptStep: (step: LabScriptStep) => void;
   spCoinReadMethodDefs: Record<string, unknown>;
   spCoinWriteMethodDefs: Record<string, unknown>;
@@ -120,7 +117,7 @@ export function useControllerScriptExecution({
   selectedScript,
   selectedScriptStepNumber,
   runScriptStep,
-  trackMethodExecution,
+  callAccessMethod,
   focusScriptStep,
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
@@ -132,14 +129,15 @@ export function useControllerScriptExecution({
 
   const runScriptStepWithPopup = useCallback(
     async (step: LabScriptStep, options: { formattedOutputBase: string }) =>
-      trackMethodExecution(step.name || step.method, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(step.name || step.method, ({ executionSignal, executionLabel }) =>
         runScriptStep(step, {
           ...options,
+          scriptNetwork: selectedScript?.network,
           executionSignal,
           executionLabel,
         }),
       ),
-    [runScriptStep, trackMethodExecution],
+    [callAccessMethod, runScriptStep, selectedScript?.network],
   );
 
   const displayedOutputCalls = useMemo(() => {

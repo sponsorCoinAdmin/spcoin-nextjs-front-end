@@ -15,6 +15,8 @@ type Props = {
   inputTitle?: string;
   dataFieldId?: string;
   options: AccountOption[];
+  traceLabel?: string;
+  onTrace?: (line: string) => void;
 };
 
 export default function AccountDropdownInput({
@@ -26,16 +28,35 @@ export default function AccountDropdownInput({
   inputTitle,
   dataFieldId,
   options,
+  traceLabel,
+  onTrace,
 }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [showFullList, setShowFullList] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const summarizeValue = React.useCallback((raw: string) => {
+    const value = String(raw || '').trim();
+    if (/^0x[0-9a-fA-F]{40}$/.test(value)) return value;
+    return value ? `${value.slice(0, 24)}${value.length > 24 ? '...' : ''}` : '(empty)';
+  }, []);
+  const trace = React.useCallback(
+    (message: string) => {
+      const label =
+        [traceLabel, dataFieldId, inputAriaLabel]
+          .map((entry) => String(entry ?? '').trim())
+          .find(Boolean) ?? 'account';
+      onTrace?.(`[ACCOUNT_POPUP_TRACE] dropdown(${label}) ${message}`);
+    },
+    [dataFieldId, inputAriaLabel, onTrace, traceLabel],
+  );
 
   React.useEffect(() => {
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (containerRef.current?.contains(target)) return;
+      if (!isOpen && !showFullList) return;
+      trace('outside pointer close');
       setIsOpen(false);
       setShowFullList(false);
     };
@@ -47,7 +68,7 @@ export default function AccountDropdownInput({
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('touchstart', handlePointerDown);
     };
-  }, []);
+  }, [isOpen, showFullList, trace]);
 
   const normalizedQuery = String(value || '').trim().toLowerCase();
   const visibleOptions = React.useMemo(() => {
@@ -57,6 +78,11 @@ export default function AccountDropdownInput({
         option.value.toLowerCase().includes(normalizedQuery) || option.label.toLowerCase().includes(normalizedQuery),
     );
   }, [normalizedQuery, options, showFullList]);
+  React.useEffect(() => {
+    trace(
+      `state open=${String(isOpen)} fullList=${String(showFullList)} query=${summarizeValue(value)} visibleOptions=${visibleOptions.length} totalOptions=${options.length}`,
+    );
+  }, [isOpen, options.length, showFullList, summarizeValue, trace, value, visibleOptions.length]);
 
   return (
     <div ref={containerRef} className="relative w-full min-w-0">
@@ -68,16 +94,20 @@ export default function AccountDropdownInput({
         className={`${className} pr-10`}
         value={value}
         onFocus={() => {
+          trace(`focus open query=${summarizeValue(value)}`);
           setIsOpen(true);
           setShowFullList(false);
         }}
         onBlur={() => {
+          trace('blur schedule close');
           window.setTimeout(() => {
+            trace('blur close applied');
             setIsOpen(false);
             setShowFullList(false);
           }, 100);
         }}
         onChange={(e) => {
+          trace(`input change raw=${summarizeValue(e.target.value)}`);
           onChange(e.target.value);
           setIsOpen(true);
           setShowFullList(false);
@@ -88,6 +118,7 @@ export default function AccountDropdownInput({
         type="button"
         onMouseDown={(e) => {
           e.preventDefault();
+          trace(`chevron mouseDown currentOpen=${String(isOpen)} currentFullList=${String(showFullList)} nextOpen=${String(!isOpen || !showFullList)}`);
           setIsOpen((prev) => !prev || !showFullList);
           setShowFullList(true);
         }}
@@ -105,6 +136,7 @@ export default function AccountDropdownInput({
               type="button"
               onMouseDown={(e) => {
                 e.preventDefault();
+                trace(`option mouseDown selected=${summarizeValue(option.value)} label=${summarizeValue(option.label)}`);
                 onChange(option.value);
                 setIsOpen(false);
                 setShowFullList(false);

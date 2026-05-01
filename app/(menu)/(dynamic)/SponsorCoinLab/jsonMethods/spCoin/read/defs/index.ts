@@ -3,7 +3,8 @@ import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
 import getMasterAccountKeys from './getMasterAccountList';
-import getMasterAccountKeyCount from './getMasterAccountListSize';
+import getMasterAccountMetaData from './getMasterAccountMetaData';
+import getMasterAccountKeyCount from './getMasterAccountKeyCount';
 import getActiveAccountKeys from './getActiveAccountList';
 import getActiveAccountCount from './getActiveAccountListSize';
 import getSpCoinMetaData from './getSpCoinMetaData';
@@ -11,7 +12,10 @@ import getRecipientList from './getRecipientList';
 import getAgentList from './getAgentList';
 import getRecipientListSize from './getRecipientListSize';
 import getAgentListSize from './getAgentListSize';
+import getAccountCore from './getAccountCore';
 import getAccountRecord from './getAccountRecord';
+import getAccountRoleSummary from './getAccountRoleSummary';
+import getAccountRoles from './getAccountRoles';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
@@ -53,18 +57,22 @@ import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
 import version from './version';
+import isSponsor from './isSponsor';
+import isRecipient from './isRecipient';
+import isAgent from './isAgent';
 
 export const SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
   calculateStakingRewards,
   creationTime,
+  getMasterAccountMetaData,
   getMasterAccountKeys,
   getMasterAccountList: getMasterAccountKeys,
   getAccountKeys: getMasterAccountKeys,
+  getMasterAccountKeyCount,
   getMasterAccountCount: getMasterAccountKeyCount,
   getMasterAccountListSize: getMasterAccountKeyCount,
   getAccountListSize: getMasterAccountKeyCount,
-  getAccountKeyCount: getMasterAccountKeyCount,
   getActiveAccountKeys,
   getActiveAccountList: getActiveAccountKeys,
   getActiveAccountCount,
@@ -78,7 +86,13 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientListSize,
   getAgentKeyCount: getAgentListSize,
   getAgentListSize,
+  getAccountCore,
   getAccountRecord,
+  getAccountRoleSummary,
+  getAccountRoles,
+  isSponsor,
+  isRecipient,
+  isAgent,
   getAccountStakingRewards,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,

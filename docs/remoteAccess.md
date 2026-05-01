@@ -17,7 +17,6 @@ The main goal was:
 
 Solidity account reads were changed so missing accounts no longer revert for these methods:
 
-- `getAccountCore(address)`
 - `getAccountLinks(address)`
 - `getAccountRecord(address)`
 
@@ -34,7 +33,7 @@ The app now prefers the direct Solidity `getAccountRecord(...)` call in these pl
 - `app/api/spCoin/run-script/route.ts`
 - `app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/spCoin/read/index.ts`
 
-Fallback to the older compound access-module path still exists if the deployed contract does not expose `getAccountRecord`.
+The older two-call account-record rebuild path has been removed; `getAccountRecord(address)` is the canonical account record source.
 
 ## 3. Normalized account record output
 

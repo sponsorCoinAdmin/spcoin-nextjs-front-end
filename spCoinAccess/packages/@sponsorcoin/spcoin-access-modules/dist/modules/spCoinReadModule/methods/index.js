@@ -1,6 +1,6 @@
 // @ts-nocheck
 export { getAccountList } from './getAccountList';
-export { getAccountListSize } from './getAccountListSize';
+export { getAccountListSize, getAccountKeyCount, getMasterAccountKeyCount, getMasterAccountCount, getMasterAccountListSize } from './getAccountListSize';
 export { getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
 export { getAccountRecord } from './getAccountRecord';

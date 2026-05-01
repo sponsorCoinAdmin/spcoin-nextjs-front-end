@@ -1,18 +1,21 @@
 {
   "name": "@sponsorcoin/spcoin-access-modules",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Package to interface with Sponsor Coin (SPCOIN)",
-  "main": "./dist/index.ts",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.ts",
-    "./onChain": "./dist/onChain/index.ts",
-    "./offChain": "./dist/offChain/index.ts",
+    ".": "./dist/index.js",
+    "./onChain": "./dist/onChain/index.js",
+    "./offChain": "./dist/offChain/index.js",
     "./package.json": "./package.json",
-    "./spCoinMethods": "./dist/spCoinMethods.ts",
+    "./spCoinMethods": "./dist/spCoinMethods.js",
+    "./spCoinMethods.js": "./dist/spCoinMethods.js",
     "./modules/*": "./dist/modules/*.ts",
-    "./utils/*": "./dist/utils/*.ts",
-    "./dataTypes/*": "./dist/dataTypes/*.ts"
+    "./utils/*.js": "./dist/utils/*.js",
+    "./utils/*": "./dist/utils/*.js",
+    "./dataTypes/*.js": "./dist/dataTypes/*.js",
+    "./dataTypes/*": "./dist/dataTypes/*.js"
   },
   "files": [
     "dist",

@@ -82,7 +82,6 @@ contract Account is StructSerialization {
         returns (
             address accountKey,
             uint256 creationTime,
-            bool verified,
             uint256 accountBalance,
             uint256 stakedAccountSPCoins,
             uint256 accountStakingRewards
@@ -91,7 +90,6 @@ contract Account is StructSerialization {
         AccountStruct storage accountRec = accountMap[_accountKey];
         accountKey = accountRec.accountKey;
         creationTime = accountRec.creationTime;
-        verified = accountRec.verified;
         accountBalance = balanceOf[_accountKey];
         stakedAccountSPCoins = accountRec.stakedSPCoins;
         accountStakingRewards = accountRec.stakingRewards;

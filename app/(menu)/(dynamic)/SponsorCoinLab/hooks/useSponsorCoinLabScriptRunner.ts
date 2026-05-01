@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
+import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 import {
   getErrorDebugTrace,
   getExecutionMetaFromError,
@@ -17,13 +17,15 @@ interface MethodExecutionDescriptor {
   method: string;
   params: MethodParamEntry[];
   sender?: string;
+  mode?: ConnectionMode;
 }
 
 interface MethodExecutionResult {
   call: { method: string; parameters: { label: string; value: unknown }[] };
-  result: unknown;
+  result?: unknown;
   warning?: unknown;
-  meta?: MethodExecutionMeta;
+  meta?: Partial<MethodExecutionMeta> & Record<string, unknown>;
+  onChainCalls?: MethodExecutionMeta['onChainCalls'];
 }
 
 interface ScriptRunResult {
@@ -35,6 +37,7 @@ interface ScriptRunOptions {
   formattedOutputBase?: string;
   executionSignal?: AbortSignal;
   executionLabel?: string;
+  scriptNetwork?: string;
 }
 
 interface Params {
@@ -61,6 +64,24 @@ function toDisplayString(value: unknown, fallback = '') {
   return fallback;
 }
 
+function resolveScriptExecutionMode(step: LabScriptStep, scriptNetwork?: string): ConnectionMode | undefined {
+  if (step.mode === 'hardhat' || step.mode === 'metamask') return step.mode;
+
+  const network = String(step.network || scriptNetwork || '').trim().toLowerCase();
+  if (!network) return undefined;
+  if (
+    network === 'hardhat' ||
+    network === 'hardhat ec2' ||
+    network === 'hardhat ec2-base' ||
+    network === 'hh_base' ||
+    network === 'sponsorcoin hh base'
+  ) {
+    return 'hardhat';
+  }
+  if (network === 'metamask') return 'metamask';
+  return undefined;
+}
+
 export function useSponsorCoinLabScriptRunner({
   appendLog,
   setStatus,
@@ -76,6 +97,7 @@ export function useSponsorCoinLabScriptRunner({
       const formattedOutputBase = options?.formattedOutputBase;
       const paramEntries = Array.isArray(step.params) ? step.params : [];
       const stepSender = String(step['msg.sender'] ?? '').trim();
+      const stepMode = resolveScriptExecutionMode(step, options?.scriptNetwork);
 
       const commitResult = (payload: unknown, success: boolean) => {
         const nextFormattedOutput = mergeFormattedOutput(formatFormattedPanelPayload(payload), formattedOutputBase);
@@ -87,13 +109,14 @@ export function useSponsorCoinLabScriptRunner({
       };
 
       try {
-        const { call, result, warning, meta } = await executeMethodDescriptor({
+        const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor({
           panel: step.panel,
           method: step.method,
           params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
           sender: stepSender,
+          mode: stepMode,
         }, { executionSignal: options?.executionSignal });
-        return commitResult({ call, result, ...(warning ? { warning } : {}), meta }, true);
+        return commitResult({ call, meta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =
           error instanceof Error

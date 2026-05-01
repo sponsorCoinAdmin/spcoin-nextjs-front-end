@@ -90,6 +90,7 @@ type Props = {
   backdateMonths: string;
   backdateDays: string;
   applyBackdateBy: (yearsRaw: string, monthsRaw: string, daysRaw: string, targetIdx?: number | null) => void;
+  accountTrace?: (line: string) => void;
 };
 
 export default function SpCoinWriteController(props: Props) {
@@ -173,6 +174,7 @@ export default function SpCoinWriteController(props: Props) {
     backdateMonths,
     backdateDays,
     applyBackdateBy,
+    accountTrace,
   } = props;
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
@@ -199,6 +201,12 @@ export default function SpCoinWriteController(props: Props) {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
+  const traceAccountPopup = React.useCallback(
+    (line: string) => {
+      accountTrace?.(`[SP_COIN_WRITE] method=${selectedSpCoinWriteMethod} ${line}`);
+    },
+    [accountTrace, selectedSpCoinWriteMethod],
+  );
   const recipientRateSliderMethods = new Set([
     'addRecipientTransaction',
     'addAgentTransaction',
@@ -441,6 +449,8 @@ export default function SpCoinWriteController(props: Props) {
         title="Toggle msg.sender Private Key"
         isOpen={showWriteSenderPrivateKey}
         onToggle={toggleShowWriteSenderPrivateKey}
+        traceLabel="write.msg.sender"
+        onTrace={traceAccountPopup}
         control={
           mode === 'hardhat' ? (
             <AccountDropdownInput
@@ -450,12 +460,16 @@ export default function SpCoinWriteController(props: Props) {
               className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
               value={selectedWriteSenderAddress}
               onChange={(value) => {
+                const normalized = normalizeAccountValue(value);
+                traceAccountPopup(`[ACCOUNT_POPUP_TRACE] write.sender change raw=${value} normalized=${normalized}`);
                 markEditorAsUserEdited();
                 clearInvalidField('spcoin-write-sender');
-                setSelectedWriteSenderAddress(normalizeAccountValue(value));
+                setSelectedWriteSenderAddress(normalized);
               }}
               placeholder="Select account"
               options={accountOptions}
+              traceLabel="write.msg.sender"
+              onTrace={traceAccountPopup}
             />
           ) : (
             <input
@@ -493,6 +507,8 @@ export default function SpCoinWriteController(props: Props) {
               title={`Toggle ${param.label}`}
               isOpen={Boolean(openAddressFields[idx])}
               onToggle={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+              traceLabel={`write.param.${idx}.${param.label}`}
+              onTrace={traceAccountPopup}
               control={
                 <AccountDropdownInput
                   dataFieldId={`spcoin-write-param-${idx}`}
@@ -501,12 +517,18 @@ export default function SpCoinWriteController(props: Props) {
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-write-param-${idx}`)}`}
                   value={spWriteParams[idx] || ''}
                   onChange={(value) => {
+                    const normalized = normalizeAccountValue(value);
+                    traceAccountPopup(
+                      `[ACCOUNT_POPUP_TRACE] write.param change idx=${idx} label=${param.label} raw=${value} normalized=${normalized}`,
+                    );
                     markEditorAsUserEdited();
                     clearInvalidField(`spcoin-write-param-${idx}`);
-                    updateSpWriteParamAtIndex(idx, normalizeAccountValue(value));
+                    updateSpWriteParamAtIndex(idx, normalized);
                   }}
                   placeholder="Select account"
                   options={accountOptions}
+                  traceLabel={`write.param.${idx}.${param.label}`}
+                  onTrace={traceAccountPopup}
                 />
               }
               metadata={getMetadataForAddress(spWriteParams[idx] || '')}

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { RotateCcw } from 'lucide-react';
 import LabCardHeader from './LabCardHeader';
-import AccountSelection from './AccountSelection';
 import { NativeSelectChevron, SelectChevron } from './SelectChevron';
 import JsonInspector from '@/components/shared/JsonInspector';
 import { BaseModal } from '@/components/modals';
@@ -17,11 +16,17 @@ import {
   normalizeAddressForAssets,
 } from '@/lib/context/helpers/assetHelpers';
 import { useJsonInspector } from '@/lib/hooks/useJsonInspector';
+import {
+  ACCOUNT_POPUP_TRACE_FILE,
+  recordSponsorCoinLabAccountTrace,
+} from '@/lib/spCoinLab/accountPopupTrace';
 import type { LabScriptStep } from '../scriptBuilder/types';
 
-type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status';
+type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 type FormattedPanelView = 'script' | 'output';
 type DragPlacement = 'before' | 'after';
+const DEBUG_TRACE_PATTERN =
+  /\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
 
 type DisplayedOutputCall = {
   method: string;
@@ -137,7 +142,7 @@ type Props = {
     refreshActiveOutput: () => void;
     buttonStyle: string;
     copyTextToClipboard: (label: string, value: string) => Promise<void>;
-    setLogs: (value: string[]) => void;
+    setLogs: React.Dispatch<React.SetStateAction<string[]>>;
     setStatus: (value: string) => void;
     setTreeOutputDisplay: (value: string) => void;
     setFormattedOutputDisplay: (value: string) => void;
@@ -248,7 +253,6 @@ export default function OutputResultsCard({
   }>({
     logoURL: defaultMissingImage,
   });
-  const [selectedFormattedAccount, setSelectedFormattedAccount] = useState('');
   const [isSaveScriptModalOpen, setIsSaveScriptModalOpen] = useState(false);
   const [saveScriptNameInput, setSaveScriptNameInput] = useState('');
   const [isSaveButtonHovered, setIsSaveButtonHovered] = useState(false);
@@ -263,13 +267,6 @@ export default function OutputResultsCard({
   const activeDraggedScriptStepNumberRef = useRef<number | null>(null);
   const activeScriptStepDropTargetRef = useRef<{ stepNumber: number; placement: DragPlacement } | null>(null);
   const scriptStepDragCleanupRef = useRef<(() => void) | null>(null);
-  const [selectedFormattedAccountMetadata, setSelectedFormattedAccountMetadata] = useState<{
-    name?: string;
-    symbol?: string;
-    logoURL: string;
-  }>({
-    logoURL: defaultMissingImage,
-  });
   const treeAccountMetadataCacheRef = useRef<
     Map<
       string,
@@ -283,6 +280,20 @@ export default function OutputResultsCard({
   const lastMetadataRefreshTokenRef = useRef(treeActions.treeAccountRefreshToken);
   const currentFormattedDisplay =
     controls.formattedPanelView === 'script' ? content.scriptDisplay : content.formattedOutputDisplay;
+  const debugDisplay = useMemo(() => {
+    const expansionLogs = content.logs.filter((line) => DEBUG_TRACE_PATTERN.test(line));
+    const header = `Trace file: ${ACCOUNT_POPUP_TRACE_FILE}`;
+    return expansionLogs.length ? `${header}\n${expansionLogs.join('\n')}` : `${header}\n(no expansion debug yet)`;
+  }, [content.logs]);
+  const appendOutputTrace = React.useCallback(
+    (line: string) => {
+      if (!controls.writeTraceEnabled) return;
+      const stamp = new Date().toLocaleTimeString();
+      controls.setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
+      recordSponsorCoinLabAccountTrace(line, 'OutputResultsCard');
+    },
+    [controls.setLogs, controls.writeTraceEnabled],
+  );
   const displayedOutputCalls = useMemo(
     () => parseDisplayedOutputCalls(content.formattedOutputDisplay),
     [content.formattedOutputDisplay],
@@ -349,6 +360,23 @@ export default function OutputResultsCard({
     if (controls.formattedJsonViewEnabled || controls.outputPanelMode !== 'tree') return null;
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
+  const lastAccountExpansionRenderTraceRef = useRef('');
+  useEffect(() => {
+    if (!String(currentFormattedDisplay || '').includes('__forceExpanded')) return;
+    const signature = `${controls.outputPanelMode}:${controls.formattedPanelView}:${currentFormattedDisplay.length}:${String(currentFormattedDisplay).slice(0, 80)}`;
+    if (lastAccountExpansionRenderTraceRef.current === signature) return;
+    lastAccountExpansionRenderTraceRef.current = signature;
+    appendOutputTrace(
+      `[ACCOUNT_EXPAND_TRACE] render check mode=${controls.outputPanelMode} view=${controls.formattedPanelView} formattedJson=${String(controls.formattedJsonViewEnabled)} formattedBlocks=${collapsibleFormattedBlocks?.length ?? 0} containsForce=true displayLength=${currentFormattedDisplay.length}`,
+    );
+  }, [
+    appendOutputTrace,
+    collapsibleFormattedBlocks?.length,
+    controls.formattedJsonViewEnabled,
+    controls.formattedPanelView,
+    controls.outputPanelMode,
+    currentFormattedDisplay,
+  ]);
   const activeInspectorRootLabel = controls.outputPanelMode === 'tree' ? 'Tree' : controls.formattedPanelView === 'script' ? 'Script' : 'Step';
   const seededDefaultCollapseSignatureRef = React.useRef('');
   React.useEffect(() => {
@@ -388,6 +416,9 @@ export default function OutputResultsCard({
   const handleOpenAccountFromInspector = React.useCallback(
     async (value: string, path: string) => {
       const address = String(value || '').trim();
+      appendOutputTrace(
+        `[ACCOUNT_EXPAND_TRACE] inspector dispatch mode=${controls.outputPanelMode} view=${controls.formattedPanelView} json=${String(controls.formattedJsonViewEnabled)} value=${address ? address : String(value ?? '')} path=${String(path || '')}`,
+      );
       if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
         await treeActions.openAccountFromAddress(value, path);
         return;
@@ -395,7 +426,13 @@ export default function OutputResultsCard({
 
       await treeActions.openAccountFromAddress(address, path);
     },
-    [treeActions],
+    [
+      appendOutputTrace,
+      controls.formattedJsonViewEnabled,
+      controls.formattedPanelView,
+      controls.outputPanelMode,
+      treeActions,
+    ],
   );
   const highlightedInspectorPathPrefixes = useMemo(() => {
     if (controls.outputPanelMode !== 'formatted' || controls.formattedPanelView !== 'script') return [];
@@ -691,55 +728,6 @@ export default function OutputResultsCard({
   }, [treeActions.selectedTreeAccount, treeActions.treeAccountRefreshToken]);
 
   useEffect(() => {
-    const account = String(selectedFormattedAccount || '').trim();
-    const folder = normalizeAddressForAssets(account);
-    if (!folder) {
-      setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
-      return;
-    }
-
-    let cancelled = false;
-    const logoURL = getAccountLogoURL(account);
-    const cached = treeAccountMetadataCacheRef.current.get(folder);
-    if (cached) {
-      setSelectedFormattedAccountMetadata(cached);
-      return;
-    }
-
-    const loadAccountMetadata = async () => {
-      try {
-        const response = await fetch(`/assets/accounts/${folder}/account.json`, {
-          cache: 'no-store',
-        });
-        if (!response.ok) {
-          if (!cancelled) setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
-          return;
-        }
-        const payload = (await response.json()) as {
-          name?: string;
-          symbol?: string;
-          logoURL?: string;
-        };
-        if (cancelled) return;
-        const nextMetadata = {
-          name: String(payload?.name || '').trim() || undefined,
-          symbol: String(payload?.symbol || '').trim() || undefined,
-          logoURL,
-        };
-        treeAccountMetadataCacheRef.current.set(folder, nextMetadata);
-        setSelectedFormattedAccountMetadata(nextMetadata);
-      } catch {
-        if (!cancelled) setSelectedFormattedAccountMetadata({ logoURL: defaultMissingImage });
-      }
-    };
-
-    void loadAccountMetadata();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedFormattedAccount]);
-
-  useEffect(() => {
     if (!isShowAllMenuOpen) return;
     const handlePointerDown = (event: MouseEvent) => {
       if (showAllMenuRef.current?.contains(event.target as Node)) return;
@@ -829,6 +817,7 @@ export default function OutputResultsCard({
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
                 ['raw_status', 'Raw Status'],
+                ['debug', 'Debug'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input
@@ -863,6 +852,8 @@ export default function OutputResultsCard({
                   void controls.copyTextToClipboard(
                     controls.outputPanelMode === 'execution'
                       ? 'Execution Log'
+                      : controls.outputPanelMode === 'debug'
+                        ? 'Debug'
                       : controls.outputPanelMode === 'tree'
                         ? 'Tree'
                         : controls.outputPanelMode === 'raw_status'
@@ -872,6 +863,8 @@ export default function OutputResultsCard({
                             : 'Formatted Output Display',
                     controls.outputPanelMode === 'execution'
                       ? content.logs.join('\n')
+                      : controls.outputPanelMode === 'debug'
+                        ? debugDisplay
                       : controls.outputPanelMode === 'tree'
                         ? content.treeOutputDisplay
                         : controls.outputPanelMode === 'raw_status'
@@ -894,6 +887,10 @@ export default function OutputResultsCard({
                   }
                   if (controls.outputPanelMode === 'tree') {
                     controls.setTreeOutputDisplay('(no tree yet)');
+                    return;
+                  }
+                  if (controls.outputPanelMode === 'debug') {
+                    controls.setLogs(content.logs.filter((line) => !DEBUG_TRACE_PATTERN.test(line)));
                     return;
                   }
                   if (controls.outputPanelMode === 'raw_status') {
@@ -1188,7 +1185,8 @@ export default function OutputResultsCard({
                         : `${activeInspectorRootLabel} ${index + 1}`
                     }
                     onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
-                    onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
+                    onAddressNodeClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
+                    onTrace={appendOutputTrace}
                     scriptStepDragState={{
                       enabled: isScriptInspectorReorderEnabled,
                       draggedStepNumber: draggedScriptStepNumber,
@@ -1229,7 +1227,8 @@ export default function OutputResultsCard({
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
                     onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
-                    onAddressNodeClick={(value) => setSelectedFormattedAccount(value)}
+                    onAddressNodeClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
+                    onTrace={appendOutputTrace}
                     scriptStepDragState={{
                       enabled: false,
                       draggedStepNumber: null,
@@ -1266,6 +1265,8 @@ export default function OutputResultsCard({
                   ))
                 : controls.outputPanelMode === 'execution'
                   ? content.logs.join('\n')
+                  : controls.outputPanelMode === 'debug'
+                    ? debugDisplay
                   : controls.outputPanelMode === 'tree'
                     ? content.treeOutputDisplay
                     : controls.outputPanelMode === 'raw_status'
@@ -1275,38 +1276,6 @@ export default function OutputResultsCard({
           )}
         </div>
       </div>
-      <BaseModal
-        isOpen={Boolean(selectedFormattedAccount)}
-        title="Account Metadata"
-        maxWidthClassName="max-w-3xl"
-        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
-        titleClassName="text-xl font-semibold text-[#8FA8FF]"
-        footer={
-          <button
-            type="button"
-            className={actionButtonClassName}
-            onClick={() => setSelectedFormattedAccount('')}
-          >
-            Close
-          </button>
-        }
-      >
-        <AccountSelection
-          label="Selected Account"
-          title="Close selected account metadata"
-          isOpen
-          onToggle={() => setSelectedFormattedAccount('')}
-          control={
-            <input
-              className={inputStyle}
-              readOnly
-              value={selectedFormattedAccount}
-              placeholder="Selected account address"
-            />
-          }
-          metadata={selectedFormattedAccountMetadata}
-        />
-      </BaseModal>
       <BaseModal
         isOpen={isSaveScriptModalOpen}
         title="Save Script"

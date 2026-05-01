@@ -12,6 +12,13 @@ import { SpCoinERC20Module as LocalSpCoinERC20Module } from '../../../../../../s
 import { SpCoinReadModule as LocalSpCoinReadModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/index';
 import { SpCoinRewardsModule as LocalSpCoinRewardsModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinRewardsModule/index';
 import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinStakingModule/index';
+import {
+  getAccountRoleSummary as localGetAccountRoleSummary,
+  getAccountRoles as localGetAccountRoles,
+  isAgent as localIsAgent,
+  isRecipient as localIsRecipient,
+  isSponsor as localIsSponsor,
+} from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRoleSummary';
 import type {
   AccountStruct,
   AgentRateStruct,
@@ -156,8 +163,10 @@ export type SpCoinOffChainAccess = {
 export type SpCoinReadAccess = {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
   getAccountKeys: () => Promise<string[]>;
+  getMasterAccountMetaData?: () => Promise<unknown>;
   getMasterAccountKeys?: () => Promise<string[]>;
   getMasterAccountList?: () => Promise<string[]>;
+  getMasterAccountKeyCount?: () => Promise<number>;
   getMasterAccountCount?: () => Promise<number>;
   getActiveAccountKeys?: () => Promise<string[]>;
   getActiveAccountList?: () => Promise<string[]>;
@@ -177,6 +186,11 @@ export type SpCoinReadAccess = {
   getAccountKeyCount?: () => Promise<number>;
   getMasterAccountListSize?: () => Promise<number>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
+  getAccountRoleSummary?: (_accountKey: string) => Promise<unknown>;
+  getAccountRoles?: (_accountKey: string) => Promise<string[]>;
+  isSponsor?: (_accountKey: string) => Promise<boolean>;
+  isRecipient?: (_accountKey: string) => Promise<boolean>;
+  isAgent?: (_accountKey: string) => Promise<boolean>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getSpCoinMetaData: () => Promise<unknown>;
   getRecipientRateKeys: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
@@ -737,6 +751,25 @@ function createSpCoinOffChainAccess(
   };
 }
 
+function attachAccountRoleReadMethods(read: SpCoinReadAccess) {
+  const readHost = read as SpCoinReadAccess & Record<string, unknown>;
+  if (typeof readHost.getAccountRoleSummary !== 'function') {
+    readHost.getAccountRoleSummary = (accountKey: string) => localGetAccountRoleSummary(read, accountKey);
+  }
+  if (typeof readHost.getAccountRoles !== 'function') {
+    readHost.getAccountRoles = (accountKey: string) => localGetAccountRoles(read, accountKey);
+  }
+  if (typeof readHost.isSponsor !== 'function') {
+    readHost.isSponsor = (accountKey: string) => localIsSponsor(read, accountKey);
+  }
+  if (typeof readHost.isRecipient !== 'function') {
+    readHost.isRecipient = (accountKey: string) => localIsRecipient(read, accountKey);
+  }
+  if (typeof readHost.isAgent !== 'function') {
+    readHost.isAgent = (accountKey: string) => localIsAgent(read, accountKey);
+  }
+}
+
 // Convenience factory for tests/stubs that call library modules instead of direct contract methods.
 export function createSpCoinModuleAccess(
   contract: Contract,
@@ -748,6 +781,7 @@ export function createSpCoinModuleAccess(
   const add = new includes.SpCoinAddModule(contract) as SpCoinAddAccess;
   const del = new includes.SpCoinDeleteModule(contract) as SpCoinDeleteAccess;
   const read = new includes.SpCoinReadModule(contract) as SpCoinReadAccess;
+  attachAccountRoleReadMethods(read);
   const attachTrace = (moduleValue: unknown) => {
     if (!trace || !moduleValue || typeof moduleValue !== 'object') return;
     const logger = (moduleValue as { spCoinLogger?: Record<string, unknown> }).spCoinLogger;

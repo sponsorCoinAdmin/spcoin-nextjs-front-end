@@ -28,6 +28,7 @@ import * as spCoinRewardsModule_2 from "./modules/spCoinRewardsModule/index";
 export { SpCoinRewardsModule as SpCoinRewardsModule } from "./modules/spCoinRewardsModule/index";
 import * as spCoinStakingModule_2 from "./modules/spCoinStakingModule/index";
 export { SpCoinStakingModule as SpCoinStakingModule } from "./modules/spCoinStakingModule/index";
+export { callAccessMethod } from "./utils/callAccessMethod";
 export class SpCoinAccessModules {
     constructor(spCoinABI, spCoinAddress, signer) {
         this.methods = () => {

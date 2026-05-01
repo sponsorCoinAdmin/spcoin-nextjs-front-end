@@ -29,8 +29,6 @@ contract Recipient is Sponsor {
             recipientRecord.inserted = true;
             sponsorRecord.recipientKeys.push(_recipientKey);
             accountMap[_recipientKey].sponsorKeys.push(_sponsor);
-            incrementActiveChildLink(_sponsor);
-            incrementActiveParentLink(_recipientKey);
         }
         return recipientRecord;
     }
@@ -47,16 +45,20 @@ contract Recipient is Sponsor {
         // return accountMap[sponsor].recipientMap[_recipientKey];
     }
 
-    function getRecipientRecordCore(address _sponsorKey, address _recipientKey)
+    function getRecipientRecord(address _sponsorKey, address _recipientKey)
         external
         view
         returns (
+            address sponsorKey,
+            address recipientKey,
             uint256 creationTime,
             uint256 stakedSPCoins,
             bool inserted
         )
     {
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
+        sponsorKey = recipientRecord.sponsorKey == address(0) ? _sponsorKey : recipientRecord.sponsorKey;
+        recipientKey = recipientRecord.recipientKey == address(0) ? _recipientKey : recipientRecord.recipientKey;
         creationTime = recipientRecord.creationTime;
         stakedSPCoins = recipientRecord.stakedSPCoins;
         inserted = recipientRecord.inserted;

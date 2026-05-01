@@ -163,6 +163,7 @@ type Props = {
   hideActionButtons?: boolean;
   hideAddToScript?: boolean;
   allowAdminReadMethods?: boolean;
+  accountTrace?: (line: string) => void;
 };
 
 function dedupeReadMethodNamesByTitle(values: string[], defs: Record<string, MethodDef>) {
@@ -189,6 +190,7 @@ const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'creationTime',
   'version',
   'getMasterAccountElement',
+  'getMasterAccountKeyCount',
   'getMasterAccountCount',
   'getMasterAccountKeys',
 ]);
@@ -233,6 +235,7 @@ export default function SpCoinReadController(props: Props) {
     hideActionButtons = false,
     hideAddToScript = false,
     allowAdminReadMethods = false,
+    accountTrace,
   } = props;
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [dateTimePopupParamIdx, setDateTimePopupParamIdx] = React.useState<number | null>(null);
@@ -269,6 +272,12 @@ export default function SpCoinReadController(props: Props) {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
   };
+  const traceAccountPopup = React.useCallback(
+    (line: string) => {
+      accountTrace?.(`[SP_COIN_READ] method=${selectedSpCoinReadMethod} ${line}`);
+    },
+    [accountTrace, selectedSpCoinReadMethod],
+  );
   const [openAddressFields, setOpenAddressFields] = React.useState<Record<number, boolean>>({});
   const normalizedInitialContractDirectoryOptions = normalizeContractDirectoryOptions(initialContractDirectoryOptions);
   const hasInitialContractDirectoryOptions = normalizedInitialContractDirectoryOptions.length > 0;
@@ -709,22 +718,30 @@ export default function SpCoinReadController(props: Props) {
               title={`Toggle ${param.label}`}
               isOpen={Boolean(openAddressFields[idx])}
               onToggle={() => setOpenAddressFields((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+              traceLabel={`read.param.${idx}.${param.label}`}
+              onTrace={traceAccountPopup}
               control={
                 <AccountDropdownInput
                   dataFieldId={`spcoin-read-param-${idx}`}
                   className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
                   value={spReadParams[idx] || ''}
                   onChange={(value) => {
+                    const normalized = normalizeAccountValue(value);
+                    traceAccountPopup(
+                      `[ACCOUNT_POPUP_TRACE] read.param change idx=${idx} label=${param.label} raw=${value} normalized=${normalized}`,
+                    );
                     markEditorAsUserEdited();
                     setSpReadParams((prev) => {
                       clearInvalidField(`spcoin-read-param-${idx}`);
                       const next = [...prev];
-                      next[idx] = normalizeAccountValue(value);
+                      next[idx] = normalized;
                       return next;
                     });
                   }}
                   placeholder="Select account"
                   options={accountOptions}
+                  traceLabel={`read.param.${idx}.${param.label}`}
+                  onTrace={traceAccountPopup}
                 />
               }
               metadata={getMetadataForAddress(spReadParams[idx] || '')}

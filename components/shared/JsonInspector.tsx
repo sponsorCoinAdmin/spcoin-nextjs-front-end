@@ -25,6 +25,7 @@ interface JsonInspectorProps {
   };
   onLeafValueClick?: (value: string, path: string, key: string) => void;
   onAddressNodeClick?: (value: string, path: string, key: string) => void;
+  onTrace?: (line: string) => void;
   hideEntryKeys?: string[];
   formatTokenAmounts?: boolean;
   tokenDecimals?: number | null;
@@ -81,7 +82,17 @@ function hasInlineAccountRecord(data: any): boolean {
   if (record.accountRecord && typeof record.accountRecord === 'object' && record.accountRecord !== null) {
     return true;
   }
-  return typeof record.accountKey === 'string' || typeof record.TYPE === 'string';
+  return Boolean(
+    record.__forceExpanded === true ||
+      typeof record.accountKey === 'string' ||
+      typeof record.TYPE === 'string' ||
+      record.totalSpCoins ||
+      record.recipientKeys ||
+      record.agentKeys ||
+      record.parentRecipientKeys ||
+      record.meta ||
+      record.value !== undefined,
+  );
 }
 
 function isLazySpCoinMetaDataNode(data: any): boolean {
@@ -90,6 +101,24 @@ function isLazySpCoinMetaDataNode(data: any): boolean {
       typeof data === 'object' &&
       !Array.isArray(data) &&
       (data as Record<string, unknown>).__lazySpCoinMetaData === true,
+  );
+}
+
+function isLazyMasterAccountKeysNode(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__lazyMasterAccountKeys === true,
+  );
+}
+
+function shouldForceExpandNode(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__forceExpanded === true,
   );
 }
 
@@ -298,6 +327,8 @@ function getVisibleEntries(
         ([childKey]) =>
           childKey !== 'address' &&
           childKey !== '__lazySpCoinMetaData' &&
+          childKey !== '__lazyMasterAccountKeys' &&
+          childKey !== '__forceExpanded' &&
           childKey !== '__showEmptyFields' &&
           !hideEntryKeys.includes(childKey) &&
           (showStructureType || childKey !== 'TYPE'),
@@ -318,6 +349,8 @@ function getVisibleEntries(
     .filter(([childKey, childValue]) => {
       if (childKey === 'address') return false;
       if (childKey === '__lazySpCoinMetaData') return false;
+      if (childKey === '__lazyMasterAccountKeys') return false;
+      if (childKey === '__forceExpanded') return false;
       if (childKey === '__showEmptyFields') return false;
       if (hideEntryKeys.includes(childKey)) return false;
       if (!showStructureType && childKey === 'TYPE') return false;
@@ -349,6 +382,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   },
   onLeafValueClick,
   onAddressNodeClick,
+  onTrace,
   hideEntryKeys = [],
   formatTokenAmounts = false,
   tokenDecimals = null,
@@ -375,22 +409,40 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
   const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
+  const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
+  const shouldForceExpand = shouldForceExpandNode(data);
   const currentPath = path ?? '';
   const expandedPathKey = getExpandedPathKey(currentPath);
-  const isExplicitlyExpanded = collapsedKeys.includes(expandedPathKey);
+  const forceExpandedDismissedKey = `__force_expanded_dismissed__:${currentPath}`;
+  const forceExpandedIsActive = shouldForceExpand && !collapsedKeys.includes(forceExpandedDismissedKey);
+  const isExplicitlyExpanded = forceExpandedIsActive || collapsedKeys.includes(expandedPathKey);
   const isDefaultCollapsed = level > 0 && !isExplicitlyExpanded;
-  const isCollapsed = collapsedKeys.includes(currentPath) || isDefaultCollapsed || isLazyAddressStub || isLazySpCoinMetaData;
+  const isCollapsed =
+    !forceExpandedIsActive &&
+    (collapsedKeys.includes(currentPath) ||
+      isDefaultCollapsed ||
+      isLazyAddressStub ||
+      isLazySpCoinMetaData ||
+      isLazyMasterAccountKeys);
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
   );
   const toggle = useCallback(() => {
+    onTrace?.(
+      `[JSON_INSPECTOR_TRACE] toggle path=${currentPath} collapsed=${String(isCollapsed)} addressNode=${String(isAddressNode)} lazyAddress=${String(isLazyAddressStub)} loaded=${String(hasLoadedAccountRecord)} lazyMeta=${String(isLazySpCoinMetaData)} lazyMasterKeys=${String(isLazyMasterAccountKeys)}`,
+    );
     const nextOpenKeys = [
-      ...collapsedKeys.filter((key) => key !== currentPath),
+      ...collapsedKeys.filter((key) => key !== currentPath && key !== forceExpandedDismissedKey),
       expandedPathKey,
     ];
     if (isCollapsed && isLazySpCoinMetaData) {
       updateCollapsedKeys([...new Set(nextOpenKeys)]);
       onLeafValueClick?.('__load_spcoin_metadata__', currentPath, 'spCoinMetaData');
+      return;
+    }
+    if (isCollapsed && isLazyMasterAccountKeys) {
+      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+      onLeafValueClick?.('__load_master_account_keys__', currentPath, 'masterAccountKeys');
       return;
     }
     if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
@@ -401,18 +453,21 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     updateCollapsedKeys(
       isCollapsed
         ? [...new Set(nextOpenKeys)]
-        : [...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath])],
+        : [...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey])],
     );
   }, [
     addressNode,
     collapsedKeys,
     currentPath,
     expandedPathKey,
+    forceExpandedDismissedKey,
     hasLoadedAccountRecord,
     isAddressNode,
     isCollapsed,
     isLazySpCoinMetaData,
+    isLazyMasterAccountKeys,
     onLeafValueClick,
+    onTrace,
     updateCollapsedKeys,
   ]);
 
@@ -532,6 +587,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           hiddenRules={hiddenRules}
           onLeafValueClick={onLeafValueClick}
           onAddressNodeClick={onAddressNodeClick}
+          onTrace={onTrace}
           formatTokenAmounts={formatTokenAmounts}
           tokenDecimals={tokenDecimals}
           showStructureType={showStructureType}
@@ -563,6 +619,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 className={`w-full bg-transparent p-0 text-left font-mono ${valueHighlighted ? highlightColorClass : 'text-green-400'}`}
                 onClick={(event) => {
                   event.stopPropagation();
+                  onTrace?.(`[JSON_INSPECTOR_TRACE] array address expand click path=${nextPath} key=${key} value=${rawStringValue}`);
                   updateCollapsedKeys([
                     ...new Set([
                       ...collapsedKeys.filter((collapsedKey) => collapsedKey !== nextPath),
@@ -588,6 +645,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               onClick={(event) => {
                 if (typeof onAddressNodeClick !== 'function') return;
                 event.stopPropagation();
+                onTrace?.(`[JSON_INSPECTOR_TRACE] scalar address click path=${nextPath} key=${key} value=${rawStringValue}`);
                 onAddressNodeClick(rawStringValue, nextPath, key);
               }}
               onKeyDown={(event) => {
@@ -595,6 +653,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 if (event.key !== 'Enter' && event.key !== ' ') return;
                 event.preventDefault();
                 event.stopPropagation();
+                onTrace?.(`[JSON_INSPECTOR_TRACE] scalar address keydown path=${nextPath} key=${key} value=${rawStringValue} eventKey=${event.key}`);
                 onAddressNodeClick(rawStringValue, nextPath, key);
               }}
               title={`Show metadata for ${rawStringValue}`}
@@ -628,7 +687,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         <button type="button" className="inline-flex items-center bg-transparent p-0" onClick={toggle}>
           <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>
         </button>{' '}
-        {isAddressNode && typeof onAddressNodeClick === 'function' ? (
+        {isAddressNode && (typeof onAddressNodeClick === 'function' || isLazyAddressStub) ? (
           <button
             type="button"
             className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
@@ -636,9 +695,16 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             }`}
             onClick={(event) => {
               event.stopPropagation();
-              onAddressNodeClick(addressNode, path ?? '', label || 'address');
+              onTrace?.(
+                `[JSON_INSPECTOR_TRACE] address node click path=${path ?? ''} key=${label || 'address'} value=${addressNode} lazy=${String(isLazyAddressStub)} loaded=${String(hasLoadedAccountRecord)}`,
+              );
+              if (isLazyAddressStub) {
+                toggle();
+                return;
+              }
+              onAddressNodeClick?.(addressNode, path ?? '', label || 'address');
             }}
-            title={`Show metadata for ${addressNode}`}
+            title={isLazyAddressStub ? `Open account record ${addressNode}` : `Show metadata for ${addressNode}`}
           >
             {getDisplayLabel(path ?? '')}
           </button>

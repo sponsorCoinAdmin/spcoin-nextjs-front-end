@@ -25,6 +25,10 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     getAccountTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getMasterAccountKeyCount: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getMasterAccountCount: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getAccountKeyCount: import("../../readMethodRuntime").ReadMethodHandler<any>;
+    getMasterAccountListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getAccountRecipientListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getRecipientTransactionList: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getRecipientRecordList: import("../../readMethodRuntime").ReadMethodHandler<any>;

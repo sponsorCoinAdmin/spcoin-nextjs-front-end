@@ -5,10 +5,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
 import {
+  attachReceiptGasToOnChainCall,
   buildMethodTimingMeta,
   createMethodTimingCollector,
   runWithMethodTimingCollector,
   wrapContractWithTiming,
+  type MethodTimingCollector,
   type MethodTimingMeta,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import { CHAIN_ID } from '@/lib/structure';
@@ -54,9 +56,10 @@ type StepPayload =
         method: string;
         parameters: Record<string, string> | [];
       };
-      result: unknown;
+      result?: unknown;
       warning?: unknown;
-      meta?: MethodTimingMeta;
+      meta?: Partial<MethodTimingMeta> & Record<string, unknown>;
+      onChainCalls?: MethodTimingMeta['onChainCalls'];
     }
   | {
       call: {
@@ -111,6 +114,19 @@ const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   7: 'Transaction Row Id does not match the supplied agent-rate branch keys.',
 };
 const SP_COIN_ERROR_INTERFACE = new Interface(['error SpCoinError(uint8 code)']);
+const MASTER_ACCOUNT_METADATA_INTERFACE = new Interface([
+  'function getMasterAccountMetaData() view returns (uint256 masterAccountSize, uint256 activeAccountCount, uint256 inactiveAccountCount, uint256 totalSponsorLinks, uint256 totalRecipientLinks, uint256 totalAgentLinks, uint256 totalParentRecipientLinks)',
+]);
+const MASTER_ACCOUNT_METADATA_ABI_FIELDS = [
+  'masterAccountSize',
+  'activeAccountCount',
+  'inactiveAccountCount',
+  'totalSponsorLinks',
+  'totalRecipientLinks',
+  'totalAgentLinks',
+  'totalParentRecipientLinks',
+] as const;
+const MASTER_ACCOUNT_METADATA_FIELDS = [...MASTER_ACCOUNT_METADATA_ABI_FIELDS].sort((a, b) => a.localeCompare(b));
 
 function getNestedErrorText(value: unknown): string {
   if (value == null) return '';
@@ -166,6 +182,46 @@ function decodeSpCoinError(error: unknown): string | null {
     }
   }
   return null;
+}
+
+function isMissingContractReadError(error: unknown) {
+  const source = (error && typeof error === 'object' ? error : {}) as Record<string, unknown>;
+  const nested = ((source.error || source.info || source.cause) && typeof (source.error || source.info || source.cause) === 'object'
+    ? (source.error || source.info || source.cause)
+    : {}) as Record<string, unknown>;
+  const code = String(source.code || nested.code || '');
+  const data = String(source.data || nested.data || '');
+  const message = String(source.message || nested.message || '');
+  return code === 'CALL_EXCEPTION' || data === '0x' || /execution reverted|require\(false\)|no matching fragment/i.test(message);
+}
+
+function normalizeMasterAccountMetaData(result: unknown) {
+  const source = (result && typeof result === 'object' ? result : []) as Record<string, unknown> & { [index: number]: unknown };
+  const values = Object.fromEntries(
+    MASTER_ACCOUNT_METADATA_ABI_FIELDS.map((field, index) => [field, source[field] ?? source[index]]),
+  );
+  return Object.fromEntries(MASTER_ACCOUNT_METADATA_FIELDS.map((field) => [field, values[field]]));
+}
+
+async function callMasterAccountMetaData(contract: unknown) {
+  const source = contract as {
+    target?: unknown;
+    getAddress?: () => Promise<string>;
+    runner?: { call?: (transaction: { to: string; data: string }) => Promise<string> };
+  };
+  const target = String(source?.target || (typeof source?.getAddress === 'function' ? await source.getAddress() : ''));
+  const runner = source?.runner;
+  if (!target || typeof runner?.call !== 'function') {
+    throw new Error('getMasterAccountMetaData is not available on the current SpCoin contract.');
+  }
+  const data = MASTER_ACCOUNT_METADATA_INTERFACE.encodeFunctionData('getMasterAccountMetaData', []);
+  const raw = await runner.call({ to: target, data });
+  return normalizeMasterAccountMetaData(MASTER_ACCOUNT_METADATA_INTERFACE.decodeFunctionResult('getMasterAccountMetaData', raw));
+}
+
+function getMasterAccountMetaDataCount(metaData: unknown) {
+  const source = (metaData && typeof metaData === 'object' ? metaData : []) as Record<string, unknown> & { [index: number]: unknown };
+  return Number(source.masterAccountSize ?? source.numberOfAccounts ?? source[0] ?? 0);
 }
 
 function classifyScriptError(error: unknown, trace: string[]): 'token_state' | 'token_revert' | 'transport' | 'server' {
@@ -260,33 +316,70 @@ function sanitizeJsonValue(value: unknown): unknown {
   return Object.fromEntries(entries);
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function isMasterAccountMetaDataStep(step: LabScriptStep) {
+  return step.panel === 'spcoin_rread' && String(step.method || '').trim() === 'getMasterAccountMetaData';
+}
+
+function buildMasterAccountMetaDataPayload(
+  call: { method: string; parameters: Record<string, string> | [] },
+  result: unknown,
+  warning: unknown,
+  meta: MethodTimingMeta,
+) {
+  const metadata = isObjectRecord(result) ? result : {};
+  return {
+    call,
+    ...(warning ? { warning } : {}),
+    meta: {
+      startedAt: meta.startedAt,
+      completedAt: meta.completedAt,
+      runTimeMs: meta.runTimeMs,
+      onChainRunTimeMs: meta.onChainRunTimeMs,
+      offChainRunTimeMs: meta.offChainRunTimeMs,
+      onChainCallCount: meta.onChainCallCount,
+      activeAccountCount: metadata.activeAccountCount,
+      inactiveAccountCount: metadata.inactiveAccountCount,
+      masterAccountSize: metadata.masterAccountSize ?? metadata.numberOfAccounts,
+    },
+    result: {
+      masterAccountKeys: { __lazyMasterAccountKeys: true },
+    },
+    onChainCalls: meta.onChainCalls,
+  };
+}
+
 function normalizeAddressDisplay(value: unknown) {
   return String(value ?? '').trim().toLowerCase();
 }
 
 function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
-  if (!Array.isArray(result) || result.length < 10) return result;
+  if (!Array.isArray(result) || result.length < 9) return result;
   const [
     accountKey,
     creationTime,
-    _verified,
     accountBalance,
     stakedAccountSPCoins,
-    _accountStakingRewards,
-    _sponsorKeys,
+    accountStakingRewards,
+    sponsorKeys,
     recipientKeys,
     agentKeys,
-    _parentRecipientKeys,
+    parentRecipientKeys,
   ] = result;
   const normalizedCreationTime = String(creationTime ?? '0').trim();
   const normalizedBalance = String(accountBalance ?? '0').trim();
   const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
+  const normalizedStakingRewards = String(accountStakingRewards ?? '0').trim();
   const normalizeList = (value: unknown) =>
     Array.isArray(value) ? value.map((entry) => normalizeAddressDisplay(entry)).filter(Boolean) : [];
   return {
     TYPE: '--ACCOUNT--',
     accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
     creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
+    accountStakingRewards: normalizedStakingRewards,
     totalSpCoins: {
       TYPE: '--TOTAL_SP_COINS--',
       totalSpCoins: (BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString(),
@@ -301,10 +394,12 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
         pendingAgentRewards: '0',
       },
     },
+    sponsorKeys: normalizeList(sponsorKeys),
     recipientKeys: normalizeList(recipientKeys),
     recipientRates: {},
     agentKeys: normalizeList(agentKeys),
     agentRates: {},
+    parentRecipientKeys: normalizeList(parentRecipientKeys),
   };
 }
 
@@ -315,13 +410,17 @@ function isEmptyNormalizedAccountRecord(result: unknown) {
     record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
       ? (record.totalSpCoins as Record<string, unknown>)
       : null;
+  const sponsorKeys = Array.isArray(record.sponsorKeys) ? record.sponsorKeys : [];
   const recipientKeys = Array.isArray(record.recipientKeys) ? record.recipientKeys : [];
   const agentKeys = Array.isArray(record.agentKeys) ? record.agentKeys : [];
+  const parentRecipientKeys = Array.isArray(record.parentRecipientKeys) ? record.parentRecipientKeys : [];
   return (
     String(record.creationTime ?? '').trim() === '' &&
     String(totalSpCoins?.totalSpCoins ?? '0').trim() === '0' &&
+    sponsorKeys.length === 0 &&
     recipientKeys.length === 0 &&
-    agentKeys.length === 0
+    agentKeys.length === 0 &&
+    parentRecipientKeys.length === 0
   );
 }
 
@@ -355,9 +454,22 @@ async function readHardhatAccounts() {
 
 function formatReceiptResult(
   label: string,
-  tx: { hash?: string },
-  receipt: { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null } | null | undefined,
+  tx: { hash?: string } | null | undefined,
+  receipt:
+    | {
+        hash?: string;
+        blockNumber?: bigint | number | null;
+        status?: number | bigint | null;
+        gasUsed?: bigint | number | string | null;
+        gasPrice?: bigint | number | string | null;
+        effectiveGasPrice?: bigint | number | string | null;
+        fee?: bigint | number | string | null;
+      }
+    | null
+    | undefined,
+  timingCollector?: MethodTimingCollector,
 ) {
+  attachReceiptGasToOnChainCall(timingCollector, label, tx, receipt);
   return [
     {
       label,
@@ -478,12 +590,38 @@ export async function POST(request: NextRequest) {
             case 'getAccountKeys':
             case 'getMasterAccountKeys':
             case 'getMasterAccountList':
-              stepResult =
-                typeof access.read.getMasterAccountKeys === 'function'
-                  ? await access.read.getMasterAccountKeys()
-                  : typeof access.read.getAccountKeys === 'function'
-                    ? await access.read.getAccountKeys()
-                  : [];
+              if (typeof access.read.getMasterAccountKeys === 'function') {
+                stepResult = await access.read.getMasterAccountKeys();
+              } else if (typeof access.read.getAccountKeys === 'function') {
+                stepResult = await access.read.getAccountKeys();
+              } else {
+                if (typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function') {
+                  try {
+                    stepResult = await (contract as unknown as { getMasterAccountKeys: () => Promise<unknown> }).getMasterAccountKeys();
+                  } catch (error) {
+                    if (!isMissingContractReadError(error)) throw error;
+                  }
+                }
+                if ((!Array.isArray(stepResult) || stepResult.length === 0) && typeof (contract as Record<string, unknown>).getAccountList === 'function') {
+                  try {
+                    stepResult = await (contract as unknown as { getAccountList: () => Promise<unknown> }).getAccountList();
+                  } catch (error) {
+                    if (!isMissingContractReadError(error)) throw error;
+                  }
+                }
+                stepResult ??= [];
+              }
+              break;
+            case 'getMasterAccountMetaData':
+              if (typeof (access.read as Record<string, unknown>).getMasterAccountMetaData === 'function') {
+                stepResult = normalizeMasterAccountMetaData(
+                  await (
+                    access.read as unknown as { getMasterAccountMetaData: () => Promise<unknown> }
+                  ).getMasterAccountMetaData(),
+                );
+              } else {
+                stepResult = await callMasterAccountMetaData(contract);
+              }
               break;
             case 'getActiveAccountKeys':
             case 'getActiveAccountList':
@@ -514,6 +652,46 @@ export async function POST(request: NextRequest) {
               } else {
                 stepResult = await access.read.getAccountRecord(findParam('Account Key'));
               }
+              break;
+            case 'getAccountRoleSummary':
+              if (typeof (access.read as Record<string, unknown>).getAccountRoleSummary !== 'function') {
+                throw new Error('getAccountRoleSummary is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { getAccountRoleSummary: (accountKey: string) => Promise<unknown> }
+              ).getAccountRoleSummary(findParam('Account Key'));
+              break;
+            case 'getAccountRoles':
+              if (typeof (access.read as Record<string, unknown>).getAccountRoles !== 'function') {
+                throw new Error('getAccountRoles is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { getAccountRoles: (accountKey: string) => Promise<unknown> }
+              ).getAccountRoles(findParam('Account Key'));
+              break;
+            case 'isSponsor':
+              if (typeof (access.read as Record<string, unknown>).isSponsor !== 'function') {
+                throw new Error('isSponsor is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { isSponsor: (accountKey: string) => Promise<boolean> }
+              ).isSponsor(findParam('Account Key'));
+              break;
+            case 'isRecipient':
+              if (typeof (access.read as Record<string, unknown>).isRecipient !== 'function') {
+                throw new Error('isRecipient is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { isRecipient: (accountKey: string) => Promise<boolean> }
+              ).isRecipient(findParam('Account Key'));
+              break;
+            case 'isAgent':
+              if (typeof (access.read as Record<string, unknown>).isAgent !== 'function') {
+                throw new Error('isAgent is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { isAgent: (accountKey: string) => Promise<boolean> }
+              ).isAgent(findParam('Account Key'));
               break;
             case 'getTransactionRecord':
               if (typeof (contract as Record<string, unknown>).getTransactionRecord === 'function') {
@@ -577,26 +755,70 @@ export async function POST(request: NextRequest) {
               }
               break;
             case 'getMasterAccountCount':
+            case 'getMasterAccountKeyCount':
             case 'getAccountKeyCount':
             case 'getAccountListSize':
             case 'getMasterAccountListSize':
-              if (typeof (contract as Record<string, unknown>).getAccountKeyCount === 'function') {
-                stepResult = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
-              } else if (typeof (access.read as Record<string, unknown>).getMasterAccountCount === 'function') {
-                stepResult = await (access.read as unknown as { getMasterAccountCount: () => Promise<unknown> }).getMasterAccountCount();
-              } else if (typeof access.read.getAccountKeyCount === 'function') {
-                stepResult = await access.read.getAccountKeyCount();
-              } else if (typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
-                stepResult = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
+              if (typeof (access.read as Record<string, unknown>).getMasterAccountKeyCount === 'function') {
+                stepResult = Number(
+                  await (access.read as unknown as { getMasterAccountKeyCount: () => Promise<unknown> }).getMasterAccountKeyCount(),
+                );
+              } else if (typeof (access.read as Record<string, unknown>).getMasterAccountMetaData === 'function') {
+                stepResult = getMasterAccountMetaDataCount(
+                  await (
+                    access.read as unknown as { getMasterAccountMetaData: () => Promise<unknown> }
+                  ).getMasterAccountMetaData(),
+                );
               } else {
-                const list =
-                  typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function'
-                    ? await (contract as unknown as { getMasterAccountKeys: () => Promise<unknown> }).getMasterAccountKeys()
-                    : typeof access.read.getMasterAccountKeys === 'function'
-                      ? await access.read.getMasterAccountKeys()
-                    : typeof access.read.getAccountKeys === 'function'
-                      ? await access.read.getAccountKeys()
-                      : [];
+                try {
+                  stepResult = getMasterAccountMetaDataCount(await callMasterAccountMetaData(contract));
+                } catch (error) {
+                  if (!isMissingContractReadError(error)) throw error;
+                }
+              }
+              if (stepResult == null && typeof (contract as Record<string, unknown>).getMasterAccountKeyCount === 'function') {
+                try {
+                  stepResult = Number(
+                    await (contract as unknown as { getMasterAccountKeyCount: () => Promise<unknown> }).getMasterAccountKeyCount(),
+                  );
+                } catch (error) {
+                  if (!isMissingContractReadError(error)) throw error;
+                }
+              }
+              if (stepResult == null && typeof (contract as Record<string, unknown>).getAccountKeyCount === 'function') {
+                try {
+                  stepResult = Number(await (contract as unknown as { getAccountKeyCount: () => Promise<unknown> }).getAccountKeyCount());
+                } catch (error) {
+                  if (!isMissingContractReadError(error)) throw error;
+                }
+              }
+              if (stepResult == null && typeof (access.read as Record<string, unknown>).getMasterAccountCount === 'function') {
+                stepResult = await (access.read as unknown as { getMasterAccountCount: () => Promise<unknown> }).getMasterAccountCount();
+              } else if (stepResult == null && typeof access.read.getAccountKeyCount === 'function') {
+                stepResult = await access.read.getAccountKeyCount();
+              } else if (stepResult == null && typeof (access.read as Record<string, unknown>).getAccountListSize === 'function') {
+                stepResult = await (access.read as unknown as { getAccountListSize: () => Promise<unknown> }).getAccountListSize();
+              } else if (stepResult == null) {
+                let list: unknown = [];
+                if (typeof access.read.getMasterAccountKeys === 'function') {
+                  list = await access.read.getMasterAccountKeys();
+                } else if (typeof access.read.getAccountKeys === 'function') {
+                  list = await access.read.getAccountKeys();
+                } else if (typeof (access.read as Record<string, unknown>).getMasterAccountList === 'function') {
+                  list = await (access.read as unknown as { getMasterAccountList: () => Promise<unknown> }).getMasterAccountList();
+                } else if (typeof (contract as Record<string, unknown>).getMasterAccountKeys === 'function') {
+                  try {
+                    list = await (contract as unknown as { getMasterAccountKeys: () => Promise<unknown> }).getMasterAccountKeys();
+                  } catch (error) {
+                    if (!isMissingContractReadError(error)) throw error;
+                  }
+                } else if (typeof (contract as Record<string, unknown>).getAccountList === 'function') {
+                  try {
+                    list = await (contract as unknown as { getAccountList: () => Promise<unknown> }).getAccountList();
+                  } catch (error) {
+                    if (!isMissingContractReadError(error)) throw error;
+                  }
+                }
                 stepResult = Array.isArray(list) ? list.length : 0;
               }
               break;
@@ -642,7 +864,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'addAgentTransaction':
@@ -669,7 +891,7 @@ export async function POST(request: NextRequest) {
                 transactionQty,
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('addAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addAgentTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'addBackDatedSponsorship':
@@ -694,7 +916,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'addBackDatedAgentSponsorship':
@@ -719,7 +941,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'backDateRecipientTransaction': {
@@ -738,7 +960,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('backDateRecipientTransaction', tx, receipt);
+              stepResult = formatReceiptResult('backDateRecipientTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'backDateAgentTransaction': {
@@ -761,7 +983,7 @@ export async function POST(request: NextRequest) {
                 Math.floor(new Date(backDate).getTime() / 1000),
               );
               const receipt = await tx.wait();
-              stepResult = formatReceiptResult('backDateAgentTransaction', tx, receipt);
+              stepResult = formatReceiptResult('backDateAgentTransaction', tx, receipt, timingCollector);
               break;
             }
             case 'deleteRecipient': {
@@ -778,6 +1000,7 @@ export async function POST(request: NextRequest) {
                 'deleteRecipient',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+                timingCollector,
               );
               break;
             }
@@ -798,6 +1021,7 @@ export async function POST(request: NextRequest) {
                 'deleteSponsor',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+                timingCollector,
               );
               break;
             }
@@ -839,6 +1063,7 @@ export async function POST(request: NextRequest) {
                 'deleteAgent',
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+                timingCollector,
               );
               break;
             }
@@ -871,6 +1096,7 @@ export async function POST(request: NextRequest) {
                 String(step.method),
                 tx,
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
+                timingCollector,
               );
               break;
             }
@@ -898,15 +1124,21 @@ export async function POST(request: NextRequest) {
               }
             : undefined;
 
+        const meta = buildMethodTimingMeta(timingCollector);
+        const sanitizedResult = sanitizeJsonValue(result);
+        const payload = isMasterAccountMetaDataStep(step)
+          ? buildMasterAccountMetaDataPayload(call, sanitizedResult, warning, meta)
+          : {
+              call,
+              result: sanitizedResult,
+              ...(warning ? { warning } : {}),
+              meta,
+            };
+
         results.push({
           step: step.step,
           success: true,
-          payload: {
-            call,
-            result: sanitizeJsonValue(result),
-            ...(warning ? { warning } : {}),
-            meta: buildMethodTimingMeta(timingCollector),
-          },
+          payload,
         });
 
         const nextStep = script.steps[idx + 1];

@@ -2,6 +2,7 @@
 import { Interface } from 'ethers';
 import { buildHandler } from '../../readMethodRuntime';
 import { timeOnChainCall } from '../../utils/methodTiming';
+import getAccountCore from './getAccountCore';
 
 const accountLinksInterface = new Interface([
   'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
@@ -18,8 +19,21 @@ async function callGetAccountLinks(contract, accountKey) {
   return accountLinksInterface.decodeFunctionResult('getAccountLinks', raw);
 }
 
+function toCount(value) {
+  if (value == null) return null;
+  const count = Number(value);
+  return Number.isFinite(count) ? count : null;
+}
+
 const handler = buildHandler('getAgentKeyCount', async (context) => {
   const accountKey = String(context.methodArgs[0] || '');
+  try {
+    const accountCore = await getAccountCore.run({ ...context, methodArgs: [accountKey] });
+    const count = toCount(accountCore?.agentCount ?? accountCore?.[8]);
+    if (count != null) return count;
+  } catch {
+    // Older deployments can derive this from agent list/link reads.
+  }
   const method =
     typeof context.read.getAgentKeys === 'function'
       ? context.read.getAgentKeys

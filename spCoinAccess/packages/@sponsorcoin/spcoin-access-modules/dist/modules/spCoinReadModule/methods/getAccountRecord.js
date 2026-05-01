@@ -205,7 +205,6 @@ async function getShallowAccountRecord(runtime, accountKey) {
     const accountStruct = await runtime.spCoinSerialize.getAccountRecordObject(accountKey);
     delete accountStruct.TYPE;
     accountStruct.accountKey = accountKey;
-    delete accountStruct.verified;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(accountStruct.balanceOf, accountStruct.stakedBalance, pendingSummary.pendingRewardsRecord, `${String(spCoinMetaData?.inflationRate ?? 0)}%`);
@@ -229,7 +228,6 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     const accountStruct = await runtime.spCoinSerialize.getAccountRecordObject(accountKey);
     delete accountStruct.TYPE;
     accountStruct.accountKey = accountKey;
-    delete accountStruct.verified;
     const sponsorAccountKeys = Array.isArray(accountStruct.sponsorAccountList) ? accountStruct.sponsorAccountList : [];
     const recipientAccountKeys = Array.isArray(accountStruct.recipientAccountList) ? accountStruct.recipientAccountList : [];
     const parentRecipientKeys = Array.isArray(accountStruct.agentParentRecipientAccountList)

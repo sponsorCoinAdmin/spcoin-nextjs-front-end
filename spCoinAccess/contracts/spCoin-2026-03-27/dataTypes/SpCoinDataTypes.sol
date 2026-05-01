@@ -56,7 +56,6 @@ contract SpCoinDataTypes {
         uint256 stakedSPCoins; // Coins Owned but steaked to recipients
         uint256 accountTypes;  // Coins Owned but steaked to recipients
         bool inserted;
-        bool verified;
         address[] recipientAccountList;           // If Sponsor List of Recipient Accounts
         address[] sponsorAccountList;             // If Recipient ? List of Sponsor Accounts
         address[] agentAccountList;               // If Recipient? List of Agent Accounts
@@ -77,7 +76,6 @@ contract SpCoinDataTypes {
         uint256[] recipientRateList;
         mapping(uint256 => RecipientRateStruct) recipientRateMap;
         bool inserted;
-        bool verified;
     }
  
     struct RecipientRateStruct {
@@ -101,7 +99,6 @@ contract SpCoinDataTypes {
         uint256[] agentRateList;
         mapping(uint256 => AgentRateStruct) agentRateMap;
         bool inserted;
-        bool verified;
     }
  
     struct AgentRateStruct {

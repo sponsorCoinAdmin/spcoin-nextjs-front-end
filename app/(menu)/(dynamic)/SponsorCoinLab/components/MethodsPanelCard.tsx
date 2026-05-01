@@ -85,8 +85,10 @@ const ERC20_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 
 const SPCOIN_READ_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   creationTime: 'creationTime.ts',
+  getMasterAccountMetaData: 'getMasterAccountMetaData.ts',
   getMasterAccountElement: 'getMasterAccountElement.ts',
   getMasterAccountList: 'getMasterAccountList.ts',
+  getMasterAccountKeyCount: 'getMasterAccountKeyCount.ts',
   getMasterAccountCount: 'getMasterAccountListSize.ts',
   version: 'getVersion.ts',
 };
@@ -130,8 +132,10 @@ const TODO_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
 const UTILS_TYPESCRIPT_TARGET_BY_METHOD: Record<string, string> = {
   compareSpCoinContractSize: 'compareSpCoinContractSize.ts',
   creationTime: 'creationTime.ts',
+  getMasterAccountMetaData: 'getMasterAccountMetaData.ts',
   getMasterAccountElement: 'getMasterAccountElement.ts',
   getMasterAccountList: 'getMasterAccountList.ts',
+  getMasterAccountKeyCount: 'getMasterAccountKeyCount.ts',
   getMasterAccountCount: 'getMasterAccountListSize.ts',
   hhFundAccounts: 'hhFundAccounts.ts',
   deleteMasterSponsorships: 'delete.ts',
@@ -271,7 +275,9 @@ function getEquivalentMemberListMethodNames(
 const BLOCKED_SPCOIN_READ_TITLES = new Set([
   'creationTime',
   'version',
+  'getMasterAccountMetaData',
   'getMasterAccountElement',
+  'getMasterAccountKeyCount',
   'getMasterAccountCount',
   'getMasterAccountKeys',
 ]);
@@ -396,6 +402,7 @@ type Props = {
   activeMethodPanelTab: MethodPanelTab;
   selectMappedJsonMethod: (value: string) => void;
   selectMethodByKind: (kind: MethodIdentityKind, value: string) => void;
+  beginNewMethodDraft: (afterReset?: () => void) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
   showOnChainMethods: boolean;
@@ -443,6 +450,7 @@ export default function MethodsPanelCard({
   activeMethodPanelTab,
   selectMappedJsonMethod,
   selectMethodByKind,
+  beginNewMethodDraft,
   writeTraceEnabled,
   toggleWriteTrace,
   showOnChainMethods,
@@ -494,6 +502,23 @@ export default function MethodsPanelCard({
   const [selectedDisplayGroup, setSelectedDisplayGroup] = React.useState<MethodDisplayFilter>(
     storedMethodsPanelUiState?.selectedDisplayGroup || getDisplayGroupForPanelTab(activeMethodPanelTab),
   );
+  const changeSelectedDisplayGroup = React.useCallback((nextGroup: MethodDisplayFilter) => {
+    if (selectedDisplayGroup === nextGroup) return;
+    const applyGroupChange = () => {
+      setSelectedDisplayGroup(nextGroup);
+      setIsAlterMembershipMenuOpen(false);
+      setIsChangeGroupMenuOpen(false);
+    };
+    if (isEditingScriptMethod) {
+      beginNewMethodDraft(applyGroupChange);
+      return;
+    }
+    applyGroupChange();
+  }, [
+    beginNewMethodDraft,
+    isEditingScriptMethod,
+    selectedDisplayGroup,
+  ]);
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
   const didHydratePanelUiRef = React.useRef(false);
@@ -1691,8 +1716,7 @@ export default function MethodsPanelCard({
                       if (selectedDisplayGroup === value) e.preventDefault();
                     }}
                     onChange={(e) => {
-                      if (selectedDisplayGroup === value) return;
-                      setSelectedDisplayGroup(e.target.value as MethodDisplayFilter);
+                      changeSelectedDisplayGroup(e.target.value as MethodDisplayFilter);
                     }}
                   />
                   <span className={selectedDisplayGroup === value ? 'text-green-400' : 'text-[#8FA8FF]'}>

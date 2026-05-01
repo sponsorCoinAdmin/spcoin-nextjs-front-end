@@ -78,8 +78,10 @@ export type BuildMethodsPanelCardPropsArgs = {
   selectMethodPanelTab: (tab: MethodPanelMode | 'erc20' | 'admin_utils' | 'todos') => void;
   selectMappedJsonMethod: (value: string) => void;
   selectMethodByKind: (kind: 'erc20Read' | 'erc20Write' | 'spCoinRead' | 'spCoinWrite' | 'serialization', value: string) => void;
+  beginNewMethodDraft: (afterReset?: () => void) => void;
   writeTraceEnabled: boolean;
   setWriteTraceEnabled: StateSetter<boolean>;
+  appendLog: (line: string) => void;
   showOnChainMethods: boolean;
   setShowOnChainMethods: StateSetter<boolean>;
   showOffChainMethods: boolean;
@@ -242,6 +244,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
     selectMethodPanelTab: args.selectMethodPanelTab,
     selectMappedJsonMethod: args.selectMappedJsonMethod,
     selectMethodByKind: args.selectMethodByKind,
+    beginNewMethodDraft: args.beginNewMethodDraft,
     writeTraceEnabled: args.writeTraceEnabled,
     toggleWriteTrace: () => args.setWriteTraceEnabled((prev: boolean) => !prev),
     showOnChainMethods: args.showOnChainMethods,
@@ -397,6 +400,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       activeContractAddress: args.contractAddress,
       initialContractDirectoryOptions: args.initialContractDirectoryOptions,
       inputStyle: args.inputStyle,
+      accountTrace: args.appendLog,
       writeTraceEnabled: args.writeTraceEnabled,
       toggleWriteTrace: () => args.setWriteTraceEnabled((prev: boolean) => !prev),
       canRunSelectedSpCoinReadMethod: args.canRunSpCoinReadMethod,
@@ -487,6 +491,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       backdateMonths: args.backdateCalendar.backdateMonths,
       backdateDays: args.backdateCalendar.backdateDays,
       applyBackdateBy: args.backdateCalendar.applyBackdateBy,
+      accountTrace: args.appendLog,
     },
     serializationTestProps: {
       invalidFieldIds: args.invalidFieldIds,

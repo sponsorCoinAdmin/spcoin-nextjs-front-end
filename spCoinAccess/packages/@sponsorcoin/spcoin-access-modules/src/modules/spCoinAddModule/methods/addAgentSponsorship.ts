@@ -1,4 +1,14 @@
 // @ts-nocheck
+
+async function readMasterAccountKeys(contract) {
+  const legacyMethod =
+    contract?.getMasterAccountKeys ??
+    contract?.getAccountKeys ??
+    contract?.getMasterAccountList ??
+    contract?.getAccountList;
+  return typeof legacyMethod === "function" ? legacyMethod.call(contract) : [];
+}
+
 export const addAgentSponsorship = async (
   context,
   _sponsorSigner,
@@ -202,15 +212,11 @@ export const addAgentSponsorship = async (
   };
   const logStructureSnapshot = async (stageLabel) => {
     const snapshot = {};
-    const getMasterAccountKeys =
-        context.spCoinContractDeployed.getMasterAccountKeys ?? context.spCoinContractDeployed.getAccountList;
-    if (typeof getMasterAccountKeys === "function") {
-      snapshot.accountList = await safeRead(
-        "addAgentSponsorship accountList",
-        () => getMasterAccountKeys(),
-        []
-      );
-    }
+    snapshot.accountList = await safeRead(
+      "addAgentSponsorship accountList",
+      () => readMasterAccountKeys(context.spCoinContractDeployed),
+      []
+    );
     if (typeof context.spCoinContractDeployed.isAccountInserted === "function") {
       snapshot.sponsorInserted = await safeRead(
         "addAgentSponsorship sponsorInserted",

@@ -12,20 +12,17 @@ let spCoinLogger;
 export const accountRewardTotalsInterface = new Interface([
     'function getAccountRewardTotals(address _accountKey) view returns (uint256 sponsorRewards, uint256 recipientRewards, uint256 agentRewards)',
 ]);
-export const accountCoreInterface = new Interface([
-    'function getAccountCore(address _accountKey) view returns (address accountKey, uint256 creationTime, bool verified, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards)',
+export const accountRecordInterface = new Interface([
+    'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
-export const accountLinksInterface = new Interface([
-    'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
+export const recipientRecordInterface = new Interface([
+    'function getRecipientRecord(address _sponsorKey, address _recipientKey) view returns (address sponsorKey, address recipientKey, uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-export const recipientRecordCoreInterface = new Interface([
-    'function getRecipientRecordCore(address _sponsorKey, address _recipientKey) view returns (uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
+export const recipientTransactionInterface = new Interface([
+    'function getRecipientTransaction(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (address sponsorKey, address recipientKey, uint256 recipientRateKey, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
-export const recipientTransactionCoreInterface = new Interface([
-    'function getRecipientTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey) view returns (uint256 recipientRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
-]);
-export const agentTransactionCoreInterface = new Interface([
-    'function getAgentTransactionCore(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (uint256 agentRate, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
+export const agentTransactionInterface = new Interface([
+    'function getAgentTransaction(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, address _agentKey, uint256 _agentRateKey) view returns (address sponsorKey, address recipientKey, uint256 recipientRateKey, address agentKey, uint256 agentRateKey, uint256 creationTime, uint256 lastUpdateTime, uint256 stakedSPCoins, bool inserted)',
 ]);
 export async function callViewFunction(contract, iface, functionName, args) {
     const target = String((contract === null || contract === void 0 ? void 0 : contract.target) || (typeof (contract === null || contract === void 0 ? void 0 : contract.getAddress) === 'function' ? await contract.getAddress() : ''));
@@ -98,7 +95,6 @@ function buildEmptyAccountRecord(accountKey) {
     const accountRecord = new AccountStruct();
     accountRecord.accountKey = normalizeAddress(accountKey);
     accountRecord.creationTime = '0';
-    accountRecord.verified = false;
     accountRecord.balanceOf = '0';
     accountRecord.stakedBalance = '0';
     accountRecord.sponsorKeys = [];
@@ -108,9 +104,8 @@ function buildEmptyAccountRecord(accountKey) {
     return accountRecord;
 }
 export async function buildSerializedAccountRecordFallback(contract, accountKey) {
-    const [normalizedAccountKey, creationTime, verified, accountBalance, stakedAccountSPCoins, accountStakingRewards] = await callViewFunction(contract, accountCoreInterface, 'getAccountCore', [accountKey]);
-    const [sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [accountKey]);
-    let serialized = `accountKey: ${normalizeAddress(normalizedAccountKey)}\\,\ncreationTime: ${String(creationTime)}\\,\nverified: ${Boolean(verified) ? 'true' : 'false'}`;
+    const [normalizedAccountKey, creationTime, accountBalance, stakedAccountSPCoins, accountStakingRewards, sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [accountKey]);
+    let serialized = `accountKey: ${normalizeAddress(normalizedAccountKey)}\\,\ncreationTime: ${String(creationTime)}`;
     serialized += `\\,balanceOf: ${String(accountBalance)}`;
     serialized += `\\,stakedSPCoins: ${String(stakedAccountSPCoins)}`;
     serialized += `\\,sponsorKeys:${normalizeAddressList(Array.from(sponsorKeys || []))}`;
@@ -125,15 +120,15 @@ export async function buildSerializedAccountRewardsFallback(contract, accountKey
     return [String(sponsorRewards), String(recipientRewards), String(agentRewards)].join(",");
 }
 export async function buildSerializedRecipientRecordFallback(contract, sponsorKey, recipientKey) {
-    const [creationTime, stakedSPCoins] = await callViewFunction(contract, recipientRecordCoreInterface, 'getRecipientRecordCore', [sponsorKey, recipientKey]);
+    const [, , creationTime, stakedSPCoins] = await callViewFunction(contract, recipientRecordInterface, 'getRecipientRecord', [sponsorKey, recipientKey]);
     return `${String(creationTime)},${String(stakedSPCoins)}`;
 }
 export async function buildSerializedRecipientRateFallback(contract, sponsorKey, recipientKey, recipientRateKey) {
-    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, recipientTransactionCoreInterface, 'getRecipientTransactionCore', [sponsorKey, recipientKey, recipientRateKey]);
+    const [, , , creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, recipientTransactionInterface, 'getRecipientTransaction', [sponsorKey, recipientKey, recipientRateKey]);
     return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 export async function buildSerializedAgentRateFallback(contract, sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey) {
-    const [, creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, agentTransactionCoreInterface, 'getAgentTransactionCore', [sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey]);
+    const [, , , , , creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(contract, agentTransactionInterface, 'getAgentTransaction', [sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey]);
     return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
 }
 export class SpCoinSerialize {
@@ -188,9 +183,6 @@ export class SpCoinSerialize {
                     break;
                 case "inserted":
                     accountRecord.inserted = _value;
-                    break;
-                case "verified":
-                    accountRecord.verified = _value;
                     break;
                 case "KYC":
                     accountRecord.KYC = _value;

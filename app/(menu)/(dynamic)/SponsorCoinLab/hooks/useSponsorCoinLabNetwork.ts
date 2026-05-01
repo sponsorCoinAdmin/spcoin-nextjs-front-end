@@ -390,10 +390,6 @@ export function useSponsorCoinLabNetwork({
     () => hardhatAccounts[selectedHardhatIndex],
     [hardhatAccounts, selectedHardhatIndex],
   );
-  const contextAddress = useMemo(() => {
-    const active = exchangeContext?.accounts?.activeAccount as { address?: string } | undefined;
-    return String(active?.address || '').trim();
-  }, [exchangeContext?.accounts?.activeAccount]);
   const contextChainId = useMemo(() => {
     const raw = Number(exchangeContext?.network?.chainId);
     return Number.isFinite(raw) && raw > 0 ? String(raw) : '';
@@ -404,8 +400,8 @@ export function useSponsorCoinLabNetwork({
   );
   const effectiveConnectedAddress = useMemo(() => {
     if (mode === 'hardhat') return connectedAddress;
-    return connectedAddress || contextAddress;
-  }, [connectedAddress, contextAddress, mode]);
+    return connectedAddress;
+  }, [connectedAddress, mode]);
   const effectiveConnectedChainId = useMemo(() => {
     if (mode === 'hardhat') return connectedChainId || '31337';
     return connectedChainId || contextChainId;
@@ -726,10 +722,7 @@ export function useSponsorCoinLabNetwork({
     setConnectedChainId(String(network.chainId));
     setConnectedNetworkName(knownName || fallbackName || '(unknown)');
 
-    const selectedAddressRaw = String((ethereum as any)?.selectedAddress || '').trim();
-    const selectedAddress =
-      /^0[xX][0-9a-fA-F]{40}$/.test(selectedAddressRaw) ? selectedAddressRaw : '';
-    const nextAccount = accounts.length > 0 ? accounts[0] : selectedAddress || contextAddress;
+    const nextAccount = accounts.length > 0 ? accounts[0] : '';
 
     if (nextAccount) {
       setConnectedAddress(nextAccount);
@@ -744,7 +737,7 @@ export function useSponsorCoinLabNetwork({
 
     setConnectedAddress('');
     setActiveSigner(null);
-  }, [contextAddress, mode]);
+  }, [mode]);
 
   useEffect(() => {
     if (mode !== 'metamask') return;
@@ -869,9 +862,11 @@ export function useSponsorCoinLabNetwork({
         metamask: () => Promise<T>;
         hardhat: () => Promise<T>;
       },
+      modeOverride?: ConnectionMode,
     ): Promise<T> => {
-      appendWriteTrace(`executeConnected context=${contextLabel}; mode=${mode}`);
-      switch (mode) {
+      const executionMode = modeOverride ?? mode;
+      appendWriteTrace(`executeConnected context=${contextLabel}; mode=${executionMode}`);
+      switch (executionMode) {
         case 'metamask':
           return handlers.metamask();
         case 'hardhat':
@@ -924,43 +919,6 @@ export function useSponsorCoinLabNetwork({
     return signer;
   }, [appendLog, appendWriteTrace, rpcUrl, setStatus]);
 
-  const connectHardhatSigner = useCallback(async (): Promise<Signer> => {
-    appendWriteTrace('connectHardhatSigner invoked');
-    if (!selectedHardhatAccount?.address || !selectedHardhatAccount.privateKey) {
-      throw new Error('Select a Hardhat account with a private key.');
-    }
-
-    try {
-      if (!hardhatProvider) {
-        throw new Error('Hardhat RPC URL is empty.');
-      }
-      const signer = new Wallet(selectedHardhatAccount.privateKey, hardhatProvider);
-      const network = await hardhatProvider.getNetwork();
-      const address = await signer.getAddress();
-
-      setActiveSigner(signer);
-      setConnectedAddress(address);
-      setConnectedChainId(String(network.chainId));
-      setConnectedNetworkName(HARDHAT_NETWORK_NAME);
-      setStatus(`Connected via Hardhat signer: ${address}`);
-      appendLog(`Connected Hardhat signer ${address} on chain ${String(network.chainId)}.`);
-      appendWriteTrace(`connectHardhatSigner returning signer ${address}`);
-      return signer;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      appendLog(`Hardhat signer connection failed via ${trimmedRpcUrl}: ${message}`);
-      throw createHardhatRpcUnavailableError('connectSigner', rpcUrl);
-    }
-  }, [appendLog, appendWriteTrace, hardhatProvider, rpcUrl, selectedHardhatAccount, setStatus, trimmedRpcUrl]);
-
-  const connectSigner = useCallback(async (): Promise<Signer> => {
-    appendWriteTrace(`connectSigner invoked; mode=${mode}`);
-    return executeConnected('connectSigner', {
-      metamask: connectMetaMaskSigner,
-      hardhat: connectHardhatSigner,
-    });
-  }, [appendWriteTrace, connectHardhatSigner, connectMetaMaskSigner, executeConnected, mode]);
-
   const ensureMetaMaskReadRunner = useCallback(async () => {
     appendWriteTrace('ensureMetaMaskReadRunner using BrowserProvider');
     if (!window.ethereum) {
@@ -1004,8 +962,9 @@ export function useSponsorCoinLabNetwork({
     }
   }, [appendLog, appendWriteTrace, hardhatProvider, rpcUrl, trimmedRpcUrl]);
 
-  const ensureReadRunner = useCallback(async (): Promise<any> => {
-    if (mode === 'hardhat') {
+  const ensureReadRunner = useCallback(async (modeOverride?: ConnectionMode): Promise<any> => {
+    const executionMode = modeOverride ?? mode;
+    if (executionMode === 'hardhat') {
       return ensureHardhatReadRunner();
     }
 
@@ -1118,11 +1077,11 @@ export function useSponsorCoinLabNetwork({
         appendWriteTrace(
           `executeMetaMaskConnected reconnect branch; reason=${String((error as any)?.message || error)}`,
         );
-        const signer = await connectSigner();
+        const signer = await connectMetaMaskSigner();
         return runWithSigner(signer);
       }
     },
-    [activeSigner, appendLog, appendWriteTrace, connectSigner, isConnectionRetryableError, requireContractAddress],
+    [activeSigner, appendLog, appendWriteTrace, connectMetaMaskSigner, isConnectionRetryableError, requireContractAddress],
   );
 
   const executeWriteConnected = useCallback(
@@ -1130,16 +1089,18 @@ export function useSponsorCoinLabNetwork({
       label: string,
       writeCall: (contract: Contract, signer: Signer) => Promise<any>,
       accountKey?: string,
+      modeOverride?: ConnectionMode,
     ) => {
+      const executionMode = modeOverride ?? mode;
       return executeConnected(`executeWriteConnected:${label}`, {
         hardhat: () => executeHardhatConnected(label, accountKey, writeCall),
         metamask: async () => {
           appendLog(`${label}: using MetaMask signer flow.`);
           return executeMetaMaskConnected(label, writeCall);
         },
-      });
+      }, executionMode);
     },
-    [appendLog, executeConnected, executeHardhatConnected, executeMetaMaskConnected],
+    [appendLog, executeConnected, executeHardhatConnected, executeMetaMaskConnected, mode],
   );
 
   const connectHardhatBaseFromNetworkLabel = useCallback(async () => {

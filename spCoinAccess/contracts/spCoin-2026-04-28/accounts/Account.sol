@@ -21,57 +21,14 @@ contract Account is StructSerialization {
             masterAccountList.push(_accountKey);
         }
         accountRec.accountTypes |= accountType;
-        if (accountType != UNDEFINED) {
-            setAccountActive(_accountKey);
-        }
-    }
-
-    function setAccountActive(address _accountKey) internal {
-        isActiveAccount[_accountKey] = true;
     }
 
     function hasActiveLinks(address _accountKey) internal view returns (bool) {
         AccountStruct storage accountRec = accountMap[_accountKey];
-        return accountRec.activeParentLinkCount > 0 || accountRec.activeChildLinkCount > 0;
-    }
-
-    function deactivateAccountIfUnlinked(address _accountKey) internal returns (bool) {
-        if (!accountMap[_accountKey].inserted || hasActiveLinks(_accountKey)) {
-            return false;
-        }
-        isActiveAccount[_accountKey] = false;
-        return true;
-    }
-
-    function incrementActiveParentLink(address _accountKey) internal {
-        accountMap[_accountKey].activeParentLinkCount += 1;
-        setAccountActive(_accountKey);
-    }
-
-    function incrementActiveChildLink(address _accountKey) internal {
-        accountMap[_accountKey].activeChildLinkCount += 1;
-        setAccountActive(_accountKey);
-    }
-
-    function decrementActiveParentLink(address _accountKey) internal {
-        AccountStruct storage accountRec = accountMap[_accountKey];
-        if (accountRec.activeParentLinkCount > 0) {
-            accountRec.activeParentLinkCount -= 1;
-        }
-        deactivateAccountIfUnlinked(_accountKey);
-    }
-
-    function decrementActiveChildLink(address _accountKey) internal {
-        AccountStruct storage accountRec = accountMap[_accountKey];
-        if (accountRec.activeChildLinkCount > 0) {
-            accountRec.activeChildLinkCount -= 1;
-        }
-        deactivateAccountIfUnlinked(_accountKey);
-    }
-
-    function clearActiveChildLinks(address _accountKey) internal {
-        accountMap[_accountKey].activeChildLinkCount = 0;
-        deactivateAccountIfUnlinked(_accountKey);
+        return accountRec.sponsorKeys.length > 0 ||
+            accountRec.recipientKeys.length > 0 ||
+            accountRec.agentKeys.length > 0 ||
+            accountRec.parentRecipientKeys.length > 0;
     }
 
     function getAccountRecord(uint accountType, address account)
@@ -122,7 +79,37 @@ contract Account is StructSerialization {
     }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice retrieves the inserted account keys.
+    /// @notice retrieves account graph summary metadata.
+    function getMasterAccountMetaData()
+        external
+        view
+        returns (
+            uint256 masterAccountSize,
+            uint256 activeAccountCount,
+            uint256 inactiveAccountCount,
+            uint256 totalSponsorLinks,
+            uint256 totalRecipientLinks,
+            uint256 totalAgentLinks,
+            uint256 totalParentRecipientLinks
+        )
+    {
+        masterAccountSize = masterAccountList.length;
+        for (uint256 idx = 0; idx < masterAccountList.length; idx++) {
+            address accountKey = masterAccountList[idx];
+            AccountStruct storage accountRec = accountMap[accountKey];
+            if (hasActiveLinks(accountKey)) {
+                activeAccountCount += 1;
+            } else {
+                inactiveAccountCount += 1;
+            }
+            totalSponsorLinks += accountRec.sponsorKeys.length;
+            totalRecipientLinks += accountRec.recipientKeys.length;
+            totalAgentLinks += accountRec.agentKeys.length;
+            totalParentRecipientLinks += accountRec.parentRecipientKeys.length;
+        }
+    }
+
+    /// @notice retrieves the inserted master account keys.
     function getMasterAccountKeys() external view returns (address[] memory) {
         return masterAccountList;
     }
@@ -131,12 +118,8 @@ contract Account is StructSerialization {
         return masterAccountList[index];
     }
 
-    function getAccountKeyCount() external view returns (uint256) {
-        return masterAccountList.length;
-    }
-
     function isAccountActive(address _accountKey) external view returns (bool) {
-        return isActiveAccount[_accountKey];
+        return hasActiveLinks(_accountKey);
     }
 
     function accountHasActiveLinks(address _accountKey) external view returns (bool) {
@@ -149,12 +132,14 @@ contract Account is StructSerialization {
         returns (
             address accountKey,
             uint256 creationTime,
-            bool verified,
             uint256 accountBalance,
             uint256 stakedAccountSPCoins,
             uint256 accountStakingRewards,
-            uint256 activeParentLinkCount,
-            uint256 activeChildLinkCount
+            uint256 sponsorCount,
+            uint256 recipientCount,
+            uint256 agentCount,
+            uint256 parentRecipientCount,
+            bool active
         )
     {
         (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
@@ -163,22 +148,26 @@ contract Account is StructSerialization {
             return (
                 accountKey,
                 creationTime,
-                verified,
                 accountBalance,
                 stakedAccountSPCoins,
                 accountStakingRewards,
-                activeParentLinkCount,
-                activeChildLinkCount
+                sponsorCount,
+                recipientCount,
+                agentCount,
+                parentRecipientCount,
+                active
             );
         }
         accountKey = accountRec.accountKey;
         creationTime = accountRec.creationTime;
-        verified = accountRec.verified;
         accountBalance = balanceOf[_accountKey];
         stakedAccountSPCoins = accountRec.stakedSPCoins;
         accountStakingRewards = accountRec.stakingRewards;
-        activeParentLinkCount = accountRec.activeParentLinkCount;
-        activeChildLinkCount = accountRec.activeChildLinkCount;
+        sponsorCount = accountRec.sponsorKeys.length;
+        recipientCount = accountRec.recipientKeys.length;
+        agentCount = accountRec.agentKeys.length;
+        parentRecipientCount = accountRec.parentRecipientKeys.length;
+        active = hasActiveLinks(_accountKey);
     }
 
     function getAccountRecord(address _accountKey)
@@ -187,7 +176,6 @@ contract Account is StructSerialization {
         returns (
             address accountKey,
             uint256 creationTime,
-            bool verified,
             uint256 accountBalance,
             uint256 stakedAccountSPCoins,
             uint256 accountStakingRewards,
@@ -207,7 +195,6 @@ contract Account is StructSerialization {
             return (
                 accountKey,
                 creationTime,
-                verified,
                 accountBalance,
                 stakedAccountSPCoins,
                 accountStakingRewards,
@@ -219,7 +206,6 @@ contract Account is StructSerialization {
         }
         accountKey = accountRec.accountKey;
         creationTime = accountRec.creationTime;
-        verified = accountRec.verified;
         accountBalance = balanceOf[_accountKey];
         stakedAccountSPCoins = accountRec.stakedSPCoins;
         accountStakingRewards = accountRec.stakingRewards;
@@ -267,14 +253,6 @@ contract Account is StructSerialization {
     function getAgentKeys(address _accountKey)
     external view returns (address[] memory) {
         return accountMap[_accountKey].agentKeys;
-    }
-
-    function getRecipientKeyCount(address _accountKey) external view returns (uint256) {
-        return accountMap[_accountKey].recipientKeys.length;
-    }
-
-    function getAgentKeyCount(address _accountKey) external view returns (uint256) {
-        return accountMap[_accountKey].agentKeys.length;
     }
 
     function getAccountListIndex (address _accountKey, 

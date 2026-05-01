@@ -47,7 +47,6 @@ type Props = {
     startedAt: number;
     isCancelling: boolean;
     onCancel: () => void;
-    onAcknowledge: () => void;
   };
 };
 

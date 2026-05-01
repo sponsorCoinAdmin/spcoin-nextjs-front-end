@@ -63,6 +63,7 @@ import { useSponsorCoinLabMethods } from '../hooks/useSponsorCoinLabMethods';
 import { useSponsorCoinLabNetwork } from '../hooks/useSponsorCoinLabNetwork';
 import { useSponsorCoinLabPersistence } from '../hooks/useSponsorCoinLabPersistence';
 import { useSponsorCoinLabScripts } from '../hooks/useSponsorCoinLabScripts';
+import { useAccessMethodCaller } from '../hooks/useAccessMethodCaller';
 import {
   type ConnectionMode,
   type LabScriptStep,
@@ -103,6 +104,10 @@ import { useControllerMethodSelection } from './hooks/useControllerMethodSelecti
 import { useControllerScriptPresentation } from './hooks/useControllerScriptPresentation';
 import { useControllerViewProps } from './hooks/useControllerViewProps';
 import type { ContractDirectoryOption } from '../components/contractDirectoryOptions';
+import {
+  isSponsorCoinLabAccountTraceLine,
+  recordSponsorCoinLabAccountTrace,
+} from '@/lib/spCoinLab/accountPopupTrace';
 
 interface SponsorCoinLabControllerProps {
   initialContractDirectoryOptions?: ContractDirectoryOption[];
@@ -111,8 +116,6 @@ interface SponsorCoinLabControllerProps {
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
 }: SponsorCoinLabControllerProps) {
-  const nextMethodRunIdRef = useRef(1);
-  const activeMethodRunAbortControllerRef = useRef<AbortController | null>(null);
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [, setSettings] = useSettings();
   const useLocalSpCoinAccessPackage =
@@ -195,28 +198,17 @@ export default function SponsorCoinLabPage({
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
-  const [runningMethodPopupState, setRunningMethodPopupState] = useState<{
-    runId: number;
-    methodName: string;
-    startedAt: number;
-    isOpen: boolean;
-    isCancelling: boolean;
-  } | null>(null);
+  const { callAccessMethod, runningMethodPopup } = useAccessMethodCaller({ traceEnabled: writeTraceEnabled });
 
   const appendLog = useCallback((line: string) => {
+    const isAccountTraceLine = isSponsorCoinLabAccountTraceLine(line);
+    if (isAccountTraceLine && !writeTraceEnabled) return;
     const stamp = new Date().toLocaleTimeString();
     setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
-  }, []);
-  const dismissRunningMethodPopup = useCallback(() => {
-    setRunningMethodPopupState((current) => (current ? { ...current, isOpen: false } : current));
-  }, []);
-  const reopenRunningMethodPopup = useCallback(() => {
-    setRunningMethodPopupState((current) => (current ? { ...current, isOpen: true } : current));
-  }, []);
-  const cancelRunningMethodPopup = useCallback(() => {
-    activeMethodRunAbortControllerRef.current?.abort();
-    setRunningMethodPopupState((current) => (current ? { ...current, isCancelling: true } : current));
-  }, []);
+    if (isAccountTraceLine) {
+      recordSponsorCoinLabAccountTrace(line, 'SponsorCoinLabController.appendLog');
+    }
+  }, [writeTraceEnabled]);
   useEffect(() => {
     const applyLatestAbi = async () => {
       try {
@@ -429,6 +421,7 @@ export default function SponsorCoinLabPage({
     exchangeContext,
     setExchangeContext,
     setSettings,
+    mode,
     setMode,
     connectedChainId,
     activeNetworkName,
@@ -659,6 +652,7 @@ export default function SponsorCoinLabPage({
       hasNonZeroRateRangeTuple(exchangeContext?.settings?.spCoinContract?.agentRateRange)
         ? exchangeContext.settings.spCoinContract.agentRateRange
         : DEFAULT_AGENT_RATE_RANGE,
+    callAccessMethod,
   });
 
   const {
@@ -845,6 +839,22 @@ export default function SponsorCoinLabPage({
       methodSelectionSource,
       openDiscardChangesPopup,
       queueEditorBaselineReset,
+    ],
+  );
+  const beginNewMethodDraft = useCallback(
+    (afterReset?: () => void) => {
+      runWithDiscardPrompt(() => {
+        setMethodSelectionSource('dropdown');
+        setEditingScriptStepNumber(null);
+        setSelectedScriptStepNumber(null);
+        afterReset?.();
+      });
+    },
+    [
+      runWithDiscardPrompt,
+      setEditingScriptStepNumber,
+      setMethodSelectionSource,
+      setSelectedScriptStepNumber,
     ],
   );
   const selectedScriptDisplay = selectedScript ? formatOutputDisplayValue(selectedScript) : '(no script selected)';
@@ -1266,70 +1276,40 @@ export default function SponsorCoinLabPage({
       spWriteParams,
     ],
   );
-  const trackMethodExecution = useCallback(
-    async <T,>(
-      methodName: string,
-      runner: (options: { executionSignal: AbortSignal; executionLabel: string }) => Promise<T> | T,
-    ) => {
-      if (activeMethodRunAbortControllerRef.current) {
-        reopenRunningMethodPopup();
-        return undefined;
-      }
-      const controller = new AbortController();
-      const runId = nextMethodRunIdRef.current++;
-      activeMethodRunAbortControllerRef.current = controller;
-      setRunningMethodPopupState({
-        runId,
-        methodName,
-        startedAt: Date.now(),
-        isOpen: true,
-        isCancelling: false,
-      });
-      try {
-        return await runner({ executionSignal: controller.signal, executionLabel: methodName });
-      } finally {
-        if (activeMethodRunAbortControllerRef.current === controller) {
-          activeMethodRunAbortControllerRef.current = null;
-        }
-        setRunningMethodPopupState(null);
-      }
-    },
-    [reopenRunningMethodPopup],
-  );
   const runSelectedReadMethodWithPopup = useCallback(
     async () =>
-      trackMethodExecution(activeReadLabels.title, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(activeReadLabels.title, ({ executionSignal, executionLabel }) =>
         runSelectedReadMethod({ executionSignal, executionLabel }),
       ),
-    [activeReadLabels.title, runSelectedReadMethod, trackMethodExecution],
+    [activeReadLabels.title, callAccessMethod, runSelectedReadMethod],
   );
   const runSelectedWriteMethodWithPopup = useCallback(
     async () =>
-      trackMethodExecution(activeWriteLabels.title, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(activeWriteLabels.title, ({ executionSignal, executionLabel }) =>
         runSelectedWriteMethod({ executionSignal, executionLabel }),
       ),
-    [activeWriteLabels.title, runSelectedWriteMethod, trackMethodExecution],
+    [activeWriteLabels.title, callAccessMethod, runSelectedWriteMethod],
   );
   const runSelectedSpCoinReadMethodWithPopup = useCallback(
     async () =>
-      trackMethodExecution(activeSpCoinReadDef.title, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(activeSpCoinReadDef.title, ({ executionSignal, executionLabel }) =>
         runSelectedSpCoinReadMethod({ executionSignal, executionLabel }),
       ),
-    [activeSpCoinReadDef.title, runSelectedSpCoinReadMethod, trackMethodExecution],
+    [activeSpCoinReadDef.title, callAccessMethod, runSelectedSpCoinReadMethod],
   );
   const runSelectedSpCoinWriteMethodWithPopup = useCallback(
     async () =>
-      trackMethodExecution(activeSpCoinWriteDef.title, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(activeSpCoinWriteDef.title, ({ executionSignal, executionLabel }) =>
         runSelectedSpCoinWriteMethod({ executionSignal, executionLabel }),
       ),
-    [activeSpCoinWriteDef.title, runSelectedSpCoinWriteMethod, trackMethodExecution],
+    [activeSpCoinWriteDef.title, callAccessMethod, runSelectedSpCoinWriteMethod],
   );
   const runSelectedSerializationTestMethodWithPopup = useCallback(
     async () =>
-      trackMethodExecution(activeSerializationTestDef.title, ({ executionSignal, executionLabel }) =>
+      callAccessMethod(activeSerializationTestDef.title, ({ executionSignal, executionLabel }) =>
         runSelectedSerializationTestMethod({ executionSignal, executionLabel }),
       ),
-    [activeSerializationTestDef.title, runSelectedSerializationTestMethod, trackMethodExecution],
+    [activeSerializationTestDef.title, callAccessMethod, runSelectedSerializationTestMethod],
   );
   useControllerEditorHydration({
     methodSelectionSource,
@@ -1393,7 +1373,7 @@ export default function SponsorCoinLabPage({
     selectedScript,
     selectedScriptStepNumber,
     runScriptStep,
-    trackMethodExecution,
+    callAccessMethod,
     focusScriptStep,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
@@ -1452,14 +1432,7 @@ export default function SponsorCoinLabPage({
     discardChangesMessage,
     clearDiscardChangesPopup,
     handleDiscardConfirm,
-    runningMethodPopup: {
-      isOpen: Boolean(runningMethodPopupState?.isOpen),
-      methodName: runningMethodPopupState?.methodName ?? '',
-      startedAt: runningMethodPopupState?.startedAt ?? Date.now(),
-      isCancelling: Boolean(runningMethodPopupState?.isCancelling),
-      onCancel: cancelRunningMethodPopup,
-      onAcknowledge: dismissRunningMethodPopup,
-    },
+    runningMethodPopup,
     methodPanelTitle,
     isEditingScriptMethod,
     scriptEditorKind,
@@ -1469,8 +1442,10 @@ export default function SponsorCoinLabPage({
     selectMethodPanelTab,
     selectMappedJsonMethod,
     selectMethodByKind,
+    beginNewMethodDraft,
     writeTraceEnabled,
     setWriteTraceEnabled,
+    appendLog,
     showOnChainMethods,
     setShowOnChainMethods,
     showOffChainMethods,

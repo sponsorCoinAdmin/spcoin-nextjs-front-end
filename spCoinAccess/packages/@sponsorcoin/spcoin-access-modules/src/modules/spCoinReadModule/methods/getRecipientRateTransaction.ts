@@ -8,13 +8,13 @@ export async function getRecipientTransaction(context, _sponsorKey, _recipientKe
     let inserted = false;
     let recordStr = ["0", "0", "0"];
     try {
-        const core = await runtime.spCoinContractDeployed.getRecipientTransactionCore(_sponsorKey, _recipientKey, _recipientRateKey);
-        inserted = Boolean(core?.[4]);
+        const core = await runtime.spCoinContractDeployed.getRecipientTransaction(_sponsorKey, _recipientKey, _recipientRateKey);
+        inserted = Boolean(core?.[6]);
         if (inserted) {
             recordStr = [
-                String(core?.[1] ?? "0"),
-                String(core?.[2] ?? "0"),
                 String(core?.[3] ?? "0"),
+                String(core?.[4] ?? "0"),
+                String(core?.[5] ?? "0"),
             ];
         }
     }

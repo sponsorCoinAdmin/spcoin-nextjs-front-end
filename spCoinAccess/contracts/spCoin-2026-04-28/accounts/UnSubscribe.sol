@@ -12,7 +12,6 @@ contract UnSubscribe is Transactions {
         accountExists(_sponsorKey)
     {
         delete accountMap[_sponsorKey].recipientKeys;
-        clearActiveChildLinks(_sponsorKey);
     }
 
     function deleteRecipient(address _sponsorKey, address _recipientKey)
@@ -30,8 +29,6 @@ contract UnSubscribe is Transactions {
         deleteAccountRecordFromSearchKeys(_recipientKey, sponsorAccount.recipientKeys);
         deleteAccountRecordFromSearchKeys(_sponsorKey, recipientAccount.sponsorKeys);
         recipientRecord.inserted = false;
-        decrementActiveChildLink(_sponsorKey);
-        decrementActiveParentLink(_recipientKey);
     }
 
     function deleteRecipientRate(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey)
@@ -67,8 +64,6 @@ contract UnSubscribe is Transactions {
         deleteAccountRecordFromSearchKeys(_agentKey, recipientAccount.agentKeys);
         deleteAccountRecordFromSearchKeys(_recipientKey, agentAccount.parentRecipientKeys);
         agentRecord.inserted = false;
-        decrementActiveChildLink(_recipientKey);
-        decrementActiveParentLink(_agentKey);
     }
 
     function deleteAgentRate(
@@ -157,7 +152,7 @@ contract UnSubscribe is Transactions {
         sponsorDoesNotExist(_accountKey)
         parentRecipientDoesNotExist(_accountKey)
         recipientDoesNotExist(_accountKey) returns (bool) {
-        return deactivateAccountIfUnlinked(_accountKey);
+        return !hasActiveLinks(_accountKey);
     }
 
     modifier sponsorDoesNotExist(address _accountKey) {

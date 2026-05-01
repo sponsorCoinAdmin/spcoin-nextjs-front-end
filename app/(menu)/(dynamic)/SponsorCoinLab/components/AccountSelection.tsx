@@ -16,6 +16,8 @@ type Props = {
   metadata?: AccountMetadata;
   metadataLabel?: string;
   extraDetails?: React.ReactNode;
+  traceLabel?: string;
+  onTrace?: (line: string) => void;
 };
 
 export default function AccountSelection({
@@ -27,7 +29,17 @@ export default function AccountSelection({
   metadata,
   metadataLabel = 'Metadata',
   extraDetails,
+  traceLabel,
+  onTrace,
 }: Props) {
+  const traceName =
+    [traceLabel, label]
+      .map((entry) => String(entry ?? '').trim())
+      .find(Boolean) ?? 'account-section';
+  const titleText = title ?? `Toggle ${label}`;
+  const imageAlt = metadata?.name ?? label;
+  const metadataName = metadata?.name ?? 'Unnamed account';
+  const metadataSymbol = metadata?.symbol ?? 'No symbol';
   return (
     <div
       className={`grid grid-cols-1 gap-3${
@@ -37,9 +49,12 @@ export default function AccountSelection({
       <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
         <button
           type="button"
-          onClick={onToggle}
+          onClick={() => {
+            onTrace?.(`[ACCOUNT_POPUP_TRACE] section(${traceName}) toggle from=${String(isOpen)} to=${String(!isOpen)}`);
+            onToggle();
+          }}
           className="w-fit text-left text-sm font-semibold text-[#8FA8FF] transition-colors hover:text-white"
-          title={title || `Toggle ${label}`}
+          title={titleText}
         >
           {label}
         </button>
@@ -54,7 +69,7 @@ export default function AccountSelection({
                 {metadata?.logoURL ? (
                   <Image
                     src={metadata.logoURL}
-                    alt={metadata?.name || label}
+                    alt={imageAlt}
                     width={40}
                     height={40}
                     className="h-full w-full object-contain"
@@ -65,8 +80,8 @@ export default function AccountSelection({
                 )}
               </div>
               <div className="min-w-0">
-                <div className="truncate font-medium text-white">{metadata?.name || 'Unnamed account'}</div>
-                <div className="truncate text-xs text-slate-400">{metadata?.symbol || 'No symbol'}</div>
+                <div className="truncate font-medium text-white">{metadataName}</div>
+                <div className="truncate text-xs text-slate-400">{metadataSymbol}</div>
               </div>
             </div>
           </div>

@@ -55,7 +55,6 @@ export class RecipientStruct {
         this.recipientKey;
         this.creationTime;
         this.stakedSPCoins;
-        this.verified;
         this.recipientTransactionList;
         this.recipientRateList;
     }
@@ -78,7 +77,6 @@ export class AgentStruct {
         this.agentKey;
         this.stakedSPCoins;
         this.creationTime;
-        this.verified;
         this.agentRateList;
     }
 }

@@ -69,16 +69,16 @@ export async function getSpCoinMetaData(context) {
     ]);
     context.spCoinLogger.logExitFunction();
     return {
-        owner: String(owner ?? ""),
-        version: String(version ?? ""),
-        name: String(name ?? ""),
-        symbol: String(symbol ?? ""),
-        decimals: Number(decimals ?? 0),
-        totalSupply: String(totalSupply ?? "0"),
-        inflationRate: Number(inflationRate ?? 0),
-        recipientRateRange: normalizeRangeTuple(recipientRateRange),
         agentRateRange: normalizeRangeTuple(agentRateRange),
         creationDate,
+        decimals: Number(decimals ?? 0),
+        inflationRate: Number(inflationRate ?? 0),
+        name: String(name ?? ""),
+        owner: String(owner ?? ""),
+        recipientRateRange: normalizeRangeTuple(recipientRateRange),
+        symbol: String(symbol ?? ""),
+        totalSupply: String(totalSupply ?? "0"),
+        version: String(version ?? ""),
     };
 }
 

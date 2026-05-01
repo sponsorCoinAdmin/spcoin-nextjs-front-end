@@ -17,17 +17,17 @@ const handler = createDynamicHandler('getSpCoinMetaData', async (result, context
     }
     const resolvedCreationDate = creationDate || String(metadata.creationDate ?? '');
     return {
-        contractAddress: context.target,
-        owner: String(metadata.owner ?? ''),
-        creationDate: resolvedCreationDate,
-        version: String(metadata.version ?? ''),
-        name: String(metadata.name ?? ''),
-        symbol: String(metadata.symbol ?? ''),
-        decimals: metadata.decimals,
-        totalSupply: metadata.totalSupply,
-        inflationRate: metadata.inflationRate,
-        recipientRateRange: metadata.recipientRateRange,
         agentRateRange: metadata.agentRateRange,
+        contractAddress: context.target,
+        creationDate: resolvedCreationDate,
+        decimals: metadata.decimals,
+        inflationRate: metadata.inflationRate,
+        name: String(metadata.name ?? ''),
+        owner: String(metadata.owner ?? ''),
+        recipientRateRange: metadata.recipientRateRange,
+        symbol: String(metadata.symbol ?? ''),
+        totalSupply: metadata.totalSupply,
+        version: String(metadata.version ?? ''),
     };
 });
 export default handler;
