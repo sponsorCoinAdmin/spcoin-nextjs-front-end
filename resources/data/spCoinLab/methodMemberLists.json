@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-01T05:59:00.704Z",
+  "updatedAt": "2026-05-02T02:58:14.284Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -311,7 +311,7 @@
         "getInflationRate": true,
         "calculateStakingRewards": true,
         "creationTime": false,
-        "getMasterAccountMetaData": true,
+        "getMasterAccountMetaData": false,
         "getMasterAccountKeys": false,
         "getMasterAccountList": false,
         "getAccountKeys": false,
@@ -363,7 +363,7 @@
         "getLowerRecipientRate": true,
         "getUpperRecipientRate": true,
         "getRecipientRateRange": true,
-        "getRecipientRateIncrement": true,
+        "getRecipientRateIncrement": false,
         "getRecipient": true,
         "getRecipientRecordList": true,
         "getAgentRateKeys": true,
@@ -372,7 +372,7 @@
         "getLowerAgentRate": true,
         "getUpperAgentRate": true,
         "getAgentRateRange": true,
-        "getAgentRateIncrement": true,
+        "getAgentRateIncrement": false,
         "getAgentTransaction": true,
         "getAgentTotalRecipient": true,
         "getRecipientTransactionCount": true,
@@ -681,11 +681,11 @@
         "setLowerRecipientRate": true,
         "setUpperRecipientRate": true,
         "setRecipientRateRange": true,
-        "setRecipientRateIncrement": true,
+        "setRecipientRateIncrement": false,
         "setLowerAgentRate": true,
         "setUpperAgentRate": true,
         "setAgentRateRange": true,
-        "setAgentRateIncrement": true
+        "setAgentRateIncrement": false
       },
       "Todo": {
         "addRecipientTransaction": false,

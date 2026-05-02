@@ -1122,19 +1122,14 @@ export default function MethodsPanelCard({
   );
   React.useEffect(() => {
     if (!isEditingScriptMethod || !currentMethodIdentity) return;
-    if (selectedDisplayGroup !== currentMethodDisplayGroup) {
-      setSelectedDisplayGroup(currentMethodDisplayGroup);
-    }
     if (!isCurrentMethodInSelectedAlterMode && selectedAlterMode !== 'All') {
       setSelectedAlterMode('All');
     }
   }, [
-    currentMethodDisplayGroup,
     currentMethodIdentity,
     isCurrentMethodInSelectedAlterMode,
     isEditingScriptMethod,
     selectedAlterMode,
-    selectedDisplayGroup,
   ]);
   const selectedDisplayGroupLabel = getMethodDisplayGroupLabel(currentMethodDisplayGroup);
   const visibleCurrentMethodIdentity = React.useMemo(
