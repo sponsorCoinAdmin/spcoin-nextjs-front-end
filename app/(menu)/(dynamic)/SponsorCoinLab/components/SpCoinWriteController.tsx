@@ -3,10 +3,12 @@ import React from 'react';
 import BackdateCalendarPopup from './BackdateCalendarPopup';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import AmountInputRow from './AmountInputRow';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
 import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
+import { isAmountParam, type AmountUnit } from '../utils/amountUnits';
 
 type Props = {
   invalidFieldIds: string[];
@@ -41,6 +43,9 @@ type Props = {
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
   updateSpWriteParamAtIndex: (idx: number, value: string) => void;
+  spWriteAmountUnits: Record<number, AmountUnit>;
+  setSpWriteAmountUnit: (idx: number, value: AmountUnit) => void;
+  activeTokenDecimals: number;
   onOpenBackdatePicker: (idx: number) => void;
   inputStyle: string;
   buttonStyle: string;
@@ -127,6 +132,9 @@ export default function SpCoinWriteController(props: Props) {
     activeSpCoinWriteDef,
     spWriteParams,
     updateSpWriteParamAtIndex,
+    spWriteAmountUnits,
+    setSpWriteAmountUnit,
+    activeTokenDecimals,
     onOpenBackdatePicker,
     inputStyle,
     buttonStyle,
@@ -665,24 +673,46 @@ export default function SpCoinWriteController(props: Props) {
                 {agentRateKeyHelpText ? <span className="text-xs text-slate-300">{agentRateKeyHelpText}</span> : null}
               </div>
             </>
+          ) : isAmountParam(param) ? (
+            <AmountInputRow
+              label={param.label}
+              dataFieldId={`spcoin-write-param-${idx}`}
+              inputStyle={inputStyle}
+              inputClassName={invalidClass(`spcoin-write-param-${idx}`)}
+              value={spWriteParams[idx] || ''}
+              unit={spWriteAmountUnits[idx] || 'RAW'}
+              decimals={activeTokenDecimals}
+              onValueChange={(value) => {
+                markEditorAsUserEdited();
+                clearInvalidField(`spcoin-write-param-${idx}`);
+                updateSpWriteParamAtIndex(idx, value);
+              }}
+              onUnitChange={(unit) => {
+                markEditorAsUserEdited();
+                setSpWriteAmountUnit(idx, unit);
+              }}
+              placeholder={param.placeholder}
+            />
           ) : (
             <>
               <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
                 <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
-                <input
-                  type="text"
-                  data-field-id={`spcoin-write-param-${idx}`}
-                  aria-label={param.label}
-                  title={param.label}
-                  className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
-                  value={spWriteParams[idx] || ''}
-                  onChange={(e) => {
-                    markEditorAsUserEdited();
-                    clearInvalidField(`spcoin-write-param-${idx}`);
-                    updateSpWriteParamAtIndex(idx, e.target.value);
-                  }}
-                  placeholder={param.placeholder}
-                />
+                <div className="min-w-0">
+                  <input
+                    type="text"
+                    data-field-id={`spcoin-write-param-${idx}`}
+                    aria-label={param.label}
+                    title={param.label}
+                    className={`${inputStyle}${invalidClass(`spcoin-write-param-${idx}`)}`}
+                    value={spWriteParams[idx] || ''}
+                    onChange={(e) => {
+                      markEditorAsUserEdited();
+                      clearInvalidField(`spcoin-write-param-${idx}`);
+                      updateSpWriteParamAtIndex(idx, e.target.value);
+                    }}
+                    placeholder={param.placeholder}
+                  />
+                </div>
               </div>
             </>
           )}

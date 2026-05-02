@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { splitRawQuantityParts } from "../shared";
 
 async function readMasterAccountKeys(contract) {
   const legacyMethod =
@@ -193,9 +194,7 @@ export const addAgentSponsorship = async (
       _transactionQty + ")"
   );
 
-  const components = _transactionQty.toString().split(".");
-  const wholePart = components[0].length > 0 ? components[0] : "0";
-  const fractionalPart = components.length > 1 ? components[1] : "0";
+  const { wholePart, fractionalPart } = await splitRawQuantityParts(context, _transactionQty);
   const sponsorKey =
     typeof _sponsorSigner?.getAddress === "function"
       ? await _sponsorSigner.getAddress()

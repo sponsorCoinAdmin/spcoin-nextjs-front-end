@@ -17,6 +17,7 @@ import { useSponsorCoinLabRateKeyOptions } from './useSponsorCoinLabRateKeyOptio
 import { useSponsorCoinLabScriptRunner } from './useSponsorCoinLabScriptRunner';
 import { useSponsorCoinLabTreeMethods } from './useSponsorCoinLabTreeMethods';
 import type { AccessMethodCaller } from './useAccessMethodCaller';
+import { isAmountParam, normalizeAmountForMethod, type AmountUnit } from '../utils/amountUnits';
 
 interface Entry { id: string; label: string }
 interface MethodExecutionOptions {
@@ -47,6 +48,7 @@ interface Params {
   writeAddressA: string;
   writeAddressB: string;
   writeAmountRaw: string;
+  writeAmountUnit: AmountUnit;
   activeReadLabels: {
     title: string;
     addressALabel: string;
@@ -72,6 +74,7 @@ interface Params {
   setSelectedSerializationTestMethod: (value: SerializationTestMethod) => void;
   spReadParams: string[];
   spWriteParams: string[];
+  spWriteAmountUnits: Record<number, AmountUnit>;
   setSpWriteParams: Dispatch<SetStateAction<string[]>>;
   serializationTestParams: string[];
   spCoinReadMethodDefs: MethodDefMap;
@@ -126,6 +129,7 @@ interface Params {
   recipientRateRange?: [number, number];
   agentRateRange?: [number, number];
   callAccessMethod?: AccessMethodCaller;
+  activeTokenDecimals: number;
 }
 
 export function useSponsorCoinLabMethods({
@@ -141,6 +145,7 @@ export function useSponsorCoinLabMethods({
   writeAddressA,
   writeAddressB,
   writeAmountRaw,
+  writeAmountUnit,
   activeReadLabels,
   activeWriteLabels,
   selectedSpCoinReadMethod,
@@ -151,6 +156,7 @@ export function useSponsorCoinLabMethods({
   setSelectedSerializationTestMethod,
   spReadParams,
   spWriteParams,
+  spWriteAmountUnits,
   setSpWriteParams,
   serializationTestParams,
   spCoinReadMethodDefs,
@@ -188,6 +194,7 @@ export function useSponsorCoinLabMethods({
   recipientRateRange,
   agentRateRange,
   callAccessMethod,
+  activeTokenDecimals,
 }: Params) {
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
@@ -213,6 +220,8 @@ export function useSponsorCoinLabMethods({
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
+    writeAmountUnit,
+    activeTokenDecimals,
   ]);
 
   const erc20ReadMissingEntries = useMemo(() => {
@@ -595,6 +604,7 @@ export function useSponsorCoinLabMethods({
       return;
     }
 
+    const rawAmount = normalizeAmountForMethod(writeAmountRaw, writeAmountUnit, activeTokenDecimals);
     const descriptor: MethodExecutionDescriptor = {
       panel: 'erc20_write',
       method: selectedWriteMethod,
@@ -602,7 +612,7 @@ export function useSponsorCoinLabMethods({
       params: [
         { key: activeWriteLabels.addressALabel, value: writeAddressA },
         ...(activeWriteLabels.requiresAddressB ? [{ key: activeWriteLabels.addressBLabel, value: writeAddressB }] : []),
-        { key: 'Amount', value: writeAmountRaw },
+        { key: 'Amount', value: rawAmount },
       ],
     };
 
@@ -645,6 +655,8 @@ export function useSponsorCoinLabMethods({
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
+    writeAmountUnit,
+    activeTokenDecimals,
   ]);
 
   const runSelectedReadMethod = useCallback(async (options?: MethodExecutionOptions) => {
@@ -802,7 +814,9 @@ export function useSponsorCoinLabMethods({
       sender: mode === 'hardhat' ? (selectedHardhatAddress ?? effectiveConnectedAddress) : effectiveConnectedAddress,
       params: activeSpCoinWriteDef.params.map((param, idx) => ({
         key: param.label,
-        value: spWriteParams[idx] || '',
+        value: isAmountParam(param)
+          ? normalizeAmountForMethod(spWriteParams[idx] || '', spWriteAmountUnits[idx] || 'RAW', activeTokenDecimals)
+          : spWriteParams[idx] || '',
       })),
     };
 
@@ -866,6 +880,8 @@ export function useSponsorCoinLabMethods({
     useLocalSpCoinAccessPackage,
     spCoinWriteMissingEntries,
     spWriteParams,
+    spWriteAmountUnits,
+    activeTokenDecimals,
   ]);
   const runSelectedSerializationTestMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && serializationTestMissingEntries.length > 0) {

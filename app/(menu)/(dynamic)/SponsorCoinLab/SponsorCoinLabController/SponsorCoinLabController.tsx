@@ -69,6 +69,7 @@ import {
   type LabScriptStep,
   type MethodPanelMode,
 } from '../scriptBuilder/types';
+import type { AmountUnit } from '../utils/amountUnits';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import type {
   FormattedPanelView,
@@ -167,6 +168,8 @@ export default function SponsorCoinLabPage({
   const [writeAddressA, setWriteAddressA] = useState('');
   const [writeAddressB, setWriteAddressB] = useState('');
   const [writeAmountRaw, setWriteAmountRaw] = useState('');
+  const [writeAmountUnit, setWriteAmountUnit] = useState<AmountUnit>('RAW');
+  const [spWriteAmountUnits, setSpWriteAmountUnits] = useState<Record<number, AmountUnit>>({});
   const [methodPanelMode, setMethodPanelMode] = useState<MethodPanelMode>('ecr20_read');
   const [isSpCoinTodoMode, setIsSpCoinTodoMode] = useState(false);
   const [selectedReadMethod, setSelectedReadMethod] = useState<Erc20ReadMethod>('name');
@@ -261,6 +264,7 @@ export default function SponsorCoinLabPage({
     typeof exchangeContext?.tradeData?.previewTokenContract?.amount === 'bigint'
       ? exchangeContext.tradeData.previewTokenContract.amount.toString()
       : '';
+  const activeTokenDecimals = Number(exchangeContext?.settings?.spCoinContract?.decimals ?? 18);
   useEffect(() => {
     const previous = normalizeAddressValue(previousContractAddressRef.current);
     const current = normalizeAddressValue(contractAddress);
@@ -548,6 +552,9 @@ export default function SponsorCoinLabPage({
       return next;
     });
   }, []);
+  const setSpWriteAmountUnit = useCallback((idx: number, value: AmountUnit) => {
+    setSpWriteAmountUnits((prev) => ({ ...prev, [idx]: value }));
+  }, []);
   const backdateCalendar = useBackdateCalendar({
     activeWriteParams: activeSpCoinWriteDef?.params || [],
     spWriteParams,
@@ -597,6 +604,7 @@ export default function SponsorCoinLabPage({
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
+    writeAmountUnit,
     activeReadLabels,
     activeWriteLabels,
     selectedSpCoinReadMethod: normalizedSelectedSpCoinReadMethod,
@@ -607,6 +615,7 @@ export default function SponsorCoinLabPage({
     setSelectedSerializationTestMethod,
     spReadParams,
     spWriteParams,
+    spWriteAmountUnits,
     setSpWriteParams,
     serializationTestParams,
     spCoinReadMethodDefs,
@@ -653,6 +662,7 @@ export default function SponsorCoinLabPage({
         ? exchangeContext.settings.spCoinContract.agentRateRange
         : DEFAULT_AGENT_RATE_RANGE,
     callAccessMethod,
+    activeTokenDecimals,
   });
 
   const {
@@ -730,6 +740,7 @@ export default function SponsorCoinLabPage({
     writeAddressA,
     writeAddressB,
     writeAmountRaw,
+    writeAmountUnit,
     activeWriteLabels,
     selectedSpCoinReadMethod,
     spReadParams,
@@ -737,6 +748,7 @@ export default function SponsorCoinLabPage({
     spCoinReadMethodDefs,
     selectedSpCoinWriteMethod,
     spWriteParams,
+    spWriteAmountUnits,
     activeSpCoinWriteDef,
     spCoinWriteMethodDefs,
     selectedSerializationTestMethod,
@@ -771,6 +783,7 @@ export default function SponsorCoinLabPage({
     setSerializationTestParams,
     showOnChainMethods,
     showOffChainMethods,
+    activeTokenDecimals,
   });
   const editorSnapshot = JSON.stringify({
     methodPanelMode,
@@ -1533,6 +1546,9 @@ export default function SponsorCoinLabPage({
     setWriteAddressB,
     writeAmountRaw,
     setWriteAmountRaw,
+    writeAmountUnit,
+    setWriteAmountUnit,
+    activeTokenDecimals,
     canRunErc20WriteMethod,
     erc20WriteMissingEntries,
     runSelectedWriteMethod: runSelectedWriteMethodWithPopup,
@@ -1568,6 +1584,8 @@ export default function SponsorCoinLabPage({
     activeSpCoinWriteDef,
     spWriteParams,
     updateSpWriteParamAtIndex,
+    spWriteAmountUnits,
+    setSpWriteAmountUnit,
     canRunSpCoinWriteMethod,
     spCoinWriteMissingEntries,
     runSelectedSpCoinWriteMethod: runSelectedSpCoinWriteMethodWithPopup,

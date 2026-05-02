@@ -2,7 +2,9 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import AmountInputRow from './AmountInputRow';
 import { NativeSelectChevron } from './SelectChevron';
+import type { AmountUnit } from '../utils/amountUnits';
 
 type ActiveWriteLabels = {
   title: string;
@@ -40,6 +42,9 @@ type Props = {
   setWriteAddressB: (value: string) => void;
   writeAmountRaw: string;
   setWriteAmountRaw: (value: string) => void;
+  writeAmountUnit: AmountUnit;
+  setWriteAmountUnit: (value: AmountUnit) => void;
+  activeTokenDecimals: number;
   inputStyle: string;
   canRunSelectedWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
@@ -79,6 +84,9 @@ export default function Erc20WriteController(props: Props) {
     setWriteAddressB,
     writeAmountRaw,
     setWriteAmountRaw,
+    writeAmountUnit,
+    setWriteAmountUnit,
+    activeTokenDecimals,
     inputStyle,
     canRunSelectedWriteMethod,
     canAddCurrentMethodToScript,
@@ -257,20 +265,25 @@ export default function Erc20WriteController(props: Props) {
             metadata={getMetadataForAddress(writeAddressB || '')}
           />
         )}
-        <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <span className="text-sm font-semibold text-[#8FA8FF]">Amount (raw uint256)</span>
-          <input
-            data-field-id="erc20-write-amount"
-            className={`${inputStyle}${invalidClass('erc20-write-amount')}`}
-            value={writeAmountRaw}
-            onChange={(e) => {
-              markEditorAsUserEdited();
-              clearInvalidField('erc20-write-amount');
-              setWriteAmountRaw(e.target.value);
-            }}
-            placeholder={`${activeWriteLabels.title}(amount raw uint256)`}
-          />
-        </label>
+        <AmountInputRow
+          label="Amount"
+          dataFieldId="erc20-write-amount"
+          inputStyle={inputStyle}
+          inputClassName={invalidClass('erc20-write-amount')}
+          value={writeAmountRaw}
+          unit={writeAmountUnit}
+          decimals={activeTokenDecimals}
+          onValueChange={(value) => {
+            markEditorAsUserEdited();
+            clearInvalidField('erc20-write-amount');
+            setWriteAmountRaw(value);
+          }}
+          onUnitChange={(unit) => {
+            markEditorAsUserEdited();
+            setWriteAmountUnit(unit);
+          }}
+          placeholder={writeAmountUnit === 'TOKEN' ? `${activeWriteLabels.title}(token amount)` : `${activeWriteLabels.title}(raw uint256)`}
+        />
       </div>
       {!hideActionButtons ? <div className="mt-3 flex gap-2">
         <button

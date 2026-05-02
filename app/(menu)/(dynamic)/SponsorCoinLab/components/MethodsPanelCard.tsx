@@ -507,6 +507,9 @@ export default function MethodsPanelCard({
   const changeSelectedDisplayGroup = React.useCallback((nextGroup: MethodDisplayFilter) => {
     if (selectedDisplayGroup === nextGroup) return;
     const applyGroupChange = () => {
+      if (nextGroup === 'erc20' && !showOnChainMethods) {
+        setShowOnChainMethods(true);
+      }
       setSelectedDisplayGroup(nextGroup);
       setIsAlterMembershipMenuOpen(false);
       setIsChangeGroupMenuOpen(false);
@@ -520,6 +523,8 @@ export default function MethodsPanelCard({
     beginNewMethodDraft,
     isEditingScriptMethod,
     selectedDisplayGroup,
+    setShowOnChainMethods,
+    showOnChainMethods,
   ]);
   const isJavaScriptScriptMode = scriptEditorKind === 'javascript';
   const isJsonScriptMode = scriptEditorKind === 'json';
@@ -1364,6 +1369,9 @@ export default function MethodsPanelCard({
     methodPanelMode,
   ]);
   const changeCurrentMethodGroup = React.useCallback((nextGroup: MethodDisplayGroup) => {
+    if (nextGroup === 'erc20' && !showOnChainMethods) {
+      setShowOnChainMethods(true);
+    }
     if (!currentMethodIdentity) {
       setSelectedDisplayGroup(nextGroup);
       return;
@@ -1373,7 +1381,7 @@ export default function MethodsPanelCard({
       [currentMethodIdentity.id]: nextGroup,
     }));
     setSelectedDisplayGroup(nextGroup);
-  }, [currentMethodIdentity]);
+  }, [currentMethodIdentity, setShowOnChainMethods, showOnChainMethods]);
   const typeScriptMethodOptions = React.useMemo(() => {
     return sortMethodNames(visibleGroupedMethods.map((entry) => entry.name));
   }, [

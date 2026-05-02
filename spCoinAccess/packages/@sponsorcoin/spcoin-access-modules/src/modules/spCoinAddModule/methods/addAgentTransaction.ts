@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { splitRawQuantityParts } from "../shared";
+
 export const addAgentTransaction = async (
     context,
     _sponsorKey,
@@ -17,9 +19,7 @@ export const addAgentTransaction = async (
             _agentRateKey + ", " +
             _transactionQty + ")"
     );
-    const components = String(_transactionQty ?? "").split(".");
-    const wholePart = components[0].length > 0 ? components[0] : "0";
-    const fractionalPart = components.length > 1 ? components[1] : "0";
+    const { wholePart, fractionalPart } = await splitRawQuantityParts(context, _transactionQty);
     const contractMethod = context.spCoinContractDeployed.addAgentTransaction
         ?? context.spCoinContractDeployed.addAgentTransaction;
     const tx = await contractMethod(

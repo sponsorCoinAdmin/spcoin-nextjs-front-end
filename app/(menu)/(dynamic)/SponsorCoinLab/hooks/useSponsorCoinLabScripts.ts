@@ -27,6 +27,11 @@ import {
 } from '../scriptBuilder/utils';
 import { BUILTIN_SYSTEM_TEST_SCRIPTS } from '../scriptBuilder/systemTests';
 import { BUILTIN_JAVASCRIPT_TEST_SCRIPTS } from '../scriptBuilder/javascriptTests';
+import {
+  isAmountParam,
+  normalizeAmountForMethod,
+  type AmountUnit,
+} from '../utils/amountUnits';
 
 type Tone = 'neutral' | 'invalid' | 'valid';
 
@@ -106,6 +111,7 @@ type Params = {
   writeAddressA: string;
   writeAddressB: string;
   writeAmountRaw: string;
+  writeAmountUnit: AmountUnit;
   activeWriteLabels: WriteLabels;
   selectedSpCoinReadMethod: SpCoinReadMethod;
   spReadParams: string[];
@@ -113,6 +119,7 @@ type Params = {
   spCoinReadMethodDefs: Record<string, MethodDef>;
   selectedSpCoinWriteMethod: SpCoinWriteMethod;
   spWriteParams: string[];
+  spWriteAmountUnits: Record<number, AmountUnit>;
   activeSpCoinWriteDef: MethodDef;
   spCoinWriteMethodDefs: Record<string, MethodDef>;
   selectedSerializationTestMethod: SerializationTestMethod;
@@ -157,6 +164,7 @@ type Params = {
   setSerializationTestParams: (value: string[]) => void;
   showOnChainMethods: boolean;
   showOffChainMethods: boolean;
+  activeTokenDecimals: number;
 };
 
 type DragPlacement = 'before' | 'after';
@@ -282,6 +290,7 @@ export function useSponsorCoinLabScripts({
   writeAddressA,
   writeAddressB,
   writeAmountRaw,
+  writeAmountUnit,
   activeWriteLabels,
   selectedSpCoinReadMethod,
   spReadParams,
@@ -289,6 +298,7 @@ export function useSponsorCoinLabScripts({
   spCoinReadMethodDefs,
   selectedSpCoinWriteMethod,
   spWriteParams,
+  spWriteAmountUnits,
   activeSpCoinWriteDef,
   spCoinWriteMethodDefs,
   selectedSerializationTestMethod,
@@ -323,6 +333,7 @@ export function useSponsorCoinLabScripts({
   setSerializationTestParams,
   showOnChainMethods,
   showOffChainMethods,
+  activeTokenDecimals,
 }: Params) {
   const effectiveScriptPanelMode: MethodPanelMode = methodPanelMode;
   const [scripts, setScriptsState] = useState<LabScript[]>([]);
@@ -1348,6 +1359,7 @@ export function useSponsorCoinLabScripts({
       }
 
       if (effectiveScriptPanelMode === 'erc20_write') {
+        const rawAmount = normalizeAmountForMethod(writeAmountRaw, writeAmountUnit, activeTokenDecimals);
         return {
           name: activeWriteLabels.title,
           panel: effectiveScriptPanelMode,
@@ -1357,7 +1369,7 @@ export function useSponsorCoinLabScripts({
           params: [
             { key: activeWriteLabels.addressALabel, value: String(writeAddressA || '').trim() },
             ...(activeWriteLabels.requiresAddressB ? [{ key: activeWriteLabels.addressBLabel, value: String(writeAddressB || '').trim() }] : []),
-            { key: 'Amount', value: String(writeAmountRaw || '').trim() },
+            { key: 'Amount', value: rawAmount },
           ].filter((param) => param.value.length > 0),
         };
       }
@@ -1388,10 +1400,15 @@ export function useSponsorCoinLabScripts({
           'msg.sender': sender,
           params: spWriteParams
             .slice(0, activeSpCoinWriteDef.params.length)
-            .map((value, idx) => ({
-              key: activeSpCoinWriteDef.params[idx]?.label || `param${idx + 1}`,
-              value: String(value || '').trim(),
-            }))
+            .map((value, idx) => {
+              const param = activeSpCoinWriteDef.params[idx];
+              return {
+                key: param?.label || `param${idx + 1}`,
+                value: isAmountParam(param)
+                  ? normalizeAmountForMethod(value, spWriteAmountUnits[idx] || 'RAW', activeTokenDecimals)
+                  : String(value || '').trim(),
+              };
+            })
             .filter((param) => param.value.length > 0),
         };
       }
@@ -1443,9 +1460,12 @@ export function useSponsorCoinLabScripts({
       serializationTestParams,
       spReadParams,
       spWriteParams,
+      spWriteAmountUnits,
       writeAddressA,
       writeAddressB,
       writeAmountRaw,
+      writeAmountUnit,
+      activeTokenDecimals,
     ],
   );
 

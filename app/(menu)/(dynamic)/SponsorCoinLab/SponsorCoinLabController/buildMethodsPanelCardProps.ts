@@ -11,6 +11,7 @@ import type { SpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import type { SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import type { ConnectionMode, LabScript, LabScriptStep, MethodPanelMode, ScriptEditorKind } from '../scriptBuilder/types';
 import type { ContractDirectoryOption } from '../components/contractDirectoryOptions';
+import type { AmountUnit } from '../utils/amountUnits';
 
 type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
 type SetValue<T> = (value: T) => void;
@@ -175,6 +176,9 @@ export type BuildMethodsPanelCardPropsArgs = {
   setWriteAddressB: StateSetter<string>;
   writeAmountRaw: string;
   setWriteAmountRaw: StateSetter<string>;
+  writeAmountUnit: AmountUnit;
+  setWriteAmountUnit: StateSetter<AmountUnit>;
+  activeTokenDecimals: number;
   inputStyle: string;
   canRunErc20WriteMethod: boolean;
   erc20WriteMissingEntries: MissingFieldEntry[];
@@ -212,6 +216,8 @@ export type BuildMethodsPanelCardPropsArgs = {
   activeSpCoinWriteDef: MethodDef;
   spWriteParams: string[];
   updateSpWriteParamAtIndex: (index: number, value: string) => void;
+  spWriteAmountUnits: Record<number, AmountUnit>;
+  setSpWriteAmountUnit: (index: number, value: AmountUnit) => void;
   buttonStyle: string;
   canRunSpCoinWriteMethod: boolean;
   spCoinWriteMissingEntries: MissingFieldEntry[];
@@ -361,6 +367,9 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       setWriteAddressB: args.setWriteAddressB,
       writeAmountRaw: args.writeAmountRaw,
       setWriteAmountRaw: args.setWriteAmountRaw,
+      writeAmountUnit: args.writeAmountUnit,
+      setWriteAmountUnit: args.setWriteAmountUnit,
+      activeTokenDecimals: args.activeTokenDecimals,
       inputStyle: args.inputStyle,
       writeTraceEnabled: args.writeTraceEnabled,
       toggleWriteTrace: () => args.setWriteTraceEnabled((prev: boolean) => !prev),
@@ -445,6 +454,9 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       activeSpCoinWriteDef: args.activeSpCoinWriteDef,
       spWriteParams: args.spWriteParams,
       updateSpWriteParamAtIndex: args.updateSpWriteParamAtIndex,
+      spWriteAmountUnits: args.spWriteAmountUnits,
+      setSpWriteAmountUnit: args.setSpWriteAmountUnit,
+      activeTokenDecimals: args.activeTokenDecimals,
       onOpenBackdatePicker: args.backdateCalendar.openBackdatePickerAt,
       inputStyle: args.inputStyle,
       buttonStyle: args.buttonStyle,
