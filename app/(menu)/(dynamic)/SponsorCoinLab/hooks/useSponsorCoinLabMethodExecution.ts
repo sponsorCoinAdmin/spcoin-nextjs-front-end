@@ -867,10 +867,22 @@ export function useSponsorCoinLabMethodExecution({
         return { call, result: displayResult, meta: writeResult.meta ?? finalizeMeta() };
       };
 
+      const promoteOnChainCalls = (payload: MethodExecutionResult): MethodExecutionResult => {
+        const metaOnChainCalls = (payload.meta as Record<string, unknown> | undefined)?.onChainCalls as MethodExecutionMeta['onChainCalls'] | undefined;
+        const topOnChainCalls = payload.onChainCalls ?? metaOnChainCalls;
+        if (!topOnChainCalls) return payload;
+        return {
+          ...payload,
+          meta: omitOnChainCalls(payload.meta),
+          onChainCalls: topOnChainCalls,
+        };
+      };
+
       try {
-        return executionTimingCollector
+        const payload = executionTimingCollector
           ? await runWithMethodTimingCollector(executionTimingCollector, async () => executeBody(true))
           : await executeBody(false);
+        return promoteOnChainCalls(payload);
       } catch (error) {
         throw attachExecutionMeta(error, finalizeMeta());
       }
