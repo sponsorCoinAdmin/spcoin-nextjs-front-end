@@ -973,6 +973,7 @@ export default function OutputResultsCard({
                   <div className="relative min-w-0">
                     <select
                       className={`${inputStyle} peer appearance-none pr-10`}
+                      aria-label="Active account"
                       value={treeActions.selectedTreeAccount}
                       onChange={(e) => {
                         const nextAccount = e.target.value;

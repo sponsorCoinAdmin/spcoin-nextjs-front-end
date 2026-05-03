@@ -105,6 +105,15 @@
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "getSpCoinMetaData",
+      "panel": "spcoin_rread",
+      "method": "getSpCoinMetaData",
+      "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     }
   ]
 }

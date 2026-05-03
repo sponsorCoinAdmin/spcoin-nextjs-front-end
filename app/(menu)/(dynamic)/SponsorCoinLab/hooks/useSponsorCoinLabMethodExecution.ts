@@ -221,6 +221,12 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
+function omitOnChainCalls(meta: MethodExecutionPayloadMeta | undefined): MethodExecutionPayloadMeta | undefined {
+  if (!meta) return meta;
+  const { onChainCalls: _oc, ...rest } = meta as Record<string, unknown>;
+  return rest as MethodExecutionPayloadMeta;
+}
+
 function buildExecutionResultPayload(
   call: MethodCallEntry,
   result: unknown,
@@ -250,7 +256,8 @@ function buildExecutionResultPayload(
     };
   }
 
-  return { call, result, ...(warning ? { warning } : {}), meta };
+  const { onChainCalls: _oc, ...metaWithoutOnChainCalls } = (meta ?? {}) as Record<string, unknown>;
+  return { call, result, ...(warning ? { warning } : {}), meta: metaWithoutOnChainCalls };
 }
 
 export function useSponsorCoinLabMethodExecution({
@@ -675,10 +682,11 @@ export function useSponsorCoinLabMethodExecution({
                   accounts,
                 },
                 ...(warning ? { warning } : {}),
-                meta: serverBackedMeta ?? finalizeMeta(),
+                meta: omitOnChainCalls(serverBackedMeta ?? finalizeMeta()),
+                onChainCalls: serverBackedMeta?.onChainCalls,
               };
             } catch {
-              return { call, result, ...(warning ? { warning } : {}), meta: serverBackedMeta ?? finalizeMeta() };
+              return { call, result, ...(warning ? { warning } : {}), meta: omitOnChainCalls(serverBackedMeta ?? finalizeMeta()), onChainCalls: serverBackedMeta?.onChainCalls };
             }
           }
           return buildExecutionResultPayload(call, result, warning, serverBackedMeta ?? finalizeMeta());

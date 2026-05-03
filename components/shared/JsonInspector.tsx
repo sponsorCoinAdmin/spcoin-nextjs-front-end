@@ -640,30 +640,31 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             <span className={`${isArrayIndexAddress ? 'text-right' : ''} ${valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}`}>
               {key}:
             </span>
-            <span
-              role={typeof onAddressNodeClick === 'function' ? 'button' : undefined}
-              tabIndex={typeof onAddressNodeClick === 'function' ? 0 : undefined}
-              className={`font-mono underline decoration-dotted underline-offset-2 transition-colors ${
-                typeof onAddressNodeClick === 'function' ? 'cursor-pointer hover:text-white focus:outline-none' : ''
-              } ${valueHighlighted ? highlightColorClass : getValueColor(value)}`}
-              onClick={(event) => {
-                if (typeof onAddressNodeClick !== 'function') return;
-                event.stopPropagation();
-                onTrace?.(`[JSON_INSPECTOR_TRACE] scalar address click path=${nextPath} key=${key} value=${rawStringValue}`);
-                onAddressNodeClick(rawStringValue, nextPath, key);
-              }}
-              onKeyDown={(event) => {
-                if (typeof onAddressNodeClick !== 'function') return;
-                if (event.key !== 'Enter' && event.key !== ' ') return;
-                event.preventDefault();
-                event.stopPropagation();
-                onTrace?.(`[JSON_INSPECTOR_TRACE] scalar address keydown path=${nextPath} key=${key} value=${rawStringValue} eventKey=${event.key}`);
-                onAddressNodeClick(rawStringValue, nextPath, key);
-              }}
-              title={`Show metadata for ${rawStringValue}`}
-            >
-              {displayValue}
-            </span>
+            {typeof onAddressNodeClick === 'function' ? (
+              <button
+                type="button"
+                className={`font-mono underline decoration-dotted underline-offset-2 transition-colors cursor-pointer hover:text-white focus:outline-none bg-transparent p-0 ${
+                  valueHighlighted ? highlightColorClass : getValueColor(value)
+                }`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onTrace?.(`[JSON_INSPECTOR_TRACE] scalar address click path=${nextPath} key=${key} value=${rawStringValue}`);
+                  onAddressNodeClick(rawStringValue, nextPath, key);
+                }}
+                title={`Show metadata for ${rawStringValue}`}
+              >
+                {displayValue}
+              </button>
+            ) : (
+              <span
+                className={`font-mono underline decoration-dotted underline-offset-2 transition-colors ${
+                  valueHighlighted ? highlightColorClass : getValueColor(value)
+                }`}
+                title={`Show metadata for ${rawStringValue}`}
+              >
+                {displayValue}
+              </span>
+            )}
           </span>
         ) : (
           <>
