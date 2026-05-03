@@ -397,52 +397,57 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       let nextPayload = { ...(payload as Record<string, unknown>) };
-      const collectOnChainCalls = (
-        value: unknown,
-        accumulator: { calls: unknown[]; totalOnChainMs: number },
-        isRoot = false,
-      ): unknown => {
-        if (!value || typeof value !== 'object') return value;
-        if (Array.isArray(value)) return value.map((entry) => collectOnChainCalls(entry, accumulator));
-        const record = { ...(value as Record<string, unknown>) };
-        if (isRoot) {
-          // Only collect from immediate children, do not recurse deeper
-          for (const childValue of Object.values(record)) {
-            if (childValue && typeof childValue === 'object' && !Array.isArray(childValue)) {
-              const childRecord = childValue as Record<string, unknown>;
-              if (childRecord.meta && typeof childRecord.meta === 'object' && !Array.isArray(childRecord.meta)) {
-                const metaRecord = childRecord.meta as Record<string, unknown>;
-                if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
-                  const onChainCallsObj = metaRecord.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
-                  accumulator.totalOnChainMs += Number(onChainCallsObj.totalOnChainMs) || 0;
-                }
-              }
-              if (childRecord.onChainCalls && typeof childRecord.onChainCalls === 'object' && !Array.isArray(childRecord.onChainCalls)) {
-                const onChainCallsObj = childRecord.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
-                accumulator.totalOnChainMs += Number(onChainCallsObj.totalOnChainMs) || 0;
-              }
-            }
-          }
-          return record;
-        }
-        // For non-root, just clean up meta.onChainCalls
-        if (record.meta && typeof record.meta === 'object' && !Array.isArray(record.meta)) {
-          const metaRecord = { ...(record.meta as Record<string, unknown>) };
-          if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
-            delete metaRecord.onChainCalls;
-            record.meta = metaRecord;
+      const collectChildOnChainCalls = (value: unknown, parentKey = ''): Array<{ method: string; totalOnChainMs: number }> => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+        const record = value as Record<string, unknown>;
+        const results: Array<{ method: string; totalOnChainMs: number }> = [];
+        for (const [key, child] of Object.entries(record)) {
+          if (key === 'onChainCalls' && child && typeof child === 'object' && !Array.isArray(child)) {
+            const oc = child as Record<string, unknown>;
+            const totalMs = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
+            if (totalMs > 0) results.push({ method: parentKey || key, totalOnChainMs: totalMs });
+          } else {
+            results.push(...collectChildOnChainCalls(child, key));
           }
         }
-        return record;
+        return results;
       };
-      const collectedOnChainCalls = { calls: [] as unknown[], totalOnChainMs: 0 };
-      nextPayload = collectOnChainCalls(nextPayload, collectedOnChainCalls, true) as Record<string, unknown>;
-      if (collectedOnChainCalls.totalOnChainMs > 0) {
-        if (!nextPayload.onChainCalls) {
-          nextPayload.onChainCalls = collectedOnChainCalls;
-        } else if (nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
-          const existing = nextPayload.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
-          existing.totalOnChainMs = (Number(existing.totalOnChainMs) || 0) + collectedOnChainCalls.totalOnChainMs;
+      const childEntries = collectChildOnChainCalls(nextPayload.result);
+      if (childEntries.length > 0 && nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
+        const oc = nextPayload.onChainCalls as Record<string, unknown>;
+        const localMs = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
+        const childMs = childEntries.reduce((sum, e) => sum + e.totalOnChainMs, 0);
+        nextPayload.onChainCalls = {
+          ...oc,
+          childOnChainCalls: childEntries,
+          totalOnChainMs: localMs + childMs,
+        };
+      }
+      // Add totals to onChainCalls
+      if (nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
+        const oc = nextPayload.onChainCalls as Record<string, unknown>;
+        const calls = Array.isArray(oc.calls) ? oc.calls as Record<string, unknown>[] : [];
+        let totalGasUsed = BigInt(0);
+        let totalGasPriceWei = BigInt(0);
+        let totalFeePaidWei = BigInt(0);
+        let totalFeePaidEth = 0;
+        for (const entry of calls) {
+          const gasUsed = String(entry?.gasUsed ?? '').replace(/,/g, '');
+          const gasPriceWei = String(entry?.gasPriceWei ?? '').replace(/,/g, '');
+          const feePaidWei = String(entry?.feePaidWei ?? '').replace(/,/g, '');
+          const feePaidEth = parseFloat(String(entry?.feePaidEth ?? '0').replace(/,/g, ''));
+          if (/^\d+$/.test(gasUsed)) totalGasUsed += BigInt(gasUsed);
+          if (/^\d+$/.test(gasPriceWei)) totalGasPriceWei += BigInt(gasPriceWei);
+          if (/^\d+$/.test(feePaidWei)) totalFeePaidWei += BigInt(feePaidWei);
+          if (Number.isFinite(feePaidEth)) totalFeePaidEth += feePaidEth;
+        }
+        const totals: Record<string, unknown> = {};
+        if (totalGasUsed > 0n) totals.totalGasUsed = totalGasUsed.toLocaleString('en-US');
+        if (totalGasPriceWei > 0n) totals.totalGasPriceWei = totalGasPriceWei.toLocaleString('en-US');
+        if (totalFeePaidWei > 0n) totals.totalFeePaidWei = totalFeePaidWei.toLocaleString('en-US');
+        if (totalFeePaidEth > 0) totals.totalFeePaidEth = totalFeePaidEth.toString();
+        if (Object.keys(totals).length > 0) {
+          nextPayload.onChainCalls = { ...oc, ...totals };
         }
       }
       const normalizeInflationRateDisplay = (value: unknown) => {
@@ -876,10 +881,10 @@ export function useSponsorCoinLabMethods({
 
     try {
       setFormattedOutputDisplay('(no output yet)');
-      const { call, result, meta } = await executeMethodDescriptor(descriptor, {
+      const { call, result, meta, onChainCalls } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
       });
-      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta }));
+      setFormattedOutputDisplay(formatFormattedPanelPayload({ call, result, meta, ...(onChainCalls ? { onChainCalls } : {}) }));
     } catch (error) {
       if (isAbortError(error)) {
         const message = `${options?.executionLabel ?? activeSpCoinWriteDef.title} cancelled.`;

@@ -312,6 +312,16 @@ function getVisibleEntries(
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
     if (leftKey === 'onChainCalls' && rightKey !== 'onChainCalls') return 1;
     if (rightKey === 'onChainCalls' && leftKey !== 'onChainCalls') return -1;
+    if (leftKey === 'totalOnChainMs' && rightKey !== 'totalOnChainMs') return 1;
+    if (rightKey === 'totalOnChainMs' && leftKey !== 'totalOnChainMs') return -1;
+    if (leftKey === 'totalGasUsed' && rightKey !== 'totalGasUsed') return 1;
+    if (rightKey === 'totalGasUsed' && leftKey !== 'totalGasUsed') return -1;
+    if (leftKey === 'totalGasPriceWei' && rightKey !== 'totalGasPriceWei') return 1;
+    if (rightKey === 'totalGasPriceWei' && leftKey !== 'totalGasPriceWei') return -1;
+    if (leftKey === 'totalFeePaidWei' && rightKey !== 'totalFeePaidWei') return 1;
+    if (rightKey === 'totalFeePaidWei' && leftKey !== 'totalFeePaidWei') return -1;
+    if (leftKey === 'totalFeePaidEth' && rightKey !== 'totalFeePaidEth') return 1;
+    if (rightKey === 'totalFeePaidEth' && leftKey !== 'totalFeePaidEth') return -1;
     const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
     const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
     if (leftIsNumericIndex === rightIsNumericIndex) return 0;
@@ -480,6 +490,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   };
 
   const getPathLabel = (nextPath: string): string => {
+    if (label && label.startsWith('localOnChainCalls')) return label;
+    if (label && label.startsWith('childOnChainCalls')) return label;
     if (label) return getAddressNodeLabel(data, formatPathSegmentLabel(nextPath));
     if (nextPath === 'root') return rootLabel;
     if (nextPath === 'tradeData.slippage') return 'slippage';
@@ -557,6 +569,24 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   const renderValue = (value: any, key: string) => {
     const nextPath = `${path}.${key}`;
+    const effectiveKey =
+      key === 'calls' && String(path || '').endsWith('.onChainCalls') && Array.isArray(value)
+        ? (() => {
+            const totalMs = (value as unknown[]).reduce((sum: number, entry: unknown) => {
+              const ms = Number(String((entry as Record<string, unknown>)?.onChainRunTimeMs ?? '0').replace(/,/g, ''));
+              return sum + (Number.isFinite(ms) ? ms : 0);
+            }, 0);
+            return `localOnChainCalls: ${totalMs}`;
+          })()
+        : key === 'childOnChainCalls' && String(path || '').endsWith('.onChainCalls') && Array.isArray(value)
+          ? (() => {
+              const totalMs = (value as unknown[]).reduce((sum: number, entry: unknown) => {
+                const ms = Number(String((entry as Record<string, unknown>)?.totalOnChainMs ?? '0').replace(/,/g, ''));
+                return sum + (Number.isFinite(ms) ? ms : 0);
+              }, 0);
+              return `childOnChainCalls: ${totalMs}`;
+            })()
+          : key;
     if (key === 'creationTime' || key === 'creationDate') {
       if (!showAll && hiddenRules.creationDates) return null;
       const normalizedDate = normalizeLegacyDateDisplay(value);
@@ -583,7 +613,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           level={level + 1}
           path={nextPath}
           rootLabel={rootLabel}
-          label={key}
+          label={effectiveKey}
           hideEntryKeys={hideEntryKeys}
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
