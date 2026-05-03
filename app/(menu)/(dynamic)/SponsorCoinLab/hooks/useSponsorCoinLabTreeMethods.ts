@@ -475,6 +475,7 @@ export function useSponsorCoinLabTreeMethods({
               warning?: Record<string, unknown>;
               error?: { message?: string };
               meta?: MethodExecutionMeta;
+              onChainCalls?: unknown;
             };
           }[];
         };
@@ -501,6 +502,9 @@ export function useSponsorCoinLabTreeMethods({
           }
           if (firstResult?.payload?.meta) {
             treeRecord.meta = firstResult.payload.meta;
+          }
+          if (firstResult?.payload?.onChainCalls) {
+            treeRecord.onChainCalls = firstResult.payload.onChainCalls;
           }
         }
         if (
@@ -769,15 +773,28 @@ export function useSponsorCoinLabTreeMethods({
             : await loadMetadata();
           if (!loadedMetadata) return 'handled';
           const { metadataResult, metadataMeta } = loadedMetadata;
+          const metadataOnChainCalls =
+            metadataMeta && typeof metadataMeta === 'object' && !Array.isArray(metadataMeta)
+              ? (metadataMeta as Record<string, unknown>).onChainCalls
+              : undefined;
+          const sanitizedMetadataMeta =
+            metadataMeta && typeof metadataMeta === 'object' && !Array.isArray(metadataMeta)
+              ? ({ ...(metadataMeta as Record<string, unknown>) } as Record<string, unknown>)
+              : metadataMeta;
+          if (sanitizedMetadataMeta && typeof sanitizedMetadataMeta === 'object' && 'onChainCalls' in sanitizedMetadataMeta) {
+            delete sanitizedMetadataMeta.onChainCalls;
+          }
           const metadataRecord =
             metadataResult && typeof metadataResult === 'object' && !Array.isArray(metadataResult)
               ? {
                   ...(metadataResult as Record<string, unknown>),
-                  meta: metadataMeta,
+                  ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
+                  meta: sanitizedMetadataMeta,
                 }
               : {
                   value: metadataResult,
-                  meta: metadataMeta,
+                  ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
+                  meta: sanitizedMetadataMeta,
                 };
           const nextPayload = formatFormattedPanelPayload({
             ...payload,
@@ -1001,17 +1018,45 @@ export function useSponsorCoinLabTreeMethods({
         const record = entry as Record<string, unknown>;
         return Boolean(record.TYPE ?? record.totalSpCoins ?? record.accountRecord);
       };
-      const buildExpandedAccountEntry = (targetEntry: unknown, accountRecord: unknown) => ({
-        address: normalizedAccount,
-        __forceExpanded: true,
-        __showEmptyFields: true,
-        ...(targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
-          ? (targetEntry as Record<string, unknown>)
-          : {}),
-        ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
-          ? (accountRecord as Record<string, unknown>)
-          : { value: accountRecord }),
-      });
+      const buildExpandedAccountEntry = (accountRecord: unknown) => {
+        const recordObject =
+          accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+            ? { ...(accountRecord as Record<string, unknown>) }
+            : null;
+        let callMeta = recordObject && 'meta' in recordObject ? (recordObject.meta as unknown) : undefined;
+        const topLevelOnChainCalls = recordObject && 'onChainCalls' in recordObject ? recordObject.onChainCalls : undefined;
+        const nestedMetaOnChainCalls =
+          recordObject &&
+          typeof recordObject.meta === 'object' &&
+          recordObject.meta !== null &&
+          !Array.isArray(recordObject.meta) &&
+          'onChainCalls' in recordObject.meta
+            ? (recordObject.meta as Record<string, unknown>).onChainCalls
+            : undefined;
+        const callOnChainCalls = topLevelOnChainCalls ?? nestedMetaOnChainCalls;
+        if (nestedMetaOnChainCalls && recordObject && typeof recordObject.meta === 'object' && !Array.isArray(recordObject.meta)) {
+          const sanitizedMeta = { ...(recordObject.meta as Record<string, unknown>) };
+          delete sanitizedMeta.onChainCalls;
+          callMeta = Object.keys(sanitizedMeta).length > 0 ? sanitizedMeta : undefined;
+        }
+
+        const expandedResult = recordObject
+          ? Object.fromEntries(Object.entries(recordObject).filter(([key]) => key !== 'meta' && key !== 'onChainCalls'))
+          : { value: accountRecord };
+        return {
+          call: {
+            method: 'getAccountRecord',
+            parameters: {
+              'Account Key': normalizedAccount,
+            },
+          },
+          ...(callMeta ? { meta: callMeta } : {}),
+          ...(callOnChainCalls ? { onChainCalls: callOnChainCalls } : {}),
+          result: expandedResult,
+          __forceExpanded: true,
+          __showEmptyFields: true,
+        };
+      };
       interface InlineAccountTarget {
         targetEntry: unknown;
         path: string[];
@@ -1130,7 +1175,7 @@ export function useSponsorCoinLabTreeMethods({
                 ? Object.keys(accountRecord as Record<string, unknown>)
                 : [];
             appendLog(`[EXPAND] loaded record keys=${accountRecordKeys.join(',') || '(scalar)'}`);
-            const nextAccountEntry = buildExpandedAccountEntry(target.targetEntry, accountRecord);
+            const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
             const nextRootPayload = writePathValue(payload, target.path, nextAccountEntry) as Record<string, unknown>;
             const nextPayload = formatFormattedPanelPayload({
               ...nextRootPayload,

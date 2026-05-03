@@ -396,17 +396,38 @@ export function useSponsorCoinLabMethods({
       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
         return formatOutputDisplayValue(payload);
       }
-      const nextPayload = { ...(payload as Record<string, unknown>) };
-      const normalizedMeta =
-        nextPayload.meta &&
-        typeof nextPayload.meta === 'object' &&
-        !Array.isArray(nextPayload.meta)
-          ? { ...(nextPayload.meta as Record<string, unknown>) }
-          : undefined;
-      if (normalizedMeta && normalizedMeta.onChainCalls !== undefined && nextPayload.onChainCalls === undefined) {
-        nextPayload.onChainCalls = normalizedMeta.onChainCalls;
-        delete normalizedMeta.onChainCalls;
-        nextPayload.meta = normalizedMeta;
+      let nextPayload = { ...(payload as Record<string, unknown>) };
+      const collectOnChainCalls = (value: unknown, accumulator: { calls: unknown[]; totalRunTimeMs: number }): unknown => {
+        if (!value || typeof value !== 'object') return value;
+        if (Array.isArray(value)) return value.map((entry) => collectOnChainCalls(entry, accumulator));
+        const record = { ...(value as Record<string, unknown>) };
+        for (const [key, childValue] of Object.entries(record)) {
+          record[key] = collectOnChainCalls(childValue, accumulator);
+        }
+        if (record.meta && typeof record.meta === 'object' && !Array.isArray(record.meta)) {
+          const metaRecord = { ...(record.meta as Record<string, unknown>) };
+          if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
+            const onChainCallsObj = metaRecord.onChainCalls as { calls?: unknown[]; totalRunTimeMs?: number };
+            if (Array.isArray(onChainCallsObj.calls)) {
+              accumulator.calls.push(...onChainCallsObj.calls);
+              accumulator.totalRunTimeMs += Number(onChainCallsObj.totalRunTimeMs) || 0;
+            }
+            delete metaRecord.onChainCalls;
+            record.meta = metaRecord;
+          }
+        }
+        return record;
+      };
+      const collectedOnChainCalls = { calls: [] as unknown[], totalRunTimeMs: 0 };
+      nextPayload = collectOnChainCalls(nextPayload, collectedOnChainCalls) as Record<string, unknown>;
+      if (collectedOnChainCalls.calls.length > 0) {
+        if (!nextPayload.onChainCalls) {
+          nextPayload.onChainCalls = collectedOnChainCalls;
+        } else if (nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
+          const existing = nextPayload.onChainCalls as { calls: unknown[]; totalRunTimeMs: number };
+          existing.calls = [...existing.calls, ...collectedOnChainCalls.calls];
+          existing.totalRunTimeMs += collectedOnChainCalls.totalRunTimeMs;
+        }
       }
       const normalizeInflationRateDisplay = (value: unknown) => {
         const trimmed = toDisplayString(value).trim();
@@ -526,11 +547,11 @@ export function useSponsorCoinLabMethods({
         nextPayload.call &&
         typeof nextPayload.call === 'object' &&
         !Array.isArray(nextPayload.call) &&
-        toDisplayString((nextPayload.call as Record<string, unknown>).method).trim() === 'getSpCoinMetaData' &&
-        nextPayload.result &&
-        typeof nextPayload.result === 'object' &&
-        !Array.isArray(nextPayload.result)
+        toDisplayString((nextPayload.call as Record<string, unknown>).method).trim() === 'getSpCoinMetaData'
       ) {
+        if (!nextPayload.result || typeof nextPayload.result !== 'object' || Array.isArray(nextPayload.result)) {
+          nextPayload.result = {};
+        }
         const resultRecord = nextPayload.result as Record<string, unknown>;
         if (resultRecord.inflationRate !== undefined) {
           nextPayload.result = {
@@ -538,10 +559,16 @@ export function useSponsorCoinLabMethods({
             inflationRate: normalizeInflationRateDisplay(resultRecord.inflationRate),
           };
         }
+        if (recipientRateRange) {
+          (nextPayload.result as Record<string, unknown>).recipientRateRange = recipientRateRange;
+        }
+        if (agentRateRange) {
+          (nextPayload.result as Record<string, unknown>).agentRateRange = agentRateRange;
+        }
       }
       return formatOutputDisplayValue(nextPayload);
     },
-    [formatOutputDisplayValue],
+    [formatOutputDisplayValue, recipientRateRange, agentRateRange],
   );
   const { executeMethodDescriptor } = useSponsorCoinLabMethodExecution({
     rpcUrl,

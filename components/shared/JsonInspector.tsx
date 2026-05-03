@@ -310,6 +310,8 @@ function getVisibleEntries(
   const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
     if (leftKey === 'meta' && rightKey !== 'meta') return -1;
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
+    if (leftKey === 'onChainCalls' && rightKey !== 'onChainCalls') return 1;
+    if (rightKey === 'onChainCalls' && leftKey !== 'onChainCalls') return -1;
     const leftIsNumericIndex = /^\d+$/.test(String(leftKey));
     const rightIsNumericIndex = /^\d+$/.test(String(rightKey));
     if (leftIsNumericIndex === rightIsNumericIndex) return 0;

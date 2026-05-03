@@ -6,6 +6,10 @@ export type OnChainCallTiming = {
     feePaidWei?: string;
     feePaidEth?: string;
 };
+export type OnChainCalls = {
+    calls: OnChainCallTiming[];
+    totalRunTimeMs: number;
+};
 export type MethodTimingMeta = {
     startedAt: string;
     completedAt: string;
@@ -13,7 +17,7 @@ export type MethodTimingMeta = {
     onChainRunTimeMs: number;
     offChainRunTimeMs: number;
     onChainCallCount: number;
-    onChainCalls: OnChainCallTiming[];
+    onChainCalls: OnChainCalls;
 };
 export type MethodTimingCollector = {
     startedAtMs: number;
@@ -188,7 +192,7 @@ export function buildMethodTimingMeta(
         onChainRunTimeMs,
         offChainRunTimeMs: Math.max(0, runTimeMs - onChainRunTimeMs),
         onChainCallCount: onChainCalls.length,
-        onChainCalls,
+        onChainCalls: { calls: onChainCalls, totalRunTimeMs: onChainRunTimeMs },
     };
 }
 export function wrapContractWithTiming<T extends object>(contract: T): T {

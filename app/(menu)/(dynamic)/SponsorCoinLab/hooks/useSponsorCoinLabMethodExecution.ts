@@ -246,7 +246,7 @@ function buildExecutionResultPayload(
       result: {
         masterAccountKeys: { __lazyMasterAccountKeys: true },
       },
-      onChainCalls: Array.isArray(meta?.onChainCalls) ? meta.onChainCalls : [],
+      onChainCalls: meta?.onChainCalls,
     };
   }
 

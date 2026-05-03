@@ -1,0 +1,223 @@
+diff --git a/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabMethods.ts b/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabMethods.ts
+index f2c7eff24..01211441c 100644
+--- a/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabMethods.ts
++++ b/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabMethods.ts
+@@ -396,17 +396,38 @@ export function useSponsorCoinLabMethods({
+       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+         return formatOutputDisplayValue(payload);
+       }
+-      const nextPayload = { ...(payload as Record<string, unknown>) };
+-      const normalizedMeta =
+-        nextPayload.meta &&
+-        typeof nextPayload.meta === 'object' &&
+-        !Array.isArray(nextPayload.meta)
+-          ? { ...(nextPayload.meta as Record<string, unknown>) }
+-          : undefined;
+-      if (normalizedMeta && normalizedMeta.onChainCalls !== undefined && nextPayload.onChainCalls === undefined) {
+-        nextPayload.onChainCalls = normalizedMeta.onChainCalls;
+-        delete normalizedMeta.onChainCalls;
+-        nextPayload.meta = normalizedMeta;
++      let nextPayload = { ...(payload as Record<string, unknown>) };
++      const collectOnChainCalls = (value: unknown, accumulator: { calls: unknown[]; totalRunTimeMs: number }): unknown => {
++        if (!value || typeof value !== 'object') return value;
++        if (Array.isArray(value)) return value.map((entry) => collectOnChainCalls(entry, accumulator));
++        const record = { ...(value as Record<string, unknown>) };
++        for (const [key, childValue] of Object.entries(record)) {
++          record[key] = collectOnChainCalls(childValue, accumulator);
++        }
++        if (record.meta && typeof record.meta === 'object' && !Array.isArray(record.meta)) {
++          const metaRecord = { ...(record.meta as Record<string, unknown>) };
++          if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
++            const onChainCallsObj = metaRecord.onChainCalls as { calls?: unknown[]; totalRunTimeMs?: number };
++            if (Array.isArray(onChainCallsObj.calls)) {
++              accumulator.calls.push(...onChainCallsObj.calls);
++              accumulator.totalRunTimeMs += Number(onChainCallsObj.totalRunTimeMs) || 0;
++            }
++            delete metaRecord.onChainCalls;
++            record.meta = metaRecord;
++          }
++        }
++        return record;
++      };
++      const collectedOnChainCalls = { calls: [] as unknown[], totalRunTimeMs: 0 };
++      nextPayload = collectOnChainCalls(nextPayload, collectedOnChainCalls) as Record<string, unknown>;
++      if (collectedOnChainCalls.calls.length > 0) {
++        if (!nextPayload.onChainCalls) {
++          nextPayload.onChainCalls = collectedOnChainCalls;
++        } else if (nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
++          const existing = nextPayload.onChainCalls as { calls: unknown[]; totalRunTimeMs: number };
++          existing.calls = [...existing.calls, ...collectedOnChainCalls.calls];
++          existing.totalRunTimeMs += collectedOnChainCalls.totalRunTimeMs;
++        }
+       }
+       const normalizeInflationRateDisplay = (value: unknown) => {
+         const trimmed = toDisplayString(value).trim();
+@@ -539,9 +560,15 @@ export function useSponsorCoinLabMethods({
+           };
+         }
+       }
++      // Add rate ranges under result
++      if (nextPayload.result && typeof nextPayload.result === 'object' && !Array.isArray(nextPayload.result)) {
++        const result = nextPayload.result as Record<string, unknown>;
++        if (recipientRateRange) result.recipientRateRange = recipientRateRange;
++        if (agentRateRange) result.agentRateRange = agentRateRange;
++      }
+       return formatOutputDisplayValue(nextPayload);
+     },
+-    [formatOutputDisplayValue],
++    [formatOutputDisplayValue, recipientRateRange, agentRateRange],
+   );
+   const { executeMethodDescriptor } = useSponsorCoinLabMethodExecution({
+     rpcUrl,
+diff --git a/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts b/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
+index a45b5e60c..5e23b0eff 100644
+--- a/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
++++ b/app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
+@@ -475,6 +475,7 @@ export function useSponsorCoinLabTreeMethods({
+               warning?: Record<string, unknown>;
+               error?: { message?: string };
+               meta?: MethodExecutionMeta;
++              onChainCalls?: unknown;
+             };
+           }[];
+         };
+@@ -502,6 +503,9 @@ export function useSponsorCoinLabTreeMethods({
+           if (firstResult?.payload?.meta) {
+             treeRecord.meta = firstResult.payload.meta;
+           }
++          if (firstResult?.payload?.onChainCalls) {
++            treeRecord.onChainCalls = firstResult.payload.onChainCalls;
++          }
+         }
+         if (
+           tree &&
+@@ -769,15 +773,28 @@ export function useSponsorCoinLabTreeMethods({
+             : await loadMetadata();
+           if (!loadedMetadata) return 'handled';
+           const { metadataResult, metadataMeta } = loadedMetadata;
++          const metadataOnChainCalls =
++            metadataMeta && typeof metadataMeta === 'object' && !Array.isArray(metadataMeta)
++              ? (metadataMeta as Record<string, unknown>).onChainCalls
++              : undefined;
++          const sanitizedMetadataMeta =
++            metadataMeta && typeof metadataMeta === 'object' && !Array.isArray(metadataMeta)
++              ? ({ ...(metadataMeta as Record<string, unknown>) } as Record<string, unknown>)
++              : metadataMeta;
++          if (sanitizedMetadataMeta && typeof sanitizedMetadataMeta === 'object' && 'onChainCalls' in sanitizedMetadataMeta) {
++            delete sanitizedMetadataMeta.onChainCalls;
++          }
+           const metadataRecord =
+             metadataResult && typeof metadataResult === 'object' && !Array.isArray(metadataResult)
+               ? {
+                   ...(metadataResult as Record<string, unknown>),
+-                  meta: metadataMeta,
++                  ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
++                  meta: sanitizedMetadataMeta,
+                 }
+               : {
+                   value: metadataResult,
+-                  meta: metadataMeta,
++                  ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
++                  meta: sanitizedMetadataMeta,
+                 };
+           const nextPayload = formatFormattedPanelPayload({
+             ...payload,
+@@ -1001,17 +1018,45 @@ export function useSponsorCoinLabTreeMethods({
+         const record = entry as Record<string, unknown>;
+         return Boolean(record.TYPE ?? record.totalSpCoins ?? record.accountRecord);
+       };
+-      const buildExpandedAccountEntry = (targetEntry: unknown, accountRecord: unknown) => ({
+-        address: normalizedAccount,
+-        __forceExpanded: true,
+-        __showEmptyFields: true,
+-        ...(targetEntry && typeof targetEntry === 'object' && !Array.isArray(targetEntry)
+-          ? (targetEntry as Record<string, unknown>)
+-          : {}),
+-        ...(accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
+-          ? (accountRecord as Record<string, unknown>)
+-          : { value: accountRecord }),
+-      });
++      const buildExpandedAccountEntry = (accountRecord: unknown) => {
++        const recordObject =
++          accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
++            ? { ...(accountRecord as Record<string, unknown>) }
++            : null;
++        let callMeta = recordObject && 'meta' in recordObject ? (recordObject.meta as unknown) : undefined;
++        const topLevelOnChainCalls = recordObject && 'onChainCalls' in recordObject ? recordObject.onChainCalls : undefined;
++        const nestedMetaOnChainCalls =
++          recordObject &&
++          typeof recordObject.meta === 'object' &&
++          recordObject.meta !== null &&
++          !Array.isArray(recordObject.meta) &&
++          'onChainCalls' in recordObject.meta
++            ? (recordObject.meta as Record<string, unknown>).onChainCalls
++            : undefined;
++        const callOnChainCalls = topLevelOnChainCalls ?? nestedMetaOnChainCalls;
++        if (nestedMetaOnChainCalls && recordObject && typeof recordObject.meta === 'object' && !Array.isArray(recordObject.meta)) {
++          const sanitizedMeta = { ...(recordObject.meta as Record<string, unknown>) };
++          delete sanitizedMeta.onChainCalls;
++          callMeta = Object.keys(sanitizedMeta).length > 0 ? sanitizedMeta : undefined;
++        }
++
++        const expandedResult = recordObject
++          ? Object.fromEntries(Object.entries(recordObject).filter(([key]) => key !== 'meta' && key !== 'onChainCalls'))
++          : { value: accountRecord };
++        return {
++          call: {
++            method: 'getAccountRecord',
++            parameters: {
++              'Account Key': normalizedAccount,
++            },
++          },
++          ...(callMeta ? { meta: callMeta } : {}),
++          ...(callOnChainCalls ? { onChainCalls: callOnChainCalls } : {}),
++          result: expandedResult,
++          __forceExpanded: true,
++          __showEmptyFields: true,
++        };
++      };
+       interface InlineAccountTarget {
+         targetEntry: unknown;
+         path: string[];
+@@ -1130,7 +1175,7 @@ export function useSponsorCoinLabTreeMethods({
+                 ? Object.keys(accountRecord as Record<string, unknown>)
+                 : [];
+             appendLog(`[EXPAND] loaded record keys=${accountRecordKeys.join(',') || '(scalar)'}`);
+-            const nextAccountEntry = buildExpandedAccountEntry(target.targetEntry, accountRecord);
++            const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
+             const nextRootPayload = writePathValue(payload, target.path, nextAccountEntry) as Record<string, unknown>;
+             const nextPayload = formatFormattedPanelPayload({
+               ...nextRootPayload,
+diff --git a/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts b/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
+index 17f520c83..c82f2d452 100644
+--- a/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
++++ b/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
+@@ -6,6 +6,10 @@ export type OnChainCallTiming = {
+     feePaidWei?: string;
+     feePaidEth?: string;
+ };
++export type OnChainCalls = {
++    calls: OnChainCallTiming[];
++    totalRunTimeMs: number;
++};
+ export type MethodTimingMeta = {
+     startedAt: string;
+     completedAt: string;
+@@ -13,7 +17,7 @@ export type MethodTimingMeta = {
+     onChainRunTimeMs: number;
+     offChainRunTimeMs: number;
+     onChainCallCount: number;
+-    onChainCalls: OnChainCallTiming[];
++    onChainCalls: OnChainCalls;
+ };
+ export type MethodTimingCollector = {
+     startedAtMs: number;
+@@ -188,7 +192,7 @@ export function buildMethodTimingMeta(
+         onChainRunTimeMs,
+         offChainRunTimeMs: Math.max(0, runTimeMs - onChainRunTimeMs),
+         onChainCallCount: onChainCalls.length,
+-        onChainCalls,
++        onChainCalls: { calls: onChainCalls, totalRunTimeMs: onChainRunTimeMs },
+     };
+ }
+ export function wrapContractWithTiming<T extends object>(contract: T): T {
