@@ -787,12 +787,14 @@ export function useSponsorCoinLabTreeMethods({
           const metadataRecord =
             metadataResult && typeof metadataResult === 'object' && !Array.isArray(metadataResult)
               ? {
-                  ...(metadataResult as Record<string, unknown>),
+                  result: {
+                    ...(metadataResult as Record<string, unknown>),
+                  },
                   ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
                   meta: sanitizedMetadataMeta,
                 }
               : {
-                  value: metadataResult,
+                  result: metadataResult,
                   ...(metadataOnChainCalls ? { onChainCalls: metadataOnChainCalls } : {}),
                   meta: sanitizedMetadataMeta,
                 };

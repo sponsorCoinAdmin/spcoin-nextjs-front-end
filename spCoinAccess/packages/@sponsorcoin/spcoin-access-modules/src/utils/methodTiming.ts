@@ -1,6 +1,6 @@
 export type OnChainCallTiming = {
     method: string;
-    runTimeMs: number;
+    onChainRunTimeMs: number;
     gasUsed?: string;
     gasPriceWei?: string;
     feePaidWei?: string;
@@ -8,14 +8,14 @@ export type OnChainCallTiming = {
 };
 export type OnChainCalls = {
     calls: OnChainCallTiming[];
-    totalRunTimeMs: number;
+    totalOnChainMs: number;
 };
 export type MethodTimingMeta = {
     startedAt: string;
     completedAt: string;
-    runTimeMs: number;
-    onChainRunTimeMs: number;
+    totalRunTimeMs: number;
     offChainRunTimeMs: number;
+    onChainRunTimeMs: number;
     onChainCallCount: number;
     onChainCalls: OnChainCalls;
 };
@@ -60,7 +60,7 @@ export function createMethodTimingCollector(startedAtMs = Date.now()): MethodTim
         recordOnChainCall(method, runTimeMs) {
             collector.onChainCalls.push({
                 method: String(method || "").trim() || "unknown",
-                runTimeMs: Math.max(0, Number(runTimeMs || 0)),
+                onChainRunTimeMs: Math.max(0, Number(runTimeMs || 0)),
             });
         },
     };
@@ -166,7 +166,7 @@ export function attachReceiptGasToOnChainCall(
     }
     calls.push({
         method: normalizedMethod,
-        runTimeMs: 0,
+        onChainRunTimeMs: 0,
         ...gasFields,
     });
 }
@@ -178,21 +178,21 @@ export function buildMethodTimingMeta(
     const runTimeMs = Math.max(0, completedAtMs - Number(collector?.startedAtMs || completedAtMs));
     const onChainCalls = Array.isArray(collector?.onChainCalls) ? collector.onChainCalls.map((entry) => ({
         method: String(entry?.method || "").trim() || "unknown",
-        runTimeMs: Math.max(0, Number(entry?.runTimeMs || 0)),
+        onChainRunTimeMs: Math.max(0, Number(entry?.onChainRunTimeMs || 0)),
         ...(entry?.gasUsed != null ? { gasUsed: String(entry.gasUsed) } : {}),
         ...(entry?.gasPriceWei != null ? { gasPriceWei: String(entry.gasPriceWei) } : {}),
         ...(entry?.feePaidWei != null ? { feePaidWei: String(entry.feePaidWei) } : {}),
         ...(entry?.feePaidEth != null ? { feePaidEth: String(entry.feePaidEth) } : {}),
     })) : [];
-    const onChainRunTimeMs = onChainCalls.reduce((total, entry) => total + entry.runTimeMs, 0);
+    const onChainRunTimeMs = onChainCalls.reduce((total, entry) => total + entry.onChainRunTimeMs, 0);
     return {
         startedAt: new Date(Number(collector?.startedAtMs || completedAtMs)).toISOString(),
         completedAt: new Date(completedAtMs).toISOString(),
-        runTimeMs,
-        onChainRunTimeMs,
+        totalRunTimeMs: runTimeMs,
         offChainRunTimeMs: Math.max(0, runTimeMs - onChainRunTimeMs),
+        onChainRunTimeMs,
         onChainCallCount: onChainCalls.length,
-        onChainCalls: { calls: onChainCalls, totalRunTimeMs: onChainRunTimeMs },
+        onChainCalls: { calls: onChainCalls, totalOnChainMs: onChainRunTimeMs },
     };
 }
 export function wrapContractWithTiming<T extends object>(contract: T): T {

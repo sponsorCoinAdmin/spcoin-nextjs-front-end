@@ -235,9 +235,9 @@ function buildExecutionResultPayload(
       meta: {
         startedAt: meta?.startedAt,
         completedAt: meta?.completedAt,
-        runTimeMs: meta?.runTimeMs,
-        onChainRunTimeMs: meta?.onChainRunTimeMs,
         offChainRunTimeMs: meta?.offChainRunTimeMs,
+        onChainRunTimeMs: meta?.onChainRunTimeMs,
+        totalRunTimeMS: meta?.totalRunTimeMs,
         onChainCallCount: meta?.onChainCallCount,
         activeAccountCount: metadata.activeAccountCount,
         inactiveAccountCount: metadata.inactiveAccountCount,

@@ -397,36 +397,52 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       let nextPayload = { ...(payload as Record<string, unknown>) };
-      const collectOnChainCalls = (value: unknown, accumulator: { calls: unknown[]; totalRunTimeMs: number }): unknown => {
+      const collectOnChainCalls = (
+        value: unknown,
+        accumulator: { calls: unknown[]; totalOnChainMs: number },
+        isRoot = false,
+      ): unknown => {
         if (!value || typeof value !== 'object') return value;
         if (Array.isArray(value)) return value.map((entry) => collectOnChainCalls(entry, accumulator));
         const record = { ...(value as Record<string, unknown>) };
-        for (const [key, childValue] of Object.entries(record)) {
-          record[key] = collectOnChainCalls(childValue, accumulator);
+        if (isRoot) {
+          // Only collect from immediate children, do not recurse deeper
+          for (const childValue of Object.values(record)) {
+            if (childValue && typeof childValue === 'object' && !Array.isArray(childValue)) {
+              const childRecord = childValue as Record<string, unknown>;
+              if (childRecord.meta && typeof childRecord.meta === 'object' && !Array.isArray(childRecord.meta)) {
+                const metaRecord = childRecord.meta as Record<string, unknown>;
+                if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
+                  const onChainCallsObj = metaRecord.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
+                  accumulator.totalOnChainMs += Number(onChainCallsObj.totalOnChainMs) || 0;
+                }
+              }
+              if (childRecord.onChainCalls && typeof childRecord.onChainCalls === 'object' && !Array.isArray(childRecord.onChainCalls)) {
+                const onChainCallsObj = childRecord.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
+                accumulator.totalOnChainMs += Number(onChainCallsObj.totalOnChainMs) || 0;
+              }
+            }
+          }
+          return record;
         }
+        // For non-root, just clean up meta.onChainCalls
         if (record.meta && typeof record.meta === 'object' && !Array.isArray(record.meta)) {
           const metaRecord = { ...(record.meta as Record<string, unknown>) };
           if (metaRecord.onChainCalls && typeof metaRecord.onChainCalls === 'object' && !Array.isArray(metaRecord.onChainCalls)) {
-            const onChainCallsObj = metaRecord.onChainCalls as { calls?: unknown[]; totalRunTimeMs?: number };
-            if (Array.isArray(onChainCallsObj.calls)) {
-              accumulator.calls.push(...onChainCallsObj.calls);
-              accumulator.totalRunTimeMs += Number(onChainCallsObj.totalRunTimeMs) || 0;
-            }
             delete metaRecord.onChainCalls;
             record.meta = metaRecord;
           }
         }
         return record;
       };
-      const collectedOnChainCalls = { calls: [] as unknown[], totalRunTimeMs: 0 };
-      nextPayload = collectOnChainCalls(nextPayload, collectedOnChainCalls) as Record<string, unknown>;
-      if (collectedOnChainCalls.calls.length > 0) {
+      const collectedOnChainCalls = { calls: [] as unknown[], totalOnChainMs: 0 };
+      nextPayload = collectOnChainCalls(nextPayload, collectedOnChainCalls, true) as Record<string, unknown>;
+      if (collectedOnChainCalls.totalOnChainMs > 0) {
         if (!nextPayload.onChainCalls) {
           nextPayload.onChainCalls = collectedOnChainCalls;
         } else if (nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
-          const existing = nextPayload.onChainCalls as { calls: unknown[]; totalRunTimeMs: number };
-          existing.calls = [...existing.calls, ...collectedOnChainCalls.calls];
-          existing.totalRunTimeMs += collectedOnChainCalls.totalRunTimeMs;
+          const existing = nextPayload.onChainCalls as { calls?: unknown[]; totalOnChainMs?: number };
+          existing.totalOnChainMs = (Number(existing.totalOnChainMs) || 0) + collectedOnChainCalls.totalOnChainMs;
         }
       }
       const normalizeInflationRateDisplay = (value: unknown) => {
