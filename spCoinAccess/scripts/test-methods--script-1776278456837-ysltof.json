@@ -91,21 +91,6 @@
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
-    },
-    {
-      "step": 5,
-      "name": "deleteAccountTree",
-      "panel": "spcoin_write",
-      "method": "deleteAccountTree",
-      "msg.sender": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "params": [
-        {
-          "key": "Account Key",
-          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
     }
   ]
 }

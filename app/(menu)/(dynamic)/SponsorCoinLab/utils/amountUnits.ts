@@ -22,6 +22,15 @@ export function normalizeRawAmountInput(value: string) {
   return String(value || '').replace(/[^\d]/g, '');
 }
 
+export function normalizeTokenAmountInput(value: string) {
+  const cleaned = String(value || '').replace(/[^\d.]/g, '');
+  const firstDecimalIndex = cleaned.indexOf('.');
+  if (firstDecimalIndex < 0) return cleaned;
+  return `${cleaned.slice(0, firstDecimalIndex + 1)}${cleaned
+    .slice(firstDecimalIndex + 1)
+    .replace(/\./g, '')}`;
+}
+
 export function convertAmountDisplayValue(
   value: string,
   fromUnit: AmountUnit,

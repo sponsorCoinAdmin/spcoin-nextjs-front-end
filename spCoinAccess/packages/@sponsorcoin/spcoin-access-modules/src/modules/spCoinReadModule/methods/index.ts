@@ -11,6 +11,7 @@ export {
 export { getActiveAccountKeys, getActiveAccountList } from './getActiveAccountList';
 export { getActiveAccountCount, getActiveAccountListSize } from './getActiveAccountListSize';
 export { getActiveAccountKeyAt, getActiveAccountElement } from './getActiveAccountElement';
+export { getSponsorKeys } from './getSponsorKeys';
 export { getRecipientKeys, getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
 export { getAccountRecord } from './getAccountRecord';

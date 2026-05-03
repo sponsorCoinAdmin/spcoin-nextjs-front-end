@@ -214,6 +214,7 @@ function buildAgentParentRelationshipRecord(agentRateKey, stakedAmount) {
     return {
         TYPE: "--AGENT_RATE--",
         agentRateKey: String(agentRateKey ?? ""),
+        agentRate: String(agentRateKey ?? ""),
         stakedAmount: String(stakedAmount ?? "0"),
     };
 }
@@ -221,8 +222,13 @@ function buildAgentParentRelationshipRecord(agentRateKey, stakedAmount) {
 function buildAgentRateRelationshipRecord(relationship) {
     return {
         TYPE: "--AGENT_RATE--",
-        agentRate: String(relationship?.agentRateKey ?? ""),
+        agentRate: String(relationship?.agentRate ?? relationship?.agentRateKey ?? ""),
+        agentRateKey: String(relationship?.agentRateKey ?? relationship?.agentRate ?? ""),
+        inserted: relationship?.inserted,
+        creationTime: relationship?.creationTime,
+        lastUpdateTime: relationship?.lastUpdateTime,
         stakedAmount: String(relationship?.stakedAmount ?? "0"),
+        transactions: Array.isArray(relationship?.transactions) ? relationship.transactions : [],
     };
 }
 
@@ -309,12 +315,22 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
         const recipientRateList = await getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey);
         const recipientRates = {};
         for (const recipientRateKey of Array.from(new Set(Array.isArray(recipientRateList) ? recipientRateList.map((value) => String(value ?? "")) : []))) {
-            const recipientTransactionFields = await getRecipientTransactionFieldsCached(
-                runtime,
-                sponsorAccountKey,
-                recipientAccountKey,
-                recipientRateKey,
-            );
+            let recipientTransaction = null;
+            let recipientTransactionFields = null;
+            try {
+                recipientTransaction = await runtime.getRecipientTransaction(sponsorAccountKey, recipientAccountKey, recipientRateKey);
+            }
+            catch (_error) {
+                recipientTransaction = null;
+            }
+            if (!recipientTransaction) {
+                recipientTransactionFields = await getRecipientTransactionFieldsCached(
+                    runtime,
+                    sponsorAccountKey,
+                    recipientAccountKey,
+                    recipientRateKey,
+                );
+            }
             if (debugState) debugState.recipientAgentReads += 1;
             const agentAccountKeys = await getRecipientRateAgentListCached(
                 runtime,
@@ -333,21 +349,39 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
                     agentAccountKey,
                 );
                 const agentAccount = await getShallowAccountRecord(runtime, agentAccountKey);
-                const agentRelationships = (Array.isArray(agentRateKeys) ? Array.from(new Set(agentRateKeys.map((value) => String(value ?? "")))) : []).map((agentRateKey) =>
-                    buildAgentParentRelationshipRecord(agentRateKey));
-                for (const relationship of agentRelationships) {
-                    relationship.stakedAmount = String(
-                        (
-                            await getAgentTransactionFieldsCached(
-                                runtime,
-                                sponsorAccountKey,
-                                recipientAccountKey,
-                                recipientRateKey,
-                                agentAccountKey,
-                                relationship.agentRateKey,
-                            )
-                        )?.[2] ?? "0",
-                    );
+                const agentRelationships = [];
+                for (const agentRateKey of Array.isArray(agentRateKeys) ? Array.from(new Set(agentRateKeys.map((value) => String(value ?? "")))) : []) {
+                    try {
+                        const agentTransaction = await runtime.getAgentTransaction(
+                            sponsorAccountKey,
+                            recipientAccountKey,
+                            recipientRateKey,
+                            agentAccountKey,
+                            agentRateKey,
+                        );
+                        agentRelationships.push({
+                            ...agentTransaction,
+                            agentRateKey,
+                            stakedAmount: String(agentTransaction?.stakedSPCoins ?? agentTransaction?.stakedAmount ?? "0"),
+                        });
+                    }
+                    catch (_error) {
+                        agentRelationships.push(
+                            buildAgentParentRelationshipRecord(
+                                agentRateKey,
+                                (
+                                    await getAgentTransactionFieldsCached(
+                                        runtime,
+                                        sponsorAccountKey,
+                                        recipientAccountKey,
+                                        recipientRateKey,
+                                        agentAccountKey,
+                                        agentRateKey,
+                                    )
+                                )?.[2] ?? "0",
+                            ),
+                        );
+                    }
                 }
                 agentAccount.agentRates = toAgentRateKeysRecord(agentRelationships);
                 agentAccountMap.set(
@@ -358,7 +392,12 @@ async function buildRecipientRateRelationshipList(runtime, sponsorAccountKey, re
             recipientRates[String(recipientRateKey ?? "")] = {
                 TYPE: "--RECIPIENT_RATE--",
                 recipientRate: String(recipientRateKey ?? ""),
-                stakedAmount: String(recipientTransactionFields?.[2] ?? "0"),
+                recipientRateKey: String(recipientRateKey ?? ""),
+                inserted: recipientTransaction?.inserted,
+                creationTime: recipientTransaction?.creationTime,
+                lastUpdateTime: recipientTransaction?.lastUpdateTime,
+                stakedAmount: String(recipientTransaction?.stakedSPCoins ?? recipientTransactionFields?.[2] ?? "0"),
+                transactions: Array.isArray(recipientTransaction?.transactions) ? recipientTransaction.transactions : [],
                 agentKeys: Array.from(agentAccountMap.values()),
             };
         }
@@ -462,8 +501,14 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
             `JS => buildAgentParentRelationshipList soft-failed for ${String(accountKey ?? "")}: ${String(error?.message || error)}`,
         );
     }
-    accountStruct.recipientRates = {};
-    accountStruct.recipientKeys = await buildRecipientAccountList(runtime, accountKey, recipientAccountKeys, depthRemaining, nextVisitedKeys, debugState);
+    const recipientAccountList = await buildRecipientAccountList(runtime, accountKey, recipientAccountKeys, depthRemaining, nextVisitedKeys, debugState);
+    accountStruct.recipientKeys = recipientAccountList;
+    accountStruct.recipientRates = Object.fromEntries(
+        recipientAccountList.map((recipientAccount) => [
+            String(recipientAccount?.accountKey ?? recipientAccount?.recipientKey ?? "").trim().toLowerCase(),
+            recipientAccount?.recipientRates ?? {},
+        ]).filter(([recipientKey]) => Boolean(recipientKey)),
+    );
     accountStruct.agentKeys = sponsorAccountKeys.length > 0
         ? await buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, accountKey, depthRemaining, nextVisitedKeys, debugState)
         : [];
@@ -566,7 +611,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
 export async function getAccountRecord(context, _accountKey) {
     const runtime = context;
     const debugState = createRelationshipBuildDebug(runtime, _accountKey);
-    const accountStruct = await getShallowAccountRecord(runtime, _accountKey);
+    const accountStruct = await buildAccountRecord(runtime, _accountKey, 2, new Set(), debugState);
     debugState.logSummary("getAccountRecord");
     runtime.spCoinLogger.logExitFunction();
     return accountStruct;

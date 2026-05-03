@@ -34,6 +34,7 @@ import getRecipientTransactionIdKeys from './getRecipientTransactionIdKeys';
 import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
 import getMasterAccountKeyCount from './getAccountListSize';
 import getActiveAccountCount from './getActiveAccountListSize';
+import getSponsorKeys from './getSponsorKeys';
 import getRecipientKeys from './getAccountRecipientList';
 import getAgentKeys from './getAccountAgentList';
 import getRecipientKeyCount from './getAccountRecipientListSize';
@@ -99,6 +100,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getMasterAccountCount: getMasterAccountKeyCount,
     getAccountKeyCount: getMasterAccountKeyCount,
     getActiveAccountCount,
+    getSponsorKeys,
     getRecipientKeys,
     getAgentKeys,
     getRecipientKeyCount,

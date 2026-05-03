@@ -397,6 +397,17 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       const nextPayload = { ...(payload as Record<string, unknown>) };
+      const normalizedMeta =
+        nextPayload.meta &&
+        typeof nextPayload.meta === 'object' &&
+        !Array.isArray(nextPayload.meta)
+          ? { ...(nextPayload.meta as Record<string, unknown>) }
+          : undefined;
+      if (normalizedMeta && normalizedMeta.onChainCalls !== undefined && nextPayload.onChainCalls === undefined) {
+        nextPayload.onChainCalls = normalizedMeta.onChainCalls;
+        delete normalizedMeta.onChainCalls;
+        nextPayload.meta = normalizedMeta;
+      }
       const normalizeInflationRateDisplay = (value: unknown) => {
         const trimmed = toDisplayString(value).trim();
         if (!trimmed) return '';

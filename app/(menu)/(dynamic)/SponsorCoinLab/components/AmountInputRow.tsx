@@ -3,6 +3,7 @@ import {
   AMOUNT_UNIT_OPTIONS,
   convertAmountDisplayValue,
   normalizeRawAmountInput,
+  normalizeTokenAmountInput,
   type AmountUnit,
 } from '../utils/amountUnits';
 import { NativeSelectChevron } from './SelectChevron';
@@ -35,7 +36,7 @@ export default function AmountInputRow({
   const resolvedPlaceholder =
     placeholder ?? (unit === 'TOKEN' ? 'Token amount' : 'Raw base-unit amount');
   const handleValueChange = (nextValue: string) => {
-    onValueChange(unit === 'RAW' ? normalizeRawAmountInput(nextValue) : nextValue);
+    onValueChange(unit === 'RAW' ? normalizeRawAmountInput(nextValue) : normalizeTokenAmountInput(nextValue));
   };
   const handleUnitChange = (nextUnit: AmountUnit) => {
     try {

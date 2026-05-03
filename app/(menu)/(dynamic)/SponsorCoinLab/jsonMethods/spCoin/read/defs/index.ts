@@ -8,6 +8,7 @@ import getMasterAccountKeyCount from './getMasterAccountKeyCount';
 import getActiveAccountKeys from './getActiveAccountList';
 import getActiveAccountCount from './getActiveAccountListSize';
 import getSpCoinMetaData from './getSpCoinMetaData';
+import getSponsorKeys from './getSponsorKeys';
 import getRecipientList from './getRecipientList';
 import getAgentList from './getAgentList';
 import getRecipientListSize from './getRecipientListSize';
@@ -88,6 +89,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getActiveAccountCount,
   getActiveAccountListSize: getActiveAccountCount,
   getSpCoinMetaData,
+  getSponsorKeys,
   getRecipientKeys: getRecipientList,
   getRecipientList,
   getAgentKeys: getAgentList,

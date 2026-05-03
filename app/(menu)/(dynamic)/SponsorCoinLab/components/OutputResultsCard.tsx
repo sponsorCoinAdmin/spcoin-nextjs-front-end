@@ -221,6 +221,12 @@ export default function OutputResultsCard({
     ['structureType', 'Structure Type'],
     ['formattedAmounts', 'Formatted Amounts'],
   ] as const;
+  const payloadFieldOptions = [
+    ['meta', 'meta'],
+    ['parameters', 'parameters'],
+    ['result', 'result'],
+    ['onChainCalls', 'onChainCalls'],
+  ] as const;
   const bulkSelectableHiddenRuleKeys = [
     'zeroValues',
     'emptyValues',
@@ -230,6 +236,7 @@ export default function OutputResultsCard({
     'creationDates',
     'structureType',
   ] as const;
+  type PayloadFieldOptionKey = typeof payloadFieldOptions[number][0];
   const [hiddenInspectorRules, setHiddenInspectorRules] = useState({
     zeroValues: true,
     emptyValues: true,
@@ -240,6 +247,12 @@ export default function OutputResultsCard({
     formattedAmounts: false,
   });
   const [showStructureType, setShowStructureType] = useState(true);
+  const [showPayloadFields, setShowPayloadFields] = useState<Record<PayloadFieldOptionKey, boolean>>({
+    meta: true,
+    parameters: true,
+    result: true,
+    onChainCalls: true,
+  });
   const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
   const showAllMenuRef = useRef<HTMLDivElement | null>(null);
   const actionButtonClassName =
@@ -1107,6 +1120,25 @@ export default function OutputResultsCard({
                           </React.Fragment>
                         );
                       })}
+                      <div className="my-2 rounded-sm bg-[#E5B94F] px-2 py-0.5 text-center font-semibold text-[#111827]">
+                        --------- FIELDS ---------
+                      </div>
+                      {payloadFieldOptions.map(([key, label]) => (
+                        <label key={key} className="flex items-center gap-2 py-0.5">
+                          <input
+                            type="checkbox"
+                            className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
+                            checked={showPayloadFields[key]}
+                            onChange={(event) =>
+                              setShowPayloadFields((prev) => ({
+                                ...prev,
+                                [key]: event.target.checked,
+                              }))
+                            }
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))}
                     </div>
                   ) : null}
                 </div>
@@ -1171,6 +1203,9 @@ export default function OutputResultsCard({
                     highlightColorClass={inspectorHighlightColorClass}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
+                    hideEntryKeys={Object.entries(showPayloadFields)
+                      .filter(([, visible]) => !visible)
+                      .map(([key]) => key)}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
@@ -1223,6 +1258,9 @@ export default function OutputResultsCard({
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
+                    hideEntryKeys={Object.entries(showPayloadFields)
+                      .filter(([, visible]) => !visible)
+                      .map(([key]) => key)}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}

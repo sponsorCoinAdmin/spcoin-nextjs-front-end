@@ -29,6 +29,7 @@ export type SpCoinReadMethod =
   | 'getRecipientListSize'
   | 'getAgentListSize'
   | 'getAccountKeys'
+  | 'getSponsorKeys'
   | 'getRecipientKeys'
   | 'getAgentKeys'
   | 'getRecipientKeyCount'
@@ -448,10 +449,6 @@ function formatDateDifferenceOutput(diffSeconds: number, unitRaw: string) {
   };
 }
 
-function normalizeAddressDisplay(value: unknown) {
-  return String(value ?? '').trim().toLowerCase();
-}
-
 function isMissingContractReadError(error: unknown) {
   const source = (error && typeof error === 'object' ? error : {}) as Record<string, unknown>;
   const nested = ((source.error || source.info || source.cause) && typeof (source.error || source.info || source.cause) === 'object'
@@ -461,55 +458,6 @@ function isMissingContractReadError(error: unknown) {
   const data = String(source.data || nested.data || '');
   const message = String(source.message || nested.message || '');
   return code === 'CALL_EXCEPTION' || data === '0x' || /execution reverted|require\(false\)|no matching fragment/i.test(message);
-}
-
-function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
-  if (!Array.isArray(result) || result.length < 9) return result;
-  const [
-    accountKey,
-    creationTime,
-    accountBalance,
-    stakedAccountSPCoins,
-    accountStakingRewards,
-    sponsorKeys,
-    recipientKeys,
-    agentKeys,
-    parentRecipientKeys,
-  ] = result;
-  const normalizedCreationTime = String(creationTime ?? '0').trim();
-  const normalizedBalance = String(accountBalance ?? '0').trim();
-  const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
-  const normalizedStakingRewards = String(accountStakingRewards ?? '0').trim();
-  const normalizedSponsorKeys = normalizeStringListResult(sponsorKeys ?? []);
-  const normalizedRecipientKeys = normalizeStringListResult(recipientKeys ?? []);
-  const normalizedAgentKeys = normalizeStringListResult(agentKeys ?? []);
-  const normalizedParentRecipientKeys = normalizeStringListResult(parentRecipientKeys ?? []);
-  return {
-    TYPE: '--ACCOUNT--',
-    accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
-    creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
-    accountStakingRewards: normalizedStakingRewards,
-    totalSpCoins: {
-      TYPE: '--TOTAL_SP_COINS--',
-      totalSpCoins: String((BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString()),
-      balanceOf: normalizedBalance,
-      stakedBalance: normalizedStaked,
-      sponsorRewardRate: '0%',
-      pendingRewards: {
-        TYPE: '--PENDING_REWARDS--',
-        pendingRewards: '0',
-        pendingSponsorRewards: '0',
-        pendingRecipientRewards: '0',
-        pendingAgentRewards: '0',
-      },
-    },
-    sponsorKeys: normalizedSponsorKeys,
-    recipientKeys: normalizedRecipientKeys,
-    recipientRates: {},
-    agentKeys: normalizedAgentKeys,
-    agentRates: {},
-    parentRecipientKeys: normalizedParentRecipientKeys,
-  };
 }
 
 type RunArgs = {
@@ -658,16 +606,6 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   }
   let result: unknown;
   try {
-    if (canonicalMethod === 'getAccountRecord' && typeof contract.getAccountRecord === 'function') {
-      result = normalizeOnChainAccountRecordResult(
-        await contract.getAccountRecord(String(methodArgs[0] ?? '')),
-        methodArgs[0],
-      );
-      const out = stringifyResult(result);
-      appendLog(`${activeDef.title}(${String(methodArgs[0] ?? '')}) -> ${out}`);
-      setStatus(`${activeDef.title} read complete.`);
-      return result;
-    }
     result = await handler.run({
       canonicalMethod,
       selectedMethod,

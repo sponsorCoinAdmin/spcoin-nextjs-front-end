@@ -529,7 +529,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const promotedStepEntries =
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
-          ...(stepCallRecord.parameters !== undefined ? ([['parameters', stepCallRecord.parameters]] as Array<[string, any]>) : []),
+          ...(stepCallRecord.parameters !== undefined && !hideEntryKeys.includes('parameters')
+            ? ([['parameters', stepCallRecord.parameters]] as Array<[string, any]>)
+            : []),
           ...visibleEntries.filter(([key]) => key !== 'call'),
         ]
       : visibleEntries;
@@ -580,7 +582,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           path={nextPath}
           rootLabel={rootLabel}
           label={key}
-          hideEntryKeys={[key]}
+          hideEntryKeys={hideEntryKeys}
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
           showAll={showAll}

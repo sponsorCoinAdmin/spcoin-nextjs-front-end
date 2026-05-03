@@ -174,6 +174,7 @@ export type SpCoinReadAccess = {
   getActiveAccountListSize?: () => Promise<number>;
   getActiveAccountKeyAt?: (index: string | number) => Promise<string>;
   getActiveAccountElement?: (index: string | number) => Promise<string>;
+  getSponsorKeys?: () => Promise<string[]>;
   getRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getRecipientList?: (_accountKey: string) => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
