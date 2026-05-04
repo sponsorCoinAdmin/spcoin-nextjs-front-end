@@ -557,10 +557,18 @@ export function useSponsorCoinLabMethods({
             }
           : null;
         const isAccountListPayload = normalizedPayloadMethod === 'getMasterAccountKeys' || normalizedPayloadMethod === 'getAccountKeys';
-
+        // Preserve already-expanded account entries (objects with accountKey/TYPE/totalSpCoins)
+        const isExpandedEntry = (entry: unknown) => {
+          if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+          const record = entry as Record<string, unknown>;
+          return Boolean(record.__forceExpanded || record.TYPE || record.totalSpCoins || record.accountKey || record.call);
+        };
         nextPayload.result = {
           spCoinMetaData: normalizedMetadata ?? { __lazySpCoinMetaData: true },
-          [entryListKey]: normalizedEntries.map((entry) => normalizeMasterSponsorEntry(entry, isAccountListPayload)),
+          [entryListKey]: normalizedEntries.map((entry) => {
+            if (isExpandedEntry(entry)) return entry;
+            return normalizeMasterSponsorEntry(entry, isAccountListPayload);
+          }),
         };
         delete nextPayload.spCoinMetaData;
       }

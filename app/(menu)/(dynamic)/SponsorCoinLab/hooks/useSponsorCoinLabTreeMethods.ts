@@ -1244,9 +1244,14 @@ export function useSponsorCoinLabTreeMethods({
         setOutputPanelMode('formatted');
         return;
       }
-      if (!inTreePanel) return;
       const normalizedAccount = normalizeAddressValue(account);
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return;
+      if (!inTreePanel) {
+        setSelectedTreeAccount(normalizedAccount);
+        setOutputPanelMode('tree');
+        await runTreeDump(normalizedAccount);
+        return;
+      }
       setSelectedTreeAccount(normalizedAccount);
       setOutputPanelMode('tree');
       await runTreeDump(normalizedAccount);
