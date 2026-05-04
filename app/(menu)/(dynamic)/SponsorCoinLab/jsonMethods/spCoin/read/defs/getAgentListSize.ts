@@ -1,7 +1,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'getAgentKeyCount',
+  title: 'getRecipientAgentKeyCount',
   params: [{ label: 'Recipient', placeholder: 'address _accountKey', type: 'address' }],
 };
 

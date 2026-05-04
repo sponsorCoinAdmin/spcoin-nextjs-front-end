@@ -951,13 +951,8 @@ export function useSponsorCoinLabTreeMethods({
       const trimmedDisplay = String(formattedOutputDisplayRef.current ?? '').trim();
       if (!trimmedDisplay) return 'unhandled';
       const normalizedPathHint = String(pathHint ?? '').trim();
-      appendLog(`[EXPAND] click account=${normalizedAccount} path=${normalizedPathHint || '(none)'}`);
-      appendLog(`[EXPAND] trimmedDisplay length=${trimmedDisplay.length} first80=${trimmedDisplay.slice(0, 80)}`);
       const pathSegments = normalizedPathHint.split('.').filter(Boolean);
-      if (pathSegments.length < 2) {
-        appendLog(`[EXPAND] FAIL: path too short segments=${pathSegments.join('|')}`);
-        return 'unhandled';
-      }
+      if (pathSegments.length < 2) return 'unhandled';
       const rootSegment = pathSegments[0] || '';
       const pathRootMatch = /^(?:step|output|script|tree)-(\d+)$/i.exec(rootSegment);
       const hintedBlockIndex = pathRootMatch ? Number(pathRootMatch[1]) : Number.NaN;
@@ -970,13 +965,7 @@ export function useSponsorCoinLabTreeMethods({
         if (!isAccountAddressPathKey(targetKey)) return false;
         return allSegments.findIndex((candidate) => candidate.join('.') === segments.join('.')) === index;
       });
-      appendLog(
-        `[EXPAND] path candidates=${payloadPathCandidates.map((segments) => segments.join('.')).join(' | ') || '(none)'}`,
-      );
-      if (payloadPathCandidates.length === 0) {
-        appendLog(`[EXPAND] FAIL: no valid path candidates from pathSegments=${pathSegments.join('|')} lastKey=${pathSegments[pathSegments.length - 1]}`);
-        return 'unhandled';
-      }
+      if (payloadPathCandidates.length === 0) return 'unhandled';
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {
@@ -1143,9 +1132,6 @@ export function useSponsorCoinLabTreeMethods({
         Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
           ? [blockEntries[hintedBlockIndex]]
           : blockEntries;
-      appendLog(
-        `[EXPAND] blocks=${blockEntries.length} hintedBlock=${Number.isInteger(hintedBlockIndex) ? hintedBlockIndex : 'none'} candidates=${candidateEntries.length}`,
-      );
 
       for (const entry of candidateEntries) {
         const payload = entry.payload;
@@ -1155,39 +1141,18 @@ export function useSponsorCoinLabTreeMethods({
           .filter((target): target is InlineAccountTarget => Boolean(target));
         const fallbackTarget = exactTargets.length > 0 ? null : findInlineAccountTarget(payload);
         const targets = fallbackTarget ? [...exactTargets, fallbackTarget] : exactTargets;
-        const targetPathSummary =
-          targets.length > 0
-            ? targets.map((target) => `${target.path.join('.')}(${target.matchKind ?? 'unknown'})`).join('|')
-            : 'none';
-        appendLog(
-          `[EXPAND] target search block=${entry.index} exact=${exactTargets.length} fallback=${fallbackTarget ? fallbackTarget.path.join('.') : 'none'} targetPaths=${
-            targetPathSummary
-          }`,
-        );
-
         for (const target of targets) {
-          appendLog(
-            `[EXPAND] loading target path=${target.path.join('.')} source=${target.sourcePath?.join('.') ?? target.path.join('.')} match=${target.matchKind ?? 'unknown'} kind=${typeof target.targetEntry}`,
-          );
           try {
             setStatus(`Loading account record for ${normalizedAccount}...`);
             const loadInlineAccountRecord = (signal?: AbortSignal) =>
               loadAccountRecordForAddress(normalizedAccount, { force: true, signal });
             const accountRecord = await loadInlineAccountRecord();
             if (accountRecord === undefined) return 'handled';
-            const accountRecordKeys =
-              accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
-                ? Object.keys(accountRecord as Record<string, unknown>)
-                : [];
-            appendLog(`[EXPAND] loaded record keys=${accountRecordKeys.join(',') || '(scalar)'}`);
             const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
             const nextRootPayload = writePathValue(payload, target.path, nextAccountEntry) as Record<string, unknown>;
             const nextPayload = formatFormattedPanelPayload({
               ...nextRootPayload,
             });
-            appendLog(
-              `[EXPAND] rewrite containsForce=${nextPayload.includes('__forceExpanded')} containsAccountKey=${nextPayload.includes('"accountKey"')}`,
-            );
             if (blocks.length > 1) {
               const nextBlocks = [...blocks];
               nextBlocks[entry.index] = nextPayload;
@@ -1195,11 +1160,8 @@ export function useSponsorCoinLabTreeMethods({
             } else {
               setFormattedOutputDisplay(nextPayload);
             }
-            appendLog(
-              `[ACCOUNT_EXPAND_TRACE] wrote account record block=${entry.index} path=${target.path.join('.')} source=${target.sourcePath?.join('.') ?? target.path.join('.')} match=${target.matchKind ?? 'unknown'} payloadLength=${nextPayload.length}`,
-            );
             setStatus(`Loaded account record for ${normalizedAccount}.`);
-            appendLog(`Inline account record loaded for ${normalizedAccount}.`);
+            appendLog(`Inline account record loaded for ${normalizedAccount}`);
             return 'expanded';
           } catch (error) {
             const message = getErrorMessage(error, 'Unable to load account record.');
@@ -1217,7 +1179,6 @@ export function useSponsorCoinLabTreeMethods({
           }
         }
       }
-      appendLog(`[EXPAND] no matching displayed account node for ${normalizedAccount}`);
       return 'unhandled';
     },
     [
@@ -1233,7 +1194,6 @@ export function useSponsorCoinLabTreeMethods({
 
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string) => {
-      appendLog(`[EXPAND] open request value=${String(account ?? '')} path=${String(pathHint ?? '')}`);
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {
         const metadataResult = await expandSpCoinMetaDataInline(pathHint);
         if (metadataResult === 'expanded' || metadataResult === 'handled') {
