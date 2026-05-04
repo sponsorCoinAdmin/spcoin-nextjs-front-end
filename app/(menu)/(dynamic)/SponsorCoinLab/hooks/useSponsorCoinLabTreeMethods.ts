@@ -158,14 +158,14 @@ export function useSponsorCoinLabTreeMethods({
         script: {
           id: `load-account-list-${Date.now()}`,
           name: 'Load Account List',
-          network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+          network: 'hardhat',
           steps: [
             {
               step: 1,
               name: 'getMasterAccountKeys',
               panel: 'spcoin_rread',
               method: 'getMasterAccountKeys',
-              mode,
+              mode: 'hardhat',
               params: [],
             },
           ],
@@ -189,6 +189,11 @@ export function useSponsorCoinLabTreeMethods({
     syncTreeAccountOptions(list);
     return { list };
   }, [mode, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
+
+  const formattedOutputDisplayRef = useRef(formattedOutputDisplay);
+  useEffect(() => {
+    formattedOutputDisplayRef.current = formattedOutputDisplay;
+  }, [formattedOutputDisplay]);
 
   const callTreeAccessMethod = useCallback(
     async <T,>(methodName: string, runner: () => Promise<T> | T) => {
@@ -451,14 +456,14 @@ export function useSponsorCoinLabTreeMethods({
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
-              network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+              network: 'hardhat',
               steps: [
                 {
                   step: 1,
                   name: 'getAccountRecord',
                   panel: 'spcoin_rread',
                   method: 'getAccountRecord',
-                  mode,
+                  mode: 'hardhat',
                   params: [{ key: 'Account Key', value: normalizedAccount }],
                 },
               ],
@@ -525,14 +530,14 @@ export function useSponsorCoinLabTreeMethods({
               script: {
                 id: `expand-account-recipient-list-${Date.now()}`,
                 name: 'Expand Account Recipient List',
-                network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+                network: 'hardhat',
                 steps: [
                   {
                     step: 1,
                     name: 'getRecipientKeys',
                     panel: 'spcoin_rread',
                     method: 'getRecipientKeys',
-                    mode,
+                    mode: 'hardhat',
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },
                 ],
@@ -575,14 +580,14 @@ export function useSponsorCoinLabTreeMethods({
               script: {
                 id: `expand-account-agent-list-${Date.now()}`,
                 name: 'Expand Account Agent List',
-                network: mode === 'hardhat' ? 'hardhat' : 'metamask',
+                network: 'hardhat',
                 steps: [
                   {
                     step: 1,
                     name: 'getAgentKeys',
                     panel: 'spcoin_rread',
                     method: 'getAgentKeys',
-                    mode,
+                    mode: 'hardhat',
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   },
                 ],
@@ -715,7 +720,7 @@ export function useSponsorCoinLabTreeMethods({
     async (pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedPathHint = String(pathHint ?? '').trim();
       if (!normalizedPathHint.includes('.result.spCoinMetaData')) return 'unhandled';
-      const trimmedDisplay = String(formattedOutputDisplay ?? '').trim();
+      const trimmedDisplay = String(formattedOutputDisplayRef.current ?? '').trim();
       if (trimmedDisplay.length === 0 || trimmedDisplay === '(no output yet)') return 'unhandled';
 
       const parsePayload = (raw: string) => {
@@ -829,7 +834,6 @@ export function useSponsorCoinLabTreeMethods({
       coerceParamValue,
       ensureReadRunner,
       formatFormattedPanelPayload,
-      formattedOutputDisplay,
       requireContractAddress,
       setFormattedOutputDisplay,
       setStatus,
@@ -843,7 +847,7 @@ export function useSponsorCoinLabTreeMethods({
     async (pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedPathHint = String(pathHint ?? '').trim();
       if (!normalizedPathHint.includes('.result.masterAccountKeys')) return 'unhandled';
-      const trimmedDisplay = String(formattedOutputDisplay ?? '').trim();
+      const trimmedDisplay = String(formattedOutputDisplayRef.current ?? '').trim();
       if (trimmedDisplay.length === 0 || trimmedDisplay === '(no output yet)') return 'unhandled';
 
       const parsePayload = (raw: string) => {
@@ -931,7 +935,6 @@ export function useSponsorCoinLabTreeMethods({
       coerceParamValue,
       ensureReadRunner,
       formatFormattedPanelPayload,
-      formattedOutputDisplay,
       requireContractAddress,
       setFormattedOutputDisplay,
       setStatus,
@@ -945,13 +948,14 @@ export function useSponsorCoinLabTreeMethods({
     async (account: string, pathHint?: string): Promise<'expanded' | 'handled' | 'unhandled'> => {
       const normalizedAccount = normalizeAddressValue(account);
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
-      const trimmedDisplay = String(formattedOutputDisplay ?? '').trim();
+      const trimmedDisplay = String(formattedOutputDisplayRef.current ?? '').trim();
       if (!trimmedDisplay) return 'unhandled';
       const normalizedPathHint = String(pathHint ?? '').trim();
       appendLog(`[EXPAND] click account=${normalizedAccount} path=${normalizedPathHint || '(none)'}`);
+      appendLog(`[EXPAND] trimmedDisplay length=${trimmedDisplay.length} first80=${trimmedDisplay.slice(0, 80)}`);
       const pathSegments = normalizedPathHint.split('.').filter(Boolean);
       if (pathSegments.length < 2) {
-        appendLog(`[EXPAND] no payload path segments for account=${normalizedAccount}`);
+        appendLog(`[EXPAND] FAIL: path too short segments=${pathSegments.join('|')}`);
         return 'unhandled';
       }
       const rootSegment = pathSegments[0] || '';
@@ -969,7 +973,10 @@ export function useSponsorCoinLabTreeMethods({
       appendLog(
         `[EXPAND] path candidates=${payloadPathCandidates.map((segments) => segments.join('.')).join(' | ') || '(none)'}`,
       );
-      if (payloadPathCandidates.length === 0) return 'unhandled';
+      if (payloadPathCandidates.length === 0) {
+        appendLog(`[EXPAND] FAIL: no valid path candidates from pathSegments=${pathSegments.join('|')} lastKey=${pathSegments[pathSegments.length - 1]}`);
+        return 'unhandled';
+      }
 
       const parsePayload = (raw: string): Record<string, unknown> | null => {
         try {
@@ -1166,11 +1173,7 @@ export function useSponsorCoinLabTreeMethods({
             setStatus(`Loading account record for ${normalizedAccount}...`);
             const loadInlineAccountRecord = (signal?: AbortSignal) =>
               loadAccountRecordForAddress(normalizedAccount, { force: true, signal });
-            const accountRecord = callAccessMethod
-              ? await callAccessMethod('getAccountRecord', ({ executionSignal }) =>
-                  loadInlineAccountRecord(executionSignal),
-                )
-              : await loadInlineAccountRecord();
+            const accountRecord = await loadInlineAccountRecord();
             if (accountRecord === undefined) return 'handled';
             const accountRecordKeys =
               accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
@@ -1202,6 +1205,14 @@ export function useSponsorCoinLabTreeMethods({
             const message = getErrorMessage(error, 'Unable to load account record.');
             setStatus(`Unable to load account record for ${normalizedAccount}.`);
             appendLog(`Inline account record load failed for ${normalizedAccount}: ${message}`);
+            if (/server runner only supports hardhat/i.test(message)) {
+              showValidationPopup(
+                [],
+                [],
+                `Account expansion requires Hardhat mode. Current mode is metamask. Switch to Hardhat in the Network settings and try again.`,
+                { title: 'Mode Mismatch', confirmLabel: 'OK' },
+              );
+            }
             return 'handled';
           }
         }
@@ -1211,13 +1222,12 @@ export function useSponsorCoinLabTreeMethods({
     },
     [
       appendLog,
-      callAccessMethod,
       formatFormattedPanelPayload,
-      formattedOutputDisplay,
       loadAccountRecordForAddress,
       normalizeAddressValue,
       setFormattedOutputDisplay,
       setStatus,
+      showValidationPopup,
     ],
   );
 

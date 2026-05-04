@@ -397,22 +397,30 @@ export function useSponsorCoinLabMethods({
         return formatOutputDisplayValue(payload);
       }
       let nextPayload = { ...(payload as Record<string, unknown>) };
-      const collectChildOnChainCalls = (value: unknown, parentKey = ''): Array<{ method: string; totalOnChainMs: number }> => {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+      const collectChildOnChainCalls = (value: unknown, parentKey = '', depth = 0): Array<{ method: string; totalOnChainMs: number }> => {
+        if (!value || typeof value !== 'object') return [];
+        if (Array.isArray(value)) {
+          return value.flatMap((entry, i) => collectChildOnChainCalls(entry, String(i), depth + 1));
+        }
         const record = value as Record<string, unknown>;
+        const callMethod =
+          record.call && typeof record.call === 'object' && !Array.isArray(record.call)
+            ? String((record.call as Record<string, unknown>).method ?? '').trim()
+            : '';
         const results: Array<{ method: string; totalOnChainMs: number }> = [];
         for (const [key, child] of Object.entries(record)) {
+          if (depth === 0 && key === 'onChainCalls') continue;
           if (key === 'onChainCalls' && child && typeof child === 'object' && !Array.isArray(child)) {
             const oc = child as Record<string, unknown>;
             const totalMs = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
-            if (totalMs > 0) results.push({ method: parentKey || key, totalOnChainMs: totalMs });
+            if (totalMs > 0) results.push({ method: callMethod || parentKey || key, totalOnChainMs: totalMs });
           } else {
-            results.push(...collectChildOnChainCalls(child, key));
+            results.push(...collectChildOnChainCalls(child, callMethod || key, depth + 1));
           }
         }
         return results;
       };
-      const childEntries = collectChildOnChainCalls(nextPayload.result);
+      const childEntries = collectChildOnChainCalls(nextPayload, '', 0);
       if (childEntries.length > 0 && nextPayload.onChainCalls && typeof nextPayload.onChainCalls === 'object' && !Array.isArray(nextPayload.onChainCalls)) {
         const oc = nextPayload.onChainCalls as Record<string, unknown>;
         const localMs = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
@@ -561,7 +569,7 @@ export function useSponsorCoinLabMethods({
         const isExpandedEntry = (entry: unknown) => {
           if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
           const record = entry as Record<string, unknown>;
-          return Boolean(record.__forceExpanded || record.TYPE || record.totalSpCoins || record.accountKey || record.call);
+          return Boolean(record.__forceExpanded || record.result !== undefined || record.TYPE || record.totalSpCoins || record.accountKey || record.call);
         };
         nextPayload.result = {
           spCoinMetaData: normalizedMetadata ?? { __lazySpCoinMetaData: true },
@@ -599,6 +607,58 @@ export function useSponsorCoinLabMethods({
     },
     [formatOutputDisplayValue, recipientRateRange, agentRateRange],
   );
+  useEffect(() => {
+    const trimmed = String(formattedOutputDisplay || '').trim();
+    if (!trimmed || trimmed === '(no output yet)' || trimmed === '(no script yet)') return;
+    const blocks = trimmed.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+    const recalcOnChainTotals = (payload: Record<string, unknown>): Record<string, unknown> => {
+      if (!payload.onChainCalls || typeof payload.onChainCalls !== 'object' || Array.isArray(payload.onChainCalls)) return payload;
+      const oc = payload.onChainCalls as Record<string, unknown>;
+      const collectChildMs = (value: unknown, depth = 0): Array<{ method: string; totalOnChainMs: number }> => {
+        if (!value || typeof value !== 'object') return [];
+        if (Array.isArray(value)) return value.flatMap((e) => collectChildMs(e, depth + 1));
+        const rec = value as Record<string, unknown>;
+        const callMethod = rec.call && typeof rec.call === 'object' && !Array.isArray(rec.call)
+          ? String((rec.call as Record<string, unknown>).method ?? '').trim() : '';
+        const results: Array<{ method: string; totalOnChainMs: number }> = [];
+        for (const [key, child] of Object.entries(rec)) {
+          if (depth === 0 && key === 'onChainCalls') continue;
+          if (key === 'onChainCalls' && child && typeof child === 'object' && !Array.isArray(child)) {
+            const childOc = child as Record<string, unknown>;
+            // sum from calls array directly to avoid reading an already-inflated totalOnChainMs
+            const calls = Array.isArray(childOc.calls) ? childOc.calls as Record<string, unknown>[] : [];
+            const ms = calls.reduce((s, c) => s + Number(String(c.onChainRunTimeMs ?? '0').replace(/,/g, '')), 0);
+            if (ms > 0) results.push({ method: callMethod || key, totalOnChainMs: ms });
+          } else {
+            results.push(...collectChildMs(child, depth + 1));
+          }
+        }
+        return results;
+      };
+      const childEntries = collectChildMs(payload, 0);
+      // local ms = sum of top-level calls array
+      const localCalls = Array.isArray(oc.calls) ? oc.calls as Record<string, unknown>[] : [];
+      const localMs = localCalls.reduce((s, c) => s + Number(String(c.onChainRunTimeMs ?? '0').replace(/,/g, '')), 0);
+      const childMs = childEntries.reduce((s, e) => s + e.totalOnChainMs, 0);
+      const newTotal = localMs + childMs;
+      const prevTotal = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
+      const prevChildren = JSON.stringify(oc.childOnChainCalls ?? []);
+      if (newTotal === prevTotal && prevChildren === JSON.stringify(childEntries)) return payload;
+      const next: Record<string, unknown> = { ...oc, totalOnChainMs: String(newTotal) };
+      if (childEntries.length > 0) next.childOnChainCalls = childEntries; else delete next.childOnChainCalls;
+      return { ...payload, onChainCalls: next };
+    };
+    try {
+      const parsed = blocks.map((b) => JSON.parse(b) as Record<string, unknown>);
+      const rewritten = parsed.map((block) => recalcOnChainTotals(block));
+      if (rewritten.every((b, i) => b === parsed[i])) return;
+      const next = rewritten.map((b) => JSON.stringify(b, null, 2)).join('\n\n');
+      if (next !== trimmed) setFormattedOutputDisplay(next);
+    } catch {
+      // malformed JSON — leave as-is
+    }
+  }, [formattedOutputDisplay, setFormattedOutputDisplay]);
+
   const { executeMethodDescriptor } = useSponsorCoinLabMethodExecution({
     rpcUrl,
     mode,

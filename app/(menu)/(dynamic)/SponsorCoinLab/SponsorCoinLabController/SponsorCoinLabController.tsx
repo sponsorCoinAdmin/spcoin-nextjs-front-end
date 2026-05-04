@@ -205,13 +205,12 @@ export default function SponsorCoinLabPage({
 
   const appendLog = useCallback((line: string) => {
     const isAccountTraceLine = isSponsorCoinLabAccountTraceLine(line);
-    if (isAccountTraceLine && !writeTraceEnabled) return;
-    const stamp = new Date().toLocaleTimeString();
-    setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
     if (isAccountTraceLine) {
       recordSponsorCoinLabAccountTrace(line, 'SponsorCoinLabController.appendLog');
     }
-  }, [writeTraceEnabled]);
+    const stamp = new Date().toLocaleTimeString();
+    setLogs((prev) => [`[${stamp}] ${line}`, ...prev].slice(0, 120));
+  }, []);
   useEffect(() => {
     const applyLatestAbi = async () => {
       try {

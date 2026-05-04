@@ -478,6 +478,10 @@ export default function MethodsPanelCard({
   const [selectedAlterMode, setSelectedAlterMode] = React.useState<AlterModeOption>(
     storedMethodsPanelUiState?.selectedAlterMode || 'Standard',
   );
+  const [completeLockedPopupOpen, setCompleteLockedPopupOpen] = React.useState(false);
+  const handleAlterModeChange = React.useCallback((option: AlterModeOption) => {
+    setSelectedAlterMode(option);
+  }, []);
   const [isAlterMembershipMenuOpen, setIsAlterMembershipMenuOpen] = React.useState(false);
   const [isChangeGroupMenuOpen, setIsChangeGroupMenuOpen] = React.useState(false);
   const [isReloadingMemberLists, setIsReloadingMemberLists] = React.useState(false);
@@ -1231,6 +1235,7 @@ export default function MethodsPanelCard({
   React.useEffect(() => {
     if (!isAlterMembershipMenuOpen && !isChangeGroupMenuOpen) return;
     const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (completeLockedPopupOpen) return;
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (!alterMembershipMenuRef.current?.contains(target)) setIsAlterMembershipMenuOpen(false);
@@ -1311,6 +1316,18 @@ export default function MethodsPanelCard({
     };
   }, [memberListPersistenceHydrated]);
   const toggleCurrentMethodAlterMembership = React.useCallback((mode: AlterMembershipOption) => {
+    if (currentMethodInAlterMode('Complete') && mode !== 'Complete' && selectedAlterMode !== 'Complete') {
+      setIsAlterMembershipMenuOpen(true);
+      setCompleteLockedPopupOpen(true);
+      return;
+    }
+    const effectiveSelectedMode: AlterModeOption = selectedAlterMode === 'Tested' ? 'Test' : selectedAlterMode;
+    const effectiveMode: AlterModeOption = mode === 'Tested' ? 'Test' : mode;
+    if (effectiveMode === effectiveSelectedMode && currentMethodInAlterMode(mode)) {
+      setIsAlterMembershipMenuOpen(true);
+      setCompleteLockedPopupOpen(true);
+      return;
+    }
     if (!currentJsonMethodName || currentJsonMethodName === '__no_methods__') return;
     const toggleMember =
       (setter: React.Dispatch<React.SetStateAction<EditableMemberLists>>, kind: MethodIdentityKind) => {
@@ -1366,7 +1383,9 @@ export default function MethodsPanelCard({
   }, [
     activeMethodPanelTab,
     currentJsonMethodName,
+    currentMethodInAlterMode,
     methodPanelMode,
+    selectedAlterMode,
   ]);
   const changeCurrentMethodGroup = React.useCallback((nextGroup: MethodDisplayGroup) => {
     if (nextGroup === 'erc20' && !showOnChainMethods) {
@@ -1852,7 +1871,7 @@ export default function MethodsPanelCard({
                         name={alterModeGroupName}
                         value={option}
                         checked={selectedAlterMode === option}
-                        onChange={() => setSelectedAlterMode(option)}
+                        onChange={() => handleAlterModeChange(option)}
                         className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
                       />
                       <span className={selectedAlterMode === option ? 'text-green-400' : 'text-[#8FA8FF]'}>
@@ -1999,6 +2018,17 @@ export default function MethodsPanelCard({
               setIsTypeScriptSavePopupOpen(false);
               javaScriptEditorProps.saveSelectedTypeScriptFile();
             }}
+          />
+        ) : null}
+        {completeLockedPopupOpen ? (
+          <ValidationPopup
+            fields={[]}
+            title="Group Membership Locked"
+            message='Cannot change "Group Membership" when the group is currently active or Complete is selected.'
+            buttonStyle="rounded-lg border border-[#31416F] bg-[#0E111B] px-3 py-[0.28rem] text-sm font-semibold text-slate-200 transition-colors hover:border-[#5981F3] hover:text-white"
+            confirmLabel="OK"
+            onClose={() => { setCompleteLockedPopupOpen(false); setIsAlterMembershipMenuOpen(true); }}
+            onConfirm={() => { setCompleteLockedPopupOpen(false); setIsAlterMembershipMenuOpen(true); }}
           />
         ) : null}
       </div>

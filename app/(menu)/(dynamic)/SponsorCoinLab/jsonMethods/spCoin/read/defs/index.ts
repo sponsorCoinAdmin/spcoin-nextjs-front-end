@@ -13,7 +13,6 @@ import getRecipientList from './getRecipientList';
 import getAgentList from './getAgentList';
 import getRecipientListSize from './getRecipientListSize';
 import getAgentListSize from './getAgentListSize';
-import getAccountCore from './getAccountCore';
 import getAccountRecord from './getAccountRecord';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
@@ -41,7 +40,6 @@ import getLowerRecipientRate from './getLowerRecipientRate';
 import getUpperRecipientRate from './getUpperRecipientRate';
 import getRecipientRateRange from './getRecipientRateRange';
 import getRecipientRateIncrement from './getRecipientRateIncrement';
-import getRecipient from './getRecipient';
 import getRecipientRecordList from './getRecipientRecordList';
 import getAgentRateList from './getAgentRateList';
 import getAgentRateTransactionSetKeysPage from './getAgentRateTransactionSetKeysPage';
@@ -55,7 +53,6 @@ import getRecipientTransactionCount from './getRecipientTransactionCount';
 import getAgentTransactionCount from './getAgentTransactionCount';
 import getAgentTransactionAt from './getAgentTransactionAt';
 import getAgentTransactionList from './getAgentTransactionList';
-import getAgent from './getAgent';
 import getAgentRecordList from './getAgentRecordList';
 import totalInitialSupply from './getInitialTotalSupply';
 import isDeployed from './isDeployed';
@@ -98,7 +95,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientListSize,
   getAgentKeyCount: getAgentListSize,
   getAgentListSize,
-  getAccountCore,
   getAccountRecord,
   getAccountRoleSummary,
   getAccountRoles,
@@ -130,7 +126,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getUpperRecipientRate,
   getRecipientRateRange,
   getRecipientRateIncrement,
-  getRecipient,
   getRecipientRecordList,
   getAgentRateKeys: getAgentRateList,
   getAgentRateList,
@@ -146,7 +141,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientTransactionAt,
   getAgentTransactionAt,
   getAgentTransactionList,
-  getAgent,
   getAgentRecordList,
   totalInitialSupply,
   isDeployed,

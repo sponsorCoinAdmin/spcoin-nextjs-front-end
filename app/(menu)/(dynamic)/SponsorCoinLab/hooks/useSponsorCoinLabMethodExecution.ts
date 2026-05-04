@@ -257,7 +257,7 @@ function buildExecutionResultPayload(
   }
 
   const { onChainCalls: _oc, ...metaWithoutOnChainCalls } = (meta ?? {}) as Record<string, unknown>;
-  return { call, result, ...(warning ? { warning } : {}), meta: metaWithoutOnChainCalls };
+  return { call, result, ...(warning ? { warning } : {}), meta: metaWithoutOnChainCalls, ...(_oc ? { onChainCalls: _oc as MethodExecutionMeta['onChainCalls'] } : {}) };
 }
 
 export function useSponsorCoinLabMethodExecution({
@@ -447,7 +447,9 @@ export function useSponsorCoinLabMethodExecution({
             appendLog,
             setStatus,
           });
-          return { call, result, meta: finalizeMeta() };
+          const erc20ReadMeta = finalizeMeta();
+          const { onChainCalls: erc20ReadOc, ...erc20ReadMetaRest } = (erc20ReadMeta ?? {}) as Record<string, unknown>;
+          return { call, result, meta: erc20ReadMetaRest as MethodExecutionPayloadMeta, ...(erc20ReadOc ? { onChainCalls: erc20ReadOc as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
 
         if (panel === 'erc20_write') {
@@ -475,7 +477,9 @@ export function useSponsorCoinLabMethodExecution({
             appendLog,
             setStatus,
           });
-          return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
+          const erc20WriteMeta = finalizeMeta();
+          const { onChainCalls: erc20WriteOc, ...erc20WriteMetaRest } = (erc20WriteMeta ?? {}) as Record<string, unknown>;
+          return { call, result: normalizeWriteResultForDisplay(result), meta: erc20WriteMetaRest as MethodExecutionPayloadMeta, ...(erc20WriteOc ? { onChainCalls: erc20WriteOc as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
 
         if (panel === 'spcoin_rread') {
@@ -818,7 +822,9 @@ export function useSponsorCoinLabMethodExecution({
             appendLog,
             setStatus,
           });
-          return { call, result: normalizeWriteResultForDisplay(result), meta: finalizeMeta() };
+          const utilityMeta = finalizeMeta();
+          const { onChainCalls: utilityOc, ...utilityMetaRest } = (utilityMeta ?? {}) as Record<string, unknown>;
+          return { call, result: normalizeWriteResultForDisplay(result), meta: utilityMetaRest as MethodExecutionPayloadMeta, ...(utilityOc ? { onChainCalls: utilityOc as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
 
         const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat';
@@ -855,7 +861,9 @@ export function useSponsorCoinLabMethodExecution({
             def,
             localParams,
           );
-          return { call, result: displayResult, meta: serverResult.meta ?? finalizeMeta() };
+          const serverWriteMeta = serverResult.meta ?? finalizeMeta();
+          const { onChainCalls: serverWriteOc, ...serverWriteMetaRest } = (serverWriteMeta ?? {}) as Record<string, unknown>;
+          return { call, result: displayResult, meta: serverWriteMetaRest as MethodExecutionPayloadMeta, ...(serverResult.onChainCalls ?? serverWriteOc ? { onChainCalls: (serverResult.onChainCalls ?? serverWriteOc) as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
         const writeResult = result as { receipts: WriteReceipt[]; meta: MethodExecutionMeta | undefined };
         const displayResult = addSpCoinWriteResultDetail(
@@ -864,7 +872,9 @@ export function useSponsorCoinLabMethodExecution({
           def,
           localParams,
         );
-        return { call, result: displayResult, meta: writeResult.meta ?? finalizeMeta() };
+        const writeMeta = writeResult.meta ?? finalizeMeta();
+        const { onChainCalls: writeOc, ...writeMetaRest } = (writeMeta ?? {}) as Record<string, unknown>;
+        return { call, result: displayResult, meta: writeMetaRest as MethodExecutionPayloadMeta, ...(writeOc ? { onChainCalls: writeOc as MethodExecutionMeta['onChainCalls'] } : {}) };
       };
 
       const collectChildOnChainCalls = (value: unknown, parentKey = ''): Array<{ method: string; totalOnChainMs: number }> => {
