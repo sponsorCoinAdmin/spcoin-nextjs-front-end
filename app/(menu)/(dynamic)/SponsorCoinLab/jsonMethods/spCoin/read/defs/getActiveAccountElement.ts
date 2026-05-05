@@ -1,7 +1,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'getActiveAccountKeyAt',
+  title: 'getActiveAccountAt',
   params: [{ label: 'Index', placeholder: 'uint256 index', type: 'uint' }],
 };
 

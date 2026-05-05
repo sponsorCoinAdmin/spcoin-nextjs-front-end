@@ -57,6 +57,15 @@ contract Agent is RecipientRates {
         return agentKeys;
     }
 
+    function getRecipientRateAgentListPage(address _sponsorKey, address _recipientKey, uint256 _recipientRateKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        RecipientRateStruct storage recipientTransaction = getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        return _sliceAccountAddressArray(recipientTransaction.agentKeys, offset, limit);
+    }
+
     /// @notice Total Coin Staked Rates Recipiented
     /// @param _recipientKey recipient account key
     /// @param _recipientRateKey recipient rate
@@ -77,5 +86,14 @@ contract Agent is RecipientRates {
 // console.log("AGENTS.SOL:agentRec.agentKey = " , agentRec.agentKey);
 // console.log("AGENTS.SOL:getAgentRateList:agentRateKeys.length = ",agentRateKeys.length);
         return agentRateKeys;
+    }
+
+    function getAgentRateListPage(address _sponsorKey, address _recipientKey, uint _recipientRateKey, address _agentKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (uint256[] memory page, uint256 total)
+    {
+        AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        return _sliceAccountUintArray(agentRec.agentRateKeys, offset, limit);
     }
 }

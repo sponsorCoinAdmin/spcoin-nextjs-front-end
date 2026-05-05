@@ -66,10 +66,10 @@ contract SpCoinDataTypes {
     mapping(address => mapping(bytes32 => bool)) internal sponsorHasRecipientRateTransactionSetKey;
     mapping(address => mapping(bytes32 => bool)) internal sponsorHasAgentRateTransactionSetKey;
 
-    uint UNDEFINED = 0;
-    uint SPONSOR = 2;
-    uint RECIPIENT = 3;
-    uint AGENT = 4;
+    uint internal constant UNDEFINED = 0;
+    uint internal constant SPONSOR = 1;
+    uint internal constant RECIPIENT = 2;
+    uint internal constant AGENT = 4;
     bytes32 internal constant RECIPIENT_RATE_TRANSACTION_SET_DOMAIN = keccak256("RECIPIENT_RATE");
     bytes32 internal constant AGENT_RATE_TRANSACTION_SET_DOMAIN = keccak256("AGENT_RATE");
 

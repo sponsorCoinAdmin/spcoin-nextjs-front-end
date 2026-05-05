@@ -498,7 +498,6 @@ export default function SponsorCoinLabPage({
   const adminUtilityWriteOptions = utilityMethodOptions.filter((name) =>
     [
       'hhFundAccounts',
-      'deleteMasterSponsorships',
       'deleteAccountTree',
       'deleteRecipient',
       'deleteRecipientRate',

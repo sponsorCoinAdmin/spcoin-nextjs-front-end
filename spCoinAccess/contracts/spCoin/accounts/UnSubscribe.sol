@@ -6,6 +6,159 @@ import "./Transactions.sol";
 contract UnSubscribe is Transactions {
     constructor() { }
 
+    function _reduceRateTransactionSetTotal(bytes32 _setKey, uint256 _amount) internal {
+        if (_amount == 0) return;
+        RateTransactionSetStruct storage rateTransactionSet = rateTransactionSetMap[_setKey];
+        if (!rateTransactionSet.inserted) return;
+        rateTransactionSet.totalStaked -= _amount;
+    }
+
+    function _refundStakeToSponsor(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        uint256 _amount
+    )
+        internal
+    {
+        if (_amount == 0) return;
+
+        AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
+        RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
+        RecipientRateStruct storage recipientTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
+
+        sponsorAccount.stakedSPCoins -= _amount;
+        recipientRecord.stakedSPCoins -= _amount;
+        recipientTransaction.stakedSPCoins -= _amount;
+        totalStakedSPCoins -= _amount;
+        totalUnstakedSpCoins += _amount;
+        balanceOf[_sponsorKey] += _amount;
+
+        if (_agentKey == burnAddress) {
+            bytes32 recipientSetKey = getRecipientRateTransactionSetKey(_sponsorKey, _recipientKey, _recipientRateKey);
+            _reduceRateTransactionSetTotal(recipientSetKey, _amount);
+            return;
+        }
+
+        AgentStruct storage agentRecord = recipientTransaction.agentMap[_agentKey];
+        AgentRateStruct storage agentTransaction = agentRecord.agentRateMap[_agentRateKey];
+        agentRecord.stakedSPCoins -= _amount;
+        agentTransaction.stakedSPCoins -= _amount;
+        bytes32 agentSetKey = getAgentRateTransactionSetKey(
+            _sponsorKey,
+            _recipientKey,
+            _recipientRateKey,
+            _agentKey,
+            _agentRateKey
+        );
+        _reduceRateTransactionSetTotal(agentSetKey, _amount);
+    }
+
+    function _refundAgentRateStake(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _agentRateKey,
+        uint256 _refundTimeStamp
+    )
+        internal
+    {
+        AgentStruct storage agentRecord =
+            getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        AgentRateStruct storage agentTransaction = agentRecord.agentRateMap[_agentRateKey];
+        if (!agentTransaction.inserted) return;
+        _settleAgentRateTransactionSet(
+            _sponsorKey,
+            _recipientKey,
+            _recipientRateKey,
+            _agentKey,
+            _agentRateKey,
+            _refundTimeStamp
+        );
+        _refundStakeToSponsor(
+            _sponsorKey,
+            _recipientKey,
+            _recipientRateKey,
+            _agentKey,
+            _agentRateKey,
+            agentTransaction.stakedSPCoins
+        );
+    }
+
+    function _refundAgentStake(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        address _agentKey,
+        uint256 _refundTimeStamp
+    )
+        internal
+    {
+        AgentStruct storage agentRecord =
+            getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
+        while (agentRecord.agentRateKeys.length > 0) {
+            uint256 agentRateKey = agentRecord.agentRateKeys[agentRecord.agentRateKeys.length - 1];
+            _refundAgentRateStake(
+                _sponsorKey,
+                _recipientKey,
+                _recipientRateKey,
+                _agentKey,
+                agentRateKey,
+                _refundTimeStamp
+            );
+            agentRecord.agentRateMap[agentRateKey].inserted = false;
+            agentRecord.agentRateKeys.pop();
+        }
+    }
+
+    function _refundRecipientRateStake(
+        address _sponsorKey,
+        address _recipientKey,
+        uint256 _recipientRateKey,
+        uint256 _refundTimeStamp
+    )
+        internal
+    {
+        RecipientRateStruct storage recipientTransaction =
+            getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
+        if (!recipientTransaction.inserted) return;
+
+        while (recipientTransaction.agentKeys.length > 0) {
+            address agentKey = recipientTransaction.agentKeys[recipientTransaction.agentKeys.length - 1];
+            _refundAgentStake(_sponsorKey, _recipientKey, _recipientRateKey, agentKey, _refundTimeStamp);
+            AgentStruct storage agentRecord = recipientTransaction.agentMap[agentKey];
+            agentRecord.inserted = false;
+            deleteAccountRecordFromSearchKeys(agentKey, accountMap[_recipientKey].agentKeys);
+            deleteAccountRecordFromSearchKeys(_recipientKey, accountMap[agentKey].parentRecipientKeys);
+            recipientTransaction.agentKeys.pop();
+        }
+
+        _settleRecipientRateTransactionSet(_sponsorKey, _recipientKey, _recipientRateKey, _refundTimeStamp);
+        _refundStakeToSponsor(
+            _sponsorKey,
+            _recipientKey,
+            _recipientRateKey,
+            burnAddress,
+            0,
+            recipientTransaction.stakedSPCoins
+        );
+    }
+
+    function _refundRecipientStake(address _sponsorKey, address _recipientKey, uint256 _refundTimeStamp)
+        internal
+    {
+        RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
+        while (recipientRecord.recipientRateKeys.length > 0) {
+            uint256 recipientRateKey = recipientRecord.recipientRateKeys[recipientRecord.recipientRateKeys.length - 1];
+            _refundRecipientRateStake(_sponsorKey, _recipientKey, recipientRateKey, _refundTimeStamp);
+            recipientRecord.recipientRateMap[recipientRateKey].inserted = false;
+            recipientRecord.recipientRateKeys.pop();
+        }
+    }
+
     function deleteSponsor(address _sponsorKey)
         external
         onlyOwnerOrRootAdmin(_sponsorKey)
@@ -13,6 +166,15 @@ contract UnSubscribe is Transactions {
     {
         uint256 deleteTimeStamp = block.timestamp;
         _settleSponsorRateBuckets(_sponsorKey, deleteTimeStamp);
+        AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
+        while (sponsorAccount.recipientKeys.length > 0) {
+            address recipientKey = sponsorAccount.recipientKeys[sponsorAccount.recipientKeys.length - 1];
+            _refundRecipientStake(_sponsorKey, recipientKey, deleteTimeStamp);
+            RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[recipientKey];
+            recipientRecord.inserted = false;
+            deleteAccountRecordFromSearchKeys(_sponsorKey, accountMap[recipientKey].sponsorKeys);
+            sponsorAccount.recipientKeys.pop();
+        }
         _unlinkSponsorRelationships(_sponsorKey);
     }
 
@@ -111,8 +273,9 @@ contract UnSubscribe is Transactions {
         AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
         AccountStruct storage recipientAccount = accountMap[_recipientKey];
         RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
-        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+        if (!recipientRecord.inserted) revert SpCoinError(RECIPIENT_NOT_FOUND);
 
+        _refundRecipientStake(_sponsorKey, _recipientKey, block.timestamp);
         deleteAccountRecordFromSearchKeys(_recipientKey, sponsorAccount.recipientKeys);
         deleteAccountRecordFromSearchKeys(_sponsorKey, recipientAccount.sponsorKeys);
         recipientRecord.inserted = false;
@@ -126,10 +289,11 @@ contract UnSubscribe is Transactions {
         nonRedundantRecipient(_sponsorKey, _recipientKey)
     {
         RecipientStruct storage recipientRecord = accountMap[_sponsorKey].recipientMap[_recipientKey];
-        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+        if (!recipientRecord.inserted) revert SpCoinError(RECIPIENT_NOT_FOUND);
         RecipientRateStruct storage recipientTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
         if (!recipientTransaction.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
 
+        _refundRecipientRateStake(_sponsorKey, _recipientKey, _recipientRateKey, block.timestamp);
         deleteUintRecordFromSearchKeys(_recipientRateKey, recipientRecord.recipientRateKeys);
         recipientTransaction.inserted = false;
     }
@@ -145,6 +309,7 @@ contract UnSubscribe is Transactions {
         AgentStruct storage agentRecord = recipientTransaction.agentMap[_agentKey];
         if (!agentRecord.inserted) revert SpCoinError(AGENT_NOT_FOUND);
 
+        _refundAgentStake(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, block.timestamp);
         AccountStruct storage agentAccount = accountMap[_agentKey];
         AccountStruct storage recipientAccount = accountMap[_recipientKey];
         deleteAccountRecordFromSearchKeys(_agentKey, recipientTransaction.agentKeys);
@@ -168,7 +333,7 @@ contract UnSubscribe is Transactions {
     {
         AccountStruct storage sponsorAccount = accountMap[_sponsorKey];
         RecipientStruct storage recipientRecord = sponsorAccount.recipientMap[_recipientKey];
-        require(recipientRecord.inserted, "RECIP_NOT_FOUND");
+        if (!recipientRecord.inserted) revert SpCoinError(RECIPIENT_NOT_FOUND);
 
         RecipientRateStruct storage recipientTransaction = recipientRecord.recipientRateMap[_recipientRateKey];
         if (!recipientTransaction.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
@@ -179,6 +344,7 @@ contract UnSubscribe is Transactions {
         AgentRateStruct storage agentTransaction = agentRecord.agentRateMap[_agentRateKey];
         if (!agentTransaction.inserted) revert SpCoinError(AGENT_RATE_NOT_FOUND);
 
+        _refundAgentRateStake(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey, block.timestamp);
         deleteUintRecordFromSearchKeys(_agentRateKey, agentRecord.agentRateKeys);
         agentTransaction.inserted = false;
     }
@@ -243,18 +409,20 @@ contract UnSubscribe is Transactions {
     }
 
     modifier sponsorDoesNotExist(address _accountKey) {
-        require (accountMap[_accountKey].sponsorKeys.length == 0 &&
-            accountMap[_accountKey].agentKeys.length == 0, "RECIP_HAS_SPONSOR");
+        if (
+            accountMap[_accountKey].sponsorKeys.length != 0 ||
+            accountMap[_accountKey].agentKeys.length != 0
+        ) revert SpCoinError(RECIPIENT_HAS_SPONSOR);
             _;
     }
     
     modifier parentRecipientDoesNotExist(address _accountKey) {
-        require (accountMap[_accountKey].parentRecipientKeys.length == 0, "AGENT_HAS_PARENT");
+        if (accountMap[_accountKey].parentRecipientKeys.length != 0) revert SpCoinError(AGENT_HAS_PARENT);
         _;
     }
 
     modifier recipientDoesNotExist(address _sponsorKey) {
-        require (accountMap[_sponsorKey].recipientKeys.length == 0, "SPONSOR_HAS_RECIP");
+        if (accountMap[_sponsorKey].recipientKeys.length != 0) revert SpCoinError(SPONSOR_HAS_RECIPIENT);
         _;
     }
 /*   

@@ -79,6 +79,15 @@ contract Recipient is Sponsor {
         return recipientRateKeys;
     }
 
+    function getRecipientRateListPage(address _sponsorKey, address _recipientKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (uint256[] memory page, uint256 total)
+    {
+        RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
+        return _sliceAccountUintArray(recipientRecord.recipientRateKeys, offset, limit);
+    }
+
     /*
     ///////////////////// DELETE RECIPIENT METHODS ////////////////////////
     modifier recipientExists (address _sponsorKey, address _recipientKey) {

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { splitRawQuantityParts } from "../shared";
+import { normalizeRawQuantityUnits } from "../shared";
 
 export const addAgentTransaction = async (
     context,
@@ -19,7 +19,7 @@ export const addAgentTransaction = async (
             _agentRateKey + ", " +
             _transactionQty + ")"
     );
-    const { wholePart, fractionalPart } = await splitRawQuantityParts(context, _transactionQty);
+    const amount = await normalizeRawQuantityUnits(context, _transactionQty);
     const contractMethod = context.spCoinContractDeployed.addAgentTransaction
         ?? context.spCoinContractDeployed.addAgentTransaction;
     const tx = await contractMethod(
@@ -28,8 +28,7 @@ export const addAgentTransaction = async (
         _recipientRateKey,
         _accountAgentKey,
         _agentRateKey,
-        wholePart,
-        fractionalPart
+        amount
     );
     context.spCoinLogger.logExitFunction();
     return tx;

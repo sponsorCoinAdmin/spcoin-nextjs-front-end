@@ -15,6 +15,11 @@ import {
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import { CHAIN_ID } from '@/lib/structure';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
+import {
+  getCachedAccountRecord,
+  setCachedAccountRecord,
+  invalidateCachedAccountRecord,
+} from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCache';
 
 type LabScriptParam = {
   key: string;
@@ -646,9 +651,15 @@ export async function POST(request: NextRequest) {
               break;
             case 'getAccountRecord':
               if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
-                stepResult = normalizeOnChainAccountRecordResult(await (
-                  contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
+                const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
+                if (cachedRecord !== null) {
+                  stepResult = cachedRecord;
+                } else {
+                  stepResult = normalizeOnChainAccountRecordResult(await (
+                    contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                  ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
+                  setCachedAccountRecord(contractAddress, findParam('Account Key'), stepResult);
+                }
               } else {
                 stepResult = await access.read.getAccountRecord(findParam('Account Key'));
               }
@@ -865,6 +876,8 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
               break;
             }
             case 'addAgentTransaction':
@@ -892,6 +905,9 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addAgentTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
             case 'addBackDatedSponsorship':
@@ -917,6 +933,8 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
               break;
             }
             case 'addBackDatedAgentSponsorship':
@@ -942,6 +960,9 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
             case 'backDateRecipientTransaction': {
@@ -961,6 +982,8 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('backDateRecipientTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
               break;
             }
             case 'backDateAgentTransaction': {
@@ -984,6 +1007,9 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('backDateAgentTransaction', tx, receipt, timingCollector);
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
             case 'deleteRecipient': {
@@ -1002,6 +1028,8 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
               break;
             }
             case 'deleteSponsor': {
@@ -1023,6 +1051,7 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
               break;
             }
             case 'deleteAgentNode': {
@@ -1065,6 +1094,9 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
             case 'delAccountAgentSponsorship':
@@ -1098,6 +1130,9 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
+              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
             default:

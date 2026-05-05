@@ -114,6 +114,14 @@ contract Account is StructSerialization {
         return masterAccountList;
     }
 
+    function getMasterAccountKeysPage(uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        return _sliceAccountAddressArray(masterAccountList, offset, limit);
+    }
+
     function getMasterAccountKeyAt(uint256 index) external view returns (address) {
         return masterAccountList[index];
     }
@@ -248,11 +256,27 @@ contract Account is StructSerialization {
         return accountMap[_sponsorKey].recipientKeys;
     }
 
+    function getRecipientKeysPage(address _sponsorKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        return _sliceAccountAddressArray(accountMap[_sponsorKey].recipientKeys, offset, limit);
+    }
+
     /// @notice retrieves the agent keys linked to an account.
     /// @param _accountKey public account key to query
     function getAgentKeys(address _accountKey)
     external view returns (address[] memory) {
         return accountMap[_accountKey].agentKeys;
+    }
+
+    function getAgentKeysPage(address _accountKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        return _sliceAccountAddressArray(accountMap[_accountKey].agentKeys, offset, limit);
     }
 
     function getAccountListIndex (address _accountKey, 
@@ -266,8 +290,52 @@ contract Account is StructSerialization {
         return i; 
     }
 
+    function _getAccountPageLength(uint256 total, uint256 offset, uint256 limit)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (offset >= total || limit == 0) return 0;
+        uint256 remaining = total - offset;
+        return limit < remaining ? limit : remaining;
+    }
+
+    function _sliceAccountAddressArray(
+        address[] storage source,
+        uint256 offset,
+        uint256 limit
+    )
+        internal
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        total = source.length;
+        uint256 pageLength = _getAccountPageLength(total, offset, limit);
+        page = new address[](pageLength);
+        for (uint256 i = 0; i < pageLength; i++) {
+            page[i] = source[offset + i];
+        }
+    }
+
+    function _sliceAccountUintArray(
+        uint256[] storage source,
+        uint256 offset,
+        uint256 limit
+    )
+        internal
+        view
+        returns (uint256[] memory page, uint256 total)
+    {
+        total = source.length;
+        uint256 pageLength = _getAccountPageLength(total, offset, limit);
+        page = new uint256[](pageLength);
+        for (uint256 i = 0; i < pageLength; i++) {
+            page[i] = source[offset + i];
+        }
+    }
+
     modifier accountExists (address _accountKey) {
-        require (accountMap[_accountKey].inserted , "ACCOUNT_NOT_FOUND");
+        if (!accountMap[_accountKey].inserted) revert SpCoinError(ACCOUNT_NOT_FOUND);
         _;
     }
 }

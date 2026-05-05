@@ -29,7 +29,6 @@ type UtilityMethodSpec = {
     | 'getSponsorAccounts'
     | 'getMasterSponsorList'
     | 'hhFundAccounts'
-    | 'deleteMasterSponsorships'
     | 'deleteAccountTree'
     | 'deleteRecipient'
     | 'deleteRecipientRate'
@@ -214,11 +213,6 @@ const METHOD_SPECS = {
     title: 'hhFundAccounts',
     params: buildHardhatFundAccountsParams(),
     utilityMethod: 'hhFundAccounts',
-  },
-  deleteMasterSponsorships: {
-    title: 'deleteMasterSponsorships',
-    params: [],
-    utilityMethod: 'deleteMasterSponsorships',
   },
   deleteAccountTree: {
     title: 'deleteAccountTree',
@@ -1349,83 +1343,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
       appendLog(`${selectedMethod} -> unsponsored sponsor tree ${sponsorKey}.`);
       setStatus(`${def.title} complete.`);
       return warning ? { ...treeSummary, __warning: warning } : treeSummary;
-    }
-
-    if ('utilityMethod' in def && def.utilityMethod === 'deleteMasterSponsorships') {
-      const deletedSponsorships = [];
-      let sponsorAccounts: string[];
-      try {
-        trace('loadSponsorAccounts start');
-        sponsorAccounts = await loadSponsorAccounts(access);
-        trace(`loadSponsorAccounts ok ${JSON.stringify(sponsorAccounts)}`);
-        appendLog(`${selectedMethod} -> initial sponsorAccounts=${JSON.stringify(sponsorAccounts)}`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        trace(`loadSponsorAccounts failed ${message}`);
-        appendLog(`${selectedMethod} -> loadSponsorAccounts failed: ${message}`);
-        throw error;
-      }
-      while (sponsorAccounts.length > 0) {
-        const sponsorKey = sponsorAccounts[0];
-        trace(`deleteAccountTree start ${sponsorKey}`);
-        const treeSummary = await deleteAccountTree(sponsorKey);
-        trace(`deleteAccountTree ok ${sponsorKey}`);
-        deletedSponsorships.push({ sponsorKey, treeSummary });
-        try {
-          trace(`reload sponsorAccounts start after ${sponsorKey}`);
-          sponsorAccounts = await loadSponsorAccounts(access);
-          trace(`reload sponsorAccounts ok ${JSON.stringify(sponsorAccounts)}`);
-          appendLog(`${selectedMethod} -> sponsorAccounts after ${sponsorKey}=${JSON.stringify(sponsorAccounts)}`);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          trace(`reload sponsorAccounts failed after ${sponsorKey}: ${message}`);
-          appendLog(`${selectedMethod} -> loadSponsorAccounts after ${sponsorKey} failed: ${message}`);
-          throw error;
-        }
-      }
-      const deletedOrphanAccounts: string[] = [];
-      let remainingAccounts: string[];
-      try {
-        trace('loadAccountList start');
-        remainingAccounts = await loadAccountList(access);
-        trace(`loadAccountList ok ${JSON.stringify(remainingAccounts)}`);
-        trace(`cleanupSignerAddress ${String(cleanupSignerAddress || '(per-account fallback)')}`);
-        appendLog(`${selectedMethod} -> initial remainingAccounts=${JSON.stringify(remainingAccounts)}`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        trace(`loadAccountList failed ${message}`);
-        appendLog(`${selectedMethod} -> loadAccountList failed: ${message}`);
-        throw error;
-      }
-      let previousRemainingSnapshot = '';
-      while (remainingAccounts.length > 0) {
-        const snapshot = remainingAccounts.join(',');
-        if (snapshot === previousRemainingSnapshot) {
-          break;
-        }
-        previousRemainingSnapshot = snapshot;
-        for (const accountKey of remainingAccounts) {
-          await deleteAccountRecordWithRecovery(accountKey);
-          deletedOrphanAccounts.push(accountKey);
-        }
-        try {
-          trace('reload remainingAccounts start');
-          remainingAccounts = await loadAccountList(access);
-          trace(`reload remainingAccounts ok ${JSON.stringify(remainingAccounts)}`);
-          appendLog(`${selectedMethod} -> remainingAccounts after orphan cleanup=${JSON.stringify(remainingAccounts)}`);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          trace(`reload remainingAccounts failed ${message}`);
-          appendLog(`${selectedMethod} -> loadAccountList after orphan cleanup failed: ${message}`);
-          throw error;
-        }
-      }
-      if (remainingAccounts.length > 0) {
-        throw new Error(`deleteMasterSponsorships incomplete: ${remainingAccounts.length} account(s) remain: ${remainingAccounts.join(', ')}`);
-      }
-      appendLog(`${selectedMethod} -> deleted ${deletedSponsorships.length} sponsorship tree(s).`);
-      setStatus(`${def.title} complete.`);
-      return { deletedSponsorships, deletedOrphanAccounts };
     }
 
     if (!('baseMethod' in def)) {

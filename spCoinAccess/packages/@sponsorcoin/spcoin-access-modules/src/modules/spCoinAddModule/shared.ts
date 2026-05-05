@@ -14,8 +14,17 @@ async function resolveContractDecimals(context) {
   }
 }
 
-export async function splitRawQuantityParts(context, value) {
+export async function normalizeRawQuantityUnits(_context, value) {
   const raw = BigInt(String(value ?? "0").replace(/,/g, "").trim() || "0");
+  if (raw < 0n) {
+    throw new Error("SpCoin quantity cannot be negative.");
+  }
+  return raw.toString();
+}
+
+export async function splitRawQuantityParts(context, value) {
+  const amount = await normalizeRawQuantityUnits(context, value);
+  const raw = BigInt(amount);
   const decimals = await resolveContractDecimals(context);
   const scale = 10n ** BigInt(decimals);
   const wholePart = raw / scale;

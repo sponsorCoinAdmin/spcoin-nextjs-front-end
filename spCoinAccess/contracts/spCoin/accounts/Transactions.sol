@@ -354,8 +354,7 @@ contract Transactions is RewardsManager {
                                  uint _recipientRateKey,
                                  address _agentKey,
                                  uint _agentRateKey,
-                                 string calldata _strWholeAmount,
-                                 string calldata _strDecimalAmount) external
+                                 uint256 _amount) external
     {
         uint256 transactionTimeStamp = block.timestamp;
         _addSponsorshipForSponsor(
@@ -364,8 +363,7 @@ contract Transactions is RewardsManager {
             _recipientRateKey,
             _agentKey,
             _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount,
+            _amount,
             transactionTimeStamp
         );
     }
@@ -374,8 +372,7 @@ contract Transactions is RewardsManager {
         address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
-        string calldata _strWholeAmount,
-        string calldata _strDecimalAmount
+        uint256 _amount
     )
         external
         onlyOwnerOrRootAdmin(_sponsorKey)
@@ -387,8 +384,7 @@ contract Transactions is RewardsManager {
             _recipientRateKey,
             burnAddress,
             0,
-            _strWholeAmount,
-            _strDecimalAmount,
+            _amount,
             block.timestamp
         );
     }
@@ -399,8 +395,7 @@ contract Transactions is RewardsManager {
         uint _recipientRateKey,
         address _agentKey,
         uint _agentRateKey,
-        string calldata _strWholeAmount,
-        string calldata _strDecimalAmount
+        uint256 _amount
     )
         external
         onlyOwnerOrRootAdmin(_sponsorKey)
@@ -412,8 +407,7 @@ contract Transactions is RewardsManager {
             _recipientRateKey,
             _agentKey,
             _agentRateKey,
-            _strWholeAmount,
-            _strDecimalAmount,
+            _amount,
             block.timestamp
         );
     }
@@ -423,19 +417,13 @@ contract Transactions is RewardsManager {
                                  uint _recipientRateKey,
                                  address _agentKey,
                                  uint _agentRateKey,
-                                 string memory _strWholeAmount,
-                                 string memory _strDecimalAmount,
+                                 uint256 sponsorAmount,
                                  uint _transactionTimeStamp)
     internal returns (uint256 transactionIndex) {
         // console.log("balanceOf[", msg.sender, "] = ",balanceOf[msg.sender]);
-        uint256 sponsorAmount;
-        bool result;
-        (sponsorAmount, result) = decimalStringToUint(_strWholeAmount, _strDecimalAmount, decimals);
-
-        require(result, "AMOUNT_PARSE");
+        if (sponsorAmount == 0) revert SpCoinError(AMOUNT_ZERO);
         // string memory errString =
-        require(balanceOf[_sponsorKey] >= sponsorAmount, 
-            "INSUFFICIENT_BAL");
+        if (balanceOf[_sponsorKey] < sponsorAmount) revert SpCoinError(INSUFFICIENT_BALANCE);
 
 
         // validateSufficientAccountBalance(_sponsorCoinQty)
@@ -446,8 +434,7 @@ contract Transactions is RewardsManager {
         // console.log("_recipientRateKey     = ", _recipientRateKey, ",");
         // console.log("_agentKey             = ", _agentKey, ",");
         // console.log("_agentRateKey         = ", _agentRateKey, ",");
-        // console.log("strWholeAmount        = ", _strWholeAmount, ",");
-        // console.log("_strDecimalAmount     = ", _strDecimalAmount, ",");
+        // console.log("sponsorAmount         = ", sponsorAmount, ",");
         // console.log("_transactionTimeStamp = ", _transactionTimeStamp, ")");
 
         // AccountStruct storage sponsorRec = accountMap[msg.sender];
@@ -576,13 +563,17 @@ contract Transactions is RewardsManager {
         if (_agentKey == burnAddress) {
             RecipientRateStruct storage recipientTransaction =
                 getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-            require(_transactionIndex < recipientTransaction.transactionList.length, "RECIP_TX_OOB");
+            if (_transactionIndex >= recipientTransaction.transactionList.length) {
+                revert SpCoinError(RECIPIENT_TRANSACTION_OOB);
+            }
             recipientTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
             _syncRecipientRateTransactionTimestamp(recipientTransaction, _transactionIndex, _transactionTimeStamp);
         } else {
             AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
             AgentRateStruct storage agentTransaction = agentRec.agentRateMap[_agentRateKey];
-            require(_transactionIndex < agentTransaction.transactionList.length, "AGENT_TX_OOB");
+            if (_transactionIndex >= agentTransaction.transactionList.length) {
+                revert SpCoinError(AGENT_TRANSACTION_OOB);
+            }
             agentTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
             _syncAgentRateTransactionTimestamp(agentTransaction, _transactionIndex, _transactionTimeStamp);
         }
@@ -635,7 +626,9 @@ contract Transactions is RewardsManager {
     {
         AgentStruct storage agentRec = getAgentRecordByKeys(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
         AgentRateStruct storage agentTransaction = agentRec.agentRateMap[_agentRateKey];
-        require(_transactionIndex < agentTransaction.transactionList.length, "AGENT_TX_OOB");
+        if (_transactionIndex >= agentTransaction.transactionList.length) {
+            revert SpCoinError(AGENT_TRANSACTION_OOB);
+        }
         StakingTransactionStruct storage transactionRecord = agentTransaction.transactionList[_transactionIndex];
         insertionTime = transactionRecord.insertionTime;
         stakingRewards = transactionRecord.stakingRewards;
@@ -656,7 +649,9 @@ contract Transactions is RewardsManager {
     {
         RecipientRateStruct storage recipientTransaction =
             getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
-        require(_transactionIndex < recipientTransaction.transactionList.length, "RECIP_TX_OOB");
+        if (_transactionIndex >= recipientTransaction.transactionList.length) {
+            revert SpCoinError(RECIPIENT_TRANSACTION_OOB);
+        }
         StakingTransactionStruct storage transactionRecord = recipientTransaction.transactionList[_transactionIndex];
         insertionTime = transactionRecord.insertionTime;
         stakingRewards = transactionRecord.stakingRewards;

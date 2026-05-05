@@ -374,6 +374,7 @@ export function useSponsorCoinLabMethods({
         throw new Error(`${def.label} must be true/false or 1/0.`);
       }
       if (def.type === 'address' || def.type === 'contract_address') {
+        if (value === '*') return '*';
         const normalized = normalizeAddressValue(value);
         if (!/^0x[0-9a-f]{40}$/.test(normalized)) {
           throw new Error(`${def.label} must be a valid address.`);

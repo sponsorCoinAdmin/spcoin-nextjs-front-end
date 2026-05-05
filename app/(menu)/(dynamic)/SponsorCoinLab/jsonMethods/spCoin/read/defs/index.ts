@@ -42,6 +42,7 @@ import getAgentRateIncrement from './getAgentRateIncrement';
 import getAgentTransaction from './getAgentTransaction';
 import getAgentTotalRecipient from './getAgentTotalRecipient';
 import getSponsorRecipientRateTransactionCount from './getRecipientTransactionCount';
+import getAgentRateTransactionCount from './getAgentRateTransactionCount';
 import getAgentTransactionCount from './getAgentTransactionCount';
 import getAgentTransactionAt from './getAgentTransactionAt';
 import getAgentTransactionList from './getAgentTransactionList';
@@ -51,7 +52,6 @@ import isDeployed from './isDeployed';
 import isAccountInserted from './isAccountInserted';
 import getAccountElement from './getMasterAccountElement';
 import getActiveAccountElement from './getActiveAccountElement';
-import getStakingRewards from './getStakingRewards';
 import calcDataTimeDiff from './getAccountTimeInSecondeSinceUpdate';
 import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
@@ -87,6 +87,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientListSize,
   getAgentKeyCount: getAgentListSize,
   getAgentListSize,
+  getAccountAgentCount: getAgentListSize,
   getAccountRecord,
   getAccountRoleSummary,
   getAccountRoles,
@@ -94,6 +95,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isRecipient,
   isAgent,
   getAccountStakingRewards,
+  getStakingRewards: getAccountStakingRewards,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,
   getAccountTransactionList,
@@ -122,6 +124,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentTotalRecipient,
   getRecipientTransactionCount: getSponsorRecipientRateTransactionCount,
   getSponsorRecipientRateTransactionCount,
+  getAgentRateTransactionCount,
   getAgentTransactionCount,
   getRecipientTransactionAt,
   getAgentTransactionAt,
@@ -136,7 +139,6 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountKeyAt: getAccountElement,
   getActiveAccountElement,
   getActiveAccountKeyAt: getActiveAccountElement,
-  getStakingRewards,
   calcDataTimeDiff,
   totalUnstakedSpCoins,
   totalStakedSPCoins,

@@ -23,7 +23,8 @@ contract Token is UnSubscribe{
     function transfer(address _to, uint256 _value) 
     public virtual returns (bool success) {
         // console.log("transfer:msg.sender =", msg.sender, "_value =", _value);
-        require(balanceOf[msg.sender] >= _value, concat("ACCOUNT ", toString(msg.sender), " *** INSUFFICIENT BALANCE ***"));
+        if (_to == address(0)) revert SpCoinError(ZERO_ADDRESS);
+        if (balanceOf[msg.sender] < _value) revert SpCoinError(INSUFFICIENT_BALANCE);
         addAccountRecord(UNDEFINED, _to);
         balanceOf[msg.sender] = balanceOf[msg.sender] - (_value);
         balanceOf[_to] = balanceOf[_to] + (_value);
@@ -39,7 +40,7 @@ contract Token is UnSubscribe{
     // Allow _spender to spend up to _value on your behalf
     function approve(address _spender, uint256 _value)
     external returns (bool) {
-        require(_spender != address(0));
+        if (_spender == address(0)) revert SpCoinError(ZERO_ADDRESS);
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
@@ -54,8 +55,10 @@ contract Token is UnSubscribe{
     // Allow _spender to spend up to _value on your behalf
     function transferFrom(address _from, address _to, uint256 _value) 
     external returns (bool) {
-        require(_value <= balanceOf[_from]);
-        require(_value <= allowance[_from][msg.sender]);
+        if (_to == address(0)) revert SpCoinError(ZERO_ADDRESS);
+        if (_value > balanceOf[_from]) revert SpCoinError(INSUFFICIENT_BALANCE);
+        if (_value > allowance[_from][msg.sender]) revert SpCoinError(INSUFFICIENT_BALANCE);
+        addAccountRecord(UNDEFINED, _to);
         allowance[_from][msg.sender] = allowance[_from][msg.sender] - (_value);
         balanceOf[_from] = balanceOf[_from] - (_value);
         balanceOf[_to] = balanceOf[_to] + (_value);

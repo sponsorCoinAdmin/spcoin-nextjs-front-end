@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { splitRawQuantityParts } from "../shared";
+import { normalizeRawQuantityUnits } from "../shared";
 
 async function readMasterAccountKeys(contract) {
   const legacyMethod =
@@ -194,7 +194,7 @@ export const addAgentSponsorship = async (
       _transactionQty + ")"
   );
 
-  const { wholePart, fractionalPart } = await splitRawQuantityParts(context, _transactionQty);
+  const amount = await normalizeRawQuantityUnits(context, _transactionQty);
   const sponsorKey =
     typeof _sponsorSigner?.getAddress === "function"
       ? await _sponsorSigner.getAddress()
@@ -267,14 +267,13 @@ export const addAgentSponsorship = async (
   };
 
   context.spCoinLogger.logDetail(
-    "JS => addAgentSponsorship sponsor/recipient/rate/agent/agentRate/whole/fraction/timestamp = " +
+    "JS => addAgentSponsorship sponsor/recipient/rate/agent/agentRate/amount/timestamp = " +
       String(sponsorKey || "") + "/" +
       String(_recipientKey) + "/" +
       String(_recipientRateKey) + "/" +
       String(_accountAgentKey) + "/" +
       String(_agentRateKey) + "/" +
-      String(wholePart) + "/" +
-      String(fractionalPart) + "/" +
+      String(amount) + "/" +
       String(transactionTimeStamp)
   );
 
@@ -289,14 +288,13 @@ export const addAgentSponsorship = async (
           _recipientRateKey,
           _accountAgentKey,
           _agentRateKey,
-          wholePart,
-          fractionalPart,
+          amount,
         ],
         logLabel: "addAgentTransaction",
       },
       {
         methodNames: ["addSponsorship"],
-        args: [_recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, wholePart, fractionalPart],
+        args: [_recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, amount],
         logLabel: "addSponsorship",
       },
     ]);
