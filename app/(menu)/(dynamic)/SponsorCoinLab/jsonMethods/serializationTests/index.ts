@@ -569,10 +569,6 @@ function toCanonicalAddress(value: unknown, label: string) {
   return getAddress(trimmed.replace(/^0X/, '0x'));
 }
 
-function normalizeAddressList(values: unknown[]) {
-  return values.map((value) => normalizeAddress(value)).join(',');
-}
-
 async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
   const [
     accountKey,
@@ -586,15 +582,17 @@ async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
     parentRecipientKeys,
   ] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [methodArgs[0]]);
 
-  let serialized = `accountKey: ${normalizeAddress(accountKey)}\\,\ncreationTime: ${String(creationTime)}`;
-  serialized += `\\,balanceOf: ${String(accountBalance)}`;
-  serialized += `\\,stakedSPCoins: ${String(stakedAccountSPCoins)}`;
-  serialized += `\\,sponsorKeys:${normalizeAddressList(Array.from(sponsorKeys as unknown[]))}`;
-  serialized += `\\,recipientKeys:${normalizeAddressList(Array.from(recipientKeys as unknown[]))}`;
-  serialized += `\\,agentKeys:${normalizeAddressList(Array.from(agentKeys as unknown[]))}`;
-  serialized += `\\,parentRecipientKeys:${normalizeAddressList(Array.from(parentRecipientKeys as unknown[]))}`;
-  serialized += `\\,stakingRewards: ${String(accountStakingRewards)}`;
-  return serialized;
+  return {
+    accountKey: normalizeAddress(accountKey),
+    creationTime: String(creationTime),
+    balanceOf: String(accountBalance),
+    stakedSPCoins: String(stakedAccountSPCoins),
+    sponsorKeys: Array.from(sponsorKeys as unknown[]).map(normalizeAddress),
+    recipientKeys: Array.from(recipientKeys as unknown[]).map(normalizeAddress),
+    agentKeys: Array.from(agentKeys as unknown[]).map(normalizeAddress),
+    parentRecipientKeys: Array.from(parentRecipientKeys as unknown[]).map(normalizeAddress),
+    stakingRewards: String(accountStakingRewards),
+  };
 }
 
 async function buildSerializedAccountRewards(contract: any, methodArgs: any[]) {
@@ -605,40 +603,68 @@ async function buildSerializedAccountRewards(contract: any, methodArgs: any[]) {
     [methodArgs[0]],
   );
 
-  return [String(sponsorRewards), String(recipientRewards), String(agentRewards)].join(',');
+  return {
+    sponsorRewards: String(sponsorRewards),
+    recipientRewards: String(recipientRewards),
+    agentRewards: String(agentRewards),
+  };
 }
 
 async function buildSerializedRecipientRecordList(contract: any, methodArgs: any[]) {
-  const [, , creationTime, stakedSPCoins] = await callViewFunction(
+  const [sponsorKey, recipientKey, creationTime, stakedSPCoins, inserted] = await callViewFunction(
     contract,
     recipientRecordInterface,
     'getRecipientRecord',
     [methodArgs[0], methodArgs[1]],
   );
 
-  return `${String(creationTime)},${String(stakedSPCoins)}`;
+  return {
+    sponsorKey: normalizeAddress(sponsorKey),
+    recipientKey: normalizeAddress(recipientKey),
+    creationTime: String(creationTime),
+    stakedSPCoins: String(stakedSPCoins),
+    inserted: Boolean(inserted),
+  };
 }
 
 async function buildSerializedRecipientRateList(contract: any, methodArgs: any[]) {
-  const [, , , creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
+  const [sponsorKey, recipientKey, recipientRateKey, creationTime, lastUpdateTime, stakedSPCoins, inserted] = await callViewFunction(
     contract,
     recipientTransactionInterface,
     'getRecipientTransaction',
     [methodArgs[0], methodArgs[1], methodArgs[2]],
   );
 
-  return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
+  return {
+    sponsorKey: normalizeAddress(sponsorKey),
+    recipientKey: normalizeAddress(recipientKey),
+    recipientRateKey: String(recipientRateKey),
+    creationTime: String(creationTime),
+    lastUpdateTime: String(lastUpdateTime),
+    stakedSPCoins: String(stakedSPCoins),
+    inserted: Boolean(inserted),
+  };
 }
 
 async function buildSerializedAgentTransactionStr(contract: any, methodArgs: any[]) {
-  const [, , , , , creationTime, lastUpdateTime, stakedSPCoins] = await callViewFunction(
+  const [sponsorKey, recipientKey, recipientRateKey, agentKey, agentRateKey, creationTime, lastUpdateTime, stakedSPCoins, inserted] = await callViewFunction(
     contract,
     agentTransactionInterface,
     'getAgentTransaction',
     [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]],
   );
 
-  return `${String(creationTime)},${String(lastUpdateTime)},${String(stakedSPCoins)}`;
+  return {
+    sponsorKey: normalizeAddress(sponsorKey),
+    recipientKey: normalizeAddress(recipientKey),
+    recipientRateKey: String(recipientRateKey),
+    agentKey: normalizeAddress(agentKey),
+    agentRateKey: String(agentRateKey),
+    creationTime: String(creationTime),
+    lastUpdateTime: String(lastUpdateTime),
+    stakedSPCoins: String(stakedSPCoins),
+    inserted: Boolean(inserted),
+  };
 }
 
 async function buildSerializedTransactionList(contract: any, methodArgs: any[]) {
@@ -649,7 +675,7 @@ async function buildSerializedTransactionList(contract: any, methodArgs: any[]) 
     [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4]],
   );
   const transactionCount = Number(transactionCountRaw);
-  const rows: string[] = [];
+  const rows: Array<{ insertionTime: string; stakingRewards: string }> = [];
 
   for (let idx = 0; idx < transactionCount; idx += 1) {
     const [insertionTime, stakingRewards] = await callViewFunction(
@@ -658,10 +684,13 @@ async function buildSerializedTransactionList(contract: any, methodArgs: any[]) 
       'getAgentTransactionAt',
       [methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3], methodArgs[4], idx],
     );
-    rows.push(`${String(insertionTime)},${String(stakingRewards)}`);
+    rows.push({
+      insertionTime: String(insertionTime),
+      stakingRewards: String(stakingRewards),
+    });
   }
 
-  return rows.join('\n');
+  return rows;
 }
 
 export async function runSerializationTestMethod(args: RunArgs): Promise<unknown> {
@@ -674,7 +703,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     mode,
     hardhatAccounts,
     executeWriteConnected,
-    selectedHardhatAddress,
     appendLog,
     setStatus,
   } = args;
@@ -684,11 +712,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
   const trace = (line: string) => {
     debugTrace.push(line);
   };
-  const cleanupSignerAddress =
-    mode === 'hardhat'
-      ? (selectedHardhatAddress || hardhatAccounts[0]?.address || '').trim()
-      : undefined;
-
   try {
     trace(`start ${selectedMethod}`);
     trace(`contract ${target}`);
@@ -888,36 +911,6 @@ export async function runSerializationTestMethod(args: RunArgs): Promise<unknown
     const message = String((error as { message?: unknown } | null)?.message ?? error ?? '');
     return code === 'NONCE_EXPIRED' || /Failed to fetch/i.test(message);
   };
-
-  const deleteAccountRecordWithRecovery = async (accountKey: string) =>
-    executeAs(`deleteAccountRecord(${accountKey})`, cleanupSignerAddress || accountKey, async (contract) => {
-      const fn = (contract as { deleteAccountRecord?: (...args: unknown[]) => Promise<any> }).deleteAccountRecord;
-      const isAccountInsertedFn = (contract as { isAccountInserted?: (...args: unknown[]) => Promise<any> }).isAccountInserted;
-      if (typeof fn !== 'function') {
-        throw new Error('deleteAccountRecord is not available on the current SpCoin contract access path.');
-      }
-      let lastError: unknown;
-      for (let attempt = 1; attempt <= 3; attempt += 1) {
-        try {
-          const tx = await fn(accountKey);
-          await tx.wait();
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          return tx;
-        } catch (error) {
-          lastError = error;
-          if (!isRetryableDeleteAccountError(error) || typeof isAccountInsertedFn !== 'function') {
-            throw error;
-          }
-          trace(`deleteAccountRecord(${accountKey}) retryable cleanup error attempt ${attempt}: ${String((error as { code?: unknown; message?: unknown })?.code || '')} ${String((error as { message?: unknown })?.message ?? error ?? '')}`);
-          await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
-          const stillInserted = await isAccountInsertedFn(accountKey);
-          if (!stillInserted) {
-            return null;
-          }
-        }
-      }
-      throw lastError;
-    });
 
   const deleteAgentRateNode = async (
     sponsorKey: string,

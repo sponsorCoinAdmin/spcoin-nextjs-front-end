@@ -105,6 +105,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAgentKeys,
     getRecipientKeyCount,
     getAgentKeyCount,
+    getAccountAgentCount: getAgentKeyCount,
     getRecipientTransactionList,
     getRecipientRecordList,
     getAgentTransactionList,

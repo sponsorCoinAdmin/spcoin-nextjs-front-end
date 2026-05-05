@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import "./StringUtils.sol";
-
-
-contract TimeUtils is StringUtils{
+contract TimeUtils {
     constructor() {
     }
 

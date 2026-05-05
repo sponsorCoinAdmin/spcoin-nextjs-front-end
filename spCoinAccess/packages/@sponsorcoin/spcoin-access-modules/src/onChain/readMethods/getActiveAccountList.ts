@@ -11,9 +11,9 @@ export default buildHandler('getActiveAccountKeys', async (context) => {
     const masterMethod = getDynamicMethod(context.read, 'getMasterAccountKeys')
         || getDynamicMethod(context.read, 'getAccountKeys')
         || getDynamicMethod(context.contract, 'getMasterAccountKeys');
-    const activeMethod = getDynamicMethod(context.contract, 'isAccountActive');
+    const activeMethod = getDynamicMethod(context.contract, 'isActiveAccount');
     if (!masterMethod || !activeMethod) {
-        throw new Error('getActiveAccountKeys requires getMasterAccountKeys() and isAccountActive().');
+        throw new Error('getActiveAccountKeys requires getMasterAccountKeys() and isActiveAccount().');
     }
 
     const masterAccountList = await masterMethod();

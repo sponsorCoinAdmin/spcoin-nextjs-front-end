@@ -37,7 +37,7 @@ async function readInitialTotalSupply(contract: any) {
   throw new Error('SpCoin contract does not expose totalInitialSupply().');
 }
 
-export async function buildSerializedSPCoinHeader(contract: any) {
+export async function buildSPCoinHeaderRecord(contract: any) {
   const versionFn =
     typeof contract?.version === 'function'
       ? contract.version.bind(contract)
@@ -74,17 +74,19 @@ export async function buildSerializedSPCoinHeader(contract: any) {
     versionFn(),
   ]);
 
-  return [
-    `NAME:${String(name)}`,
-    `CREATION_TIME:${String(creationTime)}`,
-    `DECIMALS:${String(decimals)}`,
-    `TOTAL_SUPPLY:${String(totalSupply)}`,
-    `INITIAL_TOTAL_SUPPLY:${String(initialTotalSupply)}`,
-    `ANNUAL_INFLATION:${String(annualInflation)}`,
-    `TOTAL_UNSTAKED_SP_COINS:${String(totalUnstakedSpCoins)}`,
-    `TOTAL_STAKED_REWARDS:${String(totalStakingRewards)}`,
-    `TOTAL_STAKED_SP_COINS:${String(totalStakedSPCoins)}`,
-    `SYMBOL:${String(symbol)}`,
-    `VERSION:${String(version)}`,
-  ].join(',');
+  return {
+    name: String(name),
+    creationTime: String(creationTime),
+    decimals: String(decimals),
+    totalSupply: String(totalSupply),
+    initialTotalSupply: String(initialTotalSupply),
+    annualInflation: String(annualInflation),
+    totalUnstakedSpCoins: String(totalUnstakedSpCoins),
+    totalStakingRewards: String(totalStakingRewards),
+    totalStakedSPCoins: String(totalStakedSPCoins),
+    symbol: String(symbol),
+    version: String(version),
+  };
 }
+
+export const buildSerializedSPCoinHeader = buildSPCoinHeaderRecord;

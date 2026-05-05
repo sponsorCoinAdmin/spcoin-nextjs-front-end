@@ -8,13 +8,13 @@ export async function getActiveAccountKeys(context) {
         context.spCoinLogger.logExitFunction();
         return activeAccountList;
     }
-    if (typeof context.spCoinContractDeployed.isAccountActive !== "function") {
-        throw new Error("getActiveAccountKeys requires getMasterAccountKeys() and isAccountActive().");
+    if (typeof context.spCoinContractDeployed.isActiveAccount !== "function") {
+        throw new Error("getActiveAccountKeys requires getMasterAccountKeys() and isActiveAccount().");
     }
     const masterAccountList = await getAccountKeys(context);
     const activeAccountList = [];
     for (const accountKey of masterAccountList) {
-        if (await context.spCoinContractDeployed.isAccountActive(accountKey)) {
+        if (await context.spCoinContractDeployed.isActiveAccount(accountKey)) {
             activeAccountList.push(accountKey);
         }
     }

@@ -11,8 +11,8 @@ contract SPCoin is Token{
 // initToken(defaultName,  defaultSymbol, defaultDecimals, defaultTotalSupply);
 
         version = bytes(initialVersion).length == 0 ? defaultVersion : initialVersion;
-        name = concat(defaultName, version);
-        symbol = concat(defaultSymbol, version);
+        name = string(abi.encodePacked(defaultName, version));
+        symbol = string(abi.encodePacked(defaultSymbol, version));
         decimals = defaultDecimals;
         balanceOf[msg.sender] = totalSupply = totalUnstakedSpCoins = defaultTotalSupply;
         stakedSPCoins = 0;

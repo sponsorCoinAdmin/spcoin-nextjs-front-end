@@ -5,7 +5,7 @@ const handler = buildHandler('getRecipientRecordList', async (context) => {
     const recipientAccountList = context.methodArgs[1];
     return Promise.all(recipientAccountList.map(async (recipientKey) => ({
         recipientKey,
-        serializedRecipientRecordList: await context.requireExternalSerializedValue('getSerializedRecipientRecordList', [
+        recipientRecord: await context.requireExternalSerializedValue('getSerializedRecipientRecordList', [
             sponsorKey,
             recipientKey,
         ]),

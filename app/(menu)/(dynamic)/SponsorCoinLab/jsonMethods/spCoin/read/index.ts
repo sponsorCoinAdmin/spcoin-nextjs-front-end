@@ -251,7 +251,7 @@ async function requireExternalSerializedValue(
   contract: SpCoinContractAccess,
   method: SerializationBaseMethod,
   methodArgs: unknown[],
-): Promise<string> {
+): Promise<unknown> {
   const external = await buildExternalserializedRResult(contract, method, methodArgs);
   if (external.blocked) {
     throw new Error(external.reason);

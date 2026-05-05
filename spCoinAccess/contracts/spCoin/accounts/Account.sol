@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 /// @title ERC20 Contract
-import "../utils///StructSerialization.sol";
+import "../utils/Utils.sol";
 
-contract Account is StructSerialization {
+contract Account is Utils {
     constructor() {}
 
     /// @notice insert block chain network address for spCoin Management
@@ -126,11 +126,7 @@ contract Account is StructSerialization {
         return masterAccountList[index];
     }
 
-    function isAccountActive(address _accountKey) external view returns (bool) {
-        return hasActiveLinks(_accountKey);
-    }
-
-    function accountHasActiveLinks(address _accountKey) external view returns (bool) {
+    function isActiveAccount(address _accountKey) external view returns (bool) {
         return hasActiveLinks(_accountKey);
     }
 
